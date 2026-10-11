@@ -7,7 +7,7 @@ import { factState, factWord } from "./fact-state.js";
 import { mountMarket } from "./market-view.js";
 import { checksFor, enabledNetworks, networkById, rpcHost } from "./networks.js";
 import { DISCLAIMER } from "./solana-read.js";
-import { EVM_CARD_SCHEMA, EVM_CARD_VERSION, cardDecimals, staleLine } from "./notebook-model.js";
+import { EVM_CARD_SCHEMA, EVM_CARD_VERSION, cardDecimals, staleLine, watchVerdict } from "./notebook-model.js";
 import { reportDownloadBox } from "./informe.js";
 import { notebookNameText, summaryFromEvmCard } from "./reading-summary.js";
 
@@ -261,6 +261,29 @@ const BATCH_NOTICE = {
 export function batchReviewNotice(networkIds, lang) {
   void networkIds;
   return BATCH_NOTICE[languageOf(lang)];
+}
+
+export const EVM_PASS_GAP_MS = 500;
+
+/** Pausa entre dos entradas EVM activas de networks.json. Solana no entra en esa pausa. */
+export function evmEntryGapMs(previousId, nextId) {
+  const previous = networkById(previousId);
+  const next = networkById(nextId);
+  if (!previous || !next || previous.enabled !== true || next.enabled !== true) return 0;
+  if (previous.family !== "evm" || next.family !== "evm") return 0;
+  return EVM_PASS_GAP_MS;
+}
+
+/** Un timeout o un 5xx de la pasada EVM es incompleto, no un rechazo. */
+export function evmPassVerdict(previous, read) {
+  const transport = read && (read.transport === "tiempo" || read.transport === "servidor");
+  const card = read && read.reading ? evmCardFromReading(read.reading) : null;
+  if (transport && card) {
+    const verdict = watchVerdict(previous, { ok: true, card });
+    return { ...verdict, kind: "incompleto", unchecked: true, card: verdict.card || card };
+  }
+  if (read && read.reason === "leido" && card) return watchVerdict(previous, { ok: true, card });
+  return watchVerdict(previous, { ok: false, card: null });
 }
 
 export function fillNetworkSelect(select) {

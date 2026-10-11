@@ -292,9 +292,10 @@ async function rpcCall(state, method, params) {
     const text = response && typeof response.body === "string" ? response.body : "";
     if (state.signal && state.signal.aborted) return { ok: false, kind: "red" };
     if ((response && response.overflow) || text.length > EVM_MAX_BODY) return { ok: false, kind: "grande" };
-    if (status === 0 || status === 429 || status >= 500) {
+    if (status === 0 || status === 408 || status === 429 || status >= 500) {
       if (attempt === 0) continue;
-      return { ok: false, kind: "red" };
+      const transport = status >= 500 ? "servidor" : (status === 0 || status === 408 ? "tiempo" : "");
+      return { ok: false, kind: "red", transport };
     }
     if (status !== 200) return { ok: false, kind: "red" };
     let parsed;
@@ -423,11 +424,22 @@ export async function readEvmToken(input) {
   };
   if (typeof state.transport !== "function") return { ok: false, reason: "red", reading: base };
   const to = address;
-  const call = (data) => rpcCall(state, "eth_call", [{ to, data }, "latest"]);
+  let transport = "";
+  const noteTransport = (call) => {
+    if (!call) return;
+    if (call.transport === "servidor") transport = "servidor";
+    else if (call.transport === "tiempo" && transport !== "servidor") transport = "tiempo";
+  };
+  const call = async (data) => {
+    const result = await rpcCall(state, "eth_call", [{ to, data }, "latest"]);
+    noteTransport(result);
+    return result;
+  };
   const pause = async () => {
     if (state.minIntervalMs > 0) await new Promise((resolve) => setTimeout(resolve, state.minIntervalMs));
   };
   const code = await rpcCall(state, "eth_getCode", [to, "latest"]);
+  noteTransport(code);
   await pause();
   const name = await call(SELECTORS.name);
   await pause();
@@ -440,10 +452,13 @@ export async function readEvmToken(input) {
   const owner = await call(SELECTORS.owner);
   await pause();
   const implementation = await rpcCall(state, "eth_getStorageAt", [to, SLOT_IMPLEMENTATION, "latest"]);
+  noteTransport(implementation);
   await pause();
   const admin = await rpcCall(state, "eth_getStorageAt", [to, SLOT_ADMIN, "latest"]);
+  noteTransport(admin);
   await pause();
   const beacon = await rpcCall(state, "eth_getStorageAt", [to, SLOT_BEACON, "latest"]);
+  noteTransport(beacon);
   const decimalsValue = decimals.ok ? decodeUint8(decimals.result) : null;
   const supplyRaw = totalSupply.ok ? decodeUint256(totalSupply.result) : null;
   const facts = {
@@ -471,6 +486,7 @@ export async function readEvmToken(input) {
   return {
     ok: true,
     reason: "leido",
+    transport,
     reading: { ...base, partial, facts },
   };
 }

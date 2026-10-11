@@ -5,6 +5,7 @@
 import { formatAmount } from "./amount.js";
 import { factState } from "./fact-state.js";
 import { notebookNameText } from "./reading-summary.js";
+import networkCatalog from "./networks.json" with { type: "json" };
 import { CARD_SCHEMA, CARD_VERSION, DISCLAIMER, OFFICIAL_MINT, isMintAddress } from "./solana-read.js";
 
 export const EXPORT_SCHEMA = "stubx.notebook.export";
@@ -140,7 +141,13 @@ const EVM_CARD_KEYS = [
 ];
 
 const EVM_ADDRESS = /^0x[0-9a-fA-F]{40}$/;
-const EVM_NETWORKS = new Set(["base", "ethereum", "bnb"]);
+
+function enabledEvmIds() {
+  const list = networkCatalog && Array.isArray(networkCatalog.networks) ? networkCatalog.networks : [];
+  return new Set(list.filter((item) => item && item.enabled === true && item.family === "evm" && typeof item.id === "string").map((item) => item.id));
+}
+
+const EVM_NETWORKS = enabledEvmIds();
 
 function evmText(value) {
   if (!value || typeof value !== "object" || !sameKeys(value, ["status", "text"])) return false;

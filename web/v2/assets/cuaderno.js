@@ -5,7 +5,7 @@ import { formatAmount } from "../shared/amount.js";
 import { entenderNav } from "../shared/entender.js";
 import { explainIncomplete } from "../shared/explain-incomplete.js";
 import { evmBodyCap, readCappedText, readEvmToken } from "../shared/evm-read.js";
-import { batchReviewNotice, evmCardFromReading, paintEvmResult } from "../shared/evm-view.js";
+import { batchReviewNotice, evmCardFromReading, evmEntryGapMs, evmPassVerdict, paintEvmResult } from "../shared/evm-view.js";
 import { networkById } from "../shared/networks.js";
 import { reportDownloadBox } from "../shared/informe.js";
 import { mountMarket } from "../shared/market-view.js";
@@ -148,6 +148,7 @@ const COPY = {
     watchChanged: "Cambió desde la última lectura.",
     watchSame: "Sigue igual desde la última lectura.",
     watchIncomplete: "Incompleto.",
+    watchUnchecked: "Incompleto. No se pudo comprobar.",
     watchSave: "Guardar",
     watchSaveAll: "Guardar todas",
     watchStop: "Detener",
@@ -249,6 +250,7 @@ const COPY = {
     watchChanged: "It changed since the last reading.",
     watchSame: "It is the same since the last reading.",
     watchIncomplete: "Incomplete.",
+    watchUnchecked: "Incomplete. Could not be checked.",
     watchSave: "Save",
     watchSaveAll: "Save all",
     watchStop: "Stop",
@@ -1178,9 +1180,11 @@ function armLimitCountdown(stamps) {
   limitTimer = setInterval(() => paintLimit(false), 1000);
 }
 
-function watchStatusText(kind) {
+function watchStatusText(outcome) {
+  const kind = outcome && outcome.kind;
   if (kind === "cambio") return t("watchChanged");
   if (kind === "igual") return t("watchSame");
+  if (kind === "incompleto" && outcome.unchecked) return t("watchUnchecked");
   if (kind === "incompleto") return t("watchIncomplete");
   if (kind === "rechazada") return t("watchRefused");
   return limitMessage(secondsUntilSlot(queryStamps));
@@ -1324,7 +1328,7 @@ function renderWatchResult(item) {
   article.append(line);
   article.append(text("p", `${t("watchNetwork")}: ${networkLabel(entry.network)}`, { class: "muted" }));
   if (previousCard) article.append(text("p", `${t("lastReading")} · ${staleLine(previousCard.consultedAt, lang())}`, { class: "sello" }));
-  const status = text("p", watchStatusText(outcome.kind), { class: outcome.kind === "cambio" ? "nota" : "sello", "data-estado": outcome.kind });
+  const status = text("p", watchStatusText(outcome), { class: outcome.kind === "cambio" ? "nota" : "sello", "data-estado": outcome.kind });
   article.append(status);
   const refused = Boolean(outcome.rejection && outcome.rejection.rejected);
   const gap = outcome.card && !readingComplete(outcome.card)
@@ -1455,11 +1459,29 @@ async function followSelected(forgetKey) {
     if (forgetKey && plan.ready.length) clearBlockedMethods();
     const painted = [];
     let index = 0;
+    let previousNetwork = "";
     for (const entry of plan.ready) {
       if (abort.signal.aborted) {
         stopped = true;
         break;
       }
+      const gap = evmEntryGapMs(previousNetwork, entry.network);
+      if (gap > 0) {
+        await new Promise((resolve) => {
+          const timer = setTimeout(resolve, gap);
+          const stop = () => {
+            clearTimeout(timer);
+            resolve();
+          };
+          if (abort.signal.aborted) stop();
+          else abort.signal.addEventListener("abort", stop, { once: true });
+        });
+        if (abort.signal.aborted) {
+          stopped = true;
+          break;
+        }
+      }
+      previousNetwork = entry.network;
       index += 1;
       showMessage(`${t("watchReading")} ${index} ${t("watchOf")} ${list.length}`, "info");
       let outcome;
@@ -1488,15 +1510,14 @@ async function followSelected(forgetKey) {
             stopped = true;
             break;
           }
-          result = read && read.reason === "leido"
-            ? { ok: true, card: evmCardFromReading(read.reading) }
-            : { ok: false, card: null };
+          outcome = evmPassVerdict(entry.latest, read);
+          result = null;
         }
         if (abort.signal.aborted || (result && result.aborted)) {
           stopped = true;
           break;
         }
-        outcome = watchVerdict(entry.latest, result);
+        if (entry.network === "solana") outcome = watchVerdict(entry.latest, result);
       } catch (error) {
         if (abort.signal.aborted || (error && error.name === "AbortError")) {
           stopped = true;

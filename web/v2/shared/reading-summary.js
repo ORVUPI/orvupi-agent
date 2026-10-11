@@ -890,6 +890,27 @@ export function summaryFromEvmCard(card) {
     ));
   }
   if (missingBlock.items.length) missingBlock.service = SUMMARY_SERVICE;
+  const writtenName = name.status === "ok" ? name.text : "";
+  const writtenSymbol = symbol.status === "ok" ? symbol.text : "";
+  if (summaryNormalizeToken(writtenName).includes("stubx") || summaryNormalizeToken(writtenSymbol).includes("stubx")) {
+    const attention = summary.blocks.find((block) => block.id === "atencion");
+    attention.items.unshift(summaryPoint(
+      "metadatos",
+      summaryPair("Dirección", "Address"),
+      summaryPair(
+        "Se parece a STUBX pero no es la dirección oficial. El oficial solo está en Solana.",
+        "Looks like STUBX but is not the official address. The official one is only on Solana.",
+      ),
+    ));
+  }
+  summary.note = summaryPoint(
+    "curva",
+    summaryPair("Curva de Pump.fun", "Pump.fun curve"),
+    summaryPair(
+      "Curva de Pump.fun: No aplica (no es una red de Solana)",
+      "Pump.fun curve: Not applicable (not a Solana network)",
+    ),
+  );
   return summary;
 }
 

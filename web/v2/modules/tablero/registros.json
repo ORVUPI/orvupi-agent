@@ -985,8 +985,8 @@
           "label": { "es": "Aviso", "en": "Notice" },
           "path": "web/v2/shared/evm-view.js",
           "note": {
-            "es": "El aviso de la pasada es el literal de Legal: la pasada no pide datos de mercado.",
-            "en": "The batch notice is Legal's sentence: the check does not request market data."
+            "es": "El aviso de la pasada es el literal de Legal: la pasada no pide datos de mercado. Un parecido con STUBX en una red EVM sale en el informe.",
+            "en": "The batch notice is Legal's sentence: the check does not request market data. A likeness to STUBX on an EVM network appears in the report."
           }
         }
       ],
@@ -1003,6 +1003,13 @@
           "change": {
             "es": "El aviso de la pasada pasa al literal de Legal. La pasada no pide datos de mercado. Sigue fuera de stubxai.com.",
             "en": "The batch notice uses Legal's sentence. The check does not request market data. Still absent from stubxai.com."
+          }
+        },
+        {
+          "on": "2026-10-11",
+          "change": {
+            "es": "El informe nombra un parecido con STUBX en las redes EVM. Un timeout o un 5xx de la pasada queda en incompleto. Sigue fuera de stubxai.com.",
+            "en": "The report names a likeness to STUBX on the EVM networks. A timeout or a 5xx in the pass stays incomplete. Still absent from stubxai.com."
           }
         }
       ]
