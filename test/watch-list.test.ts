@@ -229,7 +229,8 @@ describe("revisar direcciones guardadas", () => {
     assert.match(page, /id="guardar-todas"/);
     assert.equal(follow.includes("persist("), false);
     assert.match(page, /id="seguir"/);
-    assert.equal(page.includes(notice.AVISO_GUARDAR.es), false);
+    assert.equal(page.includes(notice.AVISO_GUARDAR.es), true);
+    assert.equal(page.includes(notice.AVISO_GUARDAR.en), true);
     assert.match(notice.AVISO_GUARDAR.es, /«Guardar esta consulta»/);
     assert.match(notice.AVISO_GUARDAR.en, /"Save this lookup"/);
     assert.equal(source.includes("innerHTML"), false);

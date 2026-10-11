@@ -1208,8 +1208,8 @@ describe("lector y cuaderno", () => {
     assert.ok(aprender.includes(CA));
     assert.equal(aprender.includes("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), false);
     assert.equal(aprender.toLowerCase().includes("estafa"), false);
-    assert.match(aprender, /Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión\./);
-    assert.match(aprender, /High-risk crypto · You could lose everything · Not investment advice\./);
+    assert.equal(aprender.includes("Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión."), false);
+    assert.equal(aprender.includes("High-risk crypto · You could lose everything · Not investment advice."), false);
     const main = aprender.slice(aprender.indexOf("<main"), aprender.indexOf("</main>"));
     assert.equal(main.includes("https://"), false);
     assert.match(aprender, /href="\/verify\/"/);
@@ -1235,7 +1235,7 @@ describe("lector y cuaderno", () => {
     assert.match(notebook, /Si eliges otro lector, ese servicio recibe tus consultas y tu IP\. STUBX no lo revisa\./);
     assert.match(notebook, /If you choose another reader, that service receives your queries and your IP\. STUBX does not review it\./);
     assert.equal(notebook.toLowerCase().includes("mala inversión"), false);
-    assert.match(notebook, /connect-src 'self' https:\/\/solana-rpc\.publicnode\.com https:\/\/api\.mainnet-beta\.solana\.com/);
+    assert.match(notebook, /connect-src 'self' https:\/\/solana-rpc\.publicnode\.com https:\/\/api\.mainnet-beta\.solana\.com https:\/\/api\.dexscreener\.com/);
     assert.match(notebook, /<select id="rpc-url"/);
     assert.equal(notebook.includes('id="rpc-url" name="rpc" type="url"'), false);
     assert.match(notebook, /Este navegador guarda como máximo 200 fichas/);

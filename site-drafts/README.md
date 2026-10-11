@@ -12,7 +12,7 @@ No usan CDN ni fuentes externas. No hay analítica, cuentas ni firma.
 
 Cada HTML, el worker de `/lab/` y `_headers` los genera `npm run lab:build`. Si se editan a mano, `npm test` falla.
 
-El aviso de cada página es fijo: «Herramienta educativa con datos públicos. No es consejo de inversión. Cripto de alto riesgo · Puedes perderlo todo.» También dice que es solo lectura, que no conecta carteras ni firma, y que las fichas no son una auditoría ni una garantía. Las fichas de la misión son del 2026-10-08. Los ejemplos posteriores, si los hay, van fechados. Lo desconocido no es lo mismo que lo comprobado. La lista de clones de ejemplo no es completa.
+El aviso de cada página dice que es solo lectura, que no conecta carteras ni firma, y que las fichas no son una auditoría ni una garantía. Las fichas de la misión son del 2026-10-08. Los ejemplos posteriores, si los hay, van fechados. Lo desconocido no es lo mismo que lo comprobado. La lista de clones de ejemplo no es completa.
 
 ## Publicar, solo si el creador lo decide
 

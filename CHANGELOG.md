@@ -5,6 +5,21 @@
 - En el Cuaderno, «Revisar direcciones guardadas» / «Recheck saved addresses» vuelve a leer las direcciones guardadas, las marcadas o todas si no se marca ninguna, y dice si algo cambió desde la última lectura. «Sigue igual» solo sale si las dos fichas están completas y sin errores. Si no, el veredicto es «Incompleto» y va con «Qué falta». Nada nuevo se guarda hasta pulsar «Guardar» o «Guardar todas». «Detener» corta la pasada. Esta entrada no despliega la web. stubxai.com no cambia hasta que se publique.
 - La base local del Cuaderno pasa a la versión 2. El navegador no abre una versión menor: la página que hoy está en stubxai.com abre la versión 1. Si esta entrega se publica y luego se vuelve a esa página anterior, el Cuaderno de ese navegador no abre. Para volver atrás: cargar otra vez esta página, o borrar en el navegador los datos del sitio de la base llamada stubx-cuaderno. Esas fichas solo están en ese navegador; borrarlas las quita de ahí y no las envía a ningún servidor. Si este código encuentra una versión mayor, abre la base sin subirla y sigue.
 
+## 2026-10-11 · Pie de riesgo y etiqueta de imagen retirados
+
+- Decisión del dueño del proyecto el 2026-10-11 a las 13:52: la web y las herramientas dejan de repetir el pie de riesgo y la etiqueta de imagen generada, en español y en inglés, también en las imágenes que exporta Studio.
+- El mismo día confirma que Studio no lleva banda, marca de esquina, comentario del PNG ni frase de otro token, y que los avisos de riesgo quedan solo en `/risks` y `/legal`. El pie del resto lleva un enlace a Riesgos.
+- Se quedan los avisos antiestafa, la privacidad aprobada y la línea del informe que dice que no certifica que sea verdad. Una comprobación falla si esas frases retiradas aparecen fuera de `/risks` y `/legal`.
+- En `/security`, una cuenta, una web o una CA que no está en la lista se trata como no oficial hasta comprobarla. En la portada, otra CA con el nombre STUBX «is not official». Esa fórmula solo se vigila en Studio. La franja inferior de la imagen OG no lleva texto.
+- Esta entrada no despliega stubxai.com.
+
+## 2026-10-11 · Datos de mercado en Verify, solo lectura
+
+- Verify muestra pares, liquidez y volumen de un mint de Solana si el usuario pulsa «Leer datos de mercado ahora». Si la fuente respondió, la hora de Madrid dice «leído el DD-MM-AAAA a las HH:MM:SS». Si la consulta falló, dice «intentado el …». La atribución es «Datos: DEX Screener. Pueden no ser exactos ni estar al día.» No hay precio por token, ni verde ni rojo en las cifras.
+- Al pulsar el botón, el navegador consulta `https://api.dexscreener.com` directamente. No hay proxy ni Pages Function. `connect-src` añade solo ese origen, sin comodines, en `/verify/` y `/cuaderno/`. La caché de 60 segundos por mint, la lista cerrada de campos, el tope de tamaño y los 8 segundos (también mientras se lee el cuerpo) viven en el navegador. Cada navegador se queda en unas pocas peticiones por minuto. Un fallo dice «No se pudo leer DEX Screener. Prueba otra vez en un minuto.» Si se pulsó el botón, el «Qué falta» principal añade un punto aparte, «Datos de mercado: no se pudieron leer», con su propio Reintentar, que solo vuelve a pedir los datos de mercado.
+- Si no hay pares, la consulta falla o se agota el tiempo, el bloque «Qué falta» lo dice. Un fallo se puede reintentar. No se rellena con cero. Una liquidez por debajo de 1.000 USD se señala como poca, y que cualquiera puede crear un par.
+- La ficha del cuaderno no guarda esas cifras y no las compara. Se pueden leer aparte, en el momento, con el mismo botón. Un par cuya dirección no coincide exactamente con el mint, espacios incluidos, se descarta. El SOL envuelto, USDC y USDT, por mint exacto, se muestran siempre como «SOL», «USDC» y «USDT», aunque la fuente mande otro símbolo. Cualquier otro token que no es el oficial, también el otro lado del par, se muestra como «Dice llamarse «…»». El DEX conocido sale como Raydium, Orca, Meteora, PancakeSwap o Pump.fun. Si no está en la lista, se dice «un DEX que la fuente llama «…»», sin ancho cero ni bidi, y recortado. En el bloque de mercado, la frase de que DEX Screener ve la IP queda justo junto al botón y el resto del aviso va en «Más detalle». Junto a la consulta de Verify, la frase de los nodos públicos de Solana se ve sin plegar. Una dirección en minúsculas no coincide. El aviso nombra esos nodos, que también ven la IP, y dice que al pulsar DEX Screener también ve la IP y la dirección consultada.
+
 ## 2026-10-10 · Biblioteca y cuaderno publicados
 
 - `/cuaderno` está en stubxai.com/cuaderno desde el 2026-10-10 (PR #24). El tablero marca U05 como publicado. La dirección viaja en el fragmento `#a=` y se limpia al leerla; no llega al servidor ni queda en el historial.
@@ -32,7 +47,6 @@ Esta entrada resume. No reescribe el detalle fechado que sigue debajo.
 ### Web v2
 
 - Misma navegación, mismos estilos y el mismo cambio de idioma en las páginas de `web/v2/`. Verify y Lab van dentro de ese cascarón, no en otra web.
-- Pie vigente: «Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión.» / «High-risk crypto · You could lose everything · Not investment advice.»
 - `web/v2/` es la web publicada en stubxai.com desde el 2026-10-09 (merge `ed1c7759`). `web/current/` es la copia anterior, para volver atrás.
 - Studio está desplegado (PR #20 y #26) y se indexa. Verify universal está desplegado (merge `2434636`). El cuaderno está en stubxai.com/cuaderno desde el 2026-10-10 (PR #24).
 - Esta entrada no despliega `web/v2/`. stubxai.com no cambia por este documento. La v2 ya está desplegada desde el 2026-10-09.
@@ -56,10 +70,6 @@ Lo que el tablero de main da por abierto en la web, más lo fusionado después e
 - `web/v2/sitemap.xml` lista las páginas públicas con `lastmod`.
 - No hay `noindex` global. `X-Robots-Tag: noindex, nofollow` queda en el service worker de Lab, los JSON, el manifiesto y la 404.
 - `web/v2/` es la web publicada en stubxai.com desde el 2026-10-09 (merge `ed1c7759`). `web/current/` es la copia anterior, para volver atrás. La v2 ya está desplegada desde el 2026-10-09.
-
-### Texto retirado
-
-- En README y LIMITS, la frase retirada «Memecoin experimental · puedes perderlo todo…» pasa al pie vigente. En inglés, «could», no «can».
 
 ## 2026-10-09 · Biblioteca y cuaderno de solo lectura
 

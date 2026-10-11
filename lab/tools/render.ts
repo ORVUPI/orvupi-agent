@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { repoRootFromMeta } from "../paths.js";
-import { AUDIT_EN, AUDIT_ES, DISCLAIMER, DISCLAIMER_EN, DRAFT_LINE, HOW_LAB, HOW_VERIFY, OFFLINE_LINE, PRIVACY_EN, PRIVACY_ES, READONLY_LINE, UNKNOWN_LINE } from "../copy.js";
+import { AUDIT_EN, AUDIT_ES, DRAFT_LINE, HOW_LAB, HOW_VERIFY, OFFLINE_LINE, PRIVACY_EN, PRIVACY_ES, READONLY_LINE, UNKNOWN_LINE } from "../copy.js";
 import { loadGlossary, loadMission } from "../mission/load.js";
 import type { CardSummary, GlossaryEntry, Localized, Mission, MissionStep } from "../mission/types.js";
 import { changelogHeadings, listTestFiles, loadBoard } from "../tablero/collect.js";
@@ -257,8 +257,6 @@ ${input.publish ? "" : `<p class="draft">${both(DRAFT_LINE)}</p>\n`}
 </div></header>
 <main id="contenido" class="${frame}">
 <div class="aviso" data-disclaimer="si">
-<p class="lang es" lang="es">${escapeHtml(DISCLAIMER)}</p>
-<p class="lang en" lang="en">${escapeHtml(DISCLAIMER_EN)}</p>
 <p>${both(READONLY_LINE)}</p>
 <p>${both(UNKNOWN_LINE)}</p>
 <p>${both({ es: "Fichas del 2026-10-08 y, si las hay, ejemplos posteriores. No se actualizan solas. La hora de cada ficha va en Europe/Madrid.", en: "Cards from 2026-10-08 and, where present, later examples. They do not update themselves. Each card time is shown in Europe/Madrid." })}</p>
@@ -354,6 +352,25 @@ ${howDetails(HOW_LAB)}
   });
 }
 
+const NODES_NOTICE = new Set([
+  "Para leerla en directo, se envía a los nodos públicos de Solana solana-rpc.publicnode.com y api.mainnet-beta.solana.com, que también ven tu IP.",
+  "To read it live, it is sent to the Solana public nodes solana-rpc.publicnode.com and api.mainnet-beta.solana.com, which also see your IP.",
+]);
+
+function splitAviso(text: string): { lead: string; rest: string } {
+  const parts = text.split(/(?<=\.)\s+/);
+  const lead = parts.find((part) => NODES_NOTICE.has(part));
+  if (!lead) throw new Error("El aviso no trae la frase de los nodos.");
+  const rest = parts.filter((part) => part !== lead).join(" ");
+  return { lead, rest };
+}
+
+function privacyNotice(): string {
+  const es = splitAviso(PRIVACY_ES);
+  const en = splitAviso(PRIVACY_EN);
+  return `<div id="aviso-guardar" class="aviso-fijo privacidad"><p class="aviso-nodos">${both({ es: es.lead, en: en.lead })}</p><details class="aviso-resto"><summary>${both({ es: "Más detalle", en: "More detail" })}</summary><p>${both({ es: es.rest, en: en.rest })}</p></details></div>`;
+}
+
 function renderVerify(cards: readonly CardSummary[], glossaryEntries: readonly GlossaryEntry[], options: RenderOptions): string {
   const fields = ["name", "mint", "inRegistry", "mintAuthority", "freezeAuthority", "metadata", "holders", "impersonation", "statement", "curvePresent", "curveProgress"];
   const articles = cards
@@ -380,7 +397,7 @@ ${howDetails(HOW_VERIFY)}
 <button type="submit">${both({ es: "Comprobar", en: "Check" })}</button>
 <p id="direccion-error" class="campo-error" hidden>${both({ es: "Pega primero una dirección. Suele tener entre 32 y 44 letras y números.", en: "Paste an address first. It is usually 32 to 44 letters and numbers." })}</p>
 </div>
-<p id="aviso-guardar" class="aviso-fijo privacidad">${both({ es: PRIVACY_ES, en: PRIVACY_EN })}</p>
+${privacyNotice()}
 </form>
 <section id="resultado" class="resultado" data-state="vacio" data-luz="neutro" aria-live="polite">
 <h2>${both({ es: "La lectura aparece aquí", en: "The reading shows up here" })}</h2>
@@ -443,6 +460,10 @@ const MILESTONE_EN: Record<string, string> = {
   "2026-10-09 · Biblioteca y cuaderno de solo lectura":
     "2026-10-09 · Read-only library and notebook",
   "2026-10-11 · Revisar direcciones guardadas": "2026-10-11 · Recheck saved addresses",
+  "2026-10-11 · Pie de riesgo y etiqueta de imagen retirados":
+    "2026-10-11 · Risk footer and image label removed",
+  "2026-10-11 · Datos de mercado en Verify, solo lectura":
+    "2026-10-11 · Market data in Verify, read-only",
 };
 
 function personLabel(value: string): Localized {
@@ -659,7 +680,10 @@ export function renderHeaders(): string {
   ];
   const selfCsp =
     "Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
-  const verifyCsp = selfCsp.replace("connect-src 'self'", `connect-src 'self' ${rpcOrigins().join(" ")}`);
+  const verifyCsp = selfCsp.replace(
+    "connect-src 'self'",
+    `connect-src 'self' ${rpcOrigins().join(" ")} https://api.dexscreener.com`,
+  );
   const blocks: Array<[string, string]> = [
     ["/verify/*", verifyCsp],
     ["/verify/index.html", verifyCsp],
