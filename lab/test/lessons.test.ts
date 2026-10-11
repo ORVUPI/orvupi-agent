@@ -141,8 +141,10 @@ describe("lecciones cortas", () => {
     assert.match(lesson.steps[0]?.whyRight.es ?? "", /no es la de una persona|no la de una persona|no es un censo/i);
     assert.equal(lesson.steps[1]?.correct, "no-censo");
     assert.equal(text.toLowerCase().includes("wallet"), false);
-    assert.equal((text.match(/publicada en el registro oficial/g) ?? []).length, 3);
-    assert.equal((text.match(/listed in the official registry/g) ?? []).length, 3);
+    assert.equal((text.match(/cuenta personal \(publicada en el registro oficial\)/g) ?? []).length, 3);
+    assert.equal((text.match(/personal account \(listed in the official registry\)/g) ?? []).length, 3);
+    assert.equal(text.includes("cuenta personal publicada"), false);
+    assert.equal(text.includes("published personal account"), false);
   });
 
   test("separa consulta fallida, ausencia y dato no pedido", () => {
@@ -237,8 +239,10 @@ describe("lecciones cortas", () => {
     assert.equal(JSON.stringify(loadJson(path.join(root, "lab/mission/lecciones.json"))).toLowerCase().includes("wallet"), false);
     const reparto = lab.body.slice(lab.body.indexOf('id="leccion-reparto"'), lab.body.indexOf('id="leccion-huecos"'));
     assert.equal((reparto.match(/href="\/security\/"/g) ?? []).length, 6);
-    assert.match(reparto, /publicada en el registro oficial/);
-    assert.match(reparto, /listed in the official registry/);
+    assert.match(reparto, /cuenta personal <a href="\/security\/">\(publicada en el registro oficial\)<\/a>/);
+    assert.match(reparto, /personal account <a href="\/security\/">\(listed in the official registry\)<\/a>/);
+    assert.equal(reparto.includes("cuenta personal publicada (publicada"), false);
+    assert.equal(reparto.includes("published personal account (listed"), false);
     assert.equal(huecos.includes("status is verified"), false);
     assert.match(huecos, /the query was answered and the value is empty/);
     assert.match(lab.body, /The query was answered and the value is empty/);
