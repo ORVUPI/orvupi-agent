@@ -128,8 +128,8 @@
       "es": "Proxy EIP-1967",
       "en": "EIP-1967 proxy",
       "help": {
-        "es": "Un proxy es un contrato que reenvía las preguntas a otro contrato. EIP-1967 es la forma habitual de anotar esa otra dirección. Si no está, esta lectura lo dice. Con un proxy, el código al que se reenvía puede cambiarse. Esta lectura no dice si ha cambiado.",
-        "en": "A proxy is a contract that forwards questions to another contract. EIP-1967 is the usual way to record that other address. If it is not there, this reading says so. With a proxy, the code it forwards to can be changed. This reading does not say whether it has."
+        "es": "Un proxy es un contrato que reenvía las preguntas a otro contrato. EIP-1967 es la forma habitual de anotar esa otra dirección. Si no está, esta lectura lo dice. Con un proxy, el código al que se reenvía puede cambiarse. Esta lectura no dice si ha cambiado. otros tipos de proxy no se comprueban aquí.",
+        "en": "A proxy is a contract that forwards questions to another contract. EIP-1967 is the usual way to record that other address. If it is not there, this reading says so. With a proxy, the code it forwards to can be changed. This reading does not say whether it has. Other proxy types are not checked here."
       },
       "on": ["evm"]
     },

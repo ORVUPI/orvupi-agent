@@ -10,6 +10,10 @@ Eso es `onblocked`: el aviso dice que otra pestaña tiene el cuaderno abierto. C
 
 Eso es `onversionchange`: el aviso pide recargar. La otra pestaña ya actualizó la base. Recargar no borra las fichas.
 
+## Si el navegador responde VersionError
+
+Eso es VersionError: la base de este navegador ya está en una versión mayor que la que pide esta página. El Cuaderno abre esa base sin subirla y sigue. No borres las fichas por ese aviso. Si hace falta la versión de esta página, recarga cuando esta página sea la más nueva, o exporta el JSON antes de borrar la base.
+
 ## Si hay que volver al código anterior
 
 El código anterior abre la versión 1. El navegador no abre una base que ya está en la versión 2 con un programa que pide la versión 1.

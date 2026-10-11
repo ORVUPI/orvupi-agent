@@ -20,7 +20,9 @@ const SELECTORS = {
   owner: "0x8da5cb5b",
 };
 const SLOT_IMPLEMENTATION = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
+const SLOT_ADMIN = "0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103";
 const SLOT_BEACON = "0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50";
+const ADMIN = "0x6666666666666666666666666666666666666666";
 
 function word(hex: string) {
   return `0x${hex.replace(/^0x/, "").padStart(64, "0")}`;
@@ -87,6 +89,7 @@ describe("lectura EVM en Base", () => {
     const usdc = scripted((call) => {
       if (call.method === "eth_getCode") return { result: "0x60016000" };
       if (call.method === "eth_getStorageAt" && slotOf(call) === SLOT_IMPLEMENTATION) return { result: word(IMPL.slice(2)) };
+      if (call.method === "eth_getStorageAt" && slotOf(call) === SLOT_ADMIN) return { result: word(ADMIN.slice(2)) };
       if (call.method === "eth_getStorageAt" && slotOf(call) === SLOT_BEACON) return { result: zeroWord() };
       const data = dataOf(call);
       if (data === SELECTORS.name) return { result: encodeString("USD Coin") };
@@ -105,7 +108,7 @@ describe("lectura EVM en Base", () => {
     });
     assert.equal(read.ok, true);
     assert.equal(read.reason, "leido");
-    assert.equal(read.reading.address, USDC);
+    assert.equal(read.reading.address, USDC.toLowerCase());
     assert.equal(read.reading.rpcHost, "mainnet.base.org");
     assert.equal(read.reading.facts.code.kind, "contrato");
     assert.equal(read.reading.facts.code.status, "ok");
@@ -116,7 +119,9 @@ describe("lectura EVM en Base", () => {
     assert.equal(read.reading.facts.owner.status, "ok");
     assert.equal(read.reading.facts.proxy.status, "ok");
     assert.equal(read.reading.facts.proxy.implementation, IMPL.toLowerCase());
+    assert.equal(read.reading.facts.proxy.admin, ADMIN.toLowerCase());
     assert.equal(read.reading.facts.proxy.beacon, null);
+    assert.equal(usdc.seen.some((call) => call.method === "eth_getStorageAt" && slotOf(call) === SLOT_ADMIN), true);
     assert.equal(read.reading.partial, false);
     assert.deepEqual(
       [...new Set(usdc.seen.map((call) => call.method))].sort(),
@@ -174,6 +179,8 @@ describe("lectura EVM en Base", () => {
     assert.equal(proxied.reading.facts.proxy.status, "ok");
     assert.equal(proxied.reading.facts.name.status, "ausente");
     assert.match(view.describeEvm(proxied.reading, "es").rows.find((row: { id: string }) => row.id === "proxy").line, /EIP-1967/);
+    assert.match(view.describeEvm(proxied.reading, "es").rows.find((row: { id: string }) => row.id === "proxy").line, /otros tipos de proxy no se comprueban aquí/);
+    assert.match(view.describeEvm(proxied.reading, "en").rows.find((row: { id: string }) => row.id === "proxy").line, /Other proxy types are not checked here/);
 
     evm.resetEvmClientLimit();
     const eoa = scripted((call) => {
@@ -282,8 +289,8 @@ describe("lectura EVM en Base", () => {
     assert.equal(ownerHelp.help.en, "Some contracts answer owner() with an address. If they do not have that function, this reading says so. If there is an owner address, the contract may give it special functions. This reading does not say which ones.");
     assert.equal(ownerHelp.help.es.includes("No es un permiso de Solana"), false);
     assert.equal(ownerHelp.help.en.includes("It is not a Solana permission."), false);
-    assert.equal(proxyHelp.help.es, "Un proxy es un contrato que reenvía las preguntas a otro contrato. EIP-1967 es la forma habitual de anotar esa otra dirección. Si no está, esta lectura lo dice. Con un proxy, el código al que se reenvía puede cambiarse. Esta lectura no dice si ha cambiado.");
-    assert.equal(proxyHelp.help.en, "A proxy is a contract that forwards questions to another contract. EIP-1967 is the usual way to record that other address. If it is not there, this reading says so. With a proxy, the code it forwards to can be changed. This reading does not say whether it has.");
+    assert.equal(proxyHelp.help.es, "Un proxy es un contrato que reenvía las preguntas a otro contrato. EIP-1967 es la forma habitual de anotar esa otra dirección. Si no está, esta lectura lo dice. Con un proxy, el código al que se reenvía puede cambiarse. Esta lectura no dice si ha cambiado. otros tipos de proxy no se comprueban aquí.");
+    assert.equal(proxyHelp.help.en, "A proxy is a contract that forwards questions to another contract. EIP-1967 is the usual way to record that other address. If it is not there, this reading says so. With a proxy, the code it forwards to can be changed. This reading does not say whether it has. Other proxy types are not checked here.");
     assert.equal(view.privacyText("base", "es"), "Al consultar en Base, tu navegador envía la dirección al nodo público mainnet.base.org, que también ve tu IP. Si pides los datos de mercado, DEX Screener también ve tu IP y la dirección.");
     assert.equal(view.privacyText("base", "en"), "When you look up on Base, your browser sends the address to the public node mainnet.base.org, which also sees your IP. If you request market data, DEX Screener also sees your IP and the address.");
     const solanaChecks = networks.checksFor("solana");
@@ -323,17 +330,141 @@ describe("lectura EVM en Base", () => {
     assert.equal(described.pairs[0].title.includes("Dice llamarse"), false);
     assert.equal(JSON.stringify(described).includes("priceUsd"), false);
 
-    const migrated = db.migrateStoredRecord({
+    const migrated = model.migrateStoredRecord({
       id: "11111111-1111-4111-8111-111111111111",
       note: "",
       card: { network: "solana", mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" },
     });
-    assert.equal(migrated.network, "solana");
-    assert.equal(migrated.address, "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
-    assert.equal(db.DB_VERSION, 2);
+    assert.equal(migrated.record.network, "solana");
+    assert.equal(migrated.record.address, "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+    const stamped = model.stampIdentity({
+      id: "22222222-2222-4222-8222-222222222222",
+      note: "",
+      card: { network: "base", address: USDC },
+    });
+    assert.equal(stamped.network, "base");
+    assert.equal(stamped.address, USDC.toLowerCase());
+    assert.equal(stamped.card.address, USDC.toLowerCase());
+    const watched = model.watchTargets([stamped]);
+    assert.equal(watched[0].key, `base\n${USDC.toLowerCase()}`);
+    assert.equal(model.NOTEBOOK_DB_VERSION, 2);
     const rollback = readFileSync(path.join(repoRoot(), "web/v2/shared/ROLLBACK.md"), "utf8");
     assert.match(rollback, /onblocked/);
     assert.match(rollback, /onversionchange/);
+    assert.match(rollback, /VersionError/);
     assert.equal(model.validateCard({ schema: "stubx.notebook.card.evm" }).ok, false);
+  });
+
+  test("dirección cero, EIP-55, owner vacío, bytes altos, símbolo y tope de 500 KB", async () => {
+    const { evm, view, model } = await load();
+    evm.resetEvmClientLimit();
+    let calls = 0;
+    const zero = await evm.readEvmToken({
+      networkId: "base",
+      address: `0x${"0".repeat(40)}`,
+      transport: async () => {
+        calls += 1;
+        return { status: 200, body: "" };
+      },
+      minIntervalMs: 0,
+      now: () => new Date(WHEN),
+    });
+    assert.equal(calls, 0);
+    assert.equal(zero.reason, "invalid");
+    assert.equal(evm.normalizeEvmAddress(USDC), USDC.toLowerCase());
+    assert.equal(evm.normalizeEvmAddress(USDC.toLowerCase()), USDC.toLowerCase());
+    assert.equal(evm.normalizeEvmAddress(USDC.toUpperCase()), USDC.toLowerCase());
+    assert.equal(evm.normalizeEvmAddress("0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02914"), "");
+    assert.equal(evm.normalizeEvmAddress("0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed"), "0x5aaeb6053f3e94c9b9a09f33669435e7ef1beaed");
+
+    evm.resetEvmClientLimit();
+    const emptyOwner = scripted((call) => {
+      if (call.method === "eth_getCode") return { result: "0x6001" };
+      if (call.method === "eth_getStorageAt") return { result: zeroWord() };
+      if (dataOf(call) === SELECTORS.owner) return { result: "0x" };
+      return { error: { code: 3, message: "execution reverted" } };
+    });
+    const empty = await evm.readEvmToken({
+      networkId: "base",
+      address: NO_OWNER,
+      transport: emptyOwner.transport,
+      minIntervalMs: 0,
+      now: () => new Date(WHEN),
+    });
+    assert.equal(empty.reading.facts.owner.status, "ausente");
+    assert.equal(empty.reading.facts.owner.reason, "vacio");
+    const emptyLine = view.describeEvm(empty.reading, "es").rows.find((row: { id: string }) => row.id === "owner").line;
+    assert.match(emptyLine, /ausente \/ sin respuesta/);
+    assert.equal(emptyLine.includes("consulta fallida"), false);
+
+    evm.resetEvmClientLimit();
+    const dirty = scripted((call) => {
+      if (call.method === "eth_getCode") return { result: "0x6001" };
+      if (call.method === "eth_getStorageAt") return { result: zeroWord() };
+      if (dataOf(call) === SELECTORS.owner) return { result: `0x${"01".padEnd(24, "0")}${"ab".repeat(20)}` };
+      return { error: { code: 3, message: "execution reverted" } };
+    });
+    const dirtyRead = await evm.readEvmToken({
+      networkId: "base",
+      address: NO_OWNER,
+      transport: dirty.transport,
+      minIntervalMs: 0,
+      now: () => new Date(WHEN),
+    });
+    assert.equal(dirtyRead.reading.facts.owner.status, "fallo");
+    assert.equal(evm.decodeAddressResult(`0x${"01".padEnd(24, "0")}${"ab".repeat(20)}`), null);
+    assert.equal(evm.decodeAddressResult(word("ab".repeat(20))), `0x${"ab".repeat(20)}`);
+
+    evm.resetEvmClientLimit();
+    const markedName = `USD\u200B Coin\u202E`;
+    const markedSymbol = `U\u200BSD\u202EC`;
+    const marked = scripted((call) => {
+      if (call.method === "eth_getCode") return { result: "0x6001" };
+      if (call.method === "eth_getStorageAt") return { result: zeroWord() };
+      if (dataOf(call) === SELECTORS.name) return { result: encodeString(markedName) };
+      if (dataOf(call) === SELECTORS.symbol) return { result: encodeString(markedSymbol) };
+      return { error: { code: 3, message: "execution reverted" } };
+    });
+    const cleaned = await evm.readEvmToken({
+      networkId: "base",
+      address: NO_OWNER,
+      transport: marked.transport,
+      minIntervalMs: 0,
+      now: () => new Date(WHEN),
+    });
+    assert.equal(cleaned.reading.facts.name.text, evm.cleanContractText(markedName));
+    assert.equal(cleaned.reading.facts.symbol.text, evm.cleanContractText(markedSymbol));
+    assert.equal(cleaned.reading.facts.name.text, "USD Coin");
+    assert.equal(cleaned.reading.facts.symbol.text, "USDC");
+    assert.equal(cleaned.reading.facts.symbol.text.includes("\u200B"), false);
+    assert.equal(cleaned.reading.facts.symbol.text.includes("\u202E"), false);
+    const card = view.evmCardFromReading(cleaned.reading);
+    assert.equal(card.symbol.text, card.name.text === "USD Coin" ? "USDC" : card.symbol.text);
+    assert.equal(model.validateEvmCard(card).ok, true);
+
+    let cancelled = false;
+    const capped = await evm.readCappedText({
+      body: {
+        getReader() {
+          const chunks = [new Uint8Array(400_000), new Uint8Array(200_000)];
+          let index = 0;
+          return {
+            async read() {
+              if (index >= chunks.length) return { done: true, value: undefined };
+              const value = chunks[index];
+              index += 1;
+              return { done: false, value };
+            },
+            async cancel() {
+              cancelled = true;
+            },
+          };
+        },
+      },
+    }, 500_000);
+    assert.equal(capped.overflow, true);
+    assert.equal(capped.text, "");
+    assert.equal(cancelled, true);
+    assert.equal(evm.EVM_MAX_BODY, 500_000);
   });
 });

@@ -290,18 +290,30 @@ def rpc_origins() -> list[str]:
 MARKET_ORIGIN = "https://api.dexscreener.com"
 
 
+EVM_RPC_URL = re.compile(
+    r"^https://[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$"
+)
+
+
+def evm_rpc_origin(rpc: object) -> str:
+    """Host https estricto: sin usuario, puerto, ruta, query, punto y coma ni espacios."""
+    if not isinstance(rpc, str) or not EVM_RPC_URL.fullmatch(rpc):
+        raise SystemExit(f"RPC de networks.json no válido: {rpc!r}")
+    return rpc
+
+
 def evm_rpc_origins() -> list[str]:
     """Solo las redes EVM encendidas. Ethereum y BNB entran al poner enabled en true."""
     data = json.loads((ROOT / "shared" / "networks.json").read_text(encoding="utf-8"))
     origins: list[str] = []
     for network in data.get("networks", []):
-        if not network.get("enabled") or network.get("family") != "evm":
+        rpc = network.get("rpc")
+        if not rpc:
+            if network.get("enabled") and network.get("family") == "evm":
+                raise SystemExit(f"La red {network.get('id')!r} está encendida y no tiene RPC")
             continue
-        parsed = urllib.parse.urlsplit(str(network.get("rpc") or ""))
-        if parsed.scheme != "https" or not parsed.netloc:
-            continue
-        origin = f"https://{parsed.netloc}"
-        if origin not in origins:
+        origin = evm_rpc_origin(rpc)
+        if network.get("enabled") and network.get("family") == "evm" and origin not in origins:
             origins.append(origin)
     return origins
 

@@ -3,7 +3,7 @@
  * sale de networks.json. No hay cartera, ni firma, ni envío.
  * Cada dato queda en leído, ausente comprobado, consulta fallida o no consultado.
  */
-import { networkById } from "./networks.js";
+import { allNetworks, networkById } from "./networks.js";
 
 export const EVM_TIMEOUT_MS = 8_000;
 export const EVM_MAX_BODY = 500_000;
@@ -20,9 +20,22 @@ const SELECTORS = Object.freeze({
 });
 
 const SLOT_IMPLEMENTATION = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
+const SLOT_ADMIN = "0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103";
 const SLOT_BEACON = "0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50";
 
 const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
+const ZERO_ADDRESS = `0x${"0".repeat(40)}`;
+const KECCAK_RC = [
+  0x0000000000000001n, 0x0000000000008082n, 0x800000000000808an, 0x8000000080008000n,
+  0x000000000000808bn, 0x0000000080000001n, 0x8000000080008081n, 0x8000000000008009n,
+  0x000000000000008an, 0x0000000000000088n, 0x0000000080008009n, 0x000000008000000an,
+  0x000000008000808bn, 0x800000000000008bn, 0x8000000000008089n, 0x8000000000008003n,
+  0x8000000000008002n, 0x8000000000000080n, 0x000000000000800an, 0x800000008000000an,
+  0x8000000080008081n, 0x8000000000008080n, 0x0000000080000001n, 0x8000000080008008n,
+];
+const KECCAK_ROTC = [1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 2, 14, 27, 41, 56, 8, 25, 43, 62, 18, 39, 61, 20, 44];
+const KECCAK_PILN = [10, 7, 11, 17, 18, 3, 5, 16, 8, 21, 24, 4, 15, 23, 19, 13, 12, 2, 20, 14, 22, 9, 6, 1];
+const MASK64 = 0xffffffffffffffffn;
 
 const clientHits = [];
 
@@ -34,10 +47,105 @@ export function isEvmAddress(value) {
   return typeof value === "string" && ADDRESS.test(value.trim());
 }
 
+function rotl64(value, bits) {
+  const shift = BigInt(bits);
+  return ((value << shift) | (value >> (64n - shift))) & MASK64;
+}
+
+function keccakF(state) {
+  for (let round = 0; round < 24; round += 1) {
+    const column = new Array(5);
+    for (let i = 0; i < 5; i += 1) {
+      column[i] = state[i] ^ state[i + 5] ^ state[i + 10] ^ state[i + 15] ^ state[i + 20];
+    }
+    for (let i = 0; i < 5; i += 1) {
+      const mixed = column[(i + 4) % 5] ^ rotl64(column[(i + 1) % 5], 1);
+      for (let j = 0; j < 25; j += 5) state[j + i] ^= mixed;
+    }
+    let current = state[1];
+    for (let i = 0; i < 24; i += 1) {
+      const index = KECCAK_PILN[i];
+      const next = state[index];
+      state[index] = rotl64(current, KECCAK_ROTC[i]);
+      current = next;
+    }
+    for (let j = 0; j < 25; j += 5) {
+      const lane0 = state[j];
+      const lane1 = state[j + 1];
+      const lane2 = state[j + 2];
+      const lane3 = state[j + 3];
+      const lane4 = state[j + 4];
+      state[j] ^= (~lane1 & MASK64) & lane2;
+      state[j + 1] ^= (~lane2 & MASK64) & lane3;
+      state[j + 2] ^= (~lane3 & MASK64) & lane4;
+      state[j + 3] ^= (~lane4 & MASK64) & lane0;
+      state[j + 4] ^= (~lane0 & MASK64) & lane1;
+    }
+    state[0] ^= KECCAK_RC[round];
+  }
+}
+
+export function keccak256(bytes) {
+  const rate = 136;
+  const state = new Array(25).fill(0n);
+  const message = bytes instanceof Uint8Array ? bytes : new Uint8Array(0);
+  const blocks = Math.floor(message.length / rate) + 1;
+  const padded = new Uint8Array(blocks * rate);
+  padded.set(message);
+  padded[message.length] = 0x01;
+  padded[padded.length - 1] |= 0x80;
+  for (let offset = 0; offset < padded.length; offset += rate) {
+    for (let lane = 0; lane < rate / 8; lane += 1) {
+      let word = 0n;
+      for (let byte = 0; byte < 8; byte += 1) {
+        word |= BigInt(padded[offset + lane * 8 + byte]) << BigInt(8 * byte);
+      }
+      state[lane] ^= word;
+    }
+    keccakF(state);
+  }
+  const hash = new Uint8Array(32);
+  for (let lane = 0; lane < 4; lane += 1) {
+    let word = state[lane];
+    for (let byte = 0; byte < 8; byte += 1) {
+      hash[lane * 8 + byte] = Number(word & 0xffn);
+      word >>= 8n;
+    }
+  }
+  return hash;
+}
+
+function checksumAddress(body) {
+  const hash = keccak256(new TextEncoder().encode(body));
+  let out = "0x";
+  for (let i = 0; i < body.length; i += 1) {
+    const nibble = i % 2 === 0 ? hash[i >> 1] >> 4 : hash[i >> 1] & 0x0f;
+    const char = body[i];
+    out += nibble >= 8 ? char.toUpperCase() : char;
+  }
+  return out;
+}
+
 export function normalizeEvmAddress(value) {
-  const raw = typeof value === "string" ? value.trim() : "";
+  const trimmed = typeof value === "string" ? value.trim() : "";
+  const raw = /^0X/.test(trimmed) ? `0x${trimmed.slice(2)}` : trimmed;
   if (!ADDRESS.test(raw)) return "";
-  return raw;
+  const body = raw.slice(2);
+  const lower = `0x${body.toLowerCase()}`;
+  if (lower === ZERO_ADDRESS) return "";
+  const letters = body.replace(/[0-9]/g, "");
+  const mixed = letters.length > 0 && letters !== letters.toLowerCase() && letters !== letters.toUpperCase();
+  if (mixed && raw !== checksumAddress(body.toLowerCase())) return "";
+  return lower;
+}
+
+export function evmBodyCap(endpoint) {
+  const hit = allNetworks().find((item) => item && item.enabled && item.family === "evm" && item.rpc === endpoint);
+  return hit ? EVM_MAX_BODY : 0;
+}
+
+export function cleanContractText(value) {
+  return String(value ?? "").replace(/[\u0000\uFFFD\p{Cc}\p{Cf}]/gu, "").trim();
 }
 
 function takeClientSlot(atMs, limit, windowMs) {
@@ -75,6 +183,9 @@ function uintOf(word) {
 
 function addressOf(word) {
   if (!word || word.length !== 32) return null;
+  for (let i = 0; i < 12; i += 1) {
+    if (word[i] !== 0) return null;
+  }
   let hex = "";
   for (let i = 12; i < 32; i += 1) hex += word[i].toString(16).padStart(2, "0");
   if (/^0+$/.test(hex)) return "";
@@ -136,7 +247,7 @@ function unreadFacts() {
     decimals: { status: "no_consultado", value: null },
     totalSupply: { status: "no_consultado", raw: null },
     owner: { status: "no_consultado", address: null, reason: null },
-    proxy: { status: "no_consultado", implementation: null, beacon: null },
+    proxy: { status: "no_consultado", implementation: null, admin: null, beacon: null },
   };
 }
 
@@ -172,7 +283,7 @@ async function rpcCall(state, method, params) {
     const status = response && typeof response.status === "number" ? response.status : 0;
     const text = response && typeof response.body === "string" ? response.body : "";
     if (state.signal && state.signal.aborted) return { ok: false, kind: "red" };
-    if (text.length > EVM_MAX_BODY) return { ok: false, kind: "grande" };
+    if ((response && response.overflow) || text.length > EVM_MAX_BODY) return { ok: false, kind: "grande" };
     if (status === 0 || status === 429 || status >= 500) {
       if (attempt === 0) continue;
       return { ok: false, kind: "red" };
@@ -203,9 +314,10 @@ function textFact(call) {
     return { status: failed.status, text: null };
   }
   if (call.result === "0x") return { status: "ausente", text: null };
-  const text = decodeAbiString(call.result);
-  if (text === null) return { status: "fallo", text: null };
-  if (text.length > EVM_TEXT_MAX) return { status: "fallo", text: null };
+  const decoded = decodeAbiString(call.result);
+  if (decoded === null) return { status: "fallo", text: null };
+  if (decoded.length > EVM_TEXT_MAX) return { status: "fallo", text: null };
+  const text = cleanContractText(decoded);
   if (!text) return { status: "ausente", text: null };
   return { status: "ok", text };
 }
@@ -223,21 +335,38 @@ function ownerFact(call) {
     if (call.kind === "revert") return { status: "ausente", address: null, reason: "revert" };
     return { status: "fallo", address: null, reason: "rpc" };
   }
+  if (call.result === "0x") return { status: "ausente", address: null, reason: "vacio" };
   const address = decodeAddressResult(call.result);
   if (address === null) return { status: "fallo", address: null, reason: "rpc" };
   if (!address) return { status: "ausente", address: null, reason: "cero" };
   return { status: "ok", address, reason: null };
 }
 
-function proxyFact(implementation, beacon) {
-  if (!implementation.ok || !beacon.ok) {
-    return { status: "fallo", implementation: null, beacon: null };
+function slotAddress(call) {
+  if (!call.ok) return { ok: false, address: "" };
+  if (call.result === "0x") return { ok: true, address: "" };
+  const address = decodeAddressResult(call.result);
+  if (address === null) return { ok: false, address: "" };
+  return { ok: true, address };
+}
+
+function proxyFact(implementation, admin, beacon) {
+  const slots = [slotAddress(implementation), slotAddress(admin), slotAddress(beacon)];
+  if (slots.some((slot) => !slot.ok)) {
+    return { status: "fallo", implementation: null, admin: null, beacon: null };
   }
-  const impl = decodeAddressResult(implementation.result);
-  const beaconAddress = decodeAddressResult(beacon.result);
-  if (impl === null || beaconAddress === null) return { status: "fallo", implementation: null, beacon: null };
-  if (!impl && !beaconAddress) return { status: "ausente", implementation: null, beacon: null };
-  return { status: "ok", implementation: impl || null, beacon: beaconAddress || null };
+  const impl = slots[0].address;
+  const adminAddress = slots[1].address;
+  const beaconAddress = slots[2].address;
+  if (!impl && !adminAddress && !beaconAddress) {
+    return { status: "ausente", implementation: null, admin: null, beacon: null };
+  }
+  return {
+    status: "ok",
+    implementation: impl || null,
+    admin: adminAddress || null,
+    beacon: beaconAddress || null,
+  };
 }
 
 export function isAllowedEvmRpc(network, url) {
@@ -300,6 +429,8 @@ export async function readEvmToken(input) {
   await pause();
   const implementation = await rpcCall(state, "eth_getStorageAt", [to, SLOT_IMPLEMENTATION, "latest"]);
   await pause();
+  const admin = await rpcCall(state, "eth_getStorageAt", [to, SLOT_ADMIN, "latest"]);
+  await pause();
   const beacon = await rpcCall(state, "eth_getStorageAt", [to, SLOT_BEACON, "latest"]);
   const decimalsValue = decimals.ok ? decodeUint8(decimals.result) : null;
   const supplyRaw = totalSupply.ok ? decodeUint256(totalSupply.result) : null;
@@ -322,7 +453,7 @@ export async function readEvmToken(input) {
           ? { status: "fallo", raw: null }
           : { status: "ok", raw: supplyRaw },
     owner: ownerFact(owner),
-    proxy: proxyFact(implementation, beacon),
+    proxy: proxyFact(implementation, admin, beacon),
   };
   const partial = Object.values(facts).some((fact) => fact.status === "fallo");
   return {
@@ -334,4 +465,52 @@ export async function readEvmToken(input) {
 
 export function absentFact() {
   return emptyFact("ausente");
+}
+
+export async function readCappedText(response, max = EVM_MAX_BODY, signal) {
+  const body = response && response.body;
+  if (body && typeof body.getReader === "function") {
+    const reader = body.getReader();
+    const chunks = [];
+    let total = 0;
+    try {
+      while (true) {
+        if (signal && signal.aborted) {
+          if (typeof reader.cancel === "function") await reader.cancel();
+          return { aborted: true, text: "" };
+        }
+        const step = await reader.read();
+        if (step.done) break;
+        const raw = step.value;
+        const value = raw instanceof Uint8Array ? raw : raw ? new Uint8Array(raw) : new Uint8Array();
+        total += value.byteLength;
+        if (total > max) {
+          if (typeof reader.cancel === "function") await reader.cancel();
+          return { overflow: true, text: "" };
+        }
+        chunks.push(value);
+      }
+    } catch {
+      if (typeof reader.cancel === "function") {
+        try {
+          await reader.cancel();
+        } catch {
+          /* el cuerpo ya estaba cerrado */
+        }
+      }
+      return { failed: true, text: "" };
+    }
+    const out = new Uint8Array(total);
+    let offset = 0;
+    for (const chunk of chunks) {
+      out.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+    const text = new TextDecoder().decode(out);
+    if (text.length > max) return { overflow: true, text: "" };
+    return { text };
+  }
+  const text = response && typeof response.text === "function" ? await response.text() : "";
+  if (typeof text === "string" && text.length > max) return { overflow: true, text: "" };
+  return { text: typeof text === "string" ? text : "" };
 }

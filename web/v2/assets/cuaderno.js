@@ -4,7 +4,7 @@
 import { formatAmount } from "../shared/amount.js";
 import { entenderNav } from "../shared/entender.js";
 import { explainIncomplete } from "../shared/explain-incomplete.js";
-import { readEvmToken } from "../shared/evm-read.js";
+import { evmBodyCap, readCappedText, readEvmToken } from "../shared/evm-read.js";
 import { evmCardFromReading, paintEvmResult } from "../shared/evm-view.js";
 import { reportDownloadBox } from "../shared/informe.js";
 import { mountMarket } from "../shared/market-view.js";
@@ -445,7 +445,17 @@ async function browserTransport(endpoint, body, timeoutMs, signal) {
       body,
       signal: controller.signal,
     });
-    return { status: response.status, body: await response.text() };
+    const cap = evmBodyCap(endpoint);
+    if (!cap) return { status: response.status, body: await response.text() };
+    const capped = await readCappedText(response, cap, controller.signal);
+    if (capped.aborted) {
+      const error = new Error("abortado");
+      error.name = "AbortError";
+      throw error;
+    }
+    if (capped.failed) return { status: 0, body: "" };
+    if (capped.overflow) return { status: response.status, body: "", overflow: true };
+    return { status: response.status, body: capped.text || "" };
   } catch (error) {
     if (signal && signal.aborted) throw error;
     return { status: 0, body: "" };

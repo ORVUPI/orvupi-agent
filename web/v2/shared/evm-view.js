@@ -23,15 +23,18 @@ const COPY = {
     account: "No tiene código: es una cuenta. A una cuenta sin código a veces se le llama EOA.",
     ownerRevert: "Se pidió owner(). El contrato no respondió esa función.",
     ownerZero: "owner() respondió con la dirección de ceros.",
+    ownerEmpty: "owner() no devolvió datos: ausente / sin respuesta.",
     ownerOk: (address) => `owner() respondió ${address}.`,
-    proxyOk: (impl, beacon) => {
+    proxyOk: (impl, admin, beacon) => {
       const parts = ["Hay una anotación EIP-1967."];
       if (impl) parts.push(`La otra dirección es ${impl}.`);
+      if (admin) parts.push(`La dirección admin es ${admin}.`);
       if (beacon) parts.push(`El beacon es ${beacon}.`);
       parts.push("Un proxy reenvía las preguntas a otro contrato.");
+      parts.push("otros tipos de proxy no se comprueban aquí.");
       return parts.join(" ");
     },
-    proxyAbsent: "No hay anotación EIP-1967. Esta lectura no encontró otra dirección.",
+    proxyAbsent: "No hay anotación EIP-1967. Esta lectura no encontró otra dirección. otros tipos de proxy no se comprueban aquí.",
     supplyRaw: (raw) => `Unidades mínimas: ${raw}. No se ha desplegado porque hay más de 18 decimales.`,
     node: (host) => `Nodo: ${host}.`,
     save: "Guardar esta consulta",
@@ -53,15 +56,18 @@ const COPY = {
     account: "It has no code: it is an account. An account with no code is sometimes called an EOA.",
     ownerRevert: "owner() was requested. The contract did not answer that function.",
     ownerZero: "owner() answered with the zero address.",
+    ownerEmpty: "owner() returned no data: absent / no answer.",
     ownerOk: (address) => `owner() answered ${address}.`,
-    proxyOk: (impl, beacon) => {
+    proxyOk: (impl, admin, beacon) => {
       const parts = ["There is an EIP-1967 note."];
       if (impl) parts.push(`The other address is ${impl}.`);
+      if (admin) parts.push(`The admin address is ${admin}.`);
       if (beacon) parts.push(`The beacon is ${beacon}.`);
       parts.push("A proxy forwards questions to another contract.");
+      parts.push("Other proxy types are not checked here.");
       return parts.join(" ");
     },
-    proxyAbsent: "There is no EIP-1967 note. This reading did not find another address.",
+    proxyAbsent: "There is no EIP-1967 note. This reading did not find another address. Other proxy types are not checked here.",
     supplyRaw: (raw) => `Smallest units: ${raw}. It was not expanded because there are more than 18 decimals.`,
     node: (host) => `Node: ${host}.`,
     save: "Save this lookup",
@@ -103,6 +109,7 @@ export function evmCardFromReading(reading) {
     }),
     proxy: pick(facts.proxy, {
       implementation: facts.proxy ? facts.proxy.implementation : null,
+      admin: facts.proxy ? facts.proxy.admin : null,
       beacon: facts.proxy ? facts.proxy.beacon : null,
     }),
     disclaimer: { es: DISCLAIMER.es, en: DISCLAIMER.en },
@@ -145,8 +152,9 @@ export function describeEvm(reading, lang) {
   if (facts.owner && facts.owner.status === "ok" && facts.owner.address) ownerText = text.ownerOk(facts.owner.address);
   if (facts.owner && facts.owner.status === "ausente" && facts.owner.reason === "revert") ownerText = text.ownerRevert;
   if (facts.owner && facts.owner.status === "ausente" && facts.owner.reason === "cero") ownerText = text.ownerZero;
+  if (facts.owner && facts.owner.status === "ausente" && facts.owner.reason === "vacio") ownerText = text.ownerEmpty;
   let proxyText = "";
-  if (facts.proxy && facts.proxy.status === "ok") proxyText = text.proxyOk(facts.proxy.implementation, facts.proxy.beacon);
+  if (facts.proxy && facts.proxy.status === "ok") proxyText = text.proxyOk(facts.proxy.implementation, facts.proxy.admin, facts.proxy.beacon);
   if (facts.proxy && facts.proxy.status === "ausente") proxyText = text.proxyAbsent;
   const networkId = card.network;
   const rows = [
@@ -156,7 +164,7 @@ export function describeEvm(reading, lang) {
     { id: "decimals", label: language === "en" ? "Decimals" : "Decimales", status: facts.decimals && facts.decimals.status, value: facts.decimals ? facts.decimals.value : null, line: lineFor(facts.decimals && facts.decimals.status, facts.decimals ? facts.decimals.value : null, facts.decimals && facts.decimals.status === "ok" ? String(facts.decimals.value) : "", language), help: helpFor(networkId, "decimals", language) },
     { id: "supply", label: language === "en" ? "Total amount" : "Cantidad total", status: supply.status, value: supply.raw, line: lineFor(supply.status, supply.raw, supplyText, language), help: helpFor(networkId, "supply", language) },
     { id: "owner", label: language === "en" ? "owner() address" : "Dirección owner()", status: facts.owner && facts.owner.status, value: facts.owner && facts.owner.address, line: lineFor(facts.owner && facts.owner.status, facts.owner && (facts.owner.address || facts.owner.reason), ownerText, language), help: helpFor(networkId, "owner", language) },
-    { id: "proxy", label: language === "en" ? "EIP-1967 proxy" : "Proxy EIP-1967", status: facts.proxy && facts.proxy.status, value: facts.proxy && (facts.proxy.implementation || facts.proxy.beacon), line: lineFor(facts.proxy && facts.proxy.status, facts.proxy && (facts.proxy.implementation || facts.proxy.beacon || (facts.proxy.status === "ausente" ? "ausente" : null)), proxyText, language), help: helpFor(networkId, "proxy", language) },
+    { id: "proxy", label: language === "en" ? "EIP-1967 proxy" : "Proxy EIP-1967", status: facts.proxy && facts.proxy.status, value: facts.proxy && (facts.proxy.implementation || facts.proxy.admin || facts.proxy.beacon), line: lineFor(facts.proxy && facts.proxy.status, facts.proxy && (facts.proxy.implementation || facts.proxy.admin || facts.proxy.beacon || (facts.proxy.status === "ausente" ? "ausente" : null)), proxyText, language), help: helpFor(networkId, "proxy", language) },
   ];
   const states = rows.map((row) => factState(row.status, row.value));
   const allFailed = states.every((state) => state === "fallo");

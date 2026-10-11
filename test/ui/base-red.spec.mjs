@@ -171,6 +171,7 @@ async function chooseBase(page) {
   await expect(page.locator("#aviso-guardar .aviso-nodos")).toBeHidden();
   await expect(page.locator("#comprobaciones-red")).toContainText("Si hay una dirección owner, el contrato puede darle funciones especiales. Esta lectura no dice cuáles son.");
   await expect(page.locator("#comprobaciones-red")).toContainText("Con un proxy, el código al que se reenvía puede cambiarse. Esta lectura no dice si ha cambiado.");
+  await expect(page.locator("#comprobaciones-red")).toContainText("otros tipos de proxy no se comprueban aquí");
   await expect(page.locator("#comprobaciones-red")).not.toContainText("No es un permiso de Solana");
 }
 
@@ -188,6 +189,7 @@ test("Verify en Base lee USDC, un token sin owner, un proxy, una cuenta, una dir
   await expect(page.locator("#resultado")).toContainText("USD Coin", { timeout: 20000 });
   await expect(page.locator("#resultado")).toContainText(/leído|read/);
   await expect(page.locator("#resultado")).toContainText(/EIP-1967|proxy/i);
+  await expect(page.locator("#resultado")).toContainText("otros tipos de proxy no se comprueban aquí");
   await expect(page.locator("#resultado")).toContainText("mainnet.base.org");
   const shot = testInfo.project.name === "mobile" ? "mobile" : testInfo.project.name === "desktop" ? "desktop" : "";
   if (shot) {
@@ -243,7 +245,7 @@ test("el cuaderno guarda la red y la dirección de Base", async ({ page }) => {
   await page.locator("#direccion-cuaderno").fill(USDC);
   await page.locator("#consultar").click();
   await expect(page.locator("#resultado")).toContainText("USD Coin", { timeout: 20000 });
-  await expect(page.locator("#lista-consultas")).toContainText(USDC, { timeout: 20000 });
+  await expect(page.locator("#lista-consultas")).toContainText(USDC.toLowerCase(), { timeout: 20000 });
   const stored = await page.evaluate(async () => {
     const db = await new Promise((resolve, reject) => {
       const request = indexedDB.open("stubx-cuaderno");
@@ -267,5 +269,5 @@ test("el cuaderno guarda la red y la dirección de Base", async ({ page }) => {
     db.close();
     return rows.map((row) => ({ network: row.network, address: row.address, cardNetwork: row.card && row.card.network }));
   });
-  expect(stored.some((row) => row.network === "base" && row.address === USDC && row.cardNetwork === "base")).toBe(true);
+  expect(stored.some((row) => row.network === "base" && row.address === USDC.toLowerCase() && row.cardNetwork === "base")).toBe(true);
 });

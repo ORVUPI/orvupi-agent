@@ -156,7 +156,7 @@ export function validateEvmCard(card) {
   if (card.rulesVersion !== "0.1.0" || !EVM_NETWORKS.has(card.network)) {
     return fail("La ficha no dice la red o la versión de reglas.", "The card does not name the network or the rules version.");
   }
-  if (typeof card.address !== "string" || card.address !== card.address.trim() || !EVM_ADDRESS.test(card.address)) {
+  if (typeof card.address !== "string" || card.address !== card.address.toLowerCase() || !EVM_ADDRESS.test(card.address) || /^0x0{40}$/.test(card.address)) {
     return fail("La dirección de la ficha no es una dirección de esta red.", "The address on the card is not an address of this network.");
   }
   if (typeof card.consultedAt !== "string" || !ISO.test(card.consultedAt)) {
@@ -188,18 +188,18 @@ export function validateEvmCard(card) {
   if (!owner || !sameKeys(owner, ["status", "address", "reason"]) || !STATUSES.has(owner.status)) {
     return fail("La dirección owner() no tiene la forma esperada.", "The owner() address does not have the expected shape.");
   }
-  if (owner.address !== null && (typeof owner.address !== "string" || !EVM_ADDRESS.test(owner.address))) {
+  if (owner.address !== null && (typeof owner.address !== "string" || owner.address !== owner.address.toLowerCase() || !EVM_ADDRESS.test(owner.address) || /^0x0{40}$/.test(owner.address))) {
     return fail("La dirección owner() no tiene la forma esperada.", "The owner() address does not have the expected shape.");
   }
-  if (owner.reason !== null && owner.reason !== "revert" && owner.reason !== "cero" && owner.reason !== "rpc") {
+  if (owner.reason !== null && owner.reason !== "revert" && owner.reason !== "cero" && owner.reason !== "vacio" && owner.reason !== "rpc") {
     return fail("La dirección owner() no tiene la forma esperada.", "The owner() address does not have the expected shape.");
   }
   const proxy = card.proxy;
-  if (!proxy || !sameKeys(proxy, ["status", "implementation", "beacon"]) || !STATUSES.has(proxy.status)) {
+  if (!proxy || !sameKeys(proxy, ["status", "implementation", "admin", "beacon"]) || !STATUSES.has(proxy.status)) {
     return fail("El proxy no tiene la forma esperada.", "The proxy does not have the expected shape.");
   }
-  for (const key of ["implementation", "beacon"]) {
-    if (proxy[key] !== null && (typeof proxy[key] !== "string" || !EVM_ADDRESS.test(proxy[key]))) {
+  for (const key of ["implementation", "admin", "beacon"]) {
+    if (proxy[key] !== null && (typeof proxy[key] !== "string" || proxy[key] !== proxy[key].toLowerCase() || !EVM_ADDRESS.test(proxy[key]) || /^0x0{40}$/.test(proxy[key]))) {
       return fail("El proxy no tiene la forma esperada.", "The proxy does not have the expected shape.");
     }
   }
@@ -649,6 +649,7 @@ const EVM_COMPARE_FIELDS = [
   ["decimals.value", "decimals.status", "Decimales", "Decimals", false],
   ["owner.address", "owner.status", "Dirección owner()", "owner() address", false],
   ["proxy.implementation", "proxy.status", "Proxy EIP-1967", "EIP-1967 proxy", false],
+  ["proxy.admin", "proxy.status", "Admin del proxy", "Proxy admin", false],
   ["proxy.beacon", "proxy.status", "Beacon del proxy", "Proxy beacon", false],
 ];
 
@@ -859,6 +860,13 @@ export function formatLocal(consultedAt, lang) {
 
 export const NOTEBOOK_DB_VERSION = 2;
 
+function canonicalPlace(value) {
+  if (typeof value !== "string") return "";
+  const trimmed = value.trim();
+  if (/^0x[0-9a-fA-F]{40}$/.test(trimmed)) return trimmed.toLowerCase();
+  return trimmed;
+}
+
 /**
  * Copia red y dirección a la entrada si faltan.
  * No borra la entrada, no pisa una red o una dirección que ya estuvieran, y no inventa datos.
@@ -884,7 +892,13 @@ export function migrateStoredRecord(record) {
   }
   if (typeof next.address !== "string" || !next.address) {
     if (addressFromCard) {
-      next.address = addressFromCard;
+      next.address = canonicalPlace(addressFromCard);
+      changed = true;
+    }
+  } else {
+    const placed = canonicalPlace(next.address);
+    if (placed !== next.address) {
+      next.address = placed;
       changed = true;
     }
   }
@@ -898,12 +912,18 @@ export function stampIdentity(record) {
   const network = card && typeof card.network === "string" && card.network
     ? card.network
     : (typeof record.network === "string" ? record.network : "");
-  const address = card && typeof card.address === "string" && card.address
+  const rawAddress = card && typeof card.address === "string" && card.address
     ? card.address
     : card && typeof card.mint === "string" && card.mint
       ? card.mint
       : (typeof record.address === "string" ? record.address : "");
-  return { ...record, network, address };
+  const address = canonicalPlace(rawAddress);
+  let cardOut = card;
+  if (card && typeof card.address === "string" && /^0x[0-9a-fA-F]{40}$/.test(card.address.trim())) {
+    const lower = card.address.trim().toLowerCase();
+    if (lower !== card.address) cardOut = { ...card, address: lower };
+  }
+  return { ...record, card: cardOut, network, address };
 }
 
 export function watchTargets(records) {

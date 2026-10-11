@@ -870,6 +870,67 @@ describe("web v2", () => {
     }
   });
 
+  test("los orígenes EVM activos salen de networks.json y un host malicioso rompe el build", () => {
+    const root = repoRoot();
+    const networks = JSON.parse(readFileSync(path.join(root, "web/v2/shared/networks.json"), "utf8")) as {
+      networks: { id: string; family: string; enabled: boolean; rpc?: string }[];
+    };
+    const active = networks.networks
+      .filter((item) => item.enabled && item.family === "evm" && item.rpc)
+      .map((item) => new URL(item.rpc as string).host);
+    const dormant = networks.networks
+      .filter((item) => item.family === "evm" && item.enabled === false && item.rpc)
+      .map((item) => new URL(item.rpc as string).host);
+    assert.deepEqual(active, ["mainnet.base.org"]);
+    assert.ok(dormant.includes("ethereum-rpc.publicnode.com"));
+    assert.ok(dormant.includes("bsc-rpc.publicnode.com"));
+    const headers = readFileSync(path.join(root, "web/v2/_headers"), "utf8");
+    const verifyMeta = readFileSync(path.join(root, "web/v2/verify/index.html"), "utf8").match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
+    const notebookMeta = readFileSync(path.join(root, "web/v2/cuaderno/index.html"), "utf8").match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
+    const paresMeta = readFileSync(path.join(root, "web/v2/pares/index.html"), "utf8").match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
+    for (const host of active) {
+      assert.equal(headers.includes(host), true, host);
+      assert.equal(verifyMeta.includes(host), true, host);
+      assert.equal(notebookMeta.includes(host), true, host);
+      assert.equal(cspHosts(verifyMeta).includes(host), true);
+      assert.equal(cspHosts(notebookMeta).includes(host), true);
+    }
+    for (const host of dormant) {
+      assert.equal(headers.includes(host), false, host);
+      assert.equal(verifyMeta.includes(host), false, host);
+      assert.equal(notebookMeta.includes(host), false, host);
+      assert.equal(paresMeta.includes(host), false, host);
+    }
+    const script = `
+import importlib.util
+spec = importlib.util.spec_from_file_location("build_site", "web/v2/tools/build_site.py")
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+samples = [
+    "https://a.com;script-src *",
+    "https://user@mainnet.base.org",
+    "https://mainnet.base.org:443",
+    "https://mainnet.base.org/rpc",
+    "https://mainnet.base.org extra",
+    "http://mainnet.base.org",
+    "https://mainnet.base.org?x=1",
+]
+for sample in samples:
+    try:
+        mod.evm_rpc_origin(sample)
+    except SystemExit:
+        continue
+    raise SystemExit("aceptó " + sample)
+if mod.evm_rpc_origin("https://mainnet.base.org") != "https://mainnet.base.org":
+    raise SystemExit("base")
+origins = mod.evm_rpc_origins()
+if origins != ["https://mainnet.base.org"]:
+    raise SystemExit(repr(origins))
+`;
+    const run = spawnSync("python3", ["-c", script], { cwd: root, encoding: "utf8" });
+    assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
+  });
+
   test("the browser bundle matches lab/", async () => {
     const root = repoRoot();
     const bundlePaths = [

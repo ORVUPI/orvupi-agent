@@ -3,7 +3,7 @@
  * Solana sigue el camino de siempre. Base (y luego otras redes EVM)
  * usa el lector genérico. Encender una red es un campo en networks.json.
  */
-import { readEvmToken, resetEvmClientLimit } from "../shared/evm-read.js";
+import { EVM_MAX_BODY, readCappedText, readEvmToken, resetEvmClientLimit } from "../shared/evm-read.js";
 import {
   fillNetworkSelect,
   paintChecks,
@@ -74,8 +74,10 @@ async function browserTransport(endpoint, body, timeoutMs, signal) {
       body,
       signal: local.signal,
     });
-    const text = await response.text();
-    return { status: response.status, body: text };
+    const capped = await readCappedText(response, EVM_MAX_BODY, local.signal);
+    if (capped.aborted || capped.failed) return { status: 0, body: "" };
+    if (capped.overflow) return { status: response.status, body: "", overflow: true };
+    return { status: response.status, body: capped.text || "" };
   } catch {
     return { status: 0, body: "" };
   } finally {
