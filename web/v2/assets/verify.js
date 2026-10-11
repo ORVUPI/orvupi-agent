@@ -4810,7 +4810,7 @@ function entenderResultado(lang) {
     ["/aprender/#guia-permisos", "Permisos", "Permissions"],
     ["/aprender/#autoridad-emision", "Suministro", "Supply"],
     ["/aprender/#metadatos-mutables", "Metadatos", "Metadata"],
-    ["/aprender/#censo", "Distribución", "Distribution"],
+    ["/aprender/#censo", "Distribución (guía Censo)", "Distribution (Census guide)"],
     ["/aprender/#curva-pump", "Curva", "Curve"],
   ].forEach(function (item) {
     var link = verifyEl("a", { href: item[0], "data-guia": item[0] });

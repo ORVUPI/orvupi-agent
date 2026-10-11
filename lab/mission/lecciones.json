@@ -63,8 +63,8 @@
           ],
           "correct": "contexto",
           "whyRight": {
-            "es": "En la ficha del 2026-10-09, USDC tiene la emisión activa en BJE5MMbqXjVwjAF7oxwPYXnTXDyspzZyt4vwenNw5ruG y la congelación activa en 7dGbd2QZcCKcTndnHcTL8q7SMVXAkp688NTQYwrRCrar. STUBX las tiene cerradas y verificadas. En una moneda estable, emisión activa puede ser la forma de crear unidades. En un meme, el mismo permiso deja crecer el suministro. La ficha no acusa.",
-            "en": "On the 2026-10-09 card, USDC has mint permission active at BJE5MMbqXjVwjAF7oxwPYXnTXDyspzZyt4vwenNw5ruG and freeze permission active at 7dGbd2QZcCKcTndnHcTL8q7SMVXAkp688NTQYwrRCrar. STUBX has both closed and verified. On a stablecoin, an active mint permission can be how new units are created. On a meme, the same permission lets the supply grow. The card does not accuse."
+            "es": "En la ficha del 2026-10-09, USDC tiene la emisión activa en BJE5MMbqXjVwjAF7oxwPYXnTXDyspzZyt4vwenNw5ruG y la congelación activa en 7dGbd2QZcCKcTndnHcTL8q7SMVXAkp688NTQYwrRCrar. STUBX las tiene cerradas. En una moneda estable, emisión activa puede ser la forma de crear unidades. En un meme, el mismo permiso deja crecer el suministro. La ficha no acusa.",
+            "en": "On the 2026-10-09 card, USDC has mint permission active at BJE5MMbqXjVwjAF7oxwPYXnTXDyspzZyt4vwenNw5ruG and freeze permission active at 7dGbd2QZcCKcTndnHcTL8q7SMVXAkp688NTQYwrRCrar. STUBX has both closed. On a stablecoin, an active mint permission can be how new units are created. On a meme, the same permission lets the supply grow. The card does not accuse."
           },
           "whyWrong": {
             "acusa": {
@@ -119,8 +119,8 @@
           ],
           "correct": "solo-permiso",
           "whyRight": {
-            "es": "El 2026-10-09 los dos figuran revocados y verificados. Revocado no es una garantía. USDC los tiene activos y la ficha tampoco lo acusa. Una copia puede tenerlos cerrados igual.",
-            "en": "On 2026-10-09 both are revoked and verified. Revoked is not a guarantee. USDC has them active and the card does not accuse it either. A copy can have them closed too."
+            "es": "El 2026-10-09 los dos figuran revocados y leídos en la cadena. Revocado no es una garantía. USDC los tiene activos y la ficha tampoco lo acusa. Una copia puede tenerlos cerrados igual.",
+            "en": "On 2026-10-09 both are revoked and read on-chain. Revoked is not a guarantee. USDC has them active and the card does not accuse it either. A copy can have them closed too."
           },
           "whyWrong": {
             "seguro": {
@@ -373,7 +373,7 @@
           ],
           "correct": "ausente",
           "whyRight": {
-            "es": "El 2026-10-09 el estado es verificado y el valor está vacío: no hay cuenta de metadatos de Metaplex. La consulta respondió. El dato no está. No es un HTTP 429.",
+            "es": "El 2026-10-09 la consulta respondió y el valor está vacío: no hay cuenta de metadatos de Metaplex. La consulta respondió. El dato no está. No es un HTTP 429.",
             "en": "On 2026-10-09 the query was answered and the value is empty: there is no Metaplex metadata account. The query answered. The fact is not there. It is not an HTTP 429."
           },
           "whyWrong": {

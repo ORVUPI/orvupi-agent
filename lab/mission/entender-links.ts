@@ -43,8 +43,8 @@ export const ENTENDER_LINKS: readonly EntenderLink[] = [
   {
     id: "distribucion",
     href: "/aprender/#censo",
-    es: "Distribución",
-    en: "Distribution",
+    es: "Distribución (guía Censo)",
+    en: "Distribution (Census guide)",
     explain: {
       es: "Distribución: una muestra de cuentas no es un censo de quién tiene los tokens.",
       en: "Distribution: a sample of accounts is not a census of who holds the tokens.",

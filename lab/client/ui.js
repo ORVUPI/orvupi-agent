@@ -12,7 +12,7 @@ function textOf(value, lang) {
 }
 
 var STATUS_LABEL = {
-  verificado: { es: "verificado", en: "verified" },
+  verificado: { es: "leído en la cadena", en: "read on-chain" },
   inferido: { es: "inferido", en: "inferred" },
   no_disponible: { es: "no disponible", en: "unavailable" },
   no_aplica: { es: "no aplica", en: "not applicable" },
@@ -464,7 +464,7 @@ function mountQuiz(root, mission, storageKey) {
       var dated = el("p");
       var cardDate = mission.cardDate || STUBX_LAB.cardDate;
       dated.textContent = lang === "en"
-        ? "The cards are from " + cardDate + ". Unknown is not the same as verified."
+        ? "The cards are from " + cardDate + ". Unknown is not the same as checked."
         : "Las fichas son del " + cardDate + ". Lo desconocido no es lo mismo que lo comprobado.";
       done.setAttribute("data-live-step", "resultado");
       done.append(close, dated, restartButton(), resetButton());
@@ -513,8 +513,9 @@ function mountQuiz(root, mission, storageKey) {
         section.append(lesson, locked);
       } else if (!solved) {
         var options = el("div", { class: "opciones", role: "group" });
-        options.setAttribute("aria-labelledby", "pregunta-actual");
-        prompt.id = "pregunta-actual";
+        var questionId = "pregunta-" + mission.id;
+        options.setAttribute("aria-labelledby", questionId);
+        prompt.id = questionId;
         step.options.forEach(function (option) {
           var button = el("button", { type: "button" });
           button.textContent = option.label[lang];

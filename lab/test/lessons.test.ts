@@ -30,6 +30,16 @@ function readEntender(source: string): Array<{ id: string; href: string; es: str
   return out;
 }
 
+function labWordHits(html: string): string[] {
+  const hits: string[] = [];
+  const re = /verified|verificad/gi;
+  for (const match of html.matchAll(re)) {
+    const at = match.index ?? 0;
+    hits.push(html.slice(Math.max(0, at - 24), at + match[0].length + 24).replace(/\s+/g, " "));
+  }
+  return hits;
+}
+
 describe("lecciones cortas", () => {
   const lessons = loadLessons(root);
   const glossary = loadGlossary(root);
@@ -163,7 +173,8 @@ describe("lecciones cortas", () => {
     assert.equal(lesson.steps[1]?.correct, "ausente");
     assert.equal(lesson.steps[2]?.correct, "no-pedido");
     assert.match(lesson.steps[0]?.whyRight.es ?? "", /HTTP 429/);
-    assert.match(lesson.steps[1]?.whyRight.es ?? "", /verificado/);
+    assert.match(lesson.steps[1]?.whyRight.es ?? "", /consulta respondió y el valor está vacío/);
+    assert.equal((lesson.steps[1]?.whyRight.es ?? "").toLowerCase().includes("verificad"), false);
     const absentEn = lesson.steps[1]?.whyRight.en ?? "";
     const glossaryEn = glossary.entries.find((entry) => entry.id === "ausente-comprobado")?.example.en ?? "";
     for (const sentence of [absentEn, glossaryEn]) {
@@ -246,6 +257,25 @@ describe("lecciones cortas", () => {
     assert.equal(huecos.includes("status is verified"), false);
     assert.match(huecos, /the query was answered and the value is empty/);
     assert.match(lab.body, /The query was answered and the value is empty/);
+    assert.match(lab.body, /STUBX las tiene cerradas\./);
+    assert.match(lab.body, /STUBX has both closed\./);
+    assert.equal(lab.body.includes("cerradas y verificadas"), false);
+    assert.equal(lab.body.includes("closed and verified"), false);
+    assert.match(lab.body, /STUBX · leído en la cadena/);
+    assert.match(lab.body, /STUBX · read on-chain/);
+    assert.match(lab.body, /revocada · leído en la cadena/);
+    assert.match(lab.body, /revoked · read on-chain/);
+    assert.match(huecos, /Distribución \(guía Censo\)/);
+    assert.match(huecos, /Distribution \(Census guide\)/);
+    assert.match(missionJs.body, /Distribución \(guía Censo\)/);
+    assert.match(missionJs.body, /Distribution \(Census guide\)/);
+    assert.match(missionJs.body, /pregunta-" \+ mission\.id/);
+    assert.equal(missionJs.body.includes('prompt.id = "pregunta-actual"'), false);
+    assert.equal(missionJs.body.includes('aria-labelledby", "pregunta-actual"'), false);
+    assert.match(missionJs.body, /leído en la cadena/);
+    assert.match(missionJs.body, /read on-chain/);
+    const labHits = labWordHits(lab.body);
+    assert.deepEqual(labHits, []);
     assert.match(missionJs.body, /href: "\/security\/"/);
     assert.equal(readFileSync(path.join(root, ".nvmrc"), "utf8").trim(), "22.14.0");
   });

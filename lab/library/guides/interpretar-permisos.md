@@ -2,7 +2,7 @@
 
 ## Español
 
-Un permiso no es una garantía. La autoridad de emisión, si está activa, puede aumentar el suministro de ese mint. Si la ficha la marca revocada y el campo está verificado, ese permiso concreto figura en 0 en esa lectura.
+Un permiso no es una garantía. La autoridad de emisión, si está activa, puede aumentar el suministro de ese mint. Si la ficha la marca revocada y el campo se leyó en la cadena, ese permiso concreto figura en 0 en esa lectura.
 
 La autoridad de congelación es otro permiso: congelar cuentas de ese token. Revocada lo quita en esa lectura. Activa lo deja asignado a la dirección que muestra la ficha.
 
@@ -16,7 +16,7 @@ Un ejemplo hipotético, no leído de la cadena: un token con la emisión revocad
 
 ## English
 
-A permission is not a guarantee. Mint authority, if active, can increase the supply of that mint. If the card marks it revoked and the field is verified, that specific permission is recorded as empty (none) in that reading.
+A permission is not a guarantee. Mint authority, if active, can increase the supply of that mint. If the card marks it revoked and the field was read on-chain, that specific permission is recorded as empty (none) in that reading.
 
 Freeze authority is a different permission: freezing accounts of that token. Revoked removes it in that reading. Active leaves it assigned to the address the card shows.
 
@@ -24,6 +24,6 @@ In the 2026-10-08 batch, the registry mint and the clones have both authorities 
 
 Mutable metadata is a separate piece. If there is an update authority or `is_mutable` is true, the name, the symbol, or the image can change. “Not mutable in the sources read” covers only those sources and that date. USDC, on the same day, has mutable metadata and is not thereby a clone of STUBX.
 
-If a field is unavailable, it is not filled in as revoked or as immutable. Unknown is not the same as verified.
+If a field is unavailable, it is not filled in as revoked or as immutable. Unknown is not the same as checked.
 
 A hypothetical example, not read from the chain: a token with mint authority revoked can still have no liquidity and no demand. The permission predicts neither.

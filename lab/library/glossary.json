@@ -39,8 +39,8 @@
       "id": "autoridad-emision",
       "term": { "es": "Autoridad de emisión", "en": "Mint authority" },
       "means": {
-        "es": "Permiso para aumentar el suministro de ese mint. Si la ficha dice revocada y el campo está verificado, la opción leída está en 0. Si dice activa, el permiso sigue asignado a una dirección.",
-        "en": "Permission to increase the supply of that mint. If the card says revoked and the field is verified, the field that was read is empty (no authority set). If it says active, the permission is still assigned to an address."
+        "es": "Permiso para aumentar el suministro de ese mint. Si la ficha dice revocada y el campo se leyó en la cadena, la opción leída está en 0. Si dice activa, el permiso sigue asignado a una dirección.",
+        "en": "Permission to increase the supply of that mint. If the card says revoked and the field was read on-chain, the field that was read is empty (no authority set). If it says active, the permission is still assigned to an address."
       },
       "example": {
         "es": "En la tanda del 2026-10-08, el mint del registro y los clones la tienen revocada. USDC la tiene activa.",
@@ -88,15 +88,15 @@
       "term": { "es": "Desconocido y no disponible", "en": "Unknown and unavailable" },
       "means": {
         "es": "No disponible significa que esa llamada no dejó un dato utilizable. Desconocido es lo que no se leyó. Ninguno de los dos es un valor comprobado.",
-        "en": "Unavailable means that call did not leave a usable fact. Unknown is what was not read. Neither one is a verified value."
+        "en": "Unavailable means that call did not leave a usable fact. Unknown is what was not read. Neither one is a value read on-chain."
       },
       "example": {
         "es": "En las cinco fichas del 2026-10-08, getTokenLargestAccounts respondió HTTP 429. La muestra de cuentas con tokens queda en no disponible. No es concentración cero.",
         "en": "On all five cards from 2026-10-08, getTokenLargestAccounts returned HTTP 429. The token account sample stays unavailable. It is not zero concentration."
       },
       "doesNotConclude": {
-        "es": "No se convierte en cero, en autoridad revocada ni en metadatos inmutables. Una ficha parcial tampoco anula los campos que sí están verificados.",
-        "en": "It does not become zero, a revoked authority, or immutable metadata. A partial card also does not cancel the fields that are verified."
+        "es": "No se convierte en cero, en autoridad revocada ni en metadatos inmutables. Una ficha parcial tampoco anula los campos que sí se leyeron en la cadena.",
+        "en": "It does not become zero, a revoked authority, or immutable metadata. A partial card also does not cancel the fields that were read on-chain."
       }
     },
     {
@@ -299,7 +299,7 @@
         "en": "The fact was asked for, the answer arrived, and the fact is not there. It is not a service failure."
       },
       "example": {
-        "es": "En STUBX, el 2026-10-09, la cuenta de metadatos de Metaplex se consultó. El estado es verificado y el valor está vacío: no hay esa cuenta.",
+        "es": "En STUBX, el 2026-10-09, la cuenta de metadatos de Metaplex se consultó. La consulta respondió y el valor está vacío: no hay esa cuenta.",
         "en": "On STUBX, on 2026-10-09, the Metaplex metadata account was queried. The query was answered and the value is empty: that account is not there."
       },
       "doesNotConclude": {

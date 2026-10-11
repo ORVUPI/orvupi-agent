@@ -62,15 +62,18 @@ function both(text: Localized, tag = "span"): string {
   return `<${tag} class="lang es" lang="es">${linkRegistry(escapeHtml(text.es))}</${tag}><${tag} class="lang en" lang="en">${linkRegistry(escapeHtml(text.en))}</${tag}>`;
 }
 
-function statusText(status: string): Localized {
+const LAB_READ: Localized = { es: "leído en la cadena", en: "read on-chain" };
+
+function statusText(status: string, labRead = false): Localized {
+  if (labRead && status === "verificado") return LAB_READ;
   return STATUS_LABEL[status] ?? STATUS_LABEL.desconocido ?? { es: "desconocido", en: "unknown" };
 }
 
-function fact(status: string, value: Localized | null): Localized {
+function fact(status: string, value: Localized | null, labRead = false): Localized {
   if (status !== "verificado" && status !== "inferido") {
-    return statusText(status);
+    return statusText(status, labRead);
   }
-  const mark = statusText(status);
+  const mark = statusText(status, labRead);
   if (!value || value.es.length === 0) {
     return mark;
   }
@@ -109,15 +112,15 @@ const LEVEL_LABEL: Record<string, Localized> = {
   riesgo: { es: "riesgo", en: "risk" },
 };
 
-function fieldValue(card: CardSummary, key: string): { value: Localized; note: string | Localized | null; neutral?: boolean } {
+function fieldValue(card: CardSummary, key: string, labRead = false): { value: Localized; note: string | Localized | null; neutral?: boolean } {
   switch (key) {
     case "name":
-      return { value: fact(card.nameStatus, card.name ? { es: card.name, en: card.name } : null), note: null };
+      return { value: fact(card.nameStatus, card.name ? { es: card.name, en: card.name } : null, labRead), note: null };
     case "mint":
       return { value: { es: card.mint, en: card.mint }, note: null };
     case "inRegistry":
       return {
-        value: fact(card.inRegistryStatus, card.inRegistry === null ? null : yn(card.inRegistry)),
+        value: fact(card.inRegistryStatus, card.inRegistry === null ? null : yn(card.inRegistry), labRead),
         note: null,
       };
     case "statement":
@@ -125,23 +128,24 @@ function fieldValue(card: CardSummary, key: string): { value: Localized; note: s
         value: fact(
           card.statementStatus,
           card.statement ? { es: card.statement, en: shown(card).statement_en || card.statement } : null,
+          labRead,
         ),
         note: null,
       };
     case "mintAuthority":
       return {
-        value: fact(card.mintAuthority.status, authorityWords(card.mintAuthority.state)),
+        value: fact(card.mintAuthority.status, authorityWords(card.mintAuthority.state), labRead),
         note: null,
       };
     case "freezeAuthority":
       return {
-        value: fact(card.freezeAuthority.status, authorityWords(card.freezeAuthority.state)),
+        value: fact(card.freezeAuthority.status, authorityWords(card.freezeAuthority.state), labRead),
         note: null,
       };
     case "metadata":
       return { value: META_LABEL[card.metadataReading], note: null };
     case "holders":
-      return { value: fact(card.holdersStatus, null), note: pairNote(shown(card).holdersNote, shown(card).holdersNote_en) };
+      return { value: fact(card.holdersStatus, null, labRead), note: pairNote(shown(card).holdersNote, shown(card).holdersNote_en) };
     case "impersonation": {
       if (card.impersonation === null) {
         return { value: statusText("desconocido"), note: null, neutral: true };
@@ -173,7 +177,7 @@ function fieldValue(card: CardSummary, key: string): { value: Localized; note: s
     }
     case "curvePresent":
       return {
-        value: fact(card.curvePresentStatus, card.curvePresent === null ? null : yn(card.curvePresent)),
+        value: fact(card.curvePresentStatus, card.curvePresent === null ? null : yn(card.curvePresent), labRead),
         note: pairNote(shown(card).curveModuleNote, shown(card).curveModuleNote_en),
       };
     case "curveProgress":
@@ -181,6 +185,7 @@ function fieldValue(card: CardSummary, key: string): { value: Localized; note: s
         value: fact(
           card.curveProgressStatus,
           card.curveProgress ? { es: `${card.curveProgress} %`, en: `${card.curveProgress}%` } : null,
+          labRead,
         ),
         note: pairNote(shown(card).curveProgressNote, shown(card).curveProgressNote_en),
       };
@@ -190,14 +195,14 @@ function fieldValue(card: CardSummary, key: string): { value: Localized; note: s
 }
 
 export function renderCard(card: CardSummary, fields: readonly string[]): string {
-  return `<article class="ficha">${cardInner(card, fields)}</article>`;
+  return `<article class="ficha">${cardInner(card, fields, true)}</article>`;
 }
 
-function cardInner(card: CardSummary, fields: readonly string[]): string {
+function cardInner(card: CardSummary, fields: readonly string[], labRead = false): string {
   const rows = fields
     .map((key) => {
       const label = FIELD_LABEL[key] ?? { es: key, en: key };
-      const item = fieldValue(card, key);
+      const item = fieldValue(card, key, labRead);
       const note = item.note
         ? `<p class="muted">${typeof item.note === "string" ? escapeHtml(item.note) : both(item.note)}</p>`
         : "";
@@ -270,7 +275,7 @@ ${input.publish ? "" : `<p class="draft">${both(DRAFT_LINE)}</p>\n`}
 <main id="contenido" class="${frame}">
 <div class="aviso" data-disclaimer="si">
 <p>${both(READONLY_LINE)}</p>
-<p>${both(UNKNOWN_LINE)}</p>
+<p>${both(input.current === "lab" ? { es: UNKNOWN_LINE.es, en: "Unknown is not the same as checked." } : UNKNOWN_LINE)}</p>
 <p>${both({ es: "Fichas del 2026-10-08 y, si las hay, ejemplos posteriores. No se actualizan solas. La hora de cada ficha va en Europe/Madrid.", en: "Cards from 2026-10-08 and, where present, later examples. They do not update themselves. Each card time is shown in Europe/Madrid." })}</p>
 </div>
 <p id="aviso-red" class="nota" hidden>${both(OFFLINE_LINE)}</p>
