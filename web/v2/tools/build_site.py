@@ -38,9 +38,17 @@ AVISO = aviso_guardar()
 def apply_aviso(text: str) -> str:
     return text.replace("__AVISO_ES__", AVISO["es"]).replace("__AVISO_EN__", AVISO["en"])
 
+NODOS = {
+    "Para leerla en directo, se envía a los nodos públicos de Solana solana-rpc.publicnode.com y api.mainnet-beta.solana.com, que también ven tu IP.",
+    "To read it live, it is sent to the Solana public nodes solana-rpc.publicnode.com and api.mainnet-beta.solana.com, which also see your IP.",
+}
+
+
 def aviso_partes(text: str) -> tuple[str, str]:
     parts = re.split(r"(?<=\.)\s+", text)
-    lead = next((part for part in parts if "solana-rpc.publicnode.com" in part), parts[0] if parts else "")
+    lead = next((part for part in parts if part in NODOS), "")
+    if not lead:
+        raise SystemExit("el aviso no trae la frase de los nodos")
     rest = " ".join(part for part in parts if part != lead)
     return lead, rest
 

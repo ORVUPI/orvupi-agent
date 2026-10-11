@@ -51,10 +51,10 @@ describe("aviso de Guardar", () => {
     assert.equal(visible.includes("Los datos de mercado no se guardan"), false);
     const folded = form.slice(detailsStart, form.indexOf("</details>", detailsStart));
     assert.equal(folded.includes(nodesEs), false);
-    assert.equal(folded.includes("solana-rpc.publicnode.com"), false);
+    assert.equal(folded.includes(nodesEn), false);
     assert.equal(folded.includes("Los datos de mercado no se guardan"), true);
     for (const sentence of aviso.es.split(/(?<=\.)\s+/)) assert.equal(form.includes(sentence), true, sentence);
-    assert.equal(form.includes("solana-rpc.publicnode.com and api.mainnet-beta.solana.com"), true);
+    assert.equal(form.includes(nodesEn), true);
     assert.equal(form.includes("Save this lookup"), true);
     const howItWorks = verify.slice(verify.indexOf('<details class="como"'), verify.indexOf("</details>", verify.indexOf('<details class="como"')));
     assert.equal(howItWorks.includes(aviso.es), false);

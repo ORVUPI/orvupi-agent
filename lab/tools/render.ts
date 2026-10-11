@@ -354,9 +354,15 @@ ${howDetails(HOW_LAB)}
   });
 }
 
+const NODES_NOTICE = new Set([
+  "Para leerla en directo, se envía a los nodos públicos de Solana solana-rpc.publicnode.com y api.mainnet-beta.solana.com, que también ven tu IP.",
+  "To read it live, it is sent to the Solana public nodes solana-rpc.publicnode.com and api.mainnet-beta.solana.com, which also see your IP.",
+]);
+
 function splitAviso(text: string): { lead: string; rest: string } {
   const parts = text.split(/(?<=\.)\s+/);
-  const lead = parts.find((part) => part.includes("solana-rpc.publicnode.com")) ?? parts[0] ?? "";
+  const lead = parts.find((part) => NODES_NOTICE.has(part));
+  if (!lead) throw new Error("El aviso no trae la frase de los nodos.");
   const rest = parts.filter((part) => part !== lead).join(" ");
   return { lead, rest };
 }
