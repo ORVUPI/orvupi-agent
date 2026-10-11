@@ -377,23 +377,43 @@ def home() -> str:
 <p class="kicker">{t("Solana · Pump.fun · Prototipo", "Solana · Pump.fun · Prototype")}</p>
 <p class="motto">{t("No stub, no story", "No stub, no story")}</p>
 <h1>{t("Contrasta la dirección antes de creer el nombre.", "Check the address before you trust the name.")}</h1>
+<p class="oferta">{t("Consulta cualquier token de Solana, entiende sus permisos y guarda y compara lecturas.", "Look up any Solana token, understand its permissions, and save and compare readings.")}</p>
 <div class="hero-actions">
-<a class="primary" href="/verify/">{t("Verificar un token", "Verify a token")}</a>
-<a class="primary cta-gem" href="/studio/">{t("Crear en Studio", "Create in Studio")}</a>
-<a href="/verify/">{t("Analizar token", "Analyze token")}</a>
-<a href="/methodology/">{t("Ver la metodología", "Read the methodology")}</a>
+<a class="primary" href="/verify/"><strong>Verify</strong><span class="accion-para">{t("Consultar un token", "Look up a token")}</span></a>
+<a class="primary" href="/lab/"><strong>Lab</strong><span class="accion-para">{t("Distinguir la dirección", "Tell the address apart")}</span></a>
+<a class="primary" href="/cuaderno/"><strong>{t("Cuaderno", "Notebook")}</strong><span class="accion-para">{t("Guardar y comparar", "Save and compare")}</span></a>
+<a href="/studio/">{t("Studio, para crear una imagen", "Studio, to create an image")}</a>
 </div>
-<p class="lede">{t("STUBX Verify lee en directo, y solo en lectura, cualquier token SPL o Token-2022. También compara con fichas de ejemplo: la oficial está releída el 2026-10-09, con el saldo de la curva y el de la creadora. No pide una cuenta y no dice qué comprar.", "STUBX Verify reads any SPL or Token-2022 token live, and read-only. It also compares with example cards: the official one was read again on 2026-10-09, with the curve balance and the creator balance. It does not ask for an account and it does not say what to buy.")}</p>
-<p class="source">{t("La acción abre Verify: lectura en vivo y solo lectura, más las fichas fechadas del 2026-10-09 (commit 86df576). No es una puntuación. La PR 14 se fusionó en main el 2026-10-09.", "The action opens Verify: a live read-only reading, plus the dated cards of 2026-10-09 (commit 86df576). It is not a score. PR 14 was merged into main on 2026-10-09.")}</p>
-<p class="lede">{t("Agente Talón es la guía de estas páginas. Acompaña la lectura y no es un sello de aprobación.", "Agente Talón is the guide for these pages. It stays with the reading and it is not a seal of approval.")}</p>
+<p class="lede">{t("Solo lectura. Sin cuenta. No dice qué comprar.", "Read-only. No account. It does not say what to buy.")}</p>
 </div>
 <figure>
 <picture>
 <source media="(min-width: 900px)" srcset="assets/hero-talon-1000.webp" type="image/webp">
 <img src="assets/hero-talon-movil-800.webp" width="800" height="750" alt="{html.escape("Agente Talón, personaje de STUBX: ticket rosa con una gema verde. Ilustración con elementos generados con IA. / Agente Talón, the STUBX character: a pink ticket with a green gem. Illustration with AI-generated elements.")}">
 </picture>
-<figcaption>{t("Agente Talón. No es un sello de aprobación.", "Agente Talón. It is not a seal of approval.")}</figcaption>
+<figcaption>{t("Agente Talón te guía: consulta, entiende y compara. No es un sello de aprobación.", "Agente Talón guides you: look up, understand, and compare. It is not a seal of approval.")}</figcaption>
 </figure>
+</section>
+<section id="ejemplo" aria-labelledby="ejemplo-titulo">
+<h2 id="ejemplo-titulo">{t("Así se ve un resumen", "This is what a summary looks like")}</h2>
+<p class="source">{t("Ejemplo con la ficha oficial releída el 2026-10-09 (commit 86df576). Muestra el nombre y los permisos de esa ficha. No es la lectura en vivo de esta página, no es una puntuación y no es un censo. La cantidad en vivo se abre en Verify, solo en lectura. La PR 14 se fusionó en main el 2026-10-09.", "Example from the official card reread on 2026-10-09 (commit 86df576). It shows the name and the permissions from that card. It is not the live reading on this page, it is not a score, and it is not a census. The live amount opens in Verify, read-only. PR 14 was merged into main on 2026-10-09.")}</p>
+<div class="resumen-informe">
+<h3>{t("Resumen", "Summary")}</h3>
+<div class="bloque-resumen" data-bloque="comprobado">
+<div class="cabecera-bloque"><span class="chip-resumen" aria-hidden="true" data-marca="leido"></span><h4>{t("Qué se comprobó", "What was checked")}</h4></div>
+<ul>
+<li class="punto-resumen"><span class="chip-resumen" aria-hidden="true" data-marca="leido"></span><div><p class="punto-titulo">{t("Nombre y símbolo", "Name and symbol")}</p><p class="punto-frase">STUBX.</p><a class="entender-enlace" href="/aprender/#metadatos-mutables">{t("Entender →", "Understand →")}</a></div></li>
+<li class="punto-resumen"><span class="chip-resumen" aria-hidden="true" data-marca="leido"></span><div><p class="punto-titulo">{t("Permisos", "Permissions")}</p><p class="punto-frase">{t("Nadie puede crear más tokens ni congelar cuentas.", "Nobody can create more tokens or freeze accounts.")}</p><a class="entender-enlace" href="/aprender/#autoridad-emision">{t("Entender →", "Understand →")}</a></div></li>
+</ul>
+</div>
+<div class="bloque-resumen" data-bloque="atencion">
+<div class="cabecera-bloque"><span class="chip-resumen" aria-hidden="true" data-marca="atencion"></span><h4>{t("Qué requiere atención", "What needs attention")}</h4></div>
+<p class="punto-vacio">{t("Ninguna señal de esta ficha pide atención. Que no aparezca no significa que no haya riesgo.", "No signal in this card needs attention. One not showing does not mean there is no risk.")}</p>
+</div>
+</div>
+<p>{t("Dos lecturas reales, como ejemplo y no como aval. Al abrirlas, la dirección va en el fragmento y la página la quita del historial.", "Two real readings, as an example and not as an endorsement. When they open, the address is in the fragment and the page removes it from the history.")}</p>
+<p><a class="primary" href="/verify/#a={CA}">{t("Leer la CA oficial de STUBX", "Read the official STUBX CA")}</a></p>
+<p><a href="/verify/#a=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v">{t("Leer USDC, un ejemplo público de otra dirección. No es STUBX.", "Read USDC, a public example of another address. It is not STUBX.")}</a></p>
 </section>
 <section id="que-puedes">
 <h2>{t("Qué puedes hacer aquí", "What you can do here")}</h2>
@@ -403,9 +423,6 @@ def home() -> str:
 <article class="paso"><h3>{t("Entender los permisos", "Understand the permissions")}</h3><p>{t("Un permiso de emisión activo puede ser habitual en una moneda estable. Importa si el proyecto prometió un suministro fijo. La lectura no acusa.", "An active mint authority can be common on a stablecoin. It matters if the project promised a fixed supply. The reading does not accuse.")}</p></article>
 <article class="paso"><h3>{t("Guardar y comparar", "Save and compare")}</h3><p>{t("El cuaderno guarda la lectura en este navegador. Comparar consultas muestra qué cambió y qué no se pudo determinar.", "The notebook saves the reading in this browser. Compare queries shows what changed and what could not be determined.")}</p></article>
 </div>
-<p>{t("Dos lecturas reales, como ejemplo y no como aval. Al abrirlas, la dirección va en el fragmento y la página la quita del historial.", "Two real readings, as an example and not as an endorsement. When they open, the address is in the fragment and the page removes it from the history.")}</p>
-<p><a class="primary" href="/verify/#a={CA}">{t("Leer la CA oficial de STUBX", "Read the official STUBX CA")}</a></p>
-<p><a href="/verify/#a=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v">{t("Leer USDC, un ejemplo público de otra dirección. No es STUBX.", "Read USDC, a public example of another address. It is not STUBX.")}</a></p>
 </section>
 <section class="ca-panel" id="contrato" aria-labelledby="ca-title">
 <h2 id="ca-title">{t("Contrato oficial", "Official contract")}</h2>
@@ -1576,7 +1593,7 @@ def main() -> None:
     shutil.copyfile(current / "styles.css", ROOT / "styles.css")
     shutil.copyfile(current / "app.js", ROOT / "app.js")
 
-    write_page("index.html", "home", "STUBX · Contrasta la dirección", "STUBX · Check the address", "Vista previa de STUBX. Lee un token en directo y solo en lectura. No es consejo de inversión.", "STUBX preview. Read a token live and read-only. Not investment advice.", home())
+    write_page("index.html", "home", "STUBX · Contrasta la dirección", "STUBX · Check the address", "Consulta cualquier token de Solana, entiende sus permisos y guarda y compara lecturas. Solo lectura. No es consejo de inversión.", "Look up any Solana token, understand its permissions, and save and compare readings. Read-only. Not investment advice.", home())
     write_page("verify/index.html", "verify", "STUBX Verify", "STUBX Verify", "Lee cualquier token SPL o Token-2022 en directo y solo en lectura. Las fichas fechadas siguen como ejemplo.", "Read any SPL or Token-2022 token live and read-only. The dated cards remain as examples.", prepare_tool("verify"), ["assets/draft-address.js", "assets/verify.js"], True, connect=connect_src(True), modules=["assets/verificar-acciones.mjs"])
     write_page("comparar/index.html", "comparar", "STUBX · Ejemplo de una curva", "STUBX · Curve example", "Ejemplo hipotético, no leído de la cadena. No es una recomendación ni un aval.", "Hypothetical example, not read from the chain. It is not a recommendation or an endorsement.", comparar(), narrow=True)
     write_page("pares/index.html", "pares", "STUBX · Lectura de la curva", "STUBX · Curve reading", "Moneda base y estado de la curva, tal como están en la cadena. No es una auditoría ni una recomendación.", "Base currency and curve state, as they are on chain. It is not an audit or a recommendation.", pares(), narrow=True, connect=connect_src(True), modules=["assets/pares.mjs"])
