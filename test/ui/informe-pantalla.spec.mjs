@@ -166,9 +166,16 @@ function expectSameReading(data) {
     expect(data.blocks.falta.text.includes("Curva de Pump.fun") || data.blocks.falta.text.includes("Pump.fun curve")).toBe(false);
     expect(data.reportBlocks.falta.text.includes("Curva de Pump.fun") || data.reportBlocks.falta.text.includes("Pump.fun curve")).toBe(false);
   }
-  const clock = data.clock.match(/\d{2}:\d{2}:\d{2}/);
+  const clock = data.clock.match(/(\d{2}):(\d{2}):(\d{2})/);
   expect(clock).toBeTruthy();
-  expect(data.date).toContain(clock[0]);
+  if (data.localClock) {
+    const reportClock = data.date.match(/(\d{2}):(\d{2}):(\d{2})/);
+    expect(reportClock).toBeTruthy();
+    expect(reportClock[2]).toBe(clock[2]);
+    expect(reportClock[3]).toBe(clock[3]);
+  } else {
+    expect(data.date).toContain(clock[0]);
+  }
   const painted = data.lines.join("\n");
   if (data.lang === "en") expect(painted.includes("«")).toBe(false);
   for (const phrase of [
@@ -193,6 +200,49 @@ function expectSameReading(data) {
     expect(at).toBeLessThan(checked);
     expect(data.reportBlocks.atencion.lines[0].lead).toContain(needle);
   }
+}
+
+async function readSaved(card) {
+  return card.evaluate(async (node) => {
+    const root = node.querySelector(".resumen-informe");
+    const box = node.querySelector(".informe-descarga");
+    const mod = await import("/shared/informe.js");
+    const lang = document.documentElement.lang === "en" ? "en" : "es";
+    const model = mod.reportModel(box.informeSource, lang);
+    const lines = mod.reportPaintLines(model);
+    const blocks = {};
+    for (const item of root.querySelectorAll("[data-bloque]")) {
+      blocks[item.dataset.bloque] = {
+        points: [...item.querySelectorAll(".punto-resumen")].map((row) => ({
+          title: row.querySelector(".punto-titulo")?.textContent || "",
+          lead: row.querySelector(".punto-frase")?.textContent || "",
+        })),
+        empty: item.querySelector(".punto-vacio")?.textContent || "",
+        text: item.textContent || "",
+      };
+    }
+    const reportBlocks = {};
+    for (const block of model.blocks) {
+      reportBlocks[block.id] = {
+        lines: block.lines,
+        empty: block.empty,
+        text: [block.heading, block.empty, ...block.lines.flatMap((item) => [item.title, item.lead, item.note])].filter(Boolean).join("\n"),
+      };
+    }
+    return {
+      lang,
+      lines,
+      date: model.date,
+      warning: model.warning,
+      reportNote: model.note,
+      reportBlocks,
+      blocks,
+      note: root.querySelector(".nota-curva span")?.textContent || "",
+      clock: node.querySelector("p.sello")?.textContent || "",
+      localClock: true,
+      address: node.querySelector("code.mint")?.textContent || "",
+    };
+  });
 }
 
 async function lookup(page, mint, text) {
@@ -413,4 +463,57 @@ test("USDC y ERYyy dejan un PNG en español y en inglés", async ({ page }, test
     }
     writeFileSync(path.join(dir, `${shot.stem}.png`), png);
   }
+});
+
+test("el cuaderno compara el informe con lo que se ve en pantalla", async ({ page }) => {
+  test.setTimeout(120_000);
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(String(error)));
+  await mockRpc(page);
+  await page.goto("/verify/");
+
+  await lookup(page, USDC, "Dice llamarse «USD Coin»");
+  await page.locator("#guardar-consulta").click();
+  await page.locator("#comparacion-verify").getByRole("link", { name: "Abrir Cuaderno" }).click();
+  await page.waitForURL(/\/cuaderno\/$/);
+  const usdcCard = page.locator(".consulta-guardada", { hasText: USDC }).first();
+  await expect(usdcCard.locator(".resumen-informe")).toContainText("Dice llamarse «USD Coin»", { timeout: 20_000 });
+  const usdc = await readSaved(usdcCard);
+  expectSameReading(usdc);
+  expect(usdc.lines.join("\n")).toContain(usdc.address);
+  expect(usdc.lines.join("\n")).toContain("Lectura de Verify · no es un certificado");
+  expect(usdc.reportNote).toBe("Curva de Pump.fun: no aplica");
+
+  await page.locator("[data-set-lang='en']").click();
+  await expect(usdcCard.locator(".resumen-informe")).toContainText("It says it is called");
+  const usdcEnglish = await readSaved(usdcCard);
+  expectSameReading(usdcEnglish);
+  expect(usdcEnglish.lines.join("\n")).toContain("\u201CUSD Coin\u201D");
+  expect(usdcEnglish.lines.join("\n").includes("«")).toBe(false);
+  expect(usdcEnglish.reportNote).toBe("Pump.fun curve: not applicable");
+
+  await page.locator("[data-set-lang='es']").click();
+  await page.goto("/verify/");
+  await lookup(page, CLONE, "Se parece a STUBX pero no es la dirección oficial");
+  await page.locator("#guardar-consulta").click();
+  await page.locator("#comparacion-verify").getByRole("link", { name: "Abrir Cuaderno" }).click();
+  await page.waitForURL(/\/cuaderno\/$/);
+  const cloneCard = page.locator(".consulta-guardada", { hasText: CLONE }).first();
+  await expect(cloneCard.locator("[data-bloque='atencion']")).toContainText("Se parece a STUBX pero no es la dirección oficial", { timeout: 20_000 });
+  const clone = await readSaved(cloneCard);
+  expectSameReading(clone);
+  expect(clone.blocks.atencion.points[0].lead).toContain("Se parece a STUBX pero no es la dirección oficial");
+  expect(clone.reportBlocks.atencion.lines[0].lead).toContain("Se parece a STUBX pero no es la dirección oficial");
+  expect(clone.blocks.atencion.text.includes("Comprobación anterior")).toBe(false);
+  expect(clone.reportBlocks.atencion.text.includes("Comprobación anterior")).toBe(false);
+  expect(clone.lines.join("\n")).toContain("Dice llamarse");
+
+  await page.locator("[data-set-lang='en']").click();
+  await expect(cloneCard.locator(".resumen-informe")).toContainText("It looks like STUBX");
+  const cloneEnglish = await readSaved(cloneCard);
+  expectSameReading(cloneEnglish);
+  expect(cloneEnglish.reportBlocks.atencion.lines[0].lead).toContain("It looks like STUBX");
+  expect(cloneEnglish.lines.join("\n").includes("«")).toBe(false);
+  expect(cloneEnglish.reportBlocks.atencion.text.includes("Earlier check")).toBe(false);
+  expect(pageErrors).toEqual([]);
 });
