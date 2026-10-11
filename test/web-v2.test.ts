@@ -1152,14 +1152,37 @@ samples = [
     ("entidad zwnj", "cripto de alto &#x200C;riesgo"),
     ("entidad wj", "not invest&#x2060;ment advice"),
     ("entidad rlo", "ai-generated &#x202E;image"),
+    ("zwsp entre letras", "cripto de alto\\u200briesgo"),
+    ("zwnj entre letras", "cripto de alto\\u200criesgo"),
+    ("zwj entre letras", "cripto de alto\\u200driesgo"),
+    ("bom entre letras", "cripto de alto\\ufeffriesgo"),
+    ("wj entre letras", "cripto de alto\\u2060riesgo"),
+    ("rlo entre letras", "cripto de alto\\u202eriesgo"),
+    ("doble cf", "cripto de alto\\u200b\\u200briesgo"),
+    ("mayusculas cf", "CRIPTO DE ALTO\\u200bRIESGO"),
+    ("entidad entre letras", "cripto de alto&#8203;riesgo"),
+    ("riesgo partido", "there is no\\u200brisk"),
 ]
 for name, sample in samples:
     hits = guard.phrase_hits("content/tools/ejemplo.html", sample)
     if not hits:
         raise SystemExit("no vio " + name)
 anti = "trátala como no oficial hasta comprobarla"
-if guard.phrase_hits("security/index.html", anti):
+anti_cf = "trátala como no\\u200boficial hasta comprobarla"
+anti_en = "treat it as unofficial until you check it"
+anti_en_cf = "treat it as un\\u200dofficial until you check it"
+if guard.phrase_hits("security/index.html", anti) or guard.phrase_hits("security/index.html", anti_cf):
     raise SystemExit("antiestafa")
+if guard.phrase_hits("security/index.html", anti_en) or guard.phrase_hits("security/index.html", anti_en_cf):
+    raise SystemExit("antiestafa en")
+if guard.phrase_hits("security/index.html", "no es oficial") or guard.phrase_hits("security/index.html", "no oficiales"):
+    raise SystemExit("no es oficial")
+if guard.phrase_hits("studio/reglas/index.html", "no\\u200bes oficial"):
+    raise SystemExit("no es oficial cf")
+if guard.phrase_hits("index.html", "is not\\u200bofficial"):
+    raise SystemExit("portada cf")
+if not guard.phrase_hits("studio/index.html", "no\\u200boficial"):
+    raise SystemExit("studio cf")
 if not guard.phrase_hits("studio/index.html", "unofficial"):
     raise SystemExit("studio")
 if not guard.phrase_hits("studio/index.html", "no \\u200boficial"):
