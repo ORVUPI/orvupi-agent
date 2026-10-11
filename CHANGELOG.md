@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-11 · Datos de mercado en Verify, solo lectura
+
+- Verify muestra pares, liquidez y volumen de un mint de Solana con la fuente (DEX Screener) y la hora UTC de la consulta. El navegador llama a `/api/market` en este sitio. Una Pages Function de solo lectura consulta la API pública, sin secreto y sin ampliar `connect-src`.
+- Si no hay pares, la consulta falla o la fuente pide una pausa, el bloque «Qué falta» lo dice. No se rellena con cero.
+- La ficha del cuaderno no guarda esas cifras y no las compara. Se pueden leer aparte, en el momento.
+
 ## 2026-10-10 · Biblioteca y cuaderno publicados
 
 - `/cuaderno` está en stubxai.com/cuaderno desde el 2026-10-10 (PR #24). El tablero marca U05 como publicado. La dirección viaja en el fragmento `#a=` y se limpia al leerla; no llega al servidor ni queda en el historial.

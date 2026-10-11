@@ -67,6 +67,16 @@ function entenderResultado(lang) {
   return understand;
 }
 
+function paintMarketBlock(out, view) {
+  if (typeof mountMarket !== "function") return;
+  if (!view || !view.mint || view.light === "espera") return;
+  if (view.kind === "vacio" || view.kind === "invalida" || view.kind === "comprobando" || view.kind === "evm") return;
+  if (typeof isAddress === "function" && !isAddress(view.mint)) return;
+  var slot = verifyEl("div", { class: "hueco-mercado" });
+  out.append(slot);
+  mountMarket(slot, { mint: view.mint, lang: verifyLang(), auto: true });
+}
+
 function paintSummary(out, view, lang) {
   if (typeof renderReadingSummary !== "function" || typeof buildReadingSummary !== "function") return;
   if (view.light === "espera" || view.kind === "vacio" || view.kind === "invalida" || view.kind === "comprobando") return;
@@ -125,6 +135,7 @@ function paintVerify(out, view) {
     out.append(note);
   }
   paintSummary(out, view, lang);
+  paintMarketBlock(out, view);
   if (view.signals && view.signals.length) {
     var signals = verifyEl("div", { class: "senales" });
     view.signals.forEach(function (signal) {
