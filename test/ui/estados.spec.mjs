@@ -74,7 +74,8 @@ for (const mint of [STUBX, USDC]) {
     await expect(page.locator("#resultado")).toContainText(/ausente comprobado|No falta/);
     const okMissing = await page.locator("[data-bloque='falta']").innerText();
     expect(okMissing).not.toMatch(/ausente comprobado/);
-    await expect(page.locator(".resumen-datos")).not.toContainText("Faltan datos");
+    await expect(page.locator(".resumen-datos")).toHaveCount(0);
+    await expect(page.locator("#resultado")).not.toContainText("Comprobado: no existe");
     await expect(page.locator("#entender-resultado")).toContainText("Entender este resultado");
     await expect(page.locator("#resultado")).not.toContainText(/no disponible · verificado|verificado · no disponible/i);
 
@@ -84,7 +85,8 @@ for (const mint of [STUBX, USDC]) {
     await expect(page.locator("#reintentar")).toBeVisible();
     const failedMissing = await page.locator("[data-bloque='falta']").innerText();
     expect(failedMissing).not.toMatch(/ausente comprobado/);
-    await expect(page.locator("[data-estado='ausente']")).toContainText("Comprobado: no existe");
+    await expect(page.locator("#resultado")).not.toContainText("Comprobado: no existe");
+    await expect(page.locator(".resumen-datos")).toHaveCount(0);
     await expect(page.locator("#resultado")).not.toContainText(/no disponible · verificado/i);
 
     rpc.set("ausente");

@@ -3185,7 +3185,7 @@ function compose(facts, attention, context, signals, card) {
     if (supply?.state === "ok") {
       const mismatch = extra?.reason === "distinto" || (extra?.state !== "fallo" && readsDisagree(signals));
       const again = extra?.state === "fallo" && extra?.reason !== "distinto";
-      const supplyNote = mismatch ? SUPPLY_MISMATCH : again ? SUPPLY_AGAIN : null;
+      const supplyNote = mismatch ? SUPPLY_MISMATCH : null;
       checked.push(summaryPoint(
         "suministro",
         summaryPair("Suministro total", "Total supply"),
@@ -3715,11 +3715,6 @@ function paintVerify(out, view) {
     out.append(note);
   }
   paintSummary(out, view, lang);
-  if (view.absent && view.absent[lang]) {
-    var absent = verifyEl("p", { class: "resumen-datos", "data-estado": "ausente" });
-    absent.textContent = view.absent[lang];
-    out.append(absent);
-  }
   if (view.signals && view.signals.length) {
     var signals = verifyEl("div", { class: "senales" });
     view.signals.forEach(function (signal) {

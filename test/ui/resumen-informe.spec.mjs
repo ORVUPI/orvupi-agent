@@ -123,8 +123,12 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
   await expect(summary).toContainText("USD Coin (USDC)");
   await expect(summary).toContainText("No tiene enlace de metadatos");
   await expect(summary).not.toContainText("Se leyó el enlace de metadatos");
+  const usdcText = await summary.innerText();
+  expect(usdcText.split("No tiene enlace de metadatos").length - 1).toBe(1);
   await expect(page.locator("#resultado")).toContainText("Enlace de metadatos: No tiene enlace de metadatos");
   await expect(page.locator("#resultado")).not.toContainText("Faltan datos");
+  await expect(page.locator("#resultado")).not.toContainText("Comprobado: no existe");
+  await expect(page.locator(".resumen-datos")).toHaveCount(0);
   await expect(summary.locator("[data-bloque='comprobado']")).not.toContainText("No aplica");
   await expect(summary.locator("[data-bloque='comprobado']")).not.toContainText("bytes del mint");
   await expect(summary.locator(".nota-curva")).toContainText("Curva de Pump.fun: no aplica");
@@ -189,10 +193,14 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
 
   await page.locator("#direccion-token").fill(FAIL);
   await page.locator("#consulta button[type='submit']").click();
-  await expect(summary.locator("[data-bloque='comprobado'] .punto-resumen", { hasText: "Suministro total" }).locator(".punto-nota")).toContainText("No se pudo hacer la segunda comprobación del suministro", { timeout: 20_000 });
+  await expect(summary.locator("[data-bloque='falta']")).toContainText("No se pudo hacer la segunda comprobación del suministro", { timeout: 20_000 });
+  await expect(summary.locator("[data-bloque='comprobado'] .punto-resumen", { hasText: "Suministro total" })).not.toContainText("No se pudo hacer la segunda comprobación del suministro");
+  const failedText = await summary.innerText();
+  expect(failedText.split("No se pudo hacer la segunda comprobación del suministro").length - 1).toBe(1);
   await expect(summary.locator(".punto-titulo", { hasText: "Suministro total" })).toHaveCount(1);
   await expect(summary.locator("[data-bloque='falta']")).toContainText("Segunda comprobación del suministro");
   await expect(summary.locator("[data-bloque='falta']")).not.toContainText("Suministro total");
+  await expect(page.locator(".resumen-datos")).toHaveCount(0);
   await expect(summary).toContainText("No se pudo leer quién tiene más tokens");
   await expect(summary).toContainText("El servicio público no respondió, prueba otra vez en un minuto.");
   await expect(summary.getByRole("button", { name: "Reintentar" })).toBeVisible();

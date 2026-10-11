@@ -4,7 +4,7 @@
 import { formatAmount } from "../shared/amount.js";
 import { entenderNav } from "../shared/entender.js";
 import { renderReadingSummary, summaryFromCard } from "../shared/reading-summary.js";
-import { factLine, factState, missingFacts } from "../shared/fact-state.js";
+import { factLine, factState } from "../shared/fact-state.js";
 import {
   PUBLICNODE_RPC,
   DISCLAIMER,
@@ -431,45 +431,37 @@ function renderCard(card) {
     onRetry: () => consult(card.mint, true),
   });
   const list = el("dl");
-  const facts = [];
   const supplyCheck = supplyConfirmation(card);
-  facts.push(dataRow(list, t("program"), card.programStatus, programLabel(card.program)));
+  dataRow(list, t("program"), card.programStatus, programLabel(card.program));
   const mintAuth = card.mintAuthority.address
     ? `${authorityLabel(card.mintAuthority)} · ${card.mintAuthority.address}`
     : authorityLabel(card.mintAuthority);
   const freezeAuth = card.freezeAuthority.address
     ? `${authorityLabel(card.freezeAuthority)} · ${card.freezeAuthority.address}`
     : authorityLabel(card.freezeAuthority);
-  facts.push(dataRow(list, t("mintAuth"), card.mintAuthority.status, mintAuth));
-  facts.push(dataRow(list, t("freezeAuth"), card.freezeAuthority.status, freezeAuth));
-  appendSupply(list, facts, card, supplyCheck);
-  facts.push(dataRow(list, t("decimals"), card.decimals === null ? "ausente" : "verificado", card.decimals));
-  facts.push(dataRow(list, t("name"), card.name.status, card.name.text));
-  facts.push(dataRow(list, t("symbol"), card.symbol.status, card.symbol.text));
-  facts.push(dataRow(list, t("uri"), card.uri.status, card.uri.text));
+  dataRow(list, t("mintAuth"), card.mintAuthority.status, mintAuth);
+  dataRow(list, t("freezeAuth"), card.freezeAuthority.status, freezeAuth);
+  appendSupply(list, card, supplyCheck);
+  dataRow(list, t("decimals"), card.decimals === null ? "ausente" : "verificado", card.decimals);
+  dataRow(list, t("name"), card.name.status, card.name.text);
+  dataRow(list, t("symbol"), card.symbol.status, card.symbol.text);
+  dataRow(list, t("uri"), card.uri.status, card.uri.text);
   const mutableValue = card.metadataMutable === "si" ? t("yes") : card.metadataMutable === "no" ? t("no") : null;
   const mutableStatus = mutableValue ? "verificado" : card.metadataMutable;
-  facts.push(dataRow(list, t("mutable"), mutableStatus, mutableValue));
+  dataRow(list, t("mutable"), mutableStatus, mutableValue);
   const extensionText = card.extensions.length ? card.extensions.map((item) => item.name).join(", ") : null;
-  facts.push(dataRow(list, t("extensions"), card.extensionsStatus, extensionText));
+  dataRow(list, t("extensions"), card.extensionsStatus, extensionText);
   const curve = card.curve;
   if (curve.status === "no_aplica") {
     const term = text("dt", t("curve"));
     const detail = text("dd", CURVE_NOT_ON_PUMP[lang()] || CURVE_NOT_ON_PUMP.es);
     detail.dataset.estado = "no_aplica";
     list.append(term, detail);
-    facts.push({ label: t("curve"), state: "no_aplica" });
   } else {
     const curveValue = curve.present === true ? t("yes") : null;
-    facts.push(dataRow(list, t("curve"), curve.status, curveValue));
+    dataRow(list, t("curve"), curve.status, curveValue);
   }
-  facts.push(dataRow(list, t("largest"), card.largestStatus || "no_consultado", null));
-  const summary = missingFacts(facts, lang());
-  if (summary.absentText) {
-    const absentNode = text("p", summary.absentText, { class: "resumen-datos" });
-    absentNode.dataset.estado = "ausente";
-    article.append(absentNode);
-  }
+  dataRow(list, t("largest"), card.largestStatus || "no_consultado", null);
   article.append(list);
   article.append(entenderNav(lang()));
   article.append(text("p", t("untrusted"), { class: "muted" }));
@@ -495,11 +487,11 @@ function renderCard(card) {
   return article;
 }
 
-function appendSupply(list, facts, card, check) {
+function appendSupply(list, card, check) {
   const note = supplyNote(card, lang());
   if (!check.account && !check.extra) {
     const status = check.reason === "no_aplica" ? "no_aplica" : "fallo";
-    facts.push(dataRow(list, t("supplyAccount"), status, null));
+    dataRow(list, t("supplyAccount"), status, null);
     return;
   }
   const raw = check.account || check.extra;
@@ -508,8 +500,6 @@ function appendSupply(list, facts, card, check) {
   detail.dataset.estado = check.confirmed ? "ok" : "fallo";
   list.append(term, detail);
   if (note) list.append(text("dd", note, { class: "nota" }));
-  facts.push({ label: t("supplyAccount"), state: check.account || check.confirmed ? "ok" : "fallo" });
-  if (check.reason === "fallo" && check.account) facts.push({ label: t("supplyExtra"), state: "fallo" });
 }
 
 function sameReading(left, right) {

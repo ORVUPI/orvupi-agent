@@ -58,6 +58,10 @@ function leads(summary: Summary, id: string, lang: "es" | "en") {
   return block(summary, id).items.map((item) => `${item.title[lang]} ${item.lead[lang]}`).join(" | ");
 }
 
+function times(summary: Summary, phrase: string) {
+  return prose(summary, "es").split(phrase).length - 1;
+}
+
 describe("resumen de la lectura", () => {
   test("USDC: lenguaje sencillo, congelación, emisión y la curva aparte", async () => {
     const { buildReadingSummary, summaryFromCard } = await load();
@@ -208,10 +212,10 @@ describe("resumen de la lectura", () => {
     const missing = leads(summary, "falta", "es");
     const supplyItems = summary.blocks.flatMap((item) => item.items).filter((item) => item.title.es === "Suministro total");
     assert.equal(supplyItems.length, 1);
-    assert.equal(supplyItems[0]?.note?.es, "No se pudo hacer la segunda comprobación del suministro.");
+    assert.equal(supplyItems[0]?.note ?? null, null);
     assert.equal(missing.includes("Suministro total"), false);
     assert.match(missing, /Segunda comprobación del suministro/);
-    assert.match(missing, /No se pudo hacer la segunda comprobación del suministro/);
+    assert.equal(times(summary, "No se pudo hacer la segunda comprobación del suministro"), 1);
     assert.match(missing, /No se pudo leer quién tiene más tokens/);
     assert.equal(block(summary, "falta").items.find((item) => item.topic === "distribucion")?.topic, "distribucion");
     assert.equal(summary.retry, true);
@@ -260,7 +264,8 @@ describe("resumen de la lectura", () => {
     assert.equal(failedCard.retry, true);
     const failedSupply = failedCard.blocks.flatMap((item) => item.items).filter((item) => item.title.es === "Suministro total");
     assert.equal(failedSupply.length, 1);
-    assert.equal(failedSupply[0]?.note?.es, "No se pudo hacer la segunda comprobación del suministro.");
+    assert.equal(failedSupply[0]?.note ?? null, null);
+    assert.equal(times(failedCard, "No se pudo hacer la segunda comprobación del suministro"), 1);
     assert.equal(leads(failedCard, "falta", "es").includes("Suministro total"), false);
     assert.match(leads(failedCard, "falta", "es"), /No se pudo leer quién tiene más tokens/);
     assert.match(leads(failedCard, "atencion", "es"), /Revisión de cada envío/);
@@ -401,8 +406,9 @@ describe("resumen de la lectura", () => {
     });
     const titled = summary.blocks.flatMap((item) => item.items).filter((item) => item.title.es === "Suministro total");
     assert.equal(titled.length, 1);
-    assert.equal(titled[0]?.note?.es, "No se pudo hacer la segunda comprobación del suministro.");
-    assert.equal(titled[0]?.note?.en, "The second supply check could not be done.");
+    assert.equal(titled[0]?.note ?? null, null);
+    assert.equal(times(summary, "No se pudo hacer la segunda comprobación del suministro"), 1);
+    assert.equal(prose(summary, "en").split("The second supply check could not be done.").length - 1, 1);
     assert.match(leads(summary, "falta", "es"), /Segunda comprobación del suministro/);
     assert.equal(leads(summary, "comprobado", "es").includes("Segunda comprobación"), false);
     assert.equal(block(summary, "atencion").items.some((item) => item.title.es === "Suministro total"), false);
@@ -445,7 +451,8 @@ describe("resumen de la lectura", () => {
     });
     const againItems = again.blocks.flatMap((item) => item.items).filter((item) => item.title.es === "Suministro total");
     assert.equal(againItems.length, 1);
-    assert.equal(againItems[0]?.note?.es, "No se pudo hacer la segunda comprobación del suministro.");
+    assert.equal(againItems[0]?.note ?? null, null);
+    assert.equal(times(again, "No se pudo hacer la segunda comprobación del suministro"), 1);
     const different = summaryFromCard({
       mint: STUBX,
       program: "spl-token",
@@ -510,6 +517,7 @@ describe("resumen de la lectura", () => {
         facts: [{ id: "enlace", label: { es: "Enlace de metadatos", en: "Metadata link" }, state: "ausente" }],
       });
       assert.match(leads(summary, "comprobado", "es"), /No tiene enlace de metadatos/);
+      assert.equal(times(summary, "No tiene enlace de metadatos"), 1);
       assert.equal(leads(summary, "comprobado", "es").includes("Se leyó el enlace"), false);
       const card = summaryFromCard({
         mint: USDC,
@@ -530,6 +538,7 @@ describe("resumen de la lectura", () => {
         largestStatus: "ok",
       });
       assert.match(leads(card, "comprobado", "es"), /No tiene enlace de metadatos/);
+      assert.equal(times(card, "No tiene enlace de metadatos"), 1);
       assert.equal(leads(card, "comprobado", "es").includes("Se leyó el enlace"), false);
     }
   });

@@ -408,7 +408,7 @@ function compose(facts, attention, context, signals, card) {
     if (supply?.state === "ok") {
       const mismatch = extra?.reason === "distinto" || (extra?.state !== "fallo" && readsDisagree(signals));
       const again = extra?.state === "fallo" && extra?.reason !== "distinto";
-      const supplyNote = mismatch ? SUPPLY_MISMATCH : again ? SUPPLY_AGAIN : null;
+      const supplyNote = mismatch ? SUPPLY_MISMATCH : null;
       checked.push(summaryPoint(
         "suministro",
         summaryPair("Suministro total", "Total supply"),

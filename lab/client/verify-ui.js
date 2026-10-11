@@ -125,11 +125,6 @@ function paintVerify(out, view) {
     out.append(note);
   }
   paintSummary(out, view, lang);
-  if (view.absent && view.absent[lang]) {
-    var absent = verifyEl("p", { class: "resumen-datos", "data-estado": "ausente" });
-    absent.textContent = view.absent[lang];
-    out.append(absent);
-  }
   if (view.signals && view.signals.length) {
     var signals = verifyEl("div", { class: "senales" });
     view.signals.forEach(function (signal) {
