@@ -7,6 +7,14 @@ import { NOTEBOOK_DB_VERSION, migrateStoredRecord } from "./notebook-model.js";
 export const NOTEBOOK_DB_NAME = "stubx-cuaderno";
 export const NOTEBOOK_STORE = "records";
 
+/** Dirección de la ficha: la de Base (address) o el mint de Solana. */
+export function cardAddress(card) {
+  if (!card || typeof card !== "object") return "";
+  if (typeof card.address === "string" && card.address) return card.address;
+  if (typeof card.mint === "string") return card.mint;
+  return "";
+}
+
 function attachDb(db, hooks) {
   db.onversionchange = () => {
     db.close();

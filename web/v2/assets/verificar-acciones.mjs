@@ -1,11 +1,11 @@
 /**
  * Acciones de Verify hacia el cuaderno local.
- * La dirección no va en la consulta ni al servidor. Se guarda red y dirección en IndexedDB.
+ * La dirección no va en la consulta ni al servidor. Se guarda red y dirección en IndexedDB stubx-cuaderno.
  */
 import { formatAmount } from "../shared/amount.js";
 import { ENTENDER, entenderNav } from "../shared/entender.js";
 import { notebookDbAll, notebookDbPut, openNotebookDb } from "../shared/notebook-db.js";
-import { compareRecords, comparedSideText, comparisonSummary, curveComparisonValue, pickPrevious, staleLine, stampIdentity, supplyDirection, validateCard, withinStoreLimit } from "../shared/notebook-model.js";
+import { cardDecimals, compareRecords, comparedSideText, comparisonSummary, curveComparisonValue, pickPrevious, staleLine, stampIdentity, supplyDirection, validateCard, withinStoreLimit } from "../shared/notebook-model.js";
 import { cardFromShown } from "../shared/solana-read.js";
 
 const DB_NAME = "stubx-cuaderno";
@@ -158,7 +158,7 @@ function sideText(row, side, card) {
   if (curveText) return curveText;
   const raw = side === "left" ? row.left : row.right;
   if (row.amount && raw !== null) {
-    const formatted = formatAmount(raw, card.decimals, lang());
+      const formatted = formatAmount(raw, cardDecimals(card), lang());
     if (formatted) return formatted;
   }
   return comparedSideText(row.field.es, card, raw, lang());
@@ -180,7 +180,7 @@ function gridFor(rows, verdict, older, newer) {
     right.textContent = `${t("after")}: ${sideText(row, "right", newer.card)}`;
     article.append(title, left, right);
     if (row.difference && verdict === "cambio") {
-      const delta = supplyDirection(row.difference, older.card.decimals, lang());
+      const delta = supplyDirection(row.difference, cardDecimals(older.card), lang());
       if (delta) {
         const diff = document.createElement("p");
         diff.className = "nota";
@@ -339,6 +339,8 @@ document.addEventListener("click", (event) => {
   }
   const save = target.closest("#guardar-consulta");
   if (save) {
+    const network = save.getAttribute("data-network") || "solana";
+    if (network !== "solana") return;
     const mint = save.getAttribute("data-mint") || "";
     saveQuery(mint);
     return;

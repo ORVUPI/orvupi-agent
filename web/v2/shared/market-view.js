@@ -36,13 +36,17 @@ function marketText(tag, value, attrs) {
   return node;
 }
 
-function rememberMarket(mint, model) {
-  if (!model || model.status === "fallo" || model.status === "limite" || model.status === "consulta") return;
-  marketCache.set(mint, { at: Date.now(), model });
+function marketKey(mint, chain) {
+  return chain && chain !== "solana" ? `${chain}:${mint}` : mint;
 }
 
-function freshMarket(mint) {
-  const hit = marketCache.get(mint);
+function rememberMarket(mint, model, chain) {
+  if (!model || model.status === "fallo" || model.status === "limite" || model.status === "consulta") return;
+  marketCache.set(marketKey(mint, chain), { at: Date.now(), model });
+}
+
+function freshMarket(mint, chain) {
+  const hit = marketCache.get(marketKey(mint, chain));
   if (!hit) return null;
   if (Date.now() - hit.at > CACHE_MS) {
     marketCache.delete(mint);
@@ -176,14 +180,14 @@ function paintMarket(parent, model, lang, token, onRetry) {
   parent.replaceChildren(section);
 }
 
-function paintMarketPrompt(parent, mint, lang, token) {
+function paintMarketPrompt(parent, mint, lang, token, chain) {
   const language = lang === "en" ? "en" : "es";
   const privacy = privacyParts(language);
   const section = marketEl("section", { class: "datos-mercado", "data-estado": "espera" });
   const button = marketText("button", MARKET_READ_BUTTON[language], { type: "button", class: "leer-mercado" });
   button.addEventListener("click", () => {
     if (marketTokens.get(parent) !== token) return;
-    mountMarket(parent, { mint, lang: language, auto: true });
+    mountMarket(parent, { mint, lang: language, chain, auto: true });
   });
   section.append(
     marketText("h3", language === "en" ? "Market data" : "Datos de mercado"),
@@ -199,28 +203,29 @@ export function mountMarket(parent, options) {
   if (!parent) return;
   const mint = options && options.mint;
   const lang = options && options.lang === "en" ? "en" : "es";
+  const chain = options && typeof options.chain === "string" && options.chain ? options.chain : "solana";
   const auto = Boolean(options && options.auto);
   const force = Boolean(options && options.force);
   const token = {};
   marketTokens.set(parent, token);
   const asked = auto || force;
-  const retry = () => mountMarket(parent, { mint, lang, auto: true, force: true });
+  const retry = () => mountMarket(parent, { mint, lang, chain, auto: true, force: true });
   const settle = (model) => {
     if (marketTokens.get(parent) !== token) return;
     paintMarket(parent, model, lang, token, retry);
     if (asked) syncMarketSummaryGap(parent, Boolean(model && model.status === "fallo"), lang, retry);
   };
   if (!auto && !force) {
-    const cached = freshMarket(mint);
+    const cached = freshMarket(mint, chain);
     if (cached) {
       paintMarket(parent, cached, lang, token, retry);
       return;
     }
-    paintMarketPrompt(parent, mint, lang, token);
+    paintMarketPrompt(parent, mint, lang, token, chain);
     return;
   }
   if (!force) {
-    const cached = freshMarket(mint);
+    const cached = freshMarket(mint, chain);
     if (cached) {
       paintMarket(parent, cached, lang, token, retry);
       if (asked) syncMarketSummaryGap(parent, false, lang, retry);
@@ -229,18 +234,19 @@ export function mountMarket(parent, options) {
   }
   paintMarket(parent, marketLoading(mint), lang, token, retry);
   if (asked) syncMarketSummaryGap(parent, false, lang, retry);
-  if (force) marketPending.delete(mint);
-  const pending = !force ? marketPending.get(mint) : null;
-  const job = pending || loadMarket(mint);
-  marketPending.set(mint, job);
+  const key = marketKey(mint, chain);
+  if (force) marketPending.delete(key);
+  const pending = !force ? marketPending.get(key) : null;
+  const job = pending || loadMarket(mint, undefined, chain === "solana" ? undefined : { chain });
+  marketPending.set(key, job);
   job
     .then((model) => {
-      if (marketPending.get(mint) === job) marketPending.delete(mint);
-      rememberMarket(mint, model);
+      if (marketPending.get(key) === job) marketPending.delete(key);
+      rememberMarket(mint, model, chain);
       settle(model);
     })
     .catch(() => {
-      if (marketPending.get(mint) === job) marketPending.delete(mint);
+      if (marketPending.get(key) === job) marketPending.delete(key);
       settle(marketFailure(mint, new Date().toISOString(), "http"));
     });
 }

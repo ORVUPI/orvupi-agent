@@ -39,7 +39,9 @@ function serve(dir) {
                   ? "image/webp"
                   : file.endsWith(".jpg")
                     ? "image/jpeg"
-                    : "text/html";
+                    : file.endsWith(".json")
+                      ? "application/json"
+                      : "text/html";
         res.writeHead(200, {
           "content-type": `${type}; charset=utf-8`,
           "content-security-policy": file.endsWith("cuaderno/index.html")

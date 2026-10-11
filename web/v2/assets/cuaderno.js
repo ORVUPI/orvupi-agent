@@ -4,11 +4,13 @@
 import { formatAmount } from "../shared/amount.js";
 import { entenderNav } from "../shared/entender.js";
 import { explainIncomplete } from "../shared/explain-incomplete.js";
+import { evmBodyCap, readCappedText, readEvmToken } from "../shared/evm-read.js";
+import { evmCardFromReading, paintEvmResult } from "../shared/evm-view.js";
 import { reportDownloadBox } from "../shared/informe.js";
 import { mountMarket } from "../shared/market-view.js";
 import { cloneWarningText, comparisonBanner, notebookNameText, renderReadingSummary, summaryFromCard } from "../shared/reading-summary.js";
 import { factState } from "../shared/fact-state.js";
-import { notebookDbAll, notebookDbClear, notebookDbPut, openNotebookDb } from "../shared/notebook-db.js";
+import { cardAddress, notebookDbAll, notebookDbClear, notebookDbPut, openNotebookDb } from "../shared/notebook-db.js";
 import {
   PUBLICNODE_RPC,
   DISCLAIMER,
@@ -43,6 +45,8 @@ import {
   supplyDirection,
   supplyNote,
   toExport,
+  cardDecimals,
+  validateAnyCard,
   validateCard,
   validateExport,
   watchTargets,
@@ -69,6 +73,11 @@ const COPY = {
     retry: "Reintentar",
     saveFail: "Esta lectura trae texto que el cuaderno no guarda. No se ha guardado.",
     db: "Este navegador no dejó guardar el cuaderno. Si está en modo privado, el almacenamiento puede estar cerrado.",
+    blocked: "Otra pestaña tiene el cuaderno abierto. Ciérrala y recarga. No borres el cuaderno.",
+    versionChange: "El cuaderno se actualizó en otra pestaña. Recarga esta página.",
+    evmInvalid: "Esa dirección no tiene la forma de esta red: empieza por 0x y sigue con 40 letras o números hexadecimales. No se ha consultado el nodo.",
+    evmZero: "Es la dirección cero: no es la dirección de ningún token.",
+    evmChecksum: "Las mayúsculas y minúsculas de la dirección no cuadran. Revisa que esté bien copiada.",
     noteFail: "La nota tiene que ser texto, de hasta 2000 caracteres, y no puede ser un script.",
     noteOk: "Nota guardada. Sigue separada de los datos de la cadena.",
     compareNeed: "Elige dos consultas distintas.",
@@ -165,6 +174,11 @@ const COPY = {
     retry: "Try again",
     saveFail: "This reading contains text the notebook does not store. It was not saved.",
     db: "This browser did not allow the notebook to be saved. In private mode, storage may be closed.",
+    blocked: "Another tab has the notebook open. Close it and reload. Do not delete the notebook.",
+    versionChange: "The notebook was updated in another tab. Reload this page.",
+    evmInvalid: "That address does not have this network's shape: it starts with 0x and continues with 40 hexadecimal letters or numbers. The node was not queried.",
+    evmZero: "This is the zero address: it is not a token address.",
+    evmChecksum: "The upper and lower case letters in this address do not match. Check that it was copied correctly.",
     noteFail: "The note must be text, at most 2000 characters, and it cannot be a script.",
     noteOk: "Note saved. It stays separate from the chain data.",
     compareNeed: "Choose two different queries.",
@@ -355,6 +369,54 @@ function openDb() {
   });
 }
 
+function storedRecord(record, extra) {
+  const card = record.card;
+  return {
+    id: record.id,
+    note: record.note,
+    card,
+    network: card.network,
+    address: cardAddress(card),
+    ...extra,
+  };
+}
+
+function readingFromEvmCard(card) {
+  return {
+    network: card.network,
+    address: card.address,
+    consultedAt: card.consultedAt,
+    partial: card.partial,
+    reason: "leido",
+    rpcHost: "",
+    facts: {
+      code: card.code,
+      name: card.name,
+      symbol: card.symbol,
+      decimals: card.decimals,
+      totalSupply: card.totalSupply,
+      owner: card.owner,
+      proxy: card.proxy,
+    },
+  };
+}
+
+function renderEvmCard(card) {
+  const host = document.createElement("div");
+  paintEvmResult(host, readingFromEvmCard(card), lang(), null);
+  return host.querySelector("article") || host;
+}
+
+function renderAnyCard(card, options) {
+  if (card && card.schema === "stubx.notebook.card.evm") return renderEvmCard(card, options);
+  return renderCard(card, options);
+}
+
+function selectedNetwork() {
+  const select = document.getElementById("red-cuaderno");
+  return select && select.value ? select.value : "solana";
+}
+
 function dbAll(db) {
   return notebookDbAll(db);
 }
@@ -387,7 +449,17 @@ async function browserTransport(endpoint, body, timeoutMs, signal) {
       body,
       signal: controller.signal,
     });
-    return { status: response.status, body: await response.text() };
+    const cap = evmBodyCap(endpoint);
+    if (!cap) return { status: response.status, body: await response.text() };
+    const capped = await readCappedText(response, cap, controller.signal);
+    if (capped.aborted) {
+      const error = new Error("abortado");
+      error.name = "AbortError";
+      throw error;
+    }
+    if (capped.failed) return { status: 0, body: "" };
+    if (capped.overflow) return { status: response.status, body: "", overflow: true };
+    return { status: response.status, body: capped.text || "" };
   } catch (error) {
     if (signal && signal.aborted) throw error;
     return { status: 0, body: "" };
@@ -555,7 +627,11 @@ function appendSupply(list, card, check) {
 }
 
 function sameReading(left, right) {
-  return Boolean(left && right && left.card.mint === right.card.mint && left.card.network === right.card.network);
+  if (!left || !right || !left.card || !right.card || left.card.network !== right.card.network) return false;
+  const a = cardAddress(left.card);
+  const b = cardAddress(right.card);
+  if (left.card.network === "solana") return a === b;
+  return a.toLowerCase() === b.toLowerCase();
 }
 
 function pairFor(list, leftId, rightId) {
@@ -618,7 +694,7 @@ function renderRecords(records) {
   for (const record of records) {
     const block = el("article", { class: "consulta-guardada", "data-id": record.id });
     if (record.source === "importada") block.append(text("p", t("imported"), { class: "nota" }));
-    block.append(renderCard(record.card));
+    block.append(renderAnyCard(record.card));
     const note = el("div", { class: "nota-personal" });
     const label = text("label", t("noteLabel"));
     label.htmlFor = `nota-${record.id}`;
@@ -630,7 +706,15 @@ function renderRecords(records) {
     note.append(label, area, save);
     const again = el("button", { type: "button" });
     again.textContent = t("requery");
-    again.addEventListener("click", () => consult(record.card.mint));
+    again.addEventListener("click", () => {
+      const select = document.getElementById("red-cuaderno");
+      if (select) select.value = record.card.network || "solana";
+      if (!record.card.network || record.card.network === "solana") {
+        consult(record.card.mint);
+        return;
+      }
+      consult(cardAddress(record.card));
+    });
     block.append(note, again);
     list.append(block);
   }
@@ -675,7 +759,7 @@ async function refresh() {
 }
 
 async function persist(record) {
-  const checked = validateCard(record.card);
+  const checked = validateAnyCard(record.card);
   if (!checked.ok) {
     showMessage(checked.error[lang()], "error");
     return false;
@@ -702,7 +786,68 @@ async function persist(record) {
   return true;
 }
 
+async function readOtherNetwork(address) {
+  const button = document.getElementById("consultar");
+  const input = document.getElementById("direccion-cuaderno");
+  if (button) button.disabled = true;
+  showMessage(t("consulting"), "info");
+  const slot = takeQuerySlot(queryStamps, Date.now(), 6, 60000);
+  queryStamps = slot.stamps;
+  if (!slot.allowed) {
+    showMessage(t("limit"), "error");
+    if (button) button.disabled = false;
+    return;
+  }
+  try {
+    const result = await readEvmToken({
+      networkId: selectedNetwork(),
+      address,
+      transport: browserTransport,
+      minIntervalMs: 200,
+      timeoutMs: 8000,
+      takeSlot: () => true,
+    });
+    const box = document.getElementById("resultado");
+    const reading = { ...result.reading, reason: result.reason };
+    if (result.reason === "invalid" || result.reason === "cero" || result.reason === "checksum") {
+      const rejectKey = result.reason === "cero" ? "evmZero" : result.reason === "checksum" ? "evmChecksum" : "evmInvalid";
+      showMessage(t(rejectKey), "error");
+      if (box) paintEvmResult(box, reading, lang(), null);
+      return;
+    }
+    if (result.reason === "limite") {
+      showMessage(t("limit"), "error");
+      return;
+    }
+    if (result.reason !== "leido") {
+      showMessage(t("network"), "error");
+      return;
+    }
+    const card = evmCardFromReading(reading);
+    if (box) {
+      box.replaceChildren(renderEvmCard(card));
+      box.focus();
+      box.scrollIntoView({ block: "start" });
+    }
+    const record = { id: crypto.randomUUID(), note: "", card, source: "leida" };
+    const saved = await persist(record);
+    if (!saved) return;
+    const failed = Object.values(reading.facts).some((fact) => fact.status === "fallo");
+    announceSaved(card.partial || failed ? `${t("incomplete")} ${failed ? t("network") : ""}`.trim() : "", card.partial || failed ? address : "");
+    await refresh();
+  } catch {
+    showRetry(t("network"), address);
+  } finally {
+    if (button) button.disabled = false;
+    if (input && address) input.value = address;
+  }
+}
+
 async function consult(mint, forgetBlocked = false) {
+  if (selectedNetwork() !== "solana") {
+    await readOtherNetwork(mint);
+    return;
+  }
   const button = document.getElementById("consultar");
   const input = document.getElementById("direccion-cuaderno");
   clearLimitTimer();
@@ -814,7 +959,7 @@ function renderComparison() {
     if (curveText) return curveText;
     const raw = side === "left" ? rowItem.left : rowItem.right;
     if (rowItem.amount && raw !== null) {
-      const formatted = formatAmount(raw, card.decimals, lang());
+      const formatted = formatAmount(raw, cardDecimals(card), lang());
       if (formatted) return formatted;
     }
     return comparedSideText(rowItem.field.es, card, raw, lang());
@@ -828,7 +973,7 @@ function renderComparison() {
       article.append(text("p", `${t("before")}: ${shownSide(rowItem, "left", older.card)}`));
       article.append(text("p", `${t("after")}: ${shownSide(rowItem, "right", newer.card)}`));
       if (rowItem.difference && verdict === "cambio") {
-        const delta = supplyDirection(rowItem.difference, older.card.decimals, lang());
+        const delta = supplyDirection(rowItem.difference, cardDecimals(older.card), lang());
         if (delta) article.append(text("p", delta, { class: "nota" }));
       }
       article.append(text("p", word, { class: verdict === "cambio" ? "nota" : "muted", "data-estado": verdict }));
@@ -1381,7 +1526,7 @@ function bind() {
     }
     const latest = records[0];
     const box = document.getElementById("resultado");
-    if (latest && box && box.childElementCount) box.replaceChildren(renderCard(latest.card, { autoMarket: false }));
+    if (latest && box && box.childElementCount) box.replaceChildren(renderAnyCard(latest.card, { autoMarket: false }));
     renderComparison();
     renderWatchList(records);
     renderWatchResults();

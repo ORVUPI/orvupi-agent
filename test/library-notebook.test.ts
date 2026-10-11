@@ -732,7 +732,8 @@ describe("lector y cuaderno", () => {
     assert.match(consult.slice(denied, clear), /return;/);
     assert.ok(clear < consult.indexOf("readMint"));
     assert.match(source, /addEventListener\("click", \(\) => consult\(retryMint, true\)\)/);
-    assert.match(source, /addEventListener\("click", \(\) => consult\(record\.card\.mint\)\)/);
+    assert.match(source, /consult\(record\.card\.mint\)/);
+    assert.match(source, /record\.card\.network \|\| "solana"/);
 
     const verifyUi = readFileSync(path.join(repoRoot(), "lab/client/verify-ui.js"), "utf8");
     const run = verifyUi.slice(verifyUi.indexOf("function run(force, forgetBlocked)"), verifyUi.indexOf("function readSample"));
@@ -1235,7 +1236,7 @@ describe("lector y cuaderno", () => {
     assert.match(notebook, /Si eliges otro lector, ese servicio recibe tus consultas y tu IP\. STUBX no lo revisa\./);
     assert.match(notebook, /If you choose another reader, that service receives your queries and your IP\. STUBX does not review it\./);
     assert.equal(notebook.toLowerCase().includes("mala inversión"), false);
-    assert.match(notebook, /connect-src 'self' https:\/\/solana-rpc\.publicnode\.com https:\/\/api\.mainnet-beta\.solana\.com https:\/\/api\.dexscreener\.com/);
+    assert.match(notebook, /connect-src 'self' https:\/\/solana-rpc\.publicnode\.com https:\/\/api\.mainnet-beta\.solana\.com https:\/\/mainnet\.base\.org https:\/\/api\.dexscreener\.com/);
     assert.match(notebook, /<select id="rpc-url"/);
     assert.equal(notebook.includes('id="rpc-url" name="rpc" type="url"'), false);
     assert.match(notebook, /Este navegador guarda como máximo 200 fichas/);

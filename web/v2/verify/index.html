@@ -24,7 +24,7 @@
 <meta name="twitter:description" content="Lee cualquier token SPL o Token-2022 en directo y solo en lectura. Las fichas fechadas siguen como ejemplo. / Read any SPL or Token-2022 token live and read-only. The dated cards remain as examples.">
 <meta name="twitter:image" content="https://stubxai.com/assets/og-stubx-2026-10b-1200x630.jpg">
 <meta name="twitter:image:alt" content="STUBX: Agente Talón, mascota rosa con forma de ticket, sostiene un recibo junto a un globo terráqueo. Texto: «Un meme que pide pruebas. Qué es, qué funciona hoy y qué falta. CA oficial y pruebas en stubxai.com». / STUBX: Agente Talón, a pink ticket-shaped mascot, holds a receipt next to a globe. Text: “A meme that asks for proof. What it is, what works today, and what is missing. Official CA and proofs at stubxai.com”.">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self' https://solana-rpc.publicnode.com https://api.mainnet-beta.solana.com https://api.dexscreener.com; manifest-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self' https://solana-rpc.publicnode.com https://api.mainnet-beta.solana.com https://mainnet.base.org https://api.dexscreener.com; manifest-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
 <title data-title-es="STUBX Verify" data-title-en="STUBX Verify">STUBX Verify</title>
 <meta name="theme-color" content="#071422">
 <link rel="icon" href="../favicon.ico" sizes="any">
@@ -60,7 +60,7 @@
 <p id="aviso-red" class="nota" hidden><span class="lang es" lang="es">Copia estática. Sin conexión se puede leer; no actualiza la cadena.</span><span class="lang en" lang="en">Static copy. It can be read offline; it does not update the chain.</span></p>
 <p id="aviso-version" class="nota" hidden><span class="lang es" lang="es">Hay otra copia de estas páginas. Recargar no borra el progreso local.</span><span class="lang en" lang="en">Another copy of these pages is available. Reloading does not delete local progress.</span> <button type="button" id="recargar"><span class="lang es" lang="es">Recargar</span><span class="lang en" lang="en">Reload</span></button></p>
 <h1><span class="lang es" lang="es">Comprueba una dirección</span><span class="lang en" lang="en">Check an address</span></h1>
-<p class="lede"><span class="lang es" lang="es">Cualquier token SPL o Token-2022, leído en directo y solo en lectura. Las fichas de abajo son ejemplos fechados, no una lista completa.</span><span class="lang en" lang="en">Any SPL or Token-2022 token, read live and read-only. The cards below are dated examples, not a complete list.</span></p>
+<p class="lede"><span class="lang es" lang="es">Cualquier token SPL o Token-2022, leído en directo y solo en lectura. Las fichas de abajo son ejemplos fechados, no una lista completa. Elige la red. Al abrir, la red es Solana. En Base la lectura también es solo lectura: sin cartera y sin firma.</span><span class="lang en" lang="en">Any SPL or Token-2022 token, read live and read-only. The cards below are dated examples, not a complete list. Choose the network. When the page opens, the network is Solana. On Base the reading is also read-only: no wallet and no signature.</span></p>
 <nav class="ayuda-terminos" aria-label="Ayuda / Help">
 <a href="/aprender/#direccion"><span class="lang es" lang="es">Qué es una dirección</span><span class="lang en" lang="en">What an address is</span></a>
 <a href="/aprender/#autoridad-emision"><span class="lang es" lang="es">Permiso de emisión</span><span class="lang en" lang="en">Mint authority</span></a>
@@ -68,19 +68,27 @@
 <a href="/aprender/#guia-identificar"><span class="lang es" lang="es">Guía para identificar un token</span><span class="lang en" lang="en">Guide to identifying a token</span></a>
 </nav>
 <p class="muted"><span class="lang es" lang="es">Abrir la biblioteca no borra la dirección escrita. Al volver, el campo sigue igual.</span><span class="lang en" lang="en">Opening the library does not clear the address you typed. When you come back, the field is still the same.</span></p>
-<p class="aviso-fijo"><span class="lang es" lang="es">Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. STUBX no tiene relación con este token salvo que sea la CA oficial. Que no aparezcan señales no significa que no haya riesgo.</span><span class="lang en" lang="en">Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. STUBX has no relationship with this token unless it is the official CA. No signals showing does not mean there is no risk.</span></p>
+<p class="aviso-fijo"><span class="lang es" lang="es">Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. STUBX no tiene relación con este token salvo que sea la CA oficial. Que no aparezcan señales no significa que esté todo comprobado.</span><span class="lang en" lang="en">Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. STUBX has no relationship with this token unless it is the official CA. No signals showing does not mean everything was checked.</span></p>
 <details class="como"><summary><span class="lang es" lang="es">¿Cómo funciona?</span><span class="lang en" lang="en">How does it work?</span></summary><ol><li><span class="lang es" lang="es">Pega la dirección y pulsa Comprobar.</span><span class="lang en" lang="en">Paste the address and press Check.</span></li><li><span class="lang es" lang="es">La lectura es directa y solo en lectura.</span><span class="lang en" lang="en">The read is live and read-only.</span></li><li><span class="lang es" lang="es">Verás señales con una explicación en lenguaje llano. No es una puntuación.</span><span class="lang en" lang="en">You will see signals with a plain-language explanation. It is not a score.</span></li></ol></details>
 <div class="herramienta">
 <form id="consulta" class="consulta" action="#">
+<div class="selector-red">
+<label for="red"><span class="lang es" lang="es">Red</span><span class="lang en" lang="en">Network</span></label>
+<select id="red" name="red" data-red="si">
+<option value="solana" selected>Solana</option>
+</select>
+</div>
 <div class="consulta-barra">
 <label for="direccion-token"><span class="lang es" lang="es">Pega la dirección del token</span><span class="lang en" lang="en">Paste the token address</span></label>
 <input id="direccion-token" name="direccion" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
 <button type="submit"><span class="lang es" lang="es">Comprobar</span><span class="lang en" lang="en">Check</span></button>
+<p id="aviso-rpc-base" class="aviso-rpc" hidden><span class="lang es" lang="es"></span><span class="lang en" lang="en"></span></p>
 <p id="direccion-error" class="campo-error" hidden><span class="lang es" lang="es">Pega primero una dirección. Suele tener entre 32 y 44 letras y números.</span><span class="lang en" lang="en">Paste an address first. It is usually 32 to 44 letters and numbers.</span></p>
 </div>
 <div id="aviso-guardar" class="aviso-fijo privacidad"><p class="aviso-nodos"><span class="lang es" lang="es">Para leerla en directo, se envía a los nodos públicos de Solana solana-rpc.publicnode.com y api.mainnet-beta.solana.com, que también ven tu IP.</span><span class="lang en" lang="en">To read it live, it is sent to the Solana public nodes solana-rpc.publicnode.com and api.mainnet-beta.solana.com, which also see your IP.</span></p><details class="aviso-resto"><summary><span class="lang es" lang="es">Más detalle</span><span class="lang en" lang="en">More detail</span></summary><p><span class="lang es" lang="es">Este sitio no guarda en ningún servidor la dirección que consultas. Si pulsas «Leer datos de mercado ahora», tu navegador conecta con DEX Screener y DEX Screener también ve tu IP y la dirección consultada. Solo si pulsas «Guardar esta consulta», se guarda en el Cuaderno de este navegador, en tu dispositivo, y puedes borrarla allí cuando quieras. Los datos de mercado no se guardan.</span><span class="lang en" lang="en">This site does not store the address you look up on any server. If you press &quot;Read market data now&quot;, your browser connects to DEX Screener and it also sees your IP and the address you look up. Only if you press &quot;Save this lookup&quot; is it stored in this browser&#x27;s Notebook, on your device, and you can delete it there at any time. Market data is not stored.</span></p></details></div>
 </form>
 <p><button type="button" id="ver-lectura-caida"><span class="lang es" lang="es">Mostrar el aviso de lectura no disponible</span><span class="lang en" lang="en">Show the reading-unavailable notice</span></button></p><p class="source"><span class="lang es" lang="es">Ese botón no hace una consulta nueva. Enseña el aviso de lectura no disponible. La dirección escrita se queda en el campo y ese botón no la guarda.</span><span class="lang en" lang="en">That button does not make a new query. It shows the reading-unavailable notice. The address you typed stays in the field and that button does not save it.</span></p>
+<section id="comprobaciones-red" class="comprobaciones-red" aria-live="polite"></section>
 <section id="resultado" tabindex="-1" class="resultado" data-state="vacio" data-luz="neutro" aria-live="polite">
 <h2><span class="lang es" lang="es">La lectura aparece aquí</span><span class="lang en" lang="en">The reading shows up here</span></h2>
 <p class="apoyo"><span class="lang es" lang="es">La lectura será una de estas tres. Los detalles técnicos se quedan plegados.</span><span class="lang en" lang="en">The reading will be one of these three. Technical details stay folded.</span></p>
@@ -103,6 +111,7 @@
 </div></footer>
 <script src="../assets/draft-address.js"></script>
 <script src="../assets/verify.js"></script>
+<script type="module" src="../assets/redes.mjs"></script>
 <script type="module" src="../assets/verificar-acciones.mjs"></script>
 </body>
 </html>

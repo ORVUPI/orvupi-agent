@@ -142,6 +142,14 @@ function walk(dir: string): string[] {
   return out;
 }
 
+function httpsUrlHosts(source: string): string[] {
+  const hosts: string[] = [];
+  for (const match of source.matchAll(/https:\/\/[a-z0-9.-]+/gi)) {
+    hosts.push(new URL(match[0]).host);
+  }
+  return hosts;
+}
+
 function cspHosts(policy: string): string[] {
   const connect = policy
     .split(";")
@@ -534,12 +542,18 @@ describe("web v2", () => {
     assert.match(html, /2026-10-09/);
     assert.match(html, /USD Coin/);
     assert.match(html, /No es una auditoría, ni una recomendación, ni un aval/);
+    assert.match(html, /Que no aparezcan señales no significa que esté todo comprobado\./);
+    assert.match(html, /No signals showing does not mean everything was checked\./);
+    assert.equal(html.includes("Que no aparezcan señales no significa que no haya riesgo"), false);
+    assert.equal(html.includes("No signals showing does not mean there is no risk"), false);
+    assert.equal(html.includes("no significa que no haya riesgo"), false);
+    assert.equal(html.includes("does not mean there is no risk"), false);
     assert.match(html, /Solo si pulsas «Guardar esta consulta»/);
     assert.equal(html.includes("Esta página no consulta la red"), false);
     assert.equal(html.includes("\uFFFD"), false);
     assert.match(html, /assets\/verify\.js/);
     const meta = html.match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
-    assert.deepEqual(cspHosts(meta), ["solana-rpc.publicnode.com", "api.mainnet-beta.solana.com", "api.dexscreener.com"]);
+    assert.deepEqual(cspHosts(meta), ["solana-rpc.publicnode.com", "api.mainnet-beta.solana.com", "mainnet.base.org", "api.dexscreener.com"]);
     assert.equal(meta.includes("*.dexscreener"), false);
     assert.equal((meta.match(/connect-src/g) ?? []).length, 1);
     const home = read("index.html");
@@ -549,6 +563,10 @@ describe("web v2", () => {
     assert.match(headers, /\/verify\/\*/);
     assert.match(headers, /! Content-Security-Policy/);
     const bundle = read("assets/verify.js");
+    assert.match(bundle, /Que no aparezcan señales no significa que esté todo comprobado\./);
+    assert.match(bundle, /No signals showing does not mean everything was checked\./);
+    assert.equal(bundle.includes("Que no aparezcan señales no significa que no haya riesgo"), false);
+    assert.equal(bundle.includes("No signals showing does not mean there is no risk"), false);
     assert.match(bundle, /stubx-verify-preview/);
     assert.match(bundle, /ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump/);
     assert.match(bundle, /FMNb4CR8ksibmgY7Ztei6BWcZXi3WHcVeJhYb9TNpump/);
@@ -814,6 +832,7 @@ describe("web v2", () => {
     assert.deepEqual(cspHosts(verifyPolicy?.header ?? ""), [
       "solana-rpc.publicnode.com",
       "api.mainnet-beta.solana.com",
+      "mainnet.base.org",
       "api.dexscreener.com",
     ]);
     assert.equal((verifyPolicy?.header ?? "").includes("*.dexscreener"), false);
@@ -827,6 +846,7 @@ describe("web v2", () => {
     assert.deepEqual(cspHosts(notebookPolicy?.header ?? ""), [
       "solana-rpc.publicnode.com",
       "api.mainnet-beta.solana.com",
+      "mainnet.base.org",
       "api.dexscreener.com",
     ]);
     const samples = ["/", "/verify/", "/lab/", "/lab/sw.js", "/aprender/", "/studio/", "/cuaderno/", "/cuaderno/index.html", "/token.json", "/assets/site.css", "/404.html"];
@@ -866,6 +886,70 @@ describe("web v2", () => {
       assert.match(html, /og-stubx-2026-10b-1200x630\.jpg/, rel);
       assert.equal(html.includes("og-stubx-2026-10-1200x630.jpg"), false, rel);
     }
+  });
+
+  test("los orígenes EVM activos salen de networks.json y un host malicioso rompe el build", () => {
+    const root = repoRoot();
+    const networks = JSON.parse(readFileSync(path.join(root, "web/v2/shared/networks.json"), "utf8")) as {
+      networks: { id: string; family: string; enabled: boolean; rpc?: string }[];
+    };
+    const active = networks.networks
+      .filter((item) => item.enabled && item.family === "evm" && item.rpc)
+      .map((item) => new URL(item.rpc as string).host);
+    const dormant = networks.networks
+      .filter((item) => item.family === "evm" && item.enabled === false && item.rpc)
+      .map((item) => new URL(item.rpc as string).host);
+    const sameHost = (hosts: readonly string[], name: string) => hosts.some((host) => host === name);
+    assert.deepEqual(active, ["mainnet.base.org"]);
+    assert.equal(sameHost(dormant, "ethereum-rpc.publicnode.com"), true);
+    assert.equal(sameHost(dormant, "bsc-rpc.publicnode.com"), true);
+    const headers = readFileSync(path.join(root, "web/v2/_headers"), "utf8");
+    const verifyMeta = readFileSync(path.join(root, "web/v2/verify/index.html"), "utf8").match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
+    const notebookMeta = readFileSync(path.join(root, "web/v2/cuaderno/index.html"), "utf8").match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
+    const paresMeta = readFileSync(path.join(root, "web/v2/pares/index.html"), "utf8").match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
+    const headerHosts = httpsUrlHosts(headers);
+    const verifyHosts = httpsUrlHosts(verifyMeta);
+    const notebookHosts = httpsUrlHosts(notebookMeta);
+    const paresHosts = httpsUrlHosts(paresMeta);
+    for (const host of active) {
+      assert.equal(sameHost(headerHosts, host), true, host);
+      assert.equal(sameHost(verifyHosts, host), true, host);
+      assert.equal(sameHost(notebookHosts, host), true, host);
+    }
+    for (const host of dormant) {
+      assert.equal(sameHost(headerHosts, host), false, host);
+      assert.equal(sameHost(verifyHosts, host), false, host);
+      assert.equal(sameHost(notebookHosts, host), false, host);
+      assert.equal(sameHost(paresHosts, host), false, host);
+    }
+    const script = `
+import importlib.util
+spec = importlib.util.spec_from_file_location("build_site", "web/v2/tools/build_site.py")
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+samples = [
+    "https://a.com;script-src *",
+    "https://user@mainnet.base.org",
+    "https://mainnet.base.org:443",
+    "https://mainnet.base.org/rpc",
+    "https://mainnet.base.org extra",
+    "http://mainnet.base.org",
+    "https://mainnet.base.org?x=1",
+]
+for sample in samples:
+    try:
+        mod.evm_rpc_origin(sample)
+    except SystemExit:
+        continue
+    raise SystemExit("aceptó " + sample)
+if mod.evm_rpc_origin("https://mainnet.base.org") != "https://mainnet.base.org":
+    raise SystemExit("base")
+origins = mod.evm_rpc_origins()
+if origins != ["https://mainnet.base.org"]:
+    raise SystemExit(repr(origins))
+`;
+    const run = spawnSync("python3", ["-c", script], { cwd: root, encoding: "utf8" });
+    assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
   });
 
   test("the browser bundle matches lab/", async () => {

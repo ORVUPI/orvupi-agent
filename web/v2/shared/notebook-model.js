@@ -118,6 +118,129 @@ function amount(value) {
   return value === null || (typeof value === "string" && /^\d+$/.test(value) && value.length <= 40);
 }
 
+export const EVM_CARD_SCHEMA = "stubx.notebook.card.evm";
+export const EVM_CARD_VERSION = 1;
+
+const EVM_CARD_KEYS = [
+  "schema",
+  "schemaVersion",
+  "rulesVersion",
+  "network",
+  "address",
+  "consultedAt",
+  "partial",
+  "code",
+  "name",
+  "symbol",
+  "decimals",
+  "totalSupply",
+  "owner",
+  "proxy",
+  "disclaimer",
+];
+
+const EVM_ADDRESS = /^0x[0-9a-fA-F]{40}$/;
+const EVM_NETWORKS = new Set(["base", "ethereum", "bnb"]);
+
+function evmText(value) {
+  if (!value || typeof value !== "object" || !sameKeys(value, ["status", "text"])) return false;
+  if (value.text !== null && (typeof value.text !== "string" || value.text.length > 300)) return false;
+  return STATUSES.has(value.status);
+}
+
+export function validateEvmCard(card) {
+  if (!sameKeys(card, EVM_CARD_KEYS)) return fail("La ficha no tiene la forma esperada.", "The card does not have the expected shape.");
+  if (card.schema !== EVM_CARD_SCHEMA || card.schemaVersion !== EVM_CARD_VERSION) {
+    return fail("La versión de la ficha no es la de este cuaderno.", "The card version is not the one this notebook uses.");
+  }
+  if (card.rulesVersion !== "0.1.0" || !EVM_NETWORKS.has(card.network)) {
+    return fail("La ficha no dice la red o la versión de reglas.", "The card does not name the network or the rules version.");
+  }
+  if (typeof card.address !== "string" || card.address !== card.address.toLowerCase() || !EVM_ADDRESS.test(card.address) || /^0x0{40}$/.test(card.address)) {
+    return fail("La dirección de la ficha no es una dirección de esta red.", "The address on the card is not an address of this network.");
+  }
+  if (typeof card.consultedAt !== "string" || !ISO.test(card.consultedAt)) {
+    return fail("La ficha no trae una hora UTC.", "The card does not include a UTC time.");
+  }
+  if (typeof card.partial !== "boolean") return fail("Falta un estado de la ficha.", "A card status is missing.");
+  const code = card.code;
+  if (!code || !sameKeys(code, ["status", "kind"]) || !STATUSES.has(code.status)) {
+    return fail("El dato de contrato o cuenta no tiene la forma esperada.", "The contract-or-account fact does not have the expected shape.");
+  }
+  if (code.kind !== null && code.kind !== "contrato" && code.kind !== "cuenta") {
+    return fail("El dato de contrato o cuenta no tiene la forma esperada.", "The contract-or-account fact does not have the expected shape.");
+  }
+  if (!evmText(card.name) || !evmText(card.symbol)) {
+    return fail("Un texto del contrato no tiene la forma esperada.", "A contract text does not have the expected shape.");
+  }
+  const decimals = card.decimals;
+  if (!decimals || !sameKeys(decimals, ["status", "value"]) || !STATUSES.has(decimals.status)) {
+    return fail("Los decimales no son válidos.", "The decimals are not valid.");
+  }
+  if (decimals.value !== null && (!Number.isInteger(decimals.value) || decimals.value < 0 || decimals.value > 255)) {
+    return fail("Los decimales no son válidos.", "The decimals are not valid.");
+  }
+  const supply = card.totalSupply;
+  if (!supply || !sameKeys(supply, ["status", "raw"]) || !STATUSES.has(supply.status) || !amount(supply.raw)) {
+    return fail("La cantidad total no es un entero en unidades mínimas.", "The total amount is not an integer in base units.");
+  }
+  const owner = card.owner;
+  if (!owner || !sameKeys(owner, ["status", "address", "reason"]) || !STATUSES.has(owner.status)) {
+    return fail("La dirección owner() no tiene la forma esperada.", "The owner() address does not have the expected shape.");
+  }
+  if (owner.address !== null && (typeof owner.address !== "string" || owner.address !== owner.address.toLowerCase() || !EVM_ADDRESS.test(owner.address) || /^0x0{40}$/.test(owner.address))) {
+    return fail("La dirección owner() no tiene la forma esperada.", "The owner() address does not have the expected shape.");
+  }
+  if (owner.reason !== null && owner.reason !== "revert" && owner.reason !== "cero" && owner.reason !== "vacio" && owner.reason !== "rpc") {
+    return fail("La dirección owner() no tiene la forma esperada.", "The owner() address does not have the expected shape.");
+  }
+  const proxy = card.proxy;
+  if (!proxy || !sameKeys(proxy, ["status", "implementation", "admin", "beacon"]) || !STATUSES.has(proxy.status)) {
+    return fail("El proxy no tiene la forma esperada.", "The proxy does not have the expected shape.");
+  }
+  for (const key of ["implementation", "admin", "beacon"]) {
+    if (proxy[key] !== null && (typeof proxy[key] !== "string" || proxy[key] !== proxy[key].toLowerCase() || !EVM_ADDRESS.test(proxy[key]) || /^0x0{40}$/.test(proxy[key]))) {
+      return fail("El proxy no tiene la forma esperada.", "The proxy does not have the expected shape.");
+    }
+  }
+  if (!card.disclaimer || card.disclaimer.es !== DISCLAIMER.es || card.disclaimer.en !== DISCLAIMER.en) {
+    return fail("Falta el aviso fijo de la ficha.", "The fixed card notice is missing.");
+  }
+  if (dangerousString(card, 0) || bannedKey(card, 0)) {
+    return fail("La ficha trae texto que este cuaderno no guarda.", "The card contains text this notebook does not store.");
+  }
+  return { ok: true, card };
+}
+
+export function validateAnyCard(card) {
+  if (card && card.schema === EVM_CARD_SCHEMA) return validateEvmCard(card);
+  return validateCard(card);
+}
+
+export function cardDecimals(card) {
+  if (Number.isInteger(card && card.decimals)) return card.decimals;
+  if (card && card.decimals && Number.isInteger(card.decimals.value)) return card.decimals.value;
+  return null;
+}
+
+function placeOf(card) {
+  if (!card || typeof card !== "object") return { network: "", address: "" };
+  const address = typeof card.address === "string" && card.address
+    ? card.address
+    : typeof card.mint === "string"
+      ? card.mint
+      : "";
+  return { network: typeof card.network === "string" ? card.network : "", address };
+}
+
+function samePlace(left, right) {
+  const a = placeOf(left && left.card);
+  const b = placeOf(right && right.card);
+  if (!a.network || a.network !== b.network || !a.address || !b.address) return false;
+  if (a.network === "solana") return a.address === b.address;
+  return a.address.toLowerCase() === b.address.toLowerCase();
+}
+
 export function validateCard(card) {
   const version = card && card.schemaVersion;
   const keys = version === 1 ? CARD_KEYS_V1 : version === 2 ? CARD_KEYS_V2 : null;
@@ -220,7 +343,7 @@ export function validateRecord(record) {
   if (DANGER.test(note)) {
     return fail("La nota parece un script. No se importa.", "The note looks like a script. It was not imported.");
   }
-  const card = validateCard(record.card);
+  const card = validateAnyCard(record.card);
   if (!card.ok) return card;
   return { ok: true, record: { id: record.id, note, card: card.card } };
 }
@@ -519,8 +642,88 @@ function supplyRow(left, right) {
   };
 }
 
+const EVM_COMPARE_FIELDS = [
+  ["code.kind", "code.status", "Contrato o cuenta", "Contract or account", false],
+  ["name.text", "name.status", "Nombre", "Name", false],
+  ["symbol.text", "symbol.status", "Símbolo", "Symbol", false],
+  ["decimals.value", "decimals.status", "Decimales", "Decimals", false],
+  ["owner.address", "owner.status", "Dirección owner()", "owner() address", false],
+  ["proxy.implementation", "proxy.status", "Proxy EIP-1967", "EIP-1967 proxy", false],
+  ["proxy.admin", "proxy.status", "Admin del proxy", "Proxy admin", false],
+  ["proxy.beacon", "proxy.status", "Beacon del proxy", "Proxy beacon", false],
+];
+
+function compareEvmRecords(left, right) {
+  const rows = EVM_COMPARE_FIELDS.map(([path, statusPath, es, en, amountField]) => {
+    const a = readPath(left.card, path);
+    const b = readPath(right.card, path);
+    const leftState = compareFact(readPath(left.card, statusPath), a);
+    const rightState = compareFact(readPath(right.card, statusPath), b);
+    const verdict = determined(leftState) && determined(rightState)
+      ? (Object.is(a, b) ? "igual" : "cambio")
+      : "indeterminado";
+    return {
+      field: { es, en },
+      left: a === null || a === undefined ? null : String(a),
+      right: b === null || b === undefined ? null : String(b),
+      amount: amountField,
+      leftState,
+      rightState,
+      verdict,
+      same: verdict === "igual",
+      leftAt: left.card.consultedAt,
+      rightAt: right.card.consultedAt,
+    };
+  });
+  const supply = {
+    field: { es: "Cantidad total", en: "Total amount" },
+    left: left.card.totalSupply && left.card.totalSupply.status === "ok" ? left.card.totalSupply.raw : null,
+    right: right.card.totalSupply && right.card.totalSupply.status === "ok" ? right.card.totalSupply.raw : null,
+    amount: true,
+    difference: null,
+    leftState: factState(left.card.totalSupply && left.card.totalSupply.status, left.card.totalSupply && left.card.totalSupply.raw),
+    rightState: factState(right.card.totalSupply && right.card.totalSupply.status, right.card.totalSupply && right.card.totalSupply.raw),
+    leftAt: left.card.consultedAt,
+    rightAt: right.card.consultedAt,
+  };
+  if (determined(supply.leftState) && determined(supply.rightState)) {
+    supply.verdict = supply.left === supply.right ? "igual" : "cambio";
+    if (
+      supply.verdict === "cambio"
+      && supply.left
+      && supply.right
+      && cardDecimals(left.card) !== null
+      && cardDecimals(left.card) === cardDecimals(right.card)
+    ) {
+      supply.difference = (BigInt(supply.right) - BigInt(supply.left)).toString();
+    }
+  } else {
+    supply.verdict = "indeterminado";
+  }
+  supply.same = supply.verdict === "igual";
+  const decimalsAt = rows.findIndex((row) => row.field.es === "Decimales");
+  rows.splice(decimalsAt + 1, 0, supply);
+  return {
+    ok: true,
+    mint: left.card.address,
+    network: left.card.network,
+    formatChanged: left.card.schemaVersion !== right.card.schemaVersion,
+    rows,
+    changes: rows.filter((row) => row.verdict === "cambio"),
+    unknown: rows.filter((row) => row.verdict === "indeterminado"),
+    unchanged: rows.filter((row) => row.verdict === "igual"),
+    technical: {
+      slot: { left: null, right: null },
+      consultedAt: { left: left.card.consultedAt, right: right.card.consultedAt },
+    },
+    notes: { left: left.note, right: right.note },
+    older: left,
+    newer: right,
+  };
+}
+
 export function compareRecords(left, right) {
-  if (!left || !right || left.card.mint !== right.card.mint || left.card.network !== right.card.network) {
+  if (!samePlace(left, right)) {
     return fail(
       "Solo se comparan dos consultas de la misma red y dirección.",
       "Only two queries of the same network and address can be compared.",
@@ -531,6 +734,7 @@ export function compareRecords(left, right) {
     left = right;
     right = newer;
   }
+  if (left.card.schema === EVM_CARD_SCHEMA || right.card.schema === EVM_CARD_SCHEMA) return compareEvmRecords(left, right);
   const rows = COMPARE_FIELDS.map(([path, statusPath, es, en, amount]) => {
     const a = readPath(left.card, path);
     const b = readPath(right.card, path);
@@ -574,10 +778,14 @@ export function compareRecords(left, right) {
 }
 
 export function pickPrevious(records, card, exceptId) {
-  if (!card || typeof card.mint !== "string" || typeof card.network !== "string") return null;
+  const place = placeOf(card);
+  if (!place.address || !place.network) return null;
   const matches = (Array.isArray(records) ? records : []).filter((item) => {
     if (!item || !item.card || item.id === exceptId) return false;
-    return item.card.mint === card.mint && item.card.network === card.network;
+    const other = placeOf(item.card);
+    if (other.network !== place.network) return false;
+    if (place.network === "solana") return other.address === place.address;
+    return other.address.toLowerCase() === place.address.toLowerCase();
   });
   matches.sort((a, b) => (a.card.consultedAt < b.card.consultedAt ? 1 : -1));
   return matches[0] ?? null;
@@ -608,7 +816,7 @@ function readingBaseLabel(card, lang) {
   const spoken = notebookNameText(card, lang);
   const symbol = card && card.symbol && typeof card.symbol.text === "string" ? clipName(card.symbol.text, 24) : "";
   const name = card && card.name && typeof card.name.text === "string" ? clipName(card.name.text, 24) : "";
-  const shortMint = `${String(card && card.mint ? card.mint : "").slice(0, 4)}…`;
+  const shortMint = `${placeOf(card).address.slice(0, 4)}…`;
   if (spoken.startsWith("Dice llamarse ") || spoken.startsWith("It says it is called ")) {
     return `${spoken} · ${shortMint} · ${stamp}`;
   }
@@ -652,6 +860,13 @@ export function formatLocal(consultedAt, lang) {
 
 export const NOTEBOOK_DB_VERSION = 2;
 
+function canonicalPlace(value) {
+  if (typeof value !== "string") return "";
+  const trimmed = value.trim();
+  if (/^0x[0-9a-fA-F]{40}$/.test(trimmed)) return trimmed.toLowerCase();
+  return trimmed;
+}
+
 /**
  * Copia red y dirección a la entrada si faltan.
  * No borra la entrada, no pisa una red o una dirección que ya estuvieran, y no inventa datos.
@@ -662,7 +877,11 @@ export function migrateStoredRecord(record) {
   }
   const card = record.card && typeof record.card === "object" ? record.card : null;
   const networkFromCard = card && typeof card.network === "string" ? card.network : "";
-  const addressFromCard = card && typeof card.mint === "string" ? card.mint : "";
+  const addressFromCard = card && typeof card.address === "string" && card.address
+    ? card.address
+    : card && typeof card.mint === "string"
+      ? card.mint
+      : "";
   const next = { ...record };
   let changed = false;
   if (typeof next.network !== "string" || !next.network) {
@@ -673,7 +892,13 @@ export function migrateStoredRecord(record) {
   }
   if (typeof next.address !== "string" || !next.address) {
     if (addressFromCard) {
-      next.address = addressFromCard;
+      next.address = canonicalPlace(addressFromCard);
+      changed = true;
+    }
+  } else {
+    const placed = canonicalPlace(next.address);
+    if (placed !== next.address) {
+      next.address = placed;
       changed = true;
     }
   }
@@ -687,10 +912,18 @@ export function stampIdentity(record) {
   const network = card && typeof card.network === "string" && card.network
     ? card.network
     : (typeof record.network === "string" ? record.network : "");
-  const address = card && typeof card.mint === "string" && card.mint
-    ? card.mint
-    : (typeof record.address === "string" ? record.address : "");
-  return { ...record, network, address };
+  const rawAddress = card && typeof card.address === "string" && card.address
+    ? card.address
+    : card && typeof card.mint === "string" && card.mint
+      ? card.mint
+      : (typeof record.address === "string" ? record.address : "");
+  const address = canonicalPlace(rawAddress);
+  let cardOut = card;
+  if (card && typeof card.address === "string" && /^0x[0-9a-fA-F]{40}$/.test(card.address.trim())) {
+    const lower = card.address.trim().toLowerCase();
+    if (lower !== card.address) cardOut = { ...card, address: lower };
+  }
+  return { ...record, card: cardOut, network, address };
 }
 
 export function watchTargets(records) {

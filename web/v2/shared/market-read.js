@@ -1,3 +1,20 @@
+let marketNetwork = () => null;
+
+/** Lo rellena networks.js. La lista completa no entra en el bundle de Solana. */
+export function setMarketDirectory(lookup) {
+  marketNetwork = typeof lookup === "function" ? lookup : () => null;
+}
+
+function marketNetworkById(id) {
+  return marketNetwork(id);
+}
+
+function knownQuote(chain, address) {
+  const network = marketNetworkById(chain);
+  if (!network || !network.knownQuotes || typeof address !== "string") return "";
+  return network.knownQuotes[address.toLowerCase()] || "";
+}
+
 /**
  * Lectura de mercado de solo lectura para un mint de Solana.
  * Normaliza la respuesta pública de DEX Screener. No calcula cifras,
@@ -36,6 +53,7 @@ export const MARKET_WINDOWS = Object.freeze([
 
 const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
 const PAIR_ADDRESS = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+const EVM_PAIR_ADDRESS = /^0x[0-9a-fA-F]{40}$/;
 const STATUSES = new Set(["ok", "sin_pares", "fallo", "limite", "incompleta", "consulta"]);
 
 // Mismo texto que AVISO_GUARDAR.
@@ -161,6 +179,9 @@ const MARKET_DEX_NAMES = new Map([
   ["pumpfun", "Pump.fun"],
   ["pump.fun", "Pump.fun"],
   ["pump-fun", "Pump.fun"],
+  ["aerodrome", "Aerodrome"],
+  ["uniswap", "Uniswap"],
+  ["baseswap", "BaseSwap"],
 ]);
 const MARKET_DEX_FIXED = new Set(MARKET_DEX_NAMES.values());
 
@@ -209,17 +230,31 @@ function tokenAddress(token) {
   return token.address;
 }
 
-function readPair(item, mint) {
+function marketChain(meta) {
+  const chain = meta && typeof meta.chain === "string" ? meta.chain : "";
+  return chain && chain !== "solana" ? chain : "solana";
+}
+
+function sameMarketAddress(left, right, evm) {
+  if (typeof left !== "string" || typeof right !== "string") return false;
+  if (left !== left.trim() || right !== right.trim()) return false;
+  if (!evm) return left === right;
+  return left.toLowerCase() === right.toLowerCase();
+}
+
+function readPair(item, mint, chain) {
   if (!item || typeof item !== "object") return null;
-  if (typeof item.chainId === "string" && item.chainId !== "solana") return null;
+  const evm = chain && chain !== "solana";
+  const expected = evm ? (marketNetworkById(chain) && marketNetworkById(chain).dexscreener) || chain : "solana";
+  if (typeof item.chainId === "string" && item.chainId !== expected) return null;
   const baseAddress = tokenAddress(item.baseToken);
   const quoteAddress = tokenAddress(item.quoteToken);
-  if (!mint || (baseAddress !== mint && quoteAddress !== mint)) return null;
+  if (!mint || (!sameMarketAddress(baseAddress, mint, evm) && !sameMarketAddress(quoteAddress, mint, evm))) return null;
   const volume = readVolume(item.volume);
   const base = clipSymbol(item.baseToken && item.baseToken.symbol);
   const quote = clipSymbol(item.quoteToken && item.quoteToken.symbol);
   const rawPair = typeof item.pairAddress === "string" ? item.pairAddress : "";
-  const address = PAIR_ADDRESS.test(rawPair) ? rawPair : "";
+  const address = evm ? (EVM_PAIR_ADDRESS.test(rawPair) ? rawPair : "") : PAIR_ADDRESS.test(rawPair) ? rawPair : "";
   return {
     dex: displayDex(item.dexId),
     pairAddress: address,
@@ -265,39 +300,45 @@ export function marketLoading(mint) {
   };
 }
 
+function tagChain(model, chain) {
+  if (!chain || chain === "solana") return model;
+  return { ...model, chain };
+}
+
 export function normalizeUpstream(httpStatus, bodyText, meta) {
   const mint = meta && meta.mint;
   const queriedAt = meta && meta.queriedAt;
-  if (httpStatus === 429) return marketFailure(mint, queriedAt, "http");
+  const chain = marketChain(meta);
+  if (httpStatus === 429) return tagChain(marketFailure(mint, queriedAt, "http"), chain);
   if (typeof bodyText === "string" && bodyText.length > MARKET_MAX_BODY) {
-    return marketFailure(mint, queriedAt, "grande");
+    return tagChain(marketFailure(mint, queriedAt, "grande"), chain);
   }
   const text = typeof bodyText === "string" ? bodyText.trim() : "";
   if (typeof httpStatus !== "number" || httpStatus < 200 || httpStatus >= 300) {
-    return marketFailure(mint, queriedAt, "http");
+    return tagChain(marketFailure(mint, queriedAt, "http"), chain);
   }
   let parsed;
   try {
     parsed = JSON.parse(text);
   } catch {
-    return marketFailure(mint, queriedAt, "json");
+    return tagChain(marketFailure(mint, queriedAt, "json"), chain);
   }
   const list = Array.isArray(parsed) ? parsed : parsed && Array.isArray(parsed.pairs) ? parsed.pairs : null;
-  if (!list) return marketFailure(mint, queriedAt, "json");
-  if (list.length === 0) return marketFailure(mint, queriedAt, "vacio");
+  if (!list) return tagChain(marketFailure(mint, queriedAt, "json"), chain);
+  if (list.length === 0) return tagChain(marketFailure(mint, queriedAt, "vacio"), chain);
   const usable = [];
   let skipped = 0;
   const cap = Math.min(list.length, MARKET_PARSE);
   for (let i = 0; i < cap; i += 1) {
-    const pair = readPair(list[i], mint);
+    const pair = readPair(list[i], mint, chain);
     if (!pair) skipped += 1;
     else usable.push(pair);
   }
-  if (usable.length === 0) return marketFailure(mint, queriedAt, "json");
+  if (usable.length === 0) return tagChain(marketFailure(mint, queriedAt, "json"), chain);
   const shown = usable.slice(0, MARKET_SHOW);
   const omitted = usable.length - shown.length + skipped + (list.length - cap);
   const anyFigure = shown.some((pair) => pair.liquidityUsd !== null || pair.volumeUsd !== null);
-  return {
+  return tagChain({
     schema: MARKET_SCHEMA,
     status: anyFigure ? "ok" : "incompleta",
     reason: anyFigure ? "leido" : "parcial",
@@ -308,7 +349,7 @@ export function normalizeUpstream(httpStatus, bodyText, meta) {
     zone: "Europe/Madrid",
     pairs: shown,
     omitted,
-  };
+  }, chain);
 }
 
 function pairShape(value) {
@@ -391,9 +432,16 @@ function takeClientSlot(atMs) {
   return true;
 }
 
-export function marketUpstreamUrl(mint) {
-  if (!isSolanaMint(mint)) return "";
-  return `https://${MARKET_HOST}${MARKET_PATH}${encodeURIComponent(mint)}`;
+export function marketUpstreamUrl(mint, chain) {
+  const id = typeof chain === "string" && chain ? chain : "solana";
+  if (id === "solana") {
+    if (!isSolanaMint(mint)) return "";
+    return `https://${MARKET_HOST}${MARKET_PATH}${encodeURIComponent(mint)}`;
+  }
+  const network = marketNetworkById(id);
+  if (!network || !network.enabled || network.family !== "evm" || !network.dexscreener) return "";
+  if (typeof mint !== "string" || mint !== mint.trim() || !EVM_PAIR_ADDRESS.test(mint)) return "";
+  return `https://${MARKET_HOST}/token-pairs/v1/${network.dexscreener}/${encodeURIComponent(mint)}`;
 }
 
 function abortError() {
@@ -491,12 +539,17 @@ export async function loadMarket(mint, fetchImpl, now) {
   const clock = clockFrom(now);
   const timeoutMs = timeoutFrom(now);
   const iso = clock().toISOString();
-  if (!isSolanaMint(mint)) return marketFailure(mint, iso, "mint");
+  const chain = now && typeof now === "object" && typeof now.chain === "string" ? now.chain : "solana";
+  if (chain === "solana") {
+    if (!isSolanaMint(mint)) return marketFailure(mint, iso, "mint");
+  } else if (!marketUpstreamUrl(mint, chain)) {
+    return tagChain(marketFailure(mint, iso, "mint"), chain);
+  }
   const allowed = now && typeof now.takeSlot === "function" ? now.takeSlot() : takeClientSlot(clock().getTime());
   if (!allowed) return marketFailure(mint, iso, "pausa-navegador");
   const fetchFn = fetchImpl || globalThis.fetch;
   if (typeof fetchFn !== "function") return marketFailure(mint, iso, "http");
-  const upstream = marketUpstreamUrl(mint);
+  const upstream = marketUpstreamUrl(mint, chain);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -512,16 +565,16 @@ export async function loadMarket(mint, fetchImpl, now) {
     const status = response && typeof response.status === "number" ? response.status : 0;
     if (status >= 300 && status < 400) {
       await readCappedText(response, MARKET_MAX_BODY, controller.signal);
-      return marketFailure(mint, iso, "http");
+      return tagChain(marketFailure(mint, iso, "http"), chain);
     }
     const capped = await readCappedText(response, MARKET_MAX_BODY, controller.signal);
-    if (capped.aborted || controller.signal.aborted) return marketFailure(mint, iso, "tiempo");
-    if (capped.failed) return marketFailure(mint, iso, "http");
-    if (capped.overflow) return marketFailure(mint, iso, "grande");
-    if (status === 429) return marketFailure(mint, iso, "http");
-    return normalizeUpstream(status, capped.text, { mint, queriedAt: iso });
+    if (capped.aborted || controller.signal.aborted) return tagChain(marketFailure(mint, iso, "tiempo"), chain);
+    if (capped.failed) return tagChain(marketFailure(mint, iso, "http"), chain);
+    if (capped.overflow) return tagChain(marketFailure(mint, iso, "grande"), chain);
+    if (status === 429) return tagChain(marketFailure(mint, iso, "http"), chain);
+    return normalizeUpstream(status, capped.text, { mint, queriedAt: iso, chain });
   } catch (error) {
-    return marketFailure(mint, iso, isAbort(error, controller.signal) ? "tiempo" : "http");
+    return tagChain(marketFailure(mint, iso, isAbort(error, controller.signal) ? "tiempo" : "http"), chain);
   } finally {
     clearTimeout(timer);
   }
@@ -650,7 +703,13 @@ function windowLabel(key, lang) {
   return found[1][lang === "en" ? "en" : "es"];
 }
 
-function sideName(symbol, address, lang) {
+function sideName(symbol, address, lang, chain) {
+  if (chain && chain !== "solana") {
+    const fixed = knownQuote(chain, address);
+    if (fixed) return fixed;
+    if (!symbol) return marketCopy(lang, "sin símbolo", "no symbol");
+    return marketCopy(lang, `Dice llamarse «${symbol}»`, `It says it is called «${symbol}»`);
+  }
   const fixed = MARKET_KNOWN_QUOTES.get(address);
   if (fixed) return fixed;
   if (!symbol) return marketCopy(lang, "sin símbolo", "no symbol");
@@ -658,9 +717,9 @@ function sideName(symbol, address, lang) {
   return marketCopy(lang, `Dice llamarse «${symbol}»`, `It says it is called «${symbol}»`);
 }
 
-function pairTitle(pair, lang) {
-  const base = sideName(pair.base, pair.baseMint, lang);
-  const quote = sideName(pair.quote, pair.quoteMint, lang);
+function pairTitle(pair, lang, chain) {
+  const base = sideName(pair.base, pair.baseMint, lang, chain);
+  const quote = sideName(pair.quote, pair.quoteMint, lang, chain);
   return marketCopy(lang, `Par: ${base} / ${quote}`, `Pair: ${base} / ${quote}`);
 }
 
@@ -737,6 +796,14 @@ export function marketGap(model, lang) {
     }
     return parts.join(" ");
   }
+  if (reason === "vacio" && model && model.chain && model.chain !== "solana") {
+    const label = marketNetworkById(model.chain)?.label?.[lang === "en" ? "en" : "es"] || model.chain;
+    return marketCopy(
+      lang,
+      `DEX Screener no listó ningún par de ${label} para esta dirección. No es una liquidez de cero.`,
+      `DEX Screener listed no ${label} pair for this address. That is not zero liquidity.`,
+    );
+  }
   const known = GAP[reason] || GAP.http;
   return known[lang === "en" ? "en" : "es"];
 }
@@ -750,7 +817,7 @@ export function describeMarket(model, lang) {
       const liquidity = formatUsd(pair.liquidityUsd, language);
       const volume = formatUsd(pair.volumeUsd, language);
       pairs.push({
-        title: pairTitle(pair, language),
+        title: pairTitle(pair, language, model && model.chain),
         where: pair.dex
           ? marketCopy(language, `Dónde está el par: ${dexPhrase(pair.dex, language)}`, `Where the pair is: ${dexPhrase(pair.dex, language)}`)
           : marketCopy(language, "Dónde está el par: la fuente no lo nombró.", "Where the pair is: the source did not name it."),

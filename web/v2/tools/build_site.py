@@ -290,10 +290,40 @@ def rpc_origins() -> list[str]:
 MARKET_ORIGIN = "https://api.dexscreener.com"
 
 
-def connect_src(include_rpc: bool, include_market: bool = False) -> str:
+EVM_RPC_URL = re.compile(
+    r"^https://[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$"
+)
+
+
+def evm_rpc_origin(rpc: object) -> str:
+    """Host https estricto: sin usuario, puerto, ruta, query, punto y coma ni espacios."""
+    if not isinstance(rpc, str) or not EVM_RPC_URL.fullmatch(rpc):
+        raise SystemExit(f"RPC de networks.json no válido: {rpc!r}")
+    return rpc
+
+
+def evm_rpc_origins() -> list[str]:
+    """Solo las redes EVM encendidas. Ethereum y BNB entran al poner enabled en true."""
+    data = json.loads((ROOT / "shared" / "networks.json").read_text(encoding="utf-8"))
+    origins: list[str] = []
+    for network in data.get("networks", []):
+        rpc = network.get("rpc")
+        if not rpc:
+            if network.get("enabled") and network.get("family") == "evm":
+                raise SystemExit(f"La red {network.get('id')!r} está encendida y no tiene RPC")
+            continue
+        origin = evm_rpc_origin(rpc)
+        if network.get("enabled") and network.get("family") == "evm" and origin not in origins:
+            origins.append(origin)
+    return origins
+
+
+def connect_src(include_rpc: bool, include_market: bool = False, include_evm: bool = False) -> str:
     parts = ["'self'"]
     if include_rpc:
         parts.extend(rpc_origins())
+    if include_evm:
+        parts.extend(evm_rpc_origins())
     if include_market:
         parts.append(MARKET_ORIGIN)
     return " ".join(parts)
@@ -542,6 +572,39 @@ def prepare_tool(name: str) -> str:
     raw = re.sub(r"</main>\s*$", "", raw)
     raw = raw.replace('<section id="resultado"', '<section id="resultado" tabindex="-1"', 1)
     if name == "verify":
+        raw = raw.replace(
+            "Las fichas de abajo son ejemplos fechados, no una lista completa.",
+            "Las fichas de abajo son ejemplos fechados, no una lista completa. Elige la red. Al abrir, la red es Solana. En Base la lectura también es solo lectura: sin cartera y sin firma.",
+            1,
+        )
+        raw = raw.replace(
+            "The cards below are dated examples, not a complete list.",
+            "The cards below are dated examples, not a complete list. Choose the network. When the page opens, the network is Solana. On Base the reading is also read-only: no wallet and no signature.",
+            1,
+        )
+        selector = (
+            '<div class="selector-red">\n'
+            '<label for="red">'
+            + t("Red", "Network")
+            + "</label>\n"
+            '<select id="red" name="red" data-red="si">\n'
+            '<option value="solana" selected>Solana</option>\n'
+            "</select>\n"
+            "</div>\n"
+        )
+        raw = raw.replace('<div class="consulta-barra">', selector + '<div class="consulta-barra">', 1)
+        notice = (
+            '<p id="aviso-rpc-base" class="aviso-rpc" hidden>'
+            '<span class="lang es" lang="es"></span>'
+            '<span class="lang en" lang="en"></span>'
+            "</p>\n"
+        )
+        raw = raw.replace('<p id="direccion-error"', notice + '<p id="direccion-error"', 1)
+        raw = raw.replace(
+            '<section id="resultado"',
+            '<section id="comprobaciones-red" class="comprobaciones-red" aria-live="polite"></section>\n<section id="resultado"',
+            1,
+        )
         form_end = raw.find("</form>")
         for marker in ('<div id="aviso-guardar"', '<p id="aviso-guardar"'):
             start = raw.find(marker)
@@ -1430,7 +1493,7 @@ def headers() -> str:
             "object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests"
         )
 
-    verify_csp = route_csp(connect_src(True, True))
+    verify_csp = route_csp(connect_src(True, True, True))
     pares_csp = route_csp(connect_src(True))
     return f"""# www.stubxai.com lo sirve Cloudflare Pages (comprobado 2026-10-09). El apex pasa por el proxy de Cloudflare.
 # Netlify ya no sirve el dominio: solo superb-horse-9036f5.netlify.app, con la redirección 301 de _redirects.
@@ -1438,8 +1501,9 @@ def headers() -> str:
 # worker-src 'self' deja registrar el service worker de Lab. Las páginas que no son Lab
 # repiten worker-src 'none' en la meta, y las dos políticas se cruzan.
 # connect-src global se queda en 'self'. /verify/, /verify/* y /cuaderno/* quitan
-# esa política con ! Content-Security-Policy y ponen una sola: los dos RPC y,
-# exacto, https://api.dexscreener.com. /pares/ solo lleva los dos RPC.
+# esa política con ! Content-Security-Policy y ponen una sola: los dos RPC de
+# Solana, el RPC de cada red EVM encendida (hoy mainnet.base.org) y, exacto,
+# https://api.dexscreener.com. /pares/ solo lleva los dos RPC de Solana.
 /*
   Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests
   Strict-Transport-Security: max-age=31536000; includeSubDomains
@@ -1648,7 +1712,7 @@ def main() -> None:
     shutil.copyfile(current / "app.js", ROOT / "app.js")
 
     write_page("index.html", "home", "STUBX · Contrasta la dirección", "STUBX · Check the address", "Consulta cualquier token de Solana, entiende sus permisos y guarda y compara lecturas. Solo lectura.", "Look up any Solana token, understand its permissions, and save and compare readings. Read-only.", home())
-    write_page("verify/index.html", "verify", "STUBX Verify", "STUBX Verify", "Lee cualquier token SPL o Token-2022 en directo y solo en lectura. Las fichas fechadas siguen como ejemplo.", "Read any SPL or Token-2022 token live and read-only. The dated cards remain as examples.", prepare_tool("verify"), ["assets/draft-address.js", "assets/verify.js"], True, connect=connect_src(True, True), modules=["assets/verificar-acciones.mjs"])
+    write_page("verify/index.html", "verify", "STUBX Verify", "STUBX Verify", "Lee cualquier token SPL o Token-2022 en directo y solo en lectura. Las fichas fechadas siguen como ejemplo.", "Read any SPL or Token-2022 token live and read-only. The dated cards remain as examples.", prepare_tool("verify"), ["assets/draft-address.js", "assets/verify.js"], True, connect=connect_src(True, True, True), modules=["assets/redes.mjs", "assets/verificar-acciones.mjs"])
     write_page("comparar/index.html", "comparar", "STUBX · Ejemplo de una curva", "STUBX · Curve example", "Ejemplo hipotético, no leído de la cadena. No es una recomendación ni un aval.", "Hypothetical example, not read from the chain. It is not a recommendation or an endorsement.", comparar(), narrow=True)
     write_page("pares/index.html", "pares", "STUBX · Lectura de la curva", "STUBX · Curve reading", "Moneda base y estado de la curva, tal como están en la cadena. No es una auditoría ni una recomendación.", "Base currency and curve state, as they are on chain. It is not an audit or a recommendation.", pares(), narrow=True, connect=connect_src(True), modules=["assets/pares.mjs"])
     write_page("lab/index.html", "lab", "STUBX Lab", "STUBX Lab", "Tres lecciones cortas con fichas reales, y una misión para distinguir el mint del registro de un clon.", "Three short lessons with real cards, and a mission to tell the registry mint from a clone.", prepare_tool("lab"), ["assets/mission.js"], True, True)

@@ -1,6 +1,6 @@
 {
   "version": "1.1.0",
-  "updated": "2026-10-10",
+  "updated": "2026-10-11",
   "editor": "Equipo del repositorio. La revisión por una persona distinta está pendiente.",
   "note": {
     "es": "Estados de un registro, no fechas prometidas. Una idea, código en el repositorio y una función en stubxai.com son cosas distintas. Este tablero solo cuenta el trabajo de STUBX. Citar la dirección de otro token, si hiciera falta en una prueba, no lo avala.",
@@ -822,6 +822,62 @@
           "change": {
             "es": "La columna de la web pasa a sí. La lectura de la curva está en stubxai.com/pares desde el 2026-10-10.",
             "en": "The website column becomes yes. Curve reading is on stubxai.com/pares since 2026-10-10."
+          }
+        }
+      ]
+    },
+    {
+      "id": "U10",
+      "version": "1",
+      "title": {
+        "es": "Lectura de Base, fase 1",
+        "en": "Base reading, phase 1"
+      },
+      "status": "en_revision",
+      "webPublished": false,
+      "scope": {
+        "es": "Selector de red en Verify y en el Cuaderno, con Solana al abrir. Lectura de solo lectura de un contrato en Base por el nodo público mainnet.base.org. Ethereum y BNB Chain están en la lista, apagados: se encienden con configuración. Todavía no está en stubxai.com.",
+        "en": "Network selector on Verify and the Notebook, with Solana when the page opens. Read-only reading of a contract on Base through the public node mainnet.base.org. Ethereum and BNB Chain are on the list, switched off: they turn on with configuration. It is not on stubxai.com yet."
+      },
+      "owner": "Equipo del repositorio",
+      "reviewer": "Pendiente de una persona distinta del autor, antes de publicar.",
+      "reviewedOn": "2026-10-11",
+      "block": {
+        "es": "El código está en el repositorio. La página de stubxai.com todavía no incluye esta lectura.",
+        "en": "The code is in the repository. The page on stubxai.com does not include this reading yet."
+      },
+      "evidence": [
+        {
+          "label": { "es": "Redes", "en": "Networks" },
+          "path": "web/v2/shared/networks.json",
+          "note": {
+            "es": "Base encendida. Ethereum y BNB Chain apagados.",
+            "en": "Base is on. Ethereum and BNB Chain are off."
+          }
+        },
+        {
+          "label": { "es": "Lector", "en": "Reader" },
+          "path": "web/v2/shared/evm-read.js",
+          "note": {
+            "es": "eth_call, eth_getCode y eth_getStorageAt. Sin firma.",
+            "en": "eth_call, eth_getCode, and eth_getStorageAt. No signature."
+          }
+        },
+        {
+          "label": { "es": "Vuelta atrás", "en": "Rollback" },
+          "path": "web/v2/shared/ROLLBACK.md",
+          "note": {
+            "es": "Cómo volver si la base del cuaderno queda a medias.",
+            "en": "How to go back if the notebook database is left mid-update."
+          }
+        }
+      ],
+      "history": [
+        {
+          "on": "2026-10-11",
+          "change": {
+            "es": "Fase 1 anotada. Se pidieron todas las redes, empezando por Base. Sigue fuera de stubxai.com.",
+            "en": "Phase 1 recorded. Every network was requested, starting with Base. Still absent from stubxai.com."
           }
         }
       ]

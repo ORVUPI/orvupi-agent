@@ -397,6 +397,9 @@ main h1::after {
     border-top: 0;
     box-shadow: none;
   }
+  #aviso-rpc-base:not([hidden]) {
+    grid-column: 1 / -1;
+  }
 }
 .skip { left: 0.85rem; }
 @media (prefers-reduced-motion: reduce) {
@@ -1126,6 +1129,7 @@ footer.site::before {
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
   gap: 0.75rem;
 }
+.ayuda-terminos a[hidden] { display: none !important; }
 .ayuda-terminos a {
   display: flex;
   align-items: center;
@@ -1549,6 +1553,15 @@ dd[data-estado="fallo"], dd[data-estado="ausente"], dd[data-estado="no_consultad
 }
 .ficha[data-veredicto="cambio"] { border-left-color: var(--attention); }
 .ficha[data-veredicto="indeterminado"] { border-left-color: var(--line); }
+.selector-red { display: grid; gap: 0.35rem; }
+.selector-red select { min-height: 3.25rem; font: inherit; width: 100%; max-width: 22rem; }
+.comprobaciones-red { margin: 1rem 0 1.4rem; }
+.comprobaciones-red h2 { font-size: 1.15rem; }
+.comprobaciones-red h3 { font-size: 1rem; margin: 0.8rem 0 0.3rem; }
+.comprobaciones-red ul { margin: 0.2rem 0 0.6rem; padding-left: 1.15rem; }
+.consulta-barra > #aviso-rpc-base:not([hidden]) { order: 2; }
+#aviso-rpc-base { margin: 0; line-height: 1.45; }
+#aviso-rpc-base[hidden] { display: none; }
 .grupo-desconocido { margin-top: 0.8rem; }
 article[id] { scroll-margin-top: 1rem; }
 @media (max-width: 48rem) {
