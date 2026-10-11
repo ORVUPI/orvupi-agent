@@ -316,8 +316,20 @@ describe("lector y cuaderno", () => {
     assert.equal(limited.ok, false);
     assert.equal(limited.card?.supplyRpc, null);
     assert.equal(limited.card?.supplyAccount, null);
+    assert.equal(limited.card?.supplyRpcStatus, "fallo");
+    assert.equal(limited.card?.largestStatus, "fallo");
+    assert.equal(limited.card?.programStatus, "fallo");
+    assert.equal(limited.card?.decimals ?? null, null);
     assert.equal(JSON.stringify(limited.card).includes('"0"'), false);
     assert.ok(calls >= 3);
+    const summary = (await import(pathToFileURL(path.join(repoRoot(), "web/v2/shared/reading-summary.js")).href)) as {
+      summaryFromCard: (card: Card) => { blocks: Array<{ id: string; items: Array<{ title: { es: string } }> }> };
+    };
+    const batchMissing = summary.summaryFromCard(limited.card as Card).blocks.find((item) => item.id === "falta");
+    const titles = (batchMissing?.items ?? []).map((item) => item.title.es).join(" | ");
+    assert.match(titles, /Suministro/);
+    assert.match(titles, /Decimales/);
+    assert.match(titles, /Cuentas con más tokens/);
 
     const missing = await read.readMint({
       mint: OTHER,

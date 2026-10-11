@@ -192,11 +192,20 @@ function failureReading(kind: "limite" | "tiempo" | "red", mint: string, host: s
       ),
     },
   }[kind];
+  const facts: ReadingFact[] = [
+    { id: "suministro", label: loc("Suministro", "Supply"), state: "fallo" },
+    { id: "decimales", label: loc("Decimales", "Decimals"), state: "fallo" },
+    { id: "cuentas", label: loc("Cuentas con más tokens", "Largest token accounts"), state: "fallo" },
+  ];
+  const grouped = groupFacts(facts);
   return {
     ...blank(kind, mint, copy.title, copy.support),
     lightLabel: loc("No se pudo comprobar", "Could not be checked"),
     endpointHost: host,
     usedFallback,
+    facts,
+    missing: grouped.missing,
+    missingState: grouped.missingState,
   };
 }
 

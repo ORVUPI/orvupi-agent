@@ -26,21 +26,21 @@ const TOPIC_BY_ID = {
 const ATTENTION = {
   emision: {
     title: { es: "Permiso de emisión", en: "Mint permission" },
-    lead: { es: "Está activo. En una moneda estable es habitual.", en: "It is active. On a stablecoin that is common." },
+    lead: { es: "Está activo: permite crear más tokens.", en: "It is active: it can create more tokens." },
     detail: {
-      es: "Quien emite añade unidades cuando entra dinero. Si el proyecto prometió un suministro fijo, el mismo permiso permite crear más. Conviene contrastarlo con lo que promete el proyecto. Esta lectura no dice cuál de los dos casos es.",
-      en: "The issuer adds units when money comes in. If the project promised a fixed supply, the same permission can create more. It is worth comparing with what the project promises. This reading does not say which of the two cases this is.",
+      es: "En una moneda estable es habitual: quien emite añade unidades cuando entra dinero. Si el proyecto prometió un suministro fijo, el mismo permiso permite crear más. Conviene contrastarlo con lo que promete el proyecto. Esta lectura no dice cuál de los dos casos es.",
+      en: "On a stablecoin that is common: the issuer adds units when money comes in. If the project promised a fixed supply, the same permission can create more. It is worth comparing with what the project promises. This reading does not say which of the two cases this is.",
     },
   },
   congelacion: {
     title: { es: "Permiso de congelación", en: "Freeze permission" },
-    lead: { es: "Está activo y puede bloquear cuentas de este token.", en: "It is active and can block accounts of this token." },
+    lead: { es: "Está activo: puede bloquear cuentas.", en: "It is active: it can block accounts." },
     detail: { es: "Una señal sola no acusa al proyecto.", en: "One signal does not accuse the project." },
   },
   mutable: {
     title: { es: "Nombre y símbolo", en: "Name and symbol" },
-    lead: { es: "Se pueden cambiar. Mañana pueden ser otros.", en: "They can change. Tomorrow they may be different." },
-    detail: { es: "Eso, por sí solo, no es una suplantación.", en: "That, on its own, is not impersonation." },
+    lead: { es: "Se pueden cambiar.", en: "They can change." },
+    detail: { es: "Mañana pueden ser otros. Eso, por sí solo, no es una suplantación.", en: "Tomorrow they may be different. That, on its own, is not impersonation." },
   },
   suministro: {
     title: { es: "Suministro total", en: "Total supply" },
@@ -165,8 +165,8 @@ function summaryPair(es, en) {
   return { es, en };
 }
 
-function summaryPoint(topic, title, lead, detail) {
-  return { topic, title, lead, detail: detail || null };
+function summaryPoint(topic, title, lead, detail, note) {
+  return { topic, title, lead, detail: detail || null, note: note || null };
 }
 
 function attentionPoint(id) {
@@ -293,8 +293,8 @@ function attentionFromSignals(signals) {
   const items = [];
   for (const signal of signals || []) {
     if (!signal || (signal.level !== "atencion" && signal.level !== "riesgo")) continue;
-    if (signal.id === "cuentas") {
-      if (samplePercent(signal)) items.push(concentrationPoint(signal));
+    if (signal.id === "cuentas" || signal.id === "suministro") {
+      if (signal.id === "cuentas" && samplePercent(signal)) items.push(concentrationPoint(signal));
       continue;
     }
     if (isUnread(signal)) continue;
@@ -332,11 +332,24 @@ function pushMissing(missing, topic, title, lead) {
   missing.push(summaryPoint(topic, title, lead));
 }
 
+const SUPPLY_AGAIN = summaryPair("No se pudo leer otra vez.", "It could not be read again.");
+const SUPPLY_MISMATCH = summaryPair("Las dos lecturas no coinciden.", "The two reads do not match.");
+
+function readsDisagree(signals) {
+  return (signals || []).some((signal) => {
+    if (!signal || signal.id !== "suministro" || isUnread(signal)) return false;
+    if (signal.level !== "atencion" && signal.level !== "riesgo") return false;
+    const blob = `${signal.title?.es ?? ""} ${signal.explain?.es ?? ""} ${signal.title?.en ?? ""} ${signal.explain?.en ?? ""}`;
+    return /no coincide|do not match|does not match/i.test(blob);
+  });
+}
+
 function compose(facts, attention, context, signals, card) {
   const list = Array.isArray(facts) ? facts : [];
   const checked = [];
   const missing = [];
   let note = null;
+  let rereadFailed = false;
   const whole = list.length === 1 && list[0] && list[0].state === "fallo" && /Esta lectura/.test(list[0].label?.es || "");
   if (whole) {
     pushMissing(
@@ -349,15 +362,17 @@ function compose(facts, attention, context, signals, card) {
     const supply = findFact(list, "suministro");
     const extra = findFact(list, "suministro-extra");
     if (supply?.state === "ok") {
-      checked.push(summaryPoint("suministro", summaryPair("Suministro total", "Total supply"), supplyLead(context, extra?.state === "ok")));
-      if (extra?.state === "fallo") {
-        pushMissing(
-          missing,
-          "suministro",
-          summaryPair("Suministro total", "Total supply"),
-          summaryPair("No se pudo leer el suministro otra vez.", "The supply could not be read again."),
-        );
-      }
+      const mismatch = extra?.reason === "distinto" || (extra?.state !== "fallo" && readsDisagree(signals));
+      const again = extra?.state === "fallo" && extra?.reason !== "distinto";
+      const supplyNote = mismatch ? SUPPLY_MISMATCH : again ? SUPPLY_AGAIN : null;
+      checked.push(summaryPoint(
+        "suministro",
+        summaryPair("Suministro total", "Total supply"),
+        supplyLead(context, extra?.state === "ok" && !mismatch),
+        mismatch ? ATTENTION.suministro.detail : null,
+        supplyNote,
+      ));
+      if (again) rereadFailed = true;
     } else if (supply?.state === "fallo" || (!supply && extra?.state === "fallo")) {
       pushMissing(
         missing,
@@ -501,12 +516,20 @@ function compose(facts, attention, context, signals, card) {
   }
 
   for (const signal of signals || []) {
-    if (!signal || signal.id === "cuentas" || !isUnread(signal)) continue;
+    if (!signal || signal.id === "cuentas" || signal.id === "suministro" || !isUnread(signal)) continue;
     if (signal.level !== "atencion" && signal.level !== "riesgo") continue;
     const known = attentionPoint(signal.id);
-    if (known) pushMissing(missing, known.topic, known.title, known.lead);
+    const claimsState = signal.id === "emision" || signal.id === "congelacion" || signal.id === "mutable";
+    if (known && !claimsState) pushMissing(missing, known.topic, known.title, known.lead);
     else if (signal.id === "extensiones" || (typeof signal.id === "string" && signal.id.startsWith("extension"))) {
       pushMissing(missing, "permisos", ATTENTION.extensiones.title, ATTENTION.extensiones.lead);
+    } else {
+      pushMissing(
+        missing,
+        known ? known.topic : topicOf(signal.id),
+        summaryPair(signal.title?.es || known?.title.es || "Señal", signal.title?.en || known?.title.en || "Signal"),
+        summaryPair("No se pudo leer.", "It could not be read."),
+      );
     }
   }
 
@@ -518,24 +541,26 @@ function compose(facts, attention, context, signals, card) {
       { id: "falta", heading: SUMMARY_HEADINGS.missing, items: missing, empty: EMPTY.missing, service: missing.length ? SUMMARY_SERVICE : null },
     ],
     note,
-    retry: missing.length > 0,
+    retry: missing.length > 0 || rereadFailed,
   };
 }
 
 export function buildReadingSummary(view) {
   const facts = Array.isArray(view?.facts) ? view.facts.slice() : [];
   if (!facts.length && (view?.kind === "red" || view?.kind === "limite" || view?.kind === "tiempo" || view?.ok === false)) {
-    facts.push({
-      id: "suministro",
-      label: summaryPair("Esta lectura", "This reading"),
-      state: "fallo",
-    });
+    facts.push(
+      { id: "suministro", label: summaryPair("Suministro", "Supply"), state: "fallo" },
+      { id: "decimales", label: summaryPair("Decimales", "Decimals"), state: "fallo" },
+      { id: "cuentas", label: summaryPair("Cuentas con más tokens", "Largest token accounts"), state: "fallo" },
+    );
   }
   return compose(facts, attentionFromSignals(view?.signals), contextFromView(view), view?.signals, null);
 }
 
-function pushFact(facts, id, es, en, state) {
-  facts.push({ id, label: summaryPair(es, en), state });
+function pushFact(facts, id, es, en, state, reason) {
+  const fact = { id, label: summaryPair(es, en), state };
+  if (reason) fact.reason = reason;
+  facts.push(fact);
 }
 
 function authorityState(field) {
@@ -557,15 +582,19 @@ export function summaryFromCard(card) {
   } else if (account) {
     pushFact(facts, "suministro", "Suministro", "Supply", "ok");
     if (card.supplyRpcStatus !== "no_consultado") {
-      pushFact(facts, "suministro-extra", "Suministro", "Supply", extra && card.supplyRpc === card.supplyAccount ? "ok" : "fallo");
+      const reason = extra && card.supplyRpc === card.supplyAccount ? null : extra ? "distinto" : "otra";
+      pushFact(facts, "suministro-extra", "Suministro", "Supply", reason ? "fallo" : "ok", reason);
     }
   } else if (extra) {
     pushFact(facts, "suministro-extra", "Suministro", "Supply", "ok");
   } else if (card.supplyRpcStatus !== "no_consultado") {
     pushFact(facts, "suministro", "Suministro", "Supply", "fallo");
   }
-  if (card.decimals === null || card.decimals === undefined) pushFact(facts, "decimales", "Decimales", "Decimals", "ausente");
-  else pushFact(facts, "decimales", "Decimales", "Decimals", "ok");
+  if (card.decimals === null || card.decimals === undefined) {
+    pushFact(facts, "decimales", "Decimales", "Decimals", card.programStatus === "fallo" ? "fallo" : "ausente");
+  } else {
+    pushFact(facts, "decimales", "Decimales", "Decimals", "ok");
+  }
   pushFact(facts, "nombre", "Nombre", "Name", textState(card.name));
   pushFact(facts, "simbolo", "Símbolo", "Symbol", textState(card.symbol));
   pushFact(facts, "uri", "Enlace de metadatos", "Metadata link", textState(card.uri));
@@ -673,6 +702,12 @@ function summaryItem(item, language, blockId) {
   lead.className = "punto-frase";
   lead.textContent = item.lead[language];
   body.append(title, lead);
+  if (item.note && item.note[language]) {
+    const note = document.createElement("p");
+    note.className = "punto-nota";
+    note.textContent = item.note[language];
+    body.append(note);
+  }
   if (item.detail && item.detail[language]) {
     const details = document.createElement("details");
     details.className = "punto-detalle";

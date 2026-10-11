@@ -99,7 +99,7 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
     const summary = page.locator("#resultado .resumen-informe");
     await summary.scrollIntoViewIfNeeded();
     await summary.screenshot({
-      path: `/opt/cursor/artifacts/resumen_v2_${name}_${testInfo.project.name}.png`,
+      path: `/opt/cursor/artifacts/resumen_b49_${name}_${testInfo.project.name}.png`,
     });
   }
 
@@ -118,8 +118,13 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
   await expect(summary.locator("[data-bloque='comprobado']")).not.toContainText("bytes del mint");
   await expect(summary.locator(".nota-curva")).toContainText("Curva de Pump.fun: no aplica");
   const emission = summary.locator("[data-bloque='atencion'] .punto-resumen", { hasText: "Permiso de emisión" });
-  await expect(emission).toContainText("moneda estable");
+  await expect(emission.locator(".punto-frase")).toHaveText("Está activo: permite crear más tokens.");
+  await expect(emission.locator(".punto-frase")).not.toContainText("moneda estable");
+  await expect(emission.locator(".punto-frase")).not.toContainText("stablecoin");
+  await expect(emission.locator("details")).toContainText("moneda estable");
   await expect(emission.locator("details")).toContainText("promete el proyecto");
+  await expect(summary.locator("[data-bloque='atencion'] .punto-resumen", { hasText: "Permiso de congelación" }).locator(".punto-frase")).toHaveText("Está activo: puede bloquear cuentas.");
+  await expect(summary.locator("[data-bloque='atencion'] .punto-resumen", { hasText: "Nombre y símbolo" }).locator(".punto-frase")).toHaveText("Se pueden cambiar.");
   await expect(summary).toContainText("Permiso de congelación");
   await expect(summary).toContainText("bloquear cuentas");
   await expect(summary).toContainText("Se pueden cambiar");
@@ -138,7 +143,10 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
   await expect(summary).toContainText("What was checked");
   await expect(summary).toContainText("What needs attention");
   await expect(summary).toContainText("What is missing");
-  await expect(summary).toContainText("stablecoin");
+  const englishEmission = summary.locator("[data-bloque='atencion'] .punto-resumen", { hasText: "Mint permission" }).locator(".punto-frase");
+  await expect(englishEmission).toHaveText("It is active: it can create more tokens.");
+  await expect(englishEmission).not.toContainText("stablecoin");
+  await expect(summary.locator("[data-bloque='atencion'] .punto-resumen", { hasText: "Mint permission" }).locator("details")).toContainText("stablecoin");
   await expect(summary).toContainText("Freeze permission");
   await expect(summary.locator(".nota-curva")).toContainText("Pump.fun curve: not applicable");
   await expect(summary.getByRole("link", { name: "Understand →" }).first()).toBeVisible();
@@ -158,7 +166,9 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
 
   await page.locator("#direccion-token").fill(FAIL);
   await page.locator("#consulta button[type='submit']").click();
-  await expect(summary).toContainText("No se pudo leer el suministro otra vez", { timeout: 20_000 });
+  await expect(summary.locator("[data-bloque='comprobado'] .punto-resumen", { hasText: "Suministro total" }).locator(".punto-nota")).toContainText("No se pudo leer otra vez", { timeout: 20_000 });
+  await expect(summary.locator(".punto-titulo", { hasText: "Suministro total" })).toHaveCount(1);
+  await expect(summary.locator("[data-bloque='falta']")).not.toContainText("Suministro total");
   await expect(summary).toContainText("No se pudo leer quién tiene más tokens");
   await expect(summary).toContainText("El servicio público no respondió, prueba otra vez en un minuto.");
   await expect(summary.getByRole("button", { name: "Reintentar" })).toBeVisible();
@@ -173,7 +183,9 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
 
   await page.locator("#direccion-token").fill(USDC);
   await page.locator("#consulta button[type='submit']").click();
-  await expect(summary).toContainText("moneda estable", { timeout: 20_000 });
+  const emissionAgain = summary.locator("[data-bloque='atencion'] .punto-resumen", { hasText: "Permiso de emisión" }).locator(".punto-frase");
+  await expect(emissionAgain).toHaveText("Está activo: permite crear más tokens.", { timeout: 20_000 });
+  await expect(emissionAgain).not.toContainText("moneda estable");
   await page.locator("#guardar-consulta").click();
   await page.locator("#comparacion-verify").getByRole("link", { name: "Abrir Cuaderno" }).click();
   await page.waitForURL(/\/cuaderno\/$/);
@@ -181,7 +193,9 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
   const saved = savedCard.locator(".resumen-informe");
   await expect(saved).toContainText("Qué se comprobó", { timeout: 20_000 });
   await expect(saved).toContainText("Qué requiere atención");
-  await expect(saved).toContainText("moneda estable");
+  await expect(saved.locator("[data-bloque='atencion'] .punto-resumen", { hasText: "Permiso de emisión" }).locator(".punto-frase")).toHaveText("Está activo: permite crear más tokens.");
+  await expect(saved.locator("[data-bloque='atencion'] .punto-resumen", { hasText: "Permiso de emisión" }).locator(".punto-frase")).not.toContainText("moneda estable");
+  await expect(saved.locator("[data-bloque='atencion'] .punto-resumen", { hasText: "Permiso de emisión" }).locator("details")).toContainText("moneda estable");
   await expect(saved).toContainText("Permiso de congelación");
   await expect(saved.locator(".nota-curva")).toContainText("Curva de Pump.fun: no aplica");
   await saved.locator("[data-bloque='atencion'] .punto-resumen", { hasText: "Nombre y símbolo" }).getByRole("link", { name: "Entender →" }).click();
@@ -189,7 +203,7 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
   if (testInfo.project.name === "desktop" || testInfo.project.name === "mobile") {
     await saved.scrollIntoViewIfNeeded();
     await saved.screenshot({
-      path: `/opt/cursor/artifacts/resumen_v2_cuaderno_${testInfo.project.name}.png`,
+      path: `/opt/cursor/artifacts/resumen_b49_cuaderno_${testInfo.project.name}.png`,
     });
   }
 

@@ -806,8 +806,8 @@ export async function readMint(options) {
     card.metadataMutable = "fallo";
     card.slotStatus = "fallo";
     card.curve = { ...emptyCurve(), status: "fallo" };
-    card.supplyRpcStatus = "no_consultado";
-    card.largestStatus = "no_consultado";
+    card.supplyRpcStatus = "fallo";
+    card.largestStatus = "fallo";
     return { ok: false, error: "partial", card };
   }
   if (accounts.slot !== null) {
@@ -824,8 +824,8 @@ export async function readMint(options) {
     card.metadataMutable = "fallo";
     card.slotStatus = "fallo";
     card.curve = { ...emptyCurve(), status: "fallo" };
-    card.supplyRpcStatus = "no_consultado";
-    card.largestStatus = "no_consultado";
+    card.supplyRpcStatus = "fallo";
+    card.largestStatus = "fallo";
     return { ok: false, error: "partial", card };
   }
   let mintAccount = null;
@@ -842,6 +842,15 @@ export async function readMint(options) {
       message: error instanceof Error ? error.message : "Cuenta ilegible.",
       at: accounts.fetchedAt,
     });
+    card.programStatus = "fallo";
+    card.name.status = "fallo";
+    card.symbol.status = "fallo";
+    card.uri.status = "fallo";
+    card.metadataMutable = "fallo";
+    card.slotStatus = "fallo";
+    card.curve = { ...emptyCurve(), status: "fallo" };
+    card.supplyRpcStatus = "fallo";
+    card.largestStatus = "fallo";
     return { ok: false, error: "partial", card };
   }
   if (!mintAccount) {

@@ -12,6 +12,7 @@ type Point = {
   title: { es: string; en: string };
   lead: { es: string; en: string };
   detail: { es: string; en: string } | null;
+  note?: { es: string; en: string } | null;
 };
 
 type Summary = {
@@ -47,7 +48,7 @@ function prose(summary: Summary, lang: "es" | "en") {
     .flatMap((item) => [
       item.heading[lang],
       item.empty[lang],
-      ...item.items.flatMap((point) => [point.title[lang], point.lead[lang], point.detail?.[lang] ?? ""]),
+      ...item.items.flatMap((point) => [point.title[lang], point.lead[lang], point.note?.[lang] ?? "", point.detail?.[lang] ?? ""]),
     ])
     .concat(note)
     .join("\n");
@@ -98,6 +99,10 @@ describe("resumen de la lectura", () => {
     assert.equal(summary.note?.lead.es, "Curva de Pump.fun: no aplica");
     assert.equal(summary.note?.topic, "curva");
     const attention = block(summary, "atencion");
+    const emission = attention.items.find((item) => item.title.es === "Permiso de emisión");
+    assert.equal(emission?.lead.es, "Está activo: permite crear más tokens.");
+    assert.equal(/moneda estable|stablecoin/i.test(`${emission?.title.es} ${emission?.lead.es} ${emission?.lead.en}`), false);
+    assert.match(emission?.detail?.es ?? "", /moneda estable/);
     const attentionText = attention.items.map((item) => `${item.title.es} ${item.lead.es} ${item.detail?.es ?? ""}`).join(" ");
     assert.match(attentionText, /Permiso de emisión/);
     assert.match(attentionText, /moneda estable/);
@@ -201,7 +206,10 @@ describe("resumen de la lectura", () => {
       ],
     });
     const missing = leads(summary, "falta", "es");
-    assert.match(missing, /No se pudo leer el suministro otra vez/);
+    const supplyItems = summary.blocks.flatMap((item) => item.items).filter((item) => item.title.es === "Suministro total");
+    assert.equal(supplyItems.length, 1);
+    assert.equal(supplyItems[0]?.note?.es, "No se pudo leer otra vez.");
+    assert.equal(missing.includes("Suministro total"), false);
     assert.match(missing, /No se pudo leer quién tiene más tokens/);
     assert.equal(block(summary, "falta").items.find((item) => item.topic === "distribucion")?.topic, "distribucion");
     assert.equal(summary.retry, true);
@@ -248,7 +256,10 @@ describe("resumen de la lectura", () => {
       largestStatus: "fallo",
     });
     assert.equal(failedCard.retry, true);
-    assert.match(leads(failedCard, "falta", "es"), /No se pudo leer el suministro otra vez/);
+    const failedSupply = failedCard.blocks.flatMap((item) => item.items).filter((item) => item.title.es === "Suministro total");
+    assert.equal(failedSupply.length, 1);
+    assert.equal(failedSupply[0]?.note?.es, "No se pudo leer otra vez.");
+    assert.equal(leads(failedCard, "falta", "es").includes("Suministro total"), false);
     assert.match(leads(failedCard, "falta", "es"), /No se pudo leer quién tiene más tokens/);
     assert.match(leads(failedCard, "atencion", "es"), /Revisión de cada envío/);
     const concentrated = buildReadingSummary({
@@ -261,7 +272,9 @@ describe("resumen de la lectura", () => {
     assert.match(leads(concentrated, "atencion", "es"), /25 %/);
     const whole = buildReadingSummary({ ok: false, kind: "red", facts: [], signals: [] });
     assert.equal(whole.retry, true);
-    assert.match(leads(whole, "falta", "es"), /Esta lectura/);
+    assert.match(leads(whole, "falta", "es"), /Suministro/);
+    assert.match(leads(whole, "falta", "es"), /Decimales/);
+    assert.match(leads(whole, "falta", "es"), /Cuentas con más tokens/);
     for (const lang of ["es", "en"] as const) {
       const text = `${prose(summary, lang)}\n${prose(emptyCard, lang)}\n${prose(failedCard, lang)}\n${prose(whole, lang)}`;
       assert.equal(/\b(precio|compra|comprar|seguro|buy|sell|score)\b/i.test(text), false);
@@ -269,5 +282,218 @@ describe("resumen de la lectura", () => {
       assert.equal(text.includes("bytes del mint"), false);
       assert.equal(text.includes("Consulta extra del suministro"), false);
     }
+  });
+
+  test("un token que no es USDC no nombra la moneda estable en el texto visible", async () => {
+    const { buildReadingSummary, summaryFromCard } = await load();
+    const other = "So11111111111111111111111111111111111111112";
+    const signals = [
+      { id: "emision", level: "atencion", title: { es: "Alguien puede crear más tokens", en: "Someone can create more tokens" }, explain: { es: "activa", en: "active" } },
+      { id: "congelacion", level: "riesgo", title: { es: "Alguien puede congelar cuentas", en: "Someone can freeze accounts" }, explain: { es: "puede impedir", en: "can stop" } },
+      { id: "mutable", level: "atencion", title: { es: "El nombre se puede cambiar", en: "The name can be changed" }, explain: { es: "puede actualizar", en: "can update" } },
+    ];
+    const summary = buildReadingSummary({
+      ok: true,
+      kind: "lectura",
+      mint: other,
+      facts: [
+        { id: "suministro", label: { es: "Suministro", en: "Supply" }, state: "ok" },
+        { id: "metadatos", label: { es: "Metadatos", en: "Metadata" }, state: "ok" },
+      ],
+      rows: [
+        { label: { es: "Nombre", en: "Name" }, value: { es: "Otro", en: "Other" } },
+        { label: { es: "Símbolo", en: "Symbol" }, value: { es: "OTRO", en: "OTRO" } },
+      ],
+      signals,
+    });
+    const visible = block(summary, "atencion").items.map((item) => `${item.title.es} ${item.lead.es} ${item.title.en} ${item.lead.en}`).join("\n");
+    assert.equal(/moneda estable|stablecoin/i.test(visible), false);
+    assert.equal(visible.includes(USDC), false);
+    const emission = block(summary, "atencion").items.find((item) => item.title.es === "Permiso de emisión");
+    const freeze = block(summary, "atencion").items.find((item) => item.title.es === "Permiso de congelación");
+    const metadata = block(summary, "atencion").items.find((item) => item.title.es === "Nombre y símbolo");
+    assert.equal(emission?.lead.es, "Está activo: permite crear más tokens.");
+    assert.equal(emission?.lead.en, "It is active: it can create more tokens.");
+    assert.match(emission?.detail?.es ?? "", /moneda estable/);
+    assert.match(emission?.detail?.en ?? "", /stablecoin/);
+    assert.equal(freeze?.lead.es, "Está activo: puede bloquear cuentas.");
+    assert.equal(freeze?.lead.en, "It is active: it can block accounts.");
+    assert.equal(/acusa|estafa|suplantación/i.test(`${freeze?.lead.es} ${freeze?.lead.en}`), false);
+    assert.equal(metadata?.lead.es, "Se pueden cambiar.");
+    assert.equal(metadata?.lead.en, "They can change.");
+    assert.equal(/suplantación|impersonation|acusa/i.test(`${metadata?.lead.es} ${metadata?.lead.en}`), false);
+    assert.match(metadata?.detail?.es ?? "", /no es una suplantación/);
+    const card = summaryFromCard({
+      mint: other,
+      program: "spl-token",
+      programStatus: "verificado",
+      mintAuthority: { state: "activa", status: "verificado" },
+      freezeAuthority: { state: "activa", status: "verificado" },
+      supplyAccount: "1000",
+      supplyRpc: "1000",
+      supplyRpcStatus: "verificado",
+      decimals: 6,
+      name: { text: "Otro", status: "verificado" },
+      symbol: { text: "OTRO", status: "verificado" },
+      uri: { text: null, status: "ausente" },
+      metadataMutable: "si",
+      extensionsStatus: "no_aplica",
+      extensions: [],
+      curve: { status: "no_aplica", present: false },
+      largestStatus: "ok",
+    });
+    const cardVisible = block(card, "atencion").items.map((item) => `${item.title.es} ${item.lead.es} ${item.title.en} ${item.lead.en}`).join("\n");
+    assert.equal(/moneda estable|stablecoin/i.test(cardVisible), false);
+    assert.match(block(card, "atencion").items.find((item) => item.title.es === "Permiso de emisión")?.detail?.es ?? "", /moneda estable/);
+  });
+
+  test("si falla getMultipleAccounts, Qué falta lista suministro, decimales y cuentas", async () => {
+    const { buildReadingSummary, summaryFromCard } = await load();
+    const unread = buildReadingSummary({ ok: false, kind: "red", facts: [], signals: [] });
+    const missing = leads(unread, "falta", "es");
+    assert.match(missing, /Suministro/);
+    assert.match(missing, /Decimales/);
+    assert.match(missing, /Cuentas con más tokens/);
+    assert.equal(missing.includes("Esta lectura"), false);
+    const card = summaryFromCard({
+      mint: "So11111111111111111111111111111111111111112",
+      program: "no_disponible",
+      programStatus: "fallo",
+      mintAuthority: { state: "no_disponible", status: "no_disponible" },
+      freezeAuthority: { state: "no_disponible", status: "no_disponible" },
+      supplyAccount: null,
+      supplyRpc: null,
+      supplyRpcStatus: "fallo",
+      decimals: null,
+      name: { text: null, status: "fallo" },
+      symbol: { text: null, status: "fallo" },
+      uri: { text: null, status: "fallo" },
+      metadataMutable: "fallo",
+      extensionsStatus: "fallo",
+      extensions: [],
+      curve: { status: "fallo", present: null },
+      largestStatus: "fallo",
+    });
+    const cardMissing = leads(card, "falta", "es");
+    assert.match(cardMissing, /Suministro/);
+    assert.match(cardMissing, /Decimales/);
+    assert.match(cardMissing, /Cuentas con más tokens/);
+  });
+
+  test("getTokenSupply fallido deja un solo suministro, y el cuaderno distingue las dos notas", async () => {
+    const { buildReadingSummary, summaryFromCard } = await load();
+    const summary = buildReadingSummary({
+      ok: true,
+      kind: "lectura",
+      facts: [
+        { id: "suministro", label: { es: "Suministro", en: "Supply" }, state: "ok" },
+        { id: "suministro-extra", label: { es: "Suministro", en: "Supply" }, state: "fallo" },
+      ],
+      rows: [{ label: { es: "Suministro", en: "Supply" }, value: { es: "1.000", en: "1,000" } }],
+      signals: [{
+        id: "suministro",
+        level: "neutro",
+        title: { es: "Suministro y decimales", en: "Supply and decimals" },
+        explain: { es: "El servicio no respondió. Eso no cambia esta cifra.", en: "The service did not respond." },
+      }],
+    });
+    const titled = summary.blocks.flatMap((item) => item.items).filter((item) => item.title.es === "Suministro total");
+    assert.equal(titled.length, 1);
+    assert.equal(titled[0]?.note?.es, "No se pudo leer otra vez.");
+    assert.equal(titled[0]?.note?.en, "It could not be read again.");
+    assert.equal(block(summary, "atencion").items.some((item) => item.title.es === "Suministro total"), false);
+    assert.equal(leads(summary, "comprobado", "es").includes("coinciden"), false);
+    const mismatch = buildReadingSummary({
+      ok: true,
+      kind: "lectura",
+      facts: [
+        { id: "suministro", label: { es: "Suministro", en: "Supply" }, state: "ok" },
+        { id: "suministro-extra", label: { es: "Suministro", en: "Supply" }, state: "ok" },
+      ],
+      signals: [{
+        id: "suministro",
+        level: "atencion",
+        title: { es: "Suministro y decimales", en: "Supply and decimals" },
+        explain: { es: "La lectura extra no coincide. No se calculan porcentajes.", en: "The extra read does not match." },
+      }],
+    });
+    const mismatchItems = mismatch.blocks.flatMap((item) => item.items).filter((item) => item.title.es === "Suministro total");
+    assert.equal(mismatchItems.length, 1);
+    assert.equal(mismatchItems[0]?.note?.es, "Las dos lecturas no coinciden.");
+    assert.equal(block(mismatch, "atencion").items.some((item) => item.title.es === "Suministro total"), false);
+    const again = summaryFromCard({
+      mint: STUBX,
+      program: "spl-token",
+      programStatus: "verificado",
+      mintAuthority: { state: "revocada", status: "verificado" },
+      freezeAuthority: { state: "revocada", status: "verificado" },
+      supplyAccount: "1000",
+      supplyRpc: null,
+      supplyRpcStatus: "fallo",
+      decimals: 6,
+      name: { text: "STUBX", status: "verificado" },
+      symbol: { text: "STUBX", status: "verificado" },
+      uri: { text: null, status: "ausente" },
+      metadataMutable: "no",
+      extensionsStatus: "no_aplica",
+      curve: { status: "verificado", present: true },
+      largestStatus: "ok",
+    });
+    const againItems = again.blocks.flatMap((item) => item.items).filter((item) => item.title.es === "Suministro total");
+    assert.equal(againItems.length, 1);
+    assert.equal(againItems[0]?.note?.es, "No se pudo leer otra vez.");
+    const different = summaryFromCard({
+      mint: STUBX,
+      program: "spl-token",
+      programStatus: "verificado",
+      mintAuthority: { state: "revocada", status: "verificado" },
+      freezeAuthority: { state: "revocada", status: "verificado" },
+      supplyAccount: "1000",
+      supplyRpc: "2000",
+      supplyRpcStatus: "verificado",
+      decimals: 6,
+      name: { text: "STUBX", status: "verificado" },
+      symbol: { text: "STUBX", status: "verificado" },
+      uri: { text: null, status: "ausente" },
+      metadataMutable: "no",
+      extensionsStatus: "no_aplica",
+      curve: { status: "verificado", present: true },
+      largestStatus: "ok",
+    });
+    const differentItems = different.blocks.flatMap((item) => item.items).filter((item) => item.title.es === "Suministro total");
+    assert.equal(differentItems.length, 1);
+    assert.equal(differentItems[0]?.note?.es, "Las dos lecturas no coinciden.");
+    assert.equal(differentItems[0]?.note?.es.includes("No se pudo leer otra vez"), false);
+  });
+
+  test("una señal no leída de tipo desconocido va a Qué falta", async () => {
+    const { buildReadingSummary } = await load();
+    const summary = buildReadingSummary({
+      ok: true,
+      kind: "lectura",
+      facts: [{ id: "suministro", label: { es: "Suministro", en: "Supply" }, state: "ok" }],
+      signals: [{
+        id: "tipo-raro",
+        level: "atencion",
+        title: { es: "Señal rara", en: "Rare signal" },
+        explain: { es: "No se pudo leer este dato.", en: "This fact could not be read." },
+      }],
+    });
+    assert.match(leads(summary, "falta", "es"), /Señal rara/);
+    assert.match(leads(summary, "falta", "es"), /No se pudo leer/);
+    assert.equal(block(summary, "atencion").items.some((item) => item.title.es === "Señal rara"), false);
+    const read = buildReadingSummary({
+      ok: true,
+      kind: "lectura",
+      facts: [{ id: "suministro", label: { es: "Suministro", en: "Supply" }, state: "ok" }],
+      signals: [{
+        id: "tipo-raro",
+        level: "atencion",
+        title: { es: "Señal rara", en: "Rare signal" },
+        explain: { es: "El dato está en la cuenta.", en: "The fact is on the account." },
+      }],
+    });
+    assert.equal(block(read, "falta").items.some((item) => item.title.es === "Señal rara"), false);
+    assert.match(leads(read, "atencion", "es"), /Señal rara/);
   });
 });

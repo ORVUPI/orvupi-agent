@@ -228,6 +228,26 @@ describe("lectura universal con RPC simulado", () => {
     assert.equal((reading.identity?.es ?? "").includes(mint), true);
   });
 
+  test("si falla getMultipleAccounts faltan suministro, decimales y cuentas", async () => {
+    const reading = await readAnyMint({
+      mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      registry,
+      endpoints: ["https://rpc-a.invalid"],
+      transport: async () => ({ status: 500, body: "" }),
+      maxRetries: 0,
+      minIntervalMs: 0,
+      sleep: async () => {},
+    });
+    assert.equal(reading.ok, false);
+    for (const id of ["suministro", "decimales", "cuentas"]) {
+      assert.equal(reading.facts?.find((item) => item.id === id)?.state, "fallo", id);
+    }
+    assert.match(reading.missing?.es ?? "", /Suministro/);
+    assert.match(reading.missing?.es ?? "", /Decimales/);
+    assert.match(reading.missing?.es ?? "", /Cuentas con más tokens/);
+    assert.equal((reading.missing?.es ?? "").includes("ausente comprobado"), false);
+  });
+
   test("una muestra vacía de cuentas no es una ausencia", async () => {
     const reading = await readFixture(fixture("revoked-mint"));
     const cuentas = reading.facts?.find((item) => item.id === "cuentas");
