@@ -3,8 +3,8 @@
  */
 import { formatAmount } from "../shared/amount.js";
 import { entenderNav } from "../shared/entender.js";
-import { renderReadingSummary, summaryFromCard } from "../shared/reading-summary.js";
-import { factLine, factState } from "../shared/fact-state.js";
+import { comparisonBanner, notebookNameText, renderReadingSummary, summaryFromCard } from "../shared/reading-summary.js";
+import { factState } from "../shared/fact-state.js";
 import {
   PUBLICNODE_RPC,
   DISCLAIMER,
@@ -26,6 +26,7 @@ import {
   CURVE_NOT_ON_PUMP,
   pickPrevious,
   readingOptionLabel,
+  tableCellText,
   staleLine,
   supplyConfirmation,
   supplyDirection,
@@ -393,25 +394,25 @@ function shown(value) {
   return visibleText(value);
 }
 
-function plain(status, value) {
+function plain(status, value, field) {
   const state = factState(status, value);
   if (state === "ok") {
-    if (value === null || value === undefined || value === "") return factLine(status, value, lang());
+    if (value === null || value === undefined || value === "") return tableCellText(field, status, value, lang());
     if (value === true) return t("yes");
     if (value === false) return t("no");
-    return factLine(status, shown(value), lang());
+    return shown(value);
   }
-  return factLine(status, value, lang());
+  return tableCellText(field, status, value, lang());
 }
 
 function amountText(raw, decimals, status) {
-  if (factState(status, raw) !== "ok") return plain(status, raw);
-  return formatAmount(raw, decimals, lang()) || plain(status, raw);
+  if (factState(status, raw) !== "ok") return plain(status, raw, "supply");
+  return formatAmount(raw, decimals, lang()) || plain(status, raw, "supply");
 }
 
-function dataRow(list, label, status, value) {
+function dataRow(list, label, status, value, field) {
   const term = text("dt", label);
-  const detail = text("dd", plain(status, value));
+  const detail = text("dd", plain(status, value, field));
   detail.dataset.estado = factState(status, value);
   list.append(term, detail);
   return { label, state: factState(status, value) };
@@ -433,25 +434,26 @@ function renderCard(card) {
   });
   const list = el("dl");
   const supplyCheck = supplyConfirmation(card);
-  dataRow(list, t("program"), card.programStatus, programLabel(card.program));
+  dataRow(list, t("program"), card.programStatus, programLabel(card.program), "program");
   const mintAuth = card.mintAuthority.address
     ? `${authorityLabel(card.mintAuthority)} · ${card.mintAuthority.address}`
     : authorityLabel(card.mintAuthority);
   const freezeAuth = card.freezeAuthority.address
     ? `${authorityLabel(card.freezeAuthority)} · ${card.freezeAuthority.address}`
     : authorityLabel(card.freezeAuthority);
-  dataRow(list, t("mintAuth"), card.mintAuthority.status, mintAuth);
-  dataRow(list, t("freezeAuth"), card.freezeAuthority.status, freezeAuth);
+  dataRow(list, t("mintAuth"), card.mintAuthority.status, mintAuth, "mintAuth");
+  dataRow(list, t("freezeAuth"), card.freezeAuthority.status, freezeAuth, "freezeAuth");
   appendSupply(list, card, supplyCheck);
-  dataRow(list, t("decimals"), card.decimals === null ? "ausente" : "verificado", card.decimals);
-  dataRow(list, t("name"), card.name.status, card.name.text ? clipName(card.name.text) : card.name.text);
-  dataRow(list, t("symbol"), card.symbol.status, card.symbol.text ? clipName(card.symbol.text) : card.symbol.text);
-  dataRow(list, t("uri"), card.uri.status, card.uri.text);
+  dataRow(list, t("decimals"), card.decimals === null ? "ausente" : "verificado", card.decimals, "decimals");
+  const spokenName = notebookNameText(card, lang());
+  dataRow(list, t("name"), card.name.status, spokenName || (card.name.text ? clipName(card.name.text) : card.name.text), "name");
+  dataRow(list, t("symbol"), card.symbol.status, card.symbol.text ? clipName(card.symbol.text) : card.symbol.text, "symbol");
+  dataRow(list, t("uri"), card.uri.status, card.uri.text, "uri");
   const mutableValue = card.metadataMutable === "si" ? t("yes") : card.metadataMutable === "no" ? t("no") : null;
   const mutableStatus = mutableValue ? "verificado" : card.metadataMutable;
-  dataRow(list, t("mutable"), mutableStatus, mutableValue);
+  dataRow(list, t("mutable"), mutableStatus, mutableValue, "mutable");
   const extensionText = card.extensions.length ? card.extensions.map((item) => item.name).join(", ") : null;
-  dataRow(list, t("extensions"), card.extensionsStatus, extensionText);
+  dataRow(list, t("extensions"), card.extensionsStatus, extensionText, "extensions");
   const curve = card.curve;
   if (curve.status === "no_aplica") {
     const term = text("dt", t("curve"));
@@ -460,9 +462,9 @@ function renderCard(card) {
     list.append(term, detail);
   } else {
     const curveValue = curve.present === true ? t("yes") : null;
-    dataRow(list, t("curve"), curve.status, curveValue);
+    dataRow(list, t("curve"), curve.status, curveValue, "curve");
   }
-  dataRow(list, t("largest"), card.largestStatus || "no_consultado", null);
+  dataRow(list, t("largest"), card.largestStatus || "no_consultado", null, "largest");
   article.append(list);
   article.append(entenderNav(lang()));
   article.append(text("p", t("untrusted"), { class: "muted" }));
@@ -470,12 +472,12 @@ function renderCard(card) {
   const summaryTech = el("summary");
   summaryTech.textContent = t("technical");
   const tech = el("dl");
-  dataRow(tech, t("slot"), card.slotStatus, card.slot);
+  dataRow(tech, t("slot"), card.slotStatus, card.slot, "slot");
   const utcTerm = text("dt", t("utc"));
   const utcValue = text("dd", card.consultedAt);
   tech.append(utcTerm, utcValue);
-  dataRow(tech, t("rawAccount"), supplyCheck.account ? "verificado" : "fallo", card.supplyAccount);
-  dataRow(tech, t("rawRpc"), card.supplyRpcStatus, card.supplyRpc);
+  dataRow(tech, t("rawAccount"), supplyCheck.account ? "verificado" : "fallo", card.supplyAccount, "supply");
+  dataRow(tech, t("rawRpc"), card.supplyRpcStatus, card.supplyRpc, "supply");
   if (card.errors.length) {
     const errors = el("ul");
     for (const item of card.errors) {
@@ -492,7 +494,7 @@ function appendSupply(list, card, check) {
   const note = supplyNote(card, lang());
   if (!check.account && !check.extra) {
     const status = check.reason === "no_aplica" ? "no_aplica" : "fallo";
-    dataRow(list, t("supplyAccount"), status, null);
+    dataRow(list, t("supplyAccount"), status, null, "supply");
     return;
   }
   const raw = check.account || check.extra;
@@ -715,6 +717,8 @@ function renderComparison() {
   }
   const older = compared.older || left;
   const newer = compared.newer || right;
+  const banner = comparisonBanner(older.card, newer.card, lang());
+  if (banner) out.append(text("p", banner, { class: "franja-identidad" }));
   out.append(text("h3", t("compareTitle")));
   const counted = text("p", comparisonSummary(compared, lang()), { class: "resumen-comparacion" });
   out.append(counted);

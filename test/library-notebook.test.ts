@@ -36,7 +36,7 @@ interface Card {
   officialStubx?: boolean;
   name: { text: string | null; status?: string };
   symbol?: { text: string | null; status?: string };
-  uri: { text: string | null };
+  uri: { text: string | null; status?: string };
   supplyRpc: string | null;
   supplyRpcStatus?: string;
   supplyAccount: string | null;
@@ -76,6 +76,7 @@ interface ModelModule {
   staleLine: (consultedAt: string, lang: string) => string;
   formatReadingStamp: (consultedAt: string, lang: string, withSeconds?: boolean) => string;
   readingOptionLabel: (card: Card, lang: string, peers?: Card[]) => string;
+  tableCellText: (field: string, status: string, value: unknown, lang: string) => string;
   comparisonSummary: (compared: { changes?: unknown[]; unchanged?: unknown[]; unknown?: unknown[] }, lang: string) => string;
   supplyDirection: (difference: string, decimals: number, lang: string) => string | null;
   comparedValueText: (raw: string, lang: string) => string;
@@ -922,6 +923,7 @@ describe("lector y cuaderno", () => {
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      second: "2-digit",
     }).format(new Date(WHEN)).replace(/[\u202f\u00a0]/g, " ");
     assert.equal(
       model.readingOptionLabel({ ...older, symbol: { text: "STUBX" }, name: { text: "STUBX" } }, "es"),
@@ -981,8 +983,66 @@ describe("lector y cuaderno", () => {
     second.symbol = { text: "USDC" };
     second.name = { text: "USD Coin" };
     const seconds = String(new Date(earlier).getSeconds()).padStart(2, "0");
+    const laterSeconds = String(new Date(later).getSeconds()).padStart(2, "0");
     assert.match(model.readingOptionLabel(first, "es", [first, second]), new RegExp(`:${seconds}$`));
-    assert.equal(/\d{2}:\d{2}:\d{2}/.test(model.readingOptionLabel(first, "es", [first])), false);
+    assert.match(model.readingOptionLabel(second, "es"), new RegExp(`:${laterSeconds}$`));
+    assert.match(model.readingOptionLabel(first, "es"), /\d{2}:\d{2}:\d{2}$/);
+    assert.match(model.readingOptionLabel(second, "es"), /\d{2}:\d{2}:\d{2}$/);
+  });
+
+  test("el cuaderno nombra un clon, avisa al comparar y no usa jerga en la tabla", async () => {
+    const { read, model } = await modules();
+    const summary = (await import(pathToFileURL(path.join(repoRoot(), "web/v2/shared/reading-summary.js")).href)) as {
+      notebookNameText: (card: Card, lang: string) => string;
+      comparisonBanner: (left: Card, right: Card, lang: string) => string;
+    };
+    const ery = "ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump";
+    const clone = read.blankCard(ery, WHEN, []);
+    clone.name = { text: "STUBX", status: "verificado" };
+    clone.symbol = { text: "STUBX", status: "verificado" };
+    clone.uri = { text: null, status: "ausente" };
+    const other = read.blankCard(ery, "2026-10-09T13:00:07.000Z", []);
+    other.name = { text: "STUBX", status: "verificado" };
+    other.symbol = { text: "STUBX", status: "verificado" };
+    const community = read.blankCard("FMNb4CR8ksibmgY7Ztei6BWcZXi3WHcVeJhYb9TNpump", WHEN, []);
+    community.name = { text: "Comunidad STUBX", status: "verificado" };
+    community.symbol = { text: "COMUNIDAD", status: "verificado" };
+    const usdc = read.blankCard(OTHER, WHEN, []);
+    usdc.name = { text: "USD Coin", status: "verificado" };
+    usdc.symbol = { text: "USDC", status: "verificado" };
+    usdc.uri = { text: null, status: "ausente" };
+    const official = read.blankCard(CA, WHEN, []);
+    official.name = { text: "STUBX", status: "verificado" };
+    official.symbol = { text: "STUBX", status: "verificado" };
+    assert.equal(summary.notebookNameText(clone, "es"), "Dice llamarse «STUBX»");
+    assert.equal(summary.notebookNameText(community, "es"), "Dice llamarse «Comunidad STUBX»");
+    assert.equal(summary.notebookNameText(usdc, "es"), "USD Coin");
+    assert.equal(summary.notebookNameText(official, "es"), "STUBX");
+    const option = model.readingOptionLabel(clone, "es");
+    assert.match(option, /^Dice llamarse «STUBX» · ERYy… · /);
+    assert.equal(option.startsWith("STUBX ·"), false);
+    assert.match(option, /\d{2}:\d{2}:\d{2}$/);
+    const paired = model.readingOptionLabel(other, "es");
+    assert.match(paired, /^Dice llamarse «STUBX» · ERYy… · /);
+    assert.match(paired, /\d{2}:\d{2}:\d{2}$/);
+    assert.equal(summary.comparisonBanner(clone, other, "es"), "Se parece a STUBX pero no es la dirección oficial.");
+    assert.equal(summary.comparisonBanner(usdc, usdc, "es"), "");
+    assert.equal(summary.comparisonBanner(official, official, "es"), "");
+    assert.equal(model.tableCellText("uri", "ausente", null, "es"), "No tiene enlace de metadatos");
+    assert.equal(model.tableCellText("uri", "ausente", null, "en"), "It has no metadata link");
+    assert.equal(model.tableCellText("uri", "ausente", "   ", "es"), "No tiene enlace de metadatos");
+    for (const field of ["name", "symbol", "decimals", "largest", "curve", "supply"]) {
+      for (const status of ["ausente", "fallo", "no_consultado", "no_disponible"]) {
+        const cell = model.tableCellText(field, status, null, "es");
+        assert.equal(cell.includes("ausente comprobado"), false, `${field} ${status}`);
+        assert.equal(cell.includes("consulta fallida"), false, `${field} ${status}`);
+        assert.equal(cell.includes("no consultado"), false, `${field} ${status}`);
+        assert.equal(cell.includes("verificado"), false, `${field} ${status}`);
+      }
+    }
+    assert.equal(model.tableCellText("decimals", "ausente", null, "es"), "No está en esta lectura");
+    assert.equal(model.tableCellText("largest", "fallo", null, "es"), "No se pudo leer");
+    assert.equal(model.tableCellText("largest", "no_consultado", null, "es"), "Esta lectura no lo pidió");
   });
 
   test("el suministro total no queda verificado si la lectura extra falla o no coincide", async () => {

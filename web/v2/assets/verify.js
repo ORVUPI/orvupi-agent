@@ -3481,6 +3481,29 @@ function authorityState(field) {
   return "fallo";
 }
 
+function notebookNameText(card, lang) {
+  const context = contextFromCard(card);
+  const name = summaryShown(context.name);
+  const symbol = summaryShown(context.symbol);
+  const quoted = name || symbol;
+  if (!context.official && looksLikeStubx(context) && quoted) {
+    return lang === "en" ? `It says it is called «${quoted}»` : `Dice llamarse «${quoted}»`;
+  }
+  return name;
+}
+
+function cloneWarningText(card, lang) {
+  const context = contextFromCard(card);
+  if (context.official || !looksLikeStubx(context)) return "";
+  return lang === "en"
+    ? "It looks like STUBX but it is not the official address."
+    : "Se parece a STUBX pero no es la dirección oficial.";
+}
+
+function comparisonBanner(left, right, lang) {
+  return cloneWarningText(left, lang) || cloneWarningText(right, lang);
+}
+
 function summaryFromCard(card) {
   const facts = [];
   if (!card) return compose(facts, [], { supply: null, name: "", symbol: "", decimals: null, extensions: [] }, null, null);
