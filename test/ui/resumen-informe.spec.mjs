@@ -5,6 +5,8 @@ import { decodeBase58, METADATA_PROGRAM, TOKEN_PROGRAM } from "../../web/v2/shar
 const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 const STUBX = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
 const FAIL = "So11111111111111111111111111111111111111112";
+const CLONE = "ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump";
+const CLONE_SUPPLY = 1_000_000_000_000_000n;
 const SUPPLY = 7721704579000000n;
 
 function borsh(value) {
@@ -30,7 +32,7 @@ function mintAccount(supply, mintActive, freezeActive) {
   return data;
 }
 
-function metadataAccount(mint, name, symbol, mutable) {
+function metadataAccount(mint, name, symbol, mutable, uri = "") {
   const mintBytes = decodeBase58(mint);
   if (!mintBytes || mintBytes.length !== 32) throw new Error(mint);
   return Buffer.concat([
@@ -39,7 +41,7 @@ function metadataAccount(mint, name, symbol, mutable) {
     Buffer.from(mintBytes),
     borsh(name),
     borsh(symbol),
-    borsh(""),
+    borsh(uri),
     Buffer.from([0, 0, 0, 0, mutable ? 1 : 0]),
   ]);
 }
@@ -77,18 +79,24 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
     const method = body?.method;
     if (method === "getMultipleAccounts") {
       const mint = body.params[0][0];
-      const name = mint === STUBX ? "STUBX" : mint === FAIL ? "OTRO" : "USD Coin";
-      const symbol = mint === STUBX ? "STUBX" : mint === FAIL ? "OTRO" : "USDC";
+      const name = mint === STUBX || mint === CLONE ? "STUBX" : mint === FAIL ? "OTRO" : "USD Coin";
+      const symbol = mint === STUBX || mint === CLONE ? "STUBX" : mint === FAIL ? "OTRO" : "USDC";
+      const active = mint === USDC;
+      const supply = mint === CLONE ? CLONE_SUPPLY : SUPPLY;
+      const uri = mint === USDC ? "\0".repeat(200) : "";
       return route.fulfill(rpcResult([
-        account(TOKEN_PROGRAM, mintAccount(SUPPLY, mint === USDC, mint === USDC)),
-        account(METADATA_PROGRAM, metadataAccount(mint, name, symbol, mint === USDC)),
+        account(TOKEN_PROGRAM, mintAccount(supply, active, active)),
+        account(METADATA_PROGRAM, metadataAccount(mint, name, symbol, active, uri)),
         null,
       ]));
     }
     if (method === "getTokenSupply" || method === "getTokenLargestAccounts") {
       const mint = body?.params?.[0];
       if (mint === FAIL && failReads) return route.fulfill(rpcResult(null, 500));
-      if (method === "getTokenSupply") return route.fulfill(rpcResult({ amount: SUPPLY.toString(), decimals: 6, uiAmountString: "skip" }));
+      if (method === "getTokenSupply") {
+        const amount = mint === CLONE ? CLONE_SUPPLY : SUPPLY;
+        return route.fulfill(rpcResult({ amount: amount.toString(), decimals: 6, uiAmountString: "skip" }));
+      }
       return route.fulfill(rpcResult([{ address: USDC, amount: "1000000", decimals: 6 }]));
     }
     return route.fulfill(rpcResult(1));
@@ -99,7 +107,7 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
     const summary = page.locator("#resultado .resumen-informe");
     await summary.scrollIntoViewIfNeeded();
     await summary.screenshot({
-      path: `/opt/cursor/artifacts/resumen_b49_${name}_${testInfo.project.name}.png`,
+      path: `/opt/cursor/artifacts/resumen_uso49_${name}_${testInfo.project.name}.png`,
     });
   }
 
@@ -114,6 +122,9 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
   await expect(summary).toContainText("7.721.704.579");
   await expect(summary).toContainText("USD Coin (USDC)");
   await expect(summary).toContainText("No tiene enlace de metadatos");
+  await expect(summary).not.toContainText("Se leyó el enlace de metadatos");
+  await expect(page.locator("#resultado")).toContainText("Enlace de metadatos: No tiene enlace de metadatos");
+  await expect(page.locator("#resultado")).not.toContainText("Faltan datos");
   await expect(summary.locator("[data-bloque='comprobado']")).not.toContainText("No aplica");
   await expect(summary.locator("[data-bloque='comprobado']")).not.toContainText("bytes del mint");
   await expect(summary.locator(".nota-curva")).toContainText("Curva de Pump.fun: no aplica");
@@ -164,10 +175,23 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
   await expect(summary).not.toContainText("ausente comprobado");
   await shot("stubx");
 
+  await page.locator("#direccion-token").fill(CLONE);
+  await page.locator("#consulta button[type='submit']").click();
+  await expect(summary).toContainText("Hay 1.000.000.000 tokens", { timeout: 20_000 });
+  await expect(summary).not.toContainText("1.000.000.000 STUBX");
+  await expect(summary).toContainText("Dice llamarse «STUBX» (texto elegido por quien creó el token)");
+  const likeness = summary.locator("[data-bloque='atencion'] .punto-resumen").first();
+  await expect(likeness).toContainText("Se parece a STUBX pero no es la dirección oficial");
+  await expect(likeness.locator("details")).toContainText("stubxai.com");
+  await expect(summary).toContainText("Es una ficha guardada de antes, no un dato de esta lectura");
+  await expect(summary).not.toContainText("Es un dato de esta lectura");
+  await shot("eryyy");
+
   await page.locator("#direccion-token").fill(FAIL);
   await page.locator("#consulta button[type='submit']").click();
-  await expect(summary.locator("[data-bloque='comprobado'] .punto-resumen", { hasText: "Suministro total" }).locator(".punto-nota")).toContainText("No se pudo leer otra vez", { timeout: 20_000 });
+  await expect(summary.locator("[data-bloque='comprobado'] .punto-resumen", { hasText: "Suministro total" }).locator(".punto-nota")).toContainText("No se pudo hacer la segunda comprobación del suministro", { timeout: 20_000 });
   await expect(summary.locator(".punto-titulo", { hasText: "Suministro total" })).toHaveCount(1);
+  await expect(summary.locator("[data-bloque='falta']")).toContainText("Segunda comprobación del suministro");
   await expect(summary.locator("[data-bloque='falta']")).not.toContainText("Suministro total");
   await expect(summary).toContainText("No se pudo leer quién tiene más tokens");
   await expect(summary).toContainText("El servicio público no respondió, prueba otra vez en un minuto.");

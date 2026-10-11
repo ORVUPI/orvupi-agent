@@ -208,8 +208,10 @@ describe("resumen de la lectura", () => {
     const missing = leads(summary, "falta", "es");
     const supplyItems = summary.blocks.flatMap((item) => item.items).filter((item) => item.title.es === "Suministro total");
     assert.equal(supplyItems.length, 1);
-    assert.equal(supplyItems[0]?.note?.es, "No se pudo leer otra vez.");
+    assert.equal(supplyItems[0]?.note?.es, "No se pudo hacer la segunda comprobación del suministro.");
     assert.equal(missing.includes("Suministro total"), false);
+    assert.match(missing, /Segunda comprobación del suministro/);
+    assert.match(missing, /No se pudo hacer la segunda comprobación del suministro/);
     assert.match(missing, /No se pudo leer quién tiene más tokens/);
     assert.equal(block(summary, "falta").items.find((item) => item.topic === "distribucion")?.topic, "distribucion");
     assert.equal(summary.retry, true);
@@ -258,7 +260,7 @@ describe("resumen de la lectura", () => {
     assert.equal(failedCard.retry, true);
     const failedSupply = failedCard.blocks.flatMap((item) => item.items).filter((item) => item.title.es === "Suministro total");
     assert.equal(failedSupply.length, 1);
-    assert.equal(failedSupply[0]?.note?.es, "No se pudo leer otra vez.");
+    assert.equal(failedSupply[0]?.note?.es, "No se pudo hacer la segunda comprobación del suministro.");
     assert.equal(leads(failedCard, "falta", "es").includes("Suministro total"), false);
     assert.match(leads(failedCard, "falta", "es"), /No se pudo leer quién tiene más tokens/);
     assert.match(leads(failedCard, "atencion", "es"), /Revisión de cada envío/);
@@ -399,8 +401,10 @@ describe("resumen de la lectura", () => {
     });
     const titled = summary.blocks.flatMap((item) => item.items).filter((item) => item.title.es === "Suministro total");
     assert.equal(titled.length, 1);
-    assert.equal(titled[0]?.note?.es, "No se pudo leer otra vez.");
-    assert.equal(titled[0]?.note?.en, "It could not be read again.");
+    assert.equal(titled[0]?.note?.es, "No se pudo hacer la segunda comprobación del suministro.");
+    assert.equal(titled[0]?.note?.en, "The second supply check could not be done.");
+    assert.match(leads(summary, "falta", "es"), /Segunda comprobación del suministro/);
+    assert.equal(leads(summary, "comprobado", "es").includes("Segunda comprobación"), false);
     assert.equal(block(summary, "atencion").items.some((item) => item.title.es === "Suministro total"), false);
     assert.equal(leads(summary, "comprobado", "es").includes("coinciden"), false);
     const mismatch = buildReadingSummary({
@@ -441,7 +445,7 @@ describe("resumen de la lectura", () => {
     });
     const againItems = again.blocks.flatMap((item) => item.items).filter((item) => item.title.es === "Suministro total");
     assert.equal(againItems.length, 1);
-    assert.equal(againItems[0]?.note?.es, "No se pudo leer otra vez.");
+    assert.equal(againItems[0]?.note?.es, "No se pudo hacer la segunda comprobación del suministro.");
     const different = summaryFromCard({
       mint: STUBX,
       program: "spl-token",
@@ -495,5 +499,82 @@ describe("resumen de la lectura", () => {
     });
     assert.equal(block(read, "falta").items.some((item) => item.title.es === "Señal rara"), false);
     assert.match(leads(read, "atencion", "es"), /Señal rara/);
+  });
+
+  test("un URI vacío o de nulos no es un enlace", async () => {
+    const { buildReadingSummary, summaryFromCard } = await load();
+    for (const uri of ["", "   ", `\0`.repeat(200), "\uFFFD"]) {
+      const summary = buildReadingSummary({
+        ok: true,
+        kind: "lectura",
+        facts: [{ id: "enlace", label: { es: "Enlace de metadatos", en: "Metadata link" }, state: "ausente" }],
+      });
+      assert.match(leads(summary, "comprobado", "es"), /No tiene enlace de metadatos/);
+      assert.equal(leads(summary, "comprobado", "es").includes("Se leyó el enlace"), false);
+      const card = summaryFromCard({
+        mint: USDC,
+        program: "spl-token",
+        programStatus: "verificado",
+        mintAuthority: { state: "activa", status: "verificado" },
+        freezeAuthority: { state: "activa", status: "verificado" },
+        supplyAccount: "1000",
+        supplyRpc: "1000",
+        supplyRpcStatus: "verificado",
+        decimals: 6,
+        name: { text: "USD Coin", status: "verificado" },
+        symbol: { text: "USDC", status: "verificado" },
+        uri: { text: uri, status: "verificado" },
+        metadataMutable: "si",
+        extensionsStatus: "no_aplica",
+        curve: { status: "no_aplica", present: false },
+        largestStatus: "ok",
+      });
+      assert.match(leads(card, "comprobado", "es"), /No tiene enlace de metadatos/);
+      assert.equal(leads(card, "comprobado", "es").includes("Se leyó el enlace"), false);
+    }
+  });
+
+  test("ERYyy simulado no usa el símbolo de terceros como si fuera STUBX", async () => {
+    const { buildReadingSummary } = await load();
+    const mint = "ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump";
+    const summary = buildReadingSummary({
+      ok: true,
+      kind: "lectura",
+      mint,
+      facts: [
+        { id: "suministro", label: { es: "Suministro", en: "Supply" }, state: "ok" },
+        { id: "suministro-extra", label: { es: "Suministro", en: "Supply" }, state: "ok" },
+        { id: "metadatos", label: { es: "Metadatos", en: "Metadata" }, state: "ok" },
+        { id: "enlace", label: { es: "Enlace", en: "Link" }, state: "ok" },
+      ],
+      rows: [
+        { label: { es: "Nombre", en: "Name" }, value: { es: "STUBX", en: "STUBX" } },
+        { label: { es: "Símbolo", en: "Symbol" }, value: { es: "STUBX", en: "STUBX" } },
+        { label: { es: "Suministro", en: "Supply" }, value: { es: "1.000.000.000", en: "1,000,000,000" } },
+      ],
+      signals: [
+        { id: "emision", level: "neutro", title: { es: "Nadie puede crear más tokens con ese permiso", en: "Nobody can create more tokens with that permission" } },
+        { id: "congelacion", level: "neutro", title: { es: "Nadie puede congelar cuentas con ese permiso", en: "Nobody can freeze accounts with that permission" } },
+        { id: "copia", level: "atencion", title: { es: "Se parece a STUBX, pero no es la CA oficial", en: "Looks like STUBX, but it is not the official CA" }, explain: { es: "La dirección es otra.", en: "The address is different." } },
+        { id: "mutable", level: "atencion", title: { es: "El nombre se puede cambiar", en: "The name can be changed" }, explain: { es: "puede actualizar", en: "can update" } },
+        {
+          id: "ficha",
+          level: "atencion",
+          title: { es: "La ficha fechada también dice que se parece a STUBX y no es la CA oficial", en: "The dated card also says it looks like STUBX and is not the official CA" },
+          explain: { es: "Es una foto anterior.", en: "It is an earlier snapshot." },
+        },
+      ],
+    });
+    const supply = block(summary, "comprobado").items.find((item) => item.title.es === "Suministro total");
+    assert.match(supply?.lead.es ?? "", /^Hay 1\.000\.000\.000 tokens/);
+    assert.equal((supply?.lead.es ?? "").includes("STUBX"), false);
+    const identity = block(summary, "comprobado").items.find((item) => item.title.es === "Nombre y símbolo");
+    assert.equal(identity?.lead.es, "Dice llamarse «STUBX» (texto elegido por quien creó el token).");
+    const attention = block(summary, "atencion").items;
+    assert.equal(attention[0]?.lead.es, "Se parece a STUBX pero no es la dirección oficial.");
+    assert.match(attention[0]?.detail?.es ?? "", /stubxai\.com/);
+    const dated = attention.find((item) => item.title.es === "Comprobación anterior");
+    assert.equal(dated?.lead.es, "Es una ficha guardada de antes, no un dato de esta lectura.");
+    assert.equal(prose(summary, "es").includes("Es un dato de esta lectura"), false);
   });
 });

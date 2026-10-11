@@ -1365,6 +1365,10 @@ function cleanText(value) {
     const withoutPadding = value.replace(/\0+$/u, "");
     return withoutPadding.replace(/[\0\p{Cc}\p{Cf}]/gu, "\uFFFD").replace(/\uFFFD+/g, "\uFFFD").trim();
 }
+/** Un URI vacío, de espacios o de relleno nulo no es un enlace. */
+function metadataLink(value) {
+    return cleanText(value ?? "").replace(/\uFFFD/g, "").trim();
+}
 function readTokenAccount(data) {
     if (data.length < 72) {
         return null;
@@ -2240,7 +2244,7 @@ async function readWith(mint, registry, rpc, input) {
     const bonding = curveInfo && curveInfo.owner === PUMP_PROGRAM ? decodeBondingCurve(curveInfo.owner, curveInfo.data) : null;
     const names = [decoded.tokenMetadata?.name, metaplex?.name].filter((item) => Boolean(item));
     const symbols = [decoded.tokenMetadata?.symbol, metaplex?.symbol].filter((item) => Boolean(item));
-    const uri = decoded.tokenMetadata?.uri || metaplex?.uri || "";
+    const uri = metadataLink(decoded.tokenMetadata?.uri || metaplex?.uri || "");
     const likeness = compareCanonical({ mint, names, symbols, imageUris: [], links: uri ? [uri] : [] }, registry);
     const signals = [];
     const programName = decoded.standard === "token-2022" ? "Token-2022" : "SPL Token";
@@ -2628,14 +2632,16 @@ function metadataSignals(tokenMeta, metaplex, official) {
     const out = [];
     const name = tokenMeta?.name || metaplex?.name || "";
     const symbol = tokenMeta?.symbol || metaplex?.symbol || "";
-    const uri = tokenMeta?.uri || metaplex?.uri || "";
+    const uri = metadataLink(tokenMeta?.uri || metaplex?.uri || "");
     const visibleName = clipForeign(name, official);
+    const linkEs = uri ? clipForeign(uri, official) : "No tiene enlace de metadatos";
+    const linkEn = uri ? clipForeign(uri, official) : "It has no metadata link";
     out.push({
         id: "metadatos",
         level: "neutro",
         tone: official ? undefined : "ajeno",
         title: loc(name ? `Nombre: ${visibleName}` : "Nombre no leído", name ? `Name: ${visibleName}` : "Name not read"),
-        explain: loc(`Símbolo: ${symbol ? clipForeign(symbol, official) : "ausente comprobado"}. Enlace de metadatos: ${uri ? clipForeign(uri, official) : "ausente comprobado"}. El nombre es un texto. La dirección es otra cosa.`, `Symbol: ${symbol ? clipForeign(symbol, official) : "confirmed absent"}. Metadata link: ${uri ? clipForeign(uri, official) : "confirmed absent"}. The name is text. The address is something else.`),
+        explain: loc(`Símbolo: ${symbol ? clipForeign(symbol, official) : "ausente comprobado"}. Enlace de metadatos: ${linkEs}. El nombre es un texto. La dirección es otra cosa.`, `Symbol: ${symbol ? clipForeign(symbol, official) : "confirmed absent"}. Metadata link: ${linkEn}. The name is text. The address is something else.`),
     });
     const update = tokenMeta?.updateAuthority || (metaplex ? metaplex.updateAuthority : null);
     const mutable = metaplex ? metaplex.mutable : tokenMeta?.updateAuthority ? true : null;
@@ -2792,7 +2798,10 @@ const TOPIC_BY_ID = {
   mutable: "metadatos",
   cuentas: "distribucion",
   curva: "curva",
+  ficha: "metadatos",
 };
+
+const SUMMARY_OFFICIAL = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
 
 const ATTENTION = {
   emision: {
@@ -2872,9 +2881,20 @@ const ATTENTION = {
     detail: { es: "Una señal sola no acusa al proyecto.", en: "One signal does not accuse the project." },
   },
   copia: {
-    title: { es: "Parecido con STUBX", en: "Likeness with STUBX" },
-    lead: { es: "El nombre se parece, pero la dirección es otra.", en: "The name looks similar, but the address is different." },
-    detail: { es: "Esto no dice quién lo creó.", en: "This does not say who created it." },
+    title: { es: "Dirección", en: "Address" },
+    lead: { es: "Se parece a STUBX pero no es la dirección oficial.", en: "It looks like STUBX but it is not the official address." },
+    detail: {
+      es: "La dirección oficial está publicada en stubxai.com. Ábrela y compárala con la de esta lectura, carácter a carácter. Un nombre igual no cambia la dirección.",
+      en: "The official address is published on stubxai.com. Open it and compare it with the one in this reading, character by character. The same name does not change the address.",
+    },
+  },
+  ficha: {
+    title: { es: "Comprobación anterior", en: "Earlier check" },
+    lead: { es: "Es una ficha guardada de antes, no un dato de esta lectura.", en: "It is a card saved earlier, not a fact from this reading." },
+    detail: {
+      es: "La ficha fechada es una foto anterior. No cambia lo que dice esta lectura.",
+      en: "The dated card is an earlier snapshot. It does not change what this reading says.",
+    },
   },
   parecido: {
     title: { es: "Parecido con el registro", en: "Likeness with the registry" },
@@ -2969,7 +2989,7 @@ function supplyPair(raw, decimals) {
   return es && en ? { es, en } : null;
 }
 
-function cleanText(value) {
+function summaryText(value) {
   return typeof value === "string" && value.trim() ? value.trim() : "";
 }
 
@@ -2980,24 +3000,48 @@ function contextFromView(view) {
   const supplyRow = row("Suministro");
   return {
     supply: supplyPair(shown.supplyAccount, shown.decimals) || (supplyRow && supplyRow.value && supplyRow.value.es ? supplyRow.value : null),
-    name: cleanText(shown.name) || cleanText(row("Nombre") && row("Nombre").value && row("Nombre").value.es),
-    symbol: cleanText(shown.symbol) || cleanText(row("Símbolo") && row("Símbolo").value && row("Símbolo").value.es),
+    name: summaryText(shown.name) || summaryText(row("Nombre") && row("Nombre").value && row("Nombre").value.es),
+    symbol: summaryText(shown.symbol) || summaryText(row("Símbolo") && row("Símbolo").value && row("Símbolo").value.es),
     decimals: shown.decimals,
     extensions: Array.isArray(shown.extensions) ? shown.extensions : [],
+    official: view?.mint === SUMMARY_OFFICIAL || (view?.signals || []).some((item) => item && item.id === "registro"),
   };
 }
 
 function contextFromCard(card) {
   return {
     supply: supplyPair(card && card.supplyAccount, card && card.decimals) || supplyPair(card && card.supplyRpc, card && card.decimals),
-    name: cleanText(card && card.name && card.name.text),
-    symbol: cleanText(card && card.symbol && card.symbol.text),
+    name: summaryText(card && card.name && card.name.text),
+    symbol: summaryText(card && card.symbol && card.symbol.text),
     decimals: card ? card.decimals : null,
     extensions: Array.isArray(card && card.extensions) ? card.extensions : [],
+    official: Boolean(card && (card.officialStubx === true || card.mint === SUMMARY_OFFICIAL)),
   };
 }
 
+function looksLikeStubx(context) {
+  return /stubx/i.test(`${context?.name || ""} ${context?.symbol || ""}`);
+}
+
+function foreignName(context) {
+  return Boolean(context && !context.official && looksLikeStubx(context));
+}
+
+function quotedIdentity(context) {
+  const name = context.name;
+  const symbol = context.symbol;
+  if (name && symbol && name !== symbol) return `«${name}» («${symbol}»)`;
+  return `«${name || symbol}»`;
+}
+
 function nameLead(context) {
+  if (foreignName(context)) {
+    const quoted = quotedIdentity(context);
+    return summaryPair(
+      `Dice llamarse ${quoted} (texto elegido por quien creó el token).`,
+      `It says it is called ${quoted} (text chosen by whoever created the token).`,
+    );
+  }
   const name = context.name;
   const symbol = context.symbol;
   if (name && symbol && name !== symbol) return summaryPair(`${name} (${symbol}).`, `${name} (${symbol}).`);
@@ -3006,14 +3050,15 @@ function nameLead(context) {
 }
 
 function supplyLead(context, matched) {
-  const symbol = context.symbol ? ` ${context.symbol}` : "";
+  const symbol = context.symbol && !foreignName(context) ? ` ${context.symbol}` : "";
+  const unit = symbol ? "" : " tokens";
   if (context.supply) {
     const es = matched
-      ? `Hay ${context.supply.es}${symbol} y las dos lecturas coinciden.`
-      : `Hay ${context.supply.es}${symbol}.`;
+      ? `Hay ${context.supply.es}${symbol}${unit} y las dos lecturas coinciden.`
+      : `Hay ${context.supply.es}${symbol}${unit}.`;
     const en = matched
-      ? `There are ${context.supply.en}${symbol} and the two reads match.`
-      : `There are ${context.supply.en}${symbol}.`;
+      ? `There are ${context.supply.en}${symbol}${unit} and the two reads match.`
+      : `There are ${context.supply.en}${symbol}${unit}.`;
     return summaryPair(es, en);
   }
   return summaryPair(
@@ -3070,7 +3115,9 @@ function attentionFromSignals(signals) {
     }
     if (isUnread(signal)) continue;
     const known = attentionPoint(signal.id);
-    items.push(known || genericAttention(signal));
+    const point = known || genericAttention(signal);
+    if (signal.id === "copia" || signal.id === "parecido") items.unshift(point);
+    else items.push(point);
   }
   return items;
 }
@@ -3103,7 +3150,10 @@ function pushMissing(missing, topic, title, lead) {
   missing.push(summaryPoint(topic, title, lead));
 }
 
-const SUPPLY_AGAIN = summaryPair("No se pudo leer otra vez.", "It could not be read again.");
+const SUPPLY_AGAIN = summaryPair(
+  "No se pudo hacer la segunda comprobación del suministro.",
+  "The second supply check could not be done.",
+);
 const SUPPLY_MISMATCH = summaryPair("Las dos lecturas no coinciden.", "The two reads do not match.");
 
 function readsDisagree(signals) {
@@ -3143,7 +3193,15 @@ function compose(facts, attention, context, signals, card) {
         mismatch ? ATTENTION.suministro.detail : null,
         supplyNote,
       ));
-      if (again) rereadFailed = true;
+      if (again) {
+        rereadFailed = true;
+        pushMissing(
+          missing,
+          "suministro",
+          summaryPair("Segunda comprobación del suministro", "Second supply check"),
+          SUPPLY_AGAIN,
+        );
+      }
     } else if (supply?.state === "fallo" || (!supply && extra?.state === "fallo")) {
       pushMissing(
         missing,
@@ -3390,13 +3448,18 @@ function summaryFromCard(card) {
   return compose(facts, attentionFromCard(card), contextFromCard(card), null, card);
 }
 
+function meaningfulText(value) {
+  if (typeof value !== "string") return "";
+  return value.replace(/\u0000/g, "").replace(/\uFFFD/g, "").trim();
+}
+
 function textState(field) {
   if (!field) return "fallo";
   if (field.status === "no_aplica") return "no_aplica";
   if (field.status === "ausente") return "ausente";
   if (field.status === "fallo" || field.status === "no_disponible") return "fallo";
   if (field.status === "no_consultado") return "no_consultado";
-  if (field.text) return "ok";
+  if (meaningfulText(field.text)) return "ok";
   return "ausente";
 }
 
@@ -3656,11 +3719,6 @@ function paintVerify(out, view) {
     var absent = verifyEl("p", { class: "resumen-datos", "data-estado": "ausente" });
     absent.textContent = view.absent[lang];
     out.append(absent);
-  }
-  if (view.missing && view.missing[lang]) {
-    var missing = verifyEl("p", { class: "resumen-datos", "data-estado": view.missingState || "falta" });
-    missing.textContent = view.missing[lang];
-    out.append(missing);
   }
   if (view.signals && view.signals.length) {
     var signals = verifyEl("div", { class: "senales" });

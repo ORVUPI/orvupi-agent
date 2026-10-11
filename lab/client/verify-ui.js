@@ -130,11 +130,6 @@ function paintVerify(out, view) {
     absent.textContent = view.absent[lang];
     out.append(absent);
   }
-  if (view.missing && view.missing[lang]) {
-    var missing = verifyEl("p", { class: "resumen-datos", "data-estado": view.missingState || "falta" });
-    missing.textContent = view.missing[lang];
-    out.append(missing);
-  }
   if (view.signals && view.signals.length) {
     var signals = verifyEl("div", { class: "senales" });
     view.signals.forEach(function (signal) {

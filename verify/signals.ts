@@ -3,7 +3,7 @@ import { FallbackRpc, classifyRpcFailure } from "./fallback.js";
 import { validateMint } from "./input.js";
 import { compareCanonical } from "./impersonation.js";
 import { decodeMetaplex } from "./metadata.js";
-import { decodeMint, readTokenAccount } from "./mint.js";
+import { decodeMint, metadataLink, readTokenAccount } from "./mint.js";
 import {
   ACCOUNT_BASE_LEN,
   MINT_BASE_LEN,
@@ -567,7 +567,7 @@ async function readWith(
   const bonding = curveInfo && curveInfo.owner === PUMP_PROGRAM ? decodeBondingCurve(curveInfo.owner, curveInfo.data) : null;
   const names = [decoded.tokenMetadata?.name, metaplex?.name].filter((item): item is string => Boolean(item));
   const symbols = [decoded.tokenMetadata?.symbol, metaplex?.symbol].filter((item): item is string => Boolean(item));
-  const uri = decoded.tokenMetadata?.uri || metaplex?.uri || "";
+  const uri = metadataLink(decoded.tokenMetadata?.uri || metaplex?.uri || "");
   const likeness = compareCanonical(
     { mint, names, symbols, imageUris: [], links: uri ? [uri] : [] },
     registry,
@@ -1057,16 +1057,18 @@ function metadataSignals(
   const out: Signal[] = [];
   const name = tokenMeta?.name || metaplex?.name || "";
   const symbol = tokenMeta?.symbol || metaplex?.symbol || "";
-  const uri = tokenMeta?.uri || metaplex?.uri || "";
+  const uri = metadataLink(tokenMeta?.uri || metaplex?.uri || "");
   const visibleName = clipForeign(name, official);
+  const linkEs = uri ? clipForeign(uri, official) : "No tiene enlace de metadatos";
+  const linkEn = uri ? clipForeign(uri, official) : "It has no metadata link";
   out.push({
     id: "metadatos",
     level: "neutro",
     tone: official ? undefined : "ajeno",
     title: loc(name ? `Nombre: ${visibleName}` : "Nombre no leído", name ? `Name: ${visibleName}` : "Name not read"),
     explain: loc(
-      `Símbolo: ${symbol ? clipForeign(symbol, official) : "ausente comprobado"}. Enlace de metadatos: ${uri ? clipForeign(uri, official) : "ausente comprobado"}. El nombre es un texto. La dirección es otra cosa.`,
-      `Symbol: ${symbol ? clipForeign(symbol, official) : "confirmed absent"}. Metadata link: ${uri ? clipForeign(uri, official) : "confirmed absent"}. The name is text. The address is something else.`,
+      `Símbolo: ${symbol ? clipForeign(symbol, official) : "ausente comprobado"}. Enlace de metadatos: ${linkEs}. El nombre es un texto. La dirección es otra cosa.`,
+      `Symbol: ${symbol ? clipForeign(symbol, official) : "confirmed absent"}. Metadata link: ${linkEn}. The name is text. The address is something else.`,
     ),
   });
   const update = tokenMeta?.updateAuthority || (metaplex ? metaplex.updateAuthority : null);

@@ -316,6 +316,11 @@ export function cleanText(value: string): string {
   return withoutPadding.replace(/[\0\p{Cc}\p{Cf}]/gu, "\uFFFD").replace(/\uFFFD+/g, "\uFFFD").trim();
 }
 
+/** Un URI vacío, de espacios o de relleno nulo no es un enlace. */
+export function metadataLink(value: string | null | undefined): string {
+  return cleanText(value ?? "").replace(/\uFFFD/g, "").trim();
+}
+
 export function readTokenAccount(data: Uint8Array): { mint: string; owner: string; amount: bigint } | null {
   if (data.length < 72) {
     return null;

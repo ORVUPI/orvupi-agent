@@ -6,8 +6,10 @@ import { decodePubkey, encodeBase58 } from "../base58.js";
 import { candidateUrls, connectPinned, fetchBytes, isPrivateAddress, pinnedLookup, pinnedSocketOptions } from "../http.js";
 import { compareCanonical, normalizeToken, normalizeUrl } from "../impersonation.js";
 import { validateMint } from "../input.js";
-import { cleanText, decodeMint } from "../mint.js";
-import { PUMP_DISCRIMINATOR, PUMP_PROGRAM, TOKEN_2022_PROGRAM, TOKEN_PROGRAM, associatedTokenAddress, bondingCurvePda } from "../programs.js";
+import { cleanText, decodeMint, metadataLink } from "../mint.js";
+import { decodeMetaplex } from "../metadata.js";
+import { metaplexAccount } from "./layouts.js";
+import { METADATA_PROGRAM, PUMP_DISCRIMINATOR, PUMP_PROGRAM, TOKEN_2022_PROGRAM, TOKEN_PROGRAM, associatedTokenAddress, bondingCurvePda } from "../programs.js";
 import { buildReport, redactEndpoint } from "../report.js";
 import { repoRootFrom } from "../root.js";
 import { RpcClient, type RpcTransport } from "../rpc.js";
@@ -266,6 +268,22 @@ describe("descarga y redacción", () => {
 });
 
 describe("texto, puntero y holders", () => {
+  test("un URI vacío, de espacios o de nulos no es un enlace", () => {
+    const usdc = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+    const mint = decodePubkey(usdc);
+    assert.ok(mint);
+    assert.equal(metadataLink(""), "");
+    assert.equal(metadataLink("   "), "");
+    assert.equal(metadataLink("\uFFFD"), "");
+    assert.equal(metadataLink("\0".repeat(200)), "");
+    assert.equal(metadataLink("https://example.invalid/meta"), "https://example.invalid/meta");
+    for (const uri of ["", "   ", "\0".repeat(200)]) {
+      const decoded = decodeMetaplex(METADATA_PROGRAM, metaplexAccount(mint, "USD Coin", "USDC", uri, true), usdc);
+      assert.equal(decoded?.uri ?? "missing", "");
+      assert.equal(metadataLink(decoded?.uri), "");
+    }
+  });
+
   test("cleanText recorta el relleno nulo y marca el bidi", () => {
     assert.equal(cleanText("STUBX"), "STUBX");
     assert.equal(cleanText("USD Coin\0\0\0"), "USD Coin");

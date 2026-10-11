@@ -221,7 +221,8 @@ function cleanText(bytes) {
     .decode(bytes.subarray(0, end))
     .replace(/\u0000/g, "")
     .replaceAll("<", "‹")
-    .replaceAll(">", "›");
+    .replaceAll(">", "›")
+    .trim();
   return text.length > 200 ? text.slice(0, 200) : text;
 }
 
@@ -435,8 +436,9 @@ function emptyCurve() {
 }
 
 function textFact(text) {
-  if (typeof text !== "string" || text.length === 0) return { text: null, status: "ausente" };
-  return { text, status: "verificado" };
+  const cleaned = typeof text === "string" ? text.replace(/\u0000/g, "").replace(/\uFFFD/g, "").trim() : "";
+  if (!cleaned) return { text: null, status: "ausente" };
+  return { text: cleaned, status: "verificado" };
 }
 
 function unavailableAuthority() {

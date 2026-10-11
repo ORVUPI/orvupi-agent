@@ -470,9 +470,7 @@ function renderCard(card) {
     absentNode.dataset.estado = "ausente";
     article.append(absentNode);
   }
-  const summaryNode = text("p", summary.text, { class: "resumen-datos" });
-  summaryNode.dataset.estado = summary.state;
-  article.append(summaryNode, list);
+  article.append(list);
   article.append(entenderNav(lang()));
   article.append(text("p", t("untrusted"), { class: "muted" }));
   const details = el("details", { class: "tecnico" });

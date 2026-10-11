@@ -72,9 +72,9 @@ for (const mint of [STUBX, USDC]) {
     await readMint(page, mint);
     await expect(page.locator("#resultado")).toContainText(/Hay 1 tokens/);
     await expect(page.locator("#resultado")).toContainText(/ausente comprobado|No falta/);
-    const okGroups = await page.locator(".resumen-datos").allTextContents();
-    const okMissing = okGroups.find((item) => item.startsWith("Faltan datos")) ?? "";
+    const okMissing = await page.locator("[data-bloque='falta']").innerText();
     expect(okMissing).not.toMatch(/ausente comprobado/);
+    await expect(page.locator(".resumen-datos")).not.toContainText("Faltan datos");
     await expect(page.locator("#entender-resultado")).toContainText("Entender este resultado");
     await expect(page.locator("#resultado")).not.toContainText(/no disponible · verificado|verificado · no disponible/i);
 
@@ -82,8 +82,7 @@ for (const mint of [STUBX, USDC]) {
     await readMint(page, mint);
     await expect(page.locator("#resultado")).toContainText(/El servicio público no respondió, prueba otra vez en un minuto/);
     await expect(page.locator("#reintentar")).toBeVisible();
-    const failedGroups = await page.locator(".resumen-datos").allTextContents();
-    const failedMissing = failedGroups.find((item) => item.startsWith("Faltan datos")) ?? "";
+    const failedMissing = await page.locator("[data-bloque='falta']").innerText();
     expect(failedMissing).not.toMatch(/ausente comprobado/);
     await expect(page.locator("[data-estado='ausente']")).toContainText("Comprobado: no existe");
     await expect(page.locator("#resultado")).not.toContainText(/no disponible · verificado/i);

@@ -96,7 +96,7 @@ test("lectura, guardado y comparación en el uso real", async ({ page }, testInf
   await expect(page.locator("#resultado")).toContainText("Hay 7.840.780.507,370947 tokens", { timeout: 20_000 });
   await expect(page.locator("#resultado")).not.toContainText("7840780507.370947");
   const groups = await page.locator(".resumen-datos").allTextContents();
-  const missing = groups.find((item) => item.startsWith("Faltan datos")) ?? "";
+  const missing = await page.locator("[data-bloque='falta']").innerText();
   const absent = groups.find((item) => item.startsWith("Comprobado: no existe")) ?? "";
   expect(missing).toContain("El servicio público no respondió, prueba otra vez en un minuto");
   expect(missing).not.toContain("ausente comprobado");
@@ -158,9 +158,9 @@ test("lectura, guardado y comparación en el uso real", async ({ page }, testInf
   await expect(page.locator("#consulta-error").getByRole("link", { name: "Abrir Cuaderno" })).toBeVisible();
   await expect(page.locator("#resultado")).toContainText("Entender este resultado");
   await expect(page.locator("#resultado")).toContainText("No aplica: este token no se creó en Pump.fun");
-  const notebookGroups = await page.locator("#resultado .resumen-datos").allTextContents();
-  const notebookMissing = notebookGroups.find((item) => item.startsWith("Faltan datos")) ?? "";
+  const notebookMissing = await page.locator("#resultado [data-bloque='falta']").innerText();
   expect(notebookMissing).not.toContain("Curva");
+  await expect(page.locator("#resultado .resumen-datos")).not.toContainText("Faltan datos");
   await page.locator("#resultado .abrir-entender").click();
   await expect(page.locator("#resultado .explicacion-resultado")).toBeVisible();
   await expect(page.locator("#resultado .explicacion-resultado")).toBeFocused();
