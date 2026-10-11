@@ -575,6 +575,7 @@ describe("resumen de la lectura", () => {
         {
           id: "ficha",
           level: "atencion",
+          cardDate: "2026-10-09T16:16:12.461Z",
           title: { es: "La ficha fechada también dice que se parece a STUBX y no es la CA oficial", en: "The dated card also says it looks like STUBX and is not the official CA" },
           explain: { es: "Es una foto anterior.", en: "It is an earlier snapshot." },
         },
@@ -589,7 +590,22 @@ describe("resumen de la lectura", () => {
     assert.equal(attention[0]?.lead.es, "Se parece a STUBX pero no es la dirección oficial.");
     assert.match(attention[0]?.detail?.es ?? "", /stubxai\.com/);
     const dated = attention.find((item) => item.title.es === "Comprobación anterior");
-    assert.equal(dated?.lead.es, "Es una ficha guardada de antes, no un dato de esta lectura.");
+    assert.equal(dated?.lead.es, "Es la ficha del 2026-10-09, no un dato de esta lectura.");
+    assert.equal(dated?.lead.en, "It is the 2026-10-09 card, not a fact from this reading.");
+    assert.equal(/\d{2}:\d{2}:\d{2}/.test(dated?.lead.es ?? ""), false);
+    const undated = buildReadingSummary({
+      ok: true,
+      kind: "lectura",
+      mint,
+      facts: [],
+      signals: [{
+        id: "ficha",
+        level: "atencion",
+        title: { es: "Comprobación anterior", en: "Earlier check" },
+        explain: { es: "Leído a las 12:18:00.", en: "Read at 12:18:00." },
+      }],
+    });
+    assert.equal(block(undated, "atencion").items.some((item) => item.title.es === "Comprobación anterior"), false);
     assert.equal(prose(summary, "es").includes("Es un dato de esta lectura"), false);
   });
 

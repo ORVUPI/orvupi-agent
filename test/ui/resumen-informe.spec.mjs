@@ -189,7 +189,9 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
   const likeness = summary.locator("[data-bloque='atencion'] .punto-resumen").first();
   await expect(likeness).toContainText("Se parece a STUBX pero no es la dirección oficial");
   await expect(likeness.locator("details")).toContainText("stubxai.com");
-  await expect(summary).toContainText("Es una ficha guardada de antes, no un dato de esta lectura");
+  const earlier = summary.locator("[data-bloque='atencion'] .punto-resumen", { hasText: "Comprobación anterior" });
+  await expect(earlier).toContainText("Es la ficha del 2026-10-09, no un dato de esta lectura");
+  await expect(earlier).not.toContainText(/\d{2}:\d{2}:\d{2}/);
   await expect(summary).not.toContainText("Es un dato de esta lectura");
   await shot("eryyy");
 

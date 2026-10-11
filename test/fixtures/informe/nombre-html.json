@@ -1,0 +1,38 @@
+{
+  "programStatus": "verificado",
+  "mintAuthority": {
+    "state": "revocada",
+    "status": "verificado"
+  },
+  "freezeAuthority": {
+    "state": "revocada",
+    "status": "verificado"
+  },
+  "supplyAccount": "7721704579000000",
+  "supplyRpc": "7721704579000000",
+  "supplyRpcStatus": "verificado",
+  "decimals": 6,
+  "uri": {
+    "text": null,
+    "status": "ausente"
+  },
+  "metadataMutable": "si",
+  "extensionsStatus": "no_aplica",
+  "extensions": [],
+  "curve": {
+    "status": "no_aplica",
+    "present": false
+  },
+  "largestStatus": "ok",
+  "network": "solana",
+  "consultedAt": "2026-10-11T10:18:00.000Z",
+  "mint": "BQi787uxPWNJopC5UV7TEFfH2HgxkBtehapSh9CURt4E",
+  "name": {
+    "text": "A&B<i>",
+    "status": "verificado"
+  },
+  "symbol": {
+    "text": "AB",
+    "status": "verificado"
+  }
+}
