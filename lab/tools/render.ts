@@ -47,8 +47,19 @@ const META_LABEL: Record<CardSummary["metadataReading"], Localized> = {
   desconocido: { es: "Desconocido", en: "Unknown" },
 };
 
+const REGISTRY_MARK = {
+  es: "(publicada en el registro oficial)",
+  en: "(listed in the official registry)",
+};
+
+function linkRegistry(escaped: string): string {
+  return escaped
+    .replaceAll(REGISTRY_MARK.es, `<a href="/security/">${REGISTRY_MARK.es}</a>`)
+    .replaceAll(REGISTRY_MARK.en, `<a href="/security/">${REGISTRY_MARK.en}</a>`);
+}
+
 function both(text: Localized, tag = "span"): string {
-  return `<${tag} class="lang es" lang="es">${escapeHtml(text.es)}</${tag}><${tag} class="lang en" lang="en">${escapeHtml(text.en)}</${tag}>`;
+  return `<${tag} class="lang es" lang="es">${linkRegistry(escapeHtml(text.es))}</${tag}><${tag} class="lang en" lang="en">${linkRegistry(escapeHtml(text.en))}</${tag}>`;
 }
 
 function statusText(status: string): Localized {

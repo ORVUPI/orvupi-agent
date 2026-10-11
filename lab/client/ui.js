@@ -121,6 +121,28 @@ function el(tag, attrs) {
   return node;
 }
 
+var REGISTRY_MARK = {
+  es: "(publicada en el registro oficial)",
+  en: "(listed in the official registry)",
+};
+
+function fillLinked(node, text) {
+  var marker = text.indexOf(REGISTRY_MARK.en) !== -1 ? REGISTRY_MARK.en : REGISTRY_MARK.es;
+  if (text.indexOf(marker) === -1) {
+    node.textContent = text;
+    return;
+  }
+  node.replaceChildren();
+  text.split(marker).forEach(function (chunk, index, chunks) {
+    if (chunk) node.append(document.createTextNode(chunk));
+    if (index < chunks.length - 1) {
+      var anchor = el("a", { href: "/security/" });
+      anchor.textContent = marker;
+      node.append(anchor);
+    }
+  });
+}
+
 function entenderItems(mission) {
   var ids = mission.entender;
   if (!ids || !ids.length) return [];
@@ -402,7 +424,7 @@ function mountQuiz(root, mission, storageKey) {
         ? (lang === "en" ? "That answer fits" : "Esa respuesta encaja")
         : (lang === "en" ? "That answer does not fit" : "Esa respuesta no encaja");
       var feedbackBody = el("p");
-      feedbackBody.textContent = banner.explanation[lang];
+      fillLinked(feedbackBody, banner.explanation[lang]);
       var again = el("p");
       again.textContent = banner.correct
         ? (lang === "en" ? "When you have read it, press Next step. There is no score and no penalty." : "Cuando lo hayas leído, pulsa Siguiente paso. No hay puntuación ni penalización.")
@@ -433,12 +455,12 @@ function mountQuiz(root, mission, storageKey) {
         var name = el("h3");
         name.textContent = (step.kind === "check" ? (index + 1) + ". " : "") + step.prompt[lang];
         var line = el("p");
-        line.textContent = step.whyRight[lang];
+        fillLinked(line, step.whyRight[lang]);
         block.append(name, line);
         done.append(block);
       });
       var close = el("p");
-      close.textContent = mission.closing[lang];
+      fillLinked(close, mission.closing[lang]);
       var dated = el("p");
       var cardDate = mission.cardDate || STUBX_LAB.cardDate;
       dated.textContent = lang === "en"
@@ -483,7 +505,7 @@ function mountQuiz(root, mission, storageKey) {
       var waiting = Boolean(banner && banner.correct && banner.stepId === step.id);
       if (solved && !waiting) {
         var lesson = el("p");
-        lesson.textContent = step.whyRight[lang];
+        fillLinked(lesson, step.whyRight[lang]);
         var locked = el("p", { class: "muted" });
         locked.textContent = lang === "en"
           ? "This check is already done. To try it again, delete the local progress."

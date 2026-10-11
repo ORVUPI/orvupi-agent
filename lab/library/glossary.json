@@ -300,7 +300,7 @@
       },
       "example": {
         "es": "En STUBX, el 2026-10-09, la cuenta de metadatos de Metaplex se consultó. El estado es verificado y el valor está vacío: no hay esa cuenta.",
-        "en": "On STUBX, on 2026-10-09, the Metaplex metadata account was queried. The status is verified and the value is empty: that account is not there."
+        "en": "On STUBX, on 2026-10-09, the Metaplex metadata account was queried. The query was answered and the value is empty: that account is not there."
       },
       "doesNotConclude": {
         "es": "No es un HTTP 429 ni un dato que esta lectura olvidó pedir.",

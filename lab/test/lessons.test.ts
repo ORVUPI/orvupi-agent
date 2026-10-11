@@ -85,6 +85,17 @@ describe("lecciones cortas", () => {
     }
     assert.equal(ENTENDER_BUTTON.es, "Entender este resultado");
     assert.equal(ENTENDER_BUTTON.en, "Understand this result");
+    const permisos = ENTENDER_LINKS.find((item) => item.id === "permisos");
+    const metadatos = ENTENDER_LINKS.find((item) => item.id === "metadatos");
+    assert.match(permisos?.explain.en ?? "", /the mint permission can create more tokens/);
+    assert.equal((permisos?.explain.en ?? "").includes("one of them"), false);
+    assert.match(metadatos?.explain.es ?? "", /puede que mañana el nombre o el símbolo ya no sean los de esta lectura/);
+    assert.equal((metadatos?.explain.es ?? "").includes("pueden dejar de ser los de mañana"), false);
+    const verifyUi = readFileSync(path.join(root, "lab/client/verify-ui.js"), "utf8");
+    assert.match(verifyUi, /the mint permission can create more tokens/);
+    assert.match(verifyUi, /puede que mañana el nombre o el símbolo ya no sean los de esta lectura/);
+    assert.equal(verifyUi.includes("one of them can create more tokens"), false);
+    assert.equal(verifyUi.includes("pueden dejar de ser los de mañana"), false);
     assert.deepEqual(byId.get("leccion-permisos")?.entender, ["permisos"]);
     assert.deepEqual(byId.get("leccion-reparto")?.entender, ["distribucion"]);
     assert.deepEqual(byId.get("leccion-huecos")?.entender, ["distribucion", "metadatos"]);
@@ -130,6 +141,8 @@ describe("lecciones cortas", () => {
     assert.match(lesson.steps[0]?.whyRight.es ?? "", /no es la de una persona|no la de una persona|no es un censo/i);
     assert.equal(lesson.steps[1]?.correct, "no-censo");
     assert.equal(text.toLowerCase().includes("wallet"), false);
+    assert.equal((text.match(/publicada en el registro oficial/g) ?? []).length, 3);
+    assert.equal((text.match(/listed in the official registry/g) ?? []).length, 3);
   });
 
   test("separa consulta fallida, ausencia y dato no pedido", () => {
@@ -149,6 +162,14 @@ describe("lecciones cortas", () => {
     assert.equal(lesson.steps[2]?.correct, "no-pedido");
     assert.match(lesson.steps[0]?.whyRight.es ?? "", /HTTP 429/);
     assert.match(lesson.steps[1]?.whyRight.es ?? "", /verificado/);
+    const absentEn = lesson.steps[1]?.whyRight.en ?? "";
+    const glossaryEn = glossary.entries.find((entry) => entry.id === "ausente-comprobado")?.example.en ?? "";
+    for (const sentence of [absentEn, glossaryEn]) {
+      assert.equal(sentence.toLowerCase().includes("verified"), false);
+      assert.match(sentence, /query was answered and the value is empty/);
+    }
+    assert.equal(glossaryEn.startsWith("On STUBX"), true);
+    assert.match(glossaryEn, /The query was answered and the value is empty/);
     assert.match(lesson.steps[2]?.whyRight.es ?? "", /getMultipleAccounts/);
     assert.match(lesson.steps[2]?.whyWrong.fallo?.es ?? "", /HTTP 429/);
   });
@@ -214,5 +235,14 @@ describe("lecciones cortas", () => {
     assert.equal(missionJs.body.includes('class: "abrir-entender", href: firstHref'), false);
     assert.equal(lessonStorageKey("leccion-huecos"), "stubx-lab-leccion-huecos");
     assert.equal(JSON.stringify(loadJson(path.join(root, "lab/mission/lecciones.json"))).toLowerCase().includes("wallet"), false);
+    const reparto = lab.body.slice(lab.body.indexOf('id="leccion-reparto"'), lab.body.indexOf('id="leccion-huecos"'));
+    assert.equal((reparto.match(/href="\/security\/"/g) ?? []).length, 6);
+    assert.match(reparto, /publicada en el registro oficial/);
+    assert.match(reparto, /listed in the official registry/);
+    assert.equal(huecos.includes("status is verified"), false);
+    assert.match(huecos, /the query was answered and the value is empty/);
+    assert.match(lab.body, /The query was answered and the value is empty/);
+    assert.match(missionJs.body, /href: "\/security\/"/);
+    assert.equal(readFileSync(path.join(root, ".nvmrc"), "utf8").trim(), "22.14.0");
   });
 });

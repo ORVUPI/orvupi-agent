@@ -146,12 +146,12 @@
         "en": "Distribution: accounts, not people"
       },
       "intro": {
-        "es": "Ficha de STUBX del 2026-10-09. La curva tiene el 98,6122 %. La creadora, el 0,5272 %. La cuenta personal publicada, el 0,8604 %. Una cuenta técnica es la de un programa. Un pool es la cuenta de un intercambio: tampoco es la cuenta de una persona. En esta ficha la curva no está completa, así que este saldo es la curva, no un pool.",
-        "en": "STUBX card from 2026-10-09. The curve holds 98.6122%. The creator holds 0.5272%. The published personal account holds 0.8604%. A technical account belongs to a program. A pool is an exchange account: it is not a person's account either. On this card the curve is not complete, so this balance is the curve, not a pool."
+        "es": "Ficha de STUBX del 2026-10-09. La curva tiene el 98,6122 %. La creadora, el 0,5272 %. La cuenta personal publicada (publicada en el registro oficial), el 0,8604 %. Una cuenta técnica es la de un programa. Un pool es la cuenta de un intercambio: tampoco es la cuenta de una persona. En esta ficha la curva no está completa, así que este saldo es la curva, no un pool.",
+        "en": "STUBX card from 2026-10-09. The curve holds 98.6122%. The creator holds 0.5272%. The published personal account (listed in the official registry) holds 0.8604%. A technical account belongs to a program. A pool is an exchange account: it is not a person's account either. On this card the curve is not complete, so this balance is the curve, not a pool."
       },
       "closing": {
-        "es": "Has separado la cuenta de la curva, la de la creadora y la cuenta personal publicada. Ninguna dirección de esta ficha es el nombre de una persona. No es un certificado.",
-        "en": "You separated the curve account, the creator account, and the published personal account. No address on this card is a person's name. This is not a certificate."
+        "es": "Has separado la cuenta de la curva, la de la creadora y la cuenta personal publicada (publicada en el registro oficial). Ninguna dirección de esta ficha es el nombre de una persona. No es un certificado.",
+        "en": "You separated the curve account, the creator account, and the published personal account (listed in the official registry). No address on this card is a person's name. This is not a certificate."
       },
       "steps": [
         {
@@ -246,8 +246,8 @@
           ],
           "correct": "no-censo",
           "whyRight": {
-            "es": "Se leyeron la curva (98,6122 %, 3shQFExQ3rpFL6GaXPRQNTMYazVHmTvRfuazfv62toAE), la creadora (0,5272 %, 77RKUqMprQHDSkhFBpC1REU1kE9aM1uw189orHo7wypD) y la cuenta personal publicada (0,8604 %, 2fS12sTD4TNEEE9MoCEt19brV41UjGdAnaNaxWcmiWvX). El resto del suministro es 0,0000 %. La ficha dice que no es un censo. Una dirección no nombra a una persona.",
-            "en": "The curve (98.6122%, 3shQFExQ3rpFL6GaXPRQNTMYazVHmTvRfuazfv62toAE), the creator (0.5272%, 77RKUqMprQHDSkhFBpC1REU1kE9aM1uw189orHo7wypD), and the published personal account (0.8604%, 2fS12sTD4TNEEE9MoCEt19brV41UjGdAnaNaxWcmiWvX) were read. The rest of the supply is 0.0000%. The card says it is not a census. An address does not name a person."
+            "es": "Se leyeron la curva (98,6122 %, 3shQFExQ3rpFL6GaXPRQNTMYazVHmTvRfuazfv62toAE), la creadora (0,5272 %, 77RKUqMprQHDSkhFBpC1REU1kE9aM1uw189orHo7wypD) y la cuenta personal publicada (publicada en el registro oficial) (0,8604 %, 2fS12sTD4TNEEE9MoCEt19brV41UjGdAnaNaxWcmiWvX). El resto del suministro es 0,0000 %. La ficha dice que no es un censo. Una dirección no nombra a una persona.",
+            "en": "The curve (98.6122%, 3shQFExQ3rpFL6GaXPRQNTMYazVHmTvRfuazfv62toAE), the creator (0.5272%, 77RKUqMprQHDSkhFBpC1REU1kE9aM1uw189orHo7wypD), and the published personal account (listed in the official registry) (0.8604%, 2fS12sTD4TNEEE9MoCEt19brV41UjGdAnaNaxWcmiWvX) were read. The rest of the supply is 0.0000%. The card says it is not a census. An address does not name a person."
           },
           "whyWrong": {
             "si-censo": {
@@ -374,7 +374,7 @@
           "correct": "ausente",
           "whyRight": {
             "es": "El 2026-10-09 el estado es verificado y el valor está vacío: no hay cuenta de metadatos de Metaplex. La consulta respondió. El dato no está. No es un HTTP 429.",
-            "en": "On 2026-10-09 the status is verified and the value is empty: there is no Metaplex metadata account. The query answered. The fact is not there. It is not an HTTP 429."
+            "en": "On 2026-10-09 the query was answered and the value is empty: there is no Metaplex metadata account. The query answered. The fact is not there. It is not an HTTP 429."
           },
           "whyWrong": {
             "fallo": {

@@ -4787,7 +4787,7 @@ function entenderResultado(lang) {
   var panel = verifyEl("div", { class: "explicacion-resultado", tabindex: "-1", hidden: "hidden" });
   var lines = lang === "en"
     ? [
-      "Permissions: one of them can create more tokens. The freeze permission can block accounts. Neither one says the project is legitimate.",
+      "Permissions: the mint permission can create more tokens. The freeze permission can block accounts. Neither one says the project is legitimate.",
       "Supply: it is the total number of tokens in this reading, using this token's decimals.",
       "Metadata: if they can change, the name or symbol in this reading may not be tomorrow's.",
       "Distribution: a sample of accounts is not a census of who holds the tokens.",
@@ -4796,7 +4796,7 @@ function entenderResultado(lang) {
     : [
       "Permisos: el de emisión permite crear más tokens. El de congelación permite bloquear cuentas. Ninguno de los dos dice si el proyecto es legítimo.",
       "Suministro: es la cantidad total de tokens en esta lectura, con los decimales de este token.",
-      "Metadatos: si se pueden cambiar, el nombre o el símbolo de esta lectura pueden dejar de ser los de mañana.",
+      "Metadatos: si se pueden cambiar, puede que mañana el nombre o el símbolo ya no sean los de esta lectura.",
       "Distribución: una muestra de cuentas no es un censo de quién tiene los tokens.",
       "Curva: si el token no se creó en Pump.fun, este dato no aplica. Si se creó y no hay cuenta, esta lectura no la encontró.",
     ];

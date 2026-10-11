@@ -17,7 +17,7 @@ export const ENTENDER_LINKS: readonly EntenderLink[] = [
     en: "Permissions",
     explain: {
       es: "Permisos: el de emisión permite crear más tokens. El de congelación permite bloquear cuentas. Ninguno de los dos dice si el proyecto es legítimo.",
-      en: "Permissions: one of them can create more tokens. The freeze permission can block accounts. Neither one says the project is legitimate.",
+      en: "Permissions: the mint permission can create more tokens. The freeze permission can block accounts. Neither one says the project is legitimate.",
     },
   },
   {
@@ -36,7 +36,7 @@ export const ENTENDER_LINKS: readonly EntenderLink[] = [
     es: "Metadatos",
     en: "Metadata",
     explain: {
-      es: "Metadatos: si se pueden cambiar, el nombre o el símbolo de esta lectura pueden dejar de ser los de mañana.",
+      es: "Metadatos: si se pueden cambiar, puede que mañana el nombre o el símbolo ya no sean los de esta lectura.",
       en: "Metadata: if they can change, the name or symbol in this reading may not be tomorrow's.",
     },
   },
