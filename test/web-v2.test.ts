@@ -368,6 +368,7 @@ describe("web v2", () => {
     assert.match(html, /api\.mainnet-beta\.solana\.com/);
     const meta = html.match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
     assert.deepEqual(cspHosts(meta), ["solana-rpc.publicnode.com", "api.mainnet-beta.solana.com"]);
+    assert.equal(meta.includes("dexscreener"), false);
     assert.equal(meta.includes("frame-ancestors"), false);
     const headers = read("_headers");
     const block = headers.split("/pares/*")[1]?.split("\n\n")[0] ?? "";
@@ -434,7 +435,9 @@ describe("web v2", () => {
     assert.equal(html.includes("\uFFFD"), false);
     assert.match(html, /assets\/verify\.js/);
     const meta = html.match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
-    assert.deepEqual(cspHosts(meta), ["solana-rpc.publicnode.com", "api.mainnet-beta.solana.com"]);
+    assert.deepEqual(cspHosts(meta), ["solana-rpc.publicnode.com", "api.mainnet-beta.solana.com", "api.dexscreener.com"]);
+    assert.equal(meta.includes("*.dexscreener"), false);
+    assert.equal((meta.match(/connect-src/g) ?? []).length, 1);
     const home = read("index.html");
     const homeMeta = home.match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
     assert.deepEqual(cspHosts(homeMeta), []);
@@ -704,7 +707,12 @@ describe("web v2", () => {
     const globalPolicy = policies.find((policy) => policy.path === "/*");
     assert.deepEqual(cspHosts(globalPolicy?.header ?? ""), []);
     const verifyPolicy = policies.find((policy) => policy.path === "/verify/*");
-    assert.deepEqual(cspHosts(verifyPolicy?.header ?? ""), ["solana-rpc.publicnode.com", "api.mainnet-beta.solana.com"]);
+    assert.deepEqual(cspHosts(verifyPolicy?.header ?? ""), [
+      "solana-rpc.publicnode.com",
+      "api.mainnet-beta.solana.com",
+      "api.dexscreener.com",
+    ]);
+    assert.equal((verifyPolicy?.header ?? "").includes("*.dexscreener"), false);
     const verifyBlock = blocks.find((block) => block.path === "/verify/*");
     assert.ok(verifyBlock?.headers.includes("! Content-Security-Policy"));
     const notebookBlock = blocks.find((block) => block.path === "/cuaderno/*");
@@ -712,7 +720,11 @@ describe("web v2", () => {
     const notebookCspAt = notebookBlock?.headers.findIndex((header) => header.startsWith("Content-Security-Policy:")) ?? -1;
     assert.ok(unsetAt >= 0 && notebookCspAt > unsetAt);
     const notebookPolicy = policies.find((policy) => policy.path === "/cuaderno/*");
-    assert.deepEqual(cspHosts(notebookPolicy?.header ?? ""), ["solana-rpc.publicnode.com", "api.mainnet-beta.solana.com"]);
+    assert.deepEqual(cspHosts(notebookPolicy?.header ?? ""), [
+      "solana-rpc.publicnode.com",
+      "api.mainnet-beta.solana.com",
+      "api.dexscreener.com",
+    ]);
     const samples = ["/", "/verify/", "/lab/", "/lab/sw.js", "/aprender/", "/studio/", "/cuaderno/", "/cuaderno/index.html", "/token.json", "/assets/site.css", "/404.html"];
     const seen = new Map<string, string>();
     for (const sample of samples) {
