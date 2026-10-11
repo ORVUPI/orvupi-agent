@@ -3,6 +3,7 @@
  */
 import { formatAmount } from "../shared/amount.js";
 import { entenderNav } from "../shared/entender.js";
+import { reportDownloadBox } from "../shared/informe.js";
 import { comparisonBanner, notebookNameText, renderReadingSummary, summaryFromCard } from "../shared/reading-summary.js";
 import { factState } from "../shared/fact-state.js";
 import {
@@ -433,6 +434,12 @@ function renderCard(card) {
   renderReadingSummary(article, summaryFromCard(card), lang(), {
     onRetry: () => consult(card.mint, true),
   });
+  article.append(reportDownloadBox({
+    summary: summaryFromCard(card),
+    mint: card.mint,
+    consultedAt: card.consultedAt,
+    network: card.network,
+  }, { document, navigator }));
   const list = el("dl");
   const supplyCheck = supplyConfirmation(card);
   dataRow(list, t("program"), card.programStatus, programLabel(card.program), "program");

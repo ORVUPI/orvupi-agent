@@ -3780,7 +3780,16 @@ function paintSummary(out, view, lang) {
   if (view.light === "espera" || view.kind === "vacio" || view.kind === "invalida" || view.kind === "comprobando") return;
   var live = Array.isArray(view.facts) || view.kind === "red" || view.kind === "limite" || view.kind === "tiempo";
   if (!live) return;
-  renderReadingSummary(out, buildReadingSummary(view), lang, { retryId: "reintentar" });
+  var model = buildReadingSummary(view);
+  renderReadingSummary(out, model, lang, { retryId: "reintentar" });
+  document.dispatchEvent(new CustomEvent("stubx-resumen", {
+    detail: {
+      summary: model,
+      mint: typeof view.mint === "string" ? view.mint : "",
+      consultedAt: view.shown && typeof view.shown.consultedAt === "string" ? view.shown.consultedAt : (view.fetchedAt || ""),
+      network: "solana",
+    },
+  }));
 }
 
 function paintVerify(out, view) {

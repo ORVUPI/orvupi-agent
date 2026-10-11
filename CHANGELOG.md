@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-11 · Informe descargable
+
+- Verify y el Cuaderno pueden guardar un informe de la consulta en este navegador, en PNG y en PDF. Lleva la fecha, la red, la dirección, el resumen (qué se comprobó, qué requiere atención, qué falta), sus límites y el pie de riesgo. No se envía a ningún servidor. Esta entrada no despliega la web.
+
 ## 2026-10-10 · Biblioteca y cuaderno publicados
 
 - `/cuaderno` está en stubxai.com/cuaderno desde el 2026-10-10 (PR #24). El tablero marca U05 como publicado. La dirección viaja en el fragmento `#a=` y se limpia al leerla; no llega al servidor ni queda en el historial.
