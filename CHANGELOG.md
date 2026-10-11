@@ -4,12 +4,13 @@
 
 - Verify y el Cuaderno pueden guardar un informe de la consulta en este navegador, en PNG y en PDF. Lleva la fecha con la hora, los segundos y la zona de Madrid, la red, la dirección, el resumen (qué se comprobó, qué requiere atención, qué falta) y sus límites. No lleva el pie de riesgo, ni la etiqueta «Imagen generada con IA», ni «No oficial». El aviso de clon queda arriba, como primer punto de atención y en cada página. La comprobación anterior, si sale, lleva la fecha de la ficha guardada. La curva que no aplica va en una línea aparte. En inglés las comillas son inglesas. El archivo se titula «Lectura de Verify · no es un certificado». Un nombre leído en la cadena no se reescribe. No se envía a ningún servidor. Esta entrada no despliega la web.
 - En un PDF de varias páginas el corte cae entre líneas y entre tarjetas. No parte una línea ni una tarjeta. Cada página repite la cabecera, el aviso de clon y los límites.
+- El título de una sección va con su primera tarjeta. No queda solo al final de una página.
 
 ## 2026-10-11 · Pie de riesgo y etiqueta de imagen retirados
 
 - Decisión del dueño del proyecto el 2026-10-11 a las 13:52: la web y las herramientas dejan de repetir el pie de riesgo y la etiqueta de imagen generada, en español y en inglés, también en las imágenes que exporta Studio.
 - El mismo día confirma que Studio no lleva banda, marca de esquina, comentario del PNG ni frase de otro token, y que los avisos de riesgo quedan solo en `/risks` y `/legal`. El pie del resto lleva un enlace a Riesgos.
-- Se quedan los avisos antiestafa, la privacidad aprobada y la línea del informe que dice que no certifica que sea verdad. Una comprobación falla si esas frases retiradas aparecen fuera de `/risks` y `/legal`.
+- Se quedan los avisos antiestafa, la privacidad aprobada y la línea del informe que dice que no certifica que sea verdad. Una comprobación falla si esas frases retiradas aparecen fuera de `/risks` y `/legal`. Antes de buscar quita los caracteres de ancho cero (categoría Cf, como U+200B, U+200D y U+FEFF).
 - En `/security`, una cuenta, una web o una CA que no está en la lista se trata como no oficial hasta comprobarla. En la portada, otra CA con el nombre STUBX «is not official». Esa fórmula solo se vigila en Studio. La franja inferior de la imagen OG no lleva texto.
 - Esta entrada no despliega stubxai.com.
 

@@ -1034,7 +1034,7 @@ test("las frases retiradas no salen fuera de /risks y /legal", () => {
   assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
 });
 
-test("la guardia junta espacios, saltos, etiquetas y concatenaciones", () => {
+test("la guardia junta espacios, saltos, etiquetas, ancho cero y concatenaciones", () => {
   const script = `
 import check_legal_phrases as guard
 samples = [
@@ -1046,6 +1046,16 @@ samples = [
     ("join", '["not investment ", "advice"].join("")'),
     ("adyacentes", '"imagen generada con " "ia"'),
     ("plantilla", "<p>AI-generated\\nimage</p>"),
+    ("zwsp", "cripto de alto \\u200briesgo"),
+    ("zwj", "not invest\\u200dment advice"),
+    ("bom", "ai-generated \\ufeffimage"),
+    ("entidad", "cripto de alto &#8203;riesgo"),
+    ("zwnj", "cripto de alto \\u200criesgo"),
+    ("wj", "not invest\\u2060ment advice"),
+    ("rlo", "ai-generated \\u202eimage"),
+    ("entidad zwnj", "cripto de alto &#x200C;riesgo"),
+    ("entidad wj", "not invest&#x2060;ment advice"),
+    ("entidad rlo", "ai-generated &#x202E;image"),
 ]
 for name, sample in samples:
     hits = guard.phrase_hits("content/tools/ejemplo.html", sample)
@@ -1056,6 +1066,24 @@ if guard.phrase_hits("security/index.html", anti):
     raise SystemExit("antiestafa")
 if not guard.phrase_hits("studio/index.html", "unofficial"):
     raise SystemExit("studio")
+if not guard.phrase_hits("studio/index.html", "no \\u200boficial"):
+    raise SystemExit("ancho cero")
+if not guard.phrase_hits("studio/index.html", "un\\u200dofficial"):
+    raise SystemExit("zwj")
+if not guard.phrase_hits("studio/index.html", "\\ufeffunofficial"):
+    raise SystemExit("bom")
+if not guard.phrase_hits("studio/index.html", "no \\u200coficial"):
+    raise SystemExit("zwnj")
+if not guard.phrase_hits("studio/index.html", "un\\u2060official"):
+    raise SystemExit("wj")
+if not guard.phrase_hits("studio/index.html", "\\u202eunofficial"):
+    raise SystemExit("rlo")
+if not guard.phrase_hits("studio/index.html", "no &#x200C;oficial"):
+    raise SystemExit("entidad zwnj")
+if not guard.phrase_hits("studio/index.html", "un&#x2060;official"):
+    raise SystemExit("entidad wj")
+if not guard.phrase_hits("studio/index.html", "&#x202E;unofficial"):
+    raise SystemExit("entidad rlo")
 if not guard.phrase_hits("studio/lib/copy.mjs", "not official"):
     raise SystemExit("metadatos")
 if guard.phrase_hits("index.html", "is not official"):

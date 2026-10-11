@@ -185,6 +185,7 @@ def piece(*parts: str) -> str:
 
 def fold_marks(text: str) -> str:
     text = normalize(text)
+    text = "".join(ch for ch in text if unicodedata.category(ch) != "Cf")
     text = "".join(ch for ch in unicodedata.normalize("NFD", text) if unicodedata.category(ch) != "Mn")
     return text
 
@@ -286,7 +287,7 @@ def resolve_concat(text: str) -> str:
 
 
 def prepare_scan(raw: str) -> str:
-    """Normaliza espacios, saltos, etiquetas y concatenaciones antes de buscar."""
+    """Normaliza espacios, saltos, etiquetas, ancho cero y concatenaciones antes de buscar."""
     text = resolve_concat(raw)
     text = html.unescape(text)
     text = re.sub(r"</?[A-Za-z!][^>]*>", " ", text)
@@ -401,6 +402,10 @@ def self_check() -> None:
         ("join", '["not investment ", "advice"].join("")'),
         ("adyacentes", '"imagen generada con " "ia"'),
         ("plantilla", '<p>AI-generated\nimage</p>'),
+        ("zwsp", "cripto de alto \u200briesgo"),
+        ("zwj", "not invest\u200dment advice"),
+        ("bom", "ai-generated \ufeffimage"),
+        ("entidad", "cripto de alto &#8203;riesgo"),
     ]
     for name, sample in samples:
         if not phrase_hits("content/tools/ejemplo.html", sample):

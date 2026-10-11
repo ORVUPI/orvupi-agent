@@ -438,6 +438,7 @@ export function drawReport(ctx, model, width = 840) {
         bottom: textBottom,
         header: Boolean(row.header),
         limits: Boolean(row.limits),
+        heading: Boolean(row.heading) && !row.header && !row.limits,
       };
     } else {
       card.bottom = textBottom;
@@ -471,8 +472,18 @@ export function drawReport(ctx, model, width = 840) {
   }
   const bodyCards = cards.filter((item) => !item.header && !item.limits && item.top < limitsTop);
   const headerBottom = bodyCards.length ? bodyCards[0].top : limitsTop;
-  const breaks = [...new Set(bodyCards.map((item) => item.top).concat(limitsTop))].filter((item) => item > headerBottom && item <= limitsTop).sort((a, b) => a - b);
-  const cardEnds = [...new Set(bodyCards.map((item) => item.bottom))].filter((item) => item > headerBottom && item <= limitsTop).sort((a, b) => a - b);
+  const kept = [];
+  for (let index = 0; index < bodyCards.length - 1; index += 1) {
+    const card = bodyCards[index];
+    const next = bodyCards[index + 1];
+    if (!card.heading || next.heading || next.header || next.limits) continue;
+    if (!(next.top > card.bottom && next.bottom > next.top)) continue;
+    kept.push({ top: card.top, headingBottom: card.bottom, bottom: next.bottom, cutTop: next.top, cutEnd: card.bottom });
+  }
+  const skipTops = new Set(kept.map((item) => item.cutTop));
+  const skipEnds = new Set(kept.map((item) => item.cutEnd));
+  const breaks = [...new Set(bodyCards.map((item) => item.top).concat(limitsTop))].filter((item) => item > headerBottom && item <= limitsTop && !skipTops.has(item)).sort((a, b) => a - b);
+  const cardEnds = [...new Set(bodyCards.map((item) => item.bottom))].filter((item) => item > headerBottom && item <= limitsTop && !skipEnds.has(item)).sort((a, b) => a - b);
   return {
     width,
     height,
@@ -481,7 +492,12 @@ export function drawReport(ctx, model, width = 840) {
     warningBottom,
     lines,
     cards,
-    guides: { headerBottom, breaks, cardEnds },
+    guides: {
+      headerBottom,
+      breaks,
+      cardEnds,
+      kept: kept.map((item) => ({ top: item.top, headingBottom: item.headingBottom, bottom: item.bottom })),
+    },
   };
 }
 
