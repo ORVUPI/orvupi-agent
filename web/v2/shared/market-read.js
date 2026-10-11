@@ -21,6 +21,11 @@ export const MARKET_CLIENT_LIMIT = 6;
 export const MARKET_CLIENT_WINDOW_MS = 60_000;
 export const MARKET_LOW_USD = 1_000;
 export const MARKET_OFFICIAL_MINT = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
+// Lista cerrada, por mint exacto. No se pliega a minúsculas ni se recorta.
+const MARKET_KNOWN_QUOTES = new Set([
+  "So11111111111111111111111111111111111111112",
+  "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+]);
 export const MARKET_WINDOWS = Object.freeze([
   ["h24", { es: "Volumen en 24 horas", en: "Volume over 24 hours" }],
   ["h6", { es: "Volumen en 6 horas", en: "Volume over 6 hours" }],
@@ -34,7 +39,7 @@ const STATUSES = new Set(["ok", "sin_pares", "fallo", "limite", "incompleta", "c
 
 // Mismo texto que AVISO_GUARDAR.
 const MARKET_PRIVACY = Object.freeze({
-  es: "Este sitio no guarda en ningún servidor la dirección que consultas. Para leerla en directo, se envía a los nodos públicos de Solana solana-rpc.publicnode.com y api.mainnet-beta.solana.com, que también ven tu IP. Si pulsas «Leer datos de mercado ahora», tu navegador conecta con DEX Screener y este también ve tu IP y la dirección consultada. Solo si pulsas «Guardar esta consulta», se guarda en el Cuaderno de este navegador, en tu dispositivo, y puedes borrarla allí cuando quieras. Los datos de mercado no se guardan.",
+  es: "Este sitio no guarda en ningún servidor la dirección que consultas. Para leerla en directo, se envía a los nodos públicos de Solana solana-rpc.publicnode.com y api.mainnet-beta.solana.com, que también ven tu IP. Si pulsas «Leer datos de mercado ahora», tu navegador conecta con DEX Screener y DEX Screener también ve tu IP y la dirección consultada. Solo si pulsas «Guardar esta consulta», se guarda en el Cuaderno de este navegador, en tu dispositivo, y puedes borrarla allí cuando quieras. Los datos de mercado no se guardan.",
   en: "This site does not store the address you look up on any server. To read it live, it is sent to the Solana public nodes solana-rpc.publicnode.com and api.mainnet-beta.solana.com, which also see your IP. If you press \"Read market data now\", your browser connects to DEX Screener and it also sees your IP and the address you look up. Only if you press \"Save this lookup\" is it stored in this browser's Notebook, on your device, and you can delete it there at any time. Market data is not stored.",
 });
 
@@ -587,10 +592,8 @@ function windowLabel(key, lang) {
 
 function sideName(symbol, address, lang) {
   if (!symbol) return marketCopy(lang, "sin símbolo", "no symbol");
-  if (address !== MARKET_OFFICIAL_MINT) {
-    return marketCopy(lang, `Dice llamarse «${symbol}»`, `It says it is called «${symbol}»`);
-  }
-  return symbol;
+  if (address === MARKET_OFFICIAL_MINT || MARKET_KNOWN_QUOTES.has(address)) return symbol;
+  return marketCopy(lang, `Dice llamarse «${symbol}»`, `It says it is called «${symbol}»`);
 }
 
 function pairTitle(pair, lang) {

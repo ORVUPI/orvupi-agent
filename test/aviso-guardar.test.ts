@@ -25,7 +25,7 @@ describe("aviso de Guardar", () => {
     assert.match(aviso.en, /it is sent to the Solana public nodes solana-rpc\.publicnode\.com and api\.mainnet-beta\.solana\.com, which also see your IP/);
     assert.match(aviso.es, /«Guardar esta consulta»/);
     assert.match(aviso.en, /"Save this lookup"/);
-    assert.match(aviso.es, /tu navegador conecta con DEX Screener y este también ve tu IP y la dirección consultada/);
+    assert.match(aviso.es, /tu navegador conecta con DEX Screener y DEX Screener también ve tu IP y la dirección consultada/);
     assert.match(aviso.en, /your browser connects to DEX Screener and it also sees your IP and the address you look up/);
     assert.equal(aviso.es.includes("sin reenviar tu IP"), false);
     assert.equal(aviso.en.includes("without forwarding your IP"), false);

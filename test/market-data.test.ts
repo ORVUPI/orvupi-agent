@@ -165,7 +165,7 @@ describe("datos de mercado", () => {
     assert.equal(text.includes(STAMP_ES), true);
     assert.equal(view.pairs[0]?.liquidity.includes(STAMP_ES), true);
     assert.equal(view.pairs[0]?.volume.includes(STAMP_ES), true);
-    assert.match(view.pairs[0]?.title ?? "", /Par: Dice llamarse «USDC» \/ Dice llamarse «SOL»/);
+    assert.equal(view.pairs[0]?.title, "Par: USDC / SOL");
     assert.match(text, /Liquidez: 50\.000,25 USD/);
     assert.match(text, /Volumen en 24 horas: 1\.200,5 USD/);
     assert.equal(text.includes("Una cifra en dólares"), false);
@@ -177,6 +177,7 @@ describe("datos de mercado", () => {
     assert.equal(/\b(afiliad|partner|endors|respaldo|patrocin|logo)\b/i.test(text), false);
     const englishView = market.describeMarket(model, "en");
     const english = prose(englishView);
+    assert.equal(englishView.pairs[0]?.title, "Pair: USDC / SOL");
     assert.equal(englishView.attribution, ACCURACY_EN);
     assert.equal(english.includes(STAMP_EN), true);
     assert.equal(/\b(precio|compra|comprar|seguro|buy|sell|score|sube|baja|fomo)\b/i.test(english), false);
@@ -437,7 +438,7 @@ describe("datos de mercado", () => {
     assert.equal(kept.pairs?.[0]?.liquidityUsd, 40);
     const officialTitle = market.describeMarket(kept, "es").pairs[0]?.title ?? "";
     assert.equal(officialTitle.includes("Dice llamarse «STUBX»"), false);
-    assert.match(officialTitle, /^Par: STUBX \/ Dice llamarse «SOL»$/);
+    assert.equal(officialTitle, "Par: STUBX / SOL");
 
     const spaced = market.normalizeUpstream(
       200,
@@ -472,13 +473,11 @@ describe("datos de mercado", () => {
     assert.equal(clone.status, "ok");
     assert.equal(clone.pairs?.[0]?.base, "STUBX");
     const title = market.describeMarket(clone, "es").pairs[0]?.title ?? "";
-    assert.match(title, /Dice llamarse «STUBX»/);
-    assert.match(title, /Dice llamarse «SOL»/);
+    assert.equal(title, "Par: Dice llamarse «STUBX» / SOL");
     assert.equal(title.includes("\u200B"), false);
     assert.equal(title.includes("\u202E"), false);
     const english = market.describeMarket(clone, "en").pairs[0]?.title ?? "";
-    assert.match(english, /It says it is called «STUBX»/);
-    assert.match(english, /It says it is called «SOL»/);
+    assert.equal(english, "Pair: It says it is called «STUBX» / SOL");
 
     const otherSide = market.normalizeUpstream(
       200,
@@ -492,6 +491,78 @@ describe("datos de mercado", () => {
     );
     const otherTitle = market.describeMarket(otherSide, "es").pairs[0]?.title ?? "";
     assert.match(otherTitle, /^Par: STUBX \/ Dice llamarse «STUBX»$/);
+  });
+
+  test("SOL envuelto y USDC salen con su nombre; cualquier otro mint no oficial sigue etiquetado", async () => {
+    const market = await loadMarketModule();
+    const other = "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN";
+    const usdcQuote = market.normalizeUpstream(
+      200,
+      JSON.stringify([
+        upstreamPair({
+          baseToken: { symbol: "STUBX", address: OFFICIAL },
+          quoteToken: { symbol: "USDC", address: MINT },
+        }),
+      ]),
+      { mint: OFFICIAL, queriedAt: WHEN },
+    );
+    assert.equal(market.describeMarket(usdcQuote, "es").pairs[0]?.title, "Par: STUBX / USDC");
+    assert.equal(market.describeMarket(usdcQuote, "en").pairs[0]?.title, "Pair: STUBX / USDC");
+
+    const fakeUsdc = market.normalizeUpstream(
+      200,
+      JSON.stringify([
+        upstreamPair({
+          baseToken: { symbol: "USDC", address: other },
+          quoteToken: { symbol: "SOL", address: SOL },
+        }),
+      ]),
+      { mint: other, queriedAt: WHEN },
+    );
+    assert.equal(market.describeMarket(fakeUsdc, "es").pairs[0]?.title, "Par: Dice llamarse «USDC» / SOL");
+    assert.equal(market.describeMarket(fakeUsdc, "en").pairs[0]?.title, "Pair: It says it is called «USDC» / SOL");
+
+    const fakeSol = market.normalizeUpstream(
+      200,
+      JSON.stringify([
+        upstreamPair({
+          baseToken: { symbol: "STUBX", address: CLONE },
+          quoteToken: { symbol: "SOL", address: other },
+        }),
+      ]),
+      { mint: CLONE, queriedAt: WHEN },
+    );
+    assert.equal(market.describeMarket(fakeSol, "es").pairs[0]?.title, "Par: Dice llamarse «STUBX» / Dice llamarse «SOL»");
+  });
+
+  test("una dirección en minúsculas no coincide", async () => {
+    const market = await loadMarketModule();
+    const discarded = market.normalizeUpstream(
+      200,
+      JSON.stringify([
+        upstreamPair({
+          baseToken: { symbol: "USDC", address: MINT.toLowerCase() },
+          quoteToken: { symbol: "SOL", address: SOL.toLowerCase() },
+        }),
+      ]),
+      { mint: MINT, queriedAt: WHEN },
+    );
+    assert.equal(discarded.status, "fallo");
+    assert.equal(discarded.pairs, null);
+    assert.equal(JSON.stringify(discarded).includes(MINT.toLowerCase()), false);
+
+    const notKnown = market.normalizeUpstream(
+      200,
+      JSON.stringify([
+        upstreamPair({
+          baseToken: { symbol: "STUBX", address: OFFICIAL },
+          quoteToken: { symbol: "USDC", address: MINT.toLowerCase() },
+        }),
+      ]),
+      { mint: OFFICIAL, queriedAt: WHEN },
+    );
+    assert.equal(notKnown.pairs?.[0]?.quoteMint, MINT.toLowerCase());
+    assert.equal(market.describeMarket(notKnown, "es").pairs[0]?.title, "Par: STUBX / Dice llamarse «USDC»");
   });
 
   test("no ordena por liquidez y avisa si hay poca", async () => {
@@ -565,7 +636,7 @@ describe("datos de mercado", () => {
     assert.equal(avisoSource.includes("Pendiente de Legal"), false);
     assert.match(aviso.AVISO_GUARDAR.es, /los nodos públicos de Solana solana-rpc\.publicnode\.com y api\.mainnet-beta\.solana\.com, que también ven tu IP/);
     assert.match(aviso.AVISO_GUARDAR.en, /the Solana public nodes solana-rpc\.publicnode\.com and api\.mainnet-beta\.solana\.com, which also see your IP/);
-    assert.match(aviso.AVISO_GUARDAR.es, /tu navegador conecta con DEX Screener y este también ve tu IP y la dirección consultada/);
+    assert.match(aviso.AVISO_GUARDAR.es, /tu navegador conecta con DEX Screener y DEX Screener también ve tu IP y la dirección consultada/);
     assert.match(aviso.AVISO_GUARDAR.en, /your browser connects to DEX Screener and it also sees your IP and the address you look up/);
     assert.equal(aviso.AVISO_GUARDAR.es.includes("sin reenviar tu IP"), false);
     assert.equal(aviso.AVISO_GUARDAR.en.includes("without forwarding your IP"), false);
