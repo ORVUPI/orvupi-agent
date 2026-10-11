@@ -32,12 +32,12 @@ type Model = {
 type ReportModule = {
   formatReportWhen: (value: string, lang: string) => string;
   reportPagePlan: (height: number, limitsTop: number, pageHeight?: number) => Array<{ repeatLimits: boolean; single: boolean; bodyBottom: number; bodyTop: number }>;
-  sliceReportPages: (rgba: Uint8Array, width: number, height: number, limitsTop: number, pageHeight?: number) => Array<{ rgba: Uint8Array; width: number; height: number }>;
+  sliceReportPages: (rgba: Uint8Array, width: number, height: number, limitsTop: number, pageHeight?: number, warning?: { top: number; bottom: number } | null) => Array<{ rgba: Uint8Array; width: number; height: number }>;
   reportCopy: (lang: string) => { pdfFail: string; title: string };
   canvasSafeText: (value: string, max?: number) => string;
   reportModel: (source: Record<string, unknown>, lang: string) => Model;
   reportPaintLines: (model: Model) => string[];
-  drawReport: (ctx: object, model: Model, width?: number) => { width: number; height: number };
+  drawReport: (ctx: object, model: Model, width?: number) => { width: number; height: number; limitsTop: number; warningTop: number; warningBottom: number };
   pdfFromRgba: (rgba: Uint8Array, width: number, height: number) => Promise<Uint8Array>;
   isAndroid: (nav: { userAgent?: string }) => boolean;
   savePlan: (nav: { userAgent?: string; share?: unknown; canShare?: unknown }, file: File) => string;
@@ -122,6 +122,7 @@ describe("informe descargable", () => {
     }, "es");
     assert.equal(model.title, "Lectura de Verify · no es un certificado");
     assert.match(model.date, /Consultado el /);
+    assert.match(model.date, /11-10-2026 12:18:00/);
     assert.match(model.date, /hora de Madrid/);
     assert.match(model.date, /puede haber cambiado/);
     const zone = new Intl.DateTimeFormat("es-ES", {
@@ -156,6 +157,7 @@ describe("informe descargable", () => {
     assert.equal(english.networkLabel, "Network");
     assert.equal(english.addressLabel, "Address");
     assert.match(english.date, /Checked on /);
+    assert.match(english.date, /11-10-2026 12:18:00/);
     assert.match(english.date, /Madrid time/);
     const englishZone = new Intl.DateTimeFormat("en-GB", {
       timeZone: "Europe/Madrid",
@@ -202,6 +204,9 @@ describe("informe descargable", () => {
     assert.equal(checked.includes("1.000.000.000 STUBX"), false);
     assert.match(checked, /1\.000\.000\.000 tokens/);
     assert.equal(model.address, CLONE);
+    const drawn = report.drawReport(mockCtx().ctx, model, 840);
+    assert.ok(drawn.warningBottom > drawn.warningTop);
+    assert.ok(drawn.warningTop < drawn.limitsTop);
   });
 
   test("un dato que falla no queda en lo comprobado", async () => {
@@ -290,6 +295,95 @@ describe("informe descargable", () => {
     }, "es");
     assert.match(joined(spanishSeal, "comprobado"), /revocada · leído en la cadena/);
     assert.equal(joined(spanishSeal, "comprobado").includes("verificado"), false);
+  });
+
+  test("un token llamado verificado conserva el nombre, el símbolo y el resto de la cadena", async () => {
+    const { report, summary } = await load();
+    const named = card({
+      mint: USDC,
+      name: { text: "verificado", status: "verificado" },
+      symbol: { text: "verified", status: "verificado" },
+    });
+    const source = {
+      summary: summary.summaryFromCard(named),
+      mint: "verificado",
+      network: "verified",
+      consultedAt: WHEN,
+    };
+    const model = report.reportModel(source, "es");
+    const checked = joined(model, "comprobado");
+    assert.match(checked, /Dice llamarse «verificado» \(«verified»\)/);
+    assert.equal(checked.includes("leído en la cadena"), false);
+    assert.equal(model.address, "verificado");
+    assert.equal(model.network, "verified");
+    const english = report.reportModel(source, "en");
+    const englishChecked = joined(english, "comprobado");
+    assert.match(englishChecked, /It says it is called «verificado» \(«verified»\)/);
+    assert.equal(englishChecked.includes("read on-chain"), false);
+    assert.equal(english.address, "verificado");
+    assert.equal(english.network, "verified");
+    const mixed = report.reportModel({
+      summary: {
+        blocks: [{
+          id: "comprobado",
+          heading: { es: "Qué se comprobó", en: "What was checked" },
+          items: [
+            {
+              title: { es: "Nombre", en: "Name" },
+              lead: { es: "Dice llamarse «verificado» («verified»).", en: "It says it is called «verificado» («verified»)." },
+              note: { es: "dato de la cadena: verificado", en: "chain fact: verified" },
+            },
+            {
+              title: { es: "Permiso", en: "Permission" },
+              lead: { es: "revocada · verificado", en: "revoked · verified" },
+            },
+          ],
+          empty: { es: "", en: "" },
+        }],
+      },
+      mint: "verificado",
+      network: "verified",
+      consultedAt: WHEN,
+    }, "es");
+    const text = joined(mixed, "comprobado");
+    assert.match(text, /Dice llamarse «verificado» \(«verified»\)/);
+    assert.match(text, /dato de la cadena: verificado/);
+    assert.match(text, /revocada · leído en la cadena/);
+    assert.equal(/·\s*verificado/.test(text), false);
+    const englishMixed = report.reportModel({
+      summary: {
+        blocks: [{
+          id: "comprobado",
+          heading: { es: "Qué se comprobó", en: "What was checked" },
+          items: [
+            {
+              title: { es: "Nombre", en: "Name" },
+              lead: { es: "Dice llamarse «verificado» («verified»).", en: "It says it is called «verificado» («verified»)." },
+              note: { es: "dato de la cadena: verificado", en: "chain fact: verified" },
+            },
+            {
+              title: { es: "Permiso", en: "Permission" },
+              lead: { es: "revocada · verificado", en: "revoked · verified" },
+            },
+          ],
+          empty: { es: "", en: "" },
+        }],
+      },
+      mint: "verificado",
+      network: "verified",
+      consultedAt: WHEN,
+    }, "en");
+    const englishText = joined(englishMixed, "comprobado");
+    assert.match(englishText, /It says it is called «verificado» \(«verified»\)/);
+    assert.match(englishText, /chain fact: verified/);
+    assert.match(englishText, /revoked · read on-chain/);
+    assert.equal(/·\s*verified/i.test(englishText), false);
+    const painted = report.reportPaintLines(mixed).join("\n");
+    assert.match(painted, /«verificado»/);
+    assert.match(painted, /«verified»/);
+    assert.match(painted, /^verificado$/m);
+    assert.match(painted, /^verified$/m);
+    assert.equal(painted.includes("«leído en la cadena»"), false);
   });
 
   test("el lienzo normaliza el texto de la cadena y no lo escapa como HTML", async () => {
@@ -416,6 +510,16 @@ describe("informe descargable", () => {
     const slices = report.sliceReportPages(rgba, 1, height, 160, 100);
     assert.ok(slices.length > 1);
     assert.equal(slices.every((page) => page.rgba[(page.height - 1) * 4] === 199), true);
+    rgba[12 * 4] = 250;
+    const warned = report.sliceReportPages(rgba, 1, height, 160, 100, { top: 12, bottom: 13 });
+    assert.ok(warned.length > 1);
+    assert.equal(warned.every((page) => page.rgba[(page.height - 1) * 4] === 199), true);
+    assert.equal(warned.every((page) => {
+      for (let row = 0; row < page.height; row += 1) {
+        if (page.rgba[row * 4] === 250) return true;
+      }
+      return false;
+    }), true);
     assert.match(report.reportCopy("es").pdfFail, /no puede crear el PDF/);
     assert.match(report.reportCopy("es").pdfFail, /PNG/);
     assert.match(report.reportCopy("en").pdfFail, /cannot create the PDF/);

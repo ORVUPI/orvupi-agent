@@ -2,7 +2,7 @@
 
 ## 2026-10-11 · Informe descargable
 
-- Verify y el Cuaderno pueden guardar un informe de la consulta en este navegador, en PNG y en PDF. Lleva la fecha con la hora de Madrid, la red, la dirección, el resumen (qué se comprobó, qué requiere atención, qué falta), sus límites y el pie de riesgo. El archivo se titula «Lectura de Verify · no es un certificado». No se envía a ningún servidor. Esta entrada no despliega la web.
+- Verify y el Cuaderno pueden guardar un informe de la consulta en este navegador, en PNG y en PDF. Lleva la fecha con la hora, los segundos y la zona de Madrid, la red, la dirección, el resumen (qué se comprobó, qué requiere atención, qué falta), sus límites y el pie de riesgo. El archivo se titula «Lectura de Verify · no es un certificado». Un nombre leído en la cadena no se reescribe. No se envía a ningún servidor. Esta entrada no despliega la web.
 
 ## 2026-10-10 · Biblioteca y cuaderno publicados
 

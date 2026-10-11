@@ -139,20 +139,28 @@ export function formatReportWhen(consultedAt, lang) {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    second: "2-digit",
     hourCycle: "h23",
     timeZoneName: "long",
   }).formatToParts(date);
   const pick = (type) => parts.find((part) => part.type === type)?.value || "";
   const zoneName = pick("timeZoneName");
-  const clock = `${pick("day")}-${pick("month")}-${pick("year")} ${pick("hour")}:${pick("minute")}`;
+  const clock = `${pick("day")}-${pick("month")}-${pick("year")} ${pick("hour")}:${pick("minute")}:${pick("second")}`;
   const local = reportCopy(language).zone;
   return zoneName ? `${clock} ${local} · ${zoneName}` : `${clock} ${local}`;
 }
 
 function fileWording(text, lang) {
   const source = String(text ?? "");
-  if (lang === "en") return source.replace(/\bverified\b/gi, "read on-chain");
-  return source.replace(/\bverificado\b/gi, "leído en la cadena");
+  const kept = [];
+  const masked = source.replace(/«[^»]*»/g, (match) => {
+    kept.push(match);
+    return `\uE000${kept.length - 1}\uE001`;
+  });
+  const rewritten = lang === "en"
+    ? masked.replace(/·\s*verified\b/gi, "· read on-chain")
+    : masked.replace(/·\s*verificado\b/gi, "· leído en la cadena");
+  return rewritten.replace(/\uE000(\d+)\uE001/g, (_, index) => kept[Number(index)] || "");
 }
 
 function legalEmpty(text, blockId, lang) {
@@ -253,8 +261,8 @@ function datedLine(consultedAt, lang, copy) {
   return `${copy.checkedOn} ${stamp} · ${copy.mayChange}`;
 }
 
-function paintString(value, lang) {
-  return canvasSafeText(fileWording(value, lang));
+function paintString(value) {
+  return canvasSafeText(value);
 }
 
 export function reportPaintLines(model) {
@@ -265,7 +273,7 @@ export function reportPaintLines(model) {
     for (const item of block.lines) lines.push(item.title, item.lead, item.note);
   }
   lines.push(model.note, model.limitsLabel, ...model.limits, model.footer);
-  return lines.filter(Boolean).map((line) => paintString(line, lang));
+  return lines.filter(Boolean).map((line) => paintString(line));
 }
 
 const SIZES = { title: 34, date: 16, label: 15, body: 18, address: 16, limits: 16, footer: 15 };
@@ -310,7 +318,7 @@ function layoutRows(ctx, model, width, scale) {
   const push = (text, role, extra) => {
     const size = Math.max(12, Math.round(SIZES[role] * scale));
     const family = role === "title" ? "Silkscreen, system-ui, sans-serif" : role === "address" ? "ui-monospace, monospace" : "system-ui, sans-serif";
-    const safe = paintString(text, model.lang);
+    const safe = paintString(text);
     for (const row of wrapText(ctx, safe, inner, size, family)) {
       rows.push({ text: row, size, family, role, ...extra });
     }
@@ -372,12 +380,20 @@ export function drawReport(ctx, model, width = 840) {
   const placed = [];
   let y = laid.pad;
   let limitsTop = 0;
+  let warningTop = 0;
+  let warningBottom = 0;
   for (const row of laid.rows) {
     if (row.kind === "block" || row.kind === "gap") {
       if (row.id === "limites" && !limitsTop) limitsTop = y;
       y += row.size + 10;
       placed.push({ ...row, y });
       continue;
+    }
+    if (row.warning) {
+      const top = Math.max(0, Math.floor(y));
+      const bottom = Math.min(height, Math.ceil(y + row.size));
+      if (!warningBottom) warningTop = top;
+      warningBottom = Math.max(warningBottom, bottom);
     }
     placed.push({ ...row, y });
     y += row.size + 8;
@@ -407,16 +423,17 @@ export function drawReport(ctx, model, width = 840) {
     ctx.fillStyle = row.role === "title" || row.heading ? COLORS.pink : COLORS.cream;
     ctx.fillText(row.text, laid.pad + 12, row.y);
   }
-  return { width, height, limitsTop: limitsTop || height };
+  return { width, height, limitsTop: limitsTop || height, warningTop, warningBottom };
 }
 
 export const REPORT_PAGE_HEIGHT = 1500;
 
-export function reportPagePlan(height, limitsTop, pageHeight = REPORT_PAGE_HEIGHT) {
+export function reportPagePlan(height, limitsTop, pageHeight = REPORT_PAGE_HEIGHT, warningHeight = 0) {
   const total = Math.max(1, height);
   const cut = Number.isInteger(limitsTop) && limitsTop > 0 && limitsTop < total ? limitsTop : total;
   const footerHeight = total - cut;
-  const room = Math.max(80, pageHeight - footerHeight);
+  const stamp = footerHeight + (warningHeight > 0 ? warningHeight : 0);
+  const room = Math.max(80, pageHeight - stamp);
   if (total <= pageHeight || cut <= room) {
     return [{ bodyTop: 0, bodyBottom: total, repeatLimits: true, single: true }];
   }
@@ -436,29 +453,38 @@ function sliceRgba(rgba, width, y0, y1) {
   return rgba.subarray(y0 * width * 4, y1 * width * 4);
 }
 
-function stackRgba(top, bottom, width) {
-  const height = top.height + bottom.height;
+function stackMany(parts, width) {
+  const height = parts.reduce((sum, part) => sum + part.height, 0);
   const rgba = new Uint8Array(width * height * 4);
-  rgba.set(top.rgba, 0);
-  rgba.set(bottom.rgba, top.rgba.length);
+  let offset = 0;
+  for (const part of parts) {
+    rgba.set(part.rgba, offset);
+    offset += part.rgba.length;
+  }
   return { rgba, width, height };
 }
 
-export function sliceReportPages(rgba, width, height, limitsTop, pageHeight = REPORT_PAGE_HEIGHT) {
-  const plan = reportPagePlan(height, limitsTop, pageHeight);
+export function sliceReportPages(rgba, width, height, limitsTop, pageHeight = REPORT_PAGE_HEIGHT, warning = null) {
+  const warnTop = warning && Number.isInteger(warning.top) && warning.top >= 0 ? warning.top : 0;
+  const warnBottom = warning && Number.isInteger(warning.bottom) && warning.bottom > warnTop && warning.bottom <= height ? warning.bottom : 0;
+  const warningHeight = warnBottom > warnTop ? warnBottom - warnTop : 0;
+  const plan = reportPagePlan(height, limitsTop, pageHeight, warningHeight);
   return plan.map((page) => {
     if (page.single) return { rgba, width, height };
-    const body = {
+    const parts = [];
+    const coversWarning = warningHeight > 0 && page.bodyTop <= warnTop && page.bodyBottom >= warnBottom;
+    if (warningHeight > 0 && !coversWarning) {
+      parts.push({ rgba: sliceRgba(rgba, width, warnTop, warnBottom), height: warningHeight });
+    }
+    parts.push({
       rgba: sliceRgba(rgba, width, page.bodyTop, page.bodyBottom),
-      width,
       height: page.bodyBottom - page.bodyTop,
-    };
-    const limits = {
+    });
+    parts.push({
       rgba: sliceRgba(rgba, width, limitsTop, height),
-      width,
       height: height - limitsTop,
-    };
-    return stackRgba(body, limits, width);
+    });
+    return stackMany(parts, width);
   });
 }
 
@@ -675,7 +701,10 @@ export async function renderReportFiles(model, doc) {
       pdf = null;
     } else {
       const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const pages = sliceReportPages(image.data, drawn.width, drawn.height, drawn.limitsTop);
+      const pages = sliceReportPages(image.data, drawn.width, drawn.height, drawn.limitsTop, REPORT_PAGE_HEIGHT, {
+        top: drawn.warningTop,
+        bottom: drawn.warningBottom,
+      });
       const bytes = pages.length === 1
         ? await pdfFromRgba(pages[0].rgba, pages[0].width, pages[0].height)
         : await pdfFromImages(pages);
