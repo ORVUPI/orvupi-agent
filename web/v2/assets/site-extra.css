@@ -775,6 +775,9 @@ body:has(a[href="/verify/"][aria-current="page"]) .herramienta > p { order: 7; }
 body:has(a[href="/verify/"][aria-current="page"]) #resultado,
 body:has(a[href="/pares/"][aria-current="page"]) #resultado { order: 8; }
 body:has(a[href="/verify/"][aria-current="page"]) main > details.tecnico { order: 9; }
+body:has(a[href="/lab/"][aria-current="page"]) .lecciones { order: 4; }
+body:has(a[href="/lab/"][aria-current="page"]) .mision-titulo,
+body:has(a[href="/lab/"][aria-current="page"]) .mision-intro,
 body:has(a[href="/lab/"][aria-current="page"]) #mision-app,
 body:has(a[href="/lab/"][aria-current="page"]) .estatica { order: 5; }
 body:has(a[href="/studio/"][aria-current="page"]) .plantillas { order: 2; }
@@ -838,7 +841,8 @@ main > h2::before,
 main > section > h2::before,
 main > article > h2::before,
 .tareas > section > h2::before,
-#mision-app h2::before {
+#mision-app h2::before,
+.leccion-app h2::before {
   content: "";
   display: block;
   height: 14px;
@@ -850,7 +854,7 @@ main > article > h2::before,
   background-position: 0 center, 9px center;
   background-repeat: repeat-x;
 }
-.ficha, .tarea, .paso, .senal, .feedback, #mision-app section {
+.ficha, .tarea, .paso, .senal, .feedback, #mision-app section, .leccion-app section {
   border-radius: 1rem;
   transition: transform 180ms var(--ease), border-color 180ms var(--ease), box-shadow 180ms var(--ease);
 }
@@ -911,14 +915,14 @@ main > article > h2::before,
   box-shadow: none;
 }
 .pasos button:not(:disabled):hover { transform: translateY(-2px); }
-#mision-app .opciones, .paso ul {
+#mision-app .opciones, .leccion-app .opciones, .paso ul {
   display: grid;
   gap: 0.75rem;
   margin: 0.4rem 0 0;
   padding: 0;
   list-style: none;
 }
-#mision-app .opciones button, .paso li {
+#mision-app .opciones button, .leccion-app .opciones button, .paso li {
   min-height: 4.75rem;
   padding: 0.95rem 1.1rem;
   border: 2px solid var(--line);
@@ -930,12 +934,12 @@ main > article > h2::before,
   line-height: 1.4;
   transition: transform 180ms var(--ease), border-color 180ms var(--ease), box-shadow 180ms var(--ease);
 }
-#mision-app .opciones button:hover, .paso li:hover {
+#mision-app .opciones button:hover, .leccion-app .opciones button:hover, .paso li:hover {
   border-color: var(--gem);
   transform: translateY(-2px);
   box-shadow: 0 12px 24px rgba(4, 13, 31, 0.35), 0 0 0 3px rgba(27, 235, 145, 0.35);
 }
-#mision-app h3, .paso > h4 {
+#mision-app h3, .leccion-app h3, .paso > h4 {
   margin: 0.35rem 0 0.7rem;
   padding: 0.85rem 1rem;
   border: 2px solid var(--tone);
@@ -1715,4 +1719,62 @@ article[id] { scroll-margin-top: 1rem; }
   .hero figure { grid-template-columns: 4.25rem minmax(0, 1fr); }
   .hero img { width: 4.25rem; }
   .hero-actions a.primary { min-height: 3.7rem; }
+
+.lecciones { display: grid; gap: 1rem; }
+.lecciones-indice {
+  display: grid;
+  gap: 0.55rem;
 }
+.lecciones-indice a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.55rem 0.85rem;
+  border: 2px solid var(--tone, var(--pink));
+  border-radius: 0.85rem;
+  background: var(--abyss);
+  color: var(--cream, #f9e6d0);
+  font-weight: 700;
+  text-decoration: none;
+}
+.leccion {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0.85rem 0 0.2rem;
+  border-top: 2px solid var(--tone, var(--pink));
+  scroll-margin-top: 0.75rem;
+}
+.leccion > h3 {
+  margin: 0;
+  color: var(--cream, #f9e6d0);
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+.leccion code, .leccion .mint { overflow-wrap: anywhere; }
+.leccion .abrir-entender,
+.leccion .entender-rotulo { width: 100%; justify-self: stretch; text-align: center; }
+.leccion .entender-rotulo { margin: 0; font-weight: 700; }
+.leccion .explicacion-resultado a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  width: 100%;
+}
+.leccion a[href="/security/"] {
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+@media (min-width: 700px) {
+  .lecciones-indice { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 380px) {
+  .leccion-estatica .paso {
+    padding-left: 1rem;
+  }
+  .leccion-estatica .paso::before {
+    position: static;
+    display: block;
+    margin: 0 0 0.65rem;
+  }
+

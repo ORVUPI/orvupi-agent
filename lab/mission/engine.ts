@@ -1,6 +1,11 @@
 import type { Grade, Lang, Localized, Mission, MissionStep, Progress } from "./types.js";
 
 export const STORAGE_KEY = "stubx-lab-mision-01";
+
+export function lessonStorageKey(id: string): string {
+  if (id === "mision-01") return STORAGE_KEY;
+  return `stubx-lab-${id}`;
+}
 export const LANG_KEY = "stubx-lab-lang";
 
 export const PROGRESS_ECONOMIC_VALUE = 0;

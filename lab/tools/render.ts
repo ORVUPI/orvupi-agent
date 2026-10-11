@@ -2,8 +2,9 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { repoRootFromMeta } from "../paths.js";
 import { AUDIT_EN, AUDIT_ES, DRAFT_LINE, HOW_LAB, HOW_VERIFY, OFFLINE_LINE, PRIVACY_EN, PRIVACY_ES, READONLY_LINE, UNKNOWN_LINE } from "../copy.js";
-import { loadGlossary, loadMission } from "../mission/load.js";
-import type { CardSummary, GlossaryEntry, Localized, Mission, MissionStep } from "../mission/types.js";
+import { ENTENDER_BUTTON, ENTENDER_LINKS } from "../mission/entender-links.js";
+import { loadGlossary, loadLessons, loadMission } from "../mission/load.js";
+import type { CardSummary, GlossaryEntry, Lesson, Localized, Mission, MissionStep } from "../mission/types.js";
 import { changelogHeadings, listTestFiles, loadBoard } from "../tablero/collect.js";
 import type { BoardFile, TaskRecord, TaskStatus } from "../tablero/collect.js";
 import { authorityWords, type DisplayCard } from "../display-copy.js";
@@ -46,19 +47,33 @@ const META_LABEL: Record<CardSummary["metadataReading"], Localized> = {
   desconocido: { es: "Desconocido", en: "Unknown" },
 };
 
-function both(text: Localized, tag = "span"): string {
-  return `<${tag} class="lang es" lang="es">${escapeHtml(text.es)}</${tag}><${tag} class="lang en" lang="en">${escapeHtml(text.en)}</${tag}>`;
+const REGISTRY_MARK = {
+  es: "(publicada en el registro oficial)",
+  en: "(listed in the official registry)",
+};
+
+function linkRegistry(escaped: string): string {
+  return escaped
+    .replaceAll(REGISTRY_MARK.es, `<a href="/security/">${REGISTRY_MARK.es}</a>`)
+    .replaceAll(REGISTRY_MARK.en, `<a href="/security/">${REGISTRY_MARK.en}</a>`);
 }
 
-function statusText(status: string): Localized {
+function both(text: Localized, tag = "span"): string {
+  return `<${tag} class="lang es" lang="es">${linkRegistry(escapeHtml(text.es))}</${tag}><${tag} class="lang en" lang="en">${linkRegistry(escapeHtml(text.en))}</${tag}>`;
+}
+
+const LAB_READ: Localized = { es: "leído en la cadena", en: "read on-chain" };
+
+function statusText(status: string, labRead = false): Localized {
+  if (labRead && status === "verificado") return LAB_READ;
   return STATUS_LABEL[status] ?? STATUS_LABEL.desconocido ?? { es: "desconocido", en: "unknown" };
 }
 
-function fact(status: string, value: Localized | null): Localized {
+function fact(status: string, value: Localized | null, labRead = false): Localized {
   if (status !== "verificado" && status !== "inferido") {
-    return statusText(status);
+    return statusText(status, labRead);
   }
-  const mark = statusText(status);
+  const mark = statusText(status, labRead);
   if (!value || value.es.length === 0) {
     return mark;
   }
@@ -97,15 +112,15 @@ const LEVEL_LABEL: Record<string, Localized> = {
   riesgo: { es: "riesgo", en: "risk" },
 };
 
-function fieldValue(card: CardSummary, key: string): { value: Localized; note: string | Localized | null; neutral?: boolean } {
+function fieldValue(card: CardSummary, key: string, labRead = false): { value: Localized; note: string | Localized | null; neutral?: boolean } {
   switch (key) {
     case "name":
-      return { value: fact(card.nameStatus, card.name ? { es: card.name, en: card.name } : null), note: null };
+      return { value: fact(card.nameStatus, card.name ? { es: card.name, en: card.name } : null, labRead), note: null };
     case "mint":
       return { value: { es: card.mint, en: card.mint }, note: null };
     case "inRegistry":
       return {
-        value: fact(card.inRegistryStatus, card.inRegistry === null ? null : yn(card.inRegistry)),
+        value: fact(card.inRegistryStatus, card.inRegistry === null ? null : yn(card.inRegistry), labRead),
         note: null,
       };
     case "statement":
@@ -113,23 +128,24 @@ function fieldValue(card: CardSummary, key: string): { value: Localized; note: s
         value: fact(
           card.statementStatus,
           card.statement ? { es: card.statement, en: shown(card).statement_en || card.statement } : null,
+          labRead,
         ),
         note: null,
       };
     case "mintAuthority":
       return {
-        value: fact(card.mintAuthority.status, authorityWords(card.mintAuthority.state)),
+        value: fact(card.mintAuthority.status, authorityWords(card.mintAuthority.state), labRead),
         note: null,
       };
     case "freezeAuthority":
       return {
-        value: fact(card.freezeAuthority.status, authorityWords(card.freezeAuthority.state)),
+        value: fact(card.freezeAuthority.status, authorityWords(card.freezeAuthority.state), labRead),
         note: null,
       };
     case "metadata":
       return { value: META_LABEL[card.metadataReading], note: null };
     case "holders":
-      return { value: fact(card.holdersStatus, null), note: pairNote(shown(card).holdersNote, shown(card).holdersNote_en) };
+      return { value: fact(card.holdersStatus, null, labRead), note: pairNote(shown(card).holdersNote, shown(card).holdersNote_en) };
     case "impersonation": {
       if (card.impersonation === null) {
         return { value: statusText("desconocido"), note: null, neutral: true };
@@ -161,7 +177,7 @@ function fieldValue(card: CardSummary, key: string): { value: Localized; note: s
     }
     case "curvePresent":
       return {
-        value: fact(card.curvePresentStatus, card.curvePresent === null ? null : yn(card.curvePresent)),
+        value: fact(card.curvePresentStatus, card.curvePresent === null ? null : yn(card.curvePresent), labRead),
         note: pairNote(shown(card).curveModuleNote, shown(card).curveModuleNote_en),
       };
     case "curveProgress":
@@ -169,6 +185,7 @@ function fieldValue(card: CardSummary, key: string): { value: Localized; note: s
         value: fact(
           card.curveProgressStatus,
           card.curveProgress ? { es: `${card.curveProgress} %`, en: `${card.curveProgress}%` } : null,
+          labRead,
         ),
         note: pairNote(shown(card).curveProgressNote, shown(card).curveProgressNote_en),
       };
@@ -178,14 +195,14 @@ function fieldValue(card: CardSummary, key: string): { value: Localized; note: s
 }
 
 export function renderCard(card: CardSummary, fields: readonly string[]): string {
-  return `<article class="ficha">${cardInner(card, fields)}</article>`;
+  return `<article class="ficha">${cardInner(card, fields, true)}</article>`;
 }
 
-function cardInner(card: CardSummary, fields: readonly string[]): string {
+function cardInner(card: CardSummary, fields: readonly string[], labRead = false): string {
   const rows = fields
     .map((key) => {
       const label = FIELD_LABEL[key] ?? { es: key, en: key };
-      const item = fieldValue(card, key);
+      const item = fieldValue(card, key, labRead);
       const note = item.note
         ? `<p class="muted">${typeof item.note === "string" ? escapeHtml(item.note) : both(item.note)}</p>`
         : "";
@@ -258,7 +275,7 @@ ${input.publish ? "" : `<p class="draft">${both(DRAFT_LINE)}</p>\n`}
 <main id="contenido" class="${frame}">
 <div class="aviso" data-disclaimer="si">
 <p>${both(READONLY_LINE)}</p>
-<p>${both(UNKNOWN_LINE)}</p>
+<p>${both(input.current === "lab" ? { es: UNKNOWN_LINE.es, en: "Unknown is not the same as checked." } : UNKNOWN_LINE)}</p>
 <p>${both({ es: "Fichas del 2026-10-08 y, si las hay, ejemplos posteriores. No se actualizan solas. La hora de cada ficha va en Europe/Madrid.", en: "Cards from 2026-10-08 and, where present, later examples. They do not update themselves. Each card time is shown in Europe/Madrid." })}</p>
 </div>
 <p id="aviso-red" class="nota" hidden>${both(OFFLINE_LINE)}</p>
@@ -323,26 +340,61 @@ function guideSection(repoRoot: string): string {
     .join("");
 }
 
+function entenderBlock(topics: readonly string[]): string {
+  const chosen = topics
+    .map((id) => ENTENDER_LINKS.find((item) => item.id === id))
+    .filter((item): item is (typeof ENTENDER_LINKS)[number] => Boolean(item));
+  if (chosen.length === 0) return "";
+  const label = `${ENTENDER_BUTTON.es} / ${ENTENDER_BUTTON.en}`;
+  if (chosen.length === 1) {
+    const only = chosen[0];
+    if (!only) return "";
+    return `<nav class="entender-resultado" aria-label="${escapeHtml(label)}"><a class="abrir-entender" href="${escapeHtml(only.href)}">${both(ENTENDER_BUTTON)}</a><p data-tema="${escapeHtml(only.id)}">${both(only.explain)}</p></nav>`;
+  }
+  const explains = chosen
+    .map(
+      (item) =>
+        `<p data-tema="${escapeHtml(item.id)}">${both(item.explain)}</p><a href="${escapeHtml(item.href)}" data-guia="${escapeHtml(item.href)}">${both({ es: item.es, en: item.en })}</a>`,
+    )
+    .join("");
+  return `<nav class="entender-resultado" aria-label="${escapeHtml(label)}"><p class="entender-rotulo">${both(ENTENDER_BUTTON)}</p><div class="explicacion-resultado">${explains}</div></nav>`;
+}
+
+function renderLesson(lesson: Lesson, byMint: Map<string, CardSummary>, glossaryById: Map<string, GlossaryEntry>): string {
+  const steps = lesson.steps
+    .map((step, index) => staticStep(step, index, lesson.steps.length, byMint, glossaryById))
+    .join("");
+  return `<article class="leccion" id="${escapeHtml(lesson.id)}"><h3>${both(lesson.title)}</h3><p>${both(lesson.intro)}</p><div class="leccion-app" data-leccion="${escapeHtml(lesson.id)}"></div><div class="leccion-estatica"><p class="nota">${both({ es: "Sin JavaScript se pueden leer las preguntas y la corrección. El progreso local necesita el script de esta misma carpeta.", en: "Without JavaScript the questions and the correction can still be read. Local progress needs the script in this same folder." })}</p>${entenderBlock(lesson.entender)}${steps}<p>${both(lesson.closing)}</p></div></article>`;
+}
+
 function renderLab(repoRoot: string, cards: readonly CardSummary[], mission: Mission, options: RenderOptions): string {
   const byMint = new Map(cards.map((card) => [card.mint, card]));
   const glossary = loadGlossary(repoRoot);
   const glossaryById = new Map(glossary.entries.map((entry) => [entry.id, entry]));
+  const lessons = loadLessons(repoRoot);
   const staticSteps = mission.steps.map((step, index) => staticStep(step, index, mission.steps.length, byMint, glossaryById)).join("");
   const terms = glossary.entries.map((entry) => glossaryArticle(entry)).join("");
   const revision = JSON.parse(readFileSync(path.join(repoRoot, "lab/library/revision.json"), "utf8")) as {
     enStatus: string;
     enStatusEn?: string;
   };
-  const main = `<h1>${both(mission.title)}</h1>
-<p class="lede">${both(mission.intro)}</p>
+  const index = lessons
+    .map((lesson) => `<a href="#${escapeHtml(lesson.id)}">${both(lesson.title)}</a>`)
+    .join("");
+  const lessonHtml = lessons.map((lesson) => renderLesson(lesson, byMint, glossaryById)).join("");
+  const main = `<h1>${both({ es: "Lecciones cortas con fichas reales", en: "Short lessons with real cards" })}</h1>
+<p class="lede">${both({ es: "Tres lecciones para empezar, con fichas de Verify del 2026-10-09, y la misión de cinco pasos. Si no aciertas, puedes volver a intentar. El progreso se queda en este navegador. No dice qué hacer con un token.", en: "Three lessons to start with, using Verify cards from 2026-10-09, and the five-step mission. If you miss, you can try again. Progress stays in this browser. It does not say what to do with a token." })}</p>
+<section class="lecciones" id="lecciones"><h2>${both({ es: "Para empezar", en: "Start here" })}</h2><nav class="lecciones-indice" aria-label="${escapeHtml("Lecciones / Lessons")}">${index}<a href="#mision-titulo">${both({ es: "Misión de cinco pasos", en: "Five-step mission" })}</a></nav>${lessonHtml}</section>
 ${howDetails(HOW_LAB)}
+<h2 id="mision-titulo" class="mision-titulo">${both(mission.title)}</h2>
+<p class="mision-intro">${both(mission.intro)}</p>
 <div id="mision-app" data-mission="${escapeHtml(mission.id)}"></div>
 <div class="estatica" id="mision-estatica"><p class="nota">${both({ es: "Sin JavaScript se pueden leer los pasos, las explicaciones y la biblioteca. El progreso local necesita el script de esta misma carpeta.", en: "Without JavaScript the steps, explanations, and library can still be read. Local progress needs the script in this same folder." })}</p>${staticSteps}</div>
 <details class="biblioteca-extra" id="biblioteca"><summary>${both({ es: "Para quien quiera más detalle", en: "For anyone who wants more detail" })}</summary><h2>${both({ es: "Biblioteca", en: "Library" })}</h2><p><a href="/aprender/">${both({ es: "Biblioteca para cualquier token", en: "Library for any token" })}</a></p><p class="muted">${both({ es: revision.enStatus, en: revision.enStatusEn || revision.enStatus })}</p><div class="fichas">${terms}</div><h2>${both({ es: "Guías", en: "Guides" })}</h2><div class="fichas">${guideSection(repoRoot)}</div></details>
 <dialog id="ayuda" aria-labelledby="ayuda-titulo"><h2 id="ayuda-titulo"></h2><div id="ayuda-cuerpo"></div><form method="dialog"><button type="submit" id="ayuda-cerrar">${both({ es: "Cerrar", en: "Close" })}</button></form></dialog>`;
   return shell({
-    title: "STUBX Lab · misión 1 · borrador",
-    description: "Misión educativa para distinguir un mint del registro de un clon, con fichas del 2026-10-08.",
+    title: "STUBX Lab · lecciones · borrador",
+    description: "Tres lecciones cortas con fichas de Verify del 2026-10-09, y una misión para distinguir un mint del registro de un clon.",
     prefix: "../",
     current: "lab",
     main,
