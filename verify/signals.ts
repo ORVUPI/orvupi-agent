@@ -937,8 +937,8 @@ function extensionSignals(extensions: readonly ExtensionReport[], parsed: boolea
       level: "neutro",
       title: loc("Sin extensiones de riesgo leídas", "No risk extensions read"),
       explain: loc(
-        "No apareció comisión de transferencia, delegado permanente, gancho de transferencia ni estado inicial congelado. Que no aparezcan no cierra otros riesgos.",
-        "No transfer fee, permanent delegate, transfer hook, or frozen default state appeared. Their absence does not close off other risks.",
+        "No apareció comisión de transferencia, delegado permanente, gancho de transferencia ni estado inicial congelado. Que no aparezcan extensiones no significa que esté todo comprobado.",
+        "No transfer fee, permanent delegate, transfer hook, or frozen default state appeared. No extensions showing does not mean everything was checked.",
       ),
     });
   }

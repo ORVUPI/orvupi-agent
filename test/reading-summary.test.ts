@@ -167,7 +167,10 @@ describe("resumen de la lectura", () => {
     });
     const attention = block(summary, "atencion");
     assert.equal(attention.items.length, 0);
-    assert.match(attention.empty.es, /no significa que no haya riesgo/);
+    assert.equal(attention.empty.es, "Ninguna señal de esta lectura pide atención. Que no aparezcan señales no significa que esté todo comprobado.");
+    assert.equal(attention.empty.en, "No signal in this reading needs attention. No signals showing does not mean everything was checked.");
+    assert.equal(attention.empty.es.includes("no haya riesgo"), false);
+    assert.equal(attention.empty.en.includes("there is no risk"), false);
     assert.match(leads(summary, "comprobado", "es"), /Nadie puede crear más tokens ni congelar cuentas/);
     assert.equal(prose(summary, "es").includes("moneda estable"), false);
     const card = summaryFromCard({

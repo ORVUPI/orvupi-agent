@@ -202,6 +202,10 @@ def risk_marks() -> list[str]:
         piece("you can lose ", "everything"),
         piece("not investment ", "advice"),
         piece("ai-generated ", "image"),
+        piece("no haya ", "riesgo"),
+        piece("there is no ", "risk"),
+        piece("otros ", "riesgos"),
+        piece("other ", "risks"),
     ]
 
 
@@ -421,6 +425,31 @@ def self_check() -> None:
         raise SystemExit("no oficiales no es la marca de Studio")
     if "tools/build_site.py" in SKIP_FILES:
         raise SystemExit("build_site.py tiene que entrar en la guardia")
+    if not phrase_hits("index.html", "Que no aparezca no significa que no haya riesgo."):
+        raise SystemExit("la guardia no vio no haya riesgo")
+    if not phrase_hits("index.html", "A signal not showing does not mean there is no risk."):
+        raise SystemExit("la guardia no vio there is no risk")
+    if phrase_hits("risks/index.html", "no significa que no haya riesgo"):
+        raise SystemExit("en /risks puede decirse que no haya riesgo")
+    if phrase_hits("legal/index.html", "there is no risk"):
+        raise SystemExit("en /legal puede decirse there is no risk")
+    approved = "Que no aparezcan señales no significa que esté todo comprobado."
+    if phrase_hits("verify/index.html", approved):
+        raise SystemExit("la frase aprobada no está retirada")
+    if phrase_hits("verify/index.html", "No signals showing does not mean everything was checked."):
+        raise SystemExit("la frase inglesa aprobada no está retirada")
+    if not phrase_hits("index.html", "Que no aparezcan no cierra otros riesgos."):
+        raise SystemExit("la guardia no vio otros riesgos")
+    if not phrase_hits("index.html", "Their absence does not close off other risks."):
+        raise SystemExit("la guardia no vio other risks")
+    if phrase_hits("risks/index.html", "otros riesgos"):
+        raise SystemExit("en /risks puede decirse otros riesgos")
+    if phrase_hits("legal/index.html", "other risks"):
+        raise SystemExit("en /legal puede decirse other risks")
+    if phrase_hits("verify/index.html", "Que no aparezcan extensiones no significa que esté todo comprobado."):
+        raise SystemExit("la frase de extensiones no está retirada")
+    if phrase_hits("verify/index.html", "No extensions showing does not mean everything was checked."):
+        raise SystemExit("la frase inglesa de extensiones no está retirada")
     if not (REPO / "site-drafts").exists():
         raise SystemExit("faltan las plantillas de site-drafts")
 

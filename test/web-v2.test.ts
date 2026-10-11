@@ -391,6 +391,10 @@ describe("web v2", () => {
     assert.match(hero, /Read the methodology/);
     assert.match(home, /<div class="resumen-informe">[\s\S]*<h3>[\s\S]*Resumen de ejemplo · ficha guardada del 2026-10-09/);
     assert.match(home, /<div class="resumen-informe">[\s\S]*<h3>[\s\S]*Sample summary · saved snapshot from 2026-10-09/);
+    assert.match(home, /data-bloque="atencion"[\s\S]*Que no aparezcan señales no significa que esté todo comprobado\./);
+    assert.match(home, /data-bloque="atencion"[\s\S]*No signals showing does not mean everything was checked\./);
+    assert.equal(home.includes("no haya riesgo"), false);
+    assert.equal(home.includes("there is no risk"), false);
     assert.match(home, /data-bloque="falta"[\s\S]*Este recuadro es un extracto\. No trae la lectura completa\./);
     assert.match(home, /data-bloque="falta"[\s\S]*This box is an excerpt\. It does not include the full reading\./);
     const example = home.match(/<section id="ejemplo"[\s\S]*?<\/section>/)?.[0] ?? "";
@@ -567,6 +571,14 @@ describe("web v2", () => {
     assert.match(bundle, /No signals showing does not mean everything was checked\./);
     assert.equal(bundle.includes("Que no aparezcan señales no significa que no haya riesgo"), false);
     assert.equal(bundle.includes("No signals showing does not mean there is no risk"), false);
+    assert.match(bundle, /Ninguna señal de esta lectura pide atención\. Que no aparezcan señales no significa que esté todo comprobado\./);
+    assert.match(bundle, /No signal in this reading needs attention\. No signals showing does not mean everything was checked\./);
+    assert.equal(bundle.includes("no haya riesgo"), false);
+    assert.equal(bundle.includes("there is no risk"), false);
+    assert.match(bundle, /Que no aparezcan extensiones no significa que esté todo comprobado\./);
+    assert.match(bundle, /No extensions showing does not mean everything was checked\./);
+    assert.equal(bundle.includes("otros riesgos"), false);
+    assert.equal(bundle.includes("other risks"), false);
     assert.match(bundle, /stubx-verify-preview/);
     assert.match(bundle, /ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump/);
     assert.match(bundle, /FMNb4CR8ksibmgY7Ztei6BWcZXi3WHcVeJhYb9TNpump/);
@@ -1172,6 +1184,26 @@ if not guard.phrase_hits("studio/lib/copy.mjs", "not official"):
     raise SystemExit("metadatos")
 if guard.phrase_hits("index.html", "is not official"):
     raise SystemExit("portada")
+if not guard.phrase_hits("index.html", "no significa que no haya riesgo"):
+    raise SystemExit("no haya riesgo")
+if not guard.phrase_hits("index.html", "does not mean there is no risk"):
+    raise SystemExit("there is no risk")
+if guard.phrase_hits("risks/index.html", "no haya riesgo"):
+    raise SystemExit("risks")
+if guard.phrase_hits("legal/index.html", "there is no risk"):
+    raise SystemExit("legal")
+if guard.phrase_hits("verify/index.html", "Que no aparezcan señales no significa que esté todo comprobado."):
+    raise SystemExit("aprobada")
+if not guard.phrase_hits("index.html", "no cierra otros riesgos"):
+    raise SystemExit("otros riesgos")
+if not guard.phrase_hits("index.html", "close off other risks"):
+    raise SystemExit("other risks")
+if guard.phrase_hits("risks/index.html", "otros riesgos"):
+    raise SystemExit("risks otros")
+if guard.phrase_hits("legal/index.html", "other risks"):
+    raise SystemExit("legal other")
+if guard.phrase_hits("verify/index.html", "Que no aparezcan extensiones no significa que esté todo comprobado."):
+    raise SystemExit("extensiones")
 if "tools/build_site.py" in guard.SKIP_FILES:
     raise SystemExit("generador")
 print("ok")

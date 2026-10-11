@@ -14,13 +14,13 @@ export const REPORT_LIMITS = Object.freeze({
     "Es una lectura de datos públicos en el momento indicado. Puede haber cambiado.",
     "No es una auditoría, ni un aval, ni una recomendación.",
     "Lo que no se pudo leer no aparece como comprobado.",
-    "Que no aparezca una señal no significa que no haya riesgo.",
+    "Que no aparezcan señales no significa que esté todo comprobado.",
   ],
   en: [
     "It is a reading of public data at the time stated. It may have changed.",
     "It is not an audit, an endorsement, or a recommendation.",
     "What could not be read does not appear as checked.",
-    "A signal not showing does not mean there is no risk.",
+    "No signals showing does not mean everything was checked.",
   ],
 });
 
@@ -73,7 +73,7 @@ const COPY = {
 
 const EMPTY_FILE = {
   atencion: {
-    en: "No signal in this reading needs attention. A signal not showing does not mean there is no risk.",
+    en: "No signal in this reading needs attention. No signals showing does not mean everything was checked.",
   },
   falta: {
     en: "No requested fact is missing from this reading.",
@@ -81,8 +81,8 @@ const EMPTY_FILE = {
 };
 
 const NOTHING_TO_NOTE = {
-  es: "Nada que destacar en esta lectura. Que no aparezca no significa que no haya riesgo.",
-  en: "Nothing to highlight in this reading. A signal not showing does not mean there is no risk.",
+  es: "Nada que destacar en esta lectura. Que no aparezcan señales no significa que esté todo comprobado.",
+  en: "Nothing to highlight in this reading. No signals showing does not mean everything was checked.",
 };
 
 const CLONE_WARNING = {

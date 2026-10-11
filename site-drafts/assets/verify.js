@@ -2547,7 +2547,7 @@ function extensionSignals(extensions, parsed) {
             id: "extensiones",
             level: "neutro",
             title: loc("Sin extensiones de riesgo leídas", "No risk extensions read"),
-            explain: loc("No apareció comisión de transferencia, delegado permanente, gancho de transferencia ni estado inicial congelado. Que no aparezcan no cierra otros riesgos.", "No transfer fee, permanent delegate, transfer hook, or frozen default state appeared. Their absence does not close off other risks."),
+            explain: loc("No apareció comisión de transferencia, delegado permanente, gancho de transferencia ni estado inicial congelado. Que no aparezcan extensiones no significa que esté todo comprobado.", "No transfer fee, permanent delegate, transfer hook, or frozen default state appeared. No extensions showing does not mean everything was checked."),
         });
     }
     return out;
@@ -2950,8 +2950,8 @@ const EMPTY = {
     en: "No fact was read in this query.",
   },
   attention: {
-    es: "Ninguna señal de esta lectura pide atención. Que no aparezca no significa que no haya riesgo.",
-    en: "No signal in this reading needs attention. A signal not showing does not mean there is no risk.",
+    es: "Ninguna señal de esta lectura pide atención. Que no aparezcan señales no significa que esté todo comprobado.",
+    en: "No signal in this reading needs attention. No signals showing does not mean everything was checked.",
   },
   missing: {
     es: "No falta ningún dato pedido en esta lectura.",

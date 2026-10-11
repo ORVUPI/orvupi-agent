@@ -766,6 +766,40 @@ describe("lectura universal con RPC simulado", () => {
     assert.match(titles, /Las cuentas nuevas nacen congeladas/);
   });
 
+  test("sin extensiones de riesgo la frase dice que no está todo comprobado", async () => {
+    const sample = fixture("revoked-mint");
+    const base = Buffer.from(sample.mintAccount?.dataBase64 ?? "", "base64");
+    const reading = await readAnyMint({
+      mint: sample.mint,
+      registry,
+      endpoints: ["https://rpc-a.invalid"],
+      transport: transportFor({
+        slot: 6,
+        accounts: new Map([
+          [sample.mint, { owner: TOKEN_2022_PROGRAM, data: base.subarray(0, 82) }],
+          [metadataPda(sample.mint), null],
+          [bondingCurvePda(sample.mint), null],
+        ]),
+        supply: { amount: "1000000000000000", decimals: 6 },
+        largest: [],
+      }),
+      maxRetries: 0,
+      minIntervalMs: 0,
+      sleep: async () => {},
+    });
+    const signal = reading.signals.find((item) => item.id === "extensiones");
+    assert.equal(
+      signal?.explain.es,
+      "No apareció comisión de transferencia, delegado permanente, gancho de transferencia ni estado inicial congelado. Que no aparezcan extensiones no significa que esté todo comprobado.",
+    );
+    assert.equal(
+      signal?.explain.en,
+      "No transfer fee, permanent delegate, transfer hook, or frozen default state appeared. No extensions showing does not mean everything was checked.",
+    );
+    assert.equal(signal?.explain.es.includes("otros riesgos"), false);
+    assert.equal(signal?.explain.en.includes("other risks"), false);
+  });
+
   test("la curva usa cantidad real y virtual", async () => {
     const sample = fixture("revoked-mint");
     const curve = concat(PUMP, u64(2000n), u64(100n), u64(500n), u64(50n), u64(1000n), Uint8Array.of(0));
