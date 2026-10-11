@@ -105,11 +105,10 @@ test("guardar: en iPhone con share, Descargar abre la hoja de compartir", async 
   await expect(page.locator("#aviso-guardar")).toBeHidden();
 });
 
-// El archivo que se comparte o se abre es el PNG final (lienzo completo con banda,
-// marca de agua y pie, y el comentario PNG), no una vista previa reducida.
+// El archivo que se comparte o se abre es el PNG final, no una vista previa reducida.
 async function expectFinalPng(page, bytes) {
   expect(bytes.subarray(1, 4).toString()).toBe("PNG");
-  expect(bytes.includes(Buffer.from("Community content, unofficial. Not from @stubxai."))).toBe(true);
+  expect(bytes.includes(Buffer.from("Community content, unofficial. Not from @stubxai."))).toBe(false);
   const img = await decodePng(new Uint8Array(bytes));
   const preview = await page.evaluate(() => {
     const c = document.getElementById("vista");
@@ -118,16 +117,6 @@ async function expectFinalPng(page, bytes) {
   expect(img.width).toBeGreaterThanOrEqual(1080);
   expect(img.width).toBeGreaterThan(preview.width);
   expect(img.height / img.width).toBeCloseTo(preview.height / preview.width, 1);
-  // Banda superior y pie: filas con texto (no un color plano).
-  const rowVaries = (y) => {
-    const set = new Set();
-    for (let x = 0; x < img.width; x++) set.add(img.rgba[(y * img.width + x) * 4]);
-    return set.size >= 2; // la fuente pixel usa dos colores por fila
-  };
-  const bandRows = Array.from({ length: Math.floor(img.height * 0.06) }, (_, y) => y).filter(rowVaries).length;
-  const footRows = Array.from({ length: Math.floor(img.height * 0.08) }, (_, k) => img.height - 1 - k).filter(rowVaries).length;
-  expect(bandRows).toBeGreaterThan(3);
-  expect(footRows).toBeGreaterThan(3);
   const logo = await readLogoPng(yellowPng());
   const item = templates.templates.find((entry) => entry.id === "aprendizaje");
   const card = await renderCard({
@@ -148,6 +137,9 @@ async function expectFinalPng(page, bytes) {
   });
   expect(img.width).toBe(card.width);
   expect(img.height).toBe(card.height);
+  expect(card.noticeText).toBe("");
+  expect(card.label).toBe("");
+  expect(card.glyphs.some((glyph) => glyph.role === "notice" || glyph.role === "watermark" || glyph.role === "ai")).toBe(false);
   let diff = 0;
   for (let i = 0; i < img.rgba.length; i += 4) {
     if (img.rgba[i] !== card.rgba[i] || img.rgba[i + 1] !== card.rgba[i + 1] || img.rgba[i + 2] !== card.rgba[i + 2]) diff += 1;

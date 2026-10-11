@@ -117,7 +117,7 @@ describe("informe de pares", () => {
     assert.match(card, /STUBX no revisa ni respalda este token\./);
     assert.match(card, /Un emparejamiento no es una colaboración ni un respaldo\./);
     assert.match(card, /<script>alert\(1\)<\/script>/);
-    assert.match(card, new RegExp(FOOTER_ES.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    assert.equal(card.includes(FOOTER_ES), false);
     assert.match(card, /generado con stubxai.com\/verify/);
     assert.equal(/\b(verificado|seguro|aprobado|socio)\b/i.test(card), false);
     assert.match(card, /creator_fee_basis_points/);
@@ -129,7 +129,7 @@ describe("informe de pares", () => {
     const official = snapshotLines(evidenceRecord({ ...evidence, mint: OFFICIAL }), "en");
     const english = official.map((line: { text: string }) => line.text).join("\n");
     assert.match(english, /This address matches the published STUBX CA\./);
-    assert.match(english, new RegExp(FOOTER_EN.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    assert.equal(english.includes(FOOTER_EN), false);
     assert.equal(english.includes("STUBX does not review or endorse this token."), false);
     assert.equal(/\b(verified|safe|approved|partner)\b/i.test(english), false);
   });

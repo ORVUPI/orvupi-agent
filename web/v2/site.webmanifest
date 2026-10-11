@@ -2,7 +2,7 @@
   "id": "/",
   "name": "STUBX",
   "short_name": "STUBX",
-  "description": "STUBX: a meme that asks for proof. High-risk crypto.",
+  "description": "STUBX: a meme that asks for proof.",
   "lang": "es",
   "start_url": "/",
   "scope": "./",

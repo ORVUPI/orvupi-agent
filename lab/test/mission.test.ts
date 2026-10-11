@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, test } from "node:test";
-import { DISCLAIMER, UNKNOWN_LINE } from "../copy.js";
+import { UNKNOWN_LINE } from "../copy.js";
 import { answer, checkCount, initialProgress, parseProgress, PROGRESS_ECONOMIC_VALUE, PROGRESS_IS_CERTIFICATE, resetProgress } from "../mission/engine.js";
 import { loadCards, loadFuentes, loadGlossary, loadJson, loadMission, shownFact, summarizeReport } from "../mission/load.js";
 import { validateMission } from "../mission/validate.js";
@@ -275,7 +275,7 @@ describe("biblioteca", () => {
     const guides = ["identificar-el-token.md", "interpretar-permisos.md", "comprender-liquidez.md"]
       .map((file) => readFileSync(path.join(root, "lab/library/guides", file), "utf8"))
       .join("\n");
-    assert.deepEqual(bannedHits({ mission, glossary, guides, disclaimer: DISCLAIMER }), []);
+    assert.deepEqual(bannedHits({ mission, glossary, guides, disclaimer: "" }), []);
     assert.match(UNKNOWN_LINE.es, /desconocido/);
   });
 });

@@ -20,3 +20,7 @@
 a093560db97dd73adc9e0193031f1309447c3455:verify/examples/2026-10-09/TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump.json:generic-api-key:382
 a093560db97dd73adc9e0193031f1309447c3455:verify/examples/2026-10-09/TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump.json:generic-api-key:389
 d1028d902bd9620fcae923d15b879bde78dc4afc:verify/examples/2026-10-09/TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump.json:generic-api-key:396
+
+# SHA-256 público de web/v2/token.json, publicado en el tablero. No es un secreto.
+# Las dos coincidencias son la misma línea 88 (el texto en español y el texto en inglés) y comparten esta huella.
+1297c9e6d0cf3525f10c6edcbad510dec64a59df:web/v2/tablero/index.html:generic-api-key:88

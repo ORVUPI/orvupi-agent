@@ -30,7 +30,7 @@ test("contribuciones abre GitHub y cambia de idioma", async ({ page }, info) => 
   await expect(page.locator("main")).toContainText(
     "Pedir pago, tokens, recompensas o una parte del proyecto. Contribuir no da derecho a nada de eso.",
   );
-  await expect(page.locator("footer")).toContainText(FOOTER_ES);
+  await expect(page.locator("footer")).not.toContainText(FOOTER_ES);
   await expect(page.locator("form")).toHaveCount(0);
   await expect(page.locator("input, textarea")).toHaveCount(0);
   await page.screenshot({ path: `${shots}/u04-contribuir-${project}-es.png`, fullPage: project === "desktop" });
@@ -45,6 +45,6 @@ test("contribuciones abre GitHub y cambia de idioma", async ({ page }, info) => 
   await expect(page.locator("main")).toContainText(
     "By sending a change proposal, you agree that it is published under the repository's MIT license.",
   );
-  await expect(page.locator("footer")).toContainText(FOOTER_EN);
+  await expect(page.locator("footer")).not.toContainText(FOOTER_EN);
   await page.screenshot({ path: `${shots}/u04-contribuir-${project}-en.png`, fullPage: false });
 });

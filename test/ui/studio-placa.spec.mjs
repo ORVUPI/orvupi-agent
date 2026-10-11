@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { renderCard } from "../../web/v2/studio/lib/render.mjs";
 
-test("la placa NO OFICIAL se lee en la vista previa", async ({ page }) => {
+test("la vista previa vertical no dibuja la marca de agua", async ({ page }) => {
   await page.goto("/studio/");
   await expect(page.locator("#descargar")).toBeEnabled({ timeout: 45_000 });
   await page.locator("#tab-formato").click();
@@ -38,16 +38,11 @@ test("la placa NO OFICIAL se lee en la vista previa", async ({ page }) => {
     origins: ["ninguno"],
     png: false,
   });
-  const plateText = card.glyphs.filter((glyph) => glyph.role === "watermark").map((glyph) => glyph.ch).join("");
-  expect(plateText.replace(/\s/g, "")).toBe("NOOFICIAL");
-  const box = {
-    x: Math.max(0, Math.floor(card.watermarkBox.x)),
-    y: Math.max(0, Math.floor(card.watermarkBox.y)),
-    w: Math.min(shot.width - Math.floor(card.watermarkBox.x), Math.ceil(card.watermarkBox.w)),
-    h: Math.min(shot.height - Math.floor(card.watermarkBox.y), Math.ceil(card.watermarkBox.h)),
-  };
-  expect(box.w).toBeGreaterThan(8);
-  expect(box.h).toBeGreaterThan(8);
+  const plateText = card.glyphs.filter((glyph) => glyph.role === "watermark" || glyph.role === "notice" || glyph.role === "ai").map((glyph) => glyph.ch).join("");
+  expect(plateText).toBe("");
+  expect(card.watermarkBox.w).toBe(0);
+  expect(card.watermarkBox.h).toBe(0);
+  const box = { x: 8, y: 8, w: 24, h: 24 };
   const pixels = await page.evaluate((region) => {
     const canvas = document.querySelector("#vista");
     return Array.from(canvas.getContext("2d").getImageData(region.x, region.y, region.w, region.h).data);

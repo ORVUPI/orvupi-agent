@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-11 · Pie de riesgo y etiqueta de imagen retirados
+
+- Decisión del dueño del proyecto el 2026-10-11 a las 13:52: la web y las herramientas dejan de repetir el pie de riesgo y la etiqueta de imagen generada, en español y en inglés, también en las imágenes que exporta Studio.
+- El mismo día confirma que Studio no lleva banda, marca de esquina, comentario del PNG ni frase de otro token, y que los avisos de riesgo quedan solo en `/risks` y `/legal`. El pie del resto lleva un enlace a Riesgos.
+- Se quedan los avisos antiestafa, la privacidad aprobada y la línea del informe que dice que no certifica que sea verdad. Una comprobación falla si esas frases retiradas aparecen fuera de `/risks` y `/legal`.
+- En `/security`, una cuenta, una web o una CA que no está en la lista se trata como no oficial hasta comprobarla. En la portada, otra CA con el nombre STUBX «is not official». Esa fórmula solo se vigila en Studio. La franja inferior de la imagen OG no lleva texto.
+- Esta entrada no despliega stubxai.com.
+
 ## 2026-10-11 · Datos de mercado en Verify, solo lectura
 
 - Verify muestra pares, liquidez y volumen de un mint de Solana si el usuario pulsa «Leer datos de mercado ahora». Si la fuente respondió, la hora de Madrid dice «leído el DD-MM-AAAA a las HH:MM:SS». Si la consulta falló, dice «intentado el …». La atribución es «Datos: DEX Screener. Pueden no ser exactos ni estar al día.» No hay precio por token, ni verde ni rojo en las cifras.
@@ -34,7 +42,6 @@ Esta entrada resume. No reescribe el detalle fechado que sigue debajo.
 ### Web v2
 
 - Misma navegación, mismos estilos y el mismo cambio de idioma en las páginas de `web/v2/`. Verify y Lab van dentro de ese cascarón, no en otra web.
-- Pie vigente: «Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión.» / «High-risk crypto · You could lose everything · Not investment advice.»
 - `web/v2/` es la web publicada en stubxai.com desde el 2026-10-09 (merge `ed1c7759`). `web/current/` es la copia anterior, para volver atrás.
 - Studio está desplegado (PR #20 y #26) y se indexa. Verify universal está desplegado (merge `2434636`). El cuaderno está en stubxai.com/cuaderno desde el 2026-10-10 (PR #24).
 - Esta entrada no despliega `web/v2/`. stubxai.com no cambia por este documento. La v2 ya está desplegada desde el 2026-10-09.
@@ -58,10 +65,6 @@ Lo que el tablero de main da por abierto en la web, más lo fusionado después e
 - `web/v2/sitemap.xml` lista las páginas públicas con `lastmod`.
 - No hay `noindex` global. `X-Robots-Tag: noindex, nofollow` queda en el service worker de Lab, los JSON, el manifiesto y la 404.
 - `web/v2/` es la web publicada en stubxai.com desde el 2026-10-09 (merge `ed1c7759`). `web/current/` es la copia anterior, para volver atrás. La v2 ya está desplegada desde el 2026-10-09.
-
-### Texto retirado
-
-- En README y LIMITS, la frase retirada «Memecoin experimental · puedes perderlo todo…» pasa al pie vigente. En inglés, «could», no «can».
 
 ## 2026-10-09 · Biblioteca y cuaderno de solo lectura
 

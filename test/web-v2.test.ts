@@ -196,11 +196,44 @@ describe("web v2", () => {
     }
   });
 
-  test("token.json matches the production copy byte for byte", () => {
+  test("token.json matches the production copy except the retired footer and image label", () => {
     const root = repoRoot();
-    const live = readFileSync(path.join(root, "web/v2/token.json"));
-    const current = readFileSync(path.join(root, "web/current/token.json"));
+    const footer = ["Cripto de alto riesgo", " · ", "Puedes perderlo todo", " · ", "No es consejo de inversión. "].join("");
+    const ai = ["Ilustración con elementos ", "generados con IA."].join("");
+    const live = JSON.parse(readFileSync(path.join(root, "web/v2/token.json"), "utf8")) as {
+      disclaimer: string;
+      metadata: { aggregatorLogo: Record<string, unknown> };
+    };
+    const current = JSON.parse(readFileSync(path.join(root, "web/current/token.json"), "utf8")) as {
+      disclaimer: string;
+      metadata: { aggregatorLogo: Record<string, unknown> };
+    };
+    const liveText = JSON.stringify(live);
+    assert.equal(liveText.includes(footer.trim()), false);
+    assert.equal(liveText.toLowerCase().includes(ai.toLowerCase()), false);
+    assert.equal(live.metadata.aggregatorLogo.aiNote, undefined);
+    assert.equal(live.disclaimer.includes(footer.trim()), false);
+    assert.equal(current.metadata.aggregatorLogo.aiNote, ai);
+    assert.equal(current.disclaimer.startsWith(footer), true);
+    delete current.metadata.aggregatorLogo.aiNote;
+    current.disclaimer = current.disclaimer.slice(footer.length);
     assert.deepEqual(live, current);
+  });
+
+  test("el SHA-256 publicado de token.json es el del fichero", () => {
+    const root = repoRoot();
+    const file = readFileSync(path.join(root, "web/v2/token.json"));
+    const hash = createHash("sha256").update(file).digest("hex");
+    const places = [
+      "web/v2/index.html",
+      "web/v2/security/index.html",
+      "web/v2/tablero/index.html",
+      "web/v2/CAMBIOS.md",
+    ];
+    for (const rel of places) {
+      const text = readFileSync(path.join(root, rel), "utf8");
+      assert.equal(text.includes(hash), true, `${rel} no muestra ${hash}`);
+    }
   });
 
   test("pages do not load a CDN or a remote stylesheet, and the worker stays under lab", () => {
@@ -290,9 +323,18 @@ describe("web v2", () => {
     const legal = read("legal/index.html");
     for (const html of [home, security, risks, legal]) {
       assert.ok(html.includes(CA));
+    }
+    for (const html of [risks, legal]) {
       assert.ok(html.includes(MICA_ES));
       assert.ok(html.includes(MICA_EN));
     }
+    for (const html of [home, security]) {
+      assert.equal(html.includes(MICA_ES), false);
+      assert.equal(html.includes(MICA_EN), false);
+    }
+    assert.match(home, /is not official/);
+    assert.match(security, /trátala como no oficial hasta comprobarla/);
+    assert.match(security, /treat it as unofficial until you check it/);
     for (const html of [home, security]) {
       assert.match(html, /x\.com\/stubxai/);
       assert.match(html, /stubxai\.hq@gmail\.com/);
@@ -394,8 +436,8 @@ describe("web v2", () => {
     assert.match(html, /Contribute/);
     assert.match(html, /No es una auditoría ni una recomendación/);
     assert.match(html, /This is not an audit or a recommendation/);
-    assert.match(html, /Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión\./);
-    assert.match(html, /High-risk crypto · You could lose everything · Not investment advice\./);
+    assert.equal(html.includes("Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión."), false);
+    assert.equal(html.includes("High-risk crypto · You could lose everything · Not investment advice."), false);
     assert.match(html, /https:\/\/github\.com\/stubxai\/stubx-agent\/issues\/new\?template=informe-fallo\.yml/);
     assert.match(html, /https:\/\/github\.com\/stubxai\/stubx-agent\/issues\/new\?template=mejora\.yml/);
     assert.match(html, /https:\/\/github\.com\/stubxai\/stubx-agent\/compare/);
@@ -889,8 +931,8 @@ function digestTree(root: string, rels: readonly string[]): string {
   return hash.digest("hex");
 }
 
-const FOOTER_ES = "Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión.";
-const FOOTER_EN = "High-risk crypto · You could lose everything · Not investment advice.";
+const FOOTER_ES = ["Cripto de alto riesgo", " · ", "Puedes perderlo todo", " · ", "No es consejo de inversión."].join("");
+const FOOTER_EN = ["High-risk crypto", " · ", "You could lose everything", " · ", "Not investment advice."].join("");
 const HOLDER_GLOSSARY_ES = "‘Holder’ (término del sector): cuenta que tiene tokens. No implica derechos ni comunidad de inversores.";
 const HOLDER_GLOSSARY_EN = "‘Holder’ (industry term): an account that holds tokens. It implies no rights and no investor community.";
 
@@ -903,27 +945,93 @@ function walkFiles(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-test("el pie es el mismo en español y en inglés", () => {
+test("el pie no repite el riesgo y enlaza a Riesgos", () => {
   const root = repoRoot();
   for (const rel of ROUTES) {
     const html = readFileSync(path.join(root, "web/v2", rel), "utf8");
     const footer = html.slice(html.lastIndexOf("<footer"));
-    assert.ok(footer.includes(FOOTER_ES), rel);
-    assert.ok(footer.includes(FOOTER_EN), rel);
+    assert.equal(footer.includes(FOOTER_ES), false, rel);
+    assert.equal(footer.includes(FOOTER_EN), false, rel);
+    assert.equal(footer.includes('class="mica"'), false, rel);
+    assert.match(footer, /href="(?:\/|\.\.\/)*risks\/"/, rel);
+    assert.match(footer, /Riesgos/, rel);
     assert.equal(footer.includes("Memecoin experimental"), false, rel);
     assert.equal(footer.includes("You can lose"), false, rel);
+    const keepsRisk = rel === "risks/index.html" || rel === "legal/index.html";
+    const main = html.slice(0, html.lastIndexOf("<footer"));
+    if (keepsRisk) assert.match(main, /class="mica"/, rel);
+    else assert.equal(main.includes('class="mica"'), false, rel);
   }
 });
 
+test("las frases retiradas no salen fuera de /risks y /legal", () => {
+  const run = spawnSync("python3", ["web/v2/tools/check_legal_phrases.py"], {
+    cwd: repoRoot(),
+    encoding: "utf8",
+  });
+  assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
+});
+
+test("la guardia junta espacios, saltos, etiquetas y concatenaciones", () => {
+  const script = `
+import check_legal_phrases as guard
+samples = [
+    ("espacios", "cripto   de   alto   riesgo"),
+    ("salto", "cripto de alto\\nriesgo"),
+    ("etiqueta", "cripto de alto <b>riesgo</b>"),
+    ("suma", '"cripto de alto " + "riesgo"'),
+    ("piece", 'piece("puedes perder", "lo todo")'),
+    ("join", '["not investment ", "advice"].join("")'),
+    ("adyacentes", '"imagen generada con " "ia"'),
+    ("plantilla", "<p>AI-generated\\nimage</p>"),
+]
+for name, sample in samples:
+    hits = guard.phrase_hits("content/tools/ejemplo.html", sample)
+    if not hits:
+        raise SystemExit("no vio " + name)
+anti = "trátala como no oficial hasta comprobarla"
+if guard.phrase_hits("security/index.html", anti):
+    raise SystemExit("antiestafa")
+if not guard.phrase_hits("studio/index.html", "unofficial"):
+    raise SystemExit("studio")
+if not guard.phrase_hits("studio/lib/copy.mjs", "not official"):
+    raise SystemExit("metadatos")
+if guard.phrase_hits("index.html", "is not official"):
+    raise SystemExit("portada")
+if "tools/build_site.py" in guard.SKIP_FILES:
+    raise SystemExit("generador")
+print("ok")
+`;
+  const run = spawnSync("python3", ["-c", script], {
+    cwd: repoRoot(),
+    encoding: "utf8",
+    env: { ...process.env, PYTHONPATH: "web/v2/tools" },
+  });
+  assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
+  assert.match(run.stdout, /ok/);
+});
+
 const OG_FILE = "og-stubx-2026-10b-1200x630.jpg";
-const OG_AI_ES = "Ilustración con elementos generados con IA.";
-const OG_AI_EN = "Illustration with AI-generated elements.";
+const OG_AI_ES = ["Ilustración con elementos ", "generados con IA."].join("");
+const OG_AI_EN = ["Illustration with ", "AI-generated elements."].join("");
+const AI_CREDIT_ES = ["Imágenes de Agente Talón ", "generadas con IA"].join("");
+const AI_CREDIT_EN = ["Agente Talón images ", "generated with AI"].join("");
+const AI_LABEL_ES = ["Imagen ", "generada con IA"].join("");
+const AI_LABEL_EN = ["AI-generated ", "image"].join("");
 const OLD_OG_FOOTER = [
   "you can lose everything",
   "memecoin experimental",
   "criptoactivo de alto riesgo",
   "imagen generada con ia",
   "ai-generated image",
+  "ilustración con elementos generados con ia",
+  "illustration with ai-generated elements",
+  "imágenes de agente talón generadas con ia",
+  "agente talón images generated with ai",
+  "cripto de alto riesgo · puedes perderlo todo",
+  "high-risk crypto · you could lose everything",
+  "no oficial · cripto de alto riesgo",
+  "unofficial · high-risk crypto",
 ];
 
 test("el pie antiguo no sale en el alt de la imagen OG", () => {
@@ -937,10 +1045,11 @@ test("el pie antiguo no sale en el alt de la imagen OG", () => {
       assert.ok(alt, `${rel} ${attr}`);
       const lower = alt.toLowerCase();
       for (const phrase of OLD_OG_FOOTER) assert.equal(lower.includes(phrase), false, `${rel} ${attr} ${phrase}`);
-      assert.ok(alt.includes(FOOTER_ES), rel);
-      assert.ok(alt.includes(FOOTER_EN), rel);
-      assert.ok(alt.includes(OG_AI_ES), rel);
-      assert.ok(alt.includes(OG_AI_EN), rel);
+      assert.equal(alt.includes(FOOTER_ES), false, rel);
+      assert.equal(alt.includes(FOOTER_EN), false, rel);
+      assert.equal(alt.includes(OG_AI_ES), false, rel);
+      assert.equal(alt.includes(OG_AI_EN), false, rel);
+      assert.ok(alt.includes("Agente Talón"), rel);
     }
     for (const attr of ["og:image", "twitter:image"]) {
       const match = html.match(new RegExp(`(?:property|name)="${attr}" content="([^"]*)"`));
@@ -952,18 +1061,17 @@ test("el pie antiguo no sale en el alt de la imagen OG", () => {
   const ogLower = og.toLowerCase();
   for (const phrase of OLD_OG_FOOTER) assert.equal(ogLower.includes(phrase), false, phrase);
   assert.ok(og.includes(OG_FILE));
-  assert.ok(og.includes(FOOTER_ES) && og.includes(FOOTER_EN));
-  assert.ok(og.includes(OG_AI_ES) && og.includes(OG_AI_EN));
+  assert.equal(og.includes(FOOTER_ES), false);
+  assert.equal(og.includes(FOOTER_EN), false);
+  assert.equal(og.includes(OG_AI_ES), false);
+  assert.equal(og.includes(OG_AI_EN), false);
+  const banned = [...OLD_OG_FOOTER, FOOTER_ES.toLowerCase(), FOOTER_EN.toLowerCase(), AI_CREDIT_ES.toLowerCase(), AI_CREDIT_EN.toLowerCase(), AI_LABEL_ES.toLowerCase(), AI_LABEL_EN.toLowerCase()];
   for (const file of walkFiles(path.join(root, "web/v2"))) {
     const rel = path.relative(path.join(root, "web/v2"), file);
-    if (rel === "archivo.html" || rel === "token.json" || rel.startsWith("tools/__pycache__")) continue;
+    if (rel.startsWith("tools/__pycache__")) continue;
     if (!/\.(html|py|js|mjs|json|md|css|txt|xml)$/.test(rel)) continue;
     const text = readFileSync(file, "utf8").toLowerCase();
-    const studioLabel = rel === "studio/lib/copy.mjs" || rel === "studio/reglas/index.html";
-    for (const phrase of OLD_OG_FOOTER) {
-      if (studioLabel && (phrase === "imagen generada con ia" || phrase === "ai-generated image")) continue;
-      assert.equal(text.includes(phrase), false, `${rel} ${phrase}`);
-    }
+    for (const phrase of banned) assert.equal(text.includes(phrase), false, `${rel} ${phrase}`);
   }
 });
 

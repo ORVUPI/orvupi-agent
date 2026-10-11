@@ -69,7 +69,7 @@ async function check(page, name) {
   must((await page.locator("#como-leerlo").innerText()).includes("No es un plazo"), "plazo");
   must((await page.locator("#plantilla").innerText()).includes("no avala ningún token"), "plantilla");
   must(await page.locator('#plantilla a[href="/modules/tablero/plantilla.json"]').isVisible(), "enlace de la plantilla");
-  must((await page.locator("footer").innerText()).includes(FOOTER_ES), "pie");
+  must(!(await page.locator("footer").innerText()).includes(FOOTER_ES), "pie");
   must((await page.locator("form").count()) === 0, "formulario");
   must((await page.locator('[data-web="si"]').count()) === 6, "publicado");
   must((await page.locator('[data-web="no"]').count()) > 0, "sin publicar");
@@ -89,7 +89,7 @@ async function check(page, name) {
   must((await page.locator("h1").innerText()).includes("Construction board"), "título en");
   must((await page.locator("#como-leerlo").innerText()).includes("It is not a deadline"), "plazo en");
   must((await page.locator("#como-leerlo").innerText()).includes("The stubxai.com column says yes only if the function can be opened on the website today."), "columna en");
-  must((await page.locator("footer").innerText()).includes(FOOTER_EN), "pie en");
+  must(!(await page.locator("footer").innerText()).includes(FOOTER_EN), "pie en");
   await page.locator('a[href="#grupo-propuesta"]').click();
   const box = await page.locator("#grupo-propuesta").boundingBox();
   const viewport = page.viewportSize();
