@@ -258,6 +258,11 @@ describe("datos de mercado", () => {
     const otherChain = market.normalizeUpstream(200, JSON.stringify([upstreamPair({ chainId: "ethereum" })]), { mint: MINT, queriedAt: WHEN });
     assert.equal(otherChain.status, "fallo");
     assert.equal(otherChain.pairs, null);
+    const bare = { ...upstreamPair() } as Record<string, unknown>;
+    delete bare.chainId;
+    const missingChain = market.normalizeUpstream(200, JSON.stringify([bare]), { mint: MINT, queriedAt: WHEN });
+    assert.equal(missingChain.status, "fallo");
+    assert.equal(missingChain.pairs, null);
 
     const huge = market.normalizeUpstream(200, "x".repeat(market.MARKET_MAX_BODY + 1), { mint: MINT, queriedAt: WHEN });
     assert.equal(huge.status, "fallo");

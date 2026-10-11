@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-11 · Seguridad de Ethereum y BNB Chain
+
+- Un par de DEX Screener entra solo si `chainId` es exactamente el de la red. Sin `chainId`, o con otro, se descarta. USDT de Ethereum (`0xdac17f958d2ee523a2206206994597c13d831ec7`) y USDC de BNB Chain (`0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d`) salen con ese nombre. El chainId 1 queda atado a `ethereum-rpc.publicnode.com`, el 56 a `bsc-rpc.publicnode.com` y el 8453 a `mainnet.base.org`. La CSP del cuaderno se comprueba con los hosts encendidos de `networks.json`.
+- Esta entrada no despliega stubxai.com.
+
 ## 2026-10-11 · Ethereum y BNB Chain en la lectura
 
 - Verify y el Cuaderno encienden Ethereum y después BNB Chain en `web/v2/shared/networks.json`. Usan el mismo lector de Base, solo lectura, sin cartera y sin firma. Ethereum consulta `ethereum-rpc.publicnode.com`. BNB Chain consulta `bsc-rpc.publicnode.com`. Los dos hosts pasan la comprobación estricta y entran en la CSP de `/verify/` y `/cuaderno/`, también en `_headers`. `/pares/` no los lleva.

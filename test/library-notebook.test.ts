@@ -1236,7 +1236,16 @@ describe("lector y cuaderno", () => {
     assert.match(notebook, /Si eliges otro lector, ese servicio recibe tus consultas y tu IP\. STUBX no lo revisa\./);
     assert.match(notebook, /If you choose another reader, that service receives your queries and your IP\. STUBX does not review it\./);
     assert.equal(notebook.toLowerCase().includes("mala inversión"), false);
-    assert.match(notebook, /connect-src 'self' https:\/\/solana-rpc\.publicnode\.com https:\/\/api\.mainnet-beta\.solana\.com https:\/\/mainnet\.base\.org https:\/\/ethereum-rpc\.publicnode\.com https:\/\/bsc-rpc\.publicnode\.com https:\/\/api\.dexscreener\.com/);
+    const catalog = JSON.parse(readFileSync(path.join(root, "web/v2/shared/networks.json"), "utf8")) as {
+      networks: { family: string; enabled: boolean; rpc?: string }[];
+    };
+    const evmHosts = catalog.networks
+      .filter((item) => item.enabled && item.family === "evm" && item.rpc)
+      .map((item) => new URL(item.rpc as string).host);
+    const meta = notebook.match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
+    const connect = meta.split(";").map((part) => part.trim()).find((part) => part.startsWith("connect-src")) ?? "";
+    const hosts = connect.split(/\s+/).filter((token) => token.startsWith("https://")).map((token) => new URL(token).host);
+    assert.deepEqual(hosts, ["solana-rpc.publicnode.com", "api.mainnet-beta.solana.com", ...evmHosts, "api.dexscreener.com"]);
     assert.match(notebook, /<select id="rpc-url"/);
     assert.equal(notebook.includes('id="rpc-url" name="rpc" type="url"'), false);
     assert.match(notebook, /Este navegador guarda como máximo 200 fichas/);

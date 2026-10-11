@@ -6,8 +6,10 @@ import { repoRoot } from "../src/paths.js";
 
 const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
+const ETH_USDT = "0xdac17f958d2ee523a2206206994597c13d831ec7";
 const USDT = "0x55d398326f99059fF775485246999027B3197955";
 const WBNB = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";
+const BNB_USDC = "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d";
 const BAD_USDC = "0xA0B86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 const BAD_USDT = "0x55D398326f99059fF775485246999027B3197955";
 const WHEN = "2026-10-11T18:00:00.000Z";
@@ -70,6 +72,18 @@ function tokenTransport(name: string, symbol: string, decimals: string) {
 }
 
 describe("Ethereum y BNB Chain reutilizan el lector EVM", () => {
+  test("el chainId 1, 56 y 8453 queda atado a su host", async () => {
+    const { networks } = await load();
+    const bound = networks.allNetworks()
+      .filter((item: { family: string }) => item.family === "evm")
+      .map((item: { chainId: number; rpc: string }) => [item.chainId, new URL(item.rpc).host]);
+    assert.deepEqual(bound, [
+      [8453, "mainnet.base.org"],
+      [1, "ethereum-rpc.publicnode.com"],
+      [56, "bsc-rpc.publicnode.com"],
+    ]);
+  });
+
   test("están encendidas, con RPC público, aviso, entradilla y DEX Screener", async () => {
     const { view, networks, market } = await load();
     assert.deepEqual(networks.enabledNetworks().map((item: { id: string }) => item.id), ["solana", "base", "ethereum", "bnb"]);
@@ -77,10 +91,15 @@ describe("Ethereum y BNB Chain reutilizan el lector EVM", () => {
     assert.equal(networks.rpcHost("bnb"), "bsc-rpc.publicnode.com");
     assert.equal(networks.knownQuote("ethereum", USDC), "USDC");
     assert.equal(networks.knownQuote("ethereum", WETH), "WETH");
+    assert.equal(networks.knownQuote("ethereum", ETH_USDT), "USDT");
     assert.equal(networks.knownQuote("bnb", USDT), "USDT");
     assert.equal(networks.knownQuote("bnb", WBNB), "WBNB");
+    assert.equal(networks.knownQuote("bnb", BNB_USDC), "USDC");
     assert.equal(networks.knownQuote("ethereum", USDT), "");
     assert.equal(networks.knownQuote("bnb", USDC), "");
+    assert.equal(networks.networkById("ethereum").chainId, 1);
+    assert.equal(networks.networkById("bnb").chainId, 56);
+    assert.equal(networks.networkById("base").chainId, 8453);
 
     assert.equal(view.privacyText("ethereum", "es"), "Al consultar en Ethereum, tu navegador envía la dirección al nodo público ethereum-rpc.publicnode.com, que también ve tu IP. Si pides los datos de mercado, DEX Screener también ve tu IP y la dirección.");
     assert.equal(view.privacyText("ethereum", "en"), "When you look up on Ethereum, your browser sends the address to the public node ethereum-rpc.publicnode.com, which also sees your IP. If you request market data, DEX Screener also sees your IP and the address.");
@@ -132,6 +151,46 @@ describe("Ethereum y BNB Chain reutilizan el lector EVM", () => {
       { mint: USDC, queriedAt: WHEN, chain: "ethereum" },
     );
     assert.equal(wrongChain.pairs, null);
+    const bare = {
+      baseToken: { address: USDC.toLowerCase(), symbol: "usd" },
+      quoteToken: { address: ETH_USDT, symbol: "NOTUSDT" },
+      pairAddress: "0xabcabcabcabcabcabcabcabcabcabcabcabcabca",
+      dexId: "uniswap",
+      liquidity: { usd: 2500 },
+      volume: { h24: 80 },
+    };
+    const missingChain = market.normalizeUpstream(200, JSON.stringify([bare]), { mint: USDC, queriedAt: WHEN, chain: "ethereum" });
+    assert.equal(missingChain.pairs, null);
+    const otherId = market.normalizeUpstream(200, JSON.stringify([{ ...bare, chainId: "bsc" }]), { mint: USDC, queriedAt: WHEN, chain: "ethereum" });
+    assert.equal(otherId.pairs, null);
+    const fixed = market.normalizeUpstream(
+      200,
+      JSON.stringify([{ ...bare, chainId: "ethereum" }]),
+      { mint: USDC, queriedAt: WHEN, chain: "ethereum" },
+    );
+    assert.equal(fixed.status, "ok");
+    const fixedTitle = market.describeMarket(fixed, "es").pairs[0].title;
+    assert.match(fixedTitle, /USDC/);
+    assert.match(fixedTitle, /USDT/);
+    assert.equal(fixedTitle.includes("NOTUSDT"), false);
+    const bnbUsdc = market.normalizeUpstream(
+      200,
+      JSON.stringify([{
+        chainId: "bsc",
+        baseToken: { address: BNB_USDC, symbol: "NOTUSDC" },
+        quoteToken: { address: WBNB.toLowerCase(), symbol: "WBNB" },
+        pairAddress: "0xdefdefdefdefdefdefdefdefdefdefdefdefdefd",
+        dexId: "pancakeswap",
+        liquidity: { usd: 2500 },
+        volume: { h24: 80 },
+      }]),
+      { mint: BNB_USDC, queriedAt: WHEN, chain: "bnb" },
+    );
+    assert.equal(bnbUsdc.status, "ok");
+    const bnbUsdcTitle = market.describeMarket(bnbUsdc, "es").pairs[0].title;
+    assert.match(bnbUsdcTitle, /USDC/);
+    assert.equal(bnbUsdcTitle.includes("NOTUSDC"), false);
+    assert.equal(bnbUsdcTitle.includes("Dice llamarse"), false);
     const bnbPair = market.normalizeUpstream(
       200,
       JSON.stringify([{
