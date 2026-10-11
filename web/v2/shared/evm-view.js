@@ -104,9 +104,9 @@ export function pageLede(networkId, lang) {
   const network = networkById(networkId);
   const label = network ? network.label[language] : networkId;
   if (language === "en") {
-    return `Any ERC-20 token on ${label}, read live and read-only. The cards below are dated examples, not a complete list. Choose the network. On ${label} there is no wallet and no signature.`;
+    return `Any ERC-20 (the usual token type on ${label}) token, read live and read-only. The cards below are dated Solana examples, not a complete list. Choose the network. On ${label} there is no wallet and no signature.`;
   }
-  return `Cualquier token ERC-20 de ${label}, leído en directo y solo en lectura. Las fichas de abajo son ejemplos fechados, no una lista completa. Elige la red. En ${label} no hay cartera ni firma.`;
+  return `Cualquier token ERC-20 (el tipo de token habitual en ${label}), leído en directo y solo en lectura. Las fichas de abajo son ejemplos fechados de Solana, no una lista completa. Elige la red. En ${label} no hay cartera ni firma.`;
 }
 
 export function evmCardFromReading(reading) {
