@@ -53,6 +53,25 @@ const BUY_LANGUAGE =
 const DENIAL =
   /no dice qué comprar|does not say what to buy/gi;
 
+function contrast(fg, bg) {
+  const parse = (color) => {
+    const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+    if (!match) return null;
+    return [Number(match[1]), Number(match[2]), Number(match[3]), match[4] === undefined ? 1 : Number(match[4])];
+  };
+  const lin = (channel) => {
+    const value = channel / 255;
+    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  };
+  const L = (rgb) => 0.2126 * lin(rgb[0]) + 0.7152 * lin(rgb[1]) + 0.0722 * lin(rgb[2]);
+  const fore = parse(fg);
+  const back = parse(bg);
+  if (!fore || !back || fore[3] === 0 || back[3] === 0) return 0;
+  const hi = Math.max(L(fore), L(back));
+  const lo = Math.min(L(fore), L(back));
+  return (hi + 0.05) / (lo + 0.05);
+}
+
 async function showSpanish(page) {
   const button = page.getByRole("button", { name: "Español" });
   if ((await button.getAttribute("aria-pressed")) !== "true") await button.click();
@@ -63,10 +82,13 @@ test("el pie de riesgo y la etiqueta de imagen no están en ninguna vista", asyn
     const source = await page.request.get(path);
     const html = await source.text();
     for (const phrase of ABSENT) expect(html, `${path} ${phrase}`).not.toContain(phrase);
-    expect(html, path).toContain("p class=\"mica\"");
+    const keepsRisk = path === "/risks/" || path === "/legal/";
+    if (keepsRisk) expect(html, path).toContain("p class=\"mica\"");
+    else expect(html, path).not.toContain("p class=\"mica\"");
     await page.goto(path);
     await showSpanish(page);
-    await expect(page.locator("footer p.mica").first(), path).toBeVisible();
+    await expect(page.locator("footer p.mica"), path).toHaveCount(0);
+    await expect(page.locator("footer a[href$='risks/']").first(), path).toBeVisible();
     await expect(page.locator("footer"), path).not.toContainText(FOOTER_ES);
   }
 });
@@ -79,6 +101,19 @@ test("la primera línea del aviso queda bajo el hero y encima de la herramienta"
     await expect(lead).toHaveText(LEAD_ES);
     await expect(lead).toBeVisible();
     expect(await lead.evaluate((node) => Boolean(node.closest("details")))).toBe(false);
+    const reading = await lead.evaluate((node) => {
+      const style = getComputedStyle(node);
+      let background = style.backgroundColor;
+      let cursor = node.parentElement;
+      while (cursor && (background === "transparent" || background === "rgba(0, 0, 0, 0)")) {
+        background = getComputedStyle(cursor).backgroundColor;
+        cursor = cursor.parentElement;
+      }
+      return { fontSize: Number.parseFloat(style.fontSize), color: style.color, background, text: node.textContent };
+    });
+    expect(reading.text, path).not.toContain("Puedes perderlo todo");
+    expect(reading.fontSize, path).toBeGreaterThanOrEqual(14);
+    expect(contrast(reading.color, reading.background), `${path} ${reading.color} on ${reading.background}`).toBeGreaterThanOrEqual(4.5);
     const english = page.locator('.aviso[data-disclaimer="si"] > p').first().locator(".lang.en");
     await expect(english).toHaveText(LEAD_EN);
     const place = await page.evaluate(() => {
@@ -130,8 +165,8 @@ test("el plegable es details en el HTML y se abre con el teclado", async ({ page
   }
 });
 
-test("el aviso MiCA de la portada y de Legal no se pliega", async ({ page }) => {
-  for (const path of ["/", "/legal/"]) {
+test("el aviso MiCA de Riesgos y de Legal no se pliega", async ({ page }) => {
+  for (const path of ["/risks/", "/legal/"]) {
     await page.goto(path);
     await showSpanish(page);
     const mica = page.locator("p.mica", { hasText: MICA_ES });

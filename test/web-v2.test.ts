@@ -220,6 +220,22 @@ describe("web v2", () => {
     assert.deepEqual(live, current);
   });
 
+  test("el SHA-256 publicado de token.json es el del fichero", () => {
+    const root = repoRoot();
+    const file = readFileSync(path.join(root, "web/v2/token.json"));
+    const hash = createHash("sha256").update(file).digest("hex");
+    const places = [
+      "web/v2/index.html",
+      "web/v2/security/index.html",
+      "web/v2/tablero/index.html",
+      "web/v2/CAMBIOS.md",
+    ];
+    for (const rel of places) {
+      const text = readFileSync(path.join(root, rel), "utf8");
+      assert.equal(text.includes(hash), true, `${rel} no muestra ${hash}`);
+    }
+  });
+
   test("pages do not load a CDN or a remote stylesheet, and the worker stays under lab", () => {
     const root = siteRoot();
     for (const file of walk(root)) {
@@ -908,17 +924,31 @@ function walkFiles(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-test("el pie de riesgo no se repite y el aviso MiCA sigue", () => {
+test("el pie no repite el riesgo y enlaza a Riesgos", () => {
   const root = repoRoot();
   for (const rel of ROUTES) {
     const html = readFileSync(path.join(root, "web/v2", rel), "utf8");
     const footer = html.slice(html.lastIndexOf("<footer"));
     assert.equal(footer.includes(FOOTER_ES), false, rel);
     assert.equal(footer.includes(FOOTER_EN), false, rel);
-    assert.match(footer, /class="mica"/, rel);
+    assert.equal(footer.includes('class="mica"'), false, rel);
+    assert.match(footer, /href="(?:\/|\.\.\/)*risks\/"/, rel);
+    assert.match(footer, /Riesgos/, rel);
     assert.equal(footer.includes("Memecoin experimental"), false, rel);
     assert.equal(footer.includes("You can lose"), false, rel);
+    const keepsRisk = rel === "risks/index.html" || rel === "legal/index.html";
+    const main = html.slice(0, html.lastIndexOf("<footer"));
+    if (keepsRisk) assert.match(main, /class="mica"/, rel);
+    else assert.equal(main.includes('class="mica"'), false, rel);
   }
+});
+
+test("las frases retiradas no salen fuera de /risks y /legal", () => {
+  const run = spawnSync("python3", ["web/v2/tools/check_legal_phrases.py"], {
+    cwd: repoRoot(),
+    encoding: "utf8",
+  });
+  assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
 });
 
 const OG_FILE = "og-stubx-2026-10b-1200x630.jpg";

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import html
 import json
 import os
@@ -15,6 +16,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 REPO = ROOT.parents[1]
+
+def token_sha256() -> str:
+    return hashlib.sha256((ROOT / "token.json").read_bytes()).hexdigest()
 
 def aviso_guardar() -> dict[str, str]:
     """El texto vive solo en web/v2/shared/aviso-guardar.js."""
@@ -331,7 +335,7 @@ def shell(frm: str, current: str, title_es: str, title_en: str, desc_es: str, de
 {body}
 </main>
 <footer class="site"><div class="wrap">
-<p class="mica"><strong>{t("Aviso MiCA (art. 7.1.e):", "MiCA notice (art. 7.1.e):")}</strong> {t(MICA_ES, MICA_EN)}</p>
+<p class="muted"><a href="{prefix}risks/">{t("Riesgos", "Risks")}</a></p>
 <p>{t("CA oficial y única:", "Official and only CA:")} <code>{CA}</code></p>
 <p>{t("Canales oficiales:", "Official channels:")} <a href="https://x.com/stubxai">@stubxai</a> · <a href="https://github.com/stubxai/stubx-agent">github.com/stubxai/stubx-agent</a> · <a href="mailto:stubxai.hq@gmail.com">stubxai.hq@gmail.com</a> · <a href="https://t.me/stubxai">t.me/stubxai</a> · <a href="https://farcaster.xyz/stubxai">Farcaster</a> · <a href="https://www.tiktok.com/@stubxai">TikTok</a></p>
 <p>{t("Sin cookies ni rastreadores. El idioma y el progreso de Lab, si se usa, se quedan en este navegador. El service worker solo se registra en Lab y no guarda la portada ni los avisos.", "No cookies and no trackers. Language and Lab progress, if used, stay in this browser. The service worker registers only on Lab and does not store the home page or the notices.")}</p>
@@ -414,7 +418,7 @@ def home() -> str:
 <a href="https://solscan.io/token/{CA}">{t("Abrir en Solscan", "Open on Solscan")}</a>
 <a href="token.json">token.json</a>
 </div>
-<p>{t(f"Compárala entera con la de la cuenta oficial en X: @stubxai. Cualquier otra CA con el nombre STUBX no es oficial. Fuente: token.json, campo mint, actualizado el 2026-10-05.", f"Compare the full address with the one posted by the official X account, @stubxai. Any other CA using the name STUBX is not official. Source: token.json, mint field, updated 2026-10-05.")}</p>
+<p>{t(f"Compárala entera con la de la cuenta oficial en X: @stubxai. Cualquier otra CA con el nombre STUBX no es oficial. Fuente: token.json, campo mint, actualizado el 2026-10-05. SHA-256 del archivo: {token_sha256()}.", f"Compare the full address with the one posted by the official X account, @stubxai. Any other CA using the name STUBX is a different contract. Source: token.json, mint field, updated 2026-10-05. SHA-256 of the file: {token_sha256()}.")}</p>
 </section>
 <div class="grid-3" id="proyecto">
 <article class="card"><h2>{t("Un personaje", "A character")}</h2><p>{t("Agente Talón pide pruebas antes de creer una promesa. El lema es «No stub, no story».", "Agente Talón asks for proof before believing a promise. The motto is “No stub, no story”.")}</p></article>
@@ -471,11 +475,6 @@ def home() -> str:
 <h2>{t("Versiones", "Versions")}</h2>
 <p>{t("Lo hecho lleva fecha. Lo que sigue es un objetivo, no una promesa.", "What is done has a date. What follows is a target, not a promise.")}</p>
 <p><a href="/build/">{t("Ver la lista", "See the list")}</a></p>
-</section>
-<section class="risk-block" id="riesgos">
-<h2>{t("Léelo antes de nada", "Read this before anything else")}</h2>
-<p>{t("STUBX es un criptoactivo experimental de alto riesgo. Puedes perder todo lo que aportes. No es asesoramiento ni una recomendación, y no lo ha aprobado la CNMV ni ninguna otra autoridad.", "STUBX is an experimental high-risk crypto-asset. You could lose everything you put in. It is not advice or a recommendation, and it has not been approved by the CNMV or any other authority.")}</p>
-<p><a href="/risks/">{t("El aviso completo, con MiCA", "The full notice, including MiCA")}</a> · <a href="/security/">{t("Canales y aviso de clones", "Channels and clone notice")}</a></p>
 </section>
 <section id="contacto">
 <h2>{t("Contacto", "Contact")}</h2>
@@ -599,8 +598,8 @@ def methodology() -> str:
 def security() -> str:
     return f"""
 <h1>{t("Seguridad y canales", "Security and channels")}</h1>
-<p class="lede">{t("Lista cerrada. Si una cuenta, una web o una CA no está aquí, trátala como no oficial hasta comprobarla en @stubxai y en esta web.", "Closed list. If an account, a website, or a CA is not here, treat it as unofficial until you check it on @stubxai and on this website.")}</p>
-{source("Aviso de clones del 2026-10-05, token.json securityNotice, más la revisión del 2026-10-09 (ERYyy, FMNb y dos ejemplos EVM no verificados en la cadena). Canales de token.json official, última actualización del archivo 2026-10-05. token.json no se ha reescrito: su securityNotice sigue siendo el del 2026-10-05.", "Clone notice of 2026-10-05, token.json securityNotice, plus the 2026-10-09 review (ERYyy, FMNb, and two EVM examples not verified on-chain). Channels from token.json official, file last update 2026-10-05. token.json has not been rewritten: its securityNotice is still the 2026-10-05 text.")}
+<p class="lede">{t("Lista cerrada. Si una cuenta, una web o una CA no está aquí, compruébala en @stubxai y en esta web antes de fiarte.", "Closed list. If an account, a website, or a CA is not here, check it on @stubxai and on this website before you trust it.")}</p>
+{source(f"Aviso de clones del 2026-10-05, token.json securityNotice, más la revisión del 2026-10-09 (ERYyy, FMNb y dos ejemplos EVM no verificados en la cadena). Canales de token.json official. El 2026-10-11 el archivo dejó el pie repetido y la nota de imagen. securityNotice sigue siendo el del 2026-10-05. SHA-256 de token.json: {token_sha256()}.", f"Clone notice of 2026-10-05, token.json securityNotice, plus the 2026-10-09 review (ERYyy, FMNb, and two EVM examples not verified on-chain). Channels from token.json official. On 2026-10-11 the file dropped the repeated footer and the image note. securityNotice is still the 2026-10-05 text. SHA-256 of token.json: {token_sha256()}.")}
 <div class="risk-block"><h2>{t("Aviso de clones · 2026-10-05 y revisión 2026-10-09", "Clone notice · 2026-10-05 and 2026-10-09 review")}</h2><p>{t(CLONE_ES, CLONE_EN)}</p>
 <p>{t("Enlazan a esta web y a la cuenta personal del creador para parecer oficiales. No abras esos tokens, no conectes tu wallet y no interactúes con ellos. Cualquier otra CA con el ticker STUBX es una copia o una estafa.", "They link to this website and to the creator’s personal account so they look official. Do not open those tokens, do not connect your wallet, and do not interact with them. Any other CA with the STUBX ticker is a copy or a scam.")}</p>
 <p>{t(CLONE_MORE_ES, CLONE_MORE_EN)}</p></div>
@@ -634,7 +633,6 @@ def security() -> str:
 <li>{t("Cada operación paga comisiones de Pump.fun y de la red Solana (consulta las vigentes en su página de comisiones). Además, el creador de STUBX cobra una comisión por cada operación.", "Each trade pays Pump.fun fees and Solana network fees (check the current ones on their fees page). In addition, the creator of STUBX collects a fee on every trade.")} <a href="https://pump.fun/docs/fees">{t("Página de comisiones", "Fees page")}</a> · <a href="/#transparencia">{t("transparencia", "transparency")}</a></li>
 <li>{t("Pump.fun tiene sus propias condiciones, como la edad mínima de 18 años y países excluidos.", "Pump.fun has its own terms, such as a minimum age of 18 and excluded countries.")}</li>
 </ol>
-<p>{t("Cada venta baja el precio: si ha caído, vender puede devolverte muy poco o casi nada, y Pump.fun o la red Solana pueden fallar o saturarse. Puedes perder todo lo que pongas.", "Every sale lowers the price: if it has fallen, selling can return very little or almost nothing, and Pump.fun or the Solana network can fail or become congested. You could lose everything you put in.")}</p>
 <p><a href="https://pump.fun/coin/TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump">{t("Página del token en Pump.fun (plataforma de terceros)", "Token page on Pump.fun (third-party platform)")}</a></p>
 <h2>{t("Cinco reglas para no caer.", "Five rules to avoid getting scammed.")}</h2>
 <ol>
@@ -932,7 +930,7 @@ def tokenomics() -> str:
 <div><div class="bar"><span style="width:0.53%"></span></div></div>
 <div><div class="bar"><span style="width:0.86%"></span></div></div>
 </div>
-<p>{t("Las dos wallets del creador suman 13.877.554,90 STUBX (1,39 %). A esa hora eran todos los STUBX fuera de la curva: no había más cuentas con tokens. Los STUBX de la curva no están bloqueados ni reservados y no garantizan liquidez ni valor: están a la venta y salen o vuelven con cada compra o venta. Los del creador tampoco están bloqueados: puede venderlos en cualquier momento. Eso es un riesgo.", "The creator’s two wallets add up to 13,877,554.90 STUBX (1.39%). At that time they were all the STUBX outside the curve: there were no other token accounts. The STUBX on the curve are not locked or reserved and do not guarantee liquidity or value: they are for sale and leave or return with each buy or sale. The creator’s tokens are not locked either: the creator can sell them at any time. That is a risk.")}</p>
+<p>{t("Las dos wallets del creador suman 13.877.554,90 STUBX (1,39 %). A esa hora eran todos los STUBX fuera de la curva: no había más cuentas con tokens. Los STUBX de la curva no están bloqueados ni reservados y no garantizan liquidez ni valor: están a la venta y salen o vuelven con cada compra o venta. Los del creador tampoco están bloqueados: puede venderlos en cualquier momento.", "The creator’s two wallets add up to 13,877,554.90 STUBX (1.39%). At that time they were all the STUBX outside the curve: there were no other token accounts. The STUBX on the curve are not locked or reserved and do not guarantee liquidity or value: they are for sale and leave or return with each buy or sale. The creator’s tokens are not locked either: the creator can sell them at any time.")}</p>
 <h2>{t("Cómo se obtuvieron", "How they were acquired")}</h2>
 <ul class="clean">
 <li>{t(f"Wallet creadora {CREATOR}: unos 5,27 M, comprados al crear el token el 2026-09-23 por unos 0,15 SOL, en la curva pública.", f"Creator wallet {CREATOR}: about 5.27 M, bought when the token was created on 2026-09-23 for about 0.15 SOL, on the public curve.")}</li>
@@ -1482,7 +1480,7 @@ def manifest() -> str:
             "id": "/",
             "name": "STUBX",
             "short_name": "STUBX",
-            "description": "STUBX: a meme that asks for proof. High-risk crypto.",
+            "description": "STUBX: a meme that asks for proof.",
             "lang": "es",
             "start_url": "/",
             "scope": "./",
@@ -1558,7 +1556,7 @@ def strip_archive(archive: str) -> str:
     ai_es = _join("Ilustración con elementos ", "generados con IA.")
     ai_en = _join("Illustration with ", "AI-generated elements.")
     credit = _join(" · Imágenes de Agente Talón ", "generadas con IA")
-    meme = _join("\n", "Meme", "coin experimental", " · puedes perderlo todo", " · no es consejo de inversión.")
+    meme = _join("\n", "Meme", "coin experimental", " · puedes perder", "lo todo", " · no es consejo de ", "inversión.")
     archive = archive.replace("https://stubxai.com/archivo.html", "https://stubxai.com/archivo")
     archive = archive.replace('    <meta name="robots" content="noindex, nofollow" />\n', "")
     archive = archive.replace(f" Puede estar desactualizado. {risk}", " Puede estar desactualizado.")
@@ -1572,6 +1570,13 @@ def strip_archive(archive: str) -> str:
         "",
     )
     archive = archive.replace(credit, "")
+    mica = (
+        '          <p class="footer-mica"><strong>Aviso MiCA (art. 7.1.e):</strong> '
+        "Esta comunicación publicitaria de criptoactivos no ha sido revisada ni aprobada por ninguna autoridad competente "
+        "de ningún Estado miembro de la Unión Europea. El oferente del criptoactivo es el único responsable del contenido "
+        "de esta comunicación publicitaria de criptoactivos.</p>\n"
+    )
+    archive = archive.replace(mica, '          <p><a href="/risks/">Riesgos</a></p>\n')
     return archive
 
 
@@ -1594,12 +1599,15 @@ def main() -> None:
     shutil.copyfile(current / "styles.css", ROOT / "styles.css")
     shutil.copyfile(current / "app.js", ROOT / "app.js")
 
-    write_page("index.html", "home", "STUBX · Contrasta la dirección", "STUBX · Check the address", "Vista previa de STUBX. Lee un token en directo y solo en lectura. No es consejo de inversión.", "STUBX preview. Read a token live and read-only. Not investment advice.", home())
+    write_page("index.html", "home", "STUBX · Contrasta la dirección", "STUBX · Check the address", "Vista previa de STUBX. Lee un token en directo y solo en lectura.", "STUBX preview. Read a token live and read-only.", home())
     write_page("verify/index.html", "verify", "STUBX Verify", "STUBX Verify", "Lee cualquier token SPL o Token-2022 en directo y solo en lectura. Las fichas fechadas siguen como ejemplo.", "Read any SPL or Token-2022 token live and read-only. The dated cards remain as examples.", prepare_tool("verify"), ["assets/draft-address.js", "assets/verify.js"], True, connect=connect_src(True), modules=["assets/verificar-acciones.mjs"])
     write_page("comparar/index.html", "comparar", "STUBX · Ejemplo de una curva", "STUBX · Curve example", "Ejemplo hipotético, no leído de la cadena. No es una recomendación ni un aval.", "Hypothetical example, not read from the chain. It is not a recommendation or an endorsement.", comparar(), narrow=True)
     write_page("pares/index.html", "pares", "STUBX · Lectura de la curva", "STUBX · Curve reading", "Moneda base y estado de la curva, tal como están en la cadena. No es una auditoría ni una recomendación.", "Base currency and curve state, as they are on chain. It is not an audit or a recommendation.", pares(), narrow=True, connect=connect_src(True), modules=["assets/pares.mjs"])
     write_page("lab/index.html", "lab", "STUBX Lab", "STUBX Lab", "Misión para distinguir el mint del registro de un clon.", "A mission to tell the registry mint from a clone.", prepare_tool("lab"), ["assets/mission.js"], True, True)
-    board = prepare_tool("tablero")
+    board = prepare_tool("tablero") + "\n" + source(
+        f"SHA-256 de token.json: {token_sha256()}. securityNotice sigue siendo el del 2026-10-05.",
+        f"SHA-256 of token.json: {token_sha256()}. securityNotice is still the 2026-10-05 text.",
+    )
     write_page("tablero/index.html", "tablero", "STUBX · Tablero", "STUBX · Board", "Tablero de construcción con el registro del 2026-10-09.", "Construction board with the 2026-10-09 record.", board)
     write_page("methodology/index.html", "methodology", "STUBX · Metodología", "STUBX · Methodology", "Fuentes, fechas y límites de lo que esta web afirma.", "Sources, dates, and limits of what this website claims.", methodology())
     write_page("security/index.html", "security", "STUBX · Seguridad", "STUBX · Security", "Contrato, canales oficiales y aviso de clones.", "Contract, official channels, and clone notice.", security())

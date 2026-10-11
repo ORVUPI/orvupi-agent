@@ -3,7 +3,8 @@
 ## 2026-10-11 · Pie de riesgo y etiqueta de imagen retirados
 
 - Decisión del dueño del proyecto el 2026-10-11 a las 13:52: la web y las herramientas dejan de repetir el pie de riesgo y la etiqueta de imagen generada, en español y en inglés, también en las imágenes que exporta Studio.
-- Se quedan la página `/legal`, el aviso MiCA, los avisos antiestafa, la privacidad aprobada y la línea del informe que dice que no certifica que sea verdad.
+- El mismo día confirma que Studio no lleva banda, marca de esquina, comentario del PNG ni frase de otro token, y que los avisos de riesgo quedan solo en `/risks` y `/legal`. El pie del resto lleva un enlace a Riesgos.
+- Se quedan los avisos antiestafa, la privacidad aprobada y la línea del informe que dice que no certifica que sea verdad. Una comprobación falla si esas frases retiradas aparecen fuera de `/risks` y `/legal`.
 - Esta entrada no despliega stubxai.com.
 
 ## 2026-10-10 · Biblioteca y cuaderno publicados

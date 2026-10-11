@@ -1040,7 +1040,6 @@ describe("studio", () => {
     const { analyze, exportAllowed } = await load<{ analyze: Analyze; exportAllowed: (title: string, body: string, list?: unknown, token?: string) => boolean }>(
       "lib/filter.mjs",
     );
-    const { BRAND } = await load<{ BRAND: { es: string; en: string } }>("lib/copy.mjs");
     const retiredEs = ["Cripto de alto riesgo", " · ", "Puedes perderlo todo", " · ", "No es consejo de inversión."].join("");
     const retiredEn = ["High-risk crypto", " · ", "You could lose everything", " · ", "Not investment advice."].join("");
     assert.equal(analyze("oficial").blocked, true);
@@ -1050,8 +1049,6 @@ describe("studio", () => {
     assert.equal(analyze("correcto").blocked, false);
     assert.equal(analyze("fundamental").blocked, false);
     assert.equal(analyze("heroico").blocked, false);
-    assert.equal(analyze(BRAND.es).blocked, false);
-    assert.equal(analyze(BRAND.en).blocked, false);
     assert.equal(analyze("no oficial · unofficial").blocked, false);
     assert.equal(analyze(retiredEs).blocked, true);
     assert.equal(analyze(retiredEn).blocked, true);
@@ -1237,9 +1234,11 @@ describe("studio", () => {
     assert.match(reglas, /El borrador de Studio se guarda en este dispositivo/);
     assert.match(reglas, /The Studio draft is saved on this device/);
     assert.match(reglas, /El filtro ayuda, pero no es una garantía/);
-    assert.match(reglas, /La imagen sigue siendo contenido no oficial/);
+    assert.equal(reglas.toLowerCase().includes("contenido no oficial"), false);
     assert.match(reglas, /The filter helps, but it is not a guarantee/);
-    assert.match(reglas, /The image remains unofficial content/);
+    assert.equal(reglas.toLowerCase().includes("unofficial content"), false);
+    assert.match(editor, /Vista previa de la imagen\. Muestra el título, el cuerpo y el nombre del token\./);
+    assert.match(editor, /Image preview\. It shows the title, the body, and the token name\./);
     assert.match(editor, /id="descargar"[^>]*disabled/);
     assert.match(editor, /id="borrar"/);
     assert.match(readStudio("studio.css"), /min-height:\s*44px/);
@@ -1375,9 +1374,8 @@ describe("studio", () => {
       pngDimensions: (bytes: Uint8Array) => { width: number; height: number };
       pngRawSize: (width: number, height: number, depth: number, color: number) => number;
     }>("lib/png.mjs");
-    const { brandFor, BRAND } = await load<{
+    const { brandFor } = await load<{
       brandFor: (lang: string, token: string) => string;
-      BRAND: { es: string; en: string };
     }>("lib/copy.mjs");
     assert.equal(DEFAULT_TOKEN, "STUBX");
     assert.equal(TOKEN_MAX, 20);
@@ -1389,23 +1387,26 @@ describe("studio", () => {
     assert.equal(isStubxToken("STUB\u200BX"), true);
     assert.equal(isStubxToken("stubx"), true);
     assert.equal(isStubxToken("LUNA"), false);
-    assert.equal(brandFor("es", "LUNA"), "No oficial de LUNA ni de STUBX");
-    assert.equal(brandFor("en", "LUNA"), "Not official from LUNA or STUBX");
-    assert.equal(brandFor("es", "STUBX"), BRAND.es);
-    assert.equal(brandFor("en", "stubx"), BRAND.en);
+    const otherToken = ["No oficial de ", "LUNA ni de STUBX"].join("");
+    const otherTokenEn = ["Not official from ", "LUNA or STUBX"].join("");
+    assert.equal(brandFor("es", "LUNA"), "");
+    assert.equal(brandFor("en", "LUNA"), "");
+    assert.equal(brandFor("es", "LUNA") === otherToken, false);
+    assert.equal(brandFor("en", "LUNA") === otherTokenEn, false);
+    assert.equal(brandFor("es", "STUBX"), "");
+    assert.equal(brandFor("en", "stubx"), "");
     const stubxLooks = ["STUB\u2060X", "STUB\u00ADX", "STUB\u034FX", "\u180ESTUBX", "STUBX\uFEFF", "\uFF33\uFF34\uFF35\uFF22\uFF38", "stu\u2060bx"];
     for (const sample of stubxLooks) {
       assert.equal(clipToken(sample).toLowerCase(), "stubx", sample);
       assert.equal(isStubxToken(sample), true, sample);
-      assert.equal(brandFor("es", sample), BRAND.es, sample);
-      assert.notEqual(brandFor("es", sample), "No oficial de STUBX ni de STUBX", sample);
-      assert.equal(brandFor("en", sample), BRAND.en, sample);
+      assert.equal(brandFor("es", sample), "", sample);
+      assert.equal(brandFor("en", sample), "", sample);
     }
     const { exportAllowed } = await load<{ exportAllowed: (title: string, body: string, list?: unknown, token?: string) => boolean }>("lib/filter.mjs");
     assert.equal(exportAllowed("Hola", "Texto limpio.", undefined, "mo\u2060on"), false);
     assert.equal(exportAllowed("Hola", "Texto limpio.", undefined, "\uFF33\uFF34\uFF35\uFF22\uFF38"), true);
-    assert.equal(brandFor("es", "LUNA\u202E"), "No oficial de LUNA ni de STUBX");
-    assert.equal(brandFor("en", ""), BRAND.en);
+    assert.equal(brandFor("es", "LUNA\u202E"), "");
+    assert.equal(brandFor("en", ""), "");
     const named = await renderCard({
       width: 1080,
       height: 1080,

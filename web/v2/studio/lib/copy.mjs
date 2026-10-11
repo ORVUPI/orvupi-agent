@@ -1,11 +1,4 @@
-/** Textos de marca del token. El lienzo no dibuja pie, marca de agua ni etiqueta. */
-
-import { clipToken, isStubxToken } from "./logo.mjs";
-
-export const BRAND = {
-  es: "Contenido comunitario · no oficial",
-  en: "Community content · unofficial",
-};
+/** El lienzo no dibuja pie, marca de agua ni etiqueta. */
 
 export const NOTICE_MIN_PX = 14;
 export const NOTICE_RATIO = 0.025;
@@ -32,12 +25,8 @@ export function noticeFor() {
 
 export const PNG_COMMENT = "";
 
-export function brandFor(lang, token) {
-  const name = clipToken(token);
-  const code = lang === "en" ? "en" : "es";
-  if (!name || isStubxToken(name)) return BRAND[code];
-  if (code === "en") return `Not official from ${name} or STUBX`;
-  return `No oficial de ${name} ni de STUBX`;
+export function brandFor() {
+  return "";
 }
 
 export function aiLabel() {

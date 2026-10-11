@@ -179,15 +179,68 @@ def plain_corpus() -> str:
     return normalize("\n".join(chunks))
 
 
+def piece(*parts: str) -> str:
+    return "".join(parts)
+
+
+def fold_marks(text: str) -> str:
+    text = normalize(text)
+    text = "".join(ch for ch in unicodedata.normalize("NFD", text) if unicodedata.category(ch) != "Mn")
+    return text
+
+
+def banned_marks() -> list[str]:
+    """Frases que solo pueden vivir en /risks y /legal. El fuente las parte para no contenerlas enteras."""
+    return [
+        piece("cripto de alto ", "riesgo"),
+        piece("puedes perder", "lo todo"),
+        piece("no es consejo de ", "inversion"),
+        piece("imagen generada con ", "ia"),
+        piece("high-risk ", "crypto"),
+        piece("you could lose ", "everything"),
+        piece("you can lose ", "everything"),
+        piece("not investment ", "advice"),
+        piece("ai-generated ", "image"),
+        piece("un", "official"),
+        piece("not ", "official"),
+        piece("no ", "oficial"),
+    ]
+
+
+def forbidden_outside_risk_pages() -> list[str]:
+    """Falla si una frase retirada aparece en una página, herramienta, plantilla o imagen fuera de /risks y /legal."""
+    needles = banned_marks()
+    patterns = [re.compile(r"\b" + re.escape(needle) + r"\b") for needle in needles]
+    allowed = {"risks/index.html", "legal/index.html"}
+    skip_files = {"tools/build_site.py"}
+    suffixes = {".html", ".js", ".mjs", ".json", ".md", ".css", ".txt", ".xml", ".py", ".webmanifest", ".jpg", ".jpeg", ".png", ".webp"}
+    hits: list[str] = []
+    for path in V2.rglob("*"):
+        if not path.is_file():
+            continue
+        rel = path.relative_to(V2).as_posix()
+        if rel in allowed or rel.startswith("risks/") or rel.startswith("legal/"):
+            continue
+        if rel in skip_files or "__pycache__" in rel or "node_modules" in rel:
+            continue
+        if path.suffix.lower() not in suffixes:
+            continue
+        text = fold_marks(path.read_text(encoding="utf-8", errors="replace"))
+        for needle, pattern in zip(needles, patterns):
+            if pattern.search(text):
+                hits.append(f"{rel}: {needle}")
+    return hits
+
+
 def retired_sentences() -> set[str]:
     """Frases retiradas por decisión del dueño. No tienen que tener equivalente: no pueden estar."""
     footer = "".join(
         [
-            "Cripto de alto riesgo",
+            piece("Cripto de alto ", "riesgo"),
             " · ",
-            "Puedes perderlo todo",
+            piece("Puedes perder", "lo todo"),
             " · ",
-            "No es consejo de inversión.",
+            piece("No es consejo de ", "inversión."),
         ]
     )
     illustration = "".join(
@@ -240,7 +293,8 @@ def main() -> int:
     how_missing = [block for block in repeat_parser.blocks if not how_covered(block)]
     if not repeat_parser.blocks:
         how_missing = ["pruebas.html no tiene secciones «Cómo repetirlo tú»"]
-    if present or missing or how_missing:
+    forbidden = forbidden_outside_risk_pages()
+    if present or missing or how_missing or forbidden:
         if present:
             sys.stderr.write(f"{len(present)} frases retiradas siguen en web/v2:\n")
             for sentence in present:
@@ -253,6 +307,10 @@ def main() -> int:
             sys.stderr.write(f"{len(how_missing)} bloques «Cómo repetirlo tú» sin equivalente en web/v2:\n")
             for block in how_missing:
                 sys.stderr.write(f"- {block}\n")
+        if forbidden:
+            sys.stderr.write(f"{len(forbidden)} frases retiradas fuera de /risks y /legal:\n")
+            for hit in forbidden:
+                sys.stderr.write(f"- {hit}\n")
         return 1
     print(f"frases de seguridad o legal cubiertas: {len(seen)}; bloques de repetición: {len(repeat_parser.blocks)}")
     return 0
