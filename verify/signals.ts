@@ -356,6 +356,9 @@ export async function readLargestAccounts(input: ReadMintInput): Promise<Signal>
   );
   const rpc = new FallbackRpc(readers, endpoints);
   const largest = await mainnetOnlyClient(input, input.timeoutMs ?? 6000).getTokenLargestAccounts(checked.mint);
+  if (largest.ok && largest.value.length === 0) {
+    return emptyLargestSignal();
+  }
   if (!largest.ok) {
     const kind = classifyRpcFailure(largest.error, largest.httpStatus);
     const text = {
@@ -626,16 +629,10 @@ async function readWith(
       ),
     });
   } else if (largest.value.length === 0) {
-    largestState = "ausente";
-    signals.push({
-      id: "cuentas",
-      level: "neutro",
-      title: loc("Cuentas con tokens", "Token accounts"),
-      explain: loc(
-        "La consulta respondió y la muestra volvió vacía. Es una ausencia comprobada de esa muestra, no una concentración de cero y no un censo.",
-        "The query responded and the sample came back empty. That sample is confirmed absent. It is not zero concentration and it is not a census.",
-      ),
-    });
+    // Una lista vacía no demuestra que nadie tenga tokens. USDC tiene millones de cuentas
+    // y el nodo a veces responde 200 con []. Es una lectura que no salió, no una ausencia.
+    largestState = "fallo";
+    signals.push(emptyLargestSignal());
   } else {
     largestState = "ok";
     const sample = await accountSample(rpc, mint, mintInfo.owner, curve, largest, null);
@@ -1149,17 +1146,29 @@ async function accountSample(
       title: loc("Cuentas con tokens", "Token accounts"),
       explain: loc(
         rows.length === 0
-          ? "La muestra de las 20 cuentas con más tokens volvió vacía. No es un censo y no es concentración cero."
+          ? "La muestra de cuentas volvió vacía. No se leyó quién tiene más tokens. No es una ausencia de cuentas ni una concentración de cero."
           : `Se leyeron ${rows.length} cuentas con tokens, como máximo 20. No es un censo ni un recuento de personas.${
               top?.percent ? ` La mayor cuenta que no es la de la curva tiene el ${top.percent} %.` : ""
             }\n${listed}`,
         rows.length === 0
-          ? "The sample of the 20 largest token accounts came back empty. It is not a census and it is not zero concentration."
+          ? "The account sample came back empty. Who holds the most tokens was not read. It is not an absence of accounts and it is not zero concentration."
           : `${rows.length} token accounts were read, 20 at most. It is not a census and it is not a count of people.${
               top?.percent ? ` The largest account that is not the curve account has ${top.percent}%.` : ""
             }\n${listed}`,
       ),
     },
+  };
+}
+
+function emptyLargestSignal(): Signal {
+  return {
+    id: "cuentas",
+    level: "atencion",
+    title: loc("Cuentas con tokens", "Token accounts"),
+    explain: loc(
+      "La muestra de cuentas volvió vacía. No se leyó quién tiene más tokens. No es una ausencia de cuentas ni una concentración de cero.",
+      "The account sample came back empty. Who holds the most tokens was not read. It is not an absence of accounts and it is not zero concentration.",
+    ),
   };
 }
 

@@ -979,7 +979,14 @@ export async function readMint(options) {
     card.largestStatus = "fallo";
     card.partial = true;
   } else if (largestRows.length === 0) {
-    card.largestStatus = "ausente";
+    errors.push({
+      method: "getTokenLargestAccounts",
+      httpStatus: 200,
+      message: "La muestra de cuentas volvió vacía. No se leyó quién tiene más tokens. No es una ausencia de cuentas ni una concentración de cero.",
+      at: largest.fetchedAt,
+    });
+    card.largestStatus = "fallo";
+    card.partial = true;
   } else {
     card.largestStatus = "ok";
   }

@@ -7,20 +7,28 @@ import { repoRoot } from "../src/paths.js";
 const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 const STUBX = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
 
-type SummaryModule = {
-  buildReadingSummary: (view: Record<string, unknown>) => Summary;
-  summaryFromCard: (card: Record<string, unknown>) => Summary;
+type Point = {
+  topic: string;
+  title: { es: string; en: string };
+  lead: { es: string; en: string };
+  detail: { es: string; en: string } | null;
 };
 
 type Summary = {
   title: { es: string; en: string };
   retry: boolean;
+  note: Point | null;
   blocks: Array<{
     id: string;
     heading: { es: string; en: string };
-    items: Array<{ topic: string; text: { es: string; en: string } }>;
+    items: Point[];
     empty: { es: string; en: string };
   }>;
+};
+
+type SummaryModule = {
+  buildReadingSummary: (view: Record<string, unknown>) => Summary;
+  summaryFromCard: (card: Record<string, unknown>) => Summary;
 };
 
 async function load(): Promise<SummaryModule> {
@@ -33,14 +41,24 @@ function block(summary: Summary, id: string) {
   return found;
 }
 
-function joined(summary: Summary, lang: "es" | "en") {
+function prose(summary: Summary, lang: "es" | "en") {
+  const note = summary.note ? `${summary.note.title[lang]} ${summary.note.lead[lang]}` : "";
   return summary.blocks
-    .flatMap((item) => [item.heading[lang], item.empty[lang], ...item.items.map((point) => point.text[lang])])
+    .flatMap((item) => [
+      item.heading[lang],
+      item.empty[lang],
+      ...item.items.flatMap((point) => [point.title[lang], point.lead[lang], point.detail?.[lang] ?? ""]),
+    ])
+    .concat(note)
     .join("\n");
 }
 
+function leads(summary: Summary, id: string, lang: "es" | "en") {
+  return block(summary, id).items.map((item) => `${item.title[lang]} ${item.lead[lang]}`).join(" | ");
+}
+
 describe("resumen de la lectura", () => {
-  test("USDC: lo leído, el permiso de emisión con contexto y la curva que no aplica", async () => {
+  test("USDC: lenguaje sencillo, congelación, emisión y la curva aparte", async () => {
     const { buildReadingSummary, summaryFromCard } = await load();
     const summary = buildReadingSummary({
       ok: true,
@@ -50,52 +68,69 @@ describe("resumen de la lectura", () => {
         { id: "suministro-extra", label: { es: "Consulta extra del suministro", en: "Extra supply query" }, state: "ok" },
         { id: "metadatos", label: { es: "Metadatos", en: "Metadata" }, state: "ok" },
         { id: "enlace", label: { es: "Enlace de metadatos", en: "Metadata link" }, state: "ausente" },
-        { id: "cuentas", label: { es: "Cuentas con más tokens", en: "Largest token accounts" }, state: "ausente" },
+        { id: "cuentas", label: { es: "Cuentas con más tokens", en: "Largest token accounts" }, state: "ok" },
         { id: "curva", label: { es: "Curva", en: "Curve" }, state: "no_aplica" },
+      ],
+      rows: [
+        { label: { es: "Nombre", en: "Name" }, value: { es: "USD Coin", en: "USD Coin" } },
+        { label: { es: "Símbolo", en: "Symbol" }, value: { es: "USDC", en: "USDC" } },
+        { label: { es: "Suministro", en: "Supply" }, value: { es: "7.721.704.579", en: "7,721,704,579" } },
       ],
       signals: [
         { id: "emision", level: "atencion", title: { es: "Alguien puede crear más tokens", en: "Someone can create more tokens" }, explain: { es: "activa", en: "active" } },
-        { id: "congelacion", level: "neutro", title: { es: "Nadie puede congelar cuentas con ese permiso", en: "Nobody can freeze accounts with that permission" } },
+        { id: "congelacion", level: "riesgo", title: { es: "Alguien puede congelar cuentas", en: "Someone can freeze accounts" }, explain: { es: "puede impedir", en: "can stop" } },
         { id: "mutable", level: "atencion", title: { es: "El nombre se puede cambiar", en: "The name can be changed" }, explain: { es: "puede actualizar", en: "can update" } },
+        { id: "comision", level: "riesgo", title: { es: "Comisión de transferencia", en: "Transfer fee" }, explain: { es: "parte de cada envío", en: "part of each transfer" } },
         { id: "curva", level: "neutro", title: { es: "Curva", en: "Curve" }, explain: { es: "No aplica: este token no se creó en Pump.fun", en: "Not applicable" } },
       ],
     });
     assert.equal(summary.title.es, "Resumen");
-    assert.equal(summary.title.en, "Summary");
     assert.deepEqual(summary.blocks.map((item) => item.heading.es), ["Qué se comprobó", "Qué requiere atención", "Qué falta"]);
-    assert.deepEqual(summary.blocks.map((item) => item.heading.en), ["What was checked", "What needs attention", "What is missing"]);
-    const checked = block(summary, "comprobado");
-    assert.match(checked.items.map((item) => item.text.es).join(" | "), /Suministro en los bytes del mint/);
-    assert.match(checked.items.map((item) => item.text.es).join(" | "), /No aplica: este token no se creó en Pump.fun/);
-    assert.equal(checked.items.find((item) => item.text.es.includes("No aplica"))?.topic, "curva");
+    const checked = leads(summary, "comprobado", "es");
+    assert.match(checked, /Suministro total/);
+    assert.match(checked, /7\.721\.704\.579 USDC/);
+    assert.match(checked, /Nombre y símbolo/);
+    assert.match(checked, /USD Coin \(USDC\)/);
+    assert.match(checked, /No tiene enlace de metadatos/);
+    assert.equal(checked.includes("No aplica"), false);
+    assert.equal(checked.includes("bytes del mint"), false);
+    assert.equal(checked.includes("Consulta extra"), false);
+    assert.equal(summary.note?.lead.es, "Curva de Pump.fun: no aplica");
+    assert.equal(summary.note?.topic, "curva");
     const attention = block(summary, "atencion");
-    assert.match(attention.items.map((item) => item.text.es).join(" "), /moneda estable/);
-    assert.match(attention.items.map((item) => item.text.en).join(" "), /stablecoin/);
-    assert.match(attention.items.map((item) => item.text.es).join(" "), /promete el proyecto/);
-    assert.match(attention.items.map((item) => item.text.es).join(" "), /no es una suplantación/);
-    assert.equal(attention.items.every((item) => item.topic === "permisos" || item.topic === "metadatos"), true);
+    const attentionText = attention.items.map((item) => `${item.title.es} ${item.lead.es} ${item.detail?.es ?? ""}`).join(" ");
+    assert.match(attentionText, /Permiso de emisión/);
+    assert.match(attentionText, /moneda estable/);
+    assert.match(attentionText, /promete el proyecto/);
+    assert.match(attentionText, /Permiso de congelación/);
+    assert.match(attentionText, /bloquear cuentas/);
+    assert.match(attentionText, /no es una suplantación/);
+    assert.match(attentionText, /Comisión al enviar/);
+    assert.equal(attention.items.every((item) => item.lead.es.length <= 90), true);
     assert.equal(summary.retry, false);
-    assert.match(joined(summary, "es"), /Qué falta/);
     const card = summaryFromCard({
       mint: USDC,
       program: "spl-token",
       programStatus: "verificado",
       mintAuthority: { state: "activa", status: "verificado" },
-      freezeAuthority: { state: "revocada", status: "verificado" },
-      supplyAccount: "1000",
-      supplyRpc: "1000",
+      freezeAuthority: { state: "activa", status: "verificado" },
+      supplyAccount: "7721704579000000",
+      supplyRpc: "7721704579000000",
       supplyRpcStatus: "verificado",
       decimals: 6,
-      name: { text: "USDC", status: "verificado" },
+      name: { text: "USD Coin", status: "verificado" },
       symbol: { text: "USDC", status: "verificado" },
       uri: { text: null, status: "ausente" },
       metadataMutable: "si",
       extensionsStatus: "no_aplica",
+      extensions: [],
       curve: { status: "no_aplica", present: false },
-      largestStatus: "ausente",
+      largestStatus: "ok",
     });
-    assert.match(block(card, "atencion").items.map((item) => item.text.es).join(" "), /moneda estable/);
-    assert.match(block(card, "comprobado").items.map((item) => item.text.es).join(" "), /No aplica: este token no se creó en Pump.fun/);
+    assert.match(leads(card, "atencion", "es"), /Permiso de congelación/);
+    assert.match(leads(card, "comprobado", "es"), /7\.721\.704\.579 USDC/);
+    assert.equal(card.note?.lead.es, "Curva de Pump.fun: no aplica");
+    assert.equal(leads(card, "comprobado", "es").includes("No aplica"), false);
     assert.equal(card.retry, false);
   });
 
@@ -120,8 +155,8 @@ describe("resumen de la lectura", () => {
     const attention = block(summary, "atencion");
     assert.equal(attention.items.length, 0);
     assert.match(attention.empty.es, /no significa que no haya riesgo/);
-    assert.match(attention.empty.en, /does not mean there is no risk/);
-    assert.match(block(summary, "comprobado").items.map((item) => item.text.es).join(" "), /Suministro en los bytes del mint/);
+    assert.match(leads(summary, "comprobado", "es"), /Nadie puede crear más tokens ni congelar cuentas/);
+    assert.equal(prose(summary, "es").includes("moneda estable"), false);
     const card = summaryFromCard({
       mint: STUBX,
       program: "spl-token",
@@ -141,11 +176,11 @@ describe("resumen de la lectura", () => {
       largestStatus: "ok",
     });
     assert.equal(block(card, "atencion").items.length, 0);
-    assert.match(block(card, "comprobado").items.map((item) => item.text.es).join(" "), /Permiso de emisión/);
-    assert.equal(joined(card, "es").includes("moneda estable"), false);
+    assert.match(leads(card, "comprobado", "es"), /Nadie puede crear más tokens ni congelar cuentas/);
+    assert.equal(prose(card, "es").includes("moneda estable"), false);
   });
 
-  test("una consulta fallida va a Qué falta y se puede reintentar, sin tratarla como concentración", async () => {
+  test("una muestra vacía o fallida va a Qué falta y no se llama ausencia", async () => {
     const { buildReadingSummary, summaryFromCard } = await load();
     const summary = buildReadingSummary({
       ok: true,
@@ -161,23 +196,41 @@ describe("resumen de la lectura", () => {
           id: "cuentas",
           level: "atencion",
           title: { es: "Cuentas con tokens", en: "Token accounts" },
-          explain: { es: "El servicio público no respondió, prueba otra vez en un minuto.", en: "The public service did not respond, try again in a minute." },
+          explain: { es: "La muestra de cuentas volvió vacía. No se leyó quién tiene más tokens.", en: "The account sample came back empty." },
         },
       ],
     });
-    const missing = block(summary, "falta");
-    assert.match(missing.items.map((item) => item.text.es).join(" | "), /Consulta extra del suministro: consulta fallida/);
-    assert.match(missing.items.map((item) => item.text.es).join(" | "), /Cuentas con más tokens: consulta fallida/);
-    assert.match(missing.items.map((item) => item.text.en).join(" | "), /failed query/);
-    assert.equal(missing.items.find((item) => item.text.es.startsWith("Cuentas"))?.topic, "distribucion");
+    const missing = leads(summary, "falta", "es");
+    assert.match(missing, /No se pudo leer el suministro otra vez/);
+    assert.match(missing, /No se pudo leer quién tiene más tokens/);
+    assert.equal(block(summary, "falta").items.find((item) => item.topic === "distribucion")?.topic, "distribucion");
     assert.equal(summary.retry, true);
-    assert.equal(block(summary, "atencion").items.some((item) => item.text.es.includes("parte grande")), false);
-    const whole = buildReadingSummary({ ok: false, kind: "red", facts: [], signals: [] });
-    assert.equal(whole.retry, true);
-    assert.match(block(whole, "falta").items.map((item) => item.text.es).join(" "), /Esta lectura: consulta fallida/);
-    const card = summaryFromCard({
+    assert.equal(block(summary, "atencion").items.some((item) => item.title.es === "Concentración"), false);
+    assert.equal(leads(summary, "comprobado", "es").includes("No aplica"), false);
+    assert.equal(summary.note?.lead.es, "Curva de Pump.fun: no aplica");
+    const emptyCard = summaryFromCard({
       mint: USDC,
       program: "spl-token",
+      programStatus: "verificado",
+      mintAuthority: { state: "revocada", status: "verificado" },
+      freezeAuthority: { state: "revocada", status: "verificado" },
+      supplyAccount: "1000",
+      supplyRpc: "1000",
+      supplyRpcStatus: "verificado",
+      decimals: 6,
+      name: { text: "USDC", status: "verificado" },
+      symbol: { text: "USDC", status: "verificado" },
+      uri: { text: null, status: "ausente" },
+      metadataMutable: "no",
+      extensionsStatus: "no_aplica",
+      curve: { status: "no_aplica", present: false },
+      largestStatus: "ausente",
+    });
+    assert.match(leads(emptyCard, "falta", "es"), /No se pudo leer quién tiene más tokens/);
+    assert.equal(prose(emptyCard, "es").includes("ausente comprobado"), false);
+    const failedCard = summaryFromCard({
+      mint: USDC,
+      program: "token-2022",
       programStatus: "verificado",
       mintAuthority: { state: "revocada", status: "verificado" },
       freezeAuthority: { state: "revocada", status: "verificado" },
@@ -189,16 +242,32 @@ describe("resumen de la lectura", () => {
       symbol: { text: null, status: "fallo" },
       uri: { text: null, status: "fallo" },
       metadataMutable: "fallo",
-      extensionsStatus: "no_aplica",
+      extensionsStatus: "verificado",
+      extensions: [{ type: 14, name: "TransferHook", status: "verificado" }],
       curve: { status: "no_aplica", present: false },
       largestStatus: "fallo",
     });
-    assert.equal(card.retry, true);
-    assert.match(block(card, "falta").items.map((item) => item.text.es).join(" "), /Consulta extra del suministro/);
-    assert.match(block(card, "falta").items.map((item) => item.text.es).join(" "), /Cuentas con más tokens/);
+    assert.equal(failedCard.retry, true);
+    assert.match(leads(failedCard, "falta", "es"), /No se pudo leer el suministro otra vez/);
+    assert.match(leads(failedCard, "falta", "es"), /No se pudo leer quién tiene más tokens/);
+    assert.match(leads(failedCard, "atencion", "es"), /Revisión de cada envío/);
+    const concentrated = buildReadingSummary({
+      ok: true,
+      kind: "lectura",
+      facts: [{ id: "cuentas", label: { es: "Cuentas", en: "Accounts" }, state: "ok" }],
+      signals: [{ id: "cuentas", level: "atencion", title: { es: "Cuentas con tokens", en: "Token accounts" }, explain: { es: "La mayor cuenta tiene el 25 %.", en: "The largest account has 25%." } }],
+    });
+    assert.match(leads(concentrated, "atencion", "es"), /Concentración/);
+    assert.match(leads(concentrated, "atencion", "es"), /25 %/);
+    const whole = buildReadingSummary({ ok: false, kind: "red", facts: [], signals: [] });
+    assert.equal(whole.retry, true);
+    assert.match(leads(whole, "falta", "es"), /Esta lectura/);
     for (const lang of ["es", "en"] as const) {
-      const text = `${joined(summary, lang)}\n${joined(card, lang)}\n${joined(whole, lang)}`;
+      const text = `${prose(summary, lang)}\n${prose(emptyCard, lang)}\n${prose(failedCard, lang)}\n${prose(whole, lang)}`;
       assert.equal(/\b(precio|compra|comprar|seguro|buy|sell|score)\b/i.test(text), false);
+      assert.equal(text.includes("ausente comprobado"), false);
+      assert.equal(text.includes("bytes del mint"), false);
+      assert.equal(text.includes("Consulta extra del suministro"), false);
     }
   });
 });

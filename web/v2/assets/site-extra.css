@@ -1274,7 +1274,14 @@ dd[data-estado="fallo"], dd[data-estado="ausente"], dd[data-estado="no_consultad
   color: var(--cream);
   font-family: var(--font);
   font-size: 1.2rem;
+  font-weight: 650;
   line-height: 1.25;
+}
+.cabecera-bloque {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0 0 0.35rem;
 }
 .bloque-resumen {
   margin: 0;
@@ -1286,22 +1293,122 @@ dd[data-estado="fallo"], dd[data-estado="ausente"], dd[data-estado="no_consultad
 .bloque-resumen[data-bloque="atencion"] { border-left-color: var(--pink); }
 .bloque-resumen[data-bloque="falta"] { border-left-color: var(--attention); }
 .bloque-resumen h4 {
-  margin: 0 0 0.45rem;
+  margin: 0;
   color: var(--cream);
   font-size: 1.02rem;
+  font-weight: 650;
   line-height: 1.3;
 }
-.bloque-resumen p { margin: 0.45rem 0 0; }
 .bloque-resumen ul {
+  margin: 0.35rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.15rem;
+}
+.punto-resumen {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.55rem 0.7rem;
+  align-items: start;
   margin: 0;
-  padding-left: 1.15rem;
+  padding: 0.45rem 0 0.55rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 65%, transparent);
 }
-.bloque-resumen li { margin: 0.35rem 0; }
-.bloque-resumen a {
+.punto-resumen:last-child { border-bottom: 0; padding-bottom: 0; }
+.punto-titulo {
+  margin: 0;
   color: var(--cream);
-  text-decoration: underline;
-  text-underline-offset: 0.18em;
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.3;
 }
+.punto-frase,
+.punto-detalle p,
+.punto-vacio,
+.aviso-servicio {
+  margin: 0.12rem 0 0;
+  color: var(--cream);
+  font-weight: 400;
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+.bloque-resumen[data-bloque="atencion"] .punto-frase {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.punto-detalle { margin: 0.15rem 0 0; }
+.punto-detalle summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--cream);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.punto-detalle p { margin: 0; }
+.chip-resumen {
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 999px;
+  border: 2px solid var(--line);
+  background: var(--abyss);
+  color: var(--cream);
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.chip-resumen[data-marca="leido"]::before {
+  content: "";
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: var(--cream);
+}
+.chip-resumen[data-marca="atencion"] {
+  border-color: var(--pink);
+  color: var(--pink);
+  background: rgba(251, 67, 127, 0.14);
+}
+.chip-resumen[data-marca="atencion"]::before { content: "!"; }
+.chip-resumen[data-marca="falta"] {
+  border-color: var(--attention);
+  color: var(--attention);
+  background: rgba(255, 196, 120, 0.12);
+}
+.chip-resumen[data-marca="falta"]::before { content: "?"; }
+.entender-enlace {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 0.05rem;
+  color: var(--pink);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.entender-enlace:hover,
+.entender-enlace:focus-visible { text-decoration: underline; text-underline-offset: 0.18em; }
+.nota-curva {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.8rem;
+  margin: 0;
+  padding: 0.35rem 0.8rem;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--cream);
+  font-weight: 500;
+  line-height: 1.35;
+}
+.nota-curva .entender-enlace { margin-top: 0; }
 .reintentar-resumen {
   display: inline-flex;
   align-items: center;
@@ -1318,7 +1425,6 @@ dd[data-estado="fallo"], dd[data-estado="ausente"], dd[data-estado="no_consultad
 }
 @media (max-width: 599px) {
   .resumen-informe { padding: 0.85rem; }
-  .bloque-resumen a, .reintentar-resumen { min-height: 44px; }
   .reintentar-resumen { width: 100%; justify-content: center; }
 }
 .ficha[data-veredicto="cambio"] { border-left-color: var(--attention); }

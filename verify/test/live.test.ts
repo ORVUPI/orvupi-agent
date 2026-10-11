@@ -202,7 +202,7 @@ describe("lectura universal con RPC simulado", () => {
           [bondingCurvePda(mint), null],
         ]),
         supply: { amount: "1000000000000000", decimals: 6 },
-        largest: [],
+        largest: [{ address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", amount: "1", decimals: 6 }],
       }),
       maxRetries: 0,
       minIntervalMs: 0,
@@ -226,6 +226,43 @@ describe("lectura universal con RPC simulado", () => {
     assert.match(reading.report?.es ?? "", /Qué requiere atención/);
     assert.match(reading.report?.es ?? "", /Qué falta/);
     assert.equal((reading.identity?.es ?? "").includes(mint), true);
+  });
+
+  test("una muestra vacía de cuentas no es una ausencia", async () => {
+    const reading = await readFixture(fixture("revoked-mint"));
+    const cuentas = reading.facts?.find((item) => item.id === "cuentas");
+    assert.equal(cuentas?.state, "fallo");
+    assert.equal(reading.shown && "largestStatus" in reading.shown ? reading.shown.largestStatus : null, "fallo");
+    assert.equal(reading.canSample, true);
+    assert.match(reading.missing?.es ?? "", /Cuentas con más tokens/);
+    assert.equal((reading.missing?.es ?? "").includes("ausente comprobado"), false);
+    assert.equal((reading.absent?.es ?? "").includes("Cuentas"), false);
+    const explain = reading.signals.find((item) => item.id === "cuentas")?.explain.es ?? "";
+    assert.equal(/ausencia comprobada|ausente comprobado/.test(explain), false);
+    assert.match(explain, /No se leyó/);
+    assert.match(explain, /concentración de cero/);
+    const sample = fixture("revoked-mint");
+    const limited = await readAnyMint({
+      mint: sample.mint,
+      registry,
+      endpoints: ["https://rpc-a.invalid"],
+      transport: transportFor({
+        slot: sample.slot,
+        accounts: new Map([
+          [sample.mint, sample.mintAccount],
+          [metadataPda(sample.mint), null],
+          [bondingCurvePda(sample.mint), null],
+        ]),
+        supply: { amount: "1000000000000000", decimals: 6 },
+        largest: null,
+      }),
+      maxRetries: 0,
+      minIntervalMs: 0,
+      sleep: async () => {},
+    });
+    assert.equal(limited.facts?.find((item) => item.id === "cuentas")?.state, "fallo");
+    assert.equal((limited.missing?.es ?? "").includes("ausente comprobado"), false);
+    assert.match(limited.signals.find((item) => item.id === "cuentas")?.explain.es ?? "", /concentración de cero/);
   });
 
   test("una cuenta ausente y una que no es mint no se rellenan", async () => {
@@ -379,7 +416,7 @@ describe("lectura universal con RPC simulado", () => {
       slot: sample.slot,
       accounts,
       supply: { amount: "1000000000000000", decimals: 6 },
-      largest: [],
+      largest: [{ address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", amount: "1", decimals: 6 }],
     });
     const supplyCalls: string[] = [];
     const reading = await readAnyMint({
@@ -438,7 +475,7 @@ describe("lectura universal con RPC simulado", () => {
           slot: sample.slot,
           accounts,
           supply: { amount: "1000000000000000", decimals: 6 },
-          largest: [],
+          largest: [{ address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", amount: "1", decimals: 6 }],
         })(endpoint, body, timeoutMs);
       },
       maxRetries: 0,

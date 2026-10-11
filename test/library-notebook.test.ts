@@ -51,6 +51,7 @@ interface Card {
   mintAuthority?: { state: string; address?: string | null; status: string };
   freezeAuthority?: { state: string; address?: string | null; status: string };
   curve?: { present: boolean | null; status: string };
+  largestStatus?: string;
   errors?: Array<{ message?: string }>;
 }
 
@@ -225,9 +226,12 @@ describe("lector y cuaderno", () => {
         throw new Error(parsed.method);
       },
     });
-    assert.equal(result.ok, true);
     assert.equal(result.card?.isMint, true);
-    assert.equal(result.card?.partial, false);
+    assert.equal(result.card?.largestStatus, "fallo");
+    assert.equal(result.card?.partial, true);
+    assert.equal(result.ok, false);
+    assert.match((result.card?.errors ?? []).map((item) => item.message).join(" "), /volvió vacía/);
+    assert.equal(JSON.stringify(result.card).includes("ausente comprobado"), false);
     assert.equal(result.card?.officialStubx, true);
     assert.equal(result.card?.name.text?.includes("<"), false);
     assert.equal(result.card?.uri.text, "https://evil.example/phish");
@@ -525,7 +529,7 @@ describe("lector y cuaderno", () => {
         throw new Error(method);
       },
     });
-    assert.equal(recovered.ok, true);
+    assert.equal(recovered.card?.largestStatus, "fallo");
     assert.equal(recovered.card?.curve?.status, "no_aplica");
     assert.deepEqual(
       seen.filter((item) => item.endsWith("getMultipleAccounts")),
@@ -558,7 +562,7 @@ describe("lector y cuaderno", () => {
         throw new Error(method);
       },
     });
-    assert.equal(pumpRecovered.ok, true);
+    assert.equal(pumpRecovered.card?.largestStatus, "fallo");
     assert.equal(pumpRecovered.card?.curve?.status, "ausente");
     assert.deepEqual(pumpSeen, ["solana-rpc.publicnode.com", "api.mainnet-beta.solana.com"]);
   });
@@ -707,7 +711,7 @@ describe("lector y cuaderno", () => {
         throw new Error(method);
       },
     });
-    assert.equal(result.ok, true);
+    assert.equal(result.card?.largestStatus, "fallo");
     assert.deepEqual(hosts.getTokenSupply, ["api.mainnet-beta.solana.com"]);
     assert.deepEqual(hosts.getTokenLargestAccounts, ["api.mainnet-beta.solana.com"]);
     assert.deepEqual(hosts.getMultipleAccounts, ["solana-rpc.publicnode.com"]);

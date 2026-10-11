@@ -2083,6 +2083,9 @@ async function readLargestAccounts(input) {
     }));
     const rpc = new FallbackRpc(readers, endpoints);
     const largest = await mainnetOnlyClient(input, input.timeoutMs ?? 6000).getTokenLargestAccounts(checked.mint);
+    if (largest.ok && largest.value.length === 0) {
+        return emptyLargestSignal();
+    }
     if (!largest.ok) {
         const kind = classifyRpcFailure(largest.error, largest.httpStatus);
         const text = {
@@ -2284,13 +2287,10 @@ async function readWith(mint, registry, rpc, input) {
         });
     }
     else if (largest.value.length === 0) {
-        largestState = "ausente";
-        signals.push({
-            id: "cuentas",
-            level: "neutro",
-            title: loc("Cuentas con tokens", "Token accounts"),
-            explain: loc("La consulta respondió y la muestra volvió vacía. Es una ausencia comprobada de esa muestra, no una concentración de cero y no un censo.", "The query responded and the sample came back empty. That sample is confirmed absent. It is not zero concentration and it is not a census."),
-        });
+        // Una lista vacía no demuestra que nadie tenga tokens. USDC tiene millones de cuentas
+        // y el nodo a veces responde 200 con []. Es una lectura que no salió, no una ausencia.
+        largestState = "fallo";
+        signals.push(emptyLargestSignal());
     }
     else {
         largestState = "ok";
@@ -2694,11 +2694,19 @@ async function accountSample(rpc, mint, program, curvePda, largest, denominator)
             level: high ? "atencion" : "neutro",
             title: loc("Cuentas con tokens", "Token accounts"),
             explain: loc(rows.length === 0
-                ? "La muestra de las 20 cuentas con más tokens volvió vacía. No es un censo y no es concentración cero."
+                ? "La muestra de cuentas volvió vacía. No se leyó quién tiene más tokens. No es una ausencia de cuentas ni una concentración de cero."
                 : `Se leyeron ${rows.length} cuentas con tokens, como máximo 20. No es un censo ni un recuento de personas.${top?.percent ? ` La mayor cuenta que no es la de la curva tiene el ${top.percent} %.` : ""}\n${listed}`, rows.length === 0
-                ? "The sample of the 20 largest token accounts came back empty. It is not a census and it is not zero concentration."
+                ? "The account sample came back empty. Who holds the most tokens was not read. It is not an absence of accounts and it is not zero concentration."
                 : `${rows.length} token accounts were read, 20 at most. It is not a census and it is not a count of people.${top?.percent ? ` The largest account that is not the curve account has ${top.percent}%.` : ""}\n${listed}`),
         },
+    };
+}
+function emptyLargestSignal() {
+    return {
+        id: "cuentas",
+        level: "atencion",
+        title: loc("Cuentas con tokens", "Token accounts"),
+        explain: loc("La muestra de cuentas volvió vacía. No se leyó quién tiene más tokens. No es una ausencia de cuentas ni una concentración de cero.", "The account sample came back empty. Who holds the most tokens was not read. It is not an absence of accounts and it is not zero concentration."),
     };
 }
 function emptySample() {
@@ -2755,7 +2763,7 @@ function curveSignal(account, curve) {
 /**
  * Resumen en lenguaje sencillo de una lectura.
  * Tres bloques, sin puntuación, sin semáforo de «seguro» y sin recomendación.
- * Cada punto apunta a su párrafo en «Entender este resultado».
+ * Cada punto: título corto, una frase y un enlace a «Entender».
  */
 
 const TOPIC_BY_ID = {
@@ -2765,6 +2773,7 @@ const TOPIC_BY_ID = {
   programa: "permisos",
   emision: "permisos",
   congelacion: "permisos",
+  permisos: "permisos",
   extensiones: "permisos",
   metadatos: "metadatos",
   enlace: "metadatos",
@@ -2776,27 +2785,101 @@ const TOPIC_BY_ID = {
   curva: "curva",
 };
 
-const SUMMARY_COPY = {
+const ATTENTION = {
   emision: {
-    es: "Permiso de emisión activo. En una moneda estable es habitual: quien emite añade unidades cuando entra dinero. Si el proyecto prometió un suministro fijo, el mismo permiso permite crear más. Conviene contrastarlo con lo que promete el proyecto. Esta lectura no dice cuál de los dos casos es.",
-    en: "Active mint permission. On a stablecoin that is common: the issuer adds units when money comes in. If the project promised a fixed supply, the same permission can create more. It is worth comparing with what the project promises. This reading does not say which of the two cases this is.",
+    title: { es: "Permiso de emisión", en: "Mint permission" },
+    lead: { es: "Está activo. En una moneda estable es habitual.", en: "It is active. On a stablecoin that is common." },
+    detail: {
+      es: "Quien emite añade unidades cuando entra dinero. Si el proyecto prometió un suministro fijo, el mismo permiso permite crear más. Conviene contrastarlo con lo que promete el proyecto. Esta lectura no dice cuál de los dos casos es.",
+      en: "The issuer adds units when money comes in. If the project promised a fixed supply, the same permission can create more. It is worth comparing with what the project promises. This reading does not say which of the two cases this is.",
+    },
   },
   congelacion: {
-    es: "Permiso de congelación activo. Puede bloquear cuentas de este token. Una señal sola no acusa al proyecto.",
-    en: "Active freeze permission. It can block accounts of this token. One signal does not accuse the project.",
+    title: { es: "Permiso de congelación", en: "Freeze permission" },
+    lead: { es: "Está activo y puede bloquear cuentas de este token.", en: "It is active and can block accounts of this token." },
+    detail: { es: "Una señal sola no acusa al proyecto.", en: "One signal does not accuse the project." },
   },
   mutable: {
-    es: "Los metadatos se pueden cambiar. El nombre o el símbolo de esta lectura pueden no ser los de mañana. Eso, por sí solo, no es una suplantación.",
-    en: "The metadata can be changed. The name or symbol in this reading may not be tomorrow's. That, on its own, is not impersonation.",
-  },
-  concentracion: {
-    es: "En la muestra, una cuenta reúne una parte grande de los tokens. La muestra no es un censo de personas. Una señal sola no acusa al proyecto.",
-    en: "In the sample, one account holds a large share of the tokens. The sample is not a census of people. One signal does not accuse the project.",
+    title: { es: "Nombre y símbolo", en: "Name and symbol" },
+    lead: { es: "Se pueden cambiar. Mañana pueden ser otros.", en: "They can change. Tomorrow they may be different." },
+    detail: { es: "Eso, por sí solo, no es una suplantación.", en: "That, on its own, is not impersonation." },
   },
   suministro: {
-    es: "La lectura extra del suministro no coincide con los bytes del mint. Se muestra la cifra de los bytes y no se calculan porcentajes. Eso no acusa al proyecto.",
-    en: "The extra supply read does not match the mint bytes. The figure shown is the one from the bytes, and percentages are not calculated. That does not accuse the project.",
+    title: { es: "Suministro total", en: "Total supply" },
+    lead: { es: "Las dos lecturas de la cantidad no coinciden.", en: "The two reads of the amount do not match." },
+    detail: {
+      es: "Se muestra la cifra del mint y no se calculan porcentajes. Eso no acusa al proyecto.",
+      en: "The figure shown is the one from the mint, and percentages are not calculated. That does not accuse the project.",
+    },
   },
+  comision: {
+    title: { es: "Comisión al enviar", en: "Fee on transfer" },
+    lead: { es: "El token puede quedarse una parte de cada envío.", en: "The token can keep part of each transfer." },
+    detail: { es: "Una señal sola no acusa al proyecto.", en: "One signal does not accuse the project." },
+  },
+  delegado: {
+    title: { es: "Delegado permanente", en: "Permanent delegate" },
+    lead: { es: "Alguien puede mover tokens de otras cuentas.", en: "Someone can move tokens out of other accounts." },
+    detail: { es: "Eso no pide permiso a quien los tiene. Una señal sola no acusa al proyecto.", en: "That does not ask the account that holds them. One signal does not accuse the project." },
+  },
+  gancho: {
+    title: { es: "Revisión de cada envío", en: "Check on each transfer" },
+    lead: { es: "Un programa puede revisar cada envío y rechazarlo.", en: "A program can inspect each transfer and reject it." },
+    detail: { es: "Una señal sola no acusa al proyecto.", en: "One signal does not accuse the project." },
+  },
+  "estado-inicial": {
+    title: { es: "Cuentas nuevas congeladas", en: "New accounts start frozen" },
+    lead: { es: "Una cuenta nueva puede no poder mover tokens.", en: "A new account may be unable to move tokens." },
+    detail: { es: "Una señal sola no acusa al proyecto.", en: "One signal does not accuse the project." },
+  },
+  "no-transferible": {
+    title: { es: "No transferible", en: "Non-transferable" },
+    lead: { es: "El token dice que no se puede enviar.", en: "The token says it cannot be sent." },
+    detail: { es: "Esta lectura no prueba qué ocurre al intentarlo.", en: "This reading does not prove what happens if someone tries." },
+  },
+  cierre: {
+    title: { es: "Cierre del token", en: "Closing the token" },
+    lead: { es: "Alguien puede cerrar este token.", en: "Someone can close this token." },
+    detail: { es: "Una señal sola no acusa al proyecto.", en: "One signal does not accuse the project." },
+  },
+  extensiones: {
+    title: { es: "Extensiones", en: "Extensions" },
+    lead: { es: "No se pudieron separar las extensiones.", en: "The extensions could not be split." },
+    detail: { es: "No se afirma cuál falta. Una señal sola no acusa al proyecto.", en: "This does not claim which one is missing. One signal does not accuse the project." },
+  },
+  desconocida: {
+    title: { es: "Extensión sin describir", en: "Undescribed extension" },
+    lead: { es: "Hay una extensión que esta lectura no describe.", en: "There is an extension this reading does not describe." },
+    detail: { es: "No se da por inofensiva.", en: "It is not treated as harmless." },
+  },
+  "metadatos-distintos": {
+    title: { es: "Nombre y símbolo", en: "Name and symbol" },
+    lead: { es: "Las dos fuentes no coinciden.", en: "The two sources do not match." },
+    detail: { es: "Una señal sola no acusa al proyecto.", en: "One signal does not accuse the project." },
+  },
+  invisibles: {
+    title: { es: "Nombre", en: "Name" },
+    lead: { es: "Hay caracteres que no se ven en el nombre.", en: "There are characters you cannot see in the name." },
+    detail: { es: "Una señal sola no acusa al proyecto.", en: "One signal does not accuse the project." },
+  },
+  copia: {
+    title: { es: "Parecido con STUBX", en: "Likeness with STUBX" },
+    lead: { es: "El nombre se parece, pero la dirección es otra.", en: "The name looks similar, but the address is different." },
+    detail: { es: "Esto no dice quién lo creó.", en: "This does not say who created it." },
+  },
+  parecido: {
+    title: { es: "Parecido con el registro", en: "Likeness with the registry" },
+    lead: { es: "Un dato coincide con el registro y la dirección es otra.", en: "A fact matches the registry and the address is different." },
+    detail: { es: "La coincidencia no dice quién lo hizo.", en: "The match does not say who did it." },
+  },
+};
+
+const RISK_EXTENSION = {
+  1: "comision",
+  3: "cierre",
+  9: "no-transferible",
+  12: "delegado",
+  14: "gancho",
 };
 
 const EMPTY = {
@@ -2814,14 +2897,14 @@ const EMPTY = {
   },
 };
 
-const SERVICE = {
+const SUMMARY_SERVICE = {
   es: "El servicio público no respondió, prueba otra vez en un minuto.",
   en: "The public service did not respond, try again in a minute.",
 };
 
-const CURVE_NA = {
-  es: "No aplica: este token no se creó en Pump.fun",
-  en: "Not applicable: this token was not created on Pump.fun",
+const CURVE_NOTE = {
+  es: "Curva de Pump.fun: no aplica",
+  en: "Pump.fun curve: not applicable",
 };
 
 const SUMMARY_HEADINGS = Object.freeze({
@@ -2830,11 +2913,13 @@ const SUMMARY_HEADINGS = Object.freeze({
   attention: { es: "Qué requiere atención", en: "What needs attention" },
   missing: { es: "Qué falta", en: "What is missing" },
   retry: { es: "Reintentar", en: "Try again" },
+  understand: { es: "Entender →", en: "Understand →" },
+  more: { es: "Más detalle", en: "More detail" },
 });
 
 function topicOf(id) {
   if (TOPIC_BY_ID[id]) return TOPIC_BY_ID[id];
-  if (typeof id === "string" && id.startsWith("extension")) return "permisos";
+  if (typeof id === "string" && (id.startsWith("extension") || id === "desconocida")) return "permisos";
   return "permisos";
 }
 
@@ -2842,81 +2927,365 @@ function summaryPair(es, en) {
   return { es, en };
 }
 
-function failedSignal(signal) {
+function summaryPoint(topic, title, lead, detail) {
+  return { topic, title, lead, detail: detail || null };
+}
+
+function attentionPoint(id) {
+  const copy = ATTENTION[id] || (typeof id === "string" && id.startsWith("extension") ? ATTENTION.desconocida : null);
+  if (!copy) return null;
+  return summaryPoint(topicOf(id), copy.title, copy.lead, copy.detail);
+}
+
+function findFact(facts, id) {
+  return (facts || []).find((item) => item && item.id === id) || null;
+}
+
+function summaryFormatUnits(raw, decimals, lang) {
+  if (typeof raw !== "string" || !/^\d+$/.test(raw)) return null;
+  const scale = Number(decimals);
+  if (!Number.isInteger(scale) || scale < 0 || scale > 18) return null;
+  const padded = raw.padStart(scale + 1, "0");
+  const whole = padded.slice(0, padded.length - scale).replace(/^0+(?=\d)/, "");
+  const frac = scale ? padded.slice(-scale).replace(/0+$/, "") : "";
+  const sep = lang === "en" ? "," : ".";
+  const dec = lang === "en" ? "." : ",";
+  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, sep);
+  return frac ? `${grouped}${dec}${frac}` : grouped;
+}
+
+function supplyPair(raw, decimals) {
+  const es = summaryFormatUnits(raw, decimals, "es");
+  const en = summaryFormatUnits(raw, decimals, "en");
+  return es && en ? { es, en } : null;
+}
+
+function cleanText(value) {
+  return typeof value === "string" && value.trim() ? value.trim() : "";
+}
+
+function contextFromView(view) {
+  const shown = view && view.shown ? view.shown : {};
+  const rows = Array.isArray(view && view.rows) ? view.rows : [];
+  const row = (label) => rows.find((item) => item && item.label && item.label.es === label);
+  const supplyRow = row("Suministro");
+  return {
+    supply: supplyPair(shown.supplyAccount, shown.decimals) || (supplyRow && supplyRow.value && supplyRow.value.es ? supplyRow.value : null),
+    name: cleanText(shown.name) || cleanText(row("Nombre") && row("Nombre").value && row("Nombre").value.es),
+    symbol: cleanText(shown.symbol) || cleanText(row("Símbolo") && row("Símbolo").value && row("Símbolo").value.es),
+    decimals: shown.decimals,
+    extensions: Array.isArray(shown.extensions) ? shown.extensions : [],
+  };
+}
+
+function contextFromCard(card) {
+  return {
+    supply: supplyPair(card && card.supplyAccount, card && card.decimals) || supplyPair(card && card.supplyRpc, card && card.decimals),
+    name: cleanText(card && card.name && card.name.text),
+    symbol: cleanText(card && card.symbol && card.symbol.text),
+    decimals: card ? card.decimals : null,
+    extensions: Array.isArray(card && card.extensions) ? card.extensions : [],
+  };
+}
+
+function nameLead(context) {
+  const name = context.name;
+  const symbol = context.symbol;
+  if (name && symbol && name !== symbol) return summaryPair(`${name} (${symbol}).`, `${name} (${symbol}).`);
+  if (name || symbol) return summaryPair(`${name || symbol}.`, `${name || symbol}.`);
+  return summaryPair("Se leyeron el nombre y el símbolo.", "The name and the symbol were read.");
+}
+
+function supplyLead(context, matched) {
+  const symbol = context.symbol ? ` ${context.symbol}` : "";
+  if (context.supply) {
+    const es = matched
+      ? `Hay ${context.supply.es}${symbol} y las dos lecturas coinciden.`
+      : `Hay ${context.supply.es}${symbol}.`;
+    const en = matched
+      ? `There are ${context.supply.en}${symbol} and the two reads match.`
+      : `There are ${context.supply.en}${symbol}.`;
+    return summaryPair(es, en);
+  }
+  return summaryPair(
+    matched ? "Se leyó la cantidad de tokens y las dos lecturas coinciden." : "Se leyó la cantidad de tokens.",
+    matched ? "The token amount was read and the two reads match." : "The token amount was read.",
+  );
+}
+
+function samplePercent(signal) {
+  const blob = `${signal?.explain?.es ?? ""} ${signal?.explain?.en ?? ""}`;
+  const found = blob.match(/(\d+(?:[.,]\d+)?)\s*%/);
+  return found ? found[1] : null;
+}
+
+function isUnread(signal) {
   const blob = `${signal?.title?.es ?? ""} ${signal?.explain?.es ?? ""} ${signal?.title?.en ?? ""} ${signal?.explain?.en ?? ""}`;
-  return /no se pudo|could not be checked|could not be read|no respondió|did not respond|consulta fallida|failed query/i.test(blob);
+  return /no se pudo|could not be checked|could not be read|could not be split|no respondió|did not respond|volvió vacía|came back empty|no se leyó|was not read/i.test(blob);
 }
 
 function genericAttention(signal) {
   const titleEs = signal?.title?.es || "Señal";
   const titleEn = signal?.title?.en || "Signal";
-  return {
-    topic: topicOf(signal?.id),
-    text: summaryPair(
-      `${titleEs}. Es un dato de esta lectura. Una señal sola no acusa al proyecto.`,
-      `${titleEn}. It is a fact from this reading. One signal does not accuse the project.`,
+  return summaryPoint(
+    topicOf(signal?.id),
+    summaryPair(titleEs, titleEn),
+    summaryPair("Es un dato de esta lectura.", "It is a fact from this reading."),
+    summaryPair("Una señal sola no acusa al proyecto.", "One signal does not accuse the project."),
+  );
+}
+
+function concentrationPoint(signal) {
+  const percent = samplePercent(signal);
+  const lead = percent
+    ? summaryPair(`Una cuenta reúne el ${percent} % de la muestra.`, `One account holds ${percent}% of the sample.`)
+    : summaryPair("Una cuenta reúne una parte grande de la muestra.", "One account holds a large share of the sample.");
+  return summaryPoint(
+    "distribucion",
+    summaryPair("Concentración", "Concentration"),
+    lead,
+    summaryPair(
+      "La muestra no es un censo de personas. Una señal sola no acusa al proyecto.",
+      "The sample is not a census of people. One signal does not accuse the project.",
     ),
-  };
+  );
 }
 
 function attentionFromSignals(signals) {
   const items = [];
   for (const signal of signals || []) {
     if (!signal || (signal.level !== "atencion" && signal.level !== "riesgo")) continue;
-    if (failedSignal(signal)) continue;
-    if (signal.id === "emision") items.push({ topic: "permisos", text: SUMMARY_COPY.emision });
-    else if (signal.id === "congelacion") items.push({ topic: "permisos", text: SUMMARY_COPY.congelacion });
-    else if (signal.id === "mutable") items.push({ topic: "metadatos", text: SUMMARY_COPY.mutable });
-    else if (signal.id === "cuentas") items.push({ topic: "distribucion", text: SUMMARY_COPY.concentracion });
-    else if (signal.id === "suministro") items.push({ topic: "suministro", text: SUMMARY_COPY.suministro });
-    else items.push(genericAttention(signal));
+    if (signal.id === "cuentas") {
+      if (samplePercent(signal)) items.push(concentrationPoint(signal));
+      continue;
+    }
+    if (isUnread(signal)) continue;
+    const known = attentionPoint(signal.id);
+    items.push(known || genericAttention(signal));
   }
   return items;
 }
 
 function attentionFromCard(card) {
   const items = [];
-  if (card?.mintAuthority?.state === "activa") items.push({ topic: "permisos", text: SUMMARY_COPY.emision });
-  if (card?.freezeAuthority?.state === "activa") items.push({ topic: "permisos", text: SUMMARY_COPY.congelacion });
-  if (card?.metadataMutable === "si") items.push({ topic: "metadatos", text: SUMMARY_COPY.mutable });
-  return items;
-}
-
-function factLine(fact) {
-  if (fact.state === "ausente") {
-    return summaryPair(`${fact.label.es}: ausente comprobado`, `${fact.label.en}: confirmed absent`);
+  if (card?.mintAuthority?.state === "activa") items.push(attentionPoint("emision"));
+  if (card?.freezeAuthority?.state === "activa") items.push(attentionPoint("congelacion"));
+  if (card?.metadataMutable === "si") items.push(attentionPoint("mutable"));
+  for (const extension of card?.extensions || []) {
+    if (!extension) continue;
+    if (extension.status === "no_soportada") items.push(attentionPoint("extension"));
+    else if (RISK_EXTENSION[extension.type]) items.push(attentionPoint(RISK_EXTENSION[extension.type]));
   }
-  if (fact.state === "no_aplica" && fact.id === "curva") return CURVE_NA;
-  if (fact.state === "no_aplica") return summaryPair(`${fact.label.es}: no aplica`, `${fact.label.en}: not applicable`);
-  if (fact.state === "fallo") return summaryPair(`${fact.label.es}: consulta fallida`, `${fact.label.en}: failed query`);
-  return fact.label;
+  return items.filter(Boolean);
 }
 
-function assemble(facts, attention) {
+function revokedPair(signals, card) {
+  if (card) {
+    return card.mintAuthority?.state === "revocada" && card.freezeAuthority?.state === "revocada";
+  }
+  const revoked = (id) => {
+    const signal = (signals || []).find((item) => item && item.id === id);
+    return Boolean(signal && /Nadie puede/.test(signal.title?.es || ""));
+  };
+  return revoked("emision") && revoked("congelacion");
+}
+
+function pushMissing(missing, topic, title, lead) {
+  missing.push(summaryPoint(topic, title, lead));
+}
+
+function compose(facts, attention, context, signals, card) {
+  const list = Array.isArray(facts) ? facts : [];
   const checked = [];
   const missing = [];
-  for (const fact of facts) {
-    if (!fact || !fact.label) continue;
-    if (fact.state === "no_consultado") continue;
-    const text = factLine(fact);
-    const item = { topic: topicOf(fact.id), text };
-    if (fact.state === "fallo") missing.push(item);
-    else if (fact.state === "ok" || fact.state === "ausente" || fact.state === "no_aplica") checked.push(item);
+  let note = null;
+  const whole = list.length === 1 && list[0] && list[0].state === "fallo" && /Esta lectura/.test(list[0].label?.es || "");
+  if (whole) {
+    pushMissing(
+      missing,
+      "suministro",
+      summaryPair("Esta lectura", "This reading"),
+      summaryPair("No se pudo completar.", "It could not be completed."),
+    );
+  } else {
+    const supply = findFact(list, "suministro");
+    const extra = findFact(list, "suministro-extra");
+    if (supply?.state === "ok") {
+      checked.push(summaryPoint("suministro", summaryPair("Suministro total", "Total supply"), supplyLead(context, extra?.state === "ok")));
+      if (extra?.state === "fallo") {
+        pushMissing(
+          missing,
+          "suministro",
+          summaryPair("Suministro total", "Total supply"),
+          summaryPair("No se pudo leer el suministro otra vez.", "The supply could not be read again."),
+        );
+      }
+    } else if (supply?.state === "fallo" || (!supply && extra?.state === "fallo")) {
+      pushMissing(
+        missing,
+        "suministro",
+        summaryPair("Suministro total", "Total supply"),
+        summaryPair("No se pudo leer la cantidad de tokens.", "The token amount could not be read."),
+      );
+    } else if (extra?.state === "ok" && !supply) {
+      checked.push(summaryPoint("suministro", summaryPair("Suministro total", "Total supply"), supplyLead(context, false)));
+    }
+
+    const decimals = findFact(list, "decimales");
+    if (decimals?.state === "ok" && Number.isInteger(context.decimals)) {
+      checked.push(summaryPoint(
+        "suministro",
+        summaryPair("Decimales", "Decimals"),
+        summaryPair(`Usa ${context.decimals} decimales.`, `It uses ${context.decimals} decimals.`),
+      ));
+    } else if (decimals?.state === "fallo") {
+      pushMissing(missing, "suministro", summaryPair("Decimales", "Decimals"), summaryPair("No se pudieron leer los decimales.", "The decimals could not be read."));
+    }
+
+    const meta = findFact(list, "metadatos");
+    const name = findFact(list, "nombre");
+    const symbol = findFact(list, "simbolo");
+    const identity = meta || name || symbol;
+    const identityRead = meta?.state === "ok" || name?.state === "ok" || symbol?.state === "ok";
+    const identityFailed = meta?.state === "fallo" || name?.state === "fallo" || symbol?.state === "fallo";
+    if (identityRead) {
+      checked.push(summaryPoint("metadatos", summaryPair("Nombre y símbolo", "Name and symbol"), nameLead(context)));
+    } else if (identity?.state === "ausente") {
+      checked.push(summaryPoint(
+        "metadatos",
+        summaryPair("Nombre y símbolo", "Name and symbol"),
+        summaryPair("No hay nombre ni símbolo en esta lectura.", "There is no name or symbol in this reading."),
+      ));
+    }
+    if (identityFailed && !identityRead) {
+      pushMissing(
+        missing,
+        "metadatos",
+        summaryPair("Nombre y símbolo", "Name and symbol"),
+        summaryPair("No se pudo leer el nombre ni el símbolo.", "The name and the symbol could not be read."),
+      );
+    } else if (symbol?.state === "fallo") {
+      pushMissing(
+        missing,
+        "metadatos",
+        summaryPair("Símbolo", "Symbol"),
+        summaryPair("No se pudo leer el símbolo.", "The symbol could not be read."),
+      );
+    }
+
+    const link = findFact(list, "enlace") || findFact(list, "uri");
+    if (link?.state === "ok") {
+      checked.push(summaryPoint(
+        "metadatos",
+        summaryPair("Enlace de metadatos", "Metadata link"),
+        summaryPair("Se leyó el enlace de metadatos.", "The metadata link was read."),
+      ));
+    } else if (link?.state === "ausente") {
+      checked.push(summaryPoint(
+        "metadatos",
+        summaryPair("Enlace de metadatos", "Metadata link"),
+        summaryPair("No tiene enlace de metadatos.", "It has no metadata link."),
+      ));
+    } else if (link?.state === "fallo") {
+      pushMissing(
+        missing,
+        "metadatos",
+        summaryPair("Enlace de metadatos", "Metadata link"),
+        summaryPair("No se pudo leer el enlace de metadatos.", "The metadata link could not be read."),
+      );
+    }
+
+    const accounts = findFact(list, "cuentas");
+    if (accounts && accounts.state !== "no_consultado" && accounts.state !== "no_aplica") {
+      if (accounts.state === "ok") {
+        checked.push(summaryPoint(
+          "distribucion",
+          summaryPair("Cuentas con más tokens", "Largest token accounts"),
+          summaryPair("Se leyó una muestra de las cuentas con más tokens.", "A sample of the largest token accounts was read."),
+        ));
+      } else {
+        pushMissing(
+          missing,
+          "distribucion",
+          summaryPair("Cuentas con más tokens", "Largest token accounts"),
+          summaryPair("No se pudo leer quién tiene más tokens.", "Who holds the most tokens could not be read."),
+        );
+      }
+    }
+
+    const curve = findFact(list, "curva");
+    if (curve?.state === "no_aplica") {
+      note = summaryPoint("curva", summaryPair("Curva de Pump.fun", "Pump.fun curve"), CURVE_NOTE);
+    } else if (curve?.state === "ok") {
+      checked.push(summaryPoint(
+        "curva",
+        summaryPair("Curva de Pump.fun", "Pump.fun curve"),
+        summaryPair("Se leyó la curva.", "The curve was read."),
+      ));
+    } else if (curve?.state === "ausente") {
+      checked.push(summaryPoint(
+        "curva",
+        summaryPair("Curva de Pump.fun", "Pump.fun curve"),
+        summaryPair("No hay cuenta de la curva.", "There is no curve account."),
+      ));
+    } else if (curve?.state === "fallo") {
+      pushMissing(
+        missing,
+        "curva",
+        summaryPair("Curva de Pump.fun", "Pump.fun curve"),
+        summaryPair("No se pudo leer la curva.", "The curve could not be read."),
+      );
+    }
+
+    if (card?.extensionsStatus === "fallo") {
+      pushMissing(missing, "permisos", ATTENTION.extensiones.title, ATTENTION.extensiones.lead);
+    }
+    if (revokedPair(signals, card)) {
+      checked.push(summaryPoint(
+        "permisos",
+        summaryPair("Permisos", "Permissions"),
+        summaryPair("Nadie puede crear más tokens ni congelar cuentas.", "Nobody can create more tokens or freeze accounts."),
+      ));
+    }
+    for (const id of ["emision", "congelacion"]) {
+      const permission = findFact(list, id);
+      if (permission?.state === "fallo") {
+        pushMissing(
+          missing,
+          "permisos",
+          id === "emision" ? summaryPair("Permiso de emisión", "Mint permission") : summaryPair("Permiso de congelación", "Freeze permission"),
+          id === "emision"
+            ? summaryPair("No se pudo leer el permiso de emisión.", "The mint permission could not be read.")
+            : summaryPair("No se pudo leer el permiso de congelación.", "The freeze permission could not be read."),
+        );
+      }
+    }
   }
+
+  for (const signal of signals || []) {
+    if (!signal || signal.id === "cuentas" || !isUnread(signal)) continue;
+    if (signal.level !== "atencion" && signal.level !== "riesgo") continue;
+    const known = attentionPoint(signal.id);
+    if (known) pushMissing(missing, known.topic, known.title, known.lead);
+    else if (signal.id === "extensiones" || (typeof signal.id === "string" && signal.id.startsWith("extension"))) {
+      pushMissing(missing, "permisos", ATTENTION.extensiones.title, ATTENTION.extensiones.lead);
+    }
+  }
+
   return {
     title: SUMMARY_HEADINGS.title,
     blocks: [
       { id: "comprobado", heading: SUMMARY_HEADINGS.checked, items: checked, empty: EMPTY.checked },
       { id: "atencion", heading: SUMMARY_HEADINGS.attention, items: attention, empty: EMPTY.attention },
-      { id: "falta", heading: SUMMARY_HEADINGS.missing, items: missing, empty: EMPTY.missing, service: missing.length ? SERVICE : null },
+      { id: "falta", heading: SUMMARY_HEADINGS.missing, items: missing, empty: EMPTY.missing, service: missing.length ? SUMMARY_SERVICE : null },
     ],
+    note,
     retry: missing.length > 0,
   };
 }
 
 function buildReadingSummary(view) {
   const facts = Array.isArray(view?.facts) ? view.facts.slice() : [];
-  const attention = attentionFromSignals(view?.signals);
   if (!facts.length && (view?.kind === "red" || view?.kind === "limite" || view?.kind === "tiempo" || view?.ok === false)) {
     facts.push({
       id: "suministro",
@@ -2924,7 +3293,7 @@ function buildReadingSummary(view) {
       state: "fallo",
     });
   }
-  return assemble(facts, attention);
+  return compose(facts, attentionFromSignals(view?.signals), contextFromView(view), view?.signals, null);
 }
 
 function pushFact(facts, id, es, en, state) {
@@ -2942,51 +3311,26 @@ function authorityState(field) {
 
 function summaryFromCard(card) {
   const facts = [];
-  if (!card) return assemble(facts, []);
-  const programState = card.programStatus === "verificado" || card.programStatus === "ok"
-    ? "ok"
-    : card.programStatus === "no_aplica"
-      ? "no_aplica"
-      : card.programStatus === "no_consultado"
-        ? "no_consultado"
-        : "fallo";
-  pushFact(facts, "programa", "Programa", "Program", programState);
-  pushFact(facts, "emision", "Permiso de emisión", "Mint permission", authorityState(card.mintAuthority));
-  pushFact(facts, "congelacion", "Permiso de congelación", "Freeze permission", authorityState(card.freezeAuthority));
+  if (!card) return compose(facts, [], { supply: null, name: "", symbol: "", decimals: null, extensions: [] }, null, null);
   const account = typeof card.supplyAccount === "string" && /^\d+$/.test(card.supplyAccount);
   const extra = card.supplyRpcStatus === "verificado" && typeof card.supplyRpc === "string" && /^\d+$/.test(card.supplyRpc);
   if (card.supplyRpcStatus === "no_aplica" && !account) {
     pushFact(facts, "suministro", "Suministro", "Supply", "no_aplica");
   } else if (account) {
-    pushFact(facts, "suministro", "Suministro en los bytes del mint", "Supply in the mint bytes", "ok");
-    pushFact(
-      facts,
-      "suministro-extra",
-      "Consulta extra del suministro",
-      "Extra supply query",
-      extra && card.supplyRpc === card.supplyAccount ? "ok" : "fallo",
-    );
+    pushFact(facts, "suministro", "Suministro", "Supply", "ok");
+    if (card.supplyRpcStatus !== "no_consultado") {
+      pushFact(facts, "suministro-extra", "Suministro", "Supply", extra && card.supplyRpc === card.supplyAccount ? "ok" : "fallo");
+    }
   } else if (extra) {
-    pushFact(facts, "suministro-extra", "Consulta extra del suministro", "Extra supply query", "ok");
+    pushFact(facts, "suministro-extra", "Suministro", "Supply", "ok");
   } else if (card.supplyRpcStatus !== "no_consultado") {
     pushFact(facts, "suministro", "Suministro", "Supply", "fallo");
   }
-  const decimalsState = card.decimals === null || card.decimals === undefined ? "ausente" : "ok";
-  pushFact(facts, "decimales", "Decimales", "Decimals", decimalsState);
+  if (card.decimals === null || card.decimals === undefined) pushFact(facts, "decimales", "Decimales", "Decimals", "ausente");
+  else pushFact(facts, "decimales", "Decimales", "Decimals", "ok");
   pushFact(facts, "nombre", "Nombre", "Name", textState(card.name));
   pushFact(facts, "simbolo", "Símbolo", "Symbol", textState(card.symbol));
   pushFact(facts, "uri", "Enlace de metadatos", "Metadata link", textState(card.uri));
-  pushFact(facts, "mutable", "Metadatos que se pueden cambiar", "Metadata that can change", mutableState(card.metadataMutable));
-  if (card.extensionsStatus && card.extensionsStatus !== "no_consultado") {
-    const extensionState = card.extensionsStatus === "verificado" || card.extensionsStatus === "ok"
-      ? "ok"
-      : card.extensionsStatus === "no_aplica"
-        ? "no_aplica"
-        : card.extensionsStatus === "ausente"
-          ? "ausente"
-          : "fallo";
-    pushFact(facts, "extensiones", "Extensiones", "Extensions", extensionState);
-  }
   const curve = card.curve || {};
   const curveState = curve.status === "verificado" || curve.status === "ok"
     ? "ok"
@@ -2998,17 +3342,14 @@ function summaryFromCard(card) {
           ? "no_consultado"
           : "fallo";
   pushFact(facts, "curva", "Curva", "Curve", curveState);
-  if (card.largestStatus && card.largestStatus !== "no_consultado" && card.largestStatus !== "no_disponible") {
-    const largestState = card.largestStatus === "ok" || card.largestStatus === "verificado"
-      ? "ok"
-      : card.largestStatus === "ausente"
-        ? "ausente"
-        : card.largestStatus === "no_aplica"
-          ? "no_aplica"
-          : "fallo";
-    pushFact(facts, "cuentas", "Cuentas con más tokens", "Largest token accounts", largestState);
+  if (card.largestStatus === "ok" || card.largestStatus === "verificado") {
+    pushFact(facts, "cuentas", "Cuentas con más tokens", "Largest token accounts", "ok");
+  } else if (card.largestStatus === "fallo" || card.largestStatus === "ausente") {
+    pushFact(facts, "cuentas", "Cuentas con más tokens", "Largest token accounts", "fallo");
   }
-  return assemble(facts, attentionFromCard(card));
+  pushFact(facts, "emision", "Permiso de emisión", "Mint permission", authorityState(card.mintAuthority));
+  pushFact(facts, "congelacion", "Permiso de congelación", "Freeze permission", authorityState(card.freezeAuthority));
+  return compose(facts, attentionFromCard(card), contextFromCard(card), null, card);
 }
 
 function textState(field) {
@@ -3019,14 +3360,6 @@ function textState(field) {
   if (field.status === "no_consultado") return "no_consultado";
   if (field.text) return "ok";
   return "ausente";
-}
-
-function mutableState(value) {
-  if (value === "si" || value === "no") return "ok";
-  if (value === "ausente") return "ausente";
-  if (value === "no_aplica") return "no_aplica";
-  if (value === "no_consultado") return "no_consultado";
-  return "fallo";
 }
 
 function renderReadingSummary(parent, model, lang, options) {
@@ -3041,32 +3374,23 @@ function renderReadingSummary(parent, model, lang, options) {
     const box = document.createElement("div");
     box.className = "bloque-resumen";
     box.dataset.bloque = block.id;
-    const heading = document.createElement("h4");
-    heading.textContent = block.heading[language];
-    box.append(heading);
+    const head = document.createElement("div");
+    head.className = "cabecera-bloque";
+    head.append(summaryChip(block.id), headingNode(block.heading[language]));
+    box.append(head);
     if (!block.items.length) {
       const empty = document.createElement("p");
+      empty.className = "punto-vacio";
       empty.textContent = block.empty[language];
       box.append(empty);
     } else {
       const list = document.createElement("ul");
-      for (const item of block.items) {
-        const row = document.createElement("li");
-        const link = document.createElement("a");
-        link.href = `#entender-${item.topic}`;
-        link.dataset.tema = item.topic;
-        link.textContent = item.text[language];
-        link.addEventListener("click", (event) => {
-          event.preventDefault();
-          openEntender(link, item.topic);
-        });
-        row.append(link);
-        list.append(row);
-      }
+      for (const item of block.items) list.append(summaryItem(item, language, block.id));
       box.append(list);
     }
     if (block.service) {
       const service = document.createElement("p");
+      service.className = "aviso-servicio";
       service.textContent = block.service[language];
       box.append(service);
     }
@@ -3076,15 +3400,76 @@ function renderReadingSummary(parent, model, lang, options) {
       button.className = "reintentar-resumen";
       if (options?.retryId) button.id = options.retryId;
       button.textContent = SUMMARY_HEADINGS.retry[language];
-      if (typeof options?.onRetry === "function") {
-        button.addEventListener("click", () => options.onRetry());
-      }
+      if (typeof options?.onRetry === "function") button.addEventListener("click", () => options.onRetry());
       box.append(button);
     }
     section.append(box);
   }
+  if (model.note) section.append(summaryNote(model.note, language));
   parent.append(section);
   return section;
+}
+
+function headingNode(text) {
+  const heading = document.createElement("h4");
+  heading.textContent = text;
+  return heading;
+}
+
+function summaryChip(blockId) {
+  const chip = document.createElement("span");
+  chip.className = "chip-resumen";
+  chip.setAttribute("aria-hidden", "true");
+  chip.dataset.marca = blockId === "atencion" ? "atencion" : blockId === "falta" ? "falta" : "leido";
+  return chip;
+}
+
+function summaryItem(item, language, blockId) {
+  const row = document.createElement("li");
+  row.className = "punto-resumen";
+  const body = document.createElement("div");
+  const title = document.createElement("p");
+  title.className = "punto-titulo";
+  title.textContent = item.title[language];
+  const lead = document.createElement("p");
+  lead.className = "punto-frase";
+  lead.textContent = item.lead[language];
+  body.append(title, lead);
+  if (item.detail && item.detail[language]) {
+    const details = document.createElement("details");
+    details.className = "punto-detalle";
+    const summary = document.createElement("summary");
+    summary.textContent = SUMMARY_HEADINGS.more[language];
+    const extra = document.createElement("p");
+    extra.textContent = item.detail[language];
+    details.append(summary, extra);
+    body.append(details);
+  }
+  body.append(understandLink(item.topic, language));
+  row.append(summaryChip(blockId), body);
+  return row;
+}
+
+function summaryNote(note, language) {
+  const line = document.createElement("p");
+  line.className = "nota-curva";
+  const text = document.createElement("span");
+  text.textContent = note.lead[language];
+  line.append(text, understandLink(note.topic, language));
+  return line;
+}
+
+function understandLink(topic, language) {
+  const link = document.createElement("a");
+  link.className = "entender-enlace";
+  link.href = `#entender-${topic}`;
+  link.dataset.tema = topic;
+  link.textContent = SUMMARY_HEADINGS.understand[language];
+  link.addEventListener("click", (event) => {
+    event.preventDefault();
+    openEntender(link, topic);
+  });
+  return link;
 }
 
 function openEntender(link, topic) {
