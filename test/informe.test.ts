@@ -10,6 +10,20 @@ const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 const CLONE = "ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump";
 const STUBX = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
 const WHEN = "2026-10-11T10:18:00.000Z";
+const ABSENT_FROM_FILE = [
+  "Cripto de alto riesgo",
+  "Puedes perderlo todo",
+  "No es consejo de inversión",
+  "High-risk crypto",
+  "You could lose everything",
+  "Not investment advice",
+  "Imagen generada con IA",
+  "AI-generated",
+];
+
+function assertAbsent(text: string) {
+  for (const phrase of ABSENT_FROM_FILE) assert.equal(text.includes(phrase), false, phrase);
+}
 
 type Line = { title: string; lead: string; note: string };
 type Block = { id: string; heading: string; lines: Line[]; empty: string; service: string };
@@ -26,7 +40,6 @@ type Model = {
   note: string;
   limitsLabel: string;
   limits: string[];
-  footer: string;
 };
 
 type ReportModule = {
@@ -107,7 +120,7 @@ function mockCtx() {
 }
 
 describe("informe descargable", () => {
-  test("la ficha lleva fecha, red, dirección, resumen, límites y el pie", async () => {
+  test("la ficha lleva fecha, red, dirección, resumen y límites, sin pie de riesgo", async () => {
     const { report, summary } = await load();
     const usdc = card({
       mint: USDC,
@@ -145,7 +158,7 @@ describe("informe descargable", () => {
     assert.match(model.note, /Curva de Pump.fun: no aplica/);
     assert.equal(model.limitsLabel, "Límites");
     assert.match(model.limits.join(" "), /no aparece como comprobado/);
-    assert.equal(model.footer, "Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión");
+    assertAbsent(report.reportPaintLines(model).join("\n"));
     const english = report.reportModel({
       summary: summary.summaryFromCard(usdc),
       mint: USDC,
@@ -169,7 +182,7 @@ describe("informe descargable", () => {
     assert.ok(englishZone);
     assert.equal(english.date.includes(englishZone), true);
     assert.equal(english.origin, "Made on stubxai.com · not affiliated with third-party tokens");
-    assert.equal(english.footer, "High-risk crypto · You could lose everything · Not investment advice");
+    assertAbsent(report.reportPaintLines(english).join("\n"));
     assert.match(joined(english, "comprobado"), /It says it is called \u201CUSD Coin\u201D \(\u201CUSDC\u201D\)/);
     assert.equal(joined(english, "comprobado").includes("«"), false);
     assert.equal(joined(model, "falta").includes("Curva de Pump.fun"), false);
@@ -254,6 +267,8 @@ describe("informe descargable", () => {
     assert.match(joined(dropped, "atencion"), /Ninguna señal de esta lectura pide atención/);
     assert.equal(checked.includes("1.000.000.000 STUBX"), false);
     assert.match(checked, /1\.000\.000\.000 tokens/);
+    assertAbsent(lines.join("\n"));
+    assertAbsent(report.reportPaintLines(ordered).join("\n"));
     assert.equal(model.address, CLONE);
     const drawn = report.drawReport(mockCtx().ctx, model, 840);
     assert.ok(drawn.warningBottom > drawn.warningTop);
@@ -517,6 +532,10 @@ describe("informe descargable", () => {
     }, "en");
     assert.match(joined(markedEnglish, "comprobado"), /\u201CA&B<i>\u201D/);
     assert.equal(joined(markedEnglish, "falta").includes("Pump.fun curve"), false);
+    assertAbsent(report.reportPaintLines(namedModel).join("\n"));
+    assertAbsent(report.reportPaintLines(namedEnglish).join("\n"));
+    assertAbsent(report.reportPaintLines(markedModel).join("\n"));
+    assertAbsent(report.reportPaintLines(markedEnglish).join("\n"));
     const largo = read("largo.json");
     const longModel = report.reportModel(largo, "es");
     assert.match(longModel.date, /\d{2}:\d{2}:\d{2}/);
@@ -525,6 +544,7 @@ describe("informe descargable", () => {
     assert.match(longAttention?.lines[0]?.lead || "", /Se parece a STUBX pero no es la dirección oficial/);
     assert.equal(joined(longModel, "falta").includes("Curva de Pump.fun"), false);
     assert.match(longModel.note, /Curva de Pump.fun: no aplica/);
+    assertAbsent(report.reportPaintLines(longModel).join("\n"));
     const drawn = report.drawReport(mockCtx().ctx, longModel, 840);
     const warningHeight = Math.max(0, drawn.warningBottom - drawn.warningTop);
     const plan = report.reportPagePlan(drawn.height, drawn.limitsTop, 1500, warningHeight);
@@ -557,7 +577,7 @@ describe("informe descargable", () => {
     assert.equal(painted.includes("&lt;script&gt;"), false);
     assert.equal(painted.includes("\u202E"), false);
     assert.match(painted, new RegExp(`${USDC}<b>`));
-    assert.match(painted, /Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión/);
+    assertAbsent(painted);
     assert.match(painted, /Generado en stubxai.com · herramienta no oficial para tokens de terceros/);
     assert.match(painted, /Solana mainnet/);
     const titlePaint = calls.find((item) => item.op === "fillText" && item.text?.includes("no es un certificado"));
@@ -695,7 +715,7 @@ describe("informe descargable", () => {
     assert.equal(actions.includes("stubx-resumen"), false);
     assert.equal(actions.includes("reportDownloadBox"), false);
     assert.match(notebook, /reportDownloadBox/);
-    assert.match(informe, /Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión/);
+    assertAbsent(informe);
     assert.equal(/\b(precio|compra ya|urgente|guaranteed)\b/i.test(informe), false);
     for (const rel of ["web/v2/verify/index.html", "web/v2/cuaderno/index.html"]) {
       const html = read(rel);

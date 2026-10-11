@@ -169,7 +169,22 @@ function expectSameReading(data) {
   const clock = data.clock.match(/\d{2}:\d{2}:\d{2}/);
   expect(clock).toBeTruthy();
   expect(data.date).toContain(clock[0]);
-  if (data.lang === "en") expect(data.lines.join("\n").includes("«")).toBe(false);
+  const painted = data.lines.join("\n");
+  if (data.lang === "en") expect(painted.includes("«")).toBe(false);
+  for (const phrase of [
+    "Cripto de alto riesgo",
+    "Puedes perderlo todo",
+    "No es consejo de inversión",
+    "High-risk crypto",
+    "You could lose everything",
+    "Not investment advice",
+    "Imagen generada con IA",
+    "AI-generated",
+  ]) {
+    expect(painted.includes(phrase), phrase).toBe(false);
+  }
+  expect(painted).toContain(data.lang === "en" ? "Made on stubxai.com" : "Generado en stubxai.com");
+  expect(painted).toContain(data.lang === "en" ? "Limits" : "Límites");
   if (data.warning) {
     const needle = data.lang === "en" ? "It looks like STUBX" : "Se parece a STUBX";
     const at = data.lines.findIndex((line) => line.includes(needle));
@@ -288,6 +303,18 @@ test("los fixtures dejan PNG y PDF con el texto de la cadena", async ({ page }, 
     expect(pdf.subarray(0, 5).toString("utf8")).toBe("%PDF-");
     expect(result.date).toMatch(/\d{2}:\d{2}:\d{2}/);
     const text = result.lines.join("\n");
+    for (const phrase of [
+      "Cripto de alto riesgo",
+      "Puedes perderlo todo",
+      "No es consejo de inversión",
+      "High-risk crypto",
+      "You could lose everything",
+      "Not investment advice",
+      "Imagen generada con IA",
+      "AI-generated",
+    ]) {
+      expect(text.includes(phrase), phrase).toBe(false);
+    }
     if (item.stem.startsWith("informe-verificado")) {
       expect(text.includes("verificado")).toBe(true);
       expect(text.includes("verified")).toBe(true);
@@ -306,5 +333,84 @@ test("los fixtures dejan PNG y PDF con el texto de la cadena", async ({ page }, 
     }
     writeFileSync(path.join(dir, `${item.stem}.png`), png);
     writeFileSync(path.join(dir, `${item.stem}.pdf`), pdf);
+  }
+});
+
+const BANNED_IN_FILE = [
+  "Cripto de alto riesgo",
+  "Puedes perderlo todo",
+  "No es consejo de inversión",
+  "High-risk crypto",
+  "You could lose everything",
+  "Not investment advice",
+  "Imagen generada con IA",
+  "AI-generated",
+];
+
+test("USDC y ERYyy dejan un PNG en español y en inglés", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "el archivo se genera una sola vez");
+  test.setTimeout(120_000);
+  await mockRpc(page);
+  await page.goto("/verify/");
+  const dir = "/opt/cursor/artifacts";
+  mkdirSync(dir, { recursive: true });
+  const shots = [
+    { mint: USDC, lang: "es", stem: "informe-usdc-es", ready: "Dice llamarse «USD Coin»" },
+    { mint: USDC, lang: "en", stem: "informe-usdc-en", ready: "It says it is called" },
+    { mint: CLONE, lang: "es", stem: "informe-clon-es", ready: "Se parece a STUBX pero no es la dirección oficial" },
+    { mint: CLONE, lang: "en", stem: "informe-clon-en", ready: "It looks like STUBX but it is not the official address" },
+  ];
+  for (const shot of shots) {
+    await page.locator(`[data-set-lang="${shot.lang}"]`).click();
+    await expect(page.locator("html")).toHaveAttribute("data-lang", shot.lang);
+    await lookup(page, shot.mint, shot.ready);
+    const result = await page.evaluate(async () => {
+      const box = document.querySelector("#resultado .informe-descarga");
+      const mod = await import("/shared/informe.js");
+      const lang = document.documentElement.lang === "en" ? "en" : "es";
+      const model = mod.reportModel(box.informeSource, lang);
+      const files = await mod.renderReportFiles(model, document);
+      const png = new Uint8Array(await files.png.arrayBuffer());
+      const parts = [];
+      for (let index = 0; index < png.length; index += 8192) {
+        parts.push(String.fromCharCode.apply(null, png.subarray(index, index + 8192)));
+      }
+      const falta = model.blocks.find((block) => block.id === "falta");
+      const attention = model.blocks.find((block) => block.id === "atencion");
+      return {
+        png: btoa(parts.join("")),
+        lines: mod.reportPaintLines(model),
+        title: model.title,
+        date: model.date,
+        origin: model.origin,
+        warning: model.warning,
+        note: model.note,
+        attentionLead: attention?.lines[0]?.lead || "",
+        attentionEmpty: attention?.empty || "",
+        falta: [falta?.empty, ...(falta?.lines || []).map((item) => `${item.title} ${item.lead}`)].join("\n"),
+      };
+    });
+    const png = Buffer.from(result.png, "base64");
+    expect(png.subarray(0, 8)).toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+    const text = result.lines.join("\n");
+    for (const phrase of BANNED_IN_FILE) expect(text.includes(phrase), phrase).toBe(false);
+    expect(result.title).toContain("·");
+    expect(result.date).toMatch(/\d{2}:\d{2}:\d{2}/);
+    expect(result.origin).toContain("stubxai.com");
+    expect(text).toContain(shot.lang === "en" ? "Limits" : "Límites");
+    expect(result.falta.includes("Curva de Pump.fun") || result.falta.includes("Pump.fun curve")).toBe(false);
+    expect(result.note.length).toBeGreaterThan(0);
+    if (!result.attentionLead) expect(result.attentionEmpty.length).toBeGreaterThan(0);
+    if (shot.mint === USDC) {
+      expect(text).toContain(shot.lang === "en" ? "\u201CUSD Coin\u201D" : "Dice llamarse «USD Coin»");
+      if (shot.lang === "en") expect(text.includes("«")).toBe(false);
+    }
+    if (shot.mint === CLONE) {
+      expect(result.warning.length).toBeGreaterThan(0);
+      expect(result.attentionLead).toContain(shot.lang === "en" ? "It looks like STUBX" : "Se parece a STUBX");
+      expect(text).toContain("2026-10-09");
+      expect(text).toContain(shot.lang === "en" ? "It says it is called" : "Dice llamarse");
+    }
+    writeFileSync(path.join(dir, `${shot.stem}.png`), png);
   }
 });

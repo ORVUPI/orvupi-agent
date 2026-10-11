@@ -9,11 +9,6 @@ export const REPORT_PNG = "informe.png";
 export const REPORT_PDF = "informe.pdf";
 export const REPORT_REVOKE_MS = 60_000;
 
-export const REPORT_FOOTER = Object.freeze({
-  es: "Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión",
-  en: "High-risk crypto · You could lose everything · Not investment advice",
-});
-
 export const REPORT_LIMITS = Object.freeze({
   es: [
     "Es una lectura de datos públicos en el momento indicado. Puede haber cambiado.",
@@ -250,7 +245,6 @@ export function reportModel(source, lang) {
     note: fileWording(summary.note?.lead?.[language] || "", language),
     limitsLabel: copy.limits,
     limits: REPORT_LIMITS[language].slice(),
-    footer: REPORT_FOOTER[language],
   };
 }
 
@@ -290,11 +284,11 @@ export function reportPaintLines(model) {
     lines.push(block.heading, block.empty, block.service);
     for (const item of block.lines) lines.push(item.title, item.lead, item.note);
   }
-  lines.push(model.note, model.limitsLabel, ...model.limits, model.footer);
+  lines.push(model.note, model.limitsLabel, ...model.limits);
   return lines.filter(Boolean).map((line) => paintString(line));
 }
 
-const SIZES = { title: 34, date: 16, label: 15, body: 18, address: 16, limits: 16, footer: 15 };
+const SIZES = { title: 34, date: 16, label: 15, body: 18, address: 16, limits: 16 };
 
 function wrapText(ctx, text, max, size, family) {
   ctx.font = `${size}px ${family}`;
@@ -368,8 +362,6 @@ function layoutRows(ctx, model, width, scale) {
   rows.push({ kind: "block", id: "limites", size: 8 });
   push(model.limitsLabel, "body", { heading: true, block: "limites" });
   for (const line of model.limits) push(line, "limits", { block: "limites" });
-  rows.push({ kind: "gap", size: 14 });
-  push(model.footer, "footer");
   const height = pad + rows.reduce((sum, row) => sum + row.size + (row.kind === "block" || row.kind === "gap" ? 10 : 8), 0) + pad;
   return { rows, height, pad };
 }
@@ -434,12 +426,6 @@ export function drawReport(ctx, model, width = 840) {
     if (!band.bottom) continue;
     ctx.fillStyle = blockColor(band.id);
     ctx.fillRect(laid.pad - 8, band.top, 6, Math.max(6, band.bottom - band.top));
-  }
-  const footerRows = placed.filter((row) => row.role === "footer");
-  if (footerRows.length) {
-    const top = footerRows[0].y - 14;
-    ctx.fillStyle = COLORS.pink;
-    ctx.fillRect(laid.pad - 8, top, width - laid.pad * 2 + 16, 4);
   }
   for (const row of placed) {
     if (!row.text) continue;
