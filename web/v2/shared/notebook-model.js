@@ -650,6 +650,165 @@ export function formatLocal(consultedAt, lang) {
   }).format(date);
 }
 
+export const NOTEBOOK_DB_VERSION = 2;
+
+/**
+ * Copia red y dirección a la entrada si faltan.
+ * No borra la entrada, no pisa una red o una dirección que ya estuvieran, y no inventa datos.
+ */
+export function migrateStoredRecord(record) {
+  if (!record || typeof record !== "object" || Array.isArray(record)) {
+    return { changed: false, record: record ?? null };
+  }
+  const card = record.card && typeof record.card === "object" ? record.card : null;
+  const networkFromCard = card && typeof card.network === "string" ? card.network : "";
+  const addressFromCard = card && typeof card.mint === "string" ? card.mint : "";
+  const next = { ...record };
+  let changed = false;
+  if (typeof next.network !== "string" || !next.network) {
+    if (networkFromCard) {
+      next.network = networkFromCard;
+      changed = true;
+    }
+  }
+  if (typeof next.address !== "string" || !next.address) {
+    if (addressFromCard) {
+      next.address = addressFromCard;
+      changed = true;
+    }
+  }
+  return { changed, record: next };
+}
+
+/** Una entrada nueva guarda siempre la red y la dirección de la ficha. */
+export function stampIdentity(record) {
+  if (!record || typeof record !== "object" || Array.isArray(record)) return record;
+  const card = record.card && typeof record.card === "object" ? record.card : null;
+  const network = card && typeof card.network === "string" && card.network
+    ? card.network
+    : (typeof record.network === "string" ? record.network : "");
+  const address = card && typeof card.mint === "string" && card.mint
+    ? card.mint
+    : (typeof record.address === "string" ? record.address : "");
+  return { ...record, network, address };
+}
+
+export function watchTargets(records) {
+  const groups = new Map();
+  for (const record of Array.isArray(records) ? records : []) {
+    const migrated = migrateStoredRecord(record).record;
+    if (!migrated || !migrated.card) continue;
+    const network = typeof migrated.network === "string" ? migrated.network : "";
+    const address = typeof migrated.address === "string" ? migrated.address : "";
+    if (!network || !address) continue;
+    const key = `${network}\n${address}`;
+    const bucket = groups.get(key) || [];
+    bucket.push(migrated);
+    groups.set(key, bucket);
+  }
+  const entries = [];
+  for (const [key, bucket] of groups) {
+    const sorted = bucket.slice().sort((left, right) => {
+      const at = String(left.card && left.card.consultedAt ? left.card.consultedAt : "");
+      const bt = String(right.card && right.card.consultedAt ? right.card.consultedAt : "");
+      if (at === bt) return 0;
+      return at < bt ? 1 : -1;
+    });
+    const [network, address] = key.split("\n");
+    entries.push({ key, network, address, latest: sorted[0], count: bucket.length });
+  }
+  entries.sort((left, right) => {
+    const at = String(left.latest.card && left.latest.card.consultedAt ? left.latest.card.consultedAt : "");
+    const bt = String(right.latest.card && right.latest.card.consultedAt ? right.latest.card.consultedAt : "");
+    if (at === bt) return left.address < right.address ? -1 : left.address > right.address ? 1 : 0;
+    return at < bt ? 1 : -1;
+  });
+  return entries;
+}
+
+/** Sin marcas se consultan todas. Con marcas, solo esas. */
+export function chooseWatchTargets(targets, selectedKeys) {
+  const list = Array.isArray(targets) ? targets : [];
+  const keys = Array.isArray(selectedKeys) ? selectedKeys.filter((key) => typeof key === "string" && key) : [];
+  if (!keys.length) return list.slice();
+  const wanted = new Set(keys);
+  return list.filter((item) => wanted.has(item.key));
+}
+
+/**
+ * Pide huecos de una en una. Si el cupo se llena, el resto espera y no se consulta.
+ * takeSlot es takeQuerySlot: mismas reglas que una consulta suelta.
+ */
+export function reserveWatchSlots(entries, stamps, now, takeSlot) {
+  const list = Array.isArray(entries) ? entries : [];
+  let current = Array.isArray(stamps) ? stamps.slice() : [];
+  if (typeof takeSlot !== "function") return { ready: [], waiting: list.slice(), stamps: current };
+  const ready = [];
+  const waiting = [];
+  let blocked = false;
+  for (const entry of list) {
+    if (blocked) {
+      waiting.push(entry);
+      continue;
+    }
+    const slot = takeSlot(current, now, 6, 60000);
+    current = Array.isArray(slot && slot.stamps) ? slot.stamps : current;
+    if (!slot || slot.allowed !== true) {
+      blocked = true;
+      waiting.push(entry);
+      continue;
+    }
+    ready.push(entry);
+  }
+  return { ready, waiting, stamps: current };
+}
+
+const REFUSAL = /HTTP 403|HTTP 429|request blocked|indexed request|access forbidden|personal token/i;
+
+/** Un servicio que rechaza la consulta no es una lectura igual. */
+export function serviceRejection(card) {
+  if (!card || typeof card !== "object") return { rejected: true, primary: true };
+  const errors = Array.isArray(card.errors) ? card.errors : [];
+  const refused = errors.some((item) => {
+    if (!item || typeof item !== "object") return false;
+    const status = item.httpStatus;
+    if (status === 403 || status === 429 || status === 0 || status === 408) return true;
+    if (typeof status === "number" && status >= 500) return true;
+    return REFUSAL.test(String(item.message || ""));
+  });
+  const primary = card.programStatus === "fallo";
+  return { rejected: Boolean(refused || primary), primary: Boolean(primary) };
+}
+
+export function watchVerdict(previous, result) {
+  const card = result && result.card ? result.card : null;
+  const rejection = serviceRejection(card);
+  if (!previous || !previous.card || !card || rejection.primary) {
+    return { kind: "rechazada", compared: null, save: false, card, rejection };
+  }
+  const checked = validateCard(card);
+  if (!checked.ok) return { kind: "rechazada", compared: null, save: false, card, rejection };
+  const next = { id: "00000000-0000-4000-8000-000000000001", note: "", card: checked.card };
+  const compared = compareRecords(previous, next);
+  if (!compared.ok) return { kind: "rechazada", compared: null, save: false, card: checked.card, rejection };
+  if (rejection.rejected) {
+    return {
+      kind: compared.changes.length ? "cambio" : "incompleto",
+      compared,
+      save: true,
+      card: checked.card,
+      rejection,
+    };
+  }
+  if (compared.changes.length) {
+    return { kind: "cambio", compared, save: true, card: checked.card, rejection };
+  }
+  if (compared.unknown.length) {
+    return { kind: "incompleto", compared, save: true, card: checked.card, rejection };
+  }
+  return { kind: "igual", compared, save: true, card: checked.card, rejection };
+}
+
 export function withNote(record, note) {
   if (typeof note !== "string") {
     return fail("La nota tiene que ser texto, de hasta 2000 caracteres, y no puede ser un script.", "The note must be text, at most 2000 characters, and it cannot be a script.");
