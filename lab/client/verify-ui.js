@@ -33,14 +33,14 @@ function entenderResultado(lang) {
       "Supply: it is the total number of tokens in this reading, using the mint decimals.",
       "Metadata: if they can change, the name or symbol in this reading may not be tomorrow's.",
       "Distribution: a sample of accounts is not a census of who holds the tokens.",
-      "Curve: if the token was not created on Pump.fun, this fact does not apply. If it was and there is no account, that is a confirmed absence, not a failed query.",
+      "Curve: if the token was not created on Pump.fun, this fact does not apply. If it was and there is no account, this reading did not find it.",
     ]
     : [
       "Permisos: el de emisión permite crear más tokens. El de congelación permite bloquear cuentas. Ninguno de los dos dice si el proyecto es legítimo.",
       "Suministro: es la cantidad total de tokens en esta lectura, con los decimales del mint.",
       "Metadatos: si se pueden cambiar, el nombre o el símbolo de esta lectura pueden dejar de ser los de mañana.",
       "Distribución: una muestra de cuentas no es un censo de quién tiene los tokens.",
-      "Curva: si el token no se creó en Pump.fun, este dato no aplica. Si se creó y no hay cuenta, es una ausencia comprobada, no una consulta fallida.",
+      "Curva: si el token no se creó en Pump.fun, este dato no aplica. Si se creó y no hay cuenta, esta lectura no la encontró.",
     ];
   var topics = ["permisos", "suministro", "metadatos", "distribucion", "curva"];
   lines.forEach(function (line, index) {

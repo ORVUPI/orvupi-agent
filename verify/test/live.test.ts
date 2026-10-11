@@ -189,6 +189,31 @@ describe("lectura universal con RPC simulado", () => {
     assert.equal(reading.signals.find((item) => item.id === "metadatos")?.title.es, "Nombre: Dice llamarse «Comunidad STUBX»");
     assert.equal(reading.light, "atencion");
     assert.equal(reading.mint === registry[0]?.mint, false);
+    const locked = reading.signals.find((item) => item.id === "mutable");
+    assert.match(locked?.explain.es ?? "", /los metadatos ya no se pueden cambiar/);
+    assert.match(locked?.explain.en ?? "", /the metadata can no longer be changed/);
+    assert.equal((locked?.explain.es ?? "").includes("isMutable"), false);
+    assert.equal((locked?.explain.en ?? "").includes("isMutable"), false);
+  });
+
+  test("los textos visibles no usan nombres de campo", async () => {
+    const technical = /isMutable|is_mutable|updateAuthority|mintAuthority|freezeAuthority|InterestBearingConfig|TransferFeeConfig|TokenMetadata|MetadataPointer|CpiGuard|PermanentDelegate|DefaultAccountState|getMultipleAccounts|getTokenSupply|getAccountInfo|ausente comprobado|consulta fallida/;
+    for (const id of ["revoked-mint", "name-impersonation", "mutable-metadata", "unsupported-extension"]) {
+      const reading = await readFixture(fixture(id));
+      const bits = [
+        reading.title.es,
+        reading.title.en,
+        reading.support.es,
+        reading.support.en,
+        ...reading.signals.flatMap((signal) => [signal.title.es, signal.title.en, signal.explain.es, signal.explain.en]),
+        ...reading.rows.flatMap((row) => [row.label.es, row.label.en, row.value.es, row.value.en]),
+      ].join("\n");
+      const found = bits.match(technical);
+      assert.equal(found, null, `${id} ${found?.[0] ?? ""}`);
+    }
+    const unknown = await readFixture(fixture("unsupported-extension"));
+    assert.equal(unknown.signals.some((signal) => signal.title.es === "Extensión no descrita"), true);
+    assert.equal(unknown.signals.some((signal) => signal.title.es.includes("InterestBearing")), false);
   });
 
   test("la dirección del registro se reconoce", async () => {

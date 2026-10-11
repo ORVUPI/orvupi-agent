@@ -402,6 +402,14 @@ export function comparedValueText(raw, lang) {
   return lang === "en" ? row.en : row.es;
 }
 
+export function comparedSideText(fieldEs, card, raw, lang) {
+  if (fieldEs === "Nombre") {
+    const spoken = notebookNameText(card, lang);
+    if (spoken) return spoken;
+  }
+  return comparedValueText(raw, lang);
+}
+
 export function supplyConfirmation(card) {
   const account = supplyDigits(card && card.supplyAccount);
   const extra = card && card.supplyRpcStatus === "verificado" ? supplyDigits(card.supplyRpc) : null;
@@ -576,12 +584,12 @@ export function pickPrevious(records, card, exceptId) {
 }
 
 export function staleLine(consultedAt, lang) {
-  const local = formatReadingStamp(consultedAt, lang);
+  const local = formatReadingStamp(consultedAt, lang, true);
   if (lang === "en") return `Checked on ${local} · this may have changed`;
   return `Consultado el ${local} · puede haber cambiado`;
 }
 
-export function formatReadingStamp(consultedAt, lang, withSeconds = false) {
+export function formatReadingStamp(consultedAt, lang, withSeconds = true) {
   const date = new Date(consultedAt);
   if (Number.isNaN(date.getTime())) return formatLocal(consultedAt, lang);
   const options = {
@@ -595,7 +603,7 @@ export function formatReadingStamp(consultedAt, lang, withSeconds = false) {
   return new Intl.DateTimeFormat(lang === "en" ? "en-GB" : "es-ES", options).format(date).replace(/[\u202f\u00a0]/g, " ");
 }
 
-export function readingOptionLabel(card, lang) {
+function readingBaseLabel(card, lang) {
   const stamp = formatReadingStamp(card && card.consultedAt, lang, true);
   const spoken = notebookNameText(card, lang);
   const symbol = card && card.symbol && typeof card.symbol.text === "string" ? clipName(card.symbol.text, 24) : "";
@@ -608,12 +616,21 @@ export function readingOptionLabel(card, lang) {
   return `${title} · ${stamp}`;
 }
 
+export function readingOptionLabel(card, lang, peers) {
+  const base = readingBaseLabel(card, lang);
+  if (!Array.isArray(peers)) return base;
+  const index = peers.indexOf(card);
+  if (index < 0) return base;
+  const earlier = peers.slice(0, index).filter((item) => readingBaseLabel(item, lang) === base).length;
+  return earlier ? `${base} (${earlier + 1})` : base;
+}
+
 export function formatLocal(consultedAt, lang) {
   const date = new Date(consultedAt);
   if (Number.isNaN(date.getTime())) return lang === "en" ? "unknown local time" : "hora local desconocida";
   return new Intl.DateTimeFormat(lang === "en" ? "en-GB" : "es-ES", {
     dateStyle: "short",
-    timeStyle: "short",
+    timeStyle: "medium",
   }).format(date);
 }
 

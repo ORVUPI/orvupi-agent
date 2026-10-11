@@ -67,7 +67,7 @@ interface ModelModule {
   toExport: (records: unknown[], exportedAt: string) => string;
   compareRecords: (left: { card: Card }, right: { card: Card }) => {
     ok: boolean;
-    rows?: Array<{ field: { es: string }; same: boolean; verdict?: string; difference?: string | null }>;
+    rows?: Array<{ field: { es: string }; left?: unknown; right?: unknown; same: boolean; verdict?: string; difference?: string | null }>;
     unknown?: Array<{ field: { es: string } }>;
     unchanged?: Array<{ field: { es: string } }>;
     technical?: { slot: { left: number | null; right: number | null } };
@@ -80,6 +80,7 @@ interface ModelModule {
   comparisonSummary: (compared: { changes?: unknown[]; unchanged?: unknown[]; unknown?: unknown[] }, lang: string) => string;
   supplyDirection: (difference: string, decimals: number, lang: string) => string | null;
   comparedValueText: (raw: string, lang: string) => string;
+  comparedSideText: (fieldEs: string, card: Card, raw: unknown, lang: string) => string;
   supplyConfirmation: (card: Card) => { confirmed: boolean; reason: string };
   supplyNote: (card: Card, lang: string) => string | null;
   CURVE_NOT_ON_PUMP: { es: string; en: string };
@@ -943,8 +944,10 @@ describe("lector y cuaderno", () => {
     assert.equal(actions.includes("sessionStorage"), false);
     assert.equal(actions.includes("searchParams"), false);
     assert.match(actions, /stubx-cuaderno/);
-    assert.equal(model.staleLine(WHEN, "es"), `Consultado el ${model.formatReadingStamp(WHEN, "es")} · puede haber cambiado`);
-    assert.equal(model.staleLine(WHEN, "en"), `Checked on ${model.formatReadingStamp(WHEN, "en")} · this may have changed`);
+    assert.equal(model.staleLine(WHEN, "es"), `Consultado el ${model.formatReadingStamp(WHEN, "es", true)} · puede haber cambiado`);
+    assert.equal(model.staleLine(WHEN, "en"), `Checked on ${model.formatReadingStamp(WHEN, "en", true)} · this may have changed`);
+    assert.match(model.staleLine(WHEN, "es"), /\d{2}:\d{2}:\d{2}/);
+    assert.match(model.staleLine(WHEN, "en"), /\d{2}:\d{2}:\d{2}/);
     assert.equal(model.staleLine(WHEN, "es").includes("2026-10-09T"), false);
     assert.equal(model.staleLine(WHEN, "es").includes("actual"), false);
   });
@@ -1025,6 +1028,26 @@ describe("lector y cuaderno", () => {
     const paired = model.readingOptionLabel(other, "es");
     assert.match(paired, /^Dice llamarse «STUBX» · ERYy… · /);
     assert.match(paired, /\d{2}:\d{2}:\d{2}$/);
+    const sameStamp = read.blankCard(ery, WHEN, []);
+    sameStamp.name = { text: "STUBX", status: "verificado" };
+    sameStamp.symbol = { text: "STUBX", status: "verificado" };
+    const firstLabel = model.readingOptionLabel(clone, "es", [clone, sameStamp]);
+    const secondLabel = model.readingOptionLabel(sameStamp, "es", [clone, sameStamp]);
+    assert.equal(secondLabel, `${firstLabel} (2)`);
+    assert.equal(model.readingOptionLabel(clone, "es").endsWith(" (2)"), false);
+    const left = { id: "1", note: "", card: clone };
+    const right = { id: "2", note: "", card: other };
+    const compared = model.compareRecords(left, right);
+    assert.equal(compared.ok, true);
+    const nameRow = compared.rows?.find((row) => row.field.es === "Nombre");
+    assert.ok(nameRow);
+    assert.equal(model.comparedSideText("Nombre", clone, nameRow?.left, "es"), "Dice llamarse «STUBX»");
+    assert.equal(model.comparedSideText("Nombre", other, nameRow?.right, "es"), "Dice llamarse «STUBX»");
+    assert.equal(model.comparedSideText("Nombre", other, nameRow?.right, "en"), "It says it is called «STUBX»");
+    assert.equal(model.comparedSideText("Nombre", usdc, "USD Coin", "es"), "USD Coin");
+    assert.equal(model.comparedSideText("Nombre", official, "STUBX", "es"), "STUBX");
+    assert.match(model.staleLine(WHEN, "es"), /Consultado el .+\d{2}:\d{2}:\d{2}.+puede haber cambiado/);
+    assert.match(model.staleLine("2026-10-09T13:00:07.000Z", "es"), /\d{2}:\d{2}:\d{2}/);
     assert.equal(summary.comparisonBanner(clone, other, "es"), "Se parece a STUBX pero no es la dirección oficial.");
     assert.equal(summary.comparisonBanner(usdc, usdc, "es"), "");
     assert.equal(summary.comparisonBanner(official, official, "es"), "");

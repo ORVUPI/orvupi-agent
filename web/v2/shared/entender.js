@@ -48,8 +48,8 @@ export const ENTENDER = Object.freeze([
     es: "Curva",
     en: "Curve",
     explain: {
-      es: "Curva: si el token no se creó en Pump.fun, este dato no aplica. Si se creó y no hay cuenta, es una ausencia comprobada, no una consulta fallida.",
-      en: "Curve: if the token was not created on Pump.fun, this fact does not apply. If it was and there is no account, that is a confirmed absence, not a failed query.",
+      es: "Curva: si el token no se creó en Pump.fun, este dato no aplica. Si se creó y no hay cuenta, esta lectura no la encontró.",
+      en: "Curve: if the token was not created on Pump.fun, this fact does not apply. If it was and there is no account, this reading did not find it.",
     },
   },
 ]);

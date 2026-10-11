@@ -226,7 +226,7 @@ function sourceRows(rpc: FallbackRpc): ReadSource[] {
     getSlot: loc("Slot", "Slot"),
   };
   return rpc.reads.map((read) => ({
-    dato: labels[read.method] ?? loc(read.method, read.method),
+    dato: labels[read.method] ?? loc("Otra lectura", "Other read"),
     host: hostOf(read.endpoint) ?? read.endpoint,
   }));
 }
@@ -985,6 +985,20 @@ function oneExtension(item: ExtensionReport): Signal | null {
   }
   if (item.type === 6) {
     const frozen = /frozen/.test(item.summary ?? "");
+    const stateEs = frozen
+      ? "congelado"
+      : /uninitialized/.test(item.summary ?? "")
+        ? "sin iniciar"
+        : /initialized/.test(item.summary ?? "")
+          ? "iniciado"
+          : "sin detalle";
+    const stateEn = frozen
+      ? "frozen"
+      : /uninitialized/.test(item.summary ?? "")
+        ? "not started"
+        : /initialized/.test(item.summary ?? "")
+          ? "started"
+          : "no detail";
     return {
       id: "estado-inicial",
       level: frozen ? "riesgo" : "neutro",
@@ -995,10 +1009,10 @@ function oneExtension(item: ExtensionReport): Signal | null {
       explain: loc(
         frozen
           ? "El estado por defecto es congelado. Una cuenta nueva puede no poder mover tokens hasta que alguien la descongele."
-          : `Estado por defecto leído: ${item.summary ?? "sin detalle"}.`,
+          : `Estado por defecto leído: ${stateEs}.`,
         frozen
           ? "The default state is frozen. A new account may be unable to move tokens until someone unfreezes it."
-          : `Default state read: ${item.summary ?? "no detail"}.`,
+          : `Default state read: ${stateEn}.`,
       ),
     };
   }
@@ -1028,7 +1042,7 @@ function oneExtension(item: ExtensionReport): Signal | null {
     return {
       id: `extension-${item.type}`,
       level: "atencion",
-      title: loc(`Extensión no descrita (${item.name})`, `Undescribed extension (${item.name})`),
+      title: loc("Extensión no descrita", "Undescribed extension"),
       explain: loc(
         "Hay una extensión que esta lectura no describe. No se da por ausente ni por inofensiva.",
         "There is an extension this reading does not describe. It is not treated as absent or as harmless.",
@@ -1048,10 +1062,10 @@ function metadataSignals(
       {
         id: "metadatos",
         level: "neutro",
-        title: loc("Metadatos: ausente comprobado", "Metadata: confirmed absent"),
+        title: loc("No hay metadatos en esta lectura", "There is no metadata in this reading"),
         explain: loc(
-          "Se pidió la cuenta de metadatos y no estaba. Es una ausencia comprobada, no una consulta fallida. El nombre puede vivir fuera de esta lectura.",
-          "The metadata account was requested and it was not there. That is a confirmed absence, not a failed query. The name may live outside this reading.",
+          "Se pidió la cuenta de metadatos y no estaba. No es un fallo de la consulta. El nombre puede vivir fuera de esta lectura.",
+          "The metadata account was requested and it was not there. It is not a failed query. The name may live outside this reading.",
         ),
       },
     ];
@@ -1079,8 +1093,8 @@ function metadataSignals(
     tone: official ? undefined : "ajeno",
     title: loc(nameTitle, nameTitleEn),
     explain: loc(
-      `Símbolo: ${symbol ? clipForeign(symbol, official) : "ausente comprobado"}. Enlace de metadatos: ${linkEs}. El nombre es un texto. La dirección es otra cosa.`,
-      `Symbol: ${symbol ? clipForeign(symbol, official) : "confirmed absent"}. Metadata link: ${linkEn}. The name is text. The address is something else.`,
+      `Símbolo: ${symbol ? clipForeign(symbol, official) : "No está en esta lectura"}. Enlace de metadatos: ${linkEs}. El nombre es un texto. La dirección es otra cosa.`,
+      `Symbol: ${symbol ? clipForeign(symbol, official) : "It is not in this reading"}. Metadata link: ${linkEn}. The name is text. The address is something else.`,
     ),
   });
   const update = tokenMeta?.updateAuthority || (metaplex ? metaplex.updateAuthority : null);
@@ -1096,10 +1110,10 @@ function metadataSignals(
     explain: loc(
       canChange
         ? `Hay quien puede actualizar los metadatos${update ? ` (${update})` : ""}. Un nombre de hoy puede no ser el de mañana.`
-        : "En las fuentes leídas no queda autoridad de actualización, o isMutable es falso. Eso no demuestra legitimidad.",
+        : "En las fuentes leídas no queda quien pueda cambiar los metadatos, o los metadatos ya no se pueden cambiar. Eso no demuestra legitimidad.",
       canChange
         ? `Someone can update the metadata${update ? ` (${update})` : ""}. Today’s name may not be tomorrow’s.`
-        : "In the sources read there is no update authority left, or isMutable is false. That does not show legitimacy.",
+        : "In the sources read there is nobody left who can change the metadata, or the metadata can no longer be changed. That does not show legitimacy.",
     ),
   });
   if (tokenMeta && metaplex && (tokenMeta.name !== metaplex.name || tokenMeta.symbol !== metaplex.symbol)) {

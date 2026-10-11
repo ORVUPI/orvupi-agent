@@ -20,7 +20,7 @@ import {
   MAX_NOTE,
   MAX_STORED,
   compareRecords,
-  comparedValueText,
+  comparedSideText,
   comparisonSummary,
   curveComparisonValue,
   CURVE_NOT_ON_PUMP,
@@ -734,7 +734,7 @@ function renderComparison() {
       const formatted = formatAmount(raw, card.decimals, lang());
       if (formatted) return formatted;
     }
-    return comparedValueText(raw, lang());
+    return comparedSideText(rowItem.field.es, card, raw, lang());
   };
   const gridFor = (rows, verdict) => {
     const grid = el("div", { class: "comparacion" });

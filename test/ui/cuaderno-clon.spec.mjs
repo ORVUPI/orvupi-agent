@@ -43,6 +43,7 @@ test("el cuaderno muestra el clon, el enlace ausente y la hora con segundos", as
     const records = [
       { id: "11111111-1111-4111-8111-111111111111", note: "", card: card("2026-10-09T12:00:01.000Z", 1) },
       { id: "22222222-2222-4222-8222-222222222222", note: "", card: card("2026-10-09T12:00:08.000Z", 2) },
+      { id: "33333333-3333-4333-8333-333333333333", note: "", card: card("2026-10-09T12:00:01.000Z", 3) },
     ];
     await new Promise((resolve, reject) => {
       const request = indexedDB.open("stubx-cuaderno", 1);
@@ -67,6 +68,7 @@ test("el cuaderno muestra el clon, el enlace ausente y la hora con segundos", as
   await page.reload();
   const ficha = page.locator("#lista-consultas article.ficha").first();
   await expect(ficha).toBeVisible();
+  await expect(ficha.locator("p.sello")).toHaveText(/Consultado el .+\d{2}:\d{2}:\d{2}.+puede haber cambiado/);
   const cells = await ficha.locator("dl").first().evaluate((list) => {
     const rows = {};
     const terms = list.querySelectorAll("dt");
@@ -81,13 +83,25 @@ test("el cuaderno muestra el clon, el enlace ausente y la hora con segundos", as
   expect(JSON.stringify(cells)).not.toMatch(/ausente comprobado|consulta fallida|no consultado/);
   const options = await page.locator("#comparar-izquierda option").allTextContents();
   const labels = options.filter((item) => item !== "—");
-  expect(labels).toHaveLength(2);
+  expect(labels).toHaveLength(3);
+  const marked = labels.filter((item) => item.endsWith(" (2)"));
+  expect(marked).toHaveLength(1);
+  const plain = labels.filter((item) => !item.endsWith(" (2)"));
+  expect(plain).toHaveLength(2);
   for (const label of labels) {
     expect(label.startsWith("Dice llamarse «STUBX» · ERYy… · ")).toBe(true);
     expect(label.startsWith("STUBX ·")).toBe(false);
-    expect(label).toMatch(/\d{2}:\d{2}:\d{2}$/);
   }
-  expect(labels[0].slice(-8)).not.toBe(labels[1].slice(-8));
+  for (const label of plain) expect(label).toMatch(/\d{2}:\d{2}:\d{2}$/);
+  expect(plain.some((label) => marked[0] === `${label} (2)`)).toBe(true);
+  expect(plain[0].slice(-8)).not.toBe(plain[1].slice(-8));
   await page.locator("#comparar").click();
   await expect(page.locator("#comparacion .franja-identidad").first()).toHaveText("Se parece a STUBX pero no es la dirección oficial.");
+  const stamps = page.locator("#comparacion > p.sello");
+  await expect(stamps).toHaveCount(2);
+  await expect(stamps.nth(0)).toHaveText(/Antes · Consultado el .+\d{2}:\d{2}:\d{2}.+puede haber cambiado/);
+  await expect(stamps.nth(1)).toHaveText(/Ahora · Consultado el .+\d{2}:\d{2}:\d{2}.+puede haber cambiado/);
+  const nameRow = page.locator("#comparacion article").filter({ has: page.getByRole("heading", { name: "Nombre", exact: true }) });
+  await expect(nameRow.locator("p").nth(0)).toHaveText("Antes: Dice llamarse «STUBX»");
+  await expect(nameRow.locator("p").nth(1)).toHaveText("Ahora: Dice llamarse «STUBX»");
 });
