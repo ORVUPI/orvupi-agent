@@ -216,6 +216,34 @@ describe("lectura universal con RPC simulado", () => {
     assert.equal(unknown.signals.some((signal) => signal.title.es.includes("InterestBearing")), false);
   });
 
+  test("la vista principal no dice mint y el slot queda en los detalles con segundos", async () => {
+    const spl = await readFixture(fixture("revoked-mint"));
+    const program = spl.signals.find((item) => item.id === "programa");
+    const supply = spl.signals.find((item) => item.id === "suministro");
+    assert.equal(program?.explain.es, "Es un token del programa SPL Token. Ese programa no trae las extensiones de Token-2022.");
+    assert.match(program?.explain.en ?? "", /token of the SPL Token program/);
+    assert.match(supply?.explain.es ?? "", /leídos de los datos del token en la cadena/);
+    assert.match(supply?.explain.en ?? "", /token data on the chain/);
+    const main = [
+      spl.lightLabel.es,
+      spl.lightLabel.en,
+      spl.title.es,
+      spl.title.en,
+      spl.support.es,
+      spl.support.en,
+      ...spl.signals.flatMap((signal) => [signal.title.es, signal.title.en, signal.explain.es, signal.explain.en]),
+    ].join("\n");
+    assert.equal(/\bmint\b/i.test(main), false);
+    assert.equal(/\bslot\b/i.test(main), false);
+    const clock = spl.rows.find((row) => row.label.es === "Momento");
+    assert.match(clock?.value.es ?? "", /slot \d+/);
+    assert.match(clock?.value.es ?? "", /\d{2}:\d{2}:\d{2}/);
+    assert.match(clock?.value.en ?? "", /slot \d+/);
+    assert.match(clock?.value.en ?? "", /\d{2}:\d{2}:\d{2}/);
+    const token2022 = await readFixture(fixture("name-impersonation"));
+    assert.match(token2022.signals.find((item) => item.id === "programa")?.explain.es ?? "", /Es un token del programa Token-2022/);
+  });
+
   test("la dirección del registro se reconoce", async () => {
     const mint = registry[0]?.mint ?? "";
     const sample = fixture("revoked-mint");
@@ -318,7 +346,7 @@ describe("lectura universal con RPC simulado", () => {
     const missing = await readFixture(fixture("missing-account"));
     assert.equal(missing.title.es, "Esta dirección no existe");
     const other = await readFixture(fixture("not-a-mint"));
-    assert.equal(other.title.es, "Esta cuenta no es un mint");
+    assert.equal(other.title.es, "Esta cuenta no es un token");
   });
 
   test("si el suministro no cuadra no hay porcentajes", async () => {
@@ -495,7 +523,7 @@ describe("lectura universal con RPC simulado", () => {
     assert.equal(text.includes("Esta lectura junta más de un servicio"), false);
     const supply = reading.signals.find((item) => item.id === "suministro");
     assert.equal(supply?.level, "neutro");
-    assert.match(supply?.explain.es ?? "", /bytes del mint/);
+    assert.match(supply?.explain.es ?? "", /datos del token en la cadena/);
     assert.match(supply?.explain.es ?? "", /no respondió/);
     assert.equal(reading.light, "neutro");
   });
@@ -537,7 +565,7 @@ describe("lectura universal con RPC simulado", () => {
     assert.equal(reading.title.es, "Esta dirección es la del registro de STUBX");
     const supply = reading.signals.find((item) => item.id === "suministro");
     assert.equal(supply?.level, "neutro");
-    assert.match(supply?.explain.es ?? "", /bytes del mint/);
+    assert.match(supply?.explain.es ?? "", /datos del token en la cadena/);
     assert.match(supply?.explain.es ?? "", /no respondió/);
     assert.equal(reading.signals.some((item) => item.id === "fuentes"), false);
     assert.equal(reading.sources.some((item) => item.host === "api.mainnet-beta.solana.com"), false);

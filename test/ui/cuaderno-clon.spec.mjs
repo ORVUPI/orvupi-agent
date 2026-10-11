@@ -94,6 +94,8 @@ test("el cuaderno muestra el clon, el enlace ausente y la hora con segundos", as
   }
   for (const label of plain) expect(label).toMatch(/\d{2}:\d{2}:\d{2}$/);
   expect(plain.some((label) => marked[0] === `${label} (2)`)).toBe(true);
+  const duplicateAt = labels.findIndex((item) => item.endsWith(" (2)"));
+  expect(labels[duplicateAt - 1]).toBe(marked[0].slice(0, -4));
   expect(plain[0].slice(-8)).not.toBe(plain[1].slice(-8));
   await page.locator("#comparar").click();
   await expect(page.locator("#comparacion .franja-identidad").first()).toHaveText("Se parece a STUBX pero no es la dirección oficial.");

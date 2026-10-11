@@ -616,6 +616,22 @@ function readingBaseLabel(card, lang) {
   return `${title} · ${stamp}`;
 }
 
+export function sortNotebookRecords(records, lang) {
+  const list = Array.isArray(records) ? records.slice() : [];
+  const labelOf = (record) => readingOptionLabel(record && record.card, lang);
+  list.sort((a, b) => {
+    const at = String(a && a.card ? a.card.consultedAt : "");
+    const bt = String(b && b.card ? b.card.consultedAt : "");
+    if (at !== bt) return at < bt ? 1 : -1;
+    const al = labelOf(a);
+    const bl = labelOf(b);
+    if (al < bl) return -1;
+    if (al > bl) return 1;
+    return 0;
+  });
+  return list;
+}
+
 export function readingOptionLabel(card, lang, peers) {
   const base = readingBaseLabel(card, lang);
   if (!Array.isArray(peers)) return base;

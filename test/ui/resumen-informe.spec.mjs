@@ -160,10 +160,10 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
   await expect(summary).toContainText("What was checked");
   await expect(summary).toContainText("What needs attention");
   await expect(summary).toContainText("What is missing");
-  const englishEmission = summary.locator("[data-bloque='atencion'] .punto-resumen", { hasText: "Mint permission" }).locator(".punto-frase");
+  const englishEmission = summary.locator("[data-bloque='atencion'] .punto-resumen", { hasText: "Permission to create tokens" }).locator(".punto-frase");
   await expect(englishEmission).toHaveText("It is active: it can create more tokens.");
   await expect(englishEmission).not.toContainText("stablecoin");
-  await expect(summary.locator("[data-bloque='atencion'] .punto-resumen", { hasText: "Mint permission" }).locator("details")).toContainText("stablecoin");
+  await expect(summary.locator("[data-bloque='atencion'] .punto-resumen", { hasText: "Permission to create tokens" }).locator("details")).toContainText("stablecoin");
   await expect(summary).toContainText("Freeze permission");
   await expect(summary.locator(".nota-curva")).toContainText("Pump.fun curve: not applicable");
   await expect(summary.getByRole("link", { name: "Understand →" }).first()).toBeVisible();

@@ -9,7 +9,7 @@ export const ENTENDER = Object.freeze([
     en: "Permissions",
     explain: {
       es: "Permisos: el de emisión permite crear más tokens. El de congelación permite bloquear cuentas. Ninguno de los dos dice si el proyecto es legítimo.",
-      en: "Permissions: mint authority can create more tokens. Freeze authority can block accounts. Neither one says the project is legitimate.",
+      en: "Permissions: one of them can create more tokens. The freeze permission can block accounts. Neither one says the project is legitimate.",
     },
   },
   {
@@ -18,8 +18,8 @@ export const ENTENDER = Object.freeze([
     es: "Suministro",
     en: "Supply",
     explain: {
-      es: "Suministro: es la cantidad total de tokens en esta lectura, con los decimales del mint.",
-      en: "Supply: it is the total number of tokens in this reading, using the mint decimals.",
+      es: "Suministro: es la cantidad total de tokens en esta lectura, con los decimales de este token.",
+      en: "Supply: it is the total number of tokens in this reading, using this token's decimals.",
     },
   },
   {

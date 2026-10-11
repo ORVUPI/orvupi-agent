@@ -28,7 +28,7 @@ const SUMMARY_OFFICIAL = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
 
 const ATTENTION = {
   emision: {
-    title: { es: "Permiso de emisión", en: "Mint permission" },
+    title: { es: "Permiso de emisión", en: "Permission to create tokens" },
     lead: { es: "Está activo: permite crear más tokens.", en: "It is active: it can create more tokens." },
     detail: {
       es: "En una moneda estable es habitual: quien emite añade unidades cuando entra dinero. Si el proyecto prometió un suministro fijo, el mismo permiso permite crear más. Conviene contrastarlo con lo que promete el proyecto. Esta lectura no dice cuál de los dos casos es.",
@@ -49,8 +49,8 @@ const ATTENTION = {
     title: { es: "Suministro total", en: "Total supply" },
     lead: { es: "Las dos lecturas de la cantidad no coinciden.", en: "The two reads of the amount do not match." },
     detail: {
-      es: "Se muestra la cifra del mint y no se calculan porcentajes. Eso no acusa al proyecto.",
-      en: "The figure shown is the one from the mint, and percentages are not calculated. That does not accuse the project.",
+      es: "Se muestra la cifra de los datos del token en la cadena y no se calculan porcentajes. Eso no acusa al proyecto.",
+      en: "The figure shown is the one from the token data on the chain, and percentages are not calculated. That does not accuse the project.",
     },
   },
   comision: {
@@ -626,9 +626,9 @@ function compose(facts, attention, context, signals, card) {
         pushMissing(
           missing,
           "permisos",
-          id === "emision" ? summaryPair("Permiso de emisión", "Mint permission") : summaryPair("Permiso de congelación", "Freeze permission"),
+          id === "emision" ? summaryPair("Permiso de emisión", "Permission to create tokens") : summaryPair("Permiso de congelación", "Freeze permission"),
           id === "emision"
-            ? summaryPair("No se pudo leer el permiso de emisión.", "The mint permission could not be read.")
+            ? summaryPair("No se pudo leer el permiso de emisión.", "The permission to create more tokens could not be read.")
             : summaryPair("No se pudo leer el permiso de congelación.", "The freeze permission could not be read."),
         );
       }

@@ -76,6 +76,7 @@ interface ModelModule {
   staleLine: (consultedAt: string, lang: string) => string;
   formatReadingStamp: (consultedAt: string, lang: string, withSeconds?: boolean) => string;
   readingOptionLabel: (card: Card, lang: string, peers?: Card[]) => string;
+  sortNotebookRecords: (records: Array<{ id: string; card: Card }>, lang: string) => Array<{ id: string; card: Card }>;
   tableCellText: (field: string, status: string, value: unknown, lang: string) => string;
   comparisonSummary: (compared: { changes?: unknown[]; unchanged?: unknown[]; unknown?: unknown[] }, lang: string) => string;
   supplyDirection: (difference: string, decimals: number, lang: string) => string | null;
@@ -1035,6 +1036,29 @@ describe("lector y cuaderno", () => {
     const secondLabel = model.readingOptionLabel(sameStamp, "es", [clone, sameStamp]);
     assert.equal(secondLabel, `${firstLabel} (2)`);
     assert.equal(model.readingOptionLabel(clone, "es").endsWith(" (2)"), false);
+    const between = read.blankCard(CA, WHEN, []);
+    between.name = { text: "USD Coin", status: "verificado" };
+    between.symbol = { text: "USDC", status: "verificado" };
+    const later = read.blankCard(ery, "2026-10-09T18:00:09.000Z", []);
+    later.name = { text: "STUBX", status: "verificado" };
+    later.symbol = { text: "STUBX", status: "verificado" };
+    const ordered = model.sortNotebookRecords(
+      [
+        { id: "twin", card: sameStamp },
+        { id: "other", card: between },
+        { id: "newer", card: later },
+        { id: "first", card: clone },
+      ],
+      "es",
+    );
+    assert.deepEqual(ordered.map((item) => item.id), ["newer", "twin", "first", "other"]);
+    const orderedCards = ordered.map((item) => item.card);
+    const orderedLabels = orderedCards.map((card) => model.readingOptionLabel(card, "es", orderedCards));
+    const duplicateAt = orderedLabels.findIndex((item) => item.endsWith(" (2)"));
+    const marked = orderedLabels[duplicateAt];
+    const previous = orderedLabels[duplicateAt - 1];
+    assert.equal(typeof marked, "string");
+    assert.equal(previous, marked?.slice(0, -4));
     const left = { id: "1", note: "", card: clone };
     const right = { id: "2", note: "", card: other };
     const compared = model.compareRecords(left, right);

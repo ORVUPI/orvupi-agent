@@ -26,6 +26,7 @@ import {
   CURVE_NOT_ON_PUMP,
   pickPrevious,
   readingOptionLabel,
+  sortNotebookRecords,
   tableCellText,
   staleLine,
   supplyConfirmation,
@@ -599,7 +600,7 @@ function database() {
 
 async function refresh() {
   const db = await database();
-  records = (await dbAll(db)).sort((a, b) => (a.card.consultedAt < b.card.consultedAt ? 1 : -1));
+  records = sortNotebookRecords(await dbAll(db), lang());
   renderRecords(records);
   renderComparison();
 }

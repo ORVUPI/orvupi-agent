@@ -238,8 +238,9 @@ function madridClock(iso: string): Localized {
       timeZone: "Europe/Madrid",
       hour: "2-digit",
       minute: "2-digit",
+      second: "2-digit",
       hourCycle: "h23",
-    }).format(date);
+    }).format(date).replace(/[\u202f\u00a0]/g, " ");
   return loc(format("es"), format("en"));
 }
 
@@ -305,8 +306,8 @@ export async function readAnyMint(input: ReadMintInput): Promise<LiveReading> {
       null,
       loc("Esta dirección no es válida", "This address is not valid"),
       loc(
-        "Tiene que ser la dirección completa de un mint de Solana, sin el nombre del token y sin texto alrededor.",
-        "It has to be the full Solana mint address, without the token name and without surrounding text.",
+        "Tiene que ser la dirección completa de un token de Solana, sin el nombre del token y sin texto alrededor.",
+        "It has to be the full address of a Solana token, without the token name and without surrounding text.",
       ),
     );
   }
@@ -340,8 +341,8 @@ export async function readLargestAccounts(input: ReadMintInput): Promise<Signal>
       level: "atencion",
       title: loc("No se pudo comprobar", "Could not be checked"),
       explain: loc(
-        "La dirección no es un mint válido. No se ha pedido la muestra.",
-        "The address is not a valid mint. The sample was not requested.",
+        "La dirección no es la de un token válido. No se ha pedido la muestra.",
+        "The address is not a valid token address. The sample was not requested.",
       ),
     };
   }
@@ -470,8 +471,8 @@ async function readWith(
           level: "neutro",
           title: loc("La cuenta no existe", "The account does not exist"),
           explain: loc(
-            "Se pidió la cuenta y la respuesta fue vacía. No es lo mismo que un mint sin permisos.",
-            "The account was requested and the response was empty. That is not the same as a mint with no permissions.",
+            "Se pidió la cuenta y la respuesta fue vacía. No es lo mismo que un token sin permisos.",
+            "The account was requested and the response was empty. That is not the same as a token with no permissions.",
           ),
         },
       ],
@@ -505,11 +506,11 @@ async function readWith(
       kind: "lectura",
       mint,
       light: "atencion",
-      lightLabel: loc("No es un mint", "Not a mint"),
-      title: loc("Esta cuenta no es un mint", "This account is not a mint"),
+      lightLabel: loc("No es un token", "Not a token"),
+      title: loc("Esta cuenta no es un token", "This account is not a token"),
       support: loc(
-        "La dirección existe, pero no es un mint SPL ni Token-2022. El nombre de un token no sustituye a esta comprobación.",
-        "The address exists, but it is not an SPL or Token-2022 mint. A token name does not replace this check.",
+        "La dirección existe, pero no es un token del programa SPL Token ni del programa Token-2022. El nombre de un token no sustituye a esta comprobación.",
+        "The address exists, but it is not a token of the SPL Token program or the Token-2022 program. A token name does not replace this check.",
       ),
       signals: [
         {
@@ -540,7 +541,7 @@ async function readWith(
     const unread = blank(
       "lectura",
       mint,
-      loc("No se pudo leer el mint", "The mint could not be read"),
+      loc("No se pudo leer el token", "The token could not be read"),
       loc(
         "La cuenta es del programa de tokens, pero sus bytes no se pudieron separar. No se inventan permisos.",
         "The account belongs to a token program, but its bytes could not be split. Permissions are not invented.",
@@ -580,11 +581,11 @@ async function readWith(
     title: loc(`Programa: ${programName}`, `Program: ${programName}`),
     explain: loc(
       decoded.standard === "token-2022"
-        ? "Es un mint del programa Token-2022. Puede traer extensiones. Cada extensión de abajo se lee aparte."
-        : "Es un mint del programa SPL Token. Ese programa no trae las extensiones de Token-2022.",
+        ? "Es un token del programa Token-2022. Puede traer extensiones. Cada extensión de abajo se lee aparte."
+        : "Es un token del programa SPL Token. Ese programa no trae las extensiones de Token-2022.",
       decoded.standard === "token-2022"
-        ? "This is a Token-2022 mint. It can carry extensions. Each extension below is read on its own."
-        : "This is an SPL Token mint. That program does not carry Token-2022 extensions.",
+        ? "This is a token of the Token-2022 program. It can carry extensions. Each extension below is read on its own."
+        : "This is a token of the SPL Token program. That program does not carry Token-2022 extensions.",
     ),
   });
   const supplyEs = formatUnitsLocale(decoded.supplyRaw, decoded.decimals, "es");
@@ -598,14 +599,14 @@ async function readWith(
     explain: loc(
       supply.ok
         ? supplyMatches
-          ? `Hay ${supplyEs} tokens, con ${decoded.decimals} decimales, leídos de los bytes del mint. La lectura extra coincide.`
-          : `Los bytes del mint dicen ${supplyEs} con ${decoded.decimals} decimales, y la lectura extra no coincide. Se muestra la cifra de los bytes. No se calculan porcentajes.`
-        : `Hay ${supplyEs} tokens, con ${decoded.decimals} decimales, leídos de los bytes del mint. ${SERVICE_ES} Eso no cambia esta cifra y no es una ausencia.`,
+          ? `Hay ${supplyEs} tokens, con ${decoded.decimals} decimales, leídos de los datos del token en la cadena. La lectura extra coincide.`
+          : `Los datos del token en la cadena dicen ${supplyEs} con ${decoded.decimals} decimales, y la lectura extra no coincide. Se muestra esa cifra. No se calculan porcentajes.`
+        : `Hay ${supplyEs} tokens, con ${decoded.decimals} decimales, leídos de los datos del token en la cadena. ${SERVICE_ES} Eso no cambia esta cifra y no es una ausencia.`,
       supply.ok
         ? supplyMatches
-          ? `There are ${supplyEn} tokens, with ${decoded.decimals} decimals, read from the mint bytes. The extra read matches.`
-          : `The mint bytes say ${supplyEn} with ${decoded.decimals} decimals, and the extra read does not match. The figure shown is the one from the bytes. Percentages are not calculated.`
-        : `There are ${supplyEn} tokens, with ${decoded.decimals} decimals, read from the mint bytes. ${SERVICE_EN} That does not change this figure and it is not an absence.`,
+          ? `There are ${supplyEn} tokens, with ${decoded.decimals} decimals, read from the token data on the chain. The extra read matches.`
+          : `The token data on the chain says ${supplyEn} with ${decoded.decimals} decimals, and the extra read does not match. The figure shown is that one. Percentages are not calculated.`
+        : `There are ${supplyEn} tokens, with ${decoded.decimals} decimals, read from the token data on the chain. ${SERVICE_EN} That does not change this figure and it is not an absence.`,
     ),
   });
   signals.push(authoritySignal("emision", decoded.mintAuthority, likeness.inRegistry));
@@ -656,8 +657,8 @@ async function readWith(
       level: "ok",
       title: loc("Está en el registro de STUBX", "It is in the STUBX registry"),
       explain: loc(
-        "La dirección coincide con el mint curado. La ficha fechada es una foto anterior. Estar en el registro no es una auditoría.",
-        "The address matches the curated mint. The dated card is an earlier snapshot. Being in the registry is not an audit.",
+        "La dirección coincide con la del registro. La ficha fechada es una foto anterior. Estar en el registro no es una auditoría.",
+        "The address matches the one in the registry. The dated card is an earlier snapshot. Being in the registry is not an audit.",
       ),
     });
   } else if (copyByName) {
@@ -701,8 +702,8 @@ async function readWith(
         lightLabel: loc("En el registro", "In the registry"),
         title: loc("Esta dirección es la del registro de STUBX", "This address is the one in the STUBX registry"),
         support: loc(
-          "La lectura de ahora coincide con el mint curado. Las fichas fechadas siguen abajo, como foto anterior.",
-          "This reading matches the curated mint. The dated cards remain below, as an earlier snapshot.",
+          "La lectura de ahora coincide con la dirección del registro. Las fichas fechadas siguen abajo, como foto anterior.",
+          "This reading matches the address in the registry. The dated cards remain below, as an earlier snapshot.",
         ),
       }
     : {
@@ -872,7 +873,7 @@ function authoritySignal(
           ? "La autoridad de emisión está revocada en esta lectura. Eso no demuestra que el proyecto sea legítimo."
           : "La autoridad de congelación está revocada en esta lectura. Otros límites del token pueden seguir existiendo.",
         minting
-          ? "The mint authority is revoked in this reading. That does not show that the project is legitimate."
+          ? "The permission to create more tokens is revoked in this reading. That does not show that the project is legitimate."
           : "The freeze authority is revoked in this reading. Other limits on the token can still exist.",
       ),
     };
@@ -890,7 +891,7 @@ function authoritySignal(
           ? `La autoridad de emisión sigue asignada a ${authority.address ?? "una dirección"}. Puede aumentar el suministro. En una moneda estable eso es habitual: quien la emite añade unidades cuando entra dinero. Si un proyecto prometió un suministro fijo, el mismo permiso permite crear más. Esta lectura no dice cuál de los dos casos es.`
           : `La autoridad de congelación sigue asignada a ${authority.address ?? "una dirección"}. Puede impedir que una cuenta mueva sus tokens.`,
         minting
-          ? `The mint authority is still assigned to ${authority.address ?? "an address"}. It can increase the supply. On a stablecoin that is common: the issuer adds units when money comes in. If a project promised a fixed supply, the same permission can create more. This reading does not say which of the two cases this is.`
+          ? `The permission to create more tokens is still assigned to ${authority.address ?? "an address"}. It can increase the supply. On a stablecoin that is common: the issuer adds units when money comes in. If a project promised a fixed supply, the same permission can create more. This reading does not say which of the two cases this is.`
           : `The freeze authority is still assigned to ${authority.address ?? "an address"}. It can stop an account from moving its tokens.`,
       ),
     };
@@ -900,7 +901,7 @@ function authoritySignal(
     level: "atencion",
     title: loc(
       minting ? "La autoridad de emisión no se pudo leer" : "La autoridad de congelación no se pudo leer",
-      minting ? "The mint authority could not be read" : "The freeze authority could not be read",
+      minting ? "The permission to create more tokens could not be read" : "The freeze authority could not be read",
     ),
     explain: loc(
       "El campo no se decodifica. No se rellena como revocada.",
@@ -917,8 +918,8 @@ function extensionSignals(extensions: readonly ExtensionReport[], parsed: boolea
         level: "atencion",
         title: loc("Extensiones no separadas", "Extensions not split"),
         explain: loc(
-          "Los bytes extra del mint no se pudieron separar. No se afirma qué extensión falta.",
-          "The extra mint bytes could not be split. This does not claim which extension is missing.",
+          "Los datos extra del token no se pudieron separar. No se afirma qué extensión falta.",
+          "The extra token data could not be split. This does not claim which extension is missing.",
         ),
       },
     ];
@@ -951,8 +952,8 @@ function oneExtension(item: ExtensionReport): Signal | null {
       level: "riesgo",
       title: loc("Comisión de transferencia", "Transfer fee"),
       explain: loc(
-        `El mint puede quedarse una parte de cada envío. ${item.summary ?? "La cifra no se decodificó."}`,
-        `The mint can keep part of each transfer. ${item.summary ?? "The figure did not decode."}`,
+        `El token puede quedarse una parte de cada envío. ${item.summary ?? "La cifra no se decodificó."}`,
+        `The token can keep part of each transfer. ${item.summary ?? "The figure did not decode."}`,
       ),
     };
   }
@@ -964,10 +965,10 @@ function oneExtension(item: ExtensionReport): Signal | null {
       title: loc("Delegado permanente", "Permanent delegate"),
       explain: loc(
         absent
-          ? "La extensión está en el mint y la dirección leída está vacía. Conviene volver a leerla."
+          ? "La extensión está en el token y la dirección leída está vacía. Conviene volver a leerla."
           : "Una dirección puede mover tokens desde otras cuentas. Eso no pide permiso a quien los tiene.",
         absent
-          ? "The extension is on the mint and the address that was read is empty. It is worth reading again."
+          ? "The extension is on the token and the address that was read is empty. It is worth reading again."
           : "An address can move tokens out of other accounts. That does not ask the account that holds them.",
       ),
     };
@@ -1022,8 +1023,8 @@ function oneExtension(item: ExtensionReport): Signal | null {
       level: "atencion",
       title: loc("Marcado como no transferible", "Marked non-transferable"),
       explain: loc(
-        "El mint dice que los tokens no se transfieren. Esta lectura no prueba qué ocurre al intentarlo.",
-        "The mint says the tokens do not transfer. This reading does not prove what happens if someone tries.",
+        "El token dice que no se puede enviar. Esta lectura no prueba qué ocurre al intentarlo.",
+        "The token says it cannot be sent. This reading does not prove what happens if someone tries.",
       ),
     };
   }
@@ -1031,7 +1032,7 @@ function oneExtension(item: ExtensionReport): Signal | null {
     return {
       id: "cierre",
       level: "atencion",
-      title: loc("Alguien puede cerrar el mint", "Someone can close the mint"),
+      title: loc("Alguien puede cerrar el token", "Someone can close the token"),
       explain: loc(
         item.summary ?? "Hay una autoridad de cierre.",
         item.summary ?? "There is a close authority.",
