@@ -321,6 +321,101 @@ test("si el servicio rechaza la consulta, queda en Qué falta con Reintentar y n
   expect(hits.slice(beforeRetry).some((item) => item.startsWith("ok getMultipleAccounts"))).toBe(true);
 });
 
+function fulfillStable(route) {
+  const body = route.request().postDataJSON();
+  if (body?.method === "getMultipleAccounts") {
+    const mint = body.params[0][0];
+    const pump = String(mint).endsWith("pump");
+    return route.fulfill(rpcResult([
+      account(TOKEN_PROGRAM, mintAccount(1_000_000n)),
+      account(METADATA_PROGRAM, metadataAccount(mint, pump ? "STUBX" : "USD Coin", pump ? "STUBX" : "USDC")),
+      null,
+    ]));
+  }
+  if (body?.method === "getTokenSupply") {
+    return route.fulfill(rpcResult({ amount: "1000000", decimals: 6, uiAmountString: "ignored" }));
+  }
+  if (body?.method === "getTokenLargestAccounts") return route.fulfill(rpcResult([{ amount: "1" }]));
+  return route.fulfill(rpcResult(1));
+}
+
+test("una lectura estable dice Sigue igual y Detener deja solo lo ya leído", async ({ page }) => {
+  test.setTimeout(120_000);
+  const rpc = /solana-rpc\.publicnode\.com|api\.mainnet-beta\.solana\.com/;
+  await page.route(rpc, (route) => fulfillStable(route));
+  await storeLegacy(page, [
+    {
+      id: "55555555-5555-4555-8555-555555555555",
+      mint: USDC,
+      at: "2026-10-09T12:00:00.000Z",
+      supply: "1000000",
+      name: "USD Coin",
+      symbol: "USDC",
+      note: "",
+    },
+    {
+      id: "66666666-6666-4666-8666-666666666666",
+      mint: ERY,
+      at: "2026-10-09T12:00:00.000Z",
+      supply: "1000000",
+      name: "STUBX",
+      symbol: "STUBX",
+      note: "",
+    },
+  ]);
+  await page.goto("/cuaderno/");
+  const saveAll = page.locator("#guardar-todas");
+  await expect(saveAll).toHaveAttribute("aria-disabled", "true");
+  await saveAll.click({ force: true });
+  const help = page.locator("#guardar-todas-ayuda");
+  await expect(help).toBeVisible();
+  await expect(help).toHaveText("No hay lecturas nuevas que guardar. Consulta la lista y, cuando salga un resultado, pulsa Guardar o Guardar todas.");
+  await page.locator('[data-set-lang="en"]').click();
+  await expect(help).toHaveText("There are no new readings to save. Check the list and, when a result appears, tap Save or Save all.");
+  await page.locator('[data-set-lang="es"]').click();
+  await expect(help).toHaveText("No hay lecturas nuevas que guardar. Consulta la lista y, cuando salga un resultado, pulsa Guardar o Guardar todas.");
+  await page.locator("#seguir").click();
+  const results = page.locator("#resultado-seguimiento article.seguimiento-estado");
+  await expect(results).toHaveCount(2, { timeout: 60_000 });
+  await expect(results.filter({ hasText: USDC })).toContainText("Sigue igual desde la última lectura.");
+  await expect(results.filter({ hasText: ERY })).toContainText("Sigue igual desde la última lectura.");
+  await expect(results.filter({ hasText: USDC })).toHaveAttribute("data-estado", "igual");
+  await expect(results.filter({ hasText: ERY })).toHaveAttribute("data-estado", "igual");
+  await expect(saveAll).toHaveAttribute("aria-disabled", "false");
+  await expect(help).toBeHidden();
+  let releaseSlow;
+  const gate = new Promise((resolve) => {
+    releaseSlow = resolve;
+  });
+  let slowStarted = 0;
+  await page.unroute(rpc);
+  await page.route(rpc, async (route) => {
+    const body = route.request().postDataJSON();
+    if (body?.method === "getMultipleAccounts" && body.params?.[0]?.[0] === ERY) {
+      slowStarted += 1;
+      await gate;
+    }
+    return fulfillStable(route);
+  });
+  await page.locator("#seguir").click();
+  await expect.poll(() => slowStarted, { timeout: 45_000 }).toBe(1);
+  await expect(page.locator("#detener")).toBeVisible();
+  const partial = page.locator("#resultado-seguimiento article.seguimiento-estado");
+  await expect(partial).toHaveCount(1);
+  await expect(partial).toContainText(USDC);
+  await expect(partial).toContainText("Sigue igual desde la última lectura.");
+  await expect(partial).toHaveAttribute("data-estado", "igual");
+  await expect(page.locator("#resultado-seguimiento")).not.toContainText(ERY);
+  await page.locator("#detener").click();
+  await expect(page.locator("#consulta-error")).toContainText("Pasada detenida. Lo que no se llegó a leer no se da por igual.");
+  await expect(partial).toHaveCount(1);
+  await expect(partial).toContainText("Sigue igual desde la última lectura.");
+  await expect(page.locator("#resultado-seguimiento")).not.toContainText(ERY);
+  await expect(page.locator("#resultado-seguimiento article.seguimiento-estado[data-estado='igual']")).toHaveCount(1);
+  await expect(page.locator("#detener")).toBeHidden();
+  releaseSlow();
+});
+
 test("detener corta la pasada y no la da por igual", async ({ page }) => {
   test.setTimeout(30_000);
   let release;

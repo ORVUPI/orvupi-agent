@@ -62,7 +62,7 @@ const COPY = {
     full: `Este navegador ya tiene ${MAX_STORED} fichas. Borra alguna para guardar otra.`,
     partial: "La lectura está incompleta. Lo que falta no se ha puesto a cero.",
     network: "El servicio público no respondió, prueba otra vez en un minuto.",
-    limit: "Se han hecho 6 lecturas en un minuto. Espera un momento antes de comprobar otra. No se ha inventado un resultado.",
+    saveAllIdle: "No hay lecturas nuevas que guardar. Consulta la lista y, cuando salga un resultado, pulsa Guardar o Guardar todas.",
     saved: "Guardada en el Cuaderno de este navegador · ",
     open: "Abrir Cuaderno",
     retry: "Reintentar",
@@ -158,7 +158,7 @@ const COPY = {
     full: `This browser already has ${MAX_STORED} cards. Delete one to save another.`,
     partial: "The reading is incomplete. What is missing was not filled in with zero.",
     network: "The public service did not respond, try again in a minute.",
-    limit: "6 readings were made in one minute. Wait a moment before checking another. No result was invented.",
+    saveAllIdle: "There are no new readings to save. Check the list and, when a result appears, tap Save or Save all.",
     saved: "Saved in this browser's Notebook · ",
     open: "Open Notebook",
     retry: "Try again",
@@ -638,7 +638,10 @@ let watchResults = [];
 let followRunning = false;
 let followAbort = null;
 let followRun = 0;
+let limitTimer = 0;
+let limitStamps = [];
 const selectedWatch = new Set();
+const QUERY_WINDOW_MS = 60000;
 
 function database() {
   if (!dbPromise) dbPromise = openDb();
@@ -695,6 +698,7 @@ async function persist(record) {
 async function consult(mint, forgetBlocked = false) {
   const button = document.getElementById("consultar");
   const input = document.getElementById("direccion-cuaderno");
+  clearLimitTimer();
   if (button) button.disabled = true;
   showMessage(t("consulting"), "info");
   const endpoint = endpointFromForm();
@@ -711,7 +715,7 @@ async function consult(mint, forgetBlocked = false) {
   const slot = takeQuerySlot(queryStamps, Date.now(), 6, 60000);
   queryStamps = slot.stamps;
   if (!slot.allowed) {
-    showMessage(t("limit"), "error");
+    armLimitCountdown(queryStamps);
     if (button) button.disabled = false;
     return;
   }
@@ -924,6 +928,8 @@ async function confirmDelete() {
     if (compare) compare.replaceChildren();
     watchResults = [];
     selectedWatch.clear();
+    clearLimitTimer();
+    syncSaveAll();
     showMessage(t("deleted"), "ok");
     await refresh();
   } catch (error) {
@@ -942,12 +948,92 @@ function networkLabel(network) {
   return visibleText(network || "");
 }
 
+function secondsUntilSlot(stamps, now = Date.now()) {
+  const fresh = (Array.isArray(stamps) ? stamps : []).filter((stamp) => typeof stamp === "number" && now - stamp < QUERY_WINDOW_MS);
+  if (fresh.length < 6) return 0;
+  const oldest = Math.min(...fresh);
+  return Math.max(0, Math.ceil((oldest + QUERY_WINDOW_MS - now) / 1000));
+}
+
+function limitMessage(seconds) {
+  const left = Math.max(0, Math.floor(Number(seconds) || 0));
+  if (left <= 0) {
+    return lang() === "en"
+      ? "You can check another address now. The limit of 6 readings per minute is so we do not overload Solana's public services. No result was invented."
+      : "Ya puedes consultar otra dirección. El límite de 6 lecturas por minuto es para no saturar los servicios públicos de Solana. No se ha inventado un resultado.";
+  }
+  if (lang() === "en") {
+    const wait = left === 1 ? "1 second remains" : `${left} seconds remain`;
+    return `6 readings were made in one minute. ${wait} before the next one, so we do not overload Solana's public services. No result was invented.`;
+  }
+  const wait = left === 1 ? "Falta 1 segundo" : `Faltan ${left} segundos`;
+  return `Se han hecho 6 lecturas en un minuto. ${wait} antes de la siguiente, para no saturar los servicios públicos de Solana. No se ha inventado un resultado.`;
+}
+
+function clearLimitTimer() {
+  if (limitTimer) clearInterval(limitTimer);
+  limitTimer = 0;
+  const out = document.getElementById("resultado-seguimiento");
+  if (out && !followRunning) out.setAttribute("aria-live", "polite");
+}
+
+function paintLimit(announce) {
+  const seconds = secondsUntilSlot(limitStamps);
+  const message = limitMessage(seconds);
+  const node = document.getElementById("consulta-error");
+  if (node) {
+    node.hidden = false;
+    node.replaceChildren(document.createTextNode(message));
+    node.dataset.kind = "error";
+    node.setAttribute("role", "status");
+    node.setAttribute("aria-live", announce ? "polite" : "off");
+  }
+  const out = document.getElementById("resultado-seguimiento");
+  if (out) out.setAttribute("aria-live", "off");
+  for (const status of document.querySelectorAll('#resultado-seguimiento p[data-estado="espera"]')) {
+    status.textContent = message;
+  }
+  if (seconds <= 0) clearLimitTimer();
+}
+
+function armLimitCountdown(stamps) {
+  clearLimitTimer();
+  limitStamps = Array.isArray(stamps) ? stamps.slice() : [];
+  paintLimit(true);
+  if (secondsUntilSlot(limitStamps) <= 0) return;
+  limitTimer = setInterval(() => paintLimit(false), 1000);
+}
+
 function watchStatusText(kind) {
   if (kind === "cambio") return t("watchChanged");
   if (kind === "igual") return t("watchSame");
   if (kind === "incompleto") return t("watchIncomplete");
   if (kind === "rechazada") return t("watchRefused");
-  return t("limit");
+  return limitMessage(secondsUntilSlot(queryStamps));
+}
+
+function syncSaveAll() {
+  const button = document.getElementById("guardar-todas");
+  const help = document.getElementById("guardar-todas-ayuda");
+  if (!button) return;
+  const pending = watchResults.some((item) => canKeep(item.outcome));
+  button.setAttribute("aria-disabled", pending ? "false" : "true");
+  if (pending) {
+    if (help) help.hidden = true;
+    button.removeAttribute("aria-describedby");
+    return;
+  }
+  if (help && !help.hidden) help.textContent = t("saveAllIdle");
+}
+
+function showSaveAllHelp() {
+  const help = document.getElementById("guardar-todas-ayuda");
+  const button = document.getElementById("guardar-todas");
+  if (help) {
+    help.hidden = false;
+    help.textContent = t("saveAllIdle");
+  }
+  if (button) button.setAttribute("aria-describedby", "guardar-todas-ayuda");
 }
 
 function shownSide(rowItem, side, card) {
@@ -1037,6 +1123,7 @@ function renderWatchResults() {
   if (!out) return;
   out.replaceChildren();
   for (const item of watchResults) out.append(renderWatchResult(item));
+  syncSaveAll();
 }
 
 function renderWatchResult(item) {
@@ -1160,6 +1247,7 @@ function stopFollow() {
 
 async function followSelected(forgetKey) {
   if (followRunning) return;
+  clearLimitTimer();
   const button = document.getElementById("seguir");
   const stop = document.getElementById("detener");
   const endpoint = endpointFromForm();
@@ -1230,7 +1318,7 @@ async function followSelected(forgetKey) {
     }
     watchResults = painted;
     renderWatchResults();
-    if (!stopped && plan.waiting.length) showMessage(t("limit"), "error");
+    if (!stopped && plan.waiting.length) armLimitCountdown(queryStamps);
     if (stopped) showMessage(t("watchStopped"), "info");
     if (out && !stopped) out.focus();
   } catch {
@@ -1268,6 +1356,10 @@ function bind() {
   document.getElementById("seguir")?.addEventListener("click", () => followSelected(""));
   document.getElementById("detener")?.addEventListener("click", () => stopFollow());
   document.getElementById("guardar-todas")?.addEventListener("click", () => {
+    if (!watchResults.some((item) => canKeep(item.outcome))) {
+      showSaveAllHelp();
+      return;
+    }
     saveAllWatch();
   });
   document.getElementById("comparar-izquierda")?.addEventListener("change", () => {
@@ -1286,7 +1378,9 @@ function bind() {
     renderComparison();
     renderWatchList(records);
     renderWatchResults();
+    if (limitTimer) paintLimit(false);
   });
+  syncSaveAll();
   refresh().catch(() => showMessage(t("db"), "error"));
 }
 

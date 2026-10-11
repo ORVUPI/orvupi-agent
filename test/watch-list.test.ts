@@ -226,7 +226,15 @@ describe("revisar direcciones guardadas", () => {
     assert.equal(page.includes("Al pulsar, tu navegador envía las direcciones que se revisan (las marcadas, o todas si no marcas ninguna) a los nodos públicos de Solana solana-rpc.publicnode.com y api.mainnet-beta.solana.com, que también ven tu IP. No se guarda nada nuevo hasta que pulses «Guardar»."), true);
     assert.equal(page.includes("When you tap, your browser sends the addresses being checked (the marked ones, or all of them if none are marked) to the Solana public nodes solana-rpc.publicnode.com and api.mainnet-beta.solana.com, which also see your IP. Nothing new is saved until you tap \"Save\"."), true);
     assert.match(page, /id="detener"/);
-    assert.match(page, /id="guardar-todas"/);
+    assert.match(page, /id="guardar-todas"[^>]*aria-disabled="true"/);
+    assert.match(page, /id="guardar-todas-ayuda"/);
+    assert.match(source, /No hay lecturas nuevas que guardar/);
+    assert.match(source, /There are no new readings to save/);
+    assert.match(source, /para no saturar los servicios públicos de Solana/);
+    assert.match(source, /so we do not overload Solana's public services/);
+    assert.match(source, /Faltan \$\{left\} segundos/);
+    assert.match(source, /\$\{left\} seconds remain/);
+    assert.match(source, /setInterval\(\(\) => paintLimit\(false\), 1000\)/);
     assert.equal(follow.includes("persist("), false);
     assert.match(page, /id="seguir"/);
     assert.equal(page.includes(notice.AVISO_GUARDAR.es), true);
