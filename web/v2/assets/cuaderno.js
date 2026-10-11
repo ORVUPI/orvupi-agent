@@ -668,7 +668,7 @@ async function consult(mint, forgetBlocked = false) {
       return;
     }
     if (box) {
-      box.replaceChildren(renderCard(result.card, { autoMarket: true }));
+      box.replaceChildren(renderCard(result.card, { autoMarket: false }));
       box.focus();
       box.scrollIntoView({ block: "start" });
     }
@@ -903,7 +903,7 @@ function bind() {
     }
     const latest = records[0];
     const box = document.getElementById("resultado");
-    if (latest && box && box.childElementCount) box.replaceChildren(renderCard(latest.card, { autoMarket: true }));
+    if (latest && box && box.childElementCount) box.replaceChildren(renderCard(latest.card, { autoMarket: false }));
     renderComparison();
   });
   refresh().catch(() => showMessage(t("db"), "error"));

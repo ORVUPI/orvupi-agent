@@ -74,7 +74,7 @@ function paintMarketBlock(out, view) {
   if (typeof isAddress === "function" && !isAddress(view.mint)) return;
   var slot = verifyEl("div", { class: "hueco-mercado" });
   out.append(slot);
-  mountMarket(slot, { mint: view.mint, lang: verifyLang(), auto: true });
+  mountMarket(slot, { mint: view.mint, lang: verifyLang(), auto: false });
 }
 
 function paintSummary(out, view, lang) {

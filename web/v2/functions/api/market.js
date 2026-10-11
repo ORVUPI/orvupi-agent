@@ -3,16 +3,14 @@
  * El navegador llama a este mismo sitio. Esta función consulta DEX Screener
  * y no reenvía cabeceras del visitante ni usa un secreto.
  */
-import { handleMarketGet } from "../../shared/market-proxy.js";
+import { MARKET_RATE_LIMIT, MARKET_RATE_WINDOW_MS, handleMarketGet } from "../../shared/market-proxy.js";
 
-const LIMIT = 40;
-const WINDOW_MS = 60_000;
 const hits = [];
 
 function takeMarketSlot() {
   const now = Date.now();
-  while (hits.length && hits[0] <= now - WINDOW_MS) hits.shift();
-  if (hits.length >= LIMIT) return false;
+  while (hits.length && hits[0] <= now - MARKET_RATE_WINDOW_MS) hits.shift();
+  if (hits.length >= MARKET_RATE_LIMIT) return false;
   hits.push(now);
   return true;
 }
@@ -52,10 +50,7 @@ export async function onRequest(context) {
     takeSlot: takeMarketSlot,
     readCache: readMarketCache,
     writeCache: writeMarketCache,
-    fetchImpl: async (url, init) => {
-      const response = await fetch(url, init);
-      return { status: response.status, text: () => response.text() };
-    },
+    fetchImpl: (url, init) => fetch(url, init),
   });
   return new Response(result.body, { status: result.status, headers: result.headers });
 }

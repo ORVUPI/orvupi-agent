@@ -2,6 +2,7 @@
  * Lectura de mercado de solo lectura para un mint de Solana.
  * Normaliza la respuesta pública de DEX Screener. No calcula cifras,
  * no sigue otras URLs y no convierte un fallo en cero.
+ * Descarta la cotización unitaria si la respuesta la trae.
  */
 
 const MARKET_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
@@ -15,6 +16,9 @@ export const MARKET_PATH = "/token-pairs/v1/solana/";
 export const MARKET_MAX_BODY = 500_000;
 export const MARKET_SHOW = 8;
 export const MARKET_PARSE = 40;
+export const MARKET_TIMEOUT_MS = 8_000;
+export const MARKET_LOW_USD = 1_000;
+export const MARKET_OFFICIAL_MINT = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
 export const MARKET_WINDOWS = Object.freeze([
   ["h24", { es: "Volumen en 24 horas", en: "Volume over 24 hours" }],
   ["h6", { es: "Volumen en 6 horas", en: "Volume over 6 hours" }],
@@ -23,9 +27,73 @@ export const MARKET_WINDOWS = Object.freeze([
 ]);
 
 const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
-const USD_FIGURE = /^(?:0|[1-9]\d{0,20})(?:\.\d{1,12})?$/;
 const PAIR_ADDRESS = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 const STATUSES = new Set(["ok", "sin_pares", "fallo", "limite", "incompleta", "consulta"]);
+
+const MARKET_PRIVACY = Object.freeze({
+  es: "Este sitio no guarda en ningún servidor la dirección que consultas. Para leerla en directo, se envía a un nodo público de Solana (solana-rpc.publicnode.com y api.mainnet-beta.solana.com) y, si pides los datos de mercado, también a DEX Screener a través de este sitio, sin reenviar tu IP. Solo si pulsas «Guardar esta consulta», se guarda en el Cuaderno de este navegador, en tu dispositivo, y puedes borrarla allí cuando quieras. Los datos de mercado no se guardan.",
+  en: "This site does not store the address you look up on any server. To read it live, it is sent to a public Solana node (solana-rpc.publicnode.com and api.mainnet-beta.solana.com) and, if you request market data, also to DEX Screener through this site, without forwarding your IP. Only if you press \"Save this lookup\" is it stored in this browser's Notebook, on your device, and you can delete it there at any time. Market data is not stored.",
+});
+
+export const MARKET_ATTRIBUTION = Object.freeze({
+  es: "Datos: DEX Screener. Pueden no ser exactos ni estar al día.",
+  en: "Data: DEX Screener. It may be inaccurate or out of date.",
+});
+
+const MARKET_HOMOGLYPHS = {
+  "\u0391": "A",
+  "\u0392": "B",
+  "\u0395": "E",
+  "\u0396": "Z",
+  "\u0397": "H",
+  "\u0399": "I",
+  "\u039A": "K",
+  "\u039C": "M",
+  "\u039D": "N",
+  "\u039F": "O",
+  "\u03A1": "P",
+  "\u03A4": "T",
+  "\u03A5": "Y",
+  "\u03A3": "S",
+  "\u03A7": "X",
+  "\u03B1": "a",
+  "\u03C3": "s",
+  "\u03BF": "o",
+  "\u03C4": "t",
+  "\u0410": "A",
+  "\u0412": "B",
+  "\u0415": "E",
+  "\u041A": "K",
+  "\u041C": "M",
+  "\u041D": "H",
+  "\u041E": "O",
+  "\u0420": "P",
+  "\u0421": "S",
+  "\u0422": "T",
+  "\u0425": "X",
+  "\u0430": "a",
+  "\u0435": "e",
+  "\u043E": "o",
+  "\u0440": "p",
+  "\u0441": "s",
+  "\u0442": "t",
+  "\u0445": "x",
+  "\u0405": "S",
+  "\u0455": "s",
+  "\u0406": "I",
+  "\u0456": "i",
+  "5": "S",
+  "8": "B",
+  "\uA731": "S",
+  "\u1D1B": "T",
+  "\u1D1C": "U",
+  "\u0299": "B",
+  "\u054D": "U",
+  "\u057D": "u",
+  "\u13DA": "S",
+  "\u13A2": "T",
+  "\u13F4": "B",
+};
 
 function marketDecode(source) {
   if (typeof source !== "string" || source.length === 0) return null;
@@ -62,9 +130,17 @@ export function isSolanaMint(value) {
   return Boolean(bytes && bytes.length === 32);
 }
 
+/** Misma normalización que normalizeToken de Verify: homoglifos, ancho cero y bidi. */
+export function marketNormalizeToken(value) {
+  const folded = String(value || "").normalize("NFKC").replace(/[\p{Cc}\p{Cf}\uFFFD]/gu, "");
+  let mapped = "";
+  for (const char of folded) mapped += MARKET_HOMOGLYPHS[char] ?? char;
+  return mapped.toLowerCase().replace(/[\s.\-_'’]+/g, "");
+}
+
 function clipSymbol(value) {
   if (typeof value !== "string") return "";
-  const clean = value.replace(/[\u0000-\u001f\u007f<>]/g, "").trim();
+  const clean = value.replace(/[\u0000-\u001f\u007f<>]/g, "").replace(/\p{Cf}/gu, "").trim();
   return Array.from(clean).slice(0, 24).join("");
 }
 
@@ -95,17 +171,17 @@ function readVolume(volume) {
   return { usd: null, window: null };
 }
 
-function readUsdFigure(pair) {
-  const raw = pair && pair.priceUsd;
-  if (typeof raw !== "string") return null;
-  const text = raw.trim();
-  if (!USD_FIGURE.test(text)) return null;
-  return text;
+function tokenAddress(token) {
+  if (!token || typeof token !== "object" || typeof token.address !== "string") return "";
+  return token.address.trim();
 }
 
-function readPair(item) {
+function readPair(item, mint) {
   if (!item || typeof item !== "object") return null;
   if (typeof item.chainId === "string" && item.chainId !== "solana") return null;
+  const baseAddress = tokenAddress(item.baseToken);
+  const quoteAddress = tokenAddress(item.quoteToken);
+  if (!mint || (baseAddress !== mint && quoteAddress !== mint)) return null;
   const volume = readVolume(item.volume);
   const base = clipSymbol(item.baseToken && item.baseToken.symbol);
   const quote = clipSymbol(item.quoteToken && item.quoteToken.symbol);
@@ -118,14 +194,13 @@ function readPair(item) {
     liquidityUsd: readLiquidity(item.liquidity),
     volumeUsd: volume.usd,
     volumeWindow: volume.window,
-    usdFigure: readUsdFigure(item),
   };
 }
 
 export function marketFailure(mint, queriedAt, reason) {
   const limited = reason === "pausa-sitio" || reason === "pausa-fuente";
   const empty = reason === "vacio";
-  const partial = reason === "parcial" || reason === "grande";
+  const partial = reason === "parcial";
   return {
     schema: MARKET_SCHEMA,
     status: limited ? "limite" : empty ? "sin_pares" : partial ? "incompleta" : "fallo",
@@ -134,7 +209,7 @@ export function marketFailure(mint, queriedAt, reason) {
     sourceName: MARKET_SOURCE_NAME,
     sourceHost: MARKET_HOST,
     queriedAt: typeof queriedAt === "string" ? queriedAt : "",
-    zone: "UTC",
+    zone: "Europe/Madrid",
     pairs: empty ? [] : null,
     omitted: empty ? 0 : null,
   };
@@ -149,7 +224,7 @@ export function marketLoading(mint) {
     sourceName: MARKET_SOURCE_NAME,
     sourceHost: MARKET_HOST,
     queriedAt: "",
-    zone: "UTC",
+    zone: "Europe/Madrid",
     pairs: null,
     omitted: null,
   };
@@ -163,9 +238,6 @@ export function normalizeUpstream(httpStatus, bodyText, meta) {
     return marketFailure(mint, queriedAt, "grande");
   }
   const text = typeof bodyText === "string" ? bodyText.trim() : "";
-  if (httpStatus === 404 && (text === "" || text === "null" || text === "[]")) {
-    return marketFailure(mint, queriedAt, "vacio");
-  }
   if (typeof httpStatus !== "number" || httpStatus < 200 || httpStatus >= 300) {
     return marketFailure(mint, queriedAt, "http");
   }
@@ -182,22 +254,12 @@ export function normalizeUpstream(httpStatus, bodyText, meta) {
   let skipped = 0;
   const cap = Math.min(list.length, MARKET_PARSE);
   for (let i = 0; i < cap; i += 1) {
-    const pair = readPair(list[i]);
+    const pair = readPair(list[i], mint);
     if (!pair) skipped += 1;
     else usable.push(pair);
   }
   if (usable.length === 0) return marketFailure(mint, queriedAt, "json");
-  const ranked = usable.map((pair, index) => ({ pair, index }));
-  ranked.sort((left, right) => {
-    const a = left.pair.liquidityUsd;
-    const b = right.pair.liquidityUsd;
-    const aMissing = a === null;
-    const bMissing = b === null;
-    if (aMissing !== bMissing) return aMissing ? 1 : -1;
-    if (a !== b) return b - a;
-    return left.index - right.index;
-  });
-  const shown = ranked.slice(0, MARKET_SHOW).map((item) => item.pair);
+  const shown = usable.slice(0, MARKET_SHOW);
   const omitted = usable.length - shown.length + skipped + (list.length - cap);
   const anyFigure = shown.some((pair) => pair.liquidityUsd !== null || pair.volumeUsd !== null);
   return {
@@ -208,7 +270,7 @@ export function normalizeUpstream(httpStatus, bodyText, meta) {
     sourceName: MARKET_SOURCE_NAME,
     sourceHost: MARKET_HOST,
     queriedAt: typeof queriedAt === "string" ? queriedAt : "",
-    zone: "UTC",
+    zone: "Europe/Madrid",
     pairs: shown,
     omitted,
   };
@@ -219,7 +281,6 @@ function pairShape(value) {
   const liquidity = finiteAmount(value.liquidityUsd);
   const volume = finiteAmount(value.volumeUsd);
   const windowOk = MARKET_WINDOWS.some(([key]) => key === value.volumeWindow);
-  const figure = typeof value.usdFigure === "string" && USD_FIGURE.test(value.usdFigure) ? value.usdFigure : null;
   return {
     dex: clipDex(value.dex),
     pairAddress: typeof value.pairAddress === "string" && PAIR_ADDRESS.test(value.pairAddress) ? value.pairAddress : "",
@@ -228,7 +289,6 @@ function pairShape(value) {
     liquidityUsd: value.liquidityUsd === null ? null : liquidity,
     volumeUsd: value.volumeUsd === null ? null : volume,
     volumeWindow: value.volumeWindow === null || !windowOk ? null : value.volumeWindow,
-    usdFigure: figure,
   };
 }
 
@@ -264,26 +324,44 @@ export function acceptClientPayload(value, mint) {
     sourceName: MARKET_SOURCE_NAME,
     sourceHost: MARKET_HOST,
     queriedAt: iso,
-    zone: "UTC",
+    zone: "Europe/Madrid",
     pairs,
     omitted,
   };
 }
 
+function clockFrom(now) {
+  if (typeof now === "function") return now;
+  if (now && typeof now === "object" && typeof now.now === "function") return now.now;
+  return () => new Date();
+}
+
+function timeoutFrom(now) {
+  if (now && typeof now === "object" && Number.isFinite(now.timeoutMs) && now.timeoutMs > 0) return now.timeoutMs;
+  return MARKET_TIMEOUT_MS;
+}
+
 export async function loadMarket(mint, fetchImpl, now) {
-  const clock = typeof now === "function" ? now : () => new Date();
+  const clock = clockFrom(now);
+  const timeoutMs = timeoutFrom(now);
   const iso = clock().toISOString();
   if (!isSolanaMint(mint)) return marketFailure(mint, iso, "mint");
   const fetchFn = fetchImpl || globalThis.fetch;
   if (typeof fetchFn !== "function") return marketFailure(mint, iso, "http");
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   let response;
   try {
     response = await fetchFn(`/api/market?mint=${encodeURIComponent(mint)}`, {
       method: "GET",
       headers: { accept: "application/json" },
+      signal: controller.signal,
     });
-  } catch {
-    return marketFailure(mint, iso, "http");
+  } catch (error) {
+    const aborted = controller.signal.aborted || (error && error.name === "AbortError");
+    return marketFailure(mint, iso, aborted ? "tiempo" : "http");
+  } finally {
+    clearTimeout(timer);
   }
   const status = response && typeof response.status === "number" ? response.status : 0;
   let text = "";
@@ -340,27 +418,50 @@ export function formatUsd(value, lang) {
   return frac ? `${grouped}${dec}${frac} USD` : `${grouped} USD`;
 }
 
-export function formatUsdFigure(figure, lang) {
-  if (typeof figure !== "string" || !USD_FIGURE.test(figure)) return null;
-  const language = lang === "en" ? "en" : "es";
-  const [whole, fracRaw] = figure.split(".");
-  const frac = fracRaw || "";
-  const dec = language === "en" ? "." : ",";
-  const grouped = groupDigits(whole || "0", language);
-  return frac ? `${grouped}${dec}${frac} USD` : `${grouped} USD`;
-}
-
-export function formatStamp(iso) {
+export function formatSourceStamp(iso, lang) {
   if (typeof iso !== "string" || !ISO.test(iso)) return "";
-  return `${iso.slice(0, 10)} ${iso.slice(11, 19)} UTC`;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  let parts;
+  try {
+    parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/Madrid",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    }).formatToParts(date);
+  } catch {
+    return "";
+  }
+  const pick = (type) => {
+    const found = parts.find((part) => part.type === type);
+    return found && found.value ? found.value : "";
+  };
+  const day = pick("day");
+  const month = pick("month");
+  const year = pick("year");
+  const hour = pick("hour").padStart(2, "0");
+  const minute = pick("minute").padStart(2, "0");
+  if (!day || !month || !year || !hour || !minute) return "";
+  if (lang === "en") {
+    return `Source: ${MARKET_SOURCE_NAME} · read ${day}-${month}-${year} ${hour}:${minute} (Madrid time)`;
+  }
+  return `Fuente: ${MARKET_SOURCE_NAME} · leído el ${day}-${month}-${year} a las ${hour}:${minute} (hora de Madrid)`;
 }
 
 function marketCopy(lang, es, en) {
   return lang === "en" ? en : es;
 }
 
+export function marketPrivacy(lang) {
+  return marketCopy(lang, MARKET_PRIVACY.es, MARKET_PRIVACY.en);
+}
+
 function stampLine(model, lang) {
-  const when = formatStamp(model.queriedAt);
+  const when = formatSourceStamp(model && model.queriedAt, lang);
   if (!when) {
     return marketCopy(
       lang,
@@ -368,11 +469,7 @@ function stampLine(model, lang) {
       `Source: ${MARKET_SOURCE_NAME}. The query time did not arrive.`,
     );
   }
-  return marketCopy(
-    lang,
-    `Fuente: ${MARKET_SOURCE_NAME}. Consultado: ${when}.`,
-    `Source: ${MARKET_SOURCE_NAME}. Queried: ${when}.`,
-  );
+  return when;
 }
 
 function windowLabel(key, lang) {
@@ -381,10 +478,32 @@ function windowLabel(key, lang) {
   return found[1][lang === "en" ? "en" : "es"];
 }
 
-function pairTitle(pair, lang) {
-  const base = pair.base || marketCopy(lang, "sin símbolo", "no symbol");
-  const quote = pair.quote || marketCopy(lang, "sin símbolo", "no symbol");
+function callsItself(symbol, mint) {
+  if (!symbol || mint === MARKET_OFFICIAL_MINT) return false;
+  return marketNormalizeToken(symbol).includes("stubx");
+}
+
+function sideName(symbol, mint, lang) {
+  if (!symbol) return marketCopy(lang, "sin símbolo", "no symbol");
+  if (callsItself(symbol, mint)) {
+    return marketCopy(lang, `Dice llamarse «${symbol}»`, `It says it is called «${symbol}»`);
+  }
+  return symbol;
+}
+
+function pairTitle(pair, mint, lang) {
+  const base = sideName(pair.base, mint, lang);
+  const quote = sideName(pair.quote, mint, lang);
   return marketCopy(lang, `Par: ${base} / ${quote}`, `Pair: ${base} / ${quote}`);
+}
+
+function lowLiquidityLine(amount, lang) {
+  if (typeof amount !== "number" || !Number.isFinite(amount) || amount >= MARKET_LOW_USD) return "";
+  return marketCopy(
+    lang,
+    "La liquidez publicada es poca (menos de 1.000 USD). Cualquiera puede crear un par.",
+    "The published liquidity is small (under 1,000 USD). Anyone can create a pair.",
+  );
 }
 
 const GAP = {
@@ -393,16 +512,20 @@ const GAP = {
     en: "DEX Screener listed no Solana pair for this address. That is not zero liquidity.",
   },
   http: {
-    es: "La consulta falló. No hay cifra de pares, liquidez ni volumen.",
-    en: "The query failed. There is no figure for pairs, liquidity, or volume.",
+    es: "No se pudo consultar.",
+    en: "It could not be queried.",
   },
   json: {
-    es: "La fuente no contestó como se esperaba. No hay cifra.",
-    en: "The source did not answer as expected. There is no figure.",
+    es: "No se pudo consultar.",
+    en: "It could not be queried.",
   },
   grande: {
-    es: "La respuesta de la fuente era demasiado grande. No se ha usado. No hay cifra.",
-    en: "The source response was too large. It was not used. There is no figure.",
+    es: "No se pudo consultar.",
+    en: "It could not be queried.",
+  },
+  tiempo: {
+    es: "No se pudo consultar. Se agotó el tiempo.",
+    en: "It could not be queried. The wait timed out.",
   },
   "pausa-fuente": {
     es: "DEX Screener pidió una pausa. No hay cifra. Prueba otra vez en un minuto.",
@@ -466,20 +589,21 @@ export function marketGap(model, lang) {
 export function describeMarket(model, lang) {
   const language = lang === "en" ? "en" : "es";
   const stamp = stampLine(model || {}, language);
+  const mint = model && model.mint;
   const pairs = [];
   if (model && Array.isArray(model.pairs)) {
     for (const pair of model.pairs) {
       const liquidity = formatUsd(pair.liquidityUsd, language);
       const volume = formatUsd(pair.volumeUsd, language);
-      const figure = formatUsdFigure(pair.usdFigure, language);
       pairs.push({
-        title: pairTitle(pair, language),
+        title: pairTitle(pair, mint, language),
         where: pair.dex
           ? marketCopy(language, `Dónde está el par: ${pair.dex}`, `Where the pair is: ${pair.dex}`)
           : marketCopy(language, "Dónde está el par: la fuente no lo nombró.", "Where the pair is: the source did not name it."),
         liquidity: liquidity
           ? marketCopy(language, `Liquidez: ${liquidity}. ${stamp}`, `Liquidity: ${liquidity}. ${stamp}`)
           : marketCopy(language, `Liquidez: la fuente no la dio. ${stamp}`, `Liquidity: the source did not give it. ${stamp}`),
+        low: lowLiquidityLine(pair.liquidityUsd, language),
         volume: volume
           ? marketCopy(
               language,
@@ -490,20 +614,10 @@ export function describeMarket(model, lang) {
         address: pair.pairAddress
           ? marketCopy(language, `Dirección del par: ${pair.pairAddress}`, `Pair address: ${pair.pairAddress}`)
           : marketCopy(language, "Dirección del par: la fuente no la dio.", "Pair address: the source did not give it."),
-        figure: figure
-          ? marketCopy(
-              language,
-              `Cifra en dólares publicada por la fuente: ${figure}. ${stamp}`,
-              `Dollar figure published by the source: ${figure}. ${stamp}`,
-            )
-          : marketCopy(
-              language,
-              "La fuente no publicó una cifra en dólares.",
-              "The source did not publish a dollar figure.",
-            ),
       });
     }
   }
+  const status = model && model.status;
   return {
     title: marketCopy(language, "Datos de mercado", "Market data"),
     intro: marketCopy(
@@ -513,17 +627,20 @@ export function describeMarket(model, lang) {
     ),
     notice: marketCopy(
       language,
-      "Lectura de un tercero. No es un consejo ni una puntuación. La dirección se envía a DEX Screener a través de este sitio. Esta página no le reenvía tu IP.",
-      "A third-party reading. It is not advice and it does not rank the token. The address is sent to DEX Screener through this site. This page does not forward your IP to it.",
+      "Lectura de un tercero. No es un consejo ni una puntuación.",
+      "A third-party reading. It is not advice and it does not rank the token.",
     ),
+    privacy: marketPrivacy(language),
+    attribution: MARKET_ATTRIBUTION[language],
     source: stamp,
     pairs,
     gapTitle: marketCopy(language, "Qué falta", "What is missing"),
     gap: marketGap(model, language),
+    retry: status === "fallo" || status === "limite",
     detail: marketCopy(
       language,
-      "La liquidez es el dinero que la fuente dice que hay en ese par, en dólares. El volumen es lo que la fuente dice que se movió en el intervalo indicado. Una cifra en dólares, si aparece, es la que publicó la fuente. STUBX no la calcula.",
-      "Liquidity is the money the source says is in that pair, in dollars. Volume is what the source says moved in the stated interval. A dollar figure, if one appears, is the one the source published. STUBX does not calculate it.",
+      "La liquidez es el dinero que la fuente dice que hay en ese par, en dólares. El volumen es lo que la fuente dice que se movió en el intervalo indicado. STUBX no la calcula.",
+      "Liquidity is the money the source says is in that pair, in dollars. Volume is what the source says moved in the stated interval. STUBX does not calculate it.",
     ),
     more: marketCopy(language, "Más detalle", "More detail"),
   };
@@ -537,4 +654,9 @@ export const MARKET_STORED_NOTE = Object.freeze({
 export const MARKET_READ_BUTTON = Object.freeze({
   es: "Leer datos de mercado ahora",
   en: "Read market data now",
+});
+
+export const MARKET_RETRY_BUTTON = Object.freeze({
+  es: "Reintentar",
+  en: "Retry",
 });

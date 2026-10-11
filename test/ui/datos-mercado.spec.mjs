@@ -80,7 +80,6 @@ function okBody(mint) {
       liquidityUsd: 50000.25,
       volumeUsd: 1200.5,
       volumeWindow: "h24",
-      usdFigure: "1.0001",
     },
   ]);
 }
@@ -116,7 +115,9 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
     return route.fulfill(rpcResult(1));
   });
 
+  let marketCalls = 0;
   await page.route(/\/api\/market\?mint=/, async (route) => {
+    marketCalls += 1;
     const mint = new URL(route.request().url()).searchParams.get("mint");
     if (mint === EMPTY) {
       return route.fulfill({
@@ -162,38 +163,55 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
   await page.locator("#direccion-token").fill(USDC);
   await page.locator("#consulta button[type='submit']").click();
   const block = page.locator("#resultado .datos-mercado");
-  await expect(block).toContainText("Datos de mercado", { timeout: 20_000 });
-  await expect(block).toContainText("Fuente: DEX Screener");
-  await expect(block).toContainText("2026-10-11 09:48:00 UTC");
+  const readMarket = block.getByRole("button", { name: "Leer datos de mercado ahora" });
+  await expect(readMarket).toBeVisible({ timeout: 20_000 });
+  expect(marketCalls).toBe(0);
+  await expect(block).toContainText("Datos: DEX Screener. Pueden no ser exactos ni estar al día.");
+  await readMarket.click();
+  await expect(block).toContainText("Datos de mercado");
+  await expect(block).toContainText("Fuente: DEX Screener · leído el 11-10-2026 a las 11:48 (hora de Madrid)");
   await expect(block).toContainText("Liquidez: 50.000,25 USD");
   await expect(block).toContainText("Volumen en 24 horas: 1.200,5 USD");
   await expect(block.locator("[data-hueco='falta']")).toContainText("Qué falta");
+  await expect(block).not.toContainText("1,0001");
+  await expect(block).not.toContainText("Una cifra en dólares");
+  await block.locator("summary").click();
+  await expect(block.locator("details")).not.toContainText(/precio|priceUsd|usdFigure|cifra en dólares/i);
+  const cifraColor = await block.locator("[data-cifra='liquidez']").evaluate((node) => getComputedStyle(node).color);
+  const sectionColor = await block.evaluate((node) => getComputedStyle(node).color);
+  expect(cifraColor).toBe(sectionColor);
   const advice = await block.innerText();
   expect(/\b(precio|compra|comprar|seguro|buy|sell|score|sube|baja|fomo)\b/i.test(advice)).toBe(false);
   await shot("ok");
 
   await page.getByRole("button", { name: "English" }).click();
   await expect(block).toContainText("Market data");
-  await expect(block).toContainText("Source: DEX Screener");
-  await expect(block).toContainText("Queried: 2026-10-11 09:48:00 UTC");
+  await expect(block).toContainText("Data: DEX Screener. It may be inaccurate or out of date.");
+  await expect(block).toContainText("Source: DEX Screener · read 11-10-2026 11:48 (Madrid time)");
   await page.getByRole("button", { name: "Español" }).click();
 
   await page.locator("#direccion-token").fill(EMPTY);
   await page.locator("#consulta button[type='submit']").click();
+  await block.getByRole("button", { name: "Leer datos de mercado ahora" }).click();
   await expect(block.locator("[data-falta='si']")).toContainText("no listó ningún par", { timeout: 20_000 });
   await expect(block.locator("[data-cifra='liquidez']")).toHaveCount(0);
   await expect(block).not.toContainText("0 USD");
+  await expect(block.getByRole("button", { name: "Reintentar" })).toHaveCount(0);
   await shot("vacio");
 
   await page.locator("#direccion-token").fill(LIMITED);
   await page.locator("#consulta button[type='submit']").click();
+  await block.getByRole("button", { name: "Leer datos de mercado ahora" }).click();
   await expect(block.locator("[data-falta='si']")).toContainText("pidió una pausa", { timeout: 20_000 });
+  await expect(block.getByRole("button", { name: "Reintentar" })).toBeVisible();
   await expect(block).not.toContainText("0 USD");
   await shot("pausa");
 
   await page.locator("#direccion-token").fill(DOWN);
   await page.locator("#consulta button[type='submit']").click();
-  await expect(block.locator("[data-falta='si']")).toContainText("La consulta falló", { timeout: 20_000 });
+  await block.getByRole("button", { name: "Leer datos de mercado ahora" }).click();
+  await expect(block.locator("[data-falta='si']")).toContainText("No se pudo consultar", { timeout: 20_000 });
+  await expect(block.getByRole("button", { name: "Reintentar" })).toBeVisible();
   await expect(block).not.toContainText("0 USD");
   await shot("fallo");
 
@@ -201,14 +219,18 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
   await page.locator("#direccion-cuaderno").fill(USDC);
   await page.locator("#consultar").click();
   const live = page.locator("#resultado .datos-mercado");
+  await expect(live.getByRole("button", { name: "Leer datos de mercado ahora" })).toBeVisible({ timeout: 20_000 });
+  await live.getByRole("button", { name: "Leer datos de mercado ahora" }).click();
   await expect(live).toContainText("Liquidez: 50.000,25 USD", { timeout: 20_000 });
-  await expect(live).toContainText("Fuente: DEX Screener");
+  await expect(live).toContainText("Fuente: DEX Screener · leído el 11-10-2026 a las 11:48 (hora de Madrid)");
+  await expect(live).toContainText("Datos: DEX Screener. Pueden no ser exactos ni estar al día.");
   const saved = page.locator(".consulta-guardada .datos-mercado").first();
   await expect(saved).toContainText("no se guardan en la ficha");
   await expect(saved.getByRole("button", { name: "Leer datos de mercado ahora" })).toBeVisible();
   await saved.getByRole("button", { name: "Leer datos de mercado ahora" }).click();
   await expect(saved).toContainText("Volumen en 24 horas: 1.200,5 USD");
-  await expect(saved).toContainText("2026-10-11 09:48:00 UTC");
+  await expect(saved).toContainText("Fuente: DEX Screener · leído el 11-10-2026 a las 11:48 (hora de Madrid)");
+  await expect(saved).not.toContainText("1,0001");
   if (testInfo.project.name === "desktop" || testInfo.project.name === "mobile") {
     await saved.scrollIntoViewIfNeeded();
     const target = `/opt/cursor/artifacts/datos_mercado_cuaderno_${testInfo.project.name}.png`;

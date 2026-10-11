@@ -23,6 +23,10 @@ describe("aviso de Guardar", () => {
     assert.match(aviso.en, /solana-rpc\.publicnode\.com and api\.mainnet-beta\.solana\.com/);
     assert.match(aviso.es, /«Guardar esta consulta»/);
     assert.match(aviso.en, /"Save this lookup"/);
+    assert.match(aviso.es, /también a DEX Screener a través de este sitio, sin reenviar tu IP/);
+    assert.match(aviso.en, /also to DEX Screener through this site, without forwarding your IP/);
+    assert.match(aviso.es, /Los datos de mercado no se guardan\./);
+    assert.match(aviso.en, /Market data is not stored\./);
     const verify = readFileSync(path.join(root, "web/v2/verify/index.html"), "utf8");
     const formStart = verify.indexOf('<form id="consulta"');
     const formEnd = verify.indexOf("</form>", formStart);
