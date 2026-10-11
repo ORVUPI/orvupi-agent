@@ -35,11 +35,6 @@ export function clipTokenName(name) {
   return `${graphemes.slice(0, NAME_LIMIT).join("")}…`;
 }
 
-const FOOTER = {
-  es: "Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión.",
-  en: "High-risk crypto · You could lose everything · Not investment advice.",
-};
-
 export function canonicalJson(value) {
   if (value === null || typeof value !== "object") return JSON.stringify(value) ?? "null";
   if (Array.isArray(value)) return `[${value.map((item) => canonicalJson(item)).join(",")}]`;
@@ -153,7 +148,6 @@ export function snapshotLines(evidence, lang) {
     { size: "body", text: feeText(en ? "en" : "es", "creator_fee_basis_points", 154, evidence.creatorFeeBps) },
     { size: "body", text: en ? "A pairing is not a collaboration or an endorsement." : "Un emparejamiento no es una colaboración ni un respaldo." },
     { size: "body", text: en ? "The hash detects changes against this evidence. It does not certify that it is true." : "El hash detecta cambios respecto a esta evidencia. No certifica que sea verdad." },
-    { size: "small", text: en ? FOOTER.en : FOOTER.es },
     { size: "small", text: "generado con stubxai.com/verify" },
   ];
   const slotLine = evidence.slot === null || evidence.slot === undefined

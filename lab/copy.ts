@@ -11,12 +11,6 @@ function avisoLine(name: "es" | "en"): string {
   return JSON.parse(`"${match[1]}"`) as string;
 }
 
-export const DISCLAIMER =
-  "Herramienta educativa con datos públicos. No es consejo de inversión. Cripto de alto riesgo · Puedes perderlo todo.";
-
-export const DISCLAIMER_EN =
-  "Educational tool using public data. Not investment advice. High-risk crypto · You could lose everything.";
-
 export const UNKNOWN_LINE = {
   es: "Lo desconocido no es lo mismo que lo comprobado.",
   en: "Unknown is not the same as verified.",

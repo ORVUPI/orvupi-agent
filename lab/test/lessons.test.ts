@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, test } from "node:test";
-import { DISCLAIMER } from "../copy.js";
+import { READONLY_LINE } from "../copy.js";
 import { ENTENDER_BUTTON, ENTENDER_LINKS } from "../mission/entender-links.js";
 import { answer, initialProgress, lessonStorageKey } from "../mission/engine.js";
 import { loadCards, loadFuentes, loadGlossary, loadJson, loadLessons } from "../mission/load.js";
@@ -55,7 +55,7 @@ describe("lecciones cortas", () => {
       lessons.map((lesson) => lesson.id),
       ["leccion-permisos", "leccion-reparto", "leccion-huecos"],
     );
-    assert.deepEqual(bannedHits({ lessons, disclaimer: DISCLAIMER }), []);
+    assert.deepEqual(bannedHits(lessons), []);
     for (const lesson of lessons) {
       assert.equal(lesson.cardDate, "2026-10-09");
       assert.ok(lesson.entender.length >= 1);
@@ -199,7 +199,10 @@ describe("lecciones cortas", () => {
     assert.equal(huecos.includes('<a class="abrir-entender"'), false);
     assert.match(lab.body, /data-leccion="leccion-permisos"/);
     assert.match(lab.body, /Cómo detectar un token clon en 5 pasos/);
-    assert.match(lab.body, new RegExp(DISCLAIMER.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    assert.match(lab.body, new RegExp(READONLY_LINE.es.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    assert.equal(lab.body.includes("Cripto de alto riesgo · Puedes perderlo todo"), false);
+    assert.equal(lab.body.includes("No es consejo de inversión"), false);
+    assert.equal(lab.body.includes("Not investment advice"), false);
     assert.match(lab.body, /2026-10-09/);
     const missionJs = pages.find((item) => item.rel.endsWith("assets/mission.js"));
     assert.ok(missionJs);
