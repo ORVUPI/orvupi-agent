@@ -33,15 +33,18 @@ function entenderResultado(lang) {
       "Supply: it is the total number of tokens in this reading, using the mint decimals.",
       "Metadata: if they can change, the name or symbol in this reading may not be tomorrow's.",
       "Distribution: a sample of accounts is not a census of who holds the tokens.",
+      "Curve: if the token was not created on Pump.fun, this fact does not apply. If it was and there is no account, that is a confirmed absence, not a failed query.",
     ]
     : [
       "Permisos: el de emisión permite crear más tokens. El de congelación permite bloquear cuentas. Ninguno de los dos dice si el proyecto es legítimo.",
       "Suministro: es la cantidad total de tokens en esta lectura, con los decimales del mint.",
       "Metadatos: si se pueden cambiar, el nombre o el símbolo de esta lectura pueden dejar de ser los de mañana.",
       "Distribución: una muestra de cuentas no es un censo de quién tiene los tokens.",
+      "Curva: si el token no se creó en Pump.fun, este dato no aplica. Si se creó y no hay cuenta, es una ausencia comprobada, no una consulta fallida.",
     ];
-  lines.forEach(function (line) {
-    var paragraph = verifyEl("p");
+  var topics = ["permisos", "suministro", "metadatos", "distribucion", "curva"];
+  lines.forEach(function (line, index) {
+    var paragraph = verifyEl("p", { "data-tema": topics[index], id: "entender-" + topics[index], tabindex: "-1" });
     paragraph.textContent = line;
     panel.append(paragraph);
   });
@@ -50,6 +53,7 @@ function entenderResultado(lang) {
     ["/aprender/#autoridad-emision", "Suministro", "Supply"],
     ["/aprender/#metadatos-mutables", "Metadatos", "Metadata"],
     ["/aprender/#censo", "Distribución", "Distribution"],
+    ["/aprender/#curva-pump", "Curva", "Curve"],
   ].forEach(function (item) {
     var link = verifyEl("a", { href: item[0], "data-guia": item[0] });
     link.textContent = lang === "en" ? item[2] : item[1];
@@ -61,6 +65,14 @@ function entenderResultado(lang) {
   });
   understand.append(button, panel);
   return understand;
+}
+
+function paintSummary(out, view, lang) {
+  if (typeof renderReadingSummary !== "function" || typeof buildReadingSummary !== "function") return;
+  if (view.light === "espera" || view.kind === "vacio" || view.kind === "invalida" || view.kind === "comprobando") return;
+  var live = Array.isArray(view.facts) || view.kind === "red" || view.kind === "limite" || view.kind === "tiempo";
+  if (!live) return;
+  renderReadingSummary(out, buildReadingSummary(view), lang, { retryId: "reintentar" });
 }
 
 function paintVerify(out, view) {
@@ -112,15 +124,7 @@ function paintVerify(out, view) {
     note.textContent = view.partialNote[lang];
     out.append(note);
   }
-  if (view.report) {
-    var report = verifyEl("section", { class: "resumen-informe" });
-    var reportTitle = verifyEl("h3");
-    reportTitle.textContent = lang === "en" ? "Summary of this reading" : "Resumen de esta lectura";
-    var reportBody = verifyEl("p");
-    reportBody.textContent = view.report[lang];
-    report.append(reportTitle, reportBody);
-    out.append(report);
-  }
+  paintSummary(out, view, lang);
   if (view.absent && view.absent[lang]) {
     var absent = verifyEl("p", { class: "resumen-datos", "data-estado": "ausente" });
     absent.textContent = view.absent[lang];
@@ -155,7 +159,7 @@ function paintVerify(out, view) {
     out.append(sampleBtn);
   }
   var failedRead = view.missingState === "falta" || view.kind === "red" || view.kind === "limite" || view.kind === "tiempo";
-  if (failedRead && view.light !== "espera") {
+  if (failedRead && view.light !== "espera" && !out.querySelector("#reintentar")) {
     var retry = verifyEl("button", { type: "button", id: "reintentar" });
     retry.textContent = lang === "en" ? "Try again" : "Reintentar";
     out.append(retry);

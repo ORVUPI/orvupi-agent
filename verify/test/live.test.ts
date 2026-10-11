@@ -223,7 +223,7 @@ describe("lectura universal con RPC simulado", () => {
     assert.match(reading.absent?.es ?? "", /Comprobado: no existe/);
     assert.match(reading.missing?.es ?? "", /No falta/);
     assert.match(reading.report?.es ?? "", /Qué se comprobó/);
-    assert.match(reading.report?.es ?? "", /Qué pide atención/);
+    assert.match(reading.report?.es ?? "", /Qué requiere atención/);
     assert.match(reading.report?.es ?? "", /Qué falta/);
     assert.equal((reading.identity?.es ?? "").includes(mint), true);
   });

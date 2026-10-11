@@ -3,6 +3,7 @@
  */
 import { formatAmount } from "../shared/amount.js";
 import { entenderNav } from "../shared/entender.js";
+import { renderReadingSummary, summaryFromCard } from "../shared/reading-summary.js";
 import { factLine, factState, missingFacts } from "../shared/fact-state.js";
 import {
   PUBLICNODE_RPC,
@@ -426,6 +427,9 @@ function renderCard(card) {
   const mintLine = el("p");
   mintLine.append(code);
   article.append(mintLine);
+  renderReadingSummary(article, summaryFromCard(card), lang(), {
+    onRetry: () => consult(card.mint, true),
+  });
   const list = el("dl");
   const facts = [];
   const supplyCheck = supplyConfirmation(card);

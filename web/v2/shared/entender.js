@@ -42,6 +42,16 @@ export const ENTENDER = Object.freeze([
       en: "Distribution: a sample of accounts is not a census of who holds the tokens.",
     },
   },
+  {
+    id: "curva",
+    href: "/aprender/#curva-pump",
+    es: "Curva",
+    en: "Curve",
+    explain: {
+      es: "Curva: si el token no se creó en Pump.fun, este dato no aplica. Si se creó y no hay cuenta, es una ausencia comprobada, no una consulta fallida.",
+      en: "Curve: if the token was not created on Pump.fun, this fact does not apply. If it was and there is no account, that is a confirmed absence, not a failed query.",
+    },
+  },
 ]);
 
 export function entenderNav(lang) {
@@ -59,6 +69,10 @@ export function entenderNav(lang) {
   panel.tabIndex = -1;
   for (const item of ENTENDER) {
     const paragraph = document.createElement("p");
+    paragraph.dataset.tema = item.id;
+    paragraph.tabIndex = -1;
+    const anchor = `entender-${item.id}`;
+    if (!document.getElementById(anchor)) paragraph.id = anchor;
     paragraph.textContent = lang === "en" ? item.explain.en : item.explain.es;
     panel.append(paragraph);
   }

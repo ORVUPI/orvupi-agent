@@ -39,9 +39,11 @@ export function buildOutputs(repoRoot: string, options: { publish?: boolean } = 
   const clones = JSON.parse(readFileSync(path.join(repoRoot, "verify/registry/clones.json"), "utf8")) as {
     evm?: unknown[];
   };
+  const summaryPath = path.join(repoRoot, "web/v2/shared/reading-summary.js");
   const verifyJs = bundleVerify(
     readFileSync(lookupPath, "utf8"),
     inlineModule(signalsPath),
+    inlineModule(summaryPath),
     readFileSync(verifyUiPath, "utf8"),
     {
       cards,

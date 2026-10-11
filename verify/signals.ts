@@ -755,7 +755,7 @@ async function readWith(
     .filter((item) => item.level === "atencion" || item.level === "riesgo")
     .map((item) => item.title.en);
   const report = loc(
-    `Qué se comprobó: ${checkedEs.length ? checkedEs.join(", ") : "ningún dato con valor leído"}. Qué pide atención: ${attentionEs.length ? attentionEs.join(", ") : "ninguna señal de atención"}. Qué falta: ${missing.es}${absent.es ? ` Qué no existe: ${absent.es}` : ""}`,
+    `Qué se comprobó: ${checkedEs.length ? checkedEs.join(", ") : "ningún dato con valor leído"}. Qué requiere atención: ${attentionEs.length ? attentionEs.join(", ") : "ninguna señal de atención"}. Qué falta: ${missing.es}${absent.es ? ` Qué no existe: ${absent.es}` : ""}`,
     `What was checked: ${checkedEn.length ? checkedEn.join(", ") : "no fact with a read value"}. What needs attention: ${attentionEn.length ? attentionEn.join(", ") : "no attention signal"}. What is missing: ${missing.en}${absent.en ? ` What does not exist: ${absent.en}` : ""}`,
   );
   const metadataMutable = metadataState === "fallo"
