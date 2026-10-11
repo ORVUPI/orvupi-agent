@@ -9,7 +9,7 @@ export const ENTENDER = Object.freeze([
     en: "Permissions",
     explain: {
       es: "Permisos: el de emisión permite crear más tokens. El de congelación permite bloquear cuentas. Ninguno de los dos dice si el proyecto es legítimo.",
-      en: "Permissions: one of them can create more tokens. The freeze permission can block accounts. Neither one says the project is legitimate.",
+      en: "Permissions: the mint permission can create more tokens. The freeze permission can block accounts. Neither one says the project is legitimate.",
     },
   },
   {
@@ -28,15 +28,15 @@ export const ENTENDER = Object.freeze([
     es: "Metadatos",
     en: "Metadata",
     explain: {
-      es: "Metadatos: si se pueden cambiar, el nombre o el símbolo de esta lectura pueden dejar de ser los de mañana.",
+      es: "Metadatos: si se pueden cambiar, puede que mañana el nombre o el símbolo ya no sean los de esta lectura.",
       en: "Metadata: if they can change, the name or symbol in this reading may not be tomorrow's.",
     },
   },
   {
     id: "distribucion",
     href: "/aprender/#censo",
-    es: "Distribución",
-    en: "Distribution",
+    es: "Distribución (guía Censo)",
+    en: "Distribution (Census guide)",
     explain: {
       es: "Distribución: una muestra de cuentas no es un censo de quién tiene los tokens.",
       en: "Distribution: a sample of accounts is not a census of who holds the tokens.",

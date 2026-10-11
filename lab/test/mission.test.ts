@@ -108,6 +108,15 @@ describe("misión 1", () => {
     assert.equal(missing.impersonation, null);
   });
 
+  test("la misión anterior nombra la cuenta personal con enlace al registro", () => {
+    const step = mission.steps.find((item) => item.id === "desconocido");
+    assert.ok(step);
+    assert.match(step.whyRight.es, /cuenta personal \(publicada en el registro oficial\)/);
+    assert.match(step.whyRight.en, /personal account \(listed in the official registry\)/);
+    assert.equal(step.whyRight.es.includes("cuenta personal publicada"), false);
+    assert.equal(step.whyRight.en.includes("published personal account"), false);
+  });
+
   test("el avance del registro es inferido y distinto de cero", () => {
     const official = cards.find((card) => card.role === "registro");
     assert.equal(official?.curveProgress, "1.74");

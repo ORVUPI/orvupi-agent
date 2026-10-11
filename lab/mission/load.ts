@@ -6,6 +6,7 @@ import type {
   CardSummary,
   FieldStatus,
   GlossaryFile,
+  Lesson,
   Localized,
   Mission,
   MissionStep,
@@ -295,6 +296,47 @@ export function loadMission(repoRoot: string): Mission {
     closing,
     steps,
   };
+}
+
+export function loadLessons(repoRoot: string): Lesson[] {
+  const raw = record(loadJson(path.join(repoRoot, "lab/mission/lecciones.json")));
+  if (!raw || !Array.isArray(raw.lessons)) {
+    throw new Error("lecciones.json está incompleto.");
+  }
+  const lessons: Lesson[] = [];
+  for (const item of raw.lessons) {
+    const row = record(item);
+    const title = localized(row?.title);
+    const intro = localized(row?.intro);
+    const closing = localized(row?.closing);
+    if (!row || !text(row.id) || !text(row.version) || !text(row.updated) || !text(row.cardDate) || !title || !intro || !closing) {
+      throw new Error("Una lección está incompleta.");
+    }
+    if (!Array.isArray(row.steps) || !Array.isArray(row.entender)) {
+      throw new Error(`La lección ${text(row.id) ?? ""} no tiene pasos o enlaces.`);
+    }
+    const steps: MissionStep[] = [];
+    for (const step of row.steps) {
+      const parsed = isStep(step);
+      if (!parsed) {
+        throw new Error(`Un paso de ${text(row.id) ?? ""} está incompleto.`);
+      }
+      steps.push(parsed);
+    }
+    const entender = row.entender.filter((id): id is string => typeof id === "string");
+    lessons.push({
+      id: text(row.id) ?? "",
+      version: text(row.version) ?? "",
+      updated: text(row.updated) ?? "",
+      cardDate: text(row.cardDate) ?? "",
+      title,
+      intro,
+      closing,
+      entender,
+      steps,
+    });
+  }
+  return lessons;
 }
 
 export function loadGlossary(repoRoot: string): GlossaryFile {

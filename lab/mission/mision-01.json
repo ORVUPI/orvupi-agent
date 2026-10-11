@@ -171,8 +171,8 @@
       ],
       "correct": "sigue-desconocido",
       "whyRight": {
-        "es": "En las fichas que siguen fechadas el 2026-10-08 la muestra de cuentas con tokens está no disponible. Eso no es un cero ni anula lo que sí se leyó. La ficha oficial del 2026-10-09 lee la curva, la creadora y la cuenta personal publicada, y eso no es un censo.",
-        "en": "On the cards that stay dated 2026-10-08 the token account sample is unavailable. That is not a zero and it does not erase what was read. The official card from 2026-10-09 reads the curve, the creator, and the published personal account, and that is not a census."
+        "es": "En las fichas que siguen fechadas el 2026-10-08 la muestra de cuentas con tokens está no disponible. Eso no es un cero ni anula lo que sí se leyó. La ficha oficial del 2026-10-09 lee la curva, la creadora y la cuenta personal (publicada en el registro oficial), y eso no es un censo.",
+        "en": "On the cards that stay dated 2026-10-08 the token account sample is unavailable. That is not a zero and it does not erase what was read. The official card from 2026-10-09 reads the curve, the creator, and the personal account (listed in the official registry), and that is not a census."
       },
       "whyWrong": {
         "prueba-y-cero": {
