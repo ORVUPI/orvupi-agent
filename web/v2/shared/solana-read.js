@@ -684,6 +684,28 @@ async function rpcCall(state, method, params) {
   return last;
 }
 
+function aborted(state) {
+  return Boolean(state.signal && state.signal.aborted);
+}
+
+async function pause(state, ms) {
+  if (aborted(state)) return false;
+  if (ms > 0) {
+    if (!state.signal) {
+      await state.sleep(ms);
+    } else {
+      await new Promise((resolve) => {
+        const timer = setTimeout(resolve, ms);
+        state.signal.addEventListener("abort", () => {
+          clearTimeout(timer);
+          resolve();
+        }, { once: true });
+      });
+    }
+  }
+  return !aborted(state);
+}
+
 async function rpcCallOnce(state, method, params) {
   if (!ALLOWED_METHODS.includes(method)) {
     return { ok: false, method, error: "Método RPC no permitido.", httpStatus: null, fetchedAt: state.now().toISOString() };
@@ -692,17 +714,25 @@ async function rpcCallOnce(state, method, params) {
   let lastStatus = null;
   for (let attempt = 0; attempt <= state.maxRetries; attempt += 1) {
     const wait = state.nextAt - state.mono();
-    if (wait > 0) await state.sleep(wait);
+    if (!(await pause(state, wait > 0 ? wait : 0))) {
+      const error = new Error("abortado");
+      error.name = "AbortError";
+      throw error;
+    }
     state.nextAt = state.mono() + state.minIntervalMs;
     const fetchedAt = state.now().toISOString();
     try {
       const body = JSON.stringify({ jsonrpc: "2.0", id: state.id, method, params });
       state.id += 1;
-      const response = await state.transport(state.endpoint, body, state.timeoutMs);
+      const response = await state.transport(state.endpoint, body, state.timeoutMs, state.signal);
       lastStatus = response.status;
       if ((response.status === 0 || response.status === 408 || response.status === 429 || response.status >= 500) && attempt < state.maxRetries) {
         lastError = `HTTP ${response.status}`;
-        await state.sleep(300 * (attempt + 1));
+        if (!(await pause(state, 300 * (attempt + 1)))) {
+          const error = new Error("abortado");
+          error.name = "AbortError";
+          throw error;
+        }
         continue;
       }
       if (response.status < 200 || response.status >= 300) {
@@ -720,7 +750,11 @@ async function rpcCallOnce(state, method, params) {
           lastError = "No se pudo comprobar";
           lastStatus = response.status;
           if (attempt < state.maxRetries) {
-            await state.sleep(300 * (attempt + 1));
+            if (!(await pause(state, 300 * (attempt + 1)))) {
+              const error = new Error("abortado");
+              error.name = "AbortError";
+              throw error;
+            }
             continue;
           }
           return { ok: false, method, error: lastError, httpStatus: lastStatus, fetchedAt };
@@ -731,6 +765,7 @@ async function rpcCallOnce(state, method, params) {
         : null;
       return { ok: true, method, value: parsed.result, slot, fetchedAt };
     } catch (error) {
+      if (aborted(state) || (error && error.name === "AbortError")) throw error;
       const name = error && typeof error === "object" ? error.name : "";
       const message = error instanceof Error ? error.message.slice(0, 300) : "error de red";
       if (name === "AbortError" || /timeout|timed out|aborted/i.test(message)) {
@@ -740,7 +775,11 @@ async function rpcCallOnce(state, method, params) {
         lastError = message;
       }
       if (attempt < state.maxRetries) {
-        await state.sleep(300 * (attempt + 1));
+        if (!(await pause(state, 300 * (attempt + 1)))) {
+          const error = new Error("abortado");
+          error.name = "AbortError";
+          throw error;
+        }
         continue;
       }
       return { ok: false, method, error: lastError, httpStatus: lastStatus, fetchedAt };
@@ -776,6 +815,7 @@ export async function readMint(options) {
     mono: options.mono ?? (() => Date.now()),
     nextAt: 0,
     id: 1,
+    signal: options.signal || null,
   };
   if (typeof state.transport !== "function") {
     throw new Error("Falta el transporte de lectura.");

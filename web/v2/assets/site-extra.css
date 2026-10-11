@@ -1177,6 +1177,8 @@ textarea.nota { min-height: 6rem; }
 .cuaderno-acciones label.file,
 body:has(a[href="/cuaderno/"][aria-current="page"]) #comparar,
 body:has(a[href="/cuaderno/"][aria-current="page"]) #seguir,
+body:has(a[href="/cuaderno/"][aria-current="page"]) #detener,
+body:has(a[href="/cuaderno/"][aria-current="page"]) #guardar-todas,
 body:has(a[href="/cuaderno/"][aria-current="page"]) #borrar-confirmar,
 body:has(a[href="/cuaderno/"][aria-current="page"]) #borrar-cancelar {
   display: inline-flex;
@@ -1248,7 +1250,10 @@ body:has(a[href="/studio/"][aria-current="page"]) .fila button.primary {
 }
 .seguimiento-fila span { display: grid; gap: 0.2rem; min-width: 0; }
 .seguimiento-fila .mint { margin: 0; overflow-wrap: anywhere; }
-#lista-seguimiento, #resultado-seguimiento { display: grid; gap: 0.85rem; min-width: 0; }
+#lista-seguimiento, #resultado-seguimiento, #aviso-pasada { display: grid; gap: 0.85rem; min-width: 0; }
+#aviso-pasada { overflow-wrap: anywhere; }
+#detener[hidden] { display: none; }
+.pasada-acciones { display: flex; flex-wrap: wrap; gap: 0.75rem; }
 .seguimiento-estado {
   display: grid;
   gap: 0.65rem;
@@ -1268,7 +1273,10 @@ body:has(a[href="/studio/"][aria-current="page"]) .fila button.primary {
 @media (max-width: 599px) {
   .cuaderno-acciones { display: grid; }
   .cuaderno-acciones button, .cuaderno-acciones a, .cuaderno-acciones label.file { width: 100%; }
-  body:has(a[href="/cuaderno/"][aria-current="page"]) #seguir { width: 100%; }
+  .pasada-acciones { display: grid; }
+  body:has(a[href="/cuaderno/"][aria-current="page"]) #seguir,
+  body:has(a[href="/cuaderno/"][aria-current="page"]) #detener,
+  body:has(a[href="/cuaderno/"][aria-current="page"]) #guardar-todas { width: 100%; }
 }
 
 /* Entrega 1. Clases nuevas sobre las variables de tool.css. No reordena el sistema visual. */

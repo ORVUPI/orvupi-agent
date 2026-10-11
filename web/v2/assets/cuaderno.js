@@ -28,6 +28,7 @@ import {
   CURVE_NOT_ON_PUMP,
   migrateStoredRecord,
   pickPrevious,
+  readingComplete,
   readingOptionLabel,
   reserveWatchSlots,
   sortNotebookRecords,
@@ -133,10 +134,15 @@ const COPY = {
     watchOf: "de",
     watchChanged: "Cambió desde la última lectura.",
     watchSame: "Sigue igual desde la última lectura.",
-    watchIncomplete: "No se da por igual: falta una parte de la lectura.",
+    watchIncomplete: "Incompleto.",
+    watchSave: "Guardar",
+    watchSaveAll: "Guardar todas",
+    watchStop: "Detener",
+    watchStopped: "Pasada detenida. Lo que no se llegó a leer no se da por igual.",
+    tabs: "Cierra las otras pestañas de stubxai.com y recarga",
     watchRefused: "El servicio rechazó esta consulta. No se da por igual.",
     watchMissing: "Qué falta",
-    watchSaved: "Esta lectura queda guardada en este navegador.",
+    watchSaved: "Esta lectura queda guardada en este navegador. Puedes borrarla en el Cuaderno.",
     watchNetwork: "Red",
     watchSolana: "Solana",
     watchAllLabel: "Todas las direcciones guardadas",
@@ -224,10 +230,15 @@ const COPY = {
     watchOf: "of",
     watchChanged: "It changed since the last reading.",
     watchSame: "It is the same since the last reading.",
-    watchIncomplete: "It is not treated as unchanged: part of the reading is missing.",
+    watchIncomplete: "Incomplete.",
+    watchSave: "Save",
+    watchSaveAll: "Save all",
+    watchStop: "Stop",
+    watchStopped: "The pass was stopped. What was not read is not treated as unchanged.",
+    tabs: "Close the other stubxai.com tabs and reload.",
     watchRefused: "The public service refused this check. It is not treated as unchanged.",
     watchMissing: "What is missing",
-    watchSaved: "This reading is saved in this browser.",
+    watchSaved: "This reading is saved in this browser. You can delete it in the Notebook.",
     watchNetwork: "Network",
     watchSolana: "Solana",
     watchAllLabel: "Every saved address",
@@ -332,7 +343,12 @@ function revealAboveBar(node) {
 }
 
 function openDb() {
-  return openNotebookDb(DB_NAME);
+  return openNotebookDb(DB_NAME, {
+    onConflict() {
+      dbPromise = null;
+      showMessage(t("tabs"), "error");
+    },
+  });
 }
 
 function dbAll(db) {
@@ -347,9 +363,19 @@ function dbClear(db) {
   return notebookDbClear(db);
 }
 
-async function browserTransport(endpoint, body, timeoutMs) {
+async function browserTransport(endpoint, body, timeoutMs, signal) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const stop = () => controller.abort();
+  if (signal) {
+    if (signal.aborted) {
+      clearTimeout(timer);
+      const error = new Error("abortado");
+      error.name = "AbortError";
+      throw error;
+    }
+    signal.addEventListener("abort", stop, { once: true });
+  }
   try {
     const response = await fetch(endpoint, {
       method: "POST",
@@ -358,10 +384,12 @@ async function browserTransport(endpoint, body, timeoutMs) {
       signal: controller.signal,
     });
     return { status: response.status, body: await response.text() };
-  } catch {
+  } catch (error) {
+    if (signal && signal.aborted) throw error;
     return { status: 0, body: "" };
   } finally {
     clearTimeout(timer);
+    if (signal) signal.removeEventListener("abort", stop);
   }
 }
 
@@ -598,6 +626,8 @@ let dbPromise = null;
 let queryStamps = [];
 let watchResults = [];
 let followRunning = false;
+let followAbort = null;
+let followRun = 0;
 const selectedWatch = new Set();
 
 function database() {
@@ -1023,9 +1053,12 @@ function renderWatchResult(item) {
   const status = text("p", watchStatusText(outcome.kind), { class: outcome.kind === "cambio" ? "nota" : "sello", "data-estado": outcome.kind });
   article.append(status);
   const refused = Boolean(outcome.rejection && outcome.rejection.rejected);
+  const gap = outcome.card && !readingComplete(outcome.card)
+    ? outcome.card
+    : (previousCard && !readingComplete(previousCard) ? previousCard : outcome.card);
   if (outcome.kind !== "espera" && (outcome.kind === "rechazada" || outcome.kind === "incompleto" || refused)) {
-    if (outcome.card) {
-      renderReadingSummary(article, summaryFromCard(outcome.card), lang(), {
+    if (gap) {
+      renderReadingSummary(article, summaryFromCard(gap), lang(), {
         onRetry: () => followSelected(entry.key),
       });
     } else if (outcome.kind === "rechazada") {
@@ -1059,13 +1092,64 @@ function renderWatchResult(item) {
     const newer = outcome.compared.newer;
     article.append(text("h3", t("changesTitle")), comparisonGrid(outcome.compared.changes, "cambio", older, newer));
   }
+  if (canKeep(outcome)) {
+    const save = el("button", { type: "button" });
+    save.textContent = t("watchSave");
+    save.addEventListener("click", () => {
+      saveWatchItem(item);
+    });
+    article.append(save);
+  }
   if (outcome.saved) article.append(text("p", t("watchSaved"), { class: "muted" }));
   return article;
+}
+
+function canKeep(outcome) {
+  if (!outcome || outcome.saved || !outcome.card) return false;
+  if (outcome.kind === "espera" || outcome.kind === "rechazada") return false;
+  const checked = validateCard(outcome.card);
+  return Boolean(checked.ok);
+}
+
+async function saveWatchItem(item) {
+  const outcome = item && item.outcome;
+  if (!canKeep(outcome)) return false;
+  if (!withinStoreLimit(records.length, 1)) {
+    showMessage(t("full"), "error");
+    return false;
+  }
+  const record = stampIdentity({
+    id: crypto.randomUUID(),
+    note: "",
+    card: outcome.card,
+    source: "leida",
+  });
+  const ok = await persist(record);
+  if (!ok) return false;
+  outcome.saved = true;
+  const kept = watchResults.slice();
+  await refresh();
+  watchResults = kept;
+  renderWatchResults();
+  return true;
+}
+
+async function saveAllWatch() {
+  for (const item of watchResults) {
+    if (!canKeep(item.outcome)) continue;
+    const ok = await saveWatchItem(item);
+    if (!ok) break;
+  }
+}
+
+function stopFollow() {
+  if (followAbort) followAbort.abort();
 }
 
 async function followSelected(forgetKey) {
   if (followRunning) return;
   const button = document.getElementById("seguir");
+  const stop = document.getElementById("detener");
   const endpoint = endpointFromForm();
   if (!isAllowedRpcUrl(endpoint)) {
     showMessage(t("rpc"), "error");
@@ -1079,9 +1163,15 @@ async function followSelected(forgetKey) {
     showMessage(t("watchEmpty"), "info");
     return;
   }
+  const run = followRun + 1;
+  followRun = run;
+  const abort = new AbortController();
+  followAbort = abort;
   followRunning = true;
   if (button) button.disabled = true;
+  if (stop) stop.hidden = false;
   if (out) out.setAttribute("aria-busy", "true");
+  let stopped = false;
   try {
     const plan = reserveWatchSlots(list, queryStamps, Date.now(), takeQuerySlot);
     queryStamps = plan.stamps;
@@ -1089,6 +1179,10 @@ async function followSelected(forgetKey) {
     const painted = [];
     let index = 0;
     for (const entry of plan.ready) {
+      if (abort.signal.aborted) {
+        stopped = true;
+        break;
+      }
       index += 1;
       showMessage(`${t("watchReading")} ${index} ${t("watchOf")} ${list.length}`, "info");
       let outcome;
@@ -1099,43 +1193,44 @@ async function followSelected(forgetKey) {
           transport: browserTransport,
           minIntervalMs: 2000,
           maxRetries: 1,
+          signal: abort.signal,
         });
+        if (abort.signal.aborted || (result && result.aborted)) {
+          stopped = true;
+          break;
+        }
         outcome = watchVerdict(entry.latest, result);
-      } catch {
+      } catch (error) {
+        if (abort.signal.aborted || (error && error.name === "AbortError")) {
+          stopped = true;
+          break;
+        }
         outcome = watchVerdict(entry.latest, { ok: false, card: null });
-      }
-      if (outcome.save && outcome.card) {
-        const record = stampIdentity({
-          id: crypto.randomUUID(),
-          note: "",
-          card: outcome.card,
-          source: "leida",
-        });
-        outcome.saved = await persist(record);
       }
       painted.push({ entry, outcome });
       watchResults = painted.slice();
       renderWatchResults();
     }
-    for (const entry of plan.waiting) {
-      painted.push({ entry, outcome: { kind: "espera", rejection: { rejected: true, primary: true }, card: entry.latest.card } });
+    if (!stopped) {
+      for (const entry of plan.waiting) {
+        painted.push({ entry, outcome: { kind: "espera", rejection: { rejected: true, primary: true }, card: entry.latest.card } });
+      }
     }
     watchResults = painted;
     renderWatchResults();
-    if (plan.waiting.length) showMessage(t("limit"), "error");
-    if (painted.some((item) => item.outcome && item.outcome.saved)) {
-      const kept = watchResults.slice();
-      await refresh();
-      watchResults = kept;
-      renderWatchResults();
-    }
-    if (out) out.focus();
+    if (!stopped && plan.waiting.length) showMessage(t("limit"), "error");
+    if (stopped) showMessage(t("watchStopped"), "info");
+    if (out && !stopped) out.focus();
   } catch {
-    showMessage(t("network"), "error");
+    if (!abort.signal.aborted) showMessage(t("network"), "error");
   } finally {
-    followRunning = false;
-    if (button) button.disabled = false;
-    if (out) out.removeAttribute("aria-busy");
+    if (run === followRun) {
+      followRunning = false;
+      followAbort = null;
+      if (button) button.disabled = false;
+      if (stop) stop.hidden = true;
+      if (out) out.removeAttribute("aria-busy");
+    }
   }
 }
 
@@ -1159,6 +1254,10 @@ function bind() {
   document.getElementById("borrar-cancelar")?.addEventListener("click", cancelDelete);
   document.getElementById("comparar")?.addEventListener("click", renderComparison);
   document.getElementById("seguir")?.addEventListener("click", () => followSelected(""));
+  document.getElementById("detener")?.addEventListener("click", () => stopFollow());
+  document.getElementById("guardar-todas")?.addEventListener("click", () => {
+    saveAllWatch();
+  });
   document.getElementById("comparar-izquierda")?.addEventListener("change", () => {
     const left = document.getElementById("comparar-izquierda");
     paintSelects(records, left ? left.value : "", "");

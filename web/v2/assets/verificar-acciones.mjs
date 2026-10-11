@@ -31,6 +31,7 @@ const COPY = {
     emptySave: "No hay una lectura para guardar. No se ha guardado una ficha vacía.",
     wait: "La lectura no ha terminado. Espera a que aparezca el resultado.",
     db: "Este navegador no dejó guardar el cuaderno.",
+    tabs: "Cierra las otras pestañas de stubxai.com y recarga",
     fail: "No hay una lectura en pantalla para guardar. Pulsa Comprobar y espera el resultado.",
     full: "Este navegador ya tiene el máximo de fichas.",
     before: "Antes",
@@ -59,6 +60,7 @@ const COPY = {
     emptySave: "There is no reading to save. An empty card was not saved.",
     wait: "The reading has not finished. Wait until the result appears.",
     db: "This browser did not allow the notebook to be saved.",
+    tabs: "Close the other stubxai.com tabs and reload.",
     fail: "There is no reading on screen to save. Press Check and wait for the result.",
     full: "This browser already has the maximum number of cards.",
     before: "Before",
@@ -78,7 +80,11 @@ function t(key) {
 }
 
 function openDb() {
-  return openNotebookDb(DB_NAME);
+  return openNotebookDb(DB_NAME, {
+    onConflict() {
+      say(t("tabs"));
+    },
+  });
 }
 
 function dbAll(db) {

@@ -7,13 +7,39 @@ import { NOTEBOOK_DB_VERSION, migrateStoredRecord } from "./notebook-model.js";
 export const NOTEBOOK_DB_NAME = "stubx-cuaderno";
 export const NOTEBOOK_STORE = "records";
 
-export function openNotebookDb(name = NOTEBOOK_DB_NAME) {
+function attachDb(db, hooks) {
+  db.onversionchange = () => {
+    db.close();
+    if (hooks && typeof hooks.onConflict === "function") hooks.onConflict();
+  };
+}
+
+function openCurrent(name, hooks, fallback) {
+  const again = indexedDB.open(name);
+  again.onblocked = () => {
+    if (hooks && typeof hooks.onConflict === "function") hooks.onConflict();
+  };
+  again.onsuccess = () => {
+    const db = again.result;
+    attachDb(db, hooks);
+    fallback(db);
+  };
+  again.onerror = (event) => {
+    if (event && event.preventDefault) event.preventDefault();
+    fallback(null, again.error);
+  };
+}
+
+export function openNotebookDb(name = NOTEBOOK_DB_NAME, hooks = {}) {
   return new Promise((resolve, reject) => {
     if (!("indexedDB" in globalThis)) {
       reject(new Error("indexedDB"));
       return;
     }
     const request = indexedDB.open(name, NOTEBOOK_DB_VERSION);
+    request.onblocked = () => {
+      if (hooks && typeof hooks.onConflict === "function") hooks.onConflict();
+    };
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains(NOTEBOOK_STORE)) db.createObjectStore(NOTEBOOK_STORE, { keyPath: "id" });
@@ -38,8 +64,23 @@ export function openNotebookDb(name = NOTEBOOK_DB_NAME) {
         cursor.continue();
       };
     };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error || new Error("indexedDB"));
+    request.onsuccess = () => {
+      const db = request.result;
+      attachDb(db, hooks);
+      resolve(db);
+    };
+    request.onerror = (event) => {
+      if (event && event.preventDefault) event.preventDefault();
+      const error = request.error;
+      if (error && error.name === "VersionError") {
+        openCurrent(name, hooks, (db, nextError) => {
+          if (db) resolve(db);
+          else reject(nextError || error);
+        });
+        return;
+      }
+      reject(error || new Error("indexedDB"));
+    };
   });
 }
 

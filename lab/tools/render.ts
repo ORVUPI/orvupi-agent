@@ -442,6 +442,7 @@ const MILESTONE_EN: Record<string, string> = {
   "Sin publicar": "Unpublished",
   "2026-10-09 · Biblioteca y cuaderno de solo lectura":
     "2026-10-09 · Read-only library and notebook",
+  "2026-10-11 · Revisar direcciones guardadas": "2026-10-11 · Recheck saved addresses",
 };
 
 function personLabel(value: string): Localized {

@@ -618,8 +618,8 @@
       "status": "en_revision",
       "webPublished": true,
       "scope": {
-        "es": "Cuaderno en este navegador: lee un mint con la misma lista de métodos que Verify universal, guarda la ficha y la nota en el dispositivo, compara dos consultas de la misma dirección y permite exportar, importar y borrar. No pide firmar. Está en stubxai.com/cuaderno desde el 2026-10-10.",
-        "en": "Notebook in this browser: reads a mint with the same method list as universal Verify, stores the card and note on the device, compares two reads of the same address, and lets you export, import, and delete. It never asks you to sign. It is on stubxai.com/cuaderno since 2026-10-10."
+        "es": "Cuaderno en este navegador: lee un mint con la misma lista de métodos que Verify universal, guarda la ficha y la nota en el dispositivo, compara dos consultas de la misma dirección y permite exportar, importar y borrar. No pide firmar. Está en stubxai.com/cuaderno desde el 2026-10-10. En el repositorio, «Revisar direcciones guardadas» vuelve a leer las direcciones guardadas y dice si algo cambió. Esa parte todavía no está en stubxai.com.",
+        "en": "Notebook in this browser: reads a mint with the same method list as universal Verify, stores the card and note on the device, compares two reads of the same address, and lets you export, import, and delete. It never asks you to sign. It is on stubxai.com/cuaderno since 2026-10-10. In the repository, “Recheck saved addresses” reads the saved addresses again and says whether anything changed. That part is not on stubxai.com yet."
       },
       "owner": "Equipo del repositorio",
       "reviewer": "Pendiente de una persona distinta del autor, antes de publicar.",
@@ -665,6 +665,13 @@
           "change": {
             "es": "Publicado en stubxai.com/cuaderno. La columna stubxai.com pasa a sí.",
             "en": "Published at stubxai.com/cuaderno. The stubxai.com column becomes yes."
+          }
+        },
+        {
+          "on": "2026-10-11",
+          "change": {
+            "es": "En el repositorio: «Revisar direcciones guardadas». Vuelve a leer las direcciones guardadas y dice si algo cambió. Todavía no está en stubxai.com.",
+            "en": "In the repository: “Recheck saved addresses”. It reads the saved addresses again and says whether anything changed. It is not on stubxai.com yet."
           }
         }
       ]

@@ -101,7 +101,7 @@ function filled(read: { blankCard: (mint: string, at: string, errors: unknown[])
   return card;
 }
 
-describe("lista de seguimiento", () => {
+describe("revisar direcciones guardadas", () => {
   test("la migración añade red y dirección y no borra la entrada vieja", async () => {
     const { read, model } = await modules();
     const card = filled(read, OTHER, WHEN, "1000");
@@ -166,7 +166,7 @@ describe("lista de seguimiento", () => {
     assert.equal(checked.ok, true, checked.error?.es);
     const equal = model.watchVerdict(previous, { card: same });
     assert.equal(equal.kind, "igual");
-    assert.equal(equal.save, true);
+    assert.equal(equal.save, false);
     const moved = filled(read, OTHER, LATER, "2500");
     const changed = model.watchVerdict(previous, { card: moved });
     assert.equal(changed.kind, "cambio");
@@ -186,9 +186,10 @@ describe("lista de seguimiento", () => {
     partial.supplyRpcStatus = "fallo";
     partial.errors = [{ method: "getTokenSupply", message: "HTTP 403", httpStatus: 403, at: LATER }];
     const incomplete = model.watchVerdict(previous, { card: partial });
-    assert.equal(incomplete.kind === "igual", false);
+    assert.equal(String(incomplete.kind) === "igual", false);
+    assert.equal(incomplete.kind, "incompleto");
     assert.equal(incomplete.rejection.rejected, true);
-    assert.equal(incomplete.save, true);
+    assert.equal(incomplete.save, false);
     const missing = model.watchVerdict(previous, { card: null });
     assert.equal(missing.kind, "rechazada");
     assert.equal(missing.save, false);
@@ -207,8 +208,17 @@ describe("lista de seguimiento", () => {
     assert.ok(cleared < read);
     assert.match(source, /takeQuerySlot\(\s*queryStamps,\s*Date\.now\(\),\s*6,\s*60000\s*\)/);
     const page = readFileSync(path.join(root, "web/v2/cuaderno/index.html"), "utf8");
-    assert.match(page, /Lista de seguimiento/);
-    assert.match(page, /Watch list/);
+    assert.match(page, /Revisar direcciones guardadas/);
+    assert.match(page, /Recheck saved addresses/);
+    assert.equal(page.includes("Lista de seguimiento"), false);
+    assert.equal(page.includes("Watch list"), false);
+    assert.match(source, /Esta lectura queda guardada en este navegador\. Puedes borrarla en el Cuaderno\./);
+    assert.match(source, /This reading is saved in this browser\. You can delete it in the Notebook\./);
+    assert.equal(page.includes("Al pulsar, tu navegador envía las direcciones que se revisan (las marcadas, o todas si no marcas ninguna) a los nodos públicos de Solana solana-rpc.publicnode.com y api.mainnet-beta.solana.com, que también ven tu IP. No se guarda nada nuevo hasta que pulses «Guardar»."), true);
+    assert.equal(page.includes("When you tap, your browser sends the addresses being checked (the marked ones, or all of them if none are marked) to the Solana public nodes solana-rpc.publicnode.com and api.mainnet-beta.solana.com, which also see your IP. Nothing new is saved until you tap \"Save\"."), true);
+    assert.match(page, /id="detener"/);
+    assert.match(page, /id="guardar-todas"/);
+    assert.equal(follow.includes("persist("), false);
     assert.match(page, /id="seguir"/);
     assert.equal(page.includes(notice.AVISO_GUARDAR.es), false);
     assert.match(notice.AVISO_GUARDAR.es, /«Guardar esta consulta»/);
@@ -217,6 +227,103 @@ describe("lista de seguimiento", () => {
     const actions = readFileSync(path.join(root, "web/v2/assets/verificar-acciones.mjs"), "utf8");
     assert.match(actions, /stubx-cuaderno/);
     assert.match(actions, /stampIdentity/);
-    assert.match(actions, /openNotebookDb\(DB_NAME\)/);
+    assert.match(actions, /openNotebookDb\(DB_NAME/);
+    assert.match(actions, /Cierra las otras pestañas de stubxai.com y recarga/);
+  });
+
+  test("un tiempo de espera en la segunda lectura del suministro no es igual", async () => {
+    const { read, model } = await modules();
+    const previous = { id: "1", note: "", card: filled(read, OTHER, WHEN, "1000") };
+    const card = filled(read, OTHER, LATER, "1000");
+    card.partial = true;
+    card.supplyRpc = null;
+    card.supplyRpcStatus = "fallo";
+    card.errors = [{ method: "getTokenSupply", message: "timeout", httpStatus: 408, at: LATER }];
+    const verdict = model.watchVerdict(previous, { card });
+    assert.equal(verdict.kind, "incompleto");
+    assert.equal(String(verdict.kind) === "igual", false);
+    assert.equal(verdict.save, false);
+  });
+
+  test("dos cuentas en la respuesta no es igual", async () => {
+    const { read, model } = await modules();
+    const previous = { id: "1", note: "", card: filled(read, OTHER, WHEN, "1000") };
+    const card = filled(read, OTHER, LATER, "1000");
+    card.partial = true;
+    card.programStatus = "fallo";
+    card.errors = [{ method: "getMultipleAccounts", message: "No se pudo comprobar", httpStatus: 200, at: LATER }];
+    const verdict = model.watchVerdict(previous, { card });
+    assert.equal(verdict.kind, "incompleto");
+    assert.equal(String(verdict.kind) === "igual", false);
+  });
+
+  test("cuatro cuentas en la respuesta no es igual", async () => {
+    const { read, model } = await modules();
+    const previous = { id: "1", note: "", card: filled(read, OTHER, WHEN, "1000") };
+    const card = filled(read, OTHER, LATER, "1000");
+    card.partial = true;
+    card.programStatus = "fallo";
+    card.errors = [{ method: "getMultipleAccounts", message: "No se pudo comprobar", httpStatus: 200, at: LATER }];
+    const verdict = model.watchVerdict(previous, { card });
+    assert.equal(verdict.kind, "incompleto");
+    assert.equal(String(verdict.kind) === "igual", false);
+  });
+
+  test("una respuesta mal formada no es igual", async () => {
+    const { read, model } = await modules();
+    const previous = { id: "1", note: "", card: filled(read, OTHER, WHEN, "1000") };
+    const card = filled(read, OTHER, LATER, "1000");
+    card.partial = true;
+    card.programStatus = "fallo";
+    card.errors = [{ method: "getMultipleAccounts", message: "Cuenta ilegible.", httpStatus: 200, at: LATER }];
+    const verdict = model.watchVerdict(previous, { card });
+    assert.equal(verdict.kind, "incompleto");
+    assert.equal(String(verdict.kind) === "igual", false);
+  });
+
+  test("una ficha parcial no es igual", async () => {
+    const { read, model } = await modules();
+    const previous = { id: "1", note: "", card: filled(read, OTHER, WHEN, "1000") };
+    const card = filled(read, OTHER, LATER, "1000");
+    card.partial = true;
+    const verdict = model.watchVerdict(previous, { card });
+    assert.equal(verdict.kind, "incompleto");
+    assert.equal(String(verdict.kind) === "igual", false);
+  });
+
+  test("suministros que no coinciden no es igual", async () => {
+    const { read, model } = await modules();
+    const previous = { id: "1", note: "", card: filled(read, OTHER, WHEN, "1000") };
+    const card = filled(read, OTHER, LATER, "1000");
+    card.supplyRpc = "1001";
+    card.partial = false;
+    card.errors = [];
+    const verdict = model.watchVerdict(previous, { card });
+    assert.equal(verdict.kind, "incompleto");
+    assert.equal(String(verdict.kind) === "igual", false);
+  });
+
+  test("un fallo del momento de la red no es igual", async () => {
+    const { read, model } = await modules();
+    const previous = { id: "1", note: "", card: filled(read, OTHER, WHEN, "1000") };
+    const card = filled(read, OTHER, LATER, "1000");
+    card.slotStatus = "fallo";
+    card.slot = null;
+    const verdict = model.watchVerdict(previous, { card });
+    assert.equal(verdict.kind, "incompleto");
+    assert.equal(String(verdict.kind) === "igual", false);
+  });
+
+  test("la lectura anterior incompleta no es igual", async () => {
+    const { read, model } = await modules();
+    const older = filled(read, OTHER, WHEN, "1000");
+    older.partial = true;
+    older.errors = [{ method: "getTokenSupply", message: "timeout", httpStatus: 408, at: WHEN }];
+    const previous = { id: "1", note: "", card: older };
+    const card = filled(read, OTHER, LATER, "1000");
+    const verdict = model.watchVerdict(previous, { card });
+    assert.equal(verdict.kind, "incompleto");
+    assert.equal(String(verdict.kind) === "igual", false);
+    assert.equal(verdict.save, false);
   });
 });

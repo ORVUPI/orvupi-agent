@@ -140,6 +140,7 @@ test("una ficha vieja gana red y dirección y entra en la lista", async ({ page 
   await expect(row).toBeVisible();
   await expect(row).toContainText("Red: Solana");
   await expect(page.locator("#seguir-alcance")).toHaveText("No hay ninguna marcada: se consultan todas.");
+  await expect(page.locator("#aviso-pasada .lang.es")).toHaveText("Al pulsar, tu navegador envía las direcciones que se revisan (las marcadas, o todas si no marcas ninguna) a los nodos públicos de Solana solana-rpc.publicnode.com y api.mainnet-beta.solana.com, que también ven tu IP. No se guarda nada nuevo hasta que pulses «Guardar».");
   const stored = await page.evaluate(() => new Promise((resolve) => {
     const request = indexedDB.open("stubx-cuaderno");
     request.onsuccess = () => {
@@ -158,7 +159,8 @@ test("una ficha vieja gana red y dirección y entra en la lista", async ({ page 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1);
   expect(overflow).toBe(true);
   await page.locator('[data-set-lang="en"]').click();
-  await expect(page.locator("h2").filter({ hasText: "Watch list" })).toBeVisible();
+  await expect(page.locator("h2").filter({ hasText: "Recheck saved addresses" })).toBeVisible();
+  await expect(page.locator("#aviso-pasada .lang.en")).toHaveText("When you tap, your browser sends the addresses being checked (the marked ones, or all of them if none are marked) to the Solana public nodes solana-rpc.publicnode.com and api.mainnet-beta.solana.com, which also see your IP. Nothing new is saved until you tap \"Save\".");
   await expect(page.locator("#seguir .lang.en")).toHaveText("Check the list");
   await expect(row).toContainText("Network: Solana");
 });
@@ -309,5 +311,44 @@ test("si el servicio rechaza la consulta, queda en Qué falta con Reintentar y n
   mode = "ok";
   await result.getByRole("button", { name: "Try again" }).click();
   await expect(result).toContainText("It changed since the last reading.", { timeout: 30_000 });
+  await expect(result).not.toContainText("You can delete it in the Notebook.");
+  await result.getByRole("button", { name: "Save" }).click();
+  await expect(result).toContainText("You can delete it in the Notebook.");
   expect(hits.slice(beforeRetry).some((item) => item.startsWith("ok getMultipleAccounts"))).toBe(true);
+});
+
+test("detener corta la pasada y no la da por igual", async ({ page }) => {
+  test.setTimeout(30_000);
+  let release;
+  const gate = new Promise((resolve) => {
+    release = resolve;
+  });
+  await page.route(/solana-rpc\.publicnode\.com|api\.mainnet-beta\.solana\.com/, async (route) => {
+    await gate;
+    const body = route.request().postDataJSON();
+    if (body?.method === "getMultipleAccounts") {
+      return route.fulfill(rpcResult([
+        account(TOKEN_PROGRAM, mintAccount(1_000_000n)),
+        account(METADATA_PROGRAM, metadataAccount(USDC, "USD Coin", "USDC")),
+        null,
+      ]));
+    }
+    return route.fulfill(rpcResult(body?.method === "getTokenSupply" ? { amount: "1000000", decimals: 6, uiAmountString: "ignored" } : 1));
+  });
+  await storeLegacy(page, [{
+    id: "44444444-4444-4444-8444-444444444444",
+    mint: USDC,
+    at: "2026-10-09T12:00:00.000Z",
+    supply: "1000000",
+    name: "USD Coin",
+    symbol: "USDC",
+    note: "",
+  }]);
+  await page.goto("/cuaderno/");
+  await page.locator("#seguir").click();
+  await expect(page.locator("#detener")).toBeVisible();
+  await page.locator("#detener").click();
+  await expect(page.locator("#consulta-error")).toContainText("Pasada detenida");
+  await expect(page.locator("#resultado-seguimiento")).not.toContainText("Sigue igual");
+  release();
 });

@@ -765,6 +765,30 @@ export function reserveWatchSlots(entries, stamps, now, takeSlot) {
 
 const REFUSAL = /HTTP 403|HTTP 429|request blocked|indexed request|access forbidden|personal token/i;
 
+/** Una ficha completa no está a medias, no trae errores, el momento de la red se leyó y los dos suministros coinciden. */
+export function readingComplete(card) {
+  if (!card || typeof card !== "object") return false;
+  if (card.partial === true) return false;
+  if (Array.isArray(card.errors) && card.errors.length > 0) return false;
+  if (card.slotStatus === "fallo") return false;
+  const account = card.supplyAccount;
+  const rpc = card.supplyRpc;
+  if (typeof account === "string" && typeof rpc === "string" && account !== rpc) return false;
+  return true;
+}
+
+function accountReadRefused(card) {
+  if (!card || typeof card !== "object") return true;
+  if (card.programStatus !== "fallo") return false;
+  const errors = Array.isArray(card.errors) ? card.errors : [];
+  const accountError = errors.find((item) => item && (item.method === "getMultipleAccounts" || item.method === "local"));
+  if (!accountError) return true;
+  const status = accountError.httpStatus;
+  if (status === 403 || status === 429 || status === 0 || status === 408) return true;
+  if (typeof status === "number" && status >= 500) return true;
+  return REFUSAL.test(String(accountError.message || ""));
+}
+
 /** Un servicio que rechaza la consulta no es una lectura igual. */
 export function serviceRejection(card) {
   if (!card || typeof card !== "object") return { rejected: true, primary: true };
@@ -783,30 +807,23 @@ export function serviceRejection(card) {
 export function watchVerdict(previous, result) {
   const card = result && result.card ? result.card : null;
   const rejection = serviceRejection(card);
-  if (!previous || !previous.card || !card || rejection.primary) {
-    return { kind: "rechazada", compared: null, save: false, card, rejection };
+  if (!card || accountReadRefused(card)) {
+    return { kind: "rechazada", compared: null, save: false, card, rejection: { rejected: true, primary: true } };
   }
   const checked = validateCard(card);
   if (!checked.ok) return { kind: "rechazada", compared: null, save: false, card, rejection };
+  const previousCard = previous && previous.card ? previous.card : null;
   const next = { id: "00000000-0000-4000-8000-000000000001", note: "", card: checked.card };
-  const compared = compareRecords(previous, next);
-  if (!compared.ok) return { kind: "rechazada", compared: null, save: false, card: checked.card, rejection };
-  if (rejection.rejected) {
-    return {
-      kind: compared.changes.length ? "cambio" : "incompleto",
-      compared,
-      save: true,
-      card: checked.card,
-      rejection,
-    };
+  const compared = previousCard ? compareRecords({ ...previous, card: previousCard }, next) : null;
+  const comparable = compared && compared.ok ? compared : null;
+  if (!readingComplete(previousCard) || !readingComplete(checked.card) || (comparable && comparable.unknown.length)) {
+    return { kind: "incompleto", compared: comparable, save: false, card: checked.card, rejection };
   }
-  if (compared.changes.length) {
-    return { kind: "cambio", compared, save: true, card: checked.card, rejection };
+  if (!comparable) return { kind: "incompleto", compared: null, save: false, card: checked.card, rejection };
+  if (comparable.changes.length) {
+    return { kind: "cambio", compared: comparable, save: false, card: checked.card, rejection };
   }
-  if (compared.unknown.length) {
-    return { kind: "incompleto", compared, save: true, card: checked.card, rejection };
-  }
-  return { kind: "igual", compared, save: true, card: checked.card, rejection };
+  return { kind: "igual", compared: comparable, save: false, card: checked.card, rejection };
 }
 
 export function withNote(record, note) {

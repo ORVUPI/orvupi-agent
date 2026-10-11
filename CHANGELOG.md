@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-11 · Revisar direcciones guardadas
+
+- En el Cuaderno, «Revisar direcciones guardadas» / «Recheck saved addresses» vuelve a leer las direcciones guardadas, las marcadas o todas si no se marca ninguna, y dice si algo cambió desde la última lectura. «Sigue igual» solo sale si las dos fichas están completas y sin errores. Si no, el veredicto es «Incompleto» y va con «Qué falta». Nada nuevo se guarda hasta pulsar «Guardar» o «Guardar todas». «Detener» corta la pasada. Esta entrada no despliega la web. stubxai.com no cambia hasta que se publique.
+- La base local del Cuaderno pasa a la versión 2. El navegador no abre una versión menor: la página que hoy está en stubxai.com abre la versión 1. Si esta entrega se publica y luego se vuelve a esa página anterior, el Cuaderno de ese navegador no abre. Para volver atrás: cargar otra vez esta página, o borrar en el navegador los datos del sitio de la base llamada stubx-cuaderno. Esas fichas solo están en ese navegador; borrarlas las quita de ahí y no las envía a ningún servidor. Si este código encuentra una versión mayor, abre la base sin subirla y sigue.
+
 ## 2026-10-10 · Biblioteca y cuaderno publicados
 
 - `/cuaderno` está en stubxai.com/cuaderno desde el 2026-10-10 (PR #24). El tablero marca U05 como publicado. La dirección viaja en el fragmento `#a=` y se limpia al leerla; no llega al servidor ni queda en el historial.
