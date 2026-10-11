@@ -40,10 +40,11 @@ export function buildOutputs(repoRoot: string, options: { publish?: boolean } = 
     evm?: unknown[];
   };
   const summaryPath = path.join(repoRoot, "web/v2/shared/reading-summary.js");
+  const marketPath = path.join(repoRoot, "web/v2/shared/market-view.js");
   const verifyJs = bundleVerify(
     readFileSync(lookupPath, "utf8"),
     inlineModule(signalsPath),
-    inlineModule(summaryPath),
+    `${inlineModule(summaryPath)}\n${inlineModule(marketPath)}`,
     readFileSync(verifyUiPath, "utf8"),
     {
       cards,

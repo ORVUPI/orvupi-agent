@@ -212,7 +212,8 @@ describe("páginas estáticas", () => {
     const headers = page(pages, "_headers");
     assert.match(headers, /Content-Security-Policy: default-src 'none'/);
     const verifyHeaders = headers.split("/verify/*")[1]?.split("\n\n")[0] ?? "";
-    assert.deepEqual(cspHosts(verifyHeaders), ["solana-rpc.publicnode.com", "api.mainnet-beta.solana.com"]);
+    assert.deepEqual(cspHosts(verifyHeaders), ["solana-rpc.publicnode.com", "api.mainnet-beta.solana.com", "api.dexscreener.com"]);
+    assert.equal(verifyHeaders.includes("*.dexscreener"), false);
     assert.match(verifyHeaders, /! Content-Security-Policy/);
     const labHeaders = headers.split("/lab/*")[1]?.split("\n\n")[0] ?? "";
     assert.deepEqual(cspHosts(labHeaders), []);

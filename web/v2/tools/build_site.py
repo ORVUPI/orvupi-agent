@@ -42,12 +42,37 @@ AVISO = aviso_guardar()
 def apply_aviso(text: str) -> str:
     return text.replace("__AVISO_ES__", AVISO["es"]).replace("__AVISO_EN__", AVISO["en"])
 
+NODOS = {
+    "Para leerla en directo, se envía a los nodos públicos de Solana solana-rpc.publicnode.com y api.mainnet-beta.solana.com, que también ven tu IP.",
+    "To read it live, it is sent to the Solana public nodes solana-rpc.publicnode.com and api.mainnet-beta.solana.com, which also see your IP.",
+}
+
+
+def aviso_partes(text: str) -> tuple[str, str]:
+    parts = re.split(r"(?<=\.)\s+", text)
+    lead = next((part for part in parts if part in NODOS), "")
+    if not lead:
+        raise SystemExit("el aviso no trae la frase de los nodos")
+    rest = " ".join(part for part in parts if part != lead)
+    return lead, rest
+
+
 def aviso_html() -> str:
+    es_lead, es_rest = aviso_partes(AVISO["es"])
+    en_lead, en_rest = aviso_partes(AVISO["en"])
     return (
-        '<p id="aviso-guardar" class="aviso-fijo privacidad">'
-        f'<span class="lang es" lang="es">{html.escape(AVISO["es"])}</span>'
-        f'<span class="lang en" lang="en">{html.escape(AVISO["en"])}</span>'
+        '<div id="aviso-guardar" class="aviso-fijo privacidad">'
+        '<p class="aviso-nodos">'
+        f'<span class="lang es" lang="es">{html.escape(es_lead)}</span>'
+        f'<span class="lang en" lang="en">{html.escape(en_lead)}</span>'
         "</p>"
+        '<details class="aviso-resto">'
+        '<summary><span class="lang es" lang="es">Más detalle</span>'
+        '<span class="lang en" lang="en">More detail</span></summary>'
+        "<p>"
+        f'<span class="lang es" lang="es">{html.escape(es_rest)}</span>'
+        f'<span class="lang en" lang="en">{html.escape(en_rest)}</span>'
+        "</p></details></div>"
     )
 CA = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump"
 CREATOR = "77RKUqMprQHDSkhFBpC1REU1kE9aM1uw189orHo7wypD"
@@ -262,10 +287,16 @@ def rpc_origins() -> list[str]:
     return origins
 
 
-def connect_src(include_rpc: bool) -> str:
-    if not include_rpc:
-        return "'self'"
-    return "'self' " + " ".join(rpc_origins())
+MARKET_ORIGIN = "https://api.dexscreener.com"
+
+
+def connect_src(include_rpc: bool, include_market: bool = False) -> str:
+    parts = ["'self'"]
+    if include_rpc:
+        parts.extend(rpc_origins())
+    if include_market:
+        parts.append(MARKET_ORIGIN)
+    return " ".join(parts)
 
 
 def shell(frm: str, current: str, title_es: str, title_en: str, desc_es: str, desc_en: str, body: str, scripts: list[str], narrow: bool, worker: bool = False, absolute: bool = False, connect: str | None = None, modules: list[str] | None = None) -> str:
@@ -489,13 +520,12 @@ def prepare_tool(name: str) -> str:
     raw = re.sub(r"</main>\s*$", "", raw)
     raw = raw.replace('<section id="resultado"', '<section id="resultado" tabindex="-1"', 1)
     if name == "verify":
-        raw = re.sub(
-            r'\s*<p(?: id="aviso-guardar")? class="aviso-fijo privacidad">.*?</p>',
-            "",
-            raw,
-            count=1,
-            flags=re.S,
-        )
+        form_end = raw.find("</form>")
+        for marker in ('<div id="aviso-guardar"', '<p id="aviso-guardar"'):
+            start = raw.find(marker)
+            if start >= 0 and form_end > start:
+                raw = raw[:start] + raw[form_end:]
+                break
         raw = raw.replace("</form>", aviso_html() + "\n</form>", 1)
         extra = (
             '<p><button type="button" id="ver-lectura-caida">'
@@ -1369,21 +1399,25 @@ def not_found() -> str:
 
 
 def headers() -> str:
-    origins = " ".join(rpc_origins())
-    verify_csp = (
-        "Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; "
-        "img-src 'self'; font-src 'self'; connect-src 'self' "
-        + origins
-        + "; manifest-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'none'; "
-        "object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests"
-    )
+    def route_csp(connect: str) -> str:
+        return (
+            "Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; "
+            "img-src 'self'; font-src 'self'; connect-src "
+            + connect
+            + "; manifest-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'none'; "
+            "object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests"
+        )
+
+    verify_csp = route_csp(connect_src(True, True))
+    pares_csp = route_csp(connect_src(True))
     return f"""# www.stubxai.com lo sirve Cloudflare Pages (comprobado 2026-10-09). El apex pasa por el proxy de Cloudflare.
 # Netlify ya no sirve el dominio: solo superb-horse-9036f5.netlify.app, con la redirección 301 de _redirects.
 # HSTS va aquí porque Pages no lo envía solo. Sin preload.
 # worker-src 'self' deja registrar el service worker de Lab. Las páginas que no son Lab
 # repiten worker-src 'none' en la meta, y las dos políticas se cruzan.
-# connect-src global se queda en 'self'. /verify/ y /verify/* quitan esa política
-# con ! Content-Security-Policy y ponen la suya, solo con los dos RPC públicos.
+# connect-src global se queda en 'self'. /verify/, /verify/* y /cuaderno/* quitan
+# esa política con ! Content-Security-Policy y ponen una sola: los dos RPC y,
+# exacto, https://api.dexscreener.com. /pares/ solo lleva los dos RPC.
 /*
   Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests
   Strict-Transport-Security: max-age=31536000; includeSubDomains
@@ -1405,10 +1439,10 @@ def headers() -> str:
   {verify_csp}
 /pares/
   ! Content-Security-Policy
-  {verify_csp}
+  {pares_csp}
 /pares/*
   ! Content-Security-Policy
-  {verify_csp}
+  {pares_csp}
 
 /assets/*
   Cache-Control: public, max-age=0, must-revalidate
@@ -1442,7 +1476,7 @@ def headers() -> str:
   X-Robots-Tag: noindex, nofollow
 /cuaderno/*
   ! Content-Security-Policy
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self' https://solana-rpc.publicnode.com https://api.mainnet-beta.solana.com; manifest-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests
+  {verify_csp}
 """
 
 
@@ -1600,7 +1634,7 @@ def main() -> None:
     shutil.copyfile(current / "app.js", ROOT / "app.js")
 
     write_page("index.html", "home", "STUBX · Contrasta la dirección", "STUBX · Check the address", "Vista previa de STUBX. Lee un token en directo y solo en lectura.", "STUBX preview. Read a token live and read-only.", home())
-    write_page("verify/index.html", "verify", "STUBX Verify", "STUBX Verify", "Lee cualquier token SPL o Token-2022 en directo y solo en lectura. Las fichas fechadas siguen como ejemplo.", "Read any SPL or Token-2022 token live and read-only. The dated cards remain as examples.", prepare_tool("verify"), ["assets/draft-address.js", "assets/verify.js"], True, connect=connect_src(True), modules=["assets/verificar-acciones.mjs"])
+    write_page("verify/index.html", "verify", "STUBX Verify", "STUBX Verify", "Lee cualquier token SPL o Token-2022 en directo y solo en lectura. Las fichas fechadas siguen como ejemplo.", "Read any SPL or Token-2022 token live and read-only. The dated cards remain as examples.", prepare_tool("verify"), ["assets/draft-address.js", "assets/verify.js"], True, connect=connect_src(True, True), modules=["assets/verificar-acciones.mjs"])
     write_page("comparar/index.html", "comparar", "STUBX · Ejemplo de una curva", "STUBX · Curve example", "Ejemplo hipotético, no leído de la cadena. No es una recomendación ni un aval.", "Hypothetical example, not read from the chain. It is not a recommendation or an endorsement.", comparar(), narrow=True)
     write_page("pares/index.html", "pares", "STUBX · Lectura de la curva", "STUBX · Curve reading", "Moneda base y estado de la curva, tal como están en la cadena. No es una auditoría ni una recomendación.", "Base currency and curve state, as they are on chain. It is not an audit or a recommendation.", pares(), narrow=True, connect=connect_src(True), modules=["assets/pares.mjs"])
     write_page("lab/index.html", "lab", "STUBX Lab", "STUBX Lab", "Misión para distinguir el mint del registro de un clon.", "A mission to tell the registry mint from a clone.", prepare_tool("lab"), ["assets/mission.js"], True, True)

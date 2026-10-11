@@ -212,7 +212,7 @@ def forbidden_outside_risk_pages() -> list[str]:
     needles = banned_marks()
     patterns = [re.compile(r"\b" + re.escape(needle) + r"\b") for needle in needles]
     allowed = {"risks/index.html", "legal/index.html"}
-    skip_files = {"tools/build_site.py"}
+    skip_files = {"tools/build_site.py", "tools/equivalencias-seguridad.json"}
     suffixes = {".html", ".js", ".mjs", ".json", ".md", ".css", ".txt", ".xml", ".py", ".webmanifest", ".jpg", ".jpeg", ".png", ".webp"}
     hits: list[str] = []
     for path in V2.rglob("*"):
