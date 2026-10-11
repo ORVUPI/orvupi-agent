@@ -3,6 +3,7 @@
 ## 2026-10-11 · Frase de señales en la ficha vacía, el informe y la portada
 
 - La ficha vacía de la lectura, el límite 4 del informe descargable y el ejemplo vacío de la portada dicen «Que no aparezcan señales no significa que esté todo comprobado.» / «No signals showing does not mean everything was checked.» Los otros tres límites del informe siguen igual. La guardia bloquea esa fórmula retirada fuera de `/risks` y `/legal`.
+- En las extensiones de Token-2022, si no aparece ninguna de las cuatro leídas, la frase es «Que no aparezcan extensiones no significa que esté todo comprobado.» / «No extensions showing does not mean everything was checked.» La guardia también bloquea «otros riesgos» y «other risks» fuera de `/risks` y `/legal`.
 - Esta entrada no despliega stubxai.com.
 
 ## 2026-10-11 · Base, fase 1 de la lectura multired

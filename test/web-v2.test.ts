@@ -575,6 +575,10 @@ describe("web v2", () => {
     assert.match(bundle, /No signal in this reading needs attention\. No signals showing does not mean everything was checked\./);
     assert.equal(bundle.includes("no haya riesgo"), false);
     assert.equal(bundle.includes("there is no risk"), false);
+    assert.match(bundle, /Que no aparezcan extensiones no significa que esté todo comprobado\./);
+    assert.match(bundle, /No extensions showing does not mean everything was checked\./);
+    assert.equal(bundle.includes("otros riesgos"), false);
+    assert.equal(bundle.includes("other risks"), false);
     assert.match(bundle, /stubx-verify-preview/);
     assert.match(bundle, /ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump/);
     assert.match(bundle, /FMNb4CR8ksibmgY7Ztei6BWcZXi3WHcVeJhYb9TNpump/);
@@ -1190,6 +1194,16 @@ if guard.phrase_hits("legal/index.html", "there is no risk"):
     raise SystemExit("legal")
 if guard.phrase_hits("verify/index.html", "Que no aparezcan señales no significa que esté todo comprobado."):
     raise SystemExit("aprobada")
+if not guard.phrase_hits("index.html", "no cierra otros riesgos"):
+    raise SystemExit("otros riesgos")
+if not guard.phrase_hits("index.html", "close off other risks"):
+    raise SystemExit("other risks")
+if guard.phrase_hits("risks/index.html", "otros riesgos"):
+    raise SystemExit("risks otros")
+if guard.phrase_hits("legal/index.html", "other risks"):
+    raise SystemExit("legal other")
+if guard.phrase_hits("verify/index.html", "Que no aparezcan extensiones no significa que esté todo comprobado."):
+    raise SystemExit("extensiones")
 if "tools/build_site.py" in guard.SKIP_FILES:
     raise SystemExit("generador")
 print("ok")
