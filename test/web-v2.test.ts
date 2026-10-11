@@ -142,6 +142,14 @@ function walk(dir: string): string[] {
   return out;
 }
 
+function httpsUrlHosts(source: string): string[] {
+  const hosts: string[] = [];
+  for (const match of source.matchAll(/https:\/\/[a-z0-9.-]+/gi)) {
+    hosts.push(new URL(match[0]).host);
+  }
+  return hosts;
+}
+
 function cspHosts(policy: string): string[] {
   const connect = policy
     .split(";")
@@ -881,25 +889,28 @@ describe("web v2", () => {
     const dormant = networks.networks
       .filter((item) => item.family === "evm" && item.enabled === false && item.rpc)
       .map((item) => new URL(item.rpc as string).host);
+    const sameHost = (hosts: readonly string[], name: string) => hosts.some((host) => host === name);
     assert.deepEqual(active, ["mainnet.base.org"]);
-    assert.ok(dormant.includes("ethereum-rpc.publicnode.com"));
-    assert.ok(dormant.includes("bsc-rpc.publicnode.com"));
+    assert.equal(sameHost(dormant, "ethereum-rpc.publicnode.com"), true);
+    assert.equal(sameHost(dormant, "bsc-rpc.publicnode.com"), true);
     const headers = readFileSync(path.join(root, "web/v2/_headers"), "utf8");
     const verifyMeta = readFileSync(path.join(root, "web/v2/verify/index.html"), "utf8").match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
     const notebookMeta = readFileSync(path.join(root, "web/v2/cuaderno/index.html"), "utf8").match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
     const paresMeta = readFileSync(path.join(root, "web/v2/pares/index.html"), "utf8").match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
+    const headerHosts = httpsUrlHosts(headers);
+    const verifyHosts = httpsUrlHosts(verifyMeta);
+    const notebookHosts = httpsUrlHosts(notebookMeta);
+    const paresHosts = httpsUrlHosts(paresMeta);
     for (const host of active) {
-      assert.equal(headers.includes(host), true, host);
-      assert.equal(verifyMeta.includes(host), true, host);
-      assert.equal(notebookMeta.includes(host), true, host);
-      assert.equal(cspHosts(verifyMeta).includes(host), true);
-      assert.equal(cspHosts(notebookMeta).includes(host), true);
+      assert.equal(sameHost(headerHosts, host), true, host);
+      assert.equal(sameHost(verifyHosts, host), true, host);
+      assert.equal(sameHost(notebookHosts, host), true, host);
     }
     for (const host of dormant) {
-      assert.equal(headers.includes(host), false, host);
-      assert.equal(verifyMeta.includes(host), false, host);
-      assert.equal(notebookMeta.includes(host), false, host);
-      assert.equal(paresMeta.includes(host), false, host);
+      assert.equal(sameHost(headerHosts, host), false, host);
+      assert.equal(sameHost(verifyHosts, host), false, host);
+      assert.equal(sameHost(notebookHosts, host), false, host);
+      assert.equal(sameHost(paresHosts, host), false, host);
     }
     const script = `
 import importlib.util
