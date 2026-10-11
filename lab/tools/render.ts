@@ -492,6 +492,7 @@ const PERSON_EN: Record<string, string> = {
 };
 
 const MILESTONE_EN: Record<string, string> = {
+  "2026-10-11 · Cuaderno en las cuatro redes": "2026-10-11 · Notebook on all four networks",
   "[0.1.0] — 2026-10-10": "[0.1.0] — 2026-10-10",
   "2026-10-09 · Medición de uso: ninguna en el cliente":
     "2026-10-09 · Usage measurement: none on the client",

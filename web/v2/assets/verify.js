@@ -3573,6 +3573,130 @@ function comparisonBanner(left, right, lang) {
   return cloneWarningText(left, lang) || cloneWarningText(right, lang);
 }
 
+function knownNameLead(card) {
+  const known = quoteLookup(card.network, card.address);
+  const written = summaryShown(card.name && card.name.status === "ok" ? card.name.text : "")
+    || summaryShown(card.symbol && card.symbol.status === "ok" ? card.symbol.text : "");
+  if (!known) return null;
+  if (written && written !== known) {
+    return summaryPair(
+      `${known}. El contrato escribió «${written}».`,
+      `${known}. The contract wrote «${written}».`,
+    );
+  }
+  return summaryPair(`${known}.`, `${known}.`);
+}
+
+function evmCheckedPoint(titleEs, titleEn, leadEs, leadEn) {
+  return summaryPoint("metadatos", summaryPair(titleEs, titleEn), summaryPair(leadEs, leadEn));
+}
+
+function evmMissingPoint(titleEs, titleEn, leadEs, leadEn) {
+  return summaryPoint("metadatos", summaryPair(titleEs, titleEn), summaryPair(leadEs, leadEn));
+}
+
+/** Resumen de una ficha EVM para el informe. No reutiliza los huecos de Solana. */
+function summaryFromEvmCard(card) {
+  const emptyContext = { supply: null, name: "", symbol: "", decimals: null, extensions: [], official: false };
+  if (!card || card.schema !== "stubx.notebook.card.evm") return compose([], [], emptyContext, null, null);
+  const facts = [];
+  const supply = card.totalSupply || {};
+  const decimals = card.decimals || {};
+  const name = card.name || {};
+  const symbol = card.symbol || {};
+  if (supply.status === "ok" && supply.raw) pushFact(facts, "suministro", "Cantidad total", "Total amount", "ok");
+  else if (supply.status === "fallo") pushFact(facts, "suministro", "Cantidad total", "Total amount", "fallo");
+  if (decimals.status === "ok" && Number.isInteger(decimals.value)) pushFact(facts, "decimales", "Decimales", "Decimals", "ok");
+  else if (decimals.status === "fallo") pushFact(facts, "decimales", "Decimales", "Decimals", "fallo");
+  if (name.status === "ok" || symbol.status === "ok") pushFact(facts, "nombre", "Nombre", "Name", "ok");
+  else if (name.status === "ausente" && symbol.status === "ausente") pushFact(facts, "nombre", "Nombre", "Name", "ausente");
+  else if (name.status === "fallo" || symbol.status === "fallo") pushFact(facts, "nombre", "Nombre", "Name", "fallo");
+  const summary = compose(facts, [], {
+    supply: supply.status === "ok" ? supplyPair(supply.raw, decimals.value) : null,
+    name: summaryText(name.status === "ok" ? name.text : ""),
+    symbol: summaryText(symbol.status === "ok" ? symbol.text : ""),
+    decimals: decimals.status === "ok" ? decimals.value : null,
+    extensions: [],
+    official: false,
+  }, null, null);
+  const known = knownNameLead(card);
+  if (known) {
+    const checked = summary.blocks.find((block) => block.id === "comprobado");
+    const identity = checked && checked.items.find((item) => item.title && item.title.es === "Nombre y símbolo");
+    if (identity) identity.lead = known;
+  }
+  const checkedBlock = summary.blocks.find((block) => block.id === "comprobado");
+  const missingBlock = summary.blocks.find((block) => block.id === "falta");
+  const code = card.code || {};
+  if (code.status === "ok" && code.kind === "contrato") {
+    checkedBlock.items.push(evmCheckedPoint("Contrato o cuenta", "Contract or account", "Tiene código: es un contrato.", "It has code: it is a contract."));
+  } else if (code.status === "ok" && code.kind === "cuenta") {
+    checkedBlock.items.push(evmCheckedPoint(
+      "Contrato o cuenta",
+      "Contract or account",
+      "No tiene código: es una cuenta. A una cuenta sin código a veces se le llama EOA.",
+      "It has no code: it is an account. An account with no code is sometimes called an EOA.",
+    ));
+  } else if (code.status === "fallo") {
+    missingBlock.items.push(evmMissingPoint(
+      "Contrato o cuenta",
+      "Contract or account",
+      "No se pudo leer si es un contrato o una cuenta.",
+      "Whether it is a contract or an account could not be read.",
+    ));
+  }
+  const owner = card.owner || {};
+  if (owner.status === "ok" && owner.address) {
+    checkedBlock.items.push(evmCheckedPoint("Dirección owner()", "owner() address", `owner() respondió ${owner.address}.`, `owner() answered ${owner.address}.`));
+  } else if (owner.status === "ausente" && owner.reason === "revert") {
+    checkedBlock.items.push(evmCheckedPoint("Dirección owner()", "owner() address", "Se pidió owner(). El contrato no respondió esa función.", "owner() was requested. The contract did not answer that function."));
+  } else if (owner.status === "ausente" && owner.reason === "cero") {
+    checkedBlock.items.push(evmCheckedPoint("Dirección owner()", "owner() address", "owner() respondió con la dirección de ceros.", "owner() answered with the zero address."));
+  } else if (owner.status === "ausente" && owner.reason === "vacio") {
+    checkedBlock.items.push(evmCheckedPoint("Dirección owner()", "owner() address", "owner() no devolvió datos: ausente / sin respuesta.", "owner() returned no data: absent / no answer."));
+  } else if (owner.status === "fallo") {
+    missingBlock.items.push(evmMissingPoint("Dirección owner()", "owner() address", "No se pudo leer owner().", "owner() could not be read."));
+  }
+  const proxy = card.proxy || {};
+  if (proxy.status === "ok") {
+    const partsEs = ["Hay una anotación EIP-1967."];
+    const partsEn = ["There is an EIP-1967 note."];
+    if (proxy.implementation) {
+      partsEs.push(`La otra dirección es ${proxy.implementation}.`);
+      partsEn.push(`The other address is ${proxy.implementation}.`);
+    }
+    if (proxy.admin) {
+      partsEs.push(`La dirección admin es ${proxy.admin}.`);
+      partsEn.push(`The admin address is ${proxy.admin}.`);
+    }
+    if (proxy.beacon) {
+      partsEs.push(`El beacon es ${proxy.beacon}.`);
+      partsEn.push(`The beacon is ${proxy.beacon}.`);
+    }
+    partsEs.push("Un proxy reenvía las preguntas a otro contrato.");
+    partsEn.push("A proxy forwards questions to another contract.");
+    partsEs.push("Otros tipos de proxy no se comprueban aquí.");
+    partsEn.push("Other proxy types are not checked here.");
+    checkedBlock.items.push(evmCheckedPoint("Proxy EIP-1967", "EIP-1967 proxy", partsEs.join(" "), partsEn.join(" ")));
+  } else if (proxy.status === "ausente") {
+    checkedBlock.items.push(evmCheckedPoint(
+      "Proxy EIP-1967",
+      "EIP-1967 proxy",
+      "No hay anotación EIP-1967. Esta lectura no encontró otra dirección. Otros tipos de proxy no se comprueban aquí.",
+      "There is no EIP-1967 note. This reading did not find another address. Other proxy types are not checked here.",
+    ));
+  } else if (proxy.status === "fallo") {
+    missingBlock.items.push(evmMissingPoint(
+      "Proxy EIP-1967",
+      "EIP-1967 proxy",
+      "No se pudo leer el proxy EIP-1967.",
+      "The EIP-1967 proxy could not be read.",
+    ));
+  }
+  if (missingBlock.items.length) missingBlock.service = SUMMARY_SERVICE;
+  return summary;
+}
+
 function summaryFromCard(card) {
   const facts = [];
   if (!card) return compose(facts, [], { supply: null, name: "", symbol: "", decimals: null, extensions: [] }, null, null);

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-11 · Cuaderno en las cuatro redes
+
+- Revisar direcciones guardadas usa el lector de la red de cada ficha: Solana, Base (`mainnet.base.org`), Ethereum (`ethereum-rpc.publicnode.com`) y BNB Chain (`bsc-rpc.publicnode.com`). La comparación solo admite dos lecturas de la misma red y dirección, y la pantalla lo dice. El informe PNG y PDF nombra la red: «Solana mainnet», «Base mainnet», «Ethereum mainnet» o «BNB Chain mainnet».
+- El aviso de esa pasada nombra los nodos de las redes que entran. Si entra Solana, se queda el aviso ya aprobado de solana-rpc.publicnode.com y api.mainnet-beta.solana.com. Si entra Base, Ethereum o BNB Chain, se añade el aviso ya aprobado de ese nodo, el mismo que está junto al botón de consulta.
+- Esta entrada no despliega stubxai.com.
+
 ## 2026-10-11 · Seguridad de Ethereum y BNB Chain
 
 - Un par de DEX Screener entra solo si `chainId` es exactamente el de la red. Sin `chainId`, o con otro, se descarta. USDT de Ethereum (`0xdac17f958d2ee523a2206206994597c13d831ec7`) y USDC de BNB Chain (`0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d`) salen con ese nombre. El chainId 1 queda atado a `ethereum-rpc.publicnode.com`, el 56 a `bsc-rpc.publicnode.com` y el 8453 a `mainnet.base.org`. La CSP del cuaderno se comprueba con los hosts encendidos de `networks.json`.
