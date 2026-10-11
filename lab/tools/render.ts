@@ -511,6 +511,8 @@ const MILESTONE_EN: Record<string, string> = {
   "Sin publicar": "Unpublished",
   "2026-10-09 · Biblioteca y cuaderno de solo lectura":
     "2026-10-09 · Read-only library and notebook",
+  "2026-10-11 · Guardia: un formato invisible entre letras cuenta como espacio":
+    "2026-10-11 · Guard: an invisible format character between letters counts as a space",
   "2026-10-11 · Frase de señales en la ficha vacía, el informe y la portada":
     "2026-10-11 · Signal wording on the empty card, the report, and the home page",
   "2026-10-11 · Revisar direcciones guardadas": "2026-10-11 · Recheck saved addresses",

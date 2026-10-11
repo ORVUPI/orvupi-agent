@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-11 · Guardia: un formato invisible entre letras cuenta como espacio
+
+- En `check_legal_phrases.py`, una racha de caracteres de formato (categoría Cf, como U+200B) entre dos letras se cambia por un espacio antes de comparar. «cripto de alto» pegado a «riesgo» con ese carácter queda bloqueado fuera de `/risks` y `/legal`. Quitar el carácter y unir la palabra sigue contando. «no oficial», «unofficial», «no es oficial» y «no oficiales» en los avisos antiestafa no disparan la guardia.
+- Esta entrada no despliega stubxai.com.
+
 ## 2026-10-11 · Frase de señales en la ficha vacía, el informe y la portada
 
 - La ficha vacía de la lectura, el límite 4 del informe descargable y el ejemplo vacío de la portada dicen «Que no aparezcan señales no significa que esté todo comprobado.» / «No signals showing does not mean everything was checked.» Los otros tres límites del informe siguen igual. La guardia bloquea esa fórmula retirada fuera de `/risks` y `/legal`.

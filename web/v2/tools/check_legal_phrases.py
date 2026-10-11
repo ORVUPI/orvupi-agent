@@ -183,11 +183,51 @@ def piece(*parts: str) -> str:
     return "".join(parts)
 
 
-def fold_marks(text: str) -> str:
-    text = normalize(text)
+def _is_letter(ch: str) -> bool:
+    return bool(ch) and unicodedata.category(ch).startswith("L")
+
+
+def bridge_format_chars(text: str) -> str:
+    """Una racha Cf entre dos letras pasa a espacio. El resto de Cf se quita.
+
+    Así «alto» + U+200B + «riesgo» se lee como «alto riesgo». Un Cf dentro de
+    una palabra, como en «invest» + U+200D + «ment», se quita en la otra lectura.
+    """
+    out: list[str] = []
+    index = 0
+    size = len(text)
+    while index < size:
+        if unicodedata.category(text[index]) != "Cf":
+            out.append(text[index])
+            index += 1
+            continue
+        nxt = index + 1
+        while nxt < size and unicodedata.category(text[nxt]) == "Cf":
+            nxt += 1
+        prev = out[-1] if out else ""
+        after = text[nxt] if nxt < size else ""
+        if _is_letter(prev) and _is_letter(after):
+            out.append(" ")
+        index = nxt
+    return "".join(out)
+
+
+def _strip_marks(text: str) -> str:
     text = "".join(ch for ch in text if unicodedata.category(ch) != "Cf")
-    text = "".join(ch for ch in unicodedata.normalize("NFD", text) if unicodedata.category(ch) != "Mn")
-    return text
+    return "".join(ch for ch in unicodedata.normalize("NFD", text) if unicodedata.category(ch) != "Mn")
+
+
+def fold_marks(text: str) -> str:
+    """Quita Cf y acentos. «invest» + U+200D + «ment» queda «investment»."""
+    return _strip_marks(normalize(text))
+
+
+def fold_bridged(text: str) -> str:
+    """Cf entre letras cuenta como espacio, y luego se normaliza igual que fold_marks."""
+    text = normalize(text)
+    text = bridge_format_chars(text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return _strip_marks(text)
 
 
 def risk_marks() -> list[str]:
@@ -290,12 +330,25 @@ def resolve_concat(text: str) -> str:
     return text
 
 
-def prepare_scan(raw: str) -> str:
-    """Normaliza espacios, saltos, etiquetas, ancho cero y concatenaciones antes de buscar."""
+def prepared_text(raw: str) -> str:
+    """Junta concatenaciones, descodifica entidades y quita etiquetas. Aún no pliega Cf."""
     text = resolve_concat(raw)
     text = html.unescape(text)
-    text = re.sub(r"</?[A-Za-z!][^>]*>", " ", text)
-    return fold_marks(text)
+    return re.sub(r"</?[A-Za-z!][^>]*>", " ", text)
+
+
+def prepare_scan(raw: str) -> str:
+    """Normaliza espacios, saltos, etiquetas, ancho cero y concatenaciones antes de buscar."""
+    return fold_marks(prepared_text(raw))
+
+
+def scan_forms(raw: str, *, binary: bool = False) -> list[str]:
+    base = raw if binary else prepared_text(raw)
+    forms: list[str] = []
+    for text in (fold_marks(base), fold_bridged(base)):
+        if text not in forms:
+            forms.append(text)
+    return forms
 
 
 def _drop_assignment(source: str, name: str) -> str:
@@ -354,12 +407,18 @@ def marks_in(text: str, marks: list[str]) -> list[str]:
 
 
 def phrase_hits(rel: str, raw: str, *, binary: bool = False) -> list[str]:
-    text = fold_marks(raw) if binary else prepare_scan(raw)
     found: list[str] = []
-    if not is_risk_page(rel):
-        found.extend(marks_in(text, risk_marks()))
-    if is_studio(rel):
-        found.extend(marks_in(text, studio_marks()))
+    seen: set[str] = set()
+    for text in scan_forms(raw, binary=binary):
+        hits: list[str] = []
+        if not is_risk_page(rel):
+            hits.extend(marks_in(text, risk_marks()))
+        if is_studio(rel):
+            hits.extend(marks_in(text, studio_marks()))
+        for mark in hits:
+            if mark not in seen:
+                seen.add(mark)
+                found.append(mark)
     return found
 
 
@@ -410,17 +469,40 @@ def self_check() -> None:
         ("zwj", "not invest\u200dment advice"),
         ("bom", "ai-generated \ufeffimage"),
         ("entidad", "cripto de alto &#8203;riesgo"),
+        ("zwsp entre letras", "cripto de alto\u200briesgo"),
+        ("zwnj entre letras", "cripto de alto\u200criesgo"),
+        ("zwj entre letras", "cripto de alto\u200driesgo"),
+        ("bom entre letras", "cripto de alto\ufeffriesgo"),
+        ("wj entre letras", "cripto de alto\u2060riesgo"),
+        ("rlo entre letras", "cripto de alto\u202eriesgo"),
+        ("doble cf", "cripto de alto\u200b\u200briesgo"),
+        ("mayusculas cf", "CRIPTO DE ALTO\u200bRIESGO"),
+        ("entidad entre letras", "cripto de alto&#8203;riesgo"),
+        ("riesgo partido", "there is no\u200brisk"),
     ]
     for name, sample in samples:
         if not phrase_hits("content/tools/ejemplo.html", sample):
             raise SystemExit(f"la guardia no vio el caso {name}")
     anti = "Si una cuenta no está aquí, trátala como no oficial hasta comprobarla."
-    if phrase_hits("security/index.html", anti):
+    anti_cf = "Si una cuenta no está aquí, trátala como no\u200boficial hasta comprobarla."
+    anti_en = "treat it as unofficial until you check it"
+    anti_en_cf = "treat it as un\u200dofficial until you check it"
+    if phrase_hits("security/index.html", anti) or phrase_hits("security/index.html", anti_cf):
         raise SystemExit("el aviso antiestafa no puede caer en la guardia")
+    if phrase_hits("security/index.html", anti_en) or phrase_hits("security/index.html", anti_en_cf):
+        raise SystemExit("el aviso antiestafa en inglés no puede caer en la guardia")
+    if phrase_hits("security/index.html", "no es oficial") or phrase_hits("security/index.html", "no oficiales"):
+        raise SystemExit("no es oficial y no oficiales no son el aviso retirado")
+    if phrase_hits("index.html", "is not official") or phrase_hits("index.html", "is not\u200bofficial"):
+        raise SystemExit("la portada no puede caer en la guardia")
     if not phrase_hits("studio/index.html", anti):
         raise SystemExit("en Studio, no oficial tiene que caer")
+    if not phrase_hits("studio/index.html", "no\u200boficial"):
+        raise SystemExit("en Studio, no oficial partido por Cf tiene que caer")
     if phrase_hits("studio/reglas/index.html", "no es oficial"):
         raise SystemExit("no es oficial no es la marca de Studio")
+    if phrase_hits("studio/reglas/index.html", "no\u200bes oficial"):
+        raise SystemExit("no es oficial con Cf no es la marca de Studio")
     if phrase_hits("studio/reglas/index.html", "no oficiales"):
         raise SystemExit("no oficiales no es la marca de Studio")
     if "tools/build_site.py" in SKIP_FILES:
