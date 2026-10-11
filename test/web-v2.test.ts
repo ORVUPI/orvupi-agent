@@ -323,8 +323,14 @@ describe("web v2", () => {
     const legal = read("legal/index.html");
     for (const html of [home, security, risks, legal]) {
       assert.ok(html.includes(CA));
+    }
+    for (const html of [risks, legal]) {
       assert.ok(html.includes(MICA_ES));
       assert.ok(html.includes(MICA_EN));
+    }
+    for (const html of [home, security]) {
+      assert.equal(html.includes(MICA_ES), false);
+      assert.equal(html.includes(MICA_EN), false);
     }
     for (const html of [home, security]) {
       assert.match(html, /x\.com\/stubxai/);
