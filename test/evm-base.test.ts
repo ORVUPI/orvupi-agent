@@ -215,6 +215,8 @@ describe("lectura EVM en Base", () => {
     assert.equal(called, 0);
     assert.equal(invalid.reason, "invalid");
     assert.equal(invalid.ok, false);
+    assert.equal(view.describeEvm({ ...invalid.reading, reason: invalid.reason }, "es").support.includes("dirección cero"), false);
+    assert.equal(view.describeEvm({ ...invalid.reading, reason: invalid.reason }, "es").support.includes("mayúsculas y minúsculas"), false);
     for (const fact of Object.values(invalid.reading.facts) as { status: string }[]) {
       assert.equal(fact.status, "no_consultado");
     }
@@ -370,7 +372,37 @@ describe("lectura EVM en Base", () => {
       now: () => new Date(WHEN),
     });
     assert.equal(calls, 0);
-    assert.equal(zero.reason, "invalid");
+    assert.equal(zero.reason, "cero");
+    assert.equal(view.describeEvm({ ...zero.reading, reason: zero.reason }, "es").support, "Es la dirección cero: no es la dirección de ningún token.");
+    assert.equal(view.describeEvm({ ...zero.reading, reason: zero.reason }, "en").support, "This is the zero address: it is not a token address.");
+    const badChecksum = "0x833589fCd6eDb6E08f4c7C32D4f71b54bdA02913";
+    let checksumCalls = 0;
+    const checksum = await evm.readEvmToken({
+      networkId: "base",
+      address: badChecksum,
+      transport: async () => {
+        checksumCalls += 1;
+        return { status: 200, body: "" };
+      },
+      minIntervalMs: 0,
+      now: () => new Date(WHEN),
+    });
+    assert.equal(checksumCalls, 0);
+    assert.equal(checksum.reason, "checksum");
+    assert.equal(evm.normalizeEvmAddress(badChecksum), "");
+    assert.equal(evm.normalizeEvmAddress(USDC), USDC.toLowerCase());
+    assert.equal(view.describeEvm({ ...checksum.reading, reason: checksum.reason }, "es").support, "Las mayúsculas y minúsculas de la dirección no cuadran. Revisa que esté bien copiada.");
+    assert.equal(view.describeEvm({ ...checksum.reading, reason: checksum.reason }, "en").support, "The upper and lower case letters in this address do not match. Check that it was copied correctly.");
+    assert.equal(view.pageLede("solana", "es"), "");
+    assert.equal(view.pageLede("base", "es").includes("SPL"), false);
+    assert.equal(view.pageLede("base", "es").includes("Token-2022"), false);
+    assert.equal(view.pageLede("base", "es"), "Cualquier token ERC-20 de Base, leído en directo y solo en lectura. Las fichas de abajo son ejemplos fechados, no una lista completa. Elige la red. En Base la lectura es solo lectura: sin cartera y sin firma.");
+    assert.equal(view.pageLede("base", "en"), "Any ERC-20 token on Base, read live and read-only. The cards below are dated examples, not a complete list. Choose the network. On Base the reading is read-only: no wallet and no signature.");
+    const cuaderno = readFileSync(path.join(repoRoot(), "web/v2/assets/cuaderno.js"), "utf8");
+    assert.match(cuaderno, /Es la dirección cero: no es la dirección de ningún token\./);
+    assert.match(cuaderno, /This is the zero address: it is not a token address\./);
+    assert.match(cuaderno, /Las mayúsculas y minúsculas de la dirección no cuadran\. Revisa que esté bien copiada\./);
+    assert.match(cuaderno, /The upper and lower case letters in this address do not match\. Check that it was copied correctly\./);
     assert.equal(evm.normalizeEvmAddress(USDC), USDC.toLowerCase());
     assert.equal(evm.normalizeEvmAddress(USDC.toLowerCase()), USDC.toLowerCase());
     assert.equal(evm.normalizeEvmAddress(USDC.toUpperCase()), USDC.toLowerCase());

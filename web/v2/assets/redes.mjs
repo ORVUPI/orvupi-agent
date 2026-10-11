@@ -3,9 +3,10 @@
  * Solana sigue el camino de siempre. Base (y luego otras redes EVM)
  * usa el lector genérico. Encender una red es un campo en networks.json.
  */
-import { EVM_MAX_BODY, readCappedText, readEvmToken, resetEvmClientLimit } from "../shared/evm-read.js";
+import { EVM_MAX_BODY, normalizeEvmAddress, readCappedText, readEvmToken, resetEvmClientLimit } from "../shared/evm-read.js";
 import {
   fillNetworkSelect,
+  pageLede,
   paintChecks,
   paintEvmResult,
   privacyText,
@@ -41,9 +42,36 @@ function pageLang() {
   return lang();
 }
 
+let solanaLede = null;
+
+function syncLede(id) {
+  const lede = document.querySelector("main .lede");
+  if (!lede) return;
+  const es = lede.querySelector(".lang.es");
+  const en = lede.querySelector(".lang.en");
+  if (!solanaLede) {
+    solanaLede = { es: es ? es.textContent : "", en: en ? en.textContent : "" };
+  }
+  const nextEs = id === "solana" ? solanaLede.es : pageLede(id, "es");
+  const nextEn = id === "solana" ? solanaLede.en : pageLede(id, "en");
+  if (es && nextEs) es.textContent = nextEs;
+  if (en && nextEn) en.textContent = nextEn;
+}
+
+function syncSolanaHelp(id) {
+  const hide = id !== "solana";
+  for (const link of document.querySelectorAll(".ayuda-terminos a")) {
+    const href = link.getAttribute("href") || "";
+    if (href !== "/aprender/#autoridad-emision" && href !== "/aprender/#curva-pump") continue;
+    link.hidden = hide;
+  }
+}
+
 function paintChrome() {
   const id = networkId();
   const language = pageLang();
+  syncLede(id);
+  syncSolanaHelp(id);
   const checks = document.getElementById("comprobaciones-red");
   paintChecks(checks, id, language);
   const notice = document.getElementById("aviso-rpc-base");
@@ -87,7 +115,9 @@ async function browserTransport(endpoint, body, timeoutMs, signal) {
 }
 
 function cacheKey(id, address) {
-  return `${id}:${String(address || "").toLowerCase()}`;
+  const normalized = normalizeEvmAddress(address);
+  if (!normalized) return "";
+  return `${id}:${normalized}`;
 }
 
 function saySaved(card) {
@@ -203,14 +233,14 @@ async function consult(force) {
   const fieldError = document.getElementById("direccion-error");
   if (fieldError) fieldError.hidden = true;
   const key = cacheKey(id, raw);
-  if (!force) {
+  if (key && !force) {
     const hit = cache.get(key);
     if (hit && Date.now() - hit.at < CACHE_MS) {
       lastReading = hit.reading;
       paint(hit.reading);
       return;
     }
-  } else {
+  } else if (key) {
     cache.delete(key);
   }
   if (controller) controller.abort();
@@ -239,7 +269,7 @@ async function consult(force) {
     lastReading = result.reading ? { ...result.reading, reason: result.reason } : result.reading;
     const facts = lastReading && lastReading.facts ? Object.values(lastReading.facts) : [];
     const allFailed = facts.length > 0 && facts.every((fact) => fact.status === "fallo");
-    if (result.reason === "invalid" || (result.reason === "leido" && !allFailed)) {
+    if (key && result.reason === "leido" && !allFailed) {
       cache.set(key, { at: Date.now(), reading: lastReading });
     }
     paint(lastReading);

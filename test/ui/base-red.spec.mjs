@@ -235,6 +235,79 @@ test("Verify en Base lee USDC, un token sin owner, un proxy, una cuenta, una dir
   await expect(page.locator("#resultado")).toContainText(/consulta fallida|failed query/, { timeout: 20000 });
 });
 
+const BAD_CHECKSUM = "0x833589fCd6eDb6E08f4c7C32D4f71b54bdA02913";
+const ZERO = `0x${"0".repeat(40)}`;
+const ZERO_ES = "Es la dirección cero: no es la dirección de ningún token.";
+const ZERO_EN = "This is the zero address: it is not a token address.";
+const CHECK_ES = "Las mayúsculas y minúsculas de la dirección no cuadran. Revisa que esté bien copiada.";
+const CHECK_EN = "The upper and lower case letters in this address do not match. Check that it was copied correctly.";
+const LEDE_BASE_ES = "Cualquier token ERC-20 de Base, leído en directo y solo en lectura. Las fichas de abajo son ejemplos fechados, no una lista completa. Elige la red. En Base la lectura es solo lectura: sin cartera y sin firma.";
+const LEDE_BASE_EN = "Any ERC-20 token on Base, read live and read-only. The cards below are dated examples, not a complete list. Choose the network. On Base the reading is read-only: no wallet and no signature.";
+
+test("un checksum mal no comparte caché con USDC", async ({ page }) => {
+  const rpc = await mockRpc(page);
+  await chooseBase(page);
+  await page.locator("#direccion-token").fill(BAD_CHECKSUM);
+  await page.locator("#consulta").locator("button[type=submit]").click();
+  await expect(page.locator("#resultado")).toContainText(CHECK_ES);
+  await expect(page.locator("#resultado")).not.toContainText("USD Coin");
+  expect(rpc.calls()).toBe(0);
+
+  await page.locator("#direccion-token").fill(USDC);
+  await page.locator("#consulta").locator("button[type=submit]").click();
+  await expect(page.locator("#resultado")).toContainText("USD Coin", { timeout: 20000 });
+  await expect(page.locator("#resultado")).not.toContainText(CHECK_ES);
+  const afterUsdc = rpc.calls();
+  expect(afterUsdc).toBeGreaterThan(0);
+
+  await page.locator("#direccion-token").fill(BAD_CHECKSUM);
+  await page.locator("#consulta").locator("button[type=submit]").click();
+  await expect(page.locator("#resultado")).toContainText(CHECK_ES);
+  await expect(page.locator("#resultado")).not.toContainText("USD Coin");
+  expect(rpc.calls()).toBe(afterUsdc);
+});
+
+test("en Base la entradilla no habla de SPL y se ocultan Permiso de emisión y Curva", async ({ page }) => {
+  await page.goto("/verify/");
+  await expect(page.locator("main .lede .lang.es")).toContainText("Cualquier token SPL o Token-2022");
+  await expect(page.locator('a[href="/aprender/#autoridad-emision"]')).toBeVisible();
+  await expect(page.locator('a[href="/aprender/#curva-pump"]')).toBeVisible();
+  await expect(page.locator('a[href="/aprender/#direccion"]')).toBeVisible();
+  await page.locator("#red").selectOption("base");
+  await expect(page.locator("main .lede .lang.es")).toHaveText(LEDE_BASE_ES);
+  await expect(page.locator("main .lede")).not.toContainText("SPL");
+  await expect(page.locator("main .lede")).not.toContainText("Token-2022");
+  await expect(page.locator('a[href="/aprender/#autoridad-emision"]')).toBeHidden();
+  await expect(page.locator('a[href="/aprender/#curva-pump"]')).toBeHidden();
+  await expect(page.locator('a[href="/aprender/#direccion"]')).toBeVisible();
+  await expect(page.locator('a[href="/aprender/#guia-identificar"]')).toBeVisible();
+  await page.locator("[data-set-lang='en']").click();
+  await expect(page.locator("main .lede .lang.en")).toHaveText(LEDE_BASE_EN);
+  await page.locator("#direccion-token").fill(ZERO);
+  await page.locator("#consulta").locator("button[type=submit]").click();
+  await expect(page.locator("#resultado")).toContainText(ZERO_EN);
+  await expect(page.locator("#resultado")).not.toContainText("does not have this network's shape");
+  await page.locator("#direccion-token").fill(BAD_CHECKSUM);
+  await page.locator("#consulta").locator("button[type=submit]").click();
+  await expect(page.locator("#resultado")).toContainText(CHECK_EN);
+  await page.locator("#direccion-token").fill("0x123");
+  await page.locator("#consulta").locator("button[type=submit]").click();
+  await expect(page.locator("#resultado")).toContainText("That address does not have this network's shape");
+  await expect(page.locator("#resultado")).not.toContainText(ZERO_EN);
+  await expect(page.locator("#resultado")).not.toContainText("do not match");
+  await page.locator("[data-set-lang='es']").click();
+  await page.locator("#direccion-token").fill(ZERO);
+  await page.locator("#consulta").locator("button[type=submit]").click();
+  await expect(page.locator("#resultado")).toContainText(ZERO_ES);
+  await page.locator("#direccion-token").fill(BAD_CHECKSUM);
+  await page.locator("#consulta").locator("button[type=submit]").click();
+  await expect(page.locator("#resultado")).toContainText(CHECK_ES);
+  await page.locator("#red").selectOption("solana");
+  await expect(page.locator("main .lede .lang.es")).toContainText("Cualquier token SPL o Token-2022");
+  await expect(page.locator('a[href="/aprender/#autoridad-emision"]')).toBeVisible();
+  await expect(page.locator('a[href="/aprender/#curva-pump"]')).toBeVisible();
+});
+
 test("el cuaderno guarda la red y la dirección de Base", async ({ page }) => {
   await mockRpc(page);
   await page.goto("/cuaderno/");

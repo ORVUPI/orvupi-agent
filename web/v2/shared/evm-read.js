@@ -126,17 +126,25 @@ function checksumAddress(body) {
   return out;
 }
 
-export function normalizeEvmAddress(value) {
+function parsedEvmAddress(value) {
   const trimmed = typeof value === "string" ? value.trim() : "";
   const raw = /^0X/.test(trimmed) ? `0x${trimmed.slice(2)}` : trimmed;
-  if (!ADDRESS.test(raw)) return "";
+  if (!ADDRESS.test(raw)) return { fault: "forma", address: "" };
   const body = raw.slice(2);
   const lower = `0x${body.toLowerCase()}`;
-  if (lower === ZERO_ADDRESS) return "";
+  if (lower === ZERO_ADDRESS) return { fault: "cero", address: "" };
   const letters = body.replace(/[0-9]/g, "");
   const mixed = letters.length > 0 && letters !== letters.toLowerCase() && letters !== letters.toUpperCase();
-  if (mixed && raw !== checksumAddress(body.toLowerCase())) return "";
-  return lower;
+  if (mixed && raw !== checksumAddress(body.toLowerCase())) return { fault: "checksum", address: "" };
+  return { fault: "", address: lower };
+}
+
+export function evmAddressFault(value) {
+  return parsedEvmAddress(value).fault;
+}
+
+export function normalizeEvmAddress(value) {
+  return parsedEvmAddress(value).address;
 }
 
 export function evmBodyCap(endpoint) {
@@ -377,7 +385,8 @@ export async function readEvmToken(input) {
   const networkId = input && input.networkId;
   const network = networkById(networkId);
   const consultedAt = input && typeof input.now === "function" ? input.now().toISOString() : new Date().toISOString();
-  const address = normalizeEvmAddress(input && input.address);
+  const parsed = parsedEvmAddress(input && input.address);
+  const address = parsed.address;
   const base = {
     network: network ? network.id : String(networkId || ""),
     address,
@@ -394,7 +403,10 @@ export async function readEvmToken(input) {
   } catch {
     return { ok: false, reason: "red", reading: base };
   }
-  if (!address) return { ok: false, reason: "invalid", reading: base };
+  if (!address) {
+    const reason = parsed.fault === "cero" || parsed.fault === "checksum" ? parsed.fault : "invalid";
+    return { ok: false, reason, reading: base };
+  }
   const limit = input && Number.isInteger(input.limit) ? input.limit : EVM_CLIENT_LIMIT;
   const windowMs = input && Number.isInteger(input.windowMs) ? input.windowMs : EVM_CLIENT_WINDOW_MS;
   const atMs = input && typeof input.now === "function" ? input.now().getTime() : Date.now();

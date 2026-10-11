@@ -15,6 +15,8 @@ const COPY = {
     title: (net) => `Lectura en ${net}`,
     intro: "Esta lectura pregunta al contrato y anota lo que respondió. No dice si conviene hacer algo con el token.",
     invalid: "Esa dirección no tiene la forma de esta red: empieza por 0x y sigue con 40 letras o números hexadecimales. No se ha consultado el nodo.",
+    zero: "Es la dirección cero: no es la dirección de ningún token.",
+    checksum: "Las mayúsculas y minúsculas de la dirección no cuadran. Revisa que esté bien copiada.",
     limit: "Se han hecho 6 lecturas en un minuto. Espera un momento antes de comprobar otra. No se ha inventado un resultado.",
     down: "El nodo público no respondió. Cada dato que no llegó queda como consulta fallida. Prueba otra vez en un minuto.",
     partial: "La lectura está incompleta. Lo que falta no se ha puesto a cero.",
@@ -48,6 +50,8 @@ const COPY = {
     title: (net) => `Reading on ${net}`,
     intro: "This reading asks the contract and writes down what it answered. It does not say whether any action with the token is advisable.",
     invalid: "That address does not have this network's shape: it starts with 0x and continues with 40 hexadecimal letters or numbers. The node was not queried.",
+    zero: "This is the zero address: it is not a token address.",
+    checksum: "The upper and lower case letters in this address do not match. Check that it was copied correctly.",
     limit: "6 readings were made in one minute. Wait a moment before checking another. No result was invented.",
     down: "The public node did not respond. Each fact that did not arrive stays a failed query. Try again in a minute.",
     partial: "The reading is incomplete. What is missing was not filled in with zero.",
@@ -85,6 +89,24 @@ function languageOf(lang) {
 
 function copy(lang) {
   return COPY[languageOf(lang)];
+}
+
+export function invalidSupport(reason, lang) {
+  const text = copy(lang);
+  if (reason === "cero") return text.zero;
+  if (reason === "checksum") return text.checksum;
+  return text.invalid;
+}
+
+export function pageLede(networkId, lang) {
+  if (networkId === "solana") return "";
+  const language = languageOf(lang);
+  const network = networkById(networkId);
+  const label = network ? network.label[language] : networkId;
+  if (language === "en") {
+    return `Any ERC-20 token on ${label}, read live and read-only. The cards below are dated examples, not a complete list. Choose the network. On ${label} the reading is read-only: no wallet and no signature.`;
+  }
+  return `Cualquier token ERC-20 de ${label}, leído en directo y solo en lectura. Las fichas de abajo son ejemplos fechados, no una lista completa. Elige la red. En ${label} la lectura es solo lectura: sin cartera y sin firma.`;
 }
 
 export function evmCardFromReading(reading) {
@@ -171,9 +193,9 @@ export function describeEvm(reading, lang) {
   const noneAsked = states.every((state) => state === "no_consultado");
   let headline = text.title(netLabel);
   let support = text.intro;
-  if (reading && reading.reason === "invalid") {
+  if (reading && (reading.reason === "invalid" || reading.reason === "cero" || reading.reason === "checksum")) {
     headline = language === "en" ? "Not queried" : "No consultado";
-    support = text.invalid;
+    support = invalidSupport(reading.reason, language);
   } else if (reading && reading.reason === "limite") {
     headline = language === "en" ? "Could not be checked" : "No se pudo comprobar";
     support = text.limit;

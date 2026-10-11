@@ -76,6 +76,8 @@ const COPY = {
     blocked: "Otra pestaña tiene el cuaderno abierto. Ciérrala y recarga. No borres el cuaderno.",
     versionChange: "El cuaderno se actualizó en otra pestaña. Recarga esta página.",
     evmInvalid: "Esa dirección no tiene la forma de esta red: empieza por 0x y sigue con 40 letras o números hexadecimales. No se ha consultado el nodo.",
+    evmZero: "Es la dirección cero: no es la dirección de ningún token.",
+    evmChecksum: "Las mayúsculas y minúsculas de la dirección no cuadran. Revisa que esté bien copiada.",
     noteFail: "La nota tiene que ser texto, de hasta 2000 caracteres, y no puede ser un script.",
     noteOk: "Nota guardada. Sigue separada de los datos de la cadena.",
     compareNeed: "Elige dos consultas distintas.",
@@ -175,6 +177,8 @@ const COPY = {
     blocked: "Another tab has the notebook open. Close it and reload. Do not delete the notebook.",
     versionChange: "The notebook was updated in another tab. Reload this page.",
     evmInvalid: "That address does not have this network's shape: it starts with 0x and continues with 40 hexadecimal letters or numbers. The node was not queried.",
+    evmZero: "This is the zero address: it is not a token address.",
+    evmChecksum: "The upper and lower case letters in this address do not match. Check that it was copied correctly.",
     noteFail: "The note must be text, at most 2000 characters, and it cannot be a script.",
     noteOk: "Note saved. It stays separate from the chain data.",
     compareNeed: "Choose two different queries.",
@@ -805,8 +809,9 @@ async function readOtherNetwork(address) {
     });
     const box = document.getElementById("resultado");
     const reading = { ...result.reading, reason: result.reason };
-    if (result.reason === "invalid") {
-      showMessage(t("evmInvalid"), "error");
+    if (result.reason === "invalid" || result.reason === "cero" || result.reason === "checksum") {
+      const rejectKey = result.reason === "cero" ? "evmZero" : result.reason === "checksum" ? "evmChecksum" : "evmInvalid";
+      showMessage(t(rejectKey), "error");
       if (box) paintEvmResult(box, reading, lang(), null);
       return;
     }

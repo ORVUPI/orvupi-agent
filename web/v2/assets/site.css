@@ -1553,6 +1553,7 @@ footer.site::before {
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
   gap: 0.75rem;
 }
+.ayuda-terminos a[hidden] { display: none !important; }
 .ayuda-terminos a {
   display: flex;
   align-items: center;
