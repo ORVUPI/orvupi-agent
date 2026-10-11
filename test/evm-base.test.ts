@@ -396,8 +396,10 @@ describe("lectura EVM en Base", () => {
     assert.equal(view.pageLede("solana", "es"), "");
     assert.equal(view.pageLede("base", "es").includes("SPL"), false);
     assert.equal(view.pageLede("base", "es").includes("Token-2022"), false);
-    assert.equal(view.pageLede("base", "es"), "Cualquier token ERC-20 de Base, leído en directo y solo en lectura. Las fichas de abajo son ejemplos fechados, no una lista completa. Elige la red. En Base la lectura es solo lectura: sin cartera y sin firma.");
-    assert.equal(view.pageLede("base", "en"), "Any ERC-20 token on Base, read live and read-only. The cards below are dated examples, not a complete list. Choose the network. On Base the reading is read-only: no wallet and no signature.");
+    assert.equal(view.pageLede("base", "es"), "Cualquier token ERC-20 de Base, leído en directo y solo en lectura. Las fichas de abajo son ejemplos fechados, no una lista completa. Elige la red. En Base no hay cartera ni firma.");
+    assert.equal(view.pageLede("base", "en"), "Any ERC-20 token on Base, read live and read-only. The cards below are dated examples, not a complete list. Choose the network. On Base there is no wallet and no signature.");
+    assert.equal((view.pageLede("base", "es").match(/solo(?: en)? lectura/g) || []).length, 1);
+    assert.equal((view.pageLede("base", "en").match(/read-only/g) || []).length, 1);
     const cuaderno = readFileSync(path.join(repoRoot(), "web/v2/assets/cuaderno.js"), "utf8");
     assert.match(cuaderno, /Es la dirección cero: no es la dirección de ningún token\./);
     assert.match(cuaderno, /This is the zero address: it is not a token address\./);

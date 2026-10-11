@@ -542,6 +542,10 @@ describe("web v2", () => {
     assert.match(html, /2026-10-09/);
     assert.match(html, /USD Coin/);
     assert.match(html, /No es una auditoría, ni una recomendación, ni un aval/);
+    assert.match(html, /Que no aparezcan señales no significa que esté todo comprobado\./);
+    assert.match(html, /No signals showing does not mean everything was checked\./);
+    assert.equal(html.includes("no significa que no haya riesgo"), false);
+    assert.equal(html.includes("does not mean there is no risk"), false);
     assert.match(html, /Solo si pulsas «Guardar esta consulta»/);
     assert.equal(html.includes("Esta página no consulta la red"), false);
     assert.equal(html.includes("\uFFFD"), false);

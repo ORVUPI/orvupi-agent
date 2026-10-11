@@ -241,8 +241,8 @@ const ZERO_ES = "Es la dirección cero: no es la dirección de ningún token.";
 const ZERO_EN = "This is the zero address: it is not a token address.";
 const CHECK_ES = "Las mayúsculas y minúsculas de la dirección no cuadran. Revisa que esté bien copiada.";
 const CHECK_EN = "The upper and lower case letters in this address do not match. Check that it was copied correctly.";
-const LEDE_BASE_ES = "Cualquier token ERC-20 de Base, leído en directo y solo en lectura. Las fichas de abajo son ejemplos fechados, no una lista completa. Elige la red. En Base la lectura es solo lectura: sin cartera y sin firma.";
-const LEDE_BASE_EN = "Any ERC-20 token on Base, read live and read-only. The cards below are dated examples, not a complete list. Choose the network. On Base the reading is read-only: no wallet and no signature.";
+const LEDE_BASE_ES = "Cualquier token ERC-20 de Base, leído en directo y solo en lectura. Las fichas de abajo son ejemplos fechados, no una lista completa. Elige la red. En Base no hay cartera ni firma.";
+const LEDE_BASE_EN = "Any ERC-20 token on Base, read live and read-only. The cards below are dated examples, not a complete list. Choose the network. On Base there is no wallet and no signature.";
 
 test("un checksum mal no comparte caché con USDC", async ({ page }) => {
   const rpc = await mockRpc(page);
