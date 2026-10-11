@@ -2,8 +2,9 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { repoRootFromMeta } from "../paths.js";
 import { AUDIT_EN, AUDIT_ES, DISCLAIMER, DISCLAIMER_EN, DRAFT_LINE, HOW_LAB, HOW_VERIFY, OFFLINE_LINE, PRIVACY_EN, PRIVACY_ES, READONLY_LINE, UNKNOWN_LINE } from "../copy.js";
-import { loadGlossary, loadMission } from "../mission/load.js";
-import type { CardSummary, GlossaryEntry, Localized, Mission, MissionStep } from "../mission/types.js";
+import { ENTENDER_BUTTON, ENTENDER_LINKS } from "../mission/entender-links.js";
+import { loadGlossary, loadLessons, loadMission } from "../mission/load.js";
+import type { CardSummary, GlossaryEntry, Lesson, Localized, Mission, MissionStep } from "../mission/types.js";
 import { changelogHeadings, listTestFiles, loadBoard } from "../tablero/collect.js";
 import type { BoardFile, TaskRecord, TaskStatus } from "../tablero/collect.js";
 import { authorityWords, type DisplayCard } from "../display-copy.js";
@@ -325,26 +326,61 @@ function guideSection(repoRoot: string): string {
     .join("");
 }
 
+function entenderBlock(topics: readonly string[]): string {
+  const chosen = topics
+    .map((id) => ENTENDER_LINKS.find((item) => item.id === id))
+    .filter((item): item is (typeof ENTENDER_LINKS)[number] => Boolean(item));
+  if (chosen.length === 0) return "";
+  const label = `${ENTENDER_BUTTON.es} / ${ENTENDER_BUTTON.en}`;
+  if (chosen.length === 1) {
+    const only = chosen[0];
+    if (!only) return "";
+    return `<nav class="entender-resultado" aria-label="${escapeHtml(label)}"><a class="abrir-entender" href="${escapeHtml(only.href)}">${both(ENTENDER_BUTTON)}</a><p data-tema="${escapeHtml(only.id)}">${both(only.explain)}</p></nav>`;
+  }
+  const explains = chosen
+    .map(
+      (item) =>
+        `<p data-tema="${escapeHtml(item.id)}">${both(item.explain)}</p><a href="${escapeHtml(item.href)}" data-guia="${escapeHtml(item.href)}">${both({ es: item.es, en: item.en })}</a>`,
+    )
+    .join("");
+  return `<nav class="entender-resultado" aria-label="${escapeHtml(label)}"><p class="entender-rotulo">${both(ENTENDER_BUTTON)}</p><div class="explicacion-resultado">${explains}</div></nav>`;
+}
+
+function renderLesson(lesson: Lesson, byMint: Map<string, CardSummary>, glossaryById: Map<string, GlossaryEntry>): string {
+  const steps = lesson.steps
+    .map((step, index) => staticStep(step, index, lesson.steps.length, byMint, glossaryById))
+    .join("");
+  return `<article class="leccion" id="${escapeHtml(lesson.id)}"><h3>${both(lesson.title)}</h3><p>${both(lesson.intro)}</p><div class="leccion-app" data-leccion="${escapeHtml(lesson.id)}"></div><div class="leccion-estatica"><p class="nota">${both({ es: "Sin JavaScript se pueden leer las preguntas y la corrección. El progreso local necesita el script de esta misma carpeta.", en: "Without JavaScript the questions and the correction can still be read. Local progress needs the script in this same folder." })}</p>${entenderBlock(lesson.entender)}${steps}<p>${both(lesson.closing)}</p></div></article>`;
+}
+
 function renderLab(repoRoot: string, cards: readonly CardSummary[], mission: Mission, options: RenderOptions): string {
   const byMint = new Map(cards.map((card) => [card.mint, card]));
   const glossary = loadGlossary(repoRoot);
   const glossaryById = new Map(glossary.entries.map((entry) => [entry.id, entry]));
+  const lessons = loadLessons(repoRoot);
   const staticSteps = mission.steps.map((step, index) => staticStep(step, index, mission.steps.length, byMint, glossaryById)).join("");
   const terms = glossary.entries.map((entry) => glossaryArticle(entry)).join("");
   const revision = JSON.parse(readFileSync(path.join(repoRoot, "lab/library/revision.json"), "utf8")) as {
     enStatus: string;
     enStatusEn?: string;
   };
-  const main = `<h1>${both(mission.title)}</h1>
-<p class="lede">${both(mission.intro)}</p>
+  const index = lessons
+    .map((lesson) => `<a href="#${escapeHtml(lesson.id)}">${both(lesson.title)}</a>`)
+    .join("");
+  const lessonHtml = lessons.map((lesson) => renderLesson(lesson, byMint, glossaryById)).join("");
+  const main = `<h1>${both({ es: "Lecciones cortas con fichas reales", en: "Short lessons with real cards" })}</h1>
+<p class="lede">${both({ es: "Tres lecciones para empezar, con fichas de Verify del 2026-10-09, y la misión de cinco pasos. Si no aciertas, puedes volver a intentar. El progreso se queda en este navegador. No dice qué hacer con un token.", en: "Three lessons to start with, using Verify cards from 2026-10-09, and the five-step mission. If you miss, you can try again. Progress stays in this browser. It does not say what to do with a token." })}</p>
+<section class="lecciones" id="lecciones"><h2>${both({ es: "Para empezar", en: "Start here" })}</h2><nav class="lecciones-indice" aria-label="${escapeHtml("Lecciones / Lessons")}">${index}<a href="#mision-titulo">${both({ es: "Misión de cinco pasos", en: "Five-step mission" })}</a></nav>${lessonHtml}</section>
 ${howDetails(HOW_LAB)}
+<h2 id="mision-titulo" class="mision-titulo">${both(mission.title)}</h2>
+<p class="mision-intro">${both(mission.intro)}</p>
 <div id="mision-app" data-mission="${escapeHtml(mission.id)}"></div>
 <div class="estatica" id="mision-estatica"><p class="nota">${both({ es: "Sin JavaScript se pueden leer los pasos, las explicaciones y la biblioteca. El progreso local necesita el script de esta misma carpeta.", en: "Without JavaScript the steps, explanations, and library can still be read. Local progress needs the script in this same folder." })}</p>${staticSteps}</div>
 <details class="biblioteca-extra" id="biblioteca"><summary>${both({ es: "Para quien quiera más detalle", en: "For anyone who wants more detail" })}</summary><h2>${both({ es: "Biblioteca", en: "Library" })}</h2><p><a href="/aprender/">${both({ es: "Biblioteca para cualquier token", en: "Library for any token" })}</a></p><p class="muted">${both({ es: revision.enStatus, en: revision.enStatusEn || revision.enStatus })}</p><div class="fichas">${terms}</div><h2>${both({ es: "Guías", en: "Guides" })}</h2><div class="fichas">${guideSection(repoRoot)}</div></details>
 <dialog id="ayuda" aria-labelledby="ayuda-titulo"><h2 id="ayuda-titulo"></h2><div id="ayuda-cuerpo"></div><form method="dialog"><button type="submit" id="ayuda-cerrar">${both({ es: "Cerrar", en: "Close" })}</button></form></dialog>`;
   return shell({
-    title: "STUBX Lab · misión 1 · borrador",
-    description: "Misión educativa para distinguir un mint del registro de un clon, con fichas del 2026-10-08.",
+    title: "STUBX Lab · lecciones · borrador",
+    description: "Tres lecciones cortas con fichas de Verify del 2026-10-09, y una misión para distinguir un mint del registro de un clon.",
     prefix: "../",
     current: "lab",
     main,

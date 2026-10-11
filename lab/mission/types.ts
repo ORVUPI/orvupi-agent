@@ -36,6 +36,10 @@ export type Mission = {
   steps: MissionStep[];
 };
 
+export type Lesson = Mission & {
+  entender: string[];
+};
+
 export type Progress = {
   version: 1;
   missionId: string;

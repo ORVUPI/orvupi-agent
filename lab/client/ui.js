@@ -121,14 +121,77 @@ function el(tag, attrs) {
   return node;
 }
 
+function entenderItems(mission) {
+  var ids = mission.entender;
+  if (!ids || !ids.length) return [];
+  var catalog = STUBX_LAB.entender || [];
+  var items = [];
+  ids.forEach(function (id) {
+    for (var i = 0; i < catalog.length; i += 1) {
+      if (catalog[i].id === id) items.push(catalog[i]);
+    }
+  });
+  return items;
+}
+
+function entenderGuide(item, lang) {
+  var paragraph = el("p");
+  paragraph.dataset.tema = item.id;
+  paragraph.textContent = (item.explain && item.explain[lang]) || "";
+  var guide = el("a", { href: item.href });
+  guide.dataset.guia = item.href;
+  guide.textContent = item[lang] || item.es;
+  return { paragraph: paragraph, guide: guide };
+}
+
+function entenderNav(mission, lang) {
+  var items = entenderItems(mission);
+  if (!items.length) return null;
+  var nav = el("nav", { class: "entender-resultado" });
+  var titleText = lang === "en" ? "Understand this result" : "Entender este resultado";
+  nav.setAttribute("aria-label", titleText);
+  if (items.length === 1) {
+    var only = entenderGuide(items[0], lang);
+    var link = el("a", { class: "abrir-entender", href: items[0].href });
+    link.textContent = titleText;
+    nav.append(link, only.paragraph);
+    return nav;
+  }
+  var panel = el("div", { class: "explicacion-resultado" });
+  panel.hidden = true;
+  panel.tabIndex = -1;
+  items.forEach(function (item) {
+    var parts = entenderGuide(item, lang);
+    panel.append(parts.paragraph, parts.guide);
+  });
+  var button = el("button", { type: "button", class: "abrir-entender" });
+  button.textContent = titleText;
+  button.setAttribute("aria-expanded", "false");
+  button.addEventListener("click", function () {
+    panel.hidden = false;
+    button.setAttribute("aria-expanded", "true");
+    panel.focus();
+  });
+  nav.append(button, panel);
+  return nav;
+}
+
 function bootLab() {
-  var root = document.getElementById("mision-app");
-  if (!root) return;
-  var mission = STUBX_LAB.mission;
+  var missionRoot = document.getElementById("mision-app");
+  if (missionRoot && STUBX_LAB.mission) mountQuiz(missionRoot, STUBX_LAB.mission, STORAGE_KEY);
+  var lessons = STUBX_LAB.lessons || [];
+  for (var n = 0; n < lessons.length; n += 1) {
+    var lesson = lessons[n];
+    var node = document.querySelector('[data-leccion="' + lesson.id + '"]');
+    if (node) mountQuiz(node, lesson, lessonStorageKey(lesson.id));
+  }
+}
+
+function mountQuiz(root, mission, storageKey) {
   var lang = document.documentElement.getAttribute("data-lang") === "en" ? "en" : "es";
   var stored = null;
   try {
-    stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    stored = JSON.parse(localStorage.getItem(storageKey) || "null");
   } catch (error) {
     stored = null;
   }
@@ -146,7 +209,7 @@ function bootLab() {
 
   function save() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+      localStorage.setItem(storageKey, JSON.stringify(progress));
       saveError = false;
     } catch (error) {
       saveError = true;
@@ -267,9 +330,13 @@ function bootLab() {
     var button = el("button", { type: "button", class: "secondary" });
     button.textContent = lang === "en" ? "Delete local progress" : "Borrar progreso local";
     button.addEventListener("click", function () {
-      var question = lang === "en"
-        ? "Delete the local progress of this mission in this browser?"
-        : "¿Borrar el progreso local de esta misión en este navegador?";
+      var question = mission.id.indexOf("leccion-") === 0
+        ? (lang === "en"
+          ? "Delete the local progress of this lesson in this browser?"
+          : "¿Borrar el progreso local de esta lección en este navegador?")
+        : (lang === "en"
+          ? "Delete the local progress of this mission in this browser?"
+          : "¿Borrar el progreso local de esta misión en este navegador?");
       if (!window.confirm(question)) return;
       progress = resetProgress(mission, lang);
       banner = null;
@@ -282,6 +349,8 @@ function bootLab() {
 
   function render() {
     root.replaceChildren();
+    var understand = entenderNav(mission, lang);
+    if (understand) root.append(understand);
     var total = mission.steps.length;
     var nav = el("ol", { class: "pasos" });
     mission.steps.forEach(function (step, index) {
@@ -371,9 +440,10 @@ function bootLab() {
       var close = el("p");
       close.textContent = mission.closing[lang];
       var dated = el("p");
+      var cardDate = mission.cardDate || STUBX_LAB.cardDate;
       dated.textContent = lang === "en"
-        ? "The cards are from " + STUBX_LAB.cardDate + ". Unknown is not the same as verified."
-        : "Las fichas son del " + STUBX_LAB.cardDate + ". Lo desconocido no es lo mismo que lo comprobado.";
+        ? "The cards are from " + cardDate + ". Unknown is not the same as verified."
+        : "Las fichas son del " + cardDate + ". Lo desconocido no es lo mismo que lo comprobado.";
       done.setAttribute("data-live-step", "resultado");
       done.append(close, dated, restartButton(), resetButton());
       root.append(done);

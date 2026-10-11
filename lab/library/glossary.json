@@ -242,6 +242,86 @@
         "es": "Una comisión no identifica el mint, no convierte la cantidad virtual de la curva en un saldo retirable y no es un resultado prometido.",
         "en": "A fee does not identify the mint, does not turn the virtual curve amount into a withdrawable balance, and is not a promised result."
       }
+    },
+    {
+      "id": "moneda-estable",
+      "term": { "es": "Moneda estable", "en": "Stablecoin" },
+      "means": {
+        "es": "Un token pensado para seguir una moneda de curso. En estas fichas, USDC es el ejemplo. STUBX es un meme: no tiene esa función.",
+        "en": "A token meant to follow a currency. On these cards, USDC is the example. STUBX is a meme: it does not have that role."
+      },
+      "example": {
+        "es": "El 2026-10-09, USDC tiene la emisión y la congelación activas. STUBX las tiene cerradas. El mismo permiso no se lee igual en los dos.",
+        "en": "On 2026-10-09, USDC has mint and freeze permissions active. STUBX has them closed. The same permission is not read the same way on both."
+      },
+      "doesNotConclude": {
+        "es": "No dice qué hacer con el token. Un permiso activo en USDC no es una acusación, y uno cerrado en STUBX no es una garantía.",
+        "en": "It does not say what to do with the token. An active permission on USDC is not an accusation, and a closed one on STUBX is not a guarantee."
+      }
+    },
+    {
+      "id": "cuenta-tecnica",
+      "term": { "es": "Cuenta técnica y pool", "en": "Technical account and pool" },
+      "means": {
+        "es": "Una cuenta técnica es la de un programa, como la curva. Un pool es la cuenta donde un programa de intercambio guarda tokens. Ninguna de las dos es la cuenta de una persona.",
+        "en": "A technical account belongs to a program, such as the curve. A pool is the account where an exchange program holds tokens. Neither one is a person's account."
+      },
+      "example": {
+        "es": "En STUBX, el 2026-10-09, 3shQFExQ3rpFL6GaXPRQNTMYazVHmTvRfuazfv62toAE es la cuenta de la curva, con el 98,6122 %. complete es falso: no es un pool.",
+        "en": "On STUBX, on 2026-10-09, 3shQFExQ3rpFL6GaXPRQNTMYazVHmTvRfuazfv62toAE is the curve account, with 98.6122%. complete is false: it is not a pool."
+      },
+      "doesNotConclude": {
+        "es": "Un saldo alto no convierte esa cuenta en una persona. Que no sea un pool no dice qué hacer con el token.",
+        "en": "A large balance does not turn that account into a person. Not being a pool does not say what to do with the token."
+      }
+    },
+    {
+      "id": "consulta-fallida",
+      "term": { "es": "Consulta fallida", "en": "Failed query" },
+      "means": {
+        "es": "Se pidió el dato y el servicio no dejó una respuesta usable. No es un cero y no es una ausencia.",
+        "en": "The fact was asked for and the service left no usable answer. It is not a zero and it is not an absence."
+      },
+      "example": {
+        "es": "USDC, el 2026-10-09, pidió getTokenLargestAccounts y recibió HTTP 429. La muestra queda no disponible.",
+        "en": "USDC, on 2026-10-09, asked for getTokenLargestAccounts and got HTTP 429. The sample stays unavailable."
+      },
+      "doesNotConclude": {
+        "es": "No se rellena con cero ni se dice que no existan cuentas.",
+        "en": "It is not filled in with zero, and it does not say that accounts do not exist."
+      }
+    },
+    {
+      "id": "ausente-comprobado",
+      "term": { "es": "Ausente comprobado", "en": "Confirmed absent" },
+      "means": {
+        "es": "Se pidió el dato, la respuesta llegó y el dato no está. No es un fallo del servicio.",
+        "en": "The fact was asked for, the answer arrived, and the fact is not there. It is not a service failure."
+      },
+      "example": {
+        "es": "En STUBX, el 2026-10-09, la cuenta de metadatos de Metaplex se consultó. El estado es verificado y el valor está vacío: no hay esa cuenta.",
+        "en": "On STUBX, on 2026-10-09, the Metaplex metadata account was queried. The status is verified and the value is empty: that account is not there."
+      },
+      "doesNotConclude": {
+        "es": "No es un HTTP 429 ni un dato que esta lectura olvidó pedir.",
+        "en": "It is not an HTTP 429, and it is not a fact this reading forgot to ask for."
+      }
+    },
+    {
+      "id": "no-consultado",
+      "term": { "es": "No consultado", "en": "Not queried" },
+      "means": {
+        "es": "Esta lectura no pidió ese dato. No es un fallo ni una ausencia.",
+        "en": "This reading did not ask for that fact. It is not a failure and it is not an absence."
+      },
+      "example": {
+        "es": "La ficha de STUBX del 2026-10-09 lee tres cuentas y no pide el ranking de getTokenLargestAccounts. El máximo fuera de la muestra no se calcula.",
+        "en": "The STUBX card from 2026-10-09 reads three accounts and does not ask for the getTokenLargestAccounts ranking. The maximum outside the sample is not calculated."
+      },
+      "doesNotConclude": {
+        "es": "No se convierte en cero ni en la consulta fallida de otra ficha.",
+        "en": "It does not become zero, and it does not become the failed query on another card."
+      }
     }
   ]
 }

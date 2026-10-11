@@ -4,6 +4,8 @@ Borrador. No está publicado en stubxai.com y no pide autorización para existir
 
 La misión 1, «Cómo detectar un token clon en 5 pasos», lee las fichas de `verify/examples/2026-10-08/`. No vuelve a consultar la red. El progreso se guarda solo en el navegador (`localStorage`, clave `stubx-lab-mision-01`). Se puede borrar. No es un certificado y no tiene valor.
 
+Tres lecciones cortas, en `mission/lecciones.json`, usan las fichas del 2026-10-09: permisos, reparto y datos que faltan. Cada una tiene preguntas con corrección y el enlace «Entender este resultado». El progreso de cada lección usa su propia clave: `stubx-lab-leccion-permisos`, `stubx-lab-leccion-reparto` y `stubx-lab-leccion-huecos`.
+
 `/verify` pide una dirección y responde en una frase: parece la oficial, se parece a STUBX pero no es la CA oficial, o no se pudo comprobar. Una dirección que no parece válida, o una lectura que no está disponible, tienen su propio mensaje. No llama a la red.
 
 ## Qué hay

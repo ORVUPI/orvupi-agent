@@ -3,8 +3,9 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { repoRootFromMeta } from "../paths.js";
 import { presentCard } from "../display-copy.js";
-import { loadCards, loadFuentes, loadGlossary, loadMission } from "../mission/load.js";
-import { validateMission } from "../mission/validate.js";
+import { ENTENDER_LINKS } from "../mission/entender-links.js";
+import { loadCards, loadFuentes, loadGlossary, loadLessons, loadMission } from "../mission/load.js";
+import { validateLessons, validateMission } from "../mission/validate.js";
 import { renderCss } from "./css.js";
 import { bundleMission, bundleVerify } from "./bundle.js";
 import { inlineModule } from "./inline.js";
@@ -15,8 +16,9 @@ export function buildOutputs(repoRoot: string, options: { publish?: boolean } = 
   const fuentes = loadFuentes(repoRoot);
   const cards = loadCards(repoRoot, fuentes).map((card) => presentCard(card));
   const mission = loadMission(repoRoot);
+  const lessons = loadLessons(repoRoot);
   const glossary = loadGlossary(repoRoot);
-  const issues = validateMission(mission, glossary, cards);
+  const issues = [...validateMission(mission, glossary, cards), ...validateLessons(lessons, glossary, cards)];
   if (issues.length > 0) {
     throw new Error(issues.join("\n"));
   }
@@ -55,6 +57,8 @@ export function buildOutputs(repoRoot: string, options: { publish?: boolean } = 
   );
   const missionJs = bundleMission(readFileSync(enginePath, "utf8"), readFileSync(uiPath, "utf8"), {
     mission,
+    lessons,
+    entender: ENTENDER_LINKS,
     cards: byMint,
     glossary: glossary.entries,
     cardDate: mission.cardDate,

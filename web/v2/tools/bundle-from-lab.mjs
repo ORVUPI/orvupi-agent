@@ -116,6 +116,7 @@ copyFileSync(verifyBundle, path.join(root, "web/v2/assets/verify.js"));
 copyFileSync(missionBundle, path.join(root, "web/v2/assets/mission.js"));
 copyFileSync(path.join(root, "site-drafts/lab/sw.js"), path.join(root, "web/v2/lab/sw.js"));
 copyFileSync(path.join(root, "lab/mission/mision-01.json"), path.join(root, "web/v2/modules/lab/mision-01.json"));
+copyFileSync(path.join(root, "lab/mission/lecciones.json"), path.join(root, "web/v2/modules/lab/lecciones.json"));
 copyFileSync(path.join(root, "lab/tablero/registros.json"), path.join(root, "web/v2/modules/tablero/registros.json"));
 copyFileSync(path.join(root, "lab/tablero/plantilla.json"), path.join(root, "web/v2/modules/tablero/plantilla.json"));
 copyFileSync(path.join(root, "lab/library/glossary.json"), path.join(root, "web/v2/modules/lab/glossary.json"));
