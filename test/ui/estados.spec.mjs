@@ -71,7 +71,9 @@ for (const mint of [STUBX, USDC]) {
     const rpc = await mockRpc(page);
     await readMint(page, mint);
     await expect(page.locator("#resultado")).toContainText(/Hay 1 tokens/);
-    await expect(page.locator("#resultado")).toContainText(/ausente comprobado|No falta/);
+    await expect(page.locator("#resultado")).toContainText(/No hay metadatos en esta lectura|No falta/);
+    await expect(page.locator("#resultado")).not.toContainText("ausente comprobado");
+    await expect(page.locator("#resultado")).not.toContainText("isMutable");
     const okMissing = await page.locator("[data-bloque='falta']").innerText();
     expect(okMissing).not.toMatch(/ausente comprobado/);
     await expect(page.locator(".resumen-datos")).toHaveCount(0);
@@ -91,7 +93,9 @@ for (const mint of [STUBX, USDC]) {
 
     rpc.set("ausente");
     await readMint(page, mint);
-    await expect(page.locator("#resultado")).toContainText(/ausente comprobado|no existe/i);
+    await expect(page.locator("#resultado")).toContainText(/no existe/i);
+    await expect(page.locator("#resultado")).not.toContainText("ausente comprobado");
+    await expect(page.locator("#resultado")).not.toContainText("isMutable");
     if (mint !== STUBX) await expect(page.locator(".franja-identidad")).toContainText(STUBX);
   });
 }
