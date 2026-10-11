@@ -658,7 +658,10 @@ export function renderHeaders(): string {
   ];
   const selfCsp =
     "Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
-  const verifyCsp = selfCsp.replace("connect-src 'self'", `connect-src 'self' ${rpcOrigins().join(" ")}`);
+  const verifyCsp = selfCsp.replace(
+    "connect-src 'self'",
+    `connect-src 'self' ${rpcOrigins().join(" ")} https://api.dexscreener.com`,
+  );
   const blocks: Array<[string, string]> = [
     ["/verify/*", verifyCsp],
     ["/verify/index.html", verifyCsp],

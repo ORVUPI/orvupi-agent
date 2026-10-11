@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, test } from "node:test";
 import { pathToFileURL } from "node:url";
@@ -22,6 +22,8 @@ type Pair = {
   pairAddress: string;
   base: string;
   quote: string;
+  baseMint: string;
+  quoteMint: string;
   liquidityUsd: number | null;
   volumeUsd: number | null;
   volumeWindow: string | null;
@@ -44,6 +46,8 @@ type MarketModule = {
   MARKET_SOURCE_NAME: string;
   MARKET_MAX_BODY: number;
   MARKET_TIMEOUT_MS: number;
+  MARKET_CLIENT_LIMIT: number;
+  MARKET_CLIENT_WINDOW_MS: number;
   MARKET_LOW_USD: number;
   MARKET_OFFICIAL_MINT: string;
   MARKET_ATTRIBUTION: { es: string; en: string };
@@ -52,10 +56,15 @@ type MarketModule = {
   isSolanaMint: (value: string) => boolean;
   normalizeUpstream: (status: number, body: string, meta: { mint: string; queriedAt: string }) => Model;
   acceptClientPayload: (value: unknown, mint: string) => Model;
+  marketUpstreamUrl: (mint: string) => string;
+  resetMarketClientLimit: () => void;
   loadMarket: (
     mint: string,
-    fetchImpl: (url: string, init?: RequestInit) => Promise<{ status: number; text: () => Promise<string> }>,
-    now?: { timeoutMs?: number; now?: () => Date },
+    fetchImpl: (
+      url: string,
+      init?: MarketInit,
+    ) => Promise<{ status: number; text?: () => Promise<string>; body?: { getReader: () => Reader } }>,
+    now?: { timeoutMs?: number; now?: () => Date; takeSlot?: () => boolean },
   ) => Promise<Model>;
   describeMarket: (model: Model, lang: string) => {
     title: string;
@@ -74,24 +83,14 @@ type MarketModule = {
   marketFailure: (mint: string, queriedAt: string, reason: string) => Model;
 };
 
-type ProxyModule = {
-  handleMarketGet: (input: {
-    method: string;
-    requestUrl: string;
-    now: () => Date;
-    timeoutMs?: number;
-    fetchImpl: (
-      url: string,
-      init?: { method?: string; redirect?: string; headers?: Record<string, string>; signal?: AbortSignal },
-    ) => Promise<{ status: number; text?: () => Promise<string>; body?: { getReader: () => Reader } }>;
-    takeSlot?: () => boolean;
-    readCache?: (mint: string) => Promise<string | null>;
-    writeCache?: (mint: string, body: string) => Promise<void>;
-  }) => Promise<{ status: number; body: string; headers: Record<string, string>; cacheable: boolean }>;
-  marketUpstreamUrl: (mint: string) => string;
-  MARKET_CACHE_SECONDS: number;
-  MARKET_RATE_LIMIT: number;
-  MARKET_RATE_WINDOW_MS: number;
+type MarketInit = {
+  method?: string;
+  credentials?: string;
+  referrerPolicy?: string;
+  cache?: string;
+  redirect?: string;
+  headers?: Record<string, string>;
+  signal?: AbortSignal | null;
 };
 
 type Reader = {
@@ -101,10 +100,6 @@ type Reader = {
 
 async function loadMarketModule(): Promise<MarketModule> {
   return (await import(pathToFileURL(path.join(repoRoot(), "web/v2/shared/market-read.js")).href)) as MarketModule;
-}
-
-async function loadProxy(): Promise<ProxyModule> {
-  return (await import(pathToFileURL(path.join(repoRoot(), "web/v2/shared/market-proxy.js")).href)) as ProxyModule;
 }
 
 function upstreamPair(overrides: Record<string, unknown> = {}) {
@@ -170,6 +165,7 @@ describe("datos de mercado", () => {
     assert.equal(text.includes(STAMP_ES), true);
     assert.equal(view.pairs[0]?.liquidity.includes(STAMP_ES), true);
     assert.equal(view.pairs[0]?.volume.includes(STAMP_ES), true);
+    assert.match(view.pairs[0]?.title ?? "", /Par: Dice llamarse «USDC» \/ Dice llamarse «SOL»/);
     assert.match(text, /Liquidez: 50\.000,25 USD/);
     assert.match(text, /Volumen en 24 horas: 1\.200,5 USD/);
     assert.equal(text.includes("Una cifra en dólares"), false);
@@ -224,10 +220,11 @@ describe("datos de mercado", () => {
     assert.equal(market.describeMarket(missingPage, "es").retry, true);
 
     const paused = market.normalizeUpstream(429, "slow down", { mint: MINT, queriedAt: WHEN });
-    assert.equal(paused.status, "limite");
-    assert.equal(paused.reason, "pausa-fuente");
+    assert.equal(paused.status, "fallo");
+    assert.equal(paused.reason, "http");
     assert.equal(paused.pairs, null);
-    assert.match(market.describeMarket(paused, "es").gap, /pidió una pausa/);
+    assert.equal(market.describeMarket(paused, "es").gap, "No se pudo consultar.");
+    assert.equal(market.describeMarket(paused, "es").retry, true);
 
     const down = market.normalizeUpstream(500, "<html>no</html>", { mint: MINT, queriedAt: WHEN });
     assert.equal(down.status, "fallo");
@@ -264,127 +261,129 @@ describe("datos de mercado", () => {
     assert.equal(swapped.pairs, null);
 
     let seen = "";
-    const loaded = await market.loadMarket(MINT, async (url) => {
-      seen = url;
-      return { status: 404, text: async () => "<html>missing</html>" };
-    });
-    assert.equal(seen, `/api/market?mint=${MINT}`);
+    let initSeen: MarketInit | undefined;
+    const loaded = await market.loadMarket(
+      MINT,
+      async (url, init) => {
+        seen = url;
+        initSeen = init;
+        return { status: 404, text: async () => "<html>missing</html>" };
+      },
+      { takeSlot: () => true, now: () => new Date(WHEN) },
+    );
+    assert.equal(seen, `https://api.dexscreener.com/token-pairs/v1/solana/${encodeURIComponent(MINT)}`);
+    assert.equal(seen.includes("?"), false);
+    assert.equal(initSeen?.credentials, "omit");
+    assert.equal(initSeen?.referrerPolicy, "no-referrer");
+    assert.equal(initSeen?.cache, "no-store");
+    assert.equal(initSeen?.redirect, "manual");
+    assert.deepEqual(initSeen?.headers, { accept: "application/json" });
     assert.equal(loaded.status, "fallo");
     assert.equal(loaded.pairs, null);
     assert.equal(market.describeMarket(loaded, "es").gap.includes("0 USD"), false);
-  });
 
-  test("el proxy no consulta si el mint no vale, si hay caché o si el cupo del sitio está lleno", async () => {
-    const { handleMarketGet, marketUpstreamUrl } = await loadProxy();
-    const now = () => new Date(WHEN);
     let fetches = 0;
-    const fetchImpl = async (url: string, init?: { redirect?: string }) => {
+    const skipped = await market.loadMarket("no-es-mint", async () => {
       fetches += 1;
-      assert.equal(url, `https://api.dexscreener.com/token-pairs/v1/solana/${MINT}`);
-      assert.equal(init?.redirect, "manual");
-      return { status: 302, text: async () => "" };
-    };
-    const bad = await handleMarketGet({
-      method: "GET",
-      requestUrl: "https://stubxai.com/api/market?mint=no-es-mint",
-      now,
-      fetchImpl,
+      return { status: 200, text: async () => "[]" };
     });
-    assert.equal(bad.status, 400);
     assert.equal(fetches, 0);
-    assert.equal(JSON.parse(bad.body).reason, "mint");
-    assert.equal(JSON.parse(bad.body).pairs, null);
-
-    const cached = await handleMarketGet({
-      method: "GET",
-      requestUrl: `https://stubxai.com/api/market?mint=${MINT}`,
-      now,
-      fetchImpl,
-      takeSlot: () => {
-        throw new Error("la caché no debe gastar cupo");
-      },
-      readCache: async () =>
-        JSON.stringify({
-          schema: "stubx.market.v1",
-          status: "ok",
-          reason: "leido",
-          mint: MINT,
-          sourceName: "DEX Screener",
-          queriedAt: WHEN,
-          pairs: [
-            {
-              dex: "raydium",
-              pairAddress: PAIR,
-              base: "USDC",
-              quote: "SOL",
-              liquidityUsd: 12,
-              volumeUsd: 3,
-              volumeWindow: "h24",
-              usdFigure: "1.0001",
-              priceUsd: "1.0001",
-            },
-          ],
-          omitted: 0,
-          priceUsd: "9",
-        }),
-    });
-    assert.equal(cached.status, 200);
-    assert.equal(fetches, 0);
-    priceFree(JSON.parse(cached.body));
-    assert.equal(JSON.parse(cached.body).pairs[0].liquidityUsd, 12);
-
-    const limited = await handleMarketGet({
-      method: "GET",
-      requestUrl: `https://stubxai.com/api/market?mint=${MINT}`,
-      now,
-      fetchImpl,
-      takeSlot: () => false,
-      readCache: async () => null,
-    });
-    assert.equal(limited.status, 429);
-    assert.equal(fetches, 0);
-    assert.equal(JSON.parse(limited.body).reason, "pausa-sitio");
-    assert.equal(JSON.parse(limited.body).pairs, null);
-
-    const redirected = await handleMarketGet({
-      method: "GET",
-      requestUrl: `https://stubxai.com/api/market?mint=${MINT}`,
-      now,
-      fetchImpl,
-      takeSlot: () => true,
-      readCache: async () => null,
-    });
-    assert.equal(fetches, 1);
-    assert.equal(redirected.status, 502);
-    assert.equal(JSON.parse(redirected.body).status, "fallo");
-    assert.equal(marketUpstreamUrl("no"), "");
-    assert.equal(marketUpstreamUrl(MINT).startsWith("https://api.dexscreener.com/token-pairs/v1/solana/"), true);
+    assert.equal(skipped.reason, "mint");
+    assert.equal(market.marketUpstreamUrl("no"), "");
+    assert.equal(market.marketUpstreamUrl(MINT), `https://api.dexscreener.com/token-pairs/v1/solana/${MINT}`);
   });
 
-  test("la función y la vista no reenvían cabeceras, no abren CORS y no interpretan HTML externo", () => {
+  test("un 429 y el cupo del navegador van a Qué falta, y la caché no repite la consulta", async () => {
+    const market = await loadMarketModule();
+    const paused = await market.loadMarket(
+      MINT,
+      async () => ({ status: 429, text: async () => "[]" }),
+      { takeSlot: () => true, now: () => new Date(WHEN) },
+    );
+    assert.equal(paused.status, "fallo");
+    assert.equal(paused.reason, "http");
+    assert.equal(paused.pairs, null);
+    const pausedView = market.describeMarket(paused, "es");
+    assert.equal(pausedView.gapTitle, "Qué falta");
+    assert.equal(pausedView.gap, "No se pudo consultar.");
+    assert.equal(pausedView.retry, true);
+
+    let fetches = 0;
+    const blocked = await market.loadMarket(
+      MINT,
+      async () => {
+        fetches += 1;
+        return { status: 200, text: async () => "[]" };
+      },
+      { takeSlot: () => false, now: () => new Date(WHEN) },
+    );
+    assert.equal(fetches, 0);
+    assert.equal(blocked.status, "fallo");
+    assert.equal(blocked.reason, "pausa-navegador");
+    const blockedView = market.describeMarket(blocked, "es");
+    assert.equal(blockedView.gapTitle, "Qué falta");
+    assert.match(blockedView.gap, /Este navegador hizo una pausa/);
+    assert.equal(blockedView.retry, true);
+
+    market.resetMarketClientLimit();
+    assert.equal(market.MARKET_CLIENT_LIMIT, 6);
+    assert.ok(market.MARKET_CLIENT_LIMIT < 10);
+    assert.equal(market.MARKET_CLIENT_WINDOW_MS, 60_000);
+    let calls = 0;
+    const okFetch = async () => {
+      calls += 1;
+      return { status: 200, text: async () => JSON.stringify([upstreamPair()]) };
+    };
+    for (let i = 0; i < market.MARKET_CLIENT_LIMIT; i += 1) {
+      const model = await market.loadMarket(MINT, okFetch, { now: () => new Date(WHEN) });
+      assert.equal(model.status, "ok");
+    }
+    const over = await market.loadMarket(MINT, okFetch, { now: () => new Date(WHEN) });
+    assert.equal(calls, market.MARKET_CLIENT_LIMIT);
+    assert.equal(over.reason, "pausa-navegador");
+    const later = await market.loadMarket(MINT, okFetch, { now: () => new Date(Date.parse(WHEN) + 60_000) });
+    assert.equal(later.status, "ok");
+    assert.equal(calls, market.MARKET_CLIENT_LIMIT + 1);
+    market.resetMarketClientLimit();
+
+    const viewSource = readFileSync(path.join(repoRoot(), "web/v2/shared/market-view.js"), "utf8");
+    assert.match(viewSource, /const CACHE_MS = 60_000/);
+  });
+
+  test("la vista consulta DEX Screener en el navegador y la CSP solo abre ese origen donde hace falta", () => {
     const root = repoRoot();
-    const fn = readFileSync(path.join(root, "web/v2/functions/api/market.js"), "utf8");
-    const proxy = readFileSync(path.join(root, "web/v2/shared/market-proxy.js"), "utf8");
+    assert.equal(existsSync(path.join(root, "web/v2/functions/api/market.js")), false);
+    assert.equal(existsSync(path.join(root, "web/v2/shared/market-proxy.js")), false);
+    assert.equal(existsSync(path.join(root, "web/v2/functions")), false);
     const view = readFileSync(path.join(root, "web/v2/shared/market-view.js"), "utf8");
+    const read = readFileSync(path.join(root, "web/v2/shared/market-read.js"), "utf8");
     const headers = readFileSync(path.join(root, "web/v2/_headers"), "utf8");
     const verify = readFileSync(path.join(root, "web/v2/verify/index.html"), "utf8");
-    for (const source of [fn, proxy]) {
-      assert.equal(source.includes("request.headers"), false);
-      assert.equal(source.includes("CF-Connecting-IP"), false);
-      assert.equal(source.includes("Access-Control-Allow-Origin"), false);
-    }
+    const notebookHtml = readFileSync(path.join(root, "web/v2/cuaderno/index.html"), "utf8");
+    const pares = readFileSync(path.join(root, "web/v2/pares/index.html"), "utf8");
     assert.equal(view.includes("innerHTML"), false);
     assert.equal(view.includes("insertAdjacentHTML"), false);
-    assert.equal(headers.includes("dexscreener"), false);
-    assert.equal(verify.includes("dexscreener"), false);
+    assert.equal(read.includes("/api/market"), false);
+    assert.equal(read.includes("x-forwarded-for"), false);
+    assert.equal(read.includes("user-agent"), false);
+    assert.match(read, /credentials:\s*"omit"/);
+    assert.match(read, /referrerPolicy:\s*"no-referrer"/);
+    assert.match(read, /cache:\s*"no-store"/);
+    assert.match(read, /encodeURIComponent\(mint\)/);
+    assert.equal(read.includes("*.dexscreener"), false);
+    assert.equal(headers.includes("*.dexscreener"), false);
+    const globalCsp = headers.split("/*")[1]?.split("\n\n")[0] ?? "";
+    assert.equal(globalCsp.includes("dexscreener"), false);
     assert.match(headers, /connect-src 'self'/);
-    assert.equal(proxy.includes("x-forwarded-for"), false);
-    assert.equal(proxy.includes("X-Forwarded-For"), false);
-    assert.equal(proxy.includes("user-agent"), false);
-    assert.equal(proxy.includes("User-Agent"), false);
-    assert.match(proxy, /headers:\s*\{\s*accept:\s*"application\/json"\s*\}/);
-    const read = readFileSync(path.join(root, "web/v2/shared/market-read.js"), "utf8");
-    for (const source of [fn, proxy, view, read, readFileSync(path.join(root, "web/v2/assets/verify.js"), "utf8")]) {
+    for (const html of [verify, notebookHtml]) {
+      const meta = html.match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
+      assert.equal((meta.match(/connect-src/g) ?? []).length, 1);
+      assert.match(meta, /connect-src 'self' https:\/\/solana-rpc\.publicnode\.com https:\/\/api\.mainnet-beta\.solana\.com https:\/\/api\.dexscreener\.com;/);
+      assert.equal(meta.includes("*"), false);
+    }
+    const paresMeta = pares.match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
+    assert.equal(paresMeta.includes("dexscreener"), false);
+    for (const source of [view, read, readFileSync(path.join(root, "web/v2/assets/verify.js"), "utf8")]) {
       assert.equal(source.includes("priceUsd"), false);
       assert.equal(source.includes("usdFigure"), false);
       assert.equal(source.includes("Una cifra en dólares"), false);
@@ -434,8 +433,25 @@ describe("datos de mercado", () => {
     assert.equal(kept.status, "ok");
     assert.equal(kept.pairs?.length, 1);
     assert.equal(kept.pairs?.[0]?.base, "STUBX");
+    assert.equal(kept.pairs?.[0]?.baseMint, OFFICIAL);
     assert.equal(kept.pairs?.[0]?.liquidityUsd, 40);
-    assert.equal(market.describeMarket(kept, "es").pairs[0]?.title.includes("Dice llamarse"), false);
+    const officialTitle = market.describeMarket(kept, "es").pairs[0]?.title ?? "";
+    assert.equal(officialTitle.includes("Dice llamarse «STUBX»"), false);
+    assert.match(officialTitle, /^Par: STUBX \/ Dice llamarse «SOL»$/);
+
+    const spaced = market.normalizeUpstream(
+      200,
+      JSON.stringify([upstreamPair({ baseToken: { symbol: "USDC", address: `${MINT} ` } })]),
+      { mint: MINT, queriedAt: WHEN },
+    );
+    assert.equal(spaced.status, "fallo");
+    assert.equal(spaced.pairs, null);
+    const paddedPair = market.normalizeUpstream(
+      200,
+      JSON.stringify([upstreamPair({ pairAddress: ` ${PAIR}` })]),
+      { mint: MINT, queriedAt: WHEN },
+    );
+    assert.equal(paddedPair.pairs?.[0]?.pairAddress, "");
   });
 
   test("un clon llamado STUBX dice su nombre y clipSymbol quita ancho cero y bidi", async () => {
@@ -457,10 +473,25 @@ describe("datos de mercado", () => {
     assert.equal(clone.pairs?.[0]?.base, "STUBX");
     const title = market.describeMarket(clone, "es").pairs[0]?.title ?? "";
     assert.match(title, /Dice llamarse «STUBX»/);
+    assert.match(title, /Dice llamarse «SOL»/);
     assert.equal(title.includes("\u200B"), false);
     assert.equal(title.includes("\u202E"), false);
     const english = market.describeMarket(clone, "en").pairs[0]?.title ?? "";
     assert.match(english, /It says it is called «STUBX»/);
+    assert.match(english, /It says it is called «SOL»/);
+
+    const otherSide = market.normalizeUpstream(
+      200,
+      JSON.stringify([
+        upstreamPair({
+          baseToken: { symbol: "STUBX", address: OFFICIAL },
+          quoteToken: { symbol: "STUBX", address: CLONE },
+        }),
+      ]),
+      { mint: OFFICIAL, queriedAt: WHEN },
+    );
+    const otherTitle = market.describeMarket(otherSide, "es").pairs[0]?.title ?? "";
+    assert.match(otherTitle, /^Par: STUBX \/ Dice llamarse «STUBX»$/);
   });
 
   test("no ordena por liquidez y avisa si hay poca", async () => {
@@ -488,74 +519,65 @@ describe("datos de mercado", () => {
 
   test("si se agota el tiempo, Qué falta ofrece Reintentar", async () => {
     const market = await loadMarketModule();
-    const loaded = await market.loadMarket(
-      MINT,
-      (_url, init) =>
-        new Promise((_resolve, reject) => {
-          init?.signal?.addEventListener("abort", () => {
-            const error = new Error("aborted");
-            error.name = "AbortError";
-            reject(error);
-          });
-        }),
-      { timeoutMs: 20, now: () => new Date(WHEN) },
-    );
+    const hang = (init?: { signal?: AbortSignal | null }) =>
+      new Promise<never>((_resolve, reject) => {
+        init?.signal?.addEventListener("abort", () => {
+          const error = new Error("aborted");
+          error.name = "AbortError";
+          reject(error);
+        });
+      });
+    const loaded = await market.loadMarket(MINT, (_url, init) => hang(init), {
+      timeoutMs: 20,
+      now: () => new Date(WHEN),
+      takeSlot: () => true,
+    });
     assert.equal(loaded.reason, "tiempo");
     const view = market.describeMarket(loaded, "es");
     assert.equal(view.gapTitle, "Qué falta");
     assert.match(view.gap, /No se pudo consultar/);
     assert.equal(view.retry, true);
-    const { handleMarketGet } = await loadProxy();
-    const paused = await handleMarketGet({
-      method: "GET",
-      requestUrl: `https://stubxai.com/api/market?mint=${MINT}`,
-      now: () => new Date(WHEN),
-      timeoutMs: 20,
-      fetchImpl: (_url, init) =>
-        new Promise((_resolve, reject) => {
-          init?.signal?.addEventListener("abort", () => {
-            const error = new Error("aborted");
-            error.name = "AbortError";
-            reject(error);
-          });
-        }),
-      takeSlot: () => true,
-      readCache: async () => null,
-    });
-    assert.equal(paused.status, 504);
-    assert.equal(JSON.parse(paused.body).reason, "tiempo");
-    const limit = market.describeMarket(market.marketFailure(MINT, WHEN, "pausa-sitio"), "es");
-    assert.equal(limit.gapTitle, "Qué falta");
-    assert.equal(limit.retry, true);
+    const body = await market.loadMarket(
+      MINT,
+      async (_url, init) => ({
+        status: 200,
+        text: () => hang(init),
+      }),
+      { timeoutMs: 20, now: () => new Date(WHEN), takeSlot: () => true },
+    );
+    assert.equal(body.reason, "tiempo");
+    assert.equal(market.describeMarket(body, "es").retry, true);
   });
 
-  test("el proxy corta la descarga, no devuelve el cuerpo crudo y limita muy por debajo de 300 por minuto", async () => {
+  test("el navegador corta la descarga, no conserva el cuerpo crudo y no promete un cupo de todo el sitio", async () => {
     const market = await loadMarketModule();
-    const proxy = await loadProxy();
     assert.equal(market.MARKET_TIMEOUT_MS, 8000);
     assert.equal(market.MARKET_LOW_USD, 1000);
     assert.equal(market.MARKET_OFFICIAL_MINT, OFFICIAL);
     assert.equal(market.MARKET_ATTRIBUTION.es, ACCURACY_ES);
     assert.equal(market.MARKET_ATTRIBUTION.en, ACCURACY_EN);
-    assert.ok(proxy.MARKET_RATE_LIMIT < 300);
-    assert.ok(proxy.MARKET_RATE_LIMIT <= 60);
-    assert.equal(proxy.MARKET_CACHE_SECONDS, 60);
-    assert.equal(proxy.MARKET_RATE_WINDOW_MS, 60_000);
     const aviso = (await import(pathToFileURL(path.join(repoRoot(), "web/v2/shared/aviso-guardar.js")).href)) as {
       AVISO_GUARDAR: { es: string; en: string };
     };
     assert.equal(market.marketPrivacy("es"), aviso.AVISO_GUARDAR.es);
     assert.equal(market.marketPrivacy("en"), aviso.AVISO_GUARDAR.en);
+    const avisoSource = readFileSync(path.join(repoRoot(), "web/v2/shared/aviso-guardar.js"), "utf8");
+    assert.equal(avisoSource.includes("Pendiente de Legal"), false);
+    assert.match(aviso.AVISO_GUARDAR.es, /los nodos públicos de Solana solana-rpc\.publicnode\.com y api\.mainnet-beta\.solana\.com, que también ven tu IP/);
+    assert.match(aviso.AVISO_GUARDAR.en, /the Solana public nodes solana-rpc\.publicnode\.com and api\.mainnet-beta\.solana\.com, which also see your IP/);
+    assert.match(aviso.AVISO_GUARDAR.es, /tu navegador conecta con DEX Screener y este también ve tu IP y la dirección consultada/);
+    assert.match(aviso.AVISO_GUARDAR.en, /your browser connects to DEX Screener and it also sees your IP and the address you look up/);
+    assert.equal(aviso.AVISO_GUARDAR.es.includes("sin reenviar tu IP"), false);
+    assert.equal(aviso.AVISO_GUARDAR.en.includes("without forwarding your IP"), false);
+    const changelog = readFileSync(path.join(repoRoot(), "CHANGELOG.md"), "utf8");
+    const entry = changelog.split("## 2026-10-10")[0] ?? "";
+    assert.equal(/300|cupo del sitio|límite global/i.test(entry), false);
 
     let reads = 0;
     let cancelled = false;
-    const overflow = await proxy.handleMarketGet({
-      method: "GET",
-      requestUrl: `https://stubxai.com/api/market?mint=${MINT}`,
-      now: () => new Date(WHEN),
-      takeSlot: () => true,
-      readCache: async () => null,
-      fetchImpl: async () => ({
+    const overflow = await market.loadMarket(
+      MINT,
+      async () => ({
         status: 200,
         body: {
           getReader() {
@@ -573,30 +595,25 @@ describe("datos de mercado", () => {
           },
         },
       }),
-    });
+      { takeSlot: () => true, now: () => new Date(WHEN) },
+    );
     assert.equal(cancelled, true);
     assert.equal(reads, 2);
-    assert.equal(JSON.parse(overflow.body).reason, "grande");
-    assert.equal(JSON.parse(overflow.body).pairs, null);
+    assert.equal(overflow.reason, "grande");
+    assert.equal(overflow.pairs, null);
 
-    let headerKeys: string[] = [];
-    const ok = await proxy.handleMarketGet({
-      method: "GET",
-      requestUrl: `https://stubxai.com/api/market?mint=${MINT}`,
-      now: () => new Date(WHEN),
-      takeSlot: () => true,
-      readCache: async () => null,
-      fetchImpl: async (_url, init) => {
-        headerKeys = Object.keys(init?.headers ?? {});
+    const ok = await market.loadMarket(
+      MINT,
+      async (_url, init) => {
         assert.equal(init?.headers?.["x-forwarded-for"], undefined);
         assert.equal(init?.headers?.["user-agent"], undefined);
         return { status: 200, text: async () => JSON.stringify([upstreamPair()]) };
       },
-    });
-    assert.deepEqual(headerKeys, ["accept"]);
-    const body = JSON.parse(ok.body);
-    priceFree(body);
-    assert.equal(body.pairs[0].liquidityUsd, 50000.25);
-    assert.equal(body.pairs[0].volumeUsd, 1200.5);
+      { takeSlot: () => true, now: () => new Date(WHEN) },
+    );
+    priceFree(ok);
+    assert.equal(ok.pairs?.[0]?.liquidityUsd, 50000.25);
+    assert.equal(ok.pairs?.[0]?.volumeUsd, 1200.5);
+    assert.equal(ok.pairs?.[0]?.baseMint, MINT);
   });
 });

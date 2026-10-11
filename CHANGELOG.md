@@ -3,9 +3,9 @@
 ## 2026-10-11 · Datos de mercado en Verify, solo lectura
 
 - Verify muestra pares, liquidez y volumen de un mint de Solana si el usuario pulsa «Leer datos de mercado ahora». La fuente y la hora de Madrid van junto a cada cifra: «Fuente: DEX Screener · leído el DD-MM-AAAA a las HH:MM (hora de Madrid)». La atribución es «Datos: DEX Screener. Pueden no ser exactos ni estar al día.» No hay precio por token, ni verde ni rojo en las cifras.
-- El navegador llama a `/api/market` en este sitio. Una Pages Function de solo lectura consulta la API pública, devuelve solo los campos procesados, corta la descarga si pasa del tamaño, espera como mucho 8 segundos y guarda una caché de 60 segundos por mint. El cupo del sitio queda muy por debajo de 300 peticiones por minuto. Sin secreto y sin ampliar `connect-src`.
-- Si no hay pares, la consulta falla, se agota el tiempo o la fuente pide una pausa, el bloque «Qué falta» lo dice. Un fallo o una pausa se pueden reintentar. No se rellena con cero. Una liquidez por debajo de 1.000 USD se señala como poca, y que cualquiera puede crear un par.
-- La ficha del cuaderno no guarda esas cifras y no las compara. Se pueden leer aparte, en el momento, con el mismo botón. Un par que no contiene el mint consultado se descarta. Un clon que se llama STUBX se muestra como «Dice llamarse «STUBX»».
+- Al pulsar el botón, el navegador consulta `https://api.dexscreener.com` directamente. No hay proxy ni Pages Function. `connect-src` añade solo ese origen, sin comodines, en `/verify/` y `/cuaderno/`. La caché de 60 segundos por mint, la lista cerrada de campos, el tope de tamaño y los 8 segundos (también mientras se lee el cuerpo) viven en el navegador. Cada navegador se queda en unas pocas peticiones por minuto. Un 429 es un fallo y sale en «Qué falta».
+- Si no hay pares, la consulta falla o se agota el tiempo, el bloque «Qué falta» lo dice. Un fallo se puede reintentar. No se rellena con cero. Una liquidez por debajo de 1.000 USD se señala como poca, y que cualquiera puede crear un par.
+- La ficha del cuaderno no guarda esas cifras y no las compara. Se pueden leer aparte, en el momento, con el mismo botón. Un par cuya dirección no coincide exactamente con el mint, espacios incluidos, se descarta. Todo token que no es el oficial, también el otro lado del par, se muestra como «Dice llamarse «…»». El aviso nombra los nodos públicos de Solana, que también ven la IP, y dice que al pulsar DEX Screener también ve la IP y la dirección consultada.
 
 ## 2026-10-10 · Biblioteca y cuaderno publicados
 

@@ -3,11 +3,13 @@ import { mkdirSync } from "node:fs";
 import { decodeBase58, METADATA_PROGRAM, TOKEN_PROGRAM } from "../../web/v2/shared/solana-read.js";
 
 const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
-const EMPTY = "So11111111111111111111111111111111111111112";
+const SOL = "So11111111111111111111111111111111111111112";
+const EMPTY = SOL;
 const LIMITED = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB";
 const DOWN = "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN";
-const WHEN = "2026-10-11T09:48:00.000Z";
 const PAIR = "58oQChx4yWmvKdwLLZzBi4ChoCc2fqCUWBkwMihLYQo2";
+const STAMP_ES = /Fuente: DEX Screener · leído el \d{2}-\d{2}-\d{4} a las \d{2}:\d{2} \(hora de Madrid\)/;
+const STAMP_EN = /Source: DEX Screener · read \d{2}-\d{2}-\d{4} \d{2}:\d{2} \(Madrid time\)/;
 
 function borsh(value) {
   const body = Buffer.from(value);
@@ -56,32 +58,17 @@ function rpcResult(value) {
   };
 }
 
-function marketModel(status, reason, pairs) {
+function rawPair(mint) {
   return {
-    schema: "stubx.market.v1",
-    status,
-    reason,
-    sourceName: "DEX Screener",
-    sourceHost: "api.dexscreener.com",
-    queriedAt: WHEN,
-    zone: "UTC",
-    pairs,
-    omitted: 0,
+    chainId: "solana",
+    dexId: "raydium",
+    pairAddress: PAIR,
+    baseToken: { symbol: "USDC", address: mint },
+    quoteToken: { symbol: "SOL", address: SOL },
+    priceUsd: "1.0001",
+    liquidity: { usd: 50000.25 },
+    volume: { h24: 1200.5 },
   };
-}
-
-function okBody(mint) {
-  return marketModel("ok", "leido", [
-    {
-      dex: "raydium",
-      pairAddress: PAIR,
-      base: "USDC",
-      quote: "SOL",
-      liquidityUsd: 50000.25,
-      volumeUsd: 1200.5,
-      volumeWindow: "h24",
-    },
-  ]);
 }
 
 test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) => {
@@ -116,22 +103,17 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
   });
 
   let marketCalls = 0;
-  await page.route(/\/api\/market\?mint=/, async (route) => {
+  await page.route(/api\.dexscreener\.com\/token-pairs\/v1\/solana\//, async (route) => {
     marketCalls += 1;
-    const mint = new URL(route.request().url()).searchParams.get("mint");
+    const url = new URL(route.request().url());
+    expect(url.search).toBe("");
+    expect(url.origin).toBe("https://api.dexscreener.com");
+    const mint = decodeURIComponent(url.pathname.slice("/token-pairs/v1/solana/".length));
     if (mint === EMPTY) {
-      return route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ ...marketModel("sin_pares", "vacio", []), mint }),
-      });
+      return route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
     }
     if (mint === LIMITED) {
-      return route.fulfill({
-        status: 429,
-        contentType: "application/json",
-        body: JSON.stringify({ ...marketModel("limite", "pausa-fuente", null), mint, omitted: null }),
-      });
+      return route.fulfill({ status: 429, contentType: "application/json", body: "[]" });
     }
     if (mint === DOWN) {
       return route.fulfill({ status: 502, contentType: "text/html", body: "<html>fallo</html>" });
@@ -139,7 +121,7 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
     return route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify({ ...okBody(mint), mint }),
+      body: JSON.stringify([rawPair(mint)]),
     });
   });
 
@@ -169,7 +151,7 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
   await expect(block).toContainText("Datos: DEX Screener. Pueden no ser exactos ni estar al día.");
   await readMarket.click();
   await expect(block).toContainText("Datos de mercado");
-  await expect(block).toContainText("Fuente: DEX Screener · leído el 11-10-2026 a las 11:48 (hora de Madrid)");
+  await expect(block).toContainText(STAMP_ES);
   await expect(block).toContainText("Liquidez: 50.000,25 USD");
   await expect(block).toContainText("Volumen en 24 horas: 1.200,5 USD");
   await expect(block.locator("[data-hueco='falta']")).toContainText("Qué falta");
@@ -187,7 +169,7 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
   await page.getByRole("button", { name: "English" }).click();
   await expect(block).toContainText("Market data");
   await expect(block).toContainText("Data: DEX Screener. It may be inaccurate or out of date.");
-  await expect(block).toContainText("Source: DEX Screener · read 11-10-2026 11:48 (Madrid time)");
+  await expect(block).toContainText(STAMP_EN);
   await page.getByRole("button", { name: "Español" }).click();
 
   await page.locator("#direccion-token").fill(EMPTY);
@@ -202,7 +184,7 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
   await page.locator("#direccion-token").fill(LIMITED);
   await page.locator("#consulta button[type='submit']").click();
   await block.getByRole("button", { name: "Leer datos de mercado ahora" }).click();
-  await expect(block.locator("[data-falta='si']")).toContainText("pidió una pausa", { timeout: 20_000 });
+  await expect(block.locator("[data-falta='si']")).toContainText("No se pudo consultar", { timeout: 20_000 });
   await expect(block.getByRole("button", { name: "Reintentar" })).toBeVisible();
   await expect(block).not.toContainText("0 USD");
   await shot("pausa");
@@ -222,14 +204,14 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
   await expect(live.getByRole("button", { name: "Leer datos de mercado ahora" })).toBeVisible({ timeout: 20_000 });
   await live.getByRole("button", { name: "Leer datos de mercado ahora" }).click();
   await expect(live).toContainText("Liquidez: 50.000,25 USD", { timeout: 20_000 });
-  await expect(live).toContainText("Fuente: DEX Screener · leído el 11-10-2026 a las 11:48 (hora de Madrid)");
+  await expect(live).toContainText(STAMP_ES);
   await expect(live).toContainText("Datos: DEX Screener. Pueden no ser exactos ni estar al día.");
   const saved = page.locator(".consulta-guardada .datos-mercado").first();
   await expect(saved).toContainText("no se guardan en la ficha");
   await expect(saved.getByRole("button", { name: "Leer datos de mercado ahora" })).toBeVisible();
   await saved.getByRole("button", { name: "Leer datos de mercado ahora" }).click();
   await expect(saved).toContainText("Volumen en 24 horas: 1.200,5 USD");
-  await expect(saved).toContainText("Fuente: DEX Screener · leído el 11-10-2026 a las 11:48 (hora de Madrid)");
+  await expect(saved).toContainText(STAMP_ES);
   await expect(saved).not.toContainText("1,0001");
   if (testInfo.project.name === "desktop" || testInfo.project.name === "mobile") {
     await saved.scrollIntoViewIfNeeded();
@@ -245,6 +227,7 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
     }
   }
 
-  expect(external).toEqual([]);
+  expect(external.length).toBeGreaterThan(0);
+  expect(external.every((url) => url.startsWith("https://api.dexscreener.com/token-pairs/v1/solana/"))).toBe(true);
   expect(pageErrors).toEqual([]);
 });
