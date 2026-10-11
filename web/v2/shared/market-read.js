@@ -246,7 +246,7 @@ function readPair(item, mint, chain) {
   if (!item || typeof item !== "object") return null;
   const evm = chain && chain !== "solana";
   const expected = evm ? (marketNetworkById(chain) && marketNetworkById(chain).dexscreener) || chain : "solana";
-  if (typeof item.chainId === "string" && item.chainId !== expected) return null;
+  if (item.chainId !== expected) return null;
   const baseAddress = tokenAddress(item.baseToken);
   const quoteAddress = tokenAddress(item.quoteToken);
   if (!mint || (!sameMarketAddress(baseAddress, mint, evm) && !sameMarketAddress(quoteAddress, mint, evm))) return null;

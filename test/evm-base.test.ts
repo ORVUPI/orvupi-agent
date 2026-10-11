@@ -243,7 +243,7 @@ describe("lectura EVM en Base", () => {
     assert.match(view.describeEvm({ ...down.reading, reason: down.reason }, "es").support, /consulta fallida|no respondió/);
   });
 
-  test("el límite es de una lectura por consulta, owner cero es ausencia y ethereum sigue apagado", async () => {
+  test("el límite es de una lectura por consulta y owner cero es ausencia", async () => {
     const { evm, view, networks, market, db, model } = await load();
     evm.resetEvmClientLimit();
     const okTransport = async () => ({ status: 200, body: JSON.stringify({ jsonrpc: "2.0", id: 1, result: "0x" }) });
@@ -279,8 +279,9 @@ describe("lectura EVM en Base", () => {
     assert.equal(zero.reading.facts.owner.reason, "cero");
 
     assert.equal(networks.isEnabledNetwork("base"), true);
-    assert.equal(networks.isEnabledNetwork("ethereum"), false);
-    assert.equal(networks.isEnabledNetwork("bnb"), false);
+    assert.equal(networks.isEnabledNetwork("ethereum"), true);
+    assert.equal(networks.isEnabledNetwork("bnb"), true);
+    assert.deepEqual(networks.enabledNetworks().map((item: { id: string }) => item.id), ["solana", "base", "ethereum", "bnb"]);
     assert.equal(networks.DEFAULT_NETWORK, "solana");
     const baseChecks = networks.checksFor("base");
     assert.equal(baseChecks.available.some((item: { id: string }) => item.id === "proxy"), true);

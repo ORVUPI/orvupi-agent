@@ -258,6 +258,11 @@ describe("datos de mercado", () => {
     const otherChain = market.normalizeUpstream(200, JSON.stringify([upstreamPair({ chainId: "ethereum" })]), { mint: MINT, queriedAt: WHEN });
     assert.equal(otherChain.status, "fallo");
     assert.equal(otherChain.pairs, null);
+    const bare = { ...upstreamPair() } as Record<string, unknown>;
+    delete bare.chainId;
+    const missingChain = market.normalizeUpstream(200, JSON.stringify([bare]), { mint: MINT, queriedAt: WHEN });
+    assert.equal(missingChain.status, "fallo");
+    assert.equal(missingChain.pairs, null);
 
     const huge = market.normalizeUpstream(200, "x".repeat(market.MARKET_MAX_BODY + 1), { mint: MINT, queriedAt: WHEN });
     assert.equal(huge.status, "fallo");
@@ -396,7 +401,7 @@ describe("datos de mercado", () => {
     for (const html of [verify, notebookHtml]) {
       const meta = html.match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
       assert.equal((meta.match(/connect-src/g) ?? []).length, 1);
-      assert.match(meta, /connect-src 'self' https:\/\/solana-rpc\.publicnode\.com https:\/\/api\.mainnet-beta\.solana\.com https:\/\/mainnet\.base\.org https:\/\/api\.dexscreener\.com;/);
+      assert.match(meta, /connect-src 'self' https:\/\/solana-rpc\.publicnode\.com https:\/\/api\.mainnet-beta\.solana\.com https:\/\/mainnet\.base\.org https:\/\/ethereum-rpc\.publicnode\.com https:\/\/bsc-rpc\.publicnode\.com https:\/\/api\.dexscreener\.com;/);
       assert.equal(meta.includes("*"), false);
     }
     const paresMeta = pares.match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";

@@ -1,7 +1,6 @@
 /**
- * Registro de redes. Solana y Base están encendidas.
- * Ethereum y BNB Chain están en la lista con enabled: false.
- * Encenderlas es cambiar ese campo: el lector EVM y el selector ya las conocen.
+ * Registro de redes. Solana, Base, Ethereum y BNB Chain están encendidas.
+ * El lector EVM, el selector y la CSP leen esta lista.
  */
 import data from "./networks.json" with { type: "json" };
 import { setMarketDirectory } from "./market-read.js";
