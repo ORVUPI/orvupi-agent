@@ -1,0 +1,543 @@
+{
+  "mint": "ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump",
+  "network": "solana",
+  "consultedAt": "2026-10-11T11:00:00.000Z",
+  "summary": {
+    "blocks": [
+      {
+        "id": "comprobado",
+        "heading": {
+          "es": "Qué se comprobó",
+          "en": "What was checked"
+        },
+        "items": [
+          {
+            "title": {
+              "es": "Dato 01",
+              "en": "Fact 01"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 01 de esta consulta.",
+              "en": "Public fact 01 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 02",
+              "en": "Fact 02"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 02 de esta consulta.",
+              "en": "Public fact 02 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 03",
+              "en": "Fact 03"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 03 de esta consulta.",
+              "en": "Public fact 03 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 04",
+              "en": "Fact 04"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 04 de esta consulta.",
+              "en": "Public fact 04 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 05",
+              "en": "Fact 05"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 05 de esta consulta.",
+              "en": "Public fact 05 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 06",
+              "en": "Fact 06"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 06 de esta consulta.",
+              "en": "Public fact 06 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 07",
+              "en": "Fact 07"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 07 de esta consulta.",
+              "en": "Public fact 07 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 08",
+              "en": "Fact 08"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 08 de esta consulta.",
+              "en": "Public fact 08 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 09",
+              "en": "Fact 09"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 09 de esta consulta.",
+              "en": "Public fact 09 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 10",
+              "en": "Fact 10"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 10 de esta consulta.",
+              "en": "Public fact 10 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 11",
+              "en": "Fact 11"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 11 de esta consulta.",
+              "en": "Public fact 11 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 12",
+              "en": "Fact 12"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 12 de esta consulta.",
+              "en": "Public fact 12 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 13",
+              "en": "Fact 13"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 13 de esta consulta.",
+              "en": "Public fact 13 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 14",
+              "en": "Fact 14"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 14 de esta consulta.",
+              "en": "Public fact 14 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 15",
+              "en": "Fact 15"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 15 de esta consulta.",
+              "en": "Public fact 15 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 16",
+              "en": "Fact 16"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 16 de esta consulta.",
+              "en": "Public fact 16 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 17",
+              "en": "Fact 17"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 17 de esta consulta.",
+              "en": "Public fact 17 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 18",
+              "en": "Fact 18"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 18 de esta consulta.",
+              "en": "Public fact 18 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 19",
+              "en": "Fact 19"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 19 de esta consulta.",
+              "en": "Public fact 19 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 20",
+              "en": "Fact 20"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 20 de esta consulta.",
+              "en": "Public fact 20 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 21",
+              "en": "Fact 21"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 21 de esta consulta.",
+              "en": "Public fact 21 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 22",
+              "en": "Fact 22"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 22 de esta consulta.",
+              "en": "Public fact 22 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 23",
+              "en": "Fact 23"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 23 de esta consulta.",
+              "en": "Public fact 23 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 24",
+              "en": "Fact 24"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 24 de esta consulta.",
+              "en": "Public fact 24 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 25",
+              "en": "Fact 25"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 25 de esta consulta.",
+              "en": "Public fact 25 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 26",
+              "en": "Fact 26"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 26 de esta consulta.",
+              "en": "Public fact 26 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 27",
+              "en": "Fact 27"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 27 de esta consulta.",
+              "en": "Public fact 27 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 28",
+              "en": "Fact 28"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 28 de esta consulta.",
+              "en": "Public fact 28 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 29",
+              "en": "Fact 29"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 29 de esta consulta.",
+              "en": "Public fact 29 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 30",
+              "en": "Fact 30"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 30 de esta consulta.",
+              "en": "Public fact 30 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 31",
+              "en": "Fact 31"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 31 de esta consulta.",
+              "en": "Public fact 31 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 32",
+              "en": "Fact 32"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 32 de esta consulta.",
+              "en": "Public fact 32 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 33",
+              "en": "Fact 33"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 33 de esta consulta.",
+              "en": "Public fact 33 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 34",
+              "en": "Fact 34"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 34 de esta consulta.",
+              "en": "Public fact 34 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 35",
+              "en": "Fact 35"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 35 de esta consulta.",
+              "en": "Public fact 35 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 36",
+              "en": "Fact 36"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 36 de esta consulta.",
+              "en": "Public fact 36 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 37",
+              "en": "Fact 37"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 37 de esta consulta.",
+              "en": "Public fact 37 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 38",
+              "en": "Fact 38"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 38 de esta consulta.",
+              "en": "Public fact 38 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 39",
+              "en": "Fact 39"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 39 de esta consulta.",
+              "en": "Public fact 39 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 40",
+              "en": "Fact 40"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 40 de esta consulta.",
+              "en": "Public fact 40 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 41",
+              "en": "Fact 41"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 41 de esta consulta.",
+              "en": "Public fact 41 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 42",
+              "en": "Fact 42"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 42 de esta consulta.",
+              "en": "Public fact 42 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 43",
+              "en": "Fact 43"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 43 de esta consulta.",
+              "en": "Public fact 43 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 44",
+              "en": "Fact 44"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 44 de esta consulta.",
+              "en": "Public fact 44 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 45",
+              "en": "Fact 45"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 45 de esta consulta.",
+              "en": "Public fact 45 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 46",
+              "en": "Fact 46"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 46 de esta consulta.",
+              "en": "Public fact 46 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 47",
+              "en": "Fact 47"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 47 de esta consulta.",
+              "en": "Public fact 47 was read in this query."
+            }
+          },
+          {
+            "title": {
+              "es": "Dato 48",
+              "en": "Fact 48"
+            },
+            "lead": {
+              "es": "Se leyó el dato público 48 de esta consulta.",
+              "en": "Public fact 48 was read in this query."
+            }
+          }
+        ],
+        "empty": {
+          "es": "Ningún dato quedó leído en esta consulta.",
+          "en": "No fact was read in this query."
+        }
+      },
+      {
+        "id": "atencion",
+        "heading": {
+          "es": "Qué requiere atención",
+          "en": "What needs attention"
+        },
+        "items": [
+          {
+            "title": {
+              "es": "Dirección",
+              "en": "Address"
+            },
+            "lead": {
+              "es": "Se parece a STUBX pero no es la dirección oficial.",
+              "en": "It looks like STUBX but it is not the official address."
+            }
+          }
+        ],
+        "empty": {
+          "es": "Ninguna señal de esta lectura pide atención. Que no aparezca no significa que no haya riesgo.",
+          "en": "No signal in this reading needs attention. A signal not showing does not mean there is no risk."
+        }
+      },
+      {
+        "id": "falta",
+        "heading": {
+          "es": "Qué falta",
+          "en": "What is missing"
+        },
+        "items": [],
+        "empty": {
+          "es": "No falta ningún dato pedido en esta lectura.",
+          "en": "No requested fact is missing from this reading."
+        }
+      }
+    ],
+    "note": {
+      "lead": {
+        "es": "Curva de Pump.fun: no aplica",
+        "en": "Pump.fun curve: not applicable"
+      }
+    }
+  }
+}

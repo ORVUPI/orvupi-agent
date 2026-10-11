@@ -1430,9 +1430,67 @@ dd[data-estado="fallo"], dd[data-estado="ausente"], dd[data-estado="no_consultad
   font-weight: 700;
   cursor: pointer;
 }
+.informe-descarga {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.15rem 0 0;
+  padding: 0.85rem 0.9rem;
+  border: 2px dashed var(--pink);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+}
+.informe-titulo {
+  margin: 0;
+  color: var(--pink);
+  font-family: Silkscreen, var(--font);
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+.informe-nota,
+.informe-estado {
+  margin: 0;
+  color: var(--cream);
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+.informe-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+.informe-acciones button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.45rem 0.95rem;
+  border: 2px solid var(--pink);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--cream);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.informe-acciones button[data-formato="png"] {
+  background: var(--pink);
+  color: var(--abyss);
+}
+.informe-acciones button:focus-visible {
+  outline: 3px solid var(--gem);
+  outline-offset: 2px;
+}
+.informe-acciones button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
 @media (max-width: 599px) {
   .resumen-informe { padding: 0.85rem; }
-  .reintentar-resumen { width: 100%; justify-content: center; }
+  .reintentar-resumen,
+  .informe-acciones button { width: 100%; justify-content: center; }
+  .informe-acciones { display: grid; }
 }
 .ficha[data-veredicto="cambio"] { border-left-color: var(--attention); }
 .ficha[data-veredicto="indeterminado"] { border-left-color: var(--line); }

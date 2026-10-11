@@ -82,7 +82,27 @@ function paintSummary(out, view, lang) {
   if (view.light === "espera" || view.kind === "vacio" || view.kind === "invalida" || view.kind === "comprobando") return;
   var live = Array.isArray(view.facts) || view.kind === "red" || view.kind === "limite" || view.kind === "tiempo";
   if (!live) return;
-  renderReadingSummary(out, buildReadingSummary(view), lang, { retryId: "reintentar" });
+  var model = buildReadingSummary(view);
+  var section = renderReadingSummary(out, model, lang, { retryId: "reintentar" });
+  mountReport(section, {
+    summary: model,
+    mint: typeof view.mint === "string" ? view.mint : "",
+    consultedAt: view.shown && typeof view.shown.consultedAt === "string" ? view.shown.consultedAt : (view.fetchedAt || ""),
+    network: "solana",
+  });
+}
+
+var reportTicket = 0;
+function mountReport(section, detail) {
+  if (!section) return;
+  var ticket = ++reportTicket;
+  section.dataset.informe = String(ticket);
+  import("/shared/informe.js").then(function (mod) {
+    if (!section.isConnected || section.dataset.informe !== String(ticket)) return;
+    var previous = section.querySelector(".informe-descarga");
+    if (previous) previous.remove();
+    section.append(mod.reportDownloadBox(detail, { document: document, navigator: navigator }));
+  }).catch(function () {});
 }
 
 function paintVerify(out, view) {
@@ -263,11 +283,14 @@ function bootVerify() {
 
   var generation = 0;
 
-  function datedSignal(cardView) {
+  function datedSignal(cardView, card) {
+    var createdAt = card && typeof card.createdAt === "string" ? card.createdAt.trim() : "";
+    if (!createdAt) return null;
     if (cardView.kind === "oficial") {
       return {
         id: "ficha",
         level: "ok",
+        cardDate: createdAt,
         title: { es: "Ficha fechada", en: "Dated card" },
         explain: {
           es: "Hay una ficha fechada de esta misma dirección. Es una foto anterior, no esta lectura.",
@@ -279,6 +302,7 @@ function bootVerify() {
       return {
         id: "ficha",
         level: "atencion",
+        cardDate: createdAt,
         title: {
           es: "La ficha fechada también dice que se parece a STUBX y no es la CA oficial",
           en: "The dated card also says it looks like STUBX and is not the official CA",
@@ -290,6 +314,7 @@ function bootVerify() {
       return {
         id: "ficha",
         level: "neutro",
+        cardDate: createdAt,
         title: { es: "Hay una ficha fechada y no es la del registro", en: "There is a dated card and it is not the registry one" },
         explain: cardView.support,
       };
@@ -349,7 +374,11 @@ function bootVerify() {
   function decorate(view, normalized) {
     var cardView = classifyAddress(normalized, cards, "lista", evm);
     if (cardView.compare) view.compare = cardView.compare;
-    var extra = datedSignal(cardView);
+    var card = null;
+    for (var i = 0; i < cards.length; i += 1) {
+      if (cards[i] && cards[i].mint === normalized) card = cards[i];
+    }
+    var extra = datedSignal(cardView, card);
     if (extra && view.ok && view.signals) view.signals = view.signals.concat([extra]);
     return view;
   }
