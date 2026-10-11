@@ -376,13 +376,14 @@ def home() -> str:
 <div>
 <p class="kicker">{t("Solana · Pump.fun · Prototipo", "Solana · Pump.fun · Prototype")}</p>
 <p class="motto">{t("No stub, no story", "No stub, no story")}</p>
-<h1>{t("Contrasta la dirección antes de creer el nombre.", "Check the address before you trust the name.")}</h1>
+<h1>{t("Contrasta la dirección antes de creer el nombre.", "Check the address before you believe the name.")}</h1>
 <p class="oferta">{t("Consulta cualquier token de Solana, entiende sus permisos y guarda y compara lecturas.", "Look up any Solana token, understand its permissions, and save and compare readings.")}</p>
 <div class="hero-actions">
 <a class="primary" href="/verify/"><strong>Verify</strong><span class="accion-para">{t("Consultar un token", "Look up a token")}</span></a>
 <a class="primary" href="/lab/"><strong>Lab</strong><span class="accion-para">{t("Distinguir la dirección", "Tell the address apart")}</span></a>
 <a class="primary" href="/cuaderno/"><strong>{t("Cuaderno", "Notebook")}</strong><span class="accion-para">{t("Guardar y comparar", "Save and compare")}</span></a>
 <a href="/studio/">{t("Studio, para crear una imagen", "Studio, to create an image")}</a>
+<a href="/methodology/">{t("Ver la metodología", "Read the methodology")}</a>
 </div>
 <p class="lede">{t("Solo lectura. Sin cuenta. No dice qué comprar.", "Read-only. No account. It does not say what to buy.")}</p>
 </div>
@@ -398,7 +399,7 @@ def home() -> str:
 <h2 id="ejemplo-titulo">{t("Así se ve un resumen", "This is what a summary looks like")}</h2>
 <p class="source">{t("Ejemplo con la ficha oficial releída el 2026-10-09 (commit 86df576). Muestra el nombre y los permisos de esa ficha. No es la lectura en vivo de esta página, no es una puntuación y no es un censo. La cantidad en vivo se abre en Verify, solo en lectura. La PR 14 se fusionó en main el 2026-10-09.", "Example from the official card reread on 2026-10-09 (commit 86df576). It shows the name and the permissions from that card. It is not the live reading on this page, it is not a score, and it is not a census. The live amount opens in Verify, read-only. PR 14 was merged into main on 2026-10-09.")}</p>
 <div class="resumen-informe">
-<h3>{t("Resumen", "Summary")}</h3>
+<h3>{t("Resumen de ejemplo · ficha guardada del 2026-10-09", "Sample summary · saved snapshot from 2026-10-09")}</h3>
 <div class="bloque-resumen" data-bloque="comprobado">
 <div class="cabecera-bloque"><span class="chip-resumen" aria-hidden="true" data-marca="leido"></span><h4>{t("Qué se comprobó", "What was checked")}</h4></div>
 <ul>
@@ -409,6 +410,10 @@ def home() -> str:
 <div class="bloque-resumen" data-bloque="atencion">
 <div class="cabecera-bloque"><span class="chip-resumen" aria-hidden="true" data-marca="atencion"></span><h4>{t("Qué requiere atención", "What needs attention")}</h4></div>
 <p class="punto-vacio">{t("Ninguna señal de esta ficha pide atención. Que no aparezca no significa que no haya riesgo.", "No signal in this card needs attention. One not showing does not mean there is no risk.")}</p>
+</div>
+<div class="bloque-resumen" data-bloque="falta">
+<div class="cabecera-bloque"><span class="chip-resumen" aria-hidden="true" data-marca="falta"></span><h4>{t("Qué falta", "What is missing")}</h4></div>
+<p class="punto-vacio">{t("Este recuadro es un extracto. No trae la lectura completa.", "This box is an excerpt. It does not include the full reading.")}</p>
 </div>
 </div>
 <p>{t("Dos lecturas reales, como ejemplo y no como aval. Al abrirlas, la dirección va en el fragmento y la página la quita del historial.", "Two real readings, as an example and not as an endorsement. When they open, the address is in the fragment and the page removes it from the history.")}</p>

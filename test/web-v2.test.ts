@@ -304,7 +304,8 @@ describe("web v2", () => {
     assert.match(home, /Analyze token/);
     assert.match(home, /No stub, no story/);
     assert.match(home, /Contrasta la dirección antes de creer el nombre\./);
-    assert.match(home, /Check the address before you trust the name\./);
+    assert.match(home, /Check the address before you believe the name\./);
+    assert.equal(home.includes("before you trust"), false);
     assert.match(home, /Consulta cualquier token de Solana, entiende sus permisos y guarda y compara lecturas\./);
     assert.match(home, /Look up any Solana token, understand its permissions, and save and compare readings\./);
     assert.match(home, /<a class="primary" href="\/verify\/"><strong>Verify<\/strong>/);
@@ -329,6 +330,25 @@ describe("web v2", () => {
     assert.match(security, /COMUNIDAD/);
     assert.match(risks, /puedes perder todo lo que aportes/);
     assert.match(risks, /you could lose everything you put in/i);
+  });
+
+  test("el inglés de la portada no avala y el ejemplo nombra la ficha guardada", () => {
+    const home = read("index.html");
+    const hero = home.match(/<div class="hero-actions">[\s\S]*?<\/div>/)?.[0] ?? "";
+    assert.match(hero, /<a class="primary" href="\/lab\/"><strong>Lab<\/strong>/);
+    assert.match(hero, /href="\/methodology\/"/);
+    assert.match(hero, /Ver la metodología/);
+    assert.match(hero, /Read the methodology/);
+    assert.match(home, /<div class="resumen-informe">[\s\S]*<h3>[\s\S]*Resumen de ejemplo · ficha guardada del 2026-10-09/);
+    assert.match(home, /<div class="resumen-informe">[\s\S]*<h3>[\s\S]*Sample summary · saved snapshot from 2026-10-09/);
+    assert.match(home, /data-bloque="falta"[\s\S]*Este recuadro es un extracto\. No trae la lectura completa\./);
+    assert.match(home, /data-bloque="falta"[\s\S]*This box is an excerpt\. It does not include the full reading\./);
+    const english = [...home.matchAll(/lang="en">([^<]*)</g)].map((match) => match[1] ?? "").join("\n");
+    const stripped = english
+      .replaceAll(MICA_EN, "")
+      .replaceAll("It is not advice or a recommendation, and it has not been approved by the CNMV or any other authority.", "");
+    const banned = /\b(trust(?:ed|ing|s|worthy)?|safe(?:r|st|ly|ty)?|verified|verification|secure[d]?|legitimate|authentic(?:ated)?|guarantees?)\b/i;
+    assert.equal(banned.test(stripped), false, stripped.match(banned)?.[0]);
   });
 
   test("the curve example is fixed and no route reads an address", () => {
