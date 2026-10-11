@@ -271,6 +271,12 @@ export function visibleText(value) {
   return String(value).replace(/\p{Cf}/gu, "");
 }
 
+export function clipName(value, max = 64) {
+  const clean = visibleText(value).replace(/\u0000/g, "").replace(/\uFFFD/g, "").trim();
+  if (clean.length <= max) return clean;
+  return `${clean.slice(0, max)}…`;
+}
+
 export function withinStoreLimit(existingCount, incomingNewCount) {
   if (!Number.isInteger(existingCount) || existingCount < 0) return false;
   if (!Number.isInteger(incomingNewCount) || incomingNewCount < 0) return false;
@@ -570,9 +576,9 @@ export function formatReadingStamp(consultedAt, lang, withSeconds = false) {
 }
 
 export function readingOptionLabel(card, lang, peers = []) {
-  const symbol = card && card.symbol && typeof card.symbol.text === "string" ? card.symbol.text.trim() : "";
-  const name = card && card.name && typeof card.name.text === "string" ? card.name.text.trim() : "";
-  const title = (symbol || name || `${String(card && card.mint ? card.mint : "").slice(0, 4)}…`).slice(0, 24);
+  const symbol = card && card.symbol && typeof card.symbol.text === "string" ? clipName(card.symbol.text, 24) : "";
+  const name = card && card.name && typeof card.name.text === "string" ? clipName(card.name.text, 24) : "";
+  const title = symbol || name || `${String(card && card.mint ? card.mint : "").slice(0, 4)}…`;
   const minute = formatReadingStamp(card.consultedAt, lang, false);
   const crowded = (Array.isArray(peers) ? peers : []).some((other) => {
     if (!other || other === card) return false;

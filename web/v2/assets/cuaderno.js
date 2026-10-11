@@ -33,6 +33,7 @@ import {
   toExport,
   validateCard,
   validateExport,
+  clipName,
   visibleText,
   withNote,
   withinStoreLimit,
@@ -443,8 +444,8 @@ function renderCard(card) {
   dataRow(list, t("freezeAuth"), card.freezeAuthority.status, freezeAuth);
   appendSupply(list, card, supplyCheck);
   dataRow(list, t("decimals"), card.decimals === null ? "ausente" : "verificado", card.decimals);
-  dataRow(list, t("name"), card.name.status, card.name.text);
-  dataRow(list, t("symbol"), card.symbol.status, card.symbol.text);
+  dataRow(list, t("name"), card.name.status, card.name.text ? clipName(card.name.text) : card.name.text);
+  dataRow(list, t("symbol"), card.symbol.status, card.symbol.text ? clipName(card.symbol.text) : card.symbol.text);
   dataRow(list, t("uri"), card.uri.status, card.uri.text);
   const mutableValue = card.metadataMutable === "si" ? t("yes") : card.metadataMutable === "no" ? t("no") : null;
   const mutableStatus = mutableValue ? "verificado" : card.metadataMutable;

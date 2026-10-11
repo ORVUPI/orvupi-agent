@@ -242,46 +242,112 @@ function contextFromCard(card) {
   };
 }
 
-function looksLikeStubx(context) {
-  return /stubx/i.test(`${context?.name || ""} ${context?.symbol || ""}`);
+const SUMMARY_HOMOGLYPHS = {
+  "\u0391": "A",
+  "\u0392": "B",
+  "\u0395": "E",
+  "\u0396": "Z",
+  "\u0397": "H",
+  "\u0399": "I",
+  "\u039A": "K",
+  "\u039C": "M",
+  "\u039D": "N",
+  "\u039F": "O",
+  "\u03A1": "P",
+  "\u03A4": "T",
+  "\u03A5": "Y",
+  "\u03A3": "S",
+  "\u03A7": "X",
+  "\u03B1": "a",
+  "\u03C3": "s",
+  "\u03BF": "o",
+  "\u03C4": "t",
+  "\u0410": "A",
+  "\u0412": "B",
+  "\u0415": "E",
+  "\u041A": "K",
+  "\u041C": "M",
+  "\u041D": "H",
+  "\u041E": "O",
+  "\u0420": "P",
+  "\u0421": "S",
+  "\u0422": "T",
+  "\u0425": "X",
+  "\u0430": "a",
+  "\u0435": "e",
+  "\u043E": "o",
+  "\u0440": "p",
+  "\u0441": "s",
+  "\u0442": "t",
+  "\u0445": "x",
+  "\u0405": "S",
+  "\u0455": "s",
+  "\u0406": "I",
+  "\u0456": "i",
+  "5": "S",
+  "8": "B",
+  "\uA731": "S",
+  "\u1D1B": "T",
+  "\u1D1C": "U",
+  "\u0299": "B",
+  "\u054D": "U",
+  "\u057D": "u",
+  "\u13DA": "S",
+  "\u13A2": "T",
+  "\u13F4": "B",
+};
+
+function summaryNormalizeToken(value) {
+  const folded = String(value || "").normalize("NFKC").replace(/[\p{Cc}\p{Cf}\uFFFD]/gu, "");
+  let mapped = "";
+  for (const char of folded) mapped += SUMMARY_HOMOGLYPHS[char] ?? char;
+  return mapped.toLowerCase().replace(/[\s.\-_'’]+/g, "");
 }
 
-function foreignName(context) {
-  return Boolean(context && !context.official && looksLikeStubx(context));
+function summaryShown(value) {
+  const clean = String(value || "").replace(/[\u0000\uFFFD\p{Cc}\p{Cf}]/gu, "").trim();
+  if (!clean) return "";
+  return clean.length > 64 ? `${clean.slice(0, 64)}…` : clean;
+}
+
+function looksLikeStubx(context) {
+  if (!context) return false;
+  return summaryNormalizeToken(context.name).includes("stubx") || summaryNormalizeToken(context.symbol).includes("stubx");
 }
 
 function quotedIdentity(context) {
-  const name = context.name;
-  const symbol = context.symbol;
+  const name = summaryShown(context.name);
+  const symbol = summaryShown(context.symbol);
   if (name && symbol && name !== symbol) return `«${name}» («${symbol}»)`;
-  return `«${name || symbol}»`;
+  if (name || symbol) return `«${name || symbol}»`;
+  return "";
 }
 
 function nameLead(context) {
-  if (foreignName(context)) {
-    const quoted = quotedIdentity(context);
+  const quoted = quotedIdentity(context);
+  if (context && !context.official && quoted) {
     return summaryPair(
       `Dice llamarse ${quoted} (texto elegido por quien creó el token).`,
       `It says it is called ${quoted} (text chosen by whoever created the token).`,
     );
   }
-  const name = context.name;
-  const symbol = context.symbol;
+  const name = summaryShown(context && context.name);
+  const symbol = summaryShown(context && context.symbol);
   if (name && symbol && name !== symbol) return summaryPair(`${name} (${symbol}).`, `${name} (${symbol}).`);
   if (name || symbol) return summaryPair(`${name || symbol}.`, `${name || symbol}.`);
   return summaryPair("Se leyeron el nombre y el símbolo.", "The name and the symbol were read.");
 }
 
 function supplyLead(context, matched) {
-  const symbol = context.symbol && !foreignName(context) ? ` ${context.symbol}` : "";
-  const unit = symbol ? "" : " tokens";
+  const symbol = context && context.official ? summaryShown(context.symbol) : "";
+  const mark = symbol ? ` ${symbol}` : " tokens";
   if (context.supply) {
     const es = matched
-      ? `Hay ${context.supply.es}${symbol}${unit} y las dos lecturas coinciden.`
-      : `Hay ${context.supply.es}${symbol}${unit}.`;
+      ? `Hay ${context.supply.es}${mark} y las dos lecturas coinciden.`
+      : `Hay ${context.supply.es}${mark}.`;
     const en = matched
-      ? `There are ${context.supply.en}${symbol}${unit} and the two reads match.`
-      : `There are ${context.supply.en}${symbol}${unit}.`;
+      ? `There are ${context.supply.en}${mark} and the two reads match.`
+      : `There are ${context.supply.en}${mark}.`;
     return summaryPair(es, en);
   }
   return summaryPair(
@@ -347,6 +413,8 @@ function attentionFromSignals(signals) {
 
 function attentionFromCard(card) {
   const items = [];
+  const context = contextFromCard(card);
+  if (!context.official && looksLikeStubx(context)) items.push(attentionPoint("copia"));
   if (card?.mintAuthority?.state === "activa") items.push(attentionPoint("emision"));
   if (card?.freezeAuthority?.state === "activa") items.push(attentionPoint("congelacion"));
   if (card?.metadataMutable === "si") items.push(attentionPoint("mutable"));
@@ -673,7 +741,7 @@ export function summaryFromCard(card) {
 
 function meaningfulText(value) {
   if (typeof value !== "string") return "";
-  return value.replace(/\u0000/g, "").replace(/\uFFFD/g, "").trim();
+  return value.replace(/\u0000/g, "").replace(/\uFFFD/g, "").replace(/\p{Cf}/gu, "").trim();
 }
 
 function textState(field) {

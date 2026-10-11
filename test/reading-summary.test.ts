@@ -93,9 +93,10 @@ describe("resumen de la lectura", () => {
     assert.deepEqual(summary.blocks.map((item) => item.heading.es), ["Qué se comprobó", "Qué requiere atención", "Qué falta"]);
     const checked = leads(summary, "comprobado", "es");
     assert.match(checked, /Suministro total/);
-    assert.match(checked, /7\.721\.704\.579 USDC/);
+    assert.match(checked, /7\.721\.704\.579 tokens/);
+    assert.equal(checked.includes("7.721.704.579 USDC"), false);
     assert.match(checked, /Nombre y símbolo/);
-    assert.match(checked, /USD Coin \(USDC\)/);
+    assert.match(checked, /Dice llamarse «USD Coin» \(«USDC»\)/);
     assert.match(checked, /No tiene enlace de metadatos/);
     assert.equal(checked.includes("No aplica"), false);
     assert.equal(checked.includes("bytes del mint"), false);
@@ -137,7 +138,10 @@ describe("resumen de la lectura", () => {
       largestStatus: "ok",
     });
     assert.match(leads(card, "atencion", "es"), /Permiso de congelación/);
-    assert.match(leads(card, "comprobado", "es"), /7\.721\.704\.579 USDC/);
+    assert.equal(block(card, "atencion").items.some((item) => item.lead.es.includes("Se parece a STUBX")), false);
+    assert.match(leads(card, "comprobado", "es"), /7\.721\.704\.579 tokens/);
+    assert.match(leads(card, "comprobado", "es"), /Dice llamarse «USD Coin» \(«USDC»\)/);
+    assert.equal(leads(card, "comprobado", "es").includes("7.721.704.579 USDC"), false);
     assert.equal(card.note?.lead.es, "Curva de Pump.fun: no aplica");
     assert.equal(leads(card, "comprobado", "es").includes("No aplica"), false);
     assert.equal(card.retry, false);
@@ -185,6 +189,8 @@ describe("resumen de la lectura", () => {
       largestStatus: "ok",
     });
     assert.equal(block(card, "atencion").items.length, 0);
+    assert.match(leads(card, "comprobado", "es"), /Hay 0,001 STUBX/);
+    assert.equal(leads(card, "comprobado", "es").includes("Dice llamarse"), false);
     assert.match(leads(card, "comprobado", "es"), /Nadie puede crear más tokens ni congelar cuentas/);
     assert.equal(prose(card, "es").includes("moneda estable"), false);
   });
@@ -510,7 +516,7 @@ describe("resumen de la lectura", () => {
 
   test("un URI vacío o de nulos no es un enlace", async () => {
     const { buildReadingSummary, summaryFromCard } = await load();
-    for (const uri of ["", "   ", `\0`.repeat(200), "\uFFFD"]) {
+    for (const uri of ["", "   ", `\0`.repeat(200), "\uFFFD", "\u200B", " \u200B "]) {
       const summary = buildReadingSummary({
         ok: true,
         kind: "lectura",
@@ -586,4 +592,99 @@ describe("resumen de la lectura", () => {
     assert.equal(dated?.lead.es, "Es una ficha guardada de antes, no un dato de esta lectura.");
     assert.equal(prose(summary, "es").includes("Es un dato de esta lectura"), false);
   });
+
+  test("ERYyy en el Cuaderno avisa el clon antes que el permiso de emisión", async () => {
+    const { summaryFromCard } = await load();
+    const summary = summaryFromCard(cloneCard("ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump", "STUBX", "STUBX"));
+    const attention = block(summary, "atencion").items;
+    assert.equal(attention[0]?.lead.es, "Se parece a STUBX pero no es la dirección oficial.");
+    assert.match(attention[0]?.detail?.es ?? "", /stubxai\.com/);
+    assert.equal(attention.some((item) => item.title.es === "Permiso de emisión"), true);
+    const supply = block(summary, "comprobado").items.find((item) => item.title.es === "Suministro total");
+    assert.match(supply?.lead.es ?? "", /^Hay 1\.000\.000\.000 tokens/);
+    assert.equal((supply?.lead.es ?? "").includes("STUBX"), false);
+    const identity = block(summary, "comprobado").items.find((item) => item.title.es === "Nombre y símbolo");
+    assert.equal(identity?.lead.es, "Dice llamarse «STUBX» (texto elegido por quien creó el token).");
+  });
+
+  test("FMNb en el Cuaderno avisa el clon cuando el nombre es Comunidad STUBX", async () => {
+    const { summaryFromCard } = await load();
+    const summary = summaryFromCard(cloneCard("FMNb4CR8ksibmgY7Ztei6BWcZXi3WHcVeJhYb9TNpump", "Comunidad STUBX", "COMUNIDAD"));
+    const attention = block(summary, "atencion").items;
+    assert.equal(attention[0]?.lead.es, "Se parece a STUBX pero no es la dirección oficial.");
+    const identity = block(summary, "comprobado").items.find((item) => item.title.es === "Nombre y símbolo");
+    assert.equal(identity?.lead.es, "Dice llamarse «Comunidad STUBX» («COMUNIDAD») (texto elegido por quien creó el token).");
+    const supply = block(summary, "comprobado").items.find((item) => item.title.es === "Suministro total");
+    assert.match(supply?.lead.es ?? "", /^Hay 1\.000\.000\.000 tokens/);
+    assert.equal((supply?.lead.es ?? "").includes("COMUNIDAD"), false);
+  });
+
+  test("un nombre con ancho cero se parece a STUBX", async () => {
+    await assertLookalike("STU\u200BBX", "OTRO", "«STUBX» («OTRO»)");
+  });
+
+  test("el cirílico ЅТUВХ se parece a STUBX", async () => {
+    await assertLookalike("\u0405\u0422U\u0412\u0425", "OTRO", "«\u0405\u0422U\u0412\u0425» («OTRO»)");
+  });
+
+  test("el ancho completo se parece a STUBX", async () => {
+    const wide = "\uFF33\uFF34\uFF35\uFF22\uFF38";
+    await assertLookalike(wide, "OTRO", `«${wide}» («OTRO»)`);
+  });
+
+  test("STUB X separado se parece a STUBX", async () => {
+    await assertLookalike("STUB X", "OTRO", "«STUB X» («OTRO»)");
+  });
+
+  test("ST-UBX en el símbolo se parece a STUBX", async () => {
+    await assertLookalike("Otro", "ST-UBX", "«Otro» («ST-UBX»)");
+  });
+
+  test("el RTL override se parece a STUBX y no se muestra", async () => {
+    await assertLookalike("\u202ESTUBX", "OTRO", "«STUBX» («OTRO»)");
+  });
+
+  test("un nombre largo se recorta con elipsis", async () => {
+    const { summaryFromCard } = await load();
+    const summary = summaryFromCard(cloneCard("So11111111111111111111111111111111111111112", "N".repeat(80), "OTRO"));
+    const identity = block(summary, "comprobado").items.find((item) => item.title.es === "Nombre y símbolo");
+    assert.equal(identity?.lead.es, `Dice llamarse «${"N".repeat(64)}…» («OTRO») (texto elegido por quien creó el token).`);
+    assert.equal(block(summary, "atencion").items.some((item) => item.lead.es.includes("Se parece a STUBX")), false);
+  });
 });
+
+function cloneCard(mint: string, name: string, symbol: string) {
+  return {
+    mint,
+    officialStubx: false,
+    program: "spl-token",
+    programStatus: "verificado",
+    mintAuthority: { state: "activa", status: "verificado" },
+    freezeAuthority: { state: "revocada", status: "verificado" },
+    supplyAccount: "1000000000000000",
+    supplyRpc: "1000000000000000",
+    supplyRpcStatus: "verificado",
+    decimals: 6,
+    name: { text: name, status: "verificado" },
+    symbol: { text: symbol, status: "verificado" },
+    uri: { text: "https://example.invalid/meta", status: "verificado" },
+    metadataMutable: "si",
+    extensionsStatus: "no_aplica",
+    extensions: [],
+    curve: { status: "ausente", present: false },
+    largestStatus: "ok",
+  };
+}
+
+async function assertLookalike(name: string, symbol: string, quoted: string) {
+  const { summaryFromCard } = await load();
+  const summary = summaryFromCard(cloneCard("ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump", name, symbol));
+  const attention = block(summary, "atencion").items;
+  assert.equal(attention[0]?.lead.es, "Se parece a STUBX pero no es la dirección oficial.");
+  const identity = block(summary, "comprobado").items.find((item) => item.title.es === "Nombre y símbolo");
+  assert.equal(identity?.lead.es, `Dice llamarse ${quoted} (texto elegido por quien creó el token).`);
+  assert.equal(/[\u200B\u202E\u202A-\u202E]/.test(identity?.lead.es ?? ""), false);
+  const supply = block(summary, "comprobado").items.find((item) => item.title.es === "Suministro total");
+  assert.match(supply?.lead.es ?? "", /^Hay 1\.000\.000\.000 tokens/);
+  assert.equal((supply?.lead.es ?? "").includes(symbol), false);
+}

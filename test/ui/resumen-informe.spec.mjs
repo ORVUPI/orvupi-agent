@@ -120,7 +120,9 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
   await expect(summary).toContainText("Qué falta");
   await expect(summary).toContainText("Suministro total");
   await expect(summary).toContainText("7.721.704.579");
-  await expect(summary).toContainText("USD Coin (USDC)");
+  await expect(summary).toContainText("Hay 7.721.704.579 tokens");
+  await expect(summary).toContainText("Dice llamarse «USD Coin» («USDC»)");
+  await expect(summary).not.toContainText("7.721.704.579 USDC");
   await expect(summary).toContainText("No tiene enlace de metadatos");
   await expect(summary).not.toContainText("Se leyó el enlace de metadatos");
   const usdcText = await summary.innerText();

@@ -183,6 +183,10 @@ describe("lectura universal con RPC simulado", () => {
     assert.match(reading.support.es, /No es la dirección oficial de STUBX/);
     assert.equal(reading.signals.find((item) => item.id === "copia")?.title.es, "Se parece a STUBX, pero no es la CA oficial");
     assert.equal(reading.signals.find((item) => item.id === "copia")?.level, "atencion");
+    const name = reading.rows.find((row) => row.label.es === "Nombre");
+    assert.equal(name?.value.es, "Dice llamarse «Comunidad STUBX»");
+    assert.equal(name?.value.en, "It says it is called «Comunidad STUBX»");
+    assert.equal(reading.signals.find((item) => item.id === "metadatos")?.title.es, "Nombre: Dice llamarse «Comunidad STUBX»");
     assert.equal(reading.light, "atencion");
     assert.equal(reading.mint === registry[0]?.mint, false);
   });

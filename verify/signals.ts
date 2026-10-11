@@ -721,7 +721,9 @@ async function readWith(
               "Each signal describes a fact read just now. It is not a score.",
             ),
       };
-  const displayName = clipForeign(names[0] || "", likeness.inRegistry);
+  const quotedName = clipForeign(names[0] || "", likeness.inRegistry);
+  const displayName = likeness.inRegistry || !names[0] ? quotedName : `Dice llamarse ${quotedName}`;
+  const displayNameEn = likeness.inRegistry || !names[0] ? quotedName : `It says it is called ${quotedName}`;
   const displaySymbol = clipForeign(symbols[0] || "", likeness.inRegistry);
   const metadataState: FactState = !metaInfo && !decoded.tokenMetadata ? "ausente" : metaplex || decoded.tokenMetadata ? "ok" : "fallo";
   const uriState: FactState = metadataState === "fallo" ? "fallo" : uri ? "ok" : "ausente";
@@ -825,7 +827,7 @@ async function readWith(
     support: headline.support,
     signals,
     rows: [
-      { label: loc("Nombre", "Name"), value: loc(displayName, displayName) },
+      { label: loc("Nombre", "Name"), value: loc(displayName, displayNameEn) },
       { label: loc("Símbolo", "Symbol"), value: loc(displaySymbol, displaySymbol) },
       { label: loc("Programa", "Program"), value: loc(programName, programName) },
       {
@@ -1061,11 +1063,21 @@ function metadataSignals(
   const visibleName = clipForeign(name, official);
   const linkEs = uri ? clipForeign(uri, official) : "No tiene enlace de metadatos";
   const linkEn = uri ? clipForeign(uri, official) : "It has no metadata link";
+  const nameTitle = name
+    ? official
+      ? `Nombre: ${visibleName}`
+      : `Nombre: Dice llamarse ${visibleName}`
+    : "Nombre no leído";
+  const nameTitleEn = name
+    ? official
+      ? `Name: ${visibleName}`
+      : `Name: It says it is called ${visibleName}`
+    : "Name not read";
   out.push({
     id: "metadatos",
     level: "neutro",
     tone: official ? undefined : "ajeno",
-    title: loc(name ? `Nombre: ${visibleName}` : "Nombre no leído", name ? `Name: ${visibleName}` : "Name not read"),
+    title: loc(nameTitle, nameTitleEn),
     explain: loc(
       `Símbolo: ${symbol ? clipForeign(symbol, official) : "ausente comprobado"}. Enlace de metadatos: ${linkEs}. El nombre es un texto. La dirección es otra cosa.`,
       `Symbol: ${symbol ? clipForeign(symbol, official) : "confirmed absent"}. Metadata link: ${linkEn}. The name is text. The address is something else.`,

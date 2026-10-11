@@ -220,6 +220,7 @@ function cleanText(bytes) {
   const text = new TextDecoder("utf-8", { fatal: false })
     .decode(bytes.subarray(0, end))
     .replace(/\u0000/g, "")
+    .replace(/\p{Cf}/gu, "")
     .replaceAll("<", "‹")
     .replaceAll(">", "›")
     .trim();
@@ -436,7 +437,7 @@ function emptyCurve() {
 }
 
 function textFact(text) {
-  const cleaned = typeof text === "string" ? text.replace(/\u0000/g, "").replace(/\uFFFD/g, "").trim() : "";
+  const cleaned = typeof text === "string" ? text.replace(/\u0000/g, "").replace(/\uFFFD/g, "").replace(/\p{Cf}/gu, "").trim() : "";
   if (!cleaned) return { text: null, status: "ausente" };
   return { text: cleaned, status: "verificado" };
 }

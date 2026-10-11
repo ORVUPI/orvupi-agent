@@ -191,7 +191,7 @@ function paintVerify(out, view) {
       var term = verifyEl("dt");
       term.textContent = row.label[lang];
       var detail = verifyEl("dd");
-      if ((row.value[lang] || "").charAt(0) === "«") detail.className = "ajeno";
+      if ((row.value[lang] || "").includes("«")) detail.className = "ajeno";
       detail.textContent = row.value[lang];
       rows.append(term, detail);
     });

@@ -22,7 +22,7 @@ interface ReadModule {
   metadataPda: (mint: string) => Promise<string>;
   bondingCurvePda: (mint: string) => Promise<string>;
   decodeMintAccount: (owner: string, data: Uint8Array) => { supplyRaw: string; mintAuthority: { state: string }; freezeAuthority: { state: string } } | null;
-  decodeMetadataAccount: (data: Uint8Array) => { name: string; uri: string; mutable: string | null } | null;
+  decodeMetadataAccount: (data: Uint8Array) => { name: string; symbol: string; uri: string; mutable: string | null } | null;
   isAllowedRpcUrl: (value: string) => boolean;
   blankCard: (mint: string, consultedAt: string, errors: unknown[]) => Card;
   readMint: (options: Record<string, unknown>) => Promise<{ ok: boolean; card: Card | null }>;
@@ -62,6 +62,7 @@ interface ModelModule {
   validateCard: (card: Card) => { ok: boolean };
   withinStoreLimit: (existingCount: number, incomingNewCount: number) => boolean;
   visibleText: (value: string) => string;
+  clipName: (value: string, max?: number) => string;
   withNote: (record: { id: string; card: Card }, note: string) => { ok: boolean; record?: { note: string } };
   toExport: (records: unknown[], exportedAt: string) => string;
   compareRecords: (left: { card: Card }, right: { card: Card }) => {
@@ -206,6 +207,12 @@ describe("lector y cuaderno", () => {
     assert.ok(meta);
     assert.equal(meta?.name.includes("<"), false);
     assert.equal(meta?.uri, "https://evil.example/phish");
+    const hidden = read.decodeMetadataAccount(metadataBytes("STU\u200BBX\u202E", "A\u202EB", "\u200B", 0));
+    assert.equal(hidden?.name, "STUBX");
+    assert.equal(hidden?.symbol, "AB");
+    assert.equal(hidden?.uri, "");
+    const spaces = read.decodeMetadataAccount(metadataBytes("Nombre", "NOM", "   ", 0));
+    assert.equal(spaces?.uri, "");
     assert.equal(meta?.mutable, "si");
     const calls: string[] = [];
     const result = await read.readMint({
@@ -237,6 +244,40 @@ describe("lector y cuaderno", () => {
     assert.equal(result.card?.uri.text, "https://evil.example/phish");
     assert.equal(JSON.stringify(result.card).includes("uiAmount"), false);
     assert.deepEqual(calls, ["getMultipleAccounts", "getTokenSupply", "getTokenLargestAccounts"]);
+  });
+
+  test("un URI de ancho cero o de espacios no es un enlace de metadatos", async () => {
+    const { read } = await modules();
+    const summary = (await import(pathToFileURL(path.join(repoRoot(), "web/v2/shared/reading-summary.js")).href)) as {
+      summaryFromCard: (card: Card) => { blocks: Array<{ id: string; items: Array<{ title: { es: string }; lead: { es: string } }> }> };
+    };
+    for (const uri of ["\u200B", "   ", " \u200B "]) {
+      const result = await read.readMint({
+        mint: OTHER,
+        ...fastClock(),
+        transport: async (_endpoint: string, body: string) => {
+          const parsed = JSON.parse(body) as { method: string };
+          if (parsed.method === "getMultipleAccounts") {
+            return rpcOk([
+              account(read.TOKEN_PROGRAM, mintBytes()),
+              account(read.METADATA_PROGRAM, metadataBytes("Otro\u200B", "OT\u202ERO", uri)),
+              null,
+            ]);
+          }
+          if (parsed.method === "getTokenSupply") return rpcOk({ amount: "1000", decimals: 6, uiAmount: null, uiAmountString: "skip" });
+          if (parsed.method === "getTokenLargestAccounts") return rpcOk([{ address: OTHER, amount: "1", decimals: 6 }]);
+          throw new Error(parsed.method);
+        },
+      });
+      assert.equal(result.card?.uri.text, null);
+      assert.equal(result.card?.uri && "status" in result.card.uri ? (result.card.uri as { status?: string }).status : "", "ausente");
+      assert.equal(result.card?.name.text, "Otro");
+      assert.equal(result.card?.symbol?.text, "OTRO");
+      const card = summary.summaryFromCard(result.card as Card);
+      const checked = card.blocks.find((item) => item.id === "comprobado");
+      const link = checked?.items.find((item) => item.title.es === "Enlace de metadatos");
+      assert.equal(link?.lead.es, "No tiene enlace de metadatos.");
+    }
   });
 
   test("un permiso que no se puede leer se guarda como fallo", async () => {
@@ -410,6 +451,8 @@ describe("lector y cuaderno", () => {
     assert.equal(model.withinStoreLimit(200, 1), false);
     assert.equal(model.withinStoreLimit(199, 2), false);
     assert.equal(model.visibleText("ab\u202Ecd\u200F"), "abcd");
+    assert.equal(model.clipName(`${"N".repeat(80)}\u200B`), `${"N".repeat(64)}…`);
+    assert.equal(model.clipName("STU\u200BBX\u202E"), "STUBX");
     const saved = model.withNote({ id: record.id, card }, "ab\u202Ecd\u200F\u2067");
     assert.equal(saved.ok, true);
     assert.equal(saved.record?.note, "abcd");
