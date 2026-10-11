@@ -1563,6 +1563,7 @@ footer.site::before {
   box-shadow: 0 12px 24px rgba(4, 13, 31, 0.35), 0 0 0 3px rgba(27, 235, 145, 0.35);
 }
 .sello,
+#aviso-pasada,
 body:has(a[href="/aprender/"][aria-current="page"]) main > p.nota {
   margin: 0;
   padding: 0.85rem 1rem;
@@ -1599,7 +1600,7 @@ textarea.nota { min-height: 6rem; }
 .cuaderno-acciones label.file,
 body:has(a[href="/cuaderno/"][aria-current="page"]) #comparar,
 body:has(a[href="/cuaderno/"][aria-current="page"]) #seguir,
-body:has(a[href="/cuaderno/"][aria-current="page"]) #detener,
+body:has(a[href="/cuaderno/"][aria-current="page"]) #detener:not([hidden]),
 body:has(a[href="/cuaderno/"][aria-current="page"]) #guardar-todas,
 body:has(a[href="/cuaderno/"][aria-current="page"]) #borrar-confirmar,
 body:has(a[href="/cuaderno/"][aria-current="page"]) #borrar-cancelar {
@@ -1674,7 +1675,7 @@ body:has(a[href="/studio/"][aria-current="page"]) .fila button.primary {
 .seguimiento-fila .mint { margin: 0; overflow-wrap: anywhere; }
 #lista-seguimiento, #resultado-seguimiento, #aviso-pasada { display: grid; gap: 0.85rem; min-width: 0; }
 #aviso-pasada { overflow-wrap: anywhere; }
-#detener[hidden] { display: none; }
+body:has(a[href="/cuaderno/"][aria-current="page"]) #detener[hidden] { display: none; }
 .pasada-acciones { display: flex; flex-wrap: wrap; gap: 0.75rem; }
 .seguimiento-estado {
   display: grid;

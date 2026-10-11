@@ -765,16 +765,56 @@ export function reserveWatchSlots(entries, stamps, now, takeSlot) {
 
 const REFUSAL = /HTTP 403|HTTP 429|request blocked|indexed request|access forbidden|personal token/i;
 
-/** Una ficha completa no está a medias, no trae errores, el momento de la red se leyó y los dos suministros coinciden. */
-export function readingComplete(card) {
-  if (!card || typeof card !== "object") return false;
-  if (card.partial === true) return false;
-  if (Array.isArray(card.errors) && card.errors.length > 0) return false;
-  if (card.slotStatus === "fallo") return false;
+const BROKEN = new Set(["fallo", "no_disponible"]);
+
+function brokenStatus(value) {
+  return BROKEN.has(value);
+}
+
+function pushGap(gaps, es, en) {
+  gaps.push({ es, en });
+}
+
+/** Motivos por los que una ficha no está completa, aunque no venga marcada como parcial. */
+export function readingGaps(card) {
+  if (!card || typeof card !== "object") {
+    return [{ es: "La ficha no está completa.", en: "The card is not complete." }];
+  }
+  const gaps = [];
+  if (card.partial === true) pushGap(gaps, "La ficha está a medias.", "The card is partial.");
+  if (brokenStatus(card.slotStatus)) pushGap(gaps, "No se pudo leer el momento de la red.", "The moment on the network could not be read.");
+  if (brokenStatus(card.programStatus)) pushGap(gaps, "No se pudo leer el programa del token.", "The token program could not be read.");
   const account = card.supplyAccount;
   const rpc = card.supplyRpc;
-  if (typeof account === "string" && typeof rpc === "string" && account !== rpc) return false;
-  return true;
+  if (typeof account === "string" && typeof rpc === "string" && account !== rpc) {
+    pushGap(gaps, "Las dos lecturas del suministro no coinciden.", "The two supply reads do not match.");
+  } else if (brokenStatus(card.supplyRpcStatus)) {
+    pushGap(gaps, "No se pudo hacer la segunda comprobación del suministro.", "The second supply check could not be done.");
+  }
+  if (card.mintAuthority && brokenStatus(card.mintAuthority.status)) {
+    pushGap(gaps, "No se pudo leer el permiso de emisión.", "The permission to create more tokens could not be read.");
+  }
+  if (card.freezeAuthority && brokenStatus(card.freezeAuthority.status)) {
+    pushGap(gaps, "No se pudo leer el permiso de congelación.", "The freeze permission could not be read.");
+  }
+  if (card.name && brokenStatus(card.name.status)) pushGap(gaps, "No se pudo leer el nombre.", "The name could not be read.");
+  if (card.symbol && brokenStatus(card.symbol.status)) pushGap(gaps, "No se pudo leer el símbolo.", "The symbol could not be read.");
+  if (card.uri && brokenStatus(card.uri.status)) pushGap(gaps, "No se pudo leer el enlace de metadatos.", "The metadata link could not be read.");
+  if (brokenStatus(card.metadataMutable)) pushGap(gaps, "No se pudo leer si el nombre se puede cambiar.", "Whether the name can change could not be read.");
+  if (brokenStatus(card.largestStatus)) pushGap(gaps, "No se pudo leer quién tiene más tokens.", "Who holds the most tokens could not be read.");
+  if (brokenStatus(card.extensionsStatus)) pushGap(gaps, "No se pudieron separar las extensiones.", "The extensions could not be split.");
+  if (card.curve && brokenStatus(card.curve.status)) pushGap(gaps, "No se pudo leer la curva.", "The curve could not be read.");
+  if (Array.isArray(card.errors) && card.errors.length > 0 && !gaps.length) {
+    pushGap(gaps, "Esta lectura no está completa.", "This reading is not complete.");
+  }
+  return gaps;
+}
+
+/** Una ficha completa no está a medias, no trae errores ni estados fallidos, el momento de la red se leyó y los dos suministros coinciden. */
+export function readingComplete(card) {
+  if (!card || typeof card !== "object") return false;
+  if (Array.isArray(card.errors) && card.errors.length > 0) return false;
+  return readingGaps(card).length === 0;
 }
 
 function accountReadRefused(card) {

@@ -31,7 +31,7 @@ const COPY = {
     emptySave: "No hay una lectura para guardar. No se ha guardado una ficha vacía.",
     wait: "La lectura no ha terminado. Espera a que aparezca el resultado.",
     db: "Este navegador no dejó guardar el cuaderno.",
-    tabs: "Cierra las otras pestañas de stubxai.com y recarga",
+    tabs: "Cierra las otras pestañas de stubxai.com y recarga.",
     fail: "No hay una lectura en pantalla para guardar. Pulsa Comprobar y espera el resultado.",
     full: "Este navegador ya tiene el máximo de fichas.",
     before: "Antes",

@@ -141,6 +141,8 @@ test("una ficha vieja gana red y dirección y entra en la lista", async ({ page 
   await expect(row).toContainText("Red: Solana");
   await expect(page.locator("#seguir-alcance")).toHaveText("No hay ninguna marcada: se consultan todas.");
   await expect(page.locator("#aviso-pasada .lang.es")).toHaveText("Al pulsar, tu navegador envía las direcciones que se revisan (las marcadas, o todas si no marcas ninguna) a los nodos públicos de Solana solana-rpc.publicnode.com y api.mainnet-beta.solana.com, que también ven tu IP. No se guarda nada nuevo hasta que pulses «Guardar».");
+  await expect(page.locator("#detener")).toBeHidden();
+  await noticeNextToButton(page);
   const stored = await page.evaluate(() => new Promise((resolve) => {
     const request = indexedDB.open("stubx-cuaderno");
     request.onsuccess = () => {
@@ -162,6 +164,8 @@ test("una ficha vieja gana red y dirección y entra en la lista", async ({ page 
   await expect(page.locator("h2").filter({ hasText: "Recheck saved addresses" })).toBeVisible();
   await expect(page.locator("#aviso-pasada .lang.en")).toHaveText("When you tap, your browser sends the addresses being checked (the marked ones, or all of them if none are marked) to the Solana public nodes solana-rpc.publicnode.com and api.mainnet-beta.solana.com, which also see your IP. Nothing new is saved until you tap \"Save\".");
   await expect(page.locator("#seguir .lang.en")).toHaveText("Check the list");
+  await noticeNextToButton(page);
+  await expect(page.locator("#detener")).toBeHidden();
   await expect(row).toContainText("Network: Solana");
 });
 
@@ -350,5 +354,16 @@ test("detener corta la pasada y no la da por igual", async ({ page }) => {
   await page.locator("#detener").click();
   await expect(page.locator("#consulta-error")).toContainText("Pasada detenida");
   await expect(page.locator("#resultado-seguimiento")).not.toContainText("Sigue igual");
+  await expect(page.locator("#detener")).toBeHidden();
   release();
 });
+
+async function noticeNextToButton(page) {
+  const notice = await page.locator("#aviso-pasada").boundingBox();
+  const button = await page.locator("#seguir").boundingBox();
+  expect(notice).toBeTruthy();
+  expect(button).toBeTruthy();
+  const gap = button.y - (notice.y + notice.height);
+  expect(gap).toBeGreaterThanOrEqual(0);
+  expect(gap).toBeLessThan(200);
+}

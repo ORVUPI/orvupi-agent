@@ -3,7 +3,7 @@
  */
 import { formatAmount } from "../shared/amount.js";
 import { entenderNav } from "../shared/entender.js";
-import { cloneWarningText, comparisonBanner, notebookNameText, renderReadingSummary, summaryFromCard } from "../shared/reading-summary.js";
+import { cloneWarningText, comparisonBanner, explainIncomplete, notebookNameText, renderReadingSummary, summaryFromCard } from "../shared/reading-summary.js";
 import { factState } from "../shared/fact-state.js";
 import { notebookDbAll, notebookDbClear, notebookDbPut, openNotebookDb } from "../shared/notebook-db.js";
 import {
@@ -29,6 +29,7 @@ import {
   migrateStoredRecord,
   pickPrevious,
   readingComplete,
+  readingGaps,
   readingOptionLabel,
   reserveWatchSlots,
   sortNotebookRecords,
@@ -139,7 +140,7 @@ const COPY = {
     watchSaveAll: "Guardar todas",
     watchStop: "Detener",
     watchStopped: "Pasada detenida. Lo que no se llegó a leer no se da por igual.",
-    tabs: "Cierra las otras pestañas de stubxai.com y recarga",
+    tabs: "Cierra las otras pestañas de stubxai.com y recarga.",
     watchRefused: "El servicio rechazó esta consulta. No se da por igual.",
     watchMissing: "Qué falta",
     watchSaved: "Esta lectura queda guardada en este navegador. Puedes borrarla en el Cuaderno.",
@@ -1058,7 +1059,9 @@ function renderWatchResult(item) {
     : (previousCard && !readingComplete(previousCard) ? previousCard : outcome.card);
   if (outcome.kind !== "espera" && (outcome.kind === "rechazada" || outcome.kind === "incompleto" || refused)) {
     if (gap) {
-      renderReadingSummary(article, summaryFromCard(gap), lang(), {
+      const model = summaryFromCard(gap);
+      if (outcome.kind === "incompleto") explainIncomplete(model, readingGaps(gap));
+      renderReadingSummary(article, model, lang(), {
         onRetry: () => followSelected(entry.key),
       });
     } else if (outcome.kind === "rechazada") {

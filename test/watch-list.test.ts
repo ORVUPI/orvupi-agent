@@ -45,6 +45,7 @@ async function modules() {
   const read = await import(pathToFileURL(path.join(root, "web/v2/shared/solana-read.js")).href) as {
     blankCard: (mint: string, at: string, errors: unknown[]) => Card;
     clearBlockedMethods: () => void;
+    readMint: (options: Record<string, unknown>) => Promise<{ ok: boolean; card: Card }>;
   };
   const model = await import(pathToFileURL(path.join(root, "web/v2/shared/notebook-model.js")).href) as {
     migrateStoredRecord: (record: Record<string, unknown> | null) => { changed: boolean; record: Record<string, unknown> | null };
@@ -55,7 +56,13 @@ async function modules() {
     serviceRejection: (card: Card | null) => { rejected: boolean; primary: boolean };
     watchVerdict: (previous: { card: Card }, result: { card: Card | null }) => { kind: string; save: boolean; rejection: { rejected: boolean } };
     validateCard: (card: Card) => { ok: boolean; error?: { es: string } };
+    readingComplete: (card: Card) => boolean;
+    readingGaps: (card: Card) => Array<{ es: string; en: string }>;
     NOTEBOOK_DB_VERSION: number;
+  };
+  const summary = await import(pathToFileURL(path.join(root, "web/v2/shared/reading-summary.js")).href) as {
+    summaryFromCard: (card: Card) => { blocks: Array<{ id: string; items: Array<{ lead: { es: string }; note?: { es?: string } | null }> }> };
+    explainIncomplete: (model: { blocks: Array<{ id: string; items: Array<{ lead: { es: string } }> }> }, gaps: Array<{ es: string; en: string }>) => { blocks: Array<{ id: string; items: Array<{ lead: { es: string } }> }> };
   };
   const slots = await import(pathToFileURL(path.join(root, "web/v2/modules/pair-report.mjs")).href) as {
     takeQuerySlot: (stamps: number[], now: number, limit?: number, windowMs?: number) => { allowed: boolean; stamps: number[] };
@@ -64,7 +71,7 @@ async function modules() {
     AVISO_GUARDAR: { es: string; en: string };
   };
   read.clearBlockedMethods();
-  return { read, model, slots, notice };
+  return { read, model, slots, notice, summary };
 }
 
 function filled(read: { blankCard: (mint: string, at: string, errors: unknown[]) => Card }, mint: string, at: string, supply: string): Card {
@@ -228,7 +235,15 @@ describe("revisar direcciones guardadas", () => {
     assert.match(actions, /stubx-cuaderno/);
     assert.match(actions, /stampIdentity/);
     assert.match(actions, /openNotebookDb\(DB_NAME/);
-    assert.match(actions, /Cierra las otras pestañas de stubxai.com y recarga/);
+    assert.match(source, /Cierra las otras pestañas de stubxai.com y recarga\./);
+    assert.match(actions, /Cierra las otras pestañas de stubxai.com y recarga\./);
+    const rollback = readFileSync(path.join(root, "ROLLBACK.md"), "utf8");
+    const log = readFileSync(path.join(root, "CHANGELOG.md"), "utf8");
+    const back = "Para volver atrás: cargar otra vez esta página, o borrar en el navegador los datos del sitio de la base llamada stubx-cuaderno.";
+    assert.equal(log.includes(back), true);
+    assert.equal(rollback.includes(back), true);
+    assert.equal(page.includes('id="aviso-pasada" class="aviso-pasada"'), true);
+    assert.equal(page.includes('id="aviso-pasada" class="sello"'), false);
   });
 
   test("un tiempo de espera en la segunda lectura del suministro no es igual", async () => {
@@ -326,4 +341,82 @@ describe("revisar direcciones guardadas", () => {
     assert.equal(String(verdict.kind) === "igual", false);
     assert.equal(verdict.save, false);
   });
+
+  test("un incompleto nombra el motivo y un estado fallido cuenta sin marca de parcial", async () => {
+    const { read, model, summary } = await modules();
+    const previous = { id: "1", note: "", card: filled(read, OTHER, WHEN, "1000") };
+    const cases = [
+      { label: "suministros que no coinciden", touch: (card: Card) => { card.supplyRpc = "1001"; card.partial = false; }, phrase: "no coinciden" },
+      { label: "fallo del momento de la red", touch: (card: Card) => { card.slotStatus = "fallo"; card.slot = null; card.partial = false; }, phrase: "momento de la red" },
+      { label: "ficha parcial", touch: (card: Card) => { card.partial = true; }, phrase: "a medias" },
+      { label: "cuentas grandes en fallo", touch: (card: Card) => { card.largestStatus = "fallo"; card.partial = false; card.errors = []; }, phrase: "quién tiene más tokens" },
+    ];
+    for (const item of cases) {
+      const card = filled(read, OTHER, LATER, "1000");
+      item.touch(card);
+      assert.equal(model.readingComplete(card), false, item.label);
+      const verdict = model.watchVerdict(previous, { card });
+      assert.equal(verdict.kind, "incompleto", item.label);
+      assert.equal(String(verdict.kind) === "igual", false, item.label);
+      const text = missingText(summary, model, card);
+      assert.equal(text.includes("No falta ningún dato"), false, item.label);
+      assert.match(text, new RegExp(item.phrase), item.label);
+    }
+  });
+
+  test("un 429 en los dos nodos no es igual", async () => {
+    const { read, model, summary } = await modules();
+    const seen = await bothNodes(read, 429);
+    assert.deepEqual(seen.hosts, ["solana-rpc.publicnode.com", "api.mainnet-beta.solana.com"]);
+    const previous = { id: "1", note: "", card: filled(read, OTHER, WHEN, "1000") };
+    const verdict = model.watchVerdict(previous, { card: seen.card });
+    assert.equal(verdict.kind, "rechazada");
+    assert.equal(String(verdict.kind) === "igual", false);
+    assert.equal(model.readingComplete(seen.card), false);
+    const text = missingText(summary, model, seen.card);
+    assert.equal(text.includes("No falta ningún dato"), false);
+    assert.match(text, /No se pudo/);
+  });
+
+  test("los dos nodos caídos no es igual", async () => {
+    const { read, model, summary } = await modules();
+    const seen = await bothNodes(read, 0);
+    assert.deepEqual(seen.hosts, ["solana-rpc.publicnode.com", "api.mainnet-beta.solana.com"]);
+    const previous = { id: "1", note: "", card: filled(read, OTHER, WHEN, "1000") };
+    const verdict = model.watchVerdict(previous, { card: seen.card });
+    assert.equal(verdict.kind, "rechazada");
+    assert.equal(String(verdict.kind) === "igual", false);
+    const text = missingText(summary, model, seen.card);
+    assert.equal(text.includes("No falta ningún dato"), false);
+    assert.match(text, /No se pudo/);
+  });
 });
+
+function missingText(
+  summary: { summaryFromCard: (card: Card) => { blocks: Array<{ id: string; items: Array<{ lead: { es: string } }> }> }; explainIncomplete: (model: { blocks: Array<{ id: string; items: Array<{ lead: { es: string } }> }> }, gaps: Array<{ es: string; en: string }>) => { blocks: Array<{ id: string; items: Array<{ lead: { es: string } }> }> } },
+  model: { readingGaps: (card: Card) => Array<{ es: string; en: string }> },
+  card: Card,
+) {
+  const explained = summary.explainIncomplete(summary.summaryFromCard(card), model.readingGaps(card));
+  const block = explained.blocks.find((item) => item.id === "falta");
+  return (block?.items || []).map((item) => item.lead.es).join(" ");
+}
+
+async function bothNodes(read: { clearBlockedMethods: () => void; readMint: (options: Record<string, unknown>) => Promise<{ ok: boolean; card: Card }> }, status: number) {
+  read.clearBlockedMethods();
+  const hosts: string[] = [];
+  const result = await read.readMint({
+    mint: OTHER,
+    now: () => new Date(LATER),
+    sleep: async () => undefined,
+    mono: () => 0,
+    minIntervalMs: 0,
+    maxRetries: 0,
+    transport: async (endpoint: string) => {
+      hosts.push(new URL(endpoint).hostname);
+      return { status, body: "" };
+    },
+  });
+  assert.equal(result.ok, false);
+  return { hosts, card: result.card };
+}
