@@ -2807,6 +2807,12 @@ function curveSignal(account, curve) {
  * Tres bloques, sin puntuación, sin semáforo de «seguro» y sin recomendación.
  * Cada punto: título corto, una frase y un enlace a «Entender».
  */
+let quoteLookup = () => "";
+
+/** Lo rellena networks.js. Este archivo no importa la lista: el bundle de Solana lo copia entero. */
+function setNotebookQuoteLookup(fn) {
+  quoteLookup = typeof fn === "function" ? fn : () => "";
+}
 
 const TOPIC_BY_ID = {
   suministro: "suministro",
@@ -3535,6 +3541,16 @@ function authorityState(field) {
 }
 
 function notebookNameText(card, lang) {
+  if (card && card.schema === "stubx.notebook.card.evm") {
+    const known = quoteLookup(card.network, card.address);
+    const written = summaryShown(card.name && card.name.text) || summaryShown(card.symbol && card.symbol.text);
+    if (known && written) {
+      return lang === "en" ? `${known}. The contract wrote «${written}».` : `${known}. El contrato escribió «${written}».`;
+    }
+    if (known) return known;
+    if (written) return lang === "en" ? `It says it is called «${written}»` : `Dice llamarse «${written}»`;
+    return "";
+  }
   const context = contextFromCard(card);
   const name = summaryShown(context.name);
   const symbol = summaryShown(context.symbol);
@@ -3744,6 +3760,23 @@ function openEntender(link, topic) {
   const target = nav.querySelector(`[data-tema="${topic}"]`) || panel;
   if (target && typeof target.focus === "function") target.focus();
 }
+let marketNetwork = () => null;
+
+/** Lo rellena networks.js. La lista completa no entra en el bundle de Solana. */
+function setMarketDirectory(lookup) {
+  marketNetwork = typeof lookup === "function" ? lookup : () => null;
+}
+
+function marketNetworkById(id) {
+  return marketNetwork(id);
+}
+
+function knownQuote(chain, address) {
+  const network = marketNetworkById(chain);
+  if (!network || !network.knownQuotes || typeof address !== "string") return "";
+  return network.knownQuotes[address.toLowerCase()] || "";
+}
+
 /**
  * Lectura de mercado de solo lectura para un mint de Solana.
  * Normaliza la respuesta pública de DEX Screener. No calcula cifras,
@@ -3782,6 +3815,7 @@ const MARKET_WINDOWS = Object.freeze([
 
 const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
 const PAIR_ADDRESS = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+const EVM_PAIR_ADDRESS = /^0x[0-9a-fA-F]{40}$/;
 const STATUSES = new Set(["ok", "sin_pares", "fallo", "limite", "incompleta", "consulta"]);
 
 // Mismo texto que AVISO_GUARDAR.
@@ -3907,6 +3941,9 @@ const MARKET_DEX_NAMES = new Map([
   ["pumpfun", "Pump.fun"],
   ["pump.fun", "Pump.fun"],
   ["pump-fun", "Pump.fun"],
+  ["aerodrome", "Aerodrome"],
+  ["uniswap", "Uniswap"],
+  ["baseswap", "BaseSwap"],
 ]);
 const MARKET_DEX_FIXED = new Set(MARKET_DEX_NAMES.values());
 
@@ -3955,17 +3992,31 @@ function tokenAddress(token) {
   return token.address;
 }
 
-function readPair(item, mint) {
+function marketChain(meta) {
+  const chain = meta && typeof meta.chain === "string" ? meta.chain : "";
+  return chain && chain !== "solana" ? chain : "solana";
+}
+
+function sameMarketAddress(left, right, evm) {
+  if (typeof left !== "string" || typeof right !== "string") return false;
+  if (left !== left.trim() || right !== right.trim()) return false;
+  if (!evm) return left === right;
+  return left.toLowerCase() === right.toLowerCase();
+}
+
+function readPair(item, mint, chain) {
   if (!item || typeof item !== "object") return null;
-  if (typeof item.chainId === "string" && item.chainId !== "solana") return null;
+  const evm = chain && chain !== "solana";
+  const expected = evm ? (marketNetworkById(chain) && marketNetworkById(chain).dexscreener) || chain : "solana";
+  if (typeof item.chainId === "string" && item.chainId !== expected) return null;
   const baseAddress = tokenAddress(item.baseToken);
   const quoteAddress = tokenAddress(item.quoteToken);
-  if (!mint || (baseAddress !== mint && quoteAddress !== mint)) return null;
+  if (!mint || (!sameMarketAddress(baseAddress, mint, evm) && !sameMarketAddress(quoteAddress, mint, evm))) return null;
   const volume = readVolume(item.volume);
   const base = clipSymbol(item.baseToken && item.baseToken.symbol);
   const quote = clipSymbol(item.quoteToken && item.quoteToken.symbol);
   const rawPair = typeof item.pairAddress === "string" ? item.pairAddress : "";
-  const address = PAIR_ADDRESS.test(rawPair) ? rawPair : "";
+  const address = evm ? (EVM_PAIR_ADDRESS.test(rawPair) ? rawPair : "") : PAIR_ADDRESS.test(rawPair) ? rawPair : "";
   return {
     dex: displayDex(item.dexId),
     pairAddress: address,
@@ -4011,39 +4062,45 @@ function marketLoading(mint) {
   };
 }
 
+function tagChain(model, chain) {
+  if (!chain || chain === "solana") return model;
+  return { ...model, chain };
+}
+
 function normalizeUpstream(httpStatus, bodyText, meta) {
   const mint = meta && meta.mint;
   const queriedAt = meta && meta.queriedAt;
-  if (httpStatus === 429) return marketFailure(mint, queriedAt, "http");
+  const chain = marketChain(meta);
+  if (httpStatus === 429) return tagChain(marketFailure(mint, queriedAt, "http"), chain);
   if (typeof bodyText === "string" && bodyText.length > MARKET_MAX_BODY) {
-    return marketFailure(mint, queriedAt, "grande");
+    return tagChain(marketFailure(mint, queriedAt, "grande"), chain);
   }
   const text = typeof bodyText === "string" ? bodyText.trim() : "";
   if (typeof httpStatus !== "number" || httpStatus < 200 || httpStatus >= 300) {
-    return marketFailure(mint, queriedAt, "http");
+    return tagChain(marketFailure(mint, queriedAt, "http"), chain);
   }
   let parsed;
   try {
     parsed = JSON.parse(text);
   } catch {
-    return marketFailure(mint, queriedAt, "json");
+    return tagChain(marketFailure(mint, queriedAt, "json"), chain);
   }
   const list = Array.isArray(parsed) ? parsed : parsed && Array.isArray(parsed.pairs) ? parsed.pairs : null;
-  if (!list) return marketFailure(mint, queriedAt, "json");
-  if (list.length === 0) return marketFailure(mint, queriedAt, "vacio");
+  if (!list) return tagChain(marketFailure(mint, queriedAt, "json"), chain);
+  if (list.length === 0) return tagChain(marketFailure(mint, queriedAt, "vacio"), chain);
   const usable = [];
   let skipped = 0;
   const cap = Math.min(list.length, MARKET_PARSE);
   for (let i = 0; i < cap; i += 1) {
-    const pair = readPair(list[i], mint);
+    const pair = readPair(list[i], mint, chain);
     if (!pair) skipped += 1;
     else usable.push(pair);
   }
-  if (usable.length === 0) return marketFailure(mint, queriedAt, "json");
+  if (usable.length === 0) return tagChain(marketFailure(mint, queriedAt, "json"), chain);
   const shown = usable.slice(0, MARKET_SHOW);
   const omitted = usable.length - shown.length + skipped + (list.length - cap);
   const anyFigure = shown.some((pair) => pair.liquidityUsd !== null || pair.volumeUsd !== null);
-  return {
+  return tagChain({
     schema: MARKET_SCHEMA,
     status: anyFigure ? "ok" : "incompleta",
     reason: anyFigure ? "leido" : "parcial",
@@ -4054,7 +4111,7 @@ function normalizeUpstream(httpStatus, bodyText, meta) {
     zone: "Europe/Madrid",
     pairs: shown,
     omitted,
-  };
+  }, chain);
 }
 
 function pairShape(value) {
@@ -4137,9 +4194,16 @@ function takeClientSlot(atMs) {
   return true;
 }
 
-function marketUpstreamUrl(mint) {
-  if (!isSolanaMint(mint)) return "";
-  return `https://${MARKET_HOST}${MARKET_PATH}${encodeURIComponent(mint)}`;
+function marketUpstreamUrl(mint, chain) {
+  const id = typeof chain === "string" && chain ? chain : "solana";
+  if (id === "solana") {
+    if (!isSolanaMint(mint)) return "";
+    return `https://${MARKET_HOST}${MARKET_PATH}${encodeURIComponent(mint)}`;
+  }
+  const network = marketNetworkById(id);
+  if (!network || !network.enabled || network.family !== "evm" || !network.dexscreener) return "";
+  if (typeof mint !== "string" || mint !== mint.trim() || !EVM_PAIR_ADDRESS.test(mint)) return "";
+  return `https://${MARKET_HOST}/token-pairs/v1/${network.dexscreener}/${encodeURIComponent(mint)}`;
 }
 
 function abortError() {
@@ -4237,12 +4301,17 @@ async function loadMarket(mint, fetchImpl, now) {
   const clock = clockFrom(now);
   const timeoutMs = timeoutFrom(now);
   const iso = clock().toISOString();
-  if (!isSolanaMint(mint)) return marketFailure(mint, iso, "mint");
+  const chain = now && typeof now === "object" && typeof now.chain === "string" ? now.chain : "solana";
+  if (chain === "solana") {
+    if (!isSolanaMint(mint)) return marketFailure(mint, iso, "mint");
+  } else if (!marketUpstreamUrl(mint, chain)) {
+    return tagChain(marketFailure(mint, iso, "mint"), chain);
+  }
   const allowed = now && typeof now.takeSlot === "function" ? now.takeSlot() : takeClientSlot(clock().getTime());
   if (!allowed) return marketFailure(mint, iso, "pausa-navegador");
   const fetchFn = fetchImpl || globalThis.fetch;
   if (typeof fetchFn !== "function") return marketFailure(mint, iso, "http");
-  const upstream = marketUpstreamUrl(mint);
+  const upstream = marketUpstreamUrl(mint, chain);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -4258,16 +4327,16 @@ async function loadMarket(mint, fetchImpl, now) {
     const status = response && typeof response.status === "number" ? response.status : 0;
     if (status >= 300 && status < 400) {
       await readCappedText(response, MARKET_MAX_BODY, controller.signal);
-      return marketFailure(mint, iso, "http");
+      return tagChain(marketFailure(mint, iso, "http"), chain);
     }
     const capped = await readCappedText(response, MARKET_MAX_BODY, controller.signal);
-    if (capped.aborted || controller.signal.aborted) return marketFailure(mint, iso, "tiempo");
-    if (capped.failed) return marketFailure(mint, iso, "http");
-    if (capped.overflow) return marketFailure(mint, iso, "grande");
-    if (status === 429) return marketFailure(mint, iso, "http");
-    return normalizeUpstream(status, capped.text, { mint, queriedAt: iso });
+    if (capped.aborted || controller.signal.aborted) return tagChain(marketFailure(mint, iso, "tiempo"), chain);
+    if (capped.failed) return tagChain(marketFailure(mint, iso, "http"), chain);
+    if (capped.overflow) return tagChain(marketFailure(mint, iso, "grande"), chain);
+    if (status === 429) return tagChain(marketFailure(mint, iso, "http"), chain);
+    return normalizeUpstream(status, capped.text, { mint, queriedAt: iso, chain });
   } catch (error) {
-    return marketFailure(mint, iso, isAbort(error, controller.signal) ? "tiempo" : "http");
+    return tagChain(marketFailure(mint, iso, isAbort(error, controller.signal) ? "tiempo" : "http"), chain);
   } finally {
     clearTimeout(timer);
   }
@@ -4396,7 +4465,13 @@ function windowLabel(key, lang) {
   return found[1][lang === "en" ? "en" : "es"];
 }
 
-function sideName(symbol, address, lang) {
+function sideName(symbol, address, lang, chain) {
+  if (chain && chain !== "solana") {
+    const fixed = knownQuote(chain, address);
+    if (fixed) return fixed;
+    if (!symbol) return marketCopy(lang, "sin símbolo", "no symbol");
+    return marketCopy(lang, `Dice llamarse «${symbol}»`, `It says it is called «${symbol}»`);
+  }
   const fixed = MARKET_KNOWN_QUOTES.get(address);
   if (fixed) return fixed;
   if (!symbol) return marketCopy(lang, "sin símbolo", "no symbol");
@@ -4404,9 +4479,9 @@ function sideName(symbol, address, lang) {
   return marketCopy(lang, `Dice llamarse «${symbol}»`, `It says it is called «${symbol}»`);
 }
 
-function pairTitle(pair, lang) {
-  const base = sideName(pair.base, pair.baseMint, lang);
-  const quote = sideName(pair.quote, pair.quoteMint, lang);
+function pairTitle(pair, lang, chain) {
+  const base = sideName(pair.base, pair.baseMint, lang, chain);
+  const quote = sideName(pair.quote, pair.quoteMint, lang, chain);
   return marketCopy(lang, `Par: ${base} / ${quote}`, `Pair: ${base} / ${quote}`);
 }
 
@@ -4483,6 +4558,14 @@ function marketGap(model, lang) {
     }
     return parts.join(" ");
   }
+  if (reason === "vacio" && model && model.chain && model.chain !== "solana") {
+    const label = marketNetworkById(model.chain)?.label?.[lang === "en" ? "en" : "es"] || model.chain;
+    return marketCopy(
+      lang,
+      `DEX Screener no listó ningún par de ${label} para esta dirección. No es una liquidez de cero.`,
+      `DEX Screener listed no ${label} pair for this address. That is not zero liquidity.`,
+    );
+  }
   const known = GAP[reason] || GAP.http;
   return known[lang === "en" ? "en" : "es"];
 }
@@ -4496,7 +4579,7 @@ function describeMarket(model, lang) {
       const liquidity = formatUsd(pair.liquidityUsd, language);
       const volume = formatUsd(pair.volumeUsd, language);
       pairs.push({
-        title: pairTitle(pair, language),
+        title: pairTitle(pair, language, model && model.chain),
         where: pair.dex
           ? marketCopy(language, `Dónde está el par: ${dexPhrase(pair.dex, language)}`, `Where the pair is: ${dexPhrase(pair.dex, language)}`)
           : marketCopy(language, "Dónde está el par: la fuente no lo nombró.", "Where the pair is: the source did not name it."),
@@ -4586,13 +4669,17 @@ function marketText(tag, value, attrs) {
   return node;
 }
 
-function rememberMarket(mint, model) {
-  if (!model || model.status === "fallo" || model.status === "limite" || model.status === "consulta") return;
-  marketCache.set(mint, { at: Date.now(), model });
+function marketKey(mint, chain) {
+  return chain && chain !== "solana" ? `${chain}:${mint}` : mint;
 }
 
-function freshMarket(mint) {
-  const hit = marketCache.get(mint);
+function rememberMarket(mint, model, chain) {
+  if (!model || model.status === "fallo" || model.status === "limite" || model.status === "consulta") return;
+  marketCache.set(marketKey(mint, chain), { at: Date.now(), model });
+}
+
+function freshMarket(mint, chain) {
+  const hit = marketCache.get(marketKey(mint, chain));
   if (!hit) return null;
   if (Date.now() - hit.at > CACHE_MS) {
     marketCache.delete(mint);
@@ -4726,14 +4813,14 @@ function paintMarket(parent, model, lang, token, onRetry) {
   parent.replaceChildren(section);
 }
 
-function paintMarketPrompt(parent, mint, lang, token) {
+function paintMarketPrompt(parent, mint, lang, token, chain) {
   const language = lang === "en" ? "en" : "es";
   const privacy = privacyParts(language);
   const section = marketEl("section", { class: "datos-mercado", "data-estado": "espera" });
   const button = marketText("button", MARKET_READ_BUTTON[language], { type: "button", class: "leer-mercado" });
   button.addEventListener("click", () => {
     if (marketTokens.get(parent) !== token) return;
-    mountMarket(parent, { mint, lang: language, auto: true });
+    mountMarket(parent, { mint, lang: language, chain, auto: true });
   });
   section.append(
     marketText("h3", language === "en" ? "Market data" : "Datos de mercado"),
@@ -4749,28 +4836,29 @@ function mountMarket(parent, options) {
   if (!parent) return;
   const mint = options && options.mint;
   const lang = options && options.lang === "en" ? "en" : "es";
+  const chain = options && typeof options.chain === "string" && options.chain ? options.chain : "solana";
   const auto = Boolean(options && options.auto);
   const force = Boolean(options && options.force);
   const token = {};
   marketTokens.set(parent, token);
   const asked = auto || force;
-  const retry = () => mountMarket(parent, { mint, lang, auto: true, force: true });
+  const retry = () => mountMarket(parent, { mint, lang, chain, auto: true, force: true });
   const settle = (model) => {
     if (marketTokens.get(parent) !== token) return;
     paintMarket(parent, model, lang, token, retry);
     if (asked) syncMarketSummaryGap(parent, Boolean(model && model.status === "fallo"), lang, retry);
   };
   if (!auto && !force) {
-    const cached = freshMarket(mint);
+    const cached = freshMarket(mint, chain);
     if (cached) {
       paintMarket(parent, cached, lang, token, retry);
       return;
     }
-    paintMarketPrompt(parent, mint, lang, token);
+    paintMarketPrompt(parent, mint, lang, token, chain);
     return;
   }
   if (!force) {
-    const cached = freshMarket(mint);
+    const cached = freshMarket(mint, chain);
     if (cached) {
       paintMarket(parent, cached, lang, token, retry);
       if (asked) syncMarketSummaryGap(parent, false, lang, retry);
@@ -4779,18 +4867,19 @@ function mountMarket(parent, options) {
   }
   paintMarket(parent, marketLoading(mint), lang, token, retry);
   if (asked) syncMarketSummaryGap(parent, false, lang, retry);
-  if (force) marketPending.delete(mint);
-  const pending = !force ? marketPending.get(mint) : null;
-  const job = pending || loadMarket(mint);
-  marketPending.set(mint, job);
+  const key = marketKey(mint, chain);
+  if (force) marketPending.delete(key);
+  const pending = !force ? marketPending.get(key) : null;
+  const job = pending || loadMarket(mint, undefined, chain === "solana" ? undefined : { chain });
+  marketPending.set(key, job);
   job
     .then((model) => {
-      if (marketPending.get(mint) === job) marketPending.delete(mint);
-      rememberMarket(mint, model);
+      if (marketPending.get(key) === job) marketPending.delete(key);
+      rememberMarket(mint, model, chain);
       settle(model);
     })
     .catch(() => {
-      if (marketPending.get(mint) === job) marketPending.delete(mint);
+      if (marketPending.get(key) === job) marketPending.delete(key);
       settle(marketFailure(mint, new Date().toISOString(), "http"));
     });
 }

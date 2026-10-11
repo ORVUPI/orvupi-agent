@@ -1,0 +1,190 @@
+{
+  "schema": "stubx.networks.v1",
+  "default": "solana",
+  "note": "Para añadir Ethereum o BNB Chain: pon enabled en true. El lector EVM, el selector y la CSP de Verify y del Cuaderno usan esta lista. No hace falta otro programa.",
+  "checks": [
+    {
+      "id": "name",
+      "es": "Nombre",
+      "en": "Name",
+      "help": {
+        "es": "Es un texto que escribió quien creó el token. No dice quién es esa persona.",
+        "en": "It is text written by whoever created the token. It does not say who that person is."
+      },
+      "on": ["solana", "evm"]
+    },
+    {
+      "id": "symbol",
+      "es": "Símbolo",
+      "en": "Symbol",
+      "help": {
+        "es": "Es la abreviatura que el token dice tener. Dos tokens pueden usar la misma.",
+        "en": "It is the short name the token says it has. Two tokens can use the same one."
+      },
+      "on": ["solana", "evm"]
+    },
+    {
+      "id": "decimals",
+      "es": "Decimales",
+      "en": "Decimals",
+      "help": {
+        "es": "Dicen cómo se parte la cantidad. 6 decimales significa que 1000000 unidades mínimas son 1 token.",
+        "en": "They say how the amount is split. 6 decimals means 1000000 smallest units are 1 token."
+      },
+      "on": ["solana", "evm"]
+    },
+    {
+      "id": "supply",
+      "es": "Cantidad total",
+      "en": "Total amount",
+      "help": {
+        "es": "Es la cantidad que el contrato dice que existe en esta lectura.",
+        "en": "It is the amount the contract says exists in this reading."
+      },
+      "on": ["solana", "evm"]
+    },
+    {
+      "id": "mintAuthority",
+      "es": "Permiso de emisión",
+      "en": "Mint permission",
+      "help": {
+        "es": "En Solana, permiso para crear más tokens de esa cuenta.",
+        "en": "On Solana, permission to create more tokens of that account."
+      },
+      "on": ["solana"]
+    },
+    {
+      "id": "freezeAuthority",
+      "es": "Permiso de congelación",
+      "en": "Freeze permission",
+      "help": {
+        "es": "En Solana, permiso para bloquear cuentas de ese token.",
+        "en": "On Solana, permission to block accounts of that token."
+      },
+      "on": ["solana"]
+    },
+    {
+      "id": "metadata",
+      "es": "Metadatos",
+      "en": "Metadata",
+      "help": {
+        "es": "En Solana, si el nombre o la imagen se pueden cambiar.",
+        "en": "On Solana, whether the name or the image can change."
+      },
+      "on": ["solana"]
+    },
+    {
+      "id": "extensions",
+      "es": "Extensiones",
+      "en": "Extensions",
+      "help": {
+        "es": "En Solana, extras de Token-2022 que esta lectura sabe leer.",
+        "en": "On Solana, Token-2022 extras this reading knows how to read."
+      },
+      "on": ["solana"]
+    },
+    {
+      "id": "curve",
+      "es": "Curva",
+      "en": "Curve",
+      "help": {
+        "es": "En Solana, la cuenta de la curva de Pump.fun, si existe.",
+        "en": "On Solana, the Pump.fun curve account, if it exists."
+      },
+      "on": ["solana"]
+    },
+    {
+      "id": "largest",
+      "es": "Cuentas con más tokens",
+      "en": "Largest token accounts",
+      "help": {
+        "es": "En Solana, una muestra. No es un censo.",
+        "en": "On Solana, a sample. It is not a census."
+      },
+      "on": ["solana"]
+    },
+    {
+      "id": "code",
+      "es": "Contrato o cuenta",
+      "en": "Contract or account",
+      "help": {
+        "es": "Si la dirección tiene código, es un contrato. Si no tiene, es una cuenta (a veces se llama EOA: una dirección sin código).",
+        "en": "If the address has code, it is a contract. If it has none, it is an account (sometimes called an EOA: an address with no code)."
+      },
+      "on": ["evm"]
+    },
+    {
+      "id": "owner",
+      "es": "Dirección owner()",
+      "en": "owner() address",
+      "help": {
+        "es": "Algunos contratos responden a owner() con una dirección. Si no tienen esa función, esta lectura lo dice. No es un permiso de Solana.",
+        "en": "Some contracts answer owner() with an address. If they do not have that function, this reading says so. It is not a Solana permission."
+      },
+      "on": ["evm"]
+    },
+    {
+      "id": "proxy",
+      "es": "Proxy EIP-1967",
+      "en": "EIP-1967 proxy",
+      "help": {
+        "es": "Un proxy es un contrato que reenvía las preguntas a otro contrato. EIP-1967 es la forma habitual de anotar esa otra dirección. Si no está, esta lectura lo dice.",
+        "en": "A proxy is a contract that forwards questions to another contract. EIP-1967 is the usual way to record that other address. If it is not there, this reading says so."
+      },
+      "on": ["evm"]
+    },
+    {
+      "id": "market",
+      "es": "Datos de mercado",
+      "en": "Market data",
+      "help": {
+        "es": "Pares, liquidez y volumen de DEX Screener. Solo si pulsas el botón. No hay precio por token.",
+        "en": "Pairs, liquidity, and volume from DEX Screener. Only if you press the button. There is no per-token price."
+      },
+      "on": ["solana", "evm"]
+    }
+  ],
+  "networks": [
+    {
+      "id": "solana",
+      "family": "solana",
+      "enabled": true,
+      "label": { "es": "Solana", "en": "Solana" },
+      "dexscreener": "solana"
+    },
+    {
+      "id": "base",
+      "family": "evm",
+      "enabled": true,
+      "label": { "es": "Base", "en": "Base" },
+      "chainId": 8453,
+      "rpc": "https://mainnet.base.org",
+      "dexscreener": "base",
+      "knownQuotes": {
+        "0x4200000000000000000000000000000000000006": "WETH",
+        "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "USDC",
+        "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2": "USDT"
+      }
+    },
+    {
+      "id": "ethereum",
+      "family": "evm",
+      "enabled": false,
+      "label": { "es": "Ethereum", "en": "Ethereum" },
+      "chainId": 1,
+      "rpc": "https://ethereum-rpc.publicnode.com",
+      "dexscreener": "ethereum",
+      "knownQuotes": {}
+    },
+    {
+      "id": "bnb",
+      "family": "evm",
+      "enabled": false,
+      "label": { "es": "BNB Chain", "en": "BNB Chain" },
+      "chainId": 56,
+      "rpc": "https://bsc-rpc.publicnode.com",
+      "dexscreener": "bsc",
+      "knownQuotes": {}
+    }
+  ]
+}

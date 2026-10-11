@@ -3,6 +3,12 @@
  * Tres bloques, sin puntuación, sin semáforo de «seguro» y sin recomendación.
  * Cada punto: título corto, una frase y un enlace a «Entender».
  */
+let quoteLookup = () => "";
+
+/** Lo rellena networks.js. Este archivo no importa la lista: el bundle de Solana lo copia entero. */
+export function setNotebookQuoteLookup(fn) {
+  quoteLookup = typeof fn === "function" ? fn : () => "";
+}
 
 const TOPIC_BY_ID = {
   suministro: "suministro",
@@ -731,6 +737,16 @@ function authorityState(field) {
 }
 
 export function notebookNameText(card, lang) {
+  if (card && card.schema === "stubx.notebook.card.evm") {
+    const known = quoteLookup(card.network, card.address);
+    const written = summaryShown(card.name && card.name.text) || summaryShown(card.symbol && card.symbol.text);
+    if (known && written) {
+      return lang === "en" ? `${known}. The contract wrote «${written}».` : `${known}. El contrato escribió «${written}».`;
+    }
+    if (known) return known;
+    if (written) return lang === "en" ? `It says it is called «${written}»` : `Dice llamarse «${written}»`;
+    return "";
+  }
   const context = contextFromCard(card);
   const name = summaryShown(context.name);
   const symbol = summaryShown(context.symbol);

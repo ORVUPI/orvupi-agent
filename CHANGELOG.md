@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-11 · Base, fase 1 de la lectura multired
+
+- Verify y el Cuaderno tienen un selector de red. Al abrir, la red es Solana. Base se lee en el navegador, solo lectura, por el nodo público `mainnet.base.org`, que también ve la IP. No hay cartera ni firma. Ethereum y BNB Chain están en `web/v2/shared/networks.json` con `enabled` en false: encenderlas añade la opción y el host de la CSP al publicar, sin otro programa.
+- Cada dato de Base queda en leído, ausente comprobado, consulta fallida o no consultado: nombre, símbolo, decimales, cantidad total, `owner()` si existe, proxy EIP-1967, y si la dirección es un contrato o una cuenta. Un token que no es una moneda conocida de esa red se muestra como «Dice llamarse». DEX Screener, con `chainId` base, solo si se pulsa el botón, y sin precio por token. El cuaderno guarda red y dirección. La lista de seguimiento usa la clave red y dirección. Cómo volver atrás está en `web/v2/shared/ROLLBACK.md` y en `ROLLBACK.md`.
+- Esta entrada no despliega stubxai.com.
+
 ## 2026-10-11 · Revisar direcciones guardadas
 
 - En el Cuaderno, «Revisar direcciones guardadas» / «Recheck saved addresses» vuelve a leer las direcciones guardadas, las marcadas o todas si no se marca ninguna, y dice si algo cambió desde la última lectura. «Sigue igual» solo sale si las dos fichas están completas y sin errores. Si no, el veredicto es «Incompleto» y va con «Qué falta». Nada nuevo se guarda hasta pulsar «Guardar» o «Guardar todas». «Guardar todas» sigue desactivado hasta que hay una lectura nueva sin guardar; si se pulsa antes, un texto explica que todavía no hay nada que guardar. «Detener» corta la pasada. Si se llega a 6 lecturas en un minuto, el aviso cuenta los segundos que faltan y dice que el límite es para no saturar los servicios públicos de Solana. Esta entrada no despliega la web. stubxai.com no cambia hasta que se publique.

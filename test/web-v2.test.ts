@@ -539,7 +539,7 @@ describe("web v2", () => {
     assert.equal(html.includes("\uFFFD"), false);
     assert.match(html, /assets\/verify\.js/);
     const meta = html.match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
-    assert.deepEqual(cspHosts(meta), ["solana-rpc.publicnode.com", "api.mainnet-beta.solana.com", "api.dexscreener.com"]);
+    assert.deepEqual(cspHosts(meta), ["solana-rpc.publicnode.com", "api.mainnet-beta.solana.com", "mainnet.base.org", "api.dexscreener.com"]);
     assert.equal(meta.includes("*.dexscreener"), false);
     assert.equal((meta.match(/connect-src/g) ?? []).length, 1);
     const home = read("index.html");
@@ -814,6 +814,7 @@ describe("web v2", () => {
     assert.deepEqual(cspHosts(verifyPolicy?.header ?? ""), [
       "solana-rpc.publicnode.com",
       "api.mainnet-beta.solana.com",
+      "mainnet.base.org",
       "api.dexscreener.com",
     ]);
     assert.equal((verifyPolicy?.header ?? "").includes("*.dexscreener"), false);
@@ -827,6 +828,7 @@ describe("web v2", () => {
     assert.deepEqual(cspHosts(notebookPolicy?.header ?? ""), [
       "solana-rpc.publicnode.com",
       "api.mainnet-beta.solana.com",
+      "mainnet.base.org",
       "api.dexscreener.com",
     ]);
     const samples = ["/", "/verify/", "/lab/", "/lab/sw.js", "/aprender/", "/studio/", "/cuaderno/", "/cuaderno/index.html", "/token.json", "/assets/site.css", "/404.html"];

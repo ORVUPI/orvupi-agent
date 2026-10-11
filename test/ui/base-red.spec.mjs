@@ -1,0 +1,208 @@
+import { expect, test } from "@playwright/test";
+
+const USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+const NO_OWNER = "0x1111111111111111111111111111111111111111";
+const PROXY = "0x2222222222222222222222222222222222222222";
+const EOA = "0x3333333333333333333333333333333333333333";
+const DOWN = "0x5555555555555555555555555555555555555555";
+const IMPL = "4444444444444444444444444444444444444444";
+
+const SELECTORS = {
+  name: "0x06fdde03",
+  symbol: "0x95d89b41",
+  decimals: "0x313ce567",
+  totalSupply: "0x18160ddd",
+  owner: "0x8da5cb5b",
+};
+const SLOT_IMPLEMENTATION = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
+
+function word(hex) {
+  return `0x${hex.replace(/^0x/, "").padStart(64, "0")}`;
+}
+
+function encodeString(text) {
+  const bytes = new TextEncoder().encode(text);
+  const length = bytes.length.toString(16).padStart(64, "0");
+  let data = "";
+  for (const byte of bytes) data += byte.toString(16).padStart(2, "0");
+  const pad = (64 - (data.length % 64)) % 64;
+  return `0x${"20".padStart(64, "0")}${length}${data}${"0".repeat(pad)}`;
+}
+
+function answerFor(address, body) {
+  const method = body.method;
+  const params = body.params || [];
+  const data = params[0] && params[0].data ? params[0].data : "";
+  const slot = String(params[1] || "");
+  if (address === DOWN) return null;
+  if (address === EOA) {
+    if (method === "eth_getCode") return { result: "0x" };
+    if (method === "eth_getStorageAt") return { result: word("0") };
+    return { error: { code: 3, message: "execution reverted" } };
+  }
+  if (address === NO_OWNER) {
+    if (method === "eth_getCode") return { result: "0x6001" };
+    if (method === "eth_getStorageAt") return { result: word("0") };
+    if (data === SELECTORS.name) return { result: encodeString("Foo") };
+    if (data === SELECTORS.symbol) return { result: encodeString("FOO") };
+    if (data === SELECTORS.decimals) return { result: word("12") };
+    if (data === SELECTORS.totalSupply) return { result: word("0a") };
+    if (data === SELECTORS.owner) return { error: { code: 3, message: "execution reverted" } };
+    return { error: { code: 3, message: "execution reverted" } };
+  }
+  if (address === PROXY) {
+    if (method === "eth_getCode") return { result: "0x363d3d" };
+    if (method === "eth_getStorageAt" && slot === SLOT_IMPLEMENTATION) return { result: word(IMPL) };
+    if (method === "eth_getStorageAt") return { result: word("0") };
+    return { error: { code: 3, message: "execution reverted" } };
+  }
+  if (method === "eth_getCode") return { result: "0x60016000" };
+  if (method === "eth_getStorageAt" && slot === SLOT_IMPLEMENTATION) return { result: word(IMPL) };
+  if (method === "eth_getStorageAt") return { result: word("0") };
+  if (data === SELECTORS.name) return { result: encodeString("USD Coin") };
+  if (data === SELECTORS.symbol) return { result: encodeString("USDC") };
+  if (data === SELECTORS.decimals) return { result: word("06") };
+  if (data === SELECTORS.totalSupply) return { result: word("0f4240") };
+  if (data === SELECTORS.owner) return { result: word("5555555555555555555555555555555555555555") };
+  return { error: { code: 3, message: "execution reverted" } };
+}
+
+async function mockRpc(page) {
+  let calls = 0;
+  await page.route("https://mainnet.base.org/**", async (route) => {
+    calls += 1;
+    const body = JSON.parse(route.request().postData() || "{}");
+    const to = body.params && body.params[0] && body.params[0].to ? body.params[0].to : body.params && body.params[0];
+    const address = String(to || "");
+    if (address.toLowerCase() === DOWN.toLowerCase()) {
+      await route.fulfill({ status: 500, contentType: "application/json", body: "" });
+      return;
+    }
+    const answer = answerFor(address, body);
+    if (!answer) {
+      await route.fulfill({ status: 500, contentType: "application/json", body: "" });
+      return;
+    }
+    const payload = answer.error
+      ? { jsonrpc: "2.0", id: body.id, error: answer.error }
+      : { jsonrpc: "2.0", id: body.id, result: answer.result };
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(payload) });
+  });
+  await page.route("https://api.dexscreener.com/**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify([
+        {
+          chainId: "base",
+          dexId: "aerodrome",
+          pairAddress: "0xabcabcabcabcabcabcabcabcabcabcabcabcabca",
+          baseToken: { address: USDC, symbol: "USDC" },
+          quoteToken: { address: "0x4200000000000000000000000000000000000006", symbol: "WETH" },
+          liquidity: { usd: 2500 },
+          volume: { h24: 80 },
+        },
+      ]),
+    });
+  });
+  return {
+    calls: () => calls,
+  };
+}
+
+async function chooseBase(page) {
+  await page.goto("/verify/");
+  await expect(page.locator("#red")).toHaveValue("solana");
+  await page.locator("#red").selectOption("base");
+  await expect(page.locator("#aviso-rpc-base")).toBeVisible();
+  await expect(page.locator("#aviso-rpc-base")).toContainText("mainnet.base.org");
+  await expect(page.locator("#comprobaciones-red")).toContainText(/Proxy EIP-1967/);
+  await expect(page.locator("#comprobaciones-red")).toContainText(/no pide|does not ask/i);
+}
+
+test("Verify en Base lee USDC, un token sin owner, un proxy, una cuenta, una dirección inválida y un nodo caído", async ({ page }, testInfo) => {
+  const rpc = await mockRpc(page);
+  await chooseBase(page);
+  const before = rpc.calls();
+  await page.locator("#direccion-token").fill("0x123");
+  await page.locator("#consulta").locator("button[type=submit]").click();
+  await expect(page.locator("#resultado")).toContainText(/No se ha consultado el nodo|The node was not queried/);
+  expect(rpc.calls()).toBe(before);
+
+  await page.locator("#direccion-token").fill(USDC);
+  await page.locator("#consulta").locator("button[type=submit]").click();
+  await expect(page.locator("#resultado")).toContainText("USD Coin", { timeout: 20000 });
+  await expect(page.locator("#resultado")).toContainText(/leído|read/);
+  await expect(page.locator("#resultado")).toContainText(/EIP-1967|proxy/i);
+  await expect(page.locator("#resultado")).toContainText("mainnet.base.org");
+  const shot = testInfo.project.name === "mobile" ? "mobile" : testInfo.project.name === "desktop" ? "desktop" : "";
+  if (shot) {
+    await page.screenshot({ path: `/opt/cursor/artifacts/verify-base-es-${shot}.png`, fullPage: true });
+    await page.locator("[data-set-lang='en']").click();
+    await expect(page.locator("#resultado")).toContainText(/The contract wrote/);
+    await page.screenshot({ path: `/opt/cursor/artifacts/verify-base-en-${shot}.png`, fullPage: true });
+    await page.locator("[data-set-lang='es']").click();
+  }
+  await page.locator(".leer-mercado").click();
+  await expect(page.locator(".datos-mercado")).toContainText(/USDC/);
+  await expect(page.locator(".datos-mercado")).toContainText(/WETH/);
+  await expect(page.locator(".datos-mercado")).not.toContainText(/priceUsd|precio por token/i);
+
+  await page.evaluate(() => window.stubxResetEvm && window.stubxResetEvm());
+  await page.locator("#direccion-token").fill(NO_OWNER);
+  await page.locator("#consulta").locator("button[type=submit]").click();
+  await expect(page.locator("#resultado")).toContainText(/Dice llamarse «Foo»|It says it is called «Foo»/, { timeout: 20000 });
+  await expect(page.locator("#resultado")).toContainText(/ausente comprobado|confirmed absent/);
+
+  await page.evaluate(() => window.stubxResetEvm && window.stubxResetEvm());
+  await page.locator("#direccion-token").fill(PROXY);
+  await page.locator("#consulta").locator("button[type=submit]").click();
+  await expect(page.locator("#resultado")).toContainText(/EIP-1967/, { timeout: 20000 });
+  await expect(page.locator("#resultado")).toContainText(/0x4444444444444444444444444444444444444444/i);
+
+  await page.evaluate(() => window.stubxResetEvm && window.stubxResetEvm());
+  await page.locator("#direccion-token").fill(EOA);
+  await page.locator("#consulta").locator("button[type=submit]").click();
+  await expect(page.locator("#resultado")).toContainText(/EOA/, { timeout: 20000 });
+
+  await page.evaluate(() => window.stubxResetEvm && window.stubxResetEvm());
+  await page.locator("#direccion-token").fill(DOWN);
+  await page.locator("#consulta").locator("button[type=submit]").click();
+  await expect(page.locator("#resultado")).toContainText(/consulta fallida|failed query/, { timeout: 20000 });
+});
+
+test("el cuaderno guarda la red y la dirección de Base", async ({ page }) => {
+  await mockRpc(page);
+  await page.goto("/cuaderno/");
+  await expect(page.locator("#red-cuaderno")).toHaveValue("solana");
+  await page.locator("#red-cuaderno").selectOption("base");
+  await expect(page.locator("#aviso-rpc-base")).toContainText("mainnet.base.org");
+  await page.locator("#direccion-cuaderno").fill(USDC);
+  await page.locator("#consultar").click();
+  await expect(page.locator("#resultado")).toContainText("USD Coin", { timeout: 20000 });
+  await expect(page.locator("#lista-consultas")).toContainText(USDC, { timeout: 20000 });
+  const stored = await page.evaluate(async () => {
+    const db = await new Promise((resolve, reject) => {
+      const request = indexedDB.open("stubx-cuaderno");
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const rows = await new Promise((resolve, reject) => {
+      const items = [];
+      const request = db.transaction("records").objectStore("records").openCursor();
+      request.onsuccess = () => {
+        const cursor = request.result;
+        if (!cursor) {
+          resolve(items);
+          return;
+        }
+        items.push(cursor.value);
+        cursor.continue();
+      };
+      request.onerror = () => reject(request.error);
+    });
+    db.close();
+    return rows.map((row) => ({ network: row.network, address: row.address, cardNetwork: row.card && row.card.network }));
+  });
+  expect(stored.some((row) => row.network === "base" && row.address === USDC && row.cardNetwork === "base")).toBe(true);
+});
