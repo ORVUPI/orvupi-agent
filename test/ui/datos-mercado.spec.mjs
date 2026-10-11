@@ -146,9 +146,16 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
     if (testInfo.project.name !== "mobile" && testInfo.project.name !== "desktop") return;
     const block = page.locator("#resultado .datos-mercado");
     await block.scrollIntoViewIfNeeded();
-    await block.screenshot({
-      path: `/opt/cursor/artifacts/datos_mercado_${name}_${testInfo.project.name}.png`,
-    });
+    const target = `/opt/cursor/artifacts/datos_mercado_${name}_${testInfo.project.name}.png`;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        await block.screenshot({ path: target });
+        return;
+      } catch (error) {
+        if (attempt === 2 || !String(error).includes("EAGAIN")) throw error;
+        await page.waitForTimeout(300);
+      }
+    }
   }
 
   await page.goto("/verify/");
@@ -160,7 +167,7 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
   await expect(block).toContainText("2026-10-11 09:48:00 UTC");
   await expect(block).toContainText("Liquidez: 50.000,25 USD");
   await expect(block).toContainText("Volumen en 24 horas: 1.200,5 USD");
-  await expect(block.locator("[data-bloque='falta']")).toContainText("Qué falta");
+  await expect(block.locator("[data-hueco='falta']")).toContainText("Qué falta");
   const advice = await block.innerText();
   expect(/\b(precio|compra|comprar|seguro|buy|sell|score|sube|baja|fomo)\b/i.test(advice)).toBe(false);
   await shot("ok");
@@ -204,9 +211,16 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
   await expect(saved).toContainText("2026-10-11 09:48:00 UTC");
   if (testInfo.project.name === "desktop" || testInfo.project.name === "mobile") {
     await saved.scrollIntoViewIfNeeded();
-    await saved.screenshot({
-      path: `/opt/cursor/artifacts/datos_mercado_cuaderno_${testInfo.project.name}.png`,
-    });
+    const target = `/opt/cursor/artifacts/datos_mercado_cuaderno_${testInfo.project.name}.png`;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        await saved.screenshot({ path: target });
+        break;
+      } catch (error) {
+        if (attempt === 2 || !String(error).includes("EAGAIN")) throw error;
+        await page.waitForTimeout(300);
+      }
+    }
   }
 
   expect(external).toEqual([]);

@@ -78,7 +78,7 @@ function paintMarket(parent, model, lang) {
     }
     section.append(list);
   }
-  const gap = marketEl("div", { class: "bloque-mercado", "data-bloque": "falta" });
+  const gap = marketEl("div", { class: "bloque-mercado", "data-hueco": "falta" });
   gap.append(marketText("h4", view.gapTitle), marketText("p", view.gap, { "data-falta": "si" }));
   section.append(gap);
   parent.replaceChildren(section);
