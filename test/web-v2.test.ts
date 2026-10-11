@@ -1034,7 +1034,7 @@ test("las frases retiradas no salen fuera de /risks y /legal", () => {
   assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
 });
 
-test("la guardia junta espacios, saltos, etiquetas y concatenaciones", () => {
+test("la guardia junta espacios, saltos, etiquetas, ancho cero y concatenaciones", () => {
   const script = `
 import check_legal_phrases as guard
 samples = [
@@ -1046,6 +1046,10 @@ samples = [
     ("join", '["not investment ", "advice"].join("")'),
     ("adyacentes", '"imagen generada con " "ia"'),
     ("plantilla", "<p>AI-generated\\nimage</p>"),
+    ("zwsp", "cripto de alto \\u200briesgo"),
+    ("zwj", "not invest\\u200dment advice"),
+    ("bom", "ai-generated \\ufeffimage"),
+    ("entidad", "cripto de alto &#8203;riesgo"),
 ]
 for name, sample in samples:
     hits = guard.phrase_hits("content/tools/ejemplo.html", sample)
@@ -1056,6 +1060,12 @@ if guard.phrase_hits("security/index.html", anti):
     raise SystemExit("antiestafa")
 if not guard.phrase_hits("studio/index.html", "unofficial"):
     raise SystemExit("studio")
+if not guard.phrase_hits("studio/index.html", "no \\u200boficial"):
+    raise SystemExit("ancho cero")
+if not guard.phrase_hits("studio/index.html", "un\\u200dofficial"):
+    raise SystemExit("zwj")
+if not guard.phrase_hits("studio/index.html", "\\ufeffunofficial"):
+    raise SystemExit("bom")
 if not guard.phrase_hits("studio/lib/copy.mjs", "not official"):
     raise SystemExit("metadatos")
 if guard.phrase_hits("index.html", "is not official"):

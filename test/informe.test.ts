@@ -29,6 +29,20 @@ function assertAbsent(text: string) {
   for (const phrase of ABSENT_FROM_FILE) assert.equal(text.includes(phrase), false, phrase);
 }
 
+function assertTitleStaysWithFirstCard(plan: PageSlice[], kept: KeptSpan[]) {
+  assert.ok(kept.length > 0);
+  for (const span of kept) {
+    const holders = plan.filter((page) => span.top < page.bodyBottom && span.headingBottom > page.bodyTop);
+    assert.equal(holders.length, 1, `${span.top}-${span.bottom}`);
+    const holder = holders[0];
+    assert.ok(holder);
+    assert.ok(span.top >= holder.bodyTop && span.bottom <= holder.bodyBottom);
+    assert.equal(plan.some((page) => page.bodyBottom > span.top && page.bodyBottom < span.bottom), false);
+  }
+}
+
+type KeptSpan = { top: number; headingBottom: number; bottom: number };
+type PageSlice = { bodyTop: number; bodyBottom: number };
 type Line = { title: string; lead: string; note: string };
 type Block = { id: string; heading: string; lines: Line[]; empty: string; service: string };
 type Model = {
@@ -48,8 +62,8 @@ type Model = {
 
 type ReportModule = {
   formatReportWhen: (value: string, lang: string) => string;
-  reportPagePlan: (height: number, limitsTop: number, pageHeight?: number, warningHeight?: number, guides?: { headerBottom: number; breaks: number[]; cardEnds?: number[] } | null) => Array<{ repeatLimits: boolean; repeatHeader: boolean; single: boolean; bodyBottom: number; bodyTop: number }>;
-  sliceReportPages: (rgba: Uint8Array, width: number, height: number, limitsTop: number, pageHeight?: number, warning?: { top: number; bottom: number } | null, guides?: { headerBottom: number; breaks: number[]; cardEnds?: number[] } | null) => Array<{ rgba: Uint8Array; width: number; height: number }>;
+  reportPagePlan: (height: number, limitsTop: number, pageHeight?: number, warningHeight?: number, guides?: { headerBottom: number; breaks: number[]; cardEnds?: number[]; kept?: KeptSpan[] } | null) => Array<{ repeatLimits: boolean; repeatHeader: boolean; single: boolean; bodyBottom: number; bodyTop: number }>;
+  sliceReportPages: (rgba: Uint8Array, width: number, height: number, limitsTop: number, pageHeight?: number, warning?: { top: number; bottom: number } | null, guides?: { headerBottom: number; breaks: number[]; cardEnds?: number[]; kept?: KeptSpan[] } | null) => Array<{ rgba: Uint8Array; width: number; height: number }>;
   reportCopy: (lang: string) => { pdfFail: string; title: string };
   canvasSafeText: (value: string, max?: number) => string;
   reportModel: (source: Record<string, unknown>, lang: string) => Model;
@@ -62,7 +76,7 @@ type ReportModule = {
     warningBottom: number;
     lines: Array<{ top: number; bottom: number; header: boolean; limits: boolean }>;
     cards: Array<{ top: number; bottom: number; header: boolean; limits: boolean }>;
-    guides: { headerBottom: number; breaks: number[]; cardEnds?: number[] };
+    guides: { headerBottom: number; breaks: number[]; cardEnds?: number[]; kept?: KeptSpan[] };
   };
   pdfFromRgba: (rgba: Uint8Array, width: number, height: number) => Promise<Uint8Array>;
   isAndroid: (nav: { userAgent?: string }) => boolean;
@@ -613,7 +627,8 @@ describe("informe descargable", () => {
     const drawn = report.drawReport(mockCtx().ctx, model, 840);
     const foot = drawn.height - drawn.limitsTop;
     const bodyCards = drawn.cards.filter((item) => !item.header && !item.limits);
-    const tallest = Math.max(...bodyCards.map((item) => item.bottom - item.top));
+    const keptTall = Math.max(0, ...(drawn.guides.kept ?? []).map((span) => span.bottom - span.top));
+    const tallest = Math.max(keptTall, ...bodyCards.map((item) => item.bottom - item.top));
     assert.ok(drawn.warningBottom <= drawn.guides.headerBottom);
     assert.ok(drawn.guides.headerBottom < drawn.limitsTop);
     let found: { pageHeight: number; plan: Array<{ bodyTop: number; bodyBottom: number; single: boolean; repeatHeader: boolean; repeatLimits: boolean }> } | null = null;
@@ -644,6 +659,7 @@ describe("informe descargable", () => {
       assert.ok(hit);
       assert.ok(line.top >= hit.bodyTop && line.bottom <= hit.bodyBottom);
     }
+    assertTitleStaysWithFirstCard(plan, drawn.guides.kept ?? []);
     for (const card of bodyCards) {
       const hits = plan.filter((page) => card.bottom > page.bodyTop && card.top < page.bodyBottom);
       assert.equal(hits.length, 1);
@@ -689,6 +705,76 @@ describe("informe descargable", () => {
       assert.equal(owners.every((slice) => containsFull(slice.rgba, slice.height, line.top, line.bottom)), true);
       if (!line.header && !line.limits) assert.equal(owners.length, 1);
       if (line.header || line.limits) assert.equal(owners.length, 6);
+    }
+  });
+
+  test("el título de sección viaja con su primera tarjeta", async () => {
+    const { report } = await load();
+    const items = Array.from({ length: 12 }, (_, index) => ({
+      title: { es: `Suministro total ${index + 1}`, en: `Total supply ${index + 1}` },
+      lead: { es: `Dato ${index + 1} leído en la cadena`, en: `Fact ${index + 1} read on-chain` },
+      note: { es: "", en: "" },
+    }));
+    const model = report.reportModel({
+      summary: {
+        blocks: [
+          {
+            id: "comprobado",
+            heading: { es: "Qué se comprobó", en: "What was checked" },
+            items,
+            empty: { es: "", en: "" },
+          },
+          {
+            id: "atencion",
+            heading: { es: "Qué requiere atención", en: "What needs attention" },
+            items: [
+              {
+                title: { es: "Parecido", en: "Lookalike" },
+                lead: { es: "Se parece a STUBX pero no es la dirección oficial.", en: "It looks like STUBX but it is not the official address." },
+                note: { es: "", en: "" },
+              },
+              {
+                title: { es: "Siguiente señal", en: "Next signal" },
+                lead: { es: "Otra tarjeta después del título.", en: "Another card after the title." },
+                note: { es: "", en: "" },
+              },
+            ],
+            empty: { es: "", en: "" },
+          },
+          {
+            id: "falta",
+            heading: { es: "Qué falta", en: "What is missing" },
+            items: [],
+            empty: { es: "Nada que destacar en esta lectura.", en: "Nothing to note in this reading." },
+          },
+        ],
+      },
+      mint: CLONE,
+      network: "solana",
+      consultedAt: WHEN,
+    }, "es");
+    const drawn = report.drawReport(mockCtx().ctx, model, 840);
+    const kept = drawn.guides.kept ?? [];
+    assert.ok(kept.length >= 3);
+    const foot = drawn.height - drawn.limitsTop;
+    const first = kept[0];
+    assert.ok(first);
+    assert.ok(first.headingBottom > first.top && first.bottom > first.headingBottom);
+    const midpoint = Math.floor((first.headingBottom + first.bottom) / 2);
+    assert.ok(midpoint > first.headingBottom && midpoint < first.bottom);
+    const tight = report.reportPagePlan(drawn.height, drawn.limitsTop, foot + midpoint, drawn.warningBottom - drawn.warningTop, drawn.guides);
+    assert.ok(tight.length > 1);
+    assert.equal(tight.some((page) => page.single), false);
+    assertTitleStaysWithFirstCard(tight, kept);
+    const opening = tight[0];
+    assert.ok(opening);
+    const headingOnFirst = first.top < opening.bodyBottom && first.headingBottom > opening.bodyTop;
+    if (headingOnFirst) assert.ok(first.bottom <= opening.bodyBottom);
+    else assert.ok(opening.bodyBottom <= first.top);
+    for (let pageHeight = foot + drawn.guides.headerBottom + 80; pageHeight < drawn.height; pageHeight += 12) {
+      const plan = report.reportPagePlan(drawn.height, drawn.limitsTop, pageHeight, 0, drawn.guides);
+      if (plan.some((page) => page.single)) continue;
+      assertTitleStaysWithFirstCard(plan, kept);
     }
   });
 
