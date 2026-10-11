@@ -46,7 +46,8 @@ async function pngBlob(card) {
   const blob = await board.convertToBlob({ type: "image/png" });
   if (!blob) return null;
   const bytes = new Uint8Array(await blob.arrayBuffer());
-  return new Blob([injectComment(bytes, PNG_COMMENT)], { type: "image/png" });
+  const out = PNG_COMMENT ? injectComment(bytes, PNG_COMMENT) : bytes;
+  return new Blob([out], { type: "image/png" });
 }
 
 async function run(task, png) {

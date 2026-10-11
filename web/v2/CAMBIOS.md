@@ -26,7 +26,7 @@ Vista previa del 2026-10-09. No está publicada en stubxai.com. La copia recuper
 | No existía | `/aprender` Glosario y tres guías de la PR 14. |
 | No existía | `/studio`, `/cuaderno`, `/contribuir` Huecos. «No construido · 2026-10-09». |
 | `404.html` | `404.html` |
-| `token.json` | `token.json` Copia byte a byte. |
+| `token.json` | `token.json` Ya no es copia byte a byte: el 2026-10-11 se quitaron el pie repetido y la nota de imagen. SHA-256 `07087701f8d6310715945c32001e7a11d00c04dea3b1deae47d1666ab7a93585`. |
 
 `_redirects` lleva primero la regla de Netlify `superb-horse-9036f5.netlify.app` → `https://stubxai.com/:splat` (301). Cloudflare Pages la ignora. `www.stubxai.com` ya lo sirve Cloudflare Pages; Netlify solo redirige ese hostname antiguo. El resto: `canales` → `/security/`, `riesgos` → `/risks/`, `pruebas` → `/proofs/`, `marca` → `/marca/`, `docs` → `/archivo`. No hay regla que vuelva a poner la extensión en `/archivo`: Pages ya quita esa extensión, y la pareja sería un bucle. Las páginas que son `index.html` se enlazan con barra final, que es la URL que Pages sirve. `/assets/*` lleva `Cache-Control: public, max-age=0, must-revalidate`, igual que el HTML de producción.
 
@@ -49,7 +49,7 @@ Las direcciones, los canales y los avisos dicen lo mismo en español y en inglé
 | Portada, riesgos | Una línea y un enlace al ensayo de la misma página | Dos frases y enlace a `/risks`. El ensayo no se ha acortado allí. |
 | Versiones | «Cerrar la revisión de la PPM» seguía en objetivos aunque el texto ya decía que el 2026-10-05 estaban marcadas Logs, Límites y Kill-switch, y wallet no aplica | Ese punto pasa a «Hecho», con los mismos hechos y la misma fecha. El resto de objetivos no cambia. |
 | Verify, Lab, tablero | No estaban en la web | Interfaz real de la PR 14, regenerada desde `lab/` y `site-drafts/` (commit `0cb1633`, 2026-10-09), más lectura en vivo y solo lectura de cualquier mint SPL o Token-2022. Las fichas siguen siendo la del 2026-10-09 (commit `86df576`): oficial con la cuenta personal publicada, ERYyy, FMNb, USDC, más las del 2026-10-08 y dos ejemplos 0x. El aviso de Guardar está en web/v2/shared/aviso-guardar.js. `snapshot.json` marca `inBranch` y `liveNetwork`. La PR 14 se fusionó en main el 2026-10-09 y la web no se ha desplegado. Los enlaces del tablero a las PR 13 y 14 llevan la fecha (2026-10-08 y 2026-10-09). |
-| Studio | No estaba | Ficha en la portada, mismo estilo que Verify y Lab, con enlace a `/studio/`. El editor crea una imagen en el navegador, sin cuenta. El nombre del token empieza en STUBX y se puede cambiar. El logo elegido se queda en el navegador. Si el nombre no es STUBX, la mascota no se usa ni se puede elegir, y la banda dice que no es oficial de ese token ni de STUBX. La etiqueta del recurso ai vuelve a la fórmula que pide Legal. |
+| Studio | No estaba | Ficha en la portada, mismo estilo que Verify y Lab, con enlace a `/studio/`. El editor crea una imagen en el navegador, sin cuenta. El nombre del token empieza en STUBX y se puede cambiar. El logo elegido se queda en el navegador. Si el nombre no es STUBX, la mascota no se usa ni se puede elegir. La imagen no lleva banda, marca ni comentario. |
 | Cuaderno, contribuir | No estaban | «No construido · 2026-10-09». Sin controles. |
 
 No se han inventado cifras. Suministro, PPM, pruebas y avisos conservan la fecha de la fuente que ya estaba publicada. Esta vista previa no ha vuelto a consultar GitHub ni la red.
@@ -60,7 +60,7 @@ Canales, sin traducir: `@stubxai`, `github.com/stubxai/stubx-agent`, `stubxai.hq
 
 Esta copia se ha generado con `STUBX_PUBLISH=1` y `--publish` a la vez, así que el HTML no lleva el rótulo «Borrador del repositorio. No publicado en stubxai.com.». El `noindex` sigue. El rótulo vuelve si el generador corre sin esas dos condiciones. Las páginas no llevan un nombre de persona. El inglés del pie se queda en «could», como decidió Legal.
 
-`token.json` sigue siendo la copia byte a byte de producción. Su `securityNotice` es el del 2026-10-05. La lista ampliada de clones está en `/security`, no dentro de ese archivo.
+`token.json` ya no es la copia byte a byte de producción: el 2026-10-11 se quitaron el pie repetido y la nota de imagen. SHA-256 del archivo `07087701f8d6310715945c32001e7a11d00c04dea3b1deae47d1666ab7a93585`. Su `securityNotice` sigue siendo el del 2026-10-05. La lista ampliada de clones está en `/security`, no dentro de ese archivo.
 
 ## Cómo se deshace
 

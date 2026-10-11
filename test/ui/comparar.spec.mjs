@@ -33,7 +33,7 @@ test("el ejemplo de la curva no lee una dirección", async ({ page }, info) => {
   await expect(page.locator("main")).toContainText("1 000 000");
   await expect(page.locator("form")).toHaveCount(0);
   await expect(page.locator("input, textarea")).toHaveCount(0);
-  await expect(page.locator("footer")).toContainText(FOOTER_ES);
+  await expect(page.locator("footer")).not.toContainText(FOOTER_ES);
   expect(reads).toEqual([]);
   await page.screenshot({ path: `${shots}/u07-comparar-${project}-es.png`, fullPage: project === "desktop" });
 
@@ -42,7 +42,7 @@ test("el ejemplo de la curva no lee una dirección", async ({ page }, info) => {
   await expect(page.locator("h1")).toContainText("Curve example");
   await expect(page.locator("main")).toContainText("Hypothetical example, not read from the chain");
   await expect(page.locator("main")).toContainText(WARNING_EN);
-  await expect(page.locator("footer")).toContainText(FOOTER_EN);
+  await expect(page.locator("footer")).not.toContainText(FOOTER_EN);
   expect(reads).toEqual([]);
   await page.screenshot({ path: `${shots}/u07-comparar-${project}-en.png`, fullPage: false });
 });

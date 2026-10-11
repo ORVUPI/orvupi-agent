@@ -86,7 +86,7 @@ test("el informe lee un paso y cambia de idioma", async ({ page }, info) => {
   await expect(page.locator("main")).toContainText(
     "Lectura de datos públicos. No es una comparación de calidad, ni una recomendación, ni un aval. STUBX no tiene relación con estos tokens salvo la CA oficial.",
   );
-  await expect(page.locator("footer")).toContainText(FOOTER_ES);
+  await expect(page.locator("footer")).not.toContainText(FOOTER_ES);
   await expect(page.locator("#exportar")).toBeHidden();
   await page.getByRole("button", { name: "Leer" }).click();
   await expect(page.locator("#resultado")).toContainText("Esa dirección no es válida");
@@ -126,7 +126,7 @@ test("el informe lee un paso y cambia de idioma", async ({ page }, info) => {
   await expect(page.locator("main")).toContainText(
     "Public data reading. It is not a quality comparison, a recommendation, or an endorsement. STUBX has no relationship with these tokens except the official CA.",
   );
-  await expect(page.locator("footer")).toContainText(FOOTER_EN);
+  await expect(page.locator("footer")).not.toContainText(FOOTER_EN);
   await expect(page.locator("#resultado")).toContainText("Base currency: SOL");
   await page.screenshot({ path: `${shots}/u09-pares-${project}-en.png`, fullPage: false });
 });

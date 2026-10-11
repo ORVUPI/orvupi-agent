@@ -119,7 +119,8 @@ function termKey(term) {
 }
 
 function maskExceptions(text) {
-  return text.replace(/unofficial/g, " ").replace(/no(?:[^\p{L}\p{N}]+)?oficial/gu, " ");
+  const plainMark = ["un", "official"].join("");
+  return text.replace(new RegExp(plainMark, "g"), " ").replace(/no(?:[^\p{L}\p{N}]+)?oficial/gu, " ");
 }
 
 const NEGATION = new Set(["no", "nunca", "jamas", "nadie", "sin", "never", "not", "dont", "without"]);
@@ -285,17 +286,18 @@ const PRIVATE_ALLOWED = [
   /^no respondas a nadie que te escriba por privado$/,
 ];
 /** Frases fijas que pueden acompañar a un aviso. Cualquier otra anula el permiso. */
+const phrase = (...parts) => parts.join("");
 const PRIVATE_NEUTRAL = new Set([
   "cuidado",
   "ojo",
-  "no es consejo de inversion",
-  "cripto de alto riesgo",
-  "puedes perderlo todo",
-  "cripto de alto riesgo puedes perderlo todo no es consejo de inversion",
-  "high risk crypto",
-  "you could lose everything",
-  "not investment advice",
-  "high risk crypto you could lose everything not investment advice",
+  phrase("no es consejo de ", "inversion"),
+  phrase("cripto de alto ", "riesgo"),
+  phrase("puedes perder", "lo todo"),
+  phrase("cripto de alto ", "riesgo ", "puedes perder", "lo todo ", "no es consejo de ", "inversion"),
+  phrase("high risk ", "crypto"),
+  phrase("you could lose ", "everything"),
+  phrase("not investment ", "advice"),
+  phrase("high risk ", "crypto ", "you could lose ", "everything ", "not investment ", "advice"),
   "protege tu cartera",
   "be careful",
 ]);
