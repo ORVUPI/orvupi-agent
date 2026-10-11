@@ -179,7 +179,7 @@ describe("lectura EVM en Base", () => {
     assert.equal(proxied.reading.facts.proxy.status, "ok");
     assert.equal(proxied.reading.facts.name.status, "ausente");
     assert.match(view.describeEvm(proxied.reading, "es").rows.find((row: { id: string }) => row.id === "proxy").line, /EIP-1967/);
-    assert.match(view.describeEvm(proxied.reading, "es").rows.find((row: { id: string }) => row.id === "proxy").line, /otros tipos de proxy no se comprueban aquí/);
+    assert.match(view.describeEvm(proxied.reading, "es").rows.find((row: { id: string }) => row.id === "proxy").line, /Otros tipos de proxy no se comprueban aquí/);
     assert.match(view.describeEvm(proxied.reading, "en").rows.find((row: { id: string }) => row.id === "proxy").line, /Other proxy types are not checked here/);
 
     evm.resetEvmClientLimit();
@@ -289,7 +289,7 @@ describe("lectura EVM en Base", () => {
     assert.equal(ownerHelp.help.en, "Some contracts answer owner() with an address. If they do not have that function, this reading says so. If there is an owner address, the contract may give it special functions. This reading does not say which ones.");
     assert.equal(ownerHelp.help.es.includes("No es un permiso de Solana"), false);
     assert.equal(ownerHelp.help.en.includes("It is not a Solana permission."), false);
-    assert.equal(proxyHelp.help.es, "Un proxy es un contrato que reenvía las preguntas a otro contrato. EIP-1967 es la forma habitual de anotar esa otra dirección. Si no está, esta lectura lo dice. Con un proxy, el código al que se reenvía puede cambiarse. Esta lectura no dice si ha cambiado. otros tipos de proxy no se comprueban aquí.");
+    assert.equal(proxyHelp.help.es, "Un proxy es un contrato que reenvía las preguntas a otro contrato. EIP-1967 es la forma habitual de anotar esa otra dirección. Si no está, esta lectura lo dice. Con un proxy, el código al que se reenvía puede cambiarse. Esta lectura no dice si ha cambiado. Otros tipos de proxy no se comprueban aquí.");
     assert.equal(proxyHelp.help.en, "A proxy is a contract that forwards questions to another contract. EIP-1967 is the usual way to record that other address. If it is not there, this reading says so. With a proxy, the code it forwards to can be changed. This reading does not say whether it has. Other proxy types are not checked here.");
     assert.equal(view.privacyText("base", "es"), "Al consultar en Base, tu navegador envía la dirección al nodo público mainnet.base.org, que también ve tu IP. Si pides los datos de mercado, DEX Screener también ve tu IP y la dirección.");
     assert.equal(view.privacyText("base", "en"), "When you look up on Base, your browser sends the address to the public node mainnet.base.org, which also sees your IP. If you request market data, DEX Screener also sees your IP and the address.");

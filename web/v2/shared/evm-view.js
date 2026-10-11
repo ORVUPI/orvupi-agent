@@ -31,10 +31,10 @@ const COPY = {
       if (admin) parts.push(`La dirección admin es ${admin}.`);
       if (beacon) parts.push(`El beacon es ${beacon}.`);
       parts.push("Un proxy reenvía las preguntas a otro contrato.");
-      parts.push("otros tipos de proxy no se comprueban aquí.");
+      parts.push("Otros tipos de proxy no se comprueban aquí.");
       return parts.join(" ");
     },
-    proxyAbsent: "No hay anotación EIP-1967. Esta lectura no encontró otra dirección. otros tipos de proxy no se comprueban aquí.",
+    proxyAbsent: "No hay anotación EIP-1967. Esta lectura no encontró otra dirección. Otros tipos de proxy no se comprueban aquí.",
     supplyRaw: (raw) => `Unidades mínimas: ${raw}. No se ha desplegado porque hay más de 18 decimales.`,
     node: (host) => `Nodo: ${host}.`,
     save: "Guardar esta consulta",
