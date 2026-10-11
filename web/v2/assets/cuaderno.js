@@ -3,7 +3,8 @@
  */
 import { formatAmount } from "../shared/amount.js";
 import { entenderNav } from "../shared/entender.js";
-import { cloneWarningText, comparisonBanner, explainIncomplete, notebookNameText, renderReadingSummary, summaryFromCard } from "../shared/reading-summary.js";
+import { explainIncomplete } from "../shared/explain-incomplete.js";
+import { cloneWarningText, comparisonBanner, notebookNameText, renderReadingSummary, summaryFromCard } from "../shared/reading-summary.js";
 import { factState } from "../shared/fact-state.js";
 import { notebookDbAll, notebookDbClear, notebookDbPut, openNotebookDb } from "../shared/notebook-db.js";
 import {

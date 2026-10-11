@@ -715,35 +715,6 @@ export function comparisonBanner(left, right, lang) {
   return cloneWarningText(left, lang) || cloneWarningText(right, lang);
 }
 
-/** Si la pasada está incompleta, «Qué falta» nombra el motivo y no dice que no falta nada. */
-export function explainIncomplete(model, gaps) {
-  const block = model && Array.isArray(model.blocks) ? model.blocks.find((item) => item && item.id === "falta") : null;
-  if (!block) return model;
-  const reasons = Array.isArray(gaps) ? gaps : [];
-  if (!Array.isArray(block.items)) block.items = [];
-  for (const reason of reasons) {
-    const es = reason && typeof reason.es === "string" ? reason.es : "";
-    const en = reason && typeof reason.en === "string" ? reason.en : "";
-    if (!es || !en) continue;
-    const present = block.items.some((item) => {
-      const lead = item && item.lead ? `${item.lead.es || ""} ${item.lead.en || ""}` : "";
-      const note = item && item.note ? `${item.note.es || ""} ${item.note.en || ""}` : "";
-      return lead.includes(es) || note.includes(es);
-    });
-    if (present) continue;
-    block.items.push(summaryPoint("suministro", summaryPair("Lectura incompleta", "Incomplete reading"), summaryPair(es, en)));
-  }
-  if (!block.items.length) {
-    block.items.push(summaryPoint(
-      "suministro",
-      summaryPair("Lectura incompleta", "Incomplete reading"),
-      summaryPair("Esta lectura no está completa.", "This reading is not complete."),
-    ));
-  }
-  model.retry = true;
-  return model;
-}
-
 export function summaryFromCard(card) {
   const facts = [];
   if (!card) return compose(facts, [], { supply: null, name: "", symbol: "", decimals: null, extensions: [] }, null, null);

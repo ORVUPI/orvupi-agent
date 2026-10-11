@@ -782,14 +782,25 @@ export function readingGaps(card) {
   }
   const gaps = [];
   if (card.partial === true) pushGap(gaps, "La ficha está a medias.", "The card is partial.");
-  if (brokenStatus(card.slotStatus)) pushGap(gaps, "No se pudo leer el momento de la red.", "The moment on the network could not be read.");
+  if (card.slotStatus === "no_consultado") {
+    pushGap(gaps, "Esta lectura no pidió el momento de la red.", "This reading did not ask for the moment on the network.");
+  } else if (brokenStatus(card.slotStatus)) {
+    pushGap(gaps, "No se pudo leer el momento de la red.", "The moment on the network could not be read.");
+  } else if (card.slot === null) {
+    pushGap(gaps, "No se leyó el momento de la red.", "The moment on the network was not read.");
+  }
   if (brokenStatus(card.programStatus)) pushGap(gaps, "No se pudo leer el programa del token.", "The token program could not be read.");
-  const account = card.supplyAccount;
-  const rpc = card.supplyRpc;
-  if (typeof account === "string" && typeof rpc === "string" && account !== rpc) {
+  if (card.supplyAccount === null) {
+    pushGap(gaps, "No se leyó el suministro de la cuenta.", "The supply on the account was not read.");
+  }
+  if (card.supplyRpcStatus === "no_consultado") {
+    pushGap(gaps, "Esta lectura no pidió la segunda comprobación del suministro.", "This reading did not ask for the second supply check.");
+  } else if (typeof card.supplyAccount === "string" && typeof card.supplyRpc === "string" && card.supplyAccount !== card.supplyRpc) {
     pushGap(gaps, "Las dos lecturas del suministro no coinciden.", "The two supply reads do not match.");
   } else if (brokenStatus(card.supplyRpcStatus)) {
     pushGap(gaps, "No se pudo hacer la segunda comprobación del suministro.", "The second supply check could not be done.");
+  } else if (card.supplyRpc === null) {
+    pushGap(gaps, "No se leyó la segunda comprobación del suministro.", "The second supply check was not read.");
   }
   if (card.mintAuthority && brokenStatus(card.mintAuthority.status)) {
     pushGap(gaps, "No se pudo leer el permiso de emisión.", "The permission to create more tokens could not be read.");
@@ -801,7 +812,11 @@ export function readingGaps(card) {
   if (card.symbol && brokenStatus(card.symbol.status)) pushGap(gaps, "No se pudo leer el símbolo.", "The symbol could not be read.");
   if (card.uri && brokenStatus(card.uri.status)) pushGap(gaps, "No se pudo leer el enlace de metadatos.", "The metadata link could not be read.");
   if (brokenStatus(card.metadataMutable)) pushGap(gaps, "No se pudo leer si el nombre se puede cambiar.", "Whether the name can change could not be read.");
-  if (brokenStatus(card.largestStatus)) pushGap(gaps, "No se pudo leer quién tiene más tokens.", "Who holds the most tokens could not be read.");
+  if (card.largestStatus === "no_consultado") {
+    pushGap(gaps, "Esta lectura no pidió quién tiene más tokens.", "This reading did not ask who holds the most tokens.");
+  } else if (brokenStatus(card.largestStatus)) {
+    pushGap(gaps, "No se pudo leer quién tiene más tokens.", "Who holds the most tokens could not be read.");
+  }
   if (brokenStatus(card.extensionsStatus)) pushGap(gaps, "No se pudieron separar las extensiones.", "The extensions could not be split.");
   if (card.curve && brokenStatus(card.curve.status)) pushGap(gaps, "No se pudo leer la curva.", "The curve could not be read.");
   if (Array.isArray(card.errors) && card.errors.length > 0 && !gaps.length) {
@@ -810,7 +825,7 @@ export function readingGaps(card) {
   return gaps;
 }
 
-/** Una ficha completa no está a medias, no trae errores ni estados fallidos, el momento de la red se leyó y los dos suministros coinciden. */
+/** Una ficha completa no está a medias, no trae errores ni estados fallidos, y tiene momento de la red y suministros leídos. Un null o un «no consultado» la deja incompleta. */
 export function readingComplete(card) {
   if (!card || typeof card !== "object") return false;
   if (Array.isArray(card.errors) && card.errors.length > 0) return false;

@@ -62,6 +62,8 @@ async function modules() {
   };
   const summary = await import(pathToFileURL(path.join(root, "web/v2/shared/reading-summary.js")).href) as {
     summaryFromCard: (card: Card) => { blocks: Array<{ id: string; items: Array<{ lead: { es: string }; note?: { es?: string } | null }> }> };
+  };
+  const gapsUi = await import(pathToFileURL(path.join(root, "web/v2/shared/explain-incomplete.js")).href) as {
     explainIncomplete: (model: { blocks: Array<{ id: string; items: Array<{ lead: { es: string } }> }> }, gaps: Array<{ es: string; en: string }>) => { blocks: Array<{ id: string; items: Array<{ lead: { es: string } }> }> };
   };
   const slots = await import(pathToFileURL(path.join(root, "web/v2/modules/pair-report.mjs")).href) as {
@@ -71,7 +73,7 @@ async function modules() {
     AVISO_GUARDAR: { es: string; en: string };
   };
   read.clearBlockedMethods();
-  return { read, model, slots, notice, summary };
+  return { read, model, slots, notice, summary, explainIncomplete: gapsUi.explainIncomplete };
 }
 
 function filled(read: { blankCard: (mint: string, at: string, errors: unknown[]) => Card }, mint: string, at: string, supply: string): Card {
@@ -242,6 +244,14 @@ describe("revisar direcciones guardadas", () => {
     const back = "Para volver atrás: cargar otra vez esta página, o borrar en el navegador los datos del sitio de la base llamada stubx-cuaderno.";
     assert.equal(log.includes(back), true);
     assert.equal(rollback.includes(back), true);
+    assert.equal(rollback.includes("36eea1a3"), true);
+    assert.equal(rollback.includes("f2a24c14"), true);
+    assert.equal(rollback.includes("VersionError"), true);
+    const verify = readFileSync(path.join(root, "web/v2/assets/verify.js"), "utf8");
+    const draft = readFileSync(path.join(root, "site-drafts/assets/verify.js"), "utf8");
+    assert.equal(verify.includes("function explainIncomplete"), false);
+    assert.equal(draft.includes("function explainIncomplete"), false);
+    assert.equal(readFileSync(path.join(root, "web/v2/shared/reading-summary.js"), "utf8").includes("function explainIncomplete"), false);
     assert.equal(page.includes('id="aviso-pasada" class="aviso-pasada"'), true);
     assert.equal(page.includes('id="aviso-pasada" class="sello"'), false);
   });
@@ -343,7 +353,7 @@ describe("revisar direcciones guardadas", () => {
   });
 
   test("un incompleto nombra el motivo y un estado fallido cuenta sin marca de parcial", async () => {
-    const { read, model, summary } = await modules();
+    const { read, model, summary, explainIncomplete } = await modules();
     const previous = { id: "1", note: "", card: filled(read, OTHER, WHEN, "1000") };
     const cases = [
       { label: "suministros que no coinciden", touch: (card: Card) => { card.supplyRpc = "1001"; card.partial = false; }, phrase: "no coinciden" },
@@ -358,14 +368,39 @@ describe("revisar direcciones guardadas", () => {
       const verdict = model.watchVerdict(previous, { card });
       assert.equal(verdict.kind, "incompleto", item.label);
       assert.equal(String(verdict.kind) === "igual", false, item.label);
-      const text = missingText(summary, model, card);
+      const text = missingText(summary, model, explainIncomplete, card);
       assert.equal(text.includes("No falta ningún dato"), false, item.label);
       assert.match(text, new RegExp(item.phrase), item.label);
     }
   });
 
+  test("una ficha importada con suministro o momento vacío, o sin consultar, no es igual", async () => {
+    const { read, model, summary, explainIncomplete } = await modules();
+    const previous = { id: "1", note: "", card: filled(read, OTHER, WHEN, "1000") };
+    const cases = [
+      { label: "supplyRpc null", touch: (card: Card) => { card.supplyRpc = null; }, phrase: "No se leyó la segunda comprobación del suministro." },
+      { label: "supplyAccount null", touch: (card: Card) => { card.supplyAccount = null; }, phrase: "No se leyó el suministro de la cuenta." },
+      { label: "slot null", touch: (card: Card) => { card.slot = null; }, phrase: "No se leyó el momento de la red." },
+      { label: "slotStatus no_consultado", touch: (card: Card) => { card.slotStatus = "no_consultado"; }, phrase: "Esta lectura no pidió el momento de la red." },
+      { label: "supplyRpcStatus no_consultado", touch: (card: Card) => { card.supplyRpcStatus = "no_consultado"; }, phrase: "Esta lectura no pidió la segunda comprobación del suministro." },
+      { label: "largestStatus no_consultado", touch: (card: Card) => { card.largestStatus = "no_consultado"; }, phrase: "Esta lectura no pidió quién tiene más tokens." },
+    ];
+    for (const item of cases) {
+      const card = filled(read, OTHER, LATER, "1000");
+      item.touch(card);
+      assert.equal(model.validateCard(card).ok, true, item.label);
+      assert.equal(model.readingComplete(card), false, item.label);
+      const verdict = model.watchVerdict(previous, { card });
+      assert.equal(verdict.kind, "incompleto", item.label);
+      assert.equal(String(verdict.kind) === "igual", false, item.label);
+      const text = missingText(summary, model, explainIncomplete, card);
+      assert.equal(text.includes("No falta ningún dato"), false, item.label);
+      assert.equal(text.includes(item.phrase), true, item.label);
+    }
+  });
+
   test("un 429 en los dos nodos no es igual", async () => {
-    const { read, model, summary } = await modules();
+    const { read, model, summary, explainIncomplete } = await modules();
     const seen = await bothNodes(read, 429);
     assert.deepEqual(seen.hosts, ["solana-rpc.publicnode.com", "api.mainnet-beta.solana.com"]);
     const previous = { id: "1", note: "", card: filled(read, OTHER, WHEN, "1000") };
@@ -373,31 +408,32 @@ describe("revisar direcciones guardadas", () => {
     assert.equal(verdict.kind, "rechazada");
     assert.equal(String(verdict.kind) === "igual", false);
     assert.equal(model.readingComplete(seen.card), false);
-    const text = missingText(summary, model, seen.card);
+    const text = missingText(summary, model, explainIncomplete, seen.card);
     assert.equal(text.includes("No falta ningún dato"), false);
     assert.match(text, /No se pudo/);
   });
 
   test("los dos nodos caídos no es igual", async () => {
-    const { read, model, summary } = await modules();
+    const { read, model, summary, explainIncomplete } = await modules();
     const seen = await bothNodes(read, 0);
     assert.deepEqual(seen.hosts, ["solana-rpc.publicnode.com", "api.mainnet-beta.solana.com"]);
     const previous = { id: "1", note: "", card: filled(read, OTHER, WHEN, "1000") };
     const verdict = model.watchVerdict(previous, { card: seen.card });
     assert.equal(verdict.kind, "rechazada");
     assert.equal(String(verdict.kind) === "igual", false);
-    const text = missingText(summary, model, seen.card);
+    const text = missingText(summary, model, explainIncomplete, seen.card);
     assert.equal(text.includes("No falta ningún dato"), false);
     assert.match(text, /No se pudo/);
   });
 });
 
 function missingText(
-  summary: { summaryFromCard: (card: Card) => { blocks: Array<{ id: string; items: Array<{ lead: { es: string } }> }> }; explainIncomplete: (model: { blocks: Array<{ id: string; items: Array<{ lead: { es: string } }> }> }, gaps: Array<{ es: string; en: string }>) => { blocks: Array<{ id: string; items: Array<{ lead: { es: string } }> }> } },
+  summary: { summaryFromCard: (card: Card) => { blocks: Array<{ id: string; items: Array<{ lead: { es: string } }> }> } },
   model: { readingGaps: (card: Card) => Array<{ es: string; en: string }> },
+  explainIncomplete: (model: { blocks: Array<{ id: string; items: Array<{ lead: { es: string } }> }> }, gaps: Array<{ es: string; en: string }>) => { blocks: Array<{ id: string; items: Array<{ lead: { es: string } }> }> },
   card: Card,
 ) {
-  const explained = summary.explainIncomplete(summary.summaryFromCard(card), model.readingGaps(card));
+  const explained = explainIncomplete(summary.summaryFromCard(card), model.readingGaps(card));
   const block = explained.blocks.find((item) => item.id === "falta");
   return (block?.items || []).map((item) => item.lead.es).join(" ");
 }
