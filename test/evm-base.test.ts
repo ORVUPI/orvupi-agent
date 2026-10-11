@@ -397,9 +397,9 @@ describe("lectura EVM en Base", () => {
     assert.equal(view.pageLede("base", "es").includes("SPL"), false);
     assert.equal(view.pageLede("base", "es").includes("Token-2022"), false);
     assert.equal(view.pageLede("base", "es"), "Cualquier token ERC-20 (el tipo de token habitual en Base), leído en directo y solo en lectura. Las fichas de abajo son ejemplos fechados de Solana, no una lista completa. Elige la red. En Base no hay cartera ni firma.");
-    assert.equal(view.pageLede("base", "en"), "Any ERC-20 (the usual token type on Base) token, read live and read-only. The cards below are dated Solana examples, not a complete list. Choose the network. On Base there is no wallet and no signature.");
+    assert.equal(view.pageLede("base", "en"), "Any ERC-20 token (the usual token type on Base), read live and read-only. The cards below are dated Solana examples, not a complete list. Choose the network. On Base there is no wallet and no signature.");
     assert.match(view.pageLede("base", "es"), /ERC-20 \(el tipo de token habitual en Base\)/);
-    assert.match(view.pageLede("base", "en"), /ERC-20 \(the usual token type on Base\)/);
+    assert.match(view.pageLede("base", "en"), /ERC-20 token \(the usual token type on Base\)/);
     assert.match(view.pageLede("base", "es"), /ejemplos fechados de Solana/);
     assert.match(view.pageLede("base", "en"), /dated Solana examples/);
     assert.equal((view.pageLede("base", "es").match(/solo(?: en)? lectura/g) || []).length, 1);

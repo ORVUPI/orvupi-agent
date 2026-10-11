@@ -544,6 +544,8 @@ describe("web v2", () => {
     assert.match(html, /No es una auditoría, ni una recomendación, ni un aval/);
     assert.match(html, /Que no aparezcan señales no significa que esté todo comprobado\./);
     assert.match(html, /No signals showing does not mean everything was checked\./);
+    assert.equal(html.includes("Que no aparezcan señales no significa que no haya riesgo"), false);
+    assert.equal(html.includes("No signals showing does not mean there is no risk"), false);
     assert.equal(html.includes("no significa que no haya riesgo"), false);
     assert.equal(html.includes("does not mean there is no risk"), false);
     assert.match(html, /Solo si pulsas «Guardar esta consulta»/);
@@ -561,6 +563,10 @@ describe("web v2", () => {
     assert.match(headers, /\/verify\/\*/);
     assert.match(headers, /! Content-Security-Policy/);
     const bundle = read("assets/verify.js");
+    assert.match(bundle, /Que no aparezcan señales no significa que esté todo comprobado\./);
+    assert.match(bundle, /No signals showing does not mean everything was checked\./);
+    assert.equal(bundle.includes("Que no aparezcan señales no significa que no haya riesgo"), false);
+    assert.equal(bundle.includes("No signals showing does not mean there is no risk"), false);
     assert.match(bundle, /stubx-verify-preview/);
     assert.match(bundle, /ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump/);
     assert.match(bundle, /FMNb4CR8ksibmgY7Ztei6BWcZXi3WHcVeJhYb9TNpump/);
