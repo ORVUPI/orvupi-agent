@@ -8,8 +8,9 @@ const EMPTY = SOL;
 const LIMITED = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB";
 const DOWN = "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN";
 const PAIR = "58oQChx4yWmvKdwLLZzBi4ChoCc2fqCUWBkwMihLYQo2";
-const STAMP_ES = /Fuente: DEX Screener · leído el \d{2}-\d{2}-\d{4} a las \d{2}:\d{2} \(hora de Madrid\)/;
-const STAMP_EN = /Source: DEX Screener · read \d{2}-\d{2}-\d{4} \d{2}:\d{2} \(Madrid time\)/;
+const STAMP_ES = /Fuente: DEX Screener · leído el \d{2}-\d{2}-\d{4} a las \d{2}:\d{2}:\d{2} \(hora de Madrid\)/;
+const STAMP_EN = /Source: DEX Screener · read \d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2} \(Madrid time\)/;
+const FAIL_ES = "No se pudo leer DEX Screener. Prueba otra vez en un minuto.";
 
 function borsh(value) {
   const body = Buffer.from(value);
@@ -148,17 +149,24 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
   const readMarket = block.getByRole("button", { name: "Leer datos de mercado ahora" });
   await expect(readMarket).toBeVisible({ timeout: 20_000 });
   expect(marketCalls).toBe(0);
+  await expect(page.locator("#resultado .resumen-informe")).not.toContainText("Datos de mercado: no se pudieron leer");
+  await expect(block.locator("p.nota").first()).toContainText("DEX Screener también ve tu IP y la dirección consultada");
+  await expect(block.locator("p.nota").first()).not.toContainText("no guarda en ningún servidor");
+  await expect(block.locator("details.privacidad-mercado")).toContainText("Los datos de mercado no se guardan");
   await expect(block).toContainText("Datos: DEX Screener. Pueden no ser exactos ni estar al día.");
   await readMarket.click();
   await expect(block).toContainText("Datos de mercado");
   await expect(block).toContainText(STAMP_ES);
+  await expect(block).toContainText("Par: USDC / SOL");
+  await expect(block).toContainText("Dónde está el par: Raydium");
+  await expect(page.locator("#resultado .resumen-informe")).not.toContainText("Datos de mercado: no se pudieron leer");
   await expect(block).toContainText("Liquidez: 50.000,25 USD");
   await expect(block).toContainText("Volumen en 24 horas: 1.200,5 USD");
   await expect(block.locator("[data-hueco='falta']")).toContainText("Qué falta");
   await expect(block).not.toContainText("1,0001");
   await expect(block).not.toContainText("Una cifra en dólares");
-  await block.locator("summary").click();
-  await expect(block.locator("details")).not.toContainText(/precio|priceUsd|usdFigure|cifra en dólares/i);
+  await block.locator("details.tecnico summary").click();
+  await expect(block.locator("details.tecnico")).not.toContainText(/precio|priceUsd|usdFigure|cifra en dólares/i);
   const cifraColor = await block.locator("[data-cifra='liquidez']").evaluate((node) => getComputedStyle(node).color);
   const sectionColor = await block.evaluate((node) => getComputedStyle(node).color);
   expect(cifraColor).toBe(sectionColor);
@@ -176,6 +184,7 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
   await page.locator("#consulta button[type='submit']").click();
   await block.getByRole("button", { name: "Leer datos de mercado ahora" }).click();
   await expect(block.locator("[data-falta='si']")).toContainText("no listó ningún par", { timeout: 20_000 });
+  await expect(page.locator("#resultado .resumen-informe")).not.toContainText("Datos de mercado: no se pudieron leer");
   await expect(block.locator("[data-cifra='liquidez']")).toHaveCount(0);
   await expect(block).not.toContainText("0 USD");
   await expect(block.getByRole("button", { name: "Reintentar" })).toHaveCount(0);
@@ -184,15 +193,16 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
   await page.locator("#direccion-token").fill(LIMITED);
   await page.locator("#consulta button[type='submit']").click();
   await block.getByRole("button", { name: "Leer datos de mercado ahora" }).click();
-  await expect(block.locator("[data-falta='si']")).toContainText("No se pudo consultar", { timeout: 20_000 });
+  await expect(block.locator("[data-falta='si']")).toContainText(FAIL_ES, { timeout: 20_000 });
   await expect(block.getByRole("button", { name: "Reintentar" })).toBeVisible();
+  await expect(page.locator("#resultado .resumen-informe [data-bloque='falta']")).toContainText("Datos de mercado: no se pudieron leer");
   await expect(block).not.toContainText("0 USD");
   await shot("pausa");
 
   await page.locator("#direccion-token").fill(DOWN);
   await page.locator("#consulta button[type='submit']").click();
   await block.getByRole("button", { name: "Leer datos de mercado ahora" }).click();
-  await expect(block.locator("[data-falta='si']")).toContainText("No se pudo consultar", { timeout: 20_000 });
+  await expect(block.locator("[data-falta='si']")).toContainText(FAIL_ES, { timeout: 20_000 });
   await expect(block.getByRole("button", { name: "Reintentar" })).toBeVisible();
   await expect(block).not.toContainText("0 USD");
   await shot("fallo");

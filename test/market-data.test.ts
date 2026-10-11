@@ -12,8 +12,11 @@ const SOL = "So11111111111111111111111111111111111111112";
 const OFFICIAL = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
 const CLONE = "ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump";
 const WHEN = "2026-10-11T09:48:00.000Z";
-const STAMP_ES = "Fuente: DEX Screener · leído el 11-10-2026 a las 11:48 (hora de Madrid)";
-const STAMP_EN = "Source: DEX Screener · read 11-10-2026 11:48 (Madrid time)";
+const STAMP_ES = "Fuente: DEX Screener · leído el 11-10-2026 a las 11:48:00 (hora de Madrid)";
+const STAMP_EN = "Source: DEX Screener · read 11-10-2026 11:48:00 (Madrid time)";
+const FAIL_ES = "No se pudo leer DEX Screener. Prueba otra vez en un minuto.";
+const FAIL_EN = "Could not read DEX Screener. Try again in a minute.";
+const USDT = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB";
 const ACCURACY_ES = "Datos: DEX Screener. Pueden no ser exactos ni estar al día.";
 const ACCURACY_EN = "Data: DEX Screener. It may be inaccurate or out of date.";
 
@@ -53,6 +56,9 @@ type MarketModule = {
   MARKET_ATTRIBUTION: { es: string; en: string };
   marketNormalizeToken: (value: string) => string;
   marketPrivacy: (lang: string) => string;
+  marketPrivacyLead: (lang: string) => string;
+  marketPrivacyRest: (lang: string) => string;
+  MARKET_SUMMARY_GAP: { es: string; en: string };
   isSolanaMint: (value: string) => boolean;
   normalizeUpstream: (status: number, body: string, meta: { mint: string; queriedAt: string }) => Model;
   acceptClientPayload: (value: unknown, mint: string) => Model;
@@ -77,7 +83,7 @@ type MarketModule = {
     gapTitle: string;
     detail: string;
     retry: boolean;
-    pairs: Array<{ title: string; liquidity: string; volume: string; low: string }>;
+    pairs: Array<{ title: string; where: string; liquidity: string; volume: string; low: string }>;
   };
   formatUsd: (value: number | null, lang: string) => string | null;
   marketFailure: (mint: string, queriedAt: string, reason: string) => Model;
@@ -217,20 +223,21 @@ describe("datos de mercado", () => {
     assert.equal(missingPage.status, "fallo");
     assert.equal(missingPage.reason, "http");
     assert.equal(missingPage.pairs, null);
-    assert.equal(market.describeMarket(missingPage, "es").gap, "No se pudo consultar.");
+    assert.equal(market.describeMarket(missingPage, "es").gap, FAIL_ES);
+    assert.equal(market.describeMarket(missingPage, "en").gap, FAIL_EN);
     assert.equal(market.describeMarket(missingPage, "es").retry, true);
 
     const paused = market.normalizeUpstream(429, "slow down", { mint: MINT, queriedAt: WHEN });
     assert.equal(paused.status, "fallo");
     assert.equal(paused.reason, "http");
     assert.equal(paused.pairs, null);
-    assert.equal(market.describeMarket(paused, "es").gap, "No se pudo consultar.");
+    assert.equal(market.describeMarket(paused, "es").gap, FAIL_ES);
     assert.equal(market.describeMarket(paused, "es").retry, true);
 
     const down = market.normalizeUpstream(500, "<html>no</html>", { mint: MINT, queriedAt: WHEN });
     assert.equal(down.status, "fallo");
     assert.equal(down.pairs, null);
-    assert.equal(market.describeMarket(down, "es").gap, "No se pudo consultar.");
+    assert.equal(market.describeMarket(down, "es").gap, FAIL_ES);
     assert.equal(market.describeMarket(down, "es").retry, true);
 
     const broken = market.normalizeUpstream(200, "{", { mint: MINT, queriedAt: WHEN });
@@ -246,7 +253,7 @@ describe("datos de mercado", () => {
     assert.equal(huge.status, "fallo");
     assert.equal(huge.reason, "grande");
     assert.equal(huge.pairs, null);
-    assert.equal(market.describeMarket(huge, "es").gap, "No se pudo consultar.");
+    assert.equal(market.describeMarket(huge, "es").gap, FAIL_ES);
   });
 
   test("el cliente rechaza HTML, un mint distinto y un cuerpo que no es el esquema", async () => {
@@ -306,7 +313,7 @@ describe("datos de mercado", () => {
     assert.equal(paused.pairs, null);
     const pausedView = market.describeMarket(paused, "es");
     assert.equal(pausedView.gapTitle, "Qué falta");
-    assert.equal(pausedView.gap, "No se pudo consultar.");
+    assert.equal(pausedView.gap, FAIL_ES);
     assert.equal(pausedView.retry, true);
 
     let fetches = 0;
@@ -535,6 +542,98 @@ describe("datos de mercado", () => {
     assert.equal(market.describeMarket(fakeSol, "es").pairs[0]?.title, "Par: Dice llamarse «STUBX» / Dice llamarse «SOL»");
   });
 
+  test("la mint de USDC muestra USDC aunque el símbolo sea BONK o STUBX", async () => {
+    const market = await loadMarketModule();
+    for (const symbol of ["BONK", "STUBX"]) {
+      const model = market.normalizeUpstream(
+        200,
+        JSON.stringify([upstreamPair({ baseToken: { symbol, address: MINT } })]),
+        { mint: MINT, queriedAt: WHEN },
+      );
+      const spanish = market.describeMarket(model, "es").pairs[0]?.title ?? "";
+      const english = market.describeMarket(model, "en").pairs[0]?.title ?? "";
+      assert.equal(spanish, "Par: USDC / SOL");
+      assert.equal(english, "Pair: USDC / SOL");
+      assert.equal(spanish.includes(symbol), false);
+      assert.equal(english.includes(symbol), false);
+    }
+    const wrapped = market.normalizeUpstream(
+      200,
+      JSON.stringify([
+        upstreamPair({
+          baseToken: { symbol: "BONK", address: MINT },
+          quoteToken: { symbol: "STUBX", address: SOL },
+        }),
+      ]),
+      { mint: MINT, queriedAt: WHEN },
+    );
+    assert.equal(market.describeMarket(wrapped, "es").pairs[0]?.title, "Par: USDC / SOL");
+    assert.equal(market.describeMarket(wrapped, "en").pairs[0]?.title, "Pair: USDC / SOL");
+  });
+
+  test("USDT muestra el nombre fijo aunque el símbolo sea BONK o STUBX", async () => {
+    const market = await loadMarketModule();
+    for (const symbol of ["BONK", "STUBX"]) {
+      const model = market.normalizeUpstream(
+        200,
+        JSON.stringify([
+          upstreamPair({
+            baseToken: { symbol, address: USDT },
+            quoteToken: { symbol: "BONK", address: SOL },
+          }),
+        ]),
+        { mint: USDT, queriedAt: WHEN },
+      );
+      assert.equal(market.describeMarket(model, "es").pairs[0]?.title, "Par: USDT / SOL");
+      assert.equal(market.describeMarket(model, "en").pairs[0]?.title, "Pair: USDT / SOL");
+    }
+  });
+
+  test("el DEX conocido sale con su nombre y el desconocido se deja tal cual", async () => {
+    const market = await loadMarketModule();
+    const cases: Array<[string, string]> = [
+      ["raydium", "Raydium"],
+      ["orca", "Orca"],
+      ["meteora", "Meteora"],
+      ["pancakeswap", "PancakeSwap"],
+      ["pumpfun", "Pump.fun"],
+      ["pump.fun", "Pump.fun"],
+      ["pump-fun", "Pump.fun"],
+      ["HelloDEX", "HelloDEX"],
+    ];
+    for (const [dexId, name] of cases) {
+      const model = market.normalizeUpstream(200, JSON.stringify([upstreamPair({ dexId })]), { mint: MINT, queriedAt: WHEN });
+      assert.equal(market.describeMarket(model, "es").pairs[0]?.where, `Dónde está el par: ${name}`);
+      assert.equal(market.describeMarket(model, "en").pairs[0]?.where, `Where the pair is: ${name}`);
+    }
+    const unnamed = market.normalizeUpstream(200, JSON.stringify([upstreamPair({ dexId: "" })]), { mint: MINT, queriedAt: WHEN });
+    assert.equal(market.describeMarket(unnamed, "es").pairs[0]?.where, "Dónde está el par: la fuente no lo nombró.");
+  });
+
+  test("el bloque parte el aviso sin cambiar el texto aprobado", async () => {
+    const market = await loadMarketModule();
+    const aviso = (await import(pathToFileURL(path.join(repoRoot(), "web/v2/shared/aviso-guardar.js")).href)) as {
+      AVISO_GUARDAR: { es: string; en: string };
+    };
+    assert.equal(market.marketPrivacy("es"), aviso.AVISO_GUARDAR.es);
+    assert.equal(market.marketPrivacy("en"), aviso.AVISO_GUARDAR.en);
+    assert.equal(market.marketPrivacyLead("es"), "Si pulsas «Leer datos de mercado ahora», tu navegador conecta con DEX Screener y DEX Screener también ve tu IP y la dirección consultada.");
+    assert.equal(market.marketPrivacyLead("en"), "If you press \"Read market data now\", your browser connects to DEX Screener and it also sees your IP and the address you look up.");
+    assert.equal(market.marketPrivacyRest("es").includes(market.marketPrivacyLead("es")), false);
+    assert.equal(market.marketPrivacyRest("en").includes(market.marketPrivacyLead("en")), false);
+    for (const lang of ["es", "en"] as const) {
+      const full = market.marketPrivacy(lang).split(/(?<=\.)\s+/);
+      const shown = `${market.marketPrivacyLead(lang)} ${market.marketPrivacyRest(lang)}`;
+      for (const sentence of full) assert.equal(shown.includes(sentence), true, sentence);
+    }
+    assert.equal(market.MARKET_SUMMARY_GAP.es, "Datos de mercado: no se pudieron leer");
+    assert.equal(market.MARKET_SUMMARY_GAP.en, "Market data: could not be read");
+    const view = readFileSync(path.join(repoRoot(), "web/v2/shared/market-view.js"), "utf8");
+    assert.equal(view.includes("marketPrivacy("), false);
+    assert.match(view, /marketPrivacyLead/);
+    assert.match(view, /syncMarketSummaryGap/);
+  });
+
   test("una dirección en minúsculas no coincide", async () => {
     const market = await loadMarketModule();
     const discarded = market.normalizeUpstream(
@@ -606,7 +705,7 @@ describe("datos de mercado", () => {
     assert.equal(loaded.reason, "tiempo");
     const view = market.describeMarket(loaded, "es");
     assert.equal(view.gapTitle, "Qué falta");
-    assert.match(view.gap, /No se pudo consultar/);
+    assert.equal(view.gap, FAIL_ES);
     assert.equal(view.retry, true);
     const body = await market.loadMarket(
       MINT,

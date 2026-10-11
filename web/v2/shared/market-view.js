@@ -7,11 +7,13 @@ import {
   MARKET_READ_BUTTON,
   MARKET_RETRY_BUTTON,
   MARKET_STORED_NOTE,
+  MARKET_SUMMARY_GAP,
   describeMarket,
   loadMarket,
   marketFailure,
   marketLoading,
-  marketPrivacy,
+  marketPrivacyLead,
+  marketPrivacyRest,
 } from "./market-read.js";
 
 const CACHE_MS = 60_000;
@@ -49,6 +51,70 @@ function freshMarket(mint) {
   return hit.model;
 }
 
+function privacyFold(lang) {
+  const language = lang === "en" ? "en" : "es";
+  const details = marketEl("details", { class: "privacidad-mercado" });
+  details.append(
+    marketText("summary", language === "en" ? "More detail" : "Más detalle"),
+    marketText("p", marketPrivacyRest(language)),
+  );
+  return [
+    marketText("p", marketPrivacyLead(language), { class: "nota" }),
+    details,
+  ];
+}
+
+function summaryBox(anchor) {
+  const sibling = anchor && anchor.previousElementSibling;
+  if (sibling && sibling.classList && sibling.classList.contains("resumen-informe")) return sibling;
+  const parent = anchor && anchor.parentElement;
+  if (!parent || !parent.querySelector) return null;
+  return parent.querySelector(".resumen-informe");
+}
+
+function syncMarketSummaryGap(anchor, show, lang) {
+  const summary = summaryBox(anchor);
+  if (!summary || !summary.querySelector) return;
+  const box = summary.querySelector('[data-bloque="falta"]');
+  if (!box) return;
+  const language = lang === "en" ? "en" : "es";
+  const item = box.querySelector("[data-mercado-falta='si']");
+  if (!show) {
+    if (!item) return;
+    const list = item.parentElement;
+    item.remove();
+    if (list && list.children.length === 0) {
+      const empty = marketText(
+        "p",
+        language === "en" ? "No requested fact is missing in this reading." : "No falta ningún dato pedido en esta lectura.",
+        { class: "punto-vacio" },
+      );
+      list.replaceWith(empty);
+    }
+    return;
+  }
+  const empty = box.querySelector(".punto-vacio");
+  let list = box.querySelector("ul");
+  if (!list) {
+    list = marketEl("ul");
+    if (empty) empty.replaceWith(list);
+    else box.append(list);
+  } else if (empty) {
+    empty.remove();
+  }
+  let row = item;
+  if (!row) {
+    row = marketEl("li", { class: "punto-resumen", "data-mercado-falta": "si" });
+    const lead = marketText("p", "", { class: "punto-frase" });
+    const body = marketEl("div");
+    body.append(lead);
+    row.append(body);
+    list.append(row);
+  }
+  const lead = row.querySelector(".punto-frase");
+  if (lead) lead.textContent = MARKET_SUMMARY_GAP[language];
+}
+
 function paintMarket(parent, model, lang, token, onRetry) {
   const view = describeMarket(model, lang);
   const language = lang === "en" ? "en" : "es";
@@ -61,7 +127,7 @@ function paintMarket(parent, model, lang, token, onRetry) {
     marketText("h3", view.title),
     marketText("p", view.intro, { class: "apoyo" }),
     marketText("p", view.notice, { class: "nota" }),
-    marketText("p", view.privacy, { class: "nota" }),
+    ...privacyFold(language),
     marketText("p", view.attribution, { class: "atribucion-mercado" }),
     marketText("p", view.source, { class: "fuente-mercado" }),
   );
@@ -107,7 +173,7 @@ function paintMarketPrompt(parent, mint, lang, token) {
   const section = marketEl("section", { class: "datos-mercado", "data-estado": "espera" });
   section.append(
     marketText("h3", language === "en" ? "Market data" : "Datos de mercado"),
-    marketText("p", marketPrivacy(language), { class: "nota" }),
+    ...privacyFold(language),
     marketText("p", MARKET_ATTRIBUTION[language], { class: "atribucion-mercado" }),
     marketText("p", MARKET_STORED_NOTE[language], { class: "nota" }),
   );
@@ -128,7 +194,13 @@ export function mountMarket(parent, options) {
   const force = Boolean(options && options.force);
   const token = {};
   marketTokens.set(parent, token);
+  const asked = auto || force;
   const retry = () => mountMarket(parent, { mint, lang, auto: true, force: true });
+  const settle = (model) => {
+    if (marketTokens.get(parent) !== token) return;
+    paintMarket(parent, model, lang, token, retry);
+    if (asked) syncMarketSummaryGap(parent, Boolean(model && model.status === "fallo"), lang);
+  };
   if (!auto && !force) {
     const cached = freshMarket(mint);
     if (cached) {
@@ -142,10 +214,12 @@ export function mountMarket(parent, options) {
     const cached = freshMarket(mint);
     if (cached) {
       paintMarket(parent, cached, lang, token, retry);
+      if (asked) syncMarketSummaryGap(parent, false, lang);
       return;
     }
   }
   paintMarket(parent, marketLoading(mint), lang, token, retry);
+  if (asked) syncMarketSummaryGap(parent, false, lang);
   if (force) marketPending.delete(mint);
   const pending = !force ? marketPending.get(mint) : null;
   const job = pending || loadMarket(mint);
@@ -154,12 +228,10 @@ export function mountMarket(parent, options) {
     .then((model) => {
       if (marketPending.get(mint) === job) marketPending.delete(mint);
       rememberMarket(mint, model);
-      if (marketTokens.get(parent) !== token) return;
-      paintMarket(parent, model, lang, token, retry);
+      settle(model);
     })
     .catch(() => {
       if (marketPending.get(mint) === job) marketPending.delete(mint);
-      if (marketTokens.get(parent) !== token) return;
-      paintMarket(parent, marketFailure(mint, new Date().toISOString(), "http"), lang, token, retry);
+      settle(marketFailure(mint, new Date().toISOString(), "http"));
     });
 }
