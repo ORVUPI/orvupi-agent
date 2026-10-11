@@ -3198,12 +3198,50 @@ function concentrationPoint(signal) {
   );
 }
 
+function cardDay(value) {
+  const raw = String(value || "").trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  const date = new Date(raw);
+  if (!raw || Number.isNaN(date.getTime())) return "";
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Madrid",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const pick = (type) => parts.find((part) => part.type === type)?.value || "";
+  const day = `${pick("year")}-${pick("month")}-${pick("day")}`;
+  return /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : "";
+}
+
+function earlierCheckPoint(signal) {
+  const day = cardDay(signal?.cardDate);
+  if (!day) return null;
+  return summaryPoint(
+    "metadatos",
+    summaryPair("Comprobación anterior", "Earlier check"),
+    summaryPair(
+      `Es la ficha del ${day}, no un dato de esta lectura.`,
+      `It is the ${day} card, not a fact from this reading.`,
+    ),
+    summaryPair(
+      "La ficha fechada es una foto anterior. No cambia lo que dice esta lectura.",
+      "The dated card is an earlier snapshot. It does not change what this reading says.",
+    ),
+  );
+}
+
 function attentionFromSignals(signals) {
   const items = [];
   for (const signal of signals || []) {
     if (!signal || (signal.level !== "atencion" && signal.level !== "riesgo")) continue;
     if (signal.id === "cuentas" || signal.id === "suministro") {
       if (signal.id === "cuentas" && samplePercent(signal)) items.push(concentrationPoint(signal));
+      continue;
+    }
+    if (signal.id === "ficha") {
+      const dated = earlierCheckPoint(signal);
+      if (dated) items.push(dated);
       continue;
     }
     if (isUnread(signal)) continue;
@@ -3980,11 +4018,14 @@ function bootVerify() {
 
   var generation = 0;
 
-  function datedSignal(cardView) {
+  function datedSignal(cardView, card) {
+    var createdAt = card && typeof card.createdAt === "string" ? card.createdAt.trim() : "";
+    if (!createdAt) return null;
     if (cardView.kind === "oficial") {
       return {
         id: "ficha",
         level: "ok",
+        cardDate: createdAt,
         title: { es: "Ficha fechada", en: "Dated card" },
         explain: {
           es: "Hay una ficha fechada de esta misma dirección. Es una foto anterior, no esta lectura.",
@@ -3996,6 +4037,7 @@ function bootVerify() {
       return {
         id: "ficha",
         level: "atencion",
+        cardDate: createdAt,
         title: {
           es: "La ficha fechada también dice que se parece a STUBX y no es la CA oficial",
           en: "The dated card also says it looks like STUBX and is not the official CA",
@@ -4007,6 +4049,7 @@ function bootVerify() {
       return {
         id: "ficha",
         level: "neutro",
+        cardDate: createdAt,
         title: { es: "Hay una ficha fechada y no es la del registro", en: "There is a dated card and it is not the registry one" },
         explain: cardView.support,
       };
@@ -4066,7 +4109,11 @@ function bootVerify() {
   function decorate(view, normalized) {
     var cardView = classifyAddress(normalized, cards, "lista", evm);
     if (cardView.compare) view.compare = cardView.compare;
-    var extra = datedSignal(cardView);
+    var card = null;
+    for (var i = 0; i < cards.length; i += 1) {
+      if (cards[i] && cards[i].mint === normalized) card = cards[i];
+    }
+    var extra = datedSignal(cardView, card);
     if (extra && view.ok && view.signals) view.signals = view.signals.concat([extra]);
     return view;
   }

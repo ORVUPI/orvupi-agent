@@ -85,6 +85,11 @@ const EMPTY_FILE = {
   },
 };
 
+const NOTHING_TO_NOTE = {
+  es: "Nada que destacar en esta lectura. Que no aparezca no significa que no haya riesgo.",
+  en: "Nothing to highlight in this reading. A signal not showing does not mean there is no risk.",
+};
+
 const CLONE_WARNING = {
   es: "Se parece a STUBX pero no es la dirección oficial",
   en: "It looks like STUBX but it is not the official address",
@@ -160,7 +165,9 @@ function fileWording(text, lang) {
   const rewritten = lang === "en"
     ? masked.replace(/·\s*verified\b/gi, "· read on-chain")
     : masked.replace(/·\s*verificado\b/gi, "· leído en la cadena");
-  return rewritten.replace(/\uE000(\d+)\uE001/g, (_, index) => kept[Number(index)] || "");
+  const restored = rewritten.replace(/\uE000(\d+)\uE001/g, (_, index) => kept[Number(index)] || "");
+  if (lang !== "en") return restored;
+  return restored.replace(/«([^»]*)»/g, "\u201C$1\u201D");
 }
 
 function legalEmpty(text, blockId, lang) {
@@ -173,6 +180,16 @@ function legalEmpty(text, blockId, lang) {
     return EMPTY_FILE.falta.en;
   }
   return source;
+}
+
+function isEarlierCheck(item) {
+  const title = `${item?.title?.es || ""} ${item?.title?.en || ""}`;
+  return /Comprobación anterior|Earlier check/.test(title);
+}
+
+function earlierCheckDate(item) {
+  const blob = `${item?.lead?.es || ""} ${item?.lead?.en || ""} ${item?.note?.es || ""} ${item?.note?.en || ""}`;
+  return /\d{4}-\d{2}-\d{2}/.test(blob);
 }
 
 function isCloneLead(item) {
@@ -209,7 +226,7 @@ export function reportModel(source, lang) {
   for (const item of moved) {
     if (!missingItems.some((other) => samePoint(other, item))) missingItems.push(item);
   }
-  const attentionItems = attention.items || [];
+  const attentionItems = (attention.items || []).filter((item) => !isEarlierCheck(item) || earlierCheckDate(item));
   const warningItems = attentionItems.filter(isCloneLead);
   const attentionRest = attentionItems.filter((item) => !isCloneLead(item));
   const warningLead = warningItems.map((item) => item?.lead?.[language] || item?.lead?.es || "").find(Boolean) || "";
@@ -226,9 +243,9 @@ export function reportModel(source, lang) {
     addressLabel: copy.address,
     address: addressRaw || copy.addressMissing,
     blocks: [
-      paintBlock(checked, kept, language, false),
-      paintBlock(attention, attentionRest, language, warningItems.length > 0),
-      paintBlock({ ...missing, service: missing.service }, missingItems, language, false),
+      paintBlock(checked, kept, language),
+      paintBlock(attention, [...warningItems, ...attentionRest], language),
+      paintBlock({ ...missing, service: missing.service }, missingItems, language),
     ],
     note: fileWording(summary.note?.lead?.[language] || "", language),
     limitsLabel: copy.limits,
@@ -237,7 +254,7 @@ export function reportModel(source, lang) {
   };
 }
 
-function paintBlock(block, items, lang, suppressEmpty) {
+function paintBlock(block, items, lang) {
   const lines = [];
   for (const item of items) {
     const title = fileWording(item?.title?.[lang] || "", lang);
@@ -245,7 +262,8 @@ function paintBlock(block, items, lang, suppressEmpty) {
     const note = fileWording(item?.note?.[lang] || "", lang);
     if (title || lead) lines.push({ title, lead, note });
   }
-  const empty = lines.length || suppressEmpty ? "" : legalEmpty(block.empty?.[lang] || "", block.id, lang);
+  const screenEmpty = legalEmpty(block.empty?.[lang] || "", block.id, lang).trim();
+  const empty = lines.length ? "" : (screenEmpty || NOTHING_TO_NOTE[lang] || NOTHING_TO_NOTE.es);
   return {
     id: block.id || "falta",
     heading: block.heading?.[lang] || "",
@@ -317,13 +335,13 @@ function layoutRows(ctx, model, width, scale) {
   const rows = [];
   const push = (text, role, extra) => {
     const size = Math.max(12, Math.round(SIZES[role] * scale));
-    const family = role === "title" ? "Silkscreen, system-ui, sans-serif" : role === "address" ? "ui-monospace, monospace" : "system-ui, sans-serif";
+    const family = role === "address" ? "ui-monospace, monospace" : "system-ui, sans-serif";
     const safe = paintString(text);
     for (const row of wrapText(ctx, safe, inner, size, family)) {
       rows.push({ text: row, size, family, role, ...extra });
     }
   };
-  push(model.title, "title");
+  push(model.title, "title", { strong: true });
   push(model.date, "date");
   if (model.warning) push(model.warning, "body", { heading: true, warning: true });
   push(model.origin, "date");
@@ -342,7 +360,11 @@ function layoutRows(ctx, model, width, scale) {
     }
     if (block.service) push(block.service, "body", { block: block.id });
   }
-  if (model.note) push(model.note, "body");
+  if (model.note) {
+    rows.push({ kind: "gap", size: 16 });
+    rows.push({ kind: "block", id: "nota", size: 8 });
+    push(model.note, "body", { block: "nota" });
+  }
   rows.push({ kind: "block", id: "limites", size: 8 });
   push(model.limitsLabel, "body", { heading: true, block: "limites" });
   for (const line of model.limits) push(line, "limits", { block: "limites" });
@@ -355,7 +377,7 @@ function layoutRows(ctx, model, width, scale) {
 function blockColor(id) {
   if (id === "atencion") return COLORS.pink;
   if (id === "falta") return COLORS.attention;
-  if (id === "limites") return COLORS.line;
+  if (id === "limites" || id === "nota") return COLORS.line;
   return COLORS.checked;
 }
 
@@ -404,7 +426,9 @@ export function drawReport(ctx, model, width = 840) {
       bands.push({ id: row.id, top: row.y });
       continue;
     }
-    if (row.block && bands.length) bands[bands.length - 1].bottom = row.y + row.size;
+    if (row.block && bands.length && bands[bands.length - 1].id === row.block) {
+      bands[bands.length - 1].bottom = row.y + row.size;
+    }
   }
   for (const band of bands) {
     if (!band.bottom) continue;
@@ -686,12 +710,6 @@ export async function renderReportFiles(model, doc) {
   const canvas = doc.createElement("canvas");
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) return null;
-  if (doc.fonts && typeof doc.fonts.load === "function") {
-    await Promise.race([
-      doc.fonts.load("700 34px Silkscreen").catch(() => {}),
-      new Promise((resolve) => setTimeout(resolve, 400)),
-    ]);
-  }
   const drawn = drawReport(ctx, model);
   const png = await new Promise((resolve) => canvas.toBlob((blob) => resolve(blob), "image/png"));
   if (!png) return null;
@@ -722,6 +740,7 @@ export function reportDownloadBox(source, env) {
   box.className = "informe-descarga";
   const lang = () => pageLang(doc);
   const copy = () => reportCopy(lang());
+  box.informeSource = source;
   box.setAttribute("role", "region");
   box.setAttribute("aria-label", copy().action);
   const title = doc.createElement("p");

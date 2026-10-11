@@ -394,12 +394,50 @@ function concentrationPoint(signal) {
   );
 }
 
+function cardDay(value) {
+  const raw = String(value || "").trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  const date = new Date(raw);
+  if (!raw || Number.isNaN(date.getTime())) return "";
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Madrid",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const pick = (type) => parts.find((part) => part.type === type)?.value || "";
+  const day = `${pick("year")}-${pick("month")}-${pick("day")}`;
+  return /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : "";
+}
+
+function earlierCheckPoint(signal) {
+  const day = cardDay(signal?.cardDate);
+  if (!day) return null;
+  return summaryPoint(
+    "metadatos",
+    summaryPair("Comprobación anterior", "Earlier check"),
+    summaryPair(
+      `Es la ficha del ${day}, no un dato de esta lectura.`,
+      `It is the ${day} card, not a fact from this reading.`,
+    ),
+    summaryPair(
+      "La ficha fechada es una foto anterior. No cambia lo que dice esta lectura.",
+      "The dated card is an earlier snapshot. It does not change what this reading says.",
+    ),
+  );
+}
+
 function attentionFromSignals(signals) {
   const items = [];
   for (const signal of signals || []) {
     if (!signal || (signal.level !== "atencion" && signal.level !== "riesgo")) continue;
     if (signal.id === "cuentas" || signal.id === "suministro") {
       if (signal.id === "cuentas" && samplePercent(signal)) items.push(concentrationPoint(signal));
+      continue;
+    }
+    if (signal.id === "ficha") {
+      const dated = earlierCheckPoint(signal);
+      if (dated) items.push(dated);
       continue;
     }
     if (isUnread(signal)) continue;

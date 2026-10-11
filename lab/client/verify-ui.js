@@ -272,11 +272,14 @@ function bootVerify() {
 
   var generation = 0;
 
-  function datedSignal(cardView) {
+  function datedSignal(cardView, card) {
+    var createdAt = card && typeof card.createdAt === "string" ? card.createdAt.trim() : "";
+    if (!createdAt) return null;
     if (cardView.kind === "oficial") {
       return {
         id: "ficha",
         level: "ok",
+        cardDate: createdAt,
         title: { es: "Ficha fechada", en: "Dated card" },
         explain: {
           es: "Hay una ficha fechada de esta misma dirección. Es una foto anterior, no esta lectura.",
@@ -288,6 +291,7 @@ function bootVerify() {
       return {
         id: "ficha",
         level: "atencion",
+        cardDate: createdAt,
         title: {
           es: "La ficha fechada también dice que se parece a STUBX y no es la CA oficial",
           en: "The dated card also says it looks like STUBX and is not the official CA",
@@ -299,6 +303,7 @@ function bootVerify() {
       return {
         id: "ficha",
         level: "neutro",
+        cardDate: createdAt,
         title: { es: "Hay una ficha fechada y no es la del registro", en: "There is a dated card and it is not the registry one" },
         explain: cardView.support,
       };
@@ -358,7 +363,11 @@ function bootVerify() {
   function decorate(view, normalized) {
     var cardView = classifyAddress(normalized, cards, "lista", evm);
     if (cardView.compare) view.compare = cardView.compare;
-    var extra = datedSignal(cardView);
+    var card = null;
+    for (var i = 0; i < cards.length; i += 1) {
+      if (cards[i] && cards[i].mint === normalized) card = cards[i];
+    }
+    var extra = datedSignal(cardView, card);
     if (extra && view.ok && view.signals) view.signals = view.signals.concat([extra]);
     return view;
   }

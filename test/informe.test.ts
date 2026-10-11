@@ -31,7 +31,7 @@ type Model = {
 
 type ReportModule = {
   formatReportWhen: (value: string, lang: string) => string;
-  reportPagePlan: (height: number, limitsTop: number, pageHeight?: number) => Array<{ repeatLimits: boolean; single: boolean; bodyBottom: number; bodyTop: number }>;
+  reportPagePlan: (height: number, limitsTop: number, pageHeight?: number, warningHeight?: number) => Array<{ repeatLimits: boolean; single: boolean; bodyBottom: number; bodyTop: number }>;
   sliceReportPages: (rgba: Uint8Array, width: number, height: number, limitsTop: number, pageHeight?: number, warning?: { top: number; bottom: number } | null) => Array<{ rgba: Uint8Array; width: number; height: number }>;
   reportCopy: (lang: string) => { pdfFail: string; title: string };
   canvasSafeText: (value: string, max?: number) => string;
@@ -83,7 +83,7 @@ function joined(model: Model, id: string) {
 }
 
 function mockCtx() {
-  const calls: Array<{ op: string; text?: string; fillStyle?: string }> = [];
+  const calls: Array<{ op: string; text?: string; fillStyle?: string; font?: string }> = [];
   const ctx = {
     canvas: { width: 0, height: 0 },
     fillStyle: "",
@@ -100,7 +100,7 @@ function mockCtx() {
     },
     strokeRect() {},
     fillText(text: string) {
-      calls.push({ op: "fillText", text, fillStyle: this.fillStyle });
+      calls.push({ op: "fillText", text, fillStyle: this.fillStyle, font: this.font });
     },
   };
   return { ctx, calls };
@@ -170,7 +170,10 @@ describe("informe descargable", () => {
     assert.equal(english.date.includes(englishZone), true);
     assert.equal(english.origin, "Made on stubxai.com · not affiliated with third-party tokens");
     assert.equal(english.footer, "High-risk crypto · You could lose everything · Not investment advice");
-    assert.match(joined(english, "comprobado"), /It says it is called «USD Coin» \(«USDC»\)/);
+    assert.match(joined(english, "comprobado"), /It says it is called \u201CUSD Coin\u201D \(\u201CUSDC\u201D\)/);
+    assert.equal(joined(english, "comprobado").includes("«"), false);
+    assert.equal(joined(model, "falta").includes("Curva de Pump.fun"), false);
+    assert.equal(joined(english, "falta").includes("Pump.fun curve"), false);
   });
 
   test("un clon conserva el aviso y no usa su símbolo como unidad", async () => {
@@ -200,7 +203,55 @@ describe("informe descargable", () => {
     assert.ok(warningAt < networkAt);
     assert.ok(warningAt < checkedAt);
     assert.equal(lines[warningAt - 1]?.includes("Consultado el"), true);
-    assert.equal(joined(model, "atencion").includes("Se parece a STUBX pero no es la dirección oficial"), false);
+    const attentionBlock = model.blocks.find((item) => item.id === "atencion");
+    assert.ok(attentionBlock);
+    assert.match(attentionBlock.lines[0]?.lead || "", /Se parece a STUBX pero no es la dirección oficial/);
+    assert.match(attention, /Se parece a STUBX pero no es la dirección oficial/);
+    const ordered = report.reportModel({
+      summary: {
+        blocks: [{
+          id: "atencion",
+          heading: { es: "Qué requiere atención", en: "What needs attention" },
+          items: [
+            {
+              title: { es: "Comprobación anterior", en: "Earlier check" },
+              lead: { es: "Es la ficha del 2026-10-09, no un dato de esta lectura.", en: "It is the 2026-10-09 card, not a fact from this reading." },
+            },
+            {
+              title: { es: "Dirección", en: "Address" },
+              lead: { es: "Se parece a STUBX pero no es la dirección oficial.", en: "It looks like STUBX but it is not the official address." },
+            },
+          ],
+          empty: { es: "", en: "" },
+        }],
+      },
+      mint: CLONE,
+      network: "solana",
+      consultedAt: WHEN,
+    }, "es");
+    const orderedAttention = ordered.blocks.find((item) => item.id === "atencion");
+    assert.match(ordered.warning, /Se parece a STUBX pero no es la dirección oficial/);
+    assert.match(orderedAttention?.lines[0]?.lead || "", /Se parece a STUBX pero no es la dirección oficial/);
+    assert.match(orderedAttention?.lines[1]?.lead || "", /2026-10-09/);
+    assert.equal(/\d{2}:\d{2}:\d{2}/.test(orderedAttention?.lines[1]?.lead || ""), false);
+    const dropped = report.reportModel({
+      summary: {
+        blocks: [{
+          id: "atencion",
+          heading: { es: "Qué requiere atención", en: "What needs attention" },
+          items: [{
+            title: { es: "Comprobación anterior", en: "Earlier check" },
+            lead: { es: "Es una ficha guardada de antes, no un dato de esta lectura.", en: "It is a card saved earlier, not a fact from this reading." },
+          }],
+          empty: { es: "Ninguna señal de esta lectura pide atención. Que no aparezca no significa que no haya riesgo.", en: "No signal." },
+        }],
+      },
+      mint: CLONE,
+      network: "solana",
+      consultedAt: WHEN,
+    }, "es");
+    assert.equal(joined(dropped, "atencion").includes("Comprobación anterior"), false);
+    assert.match(joined(dropped, "atencion"), /Ninguna señal de esta lectura pide atención/);
     assert.equal(checked.includes("1.000.000.000 STUBX"), false);
     assert.match(checked, /1\.000\.000\.000 tokens/);
     assert.equal(model.address, CLONE);
@@ -318,7 +369,8 @@ describe("informe descargable", () => {
     assert.equal(model.network, "verified");
     const english = report.reportModel(source, "en");
     const englishChecked = joined(english, "comprobado");
-    assert.match(englishChecked, /It says it is called «verificado» \(«verified»\)/);
+    assert.match(englishChecked, /It says it is called \u201Cverificado\u201D \(\u201Cverified\u201D\)/);
+    assert.equal(englishChecked.includes("«"), false);
     assert.equal(englishChecked.includes("read on-chain"), false);
     assert.equal(english.address, "verificado");
     assert.equal(english.network, "verified");
@@ -374,7 +426,8 @@ describe("informe descargable", () => {
       consultedAt: WHEN,
     }, "en");
     const englishText = joined(englishMixed, "comprobado");
-    assert.match(englishText, /It says it is called «verificado» \(«verified»\)/);
+    assert.match(englishText, /It says it is called \u201Cverificado\u201D \(\u201Cverified\u201D\)/);
+    assert.equal(englishText.includes("«"), false);
     assert.match(englishText, /chain fact: verified/);
     assert.match(englishText, /revoked · read on-chain/);
     assert.equal(/·\s*verified/i.test(englishText), false);
@@ -384,6 +437,101 @@ describe("informe descargable", () => {
     assert.match(painted, /^verificado$/m);
     assert.match(painted, /^verified$/m);
     assert.equal(painted.includes("«leído en la cadena»"), false);
+  });
+
+  test("un bloque sin puntos no sale en blanco", async () => {
+    const { report } = await load();
+    const model = report.reportModel({
+      summary: {
+        blocks: [{
+          id: "atencion",
+          heading: { es: "Qué requiere atención", en: "What needs attention" },
+          items: [],
+          empty: { es: "", en: "" },
+        }],
+      },
+      mint: USDC,
+      network: "solana",
+      consultedAt: WHEN,
+    }, "es");
+    const attention = joined(model, "atencion");
+    assert.match(attention, /Nada que destacar en esta lectura/);
+    assert.match(attention, /Que no aparezca no significa que no haya riesgo/);
+    const block = model.blocks.find((item) => item.id === "atencion");
+    assert.equal(block?.lines.length, 0);
+    assert.ok((block?.empty.length ?? 0) > 0);
+    const english = report.reportModel({
+      summary: {
+        blocks: [{
+          id: "atencion",
+          heading: { es: "Qué requiere atención", en: "What needs attention" },
+          items: [],
+          empty: { es: "", en: "" },
+        }],
+      },
+      mint: USDC,
+      network: "solana",
+      consultedAt: WHEN,
+    }, "en");
+    assert.match(joined(english, "atencion"), /Nothing to highlight in this reading/);
+    assert.match(joined(english, "atencion"), /A signal not showing does not mean there is no risk/);
+  });
+
+  test("los fixtures conservan la cadena, separan la curva y ocupan varias páginas", async () => {
+    const { report, summary } = await load();
+    const read = (name: string) => JSON.parse(readFileSync(path.join(repoRoot(), "test/fixtures/informe", name), "utf8")) as Record<string, unknown>;
+    const named = read("verificado.json");
+    const namedModel = report.reportModel({
+      summary: summary.summaryFromCard(named),
+      mint: named.mint,
+      network: "solana",
+      consultedAt: named.consultedAt,
+    }, "es");
+    assert.match(joined(namedModel, "comprobado"), /Dice llamarse «verificado» \(«verified»\)/);
+    assert.equal(joined(namedModel, "comprobado").includes("leído en la cadena"), false);
+    assert.match(namedModel.date, /\d{2}:\d{2}:\d{2}/);
+    const namedEnglish = report.reportModel({
+      summary: summary.summaryFromCard(named),
+      mint: named.mint,
+      network: "solana",
+      consultedAt: named.consultedAt,
+    }, "en");
+    assert.match(joined(namedEnglish, "comprobado"), /It says it is called \u201Cverificado\u201D \(\u201Cverified\u201D\)/);
+    assert.equal(joined(namedEnglish, "comprobado").includes("«"), false);
+    const marked = read("nombre-html.json");
+    const markedModel = report.reportModel({
+      summary: summary.summaryFromCard(marked),
+      mint: marked.mint,
+      network: "solana",
+      consultedAt: marked.consultedAt,
+    }, "es");
+    assert.match(joined(markedModel, "comprobado"), /«A&B<i>»/);
+    assert.equal(joined(markedModel, "comprobado").includes("&lt;"), false);
+    assert.equal(joined(markedModel, "falta").includes("Curva de Pump.fun"), false);
+    assert.match(markedModel.note, /Curva de Pump.fun: no aplica/);
+    const markedEnglish = report.reportModel({
+      summary: summary.summaryFromCard(marked),
+      mint: marked.mint,
+      network: "solana",
+      consultedAt: marked.consultedAt,
+    }, "en");
+    assert.match(joined(markedEnglish, "comprobado"), /\u201CA&B<i>\u201D/);
+    assert.equal(joined(markedEnglish, "falta").includes("Pump.fun curve"), false);
+    const largo = read("largo.json");
+    const longModel = report.reportModel(largo, "es");
+    assert.match(longModel.date, /\d{2}:\d{2}:\d{2}/);
+    assert.match(longModel.warning, /Se parece a STUBX pero no es la dirección oficial/);
+    const longAttention = longModel.blocks.find((item) => item.id === "atencion");
+    assert.match(longAttention?.lines[0]?.lead || "", /Se parece a STUBX pero no es la dirección oficial/);
+    assert.equal(joined(longModel, "falta").includes("Curva de Pump.fun"), false);
+    assert.match(longModel.note, /Curva de Pump.fun: no aplica/);
+    const drawn = report.drawReport(mockCtx().ctx, longModel, 840);
+    const warningHeight = Math.max(0, drawn.warningBottom - drawn.warningTop);
+    const plan = report.reportPagePlan(drawn.height, drawn.limitsTop, 1500, warningHeight);
+    assert.ok(drawn.height > 1500);
+    assert.ok(plan.length > 1);
+    assert.equal(plan.every((page) => page.repeatLimits), true);
+    assert.equal(plan.some((page) => page.single), false);
   });
 
   test("el lienzo normaliza el texto de la cadena y no lo escapa como HTML", async () => {
@@ -412,6 +560,11 @@ describe("informe descargable", () => {
     assert.match(painted, /Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión/);
     assert.match(painted, /Generado en stubxai.com · herramienta no oficial para tokens de terceros/);
     assert.match(painted, /Solana mainnet/);
+    const titlePaint = calls.find((item) => item.op === "fillText" && item.text?.includes("no es un certificado"));
+    assert.ok(titlePaint);
+    assert.match(titlePaint.text || "", /·/);
+    assert.match(titlePaint.font || "", /system-ui/);
+    assert.equal((titlePaint.font || "").includes("Silkscreen"), false);
     assert.equal(/\b(precio|compra|comprar|urgente|buy now)\b/i.test(painted), false);
     const fills = calls.filter((item) => item.op === "fillRect").map((item) => item.fillStyle);
     assert.equal(fills.includes("#1beb91"), false);
