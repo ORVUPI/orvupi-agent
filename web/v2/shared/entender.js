@@ -9,7 +9,7 @@ export const ENTENDER = Object.freeze([
     en: "Permissions",
     explain: {
       es: "Permisos: el de emisión permite crear más tokens. El de congelación permite bloquear cuentas. Ninguno de los dos dice si el proyecto es legítimo.",
-      en: "Permissions: mint authority can create more tokens. Freeze authority can block accounts. Neither one says the project is legitimate.",
+      en: "Permissions: one of them can create more tokens. The freeze permission can block accounts. Neither one says the project is legitimate.",
     },
   },
   {
@@ -18,8 +18,8 @@ export const ENTENDER = Object.freeze([
     es: "Suministro",
     en: "Supply",
     explain: {
-      es: "Suministro: es la cantidad total de tokens en esta lectura, con los decimales del mint.",
-      en: "Supply: it is the total number of tokens in this reading, using the mint decimals.",
+      es: "Suministro: es la cantidad total de tokens en esta lectura, con los decimales de este token.",
+      en: "Supply: it is the total number of tokens in this reading, using this token's decimals.",
     },
   },
   {
@@ -42,6 +42,16 @@ export const ENTENDER = Object.freeze([
       en: "Distribution: a sample of accounts is not a census of who holds the tokens.",
     },
   },
+  {
+    id: "curva",
+    href: "/aprender/#curva-pump",
+    es: "Curva",
+    en: "Curve",
+    explain: {
+      es: "Curva: si el token no se creó en Pump.fun, este dato no aplica. Si se creó y no hay cuenta, esta lectura no la encontró.",
+      en: "Curve: if the token was not created on Pump.fun, this fact does not apply. If it was and there is no account, this reading did not find it.",
+    },
+  },
 ]);
 
 export function entenderNav(lang) {
@@ -59,6 +69,10 @@ export function entenderNav(lang) {
   panel.tabIndex = -1;
   for (const item of ENTENDER) {
     const paragraph = document.createElement("p");
+    paragraph.dataset.tema = item.id;
+    paragraph.tabIndex = -1;
+    const anchor = `entender-${item.id}`;
+    if (!document.getElementById(anchor)) paragraph.id = anchor;
     paragraph.textContent = lang === "en" ? item.explain.en : item.explain.es;
     panel.append(paragraph);
   }

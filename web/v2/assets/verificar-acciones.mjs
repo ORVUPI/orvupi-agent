@@ -4,7 +4,7 @@
  */
 import { formatAmount } from "../shared/amount.js";
 import { ENTENDER, entenderNav } from "../shared/entender.js";
-import { compareRecords, comparedValueText, comparisonSummary, curveComparisonValue, pickPrevious, staleLine, supplyDirection, validateCard, withinStoreLimit } from "../shared/notebook-model.js";
+import { compareRecords, comparedSideText, comparisonSummary, curveComparisonValue, pickPrevious, staleLine, supplyDirection, validateCard, withinStoreLimit } from "../shared/notebook-model.js";
 import { cardFromShown } from "../shared/solana-read.js";
 
 const DB_NAME = "stubx-cuaderno";
@@ -184,7 +184,7 @@ function sideText(row, side, card) {
     const formatted = formatAmount(raw, card.decimals, lang());
     if (formatted) return formatted;
   }
-  return comparedValueText(raw, lang());
+  return comparedSideText(row.field.es, card, raw, lang());
 }
 
 function gridFor(rows, verdict, older, newer) {

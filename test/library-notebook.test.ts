@@ -22,7 +22,7 @@ interface ReadModule {
   metadataPda: (mint: string) => Promise<string>;
   bondingCurvePda: (mint: string) => Promise<string>;
   decodeMintAccount: (owner: string, data: Uint8Array) => { supplyRaw: string; mintAuthority: { state: string }; freezeAuthority: { state: string } } | null;
-  decodeMetadataAccount: (data: Uint8Array) => { name: string; uri: string; mutable: string | null } | null;
+  decodeMetadataAccount: (data: Uint8Array) => { name: string; symbol: string; uri: string; mutable: string | null } | null;
   isAllowedRpcUrl: (value: string) => boolean;
   blankCard: (mint: string, consultedAt: string, errors: unknown[]) => Card;
   readMint: (options: Record<string, unknown>) => Promise<{ ok: boolean; card: Card | null }>;
@@ -36,7 +36,7 @@ interface Card {
   officialStubx?: boolean;
   name: { text: string | null; status?: string };
   symbol?: { text: string | null; status?: string };
-  uri: { text: string | null };
+  uri: { text: string | null; status?: string };
   supplyRpc: string | null;
   supplyRpcStatus?: string;
   supplyAccount: string | null;
@@ -51,6 +51,7 @@ interface Card {
   mintAuthority?: { state: string; address?: string | null; status: string };
   freezeAuthority?: { state: string; address?: string | null; status: string };
   curve?: { present: boolean | null; status: string };
+  largestStatus?: string;
   errors?: Array<{ message?: string }>;
 }
 
@@ -61,11 +62,12 @@ interface ModelModule {
   validateCard: (card: Card) => { ok: boolean };
   withinStoreLimit: (existingCount: number, incomingNewCount: number) => boolean;
   visibleText: (value: string) => string;
+  clipName: (value: string, max?: number) => string;
   withNote: (record: { id: string; card: Card }, note: string) => { ok: boolean; record?: { note: string } };
   toExport: (records: unknown[], exportedAt: string) => string;
   compareRecords: (left: { card: Card }, right: { card: Card }) => {
     ok: boolean;
-    rows?: Array<{ field: { es: string }; same: boolean; verdict?: string; difference?: string | null }>;
+    rows?: Array<{ field: { es: string }; left?: unknown; right?: unknown; same: boolean; verdict?: string; difference?: string | null }>;
     unknown?: Array<{ field: { es: string } }>;
     unchanged?: Array<{ field: { es: string } }>;
     technical?: { slot: { left: number | null; right: number | null } };
@@ -74,9 +76,12 @@ interface ModelModule {
   staleLine: (consultedAt: string, lang: string) => string;
   formatReadingStamp: (consultedAt: string, lang: string, withSeconds?: boolean) => string;
   readingOptionLabel: (card: Card, lang: string, peers?: Card[]) => string;
+  sortNotebookRecords: (records: Array<{ id: string; card: Card }>, lang: string) => Array<{ id: string; card: Card }>;
+  tableCellText: (field: string, status: string, value: unknown, lang: string) => string;
   comparisonSummary: (compared: { changes?: unknown[]; unchanged?: unknown[]; unknown?: unknown[] }, lang: string) => string;
   supplyDirection: (difference: string, decimals: number, lang: string) => string | null;
   comparedValueText: (raw: string, lang: string) => string;
+  comparedSideText: (fieldEs: string, card: Card, raw: unknown, lang: string) => string;
   supplyConfirmation: (card: Card) => { confirmed: boolean; reason: string };
   supplyNote: (card: Card, lang: string) => string | null;
   CURVE_NOT_ON_PUMP: { es: string; en: string };
@@ -205,6 +210,12 @@ describe("lector y cuaderno", () => {
     assert.ok(meta);
     assert.equal(meta?.name.includes("<"), false);
     assert.equal(meta?.uri, "https://evil.example/phish");
+    const hidden = read.decodeMetadataAccount(metadataBytes("STU\u200BBX\u202E", "A\u202EB", "\u200B", 0));
+    assert.equal(hidden?.name, "STUBX");
+    assert.equal(hidden?.symbol, "AB");
+    assert.equal(hidden?.uri, "");
+    const spaces = read.decodeMetadataAccount(metadataBytes("Nombre", "NOM", "   ", 0));
+    assert.equal(spaces?.uri, "");
     assert.equal(meta?.mutable, "si");
     const calls: string[] = [];
     const result = await read.readMint({
@@ -225,14 +236,51 @@ describe("lector y cuaderno", () => {
         throw new Error(parsed.method);
       },
     });
-    assert.equal(result.ok, true);
     assert.equal(result.card?.isMint, true);
-    assert.equal(result.card?.partial, false);
+    assert.equal(result.card?.largestStatus, "fallo");
+    assert.equal(result.card?.partial, true);
+    assert.equal(result.ok, false);
+    assert.match((result.card?.errors ?? []).map((item) => item.message).join(" "), /volvió vacía/);
+    assert.equal(JSON.stringify(result.card).includes("ausente comprobado"), false);
     assert.equal(result.card?.officialStubx, true);
     assert.equal(result.card?.name.text?.includes("<"), false);
     assert.equal(result.card?.uri.text, "https://evil.example/phish");
     assert.equal(JSON.stringify(result.card).includes("uiAmount"), false);
     assert.deepEqual(calls, ["getMultipleAccounts", "getTokenSupply", "getTokenLargestAccounts"]);
+  });
+
+  test("un URI de ancho cero o de espacios no es un enlace de metadatos", async () => {
+    const { read } = await modules();
+    const summary = (await import(pathToFileURL(path.join(repoRoot(), "web/v2/shared/reading-summary.js")).href)) as {
+      summaryFromCard: (card: Card) => { blocks: Array<{ id: string; items: Array<{ title: { es: string }; lead: { es: string } }> }> };
+    };
+    for (const uri of ["\u200B", "   ", " \u200B "]) {
+      const result = await read.readMint({
+        mint: OTHER,
+        ...fastClock(),
+        transport: async (_endpoint: string, body: string) => {
+          const parsed = JSON.parse(body) as { method: string };
+          if (parsed.method === "getMultipleAccounts") {
+            return rpcOk([
+              account(read.TOKEN_PROGRAM, mintBytes()),
+              account(read.METADATA_PROGRAM, metadataBytes("Otro\u200B", "OT\u202ERO", uri)),
+              null,
+            ]);
+          }
+          if (parsed.method === "getTokenSupply") return rpcOk({ amount: "1000", decimals: 6, uiAmount: null, uiAmountString: "skip" });
+          if (parsed.method === "getTokenLargestAccounts") return rpcOk([{ address: OTHER, amount: "1", decimals: 6 }]);
+          throw new Error(parsed.method);
+        },
+      });
+      assert.equal(result.card?.uri.text, null);
+      assert.equal(result.card?.uri && "status" in result.card.uri ? (result.card.uri as { status?: string }).status : "", "ausente");
+      assert.equal(result.card?.name.text, "Otro");
+      assert.equal(result.card?.symbol?.text, "OTRO");
+      const card = summary.summaryFromCard(result.card as Card);
+      const checked = card.blocks.find((item) => item.id === "comprobado");
+      const link = checked?.items.find((item) => item.title.es === "Enlace de metadatos");
+      assert.equal(link?.lead.es, "No tiene enlace de metadatos.");
+    }
   });
 
   test("un permiso que no se puede leer se guarda como fallo", async () => {
@@ -312,8 +360,20 @@ describe("lector y cuaderno", () => {
     assert.equal(limited.ok, false);
     assert.equal(limited.card?.supplyRpc, null);
     assert.equal(limited.card?.supplyAccount, null);
+    assert.equal(limited.card?.supplyRpcStatus, "fallo");
+    assert.equal(limited.card?.largestStatus, "fallo");
+    assert.equal(limited.card?.programStatus, "fallo");
+    assert.equal(limited.card?.decimals ?? null, null);
     assert.equal(JSON.stringify(limited.card).includes('"0"'), false);
     assert.ok(calls >= 3);
+    const summary = (await import(pathToFileURL(path.join(repoRoot(), "web/v2/shared/reading-summary.js")).href)) as {
+      summaryFromCard: (card: Card) => { blocks: Array<{ id: string; items: Array<{ title: { es: string } }> }> };
+    };
+    const batchMissing = summary.summaryFromCard(limited.card as Card).blocks.find((item) => item.id === "falta");
+    const titles = (batchMissing?.items ?? []).map((item) => item.title.es).join(" | ");
+    assert.match(titles, /Suministro/);
+    assert.match(titles, /Decimales/);
+    assert.match(titles, /Cuentas con más tokens/);
 
     const missing = await read.readMint({
       mint: OTHER,
@@ -394,6 +454,8 @@ describe("lector y cuaderno", () => {
     assert.equal(model.withinStoreLimit(200, 1), false);
     assert.equal(model.withinStoreLimit(199, 2), false);
     assert.equal(model.visibleText("ab\u202Ecd\u200F"), "abcd");
+    assert.equal(model.clipName(`${"N".repeat(80)}\u200B`), `${"N".repeat(64)}…`);
+    assert.equal(model.clipName("STU\u200BBX\u202E"), "STUBX");
     const saved = model.withNote({ id: record.id, card }, "ab\u202Ecd\u200F\u2067");
     assert.equal(saved.ok, true);
     assert.equal(saved.record?.note, "abcd");
@@ -525,7 +587,7 @@ describe("lector y cuaderno", () => {
         throw new Error(method);
       },
     });
-    assert.equal(recovered.ok, true);
+    assert.equal(recovered.card?.largestStatus, "fallo");
     assert.equal(recovered.card?.curve?.status, "no_aplica");
     assert.deepEqual(
       seen.filter((item) => item.endsWith("getMultipleAccounts")),
@@ -558,7 +620,7 @@ describe("lector y cuaderno", () => {
         throw new Error(method);
       },
     });
-    assert.equal(pumpRecovered.ok, true);
+    assert.equal(pumpRecovered.card?.largestStatus, "fallo");
     assert.equal(pumpRecovered.card?.curve?.status, "ausente");
     assert.deepEqual(pumpSeen, ["solana-rpc.publicnode.com", "api.mainnet-beta.solana.com"]);
   });
@@ -707,7 +769,7 @@ describe("lector y cuaderno", () => {
         throw new Error(method);
       },
     });
-    assert.equal(result.ok, true);
+    assert.equal(result.card?.largestStatus, "fallo");
     assert.deepEqual(hosts.getTokenSupply, ["api.mainnet-beta.solana.com"]);
     assert.deepEqual(hosts.getTokenLargestAccounts, ["api.mainnet-beta.solana.com"]);
     assert.deepEqual(hosts.getMultipleAccounts, ["solana-rpc.publicnode.com"]);
@@ -863,6 +925,7 @@ describe("lector y cuaderno", () => {
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      second: "2-digit",
     }).format(new Date(WHEN)).replace(/[\u202f\u00a0]/g, " ");
     assert.equal(
       model.readingOptionLabel({ ...older, symbol: { text: "STUBX" }, name: { text: "STUBX" } }, "es"),
@@ -882,8 +945,10 @@ describe("lector y cuaderno", () => {
     assert.equal(actions.includes("sessionStorage"), false);
     assert.equal(actions.includes("searchParams"), false);
     assert.match(actions, /stubx-cuaderno/);
-    assert.equal(model.staleLine(WHEN, "es"), `Consultado el ${model.formatReadingStamp(WHEN, "es")} · puede haber cambiado`);
-    assert.equal(model.staleLine(WHEN, "en"), `Checked on ${model.formatReadingStamp(WHEN, "en")} · this may have changed`);
+    assert.equal(model.staleLine(WHEN, "es"), `Consultado el ${model.formatReadingStamp(WHEN, "es", true)} · puede haber cambiado`);
+    assert.equal(model.staleLine(WHEN, "en"), `Checked on ${model.formatReadingStamp(WHEN, "en", true)} · this may have changed`);
+    assert.match(model.staleLine(WHEN, "es"), /\d{2}:\d{2}:\d{2}/);
+    assert.match(model.staleLine(WHEN, "en"), /\d{2}:\d{2}:\d{2}/);
     assert.equal(model.staleLine(WHEN, "es").includes("2026-10-09T"), false);
     assert.equal(model.staleLine(WHEN, "es").includes("actual"), false);
   });
@@ -922,8 +987,109 @@ describe("lector y cuaderno", () => {
     second.symbol = { text: "USDC" };
     second.name = { text: "USD Coin" };
     const seconds = String(new Date(earlier).getSeconds()).padStart(2, "0");
+    const laterSeconds = String(new Date(later).getSeconds()).padStart(2, "0");
     assert.match(model.readingOptionLabel(first, "es", [first, second]), new RegExp(`:${seconds}$`));
-    assert.equal(/\d{2}:\d{2}:\d{2}/.test(model.readingOptionLabel(first, "es", [first])), false);
+    assert.match(model.readingOptionLabel(second, "es"), new RegExp(`:${laterSeconds}$`));
+    assert.match(model.readingOptionLabel(first, "es"), /\d{2}:\d{2}:\d{2}$/);
+    assert.match(model.readingOptionLabel(second, "es"), /\d{2}:\d{2}:\d{2}$/);
+  });
+
+  test("el cuaderno nombra un clon, avisa al comparar y no usa jerga en la tabla", async () => {
+    const { read, model } = await modules();
+    const summary = (await import(pathToFileURL(path.join(repoRoot(), "web/v2/shared/reading-summary.js")).href)) as {
+      notebookNameText: (card: Card, lang: string) => string;
+      comparisonBanner: (left: Card, right: Card, lang: string) => string;
+    };
+    const ery = "ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump";
+    const clone = read.blankCard(ery, WHEN, []);
+    clone.name = { text: "STUBX", status: "verificado" };
+    clone.symbol = { text: "STUBX", status: "verificado" };
+    clone.uri = { text: null, status: "ausente" };
+    const other = read.blankCard(ery, "2026-10-09T13:00:07.000Z", []);
+    other.name = { text: "STUBX", status: "verificado" };
+    other.symbol = { text: "STUBX", status: "verificado" };
+    const community = read.blankCard("FMNb4CR8ksibmgY7Ztei6BWcZXi3WHcVeJhYb9TNpump", WHEN, []);
+    community.name = { text: "Comunidad STUBX", status: "verificado" };
+    community.symbol = { text: "COMUNIDAD", status: "verificado" };
+    const usdc = read.blankCard(OTHER, WHEN, []);
+    usdc.name = { text: "USD Coin", status: "verificado" };
+    usdc.symbol = { text: "USDC", status: "verificado" };
+    usdc.uri = { text: null, status: "ausente" };
+    const official = read.blankCard(CA, WHEN, []);
+    official.name = { text: "STUBX", status: "verificado" };
+    official.symbol = { text: "STUBX", status: "verificado" };
+    assert.equal(summary.notebookNameText(clone, "es"), "Dice llamarse «STUBX»");
+    assert.equal(summary.notebookNameText(community, "es"), "Dice llamarse «Comunidad STUBX»");
+    assert.equal(summary.notebookNameText(usdc, "es"), "USD Coin");
+    assert.equal(summary.notebookNameText(official, "es"), "STUBX");
+    const option = model.readingOptionLabel(clone, "es");
+    assert.match(option, /^Dice llamarse «STUBX» · ERYy… · /);
+    assert.equal(option.startsWith("STUBX ·"), false);
+    assert.match(option, /\d{2}:\d{2}:\d{2}$/);
+    const paired = model.readingOptionLabel(other, "es");
+    assert.match(paired, /^Dice llamarse «STUBX» · ERYy… · /);
+    assert.match(paired, /\d{2}:\d{2}:\d{2}$/);
+    const sameStamp = read.blankCard(ery, WHEN, []);
+    sameStamp.name = { text: "STUBX", status: "verificado" };
+    sameStamp.symbol = { text: "STUBX", status: "verificado" };
+    const firstLabel = model.readingOptionLabel(clone, "es", [clone, sameStamp]);
+    const secondLabel = model.readingOptionLabel(sameStamp, "es", [clone, sameStamp]);
+    assert.equal(secondLabel, `${firstLabel} (2)`);
+    assert.equal(model.readingOptionLabel(clone, "es").endsWith(" (2)"), false);
+    const between = read.blankCard(CA, WHEN, []);
+    between.name = { text: "USD Coin", status: "verificado" };
+    between.symbol = { text: "USDC", status: "verificado" };
+    const later = read.blankCard(ery, "2026-10-09T18:00:09.000Z", []);
+    later.name = { text: "STUBX", status: "verificado" };
+    later.symbol = { text: "STUBX", status: "verificado" };
+    const ordered = model.sortNotebookRecords(
+      [
+        { id: "twin", card: sameStamp },
+        { id: "other", card: between },
+        { id: "newer", card: later },
+        { id: "first", card: clone },
+      ],
+      "es",
+    );
+    assert.deepEqual(ordered.map((item) => item.id), ["newer", "twin", "first", "other"]);
+    const orderedCards = ordered.map((item) => item.card);
+    const orderedLabels = orderedCards.map((card) => model.readingOptionLabel(card, "es", orderedCards));
+    const duplicateAt = orderedLabels.findIndex((item) => item.endsWith(" (2)"));
+    const marked = orderedLabels[duplicateAt];
+    const previous = orderedLabels[duplicateAt - 1];
+    assert.equal(typeof marked, "string");
+    assert.equal(previous, marked?.slice(0, -4));
+    const left = { id: "1", note: "", card: clone };
+    const right = { id: "2", note: "", card: other };
+    const compared = model.compareRecords(left, right);
+    assert.equal(compared.ok, true);
+    const nameRow = compared.rows?.find((row) => row.field.es === "Nombre");
+    assert.ok(nameRow);
+    assert.equal(model.comparedSideText("Nombre", clone, nameRow?.left, "es"), "Dice llamarse «STUBX»");
+    assert.equal(model.comparedSideText("Nombre", other, nameRow?.right, "es"), "Dice llamarse «STUBX»");
+    assert.equal(model.comparedSideText("Nombre", other, nameRow?.right, "en"), "It says it is called «STUBX»");
+    assert.equal(model.comparedSideText("Nombre", usdc, "USD Coin", "es"), "USD Coin");
+    assert.equal(model.comparedSideText("Nombre", official, "STUBX", "es"), "STUBX");
+    assert.match(model.staleLine(WHEN, "es"), /Consultado el .+\d{2}:\d{2}:\d{2}.+puede haber cambiado/);
+    assert.match(model.staleLine("2026-10-09T13:00:07.000Z", "es"), /\d{2}:\d{2}:\d{2}/);
+    assert.equal(summary.comparisonBanner(clone, other, "es"), "Se parece a STUBX pero no es la dirección oficial.");
+    assert.equal(summary.comparisonBanner(usdc, usdc, "es"), "");
+    assert.equal(summary.comparisonBanner(official, official, "es"), "");
+    assert.equal(model.tableCellText("uri", "ausente", null, "es"), "No tiene enlace de metadatos");
+    assert.equal(model.tableCellText("uri", "ausente", null, "en"), "It has no metadata link");
+    assert.equal(model.tableCellText("uri", "ausente", "   ", "es"), "No tiene enlace de metadatos");
+    for (const field of ["name", "symbol", "decimals", "largest", "curve", "supply"]) {
+      for (const status of ["ausente", "fallo", "no_consultado", "no_disponible"]) {
+        const cell = model.tableCellText(field, status, null, "es");
+        assert.equal(cell.includes("ausente comprobado"), false, `${field} ${status}`);
+        assert.equal(cell.includes("consulta fallida"), false, `${field} ${status}`);
+        assert.equal(cell.includes("no consultado"), false, `${field} ${status}`);
+        assert.equal(cell.includes("verificado"), false, `${field} ${status}`);
+      }
+    }
+    assert.equal(model.tableCellText("decimals", "ausente", null, "es"), "No está en esta lectura");
+    assert.equal(model.tableCellText("largest", "fallo", null, "es"), "No se pudo leer");
+    assert.equal(model.tableCellText("largest", "no_consultado", null, "es"), "Esta lectura no lo pidió");
   });
 
   test("el suministro total no queda verificado si la lectura extra falla o no coincide", async () => {

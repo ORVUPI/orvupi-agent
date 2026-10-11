@@ -183,8 +183,65 @@ describe("lectura universal con RPC simulado", () => {
     assert.match(reading.support.es, /No es la dirección oficial de STUBX/);
     assert.equal(reading.signals.find((item) => item.id === "copia")?.title.es, "Se parece a STUBX, pero no es la CA oficial");
     assert.equal(reading.signals.find((item) => item.id === "copia")?.level, "atencion");
+    const name = reading.rows.find((row) => row.label.es === "Nombre");
+    assert.equal(name?.value.es, "Dice llamarse «Comunidad STUBX»");
+    assert.equal(name?.value.en, "It says it is called «Comunidad STUBX»");
+    assert.equal(reading.signals.find((item) => item.id === "metadatos")?.title.es, "Nombre: Dice llamarse «Comunidad STUBX»");
     assert.equal(reading.light, "atencion");
     assert.equal(reading.mint === registry[0]?.mint, false);
+    const locked = reading.signals.find((item) => item.id === "mutable");
+    assert.match(locked?.explain.es ?? "", /los metadatos ya no se pueden cambiar/);
+    assert.match(locked?.explain.en ?? "", /the metadata can no longer be changed/);
+    assert.equal((locked?.explain.es ?? "").includes("isMutable"), false);
+    assert.equal((locked?.explain.en ?? "").includes("isMutable"), false);
+  });
+
+  test("los textos visibles no usan nombres de campo", async () => {
+    const technical = /isMutable|is_mutable|updateAuthority|mintAuthority|freezeAuthority|InterestBearingConfig|TransferFeeConfig|TokenMetadata|MetadataPointer|CpiGuard|PermanentDelegate|DefaultAccountState|getMultipleAccounts|getTokenSupply|getAccountInfo|ausente comprobado|consulta fallida/;
+    for (const id of ["revoked-mint", "name-impersonation", "mutable-metadata", "unsupported-extension"]) {
+      const reading = await readFixture(fixture(id));
+      const bits = [
+        reading.title.es,
+        reading.title.en,
+        reading.support.es,
+        reading.support.en,
+        ...reading.signals.flatMap((signal) => [signal.title.es, signal.title.en, signal.explain.es, signal.explain.en]),
+        ...reading.rows.flatMap((row) => [row.label.es, row.label.en, row.value.es, row.value.en]),
+      ].join("\n");
+      const found = bits.match(technical);
+      assert.equal(found, null, `${id} ${found?.[0] ?? ""}`);
+    }
+    const unknown = await readFixture(fixture("unsupported-extension"));
+    assert.equal(unknown.signals.some((signal) => signal.title.es === "Extensión no descrita"), true);
+    assert.equal(unknown.signals.some((signal) => signal.title.es.includes("InterestBearing")), false);
+  });
+
+  test("la vista principal no dice mint y el slot queda en los detalles con segundos", async () => {
+    const spl = await readFixture(fixture("revoked-mint"));
+    const program = spl.signals.find((item) => item.id === "programa");
+    const supply = spl.signals.find((item) => item.id === "suministro");
+    assert.equal(program?.explain.es, "Es un token del programa SPL Token. Ese programa no trae las extensiones de Token-2022.");
+    assert.match(program?.explain.en ?? "", /token of the SPL Token program/);
+    assert.match(supply?.explain.es ?? "", /leídos de los datos del token en la cadena/);
+    assert.match(supply?.explain.en ?? "", /token data on the chain/);
+    const main = [
+      spl.lightLabel.es,
+      spl.lightLabel.en,
+      spl.title.es,
+      spl.title.en,
+      spl.support.es,
+      spl.support.en,
+      ...spl.signals.flatMap((signal) => [signal.title.es, signal.title.en, signal.explain.es, signal.explain.en]),
+    ].join("\n");
+    assert.equal(/\bmint\b/i.test(main), false);
+    assert.equal(/\bslot\b/i.test(main), false);
+    const clock = spl.rows.find((row) => row.label.es === "Momento");
+    assert.match(clock?.value.es ?? "", /slot \d+/);
+    assert.match(clock?.value.es ?? "", /\d{2}:\d{2}:\d{2}/);
+    assert.match(clock?.value.en ?? "", /slot \d+/);
+    assert.match(clock?.value.en ?? "", /\d{2}:\d{2}:\d{2}/);
+    const token2022 = await readFixture(fixture("name-impersonation"));
+    assert.match(token2022.signals.find((item) => item.id === "programa")?.explain.es ?? "", /Es un token del programa Token-2022/);
   });
 
   test("la dirección del registro se reconoce", async () => {
@@ -202,7 +259,7 @@ describe("lectura universal con RPC simulado", () => {
           [bondingCurvePda(mint), null],
         ]),
         supply: { amount: "1000000000000000", decimals: 6 },
-        largest: [],
+        largest: [{ address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", amount: "1", decimals: 6 }],
       }),
       maxRetries: 0,
       minIntervalMs: 0,
@@ -223,16 +280,73 @@ describe("lectura universal con RPC simulado", () => {
     assert.match(reading.absent?.es ?? "", /Comprobado: no existe/);
     assert.match(reading.missing?.es ?? "", /No falta/);
     assert.match(reading.report?.es ?? "", /Qué se comprobó/);
-    assert.match(reading.report?.es ?? "", /Qué pide atención/);
+    assert.match(reading.report?.es ?? "", /Qué requiere atención/);
     assert.match(reading.report?.es ?? "", /Qué falta/);
     assert.equal((reading.identity?.es ?? "").includes(mint), true);
+  });
+
+  test("si falla getMultipleAccounts faltan suministro, decimales y cuentas", async () => {
+    const reading = await readAnyMint({
+      mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      registry,
+      endpoints: ["https://rpc-a.invalid"],
+      transport: async () => ({ status: 500, body: "" }),
+      maxRetries: 0,
+      minIntervalMs: 0,
+      sleep: async () => {},
+    });
+    assert.equal(reading.ok, false);
+    for (const id of ["suministro", "decimales", "cuentas"]) {
+      assert.equal(reading.facts?.find((item) => item.id === id)?.state, "fallo", id);
+    }
+    assert.match(reading.missing?.es ?? "", /Suministro/);
+    assert.match(reading.missing?.es ?? "", /Decimales/);
+    assert.match(reading.missing?.es ?? "", /Cuentas con más tokens/);
+    assert.equal((reading.missing?.es ?? "").includes("ausente comprobado"), false);
+  });
+
+  test("una muestra vacía de cuentas no es una ausencia", async () => {
+    const reading = await readFixture(fixture("revoked-mint"));
+    const cuentas = reading.facts?.find((item) => item.id === "cuentas");
+    assert.equal(cuentas?.state, "fallo");
+    assert.equal(reading.shown && "largestStatus" in reading.shown ? reading.shown.largestStatus : null, "fallo");
+    assert.equal(reading.canSample, true);
+    assert.match(reading.missing?.es ?? "", /Cuentas con más tokens/);
+    assert.equal((reading.missing?.es ?? "").includes("ausente comprobado"), false);
+    assert.equal((reading.absent?.es ?? "").includes("Cuentas"), false);
+    const explain = reading.signals.find((item) => item.id === "cuentas")?.explain.es ?? "";
+    assert.equal(/ausencia comprobada|ausente comprobado/.test(explain), false);
+    assert.match(explain, /No se leyó/);
+    assert.match(explain, /concentración de cero/);
+    const sample = fixture("revoked-mint");
+    const limited = await readAnyMint({
+      mint: sample.mint,
+      registry,
+      endpoints: ["https://rpc-a.invalid"],
+      transport: transportFor({
+        slot: sample.slot,
+        accounts: new Map([
+          [sample.mint, sample.mintAccount],
+          [metadataPda(sample.mint), null],
+          [bondingCurvePda(sample.mint), null],
+        ]),
+        supply: { amount: "1000000000000000", decimals: 6 },
+        largest: null,
+      }),
+      maxRetries: 0,
+      minIntervalMs: 0,
+      sleep: async () => {},
+    });
+    assert.equal(limited.facts?.find((item) => item.id === "cuentas")?.state, "fallo");
+    assert.equal((limited.missing?.es ?? "").includes("ausente comprobado"), false);
+    assert.match(limited.signals.find((item) => item.id === "cuentas")?.explain.es ?? "", /concentración de cero/);
   });
 
   test("una cuenta ausente y una que no es mint no se rellenan", async () => {
     const missing = await readFixture(fixture("missing-account"));
     assert.equal(missing.title.es, "Esta dirección no existe");
     const other = await readFixture(fixture("not-a-mint"));
-    assert.equal(other.title.es, "Esta cuenta no es un mint");
+    assert.equal(other.title.es, "Esta cuenta no es un token");
   });
 
   test("si el suministro no cuadra no hay porcentajes", async () => {
@@ -379,7 +493,7 @@ describe("lectura universal con RPC simulado", () => {
       slot: sample.slot,
       accounts,
       supply: { amount: "1000000000000000", decimals: 6 },
-      largest: [],
+      largest: [{ address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", amount: "1", decimals: 6 }],
     });
     const supplyCalls: string[] = [];
     const reading = await readAnyMint({
@@ -409,7 +523,7 @@ describe("lectura universal con RPC simulado", () => {
     assert.equal(text.includes("Esta lectura junta más de un servicio"), false);
     const supply = reading.signals.find((item) => item.id === "suministro");
     assert.equal(supply?.level, "neutro");
-    assert.match(supply?.explain.es ?? "", /bytes del mint/);
+    assert.match(supply?.explain.es ?? "", /datos del token en la cadena/);
     assert.match(supply?.explain.es ?? "", /no respondió/);
     assert.equal(reading.light, "neutro");
   });
@@ -438,7 +552,7 @@ describe("lectura universal con RPC simulado", () => {
           slot: sample.slot,
           accounts,
           supply: { amount: "1000000000000000", decimals: 6 },
-          largest: [],
+          largest: [{ address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", amount: "1", decimals: 6 }],
         })(endpoint, body, timeoutMs);
       },
       maxRetries: 0,
@@ -451,7 +565,7 @@ describe("lectura universal con RPC simulado", () => {
     assert.equal(reading.title.es, "Esta dirección es la del registro de STUBX");
     const supply = reading.signals.find((item) => item.id === "suministro");
     assert.equal(supply?.level, "neutro");
-    assert.match(supply?.explain.es ?? "", /bytes del mint/);
+    assert.match(supply?.explain.es ?? "", /datos del token en la cadena/);
     assert.match(supply?.explain.es ?? "", /no respondió/);
     assert.equal(reading.signals.some((item) => item.id === "fuentes"), false);
     assert.equal(reading.sources.some((item) => item.host === "api.mainnet-beta.solana.com"), false);

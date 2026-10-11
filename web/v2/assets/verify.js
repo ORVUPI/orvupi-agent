@@ -1365,6 +1365,10 @@ function cleanText(value) {
     const withoutPadding = value.replace(/\0+$/u, "");
     return withoutPadding.replace(/[\0\p{Cc}\p{Cf}]/gu, "\uFFFD").replace(/\uFFFD+/g, "\uFFFD").trim();
 }
+/** Un URI vacío, de espacios o de relleno nulo no es un enlace. */
+function metadataLink(value) {
+    return cleanText(value ?? "").replace(/\uFFFD/g, "").trim();
+}
 function readTokenAccount(data) {
     if (data.length < 72) {
         return null;
@@ -1948,11 +1952,20 @@ function failureReading(kind, mint, host, usedFallback) {
             support: loc(`No se pudo comprobar: el servicio no respondió o rechazó la petición. ${SERVICE_ES} No se ha inventado un resultado.`, `It could not be checked: the service did not respond or refused the request. ${SERVICE_EN} No result was invented.`),
         },
     }[kind];
+    const facts = [
+        { id: "suministro", label: loc("Suministro", "Supply"), state: "fallo" },
+        { id: "decimales", label: loc("Decimales", "Decimals"), state: "fallo" },
+        { id: "cuentas", label: loc("Cuentas con más tokens", "Largest token accounts"), state: "fallo" },
+    ];
+    const grouped = groupFacts(facts);
     return {
         ...blank(kind, mint, copy.title, copy.support),
         lightLabel: loc("No se pudo comprobar", "Could not be checked"),
         endpointHost: host,
         usedFallback,
+        facts,
+        missing: grouped.missing,
+        missingState: grouped.missingState,
     };
 }
 function hostOf(endpoint) {
@@ -1972,7 +1985,7 @@ function sourceRows(rpc) {
         getSlot: loc("Slot", "Slot"),
     };
     return rpc.reads.map((read) => ({
-        dato: labels[read.method] ?? loc(read.method, read.method),
+        dato: labels[read.method] ?? loc("Otra lectura", "Other read"),
         host: hostOf(read.endpoint) ?? read.endpoint,
     }));
 }
@@ -1982,8 +1995,9 @@ function madridClock(iso) {
         timeZone: "Europe/Madrid",
         hour: "2-digit",
         minute: "2-digit",
+        second: "2-digit",
         hourCycle: "h23",
-    }).format(date);
+    }).format(date).replace(/[\u202f\u00a0]/g, " ");
     return loc(format("es"), format("en"));
 }
 function sourceClock(iso, slot, rpc) {
@@ -2036,7 +2050,7 @@ function rememberSlot(result, slots) {
 async function readAnyMint(input) {
     const checked = validateMint(input.mint.trim());
     if (!checked.ok) {
-        return blank("invalida", null, loc("Esta dirección no es válida", "This address is not valid"), loc("Tiene que ser la dirección completa de un mint de Solana, sin el nombre del token y sin texto alrededor.", "It has to be the full Solana mint address, without the token name and without surrounding text."));
+        return blank("invalida", null, loc("Esta dirección no es válida", "This address is not valid"), loc("Tiene que ser la dirección completa de un token de Solana, sin el nombre del token y sin texto alrededor.", "It has to be the full address of a Solana token, without the token name and without surrounding text."));
     }
     const endpoints = input.endpoints.map((item) => item.trim()).filter((item) => item.length > 0);
     if (endpoints.length === 0) {
@@ -2063,7 +2077,7 @@ async function readLargestAccounts(input) {
             id: "cuentas",
             level: "atencion",
             title: loc("No se pudo comprobar", "Could not be checked"),
-            explain: loc("La dirección no es un mint válido. No se ha pedido la muestra.", "The address is not a valid mint. The sample was not requested."),
+            explain: loc("La dirección no es la de un token válido. No se ha pedido la muestra.", "The address is not a valid token address. The sample was not requested."),
         };
     }
     const endpoints = input.endpoints.map((item) => item.trim()).filter((item) => item.length > 0);
@@ -2083,6 +2097,9 @@ async function readLargestAccounts(input) {
     }));
     const rpc = new FallbackRpc(readers, endpoints);
     const largest = await mainnetOnlyClient(input, input.timeoutMs ?? 6000).getTokenLargestAccounts(checked.mint);
+    if (largest.ok && largest.value.length === 0) {
+        return emptyLargestSignal();
+    }
     if (!largest.ok) {
         const kind = classifyRpcFailure(largest.error, largest.httpStatus);
         const text = {
@@ -2156,7 +2173,7 @@ async function readWith(mint, registry, rpc, input) {
                     id: "ausente",
                     level: "neutro",
                     title: loc("La cuenta no existe", "The account does not exist"),
-                    explain: loc("Se pidió la cuenta y la respuesta fue vacía. No es lo mismo que un mint sin permisos.", "The account was requested and the response was empty. That is not the same as a mint with no permissions."),
+                    explain: loc("Se pidió la cuenta y la respuesta fue vacía. No es lo mismo que un token sin permisos.", "The account was requested and the response was empty. That is not the same as a token with no permissions."),
                 },
             ],
             rows: sourceClock(packed.fetchedAt, packed.slot, rpc),
@@ -2180,9 +2197,9 @@ async function readWith(mint, registry, rpc, input) {
             kind: "lectura",
             mint,
             light: "atencion",
-            lightLabel: loc("No es un mint", "Not a mint"),
-            title: loc("Esta cuenta no es un mint", "This account is not a mint"),
-            support: loc("La dirección existe, pero no es un mint SPL ni Token-2022. El nombre de un token no sustituye a esta comprobación.", "The address exists, but it is not an SPL or Token-2022 mint. A token name does not replace this check."),
+            lightLabel: loc("No es un token", "Not a token"),
+            title: loc("Esta cuenta no es un token", "This account is not a token"),
+            support: loc("La dirección existe, pero no es un token del programa SPL Token ni del programa Token-2022. El nombre de un token no sustituye a esta comprobación.", "The address exists, but it is not a token of the SPL Token program or the Token-2022 program. A token name does not replace this check."),
             signals: [
                 {
                     id: "programa",
@@ -2206,7 +2223,7 @@ async function readWith(mint, registry, rpc, input) {
     }
     const decoded = decodeMint(mintInfo.owner, mintInfo.data);
     if (!decoded || !decoded.initialized) {
-        const unread = blank("lectura", mint, loc("No se pudo leer el mint", "The mint could not be read"), loc("La cuenta es del programa de tokens, pero sus bytes no se pudieron separar. No se inventan permisos.", "The account belongs to a token program, but its bytes could not be split. Permissions are not invented."));
+        const unread = blank("lectura", mint, loc("No se pudo leer el token", "The token could not be read"), loc("La cuenta es del programa de tokens, pero sus bytes no se pudieron separar. No se inventan permisos.", "The account belongs to a token program, but its bytes could not be split. Permissions are not invented."));
         return {
             ...unread,
             ok: true,
@@ -2228,7 +2245,7 @@ async function readWith(mint, registry, rpc, input) {
     const bonding = curveInfo && curveInfo.owner === PUMP_PROGRAM ? decodeBondingCurve(curveInfo.owner, curveInfo.data) : null;
     const names = [decoded.tokenMetadata?.name, metaplex?.name].filter((item) => Boolean(item));
     const symbols = [decoded.tokenMetadata?.symbol, metaplex?.symbol].filter((item) => Boolean(item));
-    const uri = decoded.tokenMetadata?.uri || metaplex?.uri || "";
+    const uri = metadataLink(decoded.tokenMetadata?.uri || metaplex?.uri || "");
     const likeness = compareCanonical({ mint, names, symbols, imageUris: [], links: uri ? [uri] : [] }, registry);
     const signals = [];
     const programName = decoded.standard === "token-2022" ? "Token-2022" : "SPL Token";
@@ -2237,10 +2254,10 @@ async function readWith(mint, registry, rpc, input) {
         level: "neutro",
         title: loc(`Programa: ${programName}`, `Program: ${programName}`),
         explain: loc(decoded.standard === "token-2022"
-            ? "Es un mint del programa Token-2022. Puede traer extensiones. Cada extensión de abajo se lee aparte."
-            : "Es un mint del programa SPL Token. Ese programa no trae las extensiones de Token-2022.", decoded.standard === "token-2022"
-            ? "This is a Token-2022 mint. It can carry extensions. Each extension below is read on its own."
-            : "This is an SPL Token mint. That program does not carry Token-2022 extensions."),
+            ? "Es un token del programa Token-2022. Puede traer extensiones. Cada extensión de abajo se lee aparte."
+            : "Es un token del programa SPL Token. Ese programa no trae las extensiones de Token-2022.", decoded.standard === "token-2022"
+            ? "This is a token of the Token-2022 program. It can carry extensions. Each extension below is read on its own."
+            : "This is a token of the SPL Token program. That program does not carry Token-2022 extensions."),
     });
     const supplyEs = formatUnitsLocale(decoded.supplyRaw, decoded.decimals, "es");
     const supplyEn = formatUnitsLocale(decoded.supplyRaw, decoded.decimals, "en");
@@ -2251,13 +2268,13 @@ async function readWith(mint, registry, rpc, input) {
         title: loc("Suministro y decimales", "Supply and decimals"),
         explain: loc(supply.ok
             ? supplyMatches
-                ? `Hay ${supplyEs} tokens, con ${decoded.decimals} decimales, leídos de los bytes del mint. La lectura extra coincide.`
-                : `Los bytes del mint dicen ${supplyEs} con ${decoded.decimals} decimales, y la lectura extra no coincide. Se muestra la cifra de los bytes. No se calculan porcentajes.`
-            : `Hay ${supplyEs} tokens, con ${decoded.decimals} decimales, leídos de los bytes del mint. ${SERVICE_ES} Eso no cambia esta cifra y no es una ausencia.`, supply.ok
+                ? `Hay ${supplyEs} tokens, con ${decoded.decimals} decimales, leídos de los datos del token en la cadena. La lectura extra coincide.`
+                : `Los datos del token en la cadena dicen ${supplyEs} con ${decoded.decimals} decimales, y la lectura extra no coincide. Se muestra esa cifra. No se calculan porcentajes.`
+            : `Hay ${supplyEs} tokens, con ${decoded.decimals} decimales, leídos de los datos del token en la cadena. ${SERVICE_ES} Eso no cambia esta cifra y no es una ausencia.`, supply.ok
             ? supplyMatches
-                ? `There are ${supplyEn} tokens, with ${decoded.decimals} decimals, read from the mint bytes. The extra read matches.`
-                : `The mint bytes say ${supplyEn} with ${decoded.decimals} decimals, and the extra read does not match. The figure shown is the one from the bytes. Percentages are not calculated.`
-            : `There are ${supplyEn} tokens, with ${decoded.decimals} decimals, read from the mint bytes. ${SERVICE_EN} That does not change this figure and it is not an absence.`),
+                ? `There are ${supplyEn} tokens, with ${decoded.decimals} decimals, read from the token data on the chain. The extra read matches.`
+                : `The token data on the chain says ${supplyEn} with ${decoded.decimals} decimals, and the extra read does not match. The figure shown is that one. Percentages are not calculated.`
+            : `There are ${supplyEn} tokens, with ${decoded.decimals} decimals, read from the token data on the chain. ${SERVICE_EN} That does not change this figure and it is not an absence.`),
     });
     signals.push(authoritySignal("emision", decoded.mintAuthority, likeness.inRegistry));
     signals.push(authoritySignal("congelacion", decoded.freezeAuthority, likeness.inRegistry));
@@ -2284,13 +2301,10 @@ async function readWith(mint, registry, rpc, input) {
         });
     }
     else if (largest.value.length === 0) {
-        largestState = "ausente";
-        signals.push({
-            id: "cuentas",
-            level: "neutro",
-            title: loc("Cuentas con tokens", "Token accounts"),
-            explain: loc("La consulta respondió y la muestra volvió vacía. Es una ausencia comprobada de esa muestra, no una concentración de cero y no un censo.", "The query responded and the sample came back empty. That sample is confirmed absent. It is not zero concentration and it is not a census."),
-        });
+        // Una lista vacía no demuestra que nadie tenga tokens. USDC tiene millones de cuentas
+        // y el nodo a veces responde 200 con []. Es una lectura que no salió, no una ausencia.
+        largestState = "fallo";
+        signals.push(emptyLargestSignal());
     }
     else {
         largestState = "ok";
@@ -2305,7 +2319,7 @@ async function readWith(mint, registry, rpc, input) {
             id: "registro",
             level: "ok",
             title: loc("Está en el registro de STUBX", "It is in the STUBX registry"),
-            explain: loc("La dirección coincide con el mint curado. La ficha fechada es una foto anterior. Estar en el registro no es una auditoría.", "The address matches the curated mint. The dated card is an earlier snapshot. Being in the registry is not an audit."),
+            explain: loc("La dirección coincide con la del registro. La ficha fechada es una foto anterior. Estar en el registro no es una auditoría.", "The address matches the one in the registry. The dated card is an earlier snapshot. Being in the registry is not an audit."),
         });
     }
     else if (copyByName) {
@@ -2340,7 +2354,7 @@ async function readWith(mint, registry, rpc, input) {
             light: risky || attention ? "atencion" : "ok",
             lightLabel: loc("En el registro", "In the registry"),
             title: loc("Esta dirección es la del registro de STUBX", "This address is the one in the STUBX registry"),
-            support: loc("La lectura de ahora coincide con el mint curado. Las fichas fechadas siguen abajo, como foto anterior.", "This reading matches the curated mint. The dated cards remain below, as an earlier snapshot."),
+            support: loc("La lectura de ahora coincide con la dirección del registro. Las fichas fechadas siguen abajo, como foto anterior.", "This reading matches the address in the registry. The dated cards remain below, as an earlier snapshot."),
         }
         : {
             light: (risky ? "riesgo" : copyByName || attention ? "atencion" : "neutro"),
@@ -2352,7 +2366,9 @@ async function readWith(mint, registry, rpc, input) {
                 ? loc("No es la dirección oficial de STUBX. Cada señal describe un hecho leído ahora. No es una puntuación.", "This is not the official STUBX address. Each signal describes a fact read just now. It is not a score.")
                 : loc("Cada señal describe un hecho leído ahora. No es una puntuación.", "Each signal describes a fact read just now. It is not a score."),
         };
-    const displayName = clipForeign(names[0] || "", likeness.inRegistry);
+    const quotedName = clipForeign(names[0] || "", likeness.inRegistry);
+    const displayName = likeness.inRegistry || !names[0] ? quotedName : `Dice llamarse ${quotedName}`;
+    const displayNameEn = likeness.inRegistry || !names[0] ? quotedName : `It says it is called ${quotedName}`;
     const displaySymbol = clipForeign(symbols[0] || "", likeness.inRegistry);
     const metadataState = !metaInfo && !decoded.tokenMetadata ? "ausente" : metaplex || decoded.tokenMetadata ? "ok" : "fallo";
     const uriState = metadataState === "fallo" ? "fallo" : uri ? "ok" : "ausente";
@@ -2388,7 +2404,7 @@ async function readWith(mint, registry, rpc, input) {
     const attentionEn = signals
         .filter((item) => item.level === "atencion" || item.level === "riesgo")
         .map((item) => item.title.en);
-    const report = loc(`Qué se comprobó: ${checkedEs.length ? checkedEs.join(", ") : "ningún dato con valor leído"}. Qué pide atención: ${attentionEs.length ? attentionEs.join(", ") : "ninguna señal de atención"}. Qué falta: ${missing.es}${absent.es ? ` Qué no existe: ${absent.es}` : ""}`, `What was checked: ${checkedEn.length ? checkedEn.join(", ") : "no fact with a read value"}. What needs attention: ${attentionEn.length ? attentionEn.join(", ") : "no attention signal"}. What is missing: ${missing.en}${absent.en ? ` What does not exist: ${absent.en}` : ""}`);
+    const report = loc(`Qué se comprobó: ${checkedEs.length ? checkedEs.join(", ") : "ningún dato con valor leído"}. Qué requiere atención: ${attentionEs.length ? attentionEs.join(", ") : "ninguna señal de atención"}. Qué falta: ${missing.es}${absent.es ? ` Qué no existe: ${absent.es}` : ""}`, `What was checked: ${checkedEn.length ? checkedEn.join(", ") : "no fact with a read value"}. What needs attention: ${attentionEn.length ? attentionEn.join(", ") : "no attention signal"}. What is missing: ${missing.en}${absent.en ? ` What does not exist: ${absent.en}` : ""}`);
     const metadataMutable = metadataState === "fallo"
         ? "fallo"
         : metaplex?.mutable === true || decoded.tokenMetadata?.updateAuthority
@@ -2450,7 +2466,7 @@ async function readWith(mint, registry, rpc, input) {
         support: headline.support,
         signals,
         rows: [
-            { label: loc("Nombre", "Name"), value: loc(displayName, displayName) },
+            { label: loc("Nombre", "Name"), value: loc(displayName, displayNameEn) },
             { label: loc("Símbolo", "Symbol"), value: loc(displaySymbol, displaySymbol) },
             { label: loc("Programa", "Program"), value: loc(programName, programName) },
             {
@@ -2485,7 +2501,7 @@ function authoritySignal(kind, authority, official) {
             explain: loc(minting
                 ? "La autoridad de emisión está revocada en esta lectura. Eso no demuestra que el proyecto sea legítimo."
                 : "La autoridad de congelación está revocada en esta lectura. Otros límites del token pueden seguir existiendo.", minting
-                ? "The mint authority is revoked in this reading. That does not show that the project is legitimate."
+                ? "The permission to create more tokens is revoked in this reading. That does not show that the project is legitimate."
                 : "The freeze authority is revoked in this reading. Other limits on the token can still exist."),
         };
     }
@@ -2497,14 +2513,14 @@ function authoritySignal(kind, authority, official) {
             explain: loc(minting
                 ? `La autoridad de emisión sigue asignada a ${authority.address ?? "una dirección"}. Puede aumentar el suministro. En una moneda estable eso es habitual: quien la emite añade unidades cuando entra dinero. Si un proyecto prometió un suministro fijo, el mismo permiso permite crear más. Esta lectura no dice cuál de los dos casos es.`
                 : `La autoridad de congelación sigue asignada a ${authority.address ?? "una dirección"}. Puede impedir que una cuenta mueva sus tokens.`, minting
-                ? `The mint authority is still assigned to ${authority.address ?? "an address"}. It can increase the supply. On a stablecoin that is common: the issuer adds units when money comes in. If a project promised a fixed supply, the same permission can create more. This reading does not say which of the two cases this is.`
+                ? `The permission to create more tokens is still assigned to ${authority.address ?? "an address"}. It can increase the supply. On a stablecoin that is common: the issuer adds units when money comes in. If a project promised a fixed supply, the same permission can create more. This reading does not say which of the two cases this is.`
                 : `The freeze authority is still assigned to ${authority.address ?? "an address"}. It can stop an account from moving its tokens.`),
         };
     }
     return {
         id: kind,
         level: "atencion",
-        title: loc(minting ? "La autoridad de emisión no se pudo leer" : "La autoridad de congelación no se pudo leer", minting ? "The mint authority could not be read" : "The freeze authority could not be read"),
+        title: loc(minting ? "La autoridad de emisión no se pudo leer" : "La autoridad de congelación no se pudo leer", minting ? "The permission to create more tokens could not be read" : "The freeze authority could not be read"),
         explain: loc("El campo no se decodifica. No se rellena como revocada.", "The field does not decode. It is not filled in as revoked."),
     };
 }
@@ -2515,7 +2531,7 @@ function extensionSignals(extensions, parsed) {
                 id: "extensiones",
                 level: "atencion",
                 title: loc("Extensiones no separadas", "Extensions not split"),
-                explain: loc("Los bytes extra del mint no se pudieron separar. No se afirma qué extensión falta.", "The extra mint bytes could not be split. This does not claim which extension is missing."),
+                explain: loc("Los datos extra del token no se pudieron separar. No se afirma qué extensión falta.", "The extra token data could not be split. This does not claim which extension is missing."),
             },
         ];
     }
@@ -2542,7 +2558,7 @@ function oneExtension(item) {
             id: "comision",
             level: "riesgo",
             title: loc("Comisión de transferencia", "Transfer fee"),
-            explain: loc(`El mint puede quedarse una parte de cada envío. ${item.summary ?? "La cifra no se decodificó."}`, `The mint can keep part of each transfer. ${item.summary ?? "The figure did not decode."}`),
+            explain: loc(`El token puede quedarse una parte de cada envío. ${item.summary ?? "La cifra no se decodificó."}`, `The token can keep part of each transfer. ${item.summary ?? "The figure did not decode."}`),
         };
     }
     if (item.type === 12) {
@@ -2552,9 +2568,9 @@ function oneExtension(item) {
             level: absent ? "atencion" : "riesgo",
             title: loc("Delegado permanente", "Permanent delegate"),
             explain: loc(absent
-                ? "La extensión está en el mint y la dirección leída está vacía. Conviene volver a leerla."
+                ? "La extensión está en el token y la dirección leída está vacía. Conviene volver a leerla."
                 : "Una dirección puede mover tokens desde otras cuentas. Eso no pide permiso a quien los tiene.", absent
-                ? "The extension is on the mint and the address that was read is empty. It is worth reading again."
+                ? "The extension is on the token and the address that was read is empty. It is worth reading again."
                 : "An address can move tokens out of other accounts. That does not ask the account that holds them."),
         };
     }
@@ -2568,15 +2584,29 @@ function oneExtension(item) {
     }
     if (item.type === 6) {
         const frozen = /frozen/.test(item.summary ?? "");
+        const stateEs = frozen
+            ? "congelado"
+            : /uninitialized/.test(item.summary ?? "")
+                ? "sin iniciar"
+                : /initialized/.test(item.summary ?? "")
+                    ? "iniciado"
+                    : "sin detalle";
+        const stateEn = frozen
+            ? "frozen"
+            : /uninitialized/.test(item.summary ?? "")
+                ? "not started"
+                : /initialized/.test(item.summary ?? "")
+                    ? "started"
+                    : "no detail";
         return {
             id: "estado-inicial",
             level: frozen ? "riesgo" : "neutro",
             title: loc(frozen ? "Las cuentas nuevas nacen congeladas" : "Estado inicial de las cuentas", frozen ? "New accounts start frozen" : "Initial account state"),
             explain: loc(frozen
                 ? "El estado por defecto es congelado. Una cuenta nueva puede no poder mover tokens hasta que alguien la descongele."
-                : `Estado por defecto leído: ${item.summary ?? "sin detalle"}.`, frozen
+                : `Estado por defecto leído: ${stateEs}.`, frozen
                 ? "The default state is frozen. A new account may be unable to move tokens until someone unfreezes it."
-                : `Default state read: ${item.summary ?? "no detail"}.`),
+                : `Default state read: ${stateEn}.`),
         };
     }
     if (item.type === 9) {
@@ -2584,14 +2614,14 @@ function oneExtension(item) {
             id: "no-transferible",
             level: "atencion",
             title: loc("Marcado como no transferible", "Marked non-transferable"),
-            explain: loc("El mint dice que los tokens no se transfieren. Esta lectura no prueba qué ocurre al intentarlo.", "The mint says the tokens do not transfer. This reading does not prove what happens if someone tries."),
+            explain: loc("El token dice que no se puede enviar. Esta lectura no prueba qué ocurre al intentarlo.", "The token says it cannot be sent. This reading does not prove what happens if someone tries."),
         };
     }
     if (item.type === 3) {
         return {
             id: "cierre",
             level: "atencion",
-            title: loc("Alguien puede cerrar el mint", "Someone can close the mint"),
+            title: loc("Alguien puede cerrar el token", "Someone can close the token"),
             explain: loc(item.summary ?? "Hay una autoridad de cierre.", item.summary ?? "There is a close authority."),
         };
     }
@@ -2599,7 +2629,7 @@ function oneExtension(item) {
         return {
             id: `extension-${item.type}`,
             level: "atencion",
-            title: loc(`Extensión no descrita (${item.name})`, `Undescribed extension (${item.name})`),
+            title: loc("Extensión no descrita", "Undescribed extension"),
             explain: loc("Hay una extensión que esta lectura no describe. No se da por ausente ni por inofensiva.", "There is an extension this reading does not describe. It is not treated as absent or as harmless."),
         };
     }
@@ -2611,22 +2641,34 @@ function metadataSignals(tokenMeta, metaplex, official) {
             {
                 id: "metadatos",
                 level: "neutro",
-                title: loc("Metadatos: ausente comprobado", "Metadata: confirmed absent"),
-                explain: loc("Se pidió la cuenta de metadatos y no estaba. Es una ausencia comprobada, no una consulta fallida. El nombre puede vivir fuera de esta lectura.", "The metadata account was requested and it was not there. That is a confirmed absence, not a failed query. The name may live outside this reading."),
+                title: loc("No hay metadatos en esta lectura", "There is no metadata in this reading"),
+                explain: loc("Se pidió la cuenta de metadatos y no estaba. No es un fallo de la consulta. El nombre puede vivir fuera de esta lectura.", "The metadata account was requested and it was not there. It is not a failed query. The name may live outside this reading."),
             },
         ];
     }
     const out = [];
     const name = tokenMeta?.name || metaplex?.name || "";
     const symbol = tokenMeta?.symbol || metaplex?.symbol || "";
-    const uri = tokenMeta?.uri || metaplex?.uri || "";
+    const uri = metadataLink(tokenMeta?.uri || metaplex?.uri || "");
     const visibleName = clipForeign(name, official);
+    const linkEs = uri ? clipForeign(uri, official) : "No tiene enlace de metadatos";
+    const linkEn = uri ? clipForeign(uri, official) : "It has no metadata link";
+    const nameTitle = name
+        ? official
+            ? `Nombre: ${visibleName}`
+            : `Nombre: Dice llamarse ${visibleName}`
+        : "Nombre no leído";
+    const nameTitleEn = name
+        ? official
+            ? `Name: ${visibleName}`
+            : `Name: It says it is called ${visibleName}`
+        : "Name not read";
     out.push({
         id: "metadatos",
         level: "neutro",
         tone: official ? undefined : "ajeno",
-        title: loc(name ? `Nombre: ${visibleName}` : "Nombre no leído", name ? `Name: ${visibleName}` : "Name not read"),
-        explain: loc(`Símbolo: ${symbol ? clipForeign(symbol, official) : "ausente comprobado"}. Enlace de metadatos: ${uri ? clipForeign(uri, official) : "ausente comprobado"}. El nombre es un texto. La dirección es otra cosa.`, `Symbol: ${symbol ? clipForeign(symbol, official) : "confirmed absent"}. Metadata link: ${uri ? clipForeign(uri, official) : "confirmed absent"}. The name is text. The address is something else.`),
+        title: loc(nameTitle, nameTitleEn),
+        explain: loc(`Símbolo: ${symbol ? clipForeign(symbol, official) : "No está en esta lectura"}. Enlace de metadatos: ${linkEs}. El nombre es un texto. La dirección es otra cosa.`, `Symbol: ${symbol ? clipForeign(symbol, official) : "It is not in this reading"}. Metadata link: ${linkEn}. The name is text. The address is something else.`),
     });
     const update = tokenMeta?.updateAuthority || (metaplex ? metaplex.updateAuthority : null);
     const mutable = metaplex ? metaplex.mutable : tokenMeta?.updateAuthority ? true : null;
@@ -2637,9 +2679,9 @@ function metadataSignals(tokenMeta, metaplex, official) {
         title: loc(canChange ? "El nombre se puede cambiar" : "El nombre no se puede cambiar en las fuentes leídas", canChange ? "The name can be changed" : "The name cannot be changed in the sources read"),
         explain: loc(canChange
             ? `Hay quien puede actualizar los metadatos${update ? ` (${update})` : ""}. Un nombre de hoy puede no ser el de mañana.`
-            : "En las fuentes leídas no queda autoridad de actualización, o isMutable es falso. Eso no demuestra legitimidad.", canChange
+            : "En las fuentes leídas no queda quien pueda cambiar los metadatos, o los metadatos ya no se pueden cambiar. Eso no demuestra legitimidad.", canChange
             ? `Someone can update the metadata${update ? ` (${update})` : ""}. Today’s name may not be tomorrow’s.`
-            : "In the sources read there is no update authority left, or isMutable is false. That does not show legitimacy."),
+            : "In the sources read there is nobody left who can change the metadata, or the metadata can no longer be changed. That does not show legitimacy."),
     });
     if (tokenMeta && metaplex && (tokenMeta.name !== metaplex.name || tokenMeta.symbol !== metaplex.symbol)) {
         out.push({
@@ -2694,11 +2736,19 @@ async function accountSample(rpc, mint, program, curvePda, largest, denominator)
             level: high ? "atencion" : "neutro",
             title: loc("Cuentas con tokens", "Token accounts"),
             explain: loc(rows.length === 0
-                ? "La muestra de las 20 cuentas con más tokens volvió vacía. No es un censo y no es concentración cero."
+                ? "La muestra de cuentas volvió vacía. No se leyó quién tiene más tokens. No es una ausencia de cuentas ni una concentración de cero."
                 : `Se leyeron ${rows.length} cuentas con tokens, como máximo 20. No es un censo ni un recuento de personas.${top?.percent ? ` La mayor cuenta que no es la de la curva tiene el ${top.percent} %.` : ""}\n${listed}`, rows.length === 0
-                ? "The sample of the 20 largest token accounts came back empty. It is not a census and it is not zero concentration."
+                ? "The account sample came back empty. Who holds the most tokens was not read. It is not an absence of accounts and it is not zero concentration."
                 : `${rows.length} token accounts were read, 20 at most. It is not a census and it is not a count of people.${top?.percent ? ` The largest account that is not the curve account has ${top.percent}%.` : ""}\n${listed}`),
         },
+    };
+}
+function emptyLargestSignal() {
+    return {
+        id: "cuentas",
+        level: "atencion",
+        title: loc("Cuentas con tokens", "Token accounts"),
+        explain: loc("La muestra de cuentas volvió vacía. No se leyó quién tiene más tokens. No es una ausencia de cuentas ni una concentración de cero.", "The account sample came back empty. Who holds the most tokens was not read. It is not an absence of accounts and it is not zero concentration."),
     };
 }
 function emptySample() {
@@ -2752,6 +2802,910 @@ function curveSignal(account, curve) {
         explain: loc(`La curva sigue abierta. Cantidad real de la curva: ${real}. Cantidad virtual de la curva: ${virtual}.${progress}`, `The curve is still open. Real curve amount: ${real}. Virtual curve amount: ${virtual}.${progress ? ` Inferred classic-curve progress: ${curve.progressPercent}%.` : ""}`),
     };
 }
+/**
+ * Resumen en lenguaje sencillo de una lectura.
+ * Tres bloques, sin puntuación, sin semáforo de «seguro» y sin recomendación.
+ * Cada punto: título corto, una frase y un enlace a «Entender».
+ */
+
+const TOPIC_BY_ID = {
+  suministro: "suministro",
+  "suministro-extra": "suministro",
+  decimales: "suministro",
+  programa: "permisos",
+  emision: "permisos",
+  congelacion: "permisos",
+  permisos: "permisos",
+  extensiones: "permisos",
+  metadatos: "metadatos",
+  enlace: "metadatos",
+  nombre: "metadatos",
+  simbolo: "metadatos",
+  uri: "metadatos",
+  mutable: "metadatos",
+  cuentas: "distribucion",
+  curva: "curva",
+  ficha: "metadatos",
+};
+
+const SUMMARY_OFFICIAL = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
+
+const ATTENTION = {
+  emision: {
+    title: { es: "Permiso de emisión", en: "Permission to create tokens" },
+    lead: { es: "Está activo: permite crear más tokens.", en: "It is active: it can create more tokens." },
+    detail: {
+      es: "En una moneda estable es habitual: quien emite añade unidades cuando entra dinero. Si el proyecto prometió un suministro fijo, el mismo permiso permite crear más. Conviene contrastarlo con lo que promete el proyecto. Esta lectura no dice cuál de los dos casos es.",
+      en: "On a stablecoin that is common: the issuer adds units when money comes in. If the project promised a fixed supply, the same permission can create more. It is worth comparing with what the project promises. This reading does not say which of the two cases this is.",
+    },
+  },
+  congelacion: {
+    title: { es: "Permiso de congelación", en: "Freeze permission" },
+    lead: { es: "Está activo: puede bloquear cuentas.", en: "It is active: it can block accounts." },
+    detail: { es: "Una señal sola no acusa al proyecto.", en: "One signal does not accuse the project." },
+  },
+  mutable: {
+    title: { es: "Nombre y símbolo", en: "Name and symbol" },
+    lead: { es: "Se pueden cambiar.", en: "They can change." },
+    detail: { es: "Mañana pueden ser otros. Eso, por sí solo, no es una suplantación.", en: "Tomorrow they may be different. That, on its own, is not impersonation." },
+  },
+  suministro: {
+    title: { es: "Suministro total", en: "Total supply" },
+    lead: { es: "Las dos lecturas de la cantidad no coinciden.", en: "The two reads of the amount do not match." },
+    detail: {
+      es: "Se muestra la cifra de los datos del token en la cadena y no se calculan porcentajes. Eso no acusa al proyecto.",
+      en: "The figure shown is the one from the token data on the chain, and percentages are not calculated. That does not accuse the project.",
+    },
+  },
+  comision: {
+    title: { es: "Comisión al enviar", en: "Fee on transfer" },
+    lead: { es: "El token puede quedarse una parte de cada envío.", en: "The token can keep part of each transfer." },
+    detail: { es: "Una señal sola no acusa al proyecto.", en: "One signal does not accuse the project." },
+  },
+  delegado: {
+    title: { es: "Delegado permanente", en: "Permanent delegate" },
+    lead: { es: "Alguien puede mover tokens de otras cuentas.", en: "Someone can move tokens out of other accounts." },
+    detail: { es: "Eso no pide permiso a quien los tiene. Una señal sola no acusa al proyecto.", en: "That does not ask the account that holds them. One signal does not accuse the project." },
+  },
+  gancho: {
+    title: { es: "Revisión de cada envío", en: "Check on each transfer" },
+    lead: { es: "Un programa puede revisar cada envío y rechazarlo.", en: "A program can inspect each transfer and reject it." },
+    detail: { es: "Una señal sola no acusa al proyecto.", en: "One signal does not accuse the project." },
+  },
+  "estado-inicial": {
+    title: { es: "Cuentas nuevas congeladas", en: "New accounts start frozen" },
+    lead: { es: "Una cuenta nueva puede no poder mover tokens.", en: "A new account may be unable to move tokens." },
+    detail: { es: "Una señal sola no acusa al proyecto.", en: "One signal does not accuse the project." },
+  },
+  "no-transferible": {
+    title: { es: "No transferible", en: "Non-transferable" },
+    lead: { es: "El token dice que no se puede enviar.", en: "The token says it cannot be sent." },
+    detail: { es: "Esta lectura no prueba qué ocurre al intentarlo.", en: "This reading does not prove what happens if someone tries." },
+  },
+  cierre: {
+    title: { es: "Cierre del token", en: "Closing the token" },
+    lead: { es: "Alguien puede cerrar este token.", en: "Someone can close this token." },
+    detail: { es: "Una señal sola no acusa al proyecto.", en: "One signal does not accuse the project." },
+  },
+  extensiones: {
+    title: { es: "Extensiones", en: "Extensions" },
+    lead: { es: "No se pudieron separar las extensiones.", en: "The extensions could not be split." },
+    detail: { es: "No se afirma cuál falta. Una señal sola no acusa al proyecto.", en: "This does not claim which one is missing. One signal does not accuse the project." },
+  },
+  desconocida: {
+    title: { es: "Extensión sin describir", en: "Undescribed extension" },
+    lead: { es: "Hay una extensión que esta lectura no describe.", en: "There is an extension this reading does not describe." },
+    detail: { es: "No se da por inofensiva.", en: "It is not treated as harmless." },
+  },
+  "metadatos-distintos": {
+    title: { es: "Nombre y símbolo", en: "Name and symbol" },
+    lead: { es: "Las dos fuentes no coinciden.", en: "The two sources do not match." },
+    detail: { es: "Una señal sola no acusa al proyecto.", en: "One signal does not accuse the project." },
+  },
+  invisibles: {
+    title: { es: "Nombre", en: "Name" },
+    lead: { es: "Hay caracteres que no se ven en el nombre.", en: "There are characters you cannot see in the name." },
+    detail: { es: "Una señal sola no acusa al proyecto.", en: "One signal does not accuse the project." },
+  },
+  copia: {
+    title: { es: "Dirección", en: "Address" },
+    lead: { es: "Se parece a STUBX pero no es la dirección oficial.", en: "It looks like STUBX but it is not the official address." },
+    detail: {
+      es: "La dirección oficial está publicada en stubxai.com. Ábrela y compárala con la de esta lectura, carácter a carácter. Un nombre igual no cambia la dirección.",
+      en: "The official address is published on stubxai.com. Open it and compare it with the one in this reading, character by character. The same name does not change the address.",
+    },
+  },
+  ficha: {
+    title: { es: "Comprobación anterior", en: "Earlier check" },
+    lead: { es: "Es una ficha guardada de antes, no un dato de esta lectura.", en: "It is a card saved earlier, not a fact from this reading." },
+    detail: {
+      es: "La ficha fechada es una foto anterior. No cambia lo que dice esta lectura.",
+      en: "The dated card is an earlier snapshot. It does not change what this reading says.",
+    },
+  },
+  parecido: {
+    title: { es: "Parecido con el registro", en: "Likeness with the registry" },
+    lead: { es: "Un dato coincide con el registro y la dirección es otra.", en: "A fact matches the registry and the address is different." },
+    detail: { es: "La coincidencia no dice quién lo hizo.", en: "The match does not say who did it." },
+  },
+};
+
+const RISK_EXTENSION = {
+  1: "comision",
+  3: "cierre",
+  9: "no-transferible",
+  12: "delegado",
+  14: "gancho",
+};
+
+const EMPTY = {
+  checked: {
+    es: "Ningún dato quedó leído en esta consulta.",
+    en: "No fact was read in this query.",
+  },
+  attention: {
+    es: "Ninguna señal de esta lectura pide atención. Que no aparezca no significa que no haya riesgo.",
+    en: "No signal in this reading needs attention. One not showing does not mean there is no risk.",
+  },
+  missing: {
+    es: "No falta ningún dato pedido en esta lectura.",
+    en: "No requested fact is missing in this reading.",
+  },
+};
+
+const SUMMARY_SERVICE = {
+  es: "El servicio público no respondió, prueba otra vez en un minuto.",
+  en: "The public service did not respond, try again in a minute.",
+};
+
+const CURVE_NOTE = {
+  es: "Curva de Pump.fun: no aplica",
+  en: "Pump.fun curve: not applicable",
+};
+
+const SUMMARY_HEADINGS = Object.freeze({
+  title: { es: "Resumen", en: "Summary" },
+  checked: { es: "Qué se comprobó", en: "What was checked" },
+  attention: { es: "Qué requiere atención", en: "What needs attention" },
+  missing: { es: "Qué falta", en: "What is missing" },
+  retry: { es: "Reintentar", en: "Try again" },
+  understand: { es: "Entender →", en: "Understand →" },
+  more: { es: "Más detalle", en: "More detail" },
+});
+
+function topicOf(id) {
+  if (TOPIC_BY_ID[id]) return TOPIC_BY_ID[id];
+  if (typeof id === "string" && (id.startsWith("extension") || id === "desconocida")) return "permisos";
+  return "permisos";
+}
+
+function summaryPair(es, en) {
+  return { es, en };
+}
+
+function summaryPoint(topic, title, lead, detail, note) {
+  return { topic, title, lead, detail: detail || null, note: note || null };
+}
+
+function attentionPoint(id) {
+  const copy = ATTENTION[id] || (typeof id === "string" && id.startsWith("extension") ? ATTENTION.desconocida : null);
+  if (!copy) return null;
+  return summaryPoint(topicOf(id), copy.title, copy.lead, copy.detail);
+}
+
+function findFact(facts, id) {
+  return (facts || []).find((item) => item && item.id === id) || null;
+}
+
+function summaryFormatUnits(raw, decimals, lang) {
+  if (typeof raw !== "string" || !/^\d+$/.test(raw)) return null;
+  const scale = Number(decimals);
+  if (!Number.isInteger(scale) || scale < 0 || scale > 18) return null;
+  const padded = raw.padStart(scale + 1, "0");
+  const whole = padded.slice(0, padded.length - scale).replace(/^0+(?=\d)/, "");
+  const frac = scale ? padded.slice(-scale).replace(/0+$/, "") : "";
+  const sep = lang === "en" ? "," : ".";
+  const dec = lang === "en" ? "." : ",";
+  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, sep);
+  return frac ? `${grouped}${dec}${frac}` : grouped;
+}
+
+function supplyPair(raw, decimals) {
+  const es = summaryFormatUnits(raw, decimals, "es");
+  const en = summaryFormatUnits(raw, decimals, "en");
+  return es && en ? { es, en } : null;
+}
+
+function summaryText(value) {
+  return typeof value === "string" && value.trim() ? value.trim() : "";
+}
+
+function contextFromView(view) {
+  const shown = view && view.shown ? view.shown : {};
+  const rows = Array.isArray(view && view.rows) ? view.rows : [];
+  const row = (label) => rows.find((item) => item && item.label && item.label.es === label);
+  const supplyRow = row("Suministro");
+  return {
+    supply: supplyPair(shown.supplyAccount, shown.decimals) || (supplyRow && supplyRow.value && supplyRow.value.es ? supplyRow.value : null),
+    name: summaryText(shown.name) || summaryText(row("Nombre") && row("Nombre").value && row("Nombre").value.es),
+    symbol: summaryText(shown.symbol) || summaryText(row("Símbolo") && row("Símbolo").value && row("Símbolo").value.es),
+    decimals: shown.decimals,
+    extensions: Array.isArray(shown.extensions) ? shown.extensions : [],
+    official: view?.mint === SUMMARY_OFFICIAL || (view?.signals || []).some((item) => item && item.id === "registro"),
+  };
+}
+
+function contextFromCard(card) {
+  return {
+    supply: supplyPair(card && card.supplyAccount, card && card.decimals) || supplyPair(card && card.supplyRpc, card && card.decimals),
+    name: summaryText(card && card.name && card.name.text),
+    symbol: summaryText(card && card.symbol && card.symbol.text),
+    decimals: card ? card.decimals : null,
+    extensions: Array.isArray(card && card.extensions) ? card.extensions : [],
+    official: Boolean(card && (card.officialStubx === true || card.mint === SUMMARY_OFFICIAL)),
+  };
+}
+
+const SUMMARY_HOMOGLYPHS = {
+  "\u0391": "A",
+  "\u0392": "B",
+  "\u0395": "E",
+  "\u0396": "Z",
+  "\u0397": "H",
+  "\u0399": "I",
+  "\u039A": "K",
+  "\u039C": "M",
+  "\u039D": "N",
+  "\u039F": "O",
+  "\u03A1": "P",
+  "\u03A4": "T",
+  "\u03A5": "Y",
+  "\u03A3": "S",
+  "\u03A7": "X",
+  "\u03B1": "a",
+  "\u03C3": "s",
+  "\u03BF": "o",
+  "\u03C4": "t",
+  "\u0410": "A",
+  "\u0412": "B",
+  "\u0415": "E",
+  "\u041A": "K",
+  "\u041C": "M",
+  "\u041D": "H",
+  "\u041E": "O",
+  "\u0420": "P",
+  "\u0421": "S",
+  "\u0422": "T",
+  "\u0425": "X",
+  "\u0430": "a",
+  "\u0435": "e",
+  "\u043E": "o",
+  "\u0440": "p",
+  "\u0441": "s",
+  "\u0442": "t",
+  "\u0445": "x",
+  "\u0405": "S",
+  "\u0455": "s",
+  "\u0406": "I",
+  "\u0456": "i",
+  "5": "S",
+  "8": "B",
+  "\uA731": "S",
+  "\u1D1B": "T",
+  "\u1D1C": "U",
+  "\u0299": "B",
+  "\u054D": "U",
+  "\u057D": "u",
+  "\u13DA": "S",
+  "\u13A2": "T",
+  "\u13F4": "B",
+};
+
+function summaryNormalizeToken(value) {
+  const folded = String(value || "").normalize("NFKC").replace(/[\p{Cc}\p{Cf}\uFFFD]/gu, "");
+  let mapped = "";
+  for (const char of folded) mapped += SUMMARY_HOMOGLYPHS[char] ?? char;
+  return mapped.toLowerCase().replace(/[\s.\-_'’]+/g, "");
+}
+
+function summaryShown(value) {
+  const clean = String(value || "").replace(/[\u0000\uFFFD\p{Cc}\p{Cf}]/gu, "").trim();
+  if (!clean) return "";
+  return clean.length > 64 ? `${clean.slice(0, 64)}…` : clean;
+}
+
+function looksLikeStubx(context) {
+  if (!context) return false;
+  return summaryNormalizeToken(context.name).includes("stubx") || summaryNormalizeToken(context.symbol).includes("stubx");
+}
+
+function quotedIdentity(context) {
+  const name = summaryShown(context.name);
+  const symbol = summaryShown(context.symbol);
+  if (name && symbol && name !== symbol) return `«${name}» («${symbol}»)`;
+  if (name || symbol) return `«${name || symbol}»`;
+  return "";
+}
+
+function nameLead(context) {
+  const quoted = quotedIdentity(context);
+  if (context && !context.official && quoted) {
+    return summaryPair(
+      `Dice llamarse ${quoted} (texto elegido por quien creó el token).`,
+      `It says it is called ${quoted} (text chosen by whoever created the token).`,
+    );
+  }
+  const name = summaryShown(context && context.name);
+  const symbol = summaryShown(context && context.symbol);
+  if (name && symbol && name !== symbol) return summaryPair(`${name} (${symbol}).`, `${name} (${symbol}).`);
+  if (name || symbol) return summaryPair(`${name || symbol}.`, `${name || symbol}.`);
+  return summaryPair("Se leyeron el nombre y el símbolo.", "The name and the symbol were read.");
+}
+
+function supplyLead(context, matched) {
+  const symbol = context && context.official ? summaryShown(context.symbol) : "";
+  const mark = symbol ? ` ${symbol}` : " tokens";
+  if (context.supply) {
+    const es = matched
+      ? `Hay ${context.supply.es}${mark} y las dos lecturas coinciden.`
+      : `Hay ${context.supply.es}${mark}.`;
+    const en = matched
+      ? `There are ${context.supply.en}${mark} and the two reads match.`
+      : `There are ${context.supply.en}${mark}.`;
+    return summaryPair(es, en);
+  }
+  return summaryPair(
+    matched ? "Se leyó la cantidad de tokens y las dos lecturas coinciden." : "Se leyó la cantidad de tokens.",
+    matched ? "The token amount was read and the two reads match." : "The token amount was read.",
+  );
+}
+
+function samplePercent(signal) {
+  const blob = `${signal?.explain?.es ?? ""} ${signal?.explain?.en ?? ""}`;
+  const found = blob.match(/(\d+(?:[.,]\d+)?)\s*%/);
+  return found ? found[1] : null;
+}
+
+function isUnread(signal) {
+  const blob = `${signal?.title?.es ?? ""} ${signal?.explain?.es ?? ""} ${signal?.title?.en ?? ""} ${signal?.explain?.en ?? ""}`;
+  return /no se pudo|could not be checked|could not be read|could not be split|no respondió|did not respond|volvió vacía|came back empty|no se leyó|was not read/i.test(blob);
+}
+
+function genericAttention(signal) {
+  const titleEs = signal?.title?.es || "Señal";
+  const titleEn = signal?.title?.en || "Signal";
+  return summaryPoint(
+    topicOf(signal?.id),
+    summaryPair(titleEs, titleEn),
+    summaryPair("Es un dato de esta lectura.", "It is a fact from this reading."),
+    summaryPair("Una señal sola no acusa al proyecto.", "One signal does not accuse the project."),
+  );
+}
+
+function concentrationPoint(signal) {
+  const percent = samplePercent(signal);
+  const lead = percent
+    ? summaryPair(`Una cuenta reúne el ${percent} % de la muestra.`, `One account holds ${percent}% of the sample.`)
+    : summaryPair("Una cuenta reúne una parte grande de la muestra.", "One account holds a large share of the sample.");
+  return summaryPoint(
+    "distribucion",
+    summaryPair("Concentración", "Concentration"),
+    lead,
+    summaryPair(
+      "La muestra no es un censo de personas. Una señal sola no acusa al proyecto.",
+      "The sample is not a census of people. One signal does not accuse the project.",
+    ),
+  );
+}
+
+function attentionFromSignals(signals) {
+  const items = [];
+  for (const signal of signals || []) {
+    if (!signal || (signal.level !== "atencion" && signal.level !== "riesgo")) continue;
+    if (signal.id === "cuentas" || signal.id === "suministro") {
+      if (signal.id === "cuentas" && samplePercent(signal)) items.push(concentrationPoint(signal));
+      continue;
+    }
+    if (isUnread(signal)) continue;
+    const known = attentionPoint(signal.id);
+    const point = known || genericAttention(signal);
+    if (signal.id === "copia" || signal.id === "parecido") items.unshift(point);
+    else items.push(point);
+  }
+  return items;
+}
+
+function attentionFromCard(card) {
+  const items = [];
+  const context = contextFromCard(card);
+  if (!context.official && looksLikeStubx(context)) items.push(attentionPoint("copia"));
+  if (card?.mintAuthority?.state === "activa") items.push(attentionPoint("emision"));
+  if (card?.freezeAuthority?.state === "activa") items.push(attentionPoint("congelacion"));
+  if (card?.metadataMutable === "si") items.push(attentionPoint("mutable"));
+  for (const extension of card?.extensions || []) {
+    if (!extension) continue;
+    if (extension.status === "no_soportada") items.push(attentionPoint("extension"));
+    else if (RISK_EXTENSION[extension.type]) items.push(attentionPoint(RISK_EXTENSION[extension.type]));
+  }
+  return items.filter(Boolean);
+}
+
+function revokedPair(signals, card) {
+  if (card) {
+    return card.mintAuthority?.state === "revocada" && card.freezeAuthority?.state === "revocada";
+  }
+  const revoked = (id) => {
+    const signal = (signals || []).find((item) => item && item.id === id);
+    return Boolean(signal && /Nadie puede/.test(signal.title?.es || ""));
+  };
+  return revoked("emision") && revoked("congelacion");
+}
+
+function pushMissing(missing, topic, title, lead) {
+  missing.push(summaryPoint(topic, title, lead));
+}
+
+const SUPPLY_AGAIN = summaryPair(
+  "No se pudo hacer la segunda comprobación del suministro.",
+  "The second supply check could not be done.",
+);
+const SUPPLY_MISMATCH = summaryPair("Las dos lecturas no coinciden.", "The two reads do not match.");
+
+function readsDisagree(signals) {
+  return (signals || []).some((signal) => {
+    if (!signal || signal.id !== "suministro" || isUnread(signal)) return false;
+    if (signal.level !== "atencion" && signal.level !== "riesgo") return false;
+    const blob = `${signal.title?.es ?? ""} ${signal.explain?.es ?? ""} ${signal.title?.en ?? ""} ${signal.explain?.en ?? ""}`;
+    return /no coincide|do not match|does not match/i.test(blob);
+  });
+}
+
+function compose(facts, attention, context, signals, card) {
+  const list = Array.isArray(facts) ? facts : [];
+  const checked = [];
+  const missing = [];
+  let note = null;
+  let rereadFailed = false;
+  const whole = list.length === 1 && list[0] && list[0].state === "fallo" && /Esta lectura/.test(list[0].label?.es || "");
+  if (whole) {
+    pushMissing(
+      missing,
+      "suministro",
+      summaryPair("Esta lectura", "This reading"),
+      summaryPair("No se pudo completar.", "It could not be completed."),
+    );
+  } else {
+    const supply = findFact(list, "suministro");
+    const extra = findFact(list, "suministro-extra");
+    if (supply?.state === "ok") {
+      const mismatch = extra?.reason === "distinto" || (extra?.state !== "fallo" && readsDisagree(signals));
+      const again = extra?.state === "fallo" && extra?.reason !== "distinto";
+      const supplyNote = mismatch ? SUPPLY_MISMATCH : null;
+      checked.push(summaryPoint(
+        "suministro",
+        summaryPair("Suministro total", "Total supply"),
+        supplyLead(context, extra?.state === "ok" && !mismatch),
+        mismatch ? ATTENTION.suministro.detail : null,
+        supplyNote,
+      ));
+      if (again) {
+        rereadFailed = true;
+        pushMissing(
+          missing,
+          "suministro",
+          summaryPair("Segunda comprobación del suministro", "Second supply check"),
+          SUPPLY_AGAIN,
+        );
+      }
+    } else if (supply?.state === "fallo" || (!supply && extra?.state === "fallo")) {
+      pushMissing(
+        missing,
+        "suministro",
+        summaryPair("Suministro total", "Total supply"),
+        summaryPair("No se pudo leer la cantidad de tokens.", "The token amount could not be read."),
+      );
+    } else if (extra?.state === "ok" && !supply) {
+      checked.push(summaryPoint("suministro", summaryPair("Suministro total", "Total supply"), supplyLead(context, false)));
+    }
+
+    const decimals = findFact(list, "decimales");
+    if (decimals?.state === "ok" && Number.isInteger(context.decimals)) {
+      checked.push(summaryPoint(
+        "suministro",
+        summaryPair("Decimales", "Decimals"),
+        summaryPair(`Usa ${context.decimals} decimales.`, `It uses ${context.decimals} decimals.`),
+      ));
+    } else if (decimals?.state === "fallo") {
+      pushMissing(missing, "suministro", summaryPair("Decimales", "Decimals"), summaryPair("No se pudieron leer los decimales.", "The decimals could not be read."));
+    }
+
+    const meta = findFact(list, "metadatos");
+    const name = findFact(list, "nombre");
+    const symbol = findFact(list, "simbolo");
+    const identity = meta || name || symbol;
+    const identityRead = meta?.state === "ok" || name?.state === "ok" || symbol?.state === "ok";
+    const identityFailed = meta?.state === "fallo" || name?.state === "fallo" || symbol?.state === "fallo";
+    if (identityRead) {
+      checked.push(summaryPoint("metadatos", summaryPair("Nombre y símbolo", "Name and symbol"), nameLead(context)));
+    } else if (identity?.state === "ausente") {
+      checked.push(summaryPoint(
+        "metadatos",
+        summaryPair("Nombre y símbolo", "Name and symbol"),
+        summaryPair("No hay nombre ni símbolo en esta lectura.", "There is no name or symbol in this reading."),
+      ));
+    }
+    if (identityFailed && !identityRead) {
+      pushMissing(
+        missing,
+        "metadatos",
+        summaryPair("Nombre y símbolo", "Name and symbol"),
+        summaryPair("No se pudo leer el nombre ni el símbolo.", "The name and the symbol could not be read."),
+      );
+    } else if (symbol?.state === "fallo") {
+      pushMissing(
+        missing,
+        "metadatos",
+        summaryPair("Símbolo", "Symbol"),
+        summaryPair("No se pudo leer el símbolo.", "The symbol could not be read."),
+      );
+    }
+
+    const link = findFact(list, "enlace") || findFact(list, "uri");
+    if (link?.state === "ok") {
+      checked.push(summaryPoint(
+        "metadatos",
+        summaryPair("Enlace de metadatos", "Metadata link"),
+        summaryPair("Se leyó el enlace de metadatos.", "The metadata link was read."),
+      ));
+    } else if (link?.state === "ausente") {
+      checked.push(summaryPoint(
+        "metadatos",
+        summaryPair("Enlace de metadatos", "Metadata link"),
+        summaryPair("No tiene enlace de metadatos.", "It has no metadata link."),
+      ));
+    } else if (link?.state === "fallo") {
+      pushMissing(
+        missing,
+        "metadatos",
+        summaryPair("Enlace de metadatos", "Metadata link"),
+        summaryPair("No se pudo leer el enlace de metadatos.", "The metadata link could not be read."),
+      );
+    }
+
+    const accounts = findFact(list, "cuentas");
+    if (accounts && accounts.state !== "no_consultado" && accounts.state !== "no_aplica") {
+      if (accounts.state === "ok") {
+        checked.push(summaryPoint(
+          "distribucion",
+          summaryPair("Cuentas con más tokens", "Largest token accounts"),
+          summaryPair("Se leyó una muestra de las cuentas con más tokens.", "A sample of the largest token accounts was read."),
+        ));
+      } else {
+        pushMissing(
+          missing,
+          "distribucion",
+          summaryPair("Cuentas con más tokens", "Largest token accounts"),
+          summaryPair("No se pudo leer quién tiene más tokens.", "Who holds the most tokens could not be read."),
+        );
+      }
+    }
+
+    const curve = findFact(list, "curva");
+    if (curve?.state === "no_aplica") {
+      note = summaryPoint("curva", summaryPair("Curva de Pump.fun", "Pump.fun curve"), CURVE_NOTE);
+    } else if (curve?.state === "ok") {
+      checked.push(summaryPoint(
+        "curva",
+        summaryPair("Curva de Pump.fun", "Pump.fun curve"),
+        summaryPair("Se leyó la curva.", "The curve was read."),
+      ));
+    } else if (curve?.state === "ausente") {
+      checked.push(summaryPoint(
+        "curva",
+        summaryPair("Curva de Pump.fun", "Pump.fun curve"),
+        summaryPair("No hay cuenta de la curva.", "There is no curve account."),
+      ));
+    } else if (curve?.state === "fallo") {
+      pushMissing(
+        missing,
+        "curva",
+        summaryPair("Curva de Pump.fun", "Pump.fun curve"),
+        summaryPair("No se pudo leer la curva.", "The curve could not be read."),
+      );
+    }
+
+    if (card?.extensionsStatus === "fallo") {
+      pushMissing(missing, "permisos", ATTENTION.extensiones.title, ATTENTION.extensiones.lead);
+    }
+    if (revokedPair(signals, card)) {
+      checked.push(summaryPoint(
+        "permisos",
+        summaryPair("Permisos", "Permissions"),
+        summaryPair("Nadie puede crear más tokens ni congelar cuentas.", "Nobody can create more tokens or freeze accounts."),
+      ));
+    }
+    for (const id of ["emision", "congelacion"]) {
+      const permission = findFact(list, id);
+      if (permission?.state === "fallo") {
+        pushMissing(
+          missing,
+          "permisos",
+          id === "emision" ? summaryPair("Permiso de emisión", "Permission to create tokens") : summaryPair("Permiso de congelación", "Freeze permission"),
+          id === "emision"
+            ? summaryPair("No se pudo leer el permiso de emisión.", "The permission to create more tokens could not be read.")
+            : summaryPair("No se pudo leer el permiso de congelación.", "The freeze permission could not be read."),
+        );
+      }
+    }
+  }
+
+  for (const signal of signals || []) {
+    if (!signal || signal.id === "cuentas" || signal.id === "suministro" || !isUnread(signal)) continue;
+    if (signal.level !== "atencion" && signal.level !== "riesgo") continue;
+    const known = attentionPoint(signal.id);
+    const claimsState = signal.id === "emision" || signal.id === "congelacion" || signal.id === "mutable";
+    if (known && !claimsState) pushMissing(missing, known.topic, known.title, known.lead);
+    else if (signal.id === "extensiones" || (typeof signal.id === "string" && signal.id.startsWith("extension"))) {
+      pushMissing(missing, "permisos", ATTENTION.extensiones.title, ATTENTION.extensiones.lead);
+    } else {
+      pushMissing(
+        missing,
+        known ? known.topic : topicOf(signal.id),
+        summaryPair(signal.title?.es || known?.title.es || "Señal", signal.title?.en || known?.title.en || "Signal"),
+        summaryPair("No se pudo leer.", "It could not be read."),
+      );
+    }
+  }
+
+  return {
+    title: SUMMARY_HEADINGS.title,
+    blocks: [
+      { id: "comprobado", heading: SUMMARY_HEADINGS.checked, items: checked, empty: EMPTY.checked },
+      { id: "atencion", heading: SUMMARY_HEADINGS.attention, items: attention, empty: EMPTY.attention },
+      { id: "falta", heading: SUMMARY_HEADINGS.missing, items: missing, empty: EMPTY.missing, service: missing.length ? SUMMARY_SERVICE : null },
+    ],
+    note,
+    retry: missing.length > 0 || rereadFailed,
+  };
+}
+
+function buildReadingSummary(view) {
+  const facts = Array.isArray(view?.facts) ? view.facts.slice() : [];
+  if (!facts.length && (view?.kind === "red" || view?.kind === "limite" || view?.kind === "tiempo" || view?.ok === false)) {
+    facts.push(
+      { id: "suministro", label: summaryPair("Suministro", "Supply"), state: "fallo" },
+      { id: "decimales", label: summaryPair("Decimales", "Decimals"), state: "fallo" },
+      { id: "cuentas", label: summaryPair("Cuentas con más tokens", "Largest token accounts"), state: "fallo" },
+    );
+  }
+  return compose(facts, attentionFromSignals(view?.signals), contextFromView(view), view?.signals, null);
+}
+
+function pushFact(facts, id, es, en, state, reason) {
+  const fact = { id, label: summaryPair(es, en), state };
+  if (reason) fact.reason = reason;
+  facts.push(fact);
+}
+
+function authorityState(field) {
+  if (!field) return "fallo";
+  if (field.status === "no_aplica" || field.state === "no_aplica") return "no_aplica";
+  if (field.status === "fallo" || field.state === "no_decodificable") return "fallo";
+  if (field.state === "activa" || field.state === "revocada") return "ok";
+  if (field.status === "verificado" || field.status === "ok") return "ok";
+  return "fallo";
+}
+
+function notebookNameText(card, lang) {
+  const context = contextFromCard(card);
+  const name = summaryShown(context.name);
+  const symbol = summaryShown(context.symbol);
+  const quoted = name || symbol;
+  if (!context.official && looksLikeStubx(context) && quoted) {
+    return lang === "en" ? `It says it is called «${quoted}»` : `Dice llamarse «${quoted}»`;
+  }
+  return name;
+}
+
+function cloneWarningText(card, lang) {
+  const context = contextFromCard(card);
+  if (context.official || !looksLikeStubx(context)) return "";
+  return lang === "en"
+    ? "It looks like STUBX but it is not the official address."
+    : "Se parece a STUBX pero no es la dirección oficial.";
+}
+
+function comparisonBanner(left, right, lang) {
+  return cloneWarningText(left, lang) || cloneWarningText(right, lang);
+}
+
+function summaryFromCard(card) {
+  const facts = [];
+  if (!card) return compose(facts, [], { supply: null, name: "", symbol: "", decimals: null, extensions: [] }, null, null);
+  const account = typeof card.supplyAccount === "string" && /^\d+$/.test(card.supplyAccount);
+  const extra = card.supplyRpcStatus === "verificado" && typeof card.supplyRpc === "string" && /^\d+$/.test(card.supplyRpc);
+  if (card.supplyRpcStatus === "no_aplica" && !account) {
+    pushFact(facts, "suministro", "Suministro", "Supply", "no_aplica");
+  } else if (account) {
+    pushFact(facts, "suministro", "Suministro", "Supply", "ok");
+    if (card.supplyRpcStatus !== "no_consultado") {
+      const reason = extra && card.supplyRpc === card.supplyAccount ? null : extra ? "distinto" : "otra";
+      pushFact(facts, "suministro-extra", "Suministro", "Supply", reason ? "fallo" : "ok", reason);
+    }
+  } else if (extra) {
+    pushFact(facts, "suministro-extra", "Suministro", "Supply", "ok");
+  } else if (card.supplyRpcStatus !== "no_consultado") {
+    pushFact(facts, "suministro", "Suministro", "Supply", "fallo");
+  }
+  if (card.decimals === null || card.decimals === undefined) {
+    pushFact(facts, "decimales", "Decimales", "Decimals", card.programStatus === "fallo" ? "fallo" : "ausente");
+  } else {
+    pushFact(facts, "decimales", "Decimales", "Decimals", "ok");
+  }
+  pushFact(facts, "nombre", "Nombre", "Name", textState(card.name));
+  pushFact(facts, "simbolo", "Símbolo", "Symbol", textState(card.symbol));
+  pushFact(facts, "uri", "Enlace de metadatos", "Metadata link", textState(card.uri));
+  const curve = card.curve || {};
+  const curveState = curve.status === "verificado" || curve.status === "ok"
+    ? "ok"
+    : curve.status === "ausente"
+      ? "ausente"
+      : curve.status === "no_aplica"
+        ? "no_aplica"
+        : curve.status === "no_consultado"
+          ? "no_consultado"
+          : "fallo";
+  pushFact(facts, "curva", "Curva", "Curve", curveState);
+  if (card.largestStatus === "ok" || card.largestStatus === "verificado") {
+    pushFact(facts, "cuentas", "Cuentas con más tokens", "Largest token accounts", "ok");
+  } else if (card.largestStatus === "fallo" || card.largestStatus === "ausente") {
+    pushFact(facts, "cuentas", "Cuentas con más tokens", "Largest token accounts", "fallo");
+  }
+  pushFact(facts, "emision", "Permiso de emisión", "Mint permission", authorityState(card.mintAuthority));
+  pushFact(facts, "congelacion", "Permiso de congelación", "Freeze permission", authorityState(card.freezeAuthority));
+  return compose(facts, attentionFromCard(card), contextFromCard(card), null, card);
+}
+
+function meaningfulText(value) {
+  if (typeof value !== "string") return "";
+  return value.replace(/\u0000/g, "").replace(/\uFFFD/g, "").replace(/\p{Cf}/gu, "").trim();
+}
+
+function textState(field) {
+  if (!field) return "fallo";
+  if (field.status === "no_aplica") return "no_aplica";
+  if (field.status === "ausente") return "ausente";
+  if (field.status === "fallo" || field.status === "no_disponible") return "fallo";
+  if (field.status === "no_consultado") return "no_consultado";
+  if (meaningfulText(field.text)) return "ok";
+  return "ausente";
+}
+
+function renderReadingSummary(parent, model, lang, options) {
+  const language = lang === "en" ? "en" : "es";
+  const section = document.createElement("section");
+  section.className = "resumen-informe";
+  section.setAttribute("aria-label", model.title[language]);
+  const title = document.createElement("h3");
+  title.textContent = model.title[language];
+  section.append(title);
+  for (const block of model.blocks) {
+    const box = document.createElement("div");
+    box.className = "bloque-resumen";
+    box.dataset.bloque = block.id;
+    const head = document.createElement("div");
+    head.className = "cabecera-bloque";
+    head.append(summaryChip(block.id), headingNode(block.heading[language]));
+    box.append(head);
+    if (!block.items.length) {
+      const empty = document.createElement("p");
+      empty.className = "punto-vacio";
+      empty.textContent = block.empty[language];
+      box.append(empty);
+    } else {
+      const list = document.createElement("ul");
+      for (const item of block.items) list.append(summaryItem(item, language, block.id));
+      box.append(list);
+    }
+    if (block.service) {
+      const service = document.createElement("p");
+      service.className = "aviso-servicio";
+      service.textContent = block.service[language];
+      box.append(service);
+    }
+    if (block.id === "falta" && model.retry) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "reintentar-resumen";
+      if (options?.retryId) button.id = options.retryId;
+      button.textContent = SUMMARY_HEADINGS.retry[language];
+      if (typeof options?.onRetry === "function") button.addEventListener("click", () => options.onRetry());
+      box.append(button);
+    }
+    section.append(box);
+  }
+  if (model.note) section.append(summaryNote(model.note, language));
+  parent.append(section);
+  return section;
+}
+
+function headingNode(text) {
+  const heading = document.createElement("h4");
+  heading.textContent = text;
+  return heading;
+}
+
+function summaryChip(blockId) {
+  const chip = document.createElement("span");
+  chip.className = "chip-resumen";
+  chip.setAttribute("aria-hidden", "true");
+  chip.dataset.marca = blockId === "atencion" ? "atencion" : blockId === "falta" ? "falta" : "leido";
+  return chip;
+}
+
+function summaryItem(item, language, blockId) {
+  const row = document.createElement("li");
+  row.className = "punto-resumen";
+  const body = document.createElement("div");
+  const title = document.createElement("p");
+  title.className = "punto-titulo";
+  title.textContent = item.title[language];
+  const lead = document.createElement("p");
+  lead.className = "punto-frase";
+  lead.textContent = item.lead[language];
+  body.append(title, lead);
+  if (item.note && item.note[language]) {
+    const note = document.createElement("p");
+    note.className = "punto-nota";
+    note.textContent = item.note[language];
+    body.append(note);
+  }
+  if (item.detail && item.detail[language]) {
+    const details = document.createElement("details");
+    details.className = "punto-detalle";
+    const summary = document.createElement("summary");
+    summary.textContent = SUMMARY_HEADINGS.more[language];
+    const extra = document.createElement("p");
+    extra.textContent = item.detail[language];
+    details.append(summary, extra);
+    body.append(details);
+  }
+  body.append(understandLink(item.topic, language));
+  row.append(summaryChip(blockId), body);
+  return row;
+}
+
+function summaryNote(note, language) {
+  const line = document.createElement("p");
+  line.className = "nota-curva";
+  const text = document.createElement("span");
+  text.textContent = note.lead[language];
+  line.append(text, understandLink(note.topic, language));
+  return line;
+}
+
+function understandLink(topic, language) {
+  const link = document.createElement("a");
+  link.className = "entender-enlace";
+  link.href = `#entender-${topic}`;
+  link.dataset.tema = topic;
+  link.textContent = SUMMARY_HEADINGS.understand[language];
+  link.addEventListener("click", (event) => {
+    event.preventDefault();
+    openEntender(link, topic);
+  });
+  return link;
+}
+
+function openEntender(link, topic) {
+  const root = link.closest("article") || link.closest("#resultado") || document;
+  const nav = root.querySelector(".entender-resultado");
+  if (!nav) return;
+  const panel = nav.querySelector(".explicacion-resultado");
+  if (panel) panel.hidden = false;
+  const target = nav.querySelector(`[data-tema="${topic}"]`) || panel;
+  if (target && typeof target.focus === "function") target.focus();
+}
 function verifyEl(tag, attrs) {
   var node = document.createElement(tag);
   if (!attrs) return node;
@@ -2783,19 +3737,22 @@ function entenderResultado(lang) {
   var panel = verifyEl("div", { class: "explicacion-resultado", tabindex: "-1", hidden: "hidden" });
   var lines = lang === "en"
     ? [
-      "Permissions: mint authority can create more tokens. Freeze authority can block accounts. Neither one says the project is legitimate.",
-      "Supply: it is the total number of tokens in this reading, using the mint decimals.",
+      "Permissions: one of them can create more tokens. The freeze permission can block accounts. Neither one says the project is legitimate.",
+      "Supply: it is the total number of tokens in this reading, using this token's decimals.",
       "Metadata: if they can change, the name or symbol in this reading may not be tomorrow's.",
       "Distribution: a sample of accounts is not a census of who holds the tokens.",
+      "Curve: if the token was not created on Pump.fun, this fact does not apply. If it was and there is no account, this reading did not find it.",
     ]
     : [
       "Permisos: el de emisión permite crear más tokens. El de congelación permite bloquear cuentas. Ninguno de los dos dice si el proyecto es legítimo.",
-      "Suministro: es la cantidad total de tokens en esta lectura, con los decimales del mint.",
+      "Suministro: es la cantidad total de tokens en esta lectura, con los decimales de este token.",
       "Metadatos: si se pueden cambiar, el nombre o el símbolo de esta lectura pueden dejar de ser los de mañana.",
       "Distribución: una muestra de cuentas no es un censo de quién tiene los tokens.",
+      "Curva: si el token no se creó en Pump.fun, este dato no aplica. Si se creó y no hay cuenta, esta lectura no la encontró.",
     ];
-  lines.forEach(function (line) {
-    var paragraph = verifyEl("p");
+  var topics = ["permisos", "suministro", "metadatos", "distribucion", "curva"];
+  lines.forEach(function (line, index) {
+    var paragraph = verifyEl("p", { "data-tema": topics[index], id: "entender-" + topics[index], tabindex: "-1" });
     paragraph.textContent = line;
     panel.append(paragraph);
   });
@@ -2804,6 +3761,7 @@ function entenderResultado(lang) {
     ["/aprender/#autoridad-emision", "Suministro", "Supply"],
     ["/aprender/#metadatos-mutables", "Metadatos", "Metadata"],
     ["/aprender/#censo", "Distribución", "Distribution"],
+    ["/aprender/#curva-pump", "Curva", "Curve"],
   ].forEach(function (item) {
     var link = verifyEl("a", { href: item[0], "data-guia": item[0] });
     link.textContent = lang === "en" ? item[2] : item[1];
@@ -2815,6 +3773,14 @@ function entenderResultado(lang) {
   });
   understand.append(button, panel);
   return understand;
+}
+
+function paintSummary(out, view, lang) {
+  if (typeof renderReadingSummary !== "function" || typeof buildReadingSummary !== "function") return;
+  if (view.light === "espera" || view.kind === "vacio" || view.kind === "invalida" || view.kind === "comprobando") return;
+  var live = Array.isArray(view.facts) || view.kind === "red" || view.kind === "limite" || view.kind === "tiempo";
+  if (!live) return;
+  renderReadingSummary(out, buildReadingSummary(view), lang, { retryId: "reintentar" });
 }
 
 function paintVerify(out, view) {
@@ -2866,25 +3832,7 @@ function paintVerify(out, view) {
     note.textContent = view.partialNote[lang];
     out.append(note);
   }
-  if (view.report) {
-    var report = verifyEl("section", { class: "resumen-informe" });
-    var reportTitle = verifyEl("h3");
-    reportTitle.textContent = lang === "en" ? "Summary of this reading" : "Resumen de esta lectura";
-    var reportBody = verifyEl("p");
-    reportBody.textContent = view.report[lang];
-    report.append(reportTitle, reportBody);
-    out.append(report);
-  }
-  if (view.absent && view.absent[lang]) {
-    var absent = verifyEl("p", { class: "resumen-datos", "data-estado": "ausente" });
-    absent.textContent = view.absent[lang];
-    out.append(absent);
-  }
-  if (view.missing && view.missing[lang]) {
-    var missing = verifyEl("p", { class: "resumen-datos", "data-estado": view.missingState || "falta" });
-    missing.textContent = view.missing[lang];
-    out.append(missing);
-  }
+  paintSummary(out, view, lang);
   if (view.signals && view.signals.length) {
     var signals = verifyEl("div", { class: "senales" });
     view.signals.forEach(function (signal) {
@@ -2909,7 +3857,7 @@ function paintVerify(out, view) {
     out.append(sampleBtn);
   }
   var failedRead = view.missingState === "falta" || view.kind === "red" || view.kind === "limite" || view.kind === "tiempo";
-  if (failedRead && view.light !== "espera") {
+  if (failedRead && view.light !== "espera" && !out.querySelector("#reintentar")) {
     var retry = verifyEl("button", { type: "button", id: "reintentar" });
     retry.textContent = lang === "en" ? "Try again" : "Reintentar";
     out.append(retry);
@@ -2951,7 +3899,7 @@ function paintVerify(out, view) {
       var term = verifyEl("dt");
       term.textContent = row.label[lang];
       var detail = verifyEl("dd");
-      if ((row.value[lang] || "").charAt(0) === "«") detail.className = "ajeno";
+      if ((row.value[lang] || "").includes("«")) detail.className = "ajeno";
       detail.textContent = row.value[lang];
       rows.append(term, detail);
     });

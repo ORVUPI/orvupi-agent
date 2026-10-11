@@ -4,6 +4,7 @@
  */
 import { formatAmount } from "./amount.js";
 import { factState } from "./fact-state.js";
+import { notebookNameText } from "./reading-summary.js";
 import { CARD_SCHEMA, CARD_VERSION, DISCLAIMER, OFFICIAL_MINT, isMintAddress } from "./solana-read.js";
 
 export const EXPORT_SCHEMA = "stubx.notebook.export";
@@ -271,6 +272,31 @@ export function visibleText(value) {
   return String(value).replace(/\p{Cf}/gu, "");
 }
 
+const TABLE_STATE = {
+  ausente: { es: "No está en esta lectura", en: "It is not in this reading" },
+  fallo: { es: "No se pudo leer", en: "It could not be read" },
+  no_consultado: { es: "Esta lectura no lo pidió", en: "This reading did not ask for it" },
+  no_aplica: { es: "No aplica", en: "Not applicable" },
+};
+
+export function tableCellText(field, status, value, lang) {
+  const state = factState(status, value);
+  const language = lang === "en" ? "en" : "es";
+  if (state === "ok" && value !== null && value !== undefined && value !== "") return String(value);
+  if (state === "ausente" && field === "uri") {
+    return language === "en" ? "It has no metadata link" : "No tiene enlace de metadatos";
+  }
+  const row = TABLE_STATE[state];
+  if (row) return row[language];
+  return language === "en" ? "It could not be read" : "No se pudo leer";
+}
+
+export function clipName(value, max = 64) {
+  const clean = visibleText(value).replace(/\u0000/g, "").replace(/\uFFFD/g, "").trim();
+  if (clean.length <= max) return clean;
+  return `${clean.slice(0, max)}…`;
+}
+
 export function withinStoreLimit(existingCount, incomingNewCount) {
   if (!Number.isInteger(existingCount) || existingCount < 0) return false;
   if (!Number.isInteger(incomingNewCount) || incomingNewCount < 0) return false;
@@ -354,9 +380,9 @@ const COMPARED_TEXT = {
   revocada: { es: "revocada", en: "revoked" },
   no_decodificable: { es: "no se pudo leer", en: "could not be read" },
   no_aplica: { es: "no aplica", en: "not applicable" },
-  ausente: { es: "ausente comprobado", en: "confirmed absent" },
-  fallo: { es: "consulta fallida", en: "failed query" },
-  no_consultado: { es: "no consultado", en: "not queried" },
+  ausente: { es: "No está en esta lectura", en: "It is not in this reading" },
+  fallo: { es: "No se pudo leer", en: "It could not be read" },
+  no_consultado: { es: "Esta lectura no lo pidió", en: "This reading did not ask for it" },
 };
 
 export const CURVE_NOT_ON_PUMP = {
@@ -374,6 +400,14 @@ export function comparedValueText(raw, lang) {
   const row = COMPARED_TEXT[String(raw)];
   if (!row) return String(raw);
   return lang === "en" ? row.en : row.es;
+}
+
+export function comparedSideText(fieldEs, card, raw, lang) {
+  if (fieldEs === "Nombre") {
+    const spoken = notebookNameText(card, lang);
+    if (spoken) return spoken;
+  }
+  return comparedValueText(raw, lang);
 }
 
 export function supplyConfirmation(card) {
@@ -550,12 +584,12 @@ export function pickPrevious(records, card, exceptId) {
 }
 
 export function staleLine(consultedAt, lang) {
-  const local = formatReadingStamp(consultedAt, lang);
+  const local = formatReadingStamp(consultedAt, lang, true);
   if (lang === "en") return `Checked on ${local} · this may have changed`;
   return `Consultado el ${local} · puede haber cambiado`;
 }
 
-export function formatReadingStamp(consultedAt, lang, withSeconds = false) {
+export function formatReadingStamp(consultedAt, lang, withSeconds = true) {
   const date = new Date(consultedAt);
   if (Number.isNaN(date.getTime())) return formatLocal(consultedAt, lang);
   const options = {
@@ -569,17 +603,42 @@ export function formatReadingStamp(consultedAt, lang, withSeconds = false) {
   return new Intl.DateTimeFormat(lang === "en" ? "en-GB" : "es-ES", options).format(date).replace(/[\u202f\u00a0]/g, " ");
 }
 
-export function readingOptionLabel(card, lang, peers = []) {
-  const symbol = card && card.symbol && typeof card.symbol.text === "string" ? card.symbol.text.trim() : "";
-  const name = card && card.name && typeof card.name.text === "string" ? card.name.text.trim() : "";
-  const title = (symbol || name || `${String(card && card.mint ? card.mint : "").slice(0, 4)}…`).slice(0, 24);
-  const minute = formatReadingStamp(card.consultedAt, lang, false);
-  const crowded = (Array.isArray(peers) ? peers : []).some((other) => {
-    if (!other || other === card) return false;
-    if (other.mint !== card.mint || other.network !== card.network) return false;
-    return formatReadingStamp(other.consultedAt, lang, false) === minute;
+function readingBaseLabel(card, lang) {
+  const stamp = formatReadingStamp(card && card.consultedAt, lang, true);
+  const spoken = notebookNameText(card, lang);
+  const symbol = card && card.symbol && typeof card.symbol.text === "string" ? clipName(card.symbol.text, 24) : "";
+  const name = card && card.name && typeof card.name.text === "string" ? clipName(card.name.text, 24) : "";
+  const shortMint = `${String(card && card.mint ? card.mint : "").slice(0, 4)}…`;
+  if (spoken.startsWith("Dice llamarse ") || spoken.startsWith("It says it is called ")) {
+    return `${spoken} · ${shortMint} · ${stamp}`;
+  }
+  const title = symbol || name || spoken || shortMint;
+  return `${title} · ${stamp}`;
+}
+
+export function sortNotebookRecords(records, lang) {
+  const list = Array.isArray(records) ? records.slice() : [];
+  const labelOf = (record) => readingOptionLabel(record && record.card, lang);
+  list.sort((a, b) => {
+    const at = String(a && a.card ? a.card.consultedAt : "");
+    const bt = String(b && b.card ? b.card.consultedAt : "");
+    if (at !== bt) return at < bt ? 1 : -1;
+    const al = labelOf(a);
+    const bl = labelOf(b);
+    if (al < bl) return -1;
+    if (al > bl) return 1;
+    return 0;
   });
-  return `${title} · ${formatReadingStamp(card.consultedAt, lang, crowded)}`;
+  return list;
+}
+
+export function readingOptionLabel(card, lang, peers) {
+  const base = readingBaseLabel(card, lang);
+  if (!Array.isArray(peers)) return base;
+  const index = peers.indexOf(card);
+  if (index < 0) return base;
+  const earlier = peers.slice(0, index).filter((item) => readingBaseLabel(item, lang) === base).length;
+  return earlier ? `${base} (${earlier + 1})` : base;
 }
 
 export function formatLocal(consultedAt, lang) {
@@ -587,7 +646,7 @@ export function formatLocal(consultedAt, lang) {
   if (Number.isNaN(date.getTime())) return lang === "en" ? "unknown local time" : "hora local desconocida";
   return new Intl.DateTimeFormat(lang === "en" ? "en-GB" : "es-ES", {
     dateStyle: "short",
-    timeStyle: "short",
+    timeStyle: "medium",
   }).format(date);
 }
 

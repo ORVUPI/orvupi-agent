@@ -220,8 +220,10 @@ function cleanText(bytes) {
   const text = new TextDecoder("utf-8", { fatal: false })
     .decode(bytes.subarray(0, end))
     .replace(/\u0000/g, "")
+    .replace(/\p{Cf}/gu, "")
     .replaceAll("<", "‹")
-    .replaceAll(">", "›");
+    .replaceAll(">", "›")
+    .trim();
   return text.length > 200 ? text.slice(0, 200) : text;
 }
 
@@ -435,8 +437,9 @@ function emptyCurve() {
 }
 
 function textFact(text) {
-  if (typeof text !== "string" || text.length === 0) return { text: null, status: "ausente" };
-  return { text, status: "verificado" };
+  const cleaned = typeof text === "string" ? text.replace(/\u0000/g, "").replace(/\uFFFD/g, "").replace(/\p{Cf}/gu, "").trim() : "";
+  if (!cleaned) return { text: null, status: "ausente" };
+  return { text: cleaned, status: "verificado" };
 }
 
 function unavailableAuthority() {
@@ -806,8 +809,8 @@ export async function readMint(options) {
     card.metadataMutable = "fallo";
     card.slotStatus = "fallo";
     card.curve = { ...emptyCurve(), status: "fallo" };
-    card.supplyRpcStatus = "no_consultado";
-    card.largestStatus = "no_consultado";
+    card.supplyRpcStatus = "fallo";
+    card.largestStatus = "fallo";
     return { ok: false, error: "partial", card };
   }
   if (accounts.slot !== null) {
@@ -824,8 +827,8 @@ export async function readMint(options) {
     card.metadataMutable = "fallo";
     card.slotStatus = "fallo";
     card.curve = { ...emptyCurve(), status: "fallo" };
-    card.supplyRpcStatus = "no_consultado";
-    card.largestStatus = "no_consultado";
+    card.supplyRpcStatus = "fallo";
+    card.largestStatus = "fallo";
     return { ok: false, error: "partial", card };
   }
   let mintAccount = null;
@@ -842,6 +845,15 @@ export async function readMint(options) {
       message: error instanceof Error ? error.message : "Cuenta ilegible.",
       at: accounts.fetchedAt,
     });
+    card.programStatus = "fallo";
+    card.name.status = "fallo";
+    card.symbol.status = "fallo";
+    card.uri.status = "fallo";
+    card.metadataMutable = "fallo";
+    card.slotStatus = "fallo";
+    card.curve = { ...emptyCurve(), status: "fallo" };
+    card.supplyRpcStatus = "fallo";
+    card.largestStatus = "fallo";
     return { ok: false, error: "partial", card };
   }
   if (!mintAccount) {
@@ -979,7 +991,14 @@ export async function readMint(options) {
     card.largestStatus = "fallo";
     card.partial = true;
   } else if (largestRows.length === 0) {
-    card.largestStatus = "ausente";
+    errors.push({
+      method: "getTokenLargestAccounts",
+      httpStatus: 200,
+      message: "La muestra de cuentas volvió vacía. No se leyó quién tiene más tokens. No es una ausencia de cuentas ni una concentración de cero.",
+      at: largest.fetchedAt,
+    });
+    card.largestStatus = "fallo";
+    card.partial = true;
   } else {
     card.largestStatus = "ok";
   }
