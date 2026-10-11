@@ -5,6 +5,7 @@
 - Decisión del dueño del proyecto el 2026-10-11 a las 13:52: la web y las herramientas dejan de repetir el pie de riesgo y la etiqueta de imagen generada, en español y en inglés, también en las imágenes que exporta Studio.
 - El mismo día confirma que Studio no lleva banda, marca de esquina, comentario del PNG ni frase de otro token, y que los avisos de riesgo quedan solo en `/risks` y `/legal`. El pie del resto lleva un enlace a Riesgos.
 - Se quedan los avisos antiestafa, la privacidad aprobada y la línea del informe que dice que no certifica que sea verdad. Una comprobación falla si esas frases retiradas aparecen fuera de `/risks` y `/legal`.
+- En `/security`, una cuenta, una web o una CA que no está en la lista se trata como no oficial hasta comprobarla. En la portada, otra CA con el nombre STUBX «is not official». Esa fórmula solo se vigila en Studio. La franja inferior de la imagen OG no lleva texto.
 - Esta entrada no despliega stubxai.com.
 
 ## 2026-10-11 · Datos de mercado en Verify, solo lectura

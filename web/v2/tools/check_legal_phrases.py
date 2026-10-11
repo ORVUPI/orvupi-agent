@@ -189,8 +189,8 @@ def fold_marks(text: str) -> str:
     return text
 
 
-def banned_marks() -> list[str]:
-    """Frases que solo pueden vivir en /risks y /legal. El fuente las parte para no contenerlas enteras."""
+def risk_marks() -> list[str]:
+    """Pie de riesgo y etiqueta de imagen. Solo pueden vivir en /risks y /legal."""
     return [
         piece("cripto de alto ", "riesgo"),
         piece("puedes perder", "lo todo"),
@@ -201,35 +201,223 @@ def banned_marks() -> list[str]:
         piece("you can lose ", "everything"),
         piece("not investment ", "advice"),
         piece("ai-generated ", "image"),
+    ]
+
+
+def studio_marks() -> list[str]:
+    """«No oficial» solo se prohíbe en Studio. En el resto de la web es antiestafa."""
+    return [
         piece("un", "official"),
         piece("not ", "official"),
         piece("no ", "oficial"),
     ]
 
 
-def forbidden_outside_risk_pages() -> list[str]:
-    """Falla si una frase retirada aparece en una página, herramienta, plantilla o imagen fuera de /risks y /legal."""
-    needles = banned_marks()
-    patterns = [re.compile(r"\b" + re.escape(needle) + r"\b") for needle in needles]
-    allowed = {"risks/index.html", "legal/index.html"}
-    skip_files = {"tools/build_site.py", "tools/equivalencias-seguridad.json"}
-    suffixes = {".html", ".js", ".mjs", ".json", ".md", ".css", ".txt", ".xml", ".py", ".webmanifest", ".jpg", ".jpeg", ".png", ".webp"}
+_LITERAL = r"""(?:"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*')"""
+_LITERAL_RE = re.compile(_LITERAL)
+
+
+def _unquote(token: str) -> str:
+    body = token[1:-1]
+    out: list[str] = []
+    i = 0
+    while i < len(body):
+        if body[i] == "\\" and i + 1 < len(body):
+            mapping = {"n": "\n", "t": "\t", "r": "\r", '"': '"', "'": "'", "\\": "\\"}
+            out.append(mapping.get(body[i + 1], body[i + 1]))
+            i += 2
+        else:
+            out.append(body[i])
+            i += 1
+    return "".join(out)
+
+
+def _requote(value: str) -> str:
+    escaped = (
+        value.replace("\\", "\\\\")
+        .replace('"', '\\"')
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+    )
+    return f'"{escaped}"'
+
+
+def _literals_only(chunk: str) -> str | None:
+    literals = _LITERAL_RE.findall(chunk)
+    rest = _LITERAL_RE.sub("", chunk)
+    if rest.strip(" \t\n\r,") != "" or not literals:
+        return None
+    return "".join(_unquote(item) for item in literals)
+
+
+def resolve_concat(text: str) -> str:
+    """Junta concatenaciones simples: suma, literales pegados, piece/_join/phrase y .join."""
+
+    def repl_call(match: re.Match[str]) -> str:
+        joined = _literals_only(match.group(1))
+        return _requote(joined) if joined is not None else match.group(0)
+
+    def repl_join(match: re.Match[str]) -> str:
+        body = _literals_only(match.group(1))
+        if body is None:
+            return match.group(0)
+        sep = _unquote(match.group(2))
+        parts = _LITERAL_RE.findall(match.group(1))
+        return _requote(sep.join(_unquote(item) for item in parts))
+
+    def repl_plus(match: re.Match[str]) -> str:
+        return _requote(_unquote(match.group(1)) + _unquote(match.group(2)))
+
+    def repl_adjacent(match: re.Match[str]) -> str:
+        return _requote(_unquote(match.group(1)) + _unquote(match.group(2)))
+
+    call = re.compile(rf"\b(?:piece|_join|phrase)\(({_LITERAL}(?:\s*,\s*{_LITERAL})*)\)")
+    join = re.compile(rf"\[({_LITERAL}(?:\s*,\s*{_LITERAL})*)\]\s*\.\s*join\(\s*({_LITERAL})\s*\)")
+    plus = re.compile(rf"({_LITERAL})\s*\+\s*({_LITERAL})")
+    adjacent = re.compile(rf"({_LITERAL})[ \t\r\n]+({_LITERAL})")
+    previous = None
+    while previous != text:
+        previous = text
+        text = call.sub(repl_call, text)
+        text = join.sub(repl_join, text)
+        text = plus.sub(repl_plus, text)
+        text = adjacent.sub(repl_adjacent, text)
+    return text
+
+
+def prepare_scan(raw: str) -> str:
+    """Normaliza espacios, saltos, etiquetas y concatenaciones antes de buscar."""
+    text = resolve_concat(raw)
+    text = html.unescape(text)
+    text = re.sub(r"</?[A-Za-z!][^>]*>", " ", text)
+    return fold_marks(text)
+
+
+def _drop_assignment(source: str, name: str) -> str:
+    match = re.search(rf"^{re.escape(name)} = \(", source, flags=re.M)
+    if not match:
+        return source
+    start = match.start()
+    depth = 0
+    for index in range(match.end() - 1, len(source)):
+        if source[index] == "(":
+            depth += 1
+        elif source[index] == ")":
+            depth -= 1
+            if depth == 0:
+                end = index + 1
+                if end < len(source) and source[end] == "\n":
+                    end += 1
+                return source[:start] + source[end:]
+    return source
+
+
+def _drop_function(source: str, name: str) -> str:
+    match = re.search(rf"^def {re.escape(name)}\(", source, flags=re.M)
+    if not match:
+        return source
+    nxt = re.search(r"^def ", source[match.end() :], flags=re.M)
+    end = match.end() + nxt.start() if nxt else len(source)
+    return source[: match.start()] + source[end:]
+
+
+def without_risk_page_source(source: str) -> str:
+    """El cuerpo de /risks y /legal vive en el generador. El resto del archivo se revisa."""
+    source = _drop_assignment(source, "RISK_ES")
+    source = _drop_assignment(source, "RISK_EN")
+    source = _drop_function(source, "risks")
+    source = _drop_function(source, "legal")
+    return source
+
+
+# La lista de la guardia y el filtro de Studio comparan estas frases; no las publican.
+SKIP_FILES = {"tools/check_legal_phrases.py", "studio/lib/filter.mjs"}
+TEXT_SUFFIXES = {".html", ".js", ".mjs", ".json", ".md", ".css", ".txt", ".xml", ".py", ".webmanifest"}
+IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp"}
+
+
+def is_risk_page(rel: str) -> bool:
+    return rel in {"risks/index.html", "legal/index.html"} or rel.startswith("risks/") or rel.startswith("legal/")
+
+
+def is_studio(rel: str) -> bool:
+    return rel.startswith("studio/")
+
+
+def marks_in(text: str, marks: list[str]) -> list[str]:
+    return [mark for mark in marks if re.search(r"\b" + re.escape(mark) + r"\b", text)]
+
+
+def phrase_hits(rel: str, raw: str, *, binary: bool = False) -> list[str]:
+    text = fold_marks(raw) if binary else prepare_scan(raw)
+    found: list[str] = []
+    if not is_risk_page(rel):
+        found.extend(marks_in(text, risk_marks()))
+    if is_studio(rel):
+        found.extend(marks_in(text, studio_marks()))
+    return found
+
+
+def _scan_root(root: Path, prefix: str) -> list[str]:
     hits: list[str] = []
-    for path in V2.rglob("*"):
+    if not root.exists():
+        return hits
+    for path in root.rglob("*"):
         if not path.is_file():
             continue
-        rel = path.relative_to(V2).as_posix()
-        if rel in allowed or rel.startswith("risks/") or rel.startswith("legal/"):
+        rel = path.relative_to(root).as_posix()
+        if prefix:
+            rel = f"{prefix}/{rel}"
+        if is_risk_page(rel) or rel in SKIP_FILES or "__pycache__" in rel or "node_modules" in rel:
             continue
-        if rel in skip_files or "__pycache__" in rel or "node_modules" in rel:
+        suffix = path.suffix.lower()
+        binary = suffix in IMAGE_SUFFIXES
+        if suffix not in TEXT_SUFFIXES and not binary:
             continue
-        if path.suffix.lower() not in suffixes:
-            continue
-        text = fold_marks(path.read_text(encoding="utf-8", errors="replace"))
-        for needle, pattern in zip(needles, patterns):
-            if pattern.search(text):
-                hits.append(f"{rel}: {needle}")
+        raw = path.read_text(encoding="utf-8", errors="replace")
+        if rel == "tools/build_site.py":
+            raw = without_risk_page_source(raw)
+        for mark in phrase_hits(rel, raw, binary=binary):
+            hits.append(f"{rel}: {mark}")
     return hits
+
+
+def forbidden_outside_risk_pages() -> list[str]:
+    """Falla si el pie o la etiqueta salen fuera de /risks y /legal, o «no oficial» sale en Studio.
+
+    Revisa páginas, herramientas, imágenes, build_site.py y las plantillas (content y site-drafts).
+    """
+    return _scan_root(V2, "") + _scan_root(REPO / "site-drafts", "site-drafts")
+
+
+def self_check() -> None:
+    """Casos que antes colaban: espacios, saltos, etiquetas y concatenaciones simples."""
+    samples = [
+        ("espacios", "cripto   de   alto   riesgo"),
+        ("salto", "cripto de alto\nriesgo"),
+        ("etiqueta", "cripto de alto <b>riesgo</b>"),
+        ("suma", '"cripto de alto " + "riesgo"'),
+        ("piece", 'piece("puedes perder", "lo todo")'),
+        ("join", '["not investment ", "advice"].join("")'),
+        ("adyacentes", '"imagen generada con " "ia"'),
+        ("plantilla", '<p>AI-generated\nimage</p>'),
+    ]
+    for name, sample in samples:
+        if not phrase_hits("content/tools/ejemplo.html", sample):
+            raise SystemExit(f"la guardia no vio el caso {name}")
+    anti = "Si una cuenta no está aquí, trátala como no oficial hasta comprobarla."
+    if phrase_hits("security/index.html", anti):
+        raise SystemExit("el aviso antiestafa no puede caer en la guardia")
+    if not phrase_hits("studio/index.html", anti):
+        raise SystemExit("en Studio, no oficial tiene que caer")
+    if phrase_hits("studio/reglas/index.html", "no es oficial"):
+        raise SystemExit("no es oficial no es la marca de Studio")
+    if phrase_hits("studio/reglas/index.html", "no oficiales"):
+        raise SystemExit("no oficiales no es la marca de Studio")
+    if "tools/build_site.py" in SKIP_FILES:
+        raise SystemExit("build_site.py tiene que entrar en la guardia")
+    if not (REPO / "site-drafts").exists():
+        raise SystemExit("faltan las plantillas de site-drafts")
 
 
 def retired_sentences() -> set[str]:
@@ -253,6 +441,7 @@ def retired_sentences() -> set[str]:
 
 
 def main() -> int:
+    self_check()
     pairs = json.loads(PAIRS.read_text(encoding="utf-8")) if PAIRS.exists() else []
     mapped = {normalize(item["current"]): item["v2"] for item in pairs}
     corpus = v2_corpus()

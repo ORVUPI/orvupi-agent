@@ -332,6 +332,9 @@ describe("web v2", () => {
       assert.equal(html.includes(MICA_ES), false);
       assert.equal(html.includes(MICA_EN), false);
     }
+    assert.match(home, /is not official/);
+    assert.match(security, /trátala como no oficial hasta comprobarla/);
+    assert.match(security, /treat it as unofficial until you check it/);
     for (const html of [home, security]) {
       assert.match(html, /x\.com\/stubxai/);
       assert.match(html, /stubxai\.hq@gmail\.com/);
@@ -967,6 +970,45 @@ test("las frases retiradas no salen fuera de /risks y /legal", () => {
     encoding: "utf8",
   });
   assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
+});
+
+test("la guardia junta espacios, saltos, etiquetas y concatenaciones", () => {
+  const script = `
+import check_legal_phrases as guard
+samples = [
+    ("espacios", "cripto   de   alto   riesgo"),
+    ("salto", "cripto de alto\\nriesgo"),
+    ("etiqueta", "cripto de alto <b>riesgo</b>"),
+    ("suma", '"cripto de alto " + "riesgo"'),
+    ("piece", 'piece("puedes perder", "lo todo")'),
+    ("join", '["not investment ", "advice"].join("")'),
+    ("adyacentes", '"imagen generada con " "ia"'),
+    ("plantilla", "<p>AI-generated\\nimage</p>"),
+]
+for name, sample in samples:
+    hits = guard.phrase_hits("content/tools/ejemplo.html", sample)
+    if not hits:
+        raise SystemExit("no vio " + name)
+anti = "trátala como no oficial hasta comprobarla"
+if guard.phrase_hits("security/index.html", anti):
+    raise SystemExit("antiestafa")
+if not guard.phrase_hits("studio/index.html", "unofficial"):
+    raise SystemExit("studio")
+if not guard.phrase_hits("studio/lib/copy.mjs", "not official"):
+    raise SystemExit("metadatos")
+if guard.phrase_hits("index.html", "is not official"):
+    raise SystemExit("portada")
+if "tools/build_site.py" in guard.SKIP_FILES:
+    raise SystemExit("generador")
+print("ok")
+`;
+  const run = spawnSync("python3", ["-c", script], {
+    cwd: repoRoot(),
+    encoding: "utf8",
+    env: { ...process.env, PYTHONPATH: "web/v2/tools" },
+  });
+  assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
+  assert.match(run.stdout, /ok/);
 });
 
 const OG_FILE = "og-stubx-2026-10b-1200x630.jpg";

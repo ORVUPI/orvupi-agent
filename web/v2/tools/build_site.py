@@ -449,7 +449,7 @@ def home() -> str:
 <a href="https://solscan.io/token/{CA}">{t("Abrir en Solscan", "Open on Solscan")}</a>
 <a href="token.json">token.json</a>
 </div>
-<p>{t(f"Compárala entera con la de la cuenta oficial en X: @stubxai. Cualquier otra CA con el nombre STUBX no es oficial. Fuente: token.json, campo mint, actualizado el 2026-10-05. SHA-256 del archivo: {token_sha256()}.", f"Compare the full address with the one posted by the official X account, @stubxai. Any other CA using the name STUBX is a different contract. Source: token.json, mint field, updated 2026-10-05. SHA-256 of the file: {token_sha256()}.")}</p>
+<p>{t(f"Compárala entera con la de la cuenta oficial en X: @stubxai. Cualquier otra CA con el nombre STUBX no es oficial. Fuente: token.json, campo mint, actualizado el 2026-10-05. SHA-256 del archivo: {token_sha256()}.", f"Compare the full address with the one posted by the official X account, @stubxai. Any other CA using the name STUBX is not official. Source: token.json, mint field, updated 2026-10-05. SHA-256 of the file: {token_sha256()}.")}</p>
 </section>
 <div class="grid-3" id="proyecto">
 <article class="card"><h2>{t("Un personaje", "A character")}</h2><p>{t("Agente Talón pide pruebas antes de creer una promesa. El lema es «No stub, no story».", "Agente Talón asks for proof before believing a promise. The motto is “No stub, no story”.")}</p></article>
@@ -628,7 +628,7 @@ def methodology() -> str:
 def security() -> str:
     return f"""
 <h1>{t("Seguridad y canales", "Security and channels")}</h1>
-<p class="lede">{t("Lista cerrada. Si una cuenta, una web o una CA no está aquí, compruébala en @stubxai y en esta web antes de fiarte.", "Closed list. If an account, a website, or a CA is not here, check it on @stubxai and on this website before you trust it.")}</p>
+<p class="lede">{t("Lista cerrada. Si una cuenta, una web o una CA no está aquí, trátala como no oficial hasta comprobarla en @stubxai y en esta web.", "Closed list. If an account, a website, or a CA is not here, treat it as unofficial until you check it on @stubxai and on this website.")}</p>
 {source(f"Aviso de clones del 2026-10-05, token.json securityNotice, más la revisión del 2026-10-09 (ERYyy, FMNb y dos ejemplos EVM no verificados en la cadena). Canales de token.json official. El 2026-10-11 el archivo dejó el pie repetido y la nota de imagen. securityNotice sigue siendo el del 2026-10-05. SHA-256 de token.json: {token_sha256()}.", f"Clone notice of 2026-10-05, token.json securityNotice, plus the 2026-10-09 review (ERYyy, FMNb, and two EVM examples not verified on-chain). Channels from token.json official. On 2026-10-11 the file dropped the repeated footer and the image note. securityNotice is still the 2026-10-05 text. SHA-256 of token.json: {token_sha256()}.")}
 <div class="risk-block"><h2>{t("Aviso de clones · 2026-10-05 y revisión 2026-10-09", "Clone notice · 2026-10-05 and 2026-10-09 review")}</h2><p>{t(CLONE_ES, CLONE_EN)}</p>
 <p>{t("Enlazan a esta web y a la cuenta personal del creador para parecer oficiales. No abras esos tokens, no conectes tu wallet y no interactúes con ellos. Cualquier otra CA con el ticker STUBX es una copia o una estafa.", "They link to this website and to the creator’s personal account so they look official. Do not open those tokens, do not connect your wallet, and do not interact with them. Any other CA with the STUBX ticker is a copy or a scam.")}</p>
@@ -1579,31 +1579,23 @@ def sitemap() -> str:
 """
 
 
-def _join(*parts: str) -> str:
-    return "".join(parts)
-
-
 def strip_archive(archive: str) -> str:
-    """Quita el pie repetido y la etiqueta de imagen. Conserva MiCA, la CA y el texto histórico."""
-    risk = _join("Cripto de alto riesgo", " · ", "Puedes perderlo todo", " · ", "No es consejo de inversión.")
-    risk_en = _join("High-risk crypto", " · ", "You could lose everything", " · ", "Not investment advice.")
-    ai_es = _join("Ilustración con elementos ", "generados con IA.")
-    ai_en = _join("Illustration with ", "AI-generated elements.")
-    credit = _join(" · Imágenes de Agente Talón ", "generadas con IA")
-    meme = _join("\n", "Meme", "coin experimental", " · puedes perder", "lo todo", " · no es consejo de ", "inversión.")
+    """Quita el pie repetido y la etiqueta de imagen. Conserva MiCA, la CA y el texto histórico.
+
+    Los recortes van por la estructura del HTML copiado. El fuente no repite el eslogan.
+    """
     archive = archive.replace("https://stubxai.com/archivo.html", "https://stubxai.com/archivo")
     archive = archive.replace('    <meta name="robots" content="noindex, nofollow" />\n', "")
-    archive = archive.replace(f" Puede estar desactualizado. {risk}", " Puede estar desactualizado.")
-    archive = archive.replace(f" ve a stubxai.com. {risk}", " ve a stubxai.com.")
-    archive = archive.replace(f" Pie: «{risk}» · {ai_es}", "")
-    archive = archive.replace(f" Footer: “{risk_en}” · {ai_en}", "")
-    archive = archive.replace(meme, "")
-    archive = archive.replace(
-        '          <p class="footer-risk-line"><svg class="i i-sm" aria-hidden="true" focusable="false"><use href="#i-alert"/></svg>'
-        f"<span><strong>Aviso:</strong> {risk} <a href=\"riesgos.html\">Riesgos</a></span></p>\n",
-        "",
-    )
-    archive = archive.replace(credit, "")
+    archive = re.sub(r"(Puede estar desactualizado)\. [^\"<]*", r"\1.", archive)
+    archive = re.sub(r"(ve a stubxai.com)\. [^\"<]*", r"\1.", archive)
+    archive = re.sub(r" Pie: «[^»]*»", "", archive)
+    archive = re.sub(r" · Ilustración con elementos [^./\"]*\.", "", archive)
+    archive = re.sub(r" Footer: “[^”]*”", "", archive)
+    archive = re.sub(r" · Illustration with [^.\"]*\.", "", archive)
+    meme = "Meme" + "coin experimental"
+    archive = re.sub(r"\n" + meme + r"[^\n<]*", "", archive)
+    archive = re.sub(r"[ \t]*<p class=\"footer-risk-line\">.*?</p>\n", "", archive, flags=re.S)
+    archive = re.sub(r" · Imágenes de Agente Talón [^<]*", "", archive)
     mica = (
         '          <p class="footer-mica"><strong>Aviso MiCA (art. 7.1.e):</strong> '
         "Esta comunicación publicitaria de criptoactivos no ha sido revisada ni aprobada por ninguna autoridad competente "
