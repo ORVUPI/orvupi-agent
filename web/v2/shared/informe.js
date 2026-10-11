@@ -5,8 +5,6 @@
  * atención y qué falta. Un fallo no pasa al bloque comprobado.
  */
 
-import { formatReadingStamp } from "./notebook-model.js";
-
 export const REPORT_PNG = "informe.png";
 export const REPORT_PDF = "informe.pdf";
 export const REPORT_REVOKE_MS = 60_000;
@@ -31,9 +29,11 @@ export const REPORT_LIMITS = Object.freeze({
   ],
 });
 
+const MADRID = "Europe/Madrid";
+
 const COPY = {
   es: {
-    title: "Informe",
+    title: "Lectura de Verify · no es un certificado",
     action: "Informe descargable",
     local: "Se crea en este navegador y no se envía a ningún servidor.",
     png: "Descargar PNG",
@@ -41,16 +41,20 @@ const COPY = {
     preparing: "Preparando el archivo…",
     saved: "Archivo listo en este navegador.",
     fail: "No se pudo crear el archivo en este navegador. No se ha enviado a ningún servidor.",
-    pdfFail: "El PDF no se pudo crear en este navegador. El PNG sigue disponible.",
+    pdfFail: "Este navegador no puede crear el PDF. Descarga el PNG, que sigue disponible.",
     network: "Red",
     address: "Dirección",
     networkMissing: "Red no indicada",
     addressMissing: "Dirección no indicada",
     dateMissing: "Fecha no indicada · puede haber cambiado",
     limits: "Límites",
+    origin: "Generado en stubxai.com · herramienta no oficial para tokens de terceros",
+    zone: "hora de Madrid",
+    checkedOn: "Consultado el",
+    mayChange: "puede haber cambiado",
   },
   en: {
-    title: "Report",
+    title: "Verify reading · not a certificate",
     action: "Downloadable report",
     local: "It is created in this browser and is not sent to any server.",
     png: "Download PNG",
@@ -58,14 +62,32 @@ const COPY = {
     preparing: "Preparing the file…",
     saved: "The file is ready in this browser.",
     fail: "The file could not be created in this browser. It was not sent to any server.",
-    pdfFail: "The PDF could not be created in this browser. The PNG is still available.",
+    pdfFail: "This browser cannot create the PDF. Download the PNG, which is still available.",
     network: "Network",
     address: "Address",
     networkMissing: "Network not stated",
     addressMissing: "Address not stated",
     dateMissing: "Date not stated · this may have changed",
     limits: "Limits",
+    origin: "Made on stubxai.com · not affiliated with third-party tokens",
+    zone: "Madrid time",
+    checkedOn: "Checked on",
+    mayChange: "this may have changed",
   },
+};
+
+const EMPTY_FILE = {
+  atencion: {
+    en: "No signal in this reading needs attention. A signal not showing does not mean there is no risk.",
+  },
+  falta: {
+    en: "No requested fact is missing from this reading.",
+  },
+};
+
+const CLONE_WARNING = {
+  es: "Se parece a STUBX pero no es la dirección oficial",
+  en: "It looks like STUBX but it is not the official address",
 };
 
 const HIDDEN = /[\u0000-\u001F\u007F-\u009F\u061C\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u2069\uFEFF\uFFFD\p{Cf}]/gu;
@@ -78,7 +100,7 @@ const COLORS = {
   pink: "#fb437f",
   line: "#8eaccf",
   attention: "#ffe3ad",
-  gem: "#1beb91",
+  checked: "#9bb4ce",
 };
 
 export function pageLang(doc) {
@@ -91,25 +113,64 @@ export function reportCopy(lang) {
   return COPY[lang === "en" ? "en" : "es"];
 }
 
-/** Texto de la cadena listo para el lienzo: normalizado y escapado. */
+/** Texto de la cadena listo para el lienzo: normalizado, sin marcas de control. El lienzo no interpreta HTML. */
 export function canvasSafeText(value, max = 400) {
-  const normalized = String(value ?? "").normalize("NFKC").replace(HIDDEN, "");
+  const normalized = String(value ?? "").normalize("NFKC").replace(HIDDEN, "").replace(/\u00A0/g, " ");
   const chars = Array.from(normalized);
-  const capped = chars.length > max ? `${chars.slice(0, max).join("")}…` : normalized;
-  return capped
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+  return chars.length > max ? `${chars.slice(0, max).join("")}…` : normalized;
 }
 
 export function networkName(network, lang) {
   const copy = reportCopy(lang);
   const clean = String(network ?? "").normalize("NFKC").replace(HIDDEN, "").trim();
-  if (/^solana$/i.test(clean)) return "Solana";
+  if (/^solana$/i.test(clean)) return "Solana mainnet";
   if (!clean) return copy.networkMissing;
   return clean;
+}
+
+export function formatReportWhen(consultedAt, lang) {
+  const date = new Date(consultedAt);
+  if (!consultedAt || Number.isNaN(date.getTime())) return "";
+  const language = lang === "en" ? "en" : "es";
+  const parts = new Intl.DateTimeFormat(language === "en" ? "en-GB" : "es-ES", {
+    timeZone: MADRID,
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZoneName: "long",
+  }).formatToParts(date);
+  const pick = (type) => parts.find((part) => part.type === type)?.value || "";
+  const zoneName = pick("timeZoneName");
+  const clock = `${pick("day")}-${pick("month")}-${pick("year")} ${pick("hour")}:${pick("minute")}`;
+  const local = reportCopy(language).zone;
+  return zoneName ? `${clock} ${local} · ${zoneName}` : `${clock} ${local}`;
+}
+
+function fileWording(text, lang) {
+  const source = String(text ?? "");
+  if (lang === "en") return source.replace(/\bverified\b/gi, "read on-chain");
+  return source.replace(/\bverificado\b/gi, "leído en la cadena");
+}
+
+function legalEmpty(text, blockId, lang) {
+  const source = String(text ?? "").trim();
+  if (lang !== "en") return source;
+  if (blockId === "atencion" && (source === "No signal." || source.startsWith("No signal in this reading needs attention."))) {
+    return EMPTY_FILE.atencion.en;
+  }
+  if (blockId === "falta" && (source === "Nothing missing." || source === "No requested fact is missing in this reading.")) {
+    return EMPTY_FILE.falta.en;
+  }
+  return source;
+}
+
+function isCloneLead(item) {
+  const es = item?.lead?.es || "";
+  const en = item?.lead?.en || "";
+  return es.includes(CLONE_WARNING.es) || en.includes(CLONE_WARNING.en);
 }
 
 function pointFailed(item) {
@@ -140,64 +201,71 @@ export function reportModel(source, lang) {
   for (const item of moved) {
     if (!missingItems.some((other) => samePoint(other, item))) missingItems.push(item);
   }
+  const attentionItems = attention.items || [];
+  const warningItems = attentionItems.filter(isCloneLead);
+  const attentionRest = attentionItems.filter((item) => !isCloneLead(item));
+  const warningLead = warningItems.map((item) => item?.lead?.[language] || item?.lead?.es || "").find(Boolean) || "";
   const date = datedLine(source?.consultedAt, language, copy);
   const addressRaw = String(source?.mint ?? "").trim();
   return {
     lang: language,
     title: copy.title,
     date,
+    origin: copy.origin,
+    warning: fileWording(warningLead, language),
     networkLabel: copy.network,
     network: networkName(source?.network, language),
     addressLabel: copy.address,
     address: addressRaw || copy.addressMissing,
     blocks: [
-      paintBlock(checked, kept, language),
-      paintBlock(attention, attention.items || [], language),
-      paintBlock({ ...missing, service: missing.service }, missingItems, language),
+      paintBlock(checked, kept, language, false),
+      paintBlock(attention, attentionRest, language, warningItems.length > 0),
+      paintBlock({ ...missing, service: missing.service }, missingItems, language, false),
     ],
-    note: summary.note?.lead?.[language] || "",
+    note: fileWording(summary.note?.lead?.[language] || "", language),
     limitsLabel: copy.limits,
     limits: REPORT_LIMITS[language].slice(),
     footer: REPORT_FOOTER[language],
   };
 }
 
-function paintBlock(block, items, lang) {
+function paintBlock(block, items, lang, suppressEmpty) {
   const lines = [];
   for (const item of items) {
-    const title = item?.title?.[lang] || "";
-    const lead = item?.lead?.[lang] || "";
-    const note = item?.note?.[lang] || "";
+    const title = fileWording(item?.title?.[lang] || "", lang);
+    const lead = fileWording(item?.lead?.[lang] || "", lang);
+    const note = fileWording(item?.note?.[lang] || "", lang);
     if (title || lead) lines.push({ title, lead, note });
   }
+  const empty = lines.length || suppressEmpty ? "" : legalEmpty(block.empty?.[lang] || "", block.id, lang);
   return {
     id: block.id || "falta",
     heading: block.heading?.[lang] || "",
     lines,
-    empty: lines.length ? "" : (block.empty?.[lang] || ""),
-    service: block.service?.[lang] || "",
+    empty: fileWording(empty, lang),
+    service: fileWording(block.service?.[lang] || "", lang),
   };
 }
 
 function datedLine(consultedAt, lang, copy) {
-  const date = new Date(consultedAt);
-  if (!consultedAt || Number.isNaN(date.getTime())) return copy.dateMissing;
-  const stamp = formatReadingStamp(consultedAt, lang, true);
-  return lang === "en" ? `Checked on ${stamp} · this may have changed` : `Consultado el ${stamp} · puede haber cambiado`;
+  const stamp = formatReportWhen(consultedAt, lang);
+  if (!stamp) return copy.dateMissing;
+  return `${copy.checkedOn} ${stamp} · ${copy.mayChange}`;
 }
 
-function paintString(value) {
-  return canvasSafeText(value);
+function paintString(value, lang) {
+  return canvasSafeText(fileWording(value, lang));
 }
 
 export function reportPaintLines(model) {
-  const lines = [model.title, model.date, model.networkLabel, model.network, model.addressLabel, model.address];
+  const lang = model.lang === "en" ? "en" : "es";
+  const lines = [model.title, model.date, model.warning, model.origin, model.networkLabel, model.network, model.addressLabel, model.address];
   for (const block of model.blocks) {
     lines.push(block.heading, block.empty, block.service);
     for (const item of block.lines) lines.push(item.title, item.lead, item.note);
   }
   lines.push(model.note, model.limitsLabel, ...model.limits, model.footer);
-  return lines.filter(Boolean).map(paintString);
+  return lines.filter(Boolean).map((line) => paintString(line, lang));
 }
 
 const SIZES = { title: 34, date: 16, label: 15, body: 18, address: 16, limits: 16, footer: 15 };
@@ -242,13 +310,15 @@ function layoutRows(ctx, model, width, scale) {
   const push = (text, role, extra) => {
     const size = Math.max(12, Math.round(SIZES[role] * scale));
     const family = role === "title" ? "Silkscreen, system-ui, sans-serif" : role === "address" ? "ui-monospace, monospace" : "system-ui, sans-serif";
-    const safe = paintString(text);
+    const safe = paintString(text, model.lang);
     for (const row of wrapText(ctx, safe, inner, size, family)) {
       rows.push({ text: row, size, family, role, ...extra });
     }
   };
   push(model.title, "title");
   push(model.date, "date");
+  if (model.warning) push(model.warning, "body", { heading: true, warning: true });
+  push(model.origin, "date");
   push(model.networkLabel, "label");
   push(model.network, "body");
   push(model.addressLabel, "label");
@@ -278,7 +348,7 @@ function blockColor(id) {
   if (id === "atencion") return COLORS.pink;
   if (id === "falta") return COLORS.attention;
   if (id === "limites") return COLORS.line;
-  return COLORS.gem;
+  return COLORS.checked;
 }
 
 export function drawReport(ctx, model, width = 840) {
@@ -301,8 +371,10 @@ export function drawReport(ctx, model, width = 840) {
   ctx.textBaseline = "top";
   const placed = [];
   let y = laid.pad;
+  let limitsTop = 0;
   for (const row of laid.rows) {
     if (row.kind === "block" || row.kind === "gap") {
+      if (row.id === "limites" && !limitsTop) limitsTop = y;
       y += row.size + 10;
       placed.push({ ...row, y });
       continue;
@@ -335,7 +407,59 @@ export function drawReport(ctx, model, width = 840) {
     ctx.fillStyle = row.role === "title" || row.heading ? COLORS.pink : COLORS.cream;
     ctx.fillText(row.text, laid.pad + 12, row.y);
   }
-  return { width, height };
+  return { width, height, limitsTop: limitsTop || height };
+}
+
+export const REPORT_PAGE_HEIGHT = 1500;
+
+export function reportPagePlan(height, limitsTop, pageHeight = REPORT_PAGE_HEIGHT) {
+  const total = Math.max(1, height);
+  const cut = Number.isInteger(limitsTop) && limitsTop > 0 && limitsTop < total ? limitsTop : total;
+  const footerHeight = total - cut;
+  const room = Math.max(80, pageHeight - footerHeight);
+  if (total <= pageHeight || cut <= room) {
+    return [{ bodyTop: 0, bodyBottom: total, repeatLimits: true, single: true }];
+  }
+  const pages = [];
+  for (let top = 0; top < cut; top += room) {
+    pages.push({
+      bodyTop: top,
+      bodyBottom: Math.min(cut, top + room),
+      repeatLimits: true,
+      single: false,
+    });
+  }
+  return pages.length ? pages : [{ bodyTop: 0, bodyBottom: 0, repeatLimits: true, single: false }];
+}
+
+function sliceRgba(rgba, width, y0, y1) {
+  return rgba.subarray(y0 * width * 4, y1 * width * 4);
+}
+
+function stackRgba(top, bottom, width) {
+  const height = top.height + bottom.height;
+  const rgba = new Uint8Array(width * height * 4);
+  rgba.set(top.rgba, 0);
+  rgba.set(bottom.rgba, top.rgba.length);
+  return { rgba, width, height };
+}
+
+export function sliceReportPages(rgba, width, height, limitsTop, pageHeight = REPORT_PAGE_HEIGHT) {
+  const plan = reportPagePlan(height, limitsTop, pageHeight);
+  return plan.map((page) => {
+    if (page.single) return { rgba, width, height };
+    const body = {
+      rgba: sliceRgba(rgba, width, page.bodyTop, page.bodyBottom),
+      width,
+      height: page.bodyBottom - page.bodyTop,
+    };
+    const limits = {
+      rgba: sliceRgba(rgba, width, limitsTop, height),
+      width,
+      height: height - limitsTop,
+    };
+    return stackRgba(body, limits, width);
+  });
 }
 
 function concat(parts) {
@@ -355,6 +479,7 @@ async function deflateZlib(bytes) {
 }
 
 export async function pdfFromRgba(rgba, width, height) {
+  if (typeof CompressionStream !== "function") throw new Error("pdf");
   if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1) throw new Error("imagen");
   if (!rgba || rgba.length < width * height * 4) throw new Error("imagen");
   const rgb = new Uint8Array(width * height * 3);
@@ -400,6 +525,75 @@ export async function pdfFromRgba(rgba, width, height) {
   let xref = "xref\n0 6\n0000000000 65535 f \n";
   for (let n = 1; n <= 5; n += 1) xref += `${String(offsets[n]).padStart(10, "0")} 00000 n \n`;
   xref += `trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefAt}\n%%EOF\n`;
+  text(xref);
+  return concat(chunks);
+}
+
+export async function pdfFromImages(pages) {
+  if (typeof CompressionStream !== "function") throw new Error("pdf");
+  if (!Array.isArray(pages) || pages.length < 1) throw new Error("imagen");
+  const prepared = [];
+  for (const page of pages) {
+    const width = page.width;
+    const height = page.height;
+    const rgba = page.rgba;
+    if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1) throw new Error("imagen");
+    if (!rgba || rgba.length < width * height * 4) throw new Error("imagen");
+    const rgb = new Uint8Array(width * height * 3);
+    for (let index = 0; index < width * height; index += 1) {
+      rgb[index * 3] = rgba[index * 4];
+      rgb[index * 3 + 1] = rgba[index * 4 + 1];
+      rgb[index * 3 + 2] = rgba[index * 4 + 2];
+    }
+    prepared.push({ width, height, compressed: await deflateZlib(rgb) });
+  }
+  const encoder = new TextEncoder();
+  const pageW = 540;
+  const contents = prepared.map((page) => {
+    const pageH = Math.max(1, Math.round((pageW * page.height) / page.width));
+    return { pageH, bytes: encoder.encode(`q\n${pageW} 0 0 ${pageH} 0 0 cm\n/Im1 Do\nQ\n`) };
+  });
+  const count = prepared.length;
+  const chunks = [];
+  const offsets = [0];
+  let cursor = 0;
+  const push = (bytes) => {
+    chunks.push(bytes);
+    cursor += bytes.length;
+  };
+  const text = (value) => push(encoder.encode(value));
+  const obj = (n, body) => {
+    offsets[n] = cursor;
+    text(`${n} 0 obj\n`);
+    push(body);
+    text("\nendobj\n");
+  };
+  const kids = prepared.map((_, index) => `${3 + index * 3} 0 R`).join(" ");
+  text("%PDF-1.4\n");
+  obj(1, encoder.encode("<< /Type /Catalog /Pages 2 0 R >>"));
+  obj(2, encoder.encode(`<< /Type /Pages /Kids [${kids}] /Count ${count} >>`));
+  prepared.forEach((page, index) => {
+    const pageObj = 3 + index * 3;
+    const contentObj = pageObj + 1;
+    const imageObj = pageObj + 2;
+    const content = contents[index];
+    obj(pageObj, encoder.encode(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${content.pageH}] /Contents ${contentObj} 0 R /Resources << /XObject << /Im1 ${imageObj} 0 R >> >> >>`));
+    obj(contentObj, concat([
+      encoder.encode(`<< /Length ${content.bytes.length} >>\nstream\n`),
+      content.bytes,
+      encoder.encode("endstream"),
+    ]));
+    obj(imageObj, concat([
+      encoder.encode(`<< /Type /XObject /Subtype /Image /Width ${page.width} /Height ${page.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode /Length ${page.compressed.length} >>\nstream\n`),
+      page.compressed,
+      encoder.encode("\nendstream"),
+    ]));
+  });
+  const size = 3 + count * 3;
+  const xrefAt = cursor;
+  let xref = `xref\n0 ${size}\n0000000000 65535 f \n`;
+  for (let n = 1; n < size; n += 1) xref += `${String(offsets[n]).padStart(10, "0")} 00000 n \n`;
+  xref += `trailer\n<< /Size ${size} /Root 1 0 R >>\nstartxref\n${xrefAt}\n%%EOF\n`;
   text(xref);
   return concat(chunks);
 }
@@ -472,14 +666,21 @@ export async function renderReportFiles(model, doc) {
       new Promise((resolve) => setTimeout(resolve, 400)),
     ]);
   }
-  drawReport(ctx, model);
+  const drawn = drawReport(ctx, model);
   const png = await new Promise((resolve) => canvas.toBlob((blob) => resolve(blob), "image/png"));
   if (!png) return null;
   let pdf = null;
   try {
-    const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const bytes = await pdfFromRgba(image.data, canvas.width, canvas.height);
-    pdf = new Blob([bytes], { type: "application/pdf" });
+    if (typeof CompressionStream !== "function") {
+      pdf = null;
+    } else {
+      const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const pages = sliceReportPages(image.data, drawn.width, drawn.height, drawn.limitsTop);
+      const bytes = pages.length === 1
+        ? await pdfFromRgba(pages[0].rgba, pages[0].width, pages[0].height)
+        : await pdfFromImages(pages);
+      pdf = bytes ? new Blob([bytes], { type: "application/pdf" }) : null;
+    }
   } catch {
     pdf = null;
   }

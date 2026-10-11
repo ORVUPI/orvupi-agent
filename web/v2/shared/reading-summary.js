@@ -141,11 +141,11 @@ const EMPTY = {
   },
   attention: {
     es: "Ninguna señal de esta lectura pide atención. Que no aparezca no significa que no haya riesgo.",
-    en: "No signal in this reading needs attention. One not showing does not mean there is no risk.",
+    en: "No signal in this reading needs attention. A signal not showing does not mean there is no risk.",
   },
   missing: {
     es: "No falta ningún dato pedido en esta lectura.",
-    en: "No requested fact is missing in this reading.",
+    en: "No requested fact is missing from this reading.",
   },
 };
 

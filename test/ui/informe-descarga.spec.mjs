@@ -110,7 +110,7 @@ test("el informe se descarga en Verify y en el Cuaderno", async ({ page }, testI
     const mod = await import("/shared/informe.js");
     return mod.canvasSafeText("a<b>\u0000");
   });
-  expect(escaped).toBe("a&lt;b&gt;");
+  expect(escaped).toBe("a<b>");
 
   await page.locator("#direccion-token").fill(USDC);
   await page.locator("#consulta button[type='submit']").click();

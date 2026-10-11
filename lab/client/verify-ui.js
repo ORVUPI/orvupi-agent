@@ -73,15 +73,26 @@ function paintSummary(out, view, lang) {
   var live = Array.isArray(view.facts) || view.kind === "red" || view.kind === "limite" || view.kind === "tiempo";
   if (!live) return;
   var model = buildReadingSummary(view);
-  renderReadingSummary(out, model, lang, { retryId: "reintentar" });
-  document.dispatchEvent(new CustomEvent("stubx-resumen", {
-    detail: {
-      summary: model,
-      mint: typeof view.mint === "string" ? view.mint : "",
-      consultedAt: view.shown && typeof view.shown.consultedAt === "string" ? view.shown.consultedAt : (view.fetchedAt || ""),
-      network: "solana",
-    },
-  }));
+  var section = renderReadingSummary(out, model, lang, { retryId: "reintentar" });
+  mountReport(section, {
+    summary: model,
+    mint: typeof view.mint === "string" ? view.mint : "",
+    consultedAt: view.shown && typeof view.shown.consultedAt === "string" ? view.shown.consultedAt : (view.fetchedAt || ""),
+    network: "solana",
+  });
+}
+
+var reportTicket = 0;
+function mountReport(section, detail) {
+  if (!section) return;
+  var ticket = ++reportTicket;
+  section.dataset.informe = String(ticket);
+  import("/shared/informe.js").then(function (mod) {
+    if (!section.isConnected || section.dataset.informe !== String(ticket)) return;
+    var previous = section.querySelector(".informe-descarga");
+    if (previous) previous.remove();
+    section.append(mod.reportDownloadBox(detail, { document: document, navigator: navigator }));
+  }).catch(function () {});
 }
 
 function paintVerify(out, view) {

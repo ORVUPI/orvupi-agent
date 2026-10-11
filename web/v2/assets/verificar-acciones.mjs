@@ -5,7 +5,6 @@
 import { formatAmount } from "../shared/amount.js";
 import { ENTENDER, entenderNav } from "../shared/entender.js";
 import { compareRecords, comparedSideText, comparisonSummary, curveComparisonValue, pickPrevious, staleLine, supplyDirection, validateCard, withinStoreLimit } from "../shared/notebook-model.js";
-import { reportDownloadBox } from "../shared/informe.js";
 import { cardFromShown } from "../shared/solana-read.js";
 
 const DB_NAME = "stubx-cuaderno";
@@ -382,14 +381,6 @@ document.addEventListener("click", (event) => {
     }
     comparePrevious(changed.getAttribute("data-mint") || "", true);
   }
-});
-
-document.addEventListener("stubx-resumen", (event) => {
-  const section = document.querySelector("#resultado .resumen-informe");
-  const detail = event && event.detail;
-  if (!section || !detail || !detail.summary) return;
-  section.querySelector(".informe-descarga")?.remove();
-  section.append(reportDownloadBox(detail, { document, navigator }));
 });
 
 document.addEventListener("stubx-lang", () => {

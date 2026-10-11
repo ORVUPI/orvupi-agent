@@ -16,6 +16,8 @@ type Block = { id: string; heading: string; lines: Line[]; empty: string; servic
 type Model = {
   title: string;
   date: string;
+  origin: string;
+  warning: string;
   network: string;
   networkLabel: string;
   address: string;
@@ -28,6 +30,10 @@ type Model = {
 };
 
 type ReportModule = {
+  formatReportWhen: (value: string, lang: string) => string;
+  reportPagePlan: (height: number, limitsTop: number, pageHeight?: number) => Array<{ repeatLimits: boolean; single: boolean; bodyBottom: number; bodyTop: number }>;
+  sliceReportPages: (rgba: Uint8Array, width: number, height: number, limitsTop: number, pageHeight?: number) => Array<{ rgba: Uint8Array; width: number; height: number }>;
+  reportCopy: (lang: string) => { pdfFail: string; title: string };
   canvasSafeText: (value: string, max?: number) => string;
   reportModel: (source: Record<string, unknown>, lang: string) => Model;
   reportPaintLines: (model: Model) => string[];
@@ -114,10 +120,21 @@ describe("informe descargable", () => {
       network: "solana",
       consultedAt: WHEN,
     }, "es");
-    assert.equal(model.title, "Informe");
+    assert.equal(model.title, "Lectura de Verify · no es un certificado");
     assert.match(model.date, /Consultado el /);
+    assert.match(model.date, /hora de Madrid/);
     assert.match(model.date, /puede haber cambiado/);
-    assert.equal(model.network, "Solana");
+    const zone = new Intl.DateTimeFormat("es-ES", {
+      timeZone: "Europe/Madrid",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+      timeZoneName: "long",
+    }).formatToParts(new Date(WHEN)).find((part) => part.type === "timeZoneName")?.value;
+    assert.ok(zone);
+    assert.equal(model.date.includes(zone), true);
+    assert.equal(model.origin, "Generado en stubxai.com · herramienta no oficial para tokens de terceros");
+    assert.equal(model.network, "Solana mainnet");
     assert.equal(model.address, USDC);
     assert.deepEqual(model.blocks.map((item) => item.heading), ["Qué se comprobó", "Qué requiere atención", "Qué falta"]);
     assert.match(joined(model, "comprobado"), /Dice llamarse «USD Coin» \(«USDC»\)/);
@@ -134,10 +151,22 @@ describe("informe descargable", () => {
       network: "solana",
       consultedAt: WHEN,
     }, "en");
-    assert.equal(english.title, "Report");
+    assert.equal(english.title, "Verify reading · not a certificate");
+    assert.equal(english.network, "Solana mainnet");
     assert.equal(english.networkLabel, "Network");
     assert.equal(english.addressLabel, "Address");
     assert.match(english.date, /Checked on /);
+    assert.match(english.date, /Madrid time/);
+    const englishZone = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/Madrid",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+      timeZoneName: "long",
+    }).formatToParts(new Date(WHEN)).find((part) => part.type === "timeZoneName")?.value;
+    assert.ok(englishZone);
+    assert.equal(english.date.includes(englishZone), true);
+    assert.equal(english.origin, "Made on stubxai.com · not affiliated with third-party tokens");
     assert.equal(english.footer, "High-risk crypto · You could lose everything · Not investment advice");
     assert.match(joined(english, "comprobado"), /It says it is called «USD Coin» \(«USDC»\)/);
   });
@@ -161,7 +190,15 @@ describe("informe descargable", () => {
     const checked = joined(model, "comprobado");
     const attention = joined(model, "atencion");
     assert.match(checked, /Dice llamarse «STUBX»/);
-    assert.match(attention, /Se parece a STUBX pero no es la dirección oficial/);
+    const lines = report.reportPaintLines(model);
+    const warningAt = lines.findIndex((line) => line.includes("Se parece a STUBX pero no es la dirección oficial"));
+    const networkAt = lines.findIndex((line) => line === "Red");
+    const checkedAt = lines.findIndex((line) => line === "Qué se comprobó");
+    assert.ok(warningAt > 0);
+    assert.ok(warningAt < networkAt);
+    assert.ok(warningAt < checkedAt);
+    assert.equal(lines[warningAt - 1]?.includes("Consultado el"), true);
+    assert.equal(joined(model, "atencion").includes("Se parece a STUBX pero no es la dirección oficial"), false);
     assert.equal(checked.includes("1.000.000.000 STUBX"), false);
     assert.match(checked, /1\.000\.000\.000 tokens/);
     assert.equal(model.address, CLONE);
@@ -202,12 +239,63 @@ describe("informe descargable", () => {
     assert.equal(joined(model, "comprobado").includes("No se pudo"), false);
     assert.match(joined(model, "comprobado"), /Ningún dato quedó leído/);
     assert.match(joined(model, "falta"), /No se pudo leer la cantidad de tokens/);
+    const english = report.reportModel({
+      summary: {
+        blocks: [
+          {
+            id: "comprobado",
+            heading: { es: "Qué se comprobó", en: "What was checked" },
+            items: [{
+              title: { es: "Permiso", en: "Permission" },
+              lead: { es: "revocada · verificado", en: "revoked · verified" },
+            }],
+            empty: { es: "Ningún dato quedó leído en esta consulta.", en: "No fact was read in this query." },
+          },
+          {
+            id: "atencion",
+            heading: { es: "Qué requiere atención", en: "What needs attention" },
+            items: [],
+            empty: { es: "Ninguna señal de esta lectura pide atención. Que no aparezca no significa que no haya riesgo.", en: "No signal." },
+          },
+          {
+            id: "falta",
+            heading: { es: "Qué falta", en: "What is missing" },
+            items: [],
+            empty: { es: "No falta ningún dato pedido en esta lectura.", en: "Nothing missing." },
+          },
+        ],
+      },
+      mint: USDC,
+      network: "solana",
+      consultedAt: WHEN,
+    }, "en");
+    assert.match(joined(english, "atencion"), /No signal in this reading needs attention\. A signal not showing does not mean there is no risk\./);
+    assert.equal(joined(english, "atencion").includes("No signal."), false);
+    assert.match(joined(english, "falta"), /No requested fact is missing from this reading\./);
+    assert.equal(joined(english, "falta").includes("Nothing missing."), false);
+    assert.match(joined(english, "comprobado"), /revoked · read on-chain/);
+    assert.equal(joined(english, "comprobado").includes("verified"), false);
+    const spanishSeal = report.reportModel({
+      summary: {
+        blocks: [{
+          id: "comprobado",
+          heading: { es: "Qué se comprobó", en: "What was checked" },
+          items: [{ title: { es: "Permiso", en: "Permission" }, lead: { es: "revocada · verificado", en: "revoked · verified" } }],
+          empty: { es: "", en: "" },
+        }],
+      },
+      mint: USDC,
+      network: "solana",
+      consultedAt: WHEN,
+    }, "es");
+    assert.match(joined(spanishSeal, "comprobado"), /revocada · leído en la cadena/);
+    assert.equal(joined(spanishSeal, "comprobado").includes("verificado"), false);
   });
 
-  test("el lienzo normaliza y escapa el texto de la cadena", async () => {
+  test("el lienzo normaliza el texto de la cadena y no lo escapa como HTML", async () => {
     const { report, summary } = await load();
-    assert.equal(report.canvasSafeText("ab\u202Eba\u0000<script>"), "abba&lt;script&gt;");
-    assert.equal(report.canvasSafeText("Tom\u00A0& Jerry"), "Tom &amp; Jerry");
+    assert.equal(report.canvasSafeText("ab\u202Eba\u0000<script>"), "abba<script>");
+    assert.equal(report.canvasSafeText("Tom\u00A0& Jerry"), "Tom & Jerry");
     const model = report.reportModel({
       summary: summary.summaryFromCard(card({
         mint: USDC,
@@ -223,12 +311,17 @@ describe("informe descargable", () => {
     assert.ok(size.width >= 840);
     assert.ok(size.height > 200);
     const painted = calls.filter((item) => item.op === "fillText").map((item) => item.text).join("\n");
-    assert.match(painted, /Dice llamarse «USD&lt;script&gt;»/);
-    assert.equal(painted.includes("<script>"), false);
+    assert.match(painted, /Dice llamarse «USD<script>»/);
+    assert.equal(painted.includes("&lt;script&gt;"), false);
     assert.equal(painted.includes("\u202E"), false);
-    assert.match(painted, new RegExp(`${USDC}&lt;b&gt;`));
+    assert.match(painted, new RegExp(`${USDC}<b>`));
     assert.match(painted, /Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión/);
+    assert.match(painted, /Generado en stubxai.com · herramienta no oficial para tokens de terceros/);
+    assert.match(painted, /Solana mainnet/);
     assert.equal(/\b(precio|compra|comprar|urgente|buy now)\b/i.test(painted), false);
+    const fills = calls.filter((item) => item.op === "fillRect").map((item) => item.fillStyle);
+    assert.equal(fills.includes("#1beb91"), false);
+    assert.equal(fills.includes("#9bb4ce"), true);
   });
 
   test("el PDF se arma en memoria y Android comparte el archivo si el sistema lo permite", async () => {
@@ -313,7 +406,20 @@ describe("informe descargable", () => {
     assert.match(missing.date, /Fecha no indicada/);
     const other = report.reportModel({ summary: { blocks: [] }, mint: "abc", network: "otra<script>", consultedAt: WHEN }, "en");
     assert.equal(other.network, "otra<script>");
-    assert.match(report.reportPaintLines(other).join("\n"), /otra&lt;script&gt;/);
+    assert.match(report.reportPaintLines(other).join("\n"), /otra<script>/);
+    const tall = report.reportPagePlan(400, 300, 120);
+    assert.ok(tall.length > 1);
+    assert.equal(tall.every((page) => page.repeatLimits), true);
+    const height = 200;
+    const rgba = new Uint8Array(height * 4);
+    for (let row = 0; row < height; row += 1) rgba[row * 4] = row;
+    const slices = report.sliceReportPages(rgba, 1, height, 160, 100);
+    assert.ok(slices.length > 1);
+    assert.equal(slices.every((page) => page.rgba[(page.height - 1) * 4] === 199), true);
+    assert.match(report.reportCopy("es").pdfFail, /no puede crear el PDF/);
+    assert.match(report.reportCopy("es").pdfFail, /PNG/);
+    assert.match(report.reportCopy("en").pdfFail, /cannot create the PDF/);
+    assert.match(report.reportCopy("en").pdfFail, /Download the PNG/);
   });
 
   test("la página no afloja la CSP ni pinta la cadena con innerHTML", () => {
@@ -327,8 +433,10 @@ describe("informe descargable", () => {
       assert.equal(source.includes("innerHTML"), false);
       assert.equal(source.includes("insertAdjacentHTML"), false);
     }
-    assert.match(verify, /stubx-resumen/);
-    assert.match(actions, /reportDownloadBox/);
+    assert.match(verify, /\/shared\/informe\.js/);
+    assert.equal(verify.includes("stubx-resumen"), false);
+    assert.equal(actions.includes("stubx-resumen"), false);
+    assert.equal(actions.includes("reportDownloadBox"), false);
     assert.match(notebook, /reportDownloadBox/);
     assert.match(informe, /Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión/);
     assert.equal(/\b(precio|compra ya|urgente|guaranteed)\b/i.test(informe), false);
