@@ -159,7 +159,7 @@ test("una ficha vieja gana red y dirección y entra en la lista", async ({ page 
   expect(overflow).toBe(true);
   await page.locator('[data-set-lang="en"]').click();
   await expect(page.locator("h2").filter({ hasText: "Watch list" })).toBeVisible();
-  await expect(page.locator("#seguir .lang.en")).toHaveText("Check again");
+  await expect(page.locator("#seguir .lang.en")).toHaveText("Check the list");
   await expect(row).toContainText("Network: Solana");
 });
 
