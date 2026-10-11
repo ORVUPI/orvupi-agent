@@ -327,6 +327,11 @@ function layoutRows(ctx, model, width, scale) {
   const pad = 36;
   const inner = width - pad * 2 - 28;
   const rows = [];
+  let unitSerial = 0;
+  const unit = () => {
+    unitSerial += 1;
+    return unitSerial;
+  };
   const push = (text, role, extra) => {
     const size = Math.max(12, Math.round(SIZES[role] * scale));
     const family = role === "address" ? "ui-monospace, monospace" : "system-ui, sans-serif";
@@ -335,33 +340,38 @@ function layoutRows(ctx, model, width, scale) {
       rows.push({ text: row, size, family, role, ...extra });
     }
   };
-  push(model.title, "title", { strong: true });
-  push(model.date, "date");
-  if (model.warning) push(model.warning, "body", { heading: true, warning: true });
-  push(model.origin, "date");
-  push(model.networkLabel, "label");
-  push(model.network, "body");
-  push(model.addressLabel, "label");
-  push(model.address, "address");
+  const header = unit();
+  push(model.title, "title", { strong: true, unit: header, header: true });
+  push(model.date, "date", { unit: header, header: true });
+  if (model.warning) push(model.warning, "body", { heading: true, warning: true, unit: header, header: true });
+  push(model.origin, "date", { unit: header, header: true });
+  const network = unit();
+  push(model.networkLabel, "label", { unit: network });
+  push(model.network, "body", { unit: network });
+  const address = unit();
+  push(model.addressLabel, "label", { unit: address });
+  push(model.address, "address", { unit: address });
   for (const block of model.blocks) {
     rows.push({ kind: "block", id: block.id, size: 8 });
-    push(block.heading, "body", { heading: true, block: block.id });
-    if (block.empty) push(block.empty, "body", { block: block.id });
+    push(block.heading, "body", { heading: true, block: block.id, unit: unit() });
+    if (block.empty) push(block.empty, "body", { block: block.id, unit: unit() });
     for (const item of block.lines) {
-      if (item.title) push(item.title, "body", { strong: true, block: block.id });
-      if (item.lead) push(item.lead, "body", { block: block.id });
-      if (item.note) push(item.note, "body", { block: block.id });
+      const card = unit();
+      if (item.title) push(item.title, "body", { strong: true, block: block.id, unit: card });
+      if (item.lead) push(item.lead, "body", { block: block.id, unit: card });
+      if (item.note) push(item.note, "body", { block: block.id, unit: card });
     }
-    if (block.service) push(block.service, "body", { block: block.id });
+    if (block.service) push(block.service, "body", { block: block.id, unit: unit() });
   }
   if (model.note) {
     rows.push({ kind: "gap", size: 16 });
     rows.push({ kind: "block", id: "nota", size: 8 });
-    push(model.note, "body", { block: "nota" });
+    push(model.note, "body", { block: "nota", unit: unit() });
   }
+  const limits = unit();
   rows.push({ kind: "block", id: "limites", size: 8 });
-  push(model.limitsLabel, "body", { heading: true, block: "limites" });
-  for (const line of model.limits) push(line, "limits", { block: "limites" });
+  push(model.limitsLabel, "body", { heading: true, block: "limites", unit: limits, limits: true });
+  for (const line of model.limits) push(line, "limits", { block: "limites", unit: limits, limits: true });
   const height = pad + rows.reduce((sum, row) => sum + row.size + (row.kind === "block" || row.kind === "gap" ? 10 : 8), 0) + pad;
   return { rows, height, pad };
 }
@@ -392,13 +402,22 @@ export function drawReport(ctx, model, width = 840) {
   if (typeof ctx.strokeRect === "function") ctx.strokeRect(8, 8, width - 16, height - 16);
   ctx.textBaseline = "top";
   const placed = [];
+  const lines = [];
+  const cards = [];
   let y = laid.pad;
   let limitsTop = 0;
   let warningTop = 0;
   let warningBottom = 0;
+  let pendingTop = null;
+  let card = null;
+  const closeCard = () => {
+    if (card) cards.push(card);
+    card = null;
+  };
   for (const row of laid.rows) {
     if (row.kind === "block" || row.kind === "gap") {
       if (row.id === "limites" && !limitsTop) limitsTop = y;
+      if (pendingTop === null) pendingTop = y;
       y += row.size + 10;
       placed.push({ ...row, y });
       continue;
@@ -409,9 +428,26 @@ export function drawReport(ctx, model, width = 840) {
       if (!warningBottom) warningTop = top;
       warningBottom = Math.max(warningBottom, bottom);
     }
+    const textTop = y;
+    const textBottom = y + row.size;
+    if (!card || card.unit !== row.unit) {
+      closeCard();
+      card = {
+        unit: row.unit,
+        top: pendingTop === null ? textTop : pendingTop,
+        bottom: textBottom,
+        header: Boolean(row.header),
+        limits: Boolean(row.limits),
+      };
+    } else {
+      card.bottom = textBottom;
+    }
+    pendingTop = null;
+    lines.push({ top: textTop, bottom: textBottom, unit: row.unit, header: Boolean(row.header), limits: Boolean(row.limits) });
     placed.push({ ...row, y });
     y += row.size + 8;
   }
+  closeCard();
   const bands = [];
   for (const row of placed) {
     if (row.kind === "block") {
@@ -433,30 +469,104 @@ export function drawReport(ctx, model, width = 840) {
     ctx.fillStyle = row.role === "title" || row.heading ? COLORS.pink : COLORS.cream;
     ctx.fillText(row.text, laid.pad + 12, row.y);
   }
-  return { width, height, limitsTop: limitsTop || height, warningTop, warningBottom };
+  const bodyCards = cards.filter((item) => !item.header && !item.limits && item.top < limitsTop);
+  const headerBottom = bodyCards.length ? bodyCards[0].top : limitsTop;
+  const breaks = [...new Set(bodyCards.map((item) => item.top).concat(limitsTop))].filter((item) => item > headerBottom && item <= limitsTop).sort((a, b) => a - b);
+  const cardEnds = [...new Set(bodyCards.map((item) => item.bottom))].filter((item) => item > headerBottom && item <= limitsTop).sort((a, b) => a - b);
+  return {
+    width,
+    height,
+    limitsTop: limitsTop || height,
+    warningTop,
+    warningBottom,
+    lines,
+    cards,
+    guides: { headerBottom, breaks, cardEnds },
+  };
 }
 
 export const REPORT_PAGE_HEIGHT = 1500;
 
-export function reportPagePlan(height, limitsTop, pageHeight = REPORT_PAGE_HEIGHT, warningHeight = 0) {
+function ascendingCuts(values, start, end) {
+  return [...new Set(values.filter((item) => Number.isInteger(item) && item > start && item <= end))].sort((a, b) => a - b);
+}
+
+function lastMarkWithin(marks, start, limit) {
+  let fit = null;
+  for (const mark of marks) {
+    if (mark <= start) continue;
+    if (mark <= limit) fit = mark;
+    else break;
+  }
+  return fit;
+}
+
+function firstMarkAfter(marks, start) {
+  for (const mark of marks) {
+    if (mark > start) return mark;
+  }
+  return null;
+}
+
+function nextPageEnd(start, room, cut, cardBreaks, cardEnds) {
+  const limit = start + Math.max(1, room);
+  const cardFit = lastMarkWithin(cardBreaks, start, limit);
+  if (cardFit !== null) return cardFit;
+  const endFit = lastMarkWithin(cardEnds, start, limit);
+  if (endFit !== null) return endFit;
+  return firstMarkAfter(cardBreaks, start) ?? firstMarkAfter(cardEnds, start) ?? cut;
+}
+
+export function reportPagePlan(height, limitsTop, pageHeight = REPORT_PAGE_HEIGHT, warningHeight = 0, guides = null) {
   const total = Math.max(1, height);
   const cut = Number.isInteger(limitsTop) && limitsTop > 0 && limitsTop < total ? limitsTop : total;
   const footerHeight = total - cut;
   const stamp = footerHeight + (warningHeight > 0 ? warningHeight : 0);
   const room = Math.max(80, pageHeight - stamp);
-  if (total <= pageHeight || cut <= room) {
-    return [{ bodyTop: 0, bodyBottom: total, repeatLimits: true, single: true }];
+  const headerBottom = guides && Number.isInteger(guides.headerBottom) && guides.headerBottom > 0 && guides.headerBottom < cut
+    ? guides.headerBottom
+    : 0;
+  if (!headerBottom) {
+    if (total <= pageHeight || cut <= room) {
+      return [{ bodyTop: 0, bodyBottom: total, repeatLimits: true, repeatHeader: false, single: true }];
+    }
+    const pages = [];
+    for (let top = 0; top < cut; top += room) {
+      pages.push({
+        bodyTop: top,
+        bodyBottom: Math.min(cut, top + room),
+        repeatLimits: true,
+        repeatHeader: false,
+        single: false,
+      });
+    }
+    return pages.length ? pages : [{ bodyTop: 0, bodyBottom: 0, repeatLimits: true, repeatHeader: false, single: false }];
   }
+  if (total <= pageHeight) {
+    return [{ bodyTop: 0, bodyBottom: total, repeatLimits: true, repeatHeader: true, single: true }];
+  }
+  const cardBreaks = ascendingCuts(guides.breaks || [], 0, cut);
+  if (cardBreaks[cardBreaks.length - 1] !== cut) cardBreaks.push(cut);
+  const cardEnds = ascendingCuts(guides.cardEnds || [], headerBottom, cut);
+  const firstRoom = Math.max(1, pageHeight - footerHeight);
+  const laterRoom = Math.max(1, pageHeight - footerHeight - headerBottom);
   const pages = [];
-  for (let top = 0; top < cut; top += room) {
+  let start = 0;
+  while (start < cut && pages.length < 1000) {
+    let end = nextPageEnd(start, start === 0 ? firstRoom : laterRoom, cut, cardBreaks, cardEnds);
+    if (start === 0 && end < headerBottom) end = headerBottom;
+    const bodyBottom = end > start ? end : Math.min(cut, start + 1);
     pages.push({
-      bodyTop: top,
-      bodyBottom: Math.min(cut, top + room),
+      bodyTop: start,
+      bodyBottom,
       repeatLimits: true,
+      repeatHeader: true,
       single: false,
     });
+    if (bodyBottom <= start) break;
+    start = bodyBottom;
   }
-  return pages.length ? pages : [{ bodyTop: 0, bodyBottom: 0, repeatLimits: true, single: false }];
+  return pages.length ? pages : [{ bodyTop: 0, bodyBottom: cut, repeatLimits: true, repeatHeader: true, single: false }];
 }
 
 function sliceRgba(rgba, width, y0, y1) {
@@ -474,16 +584,21 @@ function stackMany(parts, width) {
   return { rgba, width, height };
 }
 
-export function sliceReportPages(rgba, width, height, limitsTop, pageHeight = REPORT_PAGE_HEIGHT, warning = null) {
+export function sliceReportPages(rgba, width, height, limitsTop, pageHeight = REPORT_PAGE_HEIGHT, warning = null, guides = null) {
   const warnTop = warning && Number.isInteger(warning.top) && warning.top >= 0 ? warning.top : 0;
   const warnBottom = warning && Number.isInteger(warning.bottom) && warning.bottom > warnTop && warning.bottom <= height ? warning.bottom : 0;
   const warningHeight = warnBottom > warnTop ? warnBottom - warnTop : 0;
-  const plan = reportPagePlan(height, limitsTop, pageHeight, warningHeight);
+  const plan = reportPagePlan(height, limitsTop, pageHeight, warningHeight, guides);
+  const headerBottom = guides && Number.isInteger(guides.headerBottom) && guides.headerBottom > 0 && guides.headerBottom < height
+    ? guides.headerBottom
+    : 0;
   return plan.map((page) => {
     if (page.single) return { rgba, width, height };
     const parts = [];
     const coversWarning = warningHeight > 0 && page.bodyTop <= warnTop && page.bodyBottom >= warnBottom;
-    if (warningHeight > 0 && !coversWarning) {
+    if (headerBottom > 0 && page.bodyTop >= headerBottom) {
+      parts.push({ rgba: sliceRgba(rgba, width, 0, headerBottom), height: headerBottom });
+    } else if (warningHeight > 0 && !coversWarning) {
       parts.push({ rgba: sliceRgba(rgba, width, warnTop, warnBottom), height: warningHeight });
     }
     parts.push({
@@ -708,7 +823,7 @@ export async function renderReportFiles(model, doc) {
       const pages = sliceReportPages(image.data, drawn.width, drawn.height, drawn.limitsTop, REPORT_PAGE_HEIGHT, {
         top: drawn.warningTop,
         bottom: drawn.warningBottom,
-      });
+      }, drawn.guides);
       const bytes = pages.length === 1
         ? await pdfFromRgba(pages[0].rgba, pages[0].width, pages[0].height)
         : await pdfFromImages(pages);

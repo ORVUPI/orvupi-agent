@@ -48,13 +48,22 @@ type Model = {
 
 type ReportModule = {
   formatReportWhen: (value: string, lang: string) => string;
-  reportPagePlan: (height: number, limitsTop: number, pageHeight?: number, warningHeight?: number) => Array<{ repeatLimits: boolean; single: boolean; bodyBottom: number; bodyTop: number }>;
-  sliceReportPages: (rgba: Uint8Array, width: number, height: number, limitsTop: number, pageHeight?: number, warning?: { top: number; bottom: number } | null) => Array<{ rgba: Uint8Array; width: number; height: number }>;
+  reportPagePlan: (height: number, limitsTop: number, pageHeight?: number, warningHeight?: number, guides?: { headerBottom: number; breaks: number[]; cardEnds?: number[] } | null) => Array<{ repeatLimits: boolean; repeatHeader: boolean; single: boolean; bodyBottom: number; bodyTop: number }>;
+  sliceReportPages: (rgba: Uint8Array, width: number, height: number, limitsTop: number, pageHeight?: number, warning?: { top: number; bottom: number } | null, guides?: { headerBottom: number; breaks: number[]; cardEnds?: number[] } | null) => Array<{ rgba: Uint8Array; width: number; height: number }>;
   reportCopy: (lang: string) => { pdfFail: string; title: string };
   canvasSafeText: (value: string, max?: number) => string;
   reportModel: (source: Record<string, unknown>, lang: string) => Model;
   reportPaintLines: (model: Model) => string[];
-  drawReport: (ctx: object, model: Model, width?: number) => { width: number; height: number; limitsTop: number; warningTop: number; warningBottom: number };
+  drawReport: (ctx: object, model: Model, width?: number) => {
+    width: number;
+    height: number;
+    limitsTop: number;
+    warningTop: number;
+    warningBottom: number;
+    lines: Array<{ top: number; bottom: number; header: boolean; limits: boolean }>;
+    cards: Array<{ top: number; bottom: number; header: boolean; limits: boolean }>;
+    guides: { headerBottom: number; breaks: number[]; cardEnds?: number[] };
+  };
   pdfFromRgba: (rgba: Uint8Array, width: number, height: number) => Promise<Uint8Array>;
   isAndroid: (nav: { userAgent?: string }) => boolean;
   savePlan: (nav: { userAgent?: string; share?: unknown; canShare?: unknown }, file: File) => string;
@@ -551,11 +560,136 @@ describe("informe descargable", () => {
     assertAbsent(report.reportPaintLines(longModel).join("\n"));
     const drawn = report.drawReport(mockCtx().ctx, longModel, 840);
     const warningHeight = Math.max(0, drawn.warningBottom - drawn.warningTop);
-    const plan = report.reportPagePlan(drawn.height, drawn.limitsTop, 1500, warningHeight);
+    const plan = report.reportPagePlan(drawn.height, drawn.limitsTop, 1500, warningHeight, drawn.guides);
     assert.ok(drawn.height > 1500);
     assert.ok(plan.length > 1);
     assert.equal(plan.every((page) => page.repeatLimits), true);
+    assert.equal(plan.every((page) => page.repeatHeader), true);
     assert.equal(plan.some((page) => page.single), false);
+    for (const line of drawn.lines) {
+      if (line.header || line.limits) continue;
+      const hits = plan.filter((page) => line.bottom > page.bodyTop && line.top < page.bodyBottom);
+      assert.equal(hits.length, 1);
+      const hit = hits[0];
+      assert.ok(hit);
+      assert.ok(line.top >= hit.bodyTop && line.bottom <= hit.bodyBottom);
+    }
+  });
+
+  test("un informe de 6 páginas no parte ninguna línea", async () => {
+    const { report } = await load();
+    const items = Array.from({ length: 28 }, (_, index) => ({
+      title: { es: `Suministro total ${index + 1}`, en: `Total supply ${index + 1}` },
+      lead: { es: `Dato ${index + 1} leído en la cadena`, en: `Fact ${index + 1} read on-chain` },
+      note: { es: "", en: "" },
+    }));
+    const model = report.reportModel({
+      summary: {
+        blocks: [
+          {
+            id: "comprobado",
+            heading: { es: "Qué se comprobó", en: "What was checked" },
+            items,
+            empty: { es: "", en: "" },
+          },
+          {
+            id: "atencion",
+            heading: { es: "Qué requiere atención", en: "What needs attention" },
+            items: [{
+              title: { es: "Parecido", en: "Lookalike" },
+              lead: { es: "Se parece a STUBX pero no es la dirección oficial.", en: "It looks like STUBX but it is not the official address." },
+              note: { es: "", en: "" },
+            }],
+            empty: { es: "", en: "" },
+          },
+        ],
+      },
+      mint: CLONE,
+      network: "solana",
+      consultedAt: WHEN,
+    }, "es");
+    assert.match(model.origin, /Generado en stubxai.com/);
+    assert.match(model.warning, /no es la dirección oficial/);
+    const drawn = report.drawReport(mockCtx().ctx, model, 840);
+    const foot = drawn.height - drawn.limitsTop;
+    const bodyCards = drawn.cards.filter((item) => !item.header && !item.limits);
+    const tallest = Math.max(...bodyCards.map((item) => item.bottom - item.top));
+    assert.ok(drawn.warningBottom <= drawn.guides.headerBottom);
+    assert.ok(drawn.guides.headerBottom < drawn.limitsTop);
+    let found: { pageHeight: number; plan: Array<{ bodyTop: number; bodyBottom: number; single: boolean; repeatHeader: boolean; repeatLimits: boolean }> } | null = null;
+    const minPage = drawn.guides.headerBottom + foot + tallest + 16;
+    for (let pageHeight = minPage; pageHeight < drawn.height; pageHeight += 8) {
+      const plan = report.reportPagePlan(drawn.height, drawn.limitsTop, pageHeight, drawn.warningBottom - drawn.warningTop, drawn.guides);
+      if (plan.length === 6) {
+        found = { pageHeight, plan };
+        break;
+      }
+      if (plan.length < 6) break;
+    }
+    if (!found) throw new Error("no hubo un alto de página que dejara 6 páginas");
+    const plan = found.plan;
+    const firstPage = plan[0];
+    assert.ok(firstPage);
+    assert.equal(plan.length, 6);
+    assert.equal(plan.every((page) => page.single), false);
+    assert.equal(plan.every((page) => page.repeatHeader && page.repeatLimits), true);
+    assert.equal(firstPage.bodyTop, 0);
+    assert.ok(firstPage.bodyBottom > drawn.guides.headerBottom);
+    for (const page of plan.slice(1)) assert.ok(page.bodyTop >= drawn.guides.headerBottom);
+    for (const line of drawn.lines) {
+      if (line.header || line.limits) continue;
+      const hits = plan.filter((page) => line.bottom > page.bodyTop && line.top < page.bodyBottom);
+      assert.equal(hits.length, 1, `${line.top}-${line.bottom}`);
+      const hit = hits[0];
+      assert.ok(hit);
+      assert.ok(line.top >= hit.bodyTop && line.bottom <= hit.bodyBottom);
+    }
+    for (const card of bodyCards) {
+      const hits = plan.filter((page) => card.bottom > page.bodyTop && card.top < page.bodyBottom);
+      assert.equal(hits.length, 1);
+      const hit = hits[0];
+      assert.ok(hit);
+      assert.ok(card.top >= hit.bodyTop && card.bottom <= hit.bodyBottom);
+    }
+    const rgba = new Uint8Array(drawn.height * 4);
+    for (let row = 0; row < drawn.height; row += 1) {
+      rgba[row * 4] = row & 255;
+      rgba[row * 4 + 1] = (row >> 8) & 255;
+    }
+    const slices = report.sliceReportPages(rgba, 1, drawn.height, drawn.limitsTop, found.pageHeight, {
+      top: drawn.warningTop,
+      bottom: drawn.warningBottom,
+    }, drawn.guides);
+    assert.equal(slices.length, 6);
+    const readRow = (bytes: Uint8Array, index: number) => (bytes[index * 4] ?? 0) + (bytes[index * 4 + 1] ?? 0) * 256;
+    const containsFull = (bytes: Uint8Array, sliceHeight: number, start: number, end: number) => {
+      const span = end - start;
+      for (let index = 0; index + span <= sliceHeight; index += 1) {
+        let same = true;
+        for (let step = 0; step < span; step += 1) {
+          if (readRow(bytes, index + step) !== start + step) {
+            same = false;
+            break;
+          }
+        }
+        if (same) return true;
+      }
+      return false;
+    };
+    const containsAny = (bytes: Uint8Array, sliceHeight: number, start: number, end: number) => {
+      for (let index = 0; index < sliceHeight; index += 1) {
+        const row = readRow(bytes, index);
+        if (row >= start && row < end) return true;
+      }
+      return false;
+    };
+    for (const line of drawn.lines) {
+      const owners = slices.filter((slice) => containsAny(slice.rgba, slice.height, line.top, line.bottom));
+      assert.ok(owners.length >= 1);
+      assert.equal(owners.every((slice) => containsFull(slice.rgba, slice.height, line.top, line.bottom)), true);
+      if (!line.header && !line.limits) assert.equal(owners.length, 1);
+      if (line.header || line.limits) assert.equal(owners.length, 6);
+    }
   });
 
   test("el lienzo normaliza el texto de la cadena y no lo escapa como HTML", async () => {

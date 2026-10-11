@@ -3,6 +3,7 @@
 ## 2026-10-11 · Informe descargable
 
 - Verify y el Cuaderno pueden guardar un informe de la consulta en este navegador, en PNG y en PDF. Lleva la fecha con la hora, los segundos y la zona de Madrid, la red, la dirección, el resumen (qué se comprobó, qué requiere atención, qué falta) y sus límites. No lleva el pie de riesgo, ni la etiqueta «Imagen generada con IA», ni «No oficial». El aviso de clon queda arriba, como primer punto de atención y en cada página. La comprobación anterior, si sale, lleva la fecha de la ficha guardada. La curva que no aplica va en una línea aparte. En inglés las comillas son inglesas. El archivo se titula «Lectura de Verify · no es un certificado». Un nombre leído en la cadena no se reescribe. No se envía a ningún servidor. Esta entrada no despliega la web.
+- En un PDF de varias páginas el corte cae entre líneas y entre tarjetas. No parte una línea ni una tarjeta. Cada página repite la cabecera, el aviso de clon y los límites.
 
 ## 2026-10-11 · Pie de riesgo y etiqueta de imagen retirados
 
