@@ -471,7 +471,7 @@ def home() -> str:
 </div>
 <div class="bloque-resumen" data-bloque="atencion">
 <div class="cabecera-bloque"><span class="chip-resumen" aria-hidden="true" data-marca="atencion"></span><h4>{t("Qué requiere atención", "What needs attention")}</h4></div>
-<p class="punto-vacio">{t("Ninguna señal de esta ficha pide atención. Que no aparezca no significa que no haya riesgo.", "No signal in this card needs attention. One not showing does not mean there is no risk.")}</p>
+<p class="punto-vacio">{t("Ninguna señal de esta ficha pide atención. Que no aparezcan señales no significa que esté todo comprobado.", "No signal in this card needs attention. No signals showing does not mean everything was checked.")}</p>
 </div>
 <div class="bloque-resumen" data-bloque="falta">
 <div class="cabecera-bloque"><span class="chip-resumen" aria-hidden="true" data-marca="falta"></span><h4>{t("Qué falta", "What is missing")}</h4></div>

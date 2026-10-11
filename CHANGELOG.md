@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-11 · Frase de señales en la ficha vacía, el informe y la portada
+
+- La ficha vacía de la lectura, el límite 4 del informe descargable y el ejemplo vacío de la portada dicen «Que no aparezcan señales no significa que esté todo comprobado.» / «No signals showing does not mean everything was checked.» Los otros tres límites del informe siguen igual. La guardia bloquea esa fórmula retirada fuera de `/risks` y `/legal`.
+- Esta entrada no despliega stubxai.com.
+
 ## 2026-10-11 · Base, fase 1 de la lectura multired
 
 - Verify y el Cuaderno tienen un selector de red. Al abrir, la red es Solana. Base se lee en el navegador, solo lectura, por el nodo público `mainnet.base.org`, que también ve la IP. No hay cartera ni firma. Junto al botón, sin plegar, el aviso de Base dice: «Al consultar en Base, tu navegador envía la dirección al nodo público mainnet.base.org, que también ve tu IP. Si pides los datos de mercado, DEX Screener también ve tu IP y la dirección.» Ethereum y BNB Chain están en `web/v2/shared/networks.json` con `enabled` en false: encenderlas añade la opción y el host de la CSP al publicar, sin otro programa.

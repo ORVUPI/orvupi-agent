@@ -184,7 +184,12 @@ describe("informe descargable", () => {
     assert.match(joined(model, "atencion"), /Permiso de emisión/);
     assert.match(model.note, /Curva de Pump.fun: no aplica/);
     assert.equal(model.limitsLabel, "Límites");
-    assert.match(model.limits.join(" "), /no aparece como comprobado/);
+    assert.deepEqual(model.limits, [
+      "Es una lectura de datos públicos en el momento indicado. Puede haber cambiado.",
+      "No es una auditoría, ni un aval, ni una recomendación.",
+      "Lo que no se pudo leer no aparece como comprobado.",
+      "Que no aparezcan señales no significa que esté todo comprobado.",
+    ]);
     assertAbsent(report.reportPaintLines(model).join("\n"));
     const english = report.reportModel({
       summary: summary.summaryFromCard(usdc),
@@ -209,6 +214,12 @@ describe("informe descargable", () => {
     assert.ok(englishZone);
     assert.equal(english.date.includes(englishZone), true);
     assert.equal(english.origin, "Made on stubxai.com · not affiliated with third-party tokens");
+    assert.deepEqual(english.limits, [
+      "It is a reading of public data at the time stated. It may have changed.",
+      "It is not an audit, an endorsement, or a recommendation.",
+      "What could not be read does not appear as checked.",
+      "No signals showing does not mean everything was checked.",
+    ]);
     assertAbsent(report.reportPaintLines(english).join("\n"));
     assert.match(joined(english, "comprobado"), /It says it is called \u201CUSD Coin\u201D \(\u201CUSDC\u201D\)/);
     assert.equal(joined(english, "comprobado").includes("«"), false);
@@ -283,7 +294,7 @@ describe("informe descargable", () => {
             title: { es: "Comprobación anterior", en: "Earlier check" },
             lead: { es: "Es una ficha guardada de antes, no un dato de esta lectura.", en: "It is a card saved earlier, not a fact from this reading." },
           }],
-          empty: { es: "Ninguna señal de esta lectura pide atención. Que no aparezca no significa que no haya riesgo.", en: "No signal." },
+          empty: { es: "Ninguna señal de esta lectura pide atención. Que no aparezcan señales no significa que esté todo comprobado.", en: "No signal." },
         }],
       },
       mint: CLONE,
@@ -320,7 +331,7 @@ describe("informe descargable", () => {
             id: "atencion",
             heading: { es: "Qué requiere atención", en: "What needs attention" },
             items: [],
-            empty: { es: "Ninguna señal de esta lectura pide atención. Que no aparezca no significa que no haya riesgo.", en: "No signal." },
+            empty: { es: "Ninguna señal de esta lectura pide atención. Que no aparezcan señales no significa que esté todo comprobado.", en: "No signal." },
           },
           {
             id: "falta",
@@ -353,7 +364,7 @@ describe("informe descargable", () => {
             id: "atencion",
             heading: { es: "Qué requiere atención", en: "What needs attention" },
             items: [],
-            empty: { es: "Ninguna señal de esta lectura pide atención. Que no aparezca no significa que no haya riesgo.", en: "No signal." },
+            empty: { es: "Ninguna señal de esta lectura pide atención. Que no aparezcan señales no significa que esté todo comprobado.", en: "No signal." },
           },
           {
             id: "falta",
@@ -367,7 +378,7 @@ describe("informe descargable", () => {
       network: "solana",
       consultedAt: WHEN,
     }, "en");
-    assert.match(joined(english, "atencion"), /No signal in this reading needs attention\. A signal not showing does not mean there is no risk\./);
+    assert.match(joined(english, "atencion"), /No signal in this reading needs attention\. No signals showing does not mean everything was checked\./);
     assert.equal(joined(english, "atencion").includes("No signal."), false);
     assert.match(joined(english, "falta"), /No requested fact is missing from this reading\./);
     assert.equal(joined(english, "falta").includes("Nothing missing."), false);
@@ -498,7 +509,7 @@ describe("informe descargable", () => {
     }, "es");
     const attention = joined(model, "atencion");
     assert.match(attention, /Nada que destacar en esta lectura/);
-    assert.match(attention, /Que no aparezca no significa que no haya riesgo/);
+    assert.match(attention, /Que no aparezcan señales no significa que esté todo comprobado/);
     const block = model.blocks.find((item) => item.id === "atencion");
     assert.equal(block?.lines.length, 0);
     assert.ok((block?.empty.length ?? 0) > 0);
@@ -516,7 +527,7 @@ describe("informe descargable", () => {
       consultedAt: WHEN,
     }, "en");
     assert.match(joined(english, "atencion"), /Nothing to highlight in this reading/);
-    assert.match(joined(english, "atencion"), /A signal not showing does not mean there is no risk/);
+    assert.match(joined(english, "atencion"), /No signals showing does not mean everything was checked/);
   });
 
   test("los fixtures conservan la cadena, separan la curva y ocupan varias páginas", async () => {
