@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, test } from "node:test";
-import { DISCLAIMER, UNKNOWN_LINE } from "../copy.js";
+import { READONLY_LINE, UNKNOWN_LINE } from "../copy.js";
 import { repoRootFromMeta } from "../paths.js";
 import { PALETTE, contrast } from "../theme.js";
 import { bannedHits } from "../text.js";
@@ -86,7 +86,9 @@ describe("páginas estáticas", () => {
 
   test("cada página lleva el aviso, la fecha y la diferencia entre desconocido y comprobado", () => {
     for (const item of htmlPages) {
-      assert.match(item.body, new RegExp(DISCLAIMER.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+      assert.equal(item.body.includes("Cripto de alto riesgo · Puedes perderlo todo"), false, item.rel);
+      assert.equal(item.body.includes("High-risk crypto · You could lose everything"), false, item.rel);
+      assert.match(item.body, new RegExp(READONLY_LINE.es.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
       assert.match(item.body, /2026-10-08/);
       assert.match(item.body, new RegExp(UNKNOWN_LINE.es.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
       assert.match(item.body, /lang="es"/);
@@ -210,7 +212,8 @@ describe("páginas estáticas", () => {
     const headers = page(pages, "_headers");
     assert.match(headers, /Content-Security-Policy: default-src 'none'/);
     const verifyHeaders = headers.split("/verify/*")[1]?.split("\n\n")[0] ?? "";
-    assert.deepEqual(cspHosts(verifyHeaders), ["solana-rpc.publicnode.com", "api.mainnet-beta.solana.com"]);
+    assert.deepEqual(cspHosts(verifyHeaders), ["solana-rpc.publicnode.com", "api.mainnet-beta.solana.com", "api.dexscreener.com"]);
+    assert.equal(verifyHeaders.includes("*.dexscreener"), false);
     assert.match(verifyHeaders, /! Content-Security-Policy/);
     const labHeaders = headers.split("/lab/*")[1]?.split("\n\n")[0] ?? "";
     assert.deepEqual(cspHosts(labHeaders), []);

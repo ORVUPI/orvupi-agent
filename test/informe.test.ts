@@ -19,6 +19,10 @@ const ABSENT_FROM_FILE = [
   "Not investment advice",
   "Imagen generada con IA",
   "AI-generated",
+  "no oficial",
+  "No oficial",
+  "not official",
+  "unofficial",
 ];
 
 function assertAbsent(text: string) {
@@ -147,7 +151,7 @@ describe("informe descargable", () => {
     }).formatToParts(new Date(WHEN)).find((part) => part.type === "timeZoneName")?.value;
     assert.ok(zone);
     assert.equal(model.date.includes(zone), true);
-    assert.equal(model.origin, "Generado en stubxai.com · herramienta no oficial para tokens de terceros");
+    assert.equal(model.origin, "Generado en stubxai.com · herramienta para tokens de terceros");
     assert.equal(model.network, "Solana mainnet");
     assert.equal(model.address, USDC);
     assert.deepEqual(model.blocks.map((item) => item.heading), ["Qué se comprobó", "Qué requiere atención", "Qué falta"]);
@@ -578,7 +582,7 @@ describe("informe descargable", () => {
     assert.equal(painted.includes("\u202E"), false);
     assert.match(painted, new RegExp(`${USDC}<b>`));
     assertAbsent(painted);
-    assert.match(painted, /Generado en stubxai.com · herramienta no oficial para tokens de terceros/);
+    assert.match(painted, /Generado en stubxai.com · herramienta para tokens de terceros/);
     assert.match(painted, /Solana mainnet/);
     const titlePaint = calls.find((item) => item.op === "fillText" && item.text?.includes("no es un certificado"));
     assert.ok(titlePaint);

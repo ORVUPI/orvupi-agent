@@ -43,7 +43,7 @@ const COPY = {
     addressMissing: "Dirección no indicada",
     dateMissing: "Fecha no indicada · puede haber cambiado",
     limits: "Límites",
-    origin: "Generado en stubxai.com · herramienta no oficial para tokens de terceros",
+    origin: "Generado en stubxai.com · herramienta para tokens de terceros",
     zone: "hora de Madrid",
     checkedOn: "Consultado el",
     mayChange: "puede haber cambiado",

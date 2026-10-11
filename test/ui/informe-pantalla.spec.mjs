@@ -187,6 +187,10 @@ function expectSameReading(data) {
     "Not investment advice",
     "Imagen generada con IA",
     "AI-generated",
+    "no oficial",
+    "No oficial",
+    "not official",
+    "unofficial",
   ]) {
     expect(painted.includes(phrase), phrase).toBe(false);
   }
@@ -362,6 +366,10 @@ test("los fixtures dejan PNG y PDF con el texto de la cadena", async ({ page }, 
       "Not investment advice",
       "Imagen generada con IA",
       "AI-generated",
+      "no oficial",
+      "No oficial",
+      "not official",
+      "unofficial",
     ]) {
       expect(text.includes(phrase), phrase).toBe(false);
     }
@@ -395,6 +403,10 @@ const BANNED_IN_FILE = [
   "Not investment advice",
   "Imagen generada con IA",
   "AI-generated",
+  "no oficial",
+  "No oficial",
+  "not official",
+  "unofficial",
 ];
 
 test("USDC y ERYyy dejan un PNG en español y en inglés", async ({ page }, testInfo) => {

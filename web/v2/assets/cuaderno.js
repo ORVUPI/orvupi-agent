@@ -4,6 +4,7 @@
 import { formatAmount } from "../shared/amount.js";
 import { entenderNav } from "../shared/entender.js";
 import { reportDownloadBox } from "../shared/informe.js";
+import { mountMarket } from "../shared/market-view.js";
 import { comparisonBanner, notebookNameText, renderReadingSummary, summaryFromCard } from "../shared/reading-summary.js";
 import { factState } from "../shared/fact-state.js";
 import {
@@ -420,7 +421,7 @@ function dataRow(list, label, status, value, field) {
   return { label, state: factState(status, value) };
 }
 
-function renderCard(card) {
+function renderCard(card, options) {
   const article = el("article", { class: "ficha" });
   article.append(text("p", staleLine(card.consultedAt, lang()), { class: "sello" }));
   article.append(text("p", card.officialStubx ? t("official") : t("notOfficial"), { class: "franja-identidad" }));
@@ -440,6 +441,13 @@ function renderCard(card) {
     consultedAt: card.consultedAt,
     network: card.network,
   }, { document, navigator }));
+  const marketHost = el("div", { class: "hueco-mercado" });
+  article.append(marketHost);
+  mountMarket(marketHost, {
+    mint: card.mint,
+    lang: lang(),
+    auto: Boolean(options && options.autoMarket),
+  });
   const list = el("dl");
   const supplyCheck = supplyConfirmation(card);
   dataRow(list, t("program"), card.programStatus, programLabel(card.program), "program");
@@ -667,7 +675,7 @@ async function consult(mint, forgetBlocked = false) {
       return;
     }
     if (box) {
-      box.replaceChildren(renderCard(result.card));
+      box.replaceChildren(renderCard(result.card, { autoMarket: false }));
       box.focus();
       box.scrollIntoView({ block: "start" });
     }
@@ -902,7 +910,7 @@ function bind() {
     }
     const latest = records[0];
     const box = document.getElementById("resultado");
-    if (latest && box && box.childElementCount) box.replaceChildren(renderCard(latest.card));
+    if (latest && box && box.childElementCount) box.replaceChildren(renderCard(latest.card, { autoMarket: false }));
     renderComparison();
   });
   refresh().catch(() => showMessage(t("db"), "error"));

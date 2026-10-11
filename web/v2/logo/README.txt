@@ -1,7 +1,5 @@
 STUBX · logo para agregadores (06-10-2026)
 
-Ilustración con elementos generados con IA.
-
 Archivo para agregadores y exploradores (el mismo, con el mismo hash, en todos):
   https://stubxai.com/logo/stubx-logo-1024.png
   1024x1024 PNG · SHA-256 389982f374a4c057aba84833acd78938d90fc8871152271c5602501265d4216e
