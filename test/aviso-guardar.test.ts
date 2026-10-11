@@ -39,12 +39,25 @@ describe("aviso de Guardar", () => {
     const formStart = verify.indexOf('<form id="consulta"');
     const formEnd = verify.indexOf("</form>", formStart);
     const form = verify.slice(formStart, formEnd);
+    const nodesEs = "Para leerla en directo, se envía a los nodos públicos de Solana solana-rpc.publicnode.com y api.mainnet-beta.solana.com, que también ven tu IP.";
+    const nodesEn = "To read it live, it is sent to the Solana public nodes solana-rpc.publicnode.com and api.mainnet-beta.solana.com, which also see your IP.";
     assert.equal(form.includes('id="aviso-guardar"'), true);
-    assert.equal(form.includes(aviso.es), true);
+    assert.equal(form.includes('class="aviso-nodos"'), true);
+    const noticeStart = form.indexOf('id="aviso-guardar"');
+    const detailsStart = form.indexOf("<details", noticeStart);
+    const visible = form.slice(noticeStart, detailsStart);
+    assert.equal(visible.includes(nodesEs), true);
+    assert.equal(visible.includes(nodesEn), true);
+    assert.equal(visible.includes("Los datos de mercado no se guardan"), false);
+    const folded = form.slice(detailsStart, form.indexOf("</details>", detailsStart));
+    assert.equal(folded.includes(nodesEs), false);
+    assert.equal(folded.includes("solana-rpc.publicnode.com"), false);
+    assert.equal(folded.includes("Los datos de mercado no se guardan"), true);
+    for (const sentence of aviso.es.split(/(?<=\.)\s+/)) assert.equal(form.includes(sentence), true, sentence);
     assert.equal(form.includes("solana-rpc.publicnode.com and api.mainnet-beta.solana.com"), true);
     assert.equal(form.includes("Save this lookup"), true);
-    const folded = verify.slice(verify.indexOf('<details class="como"'), verify.indexOf("</details>", verify.indexOf('<details class="como"')));
-    assert.equal(folded.includes(aviso.es), false);
+    const howItWorks = verify.slice(verify.indexOf('<details class="como"'), verify.indexOf("</details>", verify.indexOf('<details class="como"')));
+    assert.equal(howItWorks.includes(aviso.es), false);
     assert.equal(verify.includes(OLD_ES), false);
     assert.equal(verify.includes("__AVISO_"), false);
     for (const rel of ["web/v2/legal/index.html", "web/v2/methodology/index.html", "web/v2/pares/index.html"]) {

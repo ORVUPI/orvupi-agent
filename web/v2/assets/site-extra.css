@@ -1410,6 +1410,12 @@ dd[data-estado="fallo"], dd[data-estado="ausente"], dd[data-estado="no_consultad
   line-height: 1.35;
 }
 .nota-curva .entender-enlace { margin-top: 0; }
+.falta-mercado {
+  margin-top: 0.9rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--line) 65%, transparent);
+}
+.falta-mercado .punto-frase { margin: 0; }
 .reintentar-resumen {
   display: inline-flex;
   align-items: center;
@@ -1523,6 +1529,13 @@ article[id] { scroll-margin-top: 1rem; }
   background: var(--bg-elev);
   border-left: 6px solid var(--attention);
 }
+.datos-mercado .aviso-boton {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+.datos-mercado .aviso-boton .leer-mercado { margin-top: 0; }
 .datos-mercado .leer-mercado,
 .datos-mercado summary {
   display: inline-flex;
@@ -1541,5 +1554,9 @@ article[id] { scroll-margin-top: 1rem; }
 .datos-mercado summary { border: 0; padding: 0.45rem 0; }
 @media (max-width: 599px) {
   .datos-mercado { padding: 0.85rem; }
+  .datos-mercado .aviso-boton { align-items: stretch; }
   .datos-mercado .leer-mercado { width: 100%; justify-content: center; }
 }
+#aviso-guardar .aviso-nodos,
+#aviso-guardar details p { margin: 0; }
+#aviso-guardar details { margin-top: 0.35rem; }

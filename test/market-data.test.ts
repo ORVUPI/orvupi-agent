@@ -225,6 +225,16 @@ describe("datos de mercado", () => {
     assert.equal(missingPage.pairs, null);
     assert.equal(market.describeMarket(missingPage, "es").gap, FAIL_ES);
     assert.equal(market.describeMarket(missingPage, "en").gap, FAIL_EN);
+    assert.equal(market.describeMarket(empty, "es").source, STAMP_ES);
+    assert.equal(
+      market.describeMarket(missingPage, "es").source,
+      "Fuente: DEX Screener · intentado el 11-10-2026 a las 11:48:00 (hora de Madrid)",
+    );
+    assert.equal(
+      market.describeMarket(missingPage, "en").source,
+      "Source: DEX Screener · tried 11-10-2026 11:48:00 (Madrid time)",
+    );
+    assert.equal(market.describeMarket(missingPage, "es").source.includes("leído el"), false);
     assert.equal(market.describeMarket(missingPage, "es").retry, true);
 
     const paused = market.normalizeUpstream(429, "slow down", { mint: MINT, queriedAt: WHEN });
@@ -589,7 +599,7 @@ describe("datos de mercado", () => {
     }
   });
 
-  test("el DEX conocido sale con su nombre y el desconocido se deja tal cual", async () => {
+  test("el DEX conocido sale con su nombre y el desconocido dice que la fuente lo llama", async () => {
     const market = await loadMarketModule();
     const cases: Array<[string, string]> = [
       ["raydium", "Raydium"],
@@ -599,13 +609,26 @@ describe("datos de mercado", () => {
       ["pumpfun", "Pump.fun"],
       ["pump.fun", "Pump.fun"],
       ["pump-fun", "Pump.fun"],
-      ["HelloDEX", "HelloDEX"],
     ];
     for (const [dexId, name] of cases) {
       const model = market.normalizeUpstream(200, JSON.stringify([upstreamPair({ dexId })]), { mint: MINT, queriedAt: WHEN });
       assert.equal(market.describeMarket(model, "es").pairs[0]?.where, `Dónde está el par: ${name}`);
       assert.equal(market.describeMarket(model, "en").pairs[0]?.where, `Where the pair is: ${name}`);
     }
+    const unknown = "Official STUBX DEX";
+    const labeled = market.normalizeUpstream(200, JSON.stringify([upstreamPair({ dexId: unknown })]), { mint: MINT, queriedAt: WHEN });
+    assert.equal(market.describeMarket(labeled, "es").pairs[0]?.where, `Dónde está el par: un DEX que la fuente llama «${unknown}»`);
+    assert.equal(market.describeMarket(labeled, "en").pairs[0]?.where, `Where the pair is: a DEX the source calls \u201C${unknown}\u201D`);
+    assert.equal(market.describeMarket(labeled, "es").pairs[0]?.where.includes(`Dónde está el par: ${unknown}`), false);
+    const disguised = market.normalizeUpstream(
+      200,
+      JSON.stringify([upstreamPair({ dexId: "Official\u200B STUBX\u202E DEX" })]),
+      { mint: MINT, queriedAt: WHEN },
+    );
+    assert.equal(market.describeMarket(disguised, "es").pairs[0]?.where, `Dónde está el par: un DEX que la fuente llama «${unknown}»`);
+    const clipped = "A".repeat(24);
+    const longName = market.normalizeUpstream(200, JSON.stringify([upstreamPair({ dexId: "A".repeat(40) })]), { mint: MINT, queriedAt: WHEN });
+    assert.equal(market.describeMarket(longName, "es").pairs[0]?.where, `Dónde está el par: un DEX que la fuente llama «${clipped}»`);
     const unnamed = market.normalizeUpstream(200, JSON.stringify([upstreamPair({ dexId: "" })]), { mint: MINT, queriedAt: WHEN });
     assert.equal(market.describeMarket(unnamed, "es").pairs[0]?.where, "Dónde está el par: la fuente no lo nombró.");
   });
@@ -632,6 +655,10 @@ describe("datos de mercado", () => {
     assert.equal(view.includes("marketPrivacy("), false);
     assert.match(view, /marketPrivacyLead/);
     assert.match(view, /syncMarketSummaryGap/);
+    assert.match(view, /falta-mercado/);
+    assert.match(view, /reintentar-mercado-resumen/);
+    assert.match(view, /data-aviso": "dex"/);
+    assert.match(view, /aviso-boton/);
   });
 
   test("una dirección en minúsculas no coincide", async () => {

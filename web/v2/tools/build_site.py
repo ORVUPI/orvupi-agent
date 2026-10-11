@@ -38,12 +38,29 @@ AVISO = aviso_guardar()
 def apply_aviso(text: str) -> str:
     return text.replace("__AVISO_ES__", AVISO["es"]).replace("__AVISO_EN__", AVISO["en"])
 
+def aviso_partes(text: str) -> tuple[str, str]:
+    parts = re.split(r"(?<=\.)\s+", text)
+    lead = next((part for part in parts if "solana-rpc.publicnode.com" in part), parts[0] if parts else "")
+    rest = " ".join(part for part in parts if part != lead)
+    return lead, rest
+
+
 def aviso_html() -> str:
+    es_lead, es_rest = aviso_partes(AVISO["es"])
+    en_lead, en_rest = aviso_partes(AVISO["en"])
     return (
-        '<p id="aviso-guardar" class="aviso-fijo privacidad">'
-        f'<span class="lang es" lang="es">{html.escape(AVISO["es"])}</span>'
-        f'<span class="lang en" lang="en">{html.escape(AVISO["en"])}</span>'
+        '<div id="aviso-guardar" class="aviso-fijo privacidad">'
+        '<p class="aviso-nodos">'
+        f'<span class="lang es" lang="es">{html.escape(es_lead)}</span>'
+        f'<span class="lang en" lang="en">{html.escape(en_lead)}</span>'
         "</p>"
+        '<details class="aviso-resto">'
+        '<summary><span class="lang es" lang="es">Más detalle</span>'
+        '<span class="lang en" lang="en">More detail</span></summary>'
+        "<p>"
+        f'<span class="lang es" lang="es">{html.escape(es_rest)}</span>'
+        f'<span class="lang en" lang="en">{html.escape(en_rest)}</span>'
+        "</p></details></div>"
     )
 CA = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump"
 CREATOR = "77RKUqMprQHDSkhFBpC1REU1kE9aM1uw189orHo7wypD"
@@ -505,13 +522,12 @@ def prepare_tool(name: str) -> str:
     )
     raw = raw.replace('<section id="resultado"', '<section id="resultado" tabindex="-1"', 1)
     if name == "verify":
-        raw = re.sub(
-            r'\s*<p(?: id="aviso-guardar")? class="aviso-fijo privacidad">.*?</p>',
-            "",
-            raw,
-            count=1,
-            flags=re.S,
-        )
+        form_end = raw.find("</form>")
+        for marker in ('<div id="aviso-guardar"', '<p id="aviso-guardar"'):
+            start = raw.find(marker)
+            if start >= 0 and form_end > start:
+                raw = raw[:start] + raw[form_end:]
+                break
         raw = raw.replace("</form>", aviso_html() + "\n</form>", 1)
         extra = (
             '<p><button type="button" id="ver-lectura-caida">'

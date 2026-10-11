@@ -83,16 +83,28 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
     if (host.includes("dexscreener")) external.push(request.url());
   });
 
+  let marketCalls = 0;
+  let rpcCalls = 0;
   await page.route(/solana-rpc\.publicnode\.com|api\.mainnet-beta\.solana\.com/, async (route) => {
+    rpcCalls += 1;
     const body = route.request().postDataJSON();
     const method = body?.method;
+    const param = body?.params?.[0];
+    const asked = typeof param === "string" ? param : Array.isArray(param) ? param[0] : "";
     if (method === "getMultipleAccounts") {
-      const mint = body.params[0][0];
+      const mint = asked;
       return route.fulfill(rpcResult([
         account(TOKEN_PROGRAM, mintAccount()),
         account(METADATA_PROGRAM, metadataAccount(mint)),
         null,
       ]));
+    }
+    if ((method === "getTokenSupply" || method === "getTokenLargestAccounts") && asked === LIMITED) {
+      return route.fulfill({
+        status: 403,
+        contentType: "application/json",
+        body: JSON.stringify({ jsonrpc: "2.0", id: body.id ?? 1, error: { code: 403, message: "Request blocked" } }),
+      });
     }
     if (method === "getTokenSupply") {
       return route.fulfill(rpcResult({ amount: "1000000", decimals: 6, uiAmountString: "1" }));
@@ -102,8 +114,6 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
     }
     return route.fulfill(rpcResult(1));
   });
-
-  let marketCalls = 0;
   await page.route(/api\.dexscreener\.com\/token-pairs\/v1\/solana\//, async (route) => {
     marketCalls += 1;
     const url = new URL(route.request().url());
@@ -143,15 +153,27 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
   }
 
   await page.goto("/verify/");
+  const nodes = page.locator("#aviso-guardar .aviso-nodos .lang.es");
+  await expect(nodes).toBeVisible();
+  await expect(nodes).toContainText("Para leerla en directo, se envía a los nodos públicos de Solana solana-rpc.publicnode.com y api.mainnet-beta.solana.com, que también ven tu IP.");
+  await expect(page.locator("#aviso-guardar details")).not.toContainText("solana-rpc.publicnode.com");
   await page.locator("#direccion-token").fill(USDC);
   await page.locator("#consulta button[type='submit']").click();
   const block = page.locator("#resultado .datos-mercado");
   const readMarket = block.getByRole("button", { name: "Leer datos de mercado ahora" });
   await expect(readMarket).toBeVisible({ timeout: 20_000 });
   expect(marketCalls).toBe(0);
+  const dexNotice = block.locator("[data-aviso='dex']");
+  const dexBox = await dexNotice.boundingBox();
+  const buttonBox = await readMarket.boundingBox();
+  expect(dexBox).toBeTruthy();
+  expect(buttonBox).toBeTruthy();
+  const gap = buttonBox.y - (dexBox.y + dexBox.height);
+  expect(gap).toBeGreaterThanOrEqual(0);
+  expect(gap).toBeLessThan(80);
   await expect(page.locator("#resultado .resumen-informe")).not.toContainText("Datos de mercado: no se pudieron leer");
-  await expect(block.locator("p.nota").first()).toContainText("DEX Screener también ve tu IP y la dirección consultada");
-  await expect(block.locator("p.nota").first()).not.toContainText("no guarda en ningún servidor");
+  await expect(dexNotice).toContainText("DEX Screener también ve tu IP y la dirección consultada");
+  await expect(dexNotice).not.toContainText("no guarda en ningún servidor");
   await expect(block.locator("details.privacidad-mercado")).toContainText("Los datos de mercado no se guardan");
   await expect(block).toContainText("Datos: DEX Screener. Pueden no ser exactos ni estar al día.");
   await readMarket.click();
@@ -175,6 +197,8 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
   await shot("ok");
 
   await page.getByRole("button", { name: "English" }).click();
+  await expect(page.locator("#aviso-guardar .aviso-nodos .lang.en")).toBeVisible();
+  await expect(page.locator("#aviso-guardar .aviso-nodos .lang.en")).toContainText("it is sent to the Solana public nodes solana-rpc.publicnode.com and api.mainnet-beta.solana.com, which also see your IP");
   await expect(block).toContainText("Market data");
   await expect(block).toContainText("Data: DEX Screener. It may be inaccurate or out of date.");
   await expect(block).toContainText(STAMP_EN);
@@ -184,6 +208,8 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
   await page.locator("#consulta button[type='submit']").click();
   await block.getByRole("button", { name: "Leer datos de mercado ahora" }).click();
   await expect(block.locator("[data-falta='si']")).toContainText("no listó ningún par", { timeout: 20_000 });
+  await expect(block).toContainText(STAMP_ES);
+  await expect(block).not.toContainText("intentado el");
   await expect(page.locator("#resultado .resumen-informe")).not.toContainText("Datos de mercado: no se pudieron leer");
   await expect(block.locator("[data-cifra='liquidez']")).toHaveCount(0);
   await expect(block).not.toContainText("0 USD");
@@ -195,7 +221,29 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
   await block.getByRole("button", { name: "Leer datos de mercado ahora" }).click();
   await expect(block.locator("[data-falta='si']")).toContainText(FAIL_ES, { timeout: 20_000 });
   await expect(block.getByRole("button", { name: "Reintentar" })).toBeVisible();
-  await expect(page.locator("#resultado .resumen-informe [data-bloque='falta']")).toContainText("Datos de mercado: no se pudieron leer");
+  await expect(block).toContainText(/intentado el \d{2}-\d{2}-\d{4} a las \d{2}:\d{2}:\d{2}/);
+  await expect(block).not.toContainText("leído el");
+  const falta = page.locator("#resultado .resumen-informe [data-bloque='falta']");
+  const marketPoint = falta.locator("[data-mercado-falta='si']");
+  await expect(marketPoint).toContainText("Datos de mercado: no se pudieron leer");
+  await expect(marketPoint.getByRole("button", { name: "Reintentar" })).toBeVisible();
+  const solanaRetry = falta.locator("#reintentar");
+  await expect(solanaRetry).toBeVisible();
+  await expect(marketPoint).not.toContainText("El servicio público no respondió");
+  const apart = await falta.evaluate((box) => {
+    const solana = box.querySelector("#reintentar");
+    const market = box.querySelector("[data-mercado-falta='si']");
+    if (!solana || !market) return false;
+    const follows = Boolean(solana.compareDocumentPosition(market) & Node.DOCUMENT_POSITION_FOLLOWING);
+    return follows && market.parentElement === box && !market.contains(solana) && !solana.contains(market);
+  });
+  expect(apart).toBe(true);
+  const callsBefore = marketCalls;
+  const rpcBefore = rpcCalls;
+  await marketPoint.getByRole("button", { name: "Reintentar" }).click();
+  await expect(block.locator("[data-falta='si']")).toContainText(FAIL_ES, { timeout: 20_000 });
+  expect(marketCalls).toBe(callsBefore + 1);
+  expect(rpcCalls).toBe(rpcBefore);
   await expect(block).not.toContainText("0 USD");
   await shot("pausa");
 

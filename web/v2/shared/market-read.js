@@ -162,9 +162,11 @@ const MARKET_DEX_NAMES = new Map([
   ["pump.fun", "Pump.fun"],
   ["pump-fun", "Pump.fun"],
 ]);
+const MARKET_DEX_FIXED = new Set(MARKET_DEX_NAMES.values());
 
 function clipDex(value) {
-  const clean = clipSymbol(value).replace(/\s+/g, " ");
+  const folded = String(value ?? "").normalize("NFKC").replace(/[\p{Cc}\p{Cf}\uFFFD]/gu, "");
+  const clean = clipSymbol(folded).replace(/\s+/g, " ").trim();
   if (!/^[A-Za-z0-9][A-Za-z0-9 ._-]{0,31}$/.test(clean)) return "";
   return clean;
 }
@@ -173,6 +175,12 @@ function displayDex(value) {
   const clean = clipDex(value);
   if (!clean) return "";
   return MARKET_DEX_NAMES.get(clean.toLowerCase()) || clean;
+}
+
+function dexPhrase(dex, lang) {
+  if (!dex) return "";
+  if (MARKET_DEX_FIXED.has(dex)) return dex;
+  return marketCopy(lang, `un DEX que la fuente llama «${dex}»`, `a DEX the source calls \u201C${dex}\u201D`);
 }
 
 function finiteAmount(value) {
@@ -547,7 +555,7 @@ export function formatUsd(value, lang) {
   return frac ? `${grouped}${dec}${frac} USD` : `${grouped} USD`;
 }
 
-export function formatSourceStamp(iso, lang) {
+export function formatSourceStamp(iso, lang, read = true) {
   if (typeof iso !== "string" || !ISO.test(iso)) return "";
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
@@ -577,10 +585,13 @@ export function formatSourceStamp(iso, lang) {
   const minute = pick("minute").padStart(2, "0");
   const second = pick("second").padStart(2, "0");
   if (!day || !month || !year || !hour || !minute || !second) return "";
+  const answered = read !== false;
   if (lang === "en") {
-    return `Source: ${MARKET_SOURCE_NAME} · read ${day}-${month}-${year} ${hour}:${minute}:${second} (Madrid time)`;
+    const verb = answered ? "read" : "tried";
+    return `Source: ${MARKET_SOURCE_NAME} · ${verb} ${day}-${month}-${year} ${hour}:${minute}:${second} (Madrid time)`;
   }
-  return `Fuente: ${MARKET_SOURCE_NAME} · leído el ${day}-${month}-${year} a las ${hour}:${minute}:${second} (hora de Madrid)`;
+  const verb = answered ? "leído el" : "intentado el";
+  return `Fuente: ${MARKET_SOURCE_NAME} · ${verb} ${day}-${month}-${year} a las ${hour}:${minute}:${second} (hora de Madrid)`;
 }
 
 function marketCopy(lang, es, en) {
@@ -616,8 +627,13 @@ const MARKET_FAIL_GAP = Object.freeze({
   en: "Could not read DEX Screener. Try again in a minute.",
 });
 
+function sourceWasRead(model) {
+  const status = model && model.status;
+  return status === "ok" || status === "incompleta" || status === "sin_pares";
+}
+
 function stampLine(model, lang) {
-  const when = formatSourceStamp(model && model.queriedAt, lang);
+  const when = formatSourceStamp(model && model.queriedAt, lang, sourceWasRead(model));
   if (!when) {
     return marketCopy(
       lang,
@@ -736,7 +752,7 @@ export function describeMarket(model, lang) {
       pairs.push({
         title: pairTitle(pair, language),
         where: pair.dex
-          ? marketCopy(language, `Dónde está el par: ${pair.dex}`, `Where the pair is: ${pair.dex}`)
+          ? marketCopy(language, `Dónde está el par: ${dexPhrase(pair.dex, language)}`, `Where the pair is: ${dexPhrase(pair.dex, language)}`)
           : marketCopy(language, "Dónde está el par: la fuente no lo nombró.", "Where the pair is: the source did not name it."),
         liquidity: liquidity
           ? marketCopy(language, `Liquidez: ${liquidity}. ${stamp}`, `Liquidity: ${liquidity}. ${stamp}`)

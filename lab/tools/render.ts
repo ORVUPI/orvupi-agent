@@ -354,6 +354,19 @@ ${howDetails(HOW_LAB)}
   });
 }
 
+function splitAviso(text: string): { lead: string; rest: string } {
+  const parts = text.split(/(?<=\.)\s+/);
+  const lead = parts.find((part) => part.includes("solana-rpc.publicnode.com")) ?? parts[0] ?? "";
+  const rest = parts.filter((part) => part !== lead).join(" ");
+  return { lead, rest };
+}
+
+function privacyNotice(): string {
+  const es = splitAviso(PRIVACY_ES);
+  const en = splitAviso(PRIVACY_EN);
+  return `<div id="aviso-guardar" class="aviso-fijo privacidad"><p class="aviso-nodos">${both({ es: es.lead, en: en.lead })}</p><details class="aviso-resto"><summary>${both({ es: "Más detalle", en: "More detail" })}</summary><p>${both({ es: es.rest, en: en.rest })}</p></details></div>`;
+}
+
 function renderVerify(cards: readonly CardSummary[], glossaryEntries: readonly GlossaryEntry[], options: RenderOptions): string {
   const fields = ["name", "mint", "inRegistry", "mintAuthority", "freezeAuthority", "metadata", "holders", "impersonation", "statement", "curvePresent", "curveProgress"];
   const articles = cards
@@ -380,7 +393,7 @@ ${howDetails(HOW_VERIFY)}
 <button type="submit">${both({ es: "Comprobar", en: "Check" })}</button>
 <p id="direccion-error" class="campo-error" hidden>${both({ es: "Pega primero una dirección. Suele tener entre 32 y 44 letras y números.", en: "Paste an address first. It is usually 32 to 44 letters and numbers." })}</p>
 </div>
-<p id="aviso-guardar" class="aviso-fijo privacidad">${both({ es: PRIVACY_ES, en: PRIVACY_EN })}</p>
+${privacyNotice()}
 </form>
 <section id="resultado" class="resultado" data-state="vacio" data-luz="neutro" aria-live="polite">
 <h2>${both({ es: "La lectura aparece aquí", en: "The reading shows up here" })}</h2>
