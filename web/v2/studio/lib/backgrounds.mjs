@@ -307,6 +307,32 @@ export const BACKGROUND_PAINT = {
 };
 
 export function paintBackground(rgba, width, height, id) {
-  const paintId = BACKGROUND_PAINT[id];
-  if (paintId) paintId(rgba, width, height);
+  switch (id) {
+    case "fondo-solana":
+      solana(rgba, width, height);
+      break;
+    case "fondo-vineta":
+      vineta(rgba, width, height);
+      break;
+    case "fondo-talon":
+      talon(rgba, width, height);
+      break;
+    case "fondo-pixel":
+      pixel(rgba, width, height);
+      break;
+    case "fondo-velas":
+      velas(rgba, width, height);
+      break;
+    case "fondo-confeti":
+      confeti(rgba, width, height);
+      break;
+    case "fondo-estrellas":
+      estrellas(rgba, width, height);
+      break;
+    case "fondo-rafaga":
+      rafaga(rgba, width, height);
+      break;
+    default:
+      break;
+  }
 }

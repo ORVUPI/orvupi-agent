@@ -47,6 +47,34 @@ export function createLogoGate() {
   };
 }
 
+let imageSerial = 0;
+
+/** Cada carga recibe un número nuevo. La misma imagen conserva el suyo. */
+export function stampImage(image) {
+  if (!image?.rgba) return image;
+  if (!image.stamp) {
+    imageSerial += 1;
+    image.stamp = imageSerial;
+  }
+  return image;
+}
+
+export function avatarKey(image) {
+  if (!image?.rgba || !image.stamp) return "";
+  return `${image.stamp}:${image.width}x${image.height}:${image.rgba.length}`;
+}
+
+export function mascotCacheMark({ customLogo, stubx, avatarId, loaded }) {
+  if (customLogo) return "logo";
+  if (!stubx) return "off";
+  if (!avatarId) return "empty";
+  return loaded ? "ready" : "wait";
+}
+
+export function mayCacheCard(mark) {
+  return mark !== "wait";
+}
+
 export function fitLogo(image, edge) {
   const limit = Math.max(1, edge);
   if (image.width <= limit && image.height <= limit) return image;
@@ -291,10 +319,10 @@ async function logoFromBitmap(bytes, plan) {
 
 export async function readLogoPng(bytes) {
   const plan = await inspectLogo(bytes);
-  if (typeof createImageBitmap === "function") return logoFromBitmap(bytes, plan);
+  if (typeof createImageBitmap === "function") return stampImage(await logoFromBitmap(bytes, plan));
   if (plan.simplePng) {
     const image = await decodePng(bytes, LOGO_HARD_EDGE);
-    return fitLogo(image, LOGO_DRAW_EDGE);
+    return stampImage(fitLogo(image, LOGO_DRAW_EDGE));
   }
   throw new Error("logo");
 }

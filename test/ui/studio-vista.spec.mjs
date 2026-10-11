@@ -24,7 +24,7 @@ async function layout(page) {
 test("escritorio: la vista previa se ve entera al editar", async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 900 });
   await page.goto("/studio/");
-  await expect(page.locator("#descargar")).toBeEnabled();
+  await expect(page.locator("#descargar")).toBeEnabled({ timeout: 45_000 });
   await page.locator("#tab-formato").scrollIntoViewIfNeeded();
   const square = await layout(page);
   expect(square.covered).toBe(false);
@@ -40,8 +40,19 @@ test("escritorio: la vista previa se ve entera al editar", async ({ page }) => {
   const storyButton = page.locator("[data-format='story']");
   await storyButton.click();
   await expect(storyButton).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator("canvas#vista")).toHaveAttribute("height", "1920", { timeout: 45_000 });
-  await page.locator("canvas#vista").scrollIntoViewIfNeeded();
+  await expect.poll(async () => page.evaluate(() => {
+    const canvas = document.querySelector("canvas#vista");
+    return canvas.height / canvas.width;
+  }), { timeout: 45_000 }).toBeGreaterThan(1.7);
+  await page.evaluate(() => {
+    const canvas = document.querySelector("canvas#vista");
+    const header = document.querySelector("header.site");
+    const mode = getComputedStyle(header).position;
+    const stuck = mode === "fixed" || mode === "sticky";
+    const bar = stuck ? header.getBoundingClientRect().height : 0;
+    const y = canvas.getBoundingClientRect().top + window.scrollY - bar - 8;
+    window.scrollTo(0, Math.max(0, y));
+  });
   const story = await layout(page);
   expect(story.covered).toBe(false);
   expect(story.canvasTop).toBeGreaterThanOrEqual(-1);

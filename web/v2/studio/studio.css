@@ -58,6 +58,14 @@
 .studio-app { font-family: "Inter Studio", system-ui, sans-serif; }
 .studio-app h1, .studio-app h2 { font-family: "Silkscreen Studio", system-ui, sans-serif; }
 .vista-caja { max-width: 28rem; margin: 0 0 1rem; }
+canvas#vista[aria-busy="true"] { opacity: 0.55; }
+#vista-carga, #aviso-preparando { margin: 0 0 0.75rem; }
+#descargar .espera, #compartir .espera { display: none; }
+#descargar.preparando .listo, #compartir.preparando .listo { display: none; }
+html[data-lang="es"] #descargar.preparando .espera.lang.es,
+html[data-lang="es"] #compartir.preparando .espera.lang.es,
+html[data-lang="en"] #descargar.preparando .espera.lang.en,
+html[data-lang="en"] #compartir.preparando .espera.lang.en { display: inline; }
 canvas#vista {
   display: block;
   width: 100%;

@@ -24,7 +24,7 @@
 <meta name="twitter:description" content="Crea una imagen para tu token, sin cuenta. Los recursos de STUBX vienen por defecto. / Create an image for your token, without an account. STUBX assets start as the default.">
 <meta name="twitter:image" content="https://stubxai.com/assets/og-stubx-2026-10b-1200x630.jpg">
 <meta name="twitter:image:alt" content="STUBX: Agente Talón, mascota rosa con forma de ticket, sostiene un recibo junto a un globo terráqueo. Texto: «Un meme que pide pruebas. Qué es, qué funciona hoy y qué falta. CA oficial y pruebas en stubxai.com». Pie: «Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión.» · Ilustración con elementos generados con IA. / STUBX: Agente Talón, a pink ticket-shaped mascot, holds a receipt next to a globe. Text: “A meme that asks for proof. What it is, what works today, and what is missing. Official CA and proofs at stubxai.com”. Footer: “High-risk crypto · You could lose everything · Not investment advice.” · Illustration with AI-generated elements.">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
 <title data-title-es="STUBX · Studio" data-title-en="STUBX · Studio">STUBX · Studio</title>
 <meta name="theme-color" content="#071422">
 <link rel="icon" href="../favicon.ico" sizes="any">
@@ -64,6 +64,8 @@
 <div class="vista-caja">
 <canvas id="vista" width="1080" height="1080" role="img" aria-labelledby="vista-texto vista-usuario"></canvas>
 </div>
+<p id="vista-carga" class="aviso" role="status" hidden><span class="lang es" lang="es">Preparando la vista.</span><span class="lang en" lang="en">Preparing the preview.</span></p>
+<p id="aviso-preparando" class="aviso" role="status" hidden><span class="lang es" lang="es">Preparando imagen…</span><span class="lang en" lang="en">Preparing the image…</span></p>
 <p id="vista-texto" class="sr-only"><span class="lang es" lang="es">No oficial · Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión</span><span class="lang en" lang="en">Unofficial · High-risk crypto · You could lose everything · Not investment advice</span></p>
 <p id="vista-usuario" class="sr-only"></p>
 <p><span class="lang es" lang="es">Exportar no es publicar; revisa tu texto.</span><span class="lang en" lang="en">Exporting is not posting; review your text.</span></p>
@@ -115,8 +117,8 @@
 <p id="aviso-cabe" class="aviso" role="status" hidden><span class="lang es" lang="es">Este texto no cabe en la imagen. Acórtalo para poder descargarla.</span><span class="lang en" lang="en">This text does not fit in the image. Shorten it to download.</span></p>
 <p id="aviso-carga" class="aviso" role="status" hidden><span class="lang es" lang="es">No se pudo preparar una pieza del catálogo. El resto del editor sigue en este dispositivo.</span><span class="lang en" lang="en">A catalog piece could not be prepared. The rest of the editor stays on this device.</span></p>
 <div class="fila">
-<button type="button" id="descargar" class="primary" disabled><span class="lang es" lang="es">Descargar PNG</span><span class="lang en" lang="en">Download PNG</span></button>
-<button type="button" id="compartir" hidden><span class="lang es" lang="es">Compartir</span><span class="lang en" lang="en">Share</span></button>
+<button type="button" id="descargar" class="primary" disabled><span class="lang es listo" lang="es">Descargar PNG</span><span class="lang en listo" lang="en">Download PNG</span><span class="lang es espera" lang="es">Preparando imagen…</span><span class="lang en espera" lang="en">Preparing the image…</span></button>
+<button type="button" id="compartir" hidden><span class="lang es listo" lang="es">Compartir</span><span class="lang en listo" lang="en">Share</span><span class="lang es espera" lang="es">Preparando imagen…</span><span class="lang en espera" lang="en">Preparing the image…</span></button>
 <button type="button" id="borrar"><span class="lang es" lang="es">Borrar</span><span class="lang en" lang="en">Clear</span></button>
 </div>
 <p id="aviso-guardar" class="aviso" role="status" hidden><span class="lang es" lang="es">Mantén pulsada la imagen y elige Guardar en Fotos.</span><span class="lang en" lang="en">Press and hold the image and choose Save to Photos.</span></p>
