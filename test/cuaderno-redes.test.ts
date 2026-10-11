@@ -10,14 +10,9 @@ const ETH = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
 const WHEN = "2026-10-11T08:00:00.000Z";
 const LATER = "2026-10-11T12:00:00.000Z";
 
-const SOLANA_BATCH_ES = "Al pulsar, tu navegador envía las direcciones que se revisan (las marcadas, o todas si no marcas ninguna) a los nodos públicos de Solana solana-rpc.publicnode.com y api.mainnet-beta.solana.com, que también ven tu IP. No se guarda nada nuevo hasta que pulses «Guardar».";
-const SOLANA_BATCH_EN = "When you tap, your browser sends the addresses being checked (the marked ones, or all of them if none are marked) to the Solana public nodes solana-rpc.publicnode.com and api.mainnet-beta.solana.com, which also see your IP. Nothing new is saved until you tap \"Save\".";
+const BATCH_ES = "Al pulsar, tu navegador envía las direcciones que se revisan (las marcadas, o todas si no marcas ninguna) al nodo público de su red: solana-rpc.publicnode.com o api.mainnet-beta.solana.com (Solana), mainnet.base.org (Base), ethereum-rpc.publicnode.com (Ethereum) y bsc-rpc.publicnode.com (BNB Chain). Esos nodos también ven tu IP. La pasada no pide datos de mercado. No se guarda nada nuevo hasta que pulses «Guardar».";
+const BATCH_EN = "When you tap, your browser sends the addresses being checked (the marked ones, or all of them if none are marked) to the public node for their network: solana-rpc.publicnode.com or api.mainnet-beta.solana.com (Solana), mainnet.base.org (Base), ethereum-rpc.publicnode.com (Ethereum) and bsc-rpc.publicnode.com (BNB Chain). Those nodes also see your IP. The check does not request market data. Nothing new is saved until you tap \"Save\".";
 const BASE_ES = "Al consultar en Base, tu navegador envía la dirección al nodo público mainnet.base.org, que también ve tu IP. Si pides los datos de mercado, DEX Screener también ve tu IP y la dirección.";
-const BASE_EN = "When you look up on Base, your browser sends the address to the public node mainnet.base.org, which also sees your IP. If you request market data, DEX Screener also sees your IP and the address.";
-const ETH_ES = "Al consultar en Ethereum, tu navegador envía la dirección al nodo público ethereum-rpc.publicnode.com, que también ve tu IP. Si pides los datos de mercado, DEX Screener también ve tu IP y la dirección.";
-const ETH_EN = "When you look up on Ethereum, your browser sends the address to the public node ethereum-rpc.publicnode.com, which also sees your IP. If you request market data, DEX Screener also sees your IP and the address.";
-const BNB_ES = "Al consultar en BNB Chain, tu navegador envía la dirección al nodo público bsc-rpc.publicnode.com, que también ve tu IP. Si pides los datos de mercado, DEX Screener también ve tu IP y la dirección.";
-const BNB_EN = "When you look up on BNB Chain, your browser sends the address to the public node bsc-rpc.publicnode.com, which also sees your IP. If you request market data, DEX Screener also sees your IP and the address.";
 
 async function modules() {
   const root = repoRoot();
@@ -77,19 +72,33 @@ describe("cuaderno en las cuatro redes", () => {
     assert.match(report.reportPaintLines(model).join("\n"), /Base mainnet/);
   });
 
-  test("el aviso de la pasada nombra solo los nodos de las redes que entran", async () => {
-    const { view } = await modules();
+  test("el aviso de la pasada es el literal de Legal y queda junto al botón", async () => {
+    const { view, root } = await modules();
     assert.equal(view.privacyText("base", "es"), BASE_ES);
-    assert.equal(view.batchReviewNotice(["solana"], "es"), SOLANA_BATCH_ES);
-    assert.equal(view.batchReviewNotice(["solana"], "en"), SOLANA_BATCH_EN);
-    assert.equal(view.batchReviewNotice(["base"], "es"), BASE_ES);
-    assert.equal(view.batchReviewNotice(["base"], "en"), BASE_EN);
-    assert.equal(view.batchReviewNotice(["ethereum", "bnb", "base"], "es"), `${BASE_ES} ${ETH_ES} ${BNB_ES}`);
-    assert.equal(view.batchReviewNotice(["bnb", "ethereum"], "en"), `${ETH_EN} ${BNB_EN}`);
-    const all = view.batchReviewNotice(["solana", "base", "ethereum", "bnb"], "es");
-    assert.equal(all, `${SOLANA_BATCH_ES} ${BASE_ES} ${ETH_ES} ${BNB_ES}`);
-    assert.equal(all.includes("bsc-rpc.publicnode.com"), true);
-    assert.equal(view.batchReviewNotice(["base"], "es").includes("solana-rpc.publicnode.com"), false);
+    for (const ids of [[], ["solana"], ["base"], ["ethereum", "bnb", "base"], ["solana", "base", "ethereum", "bnb"]]) {
+      assert.equal(view.batchReviewNotice(ids, "es"), BATCH_ES);
+      assert.equal(view.batchReviewNotice(ids, "en"), BATCH_EN);
+    }
+    assert.equal(BATCH_ES.includes("La pasada no pide datos de mercado."), true);
+    assert.equal(BATCH_EN.includes("The check does not request market data."), true);
+    assert.equal(BATCH_ES.includes("DEX Screener también ve tu IP y las direcciones."), false);
+    assert.equal(BATCH_EN.includes("DEX Screener also sees your IP and the addresses."), false);
+    const page = readFileSync(path.join(root, "web/v2/cuaderno/index.html"), "utf8");
+    assert.equal(page.includes(BATCH_ES), true);
+    assert.equal(page.includes(BATCH_EN), true);
+    const noticeAt = page.indexOf('id="aviso-pasada"');
+    const buttonAt = page.indexOf('id="seguir"');
+    assert.equal(noticeAt >= 0 && noticeAt < buttonAt, true);
+    const before = page.slice(0, noticeAt);
+    assert.equal(before.lastIndexOf("</details>") > before.lastIndexOf("<details"), true);
+    const between = page.slice(noticeAt, buttonAt);
+    assert.equal(between.includes("<details"), false);
+    assert.equal(between.includes(BATCH_ES), true);
+    const follow = readFileSync(path.join(root, "web/v2/assets/cuaderno.js"), "utf8");
+    const pass = follow.slice(follow.indexOf("async function followSelected"), follow.indexOf("function bind"));
+    assert.equal(pass.includes("dexscreener"), false);
+    assert.equal(pass.includes("mountMarket"), false);
+    assert.equal(pass.includes("api.dexscreener.com"), false);
   });
 
   test("la comparación exige la misma red y la misma dirección, y una ficha EVM completa se puede releer", async () => {

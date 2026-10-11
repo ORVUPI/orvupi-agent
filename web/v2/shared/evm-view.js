@@ -252,25 +252,15 @@ export function privacyText(networkId, lang) {
   return `Al consultar en ${label}, tu navegador envía la dirección al nodo público ${host}, que también ve tu IP. Si pides los datos de mercado, DEX Screener también ve tu IP y la dirección.`;
 }
 
-const BATCH_SOLANA = {
-  es: "Al pulsar, tu navegador envía las direcciones que se revisan (las marcadas, o todas si no marcas ninguna) a los nodos públicos de Solana solana-rpc.publicnode.com y api.mainnet-beta.solana.com, que también ven tu IP. No se guarda nada nuevo hasta que pulses «Guardar».",
-  en: "When you tap, your browser sends the addresses being checked (the marked ones, or all of them if none are marked) to the Solana public nodes solana-rpc.publicnode.com and api.mainnet-beta.solana.com, which also see your IP. Nothing new is saved until you tap \"Save\".",
+const BATCH_NOTICE = {
+  es: "Al pulsar, tu navegador envía las direcciones que se revisan (las marcadas, o todas si no marcas ninguna) al nodo público de su red: solana-rpc.publicnode.com o api.mainnet-beta.solana.com (Solana), mainnet.base.org (Base), ethereum-rpc.publicnode.com (Ethereum) y bsc-rpc.publicnode.com (BNB Chain). Esos nodos también ven tu IP. La pasada no pide datos de mercado. No se guarda nada nuevo hasta que pulses «Guardar».",
+  en: "When you tap, your browser sends the addresses being checked (the marked ones, or all of them if none are marked) to the public node for their network: solana-rpc.publicnode.com or api.mainnet-beta.solana.com (Solana), mainnet.base.org (Base), ethereum-rpc.publicnode.com (Ethereum) and bsc-rpc.publicnode.com (BNB Chain). Those nodes also see your IP. The check does not request market data. Nothing new is saved until you tap \"Save\".",
 };
 
-/** Aviso de la pasada. Una frase por red que entra, en el orden de networks.json. */
+/** Aviso fijo de la pasada. No llama a DEX Screener, así que no cambia con las redes marcadas. */
 export function batchReviewNotice(networkIds, lang) {
-  const language = languageOf(lang);
-  const wanted = new Set(Array.isArray(networkIds) ? networkIds : []);
-  const parts = [];
-  for (const network of enabledNetworks()) {
-    if (!wanted.has(network.id)) continue;
-    if (network.family === "solana") parts.push(BATCH_SOLANA[language]);
-    else {
-      const line = privacyText(network.id, language);
-      if (line) parts.push(line);
-    }
-  }
-  return parts.join(" ");
+  void networkIds;
+  return BATCH_NOTICE[languageOf(lang)];
 }
 
 export function fillNetworkSelect(select) {

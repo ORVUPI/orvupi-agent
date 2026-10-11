@@ -236,11 +236,8 @@ test("la pasada, la comparación y el informe usan la red de cada ficha", async 
   await page.goto("/cuaderno/");
   await expect(page.locator("h2", { hasText: "Comparar consultas de la misma red y dirección" })).toBeVisible();
   const notice = page.locator("#aviso-pasada .lang.es");
-  await expect(notice).toContainText("solana-rpc.publicnode.com");
-  await expect(notice).toContainText("api.mainnet-beta.solana.com");
-  await expect(notice).toContainText("Al consultar en Base, tu navegador envía la dirección al nodo público mainnet.base.org, que también ve tu IP. Si pides los datos de mercado, DEX Screener también ve tu IP y la dirección.");
-  await expect(notice).toContainText("Al consultar en Ethereum, tu navegador envía la dirección al nodo público ethereum-rpc.publicnode.com, que también ve tu IP. Si pides los datos de mercado, DEX Screener también ve tu IP y la dirección.");
-  await expect(notice).toContainText("Al consultar en BNB Chain, tu navegador envía la dirección al nodo público bsc-rpc.publicnode.com, que también ve tu IP. Si pides los datos de mercado, DEX Screener también ve tu IP y la dirección.");
+  await expect(notice).toHaveText("Al pulsar, tu navegador envía las direcciones que se revisan (las marcadas, o todas si no marcas ninguna) al nodo público de su red: solana-rpc.publicnode.com o api.mainnet-beta.solana.com (Solana), mainnet.base.org (Base), ethereum-rpc.publicnode.com (Ethereum) y bsc-rpc.publicnode.com (BNB Chain). Esos nodos también ven tu IP. La pasada no pide datos de mercado. No se guarda nada nuevo hasta que pulses «Guardar».");
+  await expect(notice).not.toContainText("DEX Screener también ve tu IP y las direcciones.");
   await shot(page, page.locator("#aviso-pasada"), "cuaderno-aviso-es");
   await page.locator("#seguir").click();
   const results = page.locator("#resultado-seguimiento > article.seguimiento-estado");
@@ -281,10 +278,7 @@ test("la pasada, la comparación y el informe usan la red de cada ficha", async 
   await page.locator("#comparar").click();
   await expect(page.locator("#comparacion")).toHaveText("Solo se comparan dos consultas de la misma red y dirección.");
   await page.locator('[data-set-lang="en"]').click();
-  await expect(page.locator("#aviso-pasada .lang.en")).toContainText("When you look up on Base, your browser sends the address to the public node mainnet.base.org, which also sees your IP. If you request market data, DEX Screener also sees your IP and the address.");
-  await expect(page.locator("#aviso-pasada .lang.en")).toContainText("When you look up on Ethereum, your browser sends the address to the public node ethereum-rpc.publicnode.com, which also sees your IP. If you request market data, DEX Screener also sees your IP and the address.");
-  await expect(page.locator("#aviso-pasada .lang.en")).toContainText("When you look up on BNB Chain, your browser sends the address to the public node bsc-rpc.publicnode.com, which also sees your IP. If you request market data, DEX Screener also sees your IP and the address.");
-  await expect(page.locator("#aviso-pasada .lang.en")).toContainText("solana-rpc.publicnode.com");
+  await expect(page.locator("#aviso-pasada .lang.en")).toHaveText("When you tap, your browser sends the addresses being checked (the marked ones, or all of them if none are marked) to the public node for their network: solana-rpc.publicnode.com or api.mainnet-beta.solana.com (Solana), mainnet.base.org (Base), ethereum-rpc.publicnode.com (Ethereum) and bsc-rpc.publicnode.com (BNB Chain). Those nodes also see your IP. The check does not request market data. Nothing new is saved until you tap \"Save\".");
   await shot(page, page.locator("#aviso-pasada"), "cuaderno-aviso-en");
   await page.locator("#comparar-izquierda").selectOption("22222222-2222-4222-8222-222222222222");
   await page.locator("#comparar").click();
@@ -295,8 +289,8 @@ test("la pasada, la comparación y el informe usan la red de cada ficha", async 
   await shot(page, page.locator(".informe-red", { hasText: "Base mainnet" }).first(), "cuaderno-informe-en");
   const baseRow = page.locator("#lista-seguimiento .seguimiento-fila").filter({ hasText: BASE });
   await baseRow.locator("input").check();
-  await expect(page.locator("#aviso-pasada .lang.en")).toHaveText("When you look up on Base, your browser sends the address to the public node mainnet.base.org, which also sees your IP. If you request market data, DEX Screener also sees your IP and the address.");
-  await expect(page.locator("#aviso-pasada .lang.en")).not.toContainText("ethereum-rpc.publicnode.com");
-  await expect(page.locator("#aviso-pasada .lang.en")).not.toContainText("bsc-rpc.publicnode.com");
-  await expect(page.locator("#aviso-pasada .lang.en")).not.toContainText("solana-rpc.publicnode.com");
+  await expect(page.locator("#aviso-pasada .lang.en")).toHaveText("When you tap, your browser sends the addresses being checked (the marked ones, or all of them if none are marked) to the public node for their network: solana-rpc.publicnode.com or api.mainnet-beta.solana.com (Solana), mainnet.base.org (Base), ethereum-rpc.publicnode.com (Ethereum) and bsc-rpc.publicnode.com (BNB Chain). Those nodes also see your IP. The check does not request market data. Nothing new is saved until you tap \"Save\".");
+  const placed = await page.locator("#aviso-pasada").boundingBox();
+  const button = await page.locator("#seguir").boundingBox();
+  expect(placed && button && button.y - (placed.y + placed.height) >= 0 && button.y - (placed.y + placed.height) < 200).toBe(true);
 });
