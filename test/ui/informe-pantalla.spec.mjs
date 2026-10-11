@@ -399,9 +399,9 @@ test("USDC y ERYyy dejan un PNG en español y en inglés", async ({ page }, test
     expect(result.origin).toContain("stubxai.com");
     expect(text).toContain(shot.lang === "en" ? "Limits" : "Límites");
     expect(result.falta.includes("Curva de Pump.fun") || result.falta.includes("Pump.fun curve")).toBe(false);
-    expect(result.note.length).toBeGreaterThan(0);
     if (!result.attentionLead) expect(result.attentionEmpty.length).toBeGreaterThan(0);
     if (shot.mint === USDC) {
+      expect(result.note).toBe(shot.lang === "en" ? "Pump.fun curve: not applicable" : "Curva de Pump.fun: no aplica");
       expect(text).toContain(shot.lang === "en" ? "\u201CUSD Coin\u201D" : "Dice llamarse «USD Coin»");
       if (shot.lang === "en") expect(text.includes("«")).toBe(false);
     }
