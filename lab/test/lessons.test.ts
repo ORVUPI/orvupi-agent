@@ -252,6 +252,11 @@ describe("lecciones cortas", () => {
     assert.equal((reparto.match(/href="\/security\/"/g) ?? []).length, 6);
     assert.match(reparto, /cuenta personal <a href="\/security\/">\(publicada en el registro oficial\)<\/a>/);
     assert.match(reparto, /personal account <a href="\/security\/">\(listed in the official registry\)<\/a>/);
+    const estatica = lab.body.slice(lab.body.indexOf('id="mision-estatica"'));
+    assert.match(estatica, /cuenta personal <a href="\/security\/">\(publicada en el registro oficial\)<\/a>, y eso no es un censo/);
+    assert.match(estatica, /personal account <a href="\/security\/">\(listed in the official registry\)<\/a>, and that is not a census/);
+    assert.match(missionJs.body, /cuenta personal \(publicada en el registro oficial\)/);
+    assert.match(missionJs.body, /personal account \(listed in the official registry\)/);
     assert.equal(reparto.includes("cuenta personal publicada (publicada"), false);
     assert.equal(reparto.includes("published personal account (listed"), false);
     assert.equal(huecos.includes("status is verified"), false);

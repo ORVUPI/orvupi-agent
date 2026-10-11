@@ -650,6 +650,237 @@ export function formatLocal(consultedAt, lang) {
   }).format(date);
 }
 
+export const NOTEBOOK_DB_VERSION = 2;
+
+/**
+ * Copia red y dirección a la entrada si faltan.
+ * No borra la entrada, no pisa una red o una dirección que ya estuvieran, y no inventa datos.
+ */
+export function migrateStoredRecord(record) {
+  if (!record || typeof record !== "object" || Array.isArray(record)) {
+    return { changed: false, record: record ?? null };
+  }
+  const card = record.card && typeof record.card === "object" ? record.card : null;
+  const networkFromCard = card && typeof card.network === "string" ? card.network : "";
+  const addressFromCard = card && typeof card.mint === "string" ? card.mint : "";
+  const next = { ...record };
+  let changed = false;
+  if (typeof next.network !== "string" || !next.network) {
+    if (networkFromCard) {
+      next.network = networkFromCard;
+      changed = true;
+    }
+  }
+  if (typeof next.address !== "string" || !next.address) {
+    if (addressFromCard) {
+      next.address = addressFromCard;
+      changed = true;
+    }
+  }
+  return { changed, record: next };
+}
+
+/** Una entrada nueva guarda siempre la red y la dirección de la ficha. */
+export function stampIdentity(record) {
+  if (!record || typeof record !== "object" || Array.isArray(record)) return record;
+  const card = record.card && typeof record.card === "object" ? record.card : null;
+  const network = card && typeof card.network === "string" && card.network
+    ? card.network
+    : (typeof record.network === "string" ? record.network : "");
+  const address = card && typeof card.mint === "string" && card.mint
+    ? card.mint
+    : (typeof record.address === "string" ? record.address : "");
+  return { ...record, network, address };
+}
+
+export function watchTargets(records) {
+  const groups = new Map();
+  for (const record of Array.isArray(records) ? records : []) {
+    const migrated = migrateStoredRecord(record).record;
+    if (!migrated || !migrated.card) continue;
+    const network = typeof migrated.network === "string" ? migrated.network : "";
+    const address = typeof migrated.address === "string" ? migrated.address : "";
+    if (!network || !address) continue;
+    const key = `${network}\n${address}`;
+    const bucket = groups.get(key) || [];
+    bucket.push(migrated);
+    groups.set(key, bucket);
+  }
+  const entries = [];
+  for (const [key, bucket] of groups) {
+    const sorted = bucket.slice().sort((left, right) => {
+      const at = String(left.card && left.card.consultedAt ? left.card.consultedAt : "");
+      const bt = String(right.card && right.card.consultedAt ? right.card.consultedAt : "");
+      if (at === bt) return 0;
+      return at < bt ? 1 : -1;
+    });
+    const [network, address] = key.split("\n");
+    entries.push({ key, network, address, latest: sorted[0], count: bucket.length });
+  }
+  entries.sort((left, right) => {
+    const at = String(left.latest.card && left.latest.card.consultedAt ? left.latest.card.consultedAt : "");
+    const bt = String(right.latest.card && right.latest.card.consultedAt ? right.latest.card.consultedAt : "");
+    if (at === bt) return left.address < right.address ? -1 : left.address > right.address ? 1 : 0;
+    return at < bt ? 1 : -1;
+  });
+  return entries;
+}
+
+/** Sin marcas se consultan todas. Con marcas, solo esas. */
+export function chooseWatchTargets(targets, selectedKeys) {
+  const list = Array.isArray(targets) ? targets : [];
+  const keys = Array.isArray(selectedKeys) ? selectedKeys.filter((key) => typeof key === "string" && key) : [];
+  if (!keys.length) return list.slice();
+  const wanted = new Set(keys);
+  return list.filter((item) => wanted.has(item.key));
+}
+
+/**
+ * Pide huecos de una en una. Si el cupo se llena, el resto espera y no se consulta.
+ * takeSlot es takeQuerySlot: mismas reglas que una consulta suelta.
+ */
+export function reserveWatchSlots(entries, stamps, now, takeSlot) {
+  const list = Array.isArray(entries) ? entries : [];
+  let current = Array.isArray(stamps) ? stamps.slice() : [];
+  if (typeof takeSlot !== "function") return { ready: [], waiting: list.slice(), stamps: current };
+  const ready = [];
+  const waiting = [];
+  let blocked = false;
+  for (const entry of list) {
+    if (blocked) {
+      waiting.push(entry);
+      continue;
+    }
+    const slot = takeSlot(current, now, 6, 60000);
+    current = Array.isArray(slot && slot.stamps) ? slot.stamps : current;
+    if (!slot || slot.allowed !== true) {
+      blocked = true;
+      waiting.push(entry);
+      continue;
+    }
+    ready.push(entry);
+  }
+  return { ready, waiting, stamps: current };
+}
+
+const REFUSAL = /HTTP 403|HTTP 429|request blocked|indexed request|access forbidden|personal token/i;
+
+const BROKEN = new Set(["fallo", "no_disponible"]);
+
+function brokenStatus(value) {
+  return BROKEN.has(value);
+}
+
+function pushGap(gaps, es, en) {
+  gaps.push({ es, en });
+}
+
+/** Motivos por los que una ficha no está completa, aunque no venga marcada como parcial. */
+export function readingGaps(card) {
+  if (!card || typeof card !== "object") {
+    return [{ es: "La ficha no está completa.", en: "The card is not complete." }];
+  }
+  const gaps = [];
+  if (card.partial === true) pushGap(gaps, "La ficha está a medias.", "The card is partial.");
+  if (card.slotStatus === "no_consultado") {
+    pushGap(gaps, "Esta lectura no pidió el momento de la red.", "This reading did not ask for the moment on the network.");
+  } else if (brokenStatus(card.slotStatus)) {
+    pushGap(gaps, "No se pudo leer el momento de la red.", "The moment on the network could not be read.");
+  } else if (card.slot === null) {
+    pushGap(gaps, "No se leyó el momento de la red.", "The moment on the network was not read.");
+  }
+  if (brokenStatus(card.programStatus)) pushGap(gaps, "No se pudo leer el programa del token.", "The token program could not be read.");
+  if (card.supplyAccount === null) {
+    pushGap(gaps, "No se leyó el suministro de la cuenta.", "The supply on the account was not read.");
+  }
+  if (card.supplyRpcStatus === "no_consultado") {
+    pushGap(gaps, "Esta lectura no pidió la segunda comprobación del suministro.", "This reading did not ask for the second supply check.");
+  } else if (typeof card.supplyAccount === "string" && typeof card.supplyRpc === "string" && card.supplyAccount !== card.supplyRpc) {
+    pushGap(gaps, "Las dos lecturas del suministro no coinciden.", "The two supply reads do not match.");
+  } else if (brokenStatus(card.supplyRpcStatus)) {
+    pushGap(gaps, "No se pudo hacer la segunda comprobación del suministro.", "The second supply check could not be done.");
+  } else if (card.supplyRpc === null) {
+    pushGap(gaps, "No se leyó la segunda comprobación del suministro.", "The second supply check was not read.");
+  }
+  if (card.mintAuthority && brokenStatus(card.mintAuthority.status)) {
+    pushGap(gaps, "No se pudo leer el permiso de emisión.", "The permission to create more tokens could not be read.");
+  }
+  if (card.freezeAuthority && brokenStatus(card.freezeAuthority.status)) {
+    pushGap(gaps, "No se pudo leer el permiso de congelación.", "The freeze permission could not be read.");
+  }
+  if (card.name && brokenStatus(card.name.status)) pushGap(gaps, "No se pudo leer el nombre.", "The name could not be read.");
+  if (card.symbol && brokenStatus(card.symbol.status)) pushGap(gaps, "No se pudo leer el símbolo.", "The symbol could not be read.");
+  if (card.uri && brokenStatus(card.uri.status)) pushGap(gaps, "No se pudo leer el enlace de metadatos.", "The metadata link could not be read.");
+  if (brokenStatus(card.metadataMutable)) pushGap(gaps, "No se pudo leer si el nombre se puede cambiar.", "Whether the name can change could not be read.");
+  if (card.largestStatus === "no_consultado") {
+    pushGap(gaps, "Esta lectura no pidió quién tiene más tokens.", "This reading did not ask who holds the most tokens.");
+  } else if (brokenStatus(card.largestStatus)) {
+    pushGap(gaps, "No se pudo leer quién tiene más tokens.", "Who holds the most tokens could not be read.");
+  }
+  if (brokenStatus(card.extensionsStatus)) pushGap(gaps, "No se pudieron separar las extensiones.", "The extensions could not be split.");
+  if (card.curve && brokenStatus(card.curve.status)) pushGap(gaps, "No se pudo leer la curva.", "The curve could not be read.");
+  if (Array.isArray(card.errors) && card.errors.length > 0 && !gaps.length) {
+    pushGap(gaps, "Esta lectura no está completa.", "This reading is not complete.");
+  }
+  return gaps;
+}
+
+/** Una ficha completa no está a medias, no trae errores ni estados fallidos, y tiene momento de la red y suministros leídos. Un null o un «no consultado» la deja incompleta. */
+export function readingComplete(card) {
+  if (!card || typeof card !== "object") return false;
+  if (Array.isArray(card.errors) && card.errors.length > 0) return false;
+  return readingGaps(card).length === 0;
+}
+
+function accountReadRefused(card) {
+  if (!card || typeof card !== "object") return true;
+  if (card.programStatus !== "fallo") return false;
+  const errors = Array.isArray(card.errors) ? card.errors : [];
+  const accountError = errors.find((item) => item && (item.method === "getMultipleAccounts" || item.method === "local"));
+  if (!accountError) return true;
+  const status = accountError.httpStatus;
+  if (status === 403 || status === 429 || status === 0 || status === 408) return true;
+  if (typeof status === "number" && status >= 500) return true;
+  return REFUSAL.test(String(accountError.message || ""));
+}
+
+/** Un servicio que rechaza la consulta no es una lectura igual. */
+export function serviceRejection(card) {
+  if (!card || typeof card !== "object") return { rejected: true, primary: true };
+  const errors = Array.isArray(card.errors) ? card.errors : [];
+  const refused = errors.some((item) => {
+    if (!item || typeof item !== "object") return false;
+    const status = item.httpStatus;
+    if (status === 403 || status === 429 || status === 0 || status === 408) return true;
+    if (typeof status === "number" && status >= 500) return true;
+    return REFUSAL.test(String(item.message || ""));
+  });
+  const primary = card.programStatus === "fallo";
+  return { rejected: Boolean(refused || primary), primary: Boolean(primary) };
+}
+
+export function watchVerdict(previous, result) {
+  const card = result && result.card ? result.card : null;
+  const rejection = serviceRejection(card);
+  if (!card || accountReadRefused(card)) {
+    return { kind: "rechazada", compared: null, save: false, card, rejection: { rejected: true, primary: true } };
+  }
+  const checked = validateCard(card);
+  if (!checked.ok) return { kind: "rechazada", compared: null, save: false, card, rejection };
+  const previousCard = previous && previous.card ? previous.card : null;
+  const next = { id: "00000000-0000-4000-8000-000000000001", note: "", card: checked.card };
+  const compared = previousCard ? compareRecords({ ...previous, card: previousCard }, next) : null;
+  const comparable = compared && compared.ok ? compared : null;
+  if (!readingComplete(previousCard) || !readingComplete(checked.card) || (comparable && comparable.unknown.length)) {
+    return { kind: "incompleto", compared: comparable, save: false, card: checked.card, rejection };
+  }
+  if (!comparable) return { kind: "incompleto", compared: null, save: false, card: checked.card, rejection };
+  if (comparable.changes.length) {
+    return { kind: "cambio", compared: comparable, save: false, card: checked.card, rejection };
+  }
+  return { kind: "igual", compared: comparable, save: false, card: checked.card, rejection };
+}
+
 export function withNote(record, note) {
   if (typeof note !== "string") {
     return fail("La nota tiene que ser texto, de hasta 2000 caracteres, y no puede ser un script.", "The note must be text, at most 2000 characters, and it cannot be a script.");

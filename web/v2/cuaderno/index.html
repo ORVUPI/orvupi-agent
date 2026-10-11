@@ -84,6 +84,15 @@
 <p><span class="lang es" lang="es">Este navegador guarda como máximo 200 fichas. Si llega al tope, borra alguna para guardar otra.</span><span class="lang en" lang="en">This browser stores at most 200 cards. When it is full, delete one to save another.</span></p>
 <div id="lista-consultas"></div>
 
+<h2><span class="lang es" lang="es">Revisar direcciones guardadas</span><span class="lang en" lang="en">Recheck saved addresses</span></h2>
+<p><span class="lang es" lang="es">Vuelve a leer las direcciones guardadas, todas o solo las que marques, y mira si algo cambió desde la última lectura. Se leen de una en una.</span><span class="lang en" lang="en">Read the saved addresses again, all of them or only the ones you mark, and see whether anything changed since the last reading. They are read one by one.</span></p>
+<div id="lista-seguimiento"></div>
+<p id="seguir-alcance" class="muted"></p>
+<p id="aviso-pasada" class="aviso-pasada"><span class="lang es" lang="es">Al pulsar, tu navegador envía las direcciones que se revisan (las marcadas, o todas si no marcas ninguna) a los nodos públicos de Solana solana-rpc.publicnode.com y api.mainnet-beta.solana.com, que también ven tu IP. No se guarda nada nuevo hasta que pulses «Guardar».</span><span class="lang en" lang="en">When you tap, your browser sends the addresses being checked (the marked ones, or all of them if none are marked) to the Solana public nodes solana-rpc.publicnode.com and api.mainnet-beta.solana.com, which also see your IP. Nothing new is saved until you tap "Save".</span></p>
+<p class="pasada-acciones"><button id="seguir" type="button"><span class="lang es" lang="es">Consultar la lista</span><span class="lang en" lang="en">Check the list</span></button> <button id="detener" type="button" hidden><span class="lang es" lang="es">Detener</span><span class="lang en" lang="en">Stop</span></button> <button id="guardar-todas" type="button" aria-disabled="true"><span class="lang es" lang="es">Guardar todas</span><span class="lang en" lang="en">Save all</span></button></p>
+<p id="guardar-todas-ayuda" class="muted" hidden></p>
+<div id="resultado-seguimiento" tabindex="-1" aria-live="polite"></div>
+
 <h2><span class="lang es" lang="es">Comparar consultas de la misma dirección</span><span class="lang en" lang="en">Compare queries of the same address</span></h2>
 <div class="comparacion">
 <p><label for="comparar-izquierda"><span class="lang es" lang="es">Antes</span><span class="lang en" lang="en">Before</span></label>

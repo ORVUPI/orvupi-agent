@@ -4,11 +4,11 @@
  */
 import { formatAmount } from "../shared/amount.js";
 import { ENTENDER, entenderNav } from "../shared/entender.js";
-import { compareRecords, comparedSideText, comparisonSummary, curveComparisonValue, pickPrevious, staleLine, supplyDirection, validateCard, withinStoreLimit } from "../shared/notebook-model.js";
+import { notebookDbAll, notebookDbPut, openNotebookDb } from "../shared/notebook-db.js";
+import { compareRecords, comparedSideText, comparisonSummary, curveComparisonValue, pickPrevious, staleLine, stampIdentity, supplyDirection, validateCard, withinStoreLimit } from "../shared/notebook-model.js";
 import { cardFromShown } from "../shared/solana-read.js";
 
 const DB_NAME = "stubx-cuaderno";
-const STORE = "records";
 
 const COPY = {
   es: {
@@ -31,6 +31,7 @@ const COPY = {
     emptySave: "No hay una lectura para guardar. No se ha guardado una ficha vacía.",
     wait: "La lectura no ha terminado. Espera a que aparezca el resultado.",
     db: "Este navegador no dejó guardar el cuaderno.",
+    tabs: "Cierra las otras pestañas de stubxai.com y recarga.",
     fail: "No hay una lectura en pantalla para guardar. Pulsa Comprobar y espera el resultado.",
     full: "Este navegador ya tiene el máximo de fichas.",
     before: "Antes",
@@ -59,6 +60,7 @@ const COPY = {
     emptySave: "There is no reading to save. An empty card was not saved.",
     wait: "The reading has not finished. Wait until the result appears.",
     db: "This browser did not allow the notebook to be saved.",
+    tabs: "Close the other stubxai.com tabs and reload.",
     fail: "There is no reading on screen to save. Press Check and wait for the result.",
     full: "This browser already has the maximum number of cards.",
     before: "Before",
@@ -78,44 +80,19 @@ function t(key) {
 }
 
 function openDb() {
-  return new Promise((resolve, reject) => {
-    if (!("indexedDB" in window)) {
-      reject(new Error("indexedDB"));
-      return;
-    }
-    const request = indexedDB.open(DB_NAME, 1);
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: "id" });
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error || new Error("indexedDB"));
+  return openNotebookDb(DB_NAME, {
+    onConflict() {
+      say(t("tabs"));
+    },
   });
 }
 
 function dbAll(db) {
-  return new Promise((resolve, reject) => {
-    const items = [];
-    const request = db.transaction(STORE, "readonly").objectStore(STORE).openCursor();
-    request.onsuccess = () => {
-      const cursor = request.result;
-      if (!cursor) {
-        resolve(items);
-        return;
-      }
-      items.push(cursor.value);
-      cursor.continue();
-    };
-    request.onerror = () => reject(request.error);
-  });
+  return notebookDbAll(db);
 }
 
 function dbPut(db, record) {
-  return new Promise((resolve, reject) => {
-    const request = db.transaction(STORE, "readwrite").objectStore(STORE).put(record);
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
-  });
+  return notebookDbPut(db, record);
 }
 
 let shown = null;
@@ -312,7 +289,7 @@ async function saveQuery(mint) {
       say(t("full"));
       return;
     }
-    await dbPut(db, { id: record.id, note: "", card: record.card });
+    await dbPut(db, stampIdentity({ id: record.id, note: "", card: record.card }));
     saySaved(Boolean(record.card.partial));
   } catch {
     say(t("db"));

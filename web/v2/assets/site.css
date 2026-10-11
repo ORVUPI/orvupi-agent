@@ -1569,6 +1569,7 @@ footer.site::before {
   box-shadow: 0 12px 24px rgba(4, 13, 31, 0.35), 0 0 0 3px rgba(27, 235, 145, 0.35);
 }
 .sello,
+#aviso-pasada,
 body:has(a[href="/aprender/"][aria-current="page"]) main > p.nota {
   margin: 0;
   padding: 0.85rem 1rem;
@@ -1604,6 +1605,9 @@ textarea.nota { min-height: 6rem; }
 .cuaderno-acciones a,
 .cuaderno-acciones label.file,
 body:has(a[href="/cuaderno/"][aria-current="page"]) #comparar,
+body:has(a[href="/cuaderno/"][aria-current="page"]) #seguir,
+body:has(a[href="/cuaderno/"][aria-current="page"]) #detener:not([hidden]),
+body:has(a[href="/cuaderno/"][aria-current="page"]) #guardar-todas,
 body:has(a[href="/cuaderno/"][aria-current="page"]) #borrar-confirmar,
 body:has(a[href="/cuaderno/"][aria-current="page"]) #borrar-cancelar {
   display: inline-flex;
@@ -1654,9 +1658,56 @@ body:has(a[href="/studio/"][aria-current="page"]) .fila button.primary {
 @media (min-width: 48.01rem) {
   .comparacion { grid-template-columns: 1fr 1fr; }
 }
+.seguimiento-fila {
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr);
+  gap: 0.35rem 0.75rem;
+  align-items: center;
+  min-height: 4.4rem;
+  margin: 0 0 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 2px solid var(--tone);
+  border-radius: 1rem;
+  background: var(--bg-elev);
+  color: var(--cream, #f9e6d0);
+}
+.seguimiento-fila input[type="checkbox"] {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0;
+  accent-color: var(--pink, #fb437f);
+}
+.seguimiento-fila span { display: grid; gap: 0.2rem; min-width: 0; }
+.seguimiento-fila .mint { margin: 0; overflow-wrap: anywhere; }
+#lista-seguimiento, #resultado-seguimiento, #aviso-pasada { display: grid; gap: 0.85rem; min-width: 0; }
+#aviso-pasada { overflow-wrap: anywhere; }
+body:has(a[href="/cuaderno/"][aria-current="page"]) #detener[hidden] { display: none; }
+#guardar-todas[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; }
+#guardar-todas-ayuda { margin: 0; }
+.pasada-acciones { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+.seguimiento-estado {
+  display: grid;
+  gap: 0.65rem;
+  min-width: 0;
+  padding: 1rem;
+  border: 2px solid var(--tone);
+  border-left: 8px solid var(--line);
+  border-radius: 1rem;
+  background: var(--bg-elev);
+}
+.seguimiento-estado h3 { margin: 0; overflow-wrap: anywhere; }
+.seguimiento-estado[data-estado="cambio"] { border-left-color: var(--attention); }
+.seguimiento-estado[data-estado="igual"] { border-left-color: var(--gem, #1beb91); }
+.seguimiento-estado[data-estado="rechazada"],
+.seguimiento-estado[data-estado="incompleto"],
+.seguimiento-estado[data-estado="espera"] { border-left-color: var(--attention); }
 @media (max-width: 599px) {
   .cuaderno-acciones { display: grid; }
   .cuaderno-acciones button, .cuaderno-acciones a, .cuaderno-acciones label.file { width: 100%; }
+  .pasada-acciones { display: grid; }
+  body:has(a[href="/cuaderno/"][aria-current="page"]) #seguir,
+  body:has(a[href="/cuaderno/"][aria-current="page"]) #detener,
+  body:has(a[href="/cuaderno/"][aria-current="page"]) #guardar-todas { width: 100%; }
 }
 
 /* Entrega 1. Clases nuevas sobre las variables de tool.css. No reordena el sistema visual. */
@@ -1926,7 +1977,8 @@ dd[data-estado="fallo"], dd[data-estado="ausente"], dd[data-estado="no_consultad
 article[id] { scroll-margin-top: 1rem; }
 @media (max-width: 48rem) {
   body:has(a[href="/cuaderno/"][aria-current="page"]):has(#resultado:not(:empty)) form.consulta,
-  body:has(a[href="/cuaderno/"][aria-current="page"]):has(#comparacion:not(:empty)) form.consulta {
+  body:has(a[href="/cuaderno/"][aria-current="page"]):has(#comparacion:not(:empty)) form.consulta,
+  body:has(a[href="/cuaderno/"][aria-current="page"]):has(#resultado-seguimiento:not(:empty)) form.consulta {
     position: static;
     left: auto;
     right: auto;
@@ -1957,11 +2009,12 @@ article[id] { scroll-margin-top: 1rem; }
   }
   body:has(a[href="/cuaderno/"][aria-current="page"]):has(#resultado:not(:empty)),
   body:has(a[href="/cuaderno/"][aria-current="page"]):has(#comparacion:not(:empty)),
+  body:has(a[href="/cuaderno/"][aria-current="page"]):has(#resultado-seguimiento:not(:empty)),
   body:has(#resultado[data-state]:not([data-state="vacio"])),
   body:has(#comparacion-verify:not(:empty)) {
     padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
   }
-  #comparacion, #comparacion-verify, #resultado { scroll-margin-bottom: 1.5rem; }
+  #comparacion, #comparacion-verify, #resultado, #resultado-seguimiento { scroll-margin-bottom: 1.5rem; }
 }
 
 .datos-mercado {
