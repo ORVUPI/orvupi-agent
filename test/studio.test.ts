@@ -9,9 +9,9 @@ import { pathToFileURL } from "node:url";
 import { repoRoot } from "../src/paths.js";
 
 const LICENSE_ES =
-  "Recursos de STUBX (Agente Talón, imágenes de fondo y kit): puedes usarlos para crear contenido no comercial sobre STUBX. El personaje y parte de los recursos se han generado con IA y es posible que no tengan protección de derechos de autor en todos los países; no damos garantías sobre esos derechos. No puedes usarlos para hacerte pasar por @stubxai ni por el equipo, ni para presentar algo como oficial, ni en estafas, clones o promociones de otros tokens. Tú eres responsable de lo que escribes y publicas. No uses imágenes, marcas ni datos de otras personas sin su permiso. Podemos retirar este permiso si se usa mal.";
+  "Recursos de STUBX (Agente Talón, imágenes de fondo y kit): puedes usarlos para crear contenido no comercial sobre STUBX. Es posible que no tengan protección de derechos de autor en todos los países; no damos garantías sobre esos derechos. No puedes usarlos para hacerte pasar por @stubxai ni por el equipo, ni para presentar algo como oficial, ni en estafas, clones o promociones de otros tokens. Tú eres responsable de lo que escribes y publicas. No uses imágenes, marcas ni datos de otras personas sin su permiso. Podemos retirar este permiso si se usa mal.";
 const LICENSE_EN =
-  "STUBX assets (Agente Talón, backgrounds and kit): you may use them to create non-commercial content about STUBX. The character and some assets were generated with AI and may not be protected by copyright in every country; we make no warranties about those rights. You may not use them to impersonate @stubxai or the team, to present anything as official, or for scams, clones or promoting other tokens. You are responsible for what you write and publish. Do not use other people's images, brands or data without their permission. We may withdraw this permission if it is misused.";
+  "STUBX assets (Agente Talón, backgrounds and kit): you may use them to create non-commercial content about STUBX. They may not be protected by copyright in every country; we make no warranties about those rights. You may not use them to impersonate @stubxai or the team, to present anything as official, or for scams, clones or promoting other tokens. You are responsible for what you write and publish. Do not use other people's images, brands or data without their permission. We may withdraw this permission if it is misused.";
 
 const REQUIRED_TERMS = [
   "fomo",
@@ -462,6 +462,19 @@ function joined(card: Card, role: string): string {
     .filter((glyph) => glyph.role === role)
     .map((glyph) => glyph.ch)
     .join("");
+}
+
+function assertStampGone(card: Card, label = ""): void {
+  assert.equal(card.noticeText, "", label);
+  assert.equal(card.label, "", label);
+  assert.equal(card.noticeLines, 0, label);
+  assert.equal(card.watermarkAlpha, 0, label);
+  assert.equal(card.watermarkBox.w, 0, label);
+  assert.equal(card.watermarkBox.h, 0, label);
+  assert.equal(card.labelBox, null, label);
+  for (const role of ["notice", "watermark", "ai", "brand", "brandTop", "riskTop"]) {
+    assert.equal(joined(card, role), "", `${label} ${role}`);
+  }
 }
 
 describe("studio", () => {
@@ -1023,15 +1036,13 @@ describe("studio", () => {
     assert.equal(analyze("unsupported").blocked, false);
   });
 
-  test("el filtro no mira la marca ni el pie, y el dibujo sí los incluye", async () => {
+  test("el filtro bloquea el pie retirado si el usuario lo escribe", async () => {
     const { analyze, exportAllowed } = await load<{ analyze: Analyze; exportAllowed: (title: string, body: string, list?: unknown, token?: string) => boolean }>(
       "lib/filter.mjs",
     );
-    const { BRAND, FOOTER, WATERMARK } = await load<{
-      BRAND: { es: string; en: string };
-      FOOTER: { es: string; en: string };
-      WATERMARK: string;
-    }>("lib/copy.mjs");
+    const { BRAND } = await load<{ BRAND: { es: string; en: string } }>("lib/copy.mjs");
+    const retiredEs = ["Cripto de alto riesgo", " · ", "Puedes perderlo todo", " · ", "No es consejo de inversión."].join("");
+    const retiredEn = ["High-risk crypto", " · ", "You could lose everything", " · ", "Not investment advice."].join("");
     assert.equal(analyze("oficial").blocked, true);
     assert.equal(analyze("anuncio oficial").blocked, true);
     assert.equal(analyze("no oficial").blocked, false);
@@ -1041,9 +1052,9 @@ describe("studio", () => {
     assert.equal(analyze("heroico").blocked, false);
     assert.equal(analyze(BRAND.es).blocked, false);
     assert.equal(analyze(BRAND.en).blocked, false);
-    assert.equal(analyze(WATERMARK).blocked, false);
-    assert.equal(analyze(FOOTER.es).blocked, true);
-    assert.equal(analyze(FOOTER.en).blocked, true);
+    assert.equal(analyze("no oficial · unofficial").blocked, false);
+    assert.equal(analyze(retiredEs).blocked, true);
+    assert.equal(analyze(retiredEn).blocked, true);
     const templates = JSON.parse(readStudio("templates.json")) as {
       templates: { title: { es: string; en: string }; body: { es: string; en: string } }[];
     };
@@ -1054,23 +1065,25 @@ describe("studio", () => {
     }
   });
 
-  test("aiOrigin elige la etiqueta más restrictiva y el catálogo la declara", async () => {
-    const { aiLabel, AI_LABEL } = await load<{
+  test("aiLabel no escribe etiqueta y el catálogo declara el origen", async () => {
+    const { aiLabel, noticeFor, noticeChoices, PNG_COMMENT } = await load<{
       aiLabel: (origins: string[], lang: string) => string;
-      AI_LABEL: { ai: { es: string; en: string }; mascota: { es: string; en: string } };
+      noticeFor: (lang: string, token: string) => string;
+      noticeChoices: (lang: string, token: string) => string[];
+      PNG_COMMENT: string;
     }>("lib/copy.mjs");
-    assert.equal(AI_LABEL.ai.es, "Imagen generada con IA");
-    assert.equal(AI_LABEL.ai.en, "AI-generated image");
-    assert.equal(AI_LABEL.mascota.es, "Ilustración con elementos generados con IA.");
-    assert.equal(AI_LABEL.mascota.en, "Illustration with AI-generated elements.");
     assert.equal(aiLabel([], "es"), "");
     assert.equal(aiLabel(["ninguno"], "es"), "");
     assert.equal(aiLabel(["mascota"], "es"), "");
     assert.equal(aiLabel(["mascota"], "en"), "");
-    assert.equal(aiLabel(["ai"], "es"), AI_LABEL.ai.es);
-    assert.equal(aiLabel(["ai"], "en"), AI_LABEL.ai.en);
-    assert.equal(aiLabel(["ai", "mascota", "ninguno"], "en"), AI_LABEL.ai.en);
-    assert.equal(aiLabel(["ai", "mascota"], "es"), AI_LABEL.ai.es);
+    assert.equal(aiLabel(["ai"], "es"), "");
+    assert.equal(aiLabel(["ai"], "en"), "");
+    assert.equal(aiLabel(["ai", "mascota", "ninguno"], "en"), "");
+    assert.equal(aiLabel(["ai", "mascota"], "es"), "");
+    assert.equal(noticeFor("es", "LUNA"), "");
+    assert.equal(noticeFor("en", "STUBX"), "");
+    assert.deepEqual(noticeChoices("es", "LUNA"), []);
+    assert.equal(PNG_COMMENT, "");
 
     const catalog = JSON.parse(readStudio("catalog.json")) as {
       items: { archivo: string; tipo?: string; licencia: string | { es: string; en: string }; permitido: boolean; aiOrigin: string; sha256: string }[];
@@ -1143,18 +1156,20 @@ describe("studio", () => {
     assert.match(reglas, /The token name goes through the same filter/);
     assert.match(reglas, /Los recursos de STUBX siguen como opción por defecto/);
     assert.match(reglas, /STUBX assets stay the default option/);
-    assert.match(reglas, /No oficial de \{nombre\} ni de STUBX/);
-    assert.match(reglas, /Not official from \{name\} or STUBX/);
+    assert.equal(reglas.includes("No oficial de {nombre} ni de STUBX"), false);
+    assert.equal(reglas.includes("Not official from {name} or STUBX"), false);
     assert.match(reglas, /Si usas el nombre o el logo de otro token: necesitas tener derecho a usarlos/);
     assert.match(reglas, /If you use another token’s name or logo: you need the right to use them/);
     assert.match(reglas, /STUBX solo ofrece la herramienta: no revisa, no avala ni promociona ese token/);
     assert.match(reglas, /STUBX only offers the tool: it does not review, endorse or promote that token/);
     assert.match(reglas, /No uses el nombre, la imagen ni los datos de personas reales sin su permiso, tampoco los del equipo de STUBX\./);
     assert.match(reglas, /Do not use the name, image or personal data of real people without their permission, including the STUBX team\./);
-    assert.match(reglas, /ai: «Imagen generada con IA»/);
-    assert.match(reglas, /ai: “AI-generated image”/);
-    assert.match(editor, /Usa solo un logo que tengas derecho a usar\. Si se hizo con IA, indícalo al publicar\./);
-    assert.match(editor, /Only use a logo you have the right to use\. If it was made with AI, say so when you post\./);
+    assert.equal(reglas.toLowerCase().includes("imagen generada con ia"), false);
+    assert.equal(reglas.toLowerCase().includes("ai-generated image"), false);
+    assert.match(editor, /Usa solo un logo que tengas derecho a usar\./);
+    assert.equal(editor.includes("Si se hizo con IA, indícalo al publicar."), false);
+    assert.match(editor, /Only use a logo you have the right to use\./);
+    assert.equal(editor.includes("If it was made with AI, say so when you post."), false);
     const invisible = String.raw`[\u00AD\u034F\u061C\u115F\u1160\u17B4\u17B5\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u206F\u2800\u3164\uFE00-\uFE0F\uFEFF\uFFA0\uFFF9-\uFFFB]`;
     const filterSrc = readStudio("lib/filter.mjs");
     const logoSrc = readStudio("lib/logo.mjs");
@@ -1221,9 +1236,9 @@ describe("studio", () => {
     assert.match(editor, /The Studio draft is saved on this device/);
     assert.match(reglas, /El borrador de Studio se guarda en este dispositivo/);
     assert.match(reglas, /The Studio draft is saved on this device/);
-    assert.match(reglas, /El filtro y la banda ayudan, pero no son una garantía/);
+    assert.match(reglas, /El filtro ayuda, pero no es una garantía/);
     assert.match(reglas, /La imagen sigue siendo contenido no oficial/);
-    assert.match(reglas, /The filter and the band help, but they are not a guarantee/);
+    assert.match(reglas, /The filter helps, but it is not a guarantee/);
     assert.match(reglas, /The image remains unofficial content/);
     assert.match(editor, /id="descargar"[^>]*disabled/);
     assert.match(editor, /id="borrar"/);
@@ -1360,10 +1375,9 @@ describe("studio", () => {
       pngDimensions: (bytes: Uint8Array) => { width: number; height: number };
       pngRawSize: (width: number, height: number, depth: number, color: number) => number;
     }>("lib/png.mjs");
-    const { brandFor, BRAND, NOTICE_SHORT } = await load<{
+    const { brandFor, BRAND } = await load<{
       brandFor: (lang: string, token: string) => string;
       BRAND: { es: string; en: string };
-      NOTICE_SHORT: { es: string };
     }>("lib/copy.mjs");
     assert.equal(DEFAULT_TOKEN, "STUBX");
     assert.equal(TOKEN_MAX, 20);
@@ -1405,9 +1419,8 @@ describe("studio", () => {
     assert.equal(named.fits, true);
     assert.equal(joined(named, "token"), "LUNA");
     assert.ok(named.texts.includes("LUNA"));
-    assert.ok(joined(named, "notice").includes("NOOFICIALDELUNANIDESTUBX"));
+    assertStampGone(named, "LUNA");
     assert.equal(named.topBand, 0);
-    assert.equal(named.glyphs.some((glyph) => glyph.role === "brandTop" || glyph.role === "riskTop"), false);
     const englishToken = await renderCard({
       width: 1080,
       height: 1080,
@@ -1419,11 +1432,9 @@ describe("studio", () => {
       origins: [],
     });
     assert.equal(englishToken.fits, true);
-    assert.ok(joined(englishToken, "notice").includes("NOTOFFICIALFROMLUNAORSTUBX"));
-    assert.equal(englishToken.label, "");
+    assertStampGone(englishToken, "LUNA en");
     const wideName = "M".repeat(20);
     for (const lang of ["es", "en"] as const) {
-      const suffix = lang === "en" ? "ORSTUBX" : "NIDESTUBX";
       for (const height of [1080, 1920]) {
         const card = await renderCard({
           width: 1080,
@@ -1435,24 +1446,9 @@ describe("studio", () => {
           watermark: false,
           origins: [],
         });
-        const phrase = (lang === "en" ? `Not official from ${wideName} or STUBX` : `No oficial de ${wideName} ni de STUBX`)
-          .toLocaleUpperCase("es-ES")
-          .replaceAll(" ", "");
-        const notice = joined(card, "notice");
-        assert.ok(notice.includes(phrase), notice);
-        assert.ok(notice.includes(suffix), notice);
-        assert.ok(card.noticeLines >= 1);
+        assertStampGone(card, `${lang} ${height}`);
         assert.equal(card.topBand, 0);
-        const minPx = Math.max(14, Math.ceil(height * 0.025));
-        const letterPx = noticeLetterPx(card);
-        assert.ok(letterPx >= minPx, `${lang} ${height} letra ${letterPx} < ${minPx}`);
-        assert.ok(letterPx >= 14, `${lang} ${height}`);
-        assert.ok(card.noticeInk >= minPx, `${lang} ${height} tinta ${card.noticeInk}`);
-        const noticeGlyphs = card.glyphs.filter((glyph) => glyph.role === "notice");
-        const right = Math.max(...noticeGlyphs.map((glyph) => glyph.x + glyph.w));
-        assert.ok(right <= card.width, `${lang} ${height} ${right}`);
-        assert.ok(noticeGlyphs.some((glyph) => glyph.ch === "S" && glyph.y >= card.noticeTop));
-        assert.ok(noticeGlyphs.every((glyph) => glyph.y >= card.noticeTop && glyph.y + glyph.h <= card.height));
+        assert.equal(joined(card, "token"), wideName, `${lang} ${height}`);
       }
     }
     const plain = await renderCard({
@@ -1626,9 +1622,8 @@ describe("studio", () => {
       watermark: false,
       origins: [],
     });
-    const shortNotice = NOTICE_SHORT.es.toLocaleUpperCase("es-ES").replaceAll(" ", "");
-    assert.equal(joined(disguised, "notice"), shortNotice);
-    assert.equal(joined(disguised, "notice").includes("NOOFICIALDESTUBXNIDESTUBX"), false);
+    assertStampGone(disguised, "STUBX disfrazado");
+    assert.equal(joined(disguised, "token"), "STUBX");
     const fullwidth = await renderCard({
       width: 1080,
       height: 1080,
@@ -1640,7 +1635,7 @@ describe("studio", () => {
       origins: [],
     });
     assert.equal(joined(fullwidth, "token"), "STUBX");
-    assert.equal(joined(fullwidth, "notice"), shortNotice);
+    assertStampGone(fullwidth, "STUBX ancho");
   });
 
   test("el borrador se guarda y se borra en local", async () => {
@@ -1665,21 +1660,14 @@ describe("studio", () => {
     assert.equal(clipDraftText("hola", 72), "hola");
   });
 
-  test("cada PNG lleva banda, pie, marca de agua, contraste y comentario", { timeout: 120_000 }, async () => {
-    const { renderCard, BRAND_BG, BRAND_FG, contrastHex } = await load<{
+  test("el PNG no lleva pie, marca de agua, etiqueta ni comentario", { timeout: 120_000 }, async () => {
+    const { renderCard, contrastHex } = await load<{
       renderCard: (options: Record<string, unknown>) => Promise<Card>;
-      BRAND_BG: number[];
-      BRAND_FG: number[];
       contrastHex: (a: string, b: string) => number;
     }>("lib/render.mjs");
-    const { NOTICE_FULL, NOTICE_SHORT, PNG_COMMENT } = await load<{
-      NOTICE_FULL: { es: string; en: string };
-      NOTICE_SHORT: { es: string; en: string };
-      PNG_COMMENT: string;
-    }>("lib/copy.mjs");
-    const { readComments, injectComment } = await load<{
+    const { PNG_COMMENT } = await load<{ PNG_COMMENT: string }>("lib/copy.mjs");
+    const { readComments } = await load<{
       readComments: (png: Uint8Array) => { keyword: string; text: string }[];
-      injectComment: (png: Uint8Array, text: string) => Uint8Array;
     }>("lib/png.mjs");
     const templates = JSON.parse(readStudio("templates.json")) as {
       formats: { id: string; width: number; height: number }[];
@@ -1687,7 +1675,7 @@ describe("studio", () => {
       templates: { title: { es: string; en: string }; body: { es: string; en: string } }[];
     };
     assert.ok(contrastHex("#f4f7fb", "#10243f") >= 4.5);
-
+    assert.equal(PNG_COMMENT, "");
     const base = {
       width: 1080,
       height: 1080,
@@ -1700,61 +1688,16 @@ describe("studio", () => {
       zones: templates.zones,
     };
     const marked = await renderCard({ ...base, watermark: false });
-    assert.ok(noticeLetterPx(marked) >= minNoticePx(marked.height), String(noticeLetterPx(marked)));
-    assert.ok(noticeLetterPx(marked) >= 27);
-    assert.ok(marked.noticeInk >= 27);
-    assert.equal(marked.noticeLines, 2);
-    assert.equal(marked.topBand, 0);
-    assert.equal(marked.label, "");
-    assert.equal(marked.glyphs.some((glyph) => glyph.role === "ai"), false);
-    assert.equal(marked.noticeText, NOTICE_SHORT.es);
-    assert.equal(joined(marked, "notice"), NOTICE_SHORT.es.toLocaleUpperCase("es-ES").replaceAll(" ", ""));
-    assert.equal(joined(marked, "notice").includes("ILUSTRACION"), false);
-    assert.equal(marked.glyphs.some((glyph) => glyph.role === "brandTop" || glyph.role === "riskTop"), false);
-    assert.ok(marked.watermarkAlpha >= 0.6);
-    assert.ok(marked.watermarkBox.x > marked.width * 0.55);
-    assert.ok(marked.watermarkBox.y >= 0 && marked.watermarkBox.y < marked.height * 0.12);
-    assert.ok(marked.watermarkBox.w < marked.width * 0.3);
-    assert.ok(marked.watermarkBox.y + marked.watermarkBox.h < marked.noticeTop);
-    assert.equal(readComments(marked.png).some((item) => item.keyword === "Comment" && item.text === PNG_COMMENT), true);
-    const replaced = injectComment(marked.png, PNG_COMMENT);
-    assert.equal(readComments(replaced).filter((item) => item.keyword === "Comment").length, 1);
-    assert.ok(sameColor(pixel(marked, 2, marked.height - 2), [7, 20, 34, 255]));
-    assert.equal(sameColor(pixel(marked, 2, 2), BRAND_BG), false);
-
-    const plate = marked.watermarkPlate;
-    const wm = marked.watermarkColor;
-    const blend = (channel: number, ink: number) => Math.round(channel * (1 - marked.watermarkAlpha) + ink * marked.watermarkAlpha);
-    const expected = [blend(plate[0] ?? 0, wm[0] ?? 0), blend(plate[1] ?? 0, wm[1] ?? 0), blend(plate[2] ?? 0, wm[2] ?? 0)];
-    let corner = 0;
-    let other = 0;
-    const box = marked.watermarkBox;
-    for (let y = box.y; y < box.y + box.h; y += 1) {
-      for (let x = box.x; x < box.x + box.w; x += 1) {
-        const sample = pixel(marked, x, y);
-        if (sample[0] === expected[0] && sample[1] === expected[1] && sample[2] === expected[2]) corner += 1;
-      }
-    }
-    for (let y = 0; y < Math.floor(marked.height * 0.2); y += 2) {
-      for (let x = 0; x < Math.floor(marked.width * 0.35); x += 2) {
-        const sample = pixel(marked, x, y);
-        if (sample[0] === expected[0] && sample[1] === expected[1] && sample[2] === expected[2]) other += 1;
-      }
-    }
-    assert.ok(corner > 20, String(corner));
-    assert.equal(other, 0);
-
-    const none = await renderCard({ ...base, origins: ["ninguno"], watermark: false });
-    assert.equal(none.label, "");
-    assert.equal(none.glyphs.some((glyph) => glyph.role === "ai"), false);
-
+    assert.equal(marked.fits, true);
+    assertStampGone(marked, "mascota");
+    assert.equal(readComments(marked.png).some((item) => item.keyword === "Comment"), false);
+    const ai = await renderCard({ ...base, origins: ["ai"], watermark: false });
+    assertStampGone(ai, "ai");
     const english = await renderCard({ ...base, lang: "en", origins: ["ninguno"], watermark: false });
-    assert.equal(english.noticeText, NOTICE_SHORT.en);
-    assert.equal(joined(english, "notice"), NOTICE_SHORT.en.toLocaleUpperCase("es-ES").replaceAll(" ", ""));
-    assert.equal(english.noticeLines, 1);
-    assert.ok(noticeLetterPx(english) >= 27);
-    assert.equal(english.topBand, 0);
-
+    assertStampGone(english, "en");
+    const story = await renderCard({ ...base, height: 1920, watermark: false });
+    assertStampGone(story, "story");
+    assert.equal(story.height / story.width > 1.7, true);
     for (const format of templates.formats) {
       for (const template of templates.templates) {
         for (const lang of ["es", "en"] as const) {
@@ -1768,209 +1711,12 @@ describe("studio", () => {
             origins: ["mascota"],
             zones: templates.zones,
           });
-          const floor = minNoticePx(format.height);
           assert.equal(card.fits, true, `${format.id} ${lang} ${template.title[lang]}`);
-          const letterPx = noticeLetterPx(card);
-          assert.ok(letterPx >= floor, `${format.id} ${lang} letra ${letterPx} < ${floor}`);
-          assert.ok(letterPx >= 14, `${format.id} ${lang}`);
-          assert.ok(card.noticeInk >= floor, `${format.id} ${lang} tinta ${card.noticeInk}`);
-          assert.ok(card.noticeLines >= 1);
-          assert.equal(card.topBand, 0);
-          const approved = lang === "es" ? [NOTICE_FULL.es, NOTICE_SHORT.es] : [NOTICE_FULL.en, NOTICE_SHORT.en];
-          assert.ok(approved.includes(card.noticeText), card.noticeText);
-          assert.ok(joined(card, "notice").includes(lang === "es" ? "CRIPTO" : "HIGH-RISK"));
+          assertStampGone(card, `${format.id} ${lang}`);
+          assert.equal(joined(card, "title").length > 0, true, `${format.id} ${lang}`);
         }
       }
     }
-  });
-
-  test("el aviso mínimo de Legal queda en una línea, el formato corto y la marca en una esquina", { timeout: 60_000 }, async () => {
-    const { renderCard } = await load<{ renderCard: (options: Record<string, unknown>) => Promise<Card> }>("lib/render.mjs");
-    const { NOTICE_FULL, NOTICE_SHORT, NOTICE_MIN_PX, NOTICE_RATIO, WATERMARK_ALPHA } = await load<{
-      NOTICE_FULL: { es: string; en: string };
-      NOTICE_SHORT: { es: string; en: string };
-      NOTICE_MIN_PX: number;
-      NOTICE_RATIO: number;
-      WATERMARK_ALPHA: number;
-    }>("lib/copy.mjs");
-    const footer = [7, 20, 34, 255];
-    const avatarColor = [255, 0, 128, 255];
-    const avatar = { width: 4, height: 4, rgba: new Uint8ClampedArray(4 * 4 * 4) };
-    for (let i = 0; i < avatar.rgba.length; i += 4) {
-      avatar.rgba[i] = avatarColor[0] ?? 0;
-      avatar.rgba[i + 1] = avatarColor[1] ?? 0;
-      avatar.rgba[i + 2] = avatarColor[2] ?? 0;
-      avatar.rgba[i + 3] = 255;
-    }
-    const cover = { x: 0, y: 0, w: 1, h: 1 };
-    const covered = await renderCard({
-      width: 1080,
-      height: 1080,
-      lang: "es",
-      title: "TAPA ".repeat(80),
-      body: "TAPA ".repeat(160),
-      token: "STUBX",
-      watermark: false,
-      origins: [],
-      avatar,
-      zones: { title: cover, body: cover, avatar: cover },
-      fill: "#0a090d",
-      ink: "#fff3f5",
-    });
-    assert.equal(NOTICE_FULL.es, "Contenido comunitario · No oficial · Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión");
-    assert.equal(covered.noticeText, NOTICE_SHORT.es);
-    assert.equal(joined(covered, "notice"), NOTICE_SHORT.es.toLocaleUpperCase("es-ES").replaceAll(" ", ""));
-    assert.equal(covered.noticeLines, 2);
-    assert.equal(covered.topBand, 0);
-    assert.ok(noticeLetterPx(covered) >= Math.ceil(covered.height * NOTICE_RATIO), String(noticeLetterPx(covered)));
-    assert.ok(noticeLetterPx(covered) >= 27);
-    assert.ok(noticeLetterPx(covered) >= NOTICE_MIN_PX);
-    assert.ok(covered.noticeInk >= Math.ceil(covered.height * NOTICE_RATIO));
-    const noticeGlyphs = covered.glyphs.filter((glyph) => glyph.role === "notice");
-    assert.ok(noticeGlyphs.length > 20);
-    assert.ok(Math.max(...noticeGlyphs.map((glyph) => glyph.x + glyph.w)) <= covered.width);
-    for (const glyph of covered.glyphs) {
-      if (glyph.role === "notice") {
-        assert.ok(glyph.y >= covered.noticeTop);
-        assert.ok(glyph.y + glyph.h <= covered.height);
-      } else {
-        assert.ok(glyph.y + glyph.h <= covered.noticeTop, glyph.role);
-      }
-    }
-    let avatarInNotice = 0;
-    for (let y = covered.noticeTop; y < covered.height; y += 1) {
-      for (let x = 0; x < covered.width; x += 4) {
-        const sample = pixel(covered, x, y);
-        if (sample[0] === avatarColor[0] && sample[1] === avatarColor[1] && sample[2] === avatarColor[2]) avatarInNotice += 1;
-      }
-    }
-    assert.equal(avatarInNotice, 0);
-    assert.ok(sameColor(pixel(covered, 2, covered.height - 2), footer));
-    assert.equal(sameColor(pixel(covered, 2, 2), avatarColor), false);
-
-    const english = await renderCard({
-      width: 1080,
-      height: 1080,
-      lang: "en",
-      title: "Hello",
-      body: "Clean text.",
-      watermark: false,
-      origins: [],
-    });
-    assert.equal(english.noticeText, NOTICE_SHORT.en);
-    assert.equal(english.noticeLines, 1);
-    assert.ok(noticeLetterPx(english) >= 27);
-    assert.ok(english.noticeInk >= NOTICE_MIN_PX);
-
-    const square1024 = await renderCard({
-      width: 1024,
-      height: 1024,
-      lang: "es",
-      title: "Hola",
-      body: "Texto corto.",
-      watermark: false,
-      origins: [],
-    });
-    assert.ok(noticeLetterPx(square1024) >= 26, String(noticeLetterPx(square1024)));
-    assert.ok(square1024.noticeInk >= Math.ceil(1024 * NOTICE_RATIO));
-
-    const story = await renderCard({
-      width: 1080,
-      height: 1920,
-      lang: "es",
-      title: "Hola",
-      body: "Texto corto.",
-      watermark: false,
-      origins: [],
-    });
-    assert.equal(story.noticeText, NOTICE_SHORT.es);
-    assert.equal(story.noticeLines, 2);
-    assert.ok(noticeLetterPx(story) >= 48, String(noticeLetterPx(story)));
-    assert.ok(story.noticeInk >= Math.ceil(story.height * NOTICE_RATIO));
-    assert.equal(story.topBand, 0);
-
-    assert.equal(NOTICE_SHORT.es, "No oficial · Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión");
-    for (const [width, height] of [[720, 720], [1080, 720], [640, 900]] as const) {
-      for (const lang of ["es", "en"] as const) {
-        const card = await renderCard({
-          width,
-          height,
-          lang,
-          title: "Hola",
-          body: "Texto corto.",
-          watermark: false,
-          origins: [],
-        });
-        const approved = card.noticeText === NOTICE_FULL[lang] || card.noticeText === NOTICE_SHORT[lang];
-        assert.equal(approved, true, `${width}x${height} ${lang} ${card.noticeText}`);
-        assert.ok(card.noticeLines >= 1, `${width}x${height} ${lang}`);
-        const letterPx = noticeLetterPx(card);
-        const floor = Math.max(NOTICE_MIN_PX, Math.ceil(height * NOTICE_RATIO));
-        assert.ok(letterPx >= floor, `${width}x${height} letra ${letterPx} < ${floor}`);
-        assert.ok(card.noticeInk >= floor, `${width}x${height} ink ${card.noticeInk}`);
-        const right = Math.max(...card.glyphs.filter((glyph) => glyph.role === "notice").map((glyph) => glyph.x + glyph.w));
-        assert.ok(right <= card.width, `${width}x${height}`);
-      }
-    }
-    const wideShort = await renderCard({
-      width: 1080,
-      height: 720,
-      lang: "es",
-      title: "Hola",
-      body: "Texto corto.",
-      watermark: false,
-      origins: [],
-    });
-    assert.equal(wideShort.noticeText, NOTICE_FULL.es);
-    assert.equal(wideShort.noticeLines, 1);
-
-    const stamp = await renderCard({
-      width: 1080,
-      height: 1080,
-      lang: "es",
-      title: "",
-      body: "",
-      watermark: false,
-      origins: [],
-      avatar,
-      zones: { title: cover, body: cover, avatar: cover },
-      fill: "#0a090d",
-    });
-    assert.ok(WATERMARK_ALPHA >= 0.6);
-    assert.ok(stamp.watermarkAlpha >= 0.6);
-    assert.equal(stamp.watermarkAlpha, WATERMARK_ALPHA);
-    assert.equal(covered.watermarkAlpha, WATERMARK_ALPHA);
-    assert.ok(joined(stamp, "watermark").includes("NOOFICIAL"));
-    assert.ok(joined(covered, "watermark").includes("NOOFICIAL"));
-    const box = stamp.watermarkBox;
-    assert.ok(box.w > 0 && box.h > 0);
-    assert.ok(box.w < stamp.width * 0.3);
-    assert.ok(box.h < stamp.height * 0.08);
-    assert.ok(box.x > stamp.width * 0.55);
-    assert.ok(box.y >= 0 && box.y + box.h < stamp.height * 0.12);
-    assert.ok(box.y + box.h < stamp.noticeTop);
-    const wm = stamp.watermarkColor;
-    const plate = stamp.watermarkPlate;
-    const blend = (channel: number, ink: number) => Math.round(channel * (1 - stamp.watermarkAlpha) + ink * stamp.watermarkAlpha);
-    const expected = [
-      blend(plate[0] ?? 0, wm[0] ?? 0),
-      blend(plate[1] ?? 0, wm[1] ?? 0),
-      blend(plate[2] ?? 0, wm[2] ?? 0),
-    ];
-    assert.deepEqual(pixel(stamp, box.x + 1, box.y + 1).slice(0, 3), plate);
-    assert.ok(contrastRgb(expected, plate) >= 3);
-    let corner = 0;
-    for (let y = box.y; y < box.y + box.h; y += 1) {
-      for (let x = box.x; x < box.x + box.w; x += 1) {
-        const sample = pixel(stamp, x, y);
-        if (sample[0] === expected[0] && sample[1] === expected[1] && sample[2] === expected[2]) corner += 1;
-      }
-    }
-    assert.ok(corner > 20, String(corner));
-  });
-
-  test("la marca NO OFICIAL contrasta al menos 3:1 sobre cada fondo", { timeout: 60_000 }, async () => {
-    const { renderCard } = await load<{ renderCard: (options: Record<string, unknown>) => Promise<Card> }>("lib/render.mjs");
     const catalog = JSON.parse(readStudio("catalog.json")) as {
       items: { id: string; tipo: string; fill?: string; ink?: string }[];
     };
@@ -1989,41 +1735,16 @@ describe("studio", () => {
         watermark: false,
         origins: [],
       });
-      const box = card.watermarkBox;
-      const platePx = pixel(card, box.x + 1, box.y + 1);
-      assert.deepEqual(platePx.slice(0, 3), card.watermarkPlate, fondo.id);
-      let inkPx: number[] | null = null;
-      for (let y = box.y; y < box.y + box.h; y += 1) {
-        for (let x = box.x; x < box.x + box.w; x += 1) {
-          const sample = pixel(card, x, y);
-          if (sample[0] === platePx[0] && sample[1] === platePx[1] && sample[2] === platePx[2]) continue;
-          const sum = (sample[0] ?? 0) + (sample[1] ?? 0) + (sample[2] ?? 0);
-          if (!inkPx || sum > (inkPx[0] ?? 0) + (inkPx[1] ?? 0) + (inkPx[2] ?? 0)) inkPx = sample;
-        }
-      }
-      assert.ok(inkPx, fondo.id);
-      const ratio = contrastRgb(inkPx ?? [], platePx);
-      assert.ok(ratio >= 3, `${fondo.id} ${ratio.toFixed(2)}`);
-      assert.ok(card.watermarkAlpha >= 0.6, fondo.id);
+      assertStampGone(card, fondo.id);
     }
   });
 
-  test("un titular largo no entra en la placa y la mascota no lleva la etiqueta de IA", { timeout: 120_000 }, async () => {
+  test("un titular largo se dibuja y no lleva etiqueta", { timeout: 120_000 }, async () => {
     const { renderCard } = await load<{ renderCard: (options: Record<string, unknown>) => Promise<Card> }>("lib/render.mjs");
     const { HEADLINES } = await load<{ HEADLINES: { id: string }[] }>("lib/headlines.mjs");
-    const { AI_LABEL } = await load<{ AI_LABEL: { ai: { es: string; en: string } } }>("lib/copy.mjs");
     const templates = JSON.parse(readStudio("templates.json")) as {
       formats: { id: string; width: number; height: number }[];
     };
-    const padFor = (id: string) => {
-      if (id === "comic") return 0.11;
-      if (id === "neon") return 0.16;
-      if (id === "pixel") return 0.07;
-      if (id === "bold") return 0.08;
-      return 0.09;
-    };
-    const hits = (a: { x: number; y: number; w: number; h: number }, b: { x: number; y: number; w: number; h: number }) =>
-      a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
     const longTitle = "prueba ".repeat(12).trim().slice(0, 72).trim();
     assert.ok(longTitle.length >= 60, longTitle);
     for (const format of templates.formats) {
@@ -2042,14 +1763,7 @@ describe("studio", () => {
         });
         const titles = card.glyphs.filter((glyph) => glyph.role === "title");
         assert.ok(titles.length > 8, `${format.id} ${headline.id}`);
-        assert.equal(card.label, "", `${format.id} ${headline.id}`);
-        assert.equal(card.glyphs.some((glyph) => glyph.role === "ai"), false, `${format.id} ${headline.id}`);
-        const plate = card.watermarkBox;
-        for (const glyph of titles) {
-          const pad = glyph.size * padFor(headline.id) + 1;
-          const box = { x: glyph.x - pad, y: glyph.y - pad, w: glyph.w + pad * 2, h: glyph.h + pad * 2 };
-          assert.equal(hits(box, plate), false, `${format.id} ${headline.id} ${glyph.ch}`);
-        }
+        assertStampGone(card, `${format.id} ${headline.id}`);
       }
     }
     for (const [width, height] of [[1080, 1080], [1080, 1920]] as const) {
@@ -2064,26 +1778,7 @@ describe("studio", () => {
         fill: "#fff3f5",
         ink: "#120a0e",
       });
-      assert.equal(card.label, AI_LABEL.ai.es, `${width}x${height}`);
-      assert.ok(card.glyphs.some((glyph) => glyph.role === "ai"), `${width}x${height}`);
-      const box = card.labelBox;
-      assert.ok(box, `${width}x${height}`);
-      const platePx = pixel(card, (box?.x ?? 0) + 1, (box?.y ?? 0) + 1);
-      assert.deepEqual(platePx.slice(0, 3), card.watermarkPlate, `${width}x${height}`);
-      let inkPx: number[] | null = null;
-      const x1 = Math.min(card.width, (box?.x ?? 0) + (box?.w ?? 0));
-      const y1 = Math.min(card.height, (box?.y ?? 0) + (box?.h ?? 0));
-      for (let y = box?.y ?? 0; y < y1; y += 1) {
-        for (let x = box?.x ?? 0; x < x1; x += 1) {
-          const sample = pixel(card, x, y);
-          if (sample[0] === platePx[0] && sample[1] === platePx[1] && sample[2] === platePx[2]) continue;
-          const sum = (sample[0] ?? 0) + (sample[1] ?? 0) + (sample[2] ?? 0);
-          if (!inkPx || sum > (inkPx[0] ?? 0) + (inkPx[1] ?? 0) + (inkPx[2] ?? 0)) inkPx = sample;
-        }
-      }
-      assert.ok(inkPx, `${width}x${height}`);
-      assert.ok(contrastRgb(inkPx ?? [], platePx) >= 3, `${width}x${height}`);
-      assert.ok((box?.y ?? 0) + (box?.h ?? 0) <= card.noticeTop, `${width}x${height}`);
+      assertStampGone(card, `${width}x${height}`);
     }
   });
 
@@ -2135,9 +1830,8 @@ describe("studio", () => {
     }
   });
 
-  test("un texto largo con eñe sigue llevando pie y marca", { timeout: 60_000 }, async () => {
+  test("un texto largo con eñe no lleva pie ni marca", { timeout: 60_000 }, async () => {
     const { renderCard } = await load<{ renderCard: (options: Record<string, unknown>) => Promise<Card> }>("lib/render.mjs");
-    const { NOTICE_SHORT } = await load<{ NOTICE_SHORT: { es: string } }>("lib/copy.mjs");
     const line = "¿Ñandú pingüino sigue en la viñeta? ¡Sí! ";
     const card = await renderCard({
       width: 1080,
@@ -2149,8 +1843,7 @@ describe("studio", () => {
       origins: [],
     });
     assert.equal(card.fits, false);
-    assert.equal(joined(card, "notice"), NOTICE_SHORT.es.toLocaleUpperCase("es-ES").replaceAll(" ", ""));
-    assert.equal(card.noticeLines, 2);
+    assertStampGone(card, "eñe");
     assert.equal(card.topBand, 0);
     for (const ch of ["¿", "Ñ", "Ü", "¡"]) {
       const glyph = card.glyphs.find((item) => item.ch === ch && (item.role === "title" || item.role === "body"));
@@ -2166,11 +1859,7 @@ describe("studio", () => {
       watermark: false,
       origins: [],
     });
-    assert.ok(noticeLetterPx(story) >= 48, String(noticeLetterPx(story)));
-    assert.ok(noticeLetterPx(story) >= 14);
-    assert.ok(story.noticeInk >= Math.ceil(story.height * 0.025));
-    assert.equal(story.noticeLines, 2);
-    assert.equal(joined(story, "notice"), NOTICE_SHORT.es.toLocaleUpperCase("es-ES").replaceAll(" ", ""));
+    assertStampGone(story, "story eñe");
     assert.equal(story.topBand, 0);
   });
 

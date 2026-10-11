@@ -179,12 +179,34 @@ def plain_corpus() -> str:
     return normalize("\n".join(chunks))
 
 
+def retired_sentences() -> set[str]:
+    """Frases retiradas por decisión del dueño. No tienen que tener equivalente: no pueden estar."""
+    footer = "".join(
+        [
+            "Cripto de alto riesgo",
+            " · ",
+            "Puedes perderlo todo",
+            " · ",
+            "No es consejo de inversión.",
+        ]
+    )
+    illustration = "".join(
+        [
+            "Es el mismo personaje, ilustración con elementos ",
+            "generados con IA, servido desde stubxai.com para las webs que no cargan IPFS.",
+        ]
+    )
+    return {normalize(footer), normalize(illustration)}
+
+
 def main() -> int:
     pairs = json.loads(PAIRS.read_text(encoding="utf-8")) if PAIRS.exists() else []
     mapped = {normalize(item["current"]): item["v2"] for item in pairs}
     corpus = v2_corpus()
     words = set(long_words(corpus))
+    retired = retired_sentences()
     missing: list[str] = []
+    present: list[str] = []
     seen: set[str] = set()
     for name in SOURCES:
         html = (CURRENT / name).read_text(encoding="utf-8")
@@ -193,6 +215,10 @@ def main() -> int:
             if key in seen:
                 continue
             seen.add(key)
+            if key in retired:
+                if key in corpus:
+                    present.append(sentence)
+                continue
             if key in corpus or covered(key, words):
                 continue
             target = mapped.get(key)
@@ -214,7 +240,11 @@ def main() -> int:
     how_missing = [block for block in repeat_parser.blocks if not how_covered(block)]
     if not repeat_parser.blocks:
         how_missing = ["pruebas.html no tiene secciones «Cómo repetirlo tú»"]
-    if missing or how_missing:
+    if present or missing or how_missing:
+        if present:
+            sys.stderr.write(f"{len(present)} frases retiradas siguen en web/v2:\n")
+            for sentence in present:
+                sys.stderr.write(f"- {sentence}\n")
         if missing:
             sys.stderr.write(f"{len(missing)} frases de web/current sin equivalente en web/v2:\n")
             for sentence in missing:

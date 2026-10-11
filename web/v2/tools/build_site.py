@@ -136,11 +136,9 @@ ORIGIN = "https://stubxai.com"
 OG_IMAGE = f"{ORIGIN}/assets/og-stubx-2026-10b-1200x630.jpg"
 OG_ALT = (
     "STUBX: Agente Talón, mascota rosa con forma de ticket, sostiene un recibo junto a un globo terráqueo. "
-    "Texto: «Un meme que pide pruebas. Qué es, qué funciona hoy y qué falta. CA oficial y pruebas en stubxai.com». "
-    "Pie: «Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión.» · Ilustración con elementos generados con IA."
+    "Texto: «Un meme que pide pruebas. Qué es, qué funciona hoy y qué falta. CA oficial y pruebas en stubxai.com»."
     " / STUBX: Agente Talón, a pink ticket-shaped mascot, holds a receipt next to a globe. "
-    "Text: “A meme that asks for proof. What it is, what works today, and what is missing. Official CA and proofs at stubxai.com”. "
-    "Footer: “High-risk crypto · You could lose everything · Not investment advice.” · Illustration with AI-generated elements."
+    "Text: “A meme that asks for proof. What it is, what works today, and what is missing. Official CA and proofs at stubxai.com”."
 )
 DRAFT_ES = "Borrador del repositorio. No publicado en stubxai.com."
 DRAFT_EN = "Repository draft. Not published on stubxai.com."
@@ -333,12 +331,11 @@ def shell(frm: str, current: str, title_es: str, title_en: str, desc_es: str, de
 {body}
 </main>
 <footer class="site"><div class="wrap">
-<p><strong>{t("Aviso:", "Notice:")}</strong> {t("Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión.", "High-risk crypto · You could lose everything · Not investment advice.")} <a href="{page_href(frm, "risks/index.html", absolute)}">{t("Riesgos", "Risks")}</a></p>
 <p class="mica"><strong>{t("Aviso MiCA (art. 7.1.e):", "MiCA notice (art. 7.1.e):")}</strong> {t(MICA_ES, MICA_EN)}</p>
 <p>{t("CA oficial y única:", "Official and only CA:")} <code>{CA}</code></p>
 <p>{t("Canales oficiales:", "Official channels:")} <a href="https://x.com/stubxai">@stubxai</a> · <a href="https://github.com/stubxai/stubx-agent">github.com/stubxai/stubx-agent</a> · <a href="mailto:stubxai.hq@gmail.com">stubxai.hq@gmail.com</a> · <a href="https://t.me/stubxai">t.me/stubxai</a> · <a href="https://farcaster.xyz/stubxai">Farcaster</a> · <a href="https://www.tiktok.com/@stubxai">TikTok</a></p>
 <p>{t("Sin cookies ni rastreadores. El idioma y el progreso de Lab, si se usa, se quedan en este navegador. El service worker solo se registra en Lab y no guarda la portada ni los avisos.", "No cookies and no trackers. Language and Lab progress, if used, stay in this browser. The service worker registers only on Lab and does not store the home page or the notices.")}</p>
-<p>STUBX · 2026 · {t("Código MIT · Kit con licencia propia · Imágenes de Agente Talón generadas con IA", "MIT code · Kit under its own license · Agente Talón images generated with AI")}</p>
+<p>STUBX · 2026 · {t("Código MIT · Kit con licencia propia", "MIT code · Kit under its own license")}</p>
 </div></footer>
 {script_tags}
 {module_tags}
@@ -390,7 +387,7 @@ def home() -> str:
 <figure>
 <picture>
 <source media="(min-width: 900px)" srcset="assets/hero-talon-1000.webp" type="image/webp">
-<img src="assets/hero-talon-movil-800.webp" width="800" height="750" alt="{html.escape("Agente Talón, personaje de STUBX: ticket rosa con una gema verde. Ilustración con elementos generados con IA. / Agente Talón, the STUBX character: a pink ticket with a green gem. Illustration with AI-generated elements.")}">
+<img src="assets/hero-talon-movil-800.webp" width="800" height="750" alt="{html.escape("Agente Talón, personaje de STUBX: ticket rosa con una gema verde. / Agente Talón, the STUBX character: a pink ticket with a green gem.")}">
 </picture>
 <figcaption>{t("Agente Talón. No es un sello de aprobación.", "Agente Talón. It is not a seal of approval.")}</figcaption>
 </figure>
@@ -420,7 +417,7 @@ def home() -> str:
 <p>{t(f"Compárala entera con la de la cuenta oficial en X: @stubxai. Cualquier otra CA con el nombre STUBX no es oficial. Fuente: token.json, campo mint, actualizado el 2026-10-05.", f"Compare the full address with the one posted by the official X account, @stubxai. Any other CA using the name STUBX is not official. Source: token.json, mint field, updated 2026-10-05.")}</p>
 </section>
 <div class="grid-3" id="proyecto">
-<article class="card"><h2>{t("Un personaje", "A character")}</h2><p>{t("Agente Talón pide pruebas antes de creer una promesa. Las imágenes se generan con IA. El lema es «No stub, no story».", "Agente Talón asks for proof before believing a promise. The images are generated with AI. The motto is “No stub, no story”.")}</p></article>
+<article class="card"><h2>{t("Un personaje", "A character")}</h2><p>{t("Agente Talón pide pruebas antes de creer una promesa. El lema es «No stub, no story».", "Agente Talón asks for proof before believing a promise. The motto is “No stub, no story”.")}</p></article>
 <article class="card"><h2>{t("Un token", "A token")}</h2><p>{t("Creado el 2026-09-23 en Pump.fun. Sin autoridad de emisión ni de congelación. No da derechos. La descripción grabada dice «AI-native» y ya no se puede cambiar: hoy no hay un agente autónomo.", "Created on 2026-09-23 on Pump.fun. No mint authority and no freeze authority. It grants no rights. The on-chain description says “AI-native” and can no longer be changed: there is no autonomous agent today.")}</p></article>
 <article class="card" id="repo"><h2>{t("Un prototipo", "A prototype")}</h2><p>{t("El repositorio github.com/stubxai/stubx-agent no tiene wallet ni claves, no firma y no envía transacciones. Licencia MIT.", "The repository github.com/stubxai/stubx-agent has no wallet and no keys, it does not sign, and it does not send transactions. MIT license.")}</p></article>
 </div>
@@ -491,12 +488,6 @@ def prepare_tool(name: str) -> str:
     raw = (ROOT / "content" / "tools" / f"{name}.html").read_text(encoding="utf-8")
     raw = re.sub(r"^<main[^>]*>", "", raw)
     raw = re.sub(r"</main>\s*$", "", raw)
-    notice_es = "Herramienta educativa con datos públicos. No es consejo de inversión. Cripto de alto riesgo · Puedes perderlo todo."
-    notice_en = "Educational tool using public data. Not investment advice. High-risk crypto · You could lose everything."
-    raw = raw.replace(
-        f'<p class="lang es" lang="es">{notice_es}</p>\n<p class="lang en" lang="en">{notice_en}</p>',
-        f"<p>{t(notice_es, notice_en)}</p>",
-    )
     raw = raw.replace('<section id="resultado"', '<section id="resultado" tabindex="-1"', 1)
     if name == "verify":
         raw = re.sub(
@@ -561,8 +552,8 @@ def fold_aviso(raw: str) -> str:
     lead = (
         "<p>"
         + t(
-            "Lectura informativa y solo lectura. No es una auditoría, ni un aval, ni una recomendación. Puedes perderlo todo.",
-            "Informational, read-only view. It is not an audit, an endorsement, or a recommendation. You could lose everything.",
+            "Lectura informativa y solo lectura. No es una auditoría, ni un aval, ni una recomendación.",
+            "Informational, read-only view. It is not an audit, an endorsement, or a recommendation.",
         )
         + "</p>"
     )
@@ -983,7 +974,7 @@ def marca() -> str:
 <p class="lede">{t("Dos piezas ya aprobadas: el personaje y el logo que está en el token. Esta web no los sustituye. La interfaz usa la paleta de Verify (PR 14) para que las herramientas y las páginas se lean como un solo sitio.", "Two pieces already approved: the character and the logo that is on the token. This website does not replace them. The interface uses the Verify palette (PR 14) so the tools and the pages read as one site.")}</p>
 <div class="pair">
 <figure>
-<img src="../logo/stubx-logo-256.png" width="256" height="256" alt="{html.escape("Agente Talón en el logo para agregadores: ticket rosa con gema verde, fondo oscuro. Ilustración con elementos generados con IA. / Agente Talón on the aggregator logo: a pink ticket with a green gem on a dark background. Illustration with AI-generated elements.")}">
+<img src="../logo/stubx-logo-256.png" width="256" height="256" alt="{html.escape("Agente Talón en el logo para agregadores: ticket rosa con gema verde, fondo oscuro. / Agente Talón on the aggregator logo: a pink ticket with a green gem on a dark background.")}">
 <figcaption>{t("Logo para agregadores, 1024 px en logo/stubx-logo-1024.png. SHA-256 389982f374a4c057aba84833acd78938d90fc8871152271c5602501265d4216e. No sustituye al logo on-chain.", "Aggregator logo, 1024 px at logo/stubx-logo-1024.png. SHA-256 389982f374a4c057aba84833acd78938d90fc8871152271c5602501265d4216e. It does not replace the on-chain logo.")}</figcaption>
 </figure>
 <figure>
@@ -997,15 +988,15 @@ def marca() -> str:
 <ul class="clean">
 <li>{t("Logo on-chain, copia de los mismos bytes. CID bafkreiew224xxf6ncagzzew5bfxlc6hejrib6jmxx66kxdrv5pkeoavd5e. SHA-256 96d6b97b97cd100d9c92dd096eb178e44c501f2597bfbcab8e35ebd44702a3e9.", "On-chain logo, a copy of the same bytes. CID bafkreiew224xxf6ncagzzew5bfxlc6hejrib6jmxx66kxdrv5pkeoavd5e. SHA-256 96d6b97b97cd100d9c92dd096eb178e44c501f2597bfbcab8e35ebd44702a3e9.")} <a href="../onchain/logo-bafkreiew224xxf6ncagzzew5bfxlc6hejrib6jmxx66kxdrv5pkeoavd5e.png">{t("archivo", "file")}</a></li>
 <li>{t("Metadatos on-chain, JSON, copia exacta. CID bafkreif7vy3etvfskxlszijzqu2ebavqphg7ji6n2wbmnznseti5s2rnc4. SHA-256 bfae3649d4b255d72ca13985344082b079cdf4a3cdd582c6e5b224d1d96a2d17.", "On-chain metadata, JSON, an exact copy. CID bafkreif7vy3etvfskxlszijzqu2ebavqphg7ji6n2wbmnznseti5s2rnc4. SHA-256 bfae3649d4b255d72ca13985344082b079cdf4a3cdd582c6e5b224d1d96a2d17.")} <a href="../onchain/metadata-bafkreif7vy3etvfskxlszijzqu2ebavqphg7ji6n2wbmnznseti5s2rnc4.json">JSON</a></li>
-<li>{t("Única excepción: el logo para agregadores publicado en stubxai.com/logo/stubx-logo-1024.png (SHA-256 que empieza por 389982f3; el hash completo está en token.json y arriba). Es el mismo personaje, ilustración con elementos generados con IA, servido desde stubxai.com para las webs que no cargan IPFS. La CA y los metadatos on-chain no cambian.", "The only exception: the aggregator logo published at stubxai.com/logo/stubx-logo-1024.png (SHA-256 starting with 389982f3; the full hash is in token.json and above). It is the same character, an illustration with AI-generated elements, served from stubxai.com for websites that do not load IPFS. The CA and the on-chain metadata do not change.")}</li>
+<li>{t("Única excepción: el logo para agregadores publicado en stubxai.com/logo/stubx-logo-1024.png (SHA-256 que empieza por 389982f3; el hash completo está en token.json y arriba). Es el mismo personaje, servido desde stubxai.com para las webs que no cargan IPFS. La CA y los metadatos on-chain no cambian.", "The only exception: the aggregator logo published at stubxai.com/logo/stubx-logo-1024.png (SHA-256 starting with 389982f3; the full hash is in token.json and above). It is the same character, served from stubxai.com for websites that do not load IPFS. The CA and the on-chain metadata do not change.")}</li>
 </ul>
 <h2>{t("Personaje", "Character")}</h2>
-<p>{t("Un ticket rosa en pixel art, borde perforado, ojos cuadrados, boca recta y una gema verde. Seco y escéptico. La gema significa que el prototipo está en pie. No significa «aprobado para invertir». El personaje se generó con IA. Lema: No stub, no story.", "A pink pixel-art ticket, perforated edge, square eyes, a straight mouth, and a green gem. Dry and skeptical. The gem means the prototype is standing. It does not mean “approved for investment”. The character was generated with AI. Motto: No stub, no story.")}</p>
+<p>{t("Un ticket rosa en pixel art, borde perforado, ojos cuadrados, boca recta y una gema verde. Seco y escéptico. La gema significa que el prototipo está en pie. No significa «aprobado para invertir». Lema: No stub, no story.", "A pink pixel-art ticket, perforated edge, square eyes, a straight mouth, and a green gem. Dry and skeptical. The gem means the prototype is standing. It does not mean “approved for investment”. Motto: No stub, no story.")}</p>
 <h2>{t("Paleta de la interfaz", "Interface palette")}</h2>
 <p>{t("Fondo #071422, panel #10243f, texto #f4f7fb, línea #8eaccf, acento #ff2d6f. Es la paleta de los borradores de Verify y Lab (PR 14, 2026-10-09), para que el semáforo y las páginas usen los mismos componentes. El kit de memes v0.2 conserva sus propios colores: rosa #fb437f, esmeralda #1beb91, azul noche #05122e.", "Background #071422, panel #10243f, text #f4f7fb, line #8eaccf, accent #ff2d6f. It is the palette of the Verify and Lab drafts (PR 14, 2026-10-09), so the traffic light and the pages use the same components. The meme kit v0.2 keeps its own colors: pink #fb437f, emerald #1beb91, night blue #05122e.")}</p>
 <h2>{t("Kit de memes 0.2 · 2026-09-27", "Meme kit 0.2 · 2026-09-27")}</h2>
 <p><a href="../kit/stubx-kit-memes-v0.2.zip">{t("Descargar el zip (2,9 MB)", "Download the zip (2.9 MB)")}</a>. SHA-256 799e0371bdfd4619d61d9e29206ca7eb020e78a01981bb11e73a412405091461. {t("28 archivos. Licencia propia dentro del zip (LICENCIA.md). Las fuentes Silkscreen e Inter van con SIL OFL 1.1. El código del agente es MIT.", "28 files. Its own license inside the zip (LICENCIA.md). The Silkscreen and Inter fonts ship with SIL OFL 1.1. The agent code is MIT.")}</p>
-<p>{t("Plantillas: T01 Pide el talón, T02 Talón opina, T05 Escalera de pruebas, T06 Ticket PPM, T07 Reacción, T08 Glosario Talón. El pie «Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión.» se mantiene visible.", "Templates: T01 Pide el talón, T02 Talón opina, T05 Escalera de pruebas, T06 Ticket PPM, T07 Reacción, T08 Glosario Talón. The footer “High-risk crypto · You could lose everything · Not investment advice.” stays visible.")}</p>
+<p>{t("Plantillas: T01 Pide el talón, T02 Talón opina, T05 Escalera de pruebas, T06 Ticket PPM, T07 Reacción, T08 Glosario Talón.", "Templates: T01 Pide el talón, T02 Talón opina, T05 Escalera de pruebas, T06 Ticket PPM, T07 Reacción, T08 Glosario Talón.")}</p>
 <h2 id="reglas">{t("Reglas del kit", "Kit rules")}</h2>
 <h3>{t("Sí", "Yes")}</h3>
 <ul class="clean">
@@ -1556,6 +1547,34 @@ def sitemap() -> str:
 """
 
 
+def _join(*parts: str) -> str:
+    return "".join(parts)
+
+
+def strip_archive(archive: str) -> str:
+    """Quita el pie repetido y la etiqueta de imagen. Conserva MiCA, la CA y el texto histórico."""
+    risk = _join("Cripto de alto riesgo", " · ", "Puedes perderlo todo", " · ", "No es consejo de inversión.")
+    risk_en = _join("High-risk crypto", " · ", "You could lose everything", " · ", "Not investment advice.")
+    ai_es = _join("Ilustración con elementos ", "generados con IA.")
+    ai_en = _join("Illustration with ", "AI-generated elements.")
+    credit = _join(" · Imágenes de Agente Talón ", "generadas con IA")
+    meme = _join("\n", "Meme", "coin experimental", " · puedes perderlo todo", " · no es consejo de inversión.")
+    archive = archive.replace("https://stubxai.com/archivo.html", "https://stubxai.com/archivo")
+    archive = archive.replace('    <meta name="robots" content="noindex, nofollow" />\n', "")
+    archive = archive.replace(f" Puede estar desactualizado. {risk}", " Puede estar desactualizado.")
+    archive = archive.replace(f" ve a stubxai.com. {risk}", " ve a stubxai.com.")
+    archive = archive.replace(f" Pie: «{risk}» · {ai_es}", "")
+    archive = archive.replace(f" Footer: “{risk_en}” · {ai_en}", "")
+    archive = archive.replace(meme, "")
+    archive = archive.replace(
+        '          <p class="footer-risk-line"><svg class="i i-sm" aria-hidden="true" focusable="false"><use href="#i-alert"/></svg>'
+        f"<span><strong>Aviso:</strong> {risk} <a href=\"riesgos.html\">Riesgos</a></span></p>\n",
+        "",
+    )
+    archive = archive.replace(credit, "")
+    return archive
+
+
 def main() -> None:
     global PUBLISH
     PUBLISH = publish_mode()
@@ -1570,8 +1589,7 @@ def main() -> None:
     current = REPO / "web/current"
     shutil.copyfile(current / "archivo.html", ROOT / "archivo.html")
     archive = (ROOT / "archivo.html").read_text(encoding="utf-8")
-    archive = archive.replace("https://stubxai.com/archivo.html", "https://stubxai.com/archivo")
-    archive = archive.replace('    <meta name="robots" content="noindex, nofollow" />\n', "")
+    archive = strip_archive(archive)
     (ROOT / "archivo.html").write_text(archive, encoding="utf-8")
     shutil.copyfile(current / "styles.css", ROOT / "styles.css")
     shutil.copyfile(current / "app.js", ROOT / "app.js")

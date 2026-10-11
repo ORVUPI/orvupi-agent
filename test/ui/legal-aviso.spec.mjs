@@ -3,9 +3,21 @@ import { expect, test } from "@playwright/test";
 const FOOTER_ES = "Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión.";
 const FOOTER_EN = "High-risk crypto · You could lose everything · Not investment advice.";
 const LEAD_ES =
-  "Lectura informativa y solo lectura. No es una auditoría, ni un aval, ni una recomendación. Puedes perderlo todo.";
+  "Lectura informativa y solo lectura. No es una auditoría, ni un aval, ni una recomendación.";
 const LEAD_EN =
-  "Informational, read-only view. It is not an audit, an endorsement, or a recommendation. You could lose everything.";
+  "Informational, read-only view. It is not an audit, an endorsement, or a recommendation.";
+const ABSENT = [
+  FOOTER_ES,
+  FOOTER_EN,
+  "Imagen generada con IA",
+  "AI-generated image",
+  "Ilustración con elementos generados con IA",
+  "Illustration with AI-generated elements",
+  "Imágenes de Agente Talón generadas con IA",
+  "Agente Talón images generated with AI",
+  "Herramienta educativa con datos públicos. No es consejo de inversión. Cripto de alto riesgo",
+  "Educational tool using public data. Not investment advice. High-risk crypto",
+];
 const SUMMARY_ES = "Leer el aviso completo";
 const SUMMARY_EN = "Read the full notice";
 const MICA_ES =
@@ -41,102 +53,21 @@ const BUY_LANGUAGE =
 const DENIAL =
   /no dice qué comprar|does not say what to buy/gi;
 
-function contrast(fg, bg) {
-  const parse = (color) => {
-    const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
-    if (!match) return null;
-    return [Number(match[1]), Number(match[2]), Number(match[3]), match[4] === undefined ? 1 : Number(match[4])];
-  };
-  const lin = (channel) => {
-    const value = channel / 255;
-    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
-  };
-  const L = (rgb) => 0.2126 * lin(rgb[0]) + 0.7152 * lin(rgb[1]) + 0.0722 * lin(rgb[2]);
-  const fore = parse(fg);
-  const back = parse(bg);
-  if (!fore || !back || fore[3] === 0 || back[3] === 0) return 0;
-  const hi = Math.max(L(fore), L(back));
-  const lo = Math.min(L(fore), L(back));
-  return (hi + 0.05) / (lo + 0.05);
-}
-
 async function showSpanish(page) {
   const button = page.getByRole("button", { name: "Español" });
   if ((await button.getAttribute("aria-pressed")) !== "true") await button.click();
 }
 
-test("el pie de riesgo se ve sin desplegar, con contraste AA y al menos 14px", async ({ page }) => {
+test("el pie de riesgo y la etiqueta de imagen no están en ninguna vista", async ({ page }) => {
   for (const path of PAGES) {
+    const source = await page.request.get(path);
+    const html = await source.text();
+    for (const phrase of ABSENT) expect(html, `${path} ${phrase}`).not.toContain(phrase);
+    expect(html, path).toContain("p class=\"mica\"");
     await page.goto(path);
     await showSpanish(page);
-    const risk = page.locator("footer.site .lang.es", { hasText: FOOTER_ES });
-    await expect(risk, path).toHaveCount(1);
-    const reading = await risk.evaluate((node) => {
-      const style = getComputedStyle(node);
-      let background = style.backgroundColor;
-      let cursor = node.parentElement;
-      while (cursor && (background === "transparent" || background === "rgba(0, 0, 0, 0)")) {
-        background = getComputedStyle(cursor).backgroundColor;
-        cursor = cursor.parentElement;
-      }
-      const rect = node.getBoundingClientRect();
-      const hero = document.querySelector("main h1, .hero");
-      const heroBottom = hero ? hero.getBoundingClientRect().bottom + window.scrollY : 0;
-      return {
-        text: node.textContent,
-        inDetails: Boolean(node.closest("details")),
-        hidden: style.display === "none" || style.visibility === "hidden",
-        fontSize: Number.parseFloat(style.fontSize),
-        color: style.color,
-        background,
-        footerTop: node.closest("footer").getBoundingClientRect().top + window.scrollY,
-        heroBottom,
-      };
-    });
-    expect(reading.text, path).toBe(FOOTER_ES);
-    expect(reading.inDetails, path).toBe(false);
-    expect(reading.hidden, path).toBe(false);
-    expect(reading.fontSize, path).toBeGreaterThanOrEqual(14);
-    expect(contrast(reading.color, reading.background), `${path} ${reading.color} on ${reading.background}`).toBeGreaterThanOrEqual(4.5);
-    expect(reading.footerTop, path).toBeGreaterThan(reading.heroBottom);
-
-    const covered = await risk.evaluate((node) => {
-      node.scrollIntoView({ block: "center", inline: "nearest" });
-      const rect = node.getBoundingClientRect();
-      const x = Math.min(Math.max(rect.left + 12, 12), window.innerWidth - 12);
-      const y = rect.top + rect.height / 2;
-      const hit = document.elementFromPoint(x, y);
-      return {
-        covered: y < 0 || y > window.innerHeight || (hit ? !hit.closest("footer") : true),
-        hit: hit ? `${hit.tagName}.${hit.className}` : "",
-      };
-    });
-    expect(covered.covered, `${path} ${covered.hit}`).toBe(false);
-
-    await page.getByRole("button", { name: "English" }).click();
-    const english = page.locator("footer.site .lang.en", { hasText: FOOTER_EN });
-    await expect(english, path).toBeVisible();
-    const englishReading = await english.evaluate((node) => {
-      const style = getComputedStyle(node);
-      let background = style.backgroundColor;
-      let cursor = node.parentElement;
-      while (cursor && (background === "transparent" || background === "rgba(0, 0, 0, 0)")) {
-        background = getComputedStyle(cursor).backgroundColor;
-        cursor = cursor.parentElement;
-      }
-      return {
-        inDetails: Boolean(node.closest("details")),
-        fontSize: Number.parseFloat(style.fontSize),
-        color: style.color,
-        background,
-      };
-    });
-    expect(englishReading.inDetails, path).toBe(false);
-    expect(englishReading.fontSize, path).toBeGreaterThanOrEqual(14);
-    expect(
-      contrast(englishReading.color, englishReading.background),
-      `${path} en ${englishReading.color} on ${englishReading.background}`,
-    ).toBeGreaterThanOrEqual(4.5);
+    await expect(page.locator("footer p.mica").first(), path).toBeVisible();
+    await expect(page.locator("footer"), path).not.toContainText(FOOTER_ES);
   }
 });
 
@@ -192,7 +123,8 @@ test("el plegable es details en el HTML y se abre con el teclado", async ({ page
     await summary.focus();
     await page.keyboard.press("Enter");
     await expect(details).toHaveJSProperty("open", true);
-    await expect(details).toContainText("Solo lectura: no conecta carteras ni firma nada.");
+    await expect(page.locator('.aviso[data-disclaimer="si"]')).toContainText("Solo lectura: no conecta carteras ni firma nada.");
+    await expect(details).toContainText("Lo desconocido no es lo mismo que lo comprobado.");
     await page.getByRole("button", { name: "English" }).click();
     await expect(summary).toHaveAccessibleName(SUMMARY_EN);
   }

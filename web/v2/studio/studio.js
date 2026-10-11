@@ -855,7 +855,8 @@ async function exportedBlob(token) {
   const blob = await blobFrom(board, card.rgba, card.width, card.height, () => token === renderToken);
   if (!blob || token !== renderToken) return null;
   const bytes = new Uint8Array(await blob.arrayBuffer());
-  return new Blob([injectComment(bytes, PNG_COMMENT)], { type: "image/png" });
+  const out = PNG_COMMENT ? injectComment(bytes, PNG_COMMENT) : bytes;
+  return new Blob([out], { type: "image/png" });
 }
 
 document.querySelectorAll("[data-template]").forEach((button) => {

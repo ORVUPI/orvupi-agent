@@ -1208,8 +1208,8 @@ describe("lector y cuaderno", () => {
     assert.ok(aprender.includes(CA));
     assert.equal(aprender.includes("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), false);
     assert.equal(aprender.toLowerCase().includes("estafa"), false);
-    assert.match(aprender, /Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión\./);
-    assert.match(aprender, /High-risk crypto · You could lose everything · Not investment advice\./);
+    assert.equal(aprender.includes("Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión."), false);
+    assert.equal(aprender.includes("High-risk crypto · You could lose everything · Not investment advice."), false);
     const main = aprender.slice(aprender.indexOf("<main"), aprender.indexOf("</main>"));
     assert.equal(main.includes("https://"), false);
     assert.match(aprender, /href="\/verify\/"/);

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { repoRootFromMeta } from "../paths.js";
-import { AUDIT_EN, AUDIT_ES, DISCLAIMER, DISCLAIMER_EN, DRAFT_LINE, HOW_LAB, HOW_VERIFY, OFFLINE_LINE, PRIVACY_EN, PRIVACY_ES, READONLY_LINE, UNKNOWN_LINE } from "../copy.js";
+import { AUDIT_EN, AUDIT_ES, DRAFT_LINE, HOW_LAB, HOW_VERIFY, OFFLINE_LINE, PRIVACY_EN, PRIVACY_ES, READONLY_LINE, UNKNOWN_LINE } from "../copy.js";
 import { loadGlossary, loadMission } from "../mission/load.js";
 import type { CardSummary, GlossaryEntry, Localized, Mission, MissionStep } from "../mission/types.js";
 import { changelogHeadings, listTestFiles, loadBoard } from "../tablero/collect.js";
@@ -257,8 +257,6 @@ ${input.publish ? "" : `<p class="draft">${both(DRAFT_LINE)}</p>\n`}
 </div></header>
 <main id="contenido" class="${frame}">
 <div class="aviso" data-disclaimer="si">
-<p class="lang es" lang="es">${escapeHtml(DISCLAIMER)}</p>
-<p class="lang en" lang="en">${escapeHtml(DISCLAIMER_EN)}</p>
 <p>${both(READONLY_LINE)}</p>
 <p>${both(UNKNOWN_LINE)}</p>
 <p>${both({ es: "Fichas del 2026-10-08 y, si las hay, ejemplos posteriores. No se actualizan solas. La hora de cada ficha va en Europe/Madrid.", en: "Cards from 2026-10-08 and, where present, later examples. They do not update themselves. Each card time is shown in Europe/Madrid." })}</p>
