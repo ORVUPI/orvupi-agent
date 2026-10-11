@@ -4,6 +4,7 @@
 import { formatAmount } from "../shared/amount.js";
 import { entenderNav } from "../shared/entender.js";
 import { explainIncomplete } from "../shared/explain-incomplete.js";
+import { reportDownloadBox } from "../shared/informe.js";
 import { mountMarket } from "../shared/market-view.js";
 import { cloneWarningText, comparisonBanner, notebookNameText, renderReadingSummary, summaryFromCard } from "../shared/reading-summary.js";
 import { factState } from "../shared/fact-state.js";
@@ -467,6 +468,12 @@ function renderCard(card, options) {
   renderReadingSummary(article, summaryFromCard(card), lang(), {
     onRetry: () => consult(card.mint, true),
   });
+  article.append(reportDownloadBox({
+    summary: summaryFromCard(card),
+    mint: card.mint,
+    consultedAt: card.consultedAt,
+    network: card.network,
+  }, { document, navigator }));
   const marketHost = el("div", { class: "hueco-mercado" });
   article.append(marketHost);
   mountMarket(marketHost, {

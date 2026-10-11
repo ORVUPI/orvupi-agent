@@ -460,6 +460,7 @@ const MILESTONE_EN: Record<string, string> = {
   "2026-10-09 · Biblioteca y cuaderno de solo lectura":
     "2026-10-09 · Read-only library and notebook",
   "2026-10-11 · Revisar direcciones guardadas": "2026-10-11 · Recheck saved addresses",
+  "2026-10-11 · Informe descargable": "2026-10-11 · Downloadable report",
   "2026-10-11 · Pie de riesgo y etiqueta de imagen retirados":
     "2026-10-11 · Risk footer and image label removed",
   "2026-10-11 · Datos de mercado en Verify, solo lectura":
