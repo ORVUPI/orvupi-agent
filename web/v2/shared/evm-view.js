@@ -103,10 +103,11 @@ export function pageLede(networkId, lang) {
   const language = languageOf(lang);
   const network = networkById(networkId);
   const label = network ? network.label[language] : networkId;
+  const standard = network && network.tokenStandard === "BEP-20" ? "BEP-20" : "ERC-20";
   if (language === "en") {
-    return `Any ERC-20 token (the usual token type on ${label}), read live and read-only. The cards below are dated Solana examples, not a complete list. Choose the network. On ${label}, no wallet is connected and nothing is signed.`;
+    return `Any ${standard} token (the usual token type on ${label}), read live and read-only. The cards below are dated Solana examples, not a complete list. Choose the network. On ${label}, no wallet is connected and nothing is signed.`;
   }
-  return `Cualquier token ERC-20 (el tipo de token habitual en ${label}), leído en directo y solo en lectura. Las fichas de abajo son ejemplos fechados de Solana, no una lista completa. Elige la red. En ${label} no se conecta ninguna cartera ni se firma nada.`;
+  return `Cualquier token ${standard} (el tipo de token habitual en ${label}), leído en directo y solo en lectura. Las fichas de abajo son ejemplos fechados de Solana, no una lista completa. Elige la red. En ${label} no se conecta ninguna cartera ni se firma nada.`;
 }
 
 export function evmCardFromReading(reading) {
@@ -238,20 +239,16 @@ export function checksCopy(networkId, lang) {
   };
 }
 
-const BASE_PRIVACY = {
-  es: "Al consultar en Base, tu navegador envía la dirección al nodo público mainnet.base.org, que también ve tu IP. Si pides los datos de mercado, DEX Screener también ve tu IP y la dirección.",
-  en: "When you look up on Base, your browser sends the address to the public node mainnet.base.org, which also sees your IP. If you request market data, DEX Screener also sees your IP and the address.",
-};
-
 export function privacyText(networkId, lang) {
   const language = languageOf(lang);
-  if (networkId === "base") return BASE_PRIVACY[language];
   const host = rpcHost(networkId);
   const network = networkById(networkId);
-  const label = network ? network.label[language] : networkId;
-  if (!host) return "";
-  if (language === "en") return `To read it on ${label}, it is sent to the public node ${host}, which also sees your IP.`;
-  return `Para leerla en ${label}, se envía al nodo público ${host}, que también ve tu IP.`;
+  if (!network || network.family !== "evm" || !host) return "";
+  const label = network.label[language];
+  if (language === "en") {
+    return `When you look up on ${label}, your browser sends the address to the public node ${host}, which also sees your IP. If you request market data, DEX Screener also sees your IP and the address.`;
+  }
+  return `Al consultar en ${label}, tu navegador envía la dirección al nodo público ${host}, que también ve tu IP. Si pides los datos de mercado, DEX Screener también ve tu IP y la dirección.`;
 }
 
 export function fillNetworkSelect(select) {

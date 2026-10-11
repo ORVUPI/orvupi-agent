@@ -557,7 +557,7 @@ describe("web v2", () => {
     assert.equal(html.includes("\uFFFD"), false);
     assert.match(html, /assets\/verify\.js/);
     const meta = html.match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
-    assert.deepEqual(cspHosts(meta), ["solana-rpc.publicnode.com", "api.mainnet-beta.solana.com", "mainnet.base.org", "api.dexscreener.com"]);
+    assert.deepEqual(cspHosts(meta), ["solana-rpc.publicnode.com", "api.mainnet-beta.solana.com", "mainnet.base.org", "ethereum-rpc.publicnode.com", "bsc-rpc.publicnode.com", "api.dexscreener.com"]);
     assert.equal(meta.includes("*.dexscreener"), false);
     assert.equal((meta.match(/connect-src/g) ?? []).length, 1);
     const home = read("index.html");
@@ -845,6 +845,8 @@ describe("web v2", () => {
       "solana-rpc.publicnode.com",
       "api.mainnet-beta.solana.com",
       "mainnet.base.org",
+      "ethereum-rpc.publicnode.com",
+      "bsc-rpc.publicnode.com",
       "api.dexscreener.com",
     ]);
     assert.equal((verifyPolicy?.header ?? "").includes("*.dexscreener"), false);
@@ -859,6 +861,8 @@ describe("web v2", () => {
       "solana-rpc.publicnode.com",
       "api.mainnet-beta.solana.com",
       "mainnet.base.org",
+      "ethereum-rpc.publicnode.com",
+      "bsc-rpc.publicnode.com",
       "api.dexscreener.com",
     ]);
     const samples = ["/", "/verify/", "/lab/", "/lab/sw.js", "/aprender/", "/studio/", "/cuaderno/", "/cuaderno/index.html", "/token.json", "/assets/site.css", "/404.html"];
@@ -912,9 +916,8 @@ describe("web v2", () => {
       .filter((item) => item.family === "evm" && item.enabled === false && item.rpc)
       .map((item) => new URL(item.rpc as string).host);
     const sameHost = (hosts: readonly string[], name: string) => hosts.some((host) => host === name);
-    assert.deepEqual(active, ["mainnet.base.org"]);
-    assert.equal(sameHost(dormant, "ethereum-rpc.publicnode.com"), true);
-    assert.equal(sameHost(dormant, "bsc-rpc.publicnode.com"), true);
+    assert.deepEqual(active, ["mainnet.base.org", "ethereum-rpc.publicnode.com", "bsc-rpc.publicnode.com"]);
+    assert.deepEqual(dormant, []);
     const headers = readFileSync(path.join(root, "web/v2/_headers"), "utf8");
     const verifyMeta = readFileSync(path.join(root, "web/v2/verify/index.html"), "utf8").match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
     const notebookMeta = readFileSync(path.join(root, "web/v2/cuaderno/index.html"), "utf8").match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
@@ -927,6 +930,7 @@ describe("web v2", () => {
       assert.equal(sameHost(headerHosts, host), true, host);
       assert.equal(sameHost(verifyHosts, host), true, host);
       assert.equal(sameHost(notebookHosts, host), true, host);
+      assert.equal(sameHost(paresHosts, host), false, host);
     }
     for (const host of dormant) {
       assert.equal(sameHost(headerHosts, host), false, host);
@@ -956,8 +960,12 @@ for sample in samples:
     raise SystemExit("aceptó " + sample)
 if mod.evm_rpc_origin("https://mainnet.base.org") != "https://mainnet.base.org":
     raise SystemExit("base")
+if mod.evm_rpc_origin("https://ethereum-rpc.publicnode.com") != "https://ethereum-rpc.publicnode.com":
+    raise SystemExit("ethereum")
+if mod.evm_rpc_origin("https://bsc-rpc.publicnode.com") != "https://bsc-rpc.publicnode.com":
+    raise SystemExit("bnb")
 origins = mod.evm_rpc_origins()
-if origins != ["https://mainnet.base.org"]:
+if origins != ["https://mainnet.base.org", "https://ethereum-rpc.publicnode.com", "https://bsc-rpc.publicnode.com"]:
     raise SystemExit(repr(origins))
 `;
     const run = spawnSync("python3", ["-c", script], { cwd: root, encoding: "utf8" });

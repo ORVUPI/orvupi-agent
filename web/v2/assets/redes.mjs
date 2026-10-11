@@ -1,7 +1,7 @@
 /**
  * Selector de red en Verify y en el Cuaderno.
- * Solana sigue el camino de siempre. Base (y luego otras redes EVM)
- * usa el lector genérico. Encender una red es un campo en networks.json.
+ * Solana sigue el camino de siempre. Base, Ethereum y BNB Chain
+ * usan el lector genérico. La lista vive en networks.json.
  */
 import { EVM_MAX_BODY, normalizeEvmAddress, readCappedText, readEvmToken, resetEvmClientLimit } from "../shared/evm-read.js";
 import {

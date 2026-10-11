@@ -303,7 +303,7 @@ def evm_rpc_origin(rpc: object) -> str:
 
 
 def evm_rpc_origins() -> list[str]:
-    """Solo las redes EVM encendidas. Ethereum y BNB entran al poner enabled en true."""
+    """Solo las redes EVM encendidas, en el orden de networks.json."""
     data = json.loads((ROOT / "shared" / "networks.json").read_text(encoding="utf-8"))
     origins: list[str] = []
     for network in data.get("networks", []):
@@ -316,6 +316,31 @@ def evm_rpc_origins() -> list[str]:
         if network.get("enabled") and network.get("family") == "evm" and origin not in origins:
             origins.append(origin)
     return origins
+
+
+def notebook_csp_meta(connect: str) -> str:
+    return (
+        '<meta http-equiv="Content-Security-Policy" content="default-src \'self\'; '
+        "script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; "
+        f"connect-src {connect}; manifest-src 'self'; media-src 'none'; frame-src 'none'; "
+        "worker-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'\">"
+    )
+
+
+def refresh_notebook_csp() -> None:
+    """El HTML del cuaderno no se regenera. Su meta CSP sí sale de las redes encendidas."""
+    path = ROOT / "cuaderno" / "index.html"
+    html = path.read_text(encoding="utf-8")
+    meta = notebook_csp_meta(connect_src(True, True, True))
+    updated, count = re.subn(
+        r'<meta http-equiv="Content-Security-Policy" content="[^"]*">',
+        meta,
+        html,
+        count=1,
+    )
+    if count != 1:
+        raise SystemExit("El cuaderno no tiene una meta CSP para actualizar")
+    path.write_text(updated, encoding="utf-8")
 
 
 def connect_src(include_rpc: bool, include_market: bool = False, include_evm: bool = False) -> str:
@@ -1502,7 +1527,8 @@ def headers() -> str:
 # repiten worker-src 'none' en la meta, y las dos políticas se cruzan.
 # connect-src global se queda en 'self'. /verify/, /verify/* y /cuaderno/* quitan
 # esa política con ! Content-Security-Policy y ponen una sola: los dos RPC de
-# Solana, el RPC de cada red EVM encendida (hoy mainnet.base.org) y, exacto,
+# Solana, el RPC de cada red EVM encendida (mainnet.base.org,
+# ethereum-rpc.publicnode.com y bsc-rpc.publicnode.com) y, exacto,
 # https://api.dexscreener.com. /pares/ solo lleva los dos RPC de Solana.
 /*
   Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests
@@ -1699,6 +1725,7 @@ def main() -> None:
     css = (ROOT / "assets/tool.css").read_text(encoding="utf-8") + "}\n\n" + (ROOT / "assets/site-extra.css").read_text(encoding="utf-8")
     (ROOT / "assets/site.css").write_text(css, encoding="utf-8")
     (ROOT / "_headers").write_text(headers(), encoding="utf-8")
+    refresh_notebook_csp()
     (ROOT / "_redirects").write_text(redirects(), encoding="utf-8")
     (ROOT / "site.webmanifest").write_text(manifest(), encoding="utf-8")
     (ROOT / "robots.txt").write_text(robots(), encoding="utf-8")

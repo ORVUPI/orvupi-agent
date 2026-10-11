@@ -836,8 +836,8 @@
       "status": "en_revision",
       "webPublished": false,
       "scope": {
-        "es": "Selector de red en Verify y en el Cuaderno, con Solana al abrir. Lectura de solo lectura de un contrato en Base por el nodo público mainnet.base.org. Ethereum y BNB Chain están en la lista, apagados: se encienden con configuración. Todavía no está en stubxai.com.",
-        "en": "Network selector on Verify and the Notebook, with Solana when the page opens. Read-only reading of a contract on Base through the public node mainnet.base.org. Ethereum and BNB Chain are on the list, switched off: they turn on with configuration. It is not on stubxai.com yet."
+        "es": "Selector de red en Verify y en el Cuaderno, con Solana al abrir. Lectura de solo lectura de un contrato en Base por el nodo público mainnet.base.org. Ethereum y BNB Chain se encendieron después: ver U11. Todavía no está en stubxai.com.",
+        "en": "Network selector on Verify and the Notebook, with Solana when the page opens. Read-only reading of a contract on Base through the public node mainnet.base.org. Ethereum and BNB Chain were switched on afterwards: see U11. It is not on stubxai.com yet."
       },
       "owner": "Equipo del repositorio",
       "reviewer": "Pendiente de una persona distinta del autor, antes de publicar.",
@@ -851,8 +851,8 @@
           "label": { "es": "Redes", "en": "Networks" },
           "path": "web/v2/shared/networks.json",
           "note": {
-            "es": "Base encendida. Ethereum y BNB Chain apagados.",
-            "en": "Base is on. Ethereum and BNB Chain are off."
+            "es": "Base, Ethereum y BNB Chain encendidas. El detalle de Ethereum y BNB Chain está en U11.",
+            "en": "Base, Ethereum, and BNB Chain are on. The Ethereum and BNB Chain detail is in U11."
           }
         },
         {
@@ -878,6 +878,61 @@
           "change": {
             "es": "Fase 1 anotada. Se pidieron todas las redes, empezando por Base. Sigue fuera de stubxai.com.",
             "en": "Phase 1 recorded. Every network was requested, starting with Base. Still absent from stubxai.com."
+          }
+        },
+        {
+          "on": "2026-10-11",
+          "change": {
+            "es": "Ethereum y BNB Chain se encienden en U11. Esta ficha se queda en la fase de Base. Sigue fuera de stubxai.com.",
+            "en": "Ethereum and BNB Chain switch on in U11. This card stays on the Base phase. Still absent from stubxai.com."
+          }
+        }
+      ]
+    },
+    {
+      "id": "U11",
+      "version": "1",
+      "title": {
+        "es": "Lectura de Ethereum y BNB Chain",
+        "en": "Ethereum and BNB Chain reading"
+      },
+      "status": "en_revision",
+      "webPublished": false,
+      "scope": {
+        "es": "Ethereum y después BNB Chain, con el mismo lector de Base, solo lectura. Ethereum usa el nodo público ethereum-rpc.publicnode.com. BNB Chain usa bsc-rpc.publicnode.com. El aviso junto al botón nombra el nodo de cada red. La entradilla de Ethereum habla de ERC-20 y la de BNB Chain de BEP-20. DEX Screener usa ethereum y bsc. El cuaderno guarda red y dirección. Todavía no está en stubxai.com.",
+        "en": "Ethereum and then BNB Chain, with the same reader as Base, read-only. Ethereum uses the public node ethereum-rpc.publicnode.com. BNB Chain uses bsc-rpc.publicnode.com. The notice beside the button names each network's node. The Ethereum lede talks about ERC-20 and the BNB Chain lede about BEP-20. DEX Screener uses ethereum and bsc. The notebook stores network and address. It is not on stubxai.com yet."
+      },
+      "owner": "Equipo del repositorio",
+      "reviewer": "Pendiente de una persona distinta del autor, antes de publicar.",
+      "reviewedOn": "2026-10-11",
+      "block": {
+        "es": "El código está en el repositorio. La página de stubxai.com todavía no incluye esta lectura.",
+        "en": "The code is in the repository. The page on stubxai.com does not include this reading yet."
+      },
+      "evidence": [
+        {
+          "label": { "es": "Redes", "en": "Networks" },
+          "path": "web/v2/shared/networks.json",
+          "note": {
+            "es": "Ethereum y BNB Chain encendidas, después de Base.",
+            "en": "Ethereum and BNB Chain are on, after Base."
+          }
+        },
+        {
+          "label": { "es": "Aviso y entradilla", "en": "Notice and lede" },
+          "path": "web/v2/shared/evm-view.js",
+          "note": {
+            "es": "El aviso nombra el nodo de cada red. BEP-20 se explica en BNB Chain.",
+            "en": "The notice names each network's node. BEP-20 is explained on BNB Chain."
+          }
+        }
+      ],
+      "history": [
+        {
+          "on": "2026-10-11",
+          "change": {
+            "es": "Ethereum y BNB Chain encendidas en el repositorio. Sigue fuera de stubxai.com.",
+            "en": "Ethereum and BNB Chain switched on in the repository. Still absent from stubxai.com."
           }
         }
       ]

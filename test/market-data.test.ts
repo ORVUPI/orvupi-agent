@@ -396,7 +396,7 @@ describe("datos de mercado", () => {
     for (const html of [verify, notebookHtml]) {
       const meta = html.match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
       assert.equal((meta.match(/connect-src/g) ?? []).length, 1);
-      assert.match(meta, /connect-src 'self' https:\/\/solana-rpc\.publicnode\.com https:\/\/api\.mainnet-beta\.solana\.com https:\/\/mainnet\.base\.org https:\/\/api\.dexscreener\.com;/);
+      assert.match(meta, /connect-src 'self' https:\/\/solana-rpc\.publicnode\.com https:\/\/api\.mainnet-beta\.solana\.com https:\/\/mainnet\.base\.org https:\/\/ethereum-rpc\.publicnode\.com https:\/\/bsc-rpc\.publicnode\.com https:\/\/api\.dexscreener\.com;/);
       assert.equal(meta.includes("*"), false);
     }
     const paresMeta = pares.match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
