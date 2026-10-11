@@ -118,8 +118,8 @@
       "es": "Dirección owner()",
       "en": "owner() address",
       "help": {
-        "es": "Algunos contratos responden a owner() con una dirección. Si no tienen esa función, esta lectura lo dice. No es un permiso de Solana.",
-        "en": "Some contracts answer owner() with an address. If they do not have that function, this reading says so. It is not a Solana permission."
+        "es": "Algunos contratos responden a owner() con una dirección. Si no tienen esa función, esta lectura lo dice. Si hay una dirección owner, el contrato puede darle funciones especiales. Esta lectura no dice cuáles son.",
+        "en": "Some contracts answer owner() with an address. If they do not have that function, this reading says so. If there is an owner address, the contract may give it special functions. This reading does not say which ones."
       },
       "on": ["evm"]
     },
@@ -128,8 +128,8 @@
       "es": "Proxy EIP-1967",
       "en": "EIP-1967 proxy",
       "help": {
-        "es": "Un proxy es un contrato que reenvía las preguntas a otro contrato. EIP-1967 es la forma habitual de anotar esa otra dirección. Si no está, esta lectura lo dice.",
-        "en": "A proxy is a contract that forwards questions to another contract. EIP-1967 is the usual way to record that other address. If it is not there, this reading says so."
+        "es": "Un proxy es un contrato que reenvía las preguntas a otro contrato. EIP-1967 es la forma habitual de anotar esa otra dirección. Si no está, esta lectura lo dice. Con un proxy, el código al que se reenvía puede cambiarse. Esta lectura no dice si ha cambiado.",
+        "en": "A proxy is a contract that forwards questions to another contract. EIP-1967 is the usual way to record that other address. If it is not there, this reading says so. With a proxy, the code it forwards to can be changed. This reading does not say whether it has."
       },
       "on": ["evm"]
     },

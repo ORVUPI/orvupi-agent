@@ -110,14 +110,68 @@ async function mockRpc(page) {
   };
 }
 
+const BASE_NOTICE = {
+  es: "Al consultar en Base, tu navegador envía la dirección al nodo público mainnet.base.org, que también ve tu IP. Si pides los datos de mercado, DEX Screener también ve tu IP y la dirección.",
+  en: "When you look up on Base, your browser sends the address to the public node mainnet.base.org, which also sees your IP. If you request market data, DEX Screener also sees your IP and the address.",
+};
+const SOLANA_NOTICE = {
+  es: "Para leerla en directo, se envía a los nodos públicos de Solana solana-rpc.publicnode.com y api.mainnet-beta.solana.com, que también ven tu IP.",
+  en: "To read it live, it is sent to the Solana public nodes solana-rpc.publicnode.com and api.mainnet-beta.solana.com, which also see your IP.",
+};
+
+async function expectNoticeBesideButton(page, lang) {
+  const notice = page.locator("#aviso-rpc-base");
+  await expect(notice).toBeVisible();
+  await expect(notice.locator(lang === "en" ? ".lang.en" : ".lang.es")).toHaveText(BASE_NOTICE[lang]);
+  const place = await page.evaluate(() => {
+    const button = document.querySelector("#consulta button[type='submit']");
+    const note = document.getElementById("aviso-rpc-base");
+    const buttonBox = button.getBoundingClientRect();
+    const noteBox = note.getBoundingClientRect();
+    const gap = noteBox.top - buttonBox.bottom;
+    const sameRow = Math.abs(noteBox.top - buttonBox.top) < 28 && noteBox.left >= buttonBox.left - 8;
+    return {
+      folded: Boolean(note.closest("details")),
+      hidden: note.hidden,
+      near: sameRow || (gap >= -8 && gap < 96),
+      width: noteBox.width,
+      height: noteBox.height,
+    };
+  });
+  expect(place.folded).toBe(false);
+  expect(place.hidden).toBe(false);
+  expect(place.near).toBe(true);
+  expect(place.width).toBeGreaterThan(180);
+  expect(place.height).toBeGreaterThan(18);
+}
+
+async function shotNotice(page, name) {
+  await page.locator("#aviso-rpc-base").scrollIntoViewIfNeeded();
+  const clip = await page.evaluate(() => {
+    const button = document.querySelector("#consulta button[type='submit']");
+    const note = document.getElementById("aviso-rpc-base");
+    const buttonBox = button.getBoundingClientRect();
+    const noteBox = note.getBoundingClientRect();
+    const top = Math.max(0, Math.min(buttonBox.top, noteBox.top) - 12);
+    const left = Math.max(0, Math.min(buttonBox.left, noteBox.left) - 12);
+    const right = Math.min(window.innerWidth, Math.max(buttonBox.right, noteBox.right) + 12);
+    const bottom = Math.min(window.innerHeight, Math.max(buttonBox.bottom, noteBox.bottom) + 12);
+    return { x: left, y: top, width: Math.max(1, right - left), height: Math.max(1, bottom - top) };
+  });
+  await page.screenshot({ path: `/opt/cursor/artifacts/${name}.png`, clip });
+}
+
 async function chooseBase(page) {
   await page.goto("/verify/");
   await expect(page.locator("#red")).toHaveValue("solana");
+  await expect(page.locator("#aviso-guardar .aviso-nodos .lang.es")).toHaveText(SOLANA_NOTICE.es);
+  await expect(page.locator("#aviso-rpc-base")).toBeHidden();
   await page.locator("#red").selectOption("base");
-  await expect(page.locator("#aviso-rpc-base")).toBeVisible();
-  await expect(page.locator("#aviso-rpc-base")).toContainText("mainnet.base.org");
-  await expect(page.locator("#comprobaciones-red")).toContainText(/Proxy EIP-1967/);
-  await expect(page.locator("#comprobaciones-red")).toContainText(/no pide|does not ask/i);
+  await expectNoticeBesideButton(page, "es");
+  await expect(page.locator("#aviso-guardar .aviso-nodos")).toBeHidden();
+  await expect(page.locator("#comprobaciones-red")).toContainText("Si hay una dirección owner, el contrato puede darle funciones especiales. Esta lectura no dice cuáles son.");
+  await expect(page.locator("#comprobaciones-red")).toContainText("Con un proxy, el código al que se reenvía puede cambiarse. Esta lectura no dice si ha cambiado.");
+  await expect(page.locator("#comprobaciones-red")).not.toContainText("No es un permiso de Solana");
 }
 
 test("Verify en Base lee USDC, un token sin owner, un proxy, una cuenta, una dirección inválida y un nodo caído", async ({ page }, testInfo) => {
@@ -137,10 +191,18 @@ test("Verify en Base lee USDC, un token sin owner, un proxy, una cuenta, una dir
   await expect(page.locator("#resultado")).toContainText("mainnet.base.org");
   const shot = testInfo.project.name === "mobile" ? "mobile" : testInfo.project.name === "desktop" ? "desktop" : "";
   if (shot) {
+    await shotNotice(page, `aviso-base-es-${shot}`);
     await page.screenshot({ path: `/opt/cursor/artifacts/verify-base-es-${shot}.png`, fullPage: true });
     await page.locator("[data-set-lang='en']").click();
+    await expectNoticeBesideButton(page, "en");
     await expect(page.locator("#resultado")).toContainText(/The contract wrote/);
+    await shotNotice(page, `aviso-base-en-${shot}`);
     await page.screenshot({ path: `/opt/cursor/artifacts/verify-base-en-${shot}.png`, fullPage: true });
+    await page.locator("[data-set-lang='es']").click();
+    await expectNoticeBesideButton(page, "es");
+  } else {
+    await page.locator("[data-set-lang='en']").click();
+    await expectNoticeBesideButton(page, "en");
     await page.locator("[data-set-lang='es']").click();
   }
   await page.locator(".leer-mercado").click();
@@ -176,7 +238,8 @@ test("el cuaderno guarda la red y la dirección de Base", async ({ page }) => {
   await page.goto("/cuaderno/");
   await expect(page.locator("#red-cuaderno")).toHaveValue("solana");
   await page.locator("#red-cuaderno").selectOption("base");
-  await expect(page.locator("#aviso-rpc-base")).toContainText("mainnet.base.org");
+  await expect(page.locator("#aviso-rpc-base .lang.es")).toHaveText(BASE_NOTICE.es);
+  await expectNoticeBesideButton(page, "es");
   await page.locator("#direccion-cuaderno").fill(USDC);
   await page.locator("#consultar").click();
   await expect(page.locator("#resultado")).toContainText("USD Coin", { timeout: 20000 });

@@ -235,7 +235,7 @@ describe("lectura EVM en Base", () => {
   });
 
   test("el límite es de una lectura por consulta, owner cero es ausencia y ethereum sigue apagado", async () => {
-    const { evm, networks, market, db, model } = await load();
+    const { evm, view, networks, market, db, model } = await load();
     evm.resetEvmClientLimit();
     const okTransport = async () => ({ status: 200, body: JSON.stringify({ jsonrpc: "2.0", id: 1, result: "0x" }) });
     let allowed = 0;
@@ -276,6 +276,16 @@ describe("lectura EVM en Base", () => {
     const baseChecks = networks.checksFor("base");
     assert.equal(baseChecks.available.some((item: { id: string }) => item.id === "proxy"), true);
     assert.equal(baseChecks.unavailable.some((item: { id: string }) => item.id === "mintAuthority"), true);
+    const ownerHelp = baseChecks.available.find((item: { id: string }) => item.id === "owner") as { help: { es: string; en: string } };
+    const proxyHelp = baseChecks.available.find((item: { id: string }) => item.id === "proxy") as { help: { es: string; en: string } };
+    assert.equal(ownerHelp.help.es, "Algunos contratos responden a owner() con una dirección. Si no tienen esa función, esta lectura lo dice. Si hay una dirección owner, el contrato puede darle funciones especiales. Esta lectura no dice cuáles son.");
+    assert.equal(ownerHelp.help.en, "Some contracts answer owner() with an address. If they do not have that function, this reading says so. If there is an owner address, the contract may give it special functions. This reading does not say which ones.");
+    assert.equal(ownerHelp.help.es.includes("No es un permiso de Solana"), false);
+    assert.equal(ownerHelp.help.en.includes("It is not a Solana permission."), false);
+    assert.equal(proxyHelp.help.es, "Un proxy es un contrato que reenvía las preguntas a otro contrato. EIP-1967 es la forma habitual de anotar esa otra dirección. Si no está, esta lectura lo dice. Con un proxy, el código al que se reenvía puede cambiarse. Esta lectura no dice si ha cambiado.");
+    assert.equal(proxyHelp.help.en, "A proxy is a contract that forwards questions to another contract. EIP-1967 is the usual way to record that other address. If it is not there, this reading says so. With a proxy, the code it forwards to can be changed. This reading does not say whether it has.");
+    assert.equal(view.privacyText("base", "es"), "Al consultar en Base, tu navegador envía la dirección al nodo público mainnet.base.org, que también ve tu IP. Si pides los datos de mercado, DEX Screener también ve tu IP y la dirección.");
+    assert.equal(view.privacyText("base", "en"), "When you look up on Base, your browser sends the address to the public node mainnet.base.org, which also sees your IP. If you request market data, DEX Screener also sees your IP and the address.");
     const solanaChecks = networks.checksFor("solana");
     assert.equal(solanaChecks.available.some((item: { id: string }) => item.id === "mintAuthority"), true);
     assert.equal(solanaChecks.unavailable.some((item: { id: string }) => item.id === "proxy"), true);

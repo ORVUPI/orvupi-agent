@@ -1982,7 +1982,8 @@ dd[data-estado="fallo"], dd[data-estado="ausente"], dd[data-estado="no_consultad
 .comprobaciones-red h2 { font-size: 1.15rem; }
 .comprobaciones-red h3 { font-size: 1rem; margin: 0.8rem 0 0.3rem; }
 .comprobaciones-red ul { margin: 0.2rem 0 0.6rem; padding-left: 1.15rem; }
-#aviso-rpc-base { margin: 0; }
+.consulta-barra > #aviso-rpc-base:not([hidden]) { order: 2; }
+#aviso-rpc-base { margin: 0; line-height: 1.45; }
 #aviso-rpc-base[hidden] { display: none; }
 .grupo-desconocido { margin-top: 0.8rem; }
 article[id] { scroll-margin-top: 1rem; }

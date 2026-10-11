@@ -208,10 +208,16 @@ export function checksCopy(networkId, lang) {
   };
 }
 
+const BASE_PRIVACY = {
+  es: "Al consultar en Base, tu navegador envía la dirección al nodo público mainnet.base.org, que también ve tu IP. Si pides los datos de mercado, DEX Screener también ve tu IP y la dirección.",
+  en: "When you look up on Base, your browser sends the address to the public node mainnet.base.org, which also sees your IP. If you request market data, DEX Screener also sees your IP and the address.",
+};
+
 export function privacyText(networkId, lang) {
+  const language = languageOf(lang);
+  if (networkId === "base") return BASE_PRIVACY[language];
   const host = rpcHost(networkId);
   const network = networkById(networkId);
-  const language = languageOf(lang);
   const label = network ? network.label[language] : networkId;
   if (!host) return "";
   if (language === "en") return `To read it on ${label}, it is sent to the public node ${host}, which also sees your IP.`;
