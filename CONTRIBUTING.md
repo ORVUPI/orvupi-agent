@@ -1,6 +1,6 @@
-# Contribuir
+# Contribuir a ORVUPI
 
-El correo público es stubxai.hq@gmail.com. La cuenta de GitHub es [github.com/stubxai](https://github.com/stubxai). El canal en X es [x.com/stubxai](https://x.com/stubxai). La web oficial es https://superb-horse-9036f5.netlify.app/.
+El correo público es orvupi.hq@gmail.com. La cuenta de GitHub es [github.com/stubxai](https://github.com/stubxai). El canal en X es [x.com/ORVUPI](https://x.com/ORVUPI), Telegram es https://t.me/orvupi y la web oficial es https://stubxai.com/. La URL real de GitHub se conserva para mantener el repositorio existente; no se ha creado otro repositorio.
 
 1. No añadas wallets, claves, firmas, custodia ni escritura en la red.
 2. No añadas dependencias de ejecución. Si hace falta una herramienta de desarrollo, dilo en el PR y actualiza el test que fija la lista.
@@ -9,7 +9,7 @@ El correo público es stubxai.hq@gmail.com. La cuenta de GitHub es [github.com/s
 5. `npm ci && npm run typecheck && npm test && npm run ppm:print` tiene que pasar.
 6. No subas secretos. Ni de prueba realistas.
 
-Los textos de cara al público van primero en español, con un resumen corto en inglés.
+Los textos de cara al público van primero en español, con un resumen corto en inglés. Usa ORVUPI como marca actual. Conserva direcciones, fixtures, registros, avisos de autoría e identificadores técnicos históricos: no cambies un mint ni lo presentes como ORVUPI. Consulta [docs/ORVUPI.md](docs/ORVUPI.md).
 
 ## English
 

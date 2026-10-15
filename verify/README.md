@@ -1,10 +1,12 @@
-# STUBX Verify
+# ORVUPI Verify
 
 Componente **aparte** del agente de este repositorio. El agente sigue sin contactar la red principal ni ningún RPC, sin claves y sin firmar. Verify, si se ejecuta a propósito, solo **lee** datos públicos de `mainnet-beta` y escribe una ficha. No firma, no envía transacciones, no abre wallets y no custodia claves.
 
-No es consejo de inversión ni una garantía. Cada salida lleva este aviso:
+No es consejo de inversión ni una garantía. ORVUPI Verify es la identidad actual de la herramienta. La CLI conserva textos heredados en algunas salidas; esta actualización de documentación no cambia el código ni los datos que consulta.
 
-> STUBX Verify muestra datos on-chain públicos. No es consejo de inversión ni garantiza que un token sea seguro.
+> ORVUPI Verify muestra datos on-chain públicos. No es consejo de inversión ni garantiza que un token sea seguro.
+
+El registro y los ejemplos fechados de STUBX se conservan como datos históricos. No son un registro de ORVUPI y ninguna dirección de esos ejemplos debe presentarse como token ORVUPI. Véase [la guía de transición](../docs/ORVUPI.md).
 
 No hay puntuación de compra o venta ni lenguaje de precio. Los hallazgos son informativos: `ok`, `atención` o `riesgo`, cada uno con su motivo.
 
@@ -18,7 +20,7 @@ Dado un mint SPL o Token-2022:
 - URI y el JSON público (nombre, símbolo, imagen, web, redes);
 - si hay cuenta de curva de Pump.fun en la PDA derivada, y sus campos públicos;
 - una muestra de como máximo 20 cuentas grandes y el porcentaje sobre el suministro verificado;
-- comparación local con `verify/registry/canonical.json` (hoy, STUBX).
+- comparación local con `verify/registry/canonical.json` (registro heredado de STUBX; no contiene una dirección de ORVUPI).
 
 Cada campo lleva método, cuenta, slot u hora UTC. Una consulta nueva crea otro `id` (sha256 del cuerpo canónico). La ficha no se actualiza sola.
 
