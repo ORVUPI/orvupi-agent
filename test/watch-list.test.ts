@@ -223,8 +223,8 @@ describe("revisar direcciones guardadas", () => {
     assert.equal(page.includes("Watch list"), false);
     assert.match(source, /Esta lectura queda guardada en este navegador\. Puedes borrarla en el Cuaderno\./);
     assert.match(source, /This reading is saved in this browser\. You can delete it in the Notebook\./);
-    assert.equal(page.includes("Al pulsar, tu navegador envía las direcciones que se revisan (las marcadas, o todas si no marcas ninguna) a los nodos públicos de Solana solana-rpc.publicnode.com y api.mainnet-beta.solana.com, que también ven tu IP. No se guarda nada nuevo hasta que pulses «Guardar»."), true);
-    assert.equal(page.includes("When you tap, your browser sends the addresses being checked (the marked ones, or all of them if none are marked) to the Solana public nodes solana-rpc.publicnode.com and api.mainnet-beta.solana.com, which also see your IP. Nothing new is saved until you tap \"Save\"."), true);
+    assert.equal(page.includes("Al pulsar, tu navegador envía las direcciones que se revisan (las marcadas, o todas si no marcas ninguna) al nodo público de su red: solana-rpc.publicnode.com o api.mainnet-beta.solana.com (Solana), mainnet.base.org (Base), ethereum-rpc.publicnode.com (Ethereum) y bsc-rpc.publicnode.com (BNB Chain). Esos nodos también ven tu IP. La pasada no pide datos de mercado. No se guarda nada nuevo hasta que pulses «Guardar»."), true);
+    assert.equal(page.includes("When you tap, your browser sends the addresses being checked (the marked ones, or all of them if none are marked) to the public node for their network: solana-rpc.publicnode.com or api.mainnet-beta.solana.com (Solana), mainnet.base.org (Base), ethereum-rpc.publicnode.com (Ethereum) and bsc-rpc.publicnode.com (BNB Chain). Those nodes also see your IP. The check does not request market data. Nothing new is saved until you tap \"Save\"."), true);
     assert.match(page, /id="detener"/);
     assert.match(page, /id="guardar-todas"[^>]*aria-disabled="true"/);
     assert.match(page, /id="guardar-todas-ayuda"/);

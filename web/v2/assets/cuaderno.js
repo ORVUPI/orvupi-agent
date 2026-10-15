@@ -5,7 +5,8 @@ import { formatAmount } from "../shared/amount.js";
 import { entenderNav } from "../shared/entender.js";
 import { explainIncomplete } from "../shared/explain-incomplete.js";
 import { evmBodyCap, readCappedText, readEvmToken } from "../shared/evm-read.js";
-import { evmCardFromReading, paintEvmResult } from "../shared/evm-view.js";
+import { batchReviewNotice, evmCardFromReading, evmEntryGapMs, evmPassVerdict, paintEvmResult } from "../shared/evm-view.js";
+import { networkById } from "../shared/networks.js";
 import { reportDownloadBox } from "../shared/informe.js";
 import { mountMarket } from "../shared/market-view.js";
 import { cloneWarningText, comparisonBanner, notebookNameText, renderReadingSummary, summaryFromCard } from "../shared/reading-summary.js";
@@ -47,7 +48,6 @@ import {
   toExport,
   cardDecimals,
   validateAnyCard,
-  validateCard,
   validateExport,
   watchTargets,
   watchVerdict,
@@ -148,6 +148,7 @@ const COPY = {
     watchChanged: "Cambió desde la última lectura.",
     watchSame: "Sigue igual desde la última lectura.",
     watchIncomplete: "Incompleto.",
+    watchUnchecked: "Incompleto. No se pudo comprobar.",
     watchSave: "Guardar",
     watchSaveAll: "Guardar todas",
     watchStop: "Detener",
@@ -249,6 +250,7 @@ const COPY = {
     watchChanged: "It changed since the last reading.",
     watchSame: "It is the same since the last reading.",
     watchIncomplete: "Incomplete.",
+    watchUnchecked: "Incomplete. Could not be checked.",
     watchSave: "Save",
     watchSaveAll: "Save all",
     watchStop: "Stop",
@@ -947,6 +949,8 @@ function renderComparison() {
   const newer = compared.newer || right;
   const banner = comparisonBanner(older.card, newer.card, lang());
   if (banner) out.append(text("p", banner, { class: "franja-identidad" }));
+  const place = compared.network || older.card.network || "";
+  out.append(text("p", `${t("watchNetwork")}: ${networkLabel(place)}`, { class: "franja-red", "data-red": place }));
   out.append(text("h3", t("compareTitle")));
   const counted = text("p", comparisonSummary(compared, lang()), { class: "resumen-comparacion" });
   out.append(counted);
@@ -1096,8 +1100,28 @@ function cancelDelete() {
 }
 
 function networkLabel(network) {
+  const found = networkById(network);
+  if (found) return found.label[lang()] || found.label.es;
   if (network === "solana") return t("watchSolana");
   return visibleText(network || "");
+}
+
+function paintBatchNotice(networkIds) {
+  const box = document.getElementById("aviso-pasada");
+  if (!box) return;
+  const es = box.querySelector(".lang.es");
+  const en = box.querySelector(".lang.en");
+  const spanish = batchReviewNotice(networkIds, "es");
+  const english = batchReviewNotice(networkIds, "en");
+  if (es && spanish) es.textContent = spanish;
+  if (en && english) en.textContent = english;
+}
+
+function watchableAddress(entry) {
+  if (!entry || typeof entry.address !== "string" || typeof entry.network !== "string") return false;
+  if (entry.network === "solana") return isMintAddress(entry.address);
+  const network = networkById(entry.network);
+  return Boolean(network && network.enabled && network.family === "evm" && /^0x[0-9a-f]{40}$/.test(entry.address));
 }
 
 function secondsUntilSlot(stamps, now = Date.now()) {
@@ -1156,9 +1180,11 @@ function armLimitCountdown(stamps) {
   limitTimer = setInterval(() => paintLimit(false), 1000);
 }
 
-function watchStatusText(kind) {
+function watchStatusText(outcome) {
+  const kind = outcome && outcome.kind;
   if (kind === "cambio") return t("watchChanged");
   if (kind === "igual") return t("watchSame");
+  if (kind === "incompleto" && outcome.unchecked) return t("watchUnchecked");
   if (kind === "incompleto") return t("watchIncomplete");
   if (kind === "rechazada") return t("watchRefused");
   return limitMessage(secondsUntilSlot(queryStamps));
@@ -1231,6 +1257,7 @@ function renderWatchList(list) {
   if (!targets.length) {
     box.append(text("p", t("watchEmpty")));
     if (note) note.textContent = "";
+    paintBatchNotice(["solana"]);
     return;
   }
   const all = el("label", { class: "seguimiento-fila" });
@@ -1268,6 +1295,8 @@ function renderWatchList(list) {
     box.append(row);
   }
   if (note) note.textContent = selectedWatch.size ? t("watchSome") : t("watchAll");
+  const chosen = selectedWatch.size ? targets.filter((item) => selectedWatch.has(item.key)) : targets;
+  paintBatchNotice(chosen.map((item) => item.network));
 }
 
 function renderWatchResults() {
@@ -1299,7 +1328,7 @@ function renderWatchResult(item) {
   article.append(line);
   article.append(text("p", `${t("watchNetwork")}: ${networkLabel(entry.network)}`, { class: "muted" }));
   if (previousCard) article.append(text("p", `${t("lastReading")} · ${staleLine(previousCard.consultedAt, lang())}`, { class: "sello" }));
-  const status = text("p", watchStatusText(outcome.kind), { class: outcome.kind === "cambio" ? "nota" : "sello", "data-estado": outcome.kind });
+  const status = text("p", watchStatusText(outcome), { class: outcome.kind === "cambio" ? "nota" : "sello", "data-estado": outcome.kind });
   article.append(status);
   const refused = Boolean(outcome.rejection && outcome.rejection.rejected);
   const gap = outcome.card && !readingComplete(outcome.card)
@@ -1358,7 +1387,7 @@ function renderWatchResult(item) {
 function canKeep(outcome) {
   if (!outcome || outcome.saved || !outcome.card) return false;
   if (outcome.kind === "espera" || outcome.kind === "rechazada") return false;
-  const checked = validateCard(outcome.card);
+  const checked = validateAnyCard(outcome.card);
   return Boolean(checked.ok);
 }
 
@@ -1403,13 +1432,13 @@ async function followSelected(forgetKey) {
   const button = document.getElementById("seguir");
   const stop = document.getElementById("detener");
   const endpoint = endpointFromForm();
-  if (!isAllowedRpcUrl(endpoint)) {
+  const targets = watchTargets(records);
+  const selected = forgetKey ? [forgetKey] : [...selectedWatch];
+  const list = chooseWatchTargets(targets, selected).filter((item) => watchableAddress(item));
+  if (list.some((item) => item.network === "solana") && !isAllowedRpcUrl(endpoint)) {
     showMessage(t("rpc"), "error");
     return;
   }
-  const targets = watchTargets(records);
-  const selected = forgetKey ? [forgetKey] : [...selectedWatch];
-  const list = chooseWatchTargets(targets, selected).filter((item) => isMintAddress(item.address));
   const out = document.getElementById("resultado-seguimiento");
   if (!list.length) {
     showMessage(t("watchEmpty"), "info");
@@ -1430,28 +1459,65 @@ async function followSelected(forgetKey) {
     if (forgetKey && plan.ready.length) clearBlockedMethods();
     const painted = [];
     let index = 0;
+    let previousNetwork = "";
     for (const entry of plan.ready) {
       if (abort.signal.aborted) {
         stopped = true;
         break;
       }
+      const gap = evmEntryGapMs(previousNetwork, entry.network);
+      if (gap > 0) {
+        await new Promise((resolve) => {
+          const timer = setTimeout(resolve, gap);
+          const stop = () => {
+            clearTimeout(timer);
+            resolve();
+          };
+          if (abort.signal.aborted) stop();
+          else abort.signal.addEventListener("abort", stop, { once: true });
+        });
+        if (abort.signal.aborted) {
+          stopped = true;
+          break;
+        }
+      }
+      previousNetwork = entry.network;
       index += 1;
       showMessage(`${t("watchReading")} ${index} ${t("watchOf")} ${list.length}`, "info");
       let outcome;
       try {
-        const result = await readMint({
-          mint: entry.address,
-          endpoint,
-          transport: browserTransport,
-          minIntervalMs: 2000,
-          maxRetries: 1,
-          signal: abort.signal,
-        });
+        let result;
+        if (entry.network === "solana") {
+          result = await readMint({
+            mint: entry.address,
+            endpoint,
+            transport: browserTransport,
+            minIntervalMs: 2000,
+            maxRetries: 1,
+            signal: abort.signal,
+          });
+        } else {
+          const read = await readEvmToken({
+            networkId: entry.network,
+            address: entry.address,
+            transport: browserTransport,
+            minIntervalMs: 200,
+            timeoutMs: 8000,
+            takeSlot: () => true,
+            signal: abort.signal,
+          });
+          if (abort.signal.aborted) {
+            stopped = true;
+            break;
+          }
+          outcome = evmPassVerdict(entry.latest, read);
+          result = null;
+        }
         if (abort.signal.aborted || (result && result.aborted)) {
           stopped = true;
           break;
         }
-        outcome = watchVerdict(entry.latest, result);
+        if (entry.network === "solana") outcome = watchVerdict(entry.latest, result);
       } catch (error) {
         if (abort.signal.aborted || (error && error.name === "AbortError")) {
           stopped = true;

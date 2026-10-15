@@ -5,6 +5,7 @@
 import { formatAmount } from "./amount.js";
 import { factState } from "./fact-state.js";
 import { notebookNameText } from "./reading-summary.js";
+import networkCatalog from "./networks.json" with { type: "json" };
 import { CARD_SCHEMA, CARD_VERSION, DISCLAIMER, OFFICIAL_MINT, isMintAddress } from "./solana-read.js";
 
 export const EXPORT_SCHEMA = "stubx.notebook.export";
@@ -140,7 +141,13 @@ const EVM_CARD_KEYS = [
 ];
 
 const EVM_ADDRESS = /^0x[0-9a-fA-F]{40}$/;
-const EVM_NETWORKS = new Set(["base", "ethereum", "bnb"]);
+
+function enabledEvmIds() {
+  const list = networkCatalog && Array.isArray(networkCatalog.networks) ? networkCatalog.networks : [];
+  return new Set(list.filter((item) => item && item.enabled === true && item.family === "evm" && typeof item.id === "string").map((item) => item.id));
+}
+
+const EVM_NETWORKS = enabledEvmIds();
 
 function evmText(value) {
   if (!value || typeof value !== "object" || !sameKeys(value, ["status", "text"])) return false;
@@ -1008,11 +1015,38 @@ function pushGap(gaps, es, en) {
   gaps.push({ es, en });
 }
 
+function evmFactGap(fact, missingEs, missingEn, failedEs, failedEn) {
+  const status = fact && fact.status;
+  if (status === "ok" || status === "ausente") return null;
+  if (status === "fallo" || status === "no_disponible") return { es: failedEs, en: failedEn };
+  return { es: missingEs, en: missingEn };
+}
+
+function evmReadingGaps(card) {
+  const gaps = [];
+  if (card.partial === true) pushGap(gaps, "La ficha está a medias.", "The card is partial.");
+  const rows = [
+    ["code", "No se leyó si es un contrato o una cuenta.", "Whether it is a contract or an account was not read.", "No se pudo leer si es un contrato o una cuenta.", "Whether it is a contract or an account could not be read."],
+    ["name", "No se leyó el nombre.", "The name was not read.", "No se pudo leer el nombre.", "The name could not be read."],
+    ["symbol", "No se leyó el símbolo.", "The symbol was not read.", "No se pudo leer el símbolo.", "The symbol could not be read."],
+    ["decimals", "No se leyeron los decimales.", "The decimals were not read.", "No se pudieron leer los decimales.", "The decimals could not be read."],
+    ["totalSupply", "No se leyó la cantidad total.", "The total amount was not read.", "No se pudo leer la cantidad de tokens.", "The token amount could not be read."],
+    ["owner", "No se leyó owner().", "owner() was not read.", "No se pudo leer owner().", "owner() could not be read."],
+    ["proxy", "No se leyó el proxy EIP-1967.", "The EIP-1967 proxy was not read.", "No se pudo leer el proxy EIP-1967.", "The EIP-1967 proxy could not be read."],
+  ];
+  for (const [key, missingEs, missingEn, failedEs, failedEn] of rows) {
+    const gap = evmFactGap(card[key], missingEs, missingEn, failedEs, failedEn);
+    if (gap) gaps.push(gap);
+  }
+  return gaps;
+}
+
 /** Motivos por los que una ficha no está completa, aunque no venga marcada como parcial. */
 export function readingGaps(card) {
   if (!card || typeof card !== "object") {
     return [{ es: "La ficha no está completa.", en: "The card is not complete." }];
   }
+  if (card.schema === EVM_CARD_SCHEMA) return evmReadingGaps(card);
   const gaps = [];
   if (card.partial === true) pushGap(gaps, "La ficha está a medias.", "The card is partial.");
   if (card.slotStatus === "no_consultado") {
@@ -1098,7 +1132,7 @@ export function watchVerdict(previous, result) {
   if (!card || accountReadRefused(card)) {
     return { kind: "rechazada", compared: null, save: false, card, rejection: { rejected: true, primary: true } };
   }
-  const checked = validateCard(card);
+  const checked = validateAnyCard(card);
   if (!checked.ok) return { kind: "rechazada", compared: null, save: false, card, rejection };
   const previousCard = previous && previous.card ? previous.card : null;
   const next = { id: "00000000-0000-4000-8000-000000000001", note: "", card: checked.card };

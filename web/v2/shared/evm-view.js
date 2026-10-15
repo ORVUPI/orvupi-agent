@@ -7,8 +7,9 @@ import { factState, factWord } from "./fact-state.js";
 import { mountMarket } from "./market-view.js";
 import { checksFor, enabledNetworks, networkById, rpcHost } from "./networks.js";
 import { DISCLAIMER } from "./solana-read.js";
-import { EVM_CARD_SCHEMA, EVM_CARD_VERSION, cardDecimals, staleLine } from "./notebook-model.js";
-import { notebookNameText } from "./reading-summary.js";
+import { EVM_CARD_SCHEMA, EVM_CARD_VERSION, cardDecimals, staleLine, watchVerdict } from "./notebook-model.js";
+import { reportDownloadBox } from "./informe.js";
+import { notebookNameText, summaryFromEvmCard } from "./reading-summary.js";
 
 const COPY = {
   es: {
@@ -251,6 +252,40 @@ export function privacyText(networkId, lang) {
   return `Al consultar en ${label}, tu navegador envía la dirección al nodo público ${host}, que también ve tu IP. Si pides los datos de mercado, DEX Screener también ve tu IP y la dirección.`;
 }
 
+const BATCH_NOTICE = {
+  es: "Al pulsar, tu navegador envía las direcciones que se revisan (las marcadas, o todas si no marcas ninguna) al nodo público de su red: solana-rpc.publicnode.com o api.mainnet-beta.solana.com (Solana), mainnet.base.org (Base), ethereum-rpc.publicnode.com (Ethereum) y bsc-rpc.publicnode.com (BNB Chain). Esos nodos también ven tu IP. La pasada no pide datos de mercado. No se guarda nada nuevo hasta que pulses «Guardar».",
+  en: "When you tap, your browser sends the addresses being checked (the marked ones, or all of them if none are marked) to the public node for their network: solana-rpc.publicnode.com or api.mainnet-beta.solana.com (Solana), mainnet.base.org (Base), ethereum-rpc.publicnode.com (Ethereum) and bsc-rpc.publicnode.com (BNB Chain). Those nodes also see your IP. The check does not request market data. Nothing new is saved until you tap \"Save\".",
+};
+
+/** Aviso fijo de la pasada. No llama a DEX Screener, así que no cambia con las redes marcadas. */
+export function batchReviewNotice(networkIds, lang) {
+  void networkIds;
+  return BATCH_NOTICE[languageOf(lang)];
+}
+
+export const EVM_PASS_GAP_MS = 500;
+
+/** Pausa entre dos entradas EVM activas de networks.json. Solana no entra en esa pausa. */
+export function evmEntryGapMs(previousId, nextId) {
+  const previous = networkById(previousId);
+  const next = networkById(nextId);
+  if (!previous || !next || previous.enabled !== true || next.enabled !== true) return 0;
+  if (previous.family !== "evm" || next.family !== "evm") return 0;
+  return EVM_PASS_GAP_MS;
+}
+
+/** Un timeout o un 5xx de la pasada EVM es incompleto, no un rechazo. */
+export function evmPassVerdict(previous, read) {
+  const transport = read && (read.transport === "tiempo" || read.transport === "servidor");
+  const card = read && read.reading ? evmCardFromReading(read.reading) : null;
+  if (transport && card) {
+    const verdict = watchVerdict(previous, { ok: true, card });
+    return { ...verdict, kind: "incompleto", unchecked: true, card: verdict.card || card };
+  }
+  if (read && read.reason === "leido" && card) return watchVerdict(previous, { ok: true, card });
+  return watchVerdict(previous, { ok: false, card: null });
+}
+
 export function fillNetworkSelect(select) {
   if (!select) return;
   const current = select.value || "solana";
@@ -343,6 +378,12 @@ export function paintEvmResult(parent, reading, lang, options) {
       chain: view.card.network,
       auto: false,
     });
+    article.append(reportDownloadBox({
+      summary: summaryFromEvmCard(view.card),
+      mint: view.card.address,
+      consultedAt: view.card.consultedAt,
+      network: view.card.network,
+    }, { document, navigator: typeof navigator !== "undefined" ? navigator : undefined }));
   }
   if (options && typeof options.onSave === "function" && reading && reading.reason === "leido") {
     const button = textNode("button", view.save, {

@@ -934,6 +934,83 @@
             "es": "Ethereum y BNB Chain encendidas en el repositorio. Sigue fuera de stubxai.com.",
             "en": "Ethereum and BNB Chain switched on in the repository. Still absent from stubxai.com."
           }
+        },
+        {
+          "on": "2026-10-11",
+          "change": {
+            "es": "El cuaderno relee, compara e informa en las cuatro redes en U12. Esta ficha se queda en el encendido de Ethereum y BNB Chain. Sigue fuera de stubxai.com.",
+            "en": "The notebook rechecks, compares, and reports on all four networks in U12. This card stays on switching Ethereum and BNB Chain on. Still absent from stubxai.com."
+          }
+        }
+      ]
+    },
+    {
+      "id": "U12",
+      "version": "1",
+      "title": {
+        "es": "Cuaderno en las cuatro redes",
+        "en": "Notebook on all four networks"
+      },
+      "status": "en_revision",
+      "webPublished": false,
+      "scope": {
+        "es": "Revisar direcciones guardadas usa el lector de Solana, Base, Ethereum o BNB Chain según la ficha. La comparación solo junta dos lecturas de la misma red y dirección. El informe PNG y PDF dice la red, por ejemplo Base mainnet. El aviso de la pasada nombra el nodo de cada red y dice que la pasada no pide datos de mercado. Todavía no está en stubxai.com.",
+        "en": "Recheck saved addresses uses the Solana, Base, Ethereum, or BNB Chain reader according to the card. Comparison only joins two readings of the same network and address. The PNG and PDF report names the network, for example Base mainnet. The batch notice names each network's node and says the check does not request market data. It is not on stubxai.com yet."
+      },
+      "owner": "Equipo del repositorio",
+      "reviewer": "Pendiente de una persona distinta del autor, antes de publicar.",
+      "reviewedOn": "2026-10-11",
+      "block": {
+        "es": "El código está en el repositorio. La página de stubxai.com todavía no incluye esta lectura.",
+        "en": "The code is in the repository. The page on stubxai.com does not include this reading yet."
+      },
+      "evidence": [
+        {
+          "label": { "es": "Pasada", "en": "Pass" },
+          "path": "web/v2/assets/cuaderno.js",
+          "note": {
+            "es": "Cada dirección guardada se relee con el lector de su red.",
+            "en": "Each saved address is read again with that network's reader."
+          }
+        },
+        {
+          "label": { "es": "Informe", "en": "Report" },
+          "path": "web/v2/shared/informe.js",
+          "note": {
+            "es": "El archivo nombra Solana mainnet, Base mainnet, Ethereum mainnet o BNB Chain mainnet.",
+            "en": "The file names Solana mainnet, Base mainnet, Ethereum mainnet, or BNB Chain mainnet."
+          }
+        },
+        {
+          "label": { "es": "Aviso", "en": "Notice" },
+          "path": "web/v2/shared/evm-view.js",
+          "note": {
+            "es": "El aviso de la pasada es el literal de Legal: la pasada no pide datos de mercado. Un parecido con STUBX en una red EVM sale en el informe.",
+            "en": "The batch notice is Legal's sentence: the check does not request market data. A likeness to STUBX on an EVM network appears in the report."
+          }
+        }
+      ],
+      "history": [
+        {
+          "on": "2026-10-11",
+          "change": {
+            "es": "Cuaderno anotado para las cuatro redes. Sigue fuera de stubxai.com.",
+            "en": "Notebook recorded for all four networks. Still absent from stubxai.com."
+          }
+        },
+        {
+          "on": "2026-10-11",
+          "change": {
+            "es": "El aviso de la pasada pasa al literal de Legal. La pasada no pide datos de mercado. Sigue fuera de stubxai.com.",
+            "en": "The batch notice uses Legal's sentence. The check does not request market data. Still absent from stubxai.com."
+          }
+        },
+        {
+          "on": "2026-10-11",
+          "change": {
+            "es": "El informe nombra un parecido con STUBX en las redes EVM. Un timeout o un 5xx de la pasada queda en incompleto. Sigue fuera de stubxai.com.",
+            "en": "The report names a likeness to STUBX on the EVM networks. A timeout or a 5xx in the pass stays incomplete. Still absent from stubxai.com."
+          }
         }
       ]
     }

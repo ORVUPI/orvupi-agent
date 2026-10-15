@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="referrer" content="no-referrer">
-<meta name="description" content="Cuaderno local de solo lectura para cualquier token de Solana. / Local read-only notebook for any Solana token.">
+<meta name="description" content="Cuaderno local de solo lectura para un token de Solana, Base, Ethereum o BNB Chain. / Local read-only notebook for a token on Solana, Base, Ethereum, or BNB Chain.">
 <link rel="canonical" href="https://stubxai.com/cuaderno/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="STUBX">
@@ -12,7 +12,7 @@
 <meta property="og:locale:alternate" content="en_US">
 <meta property="og:url" content="https://stubxai.com/cuaderno/">
 <meta property="og:title" content="STUBX · Cuaderno / STUBX · Notebook">
-<meta property="og:description" content="Cuaderno local de solo lectura para cualquier token de Solana. / Local read-only notebook for any Solana token.">
+<meta property="og:description" content="Cuaderno local de solo lectura para un token de Solana, Base, Ethereum o BNB Chain. / Local read-only notebook for a token on Solana, Base, Ethereum, or BNB Chain.">
 <meta property="og:image" content="https://stubxai.com/assets/og-stubx-2026-10b-1200x630.jpg">
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
@@ -21,7 +21,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@stubxai">
 <meta name="twitter:title" content="STUBX · Cuaderno / STUBX · Notebook">
-<meta name="twitter:description" content="Cuaderno local de solo lectura para cualquier token de Solana. / Local read-only notebook for any Solana token.">
+<meta name="twitter:description" content="Cuaderno local de solo lectura para un token de Solana, Base, Ethereum o BNB Chain. / Local read-only notebook for a token on Solana, Base, Ethereum, or BNB Chain.">
 <meta name="twitter:image" content="https://stubxai.com/assets/og-stubx-2026-10b-1200x630.jpg">
 <meta name="twitter:image:alt" content="STUBX: Agente Talón, mascota rosa con forma de ticket, sostiene un recibo junto a un globo terráqueo. Texto: «Un meme que pide pruebas. Qué es, qué funciona hoy y qué falta. CA oficial y pruebas en stubxai.com». / STUBX: Agente Talón, a pink ticket-shaped mascot, holds a receipt next to a globe. Text: “A meme that asks for proof. What it is, what works today, and what is missing. Official CA and proofs at stubxai.com”.">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self' https://solana-rpc.publicnode.com https://api.mainnet-beta.solana.com https://mainnet.base.org https://ethereum-rpc.publicnode.com https://bsc-rpc.publicnode.com https://api.dexscreener.com; manifest-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
@@ -53,8 +53,8 @@
 <main id="contenido" class="wrap">
 
 <h1><span class="lang es" lang="es">Cuaderno</span><span class="lang en" lang="en">Notebook</span></h1>
-<p class="lede"><span class="lang es" lang="es">Lee cualquier token de Solana y guarda la ficha en este navegador. No conecta una cartera, no firma y no envía.</span><span class="lang en" lang="en">Read any Solana token and save the card in this browser. It does not connect a wallet, it does not sign, and it does not send.</span></p>
-<p><span class="lang es" lang="es">Elige la red. Al abrir, la red es Solana. En Base la lectura también es solo lectura: sin cartera y sin firma. Cada ficha guarda la red y la dirección.</span><span class="lang en" lang="en">Choose the network. When the page opens, the network is Solana. On Base the reading is also read-only: no wallet and no signature. Each card stores the network and the address.</span></p>
+<p class="lede"><span class="lang es" lang="es">Lee un token de Solana, Base, Ethereum o BNB Chain y guarda la ficha en este navegador. No conecta una cartera, no firma y no envía.</span><span class="lang en" lang="en">Read a token on Solana, Base, Ethereum, or BNB Chain and save the card in this browser. It does not connect a wallet, it does not sign, and it does not send.</span></p>
+<p><span class="lang es" lang="es">Elige la red. Al abrir, la red es Solana. En Base, Ethereum y BNB Chain la lectura también es solo lectura: sin cartera y sin firma. Cada ficha guarda la red y la dirección.</span><span class="lang en" lang="en">Choose the network. When the page opens, the network is Solana. On Base, Ethereum, and BNB Chain the reading is also read-only: no wallet and no signature. Each card stores the network and the address.</span></p>
 <p><span class="lang es" lang="es">Lo que escribes se guarda solo en este navegador. No escribas claves, frases semilla ni datos personales. Borrar lo elimina. Para leer la cadena, tu navegador consulta un servicio público de Solana (por defecto solana-rpc.publicnode.com, o el que elijas), que recibe la dirección consultada y tu IP.</span><span class="lang en" lang="en">What you write is stored only in this browser. Do not write keys, seed phrases, or personal data. Clear deletes it. To read the chain, your browser queries a public Solana service (by default solana-rpc.publicnode.com, or the one you choose), which receives the address and your IP.</span></p>
 <p><span class="lang es" lang="es">Este sitio no guarda en ningún servidor la dirección que consultas. Para leerla en directo, se envía a los nodos públicos de Solana solana-rpc.publicnode.com y api.mainnet-beta.solana.com, que también ven tu IP. Si pulsas «Leer datos de mercado ahora», tu navegador conecta con DEX Screener y DEX Screener también ve tu IP y la dirección consultada. Solo si pulsas «Guardar esta consulta», se guarda en el Cuaderno de este navegador, en tu dispositivo, y puedes borrarla allí cuando quieras. Los datos de mercado no se guardan.</span><span class="lang en" lang="en">This site does not store the address you look up on any server. To read it live, it is sent to the Solana public nodes solana-rpc.publicnode.com and api.mainnet-beta.solana.com, which also see your IP. If you press "Read market data now", your browser connects to DEX Screener and it also sees your IP and the address you look up. Only if you press "Save this lookup" is it stored in this browser's Notebook, on your device, and you can delete it there at any time. Market data is not stored.</span></p>
 <p class="sello"><span class="lang es" lang="es">No es una auditoría ni una recomendación. Muestra datos públicos de la cadena en el momento indicado; no dice si un token es bueno, seguro o una buena compra.</span><span class="lang en" lang="en">It is not an audit or a recommendation. It shows public chain data at the time stated; it does not say whether a token is good, safe, or a good purchase.</span></p>
@@ -97,12 +97,12 @@
 <p><span class="lang es" lang="es">Vuelve a leer las direcciones guardadas, todas o solo las que marques, y mira si algo cambió desde la última lectura. Se leen de una en una.</span><span class="lang en" lang="en">Read the saved addresses again, all of them or only the ones you mark, and see whether anything changed since the last reading. They are read one by one.</span></p>
 <div id="lista-seguimiento"></div>
 <p id="seguir-alcance" class="muted"></p>
-<p id="aviso-pasada" class="aviso-pasada"><span class="lang es" lang="es">Al pulsar, tu navegador envía las direcciones que se revisan (las marcadas, o todas si no marcas ninguna) a los nodos públicos de Solana solana-rpc.publicnode.com y api.mainnet-beta.solana.com, que también ven tu IP. No se guarda nada nuevo hasta que pulses «Guardar».</span><span class="lang en" lang="en">When you tap, your browser sends the addresses being checked (the marked ones, or all of them if none are marked) to the Solana public nodes solana-rpc.publicnode.com and api.mainnet-beta.solana.com, which also see your IP. Nothing new is saved until you tap "Save".</span></p>
+<p id="aviso-pasada" class="aviso-pasada"><span class="lang es" lang="es">Al pulsar, tu navegador envía las direcciones que se revisan (las marcadas, o todas si no marcas ninguna) al nodo público de su red: solana-rpc.publicnode.com o api.mainnet-beta.solana.com (Solana), mainnet.base.org (Base), ethereum-rpc.publicnode.com (Ethereum) y bsc-rpc.publicnode.com (BNB Chain). Esos nodos también ven tu IP. La pasada no pide datos de mercado. No se guarda nada nuevo hasta que pulses «Guardar».</span><span class="lang en" lang="en">When you tap, your browser sends the addresses being checked (the marked ones, or all of them if none are marked) to the public node for their network: solana-rpc.publicnode.com or api.mainnet-beta.solana.com (Solana), mainnet.base.org (Base), ethereum-rpc.publicnode.com (Ethereum) and bsc-rpc.publicnode.com (BNB Chain). Those nodes also see your IP. The check does not request market data. Nothing new is saved until you tap "Save".</span></p>
 <p class="pasada-acciones"><button id="seguir" type="button"><span class="lang es" lang="es">Consultar la lista</span><span class="lang en" lang="en">Check the list</span></button> <button id="detener" type="button" hidden><span class="lang es" lang="es">Detener</span><span class="lang en" lang="en">Stop</span></button> <button id="guardar-todas" type="button" aria-disabled="true"><span class="lang es" lang="es">Guardar todas</span><span class="lang en" lang="en">Save all</span></button></p>
 <p id="guardar-todas-ayuda" class="muted" hidden></p>
 <div id="resultado-seguimiento" tabindex="-1" aria-live="polite"></div>
 
-<h2><span class="lang es" lang="es">Comparar consultas de la misma dirección</span><span class="lang en" lang="en">Compare queries of the same address</span></h2>
+<h2><span class="lang es" lang="es">Comparar consultas de la misma red y dirección</span><span class="lang en" lang="en">Compare queries of the same network and address</span></h2>
 <div class="comparacion">
 <p><label for="comparar-izquierda"><span class="lang es" lang="es">Antes</span><span class="lang en" lang="en">Before</span></label>
 <select id="comparar-izquierda"></select></p>

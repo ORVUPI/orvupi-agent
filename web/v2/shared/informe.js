@@ -120,10 +120,18 @@ export function canvasSafeText(value, max = 400) {
   return chars.length > max ? `${chars.slice(0, max).join("")}…` : normalized;
 }
 
+const MAINNET_NAMES = Object.freeze({
+  solana: "Solana mainnet",
+  base: "Base mainnet",
+  ethereum: "Ethereum mainnet",
+  bnb: "BNB Chain mainnet",
+});
+
 export function networkName(network, lang) {
   const copy = reportCopy(lang);
   const clean = String(network ?? "").normalize("NFKC").replace(HIDDEN, "").trim();
-  if (/^solana$/i.test(clean)) return "Solana mainnet";
+  const named = MAINNET_NAMES[clean.toLowerCase()];
+  if (named) return named;
   if (!clean) return copy.networkMissing;
   return clean;
 }
@@ -863,6 +871,9 @@ export function reportDownloadBox(source, env) {
   const title = doc.createElement("p");
   title.className = "informe-titulo";
   title.textContent = copy().action;
+  const place = doc.createElement("p");
+  place.className = "informe-red";
+  place.textContent = `${copy().network}: ${networkName(source?.network, lang())}`;
   const note = doc.createElement("p");
   note.className = "informe-nota";
   note.textContent = copy().local;
@@ -910,6 +921,6 @@ export function reportDownloadBox(source, env) {
   png.addEventListener("click", () => { run("png"); });
   pdf.addEventListener("click", () => { run("pdf"); });
   actions.append(png, pdf);
-  box.append(title, note, actions, status);
+  box.append(title, place, note, actions, status);
   return box;
 }
