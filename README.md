@@ -1,24 +1,20 @@
 # ORVUPI
 
-ORVUPI combina una comunidad creativa, un pulpo rosa como identidad y herramientas para aprender, crear contenido y consultar datos públicos de tokens.
+Comunidad, humor y herramientas Web3. **Ocho brazos. Mil ideas.**
 
-Este repositorio conserva y desarrolla las herramientas existentes del proyecto. El agente no tiene claves: no firma, no custodia, no intercambia activos ni envía transacciones.
+ORVUPI combina la personalidad de un pulpo rosa con herramientas para aprender, consultar datos públicos y crear contenido. Este repositorio reúne el agente y las herramientas del proyecto.
 
-> Prototipo. Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión.
+## Canales y contacto
 
-## Canales oficiales
+- [Web](https://stubxai.com/)
+- [X · @ORVUPI](https://x.com/ORVUPI)
+- [Telegram · @orvupi](https://t.me/orvupi)
+- [TikTok · @orvupi](https://www.tiktok.com/@orvupi)
+- Contacto: **orvupi.hq@gmail.com**
 
-- Web: https://stubxai.com/
-- X: https://x.com/ORVUPI
-- Telegram: https://t.me/orvupi
-- TikTok: https://www.tiktok.com/@orvupi
-- Farcaster: https://farcaster.xyz/stubxai
-- Contacto: orvupi.hq@gmail.com
-- Repositorio: https://github.com/stubxai/stubx-agent
+El dominio y la dirección de este repositorio siguen siendo los operativos mientras se completan sus cambios. No se publican direcciones nuevas sin comprobarlas.
 
-Algunas direcciones e identificadores técnicos conservan nombres anteriores para mantener la continuidad de los servicios. La marca actual es ORVUPI. La transición y los elementos históricos se explican en [docs/ORVUPI.md](docs/ORVUPI.md).
-
-## Herramientas que conservamos
+## Herramientas
 
 | Herramienta | Función |
 | --- | --- |
@@ -29,17 +25,15 @@ Algunas direcciones e identificadores técnicos conservan nombres anteriores par
 | [Comparar](https://stubxai.com/comparar/) y [Pares](https://stubxai.com/pares/) | Ejemplos educativos y lectura de datos públicos. |
 | [Tablero](https://stubxai.com/tablero/) | Estado de funcionalidades y evidencias. |
 
-Una consulta puede fallar o quedar incompleta. Un dato ausente no se sustituye por un cero ni por un resultado inventado. Estas herramientas no garantizan que un token sea seguro ni constituyen una recomendación de inversión.
+Una consulta puede fallar o quedar incompleta. Los datos ausentes no se sustituyen por ceros ni por resultados inventados. Estas herramientas no garantizan la seguridad de un token ni recomiendan inversiones.
 
-## Estado del token ORVUPI
+## Token
 
-A fecha de esta transición, no se ha publicado en este repositorio una dirección verificada de token ORVUPI.
-
-Las direcciones, metadatos y ejemplos del proyecto anterior que se conservan en los archivos históricos no identifican un token ORVUPI. No implican una migración automática de saldos ni una equivalencia entre tokens. La dirección histórica se documenta por separado en [docs/ORVUPI.md](docs/ORVUPI.md).
+**No hay una dirección de token ORVUPI verificada publicada en este repositorio.** La preparación del proyecto no equivale a emitir un token. Solo se identificará como ORVUPI una dirección comprobada y anunciada por los canales oficiales. No hay conversión automática de otros tokens.
 
 ## Desarrollo
 
-Requiere Node.js 22 o superior; `.nvmrc` conserva la versión del proyecto.
+Requiere Node.js 22 o superior.
 
 ```bash
 npm ci
@@ -50,28 +44,21 @@ npm run drill:killswitch
 npm run logs:verify
 ```
 
-El identificador interno `@stubx/agents`, los esquemas de datos y algunas claves de almacenamiento se conservan por compatibilidad. El cambio de marca no amplía los permisos del agente. El componente de consulta [`verify/`](verify/README.md) está separado del agente: si se ejecuta a propósito, consulta datos públicos; el agente de `src/` no contacta ningún RPC.
+El agente no tiene claves: no firma, no custodia, no intercambia activos ni envía transacciones. El componente de consulta de Verify lee datos públicos cuando se ejecuta a propósito; está separado del agente. Un resultado correcto de pruebas no equivale a una auditoría.
 
-Las pruebas demuestran únicamente lo que comprueban en la versión ejecutada. Un resultado correcto no equivale a una auditoría. Este documento no afirma haber ejecutado las comprobaciones anteriores.
+## Documentación
 
-## Documentación y evidencias
-
-- [Guía de transición ORVUPI](docs/ORVUPI.md)
+- [Identidad y estado de ORVUPI](docs/ORVUPI.md)
 - [Contribuir](CONTRIBUTING.md)
 - [Seguridad](SECURITY.md)
 - [Límites](LIMITS.md)
 - [Kill-switch](KILL-SWITCH.md)
-- [Log público](LOGS.md)
+- [Logs](LOGS.md)
 - [Modelo de amenazas](THREAT-MODEL.md)
-- [Historial de cambios](CHANGELOG.md)
-- [README histórico anterior](docs/history/README.pre-orvupi.2026-10-15.md)
+- [Cambios de ORVUPI](CHANGELOG.md)
 
-El README histórico conserva las declaraciones y referencias de su versión de origen; no es la descripción actual de ORVUPI. Las pruebas de procedencia, los registros sellados y los datos históricos no se reescriben con el cambio de marca. La revisión de cualquier estado de seguridad debe hacerse contra sus evidencias y fechas.
-
-Licencia MIT. Se conservan los avisos de autoría y la [licencia](LICENSE) del código existente.
+Licencia MIT. Copyright (c) 2026 ORVUPI. Consulta [LICENSE](LICENSE). Se conservan los avisos de licencias de componentes de terceros.
 
 ## English
 
-ORVUPI combines community, creative content and educational tools. This repository preserves the existing tools while adopting the ORVUPI identity. The agent holds no keys and cannot sign, custody assets or send transactions.
-
-Prototype. High-risk crypto · You could lose everything · Not investment advice. No verified ORVUPI token address has been published in this repository. Legacy token addresses and historical examples must not be presented as an ORVUPI token. Technical identifiers and historical records are retained for compatibility and traceability; see [the transition guide](docs/ORVUPI.md). A passing test is not an audit.
+ORVUPI combines community, humor, creative content and educational Web3 tools. The agent holds no keys and cannot sign, custody assets or send transactions. No verified ORVUPI token address has been published in this repository. Crypto involves high risk; these tools are not investment advice. Contact: orvupi.hq@gmail.com.

@@ -12,7 +12,7 @@ No hay programa de recompensas. No hay pago por informes. No envíes claves, fra
 
 Dentro de alcance:
 
-- Este repositorio (identificador técnico conservado: `@stubx/agents`): código del agente, tests, política de límites, kill-switch y workflows de GitHub Actions.
+- Este repositorio: código del agente, tests, política de límites, kill-switch y workflows de GitHub Actions.
 - Un cambio que permita firmar, custodiar, enviar transacciones o escribir en la red.
 - Secretos o material de clave colados en el árbol o en la historia de git.
 
