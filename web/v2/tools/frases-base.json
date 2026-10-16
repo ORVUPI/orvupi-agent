@@ -1,0 +1,336 @@
+{
+ "_nota": "Lista base congelada (16-10-2026) de avisos antiestafa, canales y legales. Sacada de web/current en el tag pre-orvupi-2026-10-16, sin lo específico del token anterior y adaptada a ORVUPI. check_legal_phrases.py falla si alguna no está en web/v2.",
+ "origen": "pre-orvupi-2026-10-16:web/current",
+ "frases": [
+  {
+   "pagina": "security",
+   "lang": "es",
+   "frase": "X: x.com/ORVUPI"
+  },
+  {
+   "pagina": "security",
+   "lang": "en",
+   "frase": "X: x.com/ORVUPI"
+  },
+  {
+   "pagina": "security",
+   "lang": "es",
+   "frase": "Telegram: t.me/orvupi"
+  },
+  {
+   "pagina": "security",
+   "lang": "en",
+   "frase": "Telegram: t.me/orvupi"
+  },
+  {
+   "pagina": "security",
+   "lang": "es",
+   "frase": "TikTok: tiktok.com/@orvupi"
+  },
+  {
+   "pagina": "security",
+   "lang": "en",
+   "frase": "TikTok: tiktok.com/@orvupi"
+  },
+  {
+   "pagina": "security",
+   "lang": "es",
+   "frase": "Correo: orvupi.hq@gmail.com"
+  },
+  {
+   "pagina": "security",
+   "lang": "en",
+   "frase": "Email: orvupi.hq@gmail.com"
+  },
+  {
+   "pagina": "security",
+   "lang": "es",
+   "frase": "Solo son oficiales los canales de esta lista."
+  },
+  {
+   "pagina": "security",
+   "lang": "es",
+   "frase": "Si una cuenta, web o dirección no aparece aquí, trátala como no oficial hasta comprobarlo en esta web."
+  },
+  {
+   "pagina": "security",
+   "lang": "en",
+   "frase": "Only the channels on this list are official."
+  },
+  {
+   "pagina": "security",
+   "lang": "en",
+   "frase": "If an account, website or address is not listed here, treat it as unofficial until you check it on this website."
+  },
+  {
+   "pagina": "security",
+   "lang": "es",
+   "frase": "Correo: orvupi.hq@gmail.com"
+  },
+  {
+   "pagina": "security",
+   "lang": "en",
+   "frase": "Email: orvupi.hq@gmail.com"
+  },
+  {
+   "pagina": "security",
+   "lang": "es",
+   "frase": "Habrá cuentas, webs y direcciones de token falsas que usen el nombre ORVUPI."
+  },
+  {
+   "pagina": "security",
+   "lang": "es",
+   "frase": "Cualquier otra cuenta de X no es un canal oficial de la marca."
+  },
+  {
+   "pagina": "security",
+   "lang": "en",
+   "frase": "There will be fake accounts, websites and token addresses using the ORVUPI name."
+  },
+  {
+   "pagina": "security",
+   "lang": "en",
+   "frase": "Any other X account is not an official channel of the brand."
+  },
+  {
+   "pagina": "security",
+   "lang": "es",
+   "frase": "Nadie de ORVUPI te escribirá por mensaje privado."
+  },
+  {
+   "pagina": "security",
+   "lang": "es",
+   "frase": "Si pasa, es una estafa: no respondas, no abras enlaces y no firmes nada."
+  },
+  {
+   "pagina": "security",
+   "lang": "en",
+   "frase": "Nobody from ORVUPI will write to you by private message."
+  },
+  {
+   "pagina": "security",
+   "lang": "en",
+   "frase": "If it happens, it is a scam: do not reply, do not open links and do not sign anything."
+  },
+  {
+   "pagina": "security",
+   "lang": "es",
+   "frase": "Un mensaje directo que ofrezca preventa, whitelist, airdrop, devolución, inversión o «ayuda para mintear» es una estafa."
+  },
+  {
+   "pagina": "security",
+   "lang": "en",
+   "frase": "A direct message offering a presale, whitelist, airdrop, refund, investment or “help to mint” is a scam."
+  },
+  {
+   "pagina": "security",
+   "lang": "es",
+   "frase": "ORVUPI todavía no tiene contrato en ninguna red: cualquier token que diga ser ORVUPI no es oficial."
+  },
+  {
+   "pagina": "security",
+   "lang": "en",
+   "frase": "ORVUPI does not have a contract on any network yet: any token claiming to be ORVUPI is not official."
+  },
+  {
+   "pagina": "security",
+   "lang": "es",
+   "frase": "Nunca pedimos dinero, fondos, claves privadas ni frases semilla por email ni por mensaje directo."
+  },
+  {
+   "pagina": "security",
+   "lang": "en",
+   "frase": "We never ask for money, funds, private keys or seed phrases by email or direct message."
+  },
+  {
+   "pagina": "security",
+   "lang": "es",
+   "frase": "Nunca compartas tu clave privada, frase semilla (seed) ni códigos de acceso."
+  },
+  {
+   "pagina": "security",
+   "lang": "en",
+   "frase": "Never share your private key, seed phrase or access codes."
+  },
+  {
+   "pagina": "security",
+   "lang": "es",
+   "frase": "No conectes tu wallet en webs que no aparezcan en esta lista."
+  },
+  {
+   "pagina": "security",
+   "lang": "en",
+   "frase": "Do not connect your wallet on websites that are not on this list."
+  },
+  {
+   "pagina": "security",
+   "lang": "es",
+   "frase": "Nadie oficial te prometerá rentabilidad, precio, listado ni venta pública."
+  },
+  {
+   "pagina": "security",
+   "lang": "en",
+   "frase": "Nobody official will promise you returns, a price, a listing or a public sale."
+  },
+  {
+   "pagina": "security",
+   "lang": "es",
+   "frase": "Esta web no firma, no custodia fondos y no envía transacciones: no tiene wallet ni claves."
+  },
+  {
+   "pagina": "security",
+   "lang": "en",
+   "frase": "This website does not sign, does not hold funds and does not send transactions: it has no wallet or keys."
+  },
+  {
+   "pagina": "security",
+   "lang": "es",
+   "frase": "No es un agente autónomo: no firma, no custodia y no tradea."
+  },
+  {
+   "pagina": "security",
+   "lang": "en",
+   "frase": "It is not an autonomous agent: it does not sign, hold funds or trade."
+  },
+  {
+   "pagina": "risks",
+   "lang": "es",
+   "frase": "No es un dictamen jurídico ni consejo de inversión."
+  },
+  {
+   "pagina": "risks",
+   "lang": "en",
+   "frase": "It is not a legal opinion or investment advice."
+  },
+  {
+   "pagina": "risks",
+   "lang": "es",
+   "frase": "No es consejo de inversión ni una recomendación."
+  },
+  {
+   "pagina": "risks",
+   "lang": "en",
+   "frase": "It is not investment advice or a recommendation."
+  },
+  {
+   "pagina": "risks",
+   "lang": "es",
+   "frase": "No prometemos rentabilidad, precio, listado en exchanges ni venta pública."
+  },
+  {
+   "pagina": "risks",
+   "lang": "en",
+   "frase": "We do not promise returns, a price, an exchange listing or a public sale."
+  },
+  {
+   "pagina": "risks",
+   "lang": "es",
+   "frase": "No hay aprobación ni sello de la CNMV."
+  },
+  {
+   "pagina": "risks",
+   "lang": "en",
+   "frase": "There is no CNMV approval or seal."
+  },
+  {
+   "pagina": "risks",
+   "lang": "es",
+   "frase": "Solo es oficial lo que aparece en los canales oficiales de la página de Seguridad."
+  },
+  {
+   "pagina": "risks",
+   "lang": "en",
+   "frase": "Only what appears on the official channels listed on the Security page is official."
+  },
+  {
+   "pagina": "risks",
+   "lang": "es",
+   "frase": "Nadie de ORVUPI te pedirá tu seed ni fondos por DM ni por email (único correo oficial: orvupi.hq@gmail.com)."
+  },
+  {
+   "pagina": "risks",
+   "lang": "en",
+   "frase": "Nobody from ORVUPI will ask for your seed or funds by DM or email (the only official email: orvupi.hq@gmail.com)."
+  },
+  {
+   "pagina": "marca",
+   "lang": "es",
+   "frase": "No te hagas pasar por ORVUPI: no uses el avatar como foto de tu perfil ni digas que tu cuenta es oficial."
+  },
+  {
+   "pagina": "marca",
+   "lang": "en",
+   "frase": "Do not pretend to be ORVUPI: do not use the avatar as your profile picture or say your account is official."
+  },
+  {
+   "pagina": "marca",
+   "lang": "es",
+   "frase": "No pongas direcciones de contrato en tus memes: ORVUPI todavía no tiene contrato."
+  },
+  {
+   "pagina": "marca",
+   "lang": "en",
+   "frase": "Do not put contract addresses in your memes: ORVUPI does not have a contract yet."
+  },
+  {
+   "pagina": "marca",
+   "lang": "es",
+   "frase": "No ataques a personas ni proyectos reales por su nombre, y nada ofensivo o ilegal."
+  },
+  {
+   "pagina": "marca",
+   "lang": "en",
+   "frase": "Do not attack real people or projects by name, and nothing offensive or illegal."
+  },
+  {
+   "pagina": "marca",
+   "lang": "es",
+   "frase": "No hay concursos, premios, pagos ni tokens por hacer memes."
+  },
+  {
+   "pagina": "marca",
+   "lang": "en",
+   "frase": "There are no contests, prizes, payments or tokens for making memes."
+  },
+  {
+   "pagina": "marca",
+   "lang": "es",
+   "frase": "Nadie de ORVUPI te escribirá por mensaje privado por tu meme."
+  },
+  {
+   "pagina": "marca",
+   "lang": "es",
+   "frase": "Si pasa, es una estafa: no respondas, no abras enlaces y no firmes nada."
+  },
+  {
+   "pagina": "marca",
+   "lang": "en",
+   "frase": "Nobody from ORVUPI will write to you by private message about your meme."
+  },
+  {
+   "pagina": "marca",
+   "lang": "en",
+   "frase": "If it happens, it is a scam: do not reply, do not open links and do not sign anything."
+  },
+  {
+   "pagina": "marca",
+   "lang": "es",
+   "frase": "Consejos antiestafa: leer el handle letra a letra, comparar la dirección entera, no firmar lo que no entiendes."
+  },
+  {
+   "pagina": "marca",
+   "lang": "en",
+   "frase": "Anti-scam tips: read the handle letter by letter, compare the whole address, do not sign what you do not understand."
+  },
+  {
+   "pagina": "marca",
+   "lang": "es",
+   "frase": "Contacto oficial: X @ORVUPI o orvupi.hq@gmail.com."
+  },
+  {
+   "pagina": "marca",
+   "lang": "en",
+   "frase": "Official contact: X @ORVUPI or orvupi.hq@gmail.com."
+  }
+ ]
+}

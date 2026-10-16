@@ -363,6 +363,22 @@ test("las frases retiradas no salen fuera de /risks y /legal", () => {
   assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
 });
 
+test("la guardia de frases compara con la lista base congelada y falla si falta una", () => {
+  const run = spawnSync("python3", ["web/v2/tools/check_legal_phrases.py"], { cwd: repoRoot(), encoding: "utf8" });
+  const covered = Number(/frases de la lista base cubiertas: (\d+)/.exec(run.stdout)?.[1] ?? 0);
+  assert.ok(covered >= 60, run.stdout + run.stderr);
+  const script = [
+    "import check_legal_phrases as guard",
+    "base = guard.load_base()",
+    "lost = guard.base_missing(base, lambda page: guard.page_text(page).replace(guard.normalize('Un mensaje directo que ofrezca preventa'), ''))",
+    "assert any('preventa' in line for line in lost), lost",
+    "assert guard.base_missing(base) == []",
+    "print('ok')",
+  ].join("\n");
+  const check = spawnSync("python3", ["-c", script], { cwd: path.join(repoRoot(), "web/v2/tools"), encoding: "utf8" });
+  assert.equal(check.stdout.trim(), "ok", check.stderr);
+});
+
 test("la guardia junta espacios, saltos, etiquetas, ancho cero y concatenaciones", () => {
   const script = `
 import check_legal_phrases as guard
