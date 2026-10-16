@@ -285,7 +285,7 @@ describe("texto, puntero y holders", () => {
   });
 
   test("cleanText recorta el relleno nulo y marca el bidi", () => {
-    assert.equal(cleanText("ORVUPI"), "ORVUPI");
+    assert.equal(cleanText("STUBX"), "STUBX");
     assert.equal(cleanText("USD Coin\0\0\0"), "USD Coin");
     assert.equal(cleanText("USDC\0"), "USDC");
     assert.equal(cleanText("\0\0\0"), "");
@@ -304,7 +304,7 @@ describe("texto, puntero y holders", () => {
     if (!copy.ok) {
       assert.match(copy.message, /Copia conocida/);
       assert.match(copy.message, /ORVUPI todavía no tiene contrato en ninguna red/);
-      assert.match(copy.message, /sin verificar en la cadena/);
+      assert.match(copy.message, /Copia conocida de un token anterior/);
     }
     const other = validateMint("0x0000000000000000000000000000000000000001", known);
     assert.equal(other.ok, false);

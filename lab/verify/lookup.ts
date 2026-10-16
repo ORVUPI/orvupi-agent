@@ -77,7 +77,7 @@ const COPY = {
   oficial: {
     light: "ok" as const,
     lightLabel: { es: "Parece oficial", en: "Looks official" },
-    title: { es: "Parece el ORVUPI oficial", en: "Looks like the official ORVUPI" },
+    title: { es: "Está en el registro curado", en: "It is in the curated registry" },
     support: {
       es: "La dirección coincide con la ficha del registro. La fecha va en los detalles. «Parece» no es una garantía permanente.",
       en: "The address matches the registry card. The date is in the details. “Looks like” is not a permanent guarantee.",
@@ -85,17 +85,17 @@ const COPY = {
   },
   copia: {
     light: "atencion" as const,
-    lightLabel: { es: "Se parece a ORVUPI, pero no es la CA oficial", en: "Looks like ORVUPI, but it is not the official CA" },
-    title: { es: "Se parece a ORVUPI, pero no es la CA oficial", en: "Looks like ORVUPI, but it is not the official CA" },
+    lightLabel: { es: "Se parece a un token del registro, pero la dirección es otra", en: "Looks like a token in the registry, but the address is different" },
+    title: { es: "Se parece a un token del registro, pero la dirección es otra", en: "Looks like a token in the registry, but the address is different" },
     support: {
-      es: `El nombre o el símbolo se parece a ORVUPI y la dirección es otra. Esto no dice quién lo creó ni con qué intención. ORVUPI todavía no tiene contrato.`,
-      en: `The name or the symbol looks like ORVUPI and the address is different. This does not say who created it or why. ORVUPI does not have a contract yet.`,
+      es: `El nombre o el símbolo se parece a un token del registro y la dirección es otra. Esto no dice quién lo creó ni con qué intención. ORVUPI todavía no tiene contrato.`,
+      en: `The name or the symbol looks like a token in the registry and the address is different. This does not say who created it or why. ORVUPI does not have a contract yet.`,
     },
   },
   otra: {
     light: "atencion" as const,
     lightLabel: { es: "Otra dirección", en: "Another address" },
-    title: { es: "No es el ORVUPI oficial", en: "This is not the official ORVUPI" },
+    title: { es: "No está en el registro", en: "It is not in the registry" },
     support: {
       es: "Hay ficha de esta dirección y no es la del registro. Tampoco es una señal de copia.",
       en: "There is a card for this address and it is not the registry one. It is not a copy signal either.",
@@ -221,8 +221,8 @@ function notOfficialView(mint: string, official: string): LookupView {
     lightLabel: pair("No es la oficial", "Not the official one"),
     title: pair("No es la dirección oficial", "Not the official address"),
     support: pair(
-      `No es la dirección oficial de ORVUPI. Esto no dice quién creó esta dirección ni con qué intención.`,
-      `This is not the official ORVUPI address. This does not say who created this address or why.`,
+      `No está en el registro. Esto no dice quién creó esta dirección ni con qué intención.`,
+      `It is not in the registry. This does not say who created this address or why.`,
     ),
     mint,
     rows: [],

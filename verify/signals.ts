@@ -620,8 +620,8 @@ async function readWith(
       level: "atencion",
       title: loc("Hay caracteres invisibles en el nombre", "There are invisible characters in the name"),
       explain: loc(
-        "Al mostrar el nombre se marcaron caracteres de control o invisibles. La comparación con ORVUPI los quita antes de mirar.",
-        "When showing the name, control or invisible characters were marked. The comparison with ORVUPI removes them first.",
+        "Al mostrar el nombre se marcaron caracteres de control o invisibles. La comparación con el registro los quita antes de mirar.",
+        "When showing the name, control or invisible characters were marked. The comparison with the registry removes them first.",
       ),
     });
   }
@@ -656,7 +656,7 @@ async function readWith(
     signals.push({
       id: "registro",
       level: "ok",
-      title: loc("Está en el registro de ORVUPI", "It is in the ORVUPI registry"),
+      title: loc("Está en el registro curado", "It is in the curated registry"),
       explain: loc(
         "La dirección coincide con la del registro. La ficha fechada es una foto anterior. Estar en el registro no es una auditoría.",
         "The address matches the one in the registry. The dated card is an earlier snapshot. Being in the registry is not an audit.",
@@ -666,10 +666,10 @@ async function readWith(
     signals.push({
       id: "copia",
       level: "atencion",
-      title: loc("Se parece a ORVUPI, pero no es la CA oficial", "Looks like ORVUPI, but it is not the official CA"),
+      title: loc("Se parece a un token del registro curado, pero la dirección es otra", "Looks like a token in the curated registry, but the address is different"),
       explain: loc(
-        `El nombre o el símbolo se parece a ORVUPI y la dirección es otra. Esto no dice quién lo creó ni con qué intención. ORVUPI todavía no tiene contrato.`,
-        `The name or the symbol looks like ORVUPI and the address is different. This does not say who created it or why. ORVUPI does not have a contract yet.`,
+        `El nombre o el símbolo se parece a un token del registro curado y la dirección es otra. Esto no dice quién lo creó ni con qué intención.`,
+        `The name or the symbol looks like a token in the curated registry and the address is different. This does not say who created it or why.`,
       ),
     });
   } else if (likeness.signals.length > 0) {
@@ -701,7 +701,7 @@ async function readWith(
     ? {
         light: risky || attention ? ("atencion" as const) : ("ok" as const),
         lightLabel: loc("En el registro", "In the registry"),
-        title: loc("Esta dirección es la del registro de ORVUPI", "This address is the one in the ORVUPI registry"),
+        title: loc("Esta dirección está en el registro curado", "This address is in the curated registry"),
         support: loc(
           "La lectura de ahora coincide con la dirección del registro. Las fichas fechadas siguen abajo, como foto anterior.",
           "This reading matches the address in the registry. The dated cards remain below, as an earlier snapshot.",
@@ -710,13 +710,13 @@ async function readWith(
     : {
         light: (risky ? "riesgo" : copyByName || attention ? "atencion" : "neutro") as "riesgo" | "atencion" | "neutro",
         lightLabel: copyByName
-          ? loc("Se parece a ORVUPI, pero no es la CA oficial", "Looks like ORVUPI, but it is not the official CA")
+          ? loc("Se parece a un token del registro curado, pero la dirección es otra", "Looks like a token in the curated registry, but the address is different")
           : loc(risky || attention ? "Hay señales" : "Sin esas señales", risky || attention ? "Signals found" : "Without those signals"),
         title: loc("Lectura de este token", "Reading for this token"),
         support: copyByName
           ? loc(
-              "No es la dirección oficial de ORVUPI. Cada señal describe un hecho leído ahora. No es una puntuación.",
-              "This is not the official ORVUPI address. Each signal describes a fact read just now. It is not a score.",
+              "No está en el registro curado. Cada señal describe un hecho leído ahora. No es una puntuación.",
+              "It is not in the curated registry. Each signal describes a fact read just now. It is not a score.",
             )
           : loc(
               "Cada señal describe un hecho leído ahora. No es una puntuación.",
@@ -750,10 +750,10 @@ async function readWith(
   const absent = grouped.absent;
   const identity = loc(
     likeness.inRegistry
-      ? `Identidad del proyecto: esta dirección (${mint}) es la CA oficial de ORVUPI.`
+      ? `Esta dirección (${mint}) está en el registro curado. Contrato ORVUPI: aún no existe.`
       : "Contrato ORVUPI: aún no existe.",
     likeness.inRegistry
-      ? `Project identity: this address (${mint}) is the official ORVUPI CA.`
+      ? `This address (${mint}) is in the curated registry. ORVUPI contract: does not exist yet.`
       : "ORVUPI contract: does not exist yet.",
   );
   const checkedEs = facts.filter((item) => item.state === "ok").map((item) => item.label.es);

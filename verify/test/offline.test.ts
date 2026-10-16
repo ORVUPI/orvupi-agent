@@ -133,7 +133,7 @@ function authorityState(value: unknown): string | null {
   return String((value as { state: unknown }).state);
 }
 
-describe("ORVUPI Verify offline", () => {
+describe("STUBX Verify offline", () => {
   test("saved fixtures match the lab layout and cover the matrix", () => {
     const fixtures = labFixtures();
     assert.ok(fixtures.length >= 10);
@@ -172,13 +172,13 @@ describe("ORVUPI Verify offline", () => {
     assert.equal(report.identity.uri.value, "https://example.com/meta.json");
   });
 
-  test("a name that includes ORVUPI and is not the curated mint is flagged", async () => {
+  test("a name that includes STUBX and is not the curated mint is flagged", async () => {
     const { report } = await runSaved("name-impersonation");
     assert.equal(report.authenticity.inRegistry.value, false);
     assert.equal(finding(report, "authenticity").level, "riesgo");
     assert.match(finding(report, "authenticity").reason, /Posible suplantación/);
     const signals = report.authenticity.signals.value;
-    assert.ok(Array.isArray(signals) && signals.some((item) => String(item).includes("ORVUPI")));
+    assert.ok(Array.isArray(signals) && signals.some((item) => String(item).includes("STUBX")));
   });
 
   test("an image CID that matches the curated token is flagged", async () => {
@@ -389,7 +389,7 @@ describe("ORVUPI Verify offline", () => {
         const href = String(url);
         seen.push(href);
         if (hostnameOf(href) === "gateway.pinata.cloud") {
-          return new Response(JSON.stringify({ name: "ORVUPI" }), { status: 200 });
+          return new Response(JSON.stringify({ name: "STUBX" }), { status: 200 });
         }
         return new Response("limited", { status: 429 });
       },

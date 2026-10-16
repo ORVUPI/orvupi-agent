@@ -2,8 +2,8 @@
   "kind": "verify-browser-snapshot",
   "pr": 21,
   "branch": "feat/verify-universal",
-  "commit": "d70d83f35512b0ab6ba404568c81352efa6eacaf",
-  "commitDate": "2026-10-10T06:00:04+00:00",
+  "commit": "70dd5ab9e303b07ea9dd3eeae69418319e26814b",
+  "commitDate": "2026-10-16T17:42:25+00:00",
   "cardsDate": "2026-10-09",
   "earlierCardsDate": "2026-10-08",
   "liveNetwork": true,
@@ -14,5 +14,5 @@
   "missionBundle": "assets/mission.js",
   "browserApi": "modules/verify/lookup.mjs",
   "cards": "modules/verify/cards.json",
-  "note": "Bundle regenerado desde lab/ en d70d83f35512b0ab6ba404568c81352efa6eacaf, rama feat/verify-universal, PR 21. La página /verify/ lee en el navegador, solo lectura, con los servicios públicos de limits.json. El aviso de Guardar está en web/v2/shared/aviso-guardar.js. La ficha oficial incluye la cuenta personal publicada 2fS12sTD4TNEEE9MoCEt19brV41UjGdAnaNaxWcmiWvX. inBranch significa que el commit citado es ancestro de esta rama. Esta copia no está publicada."
+  "note": "Bundle regenerado desde lab/ en 70dd5ab9e303b07ea9dd3eeae69418319e26814b, rama feat/verify-universal, PR 21. La página /verify/ lee en el navegador, solo lectura, con los servicios públicos de limits.json. El aviso de Guardar está en web/v2/shared/aviso-guardar.js. La ficha oficial incluye la cuenta personal publicada 2fS12sTD4TNEEE9MoCEt19brV41UjGdAnaNaxWcmiWvX. inBranch significa que el commit citado es ancestro de esta rama. Esta copia no está publicada."
 }

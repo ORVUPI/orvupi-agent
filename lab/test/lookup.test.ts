@@ -41,7 +41,7 @@ describe("lectura de una dirección", () => {
     const known = classifyAddress(` \n${official}\n `, cards, "lista", evm);
     assert.equal(known.kind, "oficial");
     assert.equal(known.light, "ok");
-    assert.equal(known.title.es, "Parece el ORVUPI oficial");
+    assert.equal(known.title.es, "Está en el registro curado");
     const officialCard = cards.find((card) => card.role === "registro");
     if (officialCard?.holdersNote && /no es un censo/i.test(officialCard.holdersNote)) {
       assert.match(known.partialNote?.es ?? "", /no es un censo/i);
@@ -51,13 +51,13 @@ describe("lectura de una dirección", () => {
     const copy = classifyAddress(clone, cards, "lista");
     assert.equal(copy.kind, "copia");
     assert.equal(copy.light, "atencion");
-    assert.equal(copy.title.es, "Se parece a ORVUPI, pero no es la CA oficial");
-    assert.equal(copy.lightLabel.es, "Se parece a ORVUPI, pero no es la CA oficial");
+    assert.equal(copy.title.es, "Se parece a un token del registro, pero la dirección es otra");
+    assert.equal(copy.lightLabel.es, "Se parece a un token del registro, pero la dirección es otra");
     assert.match(copy.support.es, /ORVUPI todavía no tiene contrato\./);
     assert.equal(copy.rows.find((row) => row.label.es === "Señal de copia")?.value.es, "Sí");
     const other = classifyAddress(usdc, cards, "lista");
     assert.equal(other.kind, "otra");
-    assert.equal(other.title.es, "No es el ORVUPI oficial");
+    assert.equal(other.title.es, "No está en el registro");
     assert.notEqual(other.light, "riesgo");
     const curve = other.rows.find((row) => row.label.es === "Avance de la curva");
     assert.equal(curve?.value.es, "No aplica");
@@ -72,11 +72,11 @@ describe("lectura de una dirección", () => {
     assert.equal(view.title.en, "Not the official address");
     assert.equal(
       view.support.es,
-      `No es la dirección oficial de ORVUPI. Esto no dice quién creó esta dirección ni con qué intención.`,
+      `No está en el registro. Esto no dice quién creó esta dirección ni con qué intención.`,
     );
     assert.equal(
       view.support.en,
-      `This is not the official ORVUPI address. This does not say who created this address or why.`,
+      `It is not in the registry. This does not say who created this address or why.`,
     );
     assert.match(view.partialNote?.es ?? "", /No hay ficha de ejemplo/);
     assert.equal(view.compare?.official, official);
@@ -96,11 +96,11 @@ describe("lectura de una dirección", () => {
       assert.equal(view.title.es, "No es la dirección oficial", raw);
       assert.equal(
         view.support.es,
-        `No es la dirección oficial de ORVUPI. Esto no dice quién creó esta dirección ni con qué intención.`,
+        `No está en el registro. Esto no dice quién creó esta dirección ni con qué intención.`,
       );
       assert.equal(
         view.support.en,
-        `This is not the official ORVUPI address. This does not say who created this address or why.`,
+        `It is not in the registry. This does not say who created this address or why.`,
       );
       assert.equal(view.compare !== null, marks, raw);
       return view;
@@ -125,14 +125,14 @@ describe("lectura de una dirección", () => {
     assert.match(lower.partialNote?.es ?? "", /distinguen mayúsculas/);
     assert.match(lower.partialNote?.en ?? "", /case-sensitive/);
     const exact = classifyAddress(official, cards, "lista", evm);
-    assert.equal(exact.title.es, "Parece el ORVUPI oficial");
+    assert.equal(exact.title.es, "Está en el registro curado");
     assert.equal(exact.support.es.includes("No es la dirección oficial"), false);
     const copy = classifyAddress(clone, cards, "lista", evm);
     assert.equal(copy.light, "atencion");
-    assert.equal(copy.title.es, "Se parece a ORVUPI, pero no es la CA oficial");
+    assert.equal(copy.title.es, "Se parece a un token del registro, pero la dirección es otra");
     assert.equal(/copia|riesgo/i.test(copy.title.es), false);
     const other = classifyAddress(usdc, cards, "lista", evm);
-    assert.equal(other.title.es, "No es el ORVUPI oficial");
+    assert.equal(other.title.es, "No está en el registro");
     const far = classifyAddress(wrappedSol, cards, "caida", evm);
     assert.equal(far.title.es, "No es la dirección oficial");
     assert.notEqual(far.kind, "lectura_caida");
@@ -141,7 +141,7 @@ describe("lectura de una dirección", () => {
   test("con la CA oficial y los RPC caídos la ficha no sale en verde", () => {
     const card = classifyAddress(official, cards, "lista", evm);
     assert.equal(card.light, "ok");
-    assert.equal(card.title.es, "Parece el ORVUPI oficial");
+    assert.equal(card.title.es, "Está en el registro curado");
     const down = reserveWhenLiveFails(card);
     assert.equal(down.kind, "oficial");
     assert.equal(down.mint, official);
@@ -153,12 +153,12 @@ describe("lectura de una dirección", () => {
     assert.equal(down.lightLabel.en, "Could not check live");
     assert.match(down.partialNote?.es ?? "", /Es la ficha del 2026-10-09/);
     assert.match(down.partialNote?.en ?? "", /2026-10-09 card/);
-    assert.equal((down.partialNote?.es ?? "").includes("Parece el ORVUPI oficial"), false);
+    assert.equal((down.partialNote?.es ?? "").includes("Está en el registro curado"), false);
     assert.ok(down.rows.length > 0);
     assert.match(down.partialNote?.es ?? "", /censo|cuenta personal publicada/);
     const cloneCard = classifyAddress(clone, cards, "lista", evm);
     const cloneDown = reserveWhenLiveFails(cloneCard);
-    assert.equal(cloneDown.title.es, "Se parece a ORVUPI, pero no es la CA oficial");
+    assert.equal(cloneDown.title.es, "Se parece a un token del registro, pero la dirección es otra");
     assert.equal(cloneDown.light, "atencion");
   });
 
@@ -170,8 +170,8 @@ describe("lectura de una dirección", () => {
     const reserve = classifyAddress(clone, cards, "lista", evm);
     assert.equal(reserve.kind, "copia");
     assert.equal(reserve.light, "atencion");
-    assert.equal(reserve.title.es, "Se parece a ORVUPI, pero no es la CA oficial");
-    assert.equal(reserve.title.en, "Looks like ORVUPI, but it is not the official CA");
+    assert.equal(reserve.title.es, "Se parece a un token del registro, pero la dirección es otra");
+    assert.equal(reserve.title.en, "Looks like a token in the registry, but the address is different");
     assert.match(reserve.support.es, /Esto no dice quién lo creó ni con qué intención/);
     assert.equal(/copia|riesgo/i.test(reserve.title.es), false);
   });
