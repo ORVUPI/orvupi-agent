@@ -6,9 +6,9 @@ Un permiso no es una garantía. La autoridad de emisión, si está activa, puede
 
 La autoridad de congelación es otro permiso: congelar cuentas de ese token. Revocada lo quita en esa lectura. Activa lo deja asignado a la dirección que muestra la ficha.
 
-En la tanda del 2026-10-08, el mint del registro y los clones tienen las dos autoridades revocadas. USDC las tiene activas. El mismo permiso en dos direcciones no las convierte en el mismo mint. Un permiso revocado tampoco demuestra que el proyecto sea legítimo, ni dice nada de la demanda o de la liquidez.
+En la tanda del 2026-10-16, las tres copias «USD Coin» tienen las dos autoridades revocadas. USDC las tiene activas. El mismo permiso en dos direcciones no las convierte en el mismo mint. Un permiso revocado tampoco demuestra que el proyecto sea legítimo, ni dice nada de la demanda o de la liquidez.
 
-Los metadatos mutables son otra pieza. Si hay autoridad de actualización o `is_mutable` es verdadero, el nombre, el símbolo o la imagen pueden cambiar. «No mutables en las fuentes leídas» solo cubre esas fuentes y esa fecha. USDC, el mismo día, tiene metadatos mutables y no por eso es un clon de TOKEN A.
+Los metadatos mutables son otra pieza. Si hay autoridad de actualización o `is_mutable` es verdadero, el nombre, el símbolo o la imagen pueden cambiar. «No mutables en las fuentes leídas» solo cubre esas fuentes y esa fecha. USDC tiene metadatos mutables y no por eso es una copia de nada.
 
 Si un campo está en no disponible, no se rellena como revocada ni como inmutable. Lo desconocido no es lo mismo que lo comprobado.
 
@@ -20,9 +20,9 @@ A permission is not a guarantee. Mint authority, if active, can increase the sup
 
 Freeze authority is a different permission: freezing accounts of that token. Revoked removes it in that reading. Active leaves it assigned to the address the card shows.
 
-In the 2026-10-08 batch, the registry mint and the clones have both authorities revoked. USDC has them active. The same permission on two addresses does not make them the same mint. A revoked permission also does not show that the project is legitimate, and it says nothing about demand or liquidity.
+In the 2026-10-16 batch, the three “USD Coin” copies have both authorities revoked. USDC has them active. The same permission on two addresses does not make them the same mint. A revoked permission also does not show that the project is legitimate, and it says nothing about demand or liquidity.
 
-Mutable metadata is a separate piece. If there is an update authority or `is_mutable` is true, the name, the symbol, or the image can change. “Not mutable in the sources read” covers only those sources and that date. USDC, on the same day, has mutable metadata and is not thereby a clone of TOKEN A.
+Mutable metadata is a separate piece. If there is an update authority or `is_mutable` is true, the name, the symbol, or the image can change. “Not mutable in the sources read” covers only those sources and that date. USDC has mutable metadata and that does not make it a copy of anything.
 
 If a field is unavailable, it is not filled in as revoked or as immutable. Unknown is not the same as checked.
 

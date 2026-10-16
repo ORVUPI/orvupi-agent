@@ -501,12 +501,12 @@
           },
           "whyWrong": {
             "cero": {
-              "es": "No haberlo pedido no es un cero. El 0,0000 % de esta ficha es el resto del suministro, otro dato.",
-              "en": "Not asking for it is not a zero. The 0.0000% on this card is the rest of the supply, a different fact."
+              "es": "No haberlo pedido no es un cero ni un nombre vacío: simplemente no hay JSON leído.",
+              "en": "Not asking for it is not a zero or an empty name: there is simply no JSON read."
             },
             "fallo": {
-              "es": "USDC sí pidió el ranking y recibió HTTP 429. TOKEN A, en esta ficha, no hizo esa petición.",
-              "en": "USDC did ask for the ranking and got HTTP 429. TOKEN A, on this card, did not make that request."
+              "es": "Se pidió la muestra de cuentas y recibió HTTP 429: eso sí es una consulta fallida. El JSON no se pidió porque no había URI.",
+              "en": "The account sample was asked for and got HTTP 429: that is a failed query. The JSON was not asked for because there was no URI."
             }
           }
         }
