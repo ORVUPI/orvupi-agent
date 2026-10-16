@@ -158,8 +158,8 @@ async function saveCard(card) {
         const node = document.getElementById("estado-guardado");
         if (node) {
           node.textContent = lang() === "en"
-            ? "Close the other stubxai.com tabs and reload."
-            : "Cierra las otras pestañas de stubxai.com y recarga.";
+            ? "Close the other tabs of this website and reload."
+            : "Cierra las otras pestañas de esta web y recarga.";
         }
       },
     });

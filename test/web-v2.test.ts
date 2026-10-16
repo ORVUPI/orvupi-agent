@@ -272,6 +272,30 @@ describe("web ORVUPI", () => {
   test("las páginas no nombran a la persona creadora", () => {
     for (const rel of ROUTES) assert.equal(mentionsHiddenName(read(rel)), false, rel);
   });
+
+  test("el pie de cada página y /legal dan el correo oficial", () => {
+    const mail = '<a href="mailto:orvupi.hq@gmail.com">orvupi.hq@gmail.com</a>';
+    assert.ok(read("legal/index.html").includes(mail));
+    for (const file of walk(siteRoot())) {
+      const rel = path.relative(siteRoot(), file).split(path.sep).join("/");
+      if (!rel.endsWith(".html") || rel.startsWith("tools/") || rel.startsWith("content/")) continue;
+      const html = readFileSync(file, "utf8");
+      if (!html.includes("or-footer-links")) continue;
+      assert.ok((html.split("or-footer-links")[1] ?? "").includes(mail), rel);
+    }
+    for (const txt of ["security.txt", ".well-known/security.txt"]) assert.match(read(txt), /^Contact: mailto:orvupi\.hq@gmail\.com$/m);
+  });
+
+  test("ninguna página muestra la franja de cifras de la portada", () => {
+    for (const file of walk(siteRoot())) {
+      const rel = path.relative(siteRoot(), file).split(path.sep).join("/");
+      if (!rel.endsWith(".html") || rel.startsWith("tools/") || rel.startsWith("content/")) continue;
+      const html = readFileSync(file, "utf8");
+      for (const gone of ["or-metrics", "Imágenes para crear", "Colecciones visuales", "Herramientas que explorar", "La web en dos idiomas", "Images for creating", "Visual collections", "Tools to explore", "Website in two languages"]) {
+        assert.equal(html.includes(gone), false, `${rel}: ${gone}`);
+      }
+    }
+  });
 });
 
 function digestTree(root: string, rels: readonly string[]): string {

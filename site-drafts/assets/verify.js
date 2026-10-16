@@ -2935,8 +2935,8 @@ const ATTENTION = {
     title: { es: "Dirección", en: "Address" },
     lead: { es: "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.", en: "It is named like ORVUPI, but ORVUPI does not have a contract yet." },
     detail: {
-      es: "La dirección oficial está publicada en stubxai.com. Ábrela y compárala con la de esta lectura, carácter a carácter. Un nombre igual no cambia la dirección.",
-      en: "The official address is published on stubxai.com. Open it and compare it with the one in this reading, character by character. The same name does not change the address.",
+      es: "ORVUPI todavía no tiene contrato en ninguna red. Ninguna dirección es la oficial.",
+      en: "ORVUPI does not have a contract on any network yet. No address is the official one.",
     },
   },
   ficha: {

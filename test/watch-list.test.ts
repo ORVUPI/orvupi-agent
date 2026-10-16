@@ -246,8 +246,8 @@ describe("revisar direcciones guardadas", () => {
     assert.match(actions, /orvupi-cuaderno/);
     assert.match(actions, /stampIdentity/);
     assert.match(actions, /openNotebookDb\(DB_NAME/);
-    assert.match(source, /Cierra las otras pestañas de stubxai.com y recarga\./);
-    assert.match(actions, /Cierra las otras pestañas de stubxai.com y recarga\./);
+    assert.match(source, /Cierra las otras pestañas de esta web y recarga\./);
+    assert.match(actions, /Cierra las otras pestañas de esta web y recarga\./);
     const rollback = readFileSync(path.join(root, "ROLLBACK.md"), "utf8");
     const back = "Para volver atrás: cargar otra vez esta página, o borrar en el navegador los datos del sitio de la base llamada orvupi-cuaderno.";
     assert.equal(rollback.includes(back), true);
