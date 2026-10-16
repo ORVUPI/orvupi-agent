@@ -114,7 +114,7 @@ describe("informe de pares", () => {
     assert.match(card, /2026-10-10T10:00:00.000Z/);
     assert.match(card, /Instantánea: puede haber cambiado/);
     assert.match(card, /No es una auditoría ni una recomendación\./);
-    assert.match(card, /STUBX no revisa ni respalda este token\./);
+    assert.match(card, /ORVUPI no revisa ni respalda este token\./);
     assert.match(card, /Un emparejamiento no es una colaboración ni un respaldo\./);
     assert.match(card, /<script>alert\(1\)<\/script>/);
     assert.equal(card.includes(FOOTER_ES), false);
@@ -128,9 +128,8 @@ describe("informe de pares", () => {
     assert.equal(/se cobraría/i.test(card), false);
     const official = snapshotLines(evidenceRecord({ ...evidence, mint: OFFICIAL }), "en");
     const english = official.map((line: { text: string }) => line.text).join("\n");
-    assert.match(english, /This address matches the published STUBX CA\./);
+    assert.match(english, /ORVUPI does not review or endorse this token\./); // sin contrato ORVUPI, ninguna dirección coincide
     assert.equal(english.includes(FOOTER_EN), false);
-    assert.equal(english.includes("STUBX does not review or endorse this token."), false);
     assert.equal(/\b(verified|safe|approved|partner)\b/i.test(english), false);
   });
 

@@ -37,11 +37,11 @@ describe("misión 1", () => {
     assert.equal(correct?.mint, official.mint);
     assert.equal(
       first?.whyRight.es,
-      "Solo esta dirección está en el registro del 2026-10-08. Las otras se llaman parecido y la ficha indica que se parecen a STUBX pero no son la CA oficial. Eso no dice quién las creó ni con qué intención.",
+      "Solo esta dirección está en el registro del 2026-10-08. Las otras se llaman parecido y la ficha indica que se parecen a TOKEN A pero no son la CA oficial. Eso no dice quién las creó ni con qué intención.",
     );
     assert.equal(
       first?.whyRight.en,
-      "Only this address is in the 2026-10-08 registry. The others have a similar name and the card indicates that they look like STUBX but they are not the official CA. That does not say who created them or why.",
+      "Only this address is in the 2026-10-08 registry. The others have a similar name and the card indicates that they look like TOKEN A but they are not the official CA. That does not say who created them or why.",
     );
     assert.equal(first?.whyRight.es.includes("posible copia"), false);
     assert.equal(first?.whyRight.en.toLowerCase().includes("possible copy"), false);

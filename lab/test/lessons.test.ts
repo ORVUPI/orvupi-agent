@@ -181,7 +181,7 @@ describe("lecciones cortas", () => {
       assert.equal(sentence.toLowerCase().includes("verified"), false);
       assert.match(sentence, /query was answered and the value is empty/);
     }
-    assert.equal(glossaryEn.startsWith("On STUBX"), true);
+    assert.equal(glossaryEn.startsWith("On TOKEN A"), true);
     assert.match(glossaryEn, /The query was answered and the value is empty/);
     assert.match(lesson.steps[2]?.whyRight.es ?? "", /getMultipleAccounts/);
     assert.match(lesson.steps[2]?.whyWrong.fallo?.es ?? "", /HTTP 429/);
@@ -262,12 +262,12 @@ describe("lecciones cortas", () => {
     assert.equal(huecos.includes("status is verified"), false);
     assert.match(huecos, /the query was answered and the value is empty/);
     assert.match(lab.body, /The query was answered and the value is empty/);
-    assert.match(lab.body, /STUBX las tiene cerradas\./);
-    assert.match(lab.body, /STUBX has both closed\./);
+    assert.match(lab.body, /TOKEN A las tiene cerradas\./);
+    assert.match(lab.body, /TOKEN A has both closed\./);
     assert.equal(lab.body.includes("cerradas y verificadas"), false);
     assert.equal(lab.body.includes("closed and verified"), false);
-    assert.match(lab.body, /STUBX · leído en la cadena/);
-    assert.match(lab.body, /STUBX · read on-chain/);
+    assert.match(lab.body, /TOKEN A · leído en la cadena/);
+    assert.match(lab.body, /TOKEN A · read on-chain/);
     assert.match(lab.body, /revocada · leído en la cadena/);
     assert.match(lab.body, /revoked · read on-chain/);
     assert.match(huecos, /Distribución \(guía Censo\)/);

@@ -428,7 +428,7 @@ describe("datos de mercado", () => {
       200,
       JSON.stringify([
         upstreamPair({
-          baseToken: { symbol: "STUBX", address: OFFICIAL },
+          baseToken: { symbol: "ORVUPI", address: OFFICIAL },
           quoteToken: { symbol: "SOL", address: SOL },
           liquidity: { usd: 999999 },
         }),
@@ -445,7 +445,7 @@ describe("datos de mercado", () => {
       200,
       JSON.stringify([
         upstreamPair({
-          baseToken: { symbol: "STUBX", address: OFFICIAL },
+          baseToken: { symbol: "ORVUPI", address: OFFICIAL },
           quoteToken: { symbol: "SOL", address: SOL },
           liquidity: { usd: 40 },
         }),
@@ -455,12 +455,12 @@ describe("datos de mercado", () => {
     );
     assert.equal(kept.status, "ok");
     assert.equal(kept.pairs?.length, 1);
-    assert.equal(kept.pairs?.[0]?.base, "STUBX");
+    assert.equal(kept.pairs?.[0]?.base, "ORVUPI");
     assert.equal(kept.pairs?.[0]?.baseMint, OFFICIAL);
     assert.equal(kept.pairs?.[0]?.liquidityUsd, 40);
     const officialTitle = market.describeMarket(kept, "es").pairs[0]?.title ?? "";
-    assert.equal(officialTitle.includes("Dice llamarse «STUBX»"), false);
-    assert.equal(officialTitle, "Par: STUBX / SOL");
+    // Sin contrato ORVUPI ninguna dirección es oficial: el símbolo se cita como texto elegido por quien creó el token.
+    assert.equal(officialTitle, "Par: Dice llamarse «ORVUPI» / SOL");
 
     const spaced = market.normalizeUpstream(
       200,
@@ -477,7 +477,7 @@ describe("datos de mercado", () => {
     assert.equal(paddedPair.pairs?.[0]?.pairAddress, "");
   });
 
-  test("un clon llamado STUBX dice su nombre y clipSymbol quita ancho cero y bidi", async () => {
+  test("un clon llamado ORVUPI dice su nombre y clipSymbol quita ancho cero y bidi", async () => {
     const market = await loadMarketModule();
     assert.equal(market.marketNormalizeToken("STU\u200BBX"), normalizeToken("STU\u200BBX"));
     assert.equal(market.marketNormalizeToken("S\u03A4UBX"), normalizeToken("S\u03A4UBX"));
@@ -486,33 +486,33 @@ describe("datos de mercado", () => {
       200,
       JSON.stringify([
         upstreamPair({
-          baseToken: { symbol: "STU\u200BBX\u202E", address: CLONE },
+          baseToken: { symbol: "ORV\u200BUPI\u202E", address: CLONE },
           quoteToken: { symbol: "SOL", address: SOL },
         }),
       ]),
       { mint: CLONE, queriedAt: WHEN },
     );
     assert.equal(clone.status, "ok");
-    assert.equal(clone.pairs?.[0]?.base, "STUBX");
+    assert.equal(clone.pairs?.[0]?.base, "ORVUPI");
     const title = market.describeMarket(clone, "es").pairs[0]?.title ?? "";
-    assert.equal(title, "Par: Dice llamarse «STUBX» / SOL");
+    assert.equal(title, "Par: Dice llamarse «ORVUPI» / SOL");
     assert.equal(title.includes("\u200B"), false);
     assert.equal(title.includes("\u202E"), false);
     const english = market.describeMarket(clone, "en").pairs[0]?.title ?? "";
-    assert.equal(english, "Pair: It says it is called «STUBX» / SOL");
+    assert.equal(english, "Pair: It says it is called «ORVUPI» / SOL");
 
     const otherSide = market.normalizeUpstream(
       200,
       JSON.stringify([
         upstreamPair({
-          baseToken: { symbol: "STUBX", address: OFFICIAL },
-          quoteToken: { symbol: "STUBX", address: CLONE },
+          baseToken: { symbol: "ORVUPI", address: OFFICIAL },
+          quoteToken: { symbol: "ORVUPI", address: CLONE },
         }),
       ]),
       { mint: OFFICIAL, queriedAt: WHEN },
     );
     const otherTitle = market.describeMarket(otherSide, "es").pairs[0]?.title ?? "";
-    assert.match(otherTitle, /^Par: STUBX \/ Dice llamarse «STUBX»$/);
+    assert.match(otherTitle, /^Par: Dice llamarse «ORVUPI» \/ Dice llamarse «ORVUPI»$/);
   });
 
   test("SOL envuelto y USDC salen con su nombre; cualquier otro mint no oficial sigue etiquetado", async () => {
@@ -522,14 +522,14 @@ describe("datos de mercado", () => {
       200,
       JSON.stringify([
         upstreamPair({
-          baseToken: { symbol: "STUBX", address: OFFICIAL },
+          baseToken: { symbol: "ORVUPI", address: OFFICIAL },
           quoteToken: { symbol: "USDC", address: MINT },
         }),
       ]),
       { mint: OFFICIAL, queriedAt: WHEN },
     );
-    assert.equal(market.describeMarket(usdcQuote, "es").pairs[0]?.title, "Par: STUBX / USDC");
-    assert.equal(market.describeMarket(usdcQuote, "en").pairs[0]?.title, "Pair: STUBX / USDC");
+    assert.equal(market.describeMarket(usdcQuote, "es").pairs[0]?.title, "Par: Dice llamarse «ORVUPI» / USDC");
+    assert.equal(market.describeMarket(usdcQuote, "en").pairs[0]?.title, "Pair: It says it is called «ORVUPI» / USDC");
 
     const fakeUsdc = market.normalizeUpstream(
       200,
@@ -548,18 +548,18 @@ describe("datos de mercado", () => {
       200,
       JSON.stringify([
         upstreamPair({
-          baseToken: { symbol: "STUBX", address: CLONE },
+          baseToken: { symbol: "ORVUPI", address: CLONE },
           quoteToken: { symbol: "SOL", address: other },
         }),
       ]),
       { mint: CLONE, queriedAt: WHEN },
     );
-    assert.equal(market.describeMarket(fakeSol, "es").pairs[0]?.title, "Par: Dice llamarse «STUBX» / Dice llamarse «SOL»");
+    assert.equal(market.describeMarket(fakeSol, "es").pairs[0]?.title, "Par: Dice llamarse «ORVUPI» / Dice llamarse «SOL»");
   });
 
-  test("la mint de USDC muestra USDC aunque el símbolo sea BONK o STUBX", async () => {
+  test("la mint de USDC muestra USDC aunque el símbolo sea BONK o ORVUPI", async () => {
     const market = await loadMarketModule();
-    for (const symbol of ["BONK", "STUBX"]) {
+    for (const symbol of ["BONK", "ORVUPI"]) {
       const model = market.normalizeUpstream(
         200,
         JSON.stringify([upstreamPair({ baseToken: { symbol, address: MINT } })]),
@@ -577,7 +577,7 @@ describe("datos de mercado", () => {
       JSON.stringify([
         upstreamPair({
           baseToken: { symbol: "BONK", address: MINT },
-          quoteToken: { symbol: "STUBX", address: SOL },
+          quoteToken: { symbol: "ORVUPI", address: SOL },
         }),
       ]),
       { mint: MINT, queriedAt: WHEN },
@@ -586,9 +586,9 @@ describe("datos de mercado", () => {
     assert.equal(market.describeMarket(wrapped, "en").pairs[0]?.title, "Pair: USDC / SOL");
   });
 
-  test("USDT muestra el nombre fijo aunque el símbolo sea BONK o STUBX", async () => {
+  test("USDT muestra el nombre fijo aunque el símbolo sea BONK o ORVUPI", async () => {
     const market = await loadMarketModule();
-    for (const symbol of ["BONK", "STUBX"]) {
+    for (const symbol of ["BONK", "ORVUPI"]) {
       const model = market.normalizeUpstream(
         200,
         JSON.stringify([
@@ -620,14 +620,14 @@ describe("datos de mercado", () => {
       assert.equal(market.describeMarket(model, "es").pairs[0]?.where, `Dónde está el par: ${name}`);
       assert.equal(market.describeMarket(model, "en").pairs[0]?.where, `Where the pair is: ${name}`);
     }
-    const unknown = "Official STUBX DEX";
+    const unknown = "Official ORVUPI DEX";
     const labeled = market.normalizeUpstream(200, JSON.stringify([upstreamPair({ dexId: unknown })]), { mint: MINT, queriedAt: WHEN });
     assert.equal(market.describeMarket(labeled, "es").pairs[0]?.where, `Dónde está el par: un DEX que la fuente llama «${unknown}»`);
     assert.equal(market.describeMarket(labeled, "en").pairs[0]?.where, `Where the pair is: a DEX the source calls \u201C${unknown}\u201D`);
     assert.equal(market.describeMarket(labeled, "es").pairs[0]?.where.includes(`Dónde está el par: ${unknown}`), false);
     const disguised = market.normalizeUpstream(
       200,
-      JSON.stringify([upstreamPair({ dexId: "Official\u200B STUBX\u202E DEX" })]),
+      JSON.stringify([upstreamPair({ dexId: "Official\u200B ORVUPI\u202E DEX" })]),
       { mint: MINT, queriedAt: WHEN },
     );
     assert.equal(market.describeMarket(disguised, "es").pairs[0]?.where, `Dónde está el par: un DEX que la fuente llama «${unknown}»`);
@@ -686,14 +686,14 @@ describe("datos de mercado", () => {
       200,
       JSON.stringify([
         upstreamPair({
-          baseToken: { symbol: "STUBX", address: OFFICIAL },
+          baseToken: { symbol: "ORVUPI", address: OFFICIAL },
           quoteToken: { symbol: "USDC", address: MINT.toLowerCase() },
         }),
       ]),
       { mint: OFFICIAL, queriedAt: WHEN },
     );
     assert.equal(notKnown.pairs?.[0]?.quoteMint, MINT.toLowerCase());
-    assert.equal(market.describeMarket(notKnown, "es").pairs[0]?.title, "Par: STUBX / Dice llamarse «USDC»");
+    assert.equal(market.describeMarket(notKnown, "es").pairs[0]?.title, "Par: Dice llamarse «ORVUPI» / Dice llamarse «USDC»");
   });
 
   test("no ordena por liquidez y avisa si hay poca", async () => {
@@ -755,7 +755,7 @@ describe("datos de mercado", () => {
     const market = await loadMarketModule();
     assert.equal(market.MARKET_TIMEOUT_MS, 8000);
     assert.equal(market.MARKET_LOW_USD, 1000);
-    assert.equal(market.MARKET_OFFICIAL_MINT, OFFICIAL);
+    assert.equal(market.MARKET_OFFICIAL_MINT, ""); // Contrato ORVUPI: aún no existe.
     assert.equal(market.MARKET_ATTRIBUTION.es, ACCURACY_ES);
     assert.equal(market.MARKET_ATTRIBUTION.en, ACCURACY_EN);
     const aviso = (await import(pathToFileURL(path.join(repoRoot(), "web/v2/shared/aviso-guardar.js")).href)) as {

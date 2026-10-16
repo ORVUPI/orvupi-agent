@@ -159,8 +159,8 @@ describe("páginas estáticas", () => {
     assert.match(lab, /For anyone who wants more detail/);
     assert.match(lab, /id="biblioteca"/);
     assert.match(verify, /Pega la dirección del token/);
-    assert.match(verify, /Dirección del registro de STUBX/);
-    assert.match(verify, /Se parece a STUBX, pero no es la CA oficial/);
+    assert.match(verify, /Dirección del registro de ORVUPI/);
+    assert.match(verify, /Se parece a ORVUPI, pero no es la CA oficial/);
     assert.match(verify, /No es una auditoría, ni una recomendación, ni un aval/);
     assert.match(verify, /Que no aparezcan señales no significa que esté todo comprobado\./);
     assert.match(verify, /No signals showing does not mean everything was checked\./);

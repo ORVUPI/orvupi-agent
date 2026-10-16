@@ -285,7 +285,7 @@ describe("texto, puntero y holders", () => {
   });
 
   test("cleanText recorta el relleno nulo y marca el bidi", () => {
-    assert.equal(cleanText("STUBX"), "STUBX");
+    assert.equal(cleanText("ORVUPI"), "ORVUPI");
     assert.equal(cleanText("USD Coin\0\0\0"), "USD Coin");
     assert.equal(cleanText("USDC\0"), "USDC");
     assert.equal(cleanText("\0\0\0"), "");
@@ -303,19 +303,19 @@ describe("texto, puntero y holders", () => {
     assert.equal(copy.ok, false);
     if (!copy.ok) {
       assert.match(copy.message, /Copia conocida/);
-      assert.match(copy.message, /El STUBX oficial solo existe en Solana/);
+      assert.match(copy.message, /ORVUPI todavía no tiene contrato en ninguna red/);
       assert.match(copy.message, /sin verificar en la cadena/);
     }
     const other = validateMint("0x0000000000000000000000000000000000000001", known);
     assert.equal(other.ok, false);
     if (!other.ok) {
-      assert.match(other.message, /El STUBX oficial solo existe en Solana/);
+      assert.match(other.message, /ORVUPI todavía no tiene contrato en ninguna red/);
       assert.equal(other.message.includes("Copia conocida"), false);
     }
     const loose = validateMint("0xhola", known);
     assert.equal(loose.ok, false);
     if (!loose.ok) {
-      assert.match(loose.message, /El STUBX oficial solo existe en Solana/);
+      assert.match(loose.message, /ORVUPI todavía no tiene contrato en ninguna red/);
     }
   });
 
