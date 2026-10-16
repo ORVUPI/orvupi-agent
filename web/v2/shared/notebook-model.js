@@ -6,8 +6,9 @@ import { formatAmount } from "./amount.js";
 import { factState } from "./fact-state.js";
 import { notebookNameText } from "./reading-summary.js";
 import { CARD_SCHEMA, CARD_VERSION, DISCLAIMER, LEGACY_FLAG_MINT, isMintAddress } from "./solana-read.js";
+import { LEGACY_OFFICIAL_FIELD, LEGACY_SCHEMA_PREFIX } from "./legacy-names.js";
 
-export const EXPORT_SCHEMA = "stubx.notebook.export";
+export const EXPORT_SCHEMA = "orvupi.notebook.export";
 export const MAX_BYTES = 1_000_000;
 export const MAX_CARDS = 40;
 export const MAX_STORED = 200;
@@ -42,14 +43,14 @@ const CARD_KEYS_V1 = [
   "extensions",
   "extensionsStatus",
   "curve",
-  "officialStubx",
+  "officialProject",
   "disclaimer",
 ];
 
 const CARD_KEYS_V2 = [
-  ...CARD_KEYS_V1.slice(0, CARD_KEYS_V1.indexOf("officialStubx")),
+  ...CARD_KEYS_V1.slice(0, CARD_KEYS_V1.indexOf("officialProject")),
   "largestStatus",
-  "officialStubx",
+  "officialProject",
   "disclaimer",
 ];
 
@@ -118,7 +119,7 @@ function amount(value) {
   return value === null || (typeof value === "string" && /^\d+$/.test(value) && value.length <= 40);
 }
 
-export const EVM_CARD_SCHEMA = "stubx.notebook.card.evm";
+export const EVM_CARD_SCHEMA = "orvupi.notebook.card.evm";
 export const EVM_CARD_VERSION = 1;
 
 const EVM_CARD_KEYS = [
@@ -305,7 +306,7 @@ export function validateCard(card) {
   if (curve.complete !== null && typeof curve.complete !== "boolean") {
     return fail("El campo complete no es un sí o un no.", "The complete field is not a yes or a no.");
   }
-  if (typeof card.officialStubx !== "boolean" || (card.officialStubx === true && card.mint !== LEGACY_FLAG_MINT)) {
+  if (typeof card.officialProject !== "boolean" || (card.officialProject === true && card.mint !== LEGACY_FLAG_MINT)) {
     return fail("La marca de proyecto no coincide con la dirección.", "The project mark does not match the address.");
   }
   if (!card.disclaimer || card.disclaimer.es !== DISCLAIMER.es || card.disclaimer.en !== DISCLAIMER.en) {
@@ -366,6 +367,8 @@ export function validateExport(text) {
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
     return fail("La copia no tiene la forma esperada.", "The copy does not have the expected shape.");
   }
+  // Las copias exportadas antes del 16-10-2026 llevan los nombres anteriores: se importan igual.
+  parsed = upgradeLegacyNames(parsed);
   const keys = Object.keys(parsed);
   if (keys.length !== 4 || !keys.includes("schema") || !keys.includes("schemaVersion") || !keys.includes("exportedAt") || !keys.includes("cards")) {
     return fail("La copia tiene campos de más o de menos.", "The copy has extra or missing fields.");
@@ -871,6 +874,24 @@ function canonicalPlace(value) {
  * Copia red y dirección a la entrada si faltan.
  * No borra la entrada, no pisa una red o una dirección que ya estuvieran, y no inventa datos.
  */
+/**
+ * Pasa a los nombres ORVUPI un valor guardado o exportado con los nombres anteriores:
+ * esquemas con el prefijo antiguo y el campo de ficha oficial. No cambia ningún dato leído.
+ */
+export function upgradeLegacyNames(value, depth = 0) {
+  if (depth > 8 || value === null || typeof value !== "object") {
+    if (typeof value === "string" && value.startsWith(LEGACY_SCHEMA_PREFIX)) return `orvupi.${value.slice(LEGACY_SCHEMA_PREFIX.length)}`;
+    return value;
+  }
+  if (Array.isArray(value)) return value.map((item) => upgradeLegacyNames(item, depth + 1));
+  const out = {};
+  for (const [key, item] of Object.entries(value)) {
+    const name = key === LEGACY_OFFICIAL_FIELD ? "officialProject" : key;
+    out[name] = key === "schema" || typeof item === "object" ? upgradeLegacyNames(item, depth + 1) : item;
+  }
+  return out;
+}
+
 export function migrateStoredRecord(record) {
   if (!record || typeof record !== "object" || Array.isArray(record)) {
     return { changed: false, record: record ?? null };
@@ -882,8 +903,9 @@ export function migrateStoredRecord(record) {
     : card && typeof card.mint === "string"
       ? card.mint
       : "";
-  const next = { ...record };
-  let changed = false;
+  const upgraded = upgradeLegacyNames(record);
+  const next = { ...upgraded };
+  let changed = JSON.stringify(upgraded) !== JSON.stringify(record);
   if (typeof next.network !== "string" || !next.network) {
     if (networkFromCard) {
       next.network = networkFromCard;

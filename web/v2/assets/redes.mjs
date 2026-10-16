@@ -153,7 +153,7 @@ async function saveCard(card) {
     return;
   }
   try {
-    const db = await openNotebookDb("stubx-cuaderno", {
+    const db = await openNotebookDb("orvupi-cuaderno", {
       onConflict() {
         const node = document.getElementById("estado-guardado");
         if (node) {
@@ -310,8 +310,8 @@ function boot() {
   const select = selectEl();
   if (!select) return;
   fillNetworkSelect(select);
-  if (window.stubxRedPedida && [...select.options].some((option) => option.value === window.stubxRedPedida)) {
-    select.value = window.stubxRedPedida;
+  if (window.orvupiRedPedida && [...select.options].some((option) => option.value === window.orvupiRedPedida)) {
+    select.value = window.orvupiRedPedida;
   }
   rememberEmpty();
   paintChrome();
@@ -333,11 +333,11 @@ function boot() {
     }
     clearResult();
   });
-  document.addEventListener("stubx-lang", () => {
+  document.addEventListener("orvupi-lang", () => {
     paintChrome();
     if (networkId() !== "solana" && lastReading) paint(lastReading);
   });
-  document.addEventListener("stubx-lectura", () => {
+  document.addEventListener("orvupi-lectura", () => {
     if (networkId() === "solana") return;
     queueMicrotask(() => {
       if (networkId() === "solana") return;
@@ -345,12 +345,12 @@ function boot() {
       else clearResult();
     });
   });
-  window.stubxConsultarRed = (options) => consult(Boolean(options && options.force));
-  window.stubxRepintarRed = () => {
+  window.orvupiConsultarRed = (options) => consult(Boolean(options && options.force));
+  window.orvupiRepintarRed = () => {
     paintChrome();
     if (lastReading) paint(lastReading);
   };
-  window.stubxResetEvm = resetEvmClientLimit;
+  window.orvupiResetEvm = resetEvmClientLimit;
 }
 
 boot();

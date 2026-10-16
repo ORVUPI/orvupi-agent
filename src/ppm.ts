@@ -22,21 +22,21 @@ export type PpmBox = {
  * merging: evaluatePpmHonesty rejects anything that is not a run URL of this
  * repository, so CI stays red while a placeholder is left.
  */
-export const RUN_URL = /^https:\/\/github\.com\/stubxai\/stubx-agent\/actions\/runs\/[0-9]+$/;
+export const RUN_URL = /^https:\/\/github\.com\/orvupi\/orvupi-agent\/actions\/runs\/[0-9]+$/;
 export const PPM_MARKED_ON = "2026-10-05";
 export const PPM_WALLET_NOT_APPLICABLE_ON = "2026-10-05";
 export const PPM_TOTAL = 4;
-export const LOGS_DAILY_RUN = "https://github.com/stubxai/stubx-agent/actions/runs/37274282121";
-export const LIMITS_CI_RUN = "https://github.com/stubxai/stubx-agent/actions/runs/37278171372";
+export const LOGS_DAILY_RUN = "https://github.com/ORVUPI/orvupi-agent/actions/runs/37274282121";
+export const LIMITS_CI_RUN = "https://github.com/ORVUPI/orvupi-agent/actions/runs/37278171372";
 export const KILL_SWITCH_DRILL_RUNS: readonly string[] = [
-  "https://github.com/stubxai/stubx-agent/actions/runs/36264436020",
-  "https://github.com/stubxai/stubx-agent/actions/runs/36397668286",
-  "https://github.com/stubxai/stubx-agent/actions/runs/37284177840",
+  "https://github.com/ORVUPI/orvupi-agent/actions/runs/36264436020",
+  "https://github.com/ORVUPI/orvupi-agent/actions/runs/36397668286",
+  "https://github.com/ORVUPI/orvupi-agent/actions/runs/37284177840",
 ];
 
 export type PpmReport = {
-  schema: "stubx.ppm/v0";
-  package: "@stubx/agents";
+  schema: "orvupi.ppm/v0";
+  package: "@orvupi/agents";
   packageVersion: string;
   policyId: string;
   policyVersion: string;
@@ -62,7 +62,7 @@ export function readPackageVersion(root: string): string | null {
   if (!read.ok || !isRecord(read.value)) {
     return null;
   }
-  if (read.value.name !== "@stubx/agents" || typeof read.value.version !== "string") {
+  if (read.value.name !== "@orvupi/agents" || typeof read.value.version !== "string") {
     return null;
   }
   return read.value.version;
@@ -74,8 +74,8 @@ export function buildPpmReport(input: {
   mint: string;
 }): PpmReport {
   return {
-    schema: "stubx.ppm/v0",
-    package: "@stubx/agents",
+    schema: "orvupi.ppm/v0",
+    package: "@orvupi/agents",
     packageVersion: input.packageVersion,
     policyId: input.policy.id,
     policyVersion: input.policy.version,

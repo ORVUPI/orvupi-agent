@@ -337,8 +337,8 @@ try {
   const learned = await verify.evaluate(() => location.pathname + location.search + location.hash);
   if (learned.includes("a=") || learned.includes(official)) failures.push(`la biblioteca dejó la dirección en la URL: ${learned}`);
   const stored = await verify.evaluate(() => ({
-    session: sessionStorage.getItem("stubx-verify-draft"),
-    local: localStorage.getItem("stubx-verify-draft"),
+    session: sessionStorage.getItem("orvupi-verify-draft"),
+    local: localStorage.getItem("orvupi-verify-draft"),
   }));
   if (stored.session || stored.local) failures.push("Verify guardó la dirección");
   await verify.locator('main a[href="/verify/"]').first().click();
@@ -351,8 +351,8 @@ try {
   const kept = await verify.locator("#direccion-token").inputValue();
   if (kept !== official) failures.push(`Verify no recuperó la dirección del enlace: ${kept}`);
   const storedAfter = await verify.evaluate(() => ({
-    session: sessionStorage.getItem("stubx-verify-draft"),
-    local: localStorage.getItem("stubx-verify-draft"),
+    session: sessionStorage.getItem("orvupi-verify-draft"),
+    local: localStorage.getItem("orvupi-verify-draft"),
   }));
   if (storedAfter.session || storedAfter.local) failures.push("Verify guardó la dirección al volver");
   await shot(verify, "verify-direccion-conservada.png");

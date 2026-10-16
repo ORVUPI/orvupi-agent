@@ -85,7 +85,7 @@ export type CanonicalToken = {
 };
 
 export type Report = {
-  tool: "stubx-verify";
+  tool: "orvupi-verify";
   rulesVersion: string;
   disclaimer: string;
   id: string;

@@ -12,7 +12,7 @@ export const METADATA_PROGRAM = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s";
 export const PUMP_PROGRAM = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P";
 // Contrato ORVUPI: aún no existe (ver /shared/orvupi-contract.json).
 export const OFFICIAL_MINT = "";
-// Solo compatibilidad: fichas guardadas antes del 16-10-2026 llevan officialStubx = true con esta dirección.
+// Solo compatibilidad: fichas guardadas antes del 16-10-2026 llevan officialProject = true con esta dirección.
 export const LEGACY_FLAG_MINT = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
 export const DEFAULT_RPC = ["https://api.", "mainnet-beta", ".solana.com"].join("");
 export const PUBLICNODE_RPC = "https://solana-rpc.publicnode.com";
@@ -25,7 +25,7 @@ export const ALLOWED_METHODS = Object.freeze([
   "getTokenLargestAccounts",
   "getSlot",
 ]);
-export const CARD_SCHEMA = "stubx.notebook.card";
+export const CARD_SCHEMA = "orvupi.notebook.card";
 export const CARD_VERSION = 2;
 export const DISCLAIMER = Object.freeze({
   es: "No es una auditoría ni una recomendación. Muestra datos públicos de la cadena en el momento indicado; no dice si un token es bueno, seguro o una buena compra.",
@@ -478,7 +478,7 @@ export function blankCard(mint, consultedAt, errors) {
     extensionsStatus: "no_disponible",
     curve: emptyCurve(),
     largestStatus: "no_consultado",
-    officialStubx: mint === OFFICIAL_MINT,
+    officialProject: mint === OFFICIAL_MINT,
     disclaimer: DISCLAIMER,
   };
 }

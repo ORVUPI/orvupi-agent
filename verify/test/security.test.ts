@@ -28,16 +28,16 @@ function signalsFor(names: string[] = [], links: string[] = []): string[] {
 }
 
 describe("detector de suplantación", () => {
-  test("x.com/Stubxai y x.com/STUBXAI coinciden sin mirar mayúsculas", () => {
-    assert.equal(normalizeUrl("https://x.com/Stubxai"), "x.com/stubxai");
-    assert.equal(normalizeUrl("https://x.com/STUBXAI"), "x.com/stubxai");
-    assert.ok(signalsFor([], ["https://x.com/Stubxai"]).length > 0);
-    assert.ok(signalsFor([], ["https://x.com/STUBXAI"]).length > 0);
+  test("x.com/ORVUPI y x.com/ORVUPI coinciden sin mirar mayúsculas", () => {
+    assert.equal(normalizeUrl("https://x.com/ORVUPI"), "x.com/orvupi");
+    assert.equal(normalizeUrl("https://x.com/ORVUPI"), "x.com/orvupi");
+    assert.ok(signalsFor([], ["https://x.com/ORVUPI"]).length > 0);
+    assert.ok(signalsFor([], ["https://x.com/ORVUPI"]).length > 0);
   });
 
-  test("mobile.x.com/stubxai coincide con el perfil del registro", () => {
-    assert.equal(normalizeUrl("https://mobile.x.com/stubxai"), "x.com/stubxai");
-    assert.ok(signalsFor([], ["https://mobile.x.com/stubxai"]).length > 0);
+  test("mobile.x.com/orvupi coincide con el perfil del registro", () => {
+    assert.equal(normalizeUrl("https://mobile.x.com/orvupi"), "x.com/orvupi");
+    assert.ok(signalsFor([], ["https://mobile.x.com/orvupi"]).length > 0);
   });
 
   test("el host de Netlify con punto inicial coincide", () => {
@@ -48,11 +48,11 @@ describe("detector de suplantación", () => {
     assert.ok(signalsFor([], ["https://superb-horse-9036f6.netlify.app/"]).length > 0);
   });
 
-  test("STUBXAI, STUBX2 y S T U B X contienen stubx", () => {
-    assert.equal(normalizeToken("STUBXAI").includes("stubx"), true);
+  test("ORVUPI, STUBX2 y S T U B X contienen stubx", () => {
+    assert.equal(normalizeToken("ORVUPI").includes("stubx"), true);
     assert.equal(normalizeToken("STUBX2").includes("stubx"), true);
     assert.equal(normalizeToken("S T U B X"), "stubx");
-    assert.ok(signalsFor(["STUBXAI"]).length > 0);
+    assert.ok(signalsFor(["ORVUPI"]).length > 0);
     assert.ok(signalsFor(["STUBX2"]).length > 0);
     assert.ok(signalsFor(["S T U B X"]).length > 0);
   });
@@ -81,9 +81,9 @@ describe("detector de suplantación", () => {
     assert.ok(signalsFor(["S.T.U.B.X"]).length > 0);
     assert.ok(signalsFor(["5TUBX"]).length > 0);
     assert.ok(signalsFor(["\uA731\u1D1B\u1D1C\u0299x"]).length > 0);
-    assert.ok(signalsFor([], ["https://x.com/stubxai_"]).length > 0);
-    assert.ok(signalsFor([], ["https://x.com/stubxai_oficial"]).length > 0);
-    assert.ok(signalsFor([], ["https://x.com/stubx_ai"]).length > 0);
+    assert.ok(signalsFor([], ["https://x.com/orvupi_"]).length > 0);
+    assert.ok(signalsFor([], ["https://x.com/orvupi_oficial"]).length > 0);
+    assert.ok(signalsFor([], ["https://x.com/orvupi_ai"]).length > 0);
     assert.equal(signalsFor(["Stubborn"]).length, 0);
     assert.equal(signalsFor(["EVILcoin"]).length, 0);
   });

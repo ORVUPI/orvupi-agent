@@ -1,4 +1,4 @@
-export const DRAFT_KEY = "stubx-studio-draft";
+export const DRAFT_KEY = "orvupi-studio-draft";
 
 export function loadDraft(storage) {
   try {

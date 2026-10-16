@@ -43,7 +43,7 @@ const COPY = {
     checksTitle: "Qué puede comprobar esta red",
     can: "Esta lectura puede pedir",
     cannot: "Esta lectura no pide",
-    notStubx: "ORVUPI todavía no tiene contrato en ninguna red.",
+    notOrvupi: "ORVUPI todavía no tiene contrato en ninguna red.",
     third: "El nombre y el símbolo son texto que escribió el contrato.",
   },
   en: {
@@ -78,7 +78,7 @@ const COPY = {
     checksTitle: "What this network can check",
     can: "This reading can ask for",
     cannot: "This reading does not ask for",
-    notStubx: "ORVUPI does not have a contract on any network yet.",
+    notOrvupi: "ORVUPI does not have a contract on any network yet.",
     third: "The name and the symbol are text the contract wrote.",
   },
 };
@@ -219,7 +219,7 @@ export function describeEvm(reading, lang) {
     rows,
     card,
     disclaimer: DISCLAIMER[language],
-    notStubx: text.notStubx,
+    notOrvupi: text.notOrvupi,
     third: text.third,
     save: text.save,
   };
@@ -313,7 +313,7 @@ export function paintEvmResult(parent, reading, lang, options) {
   article.append(textNode("h2", view.headline));
   article.append(textNode("p", view.support, { class: "apoyo" }));
   if (view.partial) article.append(textNode("p", view.partialText, { class: "nota" }));
-  article.append(textNode("p", view.notStubx, { class: "franja-identidad" }));
+  article.append(textNode("p", view.notOrvupi, { class: "franja-identidad" }));
   article.append(textNode("p", view.disclaimer, { class: "nota" }));
   if (view.address) {
     const line = el("p");

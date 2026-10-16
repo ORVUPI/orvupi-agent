@@ -1,5 +1,5 @@
 {
-  "tool": "stubx-verify",
+  "tool": "orvupi-verify",
   "rulesVersion": "0.1.0",
   "disclaimer": "ORVUPI Verify muestra datos on-chain públicos. No garantiza que un token sea seguro.",
   "id": "a641ac2e0f9b884e4202b24e727dff06f2f28919209a3bc9b830104e47163c2c",

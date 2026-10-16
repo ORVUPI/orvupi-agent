@@ -108,7 +108,7 @@ test("guardar: en iPhone con share, Descargar abre la hoja de compartir", async 
 // El archivo que se comparte o se abre es el PNG final, no una vista previa reducida.
 async function expectFinalPng(page, bytes) {
   expect(bytes.subarray(1, 4).toString()).toBe("PNG");
-  expect(bytes.includes(Buffer.from("Community content, unofficial. Not from @stubxai."))).toBe(false);
+  expect(bytes.includes(Buffer.from("Community content, unofficial. Not from @ORVUPI."))).toBe(false);
   const img = await decodePng(new Uint8Array(bytes));
   const preview = await page.evaluate(() => {
     const c = document.getElementById("vista");

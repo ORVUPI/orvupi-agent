@@ -6,7 +6,7 @@ import { StubAgent } from "../src/stub-agent.js";
 import { evaluatePpmHonesty, KILL_SWITCH_DRILL_RUNS, LIMITS_CI_RUN, LOGS_DAILY_RUN, RUN_URL } from "../src/ppm.js";
 import type { PpmReport } from "../src/ppm.js";
 import { repoRoot } from "../src/paths.js";
-import { STUBX_MINT } from "../src/public-mint.js";
+import { PREVIOUS_MINT } from "../src/public-mint.js";
 import { agent } from "./helpers.js";
 
 function reportFrom(orch = agent()): PpmReport {
@@ -65,9 +65,9 @@ describe("ppm", () => {
     assert.equal(report.ppmNotApplicableCount, 1);
     assert.equal(report.signing, false);
     assert.equal(report.network, false);
-    assert.equal(report.package, "@stubx/agents");
+    assert.equal(report.package, "@orvupi/agents");
     assert.equal(report.packageVersion, "0.1.0");
-    assert.equal(report.tokenMint, STUBX_MINT);
+    assert.equal(report.tokenMint, PREVIOUS_MINT);
     assert.equal(report.policyVersion, "1.0.0");
     assert.match(report.policySha256, /^[0-9a-f]{64}$/);
   });
@@ -110,7 +110,7 @@ describe("ppm", () => {
       ...report,
       boxes: {
         ...report.boxes,
-        limits: { ...report.boxes.limits, publicEvidence: "https://github.com/stubx/agent/actions/runs/1" },
+        limits: { ...report.boxes.limits, publicEvidence: "https://github.com/orvupi/agent/actions/runs/1" },
       },
     });
     assert.ok(otherRepo.problems.includes("limits.publicEvidence"));
@@ -172,7 +172,7 @@ describe("ppm", () => {
       const output = result.output as { network: boolean; write: boolean; mint: string };
       assert.equal(output.network, false);
       assert.equal(output.write, false);
-      assert.equal(output.mint, STUBX_MINT);
+      assert.equal(output.mint, PREVIOUS_MINT);
     }
   });
 });

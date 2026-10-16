@@ -285,7 +285,7 @@ test("el cuaderno guarda Ethereum y BNB Chain con red y dirección distintas", a
 
   const stored = await page.evaluate(async () => {
     const db = await new Promise((resolve, reject) => {
-      const request = indexedDB.open("stubx-cuaderno");
+      const request = indexedDB.open("orvupi-cuaderno");
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });

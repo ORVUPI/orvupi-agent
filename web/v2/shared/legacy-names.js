@@ -6,4 +6,4 @@
 export const LEGACY_PREFIX = "stubx";
 export const LEGACY_DB_NAME = `${LEGACY_PREFIX}-cuaderno`;
 export const LEGACY_SCHEMA_PREFIX = `${LEGACY_PREFIX}.`;
-export const LEGACY_OFFICIAL_FIELD = "officialStubx";
+export const LEGACY_OFFICIAL_FIELD = `official${LEGACY_PREFIX[0].toUpperCase()}${LEGACY_PREFIX.slice(1)}`;

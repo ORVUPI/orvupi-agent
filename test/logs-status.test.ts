@@ -4,7 +4,7 @@ import { REQUIRED_DAYS, logsStatus } from "../src/logs-status.js";
 import { DAILY_NOTE, LOG_FILE, buildAnchorText, buildPublicLogEntry, serializeEntry } from "../src/public-log.js";
 import type { DailyDetail, PublicLogEntry } from "../src/public-log.js";
 
-const RUN = "https://github.com/stubxai/stubx-agent/actions/runs/";
+const RUN = "https://github.com/ORVUPI/orvupi-agent/actions/runs/";
 const DETAIL: DailyDetail = {
   mode: "prototipo",
   commit: null,
@@ -95,7 +95,7 @@ describe("logs:status (read-only summary for the PPM «Logs» box)", () => {
   });
 
   test("a run link of another repository makes the log fail and counts nothing", () => {
-    const items = [...daily(1, 7), { ts: "2026-09-09T06:23:00.000Z", evidence: "https://github.com/stubx/stubx-agent/actions/runs/9" }];
+    const items = [...daily(1, 7), { ts: "2026-09-09T06:23:00.000Z", evidence: "https://github.com/orvupi/orvupi-agent/actions/runs/9" }];
     const s = logsStatus(logsTree(items));
     assert.equal(s.ok, false);
     assert.equal(s.distinctDays, 0);

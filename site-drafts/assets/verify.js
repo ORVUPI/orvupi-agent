@@ -1,6 +1,6 @@
 "use strict";
 (() => {
-const STUBX_VERIFY = {"cards":[{"mint":"Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB","role":"contraste","roleNote":{"es":"USDT en Solana, contraste: otro token conocido, con emisión y congelación activas. No se presenta como copia de USDC.","en":"USDT on Solana, a contrast: another known token, with active mint and freeze permissions. It is not presented as a copy of USDC."},"id":"47f903a397a460485f0c5c21a5169d9b411a04825d5deba818a2a67c8e23ec18","createdAt":"2026-10-16T18:46:30.731Z","partial":true,"referenceSlot":457742328,"name":"USDT","nameStatus":"verificado","symbol":"USDT","inRegistry":false,"inRegistryStatus":"verificado","mintAuthority":{"state":"activa","status":"verificado"},"freezeAuthority":{"state":"activa","status":"verificado"},"metadataReading":"mutables","metadataLevel":"atención","holdersStatus":"no_disponible","holdersNote":"Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como cantidad cero.","impersonation":false,"authenticityLevel":"ok","signals":[],"statement":"Este mint no está en el registro curado. Que no esté no significa que sea falso ni que sea una copia.","statementStatus":"verificado","curvePresent":false,"curvePresentStatus":"verificado","curveProgress":null,"curveProgressStatus":"no_aplica","curveProgressNote":"No hay curva. No se rellena con cero.","curveModuleNote":"No hay cuenta en la PDA. El módulo de otros mercados no está en esta versión. La ausencia no se rellena con una cantidad de cero.","rulesVersion":"0.1.0","statement_en":"This mint is not in the curated registry. That does not mean it is fake or a copy.","holdersNote_en":"No usable response. It is not interpreted as a revoked authority, as immutability, or as a zero balance.","curveProgressNote_en":"There is no curve. It is not filled with zero.","curveModuleNote_en":null,"signals_en":[]}],"source":"lista","evm":[],"rpc":{"primary":"https://solana-rpc.publicnode.com","fallback":"https://api.mainnet-beta.solana.com"},"registry":[]};
+const ORVUPI_VERIFY = {"cards":[{"mint":"Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB","role":"contraste","roleNote":{"es":"USDT en Solana, contraste: otro token conocido, con emisión y congelación activas. No se presenta como copia de USDC.","en":"USDT on Solana, a contrast: another known token, with active mint and freeze permissions. It is not presented as a copy of USDC."},"id":"47f903a397a460485f0c5c21a5169d9b411a04825d5deba818a2a67c8e23ec18","createdAt":"2026-10-16T18:46:30.731Z","partial":true,"referenceSlot":457742328,"name":"USDT","nameStatus":"verificado","symbol":"USDT","inRegistry":false,"inRegistryStatus":"verificado","mintAuthority":{"state":"activa","status":"verificado"},"freezeAuthority":{"state":"activa","status":"verificado"},"metadataReading":"mutables","metadataLevel":"atención","holdersStatus":"no_disponible","holdersNote":"Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como cantidad cero.","impersonation":false,"authenticityLevel":"ok","signals":[],"statement":"Este mint no está en el registro curado. Que no esté no significa que sea falso ni que sea una copia.","statementStatus":"verificado","curvePresent":false,"curvePresentStatus":"verificado","curveProgress":null,"curveProgressStatus":"no_aplica","curveProgressNote":"No hay curva. No se rellena con cero.","curveModuleNote":"No hay cuenta en la PDA. El módulo de otros mercados no está en esta versión. La ausencia no se rellena con una cantidad de cero.","rulesVersion":"0.1.0","statement_en":"This mint is not in the curated registry. That does not mean it is fake or a copy.","holdersNote_en":"No usable response. It is not interpreted as a revoked authority, as immutability, or as a zero balance.","curveProgressNote_en":"There is no curve. It is not filled with zero.","curveModuleNote_en":null,"signals_en":[]}],"source":"lista","evm":[],"rpc":{"primary":"https://solana-rpc.publicnode.com","fallback":"https://api.mainnet-beta.solana.com"},"registry":[]};
 const BASE58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 // Contrato ORVUPI: aún no existe (web/v2/shared/orvupi-contract.json).
 const OFFICIAL_MINT = "";
@@ -1589,7 +1589,7 @@ async function httpTransport(endpoint, body, timeoutMs, signal) {
         accept: "application/json",
     };
     if (typeof navigator === "undefined") {
-        headers["user-agent"] = "stubx-verify/0.1";
+        headers["user-agent"] = "orvupi-verify/0.1";
     }
     try {
         const response = await fetch(endpoint, {
@@ -3122,7 +3122,7 @@ function summaryShown(value) {
   return clean.length > 64 ? `${clean.slice(0, 64)}…` : clean;
 }
 
-function looksLikeStubx(context) {
+function looksLikeOrvupi(context) {
   if (!context) return false;
   return summaryNormalizeToken(context.name).includes("orvupi") || summaryNormalizeToken(context.symbol).includes("orvupi");
 }
@@ -3264,7 +3264,7 @@ function attentionFromSignals(signals) {
 function attentionFromCard(card) {
   const items = [];
   const context = contextFromCard(card);
-  if (!context.official && looksLikeStubx(context)) items.push(attentionPoint("copia"));
+  if (!context.official && looksLikeOrvupi(context)) items.push(attentionPoint("copia"));
   if (card?.mintAuthority?.state === "activa") items.push(attentionPoint("emision"));
   if (card?.freezeAuthority?.state === "activa") items.push(attentionPoint("congelacion"));
   if (card?.metadataMutable === "si") items.push(attentionPoint("mutable"));
@@ -3543,7 +3543,7 @@ function authorityState(field) {
 }
 
 function notebookNameText(card, lang) {
-  if (card && card.schema === "stubx.notebook.card.evm") {
+  if (card && card.schema === "orvupi.notebook.card.evm") {
     const known = quoteLookup(card.network, card.address);
     const written = summaryShown(card.name && card.name.text) || summaryShown(card.symbol && card.symbol.text);
     if (known && written) {
@@ -3557,7 +3557,7 @@ function notebookNameText(card, lang) {
   const name = summaryShown(context.name);
   const symbol = summaryShown(context.symbol);
   const quoted = name || symbol;
-  if (!context.official && looksLikeStubx(context) && quoted) {
+  if (!context.official && looksLikeOrvupi(context) && quoted) {
     return lang === "en" ? `It says it is called «${quoted}»` : `Dice llamarse «${quoted}»`;
   }
   return name;
@@ -3565,7 +3565,7 @@ function notebookNameText(card, lang) {
 
 function cloneWarningText(card, lang) {
   const context = contextFromCard(card);
-  if (context.official || !looksLikeStubx(context)) return "";
+  if (context.official || !looksLikeOrvupi(context)) return "";
   return lang === "en"
     ? "It is named like ORVUPI, but ORVUPI does not have a contract yet."
     : "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.";
@@ -3790,7 +3790,7 @@ const MARKET_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvw
 const MARKET_INDEX = new Array(128).fill(-1);
 for (let i = 0; i < MARKET_ALPHABET.length; i += 1) MARKET_INDEX[MARKET_ALPHABET.charCodeAt(i)] = i;
 
-const MARKET_SCHEMA = "stubx.market.v1";
+const MARKET_SCHEMA = "orvupi.market.v1";
 const MARKET_SOURCE_NAME = "DEX Screener";
 const MARKET_HOST = "api.dexscreener.com";
 const MARKET_PATH = "/token-pairs/v1/solana/";
@@ -5125,9 +5125,9 @@ function bootVerify() {
   var out = document.getElementById("resultado");
   var form = document.getElementById("consulta");
   var input = document.getElementById("direccion-token");
-  if (!out || !form || !input || typeof STUBX_VERIFY === "undefined") return;
-  var cards = STUBX_VERIFY.cards || [];
-  var evm = STUBX_VERIFY.evm || [];
+  if (!out || !form || !input || typeof ORVUPI_VERIFY === "undefined") return;
+  var cards = ORVUPI_VERIFY.cards || [];
+  var evm = ORVUPI_VERIFY.evm || [];
   var source = cards.length > 0 ? "lista" : "caida";
 
   var last = emptyView();
@@ -5162,7 +5162,7 @@ function bootVerify() {
 
   function apply(view, reveal) {
     last = view;
-    document.dispatchEvent(new CustomEvent("stubx-lectura", { detail: view && view.shown ? view.shown : null }));
+    document.dispatchEvent(new CustomEvent("orvupi-lectura", { detail: view && view.shown ? view.shown : null }));
     paintVerify(out, view);
     input.setAttribute("aria-invalid", view.kind === "invalida" ? "true" : "false");
     if (reveal && view.kind !== "vacio" && view.kind !== "comprobando") revealVerdict();
@@ -5254,7 +5254,7 @@ function bootVerify() {
   }
 
   function endpointsOf() {
-    var rpc = STUBX_VERIFY.rpc || {};
+    var rpc = ORVUPI_VERIFY.rpc || {};
     return [rpc.primary, rpc.fallback].filter(function (item) { return !!item; });
   }
 
@@ -5317,7 +5317,7 @@ function bootVerify() {
     var endpoints = endpointsOf();
     readAnyMint({
       mint: normalized,
-      registry: STUBX_VERIFY.registry || [],
+      registry: ORVUPI_VERIFY.registry || [],
       endpoints: endpoints,
       maxRetries: 1,
       minIntervalMs: 200,
@@ -5358,7 +5358,7 @@ function bootVerify() {
     var mint = last.mint;
     readLargestAccounts({
       mint: mint,
-      registry: STUBX_VERIFY.registry || [],
+      registry: ORVUPI_VERIFY.registry || [],
       endpoints: endpointsOf(),
       maxRetries: 1,
       minIntervalMs: 200,
@@ -5409,10 +5409,10 @@ function bootVerify() {
     event.preventDefault();
     run();
   });
-  document.addEventListener("stubx-lang", function () {
+  document.addEventListener("orvupi-lang", function () {
     apply(last);
   });
-  document.addEventListener("stubx-verify-preview", function (event) {
+  document.addEventListener("orvupi-verify-preview", function (event) {
     var detail = event.detail || {};
     if (detail.kind === "comprobando") apply(pendingView(detail.raw || ""));
     if (detail.kind === "lectura_caida") apply(classifyAddress(detail.raw || "So11111111111111111111111111111111111111112", cards, "caida"));

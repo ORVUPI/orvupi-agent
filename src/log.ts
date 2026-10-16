@@ -28,7 +28,7 @@ export function buildLogEntry(input: {
   const partial = {
     v: 1 as const,
     ts: input.ts,
-    actor: "stubx-agent" as const,
+    actor: "orvupi-agent" as const,
     action: input.action,
     detail: input.detail,
   };

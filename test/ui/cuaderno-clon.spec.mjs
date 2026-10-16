@@ -46,7 +46,7 @@ test("el cuaderno muestra el clon, el enlace ausente y la hora con segundos", as
       { id: "33333333-3333-4333-8333-333333333333", note: "", card: card("2026-10-09T12:00:01.000Z", 3) },
     ];
     await new Promise((resolve, reject) => {
-      const request = indexedDB.open("stubx-cuaderno");
+      const request = indexedDB.open("orvupi-cuaderno");
       request.onupgradeneeded = () => {
         const db = request.result;
         if (!db.objectStoreNames.contains("records")) db.createObjectStore("records", { keyPath: "id" });

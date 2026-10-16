@@ -1,6 +1,6 @@
 # STUBX 0.1.0
 
-Fecha de estas notas: 2026-10-10. El número del paquete `@stubx/agents` es `0.1.0`. El tag `v0.1.0` está descrito en [TAG.md](TAG.md) y no está creado.
+Fecha de estas notas: 2026-10-10. El número del paquete `@orvupi/agents` es `0.1.0`. El tag `v0.1.0` está descrito en [TAG.md](TAG.md) y no está creado.
 
 Esto no es una auditoría ni un consejo de inversión. Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión.
 

@@ -97,7 +97,7 @@ export function safeHref(value: string | undefined): string | null {
   if (!value) {
     return null;
   }
-  if (value.startsWith("https://github.com/ORVUPI/orvupi-agent/") || value.startsWith("https://github.com/stubxai/stubx-agent/")) {
+  if (value.startsWith("https://github.com/ORVUPI/orvupi-agent/") || value.startsWith("https://github.com/ORVUPI/orvupi-agent/")) {
     return value;
   }
   if (/^[a-z0-9./_-]+$/i.test(value) && !value.includes("..")) {
@@ -655,7 +655,7 @@ export function renderPages(repoRoot: string, cards: readonly CardSummary[], opt
 }
 
 export function renderLabWorker(): string {
-  return `var CACHE = "stubx-lab-2026-10-09-5";
+  return `var CACHE = "orvupi-lab-2026-10-09-5";
 var FILES = ["./index.html", "./sw.js"];
 var ALLOWED = { "/lab/": true, "/lab/index.html": true, "/lab/sw.js": true };
 

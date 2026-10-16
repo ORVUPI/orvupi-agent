@@ -189,7 +189,7 @@ describe("lecciones cortas", () => {
 
   test("una respuesta incorrecta se explica y el recorrido correcto termina", () => {
     for (const lesson of lessons) {
-      assert.equal(lessonStorageKey(lesson.id), `stubx-lab-${lesson.id}`);
+      assert.equal(lessonStorageKey(lesson.id), `orvupi-lab-${lesson.id}`);
       let progress = initialProgress(lesson, "es");
       const first = lesson.steps[0];
       assert.ok(first);
@@ -246,7 +246,7 @@ describe("lecciones cortas", () => {
     assert.match(missionJs.body, /panel\.hidden = true/);
     assert.match(missionJs.body, /aria-expanded/);
     assert.equal(missionJs.body.includes('class: "abrir-entender", href: firstHref'), false);
-    assert.equal(lessonStorageKey("leccion-huecos"), "stubx-lab-leccion-huecos");
+    assert.equal(lessonStorageKey("leccion-huecos"), "orvupi-lab-leccion-huecos");
     assert.equal(JSON.stringify(loadJson(path.join(root, "lab/mission/lecciones.json"))).toLowerCase().includes("wallet"), false);
     const reparto = lab.body.slice(lab.body.indexOf('id="leccion-reparto"'), lab.body.indexOf('id="leccion-huecos"'));
     assert.equal((reparto.match(/href="\/security\/"/g) ?? []).length, 6);

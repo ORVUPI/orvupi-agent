@@ -33,7 +33,7 @@ interface ReadModule {
 interface Card {
   isMint?: boolean;
   partial?: boolean;
-  officialStubx?: boolean;
+  officialProject?: boolean;
   name: { text: string | null; status?: string };
   symbol?: { text: string | null; status?: string };
   uri: { text: string | null; status?: string };
@@ -242,7 +242,7 @@ describe("lector y cuaderno", () => {
     assert.equal(result.ok, false);
     assert.match((result.card?.errors ?? []).map((item) => item.message).join(" "), /volvió vacía/);
     assert.equal(JSON.stringify(result.card).includes("ausente comprobado"), false);
-    assert.equal(result.card?.officialStubx, false); // ORVUPI todavía no tiene contrato: ninguna lectura nueva se marca como oficial.
+    assert.equal(result.card?.officialProject, false); // ORVUPI todavía no tiene contrato: ninguna lectura nueva se marca como oficial.
     assert.equal(result.card?.name.text?.includes("<"), false);
     assert.equal(result.card?.uri.text, "https://evil.example/phish");
     assert.equal(JSON.stringify(result.card).includes("uiAmount"), false);
@@ -945,7 +945,7 @@ describe("lector y cuaderno", () => {
     assert.equal(actions.includes("localStorage"), false);
     assert.equal(actions.includes("sessionStorage"), false);
     assert.equal(actions.includes("searchParams"), false);
-    assert.match(actions, /stubx-cuaderno/);
+    assert.match(actions, /orvupi-cuaderno/);
     assert.equal(model.staleLine(WHEN, "es"), `Consultado el ${model.formatReadingStamp(WHEN, "es", true)} · puede haber cambiado`);
     assert.equal(model.staleLine(WHEN, "en"), `Checked on ${model.formatReadingStamp(WHEN, "en", true)} · this may have changed`);
     assert.match(model.staleLine(WHEN, "es"), /\d{2}:\d{2}:\d{2}/);
@@ -1298,7 +1298,7 @@ describe("lector y cuaderno", () => {
           get hash() { return current.hash; },
         },
         history: {
-          state: { page: "stubx" },
+          state: { page: "demo" },
           replaceState: (_state: unknown, _title: string, next: string) => {
             assert.equal(_state, sandbox.history.state);
             current = new URL(next, current.origin);

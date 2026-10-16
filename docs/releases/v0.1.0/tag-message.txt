@@ -1,8 +1,8 @@
 STUBX 0.1.0 (2026-10-10)
 
-Paquete @stubx/agents 0.1.0. Incluye el esqueleto del agente, Verify de solo lectura, la misión 1 de Lab, la web v2 bilingüe y la indexación (robots.txt y sitemap). No despliega la web y no conecta carteras. La v2 ya está desplegada desde el 2026-10-09.
+Paquete @orvupi/agents 0.1.0. Incluye el esqueleto del agente, Verify de solo lectura, la misión 1 de Lab, la web v2 bilingüe y la indexación (robots.txt y sitemap). No despliega la web y no conecta carteras. La v2 ya está desplegada desde el 2026-10-09.
 
-Package @stubx/agents 0.1.0. Includes the agent skeleton, read-only Verify, Lab mission 1, the bilingual web v2, and indexing (robots.txt and sitemap). It does not deploy the website and it does not connect wallets. Web v2 has already been deployed since 2026-10-09.
+Package @orvupi/agents 0.1.0. Includes the agent skeleton, read-only Verify, Lab mission 1, the bilingual web v2, and indexing (robots.txt and sitemap). It does not deploy the website and it does not connect wallets. Web v2 has already been deployed since 2026-10-09.
 
 Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión.
 High-risk crypto · You could lose everything · Not investment advice.

@@ -283,7 +283,7 @@ export async function buildReport(input: BuildInput): Promise<Report> {
   }
 
   const report: Report = {
-    tool: "stubx-verify",
+    tool: "orvupi-verify",
     rulesVersion: RULES_VERSION,
     disclaimer: DISCLAIMER,
     id: "",

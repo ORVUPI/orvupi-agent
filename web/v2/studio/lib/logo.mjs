@@ -15,7 +15,7 @@ export function clipToken(value) {
   return String(value ?? "").normalize("NFKC").replace(INVISIBLE_CHARS, "").replace(/[\u0000-\u001f]/g, "").trim().slice(0, TOKEN_MAX);
 }
 
-export function isStubxToken(value) {
+export function isOrvupiToken(value) {
   // El nombre de la API se conserva para las integraciones y los borradores.
   return clipToken(value).toLowerCase() === "orvupi";
 }
@@ -65,9 +65,9 @@ export function avatarKey(image) {
   return `${image.stamp}:${image.width}x${image.height}:${image.rgba.length}`;
 }
 
-export function mascotCacheMark({ customLogo, stubx, avatarId, loaded }) {
+export function mascotCacheMark({ customLogo, project, avatarId, loaded }) {
   if (customLogo) return "logo";
-  if (!stubx) return "off";
+  if (!project) return "off";
   if (!avatarId) return "empty";
   return loaded ? "ready" : "wait";
 }

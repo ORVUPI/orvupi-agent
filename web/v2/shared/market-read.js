@@ -26,7 +26,7 @@ const MARKET_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvw
 const MARKET_INDEX = new Array(128).fill(-1);
 for (let i = 0; i < MARKET_ALPHABET.length; i += 1) MARKET_INDEX[MARKET_ALPHABET.charCodeAt(i)] = i;
 
-export const MARKET_SCHEMA = "stubx.market.v1";
+export const MARKET_SCHEMA = "orvupi.market.v1";
 export const MARKET_SOURCE_NAME = "DEX Screener";
 export const MARKET_HOST = "api.dexscreener.com";
 export const MARKET_PATH = "/token-pairs/v1/solana/";

@@ -890,7 +890,7 @@ describe("informe descargable", () => {
     const official = report.reportModel({
       summary: summary.summaryFromCard(card({
         mint: LEGACY_MINT,
-        officialStubx: true,
+        officialProject: true,
         name: { text: "ORVUPI", status: "verificado" },
         symbol: { text: "ORVUPI", status: "verificado" },
         metadataMutable: "no",
@@ -946,8 +946,8 @@ describe("informe descargable", () => {
       assert.equal(source.includes("insertAdjacentHTML"), false);
     }
     assert.match(verify, /\/shared\/informe\.js/);
-    assert.equal(verify.includes("stubx-resumen"), false);
-    assert.equal(actions.includes("stubx-resumen"), false);
+    assert.equal(verify.includes("orvupi-resumen"), false);
+    assert.equal(actions.includes("orvupi-resumen"), false);
     assert.equal(actions.includes("reportDownloadBox"), false);
     assert.match(notebook, /reportDownloadBox/);
     assertAbsent(informe);

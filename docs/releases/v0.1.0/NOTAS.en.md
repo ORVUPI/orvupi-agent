@@ -1,6 +1,6 @@
 # STUBX 0.1.0
 
-These notes are dated 2026-10-10. The `@stubx/agents` package version is `0.1.0`. The `v0.1.0` tag is described in [TAG.md](TAG.md) and has not been created.
+These notes are dated 2026-10-10. The `@orvupi/agents` package version is `0.1.0`. The `v0.1.0` tag is described in [TAG.md](TAG.md) and has not been created.
 
 This is not an audit and not investment advice. High-risk crypto · You could lose everything · Not investment advice.
 

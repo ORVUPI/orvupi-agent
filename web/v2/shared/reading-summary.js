@@ -316,7 +316,7 @@ function summaryShown(value) {
   return clean.length > 64 ? `${clean.slice(0, 64)}…` : clean;
 }
 
-function looksLikeStubx(context) {
+function looksLikeOrvupi(context) {
   if (!context) return false;
   return summaryNormalizeToken(context.name).includes("orvupi") || summaryNormalizeToken(context.symbol).includes("orvupi");
 }
@@ -458,7 +458,7 @@ function attentionFromSignals(signals) {
 function attentionFromCard(card) {
   const items = [];
   const context = contextFromCard(card);
-  if (!context.official && looksLikeStubx(context)) items.push(attentionPoint("copia"));
+  if (!context.official && looksLikeOrvupi(context)) items.push(attentionPoint("copia"));
   if (card?.mintAuthority?.state === "activa") items.push(attentionPoint("emision"));
   if (card?.freezeAuthority?.state === "activa") items.push(attentionPoint("congelacion"));
   if (card?.metadataMutable === "si") items.push(attentionPoint("mutable"));
@@ -737,7 +737,7 @@ function authorityState(field) {
 }
 
 export function notebookNameText(card, lang) {
-  if (card && card.schema === "stubx.notebook.card.evm") {
+  if (card && card.schema === "orvupi.notebook.card.evm") {
     const known = quoteLookup(card.network, card.address);
     const written = summaryShown(card.name && card.name.text) || summaryShown(card.symbol && card.symbol.text);
     if (known && written) {
@@ -751,7 +751,7 @@ export function notebookNameText(card, lang) {
   const name = summaryShown(context.name);
   const symbol = summaryShown(context.symbol);
   const quoted = name || symbol;
-  if (!context.official && looksLikeStubx(context) && quoted) {
+  if (!context.official && looksLikeOrvupi(context) && quoted) {
     return lang === "en" ? `It says it is called «${quoted}»` : `Dice llamarse «${quoted}»`;
   }
   return name;
@@ -759,7 +759,7 @@ export function notebookNameText(card, lang) {
 
 export function cloneWarningText(card, lang) {
   const context = contextFromCard(card);
-  if (context.official || !looksLikeStubx(context)) return "";
+  if (context.official || !looksLikeOrvupi(context)) return "";
   return lang === "en"
     ? "It is named like ORVUPI, but ORVUPI does not have a contract yet."
     : "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.";

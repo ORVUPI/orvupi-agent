@@ -58,7 +58,7 @@ function rpcResult(value, status = 200) {
 
 async function recordCount(page) {
   return page.evaluate(() => new Promise((resolve) => {
-    const request = indexedDB.open("stubx-cuaderno");
+    const request = indexedDB.open("orvupi-cuaderno");
     request.onerror = () => resolve(0);
     request.onsuccess = () => {
       const db = request.result;

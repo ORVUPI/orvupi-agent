@@ -6,7 +6,7 @@ Rama `orvupi-limpieza`. Ninguna se ve en la web como nombre del proyecto. El tes
 - **`stubxai.com`**: es el dominio actual de producción (canonical, og:url, sitemap, robots, security.txt). Se cambiará cuando haya un dominio ORVUPI.
 - **Claves de almacenamiento local**: `stubx-cuaderno` (IndexedDB), `stubx-lang`, `stubx-studio-draft`, `stubx-lab-*`, `stubx.notebook.*`, `stubx.market.v1`, etc. Si se renombran, cada visitante pierde su cuaderno, sus borradores y su progreso. No se muestran.
 - **Identificadores de código**: `STUBX_VERIFY`, `STUBX_LAB`, `isStubxToken`, `officialStubx`, `looksLikeStubx`… Son nombres internos de funciones y variables. `officialStubx` se mantiene en el formato de ficha para que importen los cuadernos ya exportados (`LEGACY_FLAG_MINT`, solo compatibilidad).
-- **`studio/blocklist.json`**: los handles `stubxai` y `CreadorSTUBX` están en la lista de bloqueo para impedir que alguien se haga pasar por esas cuentas desde Studio.
+- **`studio/blocklist.json`**: los handles `stubxai` y `creadorORVUPI` están en la lista de bloqueo para impedir que alguien se haga pasar por esas cuentas desde Studio.
 - **Caché del Service Worker de Lab** (`stubx-lab-orvupi-…`): es un nombre interno de caché.
 
 ## Núcleo del agente y pruebas públicas (no se publican en la web)

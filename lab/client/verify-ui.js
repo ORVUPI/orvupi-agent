@@ -238,9 +238,9 @@ function bootVerify() {
   var out = document.getElementById("resultado");
   var form = document.getElementById("consulta");
   var input = document.getElementById("direccion-token");
-  if (!out || !form || !input || typeof STUBX_VERIFY === "undefined") return;
-  var cards = STUBX_VERIFY.cards || [];
-  var evm = STUBX_VERIFY.evm || [];
+  if (!out || !form || !input || typeof ORVUPI_VERIFY === "undefined") return;
+  var cards = ORVUPI_VERIFY.cards || [];
+  var evm = ORVUPI_VERIFY.evm || [];
   var source = cards.length > 0 ? "lista" : "caida";
 
   var last = emptyView();
@@ -275,7 +275,7 @@ function bootVerify() {
 
   function apply(view, reveal) {
     last = view;
-    document.dispatchEvent(new CustomEvent("stubx-lectura", { detail: view && view.shown ? view.shown : null }));
+    document.dispatchEvent(new CustomEvent("orvupi-lectura", { detail: view && view.shown ? view.shown : null }));
     paintVerify(out, view);
     input.setAttribute("aria-invalid", view.kind === "invalida" ? "true" : "false");
     if (reveal && view.kind !== "vacio" && view.kind !== "comprobando") revealVerdict();
@@ -367,7 +367,7 @@ function bootVerify() {
   }
 
   function endpointsOf() {
-    var rpc = STUBX_VERIFY.rpc || {};
+    var rpc = ORVUPI_VERIFY.rpc || {};
     return [rpc.primary, rpc.fallback].filter(function (item) { return !!item; });
   }
 
@@ -430,7 +430,7 @@ function bootVerify() {
     var endpoints = endpointsOf();
     readAnyMint({
       mint: normalized,
-      registry: STUBX_VERIFY.registry || [],
+      registry: ORVUPI_VERIFY.registry || [],
       endpoints: endpoints,
       maxRetries: 1,
       minIntervalMs: 200,
@@ -471,7 +471,7 @@ function bootVerify() {
     var mint = last.mint;
     readLargestAccounts({
       mint: mint,
-      registry: STUBX_VERIFY.registry || [],
+      registry: ORVUPI_VERIFY.registry || [],
       endpoints: endpointsOf(),
       maxRetries: 1,
       minIntervalMs: 200,
@@ -522,10 +522,10 @@ function bootVerify() {
     event.preventDefault();
     run();
   });
-  document.addEventListener("stubx-lang", function () {
+  document.addEventListener("orvupi-lang", function () {
     apply(last);
   });
-  document.addEventListener("stubx-verify-preview", function (event) {
+  document.addEventListener("orvupi-verify-preview", function (event) {
     var detail = event.detail || {};
     if (detail.kind === "comprobando") apply(pendingView(detail.raw || ""));
     if (detail.kind === "lectura_caida") apply(classifyAddress(detail.raw || "So11111111111111111111111111111111111111112", cards, "caida"));

@@ -513,7 +513,7 @@ describe("studio", () => {
     assert.deepEqual(list.emojis, ["🚀", "🌕", "📈", "💎", "🙌", "🤑", "💰", "🔥", "🌙", "💸", "📊", "💲"]);
     assert.equal(Object.hasOwn(list, "nameHashes"), false);
     assert.deepEqual(list.emojiSequences, ["💎🙌"]);
-    assert.deepEqual(list.handles, ["stubxai", "CreadorSTUBX", "orvupi", "orvupiai", "CreadorORVUPI"]);
+    assert.deepEqual(list.handles, ["ORVUPI", "orvupi", "creadorORVUPI"]);
     assert.deepEqual(list.domains, ["stubxai.com", "t.me"]);
 
     const { analyze, exportAllowed } = await load<{ analyze: Analyze; exportAllowed: (title: string, body: string, list?: unknown, token?: string) => boolean }>(
@@ -557,12 +557,12 @@ describe("studio", () => {
       "😀 no, pero 💰 sí",
       "https://example.com/ruta",
       "www.example.org",
-      "mira stubxai . com",
+      "mira orvupi . com",
       "entra en t . me",
-      "@stubxai",
-      "@ stubxai",
-      "@CreadorSTUBX",
-      "＠stubxai",
+      "@ORVUPI",
+      "@ orvupi",
+      "@creadorORVUPI",
+      "＠orvupi",
       "1".repeat(32),
       "1".repeat(44),
       "Zz9".repeat(11),
@@ -601,9 +601,9 @@ describe("studio", () => {
       "admin de ORVUPI",
       "support team",
       "soporte de ORVUPI",
-      "telegram stubxai",
-      "stubxai",
-      "stubxai[.]com",
+      "telegram orvupi",
+      "orvupi",
+      "orvupi[.]com",
       "dm me",
       "escríbeme por privado",
       "$ORVUPI a la luna",
@@ -846,7 +846,7 @@ describe("studio", () => {
       "unofficial",
       "no/oficial",
       "contenido no oficial",
-      "@stubxaiextra",
+      "@ORVUPIextra",
       "12345678",
       "1".repeat(31),
       `${"1".repeat(20)}0${"1".repeat(20)}`,
@@ -1022,7 +1022,7 @@ describe("studio", () => {
     assert.equal(analyze("para mí la playa").blocked, false);
     assert.equal(analyze("Yo sí").blocked, false);
     assert.equal(analyze("elefante").blocked, false);
-    assert.equal(analyze("@CreadorSTUBX").hits.some((hit) => hit.kind === "handle"), true);
+    assert.equal(analyze("@creadorORVUPI").hits.some((hit) => hit.kind === "handle"), true);
     assert.equal(analyze("equipo de ORVUPI").hits.some((hit) => hit.kind === "term"), true);
     assert.equal(analyze("ganar").hits.some((hit) => hit.kind === "short" && hit.term === "ganar"), true);
     assert.equal(analyze("sube").hits.some((hit) => hit.kind === "short" && hit.term === "sube"), true);
@@ -1186,8 +1186,8 @@ describe("studio", () => {
     const show = script.slice(script.indexOf("function showLogoError"), script.indexOf("function readBlob"));
     assert.match(show, /message === "logo-size"\) logoSizeNotice\.hidden = false/);
     assert.match(show, /else logoNotice\.hidden = false/);
-    assert.match(script, /const stubxName = isStubxToken\(name\)/);
-    assert.match(script, /const avatar = stubxName \? avatarItem\(\) : null/);
+    assert.match(script, /const orvupiName = isOrvupiToken\(name\)/);
+    assert.match(script, /const avatar = orvupiName \? avatarItem\(\) : null/);
     assert.equal(/type="file"|<form\b|gallery|galería|FormData/.test(script), false);
     assert.match(script, /readLogoPng/);
     assert.match(script, /arrayBuffer/);
@@ -1301,17 +1301,17 @@ describe("studio", () => {
 
   test("una carta dibujada antes de cargar la mascota no se guarda", async () => {
     const { mascotCacheMark, mayCacheCard } = await load<{
-      mascotCacheMark: (state: { customLogo: boolean; stubx: boolean; avatarId: string; loaded: boolean }) => string;
+      mascotCacheMark: (state: { customLogo: boolean; project: boolean; avatarId: string; loaded: boolean }) => string;
       mayCacheCard: (mark: string) => boolean;
     }>("lib/logo.mjs");
-    const pending = mascotCacheMark({ customLogo: false, stubx: true, avatarId: "talon-avatar-512", loaded: false });
-    const ready = mascotCacheMark({ customLogo: false, stubx: true, avatarId: "talon-avatar-512", loaded: true });
+    const pending = mascotCacheMark({ customLogo: false, project: true, avatarId: "talon-avatar-512", loaded: false });
+    const ready = mascotCacheMark({ customLogo: false, project: true, avatarId: "talon-avatar-512", loaded: true });
     assert.equal(pending, "wait");
     assert.equal(ready, "ready");
     assert.notEqual(pending, ready);
     assert.equal(mayCacheCard(pending), false);
     assert.equal(mayCacheCard(ready), true);
-    assert.equal(mayCacheCard(mascotCacheMark({ customLogo: false, stubx: false, avatarId: "", loaded: false })), true);
+    assert.equal(mayCacheCard(mascotCacheMark({ customLogo: false, project: false, avatarId: "", loaded: false })), true);
     const cache = new Map<string, string>();
     const base = "1080x1080\u001fel nombre";
     const store = (mark: string, value: string) => {
@@ -1327,9 +1327,9 @@ describe("studio", () => {
   test("el nombre del token se dibuja y el logo se queda en un PNG local", async () => {
     const { renderCard } = await load<{ renderCard: (options: Record<string, unknown>) => Promise<Card> }>("lib/render.mjs");
     const { encodePng } = await load<{ encodePng: (rgba: Uint8ClampedArray, width: number, height: number) => Promise<Uint8Array> }>("lib/png.mjs");
-    const { clipToken, fitLogo, readLogoPng, inspectLogo, rejectsWithoutResize, isStubxToken, DEFAULT_TOKEN, TOKEN_MAX, LOGO_MAX_BYTES, LOGO_MAX_EDGE, LOGO_HARD_EDGE, LOGO_MAX_PIXELS, LOGO_DRAW_EDGE } = await load<{
+    const { clipToken, fitLogo, readLogoPng, inspectLogo, rejectsWithoutResize, isOrvupiToken, DEFAULT_TOKEN, TOKEN_MAX, LOGO_MAX_BYTES, LOGO_MAX_EDGE, LOGO_HARD_EDGE, LOGO_MAX_PIXELS, LOGO_DRAW_EDGE } = await load<{
       clipToken: (value: string) => string;
-      isStubxToken: (value: string) => boolean;
+      isOrvupiToken: (value: string) => boolean;
       fitLogo: (image: { width: number; height: number; rgba: Uint8ClampedArray }, edge: number) => { width: number; height: number };
       readLogoPng: (bytes: Uint8Array) => Promise<{ width: number; height: number; rgba: Uint8ClampedArray }>;
       inspectLogo: (bytes: Uint8Array) => Promise<{ mime: string; width: number; height: number; resizeWidth: number; resizeHeight: number; simplePng: boolean }>;
@@ -1358,9 +1358,9 @@ describe("studio", () => {
     assert.equal(clipToken("ORV\u200BUPI"), "ORVUPI");
     assert.equal(clipToken("LUNA\u202E"), "LUNA");
     assert.equal(clipToken("\u202E\u200BLUNA\u200F"), "LUNA");
-    assert.equal(isStubxToken("ORV\u200BUPI"), true);
-    assert.equal(isStubxToken("stubx"), false);
-    assert.equal(isStubxToken("LUNA"), false);
+    assert.equal(isOrvupiToken("ORV\u200BUPI"), true);
+    assert.equal(isOrvupiToken("orvu"), false);
+    assert.equal(isOrvupiToken("LUNA"), false);
     const otherToken = ["No oficial de ", "LUNA ni de ORVUPI"].join("");
     const otherTokenEn = ["Not official from ", "LUNA or ORVUPI"].join("");
     assert.equal(brandFor("es", "LUNA"), "");
@@ -1368,11 +1368,11 @@ describe("studio", () => {
     assert.equal(brandFor("es", "LUNA") === otherToken, false);
     assert.equal(brandFor("en", "LUNA") === otherTokenEn, false);
     assert.equal(brandFor("es", "ORVUPI"), "");
-    assert.equal(brandFor("en", "stubx"), "");
-    const stubxLooks = ["ORV\u2060UPI", "ORV\u00ADUPI", "ORV\u034FUPI", "\u180EORVUPI", "ORVUPI\uFEFF", "\uFF2F\uFF32\uFF36\uFF35\uFF30\uFF29", "orv\u2060upi"];
-    for (const sample of stubxLooks) {
+    assert.equal(brandFor("en", "orvu"), "");
+    const orvupiLooks = ["ORV\u2060UPI", "ORV\u00ADUPI", "ORV\u034FUPI", "\u180EORVUPI", "ORVUPI\uFEFF", "\uFF2F\uFF32\uFF36\uFF35\uFF30\uFF29", "orv\u2060upi"];
+    for (const sample of orvupiLooks) {
       assert.equal(clipToken(sample).toLowerCase(), "orvupi", sample);
-      assert.equal(isStubxToken(sample), true, sample);
+      assert.equal(isOrvupiToken(sample), true, sample);
       assert.equal(brandFor("es", sample), "", sample);
       assert.equal(brandFor("en", sample), "", sample);
     }
@@ -1621,7 +1621,7 @@ describe("studio", () => {
       clearDraft: (storage: ReturnType<typeof memoryStorage>) => void;
     }>("lib/draft.mjs");
     const storage = memoryStorage();
-    assert.equal(DRAFT_KEY, "stubx-studio-draft");
+    assert.equal(DRAFT_KEY, "orvupi-studio-draft");
     assert.equal(loadDraft(storage), null);
     saveDraft(storage, { title: "Hola" });
     assert.equal(loadDraft(storage)?.title, "Hola");
@@ -1887,10 +1887,10 @@ describe("studio", () => {
   });
 
   test("la lista de la CI revisa web/v2 y la rama", (t) => {
-    const tokens = deniedTokens(process.env.STUBX_NAME_DENYLIST ?? "");
+    const tokens = deniedTokens(process.env.ORVUPI_NAME_DENYLIST ?? "");
     if (tokens.length === 0) {
       t.skip(
-        "STUBX_NAME_DENYLIST no está definida: se omite la revisión anti-nombre de web/v2 y de la rama. Seguridad la hace a mano antes de cada merge.",
+        "ORVUPI_NAME_DENYLIST no está definida: se omite la revisión anti-nombre de web/v2 y de la rama. Seguridad la hace a mano antes de cada merge.",
       );
       return;
     }

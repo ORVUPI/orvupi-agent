@@ -64,7 +64,7 @@ if (command === "scan:forbidden") {
         `- Simulacro: ${e.detail.drill.ran ? (e.detail.drill.ok ? "verde" : "rojo") : "no ejecutado"} (${e.detail.drill.passed}/${e.detail.drill.steps} pasos)`,
         `- Hash: \`${e.hash}\``,
         `- Ancla: \`logs/${result.anchor}\``,
-        "- Modo: prototipo. El agente de este repositorio no publica en redes sociales, no firma y no mueve fondos. Los posts de @stubxai los publica otro agente de IA, fuera de este repositorio.",
+        "- Modo: prototipo. El agente de este repositorio no publica en redes sociales, no firma y no mueve fondos. Los posts de @ORVUPI los publica otro agente de IA, fuera de este repositorio.",
         "",
       ].join("\n"),
     );

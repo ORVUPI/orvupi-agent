@@ -1,6 +1,29 @@
 /* ORVUPI web v2. Mismo origen. Sin service worker y sin red. */
 (function () {
-  var LANG_KEY = "stubx-lab-lang";
+  var LANG_KEY = "orvupi-lab-lang";
+  // Claves guardadas antes del 16-10-2026 con el nombre anterior: se copian a orvupi-*,
+  // se comprueba la copia y solo entonces se borra la antigua. Si ya hay una clave nueva, manda la nueva.
+  var LEGACY_KEY_PREFIX = "stubx-";
+  function migrateLegacyKeys(storage) {
+    try {
+      var old = [];
+      for (var i = 0; i < storage.length; i += 1) {
+        var key = storage.key(i);
+        if (key && key.indexOf(LEGACY_KEY_PREFIX) === 0) old.push(key);
+      }
+      old.forEach(function (key) {
+        var next = "orvupi-" + key.slice(LEGACY_KEY_PREFIX.length);
+        var value = storage.getItem(key);
+        if (value === null) return;
+        if (storage.getItem(next) === null) storage.setItem(next, value);
+        if (storage.getItem(next) !== null) storage.removeItem(key);
+      });
+    } catch (error) {
+      /* Sin almacenamiento o lleno: las claves antiguas se quedan como estaban. */
+    }
+  }
+  try { migrateLegacyKeys(window.localStorage); } catch (error) { /* sin localStorage */ }
+  try { migrateLegacyKeys(window.sessionStorage); } catch (error) { /* sin sessionStorage */ }
   // Contrato ORVUPI: aún no existe (ver /shared/orvupi-contract.json). Sin contrato no hay nada que copiar.
   var OFFICIAL_CA = "";
   document.documentElement.classList.add("js");
@@ -58,7 +81,7 @@
           /* El idioma sigue en la página aunque el navegador no lo guarde. */
         }
         apply(lang);
-        document.dispatchEvent(new CustomEvent("stubx-lang", { detail: lang }));
+        document.dispatchEvent(new CustomEvent("orvupi-lang", { detail: lang }));
       });
     });
 
@@ -121,7 +144,7 @@
         var input = document.getElementById("direccion-token");
         var raw = input && input.value ? input.value : "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
         document.dispatchEvent(
-          new CustomEvent("stubx-verify-preview", {
+          new CustomEvent("orvupi-verify-preview", {
             detail: { kind: "lectura_caida", raw: raw },
           }),
         );

@@ -209,18 +209,13 @@ describe("web ORVUPI", () => {
     for (const gone of ["/tokenomics/", "/status/", "/proofs/", "/build/", "/archivo"]) assert.equal(sitemap.includes(gone), false, gone);
   });
 
-  test("STUBX y su dirección no salen en ningún archivo publicado, salvo claves técnicas", () => {
+  test("el nombre anterior y su dirección no salen en ningún archivo publicado, salvo el dominio y la migración", () => {
+    const legacy = ["stu", "bx"].join("");
     const allowed = [
-      /stubxai\.com/g,
-      /stubx-(?:verify|cuaderno|lang|lab-lang|lab-mision-01|lab-leccion-[a-z]+|lab-|lectura|studio-draft|resumen|verify-preview|verify-draft|logs-)/g,
-      /stubx\.(?:notebook\.card\.evm|notebook\.card|notebook\.export|market\.v1|networks\.v1|ppm)/g,
-      /STUBX_(?:VERIFY|LAB|PUBLISH)/g,
-      /\b(?:isStubxToken|officialStubx|looksLikeStubx|stubxLooks|stubxName|notStubx|stubxResetEvm|stubxRedPedida|stubxRepintarRed|stubxConsultarRed)\b/g,
-      /\bconst stubx\b|\bstubx,|!stubx\b|\bstubx:|\bstubx\b(?= \?|\))/g,
-      /CreadorSTUBX/g,
-      /"stubxai"/g,
-      /stubx-verify\/0\.1/g,
+      new RegExp(`${legacy}ai\\.com`, "gi"),
+      
     ];
+    const migrationFiles = new Set(["shared/legacy-names.js", "assets/shell.js"]);
     const hits: string[] = [];
     for (const file of walk(siteRoot())) {
       const rel = path.relative(siteRoot(), file).split(path.sep).join("/");
@@ -229,7 +224,8 @@ describe("web ORVUPI", () => {
       let text = readFileSync(file, "utf8");
       if (rel === "shared/solana-read.js") text = text.replace(/export const LEGACY_FLAG_MINT = "[^"]+";/, "");
       for (const re of allowed) text = text.replace(re, "");
-      if (/stubx/i.test(text)) hits.push(`stubx ${rel}`);
+      if (migrationFiles.has(rel)) text = text.replace(new RegExp(`"${legacy}-?"|\\$\\{LEGACY_PREFIX\\}`, "g"), "");
+      if (new RegExp(legacy, "i").test(text)) hits.push(`nombre anterior ${rel}`);
       if (/tal[oó]n/i.test(text.replace(/fondo-talon|function talon|talon\(rgba/g, ""))) hits.push(`talon ${rel}`);
       if (rel !== "lab/index.html" && rel !== "assets/mission.js" && !rel.startsWith("modules/lab/") && text.includes(CA)) hits.push(`mint ${rel}`);
     }
@@ -245,7 +241,7 @@ describe("web ORVUPI", () => {
     assert.match(read("assets/shell.js"), /var OFFICIAL_CA = "";/);
     assert.match(read("assets/verify.js"), /"Contrato ORVUPI: aún no existe\."/);
     const bundle = read("assets/verify.js");
-    const data = JSON.parse(bundle.slice(bundle.indexOf("{", bundle.indexOf("const STUBX_VERIFY")), bundle.indexOf(";\n", bundle.indexOf("const STUBX_VERIFY")))) as { registry: unknown[]; evm: unknown[]; cards: { mint: string }[] };
+    const data = JSON.parse(bundle.slice(bundle.indexOf("{", bundle.indexOf("const ORVUPI_VERIFY")), bundle.indexOf(";\n", bundle.indexOf("const ORVUPI_VERIFY")))) as { registry: unknown[]; evm: unknown[]; cards: { mint: string }[] };
     assert.deepEqual(data.registry, []);
     assert.deepEqual(data.evm, []);
     assert.deepEqual(data.cards.map((card) => card.mint), [USDC]);

@@ -15,7 +15,7 @@ export function bundleMission(engineJs: string, uiJs: string, data: unknown): st
     .replaceAll(/^export /gm, "")
     .trim();
   const ui = uiJs.replaceAll("\r\n", "\n").trim();
-  return `"use strict";\n(() => {\nconst STUBX_LAB = ${jsonForScript(data)};\n${engine}\n${ui}\nbootLab();\n})();\n`;
+  return `"use strict";\n(() => {\nconst ORVUPI_LAB = ${jsonForScript(data)};\n${engine}\n${ui}\nbootLab();\n})();\n`;
 }
 
 export function bundleVerify(lookupJs: string, signalsJs: string, summaryJs: string, uiJs: string, data: unknown): string {
@@ -32,7 +32,7 @@ export function bundleVerify(lookupJs: string, signalsJs: string, summaryJs: str
   const signals = signalsJs.replaceAll("\r\n", "\n").replaceAll(/^\/\/# sourceMappingURL=.*$/gm, "").trim();
   const summary = summaryJs.replaceAll("\r\n", "\n").replaceAll(/^\/\/# sourceMappingURL=.*$/gm, "").trim();
   const ui = uiJs.replaceAll("\r\n", "\n").trim();
-  return `"use strict";\n(() => {\nconst STUBX_VERIFY = ${jsonForScript(data)};\n${lookup}\n${signals}\n${summary}\n${ui}\nbootVerify();\n})();\n`;
+  return `"use strict";\n(() => {\nconst ORVUPI_VERIFY = ${jsonForScript(data)};\n${lookup}\n${signals}\n${summary}\n${ui}\nbootVerify();\n})();\n`;
 }
 
 function stripExports(source: string): string {

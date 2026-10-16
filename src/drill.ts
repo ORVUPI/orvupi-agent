@@ -150,7 +150,7 @@ export function runKillSwitchDrill(options: DrillOptions = {}): DrillReport {
   const repoStateHashBefore = sha256File(repoState);
 
   const ownDir = options.workDir === undefined;
-  const dir = options.workDir ?? mkdtempSync(path.join(tmpdir(), "stubx-drill-"));
+  const dir = options.workDir ?? mkdtempSync(path.join(tmpdir(), "orvupi-drill-"));
   const statePath = path.join(dir, "killswitch.json");
   const steps: DrillStep[] = [];
 

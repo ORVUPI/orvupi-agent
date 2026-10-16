@@ -1,7 +1,7 @@
 import path from "node:path";
 import { isRecord, readStrictJson, sameKeys } from "./json-file.js";
 
-export const STUBX_MINT = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
+export const PREVIOUS_MINT = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
 
 const MINT_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 
@@ -24,8 +24,8 @@ export function loadPublicMint(root: string): MintLoad {
   if (read.value.version !== 1 || typeof read.value.mint !== "string" || !MINT_PATTERN.test(read.value.mint)) {
     return { ok: false, reason: "invalid" };
   }
-  if (read.value.mint !== STUBX_MINT) {
+  if (read.value.mint !== PREVIOUS_MINT) {
     return { ok: false, reason: "mismatch" };
   }
-  return { ok: true, mint: STUBX_MINT };
+  return { ok: true, mint: PREVIOUS_MINT };
 }

@@ -501,7 +501,7 @@ async function fetchChecked(start: string, input: {
       : await input.fetchImpl(allowed.url, {
           method: "GET",
           redirect: "manual",
-          headers: { accept: "*/*", "user-agent": "stubx-verify/0.1" },
+          headers: { accept: "*/*", "user-agent": "orvupi-verify/0.1" },
           signal: input.signal,
         });
     if (response.status >= 300 && response.status < 400) {
@@ -578,7 +578,7 @@ function requestOne(url: string, address: string, maxBytes: number, signal: Abor
       servername: target.hostname,
       headers: {
         accept: "*/*",
-        "user-agent": "stubx-verify/0.1",
+        "user-agent": "orvupi-verify/0.1",
         host: target.host,
       },
       family: socketOptions.family,

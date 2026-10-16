@@ -1,6 +1,6 @@
 # Límites del agente ORVUPI (v1)
 
-Política en lenguaje llano. La copia máquina es [`policy/limits.json`](policy/limits.json) (`id`: `stubx-agent-limits`, `version`: `1.0.0`). Un test falla si el markdown, el JSON y el código no coinciden.
+Política en lenguaje llano. La copia máquina es [`policy/limits.json`](policy/limits.json) (`id`: `orvupi-agent-limits`, `version`: `1.0.0`). Un test falla si el markdown, el JSON y el código no coinciden.
 
 Esto es un prototipo. ORVUPI todavía no tiene contrato. Los riesgos se explican en https://stubxai.com/risks/. El agente no tiene claves.
 

@@ -481,7 +481,7 @@ describe("datos de mercado", () => {
     const market = await loadMarketModule();
     assert.equal(market.marketNormalizeToken("STU\u200BBX"), normalizeToken("STU\u200BBX"));
     assert.equal(market.marketNormalizeToken("S\u03A4UBX"), normalizeToken("S\u03A4UBX"));
-    assert.equal(market.marketNormalizeToken("STU\u200BBX"), "stubx");
+    assert.equal(market.marketNormalizeToken("ORV\u200BUPI"), "orvupi");
     const clone = market.normalizeUpstream(
       200,
       JSON.stringify([

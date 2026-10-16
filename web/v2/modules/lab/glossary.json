@@ -166,8 +166,8 @@
         "en": "The virtual_token_reserves or virtual_quote_reserves field. The card keeps it apart from the real curve amount. On the classic curve, and with the default quote, the quote amount is in lamports."
       },
       "example": {
-        "es": "En una ficha de un token en la curva, la cantidad virtual y la cantidad real de tokens salen como números distintos, cada una con su estado. La virtual sirve para el precio; no se puede retirar.",
-        "en": "On a card for a token on the curve, the virtual and the real amounts of tokens appear as different numbers, each with its own status. The virtual one is used for the price; it cannot be withdrawn."
+        "es": "En una ficha de un token en la curva, la cantidad virtual y la cantidad real de tokens salen como números distintos, cada una con su estado. La virtual entra en el cálculo de la curva; no se puede retirar.",
+        "en": "On a card for a token on the curve, the virtual and the real amounts of tokens appear as different numbers, each with its own status. The virtual one is part of the curve calculation; it cannot be withdrawn."
       },
       "doesNotConclude": {
         "es": "La cantidad virtual de la curva no es una cantidad retirable. Sumarla con la real no crea una única cantidad disponible.",

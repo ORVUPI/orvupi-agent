@@ -14,8 +14,8 @@ import { isRecord, sameKeys } from "./json-file.js";
 
 export const LOG_FILE = "agent-log.jsonl";
 export const ANCHOR_DIR = "anchors";
-export const ANCHOR_HEADER = "stubx-agent public log anchor v1";
-export const REPO_SLUG = "stubxai/stubx-agent";
+export const ANCHOR_HEADER = "orvupi-agent public log anchor v1";
+export const REPO_SLUG = "orvupi/orvupi-agent";
 export const MAX_LINE_BYTES = 4096;
 export const MAX_ANCHOR_BYTES = 1024;
 export const MAX_OTS_BYTES = 65536;
@@ -24,15 +24,15 @@ export const MAX_OTS_BYTES = 65536;
  * Fixed text written into every entry, forever. The mode ("prototipo") and this
  * note are fixed in code: if the agent ever takes actions with effects outside
  * this repository, both must change first, in a public commit (see LOGS.md).
- * Changed on 2026-09-28 (P5) to name the @stubxai posts; earlier entries keep the earlier note (append-only).
+ * Changed on 2026-09-28 (P5) to name the @ORVUPI posts; earlier entries keep the earlier note (append-only).
  */
 export const DAILY_NOTE =
-  "Prototipo. El agente de este repositorio no publica en redes sociales, no firma y no mueve fondos. Los posts de @stubxai los prepara y publica otro agente de IA, fuera de este repositorio, a partir de textos aprobados antes de publicarse. Esta entrada la escribe el workflow daily-log y solo anota el estado del kill-switch y el resultado del simulacro en este repositorio.";
+  "Prototipo. El agente de este repositorio no publica en redes sociales, no firma y no mueve fondos. Los posts de @ORVUPI los prepara y publica otro agente de IA, fuera de este repositorio, a partir de textos aprobados antes de publicarse. Esta entrada la escribe el workflow daily-log y solo anota el estado del kill-switch y el resultado del simulacro en este repositorio.";
 
 const ISO_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 const HEX64 = /^[0-9a-f]{64}$/;
 const SHA40 = /^[0-9a-f]{40}$/;
-const RUN_URL = /^https:\/\/github\.com\/stubxai\/stubx-agent\/actions\/runs\/[1-9]\d{0,19}$/;
+const RUN_URL = /^https:\/\/github\.com\/orvupi\/orvupi-agent\/actions\/runs\/[1-9]\d{0,19}$/;
 const ANCHOR_NAME = /^(\d{4}-\d{2}-\d{2})-(\d{6})\.txt$/;
 
 export type KillSwitchSnapshot = {
@@ -59,7 +59,7 @@ export type PublicLogEntry = {
   v: 1;
   seq: number;
   ts: string;
-  actor: "stubx-agent";
+  actor: "orvupi-agent";
   action: "daily-status";
   detail: DailyDetail;
   evidence: string | null;
@@ -139,7 +139,7 @@ export function buildPublicLogEntry(input: {
     v: 1 as const,
     seq: input.seq,
     ts: input.ts,
-    actor: "stubx-agent" as const,
+    actor: "orvupi-agent" as const,
     action: "daily-status" as const,
     detail: input.detail,
     evidence: input.evidence,
@@ -255,7 +255,7 @@ export function parseLogText(text: string): { entries: PublicLogEntry[]; lines: 
     if (canonicalJson(value) !== line) {
       problems.push(`${where}: no está en forma canónica`);
     }
-    if (value.v !== 1 || value.actor !== "stubx-agent" || value.action !== "daily-status") {
+    if (value.v !== 1 || value.actor !== "orvupi-agent" || value.action !== "daily-status") {
       problems.push(`${where}: v, actor o action no admitidos`);
     }
     if (value.seq !== n) {

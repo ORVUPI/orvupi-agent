@@ -99,13 +99,13 @@ async function storeLegacy(page, records) {
       };
     });
     await new Promise((resolve, reject) => {
-      const request = indexedDB.deleteDatabase("stubx-cuaderno");
+      const request = indexedDB.deleteDatabase("orvupi-cuaderno");
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
       request.onblocked = () => resolve();
     });
     await new Promise((resolve, reject) => {
-      const request = indexedDB.open("stubx-cuaderno", 1);
+      const request = indexedDB.open("orvupi-cuaderno", 1);
       request.onupgradeneeded = () => {
         const db = request.result;
         if (!db.objectStoreNames.contains("records")) db.createObjectStore("records", { keyPath: "id" });
@@ -144,7 +144,7 @@ test("una ficha vieja gana red y dirección y entra en la lista", async ({ page 
   await expect(page.locator("#detener")).toBeHidden();
   await noticeNextToButton(page);
   const stored = await page.evaluate(() => new Promise((resolve) => {
-    const request = indexedDB.open("stubx-cuaderno");
+    const request = indexedDB.open("orvupi-cuaderno");
     request.onsuccess = () => {
       const db = request.result;
       const get = db.transaction("records", "readonly").objectStore("records").get("11111111-1111-4111-8111-111111111111");

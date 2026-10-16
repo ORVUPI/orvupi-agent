@@ -6,7 +6,7 @@ Un registro público de solo añadir: [`logs/agent-log.jsonl`](logs/agent-log.js
 
 Lo escribe el workflow `daily-log`, programado cada día a las 06:23 UTC y que también se puede lanzar a mano con «Run workflow». GitHub puede retrasar o saltarse ejecuciones programadas, y las desactiva si el repositorio pasa 60 días sin actividad. El historial de Actions muestra las que se han hecho de verdad:
 
-`https://github.com/stubxai/stubx-agent/actions/workflows/daily-log.yml`
+`https://github.com/ORVUPI/orvupi-agent/actions/workflows/daily-log.yml`
 
 ## Qué se anota
 
@@ -20,13 +20,13 @@ El agente de este repositorio es un prototipo y hoy no hace acciones con efecto 
 - enlace a la ejecución de Actions que la ha escrito
 - huella sha256 del contenido, hash de la línea anterior y hash de la línea
 
-Los posts de [@stubxai](https://x.com/stubxai) no salen de este repositorio: los prepara y publica otro agente de IA, a partir de textos aprobados antes de publicarse. Este log no los registra y el kill-switch de este repositorio no los para.
+Los posts de [@ORVUPI](https://x.com/orvupi) no salen de este repositorio: los prepara y publica otro agente de IA, a partir de textos aprobados antes de publicarse. Este log no los registra y el kill-switch de este repositorio no los para.
 
 Si el kill-switch está activado o no se puede leer, el simulacro no se ejecuta y la entrada lo dice. El registro sigue escribiéndose, como excepción declarada en [KILL-SWITCH.md](KILL-SWITCH.md): solo anota el estado, no ejecuta ninguna acción del agente y no tiene efecto on-chain. Así se ve en público que el interruptor está activado.
 
 No se anotan datos personales, secretos, direcciones de wallet ni datos de la cadena de bloques. No hay métricas.
 
-El campo `actor` vale `stubx-agent` porque identifica el paquete que escribe el log. No es una acción del agente.
+El campo `actor` vale `orvupi-agent` porque identifica el paquete que escribe el log. No es una acción del agente.
 
 ## Qué no demuestra
 
@@ -34,7 +34,7 @@ El campo `actor` vale `stubx-agent` porque identifica el paquete que escribe el 
 - Una entrada con el simulacro en verde solo demuestra lo que ese simulacro comprueba, en esa versión del código.
 - El agente sigue sin hacer acciones con efecto fuera de este repositorio. Si algún día las hace, se explicará antes en este archivo y se anotarán aquí.
 - El modo `prototipo` y la nota de cada entrada están fijados en el código. Si algún día el agente hace acciones con efecto fuera de este repositorio, se cambiarán antes, en un commit público.
-- Desde el 28-09-2026 la nota de cada entrada distingue el agente de este repositorio de los posts de @stubxai. Las entradas anteriores conservan la nota anterior («El agente no publica en redes sociales…»), que se refiere solo al agente de este repositorio; no se reescriben, porque el log es de solo añadir.
+- Desde el 28-09-2026 la nota de cada entrada distingue el agente de este repositorio de los posts de @ORVUPI. Las entradas anteriores conservan la nota anterior («El agente no publica en redes sociales…»), que se refiere solo al agente de este repositorio; no se reescriben, porque el log es de solo añadir.
 
 ## Sello de tiempo (OpenTimestamps)
 
@@ -84,7 +84,7 @@ El sello `2026-10-03-000008` seguía pendiente en el repo a las 13:59. El 03-10 
 Pasos para repetirlo (Linux o macOS, con Python 3 y curl):
 
 ```bash
-git clone https://github.com/stubxai/stubx-agent && cd stubx-agent
+git clone https://github.com/ORVUPI/orvupi-agent && cd orvupi-agent
 python3 -m venv /tmp/ots && /tmp/ots/bin/pip install --require-hashes --no-deps -r .github/ots-requirements.txt
 A=logs/anchors/2026-09-26-000001.txt
 sha256sum "$A"                      # debe coincidir con «File sha256 hash» de la línea siguiente
@@ -110,7 +110,7 @@ El workflow tiene dos jobs:
 
 Marcada el 05-10-2026, después de comprobar:
 
-1. Entradas escritas por el workflow `daily-log` en `main` en al menos 7 días distintos (UTC): hoy hay 10 (`npm run logs:status` → `daysCriterionMet: true`), desde el 26-09 hasta el 05-10. Ejemplo de ejecución pública del 05-10: https://github.com/stubxai/stubx-agent/actions/runs/37274282121
+1. Entradas escritas por el workflow `daily-log` en `main` en al menos 7 días distintos (UTC): hoy hay 10 (`npm run logs:status` → `daysCriterionMet: true`), desde el 26-09 hasta el 05-10. Ejemplo de ejecución pública del 05-10: https://github.com/ORVUPI/orvupi-agent/actions/runs/37274282121
 2. Al menos un sello de OpenTimestamps confirmado en Bitcoin y comprobado a mano (pasos en «Comprobación manual de los sellos» arriba): el ancla `2026-09-26-000001` está en el bloque **968752**; el merkle root coincide con blockstream.info y mempool.space.
 3. Revisión, incluido el OK legal.
 
@@ -124,4 +124,4 @@ La acción `log:append` del agente sigue siendo otra cosa: deja una nota en memo
 
 ## English
 
-`logs/agent-log.jsonl` is a public, append-only, hash-chained log written by the `daily-log` workflow (scheduled daily at 06:23 UTC, also runnable by hand; GitHub may delay or skip scheduled runs). The agent in this repository is a prototype and takes no actions with effects outside this repository (it posts nothing to social media, signs nothing and moves no funds), so each entry only records data produced by the repository in that run: the kill-switch state, the result of the kill-switch drill, the commit and the Actions run link. Anchors in `logs/anchors/` are submitted to OpenTimestamps (free, no wallet, relies on public calendar servers). A proof stays pending for hours until it is confirmed in a Bitcoin block; once confirmed, it only shows that the anchor existed no later than that block's time, not that the log is true or complete. Bitcoin and OpenTimestamps are used only as a public time record; they have no link to STUBX or the token and give it no backing, security or value. The daily entry is still written when the kill-switch is engaged or unreadable (see KILL-SWITCH.md); it only records that state and has no on-chain effect. `npm run logs:verify` recomputes the chain and checks the anchors (it only checks that each `.ots` file exists, not that it is confirmed). CI rejects any change that edits or removes existing lines; commits made by the `daily-log` workflow itself do not trigger CI, but that workflow runs the same checks before each commit. The chain shows that published entries were not changed later; it does not show that everything was logged. The PPM box was marked on 2026-10-05 after entries by the `daily-log` workflow on `main` on at least 7 distinct days (UTC), at least one OpenTimestamps proof confirmed by hand (see the manual check section; Bitcoin block 968752), and review including legal sign-off. Marked only means a public daily verifiable log of the kill-switch state and drill exists; it does not mean everything the agent does is logged or that the notes are true. If the chain or a confirmed stamp stops checking out, the box is unmarked. `npm run logs:status` is read-only: it counts distinct UTC days with entries linked to an Actions run of this repository and says whether they reach 7; it never marks the box (it always answers `box: "pending"`). Posts on @stubxai do not come from this repository: a separate AI agent prepares and publishes them from texts approved before publication. This log does not record them and this repository's kill-switch does not stop them. Since 2026-09-28 the fixed note of each entry says so; earlier entries keep the earlier note, which refers only to the agent in this repository, and are not rewritten (append-only).
+`logs/agent-log.jsonl` is a public, append-only, hash-chained log written by the `daily-log` workflow (scheduled daily at 06:23 UTC, also runnable by hand; GitHub may delay or skip scheduled runs). The agent in this repository is a prototype and takes no actions with effects outside this repository (it posts nothing to social media, signs nothing and moves no funds), so each entry only records data produced by the repository in that run: the kill-switch state, the result of the kill-switch drill, the commit and the Actions run link. Anchors in `logs/anchors/` are submitted to OpenTimestamps (free, no wallet, relies on public calendar servers). A proof stays pending for hours until it is confirmed in a Bitcoin block; once confirmed, it only shows that the anchor existed no later than that block's time, not that the log is true or complete. Bitcoin and OpenTimestamps are used only as a public time record; they have no link to STUBX or the token and give it no backing, security or value. The daily entry is still written when the kill-switch is engaged or unreadable (see KILL-SWITCH.md); it only records that state and has no on-chain effect. `npm run logs:verify` recomputes the chain and checks the anchors (it only checks that each `.ots` file exists, not that it is confirmed). CI rejects any change that edits or removes existing lines; commits made by the `daily-log` workflow itself do not trigger CI, but that workflow runs the same checks before each commit. The chain shows that published entries were not changed later; it does not show that everything was logged. The PPM box was marked on 2026-10-05 after entries by the `daily-log` workflow on `main` on at least 7 distinct days (UTC), at least one OpenTimestamps proof confirmed by hand (see the manual check section; Bitcoin block 968752), and review including legal sign-off. Marked only means a public daily verifiable log of the kill-switch state and drill exists; it does not mean everything the agent does is logged or that the notes are true. If the chain or a confirmed stamp stops checking out, the box is unmarked. `npm run logs:status` is read-only: it counts distinct UTC days with entries linked to an Actions run of this repository and says whether they reach 7; it never marks the box (it always answers `box: "pending"`). Posts on @ORVUPI do not come from this repository: a separate AI agent prepares and publishes them from texts approved before publication. This log does not record them and this repository's kill-switch does not stop them. Since 2026-09-28 the fixed note of each entry says so; earlier entries keep the earlier note, which refers only to the agent in this repository, and are not rewritten (append-only).

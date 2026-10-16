@@ -355,7 +355,7 @@ describe("lectura EVM en Base", () => {
     assert.match(rollback, /onblocked/);
     assert.match(rollback, /onversionchange/);
     assert.match(rollback, /VersionError/);
-    assert.equal(model.validateCard({ schema: "stubx.notebook.card.evm" }).ok, false);
+    assert.equal(model.validateCard({ schema: "orvupi.notebook.card.evm" }).ok, false);
   });
 
   test("dirección cero, EIP-55, owner vacío, bytes altos, símbolo y tope de 500 KB", async () => {

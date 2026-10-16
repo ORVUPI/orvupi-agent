@@ -8,7 +8,7 @@ export { EXPECTED_LIMITS, KILL_SWITCH_CANNOT, loadPolicy } from "./limits.js";
 export { buildLogEntry, verifyChain } from "./log.js";
 export { createOrchestrator, Orchestrator } from "./orchestrator.js";
 export { buildPpmReport, evaluatePpmHonesty } from "./ppm.js";
-export { loadPublicMint, STUBX_MINT } from "./public-mint.js";
+export { loadPublicMint, PREVIOUS_MINT } from "./public-mint.js";
 export { StubAgent } from "./stub-agent.js";
 export { ALLOWED_ACTIONS, CANNOT_IDS, LIMIT_IDS } from "./types.js";
 export type { DispatchResult, LimitId, LogEntry, MemoryEvent } from "./types.js";

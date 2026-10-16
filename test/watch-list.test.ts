@@ -36,7 +36,7 @@ interface Card {
   slot: number | null;
   slotStatus: string;
   errors: Array<{ method: string; message: string; httpStatus?: number | null; at?: string }>;
-  officialStubx: boolean;
+  officialProject: boolean;
   [key: string]: unknown;
 }
 
@@ -243,13 +243,13 @@ describe("revisar direcciones guardadas", () => {
     assert.match(notice.AVISO_GUARDAR.en, /"Save this lookup"/);
     assert.equal(source.includes("innerHTML"), false);
     const actions = readFileSync(path.join(root, "web/v2/assets/verificar-acciones.mjs"), "utf8");
-    assert.match(actions, /stubx-cuaderno/);
+    assert.match(actions, /orvupi-cuaderno/);
     assert.match(actions, /stampIdentity/);
     assert.match(actions, /openNotebookDb\(DB_NAME/);
     assert.match(source, /Cierra las otras pestañas de stubxai.com y recarga\./);
     assert.match(actions, /Cierra las otras pestañas de stubxai.com y recarga\./);
     const rollback = readFileSync(path.join(root, "ROLLBACK.md"), "utf8");
-    const back = "Para volver atrás: cargar otra vez esta página, o borrar en el navegador los datos del sitio de la base llamada stubx-cuaderno.";
+    const back = "Para volver atrás: cargar otra vez esta página, o borrar en el navegador los datos del sitio de la base llamada orvupi-cuaderno.";
     assert.equal(rollback.includes(back), true);
     assert.equal(rollback.includes("36eea1a3"), true);
     assert.equal(rollback.includes("f2a24c14"), true);

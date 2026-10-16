@@ -3,8 +3,9 @@
  * sin borrar las fichas que ya estaban.
  */
 import { NOTEBOOK_DB_VERSION, migrateStoredRecord } from "./notebook-model.js";
+import { LEGACY_DB_NAME } from "./legacy-names.js";
 
-export const NOTEBOOK_DB_NAME = "stubx-cuaderno";
+export const NOTEBOOK_DB_NAME = "orvupi-cuaderno";
 export const NOTEBOOK_STORE = "records";
 
 /** Dirección de la ficha: la de Base (address) o el mint de Solana. */
@@ -38,7 +39,7 @@ function openCurrent(name, hooks, fallback) {
   };
 }
 
-export function openNotebookDb(name = NOTEBOOK_DB_NAME, hooks = {}) {
+function openNotebookDbOnly(name = NOTEBOOK_DB_NAME, hooks = {}) {
   return new Promise((resolve, reject) => {
     if (!("indexedDB" in globalThis)) {
       reject(new Error("indexedDB"));
@@ -123,4 +124,94 @@ export function notebookDbClear(db) {
     request.onsuccess = () => resolve();
     request.onerror = () => reject(request.error);
   });
+}
+
+/** Abre la base anterior solo si ya existe. No la crea. */
+function openLegacyIfPresent() {
+  return new Promise((resolve) => {
+    let request;
+    try {
+      request = indexedDB.open(LEGACY_DB_NAME);
+    } catch {
+      resolve(null);
+      return;
+    }
+    request.onupgradeneeded = (event) => {
+      if (event.oldVersion === 0 && request.transaction) request.transaction.abort();
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = (event) => {
+      if (event && event.preventDefault) event.preventDefault();
+      resolve(null);
+    };
+    request.onblocked = () => resolve(null);
+  });
+}
+
+function readAll(db) {
+  if (!db.objectStoreNames.contains(NOTEBOOK_STORE)) return Promise.resolve([]);
+  return notebookDbAll(db);
+}
+
+function getById(db, id) {
+  return new Promise((resolve, reject) => {
+    const request = db.transaction(NOTEBOOK_STORE, "readonly").objectStore(NOTEBOOK_STORE).get(id);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function deleteDb(name) {
+  return new Promise((resolve) => {
+    const request = indexedDB.deleteDatabase(name);
+    request.onsuccess = request.onerror = request.onblocked = () => resolve();
+  });
+}
+
+/**
+ * Copia el cuaderno guardado con el nombre anterior a la base ORVUPI.
+ * Primero copia, luego comprueba que cada entrada está en la base nueva y solo
+ * entonces borra la anterior. Si algo falla, la base anterior se queda como estaba.
+ */
+export async function migrateLegacyNotebook(hooks = {}) {
+  if (!("indexedDB" in globalThis)) return { migrated: 0, kept: false };
+  const legacy = await openLegacyIfPresent();
+  if (!legacy) return { migrated: 0, kept: false };
+  let records = [];
+  try {
+    records = await readAll(legacy);
+  } catch {
+    legacy.close();
+    return { migrated: 0, kept: true };
+  }
+  const db = await openNotebookDbOnly(NOTEBOOK_DB_NAME, hooks);
+  try {
+    for (const record of records) {
+      if (!record || !record.id) continue;
+      const existing = await getById(db, record.id);
+      if (existing) continue;
+      const next = migrateStoredRecord(record);
+      await notebookDbPut(db, next && next.record ? next.record : record);
+    }
+    for (const record of records) {
+      if (!record || !record.id) continue;
+      if (!(await getById(db, record.id))) throw new Error("migración incompleta");
+    }
+  } catch {
+    db.close();
+    legacy.close();
+    return { migrated: 0, kept: true };
+  }
+  db.close();
+  legacy.close();
+  await deleteDb(LEGACY_DB_NAME);
+  return { migrated: records.length, kept: false };
+}
+
+let migration = null;
+
+export function openNotebookDb(name = NOTEBOOK_DB_NAME, hooks = {}) {
+  if (name !== NOTEBOOK_DB_NAME) return openNotebookDbOnly(name, hooks);
+  if (!migration) migration = migrateLegacyNotebook(hooks).catch(() => ({ migrated: 0, kept: true }));
+  return migration.then(() => openNotebookDbOnly(name, hooks));
 }

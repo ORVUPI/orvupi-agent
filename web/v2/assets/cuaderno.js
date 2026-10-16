@@ -57,7 +57,7 @@ import {
   withinStoreLimit,
 } from "../shared/notebook-model.js";
 
-const DB_NAME = "stubx-cuaderno";
+const DB_NAME = "orvupi-cuaderno";
 
 const COPY = {
   es: {
@@ -408,7 +408,7 @@ function renderEvmCard(card) {
 }
 
 function renderAnyCard(card, options) {
-  if (card && card.schema === "stubx.notebook.card.evm") return renderEvmCard(card, options);
+  if (card && card.schema === "orvupi.notebook.card.evm") return renderEvmCard(card, options);
   return renderCard(card, options);
 }
 
@@ -529,7 +529,7 @@ function dataRow(list, label, status, value, field) {
 function renderCard(card, options) {
   const article = el("article", { class: "ficha" });
   article.append(text("p", staleLine(card.consultedAt, lang()), { class: "sello" }));
-  article.append(text("p", card.officialStubx ? t("official") : t("notOfficial"), { class: "franja-identidad" }));
+  article.append(text("p", card.officialProject ? t("official") : t("notOfficial"), { class: "franja-identidad" }));
   if (card.partial) article.append(text("p", t("partial"), { class: "nota" }));
   article.append(text("p", DISCLAIMER[lang()], { class: "nota" }));
   const code = el("code", { class: "mint" });
@@ -1518,7 +1518,7 @@ function bind() {
     const left = document.getElementById("comparar-izquierda");
     paintSelects(records, left ? left.value : "", "");
   });
-  document.addEventListener("stubx-lang", () => {
+  document.addEventListener("orvupi-lang", () => {
     renderRecords(records);
     const current = document.getElementById("resultado")?.querySelector(".ficha");
     if (current) {

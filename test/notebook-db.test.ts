@@ -26,7 +26,7 @@ describe("base local del cuaderno", () => {
   test("si otra pestaña bloquea la subida, se avisa y se puede seguir al cerrarla", async () => {
     const root = repoRoot();
     const mod = await import(pathToFileURL(path.join(root, "web/v2/shared/notebook-db.js")).href);
-    const name = `stubx-cuaderno-${crypto.randomUUID()}`;
+    const name = `orvupi-cuaderno-${crypto.randomUUID()}`;
     const held = await openRaw(name, 1);
     let conflicts = 0;
     const opening = mod.openNotebookDb(name, {
@@ -45,7 +45,7 @@ describe("base local del cuaderno", () => {
   test("un cambio de versión cierra esta base y avisa para recargar", async () => {
     const root = repoRoot();
     const mod = await import(pathToFileURL(path.join(root, "web/v2/shared/notebook-db.js")).href);
-    const name = `stubx-cuaderno-${crypto.randomUUID()}`;
+    const name = `orvupi-cuaderno-${crypto.randomUUID()}`;
     let conflicts = 0;
     const current = await mod.openNotebookDb(name, {
       onConflict() {
@@ -64,7 +64,7 @@ describe("base local del cuaderno", () => {
   test("una versión mayor no rompe: se abre sin subirla", async () => {
     const root = repoRoot();
     const mod = await import(pathToFileURL(path.join(root, "web/v2/shared/notebook-db.js")).href);
-    const name = `stubx-cuaderno-${crypto.randomUUID()}`;
+    const name = `orvupi-cuaderno-${crypto.randomUUID()}`;
     const created = await openRaw(name, 4);
     created.close();
     const opened = await mod.openNotebookDb(name);
