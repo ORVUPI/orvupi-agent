@@ -2,19 +2,19 @@
   "source": "lista",
   "cards": [
     {
-      "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      "mint": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
       "role": "contraste",
       "roleNote": {
-        "es": "USDC, contraste. Bytes del mint el 2026-10-09 18:42 Europe/Madrid: 7.442.271.613,512366. getTokenSupply en ese minuto no coincidió, así que no hay porcentajes. No es TOKEN A y no está presentado como clon. La ficha del 2026-10-08 conserva la cifra de aquel día.",
-        "en": "USDC, a contrast. Mint bytes on 2026-10-09 18:42 Europe/Madrid: 7,442,271,613.512366. getTokenSupply did not match in that minute, so there are no percentages. It is not TOKEN A and is not presented as a clone. The 2026-10-08 card keeps that day's figure."
+        "es": "USDT en Solana, contraste: otro token conocido, con emisión y congelación activas. No se presenta como copia de USDC.",
+        "en": "USDT on Solana, a contrast: another known token, with active mint and freeze permissions. It is not presented as a copy of USDC."
       },
-      "id": "80671753ebbcdee3317b7b2bbf7ef14eba21f8a58e437bcfdab42da02b15d7a2",
-      "createdAt": "2026-10-09T16:42:39.825Z",
+      "id": "47f903a397a460485f0c5c21a5169d9b411a04825d5deba818a2a67c8e23ec18",
+      "createdAt": "2026-10-16T18:46:30.731Z",
       "partial": true,
-      "referenceSlot": 454929422,
-      "name": "USD Coin",
+      "referenceSlot": 457742328,
+      "name": "USDT",
       "nameStatus": "verificado",
-      "symbol": "USDC",
+      "symbol": "USDT",
       "inRegistry": false,
       "inRegistryStatus": "verificado",
       "mintAuthority": {
@@ -39,12 +39,12 @@
       "curveProgress": null,
       "curveProgressStatus": "no_aplica",
       "curveProgressNote": "No hay curva. No se rellena con cero.",
-      "curveModuleNote": "La dirección derivada tiene una cuenta cuyo propietario no es el programa de Pump.fun. No es una curva y no se rellenan con cero las cantidades de la curva.",
+      "curveModuleNote": "No hay cuenta en la PDA. El módulo de otros mercados no está en esta versión. La ausencia no se rellena con una cantidad de cero.",
       "rulesVersion": "0.1.0",
       "statement_en": "This mint is not in the curated registry. That does not mean it is fake or a copy.",
       "holdersNote_en": "No usable response. It is not interpreted as a revoked authority, as immutability, or as a zero balance.",
       "curveProgressNote_en": "There is no curve. It is not filled with zero.",
-      "curveModuleNote_en": "The derived address has an account whose owner is not the Pump.fun program. It is not a curve, and the curve amounts are not filled in with zero.",
+      "curveModuleNote_en": null,
       "signals_en": []
     }
   ],

@@ -35,66 +35,48 @@ describe("misión 1", () => {
     assert.ok(official);
     assert.equal(official.mint, canonical.tokens[0]?.mint);
     assert.equal(correct?.mint, official.mint);
-    assert.equal(
-      first?.whyRight.es,
-      "Solo esta dirección está en el registro del 2026-10-08. Las otras se llaman parecido y la ficha indica que se parecen a TOKEN A pero no son la CA oficial. Eso no dice quién las creó ni con qué intención.",
-    );
-    assert.equal(
-      first?.whyRight.en,
-      "Only this address is in the 2026-10-08 registry. The others have a similar name and the card indicates that they look like TOKEN A but they are not the official CA. That does not say who created them or why.",
-    );
+    assert.match(first?.whyRight.es ?? "", /^Solo esta dirección está en el registro del 2026-10-16\./);
+    assert.match(first?.whyRight.en ?? "", /^Only this address is in the 2026-10-16 registry\./);
+    assert.equal(official.mint, "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
     assert.equal(first?.whyRight.es.includes("posible copia"), false);
     assert.equal(first?.whyRight.en.toLowerCase().includes("possible copy"), false);
     assert.equal(official.inRegistry, true);
     assert.equal(official.impersonation, false);
   });
 
-  test("los clones son señal de suplantación y USDC no", () => {
+  test("las copias «USD Coin» son señal de suplantación; USDC y USDT no", () => {
     const clones = cards.filter((card) => card.role === "clon");
-    assert.equal(clones.length, 5);
-    assert.ok(clones.some((card) => card.mint === "ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump"));
-    assert.ok(clones.some((card) => card.mint === "FMNb4CR8ksibmgY7Ztei6BWcZXi3WHcVeJhYb9TNpump"));
+    assert.equal(clones.length, 3);
     for (const card of clones) {
+      assert.equal(card.name, "USD Coin");
       assert.equal(card.inRegistry, false);
       assert.equal(card.impersonation, true);
       assert.equal(card.mintAuthority.state, "revocada");
       assert.equal(card.mintAuthority.status, "verificado");
-      assert.equal(card.curveProgress, "0.00");
-      assert.equal(card.curveProgressStatus, "inferido");
-      assert.equal(shownFact(card.curveProgressStatus, card.curveProgress), "0.00");
+      assert.equal(card.curvePresent, false);
     }
-    const usdc = cards.find((card) => card.role === "contraste");
+    const usdc = cards.find((card) => card.role === "registro");
     assert.ok(usdc);
+    assert.equal(usdc.inRegistry, true);
     assert.equal(usdc.impersonation, false);
     assert.equal(usdc.mintAuthority.state, "activa");
     assert.equal(usdc.freezeAuthority.state, "activa");
-    assert.equal(usdc.metadataReading, "mutables");
-    assert.equal(usdc.curvePresent, false);
-    assert.equal(usdc.curveProgressStatus, "no_aplica");
-    assert.equal(shownFact(usdc.curveProgressStatus, "0"), "no_aplica");
+    const usdt = cards.find((card) => card.role === "contraste");
+    assert.ok(usdt);
+    assert.equal(usdt.impersonation, false);
+    assert.equal(usdt.mintAuthority.state, "activa");
+    assert.equal(usdt.curveProgressStatus, "no_aplica");
+    assert.equal(shownFact(usdt.curveProgressStatus, "0"), "no_aplica");
   });
 
   test("lo no disponible no se muestra como cero ni como revocada", () => {
-    const batch2026 = new Set([
-      "Hhq4ffySVX3UQqSowjhP1Lwa8YuJDf7iH2hYWvVHTuEf",
-      "DjEjb6bxQ3Hjej9CzUAVeRqyt7k1tevHgcS37t41PUhQ",
-      "3Zi6p6wzYZYKyuHdBhsDfb2pRR7XTfTfLKkXL7rwpump",
-    ]);
-    const official = cards.find((card) => card.role === "registro");
-    assert.equal(official?.holdersStatus, "verificado");
-    assert.match(official?.holdersNote ?? "", /no es un censo/i);
     for (const card of cards) {
-      if (batch2026.has(card.mint)) {
-        assert.equal(card.holdersStatus, "no_disponible");
-        assert.equal(shownFact(card.holdersStatus, "0"), "no_disponible");
-      }
-      if (card.holdersStatus === "no_disponible") {
-        assert.equal(shownFact(card.holdersStatus, "0"), "no_disponible");
-      }
+      assert.equal(card.holdersStatus, "no_disponible", card.mint);
+      assert.equal(shownFact(card.holdersStatus, "0"), "no_disponible");
     }
     const missing = summarizeReport(
       {
-        tool: "stubx-verify",
+        tool: "orvupi-verify",
         mint: "MintDePrueba",
         permissions: { mintAuthority: { value: null, status: "no_disponible", note: null } },
       },
@@ -108,21 +90,9 @@ describe("misión 1", () => {
     assert.equal(missing.impersonation, null);
   });
 
-  test("la misión anterior nombra la cuenta personal con enlace al registro", () => {
-    const step = mission.steps.find((item) => item.id === "desconocido");
-    assert.ok(step);
-    assert.match(step.whyRight.es, /cuenta personal \(publicada en el registro oficial\)/);
-    assert.match(step.whyRight.en, /personal account \(listed in the official registry\)/);
-    assert.equal(step.whyRight.es.includes("cuenta personal publicada"), false);
-    assert.equal(step.whyRight.en.includes("published personal account"), false);
-  });
-
-  test("el avance del registro es inferido y distinto de cero", () => {
-    const official = cards.find((card) => card.role === "registro");
-    assert.equal(official?.curveProgress, "1.74");
-    assert.equal(official?.curveProgressStatus, "inferido");
-    assert.equal(official?.metadataReading, "no_mutables_en_fuentes");
-    assert.equal(official?.partial, true);
+  test("ninguna ficha de la misión nombra el proyecto anterior", () => {
+    const text = JSON.stringify(mission) + JSON.stringify(cards);
+    assert.equal(/TOKEN A|TNWwnzecb/i.test(text), false);
   });
 
   test("una respuesta incorrecta se explica y no cierra la misión", () => {

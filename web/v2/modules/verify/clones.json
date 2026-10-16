@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "note": "Ejemplos conocidos, no una lista completa de clones. Que una dirección no esté aquí no significa que sea el mint oficial ni que sea falso. La coincidencia no atribuye intención.",
-  "evmNote": "Ejemplos de search-v2 de Pump.fun, 08-10-2026 09:14 CEST. No se han verificado en la cadena. No es una lista completa. La red eip155:5042 no está identificada con certeza.",
+  "note": "Ejemplos conocidos de copias de tokens del registro, no una lista completa. Que una dirección no esté aquí no significa que sea el mint de referencia ni que sea falso. La coincidencia no atribuye intención.",
+  "evmNote": "Sin ejemplos EVM en esta versión del registro.",
   "evm": [],
   "examples": [],
   "note_en": "Known examples, not a complete list of clones. An address that is not here is not necessarily the official mint, nor is it necessarily fake. The match does not attribute intent.",

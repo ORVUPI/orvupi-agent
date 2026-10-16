@@ -10,7 +10,6 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "../../..");
-const PERSONAL = "2fS12sTD4TNEEE9MoCEt19brV41UjGdAnaNaxWcmiWvX";
 
 function git(args) {
   const run = spawnSync("git", args, { cwd: root, encoding: "utf8" });
@@ -61,15 +60,6 @@ function mainInner(file) {
     throw new Error(`No hay <main> en ${file}`);
   }
   return `${html.slice(open + 1, end).trim()}\n`;
-}
-
-function withPersonalAccount(html) {
-  if (html.includes(PERSONAL)) return html;
-  const needle = "de la cuenta personal publicada. El resto respecto al suministro es 0.0000 %.";
-  if (!html.includes(needle)) {
-    throw new Error("La ficha oficial de site-drafts no trae la nota N12.");
-  }
-  return html.replace(needle, `de la cuenta personal publicada (${PERSONAL}). El resto respecto al suministro es 0.0000 %.`);
 }
 
 function dateProcessLinks(html) {
@@ -128,7 +118,7 @@ cpSync(path.join(root, "lab/library/guides"), path.join(root, "web/v2/modules/la
 
 writeFileSync(
   path.join(root, "web/v2/content/tools/verify.html"),
-  withPersonalAccount(mainInner(path.join(root, "site-drafts/verify/index.html"))),
+  mainInner(path.join(root, "site-drafts/verify/index.html")),
 );
 writeFileSync(path.join(root, "web/v2/content/tools/lab.html"), mainInner(path.join(root, "site-drafts/lab/index.html")));
 writeFileSync(
@@ -156,7 +146,7 @@ const snapshot = {
   missionBundle: "assets/mission.js",
   browserApi: "modules/verify/lookup.mjs",
   cards: "modules/verify/cards.json",
-  note: `Bundle regenerado desde lab/ en ${commit}, rama feat/verify-universal, PR 21. La página /verify/ lee en el navegador, solo lectura, con los servicios públicos de limits.json. El aviso de Guardar está en web/v2/shared/aviso-guardar.js. La ficha oficial incluye la cuenta personal publicada ${PERSONAL}. inBranch significa que el commit citado es ancestro de esta rama. Esta copia no está publicada.`,
+  note: `Bundle regenerado desde lab/ en ${commit}, rama feat/verify-universal, PR 21. La página /verify/ lee en el navegador, solo lectura, con los servicios públicos de limits.json. El aviso de Guardar está en web/v2/shared/aviso-guardar.js. inBranch significa que el commit citado es ancestro de esta rama. Esta copia no está publicada.`,
 };
 writeFileSync(path.join(root, "web/v2/modules/snapshot.json"), `${JSON.stringify(snapshot, null, 2)}\n`);
 console.log(`Bundle regenerado desde lab/ ${commit}.`);
