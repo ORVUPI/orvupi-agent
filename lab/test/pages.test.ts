@@ -202,7 +202,7 @@ describe("páginas estáticas", () => {
     // La fila «Usage measurement» solo está en el tablero editado a mano en producción; el generado no la tiene (ya fallaba en main).
     assert.match(board, /id="tarea-U04" data-status="en_revision" data-web="si"/);
     assert.equal(board.includes("Hace falta un abogado"), false);
-    assert.match(board, /https:\/\/github.com\/stubxai\/stubx-agent\/pull\/13/);
+    assert.match(board, /https:\/\/github.com\/ORVUPI\/orvupi-agent\/pull\/13/);
     assert.match(board, /lab\/test\/mission\.test\.ts/);
     assert.match(board, /\.github\/workflows\/ci\.yml/);
     assert.match(page(pages, "indice-borrador.html"), /href="\.\/lab\/index\.html"/);
