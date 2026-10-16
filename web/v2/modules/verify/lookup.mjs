@@ -1,5 +1,5 @@
 const BASE58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
-export const OFFICIAL_MINT = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
+export const OFFICIAL_MINT = "";
 const COPY = {
     vacio: {
         light: "neutro",
@@ -15,14 +15,14 @@ const COPY = {
         lightLabel: { es: "Dirección no válida", en: "Address is not valid" },
         title: { es: "Esta dirección no es válida", en: "This address is not valid" },
         support: {
-            es: `Tiene que ser la dirección completa, sin el nombre del token y sin texto alrededor. Una dirección de Solana es larga: de 32 a 44 letras y números, sin 0, O, I ni l. Por ejemplo: ${OFFICIAL_MINT}.`,
-            en: `It has to be the full address, without the token name and without surrounding text. A Solana address is long: 32 to 44 letters and numbers, with no 0, O, I, or l. For example: ${OFFICIAL_MINT}.`,
+            es: `Tiene que ser la dirección completa, sin el nombre del token y sin texto alrededor. Una dirección de Solana es larga: de 32 a 44 letras y números, sin 0, O, I ni l. Por ejemplo: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v.`,
+            en: `It has to be the full address, without the token name and without surrounding text. A Solana address is long: 32 to 44 letters and numbers, with no 0, O, I, or l. For example: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v.`,
         },
     },
     oficial: {
         light: "ok",
         lightLabel: { es: "Parece oficial", en: "Looks official" },
-        title: { es: "Parece el STUBX oficial", en: "Looks like the official STUBX" },
+        title: { es: "Parece el ORVUPI oficial", en: "Looks like the official ORVUPI" },
         support: {
             es: "La dirección coincide con la ficha del registro. La fecha va en los detalles. «Parece» no es una garantía permanente.",
             en: "The address matches the registry card. The date is in the details. “Looks like” is not a permanent guarantee.",
@@ -30,17 +30,17 @@ const COPY = {
     },
     copia: {
         light: "atencion",
-        lightLabel: { es: "Se parece a STUBX, pero no es la CA oficial", en: "Looks like STUBX, but it is not the official CA" },
-        title: { es: "Se parece a STUBX, pero no es la CA oficial", en: "Looks like STUBX, but it is not the official CA" },
+        lightLabel: { es: "Se parece a ORVUPI, pero no es la CA oficial", en: "Looks like ORVUPI, but it is not the official CA" },
+        title: { es: "Se parece a ORVUPI, pero no es la CA oficial", en: "Looks like ORVUPI, but it is not the official CA" },
         support: {
-            es: `El nombre o el símbolo se parece a STUBX y la dirección es otra. Esto no dice quién lo creó ni con qué intención. La única CA oficial es ${OFFICIAL_MINT}.`,
-            en: `The name or the symbol looks like STUBX and the address is different. This does not say who created it or why. The only official CA is ${OFFICIAL_MINT}.`,
+            es: `El nombre o el símbolo se parece a ORVUPI y la dirección es otra. Esto no dice quién lo creó ni con qué intención. ORVUPI todavía no tiene contrato.`,
+            en: `The name or the symbol looks like ORVUPI and the address is different. This does not say who created it or why. ORVUPI does not have a contract yet.`,
         },
     },
     otra: {
         light: "atencion",
         lightLabel: { es: "Otra dirección", en: "Another address" },
-        title: { es: "No es el STUBX oficial", en: "This is not the official STUBX" },
+        title: { es: "No es el ORVUPI oficial", en: "This is not the official ORVUPI" },
         support: {
             es: "Hay ficha de esta dirección y no es la del registro. Tampoco es una señal de copia.",
             en: "There is a card for this address and it is not the registry one. It is not a copy signal either.",
@@ -163,7 +163,7 @@ function notOfficialView(mint, official) {
         light: "atencion",
         lightLabel: pair("No es la oficial", "Not the official one"),
         title: pair("No es la dirección oficial", "Not the official address"),
-        support: pair(`No es la dirección oficial de STUBX. La oficial es ${official}. Esto no dice quién creó esta dirección ni con qué intención.`, `This is not the official STUBX address. The official one is ${official}. This does not say who created this address or why.`),
+        support: pair(`No es la dirección oficial de ORVUPI. Esto no dice quién creó esta dirección ni con qué intención.`, `This is not the official ORVUPI address. The official one is ${official}. This does not say who created this address or why.`),
         mint,
         rows: [],
         partialNote: pair(caseOnly ? `${caseNote.es} ${NOT_OFFICIAL_GAP.es}` : NOT_OFFICIAL_GAP.es, caseOnly ? `${caseNote.en} ${NOT_OFFICIAL_GAP.en}` : NOT_OFFICIAL_GAP.en),
@@ -212,7 +212,7 @@ function rowsFor(card) {
 const PARTIAL = pair("La ficha está incompleta: la muestra de cuentas con tokens no está. Eso no se rellena con un cero.", "The card is incomplete: the token account sample is missing. That is not filled in with a zero.");
 const CENSUS = pair("Hay saldos de la curva y de la creadora. No es un censo ni se rellena el resto con un cero.", "There are balances for the curve and the creator. It is not a census, and the rest is not filled in with a zero.");
 const CENSUS_PERSONAL = pair("Hay saldos de la curva, de la creadora y de la cuenta personal publicada. No es un censo ni se rellena el resto con un cero.", "There are balances for the curve, the creator, and the published personal account. It is not a census, and the rest is not filled in with a zero.");
-const SOLANA_ONLY = "El STUBX oficial solo existe en Solana";
+const SOLANA_ONLY = "ORVUPI todavía no tiene contrato en ninguna red";
 function partialNoteFor(card) {
     if (!card.partial)
         return null;
@@ -232,7 +232,7 @@ function evmView(address, evm) {
             light: "riesgo",
             lightLabel: pair("Copia conocida", "Known copy"),
             title: pair("Copia conocida", "Known copy"),
-            support: pair(`${SOLANA_ONLY}. Ejemplo de search-v2 de Pump.fun, 08-10 09:14, sin verificar en la cadena (${chain}).`, `The official STUBX exists only on Solana. Example from Pump.fun search-v2, 2026-10-08 09:14, not verified on-chain (${chain}).`),
+            support: pair(`${SOLANA_ONLY}. Ejemplo de search-v2 de Pump.fun, 08-10 09:14, sin verificar en la cadena (${chain}).`, `ORVUPI does not have a contract on any network yet. Example from Pump.fun search-v2, 2026-10-08 09:14, not verified on-chain (${chain}).`),
             mint: found.address,
             rows: [
                 { label: pair("Red", "Network"), value: pair(chain, chain) },
@@ -248,7 +248,7 @@ function evmView(address, evm) {
         kind: "evm",
         light: "atencion",
         lightLabel: pair("Otra red", "Another network"),
-        title: pair(SOLANA_ONLY, "The official STUBX exists only on Solana"),
+        title: pair(SOLANA_ONLY, "ORVUPI does not have a contract on any network yet"),
         support: pair("Una dirección que empieza por 0x no es el mint de Solana. La lista de ejemplos no es completa y no se ha verificado en la cadena.", "An address that starts with 0x is not the Solana mint. The example list is not complete and it has not been verified on-chain."),
         mint: shown,
         rows: [],

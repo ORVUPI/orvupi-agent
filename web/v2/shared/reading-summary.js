@@ -30,7 +30,7 @@ const TOPIC_BY_ID = {
   ficha: "metadatos",
 };
 
-const SUMMARY_OFFICIAL = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
+const SUMMARY_OFFICIAL = "";
 
 const ATTENTION = {
   emision: {
@@ -111,7 +111,7 @@ const ATTENTION = {
   },
   copia: {
     title: { es: "Dirección", en: "Address" },
-    lead: { es: "Se parece a STUBX pero no es la dirección oficial.", en: "It looks like STUBX but it is not the official address." },
+    lead: { es: "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.", en: "It is named like ORVUPI, but ORVUPI does not have a contract yet." },
     detail: {
       es: "La dirección oficial está publicada en stubxai.com. Ábrela y compárala con la de esta lectura, carácter a carácter. Un nombre igual no cambia la dirección.",
       en: "The official address is published on stubxai.com. Open it and compare it with the one in this reading, character by character. The same name does not change the address.",
@@ -244,7 +244,7 @@ function contextFromCard(card) {
     symbol: summaryText(card && card.symbol && card.symbol.text),
     decimals: card ? card.decimals : null,
     extensions: Array.isArray(card && card.extensions) ? card.extensions : [],
-    official: Boolean(card && (card.officialStubx === true || card.mint === SUMMARY_OFFICIAL)),
+    official: Boolean(card && (card.mint === SUMMARY_OFFICIAL)),
   };
 }
 
@@ -318,7 +318,7 @@ function summaryShown(value) {
 
 function looksLikeStubx(context) {
   if (!context) return false;
-  return summaryNormalizeToken(context.name).includes("stubx") || summaryNormalizeToken(context.symbol).includes("stubx");
+  return summaryNormalizeToken(context.name).includes("orvupi") || summaryNormalizeToken(context.symbol).includes("orvupi");
 }
 
 function quotedIdentity(context) {
@@ -761,8 +761,8 @@ export function cloneWarningText(card, lang) {
   const context = contextFromCard(card);
   if (context.official || !looksLikeStubx(context)) return "";
   return lang === "en"
-    ? "It looks like STUBX but it is not the official address."
-    : "Se parece a STUBX pero no es la dirección oficial.";
+    ? "It is named like ORVUPI, but ORVUPI does not have a contract yet."
+    : "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.";
 }
 
 export function comparisonBanner(left, right, lang) {

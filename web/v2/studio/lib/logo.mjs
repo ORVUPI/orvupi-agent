@@ -3,7 +3,7 @@
 import { INVISIBLE_CHARS } from "./filter.mjs";
 import { assertPngInflate, decodePng, pngHeader } from "./png.mjs";
 
-export const DEFAULT_TOKEN = "STUBX";
+export const DEFAULT_TOKEN = "ORVUPI";
 export const TOKEN_MAX = 20;
 export const LOGO_MAX_BYTES = 8_000_000;
 export const LOGO_MAX_EDGE = 2048;
@@ -16,7 +16,7 @@ export function clipToken(value) {
 }
 
 export function isStubxToken(value) {
-  return clipToken(value).toLowerCase() === "stubx";
+  return clipToken(value).toLowerCase() === "orvupi";
 }
 
 /** Una carga de logo. cancel() invalida el ticket y aborta la lectura en curso. */

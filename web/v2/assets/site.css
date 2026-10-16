@@ -488,7 +488,7 @@ a.brand img {
   border-radius: var(--radius-sm);
   border: 2px solid var(--accent);
   box-shadow: 0 0 0 2px var(--gem);
-  animation: talon-bob var(--motion) var(--ease) infinite;
+  animation: pulpo-bob var(--motion) var(--ease) infinite;
 }
 a.brand strong { font-size: 1.05rem; letter-spacing: 0.14em; }
 a.brand::after {
@@ -536,7 +536,7 @@ img { max-width: 100%; height: auto; }
   background: var(--bg-elev);
   box-shadow: 0 0 0 5px rgba(27, 235, 145, 0.45), var(--shadow);
 }
-.hero img { animation: talon-bob var(--motion) var(--ease) infinite; }
+.hero img { animation: pulpo-bob var(--motion) var(--ease) infinite; }
 .pair > *, .grid-2 > *, .grid-3 > *, .hero > *, .card, .slot { min-width: 0; }
 .hero figcaption, .pair figcaption { margin-top: 0.45rem; color: var(--muted); font-size: 0.92rem; }
 .hero-actions, .btn-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 1rem 0 0; }
@@ -716,7 +716,7 @@ details.mapa nav ul { padding-top: 0.75rem; }
 }
 
 /* Sistema visual compartido: ticket, mascota y lema. */
-@keyframes talon-bob {
+@keyframes pulpo-bob {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }
 }

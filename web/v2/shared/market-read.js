@@ -37,7 +37,7 @@ export const MARKET_TIMEOUT_MS = 8_000;
 export const MARKET_CLIENT_LIMIT = 6;
 export const MARKET_CLIENT_WINDOW_MS = 60_000;
 export const MARKET_LOW_USD = 1_000;
-export const MARKET_OFFICIAL_MINT = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
+export const MARKET_OFFICIAL_MINT = "";
 // Lista cerrada, por mint exacto. El nombre es fijo: no se usa el símbolo de la fuente.
 const MARKET_KNOWN_QUOTES = new Map([
   ["So11111111111111111111111111111111111111112", "SOL"],
@@ -860,8 +860,8 @@ export function describeMarket(model, lang) {
     retry: status === "fallo" || status === "limite",
     detail: marketCopy(
       language,
-      "La liquidez es el dinero que la fuente dice que hay en ese par, en dólares. El volumen es lo que la fuente dice que se movió en el intervalo indicado. STUBX no la calcula.",
-      "Liquidity is the money the source says is in that pair, in dollars. Volume is what the source says moved in the stated interval. STUBX does not calculate it.",
+      "La liquidez es el dinero que la fuente dice que hay en ese par, en dólares. El volumen es lo que la fuente dice que se movió en el intervalo indicado. ORVUPI no la calcula.",
+      "Liquidity is the money the source says is in that pair, in dollars. Volume is what the source says moved in the stated interval. ORVUPI does not calculate it.",
     ),
     more: marketCopy(language, "Más detalle", "More detail"),
   };

@@ -10,7 +10,10 @@ export const TOKEN_PROGRAM = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
 export const TOKEN_2022_PROGRAM = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
 export const METADATA_PROGRAM = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s";
 export const PUMP_PROGRAM = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P";
-export const OFFICIAL_MINT = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
+// Contrato ORVUPI: aún no existe (ver /shared/orvupi-contract.json).
+export const OFFICIAL_MINT = "";
+// Solo compatibilidad: fichas guardadas antes del 16-10-2026 llevan officialStubx = true con esta dirección.
+export const LEGACY_FLAG_MINT = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
 export const DEFAULT_RPC = ["https://api.", "mainnet-beta", ".solana.com"].join("");
 export const PUBLICNODE_RPC = "https://solana-rpc.publicnode.com";
 // Mismos dos orígenes y el mismo orden que verify/policy/limits.json (default, luego fallback).

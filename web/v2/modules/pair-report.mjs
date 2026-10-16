@@ -1,11 +1,11 @@
 export const REPORT_VERSION = "u09-pares-1";
-export const OFFICIAL_MINT = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
+export const OFFICIAL_MINT = ""; // Contrato ORVUPI: aún no existe.
 export const QUERY_LIMIT = 6;
 export const QUERY_WINDOW_MS = 60_000;
 export const NAME_LIMIT = 48;
 export const PUBLIC_WARNING = {
-  es: "Lectura de datos públicos. No es una comparación de calidad, ni una recomendación, ni un aval. STUBX no tiene relación con estos tokens salvo la CA oficial.",
-  en: "Public data reading. It is not a quality comparison, a recommendation, or an endorsement. STUBX has no relationship with these tokens except the official CA.",
+  es: "Lectura de datos públicos. No es una comparación de calidad, ni una recomendación, ni un aval. ORVUPI no tiene relación con estos tokens: todavía no tiene contrato.",
+  en: "Public data reading. It is not a quality comparison, a recommendation, or an endorsement. ORVUPI has no relationship with these tokens: it does not have a contract yet.",
 };
 
 export function takeQuerySlot(stamps, now, limit = QUERY_LIMIT, windowMs = QUERY_WINDOW_MS) {
@@ -137,8 +137,8 @@ export function snapshotLines(evidence, lang) {
     {
       size: "body",
       text: evidence.official
-        ? (en ? "This address matches the published STUBX CA." : "Esta dirección coincide con la CA publicada de STUBX.")
-        : (en ? "STUBX does not review or endorse this token." : "STUBX no revisa ni respalda este token."),
+        ? (en ? "This address matches the project one." : "Esta dirección coincide con la del proyecto.")
+        : (en ? "ORVUPI does not review or endorse this token." : "ORVUPI no revisa ni respalda este token."),
     },
     { size: "body", text: en ? `Token analyzed: ${evidence.mint}` : `Token analizado: ${evidence.mint}` },
     { size: "body", text: name },

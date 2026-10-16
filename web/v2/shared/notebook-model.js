@@ -5,7 +5,7 @@
 import { formatAmount } from "./amount.js";
 import { factState } from "./fact-state.js";
 import { notebookNameText } from "./reading-summary.js";
-import { CARD_SCHEMA, CARD_VERSION, DISCLAIMER, OFFICIAL_MINT, isMintAddress } from "./solana-read.js";
+import { CARD_SCHEMA, CARD_VERSION, DISCLAIMER, LEGACY_FLAG_MINT, isMintAddress } from "./solana-read.js";
 
 export const EXPORT_SCHEMA = "stubx.notebook.export";
 export const MAX_BYTES = 1_000_000;
@@ -305,8 +305,8 @@ export function validateCard(card) {
   if (curve.complete !== null && typeof curve.complete !== "boolean") {
     return fail("El campo complete no es un sí o un no.", "The complete field is not a yes or a no.");
   }
-  if (typeof card.officialStubx !== "boolean" || card.officialStubx !== (card.mint === OFFICIAL_MINT)) {
-    return fail("La marca de STUBX no coincide con la dirección.", "The STUBX mark does not match the address.");
+  if (typeof card.officialStubx !== "boolean" || (card.officialStubx === true && card.mint !== LEGACY_FLAG_MINT)) {
+    return fail("La marca de proyecto no coincide con la dirección.", "The project mark does not match the address.");
   }
   if (!card.disclaimer || card.disclaimer.es !== DISCLAIMER.es || card.disclaimer.en !== DISCLAIMER.en) {
     return fail("Falta el aviso fijo de la ficha.", "The fixed card notice is missing.");

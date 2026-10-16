@@ -23,8 +23,8 @@
       "id": "registro",
       "term": { "es": "Registro curado", "en": "Curated registry" },
       "means": {
-        "es": "Lista local que Verify compara con el mint, el nombre, el símbolo, la imagen y algunos enlaces. Hoy incluye STUBX. Que un mint no esté no significa que sea falso.",
-        "en": "A local list Verify compares with the mint, name, symbol, image, and some links. Today it includes STUBX. A mint that is not on the list is not necessarily fake."
+        "es": "Lista local que Verify compara con el mint, el nombre, el símbolo, la imagen y algunos enlaces. Hoy incluye TOKEN A. Que un mint no esté no significa que sea falso.",
+        "en": "A local list Verify compares with the mint, name, symbol, image, and some links. Today it includes TOKEN A. A mint that is not on the list is not necessarily fake."
       },
       "example": {
         "es": "USDC, en la ficha del 2026-10-08, no está en el registro. La propia ficha dice que eso no significa que sea falso ni una copia.",
@@ -247,16 +247,16 @@
       "id": "moneda-estable",
       "term": { "es": "Moneda estable", "en": "Stablecoin" },
       "means": {
-        "es": "Un token pensado para seguir una moneda de curso. En estas fichas, USDC es el ejemplo. STUBX es un meme: no tiene esa función.",
-        "en": "A token meant to follow a currency. On these cards, USDC is the example. STUBX is a meme: it does not have that role."
+        "es": "Un token pensado para seguir una moneda de curso. En estas fichas, USDC es el ejemplo. TOKEN A es un meme: no tiene esa función.",
+        "en": "A token meant to follow a currency. On these cards, USDC is the example. TOKEN A is a meme: it does not have that role."
       },
       "example": {
-        "es": "El 2026-10-09, USDC tiene la emisión y la congelación activas. STUBX las tiene cerradas. El mismo permiso no se lee igual en los dos.",
-        "en": "On 2026-10-09, USDC has mint and freeze permissions active. STUBX has them closed. The same permission is not read the same way on both."
+        "es": "El 2026-10-09, USDC tiene la emisión y la congelación activas. TOKEN A las tiene cerradas. El mismo permiso no se lee igual en los dos.",
+        "en": "On 2026-10-09, USDC has mint and freeze permissions active. TOKEN A has them closed. The same permission is not read the same way on both."
       },
       "doesNotConclude": {
-        "es": "No dice qué hacer con el token. Un permiso activo en USDC no es una acusación, y uno cerrado en STUBX no es una garantía.",
-        "en": "It does not say what to do with the token. An active permission on USDC is not an accusation, and a closed one on STUBX is not a guarantee."
+        "es": "No dice qué hacer con el token. Un permiso activo en USDC no es una acusación, y uno cerrado en TOKEN A no es una garantía.",
+        "en": "It does not say what to do with the token. An active permission on USDC is not an accusation, and a closed one on TOKEN A is not a guarantee."
       }
     },
     {
@@ -267,8 +267,8 @@
         "en": "A technical account belongs to a program, such as the curve. A pool is the account where an exchange program holds tokens. Neither one is a person's account."
       },
       "example": {
-        "es": "En STUBX, el 2026-10-09, 3shQFExQ3rpFL6GaXPRQNTMYazVHmTvRfuazfv62toAE es la cuenta de la curva, con el 98,6122 %. complete es falso: no es un pool.",
-        "en": "On STUBX, on 2026-10-09, 3shQFExQ3rpFL6GaXPRQNTMYazVHmTvRfuazfv62toAE is the curve account, with 98.6122%. complete is false: it is not a pool."
+        "es": "En TOKEN A, el 2026-10-09, 3shQFExQ3rpFL6GaXPRQNTMYazVHmTvRfuazfv62toAE es la cuenta de la curva, con el 98,6122 %. complete es falso: no es un pool.",
+        "en": "On TOKEN A, on 2026-10-09, 3shQFExQ3rpFL6GaXPRQNTMYazVHmTvRfuazfv62toAE is the curve account, with 98.6122%. complete is false: it is not a pool."
       },
       "doesNotConclude": {
         "es": "Un saldo alto no convierte esa cuenta en una persona. Que no sea un pool no dice qué hacer con el token.",
@@ -299,8 +299,8 @@
         "en": "The fact was asked for, the answer arrived, and the fact is not there. It is not a service failure."
       },
       "example": {
-        "es": "En STUBX, el 2026-10-09, la cuenta de metadatos de Metaplex se consultó. La consulta respondió y el valor está vacío: no hay esa cuenta.",
-        "en": "On STUBX, on 2026-10-09, the Metaplex metadata account was queried. The query was answered and the value is empty: that account is not there."
+        "es": "En TOKEN A, el 2026-10-09, la cuenta de metadatos de Metaplex se consultó. La consulta respondió y el valor está vacío: no hay esa cuenta.",
+        "en": "On TOKEN A, on 2026-10-09, the Metaplex metadata account was queried. The query was answered and the value is empty: that account is not there."
       },
       "doesNotConclude": {
         "es": "No es un HTTP 429 ni un dato que esta lectura olvidó pedir.",
@@ -315,8 +315,8 @@
         "en": "This reading did not ask for that fact. It is not a failure and it is not an absence."
       },
       "example": {
-        "es": "La ficha de STUBX del 2026-10-09 lee tres cuentas y no pide el ranking de getTokenLargestAccounts. El máximo fuera de la muestra no se calcula.",
-        "en": "The STUBX card from 2026-10-09 reads three accounts and does not ask for the getTokenLargestAccounts ranking. The maximum outside the sample is not calculated."
+        "es": "La ficha de TOKEN A del 2026-10-09 lee tres cuentas y no pide el ranking de getTokenLargestAccounts. El máximo fuera de la muestra no se calcula.",
+        "en": "The TOKEN A card from 2026-10-09 reads three accounts and does not ask for the getTokenLargestAccounts ranking. The maximum outside the sample is not calculated."
       },
       "doesNotConclude": {
         "es": "No se convierte en cero ni en la consulta fallida de otra ficha.",

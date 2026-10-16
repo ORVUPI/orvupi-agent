@@ -423,7 +423,7 @@ def shell(frm: str, current: str, title_es: str, title_en: str, desc_es: str, de
 <footer class="site"><div class="wrap">
 <p class="muted"><a href="{prefix}risks/">{t("Riesgos", "Risks")}</a></p>
 <p>{t("CA oficial y única:", "Official and only CA:")} <code>{CA}</code></p>
-<p>{t("Canales oficiales:", "Official channels:")} <a href="https://x.com/stubxai">@stubxai</a> · <a href="https://github.com/stubxai/stubx-agent">github.com/stubxai/stubx-agent</a> · <a href="mailto:stubxai.hq@gmail.com">stubxai.hq@gmail.com</a> · <a href="https://t.me/stubxai">t.me/stubxai</a> · <a href="https://farcaster.xyz/stubxai">Farcaster</a> · <a href="https://www.tiktok.com/@stubxai">TikTok</a></p>
+<p>{t("Canales oficiales:", "Official channels:")} <a href="https://x.com/ORVUPI">@stubxai</a> · <a href="https://github.com/ORVUPI/orvupi-agent">github.com/ORVUPI/orvupi-agent</a> · <a href="mailto:orvupi.hq@gmail.com">orvupi.hq@gmail.com</a> · <a href="https://t.me/orvupi">t.me/stubxai</a> ·  · <a href="https://www.tiktok.com/@orvupi">TikTok</a></p>
 <p>{t("Sin cookies ni rastreadores. El idioma y el progreso de Lab, si se usa, se quedan en este navegador. El service worker solo se registra en Lab y no guarda la portada ni los avisos.", "No cookies and no trackers. Language and Lab progress, if used, stay in this browser. The service worker registers only on Lab and does not store the home page or the notices.")}</p>
 <p>STUBX · 2026 · {t("Código MIT · Kit con licencia propia", "MIT code · Kit under its own license")}</p>
 </div></footer>
@@ -531,7 +531,7 @@ def home() -> str:
 <div class="grid-3" id="proyecto">
 <article class="card"><h2>{t("Un personaje", "A character")}</h2><p>{t("Agente Talón pide pruebas antes de creer una promesa. El lema es «No stub, no story».", "Agente Talón asks for proof before believing a promise. The motto is “No stub, no story”.")}</p></article>
 <article class="card"><h2>{t("Un token", "A token")}</h2><p>{t("Creado el 2026-09-23 en Pump.fun. Sin autoridad de emisión ni de congelación. No da derechos. La descripción grabada dice «AI-native» y ya no se puede cambiar: hoy no hay un agente autónomo.", "Created on 2026-09-23 on Pump.fun. No mint authority and no freeze authority. It grants no rights. The on-chain description says “AI-native” and can no longer be changed: there is no autonomous agent today.")}</p></article>
-<article class="card" id="repo"><h2>{t("Un prototipo", "A prototype")}</h2><p>{t("El repositorio github.com/stubxai/stubx-agent no tiene wallet ni claves, no firma y no envía transacciones. Licencia MIT.", "The repository github.com/stubxai/stubx-agent has no wallet and no keys, it does not sign, and it does not send transactions. MIT license.")}</p></article>
+<article class="card" id="repo"><h2>{t("Un prototipo", "A prototype")}</h2><p>{t("El repositorio github.com/ORVUPI/orvupi-agent no tiene wallet ni claves, no firma y no envía transacciones. Licencia MIT.", "The repository github.com/ORVUPI/orvupi-agent has no wallet and no keys, it does not sign, and it does not send transactions. MIT license.")}</p></article>
 </div>
 <h2>{t("Herramientas de esta misma web", "Tools on this website")}</h2>
 <p>{t("Misma navegación, mismos estilos y el mismo selector de idioma. Lo que no está construido no tiene un botón que finja funcionar.", "Same navigation, same styles, and the same language switch. What is not built has no button pretending to work.")}</p>
@@ -586,7 +586,7 @@ def home() -> str:
 </section>
 <section id="contacto">
 <h2>{t("Contacto", "Contact")}</h2>
-<p><a href="mailto:stubxai.hq@gmail.com">stubxai.hq@gmail.com</a>. {t("Un solo correo. No pedimos semilla, claves ni dinero.", "One email address. We do not ask for a seed, keys, or money.")}</p>
+<p><a href="mailto:orvupi.hq@gmail.com">orvupi.hq@gmail.com</a>. {t("Un solo correo. No pedimos semilla, claves ni dinero.", "One email address. We do not ask for a seed, keys, or money.")}</p>
 </section>
 """
 
@@ -748,13 +748,13 @@ def security() -> str:
 <p>{t("Cópiala solo desde esta web o desde @stubxai. Compárala entera, no solo el principio y el final. En Solscan debe decir STUBX, creado el 2026-09-23, y la wallet creadora es la de abajo.", "Copy it only from this website or from @stubxai. Compare the whole address, not only the start and the end. On Solscan it should say STUBX, created on 2026-09-23, and the creator wallet is the one below.")}</p>
 <h2>{t("Canales oficiales", "Official channels")}</h2>
 <ul class="clean">
-<li>{t("X, único canal oficial en X:", "X (the only official account on X):")} <a href="https://x.com/stubxai" title="Único canal oficial en X / The only official channel on X">@stubxai</a></li>
+<li>{t("X, único canal oficial en X:", "X (the only official account on X):")} <a href="https://x.com/ORVUPI" title="Único canal oficial en X / The only official channel on X">@stubxai</a></li>
 <li>{t("Web:", "Website:")} <a href="https://stubxai.com/">stubxai.com</a>. {t(HOSTING_ES, HOSTING_EN)}</li>
-<li>{t("Correo, único:", "Email (the only one):")} <a href="mailto:stubxai.hq@gmail.com">stubxai.hq@gmail.com</a></li>
-<li>{t("Código, único repositorio:", "Code, the only repository:")} <a href="https://github.com/stubxai/stubx-agent">github.com/stubxai/stubx-agent</a>. {t("github.com/stubx, sin «ai», no tiene relación con STUBX.", "github.com/stubx, without “ai”, has no relation to STUBX.")}</li>
-<li>{t("Telegram, solo anuncios:", "Telegram, announcements only:")} <a href="https://t.me/stubxai">t.me/stubxai</a>. {t("Los admins nunca escriben primero por privado.", "Admins never write first in private.")}</li>
-<li>Farcaster: <a href="https://farcaster.xyz/stubxai">@stubxai</a></li>
-<li>TikTok: <a href="https://www.tiktok.com/@stubxai">@stubxai</a>. {t("Solo vídeos antiestafa. No publica enlaces ni direcciones de token. Mensajes privados desactivados.", "Anti-scam videos only. It does not publish links or token addresses. Private messages are off.")}</li>
+<li>{t("Correo, único:", "Email (the only one):")} <a href="mailto:orvupi.hq@gmail.com">orvupi.hq@gmail.com</a></li>
+<li>{t("Código, único repositorio:", "Code, the only repository:")} <a href="https://github.com/ORVUPI/orvupi-agent">github.com/ORVUPI/orvupi-agent</a>. {t("github.com/stubx, sin «ai», no tiene relación con STUBX.", "github.com/stubx, without “ai”, has no relation to STUBX.")}</li>
+<li>{t("Telegram, solo anuncios:", "Telegram, announcements only:")} <a href="https://t.me/orvupi">t.me/stubxai</a>. {t("Los admins nunca escriben primero por privado.", "Admins never write first in private.")}</li>
+<li>Farcaster: </li>
+<li>TikTok: <a href="https://www.tiktok.com/@orvupi">@stubxai</a>. {t("Solo vídeos antiestafa. No publica enlaces ni direcciones de token. Mensajes privados desactivados.", "Anti-scam videos only. It does not publish links or token addresses. Private messages are off.")}</li>
 <li>Discord: {t("ninguno.", "none.")}</li>
 </ul>
 <h2>{t("Wallets que no son un canal", "Wallets that are not a channel")}</h2>
@@ -792,7 +792,7 @@ def security() -> str:
 </ul>
 <p>{t("STUBX no escribe primero por mensaje directo. Si alguien lo hace en nombre de STUBX, trátalo como una estafa: no respondas, no abras enlaces y no firmes. La información válida se publica en abierto. Si hay contradicción, no actúes.", "STUBX does not write first in a direct message. If someone does it in STUBX’s name, treat it as a scam: do not reply, do not open links, and do not sign. Valid information is published in the open. If there is a contradiction, do not act.")}</p>
 <h2>{t("Cómo avisar", "How to report")}</h2>
-<p>{t("Escribe a stubxai.hq@gmail.com con el enlace y una descripción. No envíes la frase semilla, una contraseña ni un documento personal. También está en security.txt. No hay atención continua ni promesa de recuperar fondos.", "Write to stubxai.hq@gmail.com with the link and a description. Do not send the seed phrase, a password, or a personal document. It is also in security.txt. There is no continuous support and no promise to recover funds.")}</p>
+<p>{t("Escribe a orvupi.hq@gmail.com con el enlace y una descripción. No envíes la frase semilla, una contraseña ni un documento personal. También está en security.txt. No hay atención continua ni promesa de recuperar fondos.", "Write to orvupi.hq@gmail.com with the link and a description. Do not send the seed phrase, a password, or a personal document. It is also in security.txt. There is no continuous support and no promise to recover funds.")}</p>
 <p><a href="../security.txt">security.txt</a> · <a href="../.well-known/security.txt">/.well-known/security.txt</a></p>
 <p class="source">{t("Revisión de este texto: 2026-10-09, a partir del aviso publicado el 2026-10-05. No es vigilancia permanente ni una garantía contra el fraude.", "Review of this text: 2026-10-09, from the notice published on 2026-10-05. It is not permanent monitoring or a guarantee against fraud.")}</p>
 """
@@ -854,8 +854,8 @@ def legal() -> str:
 <li>{t("El service worker solo se registra en Lab, con alcance /lab/. No guarda la portada ni las páginas de avisos. Recargar trae esta copia.", "The service worker registers only on Lab, with scope /lab/. It does not store the home page or the notice pages. Reloading fetches this copy.")}</li>
 </ul>
 <h2>{t("Contacto", "Contact")}</h2>
-<p><a href="mailto:stubxai.hq@gmail.com">stubxai.hq@gmail.com</a>. {t("Prensa, dudas y fallos de seguridad. No hay formularios. No pedimos semilla, claves ni dinero.", "Press, questions, and security faults. There are no forms. We do not ask for a seed, keys, or money.")}</p>
-<p><a href="../security.txt">security.txt</a> · <a href="https://github.com/stubxai/stubx-agent/blob/main/SECURITY.md">SECURITY.md</a>. {t("No hay recompensa económica.", "There is no monetary reward.")}</p>
+<p><a href="mailto:orvupi.hq@gmail.com">orvupi.hq@gmail.com</a>. {t("Prensa, dudas y fallos de seguridad. No hay formularios. No pedimos semilla, claves ni dinero.", "Press, questions, and security faults. There are no forms. We do not ask for a seed, keys, or money.")}</p>
+<p><a href="../security.txt">security.txt</a> · <a href="https://github.com/ORVUPI/orvupi-agent/blob/main/SECURITY.md">SECURITY.md</a>. {t("No hay recompensa económica.", "There is no monetary reward.")}</p>
 <p class="source">{t("Textos de riesgo y MiCA: los de la web en producción a 2026-10-05, conservados en su significado. La frase inglesa es una traducción de esa frase española.", "Risk and MiCA texts: those of the production website as of 2026-10-05, kept in meaning. The English sentence is a translation of that Spanish sentence.")}</p>
 """
 
@@ -888,13 +888,13 @@ def proofs() -> str:
             "On 2026-10-04 at 11:43 (Madrid), main was at commit e4faf6e and the public CI finished 115 of 115 green, 12 groups, 0 failures, including 20 limit tests. At 12:40 it was repeated on a clean clone with Node.js 22, with the same result. It shows that, at that commit, the code does what those tests check. It does not show that there are no other faults, it is not an audit, and it says nothing about price. Another version of main can have a different count.",
         )
         + source(
-            "Ejecución citada en la web en producción: github.com/stubxai/stubx-agent, commit e4faf6e, comprobado el 2026-10-04.",
-            "Run cited on the production website: github.com/stubxai/stubx-agent, commit e4faf6e, checked on 2026-10-04.",
+            "Ejecución citada en la web en producción: github.com/ORVUPI/orvupi-agent, commit e4faf6e, comprobado el 2026-10-04.",
+            "Run cited on the production website: github.com/ORVUPI/orvupi-agent, commit e4faf6e, checked on 2026-10-04.",
         )
         + how_to(
             "Necesitas git y Node.js 22. No hace falta ninguna clave ni wallet.",
             "You need git and Node.js 22. No key or wallet is required.",
-            "git clone https://github.com/stubxai/stubx-agent\ncd stubx-agent\ngit checkout e4faf6e\nnpm ci && npm test",
+            "git clone https://github.com/ORVUPI/orvupi-agent\ncd stubx-agent\ngit checkout e4faf6e\nnpm ci && npm test",
             "Al final debe salir tests 115, pass 115 y fail 0. Sin git checkout pruebas la última versión de main, que puede tener otra cifra.",
             "The end must show tests 115, pass 115 and fail 0. Without git checkout you test the latest main, which can have another count.",
         ),
@@ -1031,8 +1031,8 @@ def status() -> str:
 <thead><tr><th scope="col">{t("Casilla", "Box")}</th><th scope="col">{t("Estado", "State")}</th><th scope="col">{t("Prueba", "Proof")}</th></tr></thead>
 <tbody>
 <tr><th scope="row">{t("Wallet del agente", "Agent wallet")}</th><td>{t("No aplica · 2026-10-05", "Not applicable · 2026-10-05")}</td><td>{t(f"El agente no tiene wallet ni claves, por diseño. La wallet del proyecto {PROJECT} la controla el creador y no cuenta para esta casilla.", f"The agent has no wallet and no keys, by design. The creator controls the project wallet {PROJECT} and it does not count for this box.")}</td></tr>
-<tr><th scope="row">{t("Logs", "Logs")}</th><td>{t("Marcada · 2026-10-05", "Marked · 2026-10-05")}</td><td>{t("Log de solo añadir, ancla 2026-09-26-000001 confirmada en el bloque de Bitcoin 968752. Ejecución daily-log del 05-10: github.com/stubxai/stubx-agent/actions/runs/37274282121. Marcada no significa que registre todo ni que lo anotado sea cierto.", "Append-only log, anchor 2026-09-26-000001 confirmed in Bitcoin block 968752. daily-log run of 2026-10-05: github.com/stubxai/stubx-agent/actions/runs/37274282121. Marked does not mean it records everything or that the notes are true.")}</td></tr>
-<tr><th scope="row">{t("Límites", "Limits")}</th><td>{t("Marcada · 2026-10-05", "Marked · 2026-10-05")}</td><td>{t("CI pública del 05-10: github.com/stubxai/stubx-agent/actions/runs/37278171372, commit a960380. Un test en verde demuestra lo que ese test comprueba, en esa versión.", "Public CI of 2026-10-05: github.com/stubxai/stubx-agent/actions/runs/37278171372, commit a960380. A green test shows what that test checks, in that version.")}</td></tr>
+<tr><th scope="row">{t("Logs", "Logs")}</th><td>{t("Marcada · 2026-10-05", "Marked · 2026-10-05")}</td><td>{t("Log de solo añadir, ancla 2026-09-26-000001 confirmada en el bloque de Bitcoin 968752. Ejecución daily-log del 05-10: github.com/ORVUPI/orvupi-agent/actions/runs/37274282121. Marcada no significa que registre todo ni que lo anotado sea cierto.", "Append-only log, anchor 2026-09-26-000001 confirmed in Bitcoin block 968752. daily-log run of 2026-10-05: github.com/ORVUPI/orvupi-agent/actions/runs/37274282121. Marked does not mean it records everything or that the notes are true.")}</td></tr>
+<tr><th scope="row">{t("Límites", "Limits")}</th><td>{t("Marcada · 2026-10-05", "Marked · 2026-10-05")}</td><td>{t("CI pública del 05-10: github.com/ORVUPI/orvupi-agent/actions/runs/37278171372, commit a960380. Un test en verde demuestra lo que ese test comprueba, en esa versión.", "Public CI of 2026-10-05: github.com/ORVUPI/orvupi-agent/actions/runs/37278171372, commit a960380. A green test shows what that test checks, in that version.")}</td></tr>
 <tr><th scope="row">{t("Kill-switch", "Kill-switch")}</th><td>{t("Marcada · 2026-10-05", "Marked · 2026-10-05")}</td><td>{t("Simulacros en verde: 26-09 (36264436020), 28-09 (36397668286) y 05-10 (37284177840). Solo afecta al agente. No pausa transferencias ni congela cuentas.", "Green drills: 2026-09-26 (36264436020), 2026-09-28 (36397668286), and 2026-10-05 (37284177840). It only affects the agent. It does not pause transfers or freeze accounts.")}</td></tr>
 </tbody>
 </table></div>
@@ -1095,10 +1095,10 @@ def community() -> str:
 <p class="lede">{t("Se puede seguir y comentar sin comprar STUBX. No hay colaboradores anunciados: si no está confirmado aquí, no lo está.", "You can follow and comment without buying STUBX. There are no announced collaborators: if it is not confirmed here, it is not.")}</p>
 {source("Canales de token.json official, 2026-10-05. No hay una lista de alianzas. Esta página no promete atención continua.", "Channels from token.json official, 2026-10-05. There is no list of partnerships. This page does not promise continuous attention.")}
 <ul class="clean">
-<li><a href="https://x.com/stubxai">@stubxai</a> — {t("canal principal. Los posts los prepara un agente distinto del repositorio, con textos aprobados antes. La cuenta se identifica como bot.", "main channel. Posts are prepared by an agent other than the repository one, from texts approved beforehand. The account identifies itself as a bot.")}</li>
-<li><a href="https://t.me/stubxai">t.me/stubxai</a> — {t("solo anuncios.", "announcements only.")}</li>
-<li><a href="https://farcaster.xyz/stubxai">Farcaster</a> · <a href="https://www.tiktok.com/@stubxai">TikTok</a></li>
-<li><a href="mailto:stubxai.hq@gmail.com">stubxai.hq@gmail.com</a></li>
+<li><a href="https://x.com/ORVUPI">@stubxai</a> — {t("canal principal. Los posts los prepara un agente distinto del repositorio, con textos aprobados antes. La cuenta se identifica como bot.", "main channel. Posts are prepared by an agent other than the repository one, from texts approved beforehand. The account identifies itself as a bot.")}</li>
+<li><a href="https://t.me/orvupi">t.me/stubxai</a> — {t("solo anuncios.", "announcements only.")}</li>
+<li> · <a href="https://www.tiktok.com/@orvupi">TikTok</a></li>
+<li><a href="mailto:orvupi.hq@gmail.com">orvupi.hq@gmail.com</a></li>
 </ul>
 <p>{t("No hay Discord. No hay atención 24 horas. Un mensaje directo no es soporte. Las normas antiestafa están en Seguridad.", "There is no Discord. There is no 24-hour support. A direct message is not support. The anti-scam rules are on Security.")}</p>
 <p>{t("Los domingos, @stubxai puede destacar un meme de la comunidad, pidiendo permiso antes en una respuesta pública, con crédito. No hay premios, pagos ni tokens por hacer memes. Nadie escribirá por privado por un meme.", "@stubxai may highlight a community meme on Sundays, asking permission first in a public reply, with credit. There are no prizes, payments, or tokens for making memes. Nobody will write in private about a meme.")}</p>
@@ -1150,7 +1150,7 @@ def marca() -> str:
 <li>{t("Sorteos, airdrops, whitelists o pedir dinero, datos o firmas.", "Giveaways, airdrops, whitelists, or asking for money, data, or signatures.")}</li>
 <li>{t("No ataques a personas ni proyectos reales por su nombre, y nada ofensivo o ilegal.", "Do not attack real people or projects by name, and nothing offensive or illegal.")}</li>
 </ul>
-<p>{t("Puedes descargar el kit y usarlo y adaptarlo para memes y contenido de fans sin ánimo de lucro, gratis y sin pedir permiso, si cumples las reglas de arriba. No puedes venderlo ni usarlo en anuncios, productos o promociones de pago sin permiso por escrito de STUBX (desde stubxai.hq@gmail.com o en una respuesta pública de @stubxai). Esta licencia no te hace socio ni representante de STUBX, no es una licencia de marca y no da derecho a nada (tokens, pagos ni acceso). El kit se ofrece tal cual, sin garantías, y el permiso se puede retirar; si alguien incumple las reglas, su permiso termina. Texto completo: LICENCIA.md, dentro del zip.", "You can download the kit and use and adapt it for non-commercial fan memes and content, free and without asking permission, if you follow the rules above. You cannot sell it or use it in ads, products, or paid promotions without written permission from STUBX (from stubxai.hq@gmail.com or in a public reply from @stubxai). This license does not make you a partner or a representative of STUBX, it is not a trademark license, and it grants no right to anything (tokens, payments, or access). The kit is offered as-is, with no warranties, and permission can be withdrawn; if someone breaks the rules, their permission ends. Full text: LICENCIA.md, inside the zip.")}</p>
+<p>{t("Puedes descargar el kit y usarlo y adaptarlo para memes y contenido de fans sin ánimo de lucro, gratis y sin pedir permiso, si cumples las reglas de arriba. No puedes venderlo ni usarlo en anuncios, productos o promociones de pago sin permiso por escrito de STUBX (desde orvupi.hq@gmail.com o en una respuesta pública de @stubxai). Esta licencia no te hace socio ni representante de STUBX, no es una licencia de marca y no da derecho a nada (tokens, pagos ni acceso). El kit se ofrece tal cual, sin garantías, y el permiso se puede retirar; si alguien incumple las reglas, su permiso termina. Texto completo: LICENCIA.md, dentro del zip.", "You can download the kit and use and adapt it for non-commercial fan memes and content, free and without asking permission, if you follow the rules above. You cannot sell it or use it in ads, products, or paid promotions without written permission from STUBX (from orvupi.hq@gmail.com or in a public reply from @stubxai). This license does not make you a partner or a representative of STUBX, it is not a trademark license, and it grants no right to anything (tokens, payments, or access). The kit is offered as-is, with no warranties, and permission can be withdrawn; if someone breaks the rules, their permission ends. Full text: LICENCIA.md, inside the zip.")}</p>
 <p>{t("El zip incluye además ejemplos rellenados, el avatar en 1080 px, la cabecera con aviso (solo para artículos), las fuentes con su licencia y un README con instrucciones. Avatar oficial: PNG 512 px y JPG 1080 px, dentro del kit.", "The zip also includes filled-in examples, the avatar at 1080 px, the header with the notice (for articles only), the fonts with their license, and a README with instructions. Official avatar: PNG 512 px and JPG 1080 px, inside the kit.")}</p>
 <p>{t("No hay concursos, premios, pagos ni tokens por hacer memes. Nadie de STUBX te escribirá por mensaje privado por tu meme. Si pasa, es una estafa: no respondas, no abras enlaces y no firmes nada.", "There are no contests, prizes, payments, or tokens for making memes. Nobody from STUBX will write to you in a private message about your meme. If that happens, it is a scam: do not reply, do not open links, and do not sign anything.")}</p>
 """
@@ -1238,10 +1238,10 @@ def pares() -> str:
 
 
 def contribuir() -> str:
-    fallo = "https://github.com/stubxai/stubx-agent/issues/new?template=informe-fallo.yml"
-    mejora = "https://github.com/stubxai/stubx-agent/issues/new?template=mejora.yml"
-    cambios = "https://github.com/stubxai/stubx-agent/compare"
-    politica = "https://github.com/stubxai/stubx-agent/security/policy"
+    fallo = "https://github.com/ORVUPI/orvupi-agent/issues/new?template=informe-fallo.yml"
+    mejora = "https://github.com/ORVUPI/orvupi-agent/issues/new?template=mejora.yml"
+    cambios = "https://github.com/ORVUPI/orvupi-agent/compare"
+    politica = "https://github.com/ORVUPI/orvupi-agent/security/policy"
     return f"""
 <h1>{t("Contribuir", "Contribute")}</h1>
 <p class="lede">{t("Ayuda a mejorar las herramientas de este repositorio. Sirve un error que otra persona pueda repetir, un texto confuso, una traducción revisable o una prueba de accesibilidad. Cualquier token de Solana puede ser el ejemplo del fallo.", "Help improve the tools in this repository. A useful report is a bug someone else can repeat, confusing text, a translation that can be reviewed, or an accessibility check. Any Solana token can be the example of the bug.")}</p>
@@ -1287,7 +1287,7 @@ def contribuir() -> str:
 </ul>
 <p>{t("No hay un plazo. Un envío no se acepta por ser largo o por repetirse.", "There is no deadline. A submission is not accepted because it is long or because it is repeated.")}</p>
 <h2>{t("Si el fallo es sensible", "If the bug is sensitive")}</h2>
-<p>{t("No abras un issue público con el detalle. Escribe a", "Do not open a public issue with the detail. Write to")} <a href="mailto:stubxai.hq@gmail.com">stubxai.hq@gmail.com</a> {t("o lee la", "or read the")} <a href="{politica}">{t("política de seguridad", "security policy")}</a>. {t("No envíes semilla ni claves. No hay pago por informar.", "Do not send a seed or keys. There is no payment for a report.")}</p>
+<p>{t("No abras un issue público con el detalle. Escribe a", "Do not open a public issue with the detail. Write to")} <a href="mailto:orvupi.hq@gmail.com">orvupi.hq@gmail.com</a> {t("o lee la", "or read the")} <a href="{politica}">{t("política de seguridad", "security policy")}</a>. {t("No envíes semilla ni claves. No hay pago por informar.", "Do not send a seed or keys. There is no payment for a report.")}</p>
 <p class="source">{t("Plantillas del repositorio: .github/ISSUE_TEMPLATE/ y .github/PULL_REQUEST_TEMPLATE.md. La plantilla descargable no llega a ningún servidor de esta web.", "Repository templates: .github/ISSUE_TEMPLATE/ and .github/PULL_REQUEST_TEMPLATE.md. The downloadable template is not sent to any server on this website.")}</p>
 """
 

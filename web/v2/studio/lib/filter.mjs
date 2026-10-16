@@ -189,7 +189,7 @@ const PRICE = new Set([
   "precio", "price", "valor", "cotizacion", "mercado", "sol", "sols", "token", "tokens", "chart",
   "grafico", "mcap", "capitalizacion",
 ]);
-const ASSET = new Set(["stubx"]);
+const ASSET = new Set(["orvupi"]);
 const WARNING_SAFE = [
   "frase de recuperacion",
   "recovery phrase",

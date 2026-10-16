@@ -1,4 +1,4 @@
-# STUBX · robots.txt · v3 (2026-10-09).
+# ORVUPI · robots.txt · v3 (2026-10-09).
 # Web oficial: https://stubxai.com · Las páginas públicas son indexables.
 # Se pide a los rastreadores de entrenamiento de IA que no usen el contenido.
 

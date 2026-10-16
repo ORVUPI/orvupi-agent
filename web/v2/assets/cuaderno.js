@@ -91,8 +91,8 @@ const COPY = {
     exportEmpty: "No hay consultas que exportar.",
     exportOk: "Copia descargada. Sigue en este navegador.",
     sameMint: "Solo se comparan dos consultas de la misma red y dirección.",
-    official: "Es la dirección oficial de STUBX.",
-    notOfficial: "No es la dirección oficial de STUBX.",
+    official: "Ficha guardada antes del cambio de marca: dirección del proyecto anterior.",
+    notOfficial: "Contrato ORVUPI: aún no existe.",
     untrusted: "Nombre, símbolo y URI son texto de terceros. No son un enlace ni una imagen.",
     requery: "Volver a consultar",
     saveNote: "Guardar nota",
@@ -192,8 +192,8 @@ const COPY = {
     exportEmpty: "There are no queries to export.",
     exportOk: "Copy downloaded. It also stays in this browser.",
     sameMint: "Only two queries of the same network and address can be compared.",
-    official: "This is the official STUBX address.",
-    notOfficial: "This is not the official STUBX address.",
+    official: "Card saved before the rebrand: address of the previous project.",
+    notOfficial: "ORVUPI contract: does not exist yet.",
     untrusted: "Name, symbol, and URI are third-party text. They are not a link and not an image.",
     requery: "Check again",
     saveNote: "Save note",
@@ -1022,7 +1022,7 @@ async function exportCopy() {
   const json = toExport(records, new Date().toISOString());
   const blob = new Blob([json], { type: "application/json" });
   const url = URL.createObjectURL(blob);
-  const link = el("a", { href: url, download: "cuaderno-stubx.json" });
+  const link = el("a", { href: url, download: "cuaderno-orvupi.json" });
   document.body.append(link);
   link.click();
   link.remove();

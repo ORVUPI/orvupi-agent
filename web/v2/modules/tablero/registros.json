@@ -3,13 +3,13 @@
   "updated": "2026-10-11",
   "editor": "Equipo del repositorio. La revisión por una persona distinta está pendiente.",
   "note": {
-    "es": "Estados de un registro, no fechas prometidas. Una idea, código en el repositorio y una función en stubxai.com son cosas distintas. Este tablero solo cuenta el trabajo de STUBX. Citar la dirección de otro token, si hiciera falta en una prueba, no lo avala.",
-    "en": "These are record states, not promised dates. An idea, code in the repository, and a function on stubxai.com are different things. This board only records STUBX work. Citing another token’s address, if a test needs it, does not endorse it."
+    "es": "Estados de un registro, no fechas prometidas. Una idea, código en el repositorio y una función en stubxai.com son cosas distintas. Este tablero solo cuenta el trabajo de ORVUPI. Citar la dirección de otro token, si hiciera falta en una prueba, no lo avala.",
+    "en": "These are record states, not promised dates. An idea, code in the repository, and a function on stubxai.com are different things. This board only records ORVUPI work. Citing another token’s address, if a test needs it, does not endorse it."
   },
   "ci": {
     "workflow": ".github/workflows/ci.yml",
     "node": "22.14.0",
-    "actionsUrl": "https://github.com/stubxai/stubx-agent/actions/workflows/ci.yml",
+    "actionsUrl": "https://github.com/ORVUPI/orvupi-agent/actions/workflows/ci.yml",
     "whatItRuns": {
       "es": "En cada push y en cada pull request: npm ci, typecheck, tests (incluidos verify/ y lab/), escaneo de firma del componente Verify, logs, ppm:print, npm audit, verify:all y gitleaks. El job de atestación solo corre en main.",
       "en": "On every push and pull request: npm ci, typecheck, tests (including verify/ and lab/), a scan of the Verify component for signing code, logs, ppm:print, npm audit, verify:all, and gitleaks. The attestation job runs only on main."
@@ -23,7 +23,7 @@
         "subject": "PR 13, rama feat/verify-mvp",
         "observedOn": "2026-10-08",
         "conclusion": "success",
-        "url": "https://github.com/stubxai/stubx-agent/actions/runs/37745755560",
+        "url": "https://github.com/ORVUPI/orvupi-agent/actions/runs/37745755560",
         "names": [
           "typecheck, test, audit (22.14.0)",
           "gitleaks"
@@ -40,8 +40,8 @@
       "id": "VERIFY",
       "version": "0.1.0",
       "title": {
-        "es": "STUBX Verify, MVP de solo lectura",
-        "en": "STUBX Verify, read-only MVP"
+        "es": "ORVUPI Verify, MVP de solo lectura",
+        "en": "ORVUPI Verify, read-only MVP"
       },
       "status": "en_revision",
       "webPublished": true,
@@ -62,7 +62,7 @@
             "es": "PR 13",
             "en": "PR 13"
           },
-          "href": "https://github.com/stubxai/stubx-agent/pull/13",
+          "href": "https://github.com/ORVUPI/orvupi-agent/pull/13",
           "note": {
             "es": "Fusionada en main. La página está en stubxai.com/verify.",
             "en": "Merged into main. The page is at stubxai.com/verify."
@@ -73,7 +73,7 @@
             "es": "CI del 2026-10-08",
             "en": "CI on 2026-10-08"
           },
-          "href": "https://github.com/stubxai/stubx-agent/actions/runs/37745755560",
+          "href": "https://github.com/ORVUPI/orvupi-agent/actions/runs/37745755560",
           "note": {
             "es": "Verde en esa ejecución. No habla de Lab.",
             "en": "That run passed. It does not cover Lab."
@@ -130,8 +130,8 @@
       "id": "U01",
       "version": "1.0.0",
       "title": {
-        "es": "STUBX Lab, misión 1",
-        "en": "STUBX Lab, mission 1"
+        "es": "ORVUPI Lab, misión 1",
+        "en": "ORVUPI Lab, mission 1"
       },
       "status": "en_revision",
       "webPublished": true,
@@ -152,7 +152,7 @@
             "es": "PR 14",
             "en": "PR 14"
           },
-          "href": "https://github.com/stubxai/stubx-agent/pull/14",
+          "href": "https://github.com/ORVUPI/orvupi-agent/pull/14",
           "note": {
             "es": "Fusionada el 2026-10-09. La misión está en stubxai.com/lab.",
             "en": "Merged on 2026-10-09. The mission is at stubxai.com/lab."
@@ -242,7 +242,7 @@
             "es": "PR 14",
             "en": "PR 14"
           },
-          "href": "https://github.com/stubxai/stubx-agent/pull/14",
+          "href": "https://github.com/ORVUPI/orvupi-agent/pull/14",
           "note": {
             "es": "Fusionada el 2026-10-09. La página está en stubxai.com/tablero.",
             "en": "Merged on 2026-10-09. The page is at stubxai.com/tablero."
@@ -325,7 +325,7 @@
             "es": "PR 14",
             "en": "PR 14"
           },
-          "href": "https://github.com/stubxai/stubx-agent/pull/14",
+          "href": "https://github.com/ORVUPI/orvupi-agent/pull/14",
           "note": {
             "es": "Fusionada el 2026-10-09. El inglés sigue pendiente de revisión humana.",
             "en": "Merged on 2026-10-09. English is still waiting for human review."
@@ -397,7 +397,7 @@
             "es": "PR 14",
             "en": "PR 14"
           },
-          "href": "https://github.com/stubxai/stubx-agent/pull/14",
+          "href": "https://github.com/ORVUPI/orvupi-agent/pull/14",
           "note": {
             "es": "Fusionada el 2026-10-09. La pasada cubre estos borradores y no certifica toda la web.",
             "en": "Merged on 2026-10-09. The pass covers these drafts and does not certify the whole website."
@@ -447,8 +447,8 @@
       "id": "U02",
       "version": "1.0.0",
       "title": {
-        "es": "STUBX Studio",
-        "en": "STUBX Studio"
+        "es": "ORVUPI Studio",
+        "en": "ORVUPI Studio"
       },
       "status": "en_revision",
       "webPublished": true,
@@ -645,7 +645,7 @@
             "es": "PR 24",
             "en": "PR 24"
           },
-          "href": "https://github.com/stubxai/stubx-agent/pull/24",
+          "href": "https://github.com/ORVUPI/orvupi-agent/pull/24",
           "note": {
             "es": "Biblioteca y cuaderno.",
             "en": "Library and notebook."

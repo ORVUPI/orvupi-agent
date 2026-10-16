@@ -43,7 +43,7 @@ const COPY = {
     checksTitle: "Qué puede comprobar esta red",
     can: "Esta lectura puede pedir",
     cannot: "Esta lectura no pide",
-    notStubx: "No es la dirección de STUBX en Solana.",
+    notStubx: "ORVUPI todavía no tiene contrato en ninguna red.",
     third: "El nombre y el símbolo son texto que escribió el contrato.",
   },
   en: {
@@ -78,7 +78,7 @@ const COPY = {
     checksTitle: "What this network can check",
     can: "This reading can ask for",
     cannot: "This reading does not ask for",
-    notStubx: "It is not the STUBX address on Solana.",
+    notStubx: "ORVUPI does not have a contract on any network yet.",
     third: "The name and the symbol are text the contract wrote.",
   },
 };

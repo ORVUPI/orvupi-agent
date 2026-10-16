@@ -1,7 +1,8 @@
-/* STUBX web v2. Mismo origen. Sin service worker y sin red. */
+/* ORVUPI web v2. Mismo origen. Sin service worker y sin red. */
 (function () {
   var LANG_KEY = "stubx-lab-lang";
-  var OFFICIAL_CA = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
+  // Contrato ORVUPI: aún no existe (ver /shared/orvupi-contract.json). Sin contrato no hay nada que copiar.
+  var OFFICIAL_CA = "";
   document.documentElement.classList.add("js");
 
   function readLang() {
@@ -82,7 +83,7 @@
       };
       btn.addEventListener("click", function () {
         var value = (btn.getAttribute("data-copy") || "").trim();
-        if (value !== OFFICIAL_CA) {
+        if (!OFFICIAL_CA || value !== OFFICIAL_CA) {
           say(value ? "Copia bloqueada" : "Vacío", "error");
           return;
         }
@@ -118,7 +119,7 @@
     if (caida) {
       caida.addEventListener("click", function () {
         var input = document.getElementById("direccion-token");
-        var raw = input && input.value ? input.value : OFFICIAL_CA;
+        var raw = input && input.value ? input.value : "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
         document.dispatchEvent(
           new CustomEvent("stubx-verify-preview", {
             detail: { kind: "lectura_caida", raw: raw },

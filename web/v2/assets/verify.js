@@ -1,8 +1,8 @@
 "use strict";
 (() => {
-const STUBX_VERIFY = {"cards":[{"mint":"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v","role":"contraste","roleNote":{"es":"USDC, contraste. Bytes del mint el 2026-10-09 18:42 Europe/Madrid: 7.442.271.613,512366. getTokenSupply en ese minuto no coincidió, así que no hay porcentajes. No es STUBX y no está presentado como clon. La ficha del 2026-10-08 conserva la cifra de aquel día.","en":"USDC, a contrast. Mint bytes on 2026-10-09 18:42 Europe/Madrid: 7,442,271,613.512366. getTokenSupply did not match in that minute, so there are no percentages. It is not STUBX and is not presented as a clone. The 2026-10-08 card keeps that day's figure."},"id":"80671753ebbcdee3317b7b2bbf7ef14eba21f8a58e437bcfdab42da02b15d7a2","createdAt":"2026-10-09T16:42:39.825Z","partial":true,"referenceSlot":454929422,"name":"USD Coin","nameStatus":"verificado","symbol":"USDC","inRegistry":false,"inRegistryStatus":"verificado","mintAuthority":{"state":"activa","status":"verificado"},"freezeAuthority":{"state":"activa","status":"verificado"},"metadataReading":"mutables","metadataLevel":"atención","holdersStatus":"no_disponible","holdersNote":"Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como cantidad cero.","impersonation":false,"authenticityLevel":"ok","signals":[],"statement":"Este mint no está en el registro curado. Que no esté no significa que sea falso ni que sea una copia.","statementStatus":"verificado","curvePresent":false,"curvePresentStatus":"verificado","curveProgress":null,"curveProgressStatus":"no_aplica","curveProgressNote":"No hay curva. No se rellena con cero.","curveModuleNote":"La dirección derivada tiene una cuenta cuyo propietario no es el programa de Pump.fun. No es una curva y no se rellenan con cero las cantidades de la curva.","rulesVersion":"0.1.0","statement_en":"This mint is not in the curated registry. That does not mean it is fake or a copy.","holdersNote_en":"No usable response. It is not interpreted as a revoked authority, as immutability, or as a zero balance.","curveProgressNote_en":"There is no curve. It is not filled with zero.","curveModuleNote_en":"The derived address has an account whose owner is not the Pump.fun program. It is not a curve, and the curve amounts are not filled in with zero.","signals_en":[]}],"source":"lista","evm":[],"rpc":{"primary":"https://solana-rpc.publicnode.com","fallback":"https://api.mainnet-beta.solana.com"},"registry":[{"id":"stubx","mint":"TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump","name":"STUBX","symbol":"STUBX","imageUris":["https://ipfs.io/ipfs/bafkreiew224xxf6ncagzzew5bfxlc6hejrib6jmxx66kxdrv5pkeoavd5e"],"imageCids":["bafkreiew224xxf6ncagzzew5bfxlc6hejrib6jmxx66kxdrv5pkeoavd5e"],"links":["https://x.com/stubxai","https://stubxai.com/","https://superb-horse-9036f5.netlify.app/"],"webHosts":["stubxai.com","superb-horse-9036f5.netlify.app"],"publishedAccounts":[{"address":"2fS12sTD4TNEEE9MoCEt19brV41UjGdAnaNaxWcmiWvX","label":"cuenta personal publicada del creador, saldo leído; no es un censo"}]}]};
+const STUBX_VERIFY = {"cards":[{"mint":"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v","role":"contraste","roleNote":{"es":"USDC, contraste. Bytes del mint el 2026-10-09 18:42 Europe/Madrid: 7.442.271.613,512366. getTokenSupply en ese minuto no coincidió, así que no hay porcentajes. No es STUBX y no está presentado como clon. La ficha del 2026-10-08 conserva la cifra de aquel día.","en":"USDC, a contrast. Mint bytes on 2026-10-09 18:42 Europe/Madrid: 7,442,271,613.512366. getTokenSupply did not match in that minute, so there are no percentages. It is not STUBX and is not presented as a clone. The 2026-10-08 card keeps that day's figure."},"id":"80671753ebbcdee3317b7b2bbf7ef14eba21f8a58e437bcfdab42da02b15d7a2","createdAt":"2026-10-09T16:42:39.825Z","partial":true,"referenceSlot":454929422,"name":"USD Coin","nameStatus":"verificado","symbol":"USDC","inRegistry":false,"inRegistryStatus":"verificado","mintAuthority":{"state":"activa","status":"verificado"},"freezeAuthority":{"state":"activa","status":"verificado"},"metadataReading":"mutables","metadataLevel":"atención","holdersStatus":"no_disponible","holdersNote":"Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como cantidad cero.","impersonation":false,"authenticityLevel":"ok","signals":[],"statement":"Este mint no está en el registro curado. Que no esté no significa que sea falso ni que sea una copia.","statementStatus":"verificado","curvePresent":false,"curvePresentStatus":"verificado","curveProgress":null,"curveProgressStatus":"no_aplica","curveProgressNote":"No hay curva. No se rellena con cero.","curveModuleNote":"La dirección derivada tiene una cuenta cuyo propietario no es el programa de Pump.fun. No es una curva y no se rellenan con cero las cantidades de la curva.","rulesVersion":"0.1.0","statement_en":"This mint is not in the curated registry. That does not mean it is fake or a copy.","holdersNote_en":"No usable response. It is not interpreted as a revoked authority, as immutability, or as a zero balance.","curveProgressNote_en":"There is no curve. It is not filled with zero.","curveModuleNote_en":"The derived address has an account whose owner is not the Pump.fun program. It is not a curve, and the curve amounts are not filled in with zero.","signals_en":[]}],"source":"lista","evm":[],"rpc":{"primary":"https://solana-rpc.publicnode.com","fallback":"https://api.mainnet-beta.solana.com"},"registry":[]};
 const BASE58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
-const OFFICIAL_MINT = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
+const OFFICIAL_MINT = "";
 const COPY = {
     vacio: {
         light: "neutro",
@@ -18,14 +18,14 @@ const COPY = {
         lightLabel: { es: "Dirección no válida", en: "Address is not valid" },
         title: { es: "Esta dirección no es válida", en: "This address is not valid" },
         support: {
-            es: `Tiene que ser la dirección completa, sin el nombre del token y sin texto alrededor. Una dirección de Solana es larga: de 32 a 44 letras y números, sin 0, O, I ni l. Por ejemplo: ${OFFICIAL_MINT}.`,
-            en: `It has to be the full address, without the token name and without surrounding text. A Solana address is long: 32 to 44 letters and numbers, with no 0, O, I, or l. For example: ${OFFICIAL_MINT}.`,
+            es: `Tiene que ser la dirección completa, sin el nombre del token y sin texto alrededor. Una dirección de Solana es larga: de 32 a 44 letras y números, sin 0, O, I ni l. Por ejemplo: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v.`,
+            en: `It has to be the full address, without the token name and without surrounding text. A Solana address is long: 32 to 44 letters and numbers, with no 0, O, I, or l. For example: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v.`,
         },
     },
     oficial: {
         light: "ok",
         lightLabel: { es: "Parece oficial", en: "Looks official" },
-        title: { es: "Parece el el token del registro oficial", en: "Looks like the official el token del registro" },
+        title: { es: "Parece el ORVUPI oficial", en: "Looks like the official ORVUPI" },
         support: {
             es: "La dirección coincide con la ficha del registro. La fecha va en los detalles. «Parece» no es una garantía permanente.",
             en: "The address matches the registry card. The date is in the details. “Looks like” is not a permanent guarantee.",
@@ -33,17 +33,17 @@ const COPY = {
     },
     copia: {
         light: "atencion",
-        lightLabel: { es: "Se parece a el token del registro, pero no es la CA oficial", en: "Looks like el token del registro, but it is not the official CA" },
-        title: { es: "Se parece a el token del registro, pero no es la CA oficial", en: "Looks like el token del registro, but it is not the official CA" },
+        lightLabel: { es: "Se parece a ORVUPI, pero no es la CA oficial", en: "Looks like ORVUPI, but it is not the official CA" },
+        title: { es: "Se parece a ORVUPI, pero no es la CA oficial", en: "Looks like ORVUPI, but it is not the official CA" },
         support: {
-            es: `El nombre o el símbolo se parece a el token del registro y la dirección es otra. Esto no dice quién lo creó ni con qué intención. La única CA oficial es ${OFFICIAL_MINT}.`,
-            en: `The name or the symbol looks like el token del registro and the address is different. This does not say who created it or why. The only official CA is ${OFFICIAL_MINT}.`,
+            es: `El nombre o el símbolo se parece a ORVUPI y la dirección es otra. Esto no dice quién lo creó ni con qué intención. ORVUPI todavía no tiene contrato.`,
+            en: `The name or the symbol looks like ORVUPI and the address is different. This does not say who created it or why. ORVUPI does not have a contract yet.`,
         },
     },
     otra: {
         light: "atencion",
         lightLabel: { es: "Otra dirección", en: "Another address" },
-        title: { es: "No es el el token del registro oficial", en: "This is not the official el token del registro" },
+        title: { es: "No es el ORVUPI oficial", en: "This is not the official ORVUPI" },
         support: {
             es: "Hay ficha de esta dirección y no es la del registro. Tampoco es una señal de copia.",
             en: "There is a card for this address and it is not the registry one. It is not a copy signal either.",
@@ -166,7 +166,7 @@ function notOfficialView(mint, official) {
         light: "atencion",
         lightLabel: pair("No es la oficial", "Not the official one"),
         title: pair("No es la dirección oficial", "Not the official address"),
-        support: pair(`No es la dirección oficial de el token del registro. La oficial es ${official}. Esto no dice quién creó esta dirección ni con qué intención.`, `This is not the official el token del registro address. The official one is ${official}. This does not say who created this address or why.`),
+        support: pair(`No es la dirección oficial de ORVUPI. Esto no dice quién creó esta dirección ni con qué intención.`, `This is not the official ORVUPI address. The official one is ${official}. This does not say who created this address or why.`),
         mint,
         rows: [],
         partialNote: pair(caseOnly ? `${caseNote.es} ${NOT_OFFICIAL_GAP.es}` : NOT_OFFICIAL_GAP.es, caseOnly ? `${caseNote.en} ${NOT_OFFICIAL_GAP.en}` : NOT_OFFICIAL_GAP.en),
@@ -215,7 +215,7 @@ function rowsFor(card) {
 const PARTIAL = pair("La ficha está incompleta: la muestra de cuentas con tokens no está. Eso no se rellena con un cero.", "The card is incomplete: the token account sample is missing. That is not filled in with a zero.");
 const CENSUS = pair("Hay saldos de la curva y de la creadora. No es un censo ni se rellena el resto con un cero.", "There are balances for the curve and the creator. It is not a census, and the rest is not filled in with a zero.");
 const CENSUS_PERSONAL = pair("Hay saldos de la curva, de la creadora y de la cuenta personal publicada. No es un censo ni se rellena el resto con un cero.", "There are balances for the curve, the creator, and the published personal account. It is not a census, and the rest is not filled in with a zero.");
-const SOLANA_ONLY = "El el token del registro oficial solo existe en Solana";
+const SOLANA_ONLY = "ORVUPI todavía no tiene contrato en ninguna red";
 function partialNoteFor(card) {
     if (!card.partial)
         return null;
@@ -235,7 +235,7 @@ function evmView(address, evm) {
             light: "riesgo",
             lightLabel: pair("Copia conocida", "Known copy"),
             title: pair("Copia conocida", "Known copy"),
-            support: pair(`${SOLANA_ONLY}. Ejemplo de search-v2 de Pump.fun, 08-10 09:14, sin verificar en la cadena (${chain}).`, `The official el token del registro exists only on Solana. Example from Pump.fun search-v2, 2026-10-08 09:14, not verified on-chain (${chain}).`),
+            support: pair(`${SOLANA_ONLY}. Ejemplo de search-v2 de Pump.fun, 08-10 09:14, sin verificar en la cadena (${chain}).`, `ORVUPI does not have a contract on any network yet. Example from Pump.fun search-v2, 2026-10-08 09:14, not verified on-chain (${chain}).`),
             mint: found.address,
             rows: [
                 { label: pair("Red", "Network"), value: pair(chain, chain) },
@@ -251,7 +251,7 @@ function evmView(address, evm) {
         kind: "evm",
         light: "atencion",
         lightLabel: pair("Otra red", "Another network"),
-        title: pair(SOLANA_ONLY, "The official el token del registro exists only on Solana"),
+        title: pair(SOLANA_ONLY, "ORVUPI does not have a contract on any network yet"),
         support: pair("Una dirección que empieza por 0x no es el mint de Solana. La lista de ejemplos no es completa y no se ha verificado en la cadena.", "An address that starts with 0x is not the Solana mint. The example list is not complete and it has not been verified on-chain."),
         mint: shown,
         rows: [],
@@ -591,9 +591,9 @@ function evmMessage(input, knownEvm = []) {
     }
     const known = knownEvm.some((address) => address.toLowerCase() === trimmed.toLowerCase());
     if (known) {
-        return "Copia conocida. El el token del registro oficial solo existe en Solana. Ejemplo de search-v2 de Pump.fun, 08-10 09:14, sin verificar en la cadena.";
+        return "Copia conocida. ORVUPI todavía no tiene contrato en ninguna red. Ejemplo de search-v2 de Pump.fun, 08-10 09:14, sin verificar en la cadena.";
     }
-    return "El el token del registro oficial solo existe en Solana.";
+    return "ORVUPI todavía no tiene contrato en ninguna red.";
 }
 function validateMint(input, knownEvm = []) {
     const evm = evmMessage(input, knownEvm);
@@ -1866,10 +1866,10 @@ function decodeBase64(value) {
     return out;
 }
 
-const OFFICIAL_CA = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
+const OFFICIAL_CA = "";
 const AUDIT_NOTICE = {
-    es: "Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. el token del registro no tiene relación con este token salvo que sea la CA oficial. Que no aparezcan señales no significa que esté todo comprobado.",
-    en: "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. el token del registro has no relationship with this token unless it is the official CA. No signals showing does not mean everything was checked.",
+    es: "Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. ORVUPI no tiene relación con este token salvo que sea la CA oficial. Que no aparezcan señales no significa que esté todo comprobado.",
+    en: "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. ORVUPI has no relationship with this token unless it is the official CA. No signals showing does not mean everything was checked.",
 };
 const PRIVACY_NOTICE = {
     es: "La lectura es directa y solo en lectura.",
@@ -2187,7 +2187,7 @@ async function readWith(mint, registry, rpc, input) {
             missing: loc("No falta ningún dato pedido en esta lectura.", "No requested fact is missing in this reading."),
             missingState: "ok",
             absent: loc("Comprobado: no existe: la cuenta.", "Confirmed: it does not exist: the account."),
-            identity: loc(`Identidad del proyecto, aparte de este análisis: la CA oficial de el token del registro es ${OFFICIAL_CA}.`, `Project identity, separate from this analysis: the official el token del registro CA is ${OFFICIAL_CA}.`),
+            identity: loc("Contrato ORVUPI: aún no existe.", "ORVUPI contract: does not exist yet."),
         };
     }
     if (!isMintAccount(mintInfo.owner, mintInfo.data)) {
@@ -2285,7 +2285,7 @@ async function readWith(mint, registry, rpc, input) {
             id: "invisibles",
             level: "atencion",
             title: loc("Hay caracteres invisibles en el nombre", "There are invisible characters in the name"),
-            explain: loc("Al mostrar el nombre se marcaron caracteres de control o invisibles. La comparación con el token del registro los quita antes de mirar.", "When showing the name, control or invisible characters were marked. The comparison with el token del registro removes them first."),
+            explain: loc("Al mostrar el nombre se marcaron caracteres de control o invisibles. La comparación con ORVUPI los quita antes de mirar.", "When showing the name, control or invisible characters were marked. The comparison with ORVUPI removes them first."),
         });
     }
     // getTokenLargestAccounts en publicnode responde 403 por diseño. Solo se pide a mainnet-beta.
@@ -2318,7 +2318,7 @@ async function readWith(mint, registry, rpc, input) {
         signals.push({
             id: "registro",
             level: "ok",
-            title: loc("Está en el registro de el token del registro", "It is in the el token del registro registry"),
+            title: loc("Está en el registro de ORVUPI", "It is in the ORVUPI registry"),
             explain: loc("La dirección coincide con la del registro. La ficha fechada es una foto anterior. Estar en el registro no es una auditoría.", "The address matches the one in the registry. The dated card is an earlier snapshot. Being in the registry is not an audit."),
         });
     }
@@ -2326,8 +2326,8 @@ async function readWith(mint, registry, rpc, input) {
         signals.push({
             id: "copia",
             level: "atencion",
-            title: loc("Se parece a el token del registro, pero no es la CA oficial", "Looks like el token del registro, but it is not the official CA"),
-            explain: loc(`El nombre o el símbolo se parece a el token del registro y la dirección es otra. Esto no dice quién lo creó ni con qué intención. La única CA oficial es ${OFFICIAL_CA}.`, `The name or the symbol looks like el token del registro and the address is different. This does not say who created it or why. The only official CA is ${OFFICIAL_CA}.`),
+            title: loc("Se parece a ORVUPI, pero no es la CA oficial", "Looks like ORVUPI, but it is not the official CA"),
+            explain: loc(`El nombre o el símbolo se parece a ORVUPI y la dirección es otra. Esto no dice quién lo creó ni con qué intención. ORVUPI todavía no tiene contrato.`, `The name or the symbol looks like ORVUPI and the address is different. This does not say who created it or why. ORVUPI does not have a contract yet.`),
         });
     }
     else if (likeness.signals.length > 0) {
@@ -2353,17 +2353,17 @@ async function readWith(mint, registry, rpc, input) {
         ? {
             light: risky || attention ? "atencion" : "ok",
             lightLabel: loc("En el registro", "In the registry"),
-            title: loc("Esta dirección es la del registro de el token del registro", "This address is the one in the el token del registro registry"),
+            title: loc("Esta dirección es la del registro de ORVUPI", "This address is the one in the ORVUPI registry"),
             support: loc("La lectura de ahora coincide con la dirección del registro. Las fichas fechadas siguen abajo, como foto anterior.", "This reading matches the address in the registry. The dated cards remain below, as an earlier snapshot."),
         }
         : {
             light: (risky ? "riesgo" : copyByName || attention ? "atencion" : "neutro"),
             lightLabel: copyByName
-                ? loc("Se parece a el token del registro, pero no es la CA oficial", "Looks like el token del registro, but it is not the official CA")
+                ? loc("Se parece a ORVUPI, pero no es la CA oficial", "Looks like ORVUPI, but it is not the official CA")
                 : loc(risky || attention ? "Hay señales" : "Sin esas señales", risky || attention ? "Signals found" : "Without those signals"),
             title: loc("Lectura de este token", "Reading for this token"),
             support: copyByName
-                ? loc("No es la dirección oficial de el token del registro. Cada señal describe un hecho leído ahora. No es una puntuación.", "This is not the official el token del registro address. Each signal describes a fact read just now. It is not a score.")
+                ? loc("No es la dirección oficial de ORVUPI. Cada señal describe un hecho leído ahora. No es una puntuación.", "This is not the official ORVUPI address. Each signal describes a fact read just now. It is not a score.")
                 : loc("Cada señal describe un hecho leído ahora. No es una puntuación.", "Each signal describes a fact read just now. It is not a score."),
         };
     const quotedName = clipForeign(names[0] || "", likeness.inRegistry);
@@ -2392,10 +2392,10 @@ async function readWith(mint, registry, rpc, input) {
     const missing = grouped.missing;
     const absent = grouped.absent;
     const identity = loc(likeness.inRegistry
-        ? `Identidad del proyecto: esta dirección (${mint}) es la CA oficial de el token del registro.`
-        : `Identidad del proyecto, aparte de este análisis: la CA oficial de el token del registro es ${OFFICIAL_CA}.`, likeness.inRegistry
-        ? `Project identity: this address (${mint}) is the official el token del registro CA.`
-        : `Project identity, separate from this analysis: the official el token del registro CA is ${OFFICIAL_CA}.`);
+        ? `Identidad del proyecto: esta dirección (${mint}) es la CA oficial de ORVUPI.`
+        : "Contrato ORVUPI: aún no existe.", likeness.inRegistry
+        ? `Project identity: this address (${mint}) is the official ORVUPI CA.`
+        : "ORVUPI contract: does not exist yet.");
     const checkedEs = facts.filter((item) => item.state === "ok").map((item) => item.label.es);
     const checkedEn = facts.filter((item) => item.state === "ok").map((item) => item.label.en);
     const attentionEs = signals
@@ -2834,7 +2834,7 @@ const TOPIC_BY_ID = {
   ficha: "metadatos",
 };
 
-const SUMMARY_OFFICIAL = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
+const SUMMARY_OFFICIAL = "";
 
 const ATTENTION = {
   emision: {
@@ -2915,10 +2915,10 @@ const ATTENTION = {
   },
   copia: {
     title: { es: "Dirección", en: "Address" },
-    lead: { es: "Se parece a el token del registro pero no es la dirección oficial.", en: "It looks like el token del registro but it is not the official address." },
+    lead: { es: "Se parece a ORVUPI pero no es la dirección oficial.", en: "It looks like ORVUPI but it is not the official address." },
     detail: {
-      es: "La dirección oficial está publicada en stubxai.com. Ábrela y compárala con la de esta lectura, carácter a carácter. Un nombre igual no cambia la dirección.",
-      en: "The official address is published on stubxai.com. Open it and compare it with the one in this reading, character by character. The same name does not change the address.",
+      es: "ORVUPI todavía no tiene contrato. Un token que use su nombre no es de ORVUPI. Un nombre igual no cambia la dirección.",
+      en: "ORVUPI does not have a contract yet. A token that uses its name is not ORVUPI's. The same name does not change the address.",
     },
   },
   ficha: {
@@ -3122,7 +3122,7 @@ function summaryShown(value) {
 
 function looksLikeStubx(context) {
   if (!context) return false;
-  return summaryNormalizeToken(context.name).includes("stubx") || summaryNormalizeToken(context.symbol).includes("stubx");
+  return summaryNormalizeToken(context.name).includes("orvupi") || summaryNormalizeToken(context.symbol).includes("orvupi");
 }
 
 function quotedIdentity(context) {
@@ -3565,8 +3565,8 @@ function cloneWarningText(card, lang) {
   const context = contextFromCard(card);
   if (context.official || !looksLikeStubx(context)) return "";
   return lang === "en"
-    ? "It looks like el token del registro but it is not the official address."
-    : "Se parece a el token del registro pero no es la dirección oficial.";
+    ? "It looks like ORVUPI but it is not the official address."
+    : "Se parece a ORVUPI pero no es la dirección oficial.";
 }
 
 function comparisonBanner(left, right, lang) {
@@ -3799,7 +3799,7 @@ const MARKET_TIMEOUT_MS = 8_000;
 const MARKET_CLIENT_LIMIT = 6;
 const MARKET_CLIENT_WINDOW_MS = 60_000;
 const MARKET_LOW_USD = 1_000;
-const MARKET_OFFICIAL_MINT = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
+const MARKET_OFFICIAL_MINT = "";
 // Lista cerrada, por mint exacto. El nombre es fijo: no se usa el símbolo de la fuente.
 const MARKET_KNOWN_QUOTES = new Map([
   ["So11111111111111111111111111111111111111112", "SOL"],
@@ -5003,8 +5003,8 @@ function paintVerify(out, view) {
     emptySupport.textContent = view.support[lang];
     var list = verifyEl("ul", { class: "leyenda" });
     list.append(
-      legendItem("ok", lang === "en" ? "el token del registro registry address" : "Dirección del registro de el token del registro"),
-      legendItem("atencion", lang === "en" ? "Looks like el token del registro, but it is not the official CA" : "Se parece a el token del registro, pero no es la CA oficial"),
+      legendItem("ok", lang === "en" ? "ORVUPI registry address" : "Dirección del registro de ORVUPI"),
+      legendItem("atencion", lang === "en" ? "Looks like ORVUPI, but it is not the official CA" : "Se parece a ORVUPI, pero no es la CA oficial"),
       legendItem("neutro", lang === "en" ? "Could not be checked" : "No se pudo comprobar"),
     );
     out.append(emptyTitle, emptySupport, list);
@@ -5189,8 +5189,8 @@ function bootVerify() {
         level: "atencion",
         cardDate: createdAt,
         title: {
-          es: "La ficha fechada también dice que se parece a el token del registro y no es la CA oficial",
-          en: "The dated card also says it looks like el token del registro and is not the official CA",
+          es: "La ficha fechada también dice que se parece a ORVUPI y no es la CA oficial",
+          en: "The dated card also says it looks like ORVUPI and is not the official CA",
         },
         explain: cardView.support,
       };
