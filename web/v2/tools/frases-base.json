@@ -195,26 +195,6 @@
   {
    "pagina": "risks",
    "lang": "es",
-   "frase": "No es un dictamen jurídico ni consejo de inversión."
-  },
-  {
-   "pagina": "risks",
-   "lang": "en",
-   "frase": "It is not a legal opinion or investment advice."
-  },
-  {
-   "pagina": "risks",
-   "lang": "es",
-   "frase": "No es consejo de inversión ni una recomendación."
-  },
-  {
-   "pagina": "risks",
-   "lang": "en",
-   "frase": "It is not investment advice or a recommendation."
-  },
-  {
-   "pagina": "risks",
-   "lang": "es",
    "frase": "No prometemos rentabilidad, precio, listado en exchanges ni venta pública."
   },
   {
@@ -331,6 +311,16 @@
    "pagina": "marca",
    "lang": "en",
    "frase": "Official contact: X @ORVUPI or orvupi.hq@gmail.com."
+  },
+  {
+   "pagina": "risks",
+   "lang": "es",
+   "frase": "No es un dictamen jurídico, ni consejo de inversión, ni una recomendación."
+  },
+  {
+   "pagina": "risks",
+   "lang": "en",
+   "frase": "It is not a legal opinion, investment advice or a recommendation."
   }
  ]
 }

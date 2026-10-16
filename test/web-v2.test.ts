@@ -305,6 +305,16 @@ describe("web ORVUPI", () => {
     for (const txt of ["security.txt", ".well-known/security.txt"]) assert.match(read(txt), /^Contact: mailto:orvupi\.hq@gmail\.com$/m);
   });
 
+  test("el Tablero no tiene rutas rotas por el cambio de dominio y /risks dice una sola vez lo de inversión", () => {
+    const tablero = read("tablero/index.html");
+    assert.equal(/esta web\/|this website\/|columna esta web|esta web column/.test(tablero), false);
+    assert.equal(/<span class="lang en" lang="en">[^<]*esta web/.test(tablero), false);
+    const risks = read("risks/index.html");
+    assert.equal((risks.match(/consejo de inversión/g) || []).length, 1);
+    assert.ok(risks.includes("No es un dictamen jurídico, ni consejo de inversión, ni una recomendación."));
+    assert.ok(risks.includes("It is not a legal opinion, investment advice or a recommendation."));
+  });
+
   test("ninguna página muestra la franja de cifras de la portada", () => {
     for (const file of walk(siteRoot())) {
       const rel = path.relative(siteRoot(), file).split(path.sep).join("/");
