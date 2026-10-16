@@ -23,7 +23,7 @@ https://superb-horse-9036f5.netlify.app/*  https://stubxai.com/:splat  301!
 /docs.html          /            301
 /.well-known/security.txt  /security.txt  200
 
-# ORVUPI retirado (16-10-2026): las páginas del token anterior salen de la web vigente.
+# Token anterior retirado (16-10-2026): sus páginas salen de la web vigente.
 /token.json         /            301
 /tokenomics         /            301
 /tokenomics/*       /            301

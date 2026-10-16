@@ -513,7 +513,7 @@ describe("studio", () => {
     assert.deepEqual(list.emojis, ["🚀", "🌕", "📈", "💎", "🙌", "🤑", "💰", "🔥", "🌙", "💸", "📊", "💲"]);
     assert.equal(Object.hasOwn(list, "nameHashes"), false);
     assert.deepEqual(list.emojiSequences, ["💎🙌"]);
-    assert.deepEqual(list.handles, ["ORVUPI", "orvupi", "creadorORVUPI"]);
+    assert.deepEqual(list.handles, ["ORVUPI", "creadorORVUPI"]);
     assert.deepEqual(list.domains, ["stubxai.com", "t.me"]);
 
     const { analyze, exportAllowed } = await load<{ analyze: Analyze; exportAllowed: (title: string, body: string, list?: unknown, token?: string) => boolean }>(
