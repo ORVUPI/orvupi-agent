@@ -10,7 +10,7 @@ const root = repoRootFrom(import.meta.url);
 const enabled = process.env.VERIFY_SMOKE === "1";
 
 describe("humo opcional contra mainnet", { skip: enabled ? false : "VERIFY_SMOKE no está en 1" }, () => {
-  test("un token conocido ajeno a STUBX se lee sin llamarlo copia", async () => {
+  test("un token conocido ajeno a STUB se lee sin llamarlo copia", async () => {
     const dir = path.join(root, "verify/examples/2026-10-09");
     const file = readdirSync(dir).find((name) => name.startsWith("EPjFW") && name.endsWith(".json"));
     assert.ok(file);
@@ -20,7 +20,7 @@ describe("humo opcional contra mainnet", { skip: enabled ? false : "VERIFY_SMOKE
       fallbackRpcUrl: string;
     };
     const registry = (
-      JSON.parse(readFileSync(path.join(root, "verify/registry/canonical.json"), "utf8")) as { tokens: CanonicalToken[] }
+      JSON.parse(readFileSync(path.join(root, "verify/test/fixtures/registry-demo.json"), "utf8")) as { tokens: CanonicalToken[] }
     ).tokens;
     const reading = await readAnyMint({
       mint,
@@ -33,7 +33,7 @@ describe("humo opcional contra mainnet", { skip: enabled ? false : "VERIFY_SMOKE
     assert.equal(reading.ok, true, reading.support.es);
     assert.equal(reading.title.es, "Lectura de este token");
     assert.equal(
-      reading.signals.some((item) => item.title.es === "Se parece a STUBX, pero no es la CA oficial"),
+      reading.signals.some((item) => item.title.es === "Se parece a STUB, pero no es la CA oficial"),
       false,
     );
     assert.match(reading.signals.find((item) => item.id === "programa")?.explain.es ?? "", /SPL Token/);

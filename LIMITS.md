@@ -1,10 +1,10 @@
-# Límites del agente STUBX (v1)
+# Límites del agente ORVUPI (v1)
 
-Política en lenguaje llano. La copia máquina es [`policy/limits.json`](policy/limits.json) (`id`: `stubx-agent-limits`, `version`: `1.0.0`). Un test falla si el markdown, el JSON y el código no coinciden.
+Política en lenguaje llano. La copia máquina es [`policy/limits.json`](policy/limits.json) (`id`: `orvupi-agent-limits`, `version`: `1.0.0`). Un test falla si el markdown, el JSON y el código no coinciden.
 
-Esto es un prototipo. STUBX no tiene valor intrínseco ni da derechos, y su precio puede llegar a cero. Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión. El agente no tiene claves.
+Esto es un prototipo. ORVUPI todavía no tiene contrato. Los riesgos se explican en https://stubxai.com/risks/. El agente no tiene claves.
 
-Estos límites están aplicados en este repositorio y cubiertos por tests. La casilla pública del PPM se marcó el 05-10-2026 con una ejecución pública de la CI en verde (https://github.com/stubxai/stubx-agent/actions/runs/37278171372, commit a960380), incluidos los 20 tests de límites, y el OK legal. Marcada no significa auditada: un test en verde demuestra lo que ese test comprueba, en esa versión del código. Si una CI posterior falla en estos tests, se desmarca y se explica.
+Estos límites están aplicados en este repositorio y cubiertos por tests. La casilla pública del PPM se marcó el 05-10-2026 con una ejecución pública de la CI en verde (https://github.com/ORVUPI/orvupi-agent/actions/runs/37278171372, commit a960380), incluidos los 20 tests de límites, y el OK legal. Marcada no significa auditada: un test en verde demuestra lo que ese test comprueba, en esa versión del código. Si una CI posterior falla en estos tests, se desmarca y se explica.
 
 ## Límites
 
@@ -130,6 +130,6 @@ No hay dependencias de ejecución. El test también falla si `package.json` decl
 
 ## English
 
-This is a prototype. STUBX has no intrinsic value, gives no rights, and its price can go to zero. High-risk crypto · You could lose everything · Not investment advice. The agent holds no keys.
+This is a prototype. ORVUPI does not have a contract yet. Risks are explained at https://stubxai.com/risks/. The agent holds no keys.
 
 Limits v1 are deny-by-default. The agent does not sign, custody, exchange, send transactions, contact mainnet, ask anyone for assets, invent addresses or hashes, promise outcomes, draft a social note while the kill-switch is engaged, or store secrets. The kill-switch cannot pause holder transfers, freeze accounts, seize balances, or stop Solana. `npm test` is the check. The public PPM box for limits was marked on 2026-10-05 with a green public CI run and legal sign-off; marked does not mean audited, and a later failing run unmarks it.

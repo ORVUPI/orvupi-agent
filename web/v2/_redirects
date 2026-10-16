@@ -13,12 +13,30 @@ https://superb-horse-9036f5.netlify.app/*  https://stubxai.com/:splat  301!
 /riesgos            /risks/      301
 /riesgos/           /risks/      301
 /riesgos.html       /risks/      301
-/pruebas            /proofs/     301
-/pruebas/           /proofs/     301
-/pruebas.html       /proofs/     301
+/pruebas            /            301
+/pruebas/           /            301
+/pruebas.html       /            301
 /marca              /marca/      301
 /marca.html         /marca/      301
-/docs               /archivo     301
-/docs/              /archivo     301
-/docs.html          /archivo     301
+/docs               /            301
+/docs/              /            301
+/docs.html          /            301
 /.well-known/security.txt  /security.txt  200
+
+# Token anterior retirado (16-10-2026): sus páginas salen de la web vigente.
+/token.json         /            301
+/tokenomics         /            301
+/tokenomics/*       /            301
+/status             /            301
+/status/*           /            301
+/proofs             /            301
+/proofs/*           /            301
+/archivo            /            301
+/archivo.html       /            301
+/build              /            301
+/build/*            /            301
+/avances            /            301
+/avances/*          /            301
+/onchain/*          /            301
+/kit/*              /            301
+/logo/*             /            301

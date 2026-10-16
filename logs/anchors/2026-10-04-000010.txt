@@ -1,4 +1,4 @@
-stubx-agent public log anchor v1
+orvupi-agent public log anchor v1
 entries: 10
-head: 699b74de3f415c9cc9942be75c00a6d0de2a5eca9dfc5ce6c87c84f252c9dfea
-log-sha256: babf58c03bfeca5d057f56c2b4f2510c8863009e2afbe55704f833a8c0c5ce69
+head: ec123446a37d53c938a1f61c6a0619c4a962eaf913eee1f8f66d753fbda303e0
+log-sha256: 0c28f9e805ebbc8f5fc1955ead28d2cb67b1e5a87c9f195f4b045c0e09e69f70

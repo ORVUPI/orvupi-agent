@@ -1,0 +1,4 @@
+orvupi-agent public log anchor v1
+entries: 12
+head: e8f2c120de4fe903c5d72009d9e5aa06b44859be994ef55c799b069dfda45b56
+log-sha256: 8f7e5a080e19203989c76e54e6575eaacd920755f6dd0349949868f02ac105b1

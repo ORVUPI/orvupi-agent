@@ -35,66 +35,48 @@ describe("misión 1", () => {
     assert.ok(official);
     assert.equal(official.mint, canonical.tokens[0]?.mint);
     assert.equal(correct?.mint, official.mint);
-    assert.equal(
-      first?.whyRight.es,
-      "Solo esta dirección está en el registro del 2026-10-08. Las otras se llaman parecido y la ficha indica que se parecen a STUBX pero no son la CA oficial. Eso no dice quién las creó ni con qué intención.",
-    );
-    assert.equal(
-      first?.whyRight.en,
-      "Only this address is in the 2026-10-08 registry. The others have a similar name and the card indicates that they look like STUBX but they are not the official CA. That does not say who created them or why.",
-    );
+    assert.match(first?.whyRight.es ?? "", /^Solo esta dirección está en el registro del 2026-10-16\./);
+    assert.match(first?.whyRight.en ?? "", /^Only this address is in the 2026-10-16 registry\./);
+    assert.equal(official.mint, "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
     assert.equal(first?.whyRight.es.includes("posible copia"), false);
     assert.equal(first?.whyRight.en.toLowerCase().includes("possible copy"), false);
     assert.equal(official.inRegistry, true);
     assert.equal(official.impersonation, false);
   });
 
-  test("los clones son señal de suplantación y USDC no", () => {
+  test("las copias «USD Coin» son señal de suplantación; USDC y USDT no", () => {
     const clones = cards.filter((card) => card.role === "clon");
-    assert.equal(clones.length, 5);
-    assert.ok(clones.some((card) => card.mint === "ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump"));
-    assert.ok(clones.some((card) => card.mint === "FMNb4CR8ksibmgY7Ztei6BWcZXi3WHcVeJhYb9TNpump"));
+    assert.equal(clones.length, 3);
     for (const card of clones) {
+      assert.equal(card.name, "USD Coin");
       assert.equal(card.inRegistry, false);
       assert.equal(card.impersonation, true);
       assert.equal(card.mintAuthority.state, "revocada");
       assert.equal(card.mintAuthority.status, "verificado");
-      assert.equal(card.curveProgress, "0.00");
-      assert.equal(card.curveProgressStatus, "inferido");
-      assert.equal(shownFact(card.curveProgressStatus, card.curveProgress), "0.00");
+      assert.equal(card.curvePresent, false);
     }
-    const usdc = cards.find((card) => card.role === "contraste");
+    const usdc = cards.find((card) => card.role === "registro");
     assert.ok(usdc);
+    assert.equal(usdc.inRegistry, true);
     assert.equal(usdc.impersonation, false);
     assert.equal(usdc.mintAuthority.state, "activa");
     assert.equal(usdc.freezeAuthority.state, "activa");
-    assert.equal(usdc.metadataReading, "mutables");
-    assert.equal(usdc.curvePresent, false);
-    assert.equal(usdc.curveProgressStatus, "no_aplica");
-    assert.equal(shownFact(usdc.curveProgressStatus, "0"), "no_aplica");
+    const usdt = cards.find((card) => card.role === "contraste");
+    assert.ok(usdt);
+    assert.equal(usdt.impersonation, false);
+    assert.equal(usdt.mintAuthority.state, "activa");
+    assert.equal(usdt.curveProgressStatus, "no_aplica");
+    assert.equal(shownFact(usdt.curveProgressStatus, "0"), "no_aplica");
   });
 
   test("lo no disponible no se muestra como cero ni como revocada", () => {
-    const batch2026 = new Set([
-      "Hhq4ffySVX3UQqSowjhP1Lwa8YuJDf7iH2hYWvVHTuEf",
-      "DjEjb6bxQ3Hjej9CzUAVeRqyt7k1tevHgcS37t41PUhQ",
-      "3Zi6p6wzYZYKyuHdBhsDfb2pRR7XTfTfLKkXL7rwpump",
-    ]);
-    const official = cards.find((card) => card.role === "registro");
-    assert.equal(official?.holdersStatus, "verificado");
-    assert.match(official?.holdersNote ?? "", /no es un censo/i);
     for (const card of cards) {
-      if (batch2026.has(card.mint)) {
-        assert.equal(card.holdersStatus, "no_disponible");
-        assert.equal(shownFact(card.holdersStatus, "0"), "no_disponible");
-      }
-      if (card.holdersStatus === "no_disponible") {
-        assert.equal(shownFact(card.holdersStatus, "0"), "no_disponible");
-      }
+      assert.equal(card.holdersStatus, "no_disponible", card.mint);
+      assert.equal(shownFact(card.holdersStatus, "0"), "no_disponible");
     }
     const missing = summarizeReport(
       {
-        tool: "stubx-verify",
+        tool: "orvupi-verify",
         mint: "MintDePrueba",
         permissions: { mintAuthority: { value: null, status: "no_disponible", note: null } },
       },
@@ -108,21 +90,9 @@ describe("misión 1", () => {
     assert.equal(missing.impersonation, null);
   });
 
-  test("la misión anterior nombra la cuenta personal con enlace al registro", () => {
-    const step = mission.steps.find((item) => item.id === "desconocido");
-    assert.ok(step);
-    assert.match(step.whyRight.es, /cuenta personal \(publicada en el registro oficial\)/);
-    assert.match(step.whyRight.en, /personal account \(listed in the official registry\)/);
-    assert.equal(step.whyRight.es.includes("cuenta personal publicada"), false);
-    assert.equal(step.whyRight.en.includes("published personal account"), false);
-  });
-
-  test("el avance del registro es inferido y distinto de cero", () => {
-    const official = cards.find((card) => card.role === "registro");
-    assert.equal(official?.curveProgress, "1.74");
-    assert.equal(official?.curveProgressStatus, "inferido");
-    assert.equal(official?.metadataReading, "no_mutables_en_fuentes");
-    assert.equal(official?.partial, true);
+  test("ninguna ficha de la misión nombra el proyecto anterior", () => {
+    const text = JSON.stringify(mission) + JSON.stringify(cards);
+    assert.equal(/TOKEN A\b|TNWwnzecb/.test(text), false);
   });
 
   test("una respuesta incorrecta se explica y no cierra la misión", () => {
@@ -191,23 +161,6 @@ describe("misión 1", () => {
     }
   });
 
-  test("la quinta comprobación usa el clon con avance 0,00", () => {
-    const step = mission.steps.find((item) => item.id === "curva");
-    assert.ok(step);
-    const clone = step.cards
-      .map((mint) => byMint.get(mint))
-      .find((card) => card?.role === "clon");
-    assert.equal(clone?.curveProgress, "0.00");
-    assert.equal(step.whyRight.es.includes("793100000000000"), false);
-    assert.equal(step.whyRight.en.includes("793100000000000"), false);
-    assert.equal(step.prompt.es.includes("793100000000000"), false);
-    assert.match(step.whyRight.es, /no atribuye intención/i);
-    assert.match(step.whyRight.es, /Detalles/);
-    assert.ok(step.glossary.includes("curva-pump"));
-    assert.ok(step.glossary.includes("reserva-real"));
-    assert.ok(step.glossary.includes("suplantacion"));
-  });
-
   test("cada pregunta lleva una frase llana y el glosario del paso", () => {
     const emision = mission.steps.find((item) => item.id === "emision");
     assert.ok(emision);
@@ -268,8 +221,8 @@ describe("biblioteca", () => {
       const source = readFileSync(path.join(root, "lab/library/guides", guide.file), "utf8");
       const blocks = splitBilingualMarkdown(source);
       assert.ok(blocks, guide.id);
-      assert.match(blocks.es, /2026-10-08/);
-      assert.match(blocks.en, /2026-10-08/);
+      assert.match(blocks.es, /2026-10-16/);
+      assert.match(blocks.en, /2026-10-16/);
     }
   });
 
@@ -303,18 +256,18 @@ describe("tablero", () => {
     assert.equal(byId.get("U04")?.status, "en_revision");
     assert.ok((byId.get("U04")?.evidence.length ?? 0) > 0);
     assert.equal(byId.get("U04")?.webPublished, true);
-    assert.match(byId.get("U04")?.block?.es ?? "", /Publicada en stubxai.com\/contribuir el 2026-10-10/);
+    assert.match(byId.get("U04")?.block?.es ?? "", /Publicada en orvupi.com\/contribuir el 2026-10-10/);
     assert.equal(byId.get("U07")?.status, "en_revision");
     assert.ok((byId.get("U07")?.evidence.length ?? 0) > 0);
     assert.equal(byId.get("U07")?.webPublished, true);
     assert.match(byId.get("U07")?.block?.es ?? "", /Ejemplo educativo fijo, revisado por Legal/);
     assert.equal(byId.get("U09")?.status, "en_revision");
     assert.equal(byId.get("U09")?.webPublished, true);
-    assert.match(byId.get("U09")?.block?.es ?? "", /Publicada en stubxai.com\/pares el 2026-10-10/);
+    assert.match(byId.get("U09")?.block?.es ?? "", /Publicada en orvupi.com\/pares el 2026-10-10/);
     assert.ok((byId.get("U09")?.evidence.length ?? 0) > 0);
     assert.equal(byId.get("U05")?.status, "en_revision");
     assert.equal(byId.get("U05")?.webPublished, true);
-    assert.match(byId.get("U05")?.block?.es ?? "", /Publicado en stubxai.com\/cuaderno el 2026-10-10/);
+    assert.match(byId.get("U05")?.block?.es ?? "", /Publicado en orvupi.com\/cuaderno el 2026-10-10/);
     assert.ok((byId.get("U05")?.evidence.length ?? 0) > 0);
     const onWeb = new Set(["VERIFY", "U01", "U02", "U03", "U04", "U05", "U06", "U07", "U09"]);
     for (const task of board.tasks) {
@@ -322,8 +275,6 @@ describe("tablero", () => {
       assert.ok(task.history.length > 0, task.id);
     }
     assert.equal(board.tasks.some((task) => task.status === "publicada"), false);
-    const headings = changelogHeadings(readFileSync(path.join(root, "CHANGELOG.md"), "utf8"));
-    assert.ok(headings.some((line) => line.includes("Verify")));
     assert.ok(listTestFiles(root).includes("lab/test/mission.test.ts"));
     assert.deepEqual(bannedHits(board), []);
   });

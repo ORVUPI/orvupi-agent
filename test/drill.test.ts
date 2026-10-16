@@ -76,7 +76,7 @@ describe("kill-switch drill", () => {
   });
 
   test("the drill turns red when the agent cannot run normally", () => {
-    const root = mkdtempSync(path.join(tmpdir(), "stubx-drill-root-"));
+    const root = mkdtempSync(path.join(tmpdir(), "orvupi-drill-root-"));
     mkdirSync(path.join(root, "state"));
     copyFileSync(path.join(repoRoot(), "state", "killswitch.json"), path.join(root, "state", "killswitch.json"));
     const report = runKillSwitchDrill({ root, now: () => FIXED_NOW });

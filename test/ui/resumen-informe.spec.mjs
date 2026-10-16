@@ -3,8 +3,11 @@ import { mkdirSync } from "node:fs";
 import { decodeBase58, METADATA_PROGRAM, TOKEN_PROGRAM } from "../../web/v2/shared/solana-read.js";
 
 const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
-const STUBX = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
+// Dirección del token anterior: hoy se lee como cualquier otra.
+const PREVIOUS = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
 const FAIL = "So11111111111111111111111111111111111111112";
+// USDT es la única ficha fechada que publica la web (2026-10-16).
+const USDT = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB";
 const CLONE = "ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump";
 const CLONE_SUPPLY = 1_000_000_000_000_000n;
 const SUPPLY = 7721704579000000n;
@@ -70,7 +73,7 @@ function rpcResult(value, status = 200) {
 
 test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) => {
   test.setTimeout(90_000);
-  mkdirSync("/opt/cursor/artifacts", { recursive: true });
+  mkdirSync("test-results/artifacts", { recursive: true });
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(String(error)));
   let failReads = true;
@@ -79,8 +82,8 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
     const method = body?.method;
     if (method === "getMultipleAccounts") {
       const mint = body.params[0][0];
-      const name = mint === STUBX || mint === CLONE ? "STUBX" : mint === FAIL ? "OTRO" : "USD Coin";
-      const symbol = mint === STUBX || mint === CLONE ? "STUBX" : mint === FAIL ? "OTRO" : "USDC";
+      const name = mint === PREVIOUS || mint === CLONE ? "ORVUPI" : mint === FAIL ? "OTRO" : "USD Coin";
+      const symbol = mint === PREVIOUS || mint === CLONE ? "ORVUPI" : mint === FAIL ? "OTRO" : "USDC";
       const active = mint === USDC;
       const supply = mint === CLONE ? CLONE_SUPPLY : SUPPLY;
       const uri = mint === USDC ? "\0".repeat(200) : "";
@@ -107,7 +110,7 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
     const summary = page.locator("#resultado .resumen-informe");
     await summary.scrollIntoViewIfNeeded();
     await summary.screenshot({
-      path: `/opt/cursor/artifacts/resumen_uso49_${name}_${testInfo.project.name}.png`,
+      path: `test-results/artifacts/resumen_uso49_${name}_${testInfo.project.name}.png`,
     });
   }
 
@@ -156,7 +159,7 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
   expect(/\b(precio|compra|comprar|seguro|buy|sell)\b/i.test(banned)).toBe(false);
   await shot("usdc");
 
-  await page.getByRole("button", { name: "English" }).click();
+  await page.locator('[data-set-lang="en"]').first().click();
   await expect(summary).toContainText("What was checked");
   await expect(summary).toContainText("What needs attention");
   await expect(summary).toContainText("What is missing");
@@ -167,33 +170,36 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
   await expect(summary).toContainText("Freeze permission");
   await expect(summary.locator(".nota-curva")).toContainText("Pump.fun curve: not applicable");
   await expect(summary.getByRole("link", { name: "Understand →" }).first()).toBeVisible();
-  await page.getByRole("button", { name: "Español" }).click();
+  await page.locator('[data-set-lang="es"]').first().click();
   await expect(summary).toContainText("Qué se comprobó");
 
-  await page.locator("#direccion-token").fill(STUBX);
+  await page.locator("#direccion-token").fill(PREVIOUS);
   await page.locator("#consulta button[type='submit']").click();
-  await expect(page.locator("#resultado")).toContainText("Esta dirección es la del registro de STUBX", { timeout: 20_000 });
+  await expect(page.locator("#resultado")).toContainText("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato", { timeout: 20_000 });
+  await expect(page.locator("#resultado")).not.toContainText("Esta dirección es la del registro");
   await expect(summary).toContainText("Qué se comprobó");
   await expect(summary).toContainText("Suministro total");
   await expect(summary).toContainText("Nadie puede crear más tokens ni congelar cuentas");
-  await expect(summary).toContainText("Ninguna señal de esta lectura pide atención");
   await expect(summary).not.toContainText("moneda estable");
   await expect(summary).not.toContainText("ausente comprobado");
-  await shot("stubx");
+  await shot("anterior");
 
   await page.locator("#direccion-token").fill(CLONE);
   await page.locator("#consulta button[type='submit']").click();
   await expect(summary).toContainText("Hay 1.000.000.000 tokens", { timeout: 20_000 });
-  await expect(summary).not.toContainText("1.000.000.000 STUBX");
-  await expect(summary).toContainText("Dice llamarse «STUBX» (texto elegido por quien creó el token)");
+  await expect(summary).not.toContainText("1.000.000.000 ORVUPI");
+  await expect(summary).toContainText("Dice llamarse «ORVUPI» (texto elegido por quien creó el token)");
   const likeness = summary.locator("[data-bloque='atencion'] .punto-resumen").first();
-  await expect(likeness).toContainText("Se parece a STUBX pero no es la dirección oficial");
-  await expect(likeness.locator("details")).toContainText("stubxai.com");
-  const earlier = summary.locator("[data-bloque='atencion'] .punto-resumen", { hasText: "Comprobación anterior" });
-  await expect(earlier).toContainText("Es la ficha del 2026-10-09, no un dato de esta lectura");
-  await expect(earlier).not.toContainText(/\d{2}:\d{2}:\d{2}/);
+  await expect(likeness).toContainText("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato");
+  await expect(likeness.locator("details")).toContainText("Ninguna dirección es la oficial");
   await expect(summary).not.toContainText("Es un dato de esta lectura");
   await shot("eryyy");
+
+  await page.locator("#direccion-token").fill(USDT);
+  await page.locator("#consulta button[type='submit']").click();
+  // La ficha fechada de USDT es de contraste: sale como dato neutro, no como punto de atención.
+  await expect(page.locator("#resultado")).toContainText("Hay una ficha fechada y no es la del registro", { timeout: 20_000 });
+  await expect(summary.locator("[data-bloque='atencion'] .punto-resumen", { hasText: "Comprobación anterior" })).toHaveCount(0);
 
   await page.locator("#direccion-token").fill(FAIL);
   await page.locator("#consulta button[type='submit']").click();
@@ -239,7 +245,7 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
   if (testInfo.project.name === "desktop" || testInfo.project.name === "mobile") {
     await saved.scrollIntoViewIfNeeded();
     await saved.screenshot({
-      path: `/opt/cursor/artifacts/resumen_b49_cuaderno_${testInfo.project.name}.png`,
+      path: `test-results/artifacts/resumen_b49_cuaderno_${testInfo.project.name}.png`,
     });
   }
 

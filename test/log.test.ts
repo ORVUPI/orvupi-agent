@@ -19,7 +19,7 @@ describe("log fingerprint", () => {
       action: "log:append",
       detail: "hola",
     });
-    assert.equal(entry.actor, "stubx-agent");
+    assert.equal(entry.actor, "orvupi-agent");
     assert.equal(entry.prevHash, null);
     assert.equal(entry.chain, "stub-until-p4");
     assert.equal(entry.evidence, null);

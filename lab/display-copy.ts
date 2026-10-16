@@ -10,8 +10,8 @@ const PUMP_EN = "Pump.fun calls these ‘reserves’";
 const STATEMENT_EN: Record<string, string> = {
   "Posible suplantación: el nombre, el símbolo, la imagen o un enlace coinciden con un token del registro curado, pero el mint es otro. La coincidencia no atribuye intención.":
     "Possible impersonation: the name, symbol, image, or a link matches a token in the curated registry, but the mint is different. The match does not attribute intent.",
-  "El mint coincide con el registro curado (stubx). Que esté en el registro no es una auditoría.":
-    "The mint matches the curated registry (stubx). Being in the registry is not an audit.",
+  "El mint coincide con el registro curado (usdc). Que esté en el registro no es una auditoría.":
+    "The mint matches the curated registry (usdc). Being in the registry is not an audit.",
   "Este mint no está en el registro curado. Que no esté no significa que sea falso ni que sea una copia.":
     "This mint is not in the curated registry. That does not mean it is fake or a copy.",
 };
@@ -67,10 +67,10 @@ export function authorityWords(state: string): { es: string; en: string } {
 }
 
 export function signalEn(signal: string): string {
-  const name = /^nombre «(.+)» incluye STUBX\/STUBX$/.exec(signal);
-  if (name?.[1]) return `name “${name[1]}” includes STUBX`;
-  const symbol = /^símbolo «(.+)» incluye STUBX\/STUBX$/.exec(signal);
-  if (symbol?.[1]) return `symbol “${symbol[1]}” includes STUBX`;
+  const name = /^nombre «(.+)» incluye (.+)\/(.+)$/.exec(signal);
+  if (name?.[1] && name[2]) return `name “${name[1]}” includes ${name[2]}`;
+  const symbol = /^símbolo «(.+)» incluye (.+)\/(.+)$/.exec(signal);
+  if (symbol?.[1] && symbol[3]) return `symbol “${symbol[1]}” includes ${symbol[3]}`;
   const link = /^enlace «(.+)» coincide con un enlace u host del registro$/.exec(signal);
   if (link?.[1]) return `link “${link[1]}” matches a link or host in the registry`;
   if (signal === "mint en el registro") return "mint in the registry";
@@ -132,6 +132,10 @@ function curveModuleEn(note: string | null): string | null {
 }
 
 export function presentCard(card: CardSummary): DisplayCard {
+  return presentCardRaw(card);
+}
+
+function presentCardRaw(card: CardSummary): DisplayCard {
   return {
     ...card,
     holdersNote: holdersNoteEs(card.holdersNote),

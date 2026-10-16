@@ -3,7 +3,7 @@
 import { INVISIBLE_CHARS } from "./filter.mjs";
 import { assertPngInflate, decodePng, pngHeader } from "./png.mjs";
 
-export const DEFAULT_TOKEN = "STUBX";
+export const DEFAULT_TOKEN = "ORVUPI";
 export const TOKEN_MAX = 20;
 export const LOGO_MAX_BYTES = 8_000_000;
 export const LOGO_MAX_EDGE = 2048;
@@ -15,8 +15,9 @@ export function clipToken(value) {
   return String(value ?? "").normalize("NFKC").replace(INVISIBLE_CHARS, "").replace(/[\u0000-\u001f]/g, "").trim().slice(0, TOKEN_MAX);
 }
 
-export function isStubxToken(value) {
-  return clipToken(value).toLowerCase() === "stubx";
+export function isOrvupiToken(value) {
+  // El nombre de la API se conserva para las integraciones y los borradores.
+  return clipToken(value).toLowerCase() === "orvupi";
 }
 
 /** Una carga de logo. cancel() invalida el ticket y aborta la lectura en curso. */
@@ -64,9 +65,9 @@ export function avatarKey(image) {
   return `${image.stamp}:${image.width}x${image.height}:${image.rgba.length}`;
 }
 
-export function mascotCacheMark({ customLogo, stubx, avatarId, loaded }) {
+export function mascotCacheMark({ customLogo, project, avatarId, loaded }) {
   if (customLogo) return "logo";
-  if (!stubx) return "off";
+  if (!project) return "off";
   if (!avatarId) return "empty";
   return loaded ? "ready" : "wait";
 }

@@ -18,7 +18,7 @@ export function repoRootFrom(moduleUrl: string): string {
     }
     dir = parent;
   }
-  throw new Error("Cannot find the stubx-agent package root.");
+  throw new Error("Cannot find the orvupi-agent package root.");
 }
 
 export function repoRoot(): string {

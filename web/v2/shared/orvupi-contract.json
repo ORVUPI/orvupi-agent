@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "note": "Único punto de configuración del contrato ORVUPI. Hoy no existe: contract es null. Cuando exista, poner aquí la red y la dirección (aprobadas por el creador) y nada más.",
+  "network": null,
+  "contract": null,
+  "label": {
+    "es": "Contrato ORVUPI: aún no existe",
+    "en": "ORVUPI contract: does not exist yet"
+  }
+}

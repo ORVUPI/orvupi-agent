@@ -4,7 +4,7 @@ import { PNG_COMMENT } from "./lib/copy.mjs";
 import { HEADLINES, headlineById } from "./lib/headlines.mjs";
 import { clearDraft, clipDraftText, loadDraft, saveDraft } from "./lib/draft.mjs";
 import { analyze, exportAllowed } from "./lib/filter.mjs";
-import { DEFAULT_TOKEN, LOGO_MAX_BYTES, TOKEN_MAX, avatarKey, clipToken, createLogoGate, isStubxToken, mascotCacheMark, mayCacheCard, readLogoPng, stampImage } from "./lib/logo.mjs";
+import { DEFAULT_TOKEN, LOGO_MAX_BYTES, TOKEN_MAX, avatarKey, clipToken, createLogoGate, isOrvupiToken, mascotCacheMark, mayCacheCard, readLogoPng, stampImage } from "./lib/logo.mjs";
 import { decodePng, injectComment } from "./lib/png.mjs";
 import { renderCard } from "./lib/render.mjs";
 import { FILE_NAME, REVOKE_MS, canShareFiles, isIOS, saveMode } from "./lib/save.mjs";
@@ -148,8 +148,8 @@ function paintChoices() {
     }
   }
   avatarBox.replaceChildren();
-  const stubxName = isStubxToken(tokenName());
-  mascotNotice.hidden = stubxName;
+  const orvupiName = isOrvupiToken(tokenName());
+  mascotNotice.hidden = orvupiName;
   if (customLogo) {
     const own = document.createElement("button");
     own.type = "button";
@@ -157,7 +157,7 @@ function paintChoices() {
     own.setAttribute("aria-pressed", "true");
     avatarBox.append(own);
   }
-  if (stubxName) {
+  if (orvupiName) {
     const none = document.createElement("button");
     none.type = "button";
     none.textContent = code === "en" ? "No character" : "Sin personaje";
@@ -253,11 +253,11 @@ function previewSize() {
 }
 
 function mascotMark() {
-  const stubx = isStubxToken(tokenName());
-  const id = customLogo || !stubx ? "" : (avatarId || "");
+  const project = isOrvupiToken(tokenName());
+  const id = customLogo || !project ? "" : (avatarId || "");
   return mascotCacheMark({
     customLogo: Boolean(customLogo),
-    stubx,
+    project,
     avatarId: id,
     loaded: Boolean(id && images.has(id)),
   });
@@ -267,7 +267,7 @@ function contentKey(width, height) {
   const bg = background();
   const name = tokenName();
   const logo = customLogo ? avatarKey(customLogo) : "";
-  const avatar = !customLogo && isStubxToken(name) ? (avatarId || "") : "";
+  const avatar = !customLogo && isOrvupiToken(name) ? (avatarId || "") : "";
   return [
     width,
     height,
@@ -375,8 +375,8 @@ function cardOptions(size) {
   const code = lang();
   const bg = background();
   const name = tokenName();
-  const stubxName = isStubxToken(name);
-  const avatar = stubxName ? avatarItem() : null;
+  const orvupiName = isOrvupiToken(name);
+  const avatar = orvupiName ? avatarItem() : null;
   const origins = customLogo || !avatar ? [bg?.aiOrigin].filter(Boolean) : [bg?.aiOrigin, avatar?.aiOrigin].filter(Boolean);
   return {
     width: size.width,
@@ -1009,7 +1009,7 @@ clearButton.addEventListener("click", () => {
   paintChoices();
   schedule();
 });
-document.addEventListener("stubx-lang", () => {
+document.addEventListener("orvupi-lang", () => {
   if (!dirty) applyTemplate(templateId, lang(), false);
   paintChoices();
   schedule();

@@ -51,7 +51,8 @@ test("escritorio: la vista previa se ve entera al editar", async ({ page }) => {
     const stuck = mode === "fixed" || mode === "sticky";
     const bar = stuck ? header.getBoundingClientRect().height : 0;
     const y = canvas.getBoundingClientRect().top + window.scrollY - bar - 8;
-    window.scrollTo(0, Math.max(0, y));
+    // La web ORVUPI usa scroll-behavior: smooth; se mide sin animación.
+    window.scrollTo({ top: Math.max(0, y), behavior: "instant" });
   });
   const story = await layout(page);
   expect(story.covered).toBe(false);

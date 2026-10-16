@@ -16,7 +16,7 @@ import { RpcClient, type RpcTransport } from "../rpc.js";
 import type { CanonicalToken } from "../types.js";
 
 const root = repoRootFrom(import.meta.url);
-const registry = (JSON.parse(readFileSync(path.join(root, "verify/registry/canonical.json"), "utf8")) as { tokens: CanonicalToken[] }).tokens;
+const registry = (JSON.parse(readFileSync(path.join(root, "verify/test/fixtures/registry-demo.json"), "utf8")) as { tokens: CanonicalToken[] }).tokens;
 const CID = "bafkreiew224xxf6ncagzzew5bfxlc6hejrib6jmxx66kxdrv5pkeoavd5e";
 const AR = "A".repeat(43);
 
@@ -28,16 +28,16 @@ function signalsFor(names: string[] = [], links: string[] = []): string[] {
 }
 
 describe("detector de suplantación", () => {
-  test("x.com/Stubxai y x.com/STUBXAI coinciden sin mirar mayúsculas", () => {
-    assert.equal(normalizeUrl("https://x.com/Stubxai"), "x.com/stubxai");
-    assert.equal(normalizeUrl("https://x.com/STUBXAI"), "x.com/stubxai");
-    assert.ok(signalsFor([], ["https://x.com/Stubxai"]).length > 0);
-    assert.ok(signalsFor([], ["https://x.com/STUBXAI"]).length > 0);
+  test("x.com/ORVUPI y x.com/ORVUPI coinciden sin mirar mayúsculas", () => {
+    assert.equal(normalizeUrl("https://x.com/ORVUPI"), "x.com/orvupi");
+    assert.equal(normalizeUrl("https://x.com/ORVUPI"), "x.com/orvupi");
+    assert.ok(signalsFor([], ["https://x.com/ORVUPI"]).length > 0);
+    assert.ok(signalsFor([], ["https://x.com/ORVUPI"]).length > 0);
   });
 
-  test("mobile.x.com/stubxai coincide con el perfil del registro", () => {
-    assert.equal(normalizeUrl("https://mobile.x.com/stubxai"), "x.com/stubxai");
-    assert.ok(signalsFor([], ["https://mobile.x.com/stubxai"]).length > 0);
+  test("mobile.x.com/orvupi coincide con el perfil del registro", () => {
+    assert.equal(normalizeUrl("https://mobile.x.com/orvupi"), "x.com/orvupi");
+    assert.ok(signalsFor([], ["https://mobile.x.com/orvupi"]).length > 0);
   });
 
   test("el host de Netlify con punto inicial coincide", () => {
@@ -48,59 +48,59 @@ describe("detector de suplantación", () => {
     assert.ok(signalsFor([], ["https://superb-horse-9036f6.netlify.app/"]).length > 0);
   });
 
-  test("STUBXAI, STUBX2 y S T U B X contienen stubx", () => {
-    assert.equal(normalizeToken("STUBXAI").includes("stubx"), true);
-    assert.equal(normalizeToken("STUBX2").includes("stubx"), true);
-    assert.equal(normalizeToken("S T U B X"), "stubx");
-    assert.ok(signalsFor(["STUBXAI"]).length > 0);
-    assert.ok(signalsFor(["STUBX2"]).length > 0);
-    assert.ok(signalsFor(["S T U B X"]).length > 0);
+  test("STUBAI, STUB2 y S T U B contienen stub", () => {
+    assert.equal(normalizeToken("STUBAI").includes("stub"), true);
+    assert.equal(normalizeToken("STUB2").includes("stub"), true);
+    assert.equal(normalizeToken("S T U B"), "stub");
+    assert.ok(signalsFor(["STUBAI"]).length > 0);
+    assert.ok(signalsFor(["STUB2"]).length > 0);
+    assert.ok(signalsFor(["S T U B"]).length > 0);
   });
 
   test("la T griega y la S cirílica se pliegan antes de comparar", () => {
-    assert.equal(normalizeToken("S\u03A4UBX"), "stubx");
-    assert.equal(normalizeToken("\u0421TUBX"), "stubx");
-    assert.equal(normalizeToken("\u03A3TUBX"), "stubx");
-    assert.equal(normalizeToken("STU\u200BBX"), "stubx");
-    assert.equal(normalizeToken(cleanText("STU\u200BBX")), "stubx");
-    assert.ok(signalsFor(["S\u03A4UBX"]).length > 0);
-    assert.ok(signalsFor(["\u0421TUBX"]).length > 0);
-    assert.ok(signalsFor(["\u03A3TUBX"]).some((item) => item.startsWith("nombre ")));
-    assert.ok(signalsFor([cleanText("STU\u200BBX")]).some((item) => item.startsWith("nombre ")));
+    assert.equal(normalizeToken("S\u03A4UB"), "stub");
+    assert.equal(normalizeToken("\u0421TUB"), "stub");
+    assert.equal(normalizeToken("\u03A3TUB"), "stub");
+    assert.equal(normalizeToken("STU\u200BB"), "stub");
+    assert.equal(normalizeToken(cleanText("STU\u200BB")), "stub");
+    assert.ok(signalsFor(["S\u03A4UB"]).length > 0);
+    assert.ok(signalsFor(["\u0421TUB"]).length > 0);
+    assert.ok(signalsFor(["\u03A3TUB"]).some((item) => item.startsWith("nombre ")));
+    assert.ok(signalsFor([cleanText("STU\u200BB")]).some((item) => item.startsWith("nombre ")));
   });
 
   test("NFKC pliega las letras de ancho completo", () => {
-    assert.equal(normalizeToken("\uFF33\uFF34\uFF35\uFF22\uFF38"), "stubx");
-    assert.ok(signalsFor(["\uFF33\uFF34\uFF35\uFF22\uFF38"]).length > 0);
+    assert.equal(normalizeToken("\uFF33\uFF34\uFF35\uFF22"), "stub");
+    assert.ok(signalsFor(["\uFF33\uFF34\uFF35\uFF22"]).length > 0);
   });
 
-  test("la CLI marca S.T.U.B.X, 5TUBX, versalitas y el handle con sufijo", () => {
-    assert.equal(normalizeToken("S.T.U.B.X"), "stubx");
-    assert.equal(normalizeToken("5TUBX"), "stubx");
-    assert.equal(normalizeToken("\uA731\u1D1B\u1D1C\u0299x"), "stubx");
-    assert.ok(signalsFor(["S.T.U.B.X"]).length > 0);
-    assert.ok(signalsFor(["5TUBX"]).length > 0);
-    assert.ok(signalsFor(["\uA731\u1D1B\u1D1C\u0299x"]).length > 0);
-    assert.ok(signalsFor([], ["https://x.com/stubxai_"]).length > 0);
-    assert.ok(signalsFor([], ["https://x.com/stubxai_oficial"]).length > 0);
-    assert.ok(signalsFor([], ["https://x.com/stubx_ai"]).length > 0);
-    assert.equal(signalsFor(["Stubborn"]).length, 0);
+  test("la CLI marca S.T.U.B, 5TUB, versalitas y el handle con sufijo", () => {
+    assert.equal(normalizeToken("S.T.U.B"), "stub");
+    assert.equal(normalizeToken("5TUB"), "stub");
+    assert.equal(normalizeToken("\uA731\u1D1B\u1D1C\u0299"), "stub");
+    assert.ok(signalsFor(["S.T.U.B"]).length > 0);
+    assert.ok(signalsFor(["5TUB"]).length > 0);
+    assert.ok(signalsFor(["\uA731\u1D1B\u1D1C\u0299"]).length > 0);
+    assert.ok(signalsFor([], ["https://x.com/orvupi_"]).length > 0);
+    assert.ok(signalsFor([], ["https://x.com/orvupi_oficial"]).length > 0);
+    assert.ok(signalsFor([], ["https://x.com/orvupi_ai"]).length > 0);
+    assert.equal(signalsFor(["Stuffing"]).length, 0);
     assert.equal(signalsFor(["EVILcoin"]).length, 0);
   });
 
-  test("STU8X, la U armenia y el cherokee se pliegan a stubx", () => {
-    assert.equal(normalizeToken("STU8X"), "stubx");
-    assert.equal(normalizeToken("ST\u054DBX"), "stubx");
-    assert.equal(normalizeToken("\u13DA\u13A2U\u13F4X"), "stubx");
-    assert.ok(signalsFor(["STU8X"]).length > 0);
-    assert.ok(signalsFor(["ST\u054DBX"]).length > 0);
-    assert.ok(signalsFor(["\u13DA\u13A2U\u13F4X"]).length > 0);
+  test("STU8, la U armenia y el cherokee se pliegan a stub", () => {
+    assert.equal(normalizeToken("STU8"), "stub");
+    assert.equal(normalizeToken("ST\u054DB"), "stub");
+    assert.equal(normalizeToken("\u13DA\u13A2U\u13F4"), "stub");
+    assert.ok(signalsFor(["STU8"]).length > 0);
+    assert.ok(signalsFor(["ST\u054DB"]).length > 0);
+    assert.ok(signalsFor(["\u13DA\u13A2U\u13F4"]).length > 0);
   });
 
   test("stubxai.com dentro de otro dominio se marca y notstubxai.com no", () => {
     assert.ok(signalsFor([], ["https://stubxai.com.evil.io"]).length > 0);
     assert.equal(signalsFor([], ["https://notstubxai.com"]).length, 0);
-    assert.equal(signalsFor(["Stubborn"]).length, 0);
+    assert.equal(signalsFor(["Stuffing"]).length, 0);
     assert.equal(signalsFor(["EVILcoin"]).length, 0);
   });
 });
@@ -285,7 +285,7 @@ describe("texto, puntero y holders", () => {
   });
 
   test("cleanText recorta el relleno nulo y marca el bidi", () => {
-    assert.equal(cleanText("STUBX"), "STUBX");
+    assert.equal(cleanText("STUB"), "STUB");
     assert.equal(cleanText("USD Coin\0\0\0"), "USD Coin");
     assert.equal(cleanText("USDC\0"), "USDC");
     assert.equal(cleanText("\0\0\0"), "");
@@ -295,27 +295,25 @@ describe("texto, puntero y holders", () => {
   });
 
   test("una dirección 0x no consulta la red y nombra la copia si está en la lista", () => {
-    const clones = JSON.parse(readFileSync(path.join(root, "verify/registry/clones.json"), "utf8")) as {
-      evm: Array<{ address: string }>;
-    };
-    const known = clones.evm.map((item) => item.address);
+    // La lista real de copias EVM está vacía desde el 16-10-2026; aquí se prueba con una de ejemplo.
+    const known = ["0xc99056c762f0802e4154e6322bd71ae928857777"];
     const copy = validateMint("0xc99056c762f0802e4154e6322bd71ae928857777", known);
     assert.equal(copy.ok, false);
     if (!copy.ok) {
       assert.match(copy.message, /Copia conocida/);
-      assert.match(copy.message, /El STUBX oficial solo existe en Solana/);
-      assert.match(copy.message, /sin verificar en la cadena/);
+      assert.match(copy.message, /ORVUPI todavía no tiene contrato en ninguna red/);
+      assert.match(copy.message, /Copia conocida de un token anterior/);
     }
     const other = validateMint("0x0000000000000000000000000000000000000001", known);
     assert.equal(other.ok, false);
     if (!other.ok) {
-      assert.match(other.message, /El STUBX oficial solo existe en Solana/);
+      assert.match(other.message, /ORVUPI todavía no tiene contrato en ninguna red/);
       assert.equal(other.message.includes("Copia conocida"), false);
     }
     const loose = validateMint("0xhola", known);
     assert.equal(loose.ok, false);
     if (!loose.ok) {
-      assert.match(loose.message, /El STUBX oficial solo existe en Solana/);
+      assert.match(loose.message, /ORVUPI todavía no tiene contrato en ninguna red/);
     }
   });
 
@@ -410,7 +408,7 @@ describe("texto, puntero y holders", () => {
       random: () => 0,
       now: () => new Date("2026-10-09T12:00:00.000Z"),
     });
-    const withPublished = registry.map((token) => token.id === "stubx"
+    const withPublished = registry.map((token) => token.id === "demo"
       ? {
           ...token,
           mint: fixture.mint,

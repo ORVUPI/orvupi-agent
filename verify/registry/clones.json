@@ -1,71 +1,32 @@
 {
   "version": 1,
-  "note": "Ejemplos conocidos, no una lista completa de clones. Que una dirección no esté aquí no significa que sea el mint oficial ni que sea falso. La coincidencia no atribuye intención.",
-  "evmNote": "Ejemplos de search-v2 de Pump.fun, 08-10-2026 09:14 CEST. No se han verificado en la cadena. No es una lista completa. La red eip155:5042 no está identificada con certeza.",
-  "evm": [
-    {
-      "chain": "eip155:56",
-      "address": "0xC99056C762F0802e4154E6322bd71ae928857777",
-      "name": "STUBX",
-      "symbol": "STUBX",
-      "creator": "0x3fDBEEcf583A53eABb59c3Ab2eDdfa8a5dBA503e",
-      "notedOn": "2026-10-08",
-      "source": "search-v2 de Pump.fun, 08-10 09:14 CEST",
-      "verifiedOnChain": false
-    },
-    {
-      "chain": "eip155:5042",
-      "address": "0xAEE5212f20cc95370cb3556c4493CFD07721a5a3",
-      "name": "STUBX",
-      "symbol": "STUBX",
-      "creator": "0x37623022B9B42C5F8187eCe013E768a094C1d1e5",
-      "notedOn": "2026-10-08",
-      "source": "search-v2 de Pump.fun, 08-10 09:14 CEST",
-      "verifiedOnChain": false,
-      "note": "La red eip155:5042 no está identificada con certeza."
-    }
-  ],
+  "note": "Ejemplos conocidos de copias de tokens del registro, no una lista completa. Que una dirección no esté aquí no significa que sea el mint de referencia ni que sea falso. La coincidencia no atribuye intención.",
+  "evmNote": "Sin ejemplos EVM en esta versión del registro.",
+  "evm": [],
   "examples": [
     {
       "chain": "solana",
-      "mint": "Hhq4ffySVX3UQqSowjhP1Lwa8YuJDf7iH2hYWvVHTuEf",
-      "name": "Comunidad STUBX",
-      "symbol": "COMUNIDAD",
-      "creator": "8zWTcPwDkHWQqeDE8GkjPdWJ3zbK8HtCa5XsMUPaT61q",
-      "notedOn": "2026-10-08"
+      "mint": "4XRbnGgay2XpqJ1F5jGPQ9pRh1JSX12RPCPJASMJU5JW",
+      "name": "USD Coin",
+      "symbol": "USDC",
+      "creator": null,
+      "notedOn": "2026-10-16"
     },
     {
       "chain": "solana",
-      "mint": "DjEjb6bxQ3Hjej9CzUAVeRqyt7k1tevHgcS37t41PUhQ",
-      "name": "Comunidad STUBX",
-      "symbol": "COMUNIDAD",
-      "creator": "2pHuZmDtWVRsvUMZkrXocwywqccXeD3t4948PzeMFKoa",
-      "notedOn": "2026-10-08"
+      "mint": "5vJmAfBjsS6wEHcgQGNm69P3fbyPmUU1dVfE5j1rraVZ",
+      "name": "USD Coin",
+      "symbol": "USDC",
+      "creator": null,
+      "notedOn": "2026-10-16"
     },
     {
       "chain": "solana",
-      "mint": "3Zi6p6wzYZYKyuHdBhsDfb2pRR7XTfTfLKkXL7rwpump",
-      "name": "Comunidad STUBX",
-      "symbol": "COMUNIDAD",
-      "creator": "8QWxUhtsEScCFJXZVvjgqf78rgUzBcAw4HP9z2hTUiNq",
-      "notedOn": "2026-10-08"
-    },
-    {
-      "chain": "solana",
-      "mint": "ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump",
-      "name": "STUBX",
-      "symbol": "STUBX",
-      "creator": "fPGkP9M3k9L2UpK1SBnRppaNK77Fc5v4j7KGPxUtc1F",
-      "notedOn": "2026-10-09"
-    },
-    {
-      "chain": "solana",
-      "mint": "FMNb4CR8ksibmgY7Ztei6BWcZXi3WHcVeJhYb9TNpump",
-      "name": "STUBX",
-      "symbol": "STUBX",
-      "creator": "3KhCByAF8e4mfcuHeLS51dEsUfwHQexhRoEW9m18XvT7",
-      "notedOn": "2026-10-09",
-      "note": "Nombre y creadora leídos en la ficha del 2026-10-09. No identifica a una persona."
+      "mint": "H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R",
+      "name": "USD Coin",
+      "symbol": "USDC",
+      "creator": null,
+      "notedOn": "2026-10-16"
     }
   ]
 }

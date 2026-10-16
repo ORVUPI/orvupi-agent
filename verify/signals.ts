@@ -1,7 +1,7 @@
 import { formatUnitsLocale, percentTruncated } from "./bytes.js";
 import { FallbackRpc, classifyRpcFailure } from "./fallback.js";
 import { validateMint } from "./input.js";
-import { compareCanonical } from "./impersonation.js";
+import { compareCanonical, normalizeToken } from "./impersonation.js";
 import { decodeMetaplex } from "./metadata.js";
 import { decodeMint, metadataLink, readTokenAccount } from "./mint.js";
 import {
@@ -18,6 +18,17 @@ import { decodeBondingCurve } from "./pump.js";
 import { RpcClient, type AccountInfo, type ChainReader, type RpcResult, type RpcTransport, type TokenAmount } from "./rpc.js";
 import type { CanonicalToken, ExtensionReport } from "./types.js";
 
+/** Solo para comparar con «orvupi»: también con leet (0→o; 1, l, | y ! → i), como «0RVUP1» u «ORVUPl». */
+export function namesProject(value: string): boolean {
+  const folded = normalizeToken(value);
+  return folded.includes("orvupi") || folded.replace(/0/g, "o").replace(/[1l|!]/g, "i").includes("orvupi");
+}
+
+const NAMED_LIKE_PROJECT = {
+  es: "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato",
+  en: "It is named like ORVUPI, but ORVUPI does not have a contract yet",
+};
+
 export type Localized = { es: string; en: string };
 
 export type SignalLevel = "ok" | "atencion" | "riesgo" | "neutro";
@@ -32,13 +43,13 @@ export type Signal = {
 
 export type ReadSource = { dato: Localized; host: string };
 
-export const OFFICIAL_CA = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
+// Contrato ORVUPI: aún no existe (web/v2/shared/orvupi-contract.json).
 
 export type LiveRow = { label: Localized; value: Localized };
 
 export const AUDIT_NOTICE: Localized = {
-  es: "Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. STUBX no tiene relación con este token salvo que sea la CA oficial. Que no aparezcan señales no significa que esté todo comprobado.",
-  en: "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. STUBX has no relationship with this token unless it is the official CA. No signals showing does not mean everything was checked.",
+  es: "Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. ORVUPI no tiene relación con este token: todavía no tiene contrato. Que no aparezcan señales no significa que esté todo comprobado.",
+  en: "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. ORVUPI has no relationship with this token: it does not have a contract yet. No signals showing does not mean everything was checked.",
 };
 
 export const PRIVACY_NOTICE: Localized = {
@@ -494,8 +505,8 @@ async function readWith(
         "Confirmed: it does not exist: the account.",
       ),
       identity: loc(
-        `Identidad del proyecto, aparte de este análisis: la CA oficial de STUBX es ${OFFICIAL_CA}.`,
-        `Project identity, separate from this analysis: the official STUBX CA is ${OFFICIAL_CA}.`,
+        "Contrato ORVUPI: aún no existe.",
+        "ORVUPI contract: does not exist yet.",
       ),
     };
   }
@@ -619,8 +630,8 @@ async function readWith(
       level: "atencion",
       title: loc("Hay caracteres invisibles en el nombre", "There are invisible characters in the name"),
       explain: loc(
-        "Al mostrar el nombre se marcaron caracteres de control o invisibles. La comparación con STUBX los quita antes de mirar.",
-        "When showing the name, control or invisible characters were marked. The comparison with STUBX removes them first.",
+        "Al mostrar el nombre se marcaron caracteres de control o invisibles. La comparación con el registro los quita antes de mirar.",
+        "When showing the name, control or invisible characters were marked. The comparison with the registry removes them first.",
       ),
     });
   }
@@ -651,24 +662,36 @@ async function readWith(
   const curveNotOnPump = !mint.endsWith("pump") && (!curveInfo || curveInfo.owner !== PUMP_PROGRAM);
   signals.push(curveNotOnPump ? curveDoesNotApplySignal() : curveSignal(curveInfo, bonding));
   const copyByName = !likeness.inRegistry && likeness.signals.some((item) => /^nombre |^símbolo /.test(item));
+  // ORVUPI todavía no tiene contrato: un token que dice llamarse ORVUPI no es el oficial en ninguna red.
+  const namedLikeProject = !likeness.inRegistry && [...names, ...symbols].some((item) => namesProject(item));
   if (likeness.inRegistry) {
     signals.push({
       id: "registro",
       level: "ok",
-      title: loc("Está en el registro de STUBX", "It is in the STUBX registry"),
+      title: loc("Está en el registro curado", "It is in the curated registry"),
       explain: loc(
         "La dirección coincide con la del registro. La ficha fechada es una foto anterior. Estar en el registro no es una auditoría.",
         "The address matches the one in the registry. The dated card is an earlier snapshot. Being in the registry is not an audit.",
+      ),
+    });
+  } else if (namedLikeProject) {
+    signals.push({
+      id: "copia",
+      level: "atencion",
+      title: loc(NAMED_LIKE_PROJECT.es, NAMED_LIKE_PROJECT.en),
+      explain: loc(
+        "El nombre o el símbolo dice ORVUPI. ORVUPI todavía no tiene contrato en ninguna red, así que esta dirección no es la oficial. Esto no dice quién lo creó ni con qué intención.",
+        "The name or the symbol says ORVUPI. ORVUPI does not have a contract on any network yet, so this address is not the official one. This does not say who created it or why.",
       ),
     });
   } else if (copyByName) {
     signals.push({
       id: "copia",
       level: "atencion",
-      title: loc("Se parece a STUBX, pero no es la CA oficial", "Looks like STUBX, but it is not the official CA"),
+      title: loc("Se parece a un token del registro curado, pero la dirección es otra", "Looks like a token in the curated registry, but the address is different"),
       explain: loc(
-        `El nombre o el símbolo se parece a STUBX y la dirección es otra. Esto no dice quién lo creó ni con qué intención. La única CA oficial es ${OFFICIAL_CA}.`,
-        `The name or the symbol looks like STUBX and the address is different. This does not say who created it or why. The only official CA is ${OFFICIAL_CA}.`,
+        `El nombre o el símbolo se parece a un token del registro curado y la dirección es otra. Esto no dice quién lo creó ni con qué intención.`,
+        `The name or the symbol looks like a token in the curated registry and the address is different. This does not say who created it or why.`,
       ),
     });
   } else if (likeness.signals.length > 0) {
@@ -700,22 +723,24 @@ async function readWith(
     ? {
         light: risky || attention ? ("atencion" as const) : ("ok" as const),
         lightLabel: loc("En el registro", "In the registry"),
-        title: loc("Esta dirección es la del registro de STUBX", "This address is the one in the STUBX registry"),
+        title: loc("Esta dirección está en el registro curado", "This address is in the curated registry"),
         support: loc(
           "La lectura de ahora coincide con la dirección del registro. Las fichas fechadas siguen abajo, como foto anterior.",
           "This reading matches the address in the registry. The dated cards remain below, as an earlier snapshot.",
         ),
       }
     : {
-        light: (risky ? "riesgo" : copyByName || attention ? "atencion" : "neutro") as "riesgo" | "atencion" | "neutro",
-        lightLabel: copyByName
-          ? loc("Se parece a STUBX, pero no es la CA oficial", "Looks like STUBX, but it is not the official CA")
+        light: (risky ? "riesgo" : copyByName || namedLikeProject || attention ? "atencion" : "neutro") as "riesgo" | "atencion" | "neutro",
+        lightLabel: namedLikeProject
+          ? loc(NAMED_LIKE_PROJECT.es, NAMED_LIKE_PROJECT.en)
+          : copyByName
+          ? loc("Se parece a un token del registro curado, pero la dirección es otra", "Looks like a token in the curated registry, but the address is different")
           : loc(risky || attention ? "Hay señales" : "Sin esas señales", risky || attention ? "Signals found" : "Without those signals"),
         title: loc("Lectura de este token", "Reading for this token"),
         support: copyByName
           ? loc(
-              "No es la dirección oficial de STUBX. Cada señal describe un hecho leído ahora. No es una puntuación.",
-              "This is not the official STUBX address. Each signal describes a fact read just now. It is not a score.",
+              "No está en el registro curado. Cada señal describe un hecho leído ahora. No es una puntuación.",
+              "It is not in the curated registry. Each signal describes a fact read just now. It is not a score.",
             )
           : loc(
               "Cada señal describe un hecho leído ahora. No es una puntuación.",
@@ -749,11 +774,11 @@ async function readWith(
   const absent = grouped.absent;
   const identity = loc(
     likeness.inRegistry
-      ? `Identidad del proyecto: esta dirección (${mint}) es la CA oficial de STUBX.`
-      : `Identidad del proyecto, aparte de este análisis: la CA oficial de STUBX es ${OFFICIAL_CA}.`,
+      ? `Esta dirección (${mint}) está en el registro curado. Contrato ORVUPI: aún no existe.`
+      : "Contrato ORVUPI: aún no existe.",
     likeness.inRegistry
-      ? `Project identity: this address (${mint}) is the official STUBX CA.`
-      : `Project identity, separate from this analysis: the official STUBX CA is ${OFFICIAL_CA}.`,
+      ? `This address (${mint}) is in the curated registry. ORVUPI contract: does not exist yet.`
+      : "ORVUPI contract: does not exist yet.",
   );
   const checkedEs = facts.filter((item) => item.state === "ok").map((item) => item.label.es);
   const checkedEn = facts.filter((item) => item.state === "ok").map((item) => item.label.en);

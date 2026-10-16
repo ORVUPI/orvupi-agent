@@ -103,7 +103,7 @@ describe("kill-switch", () => {
   });
 
   test("a directory path fails closed", () => {
-    const dir = mkdtempSync(path.join(tmpdir(), "stubx-dir-"));
+    const dir = mkdtempSync(path.join(tmpdir(), "orvupi-dir-"));
     const result = agent(dir).dispatch("status");
     assert.equal(result.ok, false);
     if (!result.ok) {
@@ -112,7 +112,7 @@ describe("kill-switch", () => {
   });
 
   test("a symlink fails closed", () => {
-    const dir = mkdtempSync(path.join(tmpdir(), "stubx-link-"));
+    const dir = mkdtempSync(path.join(tmpdir(), "orvupi-link-"));
     const real = path.join(dir, "real.json");
     writeFileSync(
       real,
@@ -162,7 +162,7 @@ describe("kill-switch", () => {
   });
 
   test("a custom root without a policy fails closed", () => {
-    const dir = mkdtempSync(path.join(tmpdir(), "stubx-root-"));
+    const dir = mkdtempSync(path.join(tmpdir(), "orvupi-root-"));
     const ks = path.join(dir, "killswitch.json");
     writeFileSync(
       ks,

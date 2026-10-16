@@ -1,11 +1,12 @@
 export const REPORT_VERSION = "u09-pares-1";
-export const OFFICIAL_MINT = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
+import { OFFICIAL_ADDRESS, isOfficialAddress } from "../shared/orvupi-contract.js";
+export const OFFICIAL_MINT = OFFICIAL_ADDRESS; // Contrato ORVUPI: aún no existe (shared/orvupi-contract.js).
 export const QUERY_LIMIT = 6;
 export const QUERY_WINDOW_MS = 60_000;
 export const NAME_LIMIT = 48;
 export const PUBLIC_WARNING = {
-  es: "Lectura de datos públicos. No es una comparación de calidad, ni una recomendación, ni un aval. STUBX no tiene relación con estos tokens salvo la CA oficial.",
-  en: "Public data reading. It is not a quality comparison, a recommendation, or an endorsement. STUBX has no relationship with these tokens except the official CA.",
+  es: "Lectura de datos públicos. No es una comparación de calidad, ni una recomendación, ni un aval. ORVUPI no tiene relación con estos tokens: todavía no tiene contrato.",
+  en: "Public data reading. It is not a quality comparison, a recommendation, or an endorsement. ORVUPI has no relationship with these tokens: it does not have a contract yet.",
 };
 
 export function takeQuerySlot(stamps, now, limit = QUERY_LIMIT, windowMs = QUERY_WINDOW_MS) {
@@ -87,7 +88,7 @@ export function evidenceRecord(input) {
     slot: input.slot ?? null,
     source: input.source,
     readAt: input.readAt,
-    official: input.mint === OFFICIAL_MINT,
+    official: isOfficialAddress(input.mint),
   };
 }
 
@@ -137,8 +138,8 @@ export function snapshotLines(evidence, lang) {
     {
       size: "body",
       text: evidence.official
-        ? (en ? "This address matches the published STUBX CA." : "Esta dirección coincide con la CA publicada de STUBX.")
-        : (en ? "STUBX does not review or endorse this token." : "STUBX no revisa ni respalda este token."),
+        ? (en ? "This address matches the project one." : "Esta dirección coincide con la del proyecto.")
+        : (en ? "ORVUPI does not review or endorse this token." : "ORVUPI no revisa ni respalda este token."),
     },
     { size: "body", text: en ? `Token analyzed: ${evidence.mint}` : `Token analizado: ${evidence.mint}` },
     { size: "body", text: name },
@@ -148,7 +149,7 @@ export function snapshotLines(evidence, lang) {
     { size: "body", text: feeText(en ? "en" : "es", "creator_fee_basis_points", 154, evidence.creatorFeeBps) },
     { size: "body", text: en ? "A pairing is not a collaboration or an endorsement." : "Un emparejamiento no es una colaboración ni un respaldo." },
     { size: "body", text: en ? "The hash detects changes against this evidence. It does not certify that it is true." : "El hash detecta cambios respecto a esta evidencia. No certifica que sea verdad." },
-    { size: "small", text: "generado con stubxai.com/verify" },
+    { size: "small", text: "generado con orvupi.com/verify" },
   ];
   const slotLine = evidence.slot === null || evidence.slot === undefined
     ? { size: "small", text: en ? "Technical detail. Network moment: not read." : "Detalle técnico. Momento de la red: no se leyó." }

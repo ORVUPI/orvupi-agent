@@ -118,8 +118,8 @@ function paintVerify(out, view) {
     emptySupport.textContent = view.support[lang];
     var list = verifyEl("ul", { class: "leyenda" });
     list.append(
-      legendItem("ok", lang === "en" ? "STUBX registry address" : "Dirección del registro de STUBX"),
-      legendItem("atencion", lang === "en" ? "Looks like STUBX, but it is not the official CA" : "Se parece a STUBX, pero no es la CA oficial"),
+      legendItem("ok", lang === "en" ? "ORVUPI registry address" : "Dirección del registro de ORVUPI"),
+      legendItem("atencion", lang === "en" ? "Named like ORVUPI, but ORVUPI does not have a contract yet" : "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato"),
       legendItem("neutro", lang === "en" ? "Could not be checked" : "No se pudo comprobar"),
     );
     out.append(emptyTitle, emptySupport, list);
@@ -238,9 +238,9 @@ function bootVerify() {
   var out = document.getElementById("resultado");
   var form = document.getElementById("consulta");
   var input = document.getElementById("direccion-token");
-  if (!out || !form || !input || typeof STUBX_VERIFY === "undefined") return;
-  var cards = STUBX_VERIFY.cards || [];
-  var evm = STUBX_VERIFY.evm || [];
+  if (!out || !form || !input || typeof ORVUPI_VERIFY === "undefined") return;
+  var cards = ORVUPI_VERIFY.cards || [];
+  var evm = ORVUPI_VERIFY.evm || [];
   var source = cards.length > 0 ? "lista" : "caida";
 
   var last = emptyView();
@@ -275,7 +275,7 @@ function bootVerify() {
 
   function apply(view, reveal) {
     last = view;
-    document.dispatchEvent(new CustomEvent("stubx-lectura", { detail: view && view.shown ? view.shown : null }));
+    document.dispatchEvent(new CustomEvent("orvupi-lectura", { detail: view && view.shown ? view.shown : null }));
     paintVerify(out, view);
     input.setAttribute("aria-invalid", view.kind === "invalida" ? "true" : "false");
     if (reveal && view.kind !== "vacio" && view.kind !== "comprobando") revealVerdict();
@@ -304,8 +304,8 @@ function bootVerify() {
         level: "atencion",
         cardDate: createdAt,
         title: {
-          es: "La ficha fechada también dice que se parece a STUBX y no es la CA oficial",
-          en: "The dated card also says it looks like STUBX and is not the official CA",
+          es: "La ficha fechada también dice que se parece a otro token y no es su dirección",
+          en: "The dated card also says it looks like another token and is not its address",
         },
         explain: cardView.support,
       };
@@ -367,7 +367,7 @@ function bootVerify() {
   }
 
   function endpointsOf() {
-    var rpc = STUBX_VERIFY.rpc || {};
+    var rpc = ORVUPI_VERIFY.rpc || {};
     return [rpc.primary, rpc.fallback].filter(function (item) { return !!item; });
   }
 
@@ -430,7 +430,7 @@ function bootVerify() {
     var endpoints = endpointsOf();
     readAnyMint({
       mint: normalized,
-      registry: STUBX_VERIFY.registry || [],
+      registry: ORVUPI_VERIFY.registry || [],
       endpoints: endpoints,
       maxRetries: 1,
       minIntervalMs: 200,
@@ -471,7 +471,7 @@ function bootVerify() {
     var mint = last.mint;
     readLargestAccounts({
       mint: mint,
-      registry: STUBX_VERIFY.registry || [],
+      registry: ORVUPI_VERIFY.registry || [],
       endpoints: endpointsOf(),
       maxRetries: 1,
       minIntervalMs: 200,
@@ -522,10 +522,10 @@ function bootVerify() {
     event.preventDefault();
     run();
   });
-  document.addEventListener("stubx-lang", function () {
+  document.addEventListener("orvupi-lang", function () {
     apply(last);
   });
-  document.addEventListener("stubx-verify-preview", function (event) {
+  document.addEventListener("orvupi-verify-preview", function (event) {
     var detail = event.detail || {};
     if (detail.kind === "comprobando") apply(pendingView(detail.raw || ""));
     if (detail.kind === "lectura_caida") apply(classifyAddress(detail.raw || "So11111111111111111111111111111111111111112", cards, "caida"));

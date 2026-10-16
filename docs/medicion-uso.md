@@ -22,7 +22,7 @@ Solo tres cifras que GitHub ya enseña en la página pública del repositorio, s
 
 No son visitas a stubxai.com. No identifican a quien abre la web. No se descargan con la API de tráfico de GitHub (clones, vistas, referentes): esa API no es pública y se acerca más a un registro de visitas.
 
-Nadie tiene que ejecutar un script para verlas. Están en `https://github.com/stubxai/stubx-agent`.
+Nadie tiene que ejecutar un script para verlas. Están en `https://github.com/ORVUPI/orvupi-agent`.
 
 ## Qué queda fuera
 
@@ -55,7 +55,7 @@ Cloudflare Web Analytics must be off in the zone dashboard. This repository does
 
 There is also no aggregated server counter. Any “add one” request reaches the host (today, Cloudflare) with the visitor’s IP address, even if the program never writes that address down. That is already personal data in the host’s log. So it is not added.
 
-The only figures that may be looked at are the three GitHub already shows on the public repository page, without this website asking for them: stars, forks, and watchers. They are not visits to stubxai.com. They do not identify who opens the website. The GitHub traffic API (clones, views, referrers) is not used: it is not public and it is closer to a visit log. No script has to run. The figures are on `https://github.com/stubxai/stubx-agent`.
+The only figures that may be looked at are the three GitHub already shows on the public repository page, without this website asking for them: stars, forks, and watchers. They are not visits to stubxai.com. They do not identify who opens the website. The GitHub traffic API (clones, views, referrers) is not used: it is not public and it is closer to a visit log. No script has to run. The figures are on `https://github.com/ORVUPI/orvupi-agent`.
 
 Cloudflare Web Analytics must be off in the zone dashboard. This repository does not insert it, and the HTML served on 2026-10-10 does not contain the beacon. A first-party counter is refused because the request still carries the IP to the host. A cookie or a storage key used to count sessions would identify the browser. Language and Lab progress, when used, stay in the browser and are not sent. A page script that called GitHub would send the visitor’s IP to GitHub.
 

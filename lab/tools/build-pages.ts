@@ -12,6 +12,9 @@ import { inlineModule } from "./inline.js";
 import { renderPages } from "./render.js";
 import type { BuiltPage } from "./render.js";
 
+/** Vuelve a true solo cuando exista el contrato ORVUPI y esté en web/v2/shared/orvupi-contract.json. */
+const WEB_PUBLISHES_REGISTRY = false;
+
 export function buildOutputs(repoRoot: string, options: { publish?: boolean } = {}): BuiltPage[] {
   const fuentes = loadFuentes(repoRoot);
   const cards = loadCards(repoRoot, fuentes).map((card) => presentCard(card));
@@ -46,14 +49,17 @@ export function buildOutputs(repoRoot: string, options: { publish?: boolean } = 
   const verifyJs = bundleVerify(
     readFileSync(lookupPath, "utf8"),
     inlineModule(signalsPath),
-    `${inlineModule(summaryPath)}\n${inlineModule(marketPath)}`,
+    // Una sola pasada: los dos leen shared/orvupi-contract.js y así sale una vez.
+    inlineModule([summaryPath, marketPath]),
     readFileSync(verifyUiPath, "utf8"),
     {
-      cards,
+      // ORVUPI todavía no tiene contrato: la web no publica registro, clones ni fichas del token anterior.
+      // Solo queda la ficha de contraste (USDC). canonical y clones siguen en verify/registry para el agente.
+      cards: cards.filter((card) => card.role === "contraste"),
       source: "lista" as const,
-      evm: Array.isArray(clones.evm) ? clones.evm : [],
+      evm: WEB_PUBLISHES_REGISTRY && Array.isArray(clones.evm) ? clones.evm : [],
       rpc: { primary: limits.defaultRpcUrl, fallback: limits.fallbackRpcUrl },
-      registry: canonical.tokens,
+      registry: WEB_PUBLISHES_REGISTRY ? canonical.tokens : [],
     },
   );
   const missionJs = bundleMission(readFileSync(enginePath, "utf8"), readFileSync(uiPath, "utf8"), {
@@ -101,9 +107,9 @@ function writePages(repoRoot: string, pages: readonly BuiltPage[]): void {
 function main(): void {
   const repoRoot = repoRootFromMeta(import.meta.url);
   const publishRequested = process.argv.includes("--publish");
-  const publishConfirmed = process.env.STUBX_PUBLISH === "1";
+  const publishConfirmed = process.env.ORVUPI_PUBLISH === "1";
   if (publishRequested !== publishConfirmed) {
-    process.stderr.write("El modo publicación solo se activa con STUBX_PUBLISH=1 y --publish, y solo cuando el creador lo decida. El borrador no cambia.\n");
+    process.stderr.write("El modo publicación solo se activa con ORVUPI_PUBLISH=1 y --publish, y solo cuando el creador lo decida. El borrador no cambia.\n");
     process.exitCode = 1;
     return;
   }

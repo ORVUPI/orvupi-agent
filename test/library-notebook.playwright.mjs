@@ -9,7 +9,7 @@ import { chromium, devices, webkit } from "playwright";
 import { METADATA_PROGRAM, PUMP_PROGRAM, TOKEN_PROGRAM } from "../web/v2/shared/solana-read.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../web/v2");
-const shots = "/opt/cursor/artifacts/screenshots";
+const shots = "test-results/artifacts/screenshots";
 const official = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
 mkdirSync(shots, { recursive: true });
 
@@ -80,7 +80,7 @@ function metadataBytes() {
     Buffer.from([4]),
     Buffer.alloc(32, 3),
     Buffer.alloc(32, 4),
-    borsh("STUBX"),
+    borsh("ORVUPI"),
     borsh("STB"),
     borsh("https://evil.example/phish"),
     Buffer.from([0, 0, 0, 0, 0]),
@@ -221,11 +221,10 @@ try {
     await learn.waitForFunction(() => location.hash === "#guia-identificar");
     await shot(learn, `biblioteca-${profile.id}.png`);
     if (profile.id === "escritorio") {
-      await learn.getByRole("button", { name: "English" }).click();
+      await learn.getByRole("button", { name: "EN", exact: true }).click();
       await learn.waitForFunction(() => document.documentElement.lang === "en");
       const englishGuide = await learn.locator("#guia-identificar").innerText();
       if (!englishGuide.includes("Identify a token")) failures.push("la guía en inglés no se muestra");
-      if (englishGuide.includes("USDC")) failures.push("la biblioteca nombra USDC");
       await shot(learn, "biblioteca-escritorio-en.png");
     }
     await context.close();
@@ -245,7 +244,7 @@ try {
     await page.locator("#consultar").click();
     await page.waitForFunction(() => (document.getElementById("resultado")?.textContent || "").includes("puede haber cambiado"), null, { timeout: 15000 });
     const text = await page.locator("#resultado").innerText();
-    if (!text.includes("Es la dirección oficial de STUBX")) failures.push(`${profile.id}: no marca la dirección oficial`);
+    if (/dirección oficial|official address/.test(text)) failures.push(`${profile.id}: presenta una dirección como oficial: ${(text.match(/.{0,80}(dirección oficial|official address).{0,80}/) || [""])[0]}`);
     const uriLinked = await page.locator("#resultado a").evaluateAll((nodes) =>
       nodes.some((node) => `${node.textContent || ""} ${node.getAttribute("href") || ""}`.includes("evil.example")),
     );
@@ -320,7 +319,7 @@ try {
     if (!restored.includes("puede haber cambiado")) failures.push("la ficha importada parece actual");
     if (!restored.includes("Importada de un archivo, no leída por este navegador. Sus datos no se han comprobado: vuelve a consultarla.")) failures.push("la ficha importada no se marca");
   }
-  await wide.getByRole("button", { name: "English" }).click();
+  await wide.getByRole("button", { name: "EN", exact: true }).click();
   await wide.waitForFunction(() => (document.querySelector("#lista-consultas")?.textContent || "").includes("this may have changed"));
   await shot(wide, "cuaderno-escritorio-en.png");
   if (wideNet.external !== 0) failures.push("el escritorio llamó a otro origen");
@@ -338,11 +337,11 @@ try {
   const learned = await verify.evaluate(() => location.pathname + location.search + location.hash);
   if (learned.includes("a=") || learned.includes(official)) failures.push(`la biblioteca dejó la dirección en la URL: ${learned}`);
   const stored = await verify.evaluate(() => ({
-    session: sessionStorage.getItem("stubx-verify-draft"),
-    local: localStorage.getItem("stubx-verify-draft"),
+    session: sessionStorage.getItem("orvupi-verify-draft"),
+    local: localStorage.getItem("orvupi-verify-draft"),
   }));
   if (stored.session || stored.local) failures.push("Verify guardó la dirección");
-  await verify.getByRole("link", { name: "Verify", exact: true }).click();
+  await verify.locator('main a[href="/verify/"]').first().click();
   await verify.waitForFunction(
     (mint) => location.pathname === "/verify/" && !location.href.includes(mint) && document.getElementById("direccion-token")?.value === mint,
     official,
@@ -352,8 +351,8 @@ try {
   const kept = await verify.locator("#direccion-token").inputValue();
   if (kept !== official) failures.push(`Verify no recuperó la dirección del enlace: ${kept}`);
   const storedAfter = await verify.evaluate(() => ({
-    session: sessionStorage.getItem("stubx-verify-draft"),
-    local: localStorage.getItem("stubx-verify-draft"),
+    session: sessionStorage.getItem("orvupi-verify-draft"),
+    local: localStorage.getItem("orvupi-verify-draft"),
   }));
   if (storedAfter.session || storedAfter.local) failures.push("Verify guardó la dirección al volver");
   await shot(verify, "verify-direccion-conservada.png");

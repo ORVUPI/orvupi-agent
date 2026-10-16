@@ -1,6 +1,30 @@
 {
-  "version": "2026-10-09",
-  "shortWords": ["ya", "now", "buy", "fondo", "fondos", "fund", "funds", "return", "ape", "ath", "invest", "roi", "cex", "corre", "chart", "free", "dm", "md", "claim", "claims", "ganar", "sube", "support"],
+  "version": "2026-10-14-orvupi",
+  "shortWords": [
+    "ya",
+    "now",
+    "buy",
+    "fondo",
+    "fondos",
+    "fund",
+    "funds",
+    "return",
+    "ape",
+    "ath",
+    "invest",
+    "roi",
+    "cex",
+    "corre",
+    "chart",
+    "free",
+    "dm",
+    "md",
+    "claim",
+    "claims",
+    "ganar",
+    "sube",
+    "support"
+  ],
   "terms": [
     "fomo",
     "última oportunidad",
@@ -93,12 +117,12 @@
     "date prisa",
     "no te lo pierdas",
     "quedan pocas horas",
-    "equipo de STUBX",
-    "equipo stubx",
+    "equipo de ORVUPI",
+    "equipo orvupi",
     "va a subir",
-    "admin de STUBX",
+    "admin de ORVUPI",
     "support team",
-    "soporte de STUBX",
+    "soporte de ORVUPI",
     "dm me",
     "escríbeme por privado",
     "a la luna",
@@ -138,8 +162,8 @@
     "al priv",
     "inbox",
     "soporte",
-    "STUBX team",
-    "team STUBX",
+    "ORVUPI team",
+    "team ORVUPI",
     "pump",
     "pump.fun",
     "oficial",
@@ -149,8 +173,29 @@
     "partner",
     "anuncio oficial"
   ],
-  "emojis": ["🚀", "🌕", "📈", "💎", "🙌", "🤑", "💰", "🔥", "🌙", "💸", "📊", "💲"],
-  "emojiSequences": ["💎🙌"],
-  "handles": ["stubxai", "CreadorSTUBX"],
-  "domains": ["stubxai.com", "t.me"]
+  "emojis": [
+    "🚀",
+    "🌕",
+    "📈",
+    "💎",
+    "🙌",
+    "🤑",
+    "💰",
+    "🔥",
+    "🌙",
+    "💸",
+    "📊",
+    "💲"
+  ],
+  "emojiSequences": [
+    "💎🙌"
+  ],
+  "handles": [
+    "ORVUPI",
+    "creadorORVUPI"
+  ],
+  "domains": [
+    "stubxai.com",
+    "t.me"
+  ]
 }

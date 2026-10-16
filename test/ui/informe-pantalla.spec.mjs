@@ -8,6 +8,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 const CLONE = "ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump";
 const FAIL = "So11111111111111111111111111111111111111112";
+// USDT es la única ficha fechada que publica la web (2026-10-16).
+const USDT = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB";
 const SUPPLY = 7721704579000000n;
 const CLONE_SUPPLY = 1_000_000_000_000_000n;
 const named = JSON.parse(readFileSync(path.join(root, "test/fixtures/informe/verificado.json"), "utf8"));
@@ -68,7 +70,7 @@ function rpcResult(value, status = 200) {
 }
 
 function profile(mint) {
-  if (mint === CLONE) return { name: "STUBX", symbol: "STUBX", supply: CLONE_SUPPLY, active: false };
+  if (mint === CLONE) return { name: "ORVUPI", symbol: "ORVUPI", supply: CLONE_SUPPLY, active: false };
   if (mint === named.mint) return { name: named.name.text, symbol: named.symbol.text, supply: SUPPLY, active: false };
   if (mint === marked.mint) return { name: marked.name.text, symbol: marked.symbol.text, supply: SUPPLY, active: false };
   if (mint === FAIL) return { name: "OTRO", symbol: "OTRO", supply: SUPPLY, active: false };
@@ -194,10 +196,10 @@ function expectSameReading(data) {
   ]) {
     expect(painted.includes(phrase), phrase).toBe(false);
   }
-  expect(painted).toContain(data.lang === "en" ? "Made on stubxai.com" : "Generado en stubxai.com");
+  expect(painted).toContain(data.lang === "en" ? "Made on orvupi.com" : "Generado en orvupi.com");
   expect(painted).toContain(data.lang === "en" ? "Limits" : "Límites");
   if (data.warning) {
-    const needle = data.lang === "en" ? "It looks like STUBX" : "Se parece a STUBX";
+    const needle = data.lang === "en" ? "It is named like ORVUPI" : "Se llama como ORVUPI";
     const at = data.lines.findIndex((line) => line.includes(needle));
     const checked = data.lines.findIndex((line) => line === "Qué se comprobó" || line === "What was checked");
     expect(at).toBeGreaterThan(0);
@@ -269,13 +271,13 @@ test("el informe repite lo que se ve en pantalla", async ({ page }) => {
   expect(usdc.lines.join("\n")).toContain("Lectura de Verify · no es un certificado");
   expect(usdc.date).toMatch(/\d{2}:\d{2}:\d{2}/);
 
-  await page.getByRole("button", { name: "English" }).click();
+  await page.locator('[data-set-lang="en"]').first().click();
   await expect(page.locator("#resultado .resumen-informe")).toContainText("It says it is called");
   const english = await readPair(page);
   expectSameReading(english);
   expect(english.lines.join("\n")).toContain("\u201CUSD Coin\u201D");
   expect(english.lines.join("\n").includes("«")).toBe(false);
-  await page.getByRole("button", { name: "Español" }).click();
+  await page.locator('[data-set-lang="es"]').first().click();
   await expect(page.locator("#resultado .resumen-informe")).toContainText("Qué se comprobó");
 
   await lookup(page, named.mint, "Dice llamarse «verificado»");
@@ -292,20 +294,17 @@ test("el informe repite lo que se ve en pantalla", async ({ page }) => {
   expect(htmlName.lines.join("\n")).toContain("«A&B<i>»");
   expect(htmlName.lines.join("\n").includes("&lt;")).toBe(false);
 
-  await lookup(page, CLONE, "Se parece a STUBX pero no es la dirección oficial");
+  await lookup(page, CLONE, "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato");
   const clone = await readPair(page);
   expectSameReading(clone);
-  const earlier = clone.reportBlocks.atencion.lines.find((item) => item.title === "Comprobación anterior");
-  expect(earlier?.lead).toContain("2026-10-09");
-  expect(earlier?.lead).not.toContain(clone.date.match(/\d{2}:\d{2}:\d{2}/)[0]);
-  expect(clone.blocks.atencion.points[0].lead).toContain("Se parece a STUBX pero no es la dirección oficial");
+  expect(clone.blocks.atencion.points[0].lead).toContain("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato");
 
   await page.locator("#guardar-consulta").click();
   await page.locator("#comparacion-verify").getByRole("link", { name: "Abrir Cuaderno" }).click();
   await page.waitForURL(/\/cuaderno\/$/);
   const saved = page.locator(".consulta-guardada", { hasText: CLONE }).first();
   const savedAttention = saved.locator("[data-bloque='atencion']");
-  await expect(savedAttention).toContainText("Se parece a STUBX pero no es la dirección oficial", { timeout: 20_000 });
+  await expect(savedAttention).toContainText("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato", { timeout: 20_000 });
   await expect(savedAttention.locator(".punto-vacio")).toHaveCount(0);
   await expect(savedAttention).not.toContainText("Comprobación anterior");
   await expect(saved.locator(".informe-descarga")).toContainText("Informe descargable");
@@ -323,7 +322,7 @@ test("los fixtures dejan PNG y PDF con el texto de la cadena", async ({ page }, 
     { source: marked, lang: "en", stem: "informe-nombre-html-en", summary: true },
     { source: largo, lang: "es", stem: "informe-largo-es", summary: false },
   ];
-  const dir = "/opt/cursor/artifacts";
+  const dir = "test-results/artifacts";
   mkdirSync(dir, { recursive: true });
   for (const item of cases) {
     const result = await page.evaluate(async ({ source, lang, summary }) => {
@@ -384,7 +383,7 @@ test("los fixtures dejan PNG y PDF con el texto de la cadena", async ({ page }, 
       expect(text.includes("&lt;")).toBe(false);
     }
     if (item.stem === "informe-largo-es") {
-      expect(result.warning).toContain("Se parece a STUBX pero no es la dirección oficial");
+      expect(result.warning).toContain("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato");
       expect(text.includes("Curva de Pump.fun: no aplica")).toBe(true);
       const count = Number(/\/Count (\d+)/.exec(pdf.toString("latin1"))?.[1] || 0);
       expect(count).toBeGreaterThan(1);
@@ -414,13 +413,13 @@ test("USDC y ERYyy dejan un PNG en español y en inglés", async ({ page }, test
   test.setTimeout(120_000);
   await mockRpc(page);
   await page.goto("/verify/");
-  const dir = "/opt/cursor/artifacts";
+  const dir = "test-results/artifacts";
   mkdirSync(dir, { recursive: true });
   const shots = [
     { mint: USDC, lang: "es", stem: "informe-usdc-es", ready: "Dice llamarse «USD Coin»" },
     { mint: USDC, lang: "en", stem: "informe-usdc-en", ready: "It says it is called" },
-    { mint: CLONE, lang: "es", stem: "informe-clon-es", ready: "Se parece a STUBX pero no es la dirección oficial" },
-    { mint: CLONE, lang: "en", stem: "informe-clon-en", ready: "It looks like STUBX but it is not the official address" },
+    { mint: CLONE, lang: "es", stem: "informe-clon-es", ready: "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato" },
+    { mint: CLONE, lang: "en", stem: "informe-clon-en", ready: "It is named like ORVUPI, but ORVUPI does not have a contract yet" },
   ];
   for (const shot of shots) {
     await page.locator(`[data-set-lang="${shot.lang}"]`).click();
@@ -458,7 +457,7 @@ test("USDC y ERYyy dejan un PNG en español y en inglés", async ({ page }, test
     for (const phrase of BANNED_IN_FILE) expect(text.includes(phrase), phrase).toBe(false);
     expect(result.title).toContain("·");
     expect(result.date).toMatch(/\d{2}:\d{2}:\d{2}/);
-    expect(result.origin).toContain("stubxai.com");
+    expect(result.origin).toContain("orvupi.com");
     expect(text).toContain(shot.lang === "en" ? "Limits" : "Límites");
     expect(result.falta.includes("Curva de Pump.fun") || result.falta.includes("Pump.fun curve")).toBe(false);
     if (!result.attentionLead) expect(result.attentionEmpty.length).toBeGreaterThan(0);
@@ -469,8 +468,7 @@ test("USDC y ERYyy dejan un PNG en español y en inglés", async ({ page }, test
     }
     if (shot.mint === CLONE) {
       expect(result.warning.length).toBeGreaterThan(0);
-      expect(result.attentionLead).toContain(shot.lang === "en" ? "It looks like STUBX" : "Se parece a STUBX");
-      expect(text).toContain("2026-10-09");
+      expect(result.attentionLead).toContain(shot.lang === "en" ? "It is named like ORVUPI" : "Se llama como ORVUPI");
       expect(text).toContain(shot.lang === "en" ? "It says it is called" : "Dice llamarse");
     }
     writeFileSync(path.join(dir, `${shot.stem}.png`), png);
@@ -506,25 +504,25 @@ test("el cuaderno compara el informe con lo que se ve en pantalla", async ({ pag
 
   await page.locator("[data-set-lang='es']").click();
   await page.goto("/verify/");
-  await lookup(page, CLONE, "Se parece a STUBX pero no es la dirección oficial");
+  await lookup(page, CLONE, "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato");
   await page.locator("#guardar-consulta").click();
   await page.locator("#comparacion-verify").getByRole("link", { name: "Abrir Cuaderno" }).click();
   await page.waitForURL(/\/cuaderno\/$/);
   const cloneCard = page.locator(".consulta-guardada", { hasText: CLONE }).first();
-  await expect(cloneCard.locator("[data-bloque='atencion']")).toContainText("Se parece a STUBX pero no es la dirección oficial", { timeout: 20_000 });
+  await expect(cloneCard.locator("[data-bloque='atencion']")).toContainText("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato", { timeout: 20_000 });
   const clone = await readSaved(cloneCard);
   expectSameReading(clone);
-  expect(clone.blocks.atencion.points[0].lead).toContain("Se parece a STUBX pero no es la dirección oficial");
-  expect(clone.reportBlocks.atencion.lines[0].lead).toContain("Se parece a STUBX pero no es la dirección oficial");
+  expect(clone.blocks.atencion.points[0].lead).toContain("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato");
+  expect(clone.reportBlocks.atencion.lines[0].lead).toContain("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato");
   expect(clone.blocks.atencion.text.includes("Comprobación anterior")).toBe(false);
   expect(clone.reportBlocks.atencion.text.includes("Comprobación anterior")).toBe(false);
   expect(clone.lines.join("\n")).toContain("Dice llamarse");
 
   await page.locator("[data-set-lang='en']").click();
-  await expect(cloneCard.locator(".resumen-informe")).toContainText("It looks like STUBX");
+  await expect(cloneCard.locator(".resumen-informe")).toContainText("It is named like ORVUPI");
   const cloneEnglish = await readSaved(cloneCard);
   expectSameReading(cloneEnglish);
-  expect(cloneEnglish.reportBlocks.atencion.lines[0].lead).toContain("It looks like STUBX");
+  expect(cloneEnglish.reportBlocks.atencion.lines[0].lead).toContain("It is named like ORVUPI");
   expect(cloneEnglish.lines.join("\n").includes("«")).toBe(false);
   expect(cloneEnglish.reportBlocks.atencion.text.includes("Earlier check")).toBe(false);
   expect(pageErrors).toEqual([]);

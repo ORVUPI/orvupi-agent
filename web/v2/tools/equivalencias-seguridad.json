@@ -4,7 +4,7 @@
     "v2": "la wallet creadora es la de abajo"
   },
   {
-    "current": "Nota: la wallet pública del proyecto (SOL) ( GtYJ…QZoutA) no tiene STUBX, no forma parte del suministro y no es una porción del gráfico.",
+    "current": "Nota: la wallet pública del proyecto (SOL) ( GtYJ…QZoutA) no tiene tokens del proyecto, no forma parte del suministro y no es una porción del gráfico.",
     "v2": "No forma parte del suministro ni del gráfico"
   },
   {
@@ -21,7 +21,7 @@
   },
   {
     "current": "No oficiales: no pagues, no conectes tu wallet",
-    "v2": "Nadie de STUBX pedirá tu semilla ni fondos por mensaje directo."
+    "v2": "Nadie de ORVUPI pedirá tu semilla ni fondos por mensaje directo."
   },
   {
     "current": "Esta web puede considerarse una comunicación publicitaria de criptoactivos; por eso lleva el aviso del art.",
@@ -44,7 +44,7 @@
     "v2": "Pégala en Solscan y mira quién la creó y cuándo"
   },
   {
-    "current": "Si una cuenta, web o CA no aparece aquí, trátala como no oficial hasta verificarlo en @stubxai y en esta web.",
-    "v2": "Si una cuenta, una web o una CA no está aquí, trátala como no oficial hasta comprobarla en @stubxai y en esta web."
+    "current": "Si una cuenta, web o CA no aparece aquí, trátala como no oficial hasta verificarlo en @ORVUPI y en esta web.",
+    "v2": "Si una cuenta, una web o una CA no está aquí, trátala como no oficial hasta comprobarla en @ORVUPI y en esta web."
   }
 ]

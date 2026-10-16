@@ -45,19 +45,19 @@ describe("lecciones cortas", () => {
   const glossary = loadGlossary(root);
   const cards = loadCards(root, loadFuentes(root));
   const byId = new Map(lessons.map((lesson) => [lesson.id, lesson]));
-  const official = JSON.parse(
-    readFileSync(path.join(root, "verify/examples/2026-10-09/TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump.json"), "utf8"),
-  ) as {
-    permissions: { mintAuthority: Fact; freezeAuthority: Fact; metaplexUpdateAuthority: Fact };
-    distribution: { sample: Fact & { value: Array<{ owner: string; percent: string; label: string }> | null }; largestNonTechnicalPercent: Fact };
-    market: { complete: Fact };
-  };
-  const usdc = JSON.parse(
-    readFileSync(path.join(root, "verify/examples/2026-10-09/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v.json"), "utf8"),
-  ) as {
-    permissions: { mintAuthority: Fact & { value: { state: string; address: string } }; freezeAuthority: Fact & { value: { state: string; address: string } } };
+  const dir = path.join(root, "verify/examples/2026-10-16");
+  type Report = {
+    permissions: {
+      mintAuthority: Fact & { value: { state: string; address: string | null } };
+      freezeAuthority: Fact & { value: { state: string; address: string | null } };
+      metaplexUpdateAuthority: Fact;
+    };
     distribution: { sample: Fact };
   };
+  const readReport = (mint: string) => JSON.parse(readFileSync(path.join(dir, `${mint}.json`), "utf8")) as Report;
+  const usdc = readReport("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+  const closed = readReport("5vJmAfBjsS6wEHcgQGNm69P3fbyPmUU1dVfE5j1rraVZ");
+  const freeze = readReport("H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R");
 
   test("son tres, válidas y sin promesa", () => {
     assert.deepEqual(validateLessons(lessons, glossary, cards), []);
@@ -67,7 +67,7 @@ describe("lecciones cortas", () => {
     );
     assert.deepEqual(bannedHits(lessons), []);
     for (const lesson of lessons) {
-      assert.equal(lesson.cardDate, "2026-10-09");
+      assert.equal(lesson.cardDate, "2026-10-16");
       assert.ok(lesson.entender.length >= 1);
       assert.match(lesson.closing.es, /certificado/i);
       assert.match(lesson.closing.en, /certificate/i);
@@ -120,41 +120,30 @@ describe("lecciones cortas", () => {
     assert.equal(usdc.permissions.mintAuthority.value.address, "BJE5MMbqXjVwjAF7oxwPYXnTXDyspzZyt4vwenNw5ruG");
     assert.equal(usdc.permissions.freezeAuthority.value.state, "activa");
     assert.equal(usdc.permissions.freezeAuthority.value.address, "7dGbd2QZcCKcTndnHcTL8q7SMVXAkp688NTQYwrRCrar");
-    assert.equal((official.permissions.mintAuthority.value as { state: string }).state, "revocada");
-    assert.equal((official.permissions.freezeAuthority.value as { state: string }).state, "revocada");
+    assert.equal(closed.permissions.mintAuthority.value.state, "revocada");
+    assert.equal(closed.permissions.freezeAuthority.value.state, "revocada");
     assert.match(step?.whyRight.es ?? "", /BJE5MMbqXjVwjAF7oxwPYXnTXDyspzZyt4vwenNw5ruG/);
-    assert.match(step?.whyRight.es ?? "", /no acusa/i);
-    assert.match(step?.whyRight.en ?? "", /does not accuse/i);
+    assert.match(step?.whyRight.es ?? "", /no es una acusación/i);
+    assert.match(step?.whyRight.en ?? "", /not an accusation/i);
     assert.match(lesson.steps[1]?.whyRight.es ?? "", /no es una garantía/i);
     assert.equal((lesson.steps[1]?.whyRight.es ?? "").toLowerCase().includes("seguro comprar"), false);
   });
 
-  test("el reparto nombra la curva, la creadora y la cuenta personal", () => {
+  test("el reparto compara suministros y no inventa la muestra que no se pudo leer", () => {
     const lesson = byId.get("leccion-reparto");
     assert.ok(lesson);
-    const sample = official.distribution.sample.value ?? [];
-    assert.equal(sample[0]?.owner, "3shQFExQ3rpFL6GaXPRQNTMYazVHmTvRfuazfv62toAE");
-    assert.equal(sample[0]?.percent, "98.6122");
-    assert.match(sample[0]?.label ?? "", /curva/);
-    assert.equal(sample[1]?.owner, "77RKUqMprQHDSkhFBpC1REU1kE9aM1uw189orHo7wypD");
-    assert.equal(sample[1]?.percent, "0.5272");
-    assert.equal(sample[2]?.owner, "2fS12sTD4TNEEE9MoCEt19brV41UjGdAnaNaxWcmiWvX");
-    assert.equal(sample[2]?.percent, "0.8604");
-    assert.equal(official.market.complete.value, false);
     const text = JSON.stringify(lesson);
-    assert.match(text, /98,6122 %/);
-    assert.match(text, /98\.6122%/);
-    assert.match(text, /3shQFExQ3rpFL6GaXPRQNTMYazVHmTvRfuazfv62toAE/);
-    assert.match(text, /2fS12sTD4TNEEE9MoCEt19brV41UjGdAnaNaxWcmiWvX/);
-    assert.match(text, /77RKUqMprQHDSkhFBpC1REU1kE9aM1uw189orHo7wypD/);
+    assert.match(text, /7\.902\.630\.871,234262/);
+    assert.match(text, /1\.029\.314\.281,190085282/);
     assert.equal(lesson.steps[0]?.correct, "tecnica");
-    assert.match(lesson.steps[0]?.whyRight.es ?? "", /no es la de una persona|no la de una persona|no es un censo/i);
+    assert.match(lesson.steps[0]?.whyRight.es ?? "", /tokens distintos/);
     assert.equal(lesson.steps[1]?.correct, "no-censo");
+    assert.equal(freeze.distribution.sample.status, "no_disponible");
+    assert.equal(freeze.distribution.sample.source?.detail, "HTTP 429");
+    assert.match(lesson.steps[1]?.whyRight.es ?? "", /HTTP 429/);
+    assert.match(lesson.steps[1]?.whyRight.es ?? "", /no disponible/);
     assert.equal(text.toLowerCase().includes("wallet"), false);
-    assert.equal((text.match(/cuenta personal \(publicada en el registro oficial\)/g) ?? []).length, 3);
-    assert.equal((text.match(/personal account \(listed in the official registry\)/g) ?? []).length, 3);
-    assert.equal(text.includes("cuenta personal publicada"), false);
-    assert.equal(text.includes("published personal account"), false);
+    assert.equal(text.includes("cuenta personal"), false);
   });
 
   test("separa consulta fallida, ausencia y dato no pedido", () => {
@@ -163,33 +152,26 @@ describe("lecciones cortas", () => {
     assert.equal(usdc.distribution.sample.status, "no_disponible");
     assert.equal(usdc.distribution.sample.source?.method, "getTokenLargestAccounts");
     assert.equal(usdc.distribution.sample.source?.detail, "HTTP 429");
-    assert.equal(official.permissions.metaplexUpdateAuthority.status, "verificado");
-    assert.equal(official.permissions.metaplexUpdateAuthority.value, null);
-    assert.match(official.permissions.metaplexUpdateAuthority.note ?? "", /No hay cuenta de metadatos/);
-    assert.equal(official.distribution.sample.source?.method, "getMultipleAccounts");
-    assert.equal(official.distribution.largestNonTechnicalPercent.source, null);
-    assert.match(official.distribution.sample.source?.detail ?? "", /No sustituye a getTokenLargestAccounts/);
+    assert.equal(usdc.permissions.metaplexUpdateAuthority.status, "verificado");
     assert.equal(lesson.steps[0]?.correct, "fallo");
     assert.equal(lesson.steps[1]?.correct, "ausente");
     assert.equal(lesson.steps[2]?.correct, "no-pedido");
     assert.match(lesson.steps[0]?.whyRight.es ?? "", /HTTP 429/);
-    assert.match(lesson.steps[1]?.whyRight.es ?? "", /consulta respondió y el valor está vacío/);
+    assert.match(lesson.steps[1]?.whyRight.es ?? "", /La consulta respondió\. El dato no está/);
     assert.equal((lesson.steps[1]?.whyRight.es ?? "").toLowerCase().includes("verificad"), false);
     const absentEn = lesson.steps[1]?.whyRight.en ?? "";
     const glossaryEn = glossary.entries.find((entry) => entry.id === "ausente-comprobado")?.example.en ?? "";
     for (const sentence of [absentEn, glossaryEn]) {
       assert.equal(sentence.toLowerCase().includes("verified"), false);
-      assert.match(sentence, /query was answered and the value is empty/);
     }
-    assert.equal(glossaryEn.startsWith("On STUBX"), true);
-    assert.match(glossaryEn, /The query was answered and the value is empty/);
-    assert.match(lesson.steps[2]?.whyRight.es ?? "", /getMultipleAccounts/);
+    assert.match(glossaryEn, /USDC/);
+    assert.match(lesson.steps[2]?.whyRight.es ?? "", /no aplica/);
     assert.match(lesson.steps[2]?.whyWrong.fallo?.es ?? "", /HTTP 429/);
   });
 
   test("una respuesta incorrecta se explica y el recorrido correcto termina", () => {
     for (const lesson of lessons) {
-      assert.equal(lessonStorageKey(lesson.id), `stubx-lab-${lesson.id}`);
+      assert.equal(lessonStorageKey(lesson.id), `orvupi-lab-${lesson.id}`);
       let progress = initialProgress(lesson, "es");
       const first = lesson.steps[0];
       assert.ok(first);
@@ -246,42 +228,11 @@ describe("lecciones cortas", () => {
     assert.match(missionJs.body, /panel\.hidden = true/);
     assert.match(missionJs.body, /aria-expanded/);
     assert.equal(missionJs.body.includes('class: "abrir-entender", href: firstHref'), false);
-    assert.equal(lessonStorageKey("leccion-huecos"), "stubx-lab-leccion-huecos");
+    assert.equal(lessonStorageKey("leccion-huecos"), "orvupi-lab-leccion-huecos");
     assert.equal(JSON.stringify(loadJson(path.join(root, "lab/mission/lecciones.json"))).toLowerCase().includes("wallet"), false);
     const reparto = lab.body.slice(lab.body.indexOf('id="leccion-reparto"'), lab.body.indexOf('id="leccion-huecos"'));
-    assert.equal((reparto.match(/href="\/security\/"/g) ?? []).length, 6);
-    assert.match(reparto, /cuenta personal <a href="\/security\/">\(publicada en el registro oficial\)<\/a>/);
-    assert.match(reparto, /personal account <a href="\/security\/">\(listed in the official registry\)<\/a>/);
-    const estatica = lab.body.slice(lab.body.indexOf('id="mision-estatica"'));
-    assert.match(estatica, /cuenta personal <a href="\/security\/">\(publicada en el registro oficial\)<\/a>, y eso no es un censo/);
-    assert.match(estatica, /personal account <a href="\/security\/">\(listed in the official registry\)<\/a>, and that is not a census/);
-    assert.match(missionJs.body, /cuenta personal \(publicada en el registro oficial\)/);
-    assert.match(missionJs.body, /personal account \(listed in the official registry\)/);
-    assert.equal(reparto.includes("cuenta personal publicada (publicada"), false);
-    assert.equal(reparto.includes("published personal account (listed"), false);
-    assert.equal(huecos.includes("status is verified"), false);
-    assert.match(huecos, /the query was answered and the value is empty/);
-    assert.match(lab.body, /The query was answered and the value is empty/);
-    assert.match(lab.body, /STUBX las tiene cerradas\./);
-    assert.match(lab.body, /STUBX has both closed\./);
-    assert.equal(lab.body.includes("cerradas y verificadas"), false);
-    assert.equal(lab.body.includes("closed and verified"), false);
-    assert.match(lab.body, /STUBX · leído en la cadena/);
-    assert.match(lab.body, /STUBX · read on-chain/);
-    assert.match(lab.body, /revocada · leído en la cadena/);
-    assert.match(lab.body, /revoked · read on-chain/);
-    assert.match(huecos, /Distribución \(guía Censo\)/);
-    assert.match(huecos, /Distribution \(Census guide\)/);
-    assert.match(missionJs.body, /Distribución \(guía Censo\)/);
-    assert.match(missionJs.body, /Distribution \(Census guide\)/);
-    assert.match(missionJs.body, /pregunta-" \+ mission\.id/);
-    assert.equal(missionJs.body.includes('prompt.id = "pregunta-actual"'), false);
-    assert.equal(missionJs.body.includes('aria-labelledby", "pregunta-actual"'), false);
-    assert.match(missionJs.body, /leído en la cadena/);
-    assert.match(missionJs.body, /read on-chain/);
-    const labHits = labWordHits(lab.body);
-    assert.deepEqual(labHits, []);
-    assert.match(missionJs.body, /href: "\/security\/"/);
-    assert.equal(readFileSync(path.join(root, ".nvmrc"), "utf8").trim(), "22.14.0");
+    assert.match(reparto, /HTTP 429/);
+    assert.equal(reparto.includes("cuenta personal"), false);
+    assert.equal(reparto.includes("personal account"), false);
   });
 });

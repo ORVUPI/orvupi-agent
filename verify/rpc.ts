@@ -67,7 +67,7 @@ export async function httpTransport(
     accept: "application/json",
   };
   if (typeof navigator === "undefined") {
-    headers["user-agent"] = "stubx-verify/0.1";
+    headers["user-agent"] = "orvupi-verify/0.1";
   }
   try {
     const response = await fetch(endpoint, {

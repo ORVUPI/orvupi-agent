@@ -1,6 +1,6 @@
-# STUBX 0.1.0
+# ORVUPI 0.1.0
 
-These notes are dated 2026-10-10. The `@stubx/agents` package version is `0.1.0`. The `v0.1.0` tag is described in [TAG.md](TAG.md) and has not been created.
+These notes are dated 2026-10-10. The `@orvupi/agents` package version is `0.1.0`. The `v0.1.0` tag is described in [TAG.md](TAG.md) and has not been created.
 
 This is not an audit and not investment advice. High-risk crypto · You could lose everything · Not investment advice.
 
@@ -18,7 +18,7 @@ Four pieces. All of them read or teach. None of them asks for a wallet, a seed p
 ## Verify
 
 - Directory `verify/`. The command reads public data only when someone runs it on purpose. Read methods sit on a closed list. If a fact does not arrive, the card leaves it unavailable. It does not invent a zero or a revoked authority.
-- Dated examples live in `verify/examples/2026-10-08/` and `verify/examples/2026-10-09/`. The official STUBX mint card was read again on 2026-10-09.
+- Dated examples live in `verify/examples/2026-10-08/` and `verify/examples/2026-10-09/`. The previous project's mint card was read again on 2026-10-09.
 - `web/v2/verify/` takes a pasted address. Verify universal, deployed (merge `2434636`), reads it in the browser, read-only, when it is an SPL or Token-2022 mint, and also compares it with the dated cards. If the address is not valid, the page says so. The card list is not a census.
 
 A card does not say whether a token is good, safe, or a good purchase.

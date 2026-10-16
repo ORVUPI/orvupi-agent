@@ -185,7 +185,7 @@ export function loadPolicy(root: string): PolicyLoad {
   if (!isRecord(read.value) || !sameKeys(read.value, ["id", "version", "limits", "killSwitchCannot"])) {
     return { ok: false, reason: "invalid" };
   }
-  if (read.value.id !== "stubx-agent-limits" || read.value.version !== "1.0.0") {
+  if (read.value.id !== "orvupi-agent-limits" || read.value.version !== "1.0.0") {
     return { ok: false, reason: "mismatch" };
   }
   if (!Array.isArray(read.value.limits) || !Array.isArray(read.value.killSwitchCannot)) {
@@ -232,7 +232,7 @@ export function loadPolicy(root: string): PolicyLoad {
   return {
     ok: true,
     policy: {
-      id: "stubx-agent-limits",
+      id: "orvupi-agent-limits",
       version: "1.0.0",
       sha256: fingerprint(read.raw),
       limits,

@@ -30,7 +30,7 @@ const TOPIC_BY_ID = {
   ficha: "metadatos",
 };
 
-const SUMMARY_OFFICIAL = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
+import { isOfficialAddress } from "./orvupi-contract.js";
 
 const ATTENTION = {
   emision: {
@@ -111,10 +111,10 @@ const ATTENTION = {
   },
   copia: {
     title: { es: "Dirección", en: "Address" },
-    lead: { es: "Se parece a STUBX pero no es la dirección oficial.", en: "It looks like STUBX but it is not the official address." },
+    lead: { es: "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.", en: "It is named like ORVUPI, but ORVUPI does not have a contract yet." },
     detail: {
-      es: "La dirección oficial está publicada en stubxai.com. Ábrela y compárala con la de esta lectura, carácter a carácter. Un nombre igual no cambia la dirección.",
-      en: "The official address is published on stubxai.com. Open it and compare it with the one in this reading, character by character. The same name does not change the address.",
+      es: "ORVUPI todavía no tiene contrato en ninguna red. Ninguna dirección es la oficial.",
+      en: "ORVUPI does not have a contract on any network yet. No address is the official one.",
     },
   },
   ficha: {
@@ -233,7 +233,7 @@ function contextFromView(view) {
     symbol: summaryText(shown.symbol) || summaryText(row("Símbolo") && row("Símbolo").value && row("Símbolo").value.es),
     decimals: shown.decimals,
     extensions: Array.isArray(shown.extensions) ? shown.extensions : [],
-    official: view?.mint === SUMMARY_OFFICIAL || (view?.signals || []).some((item) => item && item.id === "registro"),
+    official: isOfficialAddress(view?.mint) || (view?.signals || []).some((item) => item && item.id === "registro"),
   };
 }
 
@@ -244,7 +244,7 @@ function contextFromCard(card) {
     symbol: summaryText(card && card.symbol && card.symbol.text),
     decimals: card ? card.decimals : null,
     extensions: Array.isArray(card && card.extensions) ? card.extensions : [],
-    official: Boolean(card && (card.officialStubx === true || card.mint === SUMMARY_OFFICIAL)),
+    official: Boolean(card && isOfficialAddress(card.mint)),
   };
 }
 
@@ -316,9 +316,23 @@ function summaryShown(value) {
   return clean.length > 64 ? `${clean.slice(0, 64)}…` : clean;
 }
 
-function looksLikeStubx(context) {
+// Solo para comparar con «orvupi»: también con leet (0→o; 1, l, | y ! → i), como «0RVUP1» u «ORVUPl».
+function namesOrvupi(value) {
+  const folded = summaryNormalizeToken(value);
+  return folded.includes("orvupi") || folded.replace(/0/g, "o").replace(/[1l|!]/g, "i").includes("orvupi");
+}
+
+function looksLikeOrvupi(context) {
   if (!context) return false;
-  return summaryNormalizeToken(context.name).includes("stubx") || summaryNormalizeToken(context.symbol).includes("stubx");
+  return namesOrvupi(context.name) || namesOrvupi(context.symbol);
+}
+
+/** Franja «Se llama como ORVUPI…» para cualquier red, a partir del nombre y el símbolo leídos. */
+export function namedLikeOrvupiText(name, symbol, lang) {
+  if (!namesOrvupi(name) && !namesOrvupi(symbol)) return "";
+  return lang === "en"
+    ? "It is named like ORVUPI, but ORVUPI does not have a contract yet."
+    : "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.";
 }
 
 function quotedIdentity(context) {
@@ -458,7 +472,7 @@ function attentionFromSignals(signals) {
 function attentionFromCard(card) {
   const items = [];
   const context = contextFromCard(card);
-  if (!context.official && looksLikeStubx(context)) items.push(attentionPoint("copia"));
+  if (!context.official && looksLikeOrvupi(context)) items.push(attentionPoint("copia"));
   if (card?.mintAuthority?.state === "activa") items.push(attentionPoint("emision"));
   if (card?.freezeAuthority?.state === "activa") items.push(attentionPoint("congelacion"));
   if (card?.metadataMutable === "si") items.push(attentionPoint("mutable"));
@@ -737,7 +751,7 @@ function authorityState(field) {
 }
 
 export function notebookNameText(card, lang) {
-  if (card && card.schema === "stubx.notebook.card.evm") {
+  if (card && card.schema === "orvupi.notebook.card.evm") {
     const known = quoteLookup(card.network, card.address);
     const written = summaryShown(card.name && card.name.text) || summaryShown(card.symbol && card.symbol.text);
     if (known && written) {
@@ -751,7 +765,7 @@ export function notebookNameText(card, lang) {
   const name = summaryShown(context.name);
   const symbol = summaryShown(context.symbol);
   const quoted = name || symbol;
-  if (!context.official && looksLikeStubx(context) && quoted) {
+  if (!context.official && looksLikeOrvupi(context) && quoted) {
     return lang === "en" ? `It says it is called «${quoted}»` : `Dice llamarse «${quoted}»`;
   }
   return name;
@@ -759,10 +773,10 @@ export function notebookNameText(card, lang) {
 
 export function cloneWarningText(card, lang) {
   const context = contextFromCard(card);
-  if (context.official || !looksLikeStubx(context)) return "";
+  if (context.official || !looksLikeOrvupi(context)) return "";
   return lang === "en"
-    ? "It looks like STUBX but it is not the official address."
-    : "Se parece a STUBX pero no es la dirección oficial.";
+    ? "It is named like ORVUPI, but ORVUPI does not have a contract yet."
+    : "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.";
 }
 
 export function comparisonBanner(left, right, lang) {

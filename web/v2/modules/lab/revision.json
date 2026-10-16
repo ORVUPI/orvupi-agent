@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated": "2026-10-09",
+  "updated": "2026-10-16",
   "sourceLanguage": "es",
   "languages": ["es", "en"],
   "enStatus": "Redactado en los mismos archivos que la fuente española. Pendiente de revisión humana antes de cualquier publicación.",
@@ -9,6 +9,6 @@
   "notes": [
     "No se traducen las direcciones de los mints.",
     "Si una frase inglesa y otra española no dicen lo mismo, manda la española hasta que haya revisión.",
-    "Las cifras de las fichas son del 2026-10-08. Un ejemplo hipotético va rotulado y no usa una dirección real que no esté en esas fichas."
+    "Las cifras de las fichas son del 2026-10-16. Un ejemplo hipotético va rotulado y no usa una dirección real que no esté en esas fichas."
   ]
 }

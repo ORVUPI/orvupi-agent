@@ -35,7 +35,7 @@ const FIELD_LABEL: Record<string, Localized> = {
   mintAuthority: { es: "Autoridad de emisión", en: "Mint authority" },
   freezeAuthority: { es: "Autoridad de congelación", en: "Freeze authority" },
   metadata: { es: "Metadatos", en: "Metadata" },
-  holders: { es: "Muestra de cuentas con STUBX", en: "Token account sample" },
+  holders: { es: "Muestra de cuentas con el token", en: "Token account sample" },
   impersonation: { es: "Señal de suplantación", en: "Impersonation signal" },
   curvePresent: { es: "Cuenta de curva", en: "Curve account" },
   curveProgress: { es: "Avance de la curva clásica", en: "Classic curve progress" },
@@ -97,7 +97,7 @@ export function safeHref(value: string | undefined): string | null {
   if (!value) {
     return null;
   }
-  if (value.startsWith("https://github.com/stubxai/stubx-agent/")) {
+  if (value.startsWith("https://github.com/ORVUPI/orvupi-agent/") || value.startsWith("https://github.com/ORVUPI/orvupi-agent/")) {
     return value;
   }
   if (/^[a-z0-9./_-]+$/i.test(value) && !value.includes("..")) {
@@ -264,7 +264,7 @@ ${input.publish ? "" : `<meta name="robots" content="noindex">\n`}<title>${escap
 <a class="skip lang es" href="#contenido">Saltar al contenido</a>
 <a class="skip lang en" href="#contenido">Skip to content</a>
 <header class="site"><div class="${frame}">
-<p class="brand"><strong>STUBX</strong></p>
+<p class="brand"><strong>ORVUPI</strong></p>
 ${input.publish ? "" : `<p class="draft">${both(DRAFT_LINE)}</p>\n`}
 <nav class="site" aria-label="Secciones / Sections"><ul>${links}</ul></nav>
 <div class="langs" role="group" aria-label="Idioma / Language">
@@ -276,7 +276,7 @@ ${input.publish ? "" : `<p class="draft">${both(DRAFT_LINE)}</p>\n`}
 <div class="aviso" data-disclaimer="si">
 <p>${both(READONLY_LINE)}</p>
 <p>${both(input.current === "lab" ? { es: UNKNOWN_LINE.es, en: "Unknown is not the same as checked." } : UNKNOWN_LINE)}</p>
-<p>${both({ es: "Fichas del 2026-10-08 y, si las hay, ejemplos posteriores. No se actualizan solas. La hora de cada ficha va en Europe/Madrid.", en: "Cards from 2026-10-08 and, where present, later examples. They do not update themselves. Each card time is shown in Europe/Madrid." })}</p>
+<p>${both({ es: "Fichas del 2026-10-16. No se actualizan solas. La hora de cada ficha va en Europe/Madrid.", en: "Cards from 2026-10-16. They do not update themselves. Each card time is shown in Europe/Madrid." })}</p>
 </div>
 <p id="aviso-red" class="nota" hidden>${both(OFFLINE_LINE)}</p>
 <p id="aviso-version" class="nota" hidden>${both({ es: "Hay otra copia de estas páginas. Recargar no borra el progreso local.", en: "Another copy of these pages is available. Reloading does not delete local progress." })} <button type="button" id="recargar">${both({ es: "Recargar", en: "Reload" })}</button></p>
@@ -383,7 +383,7 @@ function renderLab(repoRoot: string, cards: readonly CardSummary[], mission: Mis
     .join("");
   const lessonHtml = lessons.map((lesson) => renderLesson(lesson, byMint, glossaryById)).join("");
   const main = `<h1>${both({ es: "Lecciones cortas con fichas reales", en: "Short lessons with real cards" })}</h1>
-<p class="lede">${both({ es: "Tres lecciones para empezar, con fichas de Verify del 2026-10-09, y la misión de cinco pasos. Si no aciertas, puedes volver a intentar. El progreso se queda en este navegador. No dice qué hacer con un token.", en: "Three lessons to start with, using Verify cards from 2026-10-09, and the five-step mission. If you miss, you can try again. Progress stays in this browser. It does not say what to do with a token." })}</p>
+<p class="lede">${both({ es: "Tres lecciones para empezar, con fichas de Verify del 2026-10-16, y la misión de cinco pasos. Si no aciertas, puedes volver a intentar. El progreso se queda en este navegador. No dice qué hacer con un token.", en: "Three lessons to start with, using Verify cards from 2026-10-16, and the five-step mission. If you miss, you can try again. Progress stays in this browser. It does not say what to do with a token." })}</p>
 <section class="lecciones" id="lecciones"><h2>${both({ es: "Para empezar", en: "Start here" })}</h2><nav class="lecciones-indice" aria-label="${escapeHtml("Lecciones / Lessons")}">${index}<a href="#mision-titulo">${both({ es: "Misión de cinco pasos", en: "Five-step mission" })}</a></nav>${lessonHtml}</section>
 ${howDetails(HOW_LAB)}
 <h2 id="mision-titulo" class="mision-titulo">${both(mission.title)}</h2>
@@ -393,8 +393,8 @@ ${howDetails(HOW_LAB)}
 <details class="biblioteca-extra" id="biblioteca"><summary>${both({ es: "Para quien quiera más detalle", en: "For anyone who wants more detail" })}</summary><h2>${both({ es: "Biblioteca", en: "Library" })}</h2><p><a href="/aprender/">${both({ es: "Biblioteca para cualquier token", en: "Library for any token" })}</a></p><p class="muted">${both({ es: revision.enStatus, en: revision.enStatusEn || revision.enStatus })}</p><div class="fichas">${terms}</div><h2>${both({ es: "Guías", en: "Guides" })}</h2><div class="fichas">${guideSection(repoRoot)}</div></details>
 <dialog id="ayuda" aria-labelledby="ayuda-titulo"><h2 id="ayuda-titulo"></h2><div id="ayuda-cuerpo"></div><form method="dialog"><button type="submit" id="ayuda-cerrar">${both({ es: "Cerrar", en: "Close" })}</button></form></dialog>`;
   return shell({
-    title: "STUBX Lab · lecciones · borrador",
-    description: "Tres lecciones cortas con fichas de Verify del 2026-10-09, y una misión para distinguir un mint del registro de un clon.",
+    title: "ORVUPI Lab · lecciones · borrador",
+    description: "Tres lecciones cortas con fichas de Verify del 2026-10-16, y una misión para distinguir un mint del registro de un clon.",
     prefix: "../",
     current: "lab",
     main,
@@ -454,7 +454,7 @@ ${privacyNotice()}
 <section id="resultado" class="resultado" data-state="vacio" data-luz="neutro" aria-live="polite">
 <h2>${both({ es: "La lectura aparece aquí", en: "The reading shows up here" })}</h2>
 <p class="apoyo">${both({ es: "La lectura será una de estas tres. Los detalles técnicos se quedan plegados.", en: "The reading will be one of these three. Technical details stay folded." })}</p>
-<ul class="leyenda"><li data-luz="ok">${both({ es: "Dirección del registro de STUBX", en: "STUBX registry address" })}</li><li data-luz="atencion">${both({ es: "Se parece a STUBX, pero no es la CA oficial", en: "Looks like STUBX, but it is not the official CA" })}</li><li data-luz="neutro">${both({ es: "No se pudo comprobar", en: "Could not be checked" })}</li></ul>
+<ul class="leyenda"><li data-luz="ok">${both({ es: "Dirección del registro de ORVUPI", en: "ORVUPI registry address" })}</li><li data-luz="atencion">${both({ es: "Se parece a ORVUPI, pero no es la CA oficial", en: "Looks like ORVUPI, but it is not the official CA" })}</li><li data-luz="neutro">${both({ es: "No se pudo comprobar", en: "Could not be checked" })}</li></ul>
 </section>
 </div>
 <details class="tecnico archivo"><summary>${both({ es: "Fichas de ejemplo", en: "Example cards" })}</summary>
@@ -463,8 +463,8 @@ ${privacyNotice()}
 <div class="fichas">${help}</div>
 </details>`;
   return shell({
-    title: "STUBX Verify · borrador",
-    description: "Comprueba una dirección con las fichas públicas de STUBX Verify del 2026-10-08.",
+    title: "ORVUPI Verify · borrador",
+    description: "Comprueba una dirección con las fichas públicas de ORVUPI Verify del 2026-10-16.",
     prefix: "../",
     current: "verify",
     main,
@@ -503,9 +503,9 @@ const MILESTONE_EN: Record<string, string> = {
     "2026-10-09 · Verify and Lab: the reading stays visible on a phone",
   "2026-10-09 · Revisión de seguridad de Verify y Lab (borrador, sin publicar)":
     "2026-10-09 · Verify and Lab security review (draft, unpublished)",
-  "2026-10-09 · STUBX Lab, misión 1 (borrador, sin publicar)":
-    "2026-10-09 · STUBX Lab, mission 1 (draft, unpublished)",
-  "2026-10-08 · STUBX Verify (MVP, solo lectura)": "2026-10-08 · STUBX Verify (MVP, read-only)",
+  "2026-10-09 · ORVUPI Lab, misión 1 (borrador, sin publicar)":
+    "2026-10-09 · ORVUPI Lab, mission 1 (draft, unpublished)",
+  "2026-10-08 · ORVUPI Verify (MVP, solo lectura)": "2026-10-08 · ORVUPI Verify (MVP, read-only)",
   "2026-10-05 · PPM: casilla Wallet → no aplica": "2026-10-05 · PPM: Wallet check → not applicable",
   "2026-10-05 · PPM: casilla Logs marcada": "2026-10-05 · PPM: Logs check marked",
   "Sin publicar": "Unpublished",
@@ -552,7 +552,7 @@ function taskArticle(task: TaskRecord): string {
   const history = task.history.map((item) => `<li><time datetime="${escapeHtml(item.on)}">${escapeHtml(item.on)}</time> — ${both(item.change)}</li>`).join("");
   const block = task.block ? `<p>${both({ es: "Bloqueo: ", en: "Blocker: " })}${both(task.block)}</p>` : "";
   const reviewed = task.reviewedOn ?? "—";
-  return `<article class="tarea" id="tarea-${escapeHtml(task.id)}" data-status="${escapeHtml(task.status)}" data-web="${task.webPublished ? "si" : "no"}"><h3>${escapeHtml(task.id)} · ${both(task.title)}</h3><p class="estado">${both(status)} · ${both(task.webPublished ? { es: "En stubxai.com: sí", en: "On stubxai.com: yes" } : { es: "En stubxai.com: no", en: "On stubxai.com: no" })}</p><p>${both(task.scope)}</p><dl><dt>${both({ es: "Responsable", en: "Owner" })}</dt><dd>${both(personLabel(task.owner))}</dd><dt>${both({ es: "Revisión", en: "Review" })}</dt><dd>${both(personLabel(task.reviewer))}</dd><dt>${both({ es: "Fecha de revisión del registro", en: "Record review date" })}</dt><dd>${escapeHtml(reviewed)}</dd></dl>${block}<h4>${both({ es: "Evidencia", en: "Evidence" })}</h4>${evidence ? `<ul>${evidence}</ul>` : `<p>${both({ es: "Todavía no hay evidencia de implementación.", en: "There is no implementation evidence yet." })}</p>`}<h4>${both({ es: "Historial", en: "History" })}</h4><ul>${history}</ul></article>`;
+  return `<article class="tarea" id="tarea-${escapeHtml(task.id)}" data-status="${escapeHtml(task.status)}" data-web="${task.webPublished ? "si" : "no"}"><h3>${escapeHtml(task.id)} · ${both(task.title)}</h3><p class="estado">${both(status)} · ${both(task.webPublished ? { es: "En orvupi.com: sí", en: "On orvupi.com: yes" } : { es: "En orvupi.com: no", en: "On orvupi.com: no" })}</p><p>${both(task.scope)}</p><dl><dt>${both({ es: "Responsable", en: "Owner" })}</dt><dd>${both(personLabel(task.owner))}</dd><dt>${both({ es: "Revisión", en: "Review" })}</dt><dd>${both(personLabel(task.reviewer))}</dd><dt>${both({ es: "Fecha de revisión del registro", en: "Record review date" })}</dt><dd>${escapeHtml(reviewed)}</dd></dl>${block}<h4>${both({ es: "Evidencia", en: "Evidence" })}</h4>${evidence ? `<ul>${evidence}</ul>` : `<p>${both({ es: "Todavía no hay evidencia de implementación.", en: "There is no implementation evidence yet." })}</p>`}<h4>${both({ es: "Historial", en: "History" })}</h4><ul>${history}</ul></article>`;
 }
 
 const STATUS_ORDER = ["en_revision", "en_curso", "propuesta", "publicada"] as const;
@@ -591,17 +591,17 @@ function renderBoard(repoRoot: string, board: BoardFile, options: RenderOptions)
 <ul class="clean">
 <li>${both({ es: "Propuesta: es una idea. Todavía no hay una entrega que puedas abrir.", en: "Proposal: it is an idea. There is no delivery you can open yet." })}</li>
 <li>${both({ es: "En curso o en revisión: hay trabajo en este repositorio. Puedes abrir la evidencia.", en: "In progress or in review: there is work in this repository. You can open the evidence." })}</li>
-<li>${both({ es: "La columna stubxai.com dice sí solo si la función se puede abrir hoy en la web.", en: "The stubxai.com column says yes only if the function can be opened on the website today." })}</li>
+<li>${both({ es: "La columna orvupi.com dice sí solo si la función se puede abrir hoy en la web.", en: "The orvupi.com column says yes only if the function can be opened on the website today." })}</li>
 <li>${both({ es: "Una fecha del historial dice cuándo se anotó el cambio. No es un plazo.", en: "A history date says when the change was written down. It is not a deadline." })}</li>
 </ul>
 </section>
 <nav class="grupos" aria-label="${escapeHtml("Estados / States")}">${jumps}</nav>
-<div class="tabla-scroll" tabindex="0"><table><caption>${both({ es: "Tareas de este registro", en: "Tasks in this record" })}</caption><thead><tr><th scope="col">ID</th><th scope="col">${both({ es: "Tarea", en: "Task" })}</th><th scope="col">${both({ es: "Estado", en: "State" })}</th><th scope="col">stubxai.com</th></tr></thead><tbody>${rows}</tbody></table></div>
-<p>${both({ es: "Propuesta es una idea. En curso o en revisión es trabajo en el repositorio. Publicada sería una función ya en stubxai.com.", en: "Proposal means an idea. In progress or in review means work in the repository. Published would mean a function already on stubxai.com." })}</p>
+<div class="tabla-scroll" tabindex="0"><table><caption>${both({ es: "Tareas de este registro", en: "Tasks in this record" })}</caption><thead><tr><th scope="col">ID</th><th scope="col">${both({ es: "Tarea", en: "Task" })}</th><th scope="col">${both({ es: "Estado", en: "State" })}</th><th scope="col">orvupi.com</th></tr></thead><tbody>${rows}</tbody></table></div>
+<p>${both({ es: "Propuesta es una idea. En curso o en revisión es trabajo en el repositorio. Publicada sería una función ya en orvupi.com.", en: "Proposal means an idea. In progress or in review means work in the repository. Published would mean a function already on orvupi.com." })}</p>
 <div class="tareas">${groups}</div>
 <section class="card" id="plantilla">
 <h2>${both({ es: "Plantilla para copiar", en: "Template to copy" })}</h2>
-<p>${both({ es: "El tablero de arriba es el de STUBX. La plantilla vacía no trae un token: otro proyecto puede copiar el archivo y rellenar su propio trabajo. Copiarla no hace socio ni representante de STUBX, y no avala ningún token.", en: "The board above is STUBX’s. The empty template carries no token: another project can copy the file and fill in its own work. Copying it does not make anyone a partner or a representative of STUBX, and it endorses no token." })}</p>
+<p>${both({ es: "El tablero de arriba es el de ORVUPI. La plantilla vacía no trae un token: otro proyecto puede copiar el archivo y rellenar su propio trabajo. Copiarla no hace socio ni representante de ORVUPI, y no avala ningún token.", en: "The board above is ORVUPI’s. The empty template carries no token: another project can copy the file and fill in its own work. Copying it does not make anyone a partner or a representative of ORVUPI, and it endorses no token." })}</p>
 <p><a class="primary" href="/modules/tablero/plantilla.json">${both({ es: "Descargar plantilla.json", en: "Download plantilla.json" })}</a></p>
 <p class="source">${both({ es: "Licencia MIT, la misma del código. El archivo no se envía a ningún sitio al descargarlo.", en: "MIT license, the same as the code. Downloading the file does not send it anywhere." })}</p>
 </section>
@@ -609,8 +609,8 @@ function renderBoard(repoRoot: string, board: BoardFile, options: RenderOptions)
 <section><h2>${both({ es: "Pruebas en el repositorio", en: "Tests in the repository" })}</h2><ul>${tests.map((file) => `<li><code>${escapeHtml(file)}</code></li>`).join("")}</ul></section>
 <section><h2>${both({ es: "Hitos copiados de CHANGELOG.md", en: "Milestones copied from CHANGELOG.md" })}</h2><p class="muted">${both({ es: "Son encabezados del archivo, no compromisos de esta página.", en: "They are headings from the file, not commitments of this page." })}</p><ul>${changelog.map((line) => `<li>${both({ es: line, en: milestoneEn(line) })}</li>`).join("")}</ul></section>`;
   return shell({
-    title: "STUBX · tablero de construcción · borrador",
-    description: "Tablero estático del trabajo de STUBX, generado desde el repositorio y no publicado.",
+    title: "ORVUPI · tablero de construcción · borrador",
+    description: "Tablero estático del trabajo de ORVUPI, generado desde el repositorio y no publicado.",
     prefix: "../",
     current: "tablero",
     main,
@@ -620,14 +620,14 @@ function renderBoard(repoRoot: string, board: BoardFile, options: RenderOptions)
 
 function renderIndex(options: RenderOptions): string {
   const main = `<h1>${both({ es: "Borradores para la web", en: "Drafts for the website" })}</h1>
-<p>${both({ es: "Tres páginas estáticas listas para copiar a stubxai.com cuando haya autorización. Este índice no se llama index.html: no sustituye la portada.", en: "Three static pages ready to copy onto stubxai.com when there is authorization. This index is not named index.html: it does not replace the homepage." })}</p>
+<p>${both({ es: "Tres páginas estáticas listas para copiar a orvupi.com cuando haya autorización. Este índice no se llama index.html: no sustituye la portada.", en: "Three static pages ready to copy onto orvupi.com when there is authorization. This index is not named index.html: it does not replace the homepage." })}</p>
 <ul>
 <li><a href="./verify/index.html">/verify</a> — ${both({ es: "lectura en vivo y fichas de ejemplo", en: "live reading and example cards" })}</li>
 <li><a href="./lab/index.html">/lab</a> — ${both({ es: "misión 1", en: "mission 1" })}</li>
 <li><a href="./tablero/index.html">/tablero</a> — ${both({ es: "tablero de construcción", en: "construction board" })}</li>
 </ul>`;
   return shell({
-    title: "STUBX · borradores sin publicar",
+    title: "ORVUPI · borradores sin publicar",
     description: "Índice local de los borradores de Verify, Lab y el tablero.",
     prefix: "",
     current: "index",
@@ -655,7 +655,7 @@ export function renderPages(repoRoot: string, cards: readonly CardSummary[], opt
 }
 
 export function renderLabWorker(): string {
-  return `var CACHE = "stubx-lab-2026-10-09-5";
+  return `var CACHE = "orvupi-lab-2026-10-09-5";
 var FILES = ["./index.html", "./sw.js"];
 var ALLOWED = { "/lab/": true, "/lab/index.html": true, "/lab/sw.js": true };
 

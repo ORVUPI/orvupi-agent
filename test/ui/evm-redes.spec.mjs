@@ -164,7 +164,7 @@ async function shotNotice(page, name) {
     return { x: left, y: top, width: Math.max(1, right - left), height: Math.max(1, bottom - top) };
   });
   await button.scrollIntoViewIfNeeded();
-  await page.screenshot({ path: `/opt/cursor/artifacts/${name}.png`, clip });
+  await page.screenshot({ path: `test-results/artifacts/${name}.png`, clip });
 }
 
 async function choose(page, network) {
@@ -213,12 +213,12 @@ test("Ethereum lee USDC y WETH, y un checksum mal no comparte caché", async ({ 
 
   const shot = testInfo.project.name === "mobile" || testInfo.project.name === "desktop" ? testInfo.project.name : "";
   if (shot) {
-    await page.locator("main .lede").screenshot({ path: `/opt/cursor/artifacts/lede-ethereum-es-${shot}.png` });
+    await page.locator("main .lede").screenshot({ path: `test-results/artifacts/lede-ethereum-es-${shot}.png` });
     await shotNotice(page, `aviso-ethereum-es-${shot}`);
     await page.locator("[data-set-lang='en']").click();
     await expectNotice(page, "ethereum", "en");
     await expect(page.locator("main .lede .lang.en")).toHaveText(LEDE.ethereum.en);
-    await page.locator("main .lede").screenshot({ path: `/opt/cursor/artifacts/lede-ethereum-en-${shot}.png` });
+    await page.locator("main .lede").screenshot({ path: `test-results/artifacts/lede-ethereum-en-${shot}.png` });
     await shotNotice(page, `aviso-ethereum-en-${shot}`);
   }
 });
@@ -257,12 +257,12 @@ test("BNB Chain lee USDT y WBNB, y un checksum mal no comparte caché", async ({
 
   const shot = testInfo.project.name === "mobile" || testInfo.project.name === "desktop" ? testInfo.project.name : "";
   if (shot) {
-    await page.locator("main .lede").screenshot({ path: `/opt/cursor/artifacts/lede-bnb-es-${shot}.png` });
+    await page.locator("main .lede").screenshot({ path: `test-results/artifacts/lede-bnb-es-${shot}.png` });
     await shotNotice(page, `aviso-bnb-es-${shot}`);
     await page.locator("[data-set-lang='en']").click();
     await expectNotice(page, "bnb", "en");
     await expect(page.locator("main .lede .lang.en")).toHaveText(LEDE.bnb.en);
-    await page.locator("main .lede").screenshot({ path: `/opt/cursor/artifacts/lede-bnb-en-${shot}.png` });
+    await page.locator("main .lede").screenshot({ path: `test-results/artifacts/lede-bnb-en-${shot}.png` });
     await shotNotice(page, `aviso-bnb-en-${shot}`);
   }
 });
@@ -285,7 +285,7 @@ test("el cuaderno guarda Ethereum y BNB Chain con red y dirección distintas", a
 
   const stored = await page.evaluate(async () => {
     const db = await new Promise((resolve, reject) => {
-      const request = indexedDB.open("stubx-cuaderno");
+      const request = indexedDB.open("orvupi-cuaderno");
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });

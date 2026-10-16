@@ -57,7 +57,7 @@ import {
   withinStoreLimit,
 } from "../shared/notebook-model.js";
 
-const DB_NAME = "stubx-cuaderno";
+const DB_NAME = "orvupi-cuaderno";
 
 const COPY = {
   es: {
@@ -91,8 +91,8 @@ const COPY = {
     exportEmpty: "No hay consultas que exportar.",
     exportOk: "Copia descargada. Sigue en este navegador.",
     sameMint: "Solo se comparan dos consultas de la misma red y dirección.",
-    official: "Es la dirección oficial de STUBX.",
-    notOfficial: "No es la dirección oficial de STUBX.",
+    official: "Ficha guardada antes del cambio de marca: dirección del proyecto anterior.",
+    notOfficial: "Contrato ORVUPI: aún no existe.",
     untrusted: "Nombre, símbolo y URI son texto de terceros. No son un enlace ni una imagen.",
     requery: "Volver a consultar",
     saveNote: "Guardar nota",
@@ -152,7 +152,7 @@ const COPY = {
     watchSaveAll: "Guardar todas",
     watchStop: "Detener",
     watchStopped: "Pasada detenida. Lo que no se llegó a leer no se da por igual.",
-    tabs: "Cierra las otras pestañas de stubxai.com y recarga.",
+    tabs: "Cierra las otras pestañas de esta web y recarga.",
     watchRefused: "El servicio rechazó esta consulta. No se da por igual.",
     watchMissing: "Qué falta",
     watchSaved: "Esta lectura queda guardada en este navegador. Puedes borrarla en el Cuaderno.",
@@ -192,8 +192,8 @@ const COPY = {
     exportEmpty: "There are no queries to export.",
     exportOk: "Copy downloaded. It also stays in this browser.",
     sameMint: "Only two queries of the same network and address can be compared.",
-    official: "This is the official STUBX address.",
-    notOfficial: "This is not the official STUBX address.",
+    official: "Card saved before the rebrand: address of the previous project.",
+    notOfficial: "ORVUPI contract: does not exist yet.",
     untrusted: "Name, symbol, and URI are third-party text. They are not a link and not an image.",
     requery: "Check again",
     saveNote: "Save note",
@@ -253,7 +253,7 @@ const COPY = {
     watchSaveAll: "Save all",
     watchStop: "Stop",
     watchStopped: "The pass was stopped. What was not read is not treated as unchanged.",
-    tabs: "Close the other stubxai.com tabs and reload.",
+    tabs: "Close the other tabs of this website and reload.",
     watchRefused: "The public service refused this check. It is not treated as unchanged.",
     watchMissing: "What is missing",
     watchSaved: "This reading is saved in this browser. You can delete it in the Notebook.",
@@ -408,7 +408,7 @@ function renderEvmCard(card) {
 }
 
 function renderAnyCard(card, options) {
-  if (card && card.schema === "stubx.notebook.card.evm") return renderEvmCard(card, options);
+  if (card && card.schema === "orvupi.notebook.card.evm") return renderEvmCard(card, options);
   return renderCard(card, options);
 }
 
@@ -529,7 +529,7 @@ function dataRow(list, label, status, value, field) {
 function renderCard(card, options) {
   const article = el("article", { class: "ficha" });
   article.append(text("p", staleLine(card.consultedAt, lang()), { class: "sello" }));
-  article.append(text("p", card.officialStubx ? t("official") : t("notOfficial"), { class: "franja-identidad" }));
+  article.append(text("p", card.officialProject ? t("official") : t("notOfficial"), { class: "franja-identidad" }));
   if (card.partial) article.append(text("p", t("partial"), { class: "nota" }));
   article.append(text("p", DISCLAIMER[lang()], { class: "nota" }));
   const code = el("code", { class: "mint" });
@@ -1022,7 +1022,7 @@ async function exportCopy() {
   const json = toExport(records, new Date().toISOString());
   const blob = new Blob([json], { type: "application/json" });
   const url = URL.createObjectURL(blob);
-  const link = el("a", { href: url, download: "cuaderno-stubx.json" });
+  const link = el("a", { href: url, download: "cuaderno-orvupi.json" });
   document.body.append(link);
   link.click();
   link.remove();
@@ -1518,7 +1518,7 @@ function bind() {
     const left = document.getElementById("comparar-izquierda");
     paintSelects(records, left ? left.value : "", "");
   });
-  document.addEventListener("stubx-lang", () => {
+  document.addEventListener("orvupi-lang", () => {
     renderRecords(records);
     const current = document.getElementById("resultado")?.querySelector(".ficha");
     if (current) {

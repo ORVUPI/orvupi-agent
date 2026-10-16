@@ -1,6 +1,6 @@
 /**
  * Acciones de Verify hacia el cuaderno local.
- * La dirección no va en la consulta ni al servidor. Se guarda red y dirección en IndexedDB stubx-cuaderno.
+ * La dirección no va en la consulta ni al servidor. Se guarda red y dirección en IndexedDB orvupi-cuaderno.
  */
 import { formatAmount } from "../shared/amount.js";
 import { ENTENDER, entenderNav } from "../shared/entender.js";
@@ -8,7 +8,7 @@ import { notebookDbAll, notebookDbPut, openNotebookDb } from "../shared/notebook
 import { cardDecimals, compareRecords, comparedSideText, comparisonSummary, curveComparisonValue, pickPrevious, staleLine, stampIdentity, supplyDirection, validateCard, withinStoreLimit } from "../shared/notebook-model.js";
 import { cardFromShown } from "../shared/solana-read.js";
 
-const DB_NAME = "stubx-cuaderno";
+const DB_NAME = "orvupi-cuaderno";
 
 const COPY = {
   es: {
@@ -31,7 +31,7 @@ const COPY = {
     emptySave: "No hay una lectura para guardar. No se ha guardado una ficha vacía.",
     wait: "La lectura no ha terminado. Espera a que aparezca el resultado.",
     db: "Este navegador no dejó guardar el cuaderno.",
-    tabs: "Cierra las otras pestañas de stubxai.com y recarga.",
+    tabs: "Cierra las otras pestañas de esta web y recarga.",
     fail: "No hay una lectura en pantalla para guardar. Pulsa Comprobar y espera el resultado.",
     full: "Este navegador ya tiene el máximo de fichas.",
     before: "Antes",
@@ -60,7 +60,7 @@ const COPY = {
     emptySave: "There is no reading to save. An empty card was not saved.",
     wait: "The reading has not finished. Wait until the result appears.",
     db: "This browser did not allow the notebook to be saved.",
-    tabs: "Close the other stubxai.com tabs and reload.",
+    tabs: "Close the other tabs of this website and reload.",
     fail: "There is no reading on screen to save. Press Check and wait for the result.",
     full: "This browser already has the maximum number of cards.",
     before: "Before",
@@ -98,7 +98,7 @@ function dbPut(db, record) {
 let shown = null;
 let lastView = null;
 
-document.addEventListener("stubx-lectura", (event) => {
+document.addEventListener("orvupi-lectura", (event) => {
   shown = event && event.detail ? event.detail : null;
 });
 
@@ -362,7 +362,7 @@ document.addEventListener("click", (event) => {
   }
 });
 
-document.addEventListener("stubx-lang", () => {
+document.addEventListener("orvupi-lang", () => {
   if (!lastView) return;
   const compared = compareRecords(lastView.current, lastView.previous);
   if (compared.ok) paintComparison(lastView.current, lastView.previous, compared);

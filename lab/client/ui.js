@@ -1,5 +1,5 @@
 function findEntry(id) {
-  var entries = STUBX_LAB.glossary;
+  var entries = ORVUPI_LAB.glossary;
   for (var i = 0; i < entries.length; i += 1) {
     if (entries[i].id === id) return entries[i];
   }
@@ -27,7 +27,7 @@ var FIELD_LABEL = {
   mintAuthority: { es: "Autoridad de emisión", en: "Mint authority" },
   freezeAuthority: { es: "Autoridad de congelación", en: "Freeze authority" },
   metadata: { es: "Metadatos", en: "Metadata" },
-  holders: { es: "Muestra de cuentas con STUBX", en: "Token account sample" },
+  holders: { es: "Muestra de cuentas con el token", en: "Token account sample" },
   impersonation: { es: "Señal de suplantación", en: "Impersonation signal" },
   curvePresent: { es: "Cuenta de curva", en: "Curve account" },
   curveProgress: { es: "Avance de la curva clásica", en: "Classic curve progress" },
@@ -146,7 +146,7 @@ function fillLinked(node, text) {
 function entenderItems(mission) {
   var ids = mission.entender;
   if (!ids || !ids.length) return [];
-  var catalog = STUBX_LAB.entender || [];
+  var catalog = ORVUPI_LAB.entender || [];
   var items = [];
   ids.forEach(function (id) {
     for (var i = 0; i < catalog.length; i += 1) {
@@ -200,8 +200,8 @@ function entenderNav(mission, lang) {
 
 function bootLab() {
   var missionRoot = document.getElementById("mision-app");
-  if (missionRoot && STUBX_LAB.mission) mountQuiz(missionRoot, STUBX_LAB.mission, STORAGE_KEY);
-  var lessons = STUBX_LAB.lessons || [];
+  if (missionRoot && ORVUPI_LAB.mission) mountQuiz(missionRoot, ORVUPI_LAB.mission, STORAGE_KEY);
+  var lessons = ORVUPI_LAB.lessons || [];
   for (var n = 0; n < lessons.length; n += 1) {
     var lesson = lessons[n];
     var node = document.querySelector('[data-leccion="' + lesson.id + '"]');
@@ -462,7 +462,7 @@ function mountQuiz(root, mission, storageKey) {
       var close = el("p");
       fillLinked(close, mission.closing[lang]);
       var dated = el("p");
-      var cardDate = mission.cardDate || STUBX_LAB.cardDate;
+      var cardDate = mission.cardDate || ORVUPI_LAB.cardDate;
       dated.textContent = lang === "en"
         ? "The cards are from " + cardDate + ". Unknown is not the same as checked."
         : "Las fichas son del " + cardDate + ". Lo desconocido no es lo mismo que lo comprobado.";
@@ -493,7 +493,7 @@ function mountQuiz(root, mission, storageKey) {
         summary.textContent = lang === "en" ? "Details" : "Detalles";
         fold.append(summary);
         step.cards.forEach(function (mint) {
-          var card = STUBX_LAB.cards[mint];
+          var card = ORVUPI_LAB.cards[mint];
           if (card) fold.append(cardNode(card, step.fields));
         });
         section.append(fold);
@@ -561,7 +561,7 @@ function mountQuiz(root, mission, storageKey) {
     }
   }
 
-  document.addEventListener("stubx-lang", function (event) {
+  document.addEventListener("orvupi-lang", function (event) {
     lang = event.detail === "en" ? "en" : "es";
     progress = withLang(progress, lang);
     save();

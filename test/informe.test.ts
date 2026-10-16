@@ -8,7 +8,7 @@ import { repoRoot } from "../src/paths.js";
 
 const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 const CLONE = "ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump";
-const STUBX = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
+const LEGACY_MINT = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
 const WHEN = "2026-10-11T10:18:00.000Z";
 const ABSENT_FROM_FILE = [
   "Cripto de alto riesgo",
@@ -174,7 +174,7 @@ describe("informe descargable", () => {
     }).formatToParts(new Date(WHEN)).find((part) => part.type === "timeZoneName")?.value;
     assert.ok(zone);
     assert.equal(model.date.includes(zone), true);
-    assert.equal(model.origin, "Generado en stubxai.com · herramienta para tokens de terceros");
+    assert.equal(model.origin, "Generado en orvupi.com · herramienta para tokens de terceros");
     assert.equal(model.network, "Solana mainnet");
     assert.equal(model.address, USDC);
     assert.deepEqual(model.blocks.map((item) => item.heading), ["Qué se comprobó", "Qué requiere atención", "Qué falta"]);
@@ -213,7 +213,7 @@ describe("informe descargable", () => {
     }).formatToParts(new Date(WHEN)).find((part) => part.type === "timeZoneName")?.value;
     assert.ok(englishZone);
     assert.equal(english.date.includes(englishZone), true);
-    assert.equal(english.origin, "Made on stubxai.com · not affiliated with third-party tokens");
+    assert.equal(english.origin, "Made on orvupi.com · not affiliated with third-party tokens");
     assert.deepEqual(english.limits, [
       "It is a reading of public data at the time stated. It may have changed.",
       "It is not an audit, an endorsement, or a recommendation.",
@@ -232,8 +232,8 @@ describe("informe descargable", () => {
     const model = report.reportModel({
       summary: summary.summaryFromCard(card({
         mint: CLONE,
-        name: { text: "STUBX", status: "verificado" },
-        symbol: { text: "STUBX", status: "verificado" },
+        name: { text: "ORVUPI", status: "verificado" },
+        symbol: { text: "ORVUPI", status: "verificado" },
         supplyAccount: "1000000000000000",
         supplyRpc: "1000000000000000",
         metadataMutable: "no",
@@ -245,9 +245,9 @@ describe("informe descargable", () => {
     }, "es");
     const checked = joined(model, "comprobado");
     const attention = joined(model, "atencion");
-    assert.match(checked, /Dice llamarse «STUBX»/);
+    assert.match(checked, /Dice llamarse «ORVUPI»/);
     const lines = report.reportPaintLines(model);
-    const warningAt = lines.findIndex((line) => line.includes("Se parece a STUBX pero no es la dirección oficial"));
+    const warningAt = lines.findIndex((line) => line.includes("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato"));
     const networkAt = lines.findIndex((line) => line === "Red");
     const checkedAt = lines.findIndex((line) => line === "Qué se comprobó");
     assert.ok(warningAt > 0);
@@ -256,8 +256,8 @@ describe("informe descargable", () => {
     assert.equal(lines[warningAt - 1]?.includes("Consultado el"), true);
     const attentionBlock = model.blocks.find((item) => item.id === "atencion");
     assert.ok(attentionBlock);
-    assert.match(attentionBlock.lines[0]?.lead || "", /Se parece a STUBX pero no es la dirección oficial/);
-    assert.match(attention, /Se parece a STUBX pero no es la dirección oficial/);
+    assert.match(attentionBlock.lines[0]?.lead || "", /Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato/);
+    assert.match(attention, /Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato/);
     const ordered = report.reportModel({
       summary: {
         blocks: [{
@@ -270,7 +270,7 @@ describe("informe descargable", () => {
             },
             {
               title: { es: "Dirección", en: "Address" },
-              lead: { es: "Se parece a STUBX pero no es la dirección oficial.", en: "It looks like STUBX but it is not the official address." },
+              lead: { es: "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.", en: "It is named like ORVUPI, but ORVUPI does not have a contract yet." },
             },
           ],
           empty: { es: "", en: "" },
@@ -281,8 +281,8 @@ describe("informe descargable", () => {
       consultedAt: WHEN,
     }, "es");
     const orderedAttention = ordered.blocks.find((item) => item.id === "atencion");
-    assert.match(ordered.warning, /Se parece a STUBX pero no es la dirección oficial/);
-    assert.match(orderedAttention?.lines[0]?.lead || "", /Se parece a STUBX pero no es la dirección oficial/);
+    assert.match(ordered.warning, /Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato/);
+    assert.match(orderedAttention?.lines[0]?.lead || "", /Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato/);
     assert.match(orderedAttention?.lines[1]?.lead || "", /2026-10-09/);
     assert.equal(/\d{2}:\d{2}:\d{2}/.test(orderedAttention?.lines[1]?.lead || ""), false);
     const dropped = report.reportModel({
@@ -303,7 +303,7 @@ describe("informe descargable", () => {
     }, "es");
     assert.equal(joined(dropped, "atencion").includes("Comprobación anterior"), false);
     assert.match(joined(dropped, "atencion"), /Ninguna señal de esta lectura pide atención/);
-    assert.equal(checked.includes("1.000.000.000 STUBX"), false);
+    assert.equal(checked.includes("1.000.000.000 ORVUPI"), false);
     assert.match(checked, /1\.000\.000\.000 tokens/);
     assertAbsent(lines.join("\n"));
     assertAbsent(report.reportPaintLines(ordered).join("\n"));
@@ -577,9 +577,9 @@ describe("informe descargable", () => {
     const largo = read("largo.json");
     const longModel = report.reportModel(largo, "es");
     assert.match(longModel.date, /\d{2}:\d{2}:\d{2}/);
-    assert.match(longModel.warning, /Se parece a STUBX pero no es la dirección oficial/);
+    assert.match(longModel.warning, /Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato/);
     const longAttention = longModel.blocks.find((item) => item.id === "atencion");
-    assert.match(longAttention?.lines[0]?.lead || "", /Se parece a STUBX pero no es la dirección oficial/);
+    assert.match(longAttention?.lines[0]?.lead || "", /Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato/);
     assert.equal(joined(longModel, "falta").includes("Curva de Pump.fun"), false);
     assert.match(longModel.note, /Curva de Pump.fun: no aplica/);
     assertAbsent(report.reportPaintLines(longModel).join("\n"));
@@ -622,7 +622,7 @@ describe("informe descargable", () => {
             heading: { es: "Qué requiere atención", en: "What needs attention" },
             items: [{
               title: { es: "Parecido", en: "Lookalike" },
-              lead: { es: "Se parece a STUBX pero no es la dirección oficial.", en: "It looks like STUBX but it is not the official address." },
+              lead: { es: "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.", en: "It is named like ORVUPI, but ORVUPI does not have a contract yet." },
               note: { es: "", en: "" },
             }],
             empty: { es: "", en: "" },
@@ -633,8 +633,8 @@ describe("informe descargable", () => {
       network: "solana",
       consultedAt: WHEN,
     }, "es");
-    assert.match(model.origin, /Generado en stubxai.com/);
-    assert.match(model.warning, /no es la dirección oficial/);
+    assert.match(model.origin, /Generado en orvupi.com/);
+    assert.match(model.warning, /todavía no tiene contrato/);
     const drawn = report.drawReport(mockCtx().ctx, model, 840);
     const foot = drawn.height - drawn.limitsTop;
     const bodyCards = drawn.cards.filter((item) => !item.header && !item.limits);
@@ -741,7 +741,7 @@ describe("informe descargable", () => {
             items: [
               {
                 title: { es: "Parecido", en: "Lookalike" },
-                lead: { es: "Se parece a STUBX pero no es la dirección oficial.", en: "It looks like STUBX but it is not the official address." },
+                lead: { es: "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.", en: "It is named like ORVUPI, but ORVUPI does not have a contract yet." },
                 note: { es: "", en: "" },
               },
               {
@@ -813,7 +813,7 @@ describe("informe descargable", () => {
     assert.equal(painted.includes("\u202E"), false);
     assert.match(painted, new RegExp(`${USDC}<b>`));
     assertAbsent(painted);
-    assert.match(painted, /Generado en stubxai.com · herramienta para tokens de terceros/);
+    assert.match(painted, /Generado en orvupi.com · herramienta para tokens de terceros/);
     assert.match(painted, /Solana mainnet/);
     const titlePaint = calls.find((item) => item.op === "fillText" && item.text?.includes("no es un certificado"));
     assert.ok(titlePaint);
@@ -885,23 +885,23 @@ describe("informe descargable", () => {
     assert.equal(clicked, "informe.png");
   });
 
-  test("el STUBX oficial puede nombrar su símbolo y una red desconocida no se inventa", async () => {
+  test("sin contrato ORVUPI, un token llamado ORVUPI pide atención aunque lleve la marca antigua, y una red desconocida no se inventa", async () => {
     const { report, summary } = await load();
     const official = report.reportModel({
       summary: summary.summaryFromCard(card({
-        mint: STUBX,
-        officialStubx: true,
-        name: { text: "STUBX", status: "verificado" },
-        symbol: { text: "STUBX", status: "verificado" },
+        mint: LEGACY_MINT,
+        officialProject: true,
+        name: { text: "ORVUPI", status: "verificado" },
+        symbol: { text: "ORVUPI", status: "verificado" },
         metadataMutable: "no",
         curve: { status: "ok", present: true },
       })),
-      mint: STUBX,
+      mint: LEGACY_MINT,
       network: "solana",
       consultedAt: WHEN,
     }, "es");
-    assert.match(joined(official, "comprobado"), /STUBX/);
-    assert.equal(joined(official, "atencion").includes("Se parece a STUBX"), false);
+    assert.match(joined(official, "comprobado"), /«ORVUPI»/);
+    assert.equal(joined(official, "atencion").includes("Se llama como ORVUPI"), true);
     const missing = report.reportModel({ summary: { blocks: [] }, mint: "", network: "", consultedAt: "" }, "es");
     assert.equal(missing.network, "Red no indicada");
     assert.equal(missing.address, "Dirección no indicada");
@@ -946,8 +946,8 @@ describe("informe descargable", () => {
       assert.equal(source.includes("insertAdjacentHTML"), false);
     }
     assert.match(verify, /\/shared\/informe\.js/);
-    assert.equal(verify.includes("stubx-resumen"), false);
-    assert.equal(actions.includes("stubx-resumen"), false);
+    assert.equal(verify.includes("orvupi-resumen"), false);
+    assert.equal(actions.includes("orvupi-resumen"), false);
     assert.equal(actions.includes("reportDownloadBox"), false);
     assert.match(notebook, /reportDownloadBox/);
     assertAbsent(informe);

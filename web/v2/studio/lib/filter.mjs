@@ -189,7 +189,7 @@ const PRICE = new Set([
   "precio", "price", "valor", "cotizacion", "mercado", "sol", "sols", "token", "tokens", "chart",
   "grafico", "mcap", "capitalizacion",
 ]);
-const ASSET = new Set(["stubx"]);
+const ASSET = new Set(["orvupi"]);
 const WARNING_SAFE = [
   "frase de recuperacion",
   "recovery phrase",
@@ -700,12 +700,17 @@ export function analyze(text, list = blocklist) {
   }
   if (/[a-z0-9-]+\.(?:com|net|org|io|xyz|fun|me)\b/.test(urlText)) pushHit(hits, seen, "url", "url");
 
-  const handleNames = new Set((list.handles ?? []).map((handle) => termKey(handle)));
+  // ORVUPI puede escribirse como marca/ticker. Su @handle sigue bloqueado
+  // por la comprobación explícita de abajo, igual que las otras cuentas.
+  const handleNames = new Set((list.handles ?? []).map((handle) => termKey(handle)).filter((name) => name !== "orvupi"));
+  // También con leet (0→o, 1→i, l→i…), sin tocar la @: «@0RVUP1», «@orvupl», «@creador0rvupi».
+  const keepAt = (text, one) => leet(text.replaceAll("@", "\u0000"), one).replaceAll("\u0000", "@");
+  const handleForms = [folded, keepAt(folded, "i"), keepAt(folded, "i").replaceAll("l", "i"), keepAt(folded, "l")];
   for (const handle of list.handles ?? []) {
     const name = termKey(handle);
     if (!name) continue;
     const re = new RegExp(`@\\s*${name}(?![a-z0-9])`, "i");
-    if (re.test(folded)) pushHit(hits, seen, "handle", `@${handle}`);
+    if (handleForms.some((form) => re.test(form))) pushHit(hits, seen, "handle", `@${handle}`);
   }
 
   const plainWords = wordList(folded.replace(/['’]/g, ""));

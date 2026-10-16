@@ -54,7 +54,7 @@ describe("forbidden API scanner", () => {
     };
     assert.deepEqual(pkg.dependencies ?? {}, {});
     assert.deepEqual(dependencyFindings(pkg), []);
-    assert.deepEqual(Object.keys(pkg.devDependencies ?? {}).sort(), ["@playwright/test", "@types/node", "fake-indexeddb", "playwright", "typescript"]);
+    assert.deepEqual(Object.keys(pkg.devDependencies ?? {}).sort(), ["@axe-core/playwright", "@playwright/test", "@types/node", "fake-indexeddb", "playwright", "typescript"]);
   });
 
   test("a declared wallet package would be flagged", () => {

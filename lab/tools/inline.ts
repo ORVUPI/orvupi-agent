@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 
 /** Mete un grafo ESM relativo en un solo ámbito, sin import ni export. */
-export function inlineModule(entryFile: string): string {
+export function inlineModule(entryFile: string | readonly string[]): string {
   const order: string[] = [];
   const seen = new Set<string>();
   const visit = (file: string): void => {
@@ -20,7 +20,7 @@ export function inlineModule(entryFile: string): string {
     }
     order.push(abs);
   };
-  visit(entryFile);
+  for (const entry of typeof entryFile === "string" ? [entryFile] : entryFile) visit(entry);
   const body = order
     .map((file) => parseModule(readFileSync(file, "utf8")).body)
     .filter((item) => item.length > 0)

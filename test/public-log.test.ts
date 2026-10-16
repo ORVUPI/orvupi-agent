@@ -23,7 +23,7 @@ import { appendDailyEntry, readLogsTree, verifyLogsTree } from "../src/public-lo
 import { ENGAGED, writeState } from "./helpers.js";
 
 const SHA = "0123456789abcdef0123456789abcdef01234567";
-const RUN = "https://github.com/stubxai/stubx-agent/actions/runs/123456";
+const RUN = "https://github.com/ORVUPI/orvupi-agent/actions/runs/123456";
 
 const DETAIL: DailyDetail = {
   mode: "prototipo",
@@ -116,9 +116,9 @@ describe("public append-only log", () => {
       prevHash: null,
     });
     assert.equal(verifyLogText(`${serializeEntry(foreign)}\n`).ok, false);
-    assert.equal(runUrl("stubxai/stubx-agent", "987"), "https://github.com/stubxai/stubx-agent/actions/runs/987");
+    assert.equal(runUrl("ORVUPI/orvupi-agent", "987"), "https://github.com/ORVUPI/orvupi-agent/actions/runs/987");
     assert.equal(runUrl("someone/fork", "987"), null);
-    assert.equal(runUrl("stubxai/stubx-agent", "abc"), null);
+    assert.equal(runUrl("ORVUPI/orvupi-agent", "abc"), null);
   });
 
   test("a drill cannot be reported as run while the kill-switch is on", () => {
@@ -201,7 +201,7 @@ describe("public append-only log", () => {
       {
         ...withAnchors(chain(2)),
         "anchors/2026-09-27-000001.txt.ots": "x",
-        "anchors/2026-09-27-000001.txt": "stubx-agent public log anchor v1\n",
+        "anchors/2026-09-27-000001.txt": "orvupi-agent public log anchor v1\n",
       },
       { ...withAnchors(chain(2)), "anchors/2026-09-27-000001.txt.ots": "x", "anchors/2026-09-30-000009.txt.ots": "y" },
     ];
@@ -212,7 +212,7 @@ describe("public append-only log", () => {
   });
 
   test("appendDailyEntry writes a real entry and an anchor, then links the next one", () => {
-    const logsDir = path.join(mkdtempSync(path.join(tmpdir(), "stubx-logs-")), "logs");
+    const logsDir = path.join(mkdtempSync(path.join(tmpdir(), "orvupi-logs-")), "logs");
     const times = ["2026-09-27T06:23:00.000Z", "2026-09-28T06:23:00.000Z"];
     let i = 0;
     const now = () => times[Math.min(i, times.length - 1)] ?? times[0] ?? "";
@@ -243,7 +243,7 @@ describe("public append-only log", () => {
   });
 
   test("with the kill-switch on, the entry records it and the drill does not run", () => {
-    const logsDir = path.join(mkdtempSync(path.join(tmpdir(), "stubx-logs-")), "logs");
+    const logsDir = path.join(mkdtempSync(path.join(tmpdir(), "orvupi-logs-")), "logs");
     const result = appendDailyEntry({
       root: repoRoot(),
       logsDir,
@@ -271,7 +271,7 @@ describe("public append-only log", () => {
   test("the fixed note names the workflow and keeps the social-media wording", () => {
     assert.ok(DAILY_NOTE.length <= 400);
     assert.match(DAILY_NOTE, /^Prototipo\. El agente de este repositorio no publica en redes sociales, no firma y no mueve fondos\./);
-    assert.match(DAILY_NOTE, /@stubxai/);
+    assert.match(DAILY_NOTE, /@ORVUPI/);
     assert.match(DAILY_NOTE, /workflow daily-log/);
   });
 
@@ -282,11 +282,11 @@ describe("public append-only log", () => {
     assert.match(ks, /\*\*no se ejecuta ninguna acción\*\* del agente\. El log diario solo anota/);
     assert.match(ks, /Exception: the daily public-log entry/);
     assert.match(logs, /como excepción declarada en \[KILL-SWITCH\.md\]/);
-    assert.match(logs, /no tienen relación con STUBX ni con el token/i);
+    assert.match(logs, /no tienen relación con ORVUPI ni con el token/i);
   });
 
   test("appendDailyEntry refuses to extend a tampered log", () => {
-    const logsDir = path.join(mkdtempSync(path.join(tmpdir(), "stubx-logs-")), "logs");
+    const logsDir = path.join(mkdtempSync(path.join(tmpdir(), "orvupi-logs-")), "logs");
     mkdirSync(logsDir, { recursive: true });
     const c = chain(2);
     writeFileSync(path.join(logsDir, LOG_FILE), c.text.replace('"passed":11', '"passed":9'));
@@ -295,7 +295,7 @@ describe("public append-only log", () => {
   });
 
   test("readLogsTree rejects unexpected folders", () => {
-    const logsDir = mkdtempSync(path.join(tmpdir(), "stubx-logs-"));
+    const logsDir = mkdtempSync(path.join(tmpdir(), "orvupi-logs-"));
     mkdirSync(path.join(logsDir, "other"));
     assert.notDeepEqual(readLogsTree(logsDir).problems, []);
   });

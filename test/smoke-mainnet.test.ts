@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 
 const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
-const STUBX = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
+// Dirección del token anterior: se lee como cualquier otra.
+const PREVIOUS = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
 const PUBLICNODE = "https://solana-rpc.publicnode.com";
 const MAINNET = "https://api.mainnet-beta.solana.com";
 
@@ -32,7 +33,7 @@ function supplyFromMint(dataBase64: string) {
 }
 
 describe("smoke de mainnet con RPC públicos", { skip: process.env.SMOKE_MAINNET !== "1" }, () => {
-  for (const mint of [USDC, STUBX]) {
+  for (const mint of [USDC, PREVIOUS]) {
     test(`${mint} se lee por los bytes y un bloqueo no queda verificado`, async () => {
       const info = await rpc(PUBLICNODE, "getAccountInfo", [mint, { encoding: "base64", commitment: "confirmed" }]);
       assert.equal(info.status, 200);

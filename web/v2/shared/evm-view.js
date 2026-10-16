@@ -8,7 +8,8 @@ import { mountMarket } from "./market-view.js";
 import { checksFor, enabledNetworks, networkById, rpcHost } from "./networks.js";
 import { DISCLAIMER } from "./solana-read.js";
 import { EVM_CARD_SCHEMA, EVM_CARD_VERSION, cardDecimals, staleLine } from "./notebook-model.js";
-import { notebookNameText } from "./reading-summary.js";
+import { namedLikeOrvupiText, notebookNameText } from "./reading-summary.js";
+import { reportDownloadBox } from "./informe.js";
 
 const COPY = {
   es: {
@@ -43,7 +44,7 @@ const COPY = {
     checksTitle: "Qué puede comprobar esta red",
     can: "Esta lectura puede pedir",
     cannot: "Esta lectura no pide",
-    notStubx: "No es la dirección de STUBX en Solana.",
+    notOrvupi: "ORVUPI todavía no tiene contrato en ninguna red.",
     third: "El nombre y el símbolo son texto que escribió el contrato.",
   },
   en: {
@@ -78,7 +79,7 @@ const COPY = {
     checksTitle: "What this network can check",
     can: "This reading can ask for",
     cannot: "This reading does not ask for",
-    notStubx: "It is not the STUBX address on Solana.",
+    notOrvupi: "ORVUPI does not have a contract on any network yet.",
     third: "The name and the symbol are text the contract wrote.",
   },
 };
@@ -219,7 +220,8 @@ export function describeEvm(reading, lang) {
     rows,
     card,
     disclaimer: DISCLAIMER[language],
-    notStubx: text.notStubx,
+    notOrvupi: text.notOrvupi,
+    namedLike: namedLikeOrvupiText(card.name && card.name.text, card.symbol && card.symbol.text, language),
     third: text.third,
     save: text.save,
   };
@@ -305,6 +307,41 @@ export function paintChecks(parent, networkId, lang) {
   parent.replaceChildren(section);
 }
 
+/**
+ * Lo que necesita el informe PNG/PDF (shared/informe.js) a partir de una lectura EVM.
+ * Mismo esquema que en Solana: qué se comprobó, qué requiere atención y qué falta.
+ */
+export function evmReportSource(reading) {
+  const es = describeEvm(reading, "es");
+  const en = describeEvm(reading, "en");
+  const checked = [];
+  const missing = [];
+  es.rows.forEach((row, index) => {
+    const other = en.rows[index] || row;
+    const item = { title: { es: row.label, en: other.label }, lead: { es: row.line, en: other.line } };
+    const state = factState(row.status, row.value);
+    if (state === "ok" || state === "ausente" || state === "no_aplica") checked.push(item);
+    else missing.push(item);
+  });
+  const attention = [];
+  if (es.namedLike) attention.push({ title: { es: "Nombre", en: "Name" }, lead: { es: es.namedLike, en: en.namedLike } });
+  attention.push({ title: { es: "Contrato ORVUPI", en: "ORVUPI contract" }, lead: { es: es.notOrvupi, en: en.notOrvupi } });
+  attention.push({ title: { es: "Nombre y símbolo", en: "Name and symbol" }, lead: { es: es.third, en: en.third } });
+  return {
+    summary: {
+      blocks: [
+        { id: "comprobado", heading: { es: "Qué se comprobó", en: "What was checked" }, items: checked, empty: { es: "", en: "" } },
+        { id: "atencion", heading: { es: "Qué requiere atención", en: "What needs attention" }, items: attention, empty: { es: "", en: "" } },
+        { id: "falta", heading: { es: "Qué falta", en: "What is missing" }, items: missing, empty: { es: "", en: "" } },
+      ],
+      note: null,
+    },
+    mint: es.card.address || "",
+    consultedAt: es.card.consultedAt || "",
+    network: es.card.network || (reading && reading.network) || "",
+  };
+}
+
 export function paintEvmResult(parent, reading, lang, options) {
   if (!parent) return;
   const view = describeEvm(reading, lang);
@@ -313,7 +350,8 @@ export function paintEvmResult(parent, reading, lang, options) {
   article.append(textNode("h2", view.headline));
   article.append(textNode("p", view.support, { class: "apoyo" }));
   if (view.partial) article.append(textNode("p", view.partialText, { class: "nota" }));
-  article.append(textNode("p", view.notStubx, { class: "franja-identidad" }));
+  if (view.namedLike) article.append(textNode("p", view.namedLike, { class: "franja-identidad", "data-copia": "nombre" }));
+  article.append(textNode("p", view.notOrvupi, { class: "franja-identidad" }));
   article.append(textNode("p", view.disclaimer, { class: "nota" }));
   if (view.address) {
     const line = el("p");
@@ -334,6 +372,9 @@ export function paintEvmResult(parent, reading, lang, options) {
   }
   article.append(list);
   article.append(textNode("p", view.third, { class: "muted" }));
+  if (reading && reading.reason === "leido" && typeof document !== "undefined") {
+    article.append(reportDownloadBox(evmReportSource(reading), { document, navigator }));
+  }
   const marketHost = el("div", { class: "hueco-mercado" });
   article.append(marketHost);
   if (view.card.address && reading && reading.reason === "leido") {

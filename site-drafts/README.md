@@ -19,7 +19,7 @@ El aviso de cada página dice que es solo lectura, que no conecta carteras ni fi
 El borrador lleva `noindex` y la línea «No publicado». Para regenerar sin eso hacen falta las dos cosas a la vez:
 
 ```
-STUBX_PUBLISH=1 npm run lab:build -- --publish
+ORVUPI_PUBLISH=1 npm run lab:build -- --publish
 ```
 
 Sin las dos, el comando no escribe nada. Ese modo no está activado en esta rama.

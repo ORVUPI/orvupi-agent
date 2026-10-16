@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "note": "Registro de prueba solo para los tests del detector. No es un registro real ni de ORVUPI.",
+  "tokens": [
+    {
+      "id": "demo",
+      "mint": "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump",
+      "name": "STUB",
+      "symbol": "STUB",
+      "imageUris": [
+        "https://ipfs.io/ipfs/bafkreiew224xxf6ncagzzew5bfxlc6hejrib6jmxx66kxdrv5pkeoavd5e"
+      ],
+      "imageCids": [
+        "bafkreiew224xxf6ncagzzew5bfxlc6hejrib6jmxx66kxdrv5pkeoavd5e"
+      ],
+      "links": [
+        "https://x.com/ORVUPI",
+        "https://stubxai.com/",
+        "https://superb-horse-9036f5.netlify.app/"
+      ],
+      "webHosts": [
+        "stubxai.com",
+        "superb-horse-9036f5.netlify.app"
+      ],
+      "publishedAccounts": [
+        {
+          "address": "2fS12sTD4TNEEE9MoCEt19brV41UjGdAnaNaxWcmiWvX",
+          "label": "cuenta publicada de prueba, saldo leído; no es un censo"
+        }
+      ]
+    }
+  ]
+}

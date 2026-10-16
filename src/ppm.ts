@@ -14,29 +14,29 @@ export type PpmBox = {
 };
 
 /**
- * Public evidence behind the three marked boxes (logs, limits and kill-switch),
+ * Public evidence behind the marked boxes (limits and kill-switch; logs unmarked since 2026-10-16),
  * reviewed on 2026-10-05 with legal sign-off. Wallet is not-applicable from
  * 2026-10-05 (by design: the agent has no wallet or keys). The public count
- * stays "3 of 4 marked · 1 not applicable", never a silent 3/3.
+ * stays "2 of 4 marked · 1 not applicable" (logs unmarked since 2026-10-16), never a silent 2/2.
  * Placeholders `__URL_…__` must be replaced by real Actions run URLs before
  * merging: evaluatePpmHonesty rejects anything that is not a run URL of this
  * repository, so CI stays red while a placeholder is left.
  */
-export const RUN_URL = /^https:\/\/github\.com\/stubxai\/stubx-agent\/actions\/runs\/[0-9]+$/;
+export const RUN_URL = /^https:\/\/github\.com\/ORVUPI\/orvupi-agent\/actions\/runs\/[0-9]+$/;
 export const PPM_MARKED_ON = "2026-10-05";
 export const PPM_WALLET_NOT_APPLICABLE_ON = "2026-10-05";
 export const PPM_TOTAL = 4;
-export const LOGS_DAILY_RUN = "https://github.com/stubxai/stubx-agent/actions/runs/37274282121";
-export const LIMITS_CI_RUN = "https://github.com/stubxai/stubx-agent/actions/runs/37278171372";
+export const LOGS_DAILY_RUN = "https://github.com/ORVUPI/orvupi-agent/actions/runs/37274282121";
+export const LIMITS_CI_RUN = "https://github.com/ORVUPI/orvupi-agent/actions/runs/37278171372";
 export const KILL_SWITCH_DRILL_RUNS: readonly string[] = [
-  "https://github.com/stubxai/stubx-agent/actions/runs/36264436020",
-  "https://github.com/stubxai/stubx-agent/actions/runs/36397668286",
-  "https://github.com/stubxai/stubx-agent/actions/runs/37284177840",
+  "https://github.com/ORVUPI/orvupi-agent/actions/runs/36264436020",
+  "https://github.com/ORVUPI/orvupi-agent/actions/runs/36397668286",
+  "https://github.com/ORVUPI/orvupi-agent/actions/runs/37284177840",
 ];
 
 export type PpmReport = {
-  schema: "stubx.ppm/v0";
-  package: "@stubx/agents";
+  schema: "orvupi.ppm/v0";
+  package: "@orvupi/agents";
   packageVersion: string;
   policyId: string;
   policyVersion: string;
@@ -62,7 +62,7 @@ export function readPackageVersion(root: string): string | null {
   if (!read.ok || !isRecord(read.value)) {
     return null;
   }
-  if (read.value.name !== "@stubx/agents" || typeof read.value.version !== "string") {
+  if (read.value.name !== "@orvupi/agents" || typeof read.value.version !== "string") {
     return null;
   }
   return read.value.version;
@@ -74,21 +74,21 @@ export function buildPpmReport(input: {
   mint: string;
 }): PpmReport {
   return {
-    schema: "stubx.ppm/v0",
-    package: "@stubx/agents",
+    schema: "orvupi.ppm/v0",
+    package: "@orvupi/agents",
     packageVersion: input.packageVersion,
     policyId: input.policy.id,
     policyVersion: input.policy.version,
     policySha256: input.policy.sha256,
     tokenMint: input.mint,
     approved: false,
-    ppmMarkedCount: 3,
+    ppmMarkedCount: 2,
     ppmTotal: PPM_TOTAL,
     ppmNotApplicableCount: 1,
     network: false,
     signing: false,
     scope:
-      "Three public PPM boxes are marked (logs, limits and kill-switch, 2026-10-05) after review with legal sign-off. Wallet is not-applicable from 2026-10-05 by design (no agent wallet or keys). Public count: 3 of 4 marked · 1 not applicable. A marked box is not an audit: a green run only proves what it checks, in that version of the code.",
+      "Two public PPM boxes are marked (limits and kill-switch, 2026-10-05) after review with legal sign-off. Logs was marked on 2026-10-05 and is unmarked since 2026-10-16: the public log chain restarted and its earlier Bitcoin-confirmed stamps no longer apply to the live chain (the previous chain is kept in tag pre-orvupi-2026-10-16). Wallet is not-applicable from 2026-10-05 by design (no agent wallet or keys). Public count: 2 of 4 marked · 1 not applicable. A marked box is not an audit: a green run only proves what it checks, in that version of the code.",
     boxes: {
       wallet: {
         status: "not-applicable",
@@ -105,14 +105,14 @@ export function buildPpmReport(input: {
       logs: {
         status: "repo-tested",
         provenByTests: true,
-        ppmMarked: true,
-        markedOn: PPM_MARKED_ON,
+        ppmMarked: false,
+        markedOn: null,
         notApplicableOn: null,
-        publicEvidence: LOGS_DAILY_RUN,
+        publicEvidence: null,
         summary:
-          "Log público diario de solo añadir en logs/, escrito por el workflow daily-log, con anclas selladas por OpenTimestamps. Casilla marcada el 05-10-2026: entradas en main en ≥7 días UTC distintos, sello confirmado en Bitcoin (bloque 968752) comprobado a mano (pasos en LOGS.md) y OK legal. Solo demuestra un registro verificable del kill-switch y del simulacro, no que esté completo ni que lo anotado sea cierto. Si la cadena o un sello dejan de cuadrar, se desmarca.",
+          "Log público diario de solo añadir en logs/, escrito por el workflow daily-log, con anclas selladas por OpenTimestamps. Casilla desmarcada desde el 16-10-2026: la cadena se reinició con el cambio a ORVUPI y los sellos confirmados en Bitcoin eran de la cadena anterior (conservada en el tag pre-orvupi-2026-10-16). Se vuelve a marcar con entradas en ≥7 días UTC, un sello confirmado de la cadena nueva comprobado a mano (pasos en LOGS.md) y OK legal.",
         summaryEn:
-          "Public daily append-only log in logs/, written by the daily-log workflow, with anchors stamped by OpenTimestamps. Box marked on 2026-10-05: entries on main on ≥7 distinct UTC days, a Bitcoin-confirmed stamp (block 968752) checked by hand (steps in LOGS.md) and legal sign-off. It only shows a verifiable record of the kill-switch and drill, not that the log is complete or true. If the chain or a stamp stops checking out, the box is unmarked.",
+          "Public daily append-only log in logs/, written by the daily-log workflow, with anchors stamped by OpenTimestamps. Box unmarked since 2026-10-16: the chain restarted with the move to ORVUPI and the Bitcoin-confirmed stamps belonged to the previous chain (kept in tag pre-orvupi-2026-10-16). It can be marked again with entries on ≥7 distinct UTC days, a confirmed stamp of the new chain checked by hand (steps in LOGS.md) and legal sign-off.",
       },
       limits: {
         status: "repo-tested",

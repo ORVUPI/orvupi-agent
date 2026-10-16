@@ -1,5 +1,5 @@
 (function () {
-  var LANG_KEY = "stubx-lab-lang";
+  var LANG_KEY = "orvupi-lab-lang";
   document.documentElement.classList.add("js");
 
   function readLang() {
@@ -60,7 +60,7 @@
           /* El idioma sigue en la página aunque el navegador no lo guarde. */
         }
         apply(lang);
-        document.dispatchEvent(new CustomEvent("stubx-lang", { detail: lang }));
+        document.dispatchEvent(new CustomEvent("orvupi-lang", { detail: lang }));
       });
     });
     var reload = document.getElementById("recargar");

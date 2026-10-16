@@ -75,7 +75,7 @@ export type DispatchResult = DispatchOk | DispatchDenied;
 export type LogEntry = {
   v: 1;
   ts: string;
-  actor: "stubx-agent";
+  actor: "orvupi-agent";
   action: string;
   detail: string;
   evidence: null;

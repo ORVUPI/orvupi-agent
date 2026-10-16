@@ -72,8 +72,8 @@ export function shownFact(status: string, value: string | null): string {
 
 export function summarizeReport(raw: unknown, role: CardRole, roleNote: Localized): CardSummary {
   const row = record(raw);
-  if (!row || text(row.tool) !== "stubx-verify" || !text(row.mint)) {
-    throw new Error("La ficha no es un informe de STUBX Verify.");
+  if (!row || text(row.tool) !== "orvupi-verify" || !text(row.mint)) {
+    throw new Error("La ficha no es un informe de ORVUPI Verify.");
   }
   const identity = record(row.identity);
   const permissions = record(row.permissions);

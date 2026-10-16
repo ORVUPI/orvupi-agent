@@ -1,4 +1,0 @@
-stubx-agent public log anchor v1
-entries: 7
-head: 31d27fd1c3fd54cbdc41410de0be450de3941d199c55f936d2edf1f9f83302d9
-log-sha256: ee2693f3d0e49561f9cc2c09af262a8b6a74df4840af28ddd1e1a0bf57f50184

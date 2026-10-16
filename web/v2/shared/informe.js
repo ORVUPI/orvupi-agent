@@ -5,6 +5,8 @@
  * atención y qué falta. Un fallo no pasa al bloque comprobado.
  */
 
+import { SITE_HOST } from "./site.js";
+
 export const REPORT_PNG = "informe.png";
 export const REPORT_PDF = "informe.pdf";
 export const REPORT_REVOKE_MS = 60_000;
@@ -43,7 +45,7 @@ const COPY = {
     addressMissing: "Dirección no indicada",
     dateMissing: "Fecha no indicada · puede haber cambiado",
     limits: "Límites",
-    origin: "Generado en stubxai.com · herramienta para tokens de terceros",
+    origin: `Generado en ${SITE_HOST} · herramienta para tokens de terceros`,
     zone: "hora de Madrid",
     checkedOn: "Consultado el",
     mayChange: "puede haber cambiado",
@@ -64,7 +66,7 @@ const COPY = {
     addressMissing: "Address not stated",
     dateMissing: "Date not stated · this may have changed",
     limits: "Limits",
-    origin: "Made on stubxai.com · not affiliated with third-party tokens",
+    origin: `Made on ${SITE_HOST} · not affiliated with third-party tokens`,
     zone: "Madrid time",
     checkedOn: "Checked on",
     mayChange: "this may have changed",
@@ -86,8 +88,8 @@ const NOTHING_TO_NOTE = {
 };
 
 const CLONE_WARNING = {
-  es: "Se parece a STUBX pero no es la dirección oficial",
-  en: "It looks like STUBX but it is not the official address",
+  es: "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato",
+  en: "It is named like ORVUPI, but ORVUPI does not have a contract yet",
 };
 
 const HIDDEN = /[\u0000-\u001F\u007F-\u009F\u061C\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u2069\uFEFF\uFFFD\p{Cf}]/gu;
@@ -124,6 +126,9 @@ export function networkName(network, lang) {
   const copy = reportCopy(lang);
   const clean = String(network ?? "").normalize("NFKC").replace(HIDDEN, "").trim();
   if (/^solana$/i.test(clean)) return "Solana mainnet";
+  if (/^base$/i.test(clean)) return "Base";
+  if (/^ethereum$/i.test(clean)) return "Ethereum";
+  if (/^bnb$/i.test(clean)) return "BNB Chain";
   if (!clean) return copy.networkMissing;
   return clean;
 }

@@ -24,3 +24,6 @@ d1028d902bd9620fcae923d15b879bde78dc4afc:verify/examples/2026-10-09/TNWwnzecb372
 # SHA-256 público de web/v2/token.json, publicado en el tablero. No es un secreto.
 # Las dos coincidencias son la misma línea 88 (el texto en español y el texto en inglés) y comparten esta huella.
 1297c9e6d0cf3525f10c6edcbad510dec64a59df:web/v2/tablero/index.html:generic-api-key:88
+
+# Misma huella pública (SHA-256 de token.json) tras pasar web/v2 a la versión de producción.
+b4ef7f7b956623f6f45f68e6071c6cf9a4cc554b:web/v2/tablero/index.html:generic-api-key:79

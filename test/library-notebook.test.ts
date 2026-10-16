@@ -33,7 +33,7 @@ interface ReadModule {
 interface Card {
   isMint?: boolean;
   partial?: boolean;
-  officialStubx?: boolean;
+  officialProject?: boolean;
   name: { text: string | null; status?: string };
   symbol?: { text: string | null; status?: string };
   uri: { text: string | null; status?: string };
@@ -210,8 +210,8 @@ describe("lector y cuaderno", () => {
     assert.ok(meta);
     assert.equal(meta?.name.includes("<"), false);
     assert.equal(meta?.uri, "https://evil.example/phish");
-    const hidden = read.decodeMetadataAccount(metadataBytes("STU\u200BBX\u202E", "A\u202EB", "\u200B", 0));
-    assert.equal(hidden?.name, "STUBX");
+    const hidden = read.decodeMetadataAccount(metadataBytes("ORV\u200BUPI\u202E", "A\u202EB", "\u200B", 0));
+    assert.equal(hidden?.name, "ORVUPI");
     assert.equal(hidden?.symbol, "AB");
     assert.equal(hidden?.uri, "");
     const spaces = read.decodeMetadataAccount(metadataBytes("Nombre", "NOM", "   ", 0));
@@ -242,7 +242,7 @@ describe("lector y cuaderno", () => {
     assert.equal(result.ok, false);
     assert.match((result.card?.errors ?? []).map((item) => item.message).join(" "), /volvió vacía/);
     assert.equal(JSON.stringify(result.card).includes("ausente comprobado"), false);
-    assert.equal(result.card?.officialStubx, true);
+    assert.equal(result.card?.officialProject, false); // ORVUPI todavía no tiene contrato: ninguna lectura nueva se marca como oficial.
     assert.equal(result.card?.name.text?.includes("<"), false);
     assert.equal(result.card?.uri.text, "https://evil.example/phish");
     assert.equal(JSON.stringify(result.card).includes("uiAmount"), false);
@@ -455,7 +455,7 @@ describe("lector y cuaderno", () => {
     assert.equal(model.withinStoreLimit(199, 2), false);
     assert.equal(model.visibleText("ab\u202Ecd\u200F"), "abcd");
     assert.equal(model.clipName(`${"N".repeat(80)}\u200B`), `${"N".repeat(64)}…`);
-    assert.equal(model.clipName("STU\u200BBX\u202E"), "STUBX");
+    assert.equal(model.clipName("ORV\u200BUPI\u202E"), "ORVUPI");
     const saved = model.withNote({ id: record.id, card }, "ab\u202Ecd\u200F\u2067");
     assert.equal(saved.ok, true);
     assert.equal(saved.record?.note, "abcd");
@@ -467,7 +467,7 @@ describe("lector y cuaderno", () => {
     const { read } = await modules();
     const okAccounts = rpcOk([
       account(read.TOKEN_PROGRAM, mintBytes()),
-      account(read.METADATA_PROGRAM, metadataBytes("STUBX", "STB", "https://evil.example/phish")),
+      account(read.METADATA_PROGRAM, metadataBytes("ORVUPI", "STB", "https://evil.example/phish")),
       account(read.PUMP_PROGRAM, curveBytes()),
     ]);
     async function failThen(status: number | "timeout") {
@@ -929,8 +929,8 @@ describe("lector y cuaderno", () => {
       second: "2-digit",
     }).format(new Date(WHEN)).replace(/[\u202f\u00a0]/g, " ");
     assert.equal(
-      model.readingOptionLabel({ ...older, symbol: { text: "STUBX" }, name: { text: "STUBX" } }, "es"),
-      `STUBX · ${stamp}`,
+      model.readingOptionLabel({ ...older, symbol: { text: "USDC" }, name: { text: "USD Coin" } }, "es"),
+      `USDC · ${stamp}`,
     );
     const amount = (await import(pathToFileURL(path.join(repoRoot(), "web/v2/shared/amount.js")).href)) as {
       formatAmount: (raw: string, decimals: number, lang: string) => string | null;
@@ -945,7 +945,7 @@ describe("lector y cuaderno", () => {
     assert.equal(actions.includes("localStorage"), false);
     assert.equal(actions.includes("sessionStorage"), false);
     assert.equal(actions.includes("searchParams"), false);
-    assert.match(actions, /stubx-cuaderno/);
+    assert.match(actions, /orvupi-cuaderno/);
     assert.equal(model.staleLine(WHEN, "es"), `Consultado el ${model.formatReadingStamp(WHEN, "es", true)} · puede haber cambiado`);
     assert.equal(model.staleLine(WHEN, "en"), `Checked on ${model.formatReadingStamp(WHEN, "en", true)} · this may have changed`);
     assert.match(model.staleLine(WHEN, "es"), /\d{2}:\d{2}:\d{2}/);
@@ -1003,36 +1003,37 @@ describe("lector y cuaderno", () => {
     };
     const ery = "ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump";
     const clone = read.blankCard(ery, WHEN, []);
-    clone.name = { text: "STUBX", status: "verificado" };
-    clone.symbol = { text: "STUBX", status: "verificado" };
+    clone.name = { text: "ORVUPI", status: "verificado" };
+    clone.symbol = { text: "ORVUPI", status: "verificado" };
     clone.uri = { text: null, status: "ausente" };
     const other = read.blankCard(ery, "2026-10-09T13:00:07.000Z", []);
-    other.name = { text: "STUBX", status: "verificado" };
-    other.symbol = { text: "STUBX", status: "verificado" };
+    other.name = { text: "ORVUPI", status: "verificado" };
+    other.symbol = { text: "ORVUPI", status: "verificado" };
     const community = read.blankCard("FMNb4CR8ksibmgY7Ztei6BWcZXi3WHcVeJhYb9TNpump", WHEN, []);
-    community.name = { text: "Comunidad STUBX", status: "verificado" };
+    community.name = { text: "Comunidad ORVUPI", status: "verificado" };
     community.symbol = { text: "COMUNIDAD", status: "verificado" };
     const usdc = read.blankCard(OTHER, WHEN, []);
     usdc.name = { text: "USD Coin", status: "verificado" };
     usdc.symbol = { text: "USDC", status: "verificado" };
     usdc.uri = { text: null, status: "ausente" };
     const official = read.blankCard(CA, WHEN, []);
-    official.name = { text: "STUBX", status: "verificado" };
-    official.symbol = { text: "STUBX", status: "verificado" };
-    assert.equal(summary.notebookNameText(clone, "es"), "Dice llamarse «STUBX»");
-    assert.equal(summary.notebookNameText(community, "es"), "Dice llamarse «Comunidad STUBX»");
+    official.name = { text: "ORVUPI", status: "verificado" };
+    official.symbol = { text: "ORVUPI", status: "verificado" };
+    assert.equal(summary.notebookNameText(clone, "es"), "Dice llamarse «ORVUPI»");
+    assert.equal(summary.notebookNameText(community, "es"), "Dice llamarse «Comunidad ORVUPI»");
     assert.equal(summary.notebookNameText(usdc, "es"), "USD Coin");
-    assert.equal(summary.notebookNameText(official, "es"), "STUBX");
+    // Sin contrato ORVUPI no hay ficha oficial: un token llamado ORVUPI se cita como texto elegido por quien lo creó.
+    assert.equal(summary.notebookNameText(official, "es"), "Dice llamarse «ORVUPI»");
     const option = model.readingOptionLabel(clone, "es");
-    assert.match(option, /^Dice llamarse «STUBX» · ERYy… · /);
-    assert.equal(option.startsWith("STUBX ·"), false);
+    assert.match(option, /^Dice llamarse «ORVUPI» · ERYy… · /);
+    assert.equal(option.startsWith("ORVUPI ·"), false);
     assert.match(option, /\d{2}:\d{2}:\d{2}$/);
     const paired = model.readingOptionLabel(other, "es");
-    assert.match(paired, /^Dice llamarse «STUBX» · ERYy… · /);
+    assert.match(paired, /^Dice llamarse «ORVUPI» · ERYy… · /);
     assert.match(paired, /\d{2}:\d{2}:\d{2}$/);
     const sameStamp = read.blankCard(ery, WHEN, []);
-    sameStamp.name = { text: "STUBX", status: "verificado" };
-    sameStamp.symbol = { text: "STUBX", status: "verificado" };
+    sameStamp.name = { text: "ORVUPI", status: "verificado" };
+    sameStamp.symbol = { text: "ORVUPI", status: "verificado" };
     const firstLabel = model.readingOptionLabel(clone, "es", [clone, sameStamp]);
     const secondLabel = model.readingOptionLabel(sameStamp, "es", [clone, sameStamp]);
     assert.equal(secondLabel, `${firstLabel} (2)`);
@@ -1041,8 +1042,8 @@ describe("lector y cuaderno", () => {
     between.name = { text: "USD Coin", status: "verificado" };
     between.symbol = { text: "USDC", status: "verificado" };
     const later = read.blankCard(ery, "2026-10-09T18:00:09.000Z", []);
-    later.name = { text: "STUBX", status: "verificado" };
-    later.symbol = { text: "STUBX", status: "verificado" };
+    later.name = { text: "ORVUPI", status: "verificado" };
+    later.symbol = { text: "ORVUPI", status: "verificado" };
     const ordered = model.sortNotebookRecords(
       [
         { id: "twin", card: sameStamp },
@@ -1066,16 +1067,16 @@ describe("lector y cuaderno", () => {
     assert.equal(compared.ok, true);
     const nameRow = compared.rows?.find((row) => row.field.es === "Nombre");
     assert.ok(nameRow);
-    assert.equal(model.comparedSideText("Nombre", clone, nameRow?.left, "es"), "Dice llamarse «STUBX»");
-    assert.equal(model.comparedSideText("Nombre", other, nameRow?.right, "es"), "Dice llamarse «STUBX»");
-    assert.equal(model.comparedSideText("Nombre", other, nameRow?.right, "en"), "It says it is called «STUBX»");
+    assert.equal(model.comparedSideText("Nombre", clone, nameRow?.left, "es"), "Dice llamarse «ORVUPI»");
+    assert.equal(model.comparedSideText("Nombre", other, nameRow?.right, "es"), "Dice llamarse «ORVUPI»");
+    assert.equal(model.comparedSideText("Nombre", other, nameRow?.right, "en"), "It says it is called «ORVUPI»");
     assert.equal(model.comparedSideText("Nombre", usdc, "USD Coin", "es"), "USD Coin");
-    assert.equal(model.comparedSideText("Nombre", official, "STUBX", "es"), "STUBX");
+    assert.equal(model.comparedSideText("Nombre", official, "ORVUPI", "es"), "Dice llamarse «ORVUPI»");
     assert.match(model.staleLine(WHEN, "es"), /Consultado el .+\d{2}:\d{2}:\d{2}.+puede haber cambiado/);
     assert.match(model.staleLine("2026-10-09T13:00:07.000Z", "es"), /\d{2}:\d{2}:\d{2}/);
-    assert.equal(summary.comparisonBanner(clone, other, "es"), "Se parece a STUBX pero no es la dirección oficial.");
+    assert.equal(summary.comparisonBanner(clone, other, "es"), "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.");
     assert.equal(summary.comparisonBanner(usdc, usdc, "es"), "");
-    assert.equal(summary.comparisonBanner(official, official, "es"), "");
+    assert.equal(summary.comparisonBanner(official, official, "es"), "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.");
     assert.equal(model.tableCellText("uri", "ausente", null, "es"), "No tiene enlace de metadatos");
     assert.equal(model.tableCellText("uri", "ausente", null, "en"), "It has no metadata link");
     assert.equal(model.tableCellText("uri", "ausente", "   ", "es"), "No tiene enlace de metadatos");
@@ -1119,8 +1120,8 @@ describe("lector y cuaderno", () => {
 
   test("el nombre de Token-2022 sale de la extensión si no hay cuenta Metaplex", async () => {
     const { read } = await modules();
-    const name = "STUBX";
-    const symbol = "STUBX";
+    const name = "ORVUPI";
+    const symbol = "ORVUPI";
     const uri = "https://example.invalid/meta.json";
     const base = Buffer.alloc(166);
     mintBytes().copy(base, 0);
@@ -1206,8 +1207,8 @@ describe("lector y cuaderno", () => {
       assert.match(aprender, new RegExp(`id="${id}"`));
     }
     assert.match(aprender, /Pendiente de revisión humana|pendiente de revisión humana/);
-    assert.ok(aprender.includes(CA));
-    assert.equal(aprender.includes("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), false);
+    assert.equal(aprender.includes(CA), false);
+    assert.ok(aprender.includes("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"));
     assert.equal(aprender.toLowerCase().includes("estafa"), false);
     assert.equal(aprender.includes("Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión."), false);
     assert.equal(aprender.includes("High-risk crypto · You could lose everything · Not investment advice."), false);
@@ -1233,8 +1234,8 @@ describe("lector y cuaderno", () => {
       notebook,
       /Language, Lab progress, the Studio draft, and the notebook, if they are used, stay in this browser\./,
     );
-    assert.match(notebook, /Si eliges otro lector, ese servicio recibe tus consultas y tu IP\. STUBX no lo revisa\./);
-    assert.match(notebook, /If you choose another reader, that service receives your queries and your IP\. STUBX does not review it\./);
+    assert.match(notebook, /Si eliges otro lector, ese servicio recibe tus consultas y tu IP\. ORVUPI no lo revisa\./);
+    assert.match(notebook, /If you choose another reader, that service receives your queries and your IP\. ORVUPI does not review it\./);
     assert.equal(notebook.toLowerCase().includes("mala inversión"), false);
     const catalog = JSON.parse(readFileSync(path.join(root, "web/v2/shared/networks.json"), "utf8")) as {
       networks: { family: string; enabled: boolean; rpc?: string }[];
@@ -1297,7 +1298,7 @@ describe("lector y cuaderno", () => {
           get hash() { return current.hash; },
         },
         history: {
-          state: { page: "stubx" },
+          state: { page: "demo" },
           replaceState: (_state: unknown, _title: string, next: string) => {
             assert.equal(_state, sandbox.history.state);
             current = new URL(next, current.origin);

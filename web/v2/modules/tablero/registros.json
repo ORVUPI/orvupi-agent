@@ -3,13 +3,13 @@
   "updated": "2026-10-11",
   "editor": "Equipo del repositorio. La revisión por una persona distinta está pendiente.",
   "note": {
-    "es": "Estados de un registro, no fechas prometidas. Una idea, código en el repositorio y una función en stubxai.com son cosas distintas. Este tablero solo cuenta el trabajo de STUBX. Citar la dirección de otro token, si hiciera falta en una prueba, no lo avala.",
-    "en": "These are record states, not promised dates. An idea, code in the repository, and a function on stubxai.com are different things. This board only records STUBX work. Citing another token’s address, if a test needs it, does not endorse it."
+    "es": "Estados de un registro, no fechas prometidas. Una idea, código en el repositorio y una función en orvupi.com son cosas distintas. Este tablero solo cuenta el trabajo de ORVUPI. Citar la dirección de otro token, si hiciera falta en una prueba, no lo avala.",
+    "en": "These are record states, not promised dates. An idea, code in the repository, and a function on orvupi.com are different things. This board only records ORVUPI work. Citing another token’s address, if a test needs it, does not endorse it."
   },
   "ci": {
     "workflow": ".github/workflows/ci.yml",
     "node": "22.14.0",
-    "actionsUrl": "https://github.com/stubxai/stubx-agent/actions/workflows/ci.yml",
+    "actionsUrl": "https://github.com/ORVUPI/orvupi-agent/actions/workflows/ci.yml",
     "whatItRuns": {
       "es": "En cada push y en cada pull request: npm ci, typecheck, tests (incluidos verify/ y lab/), escaneo de firma del componente Verify, logs, ppm:print, npm audit, verify:all y gitleaks. El job de atestación solo corre en main.",
       "en": "On every push and pull request: npm ci, typecheck, tests (including verify/ and lab/), a scan of the Verify component for signing code, logs, ppm:print, npm audit, verify:all, and gitleaks. The attestation job runs only on main."
@@ -23,7 +23,7 @@
         "subject": "PR 13, rama feat/verify-mvp",
         "observedOn": "2026-10-08",
         "conclusion": "success",
-        "url": "https://github.com/stubxai/stubx-agent/actions/runs/37745755560",
+        "url": "https://github.com/ORVUPI/orvupi-agent/actions/runs/37745755560",
         "names": [
           "typecheck, test, audit (22.14.0)",
           "gitleaks"
@@ -40,21 +40,21 @@
       "id": "VERIFY",
       "version": "0.1.0",
       "title": {
-        "es": "STUBX Verify, MVP de solo lectura",
-        "en": "STUBX Verify, read-only MVP"
+        "es": "ORVUPI Verify, MVP de solo lectura",
+        "en": "ORVUPI Verify, read-only MVP"
       },
       "status": "en_revision",
       "webPublished": true,
       "scope": {
-        "es": "Lectura en stubxai.com/verify, desde el 2026-10-10, de cualquier mint SPL o Token-2022, solo lectura. La nota del 2026-10-08 describía la PR 13. El código llegó a main en el merge 2434636.",
-        "en": "Read-only reading at stubxai.com/verify, since 2026-10-10, of any SPL or Token-2022 mint. The 2026-10-08 note described PR 13. The code reached main in merge 2434636."
+        "es": "Lectura en orvupi.com/verify, desde el 2026-10-10, de cualquier mint SPL o Token-2022, solo lectura. La nota del 2026-10-08 describía la PR 13. El código llegó a main en el merge 2434636.",
+        "en": "Read-only reading at orvupi.com/verify, since 2026-10-10, of any SPL or Token-2022 mint. The 2026-10-08 note described PR 13. The code reached main in merge 2434636."
       },
       "owner": "Equipo del repositorio",
       "reviewer": "Pendiente de una persona distinta del autor, antes de publicar.",
       "reviewedOn": "2026-10-08",
       "block": {
-        "es": "La función se abre en stubxai.com/verify. La muestra de cuentas con tokens de los ejemplos del 2026-10-08 quedó en no disponible por HTTP 429.",
-        "en": "The function opens at stubxai.com/verify. The token account sample on the 2026-10-08 examples stayed unavailable because of HTTP 429."
+        "es": "La función se abre en orvupi.com/verify. La muestra de cuentas con tokens de los ejemplos del 2026-10-08 quedó en no disponible por HTTP 429.",
+        "en": "The function opens at orvupi.com/verify. The token account sample on the 2026-10-08 examples stayed unavailable because of HTTP 429."
       },
       "evidence": [
         {
@@ -62,10 +62,10 @@
             "es": "PR 13",
             "en": "PR 13"
           },
-          "href": "https://github.com/stubxai/stubx-agent/pull/13",
+          "href": "https://github.com/ORVUPI/orvupi-agent/pull/13",
           "note": {
-            "es": "Fusionada en main. La página está en stubxai.com/verify.",
-            "en": "Merged into main. The page is at stubxai.com/verify."
+            "es": "Fusionada en main. La página está en orvupi.com/verify.",
+            "en": "Merged into main. The page is at orvupi.com/verify."
           }
         },
         {
@@ -73,7 +73,7 @@
             "es": "CI del 2026-10-08",
             "en": "CI on 2026-10-08"
           },
-          "href": "https://github.com/stubxai/stubx-agent/actions/runs/37745755560",
+          "href": "https://github.com/ORVUPI/orvupi-agent/actions/runs/37745755560",
           "note": {
             "es": "Verde en esa ejecución. No habla de Lab.",
             "en": "That run passed. It does not cover Lab."
@@ -120,8 +120,8 @@
         {
           "on": "2026-10-10",
           "change": {
-            "es": "El lector está en stubxai.com/verify desde esta fecha. El historial anterior no se borra.",
-            "en": "The reader is on stubxai.com/verify as of this date. The earlier history is kept."
+            "es": "El lector está en orvupi.com/verify desde esta fecha. El historial anterior no se borra.",
+            "en": "The reader is on orvupi.com/verify as of this date. The earlier history is kept."
           }
         }
       ]
@@ -130,21 +130,21 @@
       "id": "U01",
       "version": "1.0.0",
       "title": {
-        "es": "STUBX Lab, misión 1",
-        "en": "STUBX Lab, mission 1"
+        "es": "ORVUPI Lab, misión 1",
+        "en": "ORVUPI Lab, mission 1"
       },
       "status": "en_revision",
       "webPublished": true,
       "scope": {
-        "es": "Una misión estática en stubxai.com/lab, desde el 2026-10-09: detectar un clon en 5 comprobaciones, más un caso nuevo hipotético. Español e inglés. Progreso solo en el navegador.",
-        "en": "One static mission at stubxai.com/lab, since 2026-10-09: spot a clone in 5 checks, plus a new hypothetical case. Spanish and English. Progress only in the browser."
+        "es": "Una misión estática en orvupi.com/lab, desde el 2026-10-09: detectar un clon en 5 comprobaciones, más un caso nuevo hipotético. Español e inglés. Progreso solo en el navegador.",
+        "en": "One static mission at orvupi.com/lab, since 2026-10-09: spot a clone in 5 checks, plus a new hypothetical case. Spanish and English. Progress only in the browser."
       },
       "owner": "Equipo del repositorio",
       "reviewer": "Pendiente de personas ajenas al equipo, como pide la ficha, y de autorización para publicar.",
       "reviewedOn": "2026-10-09",
       "block": {
-        "es": "La misión se abre en stubxai.com/lab desde el 2026-10-09. La observación de personas externas sigue pendiente.",
-        "en": "The mission opens at stubxai.com/lab since 2026-10-09. Observation from people outside the team is still pending."
+        "es": "La misión se abre en orvupi.com/lab desde el 2026-10-09. La observación de personas externas sigue pendiente.",
+        "en": "The mission opens at orvupi.com/lab since 2026-10-09. Observation from people outside the team is still pending."
       },
       "evidence": [
         {
@@ -152,10 +152,10 @@
             "es": "PR 14",
             "en": "PR 14"
           },
-          "href": "https://github.com/stubxai/stubx-agent/pull/14",
+          "href": "https://github.com/ORVUPI/orvupi-agent/pull/14",
           "note": {
-            "es": "Fusionada el 2026-10-09. La misión está en stubxai.com/lab.",
-            "en": "Merged on 2026-10-09. The mission is at stubxai.com/lab."
+            "es": "Fusionada el 2026-10-09. La misión está en orvupi.com/lab.",
+            "en": "Merged on 2026-10-09. The mission is at orvupi.com/lab."
           }
         },
         {
@@ -187,8 +187,8 @@
           },
           "path": "site-drafts/lab/index.html",
           "note": {
-            "es": "Copia de trabajo. La función abierta está en stubxai.com/lab.",
-            "en": "Working copy. The open function is at stubxai.com/lab."
+            "es": "Copia de trabajo. La función abierta está en orvupi.com/lab.",
+            "en": "Working copy. The open function is at orvupi.com/lab."
           }
         }
       ],
@@ -210,8 +210,8 @@
         {
           "on": "2026-10-10",
           "change": {
-            "es": "La misión está en stubxai.com/lab. El historial anterior se conserva.",
-            "en": "The mission is at stubxai.com/lab. The earlier history is kept."
+            "es": "La misión está en orvupi.com/lab. El historial anterior se conserva.",
+            "en": "The mission is at orvupi.com/lab. The earlier history is kept."
           }
         }
       ]
@@ -226,15 +226,15 @@
       "status": "en_revision",
       "webPublished": true,
       "scope": {
-        "es": "Página estática en stubxai.com/tablero, generada desde este registro. Incluye la plantilla vacía para copiar. No promete fechas.",
-        "en": "Static page at stubxai.com/tablero, generated from this record. It includes the empty template to copy. It promises no dates."
+        "es": "Página estática en orvupi.com/tablero, generada desde este registro. Incluye la plantilla vacía para copiar. No promete fechas.",
+        "en": "Static page at orvupi.com/tablero, generated from this record. It includes the empty template to copy. It promises no dates."
       },
       "owner": "Equipo del repositorio",
       "reviewer": "El creador, antes de cualquier publicación, como pide la ficha.",
       "reviewedOn": "2026-10-09",
       "block": {
-        "es": "La página se abre en stubxai.com/tablero. Esta copia no se actualiza sola.",
-        "en": "The page opens at stubxai.com/tablero. This copy does not update itself."
+        "es": "La página se abre en orvupi.com/tablero. Esta copia no se actualiza sola.",
+        "en": "The page opens at orvupi.com/tablero. This copy does not update itself."
       },
       "evidence": [
         {
@@ -242,10 +242,10 @@
             "es": "PR 14",
             "en": "PR 14"
           },
-          "href": "https://github.com/stubxai/stubx-agent/pull/14",
+          "href": "https://github.com/ORVUPI/orvupi-agent/pull/14",
           "note": {
-            "es": "Fusionada el 2026-10-09. La página está en stubxai.com/tablero.",
-            "en": "Merged on 2026-10-09. The page is at stubxai.com/tablero."
+            "es": "Fusionada el 2026-10-09. La página está en orvupi.com/tablero.",
+            "en": "Merged on 2026-10-09. The page is at orvupi.com/tablero."
           }
         },
         {
@@ -266,8 +266,8 @@
           },
           "path": "site-drafts/tablero/index.html",
           "note": {
-            "es": "Generada. La función abierta está en stubxai.com/tablero.",
-            "en": "Generated. The open function is at stubxai.com/tablero."
+            "es": "Generada. La función abierta está en orvupi.com/tablero.",
+            "en": "Generated. The open function is at orvupi.com/tablero."
           }
         },
         {
@@ -293,8 +293,8 @@
         {
           "on": "2026-10-10",
           "change": {
-            "es": "Se añade la plantilla vacía y se separan idea, código en el repositorio y publicación en stubxai.com. Comprobado el mismo día: stubxai.com/tablero responde. El historial del 2026-10-09 se conserva.",
-            "en": "The empty template is added, and an idea, code in the repository, and publication on stubxai.com stay separate. Checked the same day: stubxai.com/tablero answers. The 2026-10-09 history is kept."
+            "es": "Se añade la plantilla vacía y se separan idea, código en el repositorio y publicación en orvupi.com. Comprobado el mismo día: orvupi.com/tablero responde. El historial del 2026-10-09 se conserva.",
+            "en": "The empty template is added, and an idea, code in the repository, and publication on orvupi.com stay separate. Checked the same day: orvupi.com/tablero answers. The 2026-10-09 history is kept."
           }
         }
       ]
@@ -309,15 +309,15 @@
       "status": "en_revision",
       "webPublished": true,
       "scope": {
-        "es": "Glosario y tres guías en stubxai.com/aprender: identificar el token, interpretar permisos y comprender la curva. Inglés pendiente de revisión humana.",
-        "en": "Glossary and three guides at stubxai.com/aprender: identify the token, read permissions, and understand the curve. English is waiting for human review."
+        "es": "Glosario y tres guías en orvupi.com/aprender: identificar el token, interpretar permisos y comprender la curva. Inglés pendiente de revisión humana.",
+        "en": "Glossary and three guides at orvupi.com/aprender: identify the token, read permissions, and understand the curve. English is waiting for human review."
       },
       "owner": "Equipo del repositorio",
       "reviewer": "Revisión lingüística humana pendiente. Hasta entonces, si hay diferencia, manda el español.",
       "reviewedOn": "2026-10-09",
       "block": {
-        "es": "El inglés no tiene todavía un revisor distinto. La página se abre en stubxai.com/aprender; el inglés no se presenta como texto cerrado.",
-        "en": "English does not yet have a separate reviewer. The page opens at stubxai.com/aprender; English is not presented as closed text."
+        "es": "El inglés no tiene todavía un revisor distinto. La página se abre en orvupi.com/aprender; el inglés no se presenta como texto cerrado.",
+        "en": "English does not yet have a separate reviewer. The page opens at orvupi.com/aprender; English is not presented as closed text."
       },
       "evidence": [
         {
@@ -325,7 +325,7 @@
             "es": "PR 14",
             "en": "PR 14"
           },
-          "href": "https://github.com/stubxai/stubx-agent/pull/14",
+          "href": "https://github.com/ORVUPI/orvupi-agent/pull/14",
           "note": {
             "es": "Fusionada el 2026-10-09. El inglés sigue pendiente de revisión humana.",
             "en": "Merged on 2026-10-09. English is still waiting for human review."
@@ -365,8 +365,8 @@
         {
           "on": "2026-10-10",
           "change": {
-            "es": "El glosario y las tres guías se abren en stubxai.com/aprender. El inglés sigue pendiente de revisión humana.",
-            "en": "The glossary and the three guides open at stubxai.com/aprender. English is still waiting for human review."
+            "es": "El glosario y las tres guías se abren en orvupi.com/aprender. El inglés sigue pendiente de revisión humana.",
+            "en": "The glossary and the three guides open at orvupi.com/aprender. English is still waiting for human review."
           }
         }
       ]
@@ -388,8 +388,8 @@
       "reviewer": "Pendiente de una prueba con lector de pantalla por otra persona.",
       "reviewedOn": "2026-10-09",
       "block": {
-        "es": "La pasada no certifica toda la web ni stubxai.com. Falta una prueba con lector de pantalla por otra persona.",
-        "en": "The pass does not certify the whole website or stubxai.com. A screen-reader test by another person is still missing."
+        "es": "La pasada no certifica toda la web ni orvupi.com. Falta una prueba con lector de pantalla por otra persona.",
+        "en": "The pass does not certify the whole website or orvupi.com. A screen-reader test by another person is still missing."
       },
       "evidence": [
         {
@@ -397,7 +397,7 @@
             "es": "PR 14",
             "en": "PR 14"
           },
-          "href": "https://github.com/stubxai/stubx-agent/pull/14",
+          "href": "https://github.com/ORVUPI/orvupi-agent/pull/14",
           "note": {
             "es": "Fusionada el 2026-10-09. La pasada cubre estos borradores y no certifica toda la web.",
             "en": "Merged on 2026-10-09. The pass covers these drafts and does not certify the whole website."
@@ -437,8 +437,8 @@
         {
           "on": "2026-10-10",
           "change": {
-            "es": "Sigue en curso. No se presenta como certificación de stubxai.com.",
-            "en": "Still in progress. It is not presented as a certification of stubxai.com."
+            "es": "Sigue en curso. No se presenta como certificación de orvupi.com.",
+            "en": "Still in progress. It is not presented as a certification of orvupi.com."
           }
         }
       ]
@@ -447,21 +447,21 @@
       "id": "U02",
       "version": "1.0.0",
       "title": {
-        "es": "STUBX Studio",
-        "en": "STUBX Studio"
+        "es": "ORVUPI Studio",
+        "en": "ORVUPI Studio"
       },
       "status": "en_revision",
       "webPublished": true,
       "scope": {
-        "es": "Editor en stubxai.com/studio, desde el 2026-10-10: plantillas, vista previa y descarga en el navegador, sin cuenta.",
-        "en": "Editor at stubxai.com/studio, since 2026-10-10: templates, preview, and download in the browser, with no account."
+        "es": "Editor en orvupi.com/studio, desde el 2026-10-10: plantillas, vista previa y descarga en el navegador, sin cuenta.",
+        "en": "Editor at orvupi.com/studio, since 2026-10-10: templates, preview, and download in the browser, with no account."
       },
       "owner": "Equipo del repositorio",
       "reviewer": "Pendiente de una persona distinta del autor, antes de publicar.",
       "reviewedOn": "2026-10-10",
       "block": {
-        "es": "La función se abre en stubxai.com/studio.",
-        "en": "The function opens at stubxai.com/studio."
+        "es": "La función se abre en orvupi.com/studio.",
+        "en": "The function opens at orvupi.com/studio."
       },
       "evidence": [
         {
@@ -471,8 +471,8 @@
           },
           "path": "web/v2/studio/index.html",
           "note": {
-            "es": "Está en stubxai.com/studio.",
-            "en": "It is at stubxai.com/studio."
+            "es": "Está en orvupi.com/studio.",
+            "en": "It is at orvupi.com/studio."
           }
         }
       ],
@@ -487,8 +487,8 @@
         {
           "on": "2026-10-10",
           "change": {
-            "es": "El editor está en stubxai.com/studio. Pasa a en revisión en el registro. La nota del 2026-10-09 se conserva.",
-            "en": "The editor is at stubxai.com/studio. The record moves to in review. The 2026-10-09 note is kept."
+            "es": "El editor está en orvupi.com/studio. Pasa a en revisión en el registro. La nota del 2026-10-09 se conserva.",
+            "en": "The editor is at orvupi.com/studio. The record moves to in review. The 2026-10-09 note is kept."
           }
         }
       ]
@@ -503,15 +503,15 @@
       "status": "en_revision",
       "webPublished": true,
       "scope": {
-        "es": "Canal en el repositorio para un fallo que se puede repetir, un texto confuso, una traducción o una prueba de accesibilidad. Cualquier token de Solana puede ser el ejemplo del fallo. La página no pide cuenta ni guarda datos. Está en stubxai.com/contribuir.",
-        "en": "A channel in the repository for a repeatable bug, confusing text, a translation, or an accessibility check. Any Solana token can be the example of the bug. The page does not ask for an account and does not store data. It is on stubxai.com/contribuir."
+        "es": "Canal en el repositorio para un fallo que se puede repetir, un texto confuso, una traducción o una prueba de accesibilidad. Cualquier token de Solana puede ser el ejemplo del fallo. La página no pide cuenta ni guarda datos. Está en orvupi.com/contribuir.",
+        "en": "A channel in the repository for a repeatable bug, confusing text, a translation, or an accessibility check. Any Solana token can be the example of the bug. The page does not ask for an account and does not store data. It is on orvupi.com/contribuir."
       },
       "owner": "Equipo del repositorio",
       "reviewer": "Pendiente de una persona distinta del autor, antes de publicar.",
       "reviewedOn": "2026-10-10",
       "block": {
-        "es": "Publicada en stubxai.com/contribuir el 2026-10-10.",
-        "en": "Published at stubxai.com/contribuir on 2026-10-10."
+        "es": "Publicada en orvupi.com/contribuir el 2026-10-10.",
+        "en": "Published at orvupi.com/contribuir on 2026-10-10."
       },
       "evidence": [
         {
@@ -581,29 +581,29 @@
         {
           "on": "2026-10-10",
           "change": {
-            "es": "Canal en el repositorio: página, plantillas de issue y plantilla de propuesta. Sigue fuera de stubxai.com.",
-            "en": "Channel in the repository: page, issue templates, and proposal template. Still absent from stubxai.com."
+            "es": "Canal en el repositorio: página, plantillas de issue y plantilla de propuesta. Sigue fuera de orvupi.com.",
+            "en": "Channel in the repository: page, issue templates, and proposal template. Still absent from orvupi.com."
           }
         },
         {
           "on": "2026-10-10",
           "change": {
-            "es": "El canal está en este repositorio. stubxai.com/contribuir responde y la página dice que no está construida. Sigue sin publicar.",
-            "en": "The channel is in this repository. stubxai.com/contribuir answers and the page says it is not built. Still not published."
+            "es": "El canal está en este repositorio. orvupi.com/contribuir responde y la página dice que no está construida. Sigue sin publicar.",
+            "en": "The channel is in this repository. orvupi.com/contribuir answers and the page says it is not built. Still not published."
           }
         },
         {
           "on": "2026-10-10",
           "change": {
-            "es": "El registro queda listo. Al desplegar la página, la columna stubxai.com pasa a sí. El historial anterior se conserva.",
-            "en": "The record is ready. When the page is deployed, the stubxai.com column becomes yes. The earlier history is kept."
+            "es": "El registro queda listo. Al desplegar la página, la columna orvupi.com pasa a sí. El historial anterior se conserva.",
+            "en": "The record is ready. When the page is deployed, the orvupi.com column becomes yes. The earlier history is kept."
           }
         },
         {
           "on": "2026-10-10",
           "change": {
-            "es": "Publicada en stubxai.com/contribuir. La columna stubxai.com pasa a sí.",
-            "en": "Published at stubxai.com/contribuir. The stubxai.com column becomes yes."
+            "es": "Publicada en orvupi.com/contribuir. La columna orvupi.com pasa a sí.",
+            "en": "Published at orvupi.com/contribuir. The orvupi.com column becomes yes."
           }
         }
       ]
@@ -618,15 +618,15 @@
       "status": "en_revision",
       "webPublished": true,
       "scope": {
-        "es": "Cuaderno en este navegador: lee un mint con la misma lista de métodos que Verify universal, guarda la ficha y la nota en el dispositivo, compara dos consultas de la misma dirección y permite exportar, importar y borrar. No pide firmar. Está en stubxai.com/cuaderno desde el 2026-10-10. En el repositorio, «Revisar direcciones guardadas» vuelve a leer las direcciones guardadas y dice si algo cambió. Esa parte todavía no está en stubxai.com.",
-        "en": "Notebook in this browser: reads a mint with the same method list as universal Verify, stores the card and note on the device, compares two reads of the same address, and lets you export, import, and delete. It never asks you to sign. It is on stubxai.com/cuaderno since 2026-10-10. In the repository, “Recheck saved addresses” reads the saved addresses again and says whether anything changed. That part is not on stubxai.com yet."
+        "es": "Cuaderno en este navegador: lee un mint con la misma lista de métodos que Verify universal, guarda la ficha y la nota en el dispositivo, compara dos consultas de la misma dirección y permite exportar, importar y borrar. No pide firmar. Está en orvupi.com/cuaderno desde el 2026-10-10. En el repositorio, «Revisar direcciones guardadas» vuelve a leer las direcciones guardadas y dice si algo cambió. Esa parte todavía no está en orvupi.com.",
+        "en": "Notebook in this browser: reads a mint with the same method list as universal Verify, stores the card and note on the device, compares two reads of the same address, and lets you export, import, and delete. It never asks you to sign. It is on orvupi.com/cuaderno since 2026-10-10. In the repository, “Recheck saved addresses” reads the saved addresses again and says whether anything changed. That part is not on orvupi.com yet."
       },
       "owner": "Equipo del repositorio",
       "reviewer": "Pendiente de una persona distinta del autor, antes de publicar.",
       "reviewedOn": "2026-10-10",
       "block": {
-        "es": "Publicado en stubxai.com/cuaderno el 2026-10-10.",
-        "en": "Published at stubxai.com/cuaderno on 2026-10-10."
+        "es": "Publicado en orvupi.com/cuaderno el 2026-10-10.",
+        "en": "Published at orvupi.com/cuaderno on 2026-10-10."
       },
       "evidence": [
         {
@@ -645,7 +645,7 @@
             "es": "PR 24",
             "en": "PR 24"
           },
-          "href": "https://github.com/stubxai/stubx-agent/pull/24",
+          "href": "https://github.com/ORVUPI/orvupi-agent/pull/24",
           "note": {
             "es": "Biblioteca y cuaderno.",
             "en": "Library and notebook."
@@ -663,15 +663,15 @@
         {
           "on": "2026-10-10",
           "change": {
-            "es": "Publicado en stubxai.com/cuaderno. La columna stubxai.com pasa a sí.",
-            "en": "Published at stubxai.com/cuaderno. The stubxai.com column becomes yes."
+            "es": "Publicado en orvupi.com/cuaderno. La columna orvupi.com pasa a sí.",
+            "en": "Published at orvupi.com/cuaderno. The orvupi.com column becomes yes."
           }
         },
         {
           "on": "2026-10-11",
           "change": {
-            "es": "En el repositorio: «Revisar direcciones guardadas». Vuelve a leer las direcciones guardadas y dice si algo cambió. Todavía no está en stubxai.com.",
-            "en": "In the repository: “Recheck saved addresses”. It reads the saved addresses again and says whether anything changed. It is not on stubxai.com yet."
+            "es": "En el repositorio: «Revisar direcciones guardadas». Vuelve a leer las direcciones guardadas y dice si algo cambió. Todavía no está en orvupi.com.",
+            "en": "In the repository: “Recheck saved addresses”. It reads the saved addresses again and says whether anything changed. It is not on orvupi.com yet."
           }
         }
       ]
@@ -686,15 +686,15 @@
       "status": "en_revision",
       "webPublished": true,
       "scope": {
-        "es": "Ejemplo educativo fijo de una curva, fechado el 2026-10-10 y no leído de la cadena. Sin dirección. Está en stubxai.com/comparar desde el 2026-10-10.",
-        "en": "A fixed educational example of a curve, dated 2026-10-10 and not read from the chain. No address. It is on stubxai.com/comparar since 2026-10-10."
+        "es": "Ejemplo educativo fijo de una curva, fechado el 2026-10-10 y no leído de la cadena. Sin dirección. Está en orvupi.com/comparar desde el 2026-10-10.",
+        "en": "A fixed educational example of a curve, dated 2026-10-10 and not read from the chain. No address. It is on orvupi.com/comparar since 2026-10-10."
       },
       "owner": "Equipo del repositorio",
       "reviewer": "Revisado por Legal.",
       "reviewedOn": "2026-10-10",
       "block": {
-        "es": "Ejemplo educativo fijo, revisado por Legal. Cualquier versión con datos reales necesitará una revisión nueva. El ejemplo educativo fijo está publicado en stubxai.com/comparar desde el 2026-10-10.",
-        "en": "Fixed educational example, reviewed by Legal. Any version with real data will need a new review. The fixed educational example is published at stubxai.com/comparar since 2026-10-10."
+        "es": "Ejemplo educativo fijo, revisado por Legal. Cualquier versión con datos reales necesitará una revisión nueva. El ejemplo educativo fijo está publicado en orvupi.com/comparar desde el 2026-10-10.",
+        "en": "Fixed educational example, reviewed by Legal. Any version with real data will need a new review. The fixed educational example is published at orvupi.com/comparar since 2026-10-10."
       },
       "evidence": [
         {
@@ -720,22 +720,22 @@
         {
           "on": "2026-10-10",
           "change": {
-            "es": "El ejemplo fijo sustituye a la calculadora. No hay dirección ni lectura de la cadena. Sigue fuera de stubxai.com.",
-            "en": "The fixed example replaces the calculator. There is no address and no chain read. Still absent from stubxai.com."
+            "es": "El ejemplo fijo sustituye a la calculadora. No hay dirección ni lectura de la cadena. Sigue fuera de orvupi.com.",
+            "en": "The fixed example replaces the calculator. There is no address and no chain read. Still absent from orvupi.com."
           }
         },
         {
           "on": "2026-10-10",
           "change": {
-            "es": "Legal revisa este ejemplo educativo fijo. Cualquier versión con datos reales necesitará una revisión nueva. Sigue fuera de stubxai.com.",
-            "en": "Legal reviews this fixed educational example. Any version with real data will need a new review. Still absent from stubxai.com."
+            "es": "Legal revisa este ejemplo educativo fijo. Cualquier versión con datos reales necesitará una revisión nueva. Sigue fuera de orvupi.com.",
+            "en": "Legal reviews this fixed educational example. Any version with real data will need a new review. Still absent from orvupi.com."
           }
         },
         {
           "on": "2026-10-10",
           "change": {
-            "es": "La columna de la web pasa a sí. El ejemplo está en stubxai.com/comparar desde el 2026-10-10.",
-            "en": "The website column becomes yes. The example is on stubxai.com/comparar since 2026-10-10."
+            "es": "La columna de la web pasa a sí. El ejemplo está en orvupi.com/comparar desde el 2026-10-10.",
+            "en": "The website column becomes yes. The example is on orvupi.com/comparar since 2026-10-10."
           }
         }
       ]
@@ -750,15 +750,15 @@
       "status": "en_revision",
       "webPublished": true,
       "scope": {
-        "es": "Lectura de la moneda base y del estado de la curva, tal como están en la cadena. Cualquier mint. Sin firma y sin envío. Está en stubxai.com/pares desde el 2026-10-10.",
-        "en": "A reading of the base currency and the curve state, as they are on chain. Any mint. No signing and no sending. It is on stubxai.com/pares since 2026-10-10."
+        "es": "Lectura de la moneda base y del estado de la curva, tal como están en la cadena. Cualquier mint. Sin firma y sin envío. Está en orvupi.com/pares desde el 2026-10-10.",
+        "en": "A reading of the base currency and the curve state, as they are on chain. Any mint. No signing and no sending. It is on orvupi.com/pares since 2026-10-10."
       },
       "owner": "Equipo del repositorio",
       "reviewer": "Pendiente de una persona distinta del autor, antes de publicar.",
       "reviewedOn": "2026-10-10",
       "block": {
-        "es": "Publicada en stubxai.com/pares el 2026-10-10.",
-        "en": "Published at stubxai.com/pares on 2026-10-10."
+        "es": "Publicada en orvupi.com/pares el 2026-10-10.",
+        "en": "Published at orvupi.com/pares on 2026-10-10."
       },
       "evidence": [
         {
@@ -768,8 +768,8 @@
           },
           "path": "web/v2/pares/index.html",
           "note": {
-            "es": "Lectura de solo lectura en stubxai.com/pares desde el 2026-10-10.",
-            "en": "Read-only page at stubxai.com/pares since 2026-10-10."
+            "es": "Lectura de solo lectura en orvupi.com/pares desde el 2026-10-10.",
+            "en": "Read-only page at orvupi.com/pares since 2026-10-10."
           }
         },
         {
@@ -806,22 +806,22 @@
         {
           "on": "2026-10-10",
           "change": {
-            "es": "Hay una página de solo lectura y una exportación de instantánea. Sigue fuera de stubxai.com.",
-            "en": "There is a read-only page and a snapshot export. It is still off stubxai.com."
+            "es": "Hay una página de solo lectura y una exportación de instantánea. Sigue fuera de orvupi.com.",
+            "en": "There is a read-only page and a snapshot export. It is still off orvupi.com."
           }
         },
         {
           "on": "2026-10-10",
           "change": {
-            "es": "El título pasa a lectura de la curva. Sigue fuera de stubxai.com.",
-            "en": "The title becomes curve reading. Still absent from stubxai.com."
+            "es": "El título pasa a lectura de la curva. Sigue fuera de orvupi.com.",
+            "en": "The title becomes curve reading. Still absent from orvupi.com."
           }
         },
         {
           "on": "2026-10-10",
           "change": {
-            "es": "La columna de la web pasa a sí. La lectura de la curva está en stubxai.com/pares desde el 2026-10-10.",
-            "en": "The website column becomes yes. Curve reading is on stubxai.com/pares since 2026-10-10."
+            "es": "La columna de la web pasa a sí. La lectura de la curva está en orvupi.com/pares desde el 2026-10-10.",
+            "en": "The website column becomes yes. Curve reading is on orvupi.com/pares since 2026-10-10."
           }
         }
       ]
@@ -836,15 +836,15 @@
       "status": "en_revision",
       "webPublished": false,
       "scope": {
-        "es": "Selector de red en Verify y en el Cuaderno, con Solana al abrir. Lectura de solo lectura de un contrato en Base por el nodo público mainnet.base.org. Ethereum y BNB Chain se encendieron después: ver U11. Todavía no está en stubxai.com.",
-        "en": "Network selector on Verify and the Notebook, with Solana when the page opens. Read-only reading of a contract on Base through the public node mainnet.base.org. Ethereum and BNB Chain were switched on afterwards: see U11. It is not on stubxai.com yet."
+        "es": "Selector de red en Verify y en el Cuaderno, con Solana al abrir. Lectura de solo lectura de un contrato en Base por el nodo público mainnet.base.org. Ethereum y BNB Chain se encendieron después: ver U11. Todavía no está en orvupi.com.",
+        "en": "Network selector on Verify and the Notebook, with Solana when the page opens. Read-only reading of a contract on Base through the public node mainnet.base.org. Ethereum and BNB Chain were switched on afterwards: see U11. It is not on orvupi.com yet."
       },
       "owner": "Equipo del repositorio",
       "reviewer": "Pendiente de una persona distinta del autor, antes de publicar.",
       "reviewedOn": "2026-10-11",
       "block": {
-        "es": "El código está en el repositorio. La página de stubxai.com todavía no incluye esta lectura.",
-        "en": "The code is in the repository. The page on stubxai.com does not include this reading yet."
+        "es": "El código está en el repositorio. La página de orvupi.com todavía no incluye esta lectura.",
+        "en": "The code is in the repository. The page on orvupi.com does not include this reading yet."
       },
       "evidence": [
         {
@@ -876,15 +876,15 @@
         {
           "on": "2026-10-11",
           "change": {
-            "es": "Fase 1 anotada. Se pidieron todas las redes, empezando por Base. Sigue fuera de stubxai.com.",
-            "en": "Phase 1 recorded. Every network was requested, starting with Base. Still absent from stubxai.com."
+            "es": "Fase 1 anotada. Se pidieron todas las redes, empezando por Base. Sigue fuera de orvupi.com.",
+            "en": "Phase 1 recorded. Every network was requested, starting with Base. Still absent from orvupi.com."
           }
         },
         {
           "on": "2026-10-11",
           "change": {
-            "es": "Ethereum y BNB Chain se encienden en U11. Esta ficha se queda en la fase de Base. Sigue fuera de stubxai.com.",
-            "en": "Ethereum and BNB Chain switch on in U11. This card stays on the Base phase. Still absent from stubxai.com."
+            "es": "Ethereum y BNB Chain se encienden en U11. Esta ficha se queda en la fase de Base. Sigue fuera de orvupi.com.",
+            "en": "Ethereum and BNB Chain switch on in U11. This card stays on the Base phase. Still absent from orvupi.com."
           }
         }
       ]
@@ -899,15 +899,15 @@
       "status": "en_revision",
       "webPublished": false,
       "scope": {
-        "es": "Ethereum y después BNB Chain, con el mismo lector de Base, solo lectura. Ethereum usa el nodo público ethereum-rpc.publicnode.com. BNB Chain usa bsc-rpc.publicnode.com. El aviso junto al botón nombra el nodo de cada red. La entradilla de Ethereum habla de ERC-20 y la de BNB Chain de BEP-20. DEX Screener usa ethereum y bsc. El cuaderno guarda red y dirección. Todavía no está en stubxai.com.",
-        "en": "Ethereum and then BNB Chain, with the same reader as Base, read-only. Ethereum uses the public node ethereum-rpc.publicnode.com. BNB Chain uses bsc-rpc.publicnode.com. The notice beside the button names each network's node. The Ethereum lede talks about ERC-20 and the BNB Chain lede about BEP-20. DEX Screener uses ethereum and bsc. The notebook stores network and address. It is not on stubxai.com yet."
+        "es": "Ethereum y después BNB Chain, con el mismo lector de Base, solo lectura. Ethereum usa el nodo público ethereum-rpc.publicnode.com. BNB Chain usa bsc-rpc.publicnode.com. El aviso junto al botón nombra el nodo de cada red. La entradilla de Ethereum habla de ERC-20 y la de BNB Chain de BEP-20. DEX Screener usa ethereum y bsc. El cuaderno guarda red y dirección. Todavía no está en orvupi.com.",
+        "en": "Ethereum and then BNB Chain, with the same reader as Base, read-only. Ethereum uses the public node ethereum-rpc.publicnode.com. BNB Chain uses bsc-rpc.publicnode.com. The notice beside the button names each network's node. The Ethereum lede talks about ERC-20 and the BNB Chain lede about BEP-20. DEX Screener uses ethereum and bsc. The notebook stores network and address. It is not on orvupi.com yet."
       },
       "owner": "Equipo del repositorio",
       "reviewer": "Pendiente de una persona distinta del autor, antes de publicar.",
       "reviewedOn": "2026-10-11",
       "block": {
-        "es": "El código está en el repositorio. La página de stubxai.com todavía no incluye esta lectura.",
-        "en": "The code is in the repository. The page on stubxai.com does not include this reading yet."
+        "es": "El código está en el repositorio. La página de orvupi.com todavía no incluye esta lectura.",
+        "en": "The code is in the repository. The page on orvupi.com does not include this reading yet."
       },
       "evidence": [
         {
@@ -931,8 +931,8 @@
         {
           "on": "2026-10-11",
           "change": {
-            "es": "Ethereum y BNB Chain encendidas en el repositorio. Sigue fuera de stubxai.com.",
-            "en": "Ethereum and BNB Chain switched on in the repository. Still absent from stubxai.com."
+            "es": "Ethereum y BNB Chain encendidas en el repositorio. Sigue fuera de orvupi.com.",
+            "en": "Ethereum and BNB Chain switched on in the repository. Still absent from orvupi.com."
           }
         }
       ]

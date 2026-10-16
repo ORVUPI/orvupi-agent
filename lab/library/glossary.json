@@ -1,18 +1,21 @@
 {
   "version": "1.0.0",
-  "updated": "2026-10-09",
+  "updated": "2026-10-16",
   "sourceLanguage": "es",
   "entries": [
     {
       "id": "direccion",
-      "term": { "es": "Dirección del mint", "en": "Mint address" },
+      "term": {
+        "es": "Dirección del mint",
+        "en": "Mint address"
+      },
       "means": {
         "es": "Es la dirección de la cuenta del token. Identifica ese mint en la red de la ficha. El nombre y el símbolo son textos aparte.",
         "en": "It is the address of the token’s mint account. It identifies that mint on the network named in the card. The name and the symbol are separate text."
       },
       "example": {
-        "es": "En las fichas del 2026-10-08, TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump y DjEjb6bxQ3Hjej9CzUAVeRqyt7k1tevHgcS37t41PUhQ son direcciones distintas aunque los nombres se parezcan.",
-        "en": "On the 2026-10-08 cards, TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump and DjEjb6bxQ3Hjej9CzUAVeRqyt7k1tevHgcS37t41PUhQ are different addresses even if the names look alike."
+        "es": "En las fichas del 2026-10-16, EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v (USDC) y 5vJmAfBjsS6wEHcgQGNm69P3fbyPmUU1dVfE5j1rraVZ son direcciones distintas aunque las dos se llamen «USD Coin».",
+        "en": "On the 2026-10-16 cards, EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v (USDC) and 5vJmAfBjsS6wEHcgQGNm69P3fbyPmUU1dVfE5j1rraVZ are different addresses even though both are named “USD Coin”."
       },
       "doesNotConclude": {
         "es": "No dice quién es una persona, ni si conviene hacer nada con el token. Dos nombres iguales no son la misma dirección.",
@@ -21,14 +24,17 @@
     },
     {
       "id": "registro",
-      "term": { "es": "Registro curado", "en": "Curated registry" },
+      "term": {
+        "es": "Registro curado",
+        "en": "Curated registry"
+      },
       "means": {
-        "es": "Lista local que Verify compara con el mint, el nombre, el símbolo, la imagen y algunos enlaces. Hoy incluye STUBX. Que un mint no esté no significa que sea falso.",
-        "en": "A local list Verify compares with the mint, name, symbol, image, and some links. Today it includes STUBX. A mint that is not on the list is not necessarily fake."
+        "es": "Lista local que Verify compara con el mint, el nombre, el símbolo, la imagen y algunos enlaces. En los ejemplos incluye USDC. ORVUPI aún no tiene contrato y no está. Que un mint no esté no significa que sea falso.",
+        "en": "A local list Verify compares with the mint, name, symbol, image, and some links. In the examples it includes USDC. ORVUPI does not have a contract yet and is not on it. A mint that is not on the list is not necessarily fake."
       },
       "example": {
-        "es": "USDC, en la ficha del 2026-10-08, no está en el registro. La propia ficha dice que eso no significa que sea falso ni una copia.",
-        "en": "USDC, on the 2026-10-08 card, is not in the registry. The card itself says that does not mean it is false or a copy."
+        "es": "USDT, en la ficha del 2026-10-16, no está en el registro. La propia ficha dice que eso no significa que sea falso ni una copia.",
+        "en": "USDT, on the 2026-10-16 card, is not in the registry. The card itself says that does not mean it is false or a copy."
       },
       "doesNotConclude": {
         "es": "Estar en el registro no es una auditoría ni una garantía. No estar tampoco es una acusación.",
@@ -37,14 +43,17 @@
     },
     {
       "id": "autoridad-emision",
-      "term": { "es": "Autoridad de emisión", "en": "Mint authority" },
+      "term": {
+        "es": "Autoridad de emisión",
+        "en": "Mint authority"
+      },
       "means": {
         "es": "Permiso para aumentar el suministro de ese mint. Si la ficha dice revocada y el campo se leyó en la cadena, la opción leída está en 0. Si dice activa, el permiso sigue asignado a una dirección.",
         "en": "Permission to increase the supply of that mint. If the card says revoked and the field was read on-chain, the field that was read is empty (no authority set). If it says active, the permission is still assigned to an address."
       },
       "example": {
-        "es": "En la tanda del 2026-10-08, el mint del registro y los clones la tienen revocada. USDC la tiene activa.",
-        "en": "In the 2026-10-08 batch, the registry mint and the clones have it revoked. USDC has it active."
+        "es": "En la tanda del 2026-10-16, las tres copias «USD Coin» la tienen revocada. USDC y USDT la tienen activa.",
+        "en": "In the 2026-10-16 batch, the three “USD Coin” copies have it revoked. USDC and USDT have it active."
       },
       "doesNotConclude": {
         "es": "Revocada no identifica el mint, no demuestra que el proyecto sea legítimo y no dice nada de la demanda ni de la liquidez. Un campo no disponible no se rellena como revocada.",
@@ -53,7 +62,10 @@
     },
     {
       "id": "autoridad-congelacion",
-      "term": { "es": "Autoridad de congelación", "en": "Freeze authority" },
+      "term": {
+        "es": "Autoridad de congelación",
+        "en": "Freeze authority"
+      },
       "means": {
         "es": "Permiso para congelar cuentas de ese token. Revocada quita ese permiso concreto en la lectura. Activa significa que sigue asignado.",
         "en": "Permission to freeze accounts of that token. “Revoked” means that specific permission was removed at the time of reading. Active means it is still assigned."
@@ -69,14 +81,17 @@
     },
     {
       "id": "metadatos-mutables",
-      "term": { "es": "Metadatos mutables", "en": "Mutable metadata" },
+      "term": {
+        "es": "Metadatos mutables",
+        "en": "Mutable metadata"
+      },
       "means": {
         "es": "Si hay una autoridad de actualización o is_mutable es verdadero, el nombre, el símbolo o la imagen pueden cambiar. «No mutables en las fuentes leídas» describe esas fuentes en esa fecha.",
         "en": "If there is an update authority or is_mutable is true, the name, symbol, or image can change. “Not mutable in the sources read” describes those sources on that date."
       },
       "example": {
-        "es": "El mint del registro, el 2026-10-08, queda como no mutable en las fuentes leídas. USDC tiene is_mutable verdadero en Metaplex.",
-        "en": "The registry mint, on 2026-10-08, is recorded as not mutable in the sources read. USDC has is_mutable true in Metaplex."
+        "es": "El 2026-10-16, la copia 5vJmAfBjsS6wEHcgQGNm69P3fbyPmUU1dVfE5j1rraVZ queda como no mutable en las fuentes leídas. USDC tiene is_mutable verdadero en Metaplex.",
+        "en": "On 2026-10-16, the 5vJmAfBjsS6wEHcgQGNm69P3fbyPmUU1dVfE5j1rraVZ copy is recorded as not mutable in the sources read. USDC has is_mutable true in Metaplex."
       },
       "doesNotConclude": {
         "es": "Que no se puedan cambiar en esa lectura no demuestra legitimidad. Que se puedan cambiar no es, por sí solo, una suplantación.",
@@ -85,14 +100,17 @@
     },
     {
       "id": "desconocido",
-      "term": { "es": "Desconocido y no disponible", "en": "Unknown and unavailable" },
+      "term": {
+        "es": "Desconocido y no disponible",
+        "en": "Unknown and unavailable"
+      },
       "means": {
         "es": "No disponible significa que esa llamada no dejó un dato utilizable. Desconocido es lo que no se leyó. Ninguno de los dos es un valor comprobado.",
         "en": "Unavailable means that call did not leave a usable fact. Unknown is what was not read. Neither one is a value read on-chain."
       },
       "example": {
-        "es": "En las cinco fichas del 2026-10-08, getTokenLargestAccounts respondió HTTP 429. La muestra de cuentas con tokens queda en no disponible. No es concentración cero.",
-        "en": "On all five cards from 2026-10-08, getTokenLargestAccounts returned HTTP 429. The token account sample stays unavailable. It is not zero concentration."
+        "es": "En las cinco fichas del 2026-10-16, getTokenLargestAccounts respondió HTTP 429. La muestra de cuentas con tokens queda en no disponible. No es concentración cero.",
+        "en": "On all five cards from 2026-10-16, getTokenLargestAccounts returned HTTP 429. The token account sample stays unavailable. It is not zero concentration."
       },
       "doesNotConclude": {
         "es": "No se convierte en cero, en autoridad revocada ni en metadatos inmutables. Una ficha parcial tampoco anula los campos que sí se leyeron en la cadena.",
@@ -101,14 +119,17 @@
     },
     {
       "id": "curva-pump",
-      "term": { "es": "Curva de Pump.fun", "en": "Pump.fun curve" },
+      "term": {
+        "es": "Curva de Pump.fun",
+        "en": "Pump.fun curve"
+      },
       "means": {
         "es": "Si la cuenta derivada es del programa de la curva, Verify lee sus campos públicos. El avance clásico es un cálculo inferido, no un campo de la cuenta. Si no hay curva, no se rellenan con cero las cantidades de la curva (Pump.fun lo llama ‘reserves’).",
         "en": "If the derived account belongs to the curve program, Verify reads its public fields. Classic progress is an inferred calculation, not a field of the account. If there is no curve, the curve amounts (Pump.fun calls these ‘reserves’) are not filled in with zero."
       },
       "example": {
-        "es": "El 2026-10-08 el mint del registro tiene avance inferido 1,74. Los clones tienen 0,00 inferido porque la cantidad real de la curva coincide con la inicial documentada. USDC no es una curva: el avance queda en no aplica.",
-        "en": "On 2026-10-08 the registry mint has inferred progress 1.74. The clones have inferred 0.00 because the real curve amount matches the documented initial amount. USDC is not a curve: progress stays not applicable."
+        "es": "Ninguna ficha del 2026-10-16 es una curva de Pump.fun: en USDC, USDT y las copias el avance queda en no aplica. En un token que sí esté en la curva, el avance se infiere de la cantidad real que queda.",
+        "en": "None of the 2026-10-16 cards is a Pump.fun curve: on USDC, USDT, and the copies, progress stays not applicable. On a token that is on the curve, progress is inferred from the real amount left."
       },
       "doesNotConclude": {
         "es": "El avance no dice qué hacer. 0,00 inferido no significa que faltara la cuenta. Esta misión no simula un intercambio.",
@@ -117,14 +138,17 @@
     },
     {
       "id": "reserva-real",
-      "term": { "es": "Cantidad real de la curva", "en": "Real curve amount" },
+      "term": {
+        "es": "Cantidad real de la curva",
+        "en": "Real curve amount"
+      },
       "means": {
         "es": "Campo real_token_reserves o real_quote_reserves de la cuenta de la curva, en unidades mínimas. Es distinto de la cantidad virtual de la curva.",
         "en": "The real_token_reserves or real_quote_reserves field of the curve account, in base units. It is different from the virtual curve amount."
       },
       "example": {
-        "es": "En los clones del 2026-10-08, la cantidad real de tokens de la curva coincide con 793100000000000, la inicial documentada de la curva clásica. Por eso el avance inferido es 0,00.",
-        "en": "On the 2026-10-08 clones, the real curve amount of tokens matches 793100000000000, the documented initial amount of the classic curve. That is why inferred progress is 0.00."
+        "es": "En la curva clásica, la cantidad real inicial documentada es 793100000000000. Si una ficha lee exactamente esa cifra, el avance inferido es 0,00: no se ha vendido nada de la curva.",
+        "en": "On the classic curve, the documented initial real amount is 793100000000000. If a card reads exactly that figure, inferred progress is 0.00: nothing has been sold from the curve."
       },
       "doesNotConclude": {
         "es": "No es una auditoría de fondos ni un saldo que esta página calcule como retirable. Si el campo no está, no se inventa un cero.",
@@ -133,14 +157,17 @@
     },
     {
       "id": "reserva-virtual",
-      "term": { "es": "Cantidad virtual de la curva", "en": "Virtual curve amount" },
+      "term": {
+        "es": "Cantidad virtual de la curva",
+        "en": "Virtual curve amount"
+      },
       "means": {
         "es": "Campo virtual_token_reserves o virtual_quote_reserves. La ficha lo separa de la cantidad real de la curva. En la curva clásica, y con la quote por defecto, la cantidad quote va en lamports.",
         "en": "The virtual_token_reserves or virtual_quote_reserves field. The card keeps it apart from the real curve amount. On the classic curve, and with the default quote, the quote amount is in lamports."
       },
       "example": {
-        "es": "La ficha del mint del registro, el 2026-10-08, muestra la cantidad virtual y la cantidad real de tokens de la curva como números distintos, cada una con su estado.",
-        "en": "The registry mint card, on 2026-10-08, shows the virtual and the real curve amounts of tokens as different numbers, each with its own status."
+        "es": "En una ficha de un token en la curva, la cantidad virtual y la cantidad real de tokens salen como números distintos, cada una con su estado. La virtual entra en el cálculo de la curva; no se puede retirar.",
+        "en": "On a card for a token on the curve, the virtual and the real amounts of tokens appear as different numbers, each with its own status. The virtual one is part of the curve calculation; it cannot be withdrawn."
       },
       "doesNotConclude": {
         "es": "La cantidad virtual de la curva no es una cantidad retirable. Sumarla con la real no crea una única cantidad disponible.",
@@ -149,14 +176,17 @@
     },
     {
       "id": "suplantacion",
-      "term": { "es": "Posible suplantación", "en": "Possible impersonation" },
+      "term": {
+        "es": "Posible suplantación",
+        "en": "Possible impersonation"
+      },
       "means": {
         "es": "Señal de Verify: el nombre, el símbolo, la imagen o un enlace coinciden con el registro curado y el mint es otro. La coincidencia no atribuye intención.",
         "en": "A Verify signal: the name, symbol, image, or a link matches the curated registry and the mint is a different one. The match does not attribute intent."
       },
       "example": {
-        "es": "Las fichas de Hhq4ffySVX3UQqSowjhP1Lwa8YuJDf7iH2hYWvVHTuEf, DjEjb6bxQ3Hjej9CzUAVeRqyt7k1tevHgcS37t41PUhQ y 3Zi6p6wzYZYKyuHdBhsDfb2pRR7XTfTfLKkXL7rwpump, del 2026-10-08, llevan esa señal. USDC no.",
-        "en": "The 2026-10-08 cards for Hhq4ffySVX3UQqSowjhP1Lwa8YuJDf7iH2hYWvVHTuEf, DjEjb6bxQ3Hjej9CzUAVeRqyt7k1tevHgcS37t41PUhQ, and 3Zi6p6wzYZYKyuHdBhsDfb2pRR7XTfTfLKkXL7rwpump carry that signal. USDC does not."
+        "es": "Las fichas de 4XRbnGgay2XpqJ1F5jGPQ9pRh1JSX12RPCPJASMJU5JW, 5vJmAfBjsS6wEHcgQGNm69P3fbyPmUU1dVfE5j1rraVZ y H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R, del 2026-10-16, llevan esa señal: se llaman «USD Coin» y no son el mint de USDC. USDC y USDT no.",
+        "en": "The 2026-10-16 cards for 4XRbnGgay2XpqJ1F5jGPQ9pRh1JSX12RPCPJASMJU5JW, 5vJmAfBjsS6wEHcgQGNm69P3fbyPmUU1dVfE5j1rraVZ, and H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R carry that signal: they are named “USD Coin” and are not the USDC mint. USDC and USDT do not."
       },
       "doesNotConclude": {
         "es": "No es una sentencia ni una prueba de lo que alguien quiso hacer. Un nombre parecido, por sí solo, tampoco sustituye a leer la dirección.",
@@ -165,7 +195,10 @@
     },
     {
       "id": "titular",
-      "term": { "es": "Titular y persona", "en": "Account owner and person" },
+      "term": {
+        "es": "Titular y persona",
+        "en": "Account owner and person"
+      },
       "means": {
         "es": "Una dirección guardada en una cuenta, como el creator de la curva, es un campo público. No identifica a una persona ni a un titular jurídico.",
         "en": "An address stored on an account, such as the curve creator, is a public field. It does not identify a person or a legal owner."
@@ -181,7 +214,10 @@
     },
     {
       "id": "holder",
-      "term": { "es": "‘Holder’ (término del sector)", "en": "‘Holder’ (industry term)" },
+      "term": {
+        "es": "‘Holder’ (término del sector)",
+        "en": "‘Holder’ (industry term)"
+      },
       "means": {
         "es": "‘Holder’ (término del sector): cuenta que tiene tokens. No implica derechos ni comunidad de inversores.",
         "en": "‘Holder’ (industry term): an account that holds tokens. It implies no rights and no investor community."
@@ -197,14 +233,17 @@
     },
     {
       "id": "ficha",
-      "term": { "es": "Ficha", "en": "Card" },
+      "term": {
+        "es": "Ficha",
+        "en": "Card"
+      },
       "means": {
         "es": "Una ficha es la lectura fechada de una dirección. No se actualiza sola y no es una auditoría.",
         "en": "A card is the dated reading of an address. It does not update itself and it is not an audit."
       },
       "example": {
-        "es": "Las fichas de esta misión llevan fecha 2026-10-08 o, si se releyeron, 2026-10-09.",
-        "en": "The cards in this mission are dated 2026-10-08 or, if they were read again, 2026-10-09."
+        "es": "Las fichas de esta misión llevan fecha 2026-10-16.",
+        "en": "The cards in this mission are dated 2026-10-16."
       },
       "doesNotConclude": {
         "es": "Una ficha no dice qué hacer con el token ni quién es una persona.",
@@ -213,14 +252,17 @@
     },
     {
       "id": "censo",
-      "term": { "es": "Censo", "en": "Census" },
+      "term": {
+        "es": "Censo",
+        "en": "Census"
+      },
       "means": {
         "es": "Un censo sería la lista de todas las cuentas. Estas fichas no lo son: leen algunas cuentas y no rellenan el resto con un cero.",
         "en": "A census would be the list of every account. These cards are not that: they read some accounts and do not fill the rest in with a zero."
       },
       "example": {
-        "es": "La ficha oficial del 2026-10-09 lee la curva, la creadora y la cuenta personal publicada, y dice que eso no es un censo.",
-        "en": "The official card from 2026-10-09 reads the curve, the creator, and the published personal account, and it says that is not a census."
+        "es": "Ninguna ficha del 2026-10-16 trae la muestra de cuentas: el servicio respondió HTTP 429. Aunque la trajera, serían como mucho 20 cuentas: no es un censo.",
+        "en": "No 2026-10-16 card has the account sample: the service returned HTTP 429. Even if it had, it would be at most 20 accounts: it is not a census."
       },
       "doesNotConclude": {
         "es": "Que no sea un censo no convierte el dato que falta en un cero.",
@@ -229,7 +271,10 @@
     },
     {
       "id": "comision",
-      "term": { "es": "Comisión", "en": "Fee" },
+      "term": {
+        "es": "Comisión",
+        "en": "Fee"
+      },
       "means": {
         "es": "Regla de un conector sobre un intercambio. Esta misión no calcula comisiones ni intercambios.",
         "en": "A fee rule set by a connector (for example a DEX or an aggregator) on a swap. This mission does not calculate fees or swaps."
@@ -245,30 +290,36 @@
     },
     {
       "id": "moneda-estable",
-      "term": { "es": "Moneda estable", "en": "Stablecoin" },
+      "term": {
+        "es": "Moneda estable",
+        "en": "Stablecoin"
+      },
       "means": {
-        "es": "Un token pensado para seguir una moneda de curso. En estas fichas, USDC es el ejemplo. STUBX es un meme: no tiene esa función.",
-        "en": "A token meant to follow a currency. On these cards, USDC is the example. STUBX is a meme: it does not have that role."
+        "es": "Un token pensado para seguir una moneda de curso. En estas fichas, USDC y USDT son los ejemplos.",
+        "en": "A token meant to follow a currency. On these cards, USDC and USDT are the examples."
       },
       "example": {
-        "es": "El 2026-10-09, USDC tiene la emisión y la congelación activas. STUBX las tiene cerradas. El mismo permiso no se lee igual en los dos.",
-        "en": "On 2026-10-09, USDC has mint and freeze permissions active. STUBX has them closed. The same permission is not read the same way on both."
+        "es": "El 2026-10-16, USDC tiene la emisión y la congelación activas. La copia 5vJm… que se llama «USD Coin» las tiene cerradas. El mismo permiso no se lee igual en los dos.",
+        "en": "On 2026-10-16, USDC has mint and freeze permissions active. The 5vJm… copy named “USD Coin” has them closed. The same permission is not read the same way on both."
       },
       "doesNotConclude": {
-        "es": "No dice qué hacer con el token. Un permiso activo en USDC no es una acusación, y uno cerrado en STUBX no es una garantía.",
-        "en": "It does not say what to do with the token. An active permission on USDC is not an accusation, and a closed one on STUBX is not a guarantee."
+        "es": "No dice qué hacer con el token. Un permiso activo en USDC no es una acusación, y uno cerrado en una copia no es una garantía.",
+        "en": "It does not say what to do with the token. An active permission on USDC is not an accusation, and a closed one on a copy is not a guarantee."
       }
     },
     {
       "id": "cuenta-tecnica",
-      "term": { "es": "Cuenta técnica y pool", "en": "Technical account and pool" },
+      "term": {
+        "es": "Cuenta técnica y pool",
+        "en": "Technical account and pool"
+      },
       "means": {
         "es": "Una cuenta técnica es la de un programa, como la curva. Un pool es la cuenta donde un programa de intercambio guarda tokens. Ninguna de las dos es la cuenta de una persona.",
         "en": "A technical account belongs to a program, such as the curve. A pool is the account where an exchange program holds tokens. Neither one is a person's account."
       },
       "example": {
-        "es": "En STUBX, el 2026-10-09, 3shQFExQ3rpFL6GaXPRQNTMYazVHmTvRfuazfv62toAE es la cuenta de la curva, con el 98,6122 %. complete es falso: no es un pool.",
-        "en": "On STUBX, on 2026-10-09, 3shQFExQ3rpFL6GaXPRQNTMYazVHmTvRfuazfv62toAE is the curve account, with 98.6122%. complete is false: it is not a pool."
+        "es": "En un token que aún está en una curva de lanzamiento, la cuenta con más tokens suele ser la de la curva: es del programa, no de una persona. Si la curva se completó, el saldo grande puede estar en un pool.",
+        "en": "On a token that is still on a launch curve, the account with the most tokens is usually the curve account: it belongs to the program, not a person. If the curve was completed, the large balance may be in a pool."
       },
       "doesNotConclude": {
         "es": "Un saldo alto no convierte esa cuenta en una persona. Que no sea un pool no dice qué hacer con el token.",
@@ -277,14 +328,17 @@
     },
     {
       "id": "consulta-fallida",
-      "term": { "es": "Consulta fallida", "en": "Failed query" },
+      "term": {
+        "es": "Consulta fallida",
+        "en": "Failed query"
+      },
       "means": {
         "es": "Se pidió el dato y el servicio no dejó una respuesta usable. No es un cero y no es una ausencia.",
         "en": "The fact was asked for and the service left no usable answer. It is not a zero and it is not an absence."
       },
       "example": {
-        "es": "USDC, el 2026-10-09, pidió getTokenLargestAccounts y recibió HTTP 429. La muestra queda no disponible.",
-        "en": "USDC, on 2026-10-09, asked for getTokenLargestAccounts and got HTTP 429. The sample stays unavailable."
+        "es": "USDC, el 2026-10-16, pidió getTokenLargestAccounts y recibió HTTP 429. La muestra queda no disponible.",
+        "en": "USDC, on 2026-10-16, asked for getTokenLargestAccounts and got HTTP 429. The sample stays unavailable."
       },
       "doesNotConclude": {
         "es": "No se rellena con cero ni se dice que no existan cuentas.",
@@ -293,14 +347,17 @@
     },
     {
       "id": "ausente-comprobado",
-      "term": { "es": "Ausente comprobado", "en": "Confirmed absent" },
+      "term": {
+        "es": "Ausente comprobado",
+        "en": "Confirmed absent"
+      },
       "means": {
         "es": "Se pidió el dato, la respuesta llegó y el dato no está. No es un fallo del servicio.",
         "en": "The fact was asked for, the answer arrived, and the fact is not there. It is not a service failure."
       },
       "example": {
-        "es": "En STUBX, el 2026-10-09, la cuenta de metadatos de Metaplex se consultó. La consulta respondió y el valor está vacío: no hay esa cuenta.",
-        "en": "On STUBX, on 2026-10-09, the Metaplex metadata account was queried. The query was answered and the value is empty: that account is not there."
+        "es": "En USDC, el 2026-10-16, la cuenta de metadatos se consultó. La consulta respondió y el enlace (URI) está vacío: ese dato no está.",
+        "en": "On USDC, on 2026-10-16, the metadata account was queried. The query was answered and the link (URI) is empty: that fact is not there."
       },
       "doesNotConclude": {
         "es": "No es un HTTP 429 ni un dato que esta lectura olvidó pedir.",
@@ -309,14 +366,17 @@
     },
     {
       "id": "no-consultado",
-      "term": { "es": "No consultado", "en": "Not queried" },
+      "term": {
+        "es": "No consultado",
+        "en": "Not queried"
+      },
       "means": {
         "es": "Esta lectura no pidió ese dato. No es un fallo ni una ausencia.",
         "en": "This reading did not ask for that fact. It is not a failure and it is not an absence."
       },
       "example": {
-        "es": "La ficha de STUBX del 2026-10-09 lee tres cuentas y no pide el ranking de getTokenLargestAccounts. El máximo fuera de la muestra no se calcula.",
-        "en": "The STUBX card from 2026-10-09 reads three accounts and does not ask for the getTokenLargestAccounts ranking. The maximum outside the sample is not calculated."
+        "es": "La ficha de USDC del 2026-10-16 no tiene URI, así que no pide el JSON de metadatos. El nombre del JSON queda en «no aplica».",
+        "en": "The USDC card from 2026-10-16 has no URI, so it does not ask for the metadata JSON. The JSON name stays “not applicable”."
       },
       "doesNotConclude": {
         "es": "No se convierte en cero ni en la consulta fallida de otra ficha.",

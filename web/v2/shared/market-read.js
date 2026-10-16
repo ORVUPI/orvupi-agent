@@ -26,7 +26,7 @@ const MARKET_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvw
 const MARKET_INDEX = new Array(128).fill(-1);
 for (let i = 0; i < MARKET_ALPHABET.length; i += 1) MARKET_INDEX[MARKET_ALPHABET.charCodeAt(i)] = i;
 
-export const MARKET_SCHEMA = "stubx.market.v1";
+export const MARKET_SCHEMA = "orvupi.market.v1";
 export const MARKET_SOURCE_NAME = "DEX Screener";
 export const MARKET_HOST = "api.dexscreener.com";
 export const MARKET_PATH = "/token-pairs/v1/solana/";
@@ -37,7 +37,8 @@ export const MARKET_TIMEOUT_MS = 8_000;
 export const MARKET_CLIENT_LIMIT = 6;
 export const MARKET_CLIENT_WINDOW_MS = 60_000;
 export const MARKET_LOW_USD = 1_000;
-export const MARKET_OFFICIAL_MINT = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
+import { OFFICIAL_ADDRESS, isOfficialAddress } from "./orvupi-contract.js";
+export const MARKET_OFFICIAL_MINT = OFFICIAL_ADDRESS;
 // Lista cerrada, por mint exacto. El nombre es fijo: no se usa el símbolo de la fuente.
 const MARKET_KNOWN_QUOTES = new Map([
   ["So11111111111111111111111111111111111111112", "SOL"],
@@ -713,7 +714,7 @@ function sideName(symbol, address, lang, chain) {
   const fixed = MARKET_KNOWN_QUOTES.get(address);
   if (fixed) return fixed;
   if (!symbol) return marketCopy(lang, "sin símbolo", "no symbol");
-  if (address === MARKET_OFFICIAL_MINT) return symbol;
+  if (isOfficialAddress(address)) return symbol;
   return marketCopy(lang, `Dice llamarse «${symbol}»`, `It says it is called «${symbol}»`);
 }
 
@@ -860,8 +861,8 @@ export function describeMarket(model, lang) {
     retry: status === "fallo" || status === "limite",
     detail: marketCopy(
       language,
-      "La liquidez es el dinero que la fuente dice que hay en ese par, en dólares. El volumen es lo que la fuente dice que se movió en el intervalo indicado. STUBX no la calcula.",
-      "Liquidity is the money the source says is in that pair, in dollars. Volume is what the source says moved in the stated interval. STUBX does not calculate it.",
+      "La liquidez es el dinero que la fuente dice que hay en ese par, en dólares. El volumen es lo que la fuente dice que se movió en el intervalo indicado. ORVUPI no la calcula.",
+      "Liquidity is the money the source says is in that pair, in dollars. Volume is what the source says moved in the stated interval. ORVUPI does not calculate it.",
     ),
     more: marketCopy(language, "Más detalle", "More detail"),
   };

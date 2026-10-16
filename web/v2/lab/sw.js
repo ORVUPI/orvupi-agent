@@ -1,4 +1,4 @@
-var CACHE = "stubx-lab-2026-10-09-5";
+var CACHE = "orvupi-lab-2026-10-09-5";
 var FILES = ["./index.html", "./sw.js"];
 var ALLOWED = { "/lab/": true, "/lab/index.html": true, "/lab/sw.js": true };
 

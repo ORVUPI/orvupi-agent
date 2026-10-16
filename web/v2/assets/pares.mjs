@@ -689,11 +689,11 @@ function showReading(evidence, digest) {
   strip.append(
     span(
       evidence.official
-        ? "Identidad del proyecto: esta dirección coincide con la CA publicada de STUBX."
-        : "Identidad del proyecto, aparte de este análisis: STUBX no revisa ni respalda este token.",
+        ? "Identidad del proyecto: esta dirección coincide con la del proyecto."
+        : "Identidad del proyecto, aparte de este análisis: ORVUPI no revisa ni respalda este token.",
       evidence.official
-        ? "Project identity: this address matches the published STUBX CA."
-        : "Project identity, separate from this analysis: STUBX does not review or endorse this token.",
+        ? "Project identity: this address matches the project one."
+        : "Project identity, separate from this analysis: ORVUPI does not review or endorse this token.",
     ),
   );
   out.append(strip);

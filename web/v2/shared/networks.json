@@ -1,5 +1,5 @@
 {
-  "schema": "stubx.networks.v1",
+  "schema": "orvupi.networks.v1",
   "default": "solana",
   "note": "Solana, Base, Ethereum y BNB Chain están encendidas. El lector EVM, el selector y la CSP de Verify y del Cuaderno usan esta lista.",
   "checks": [

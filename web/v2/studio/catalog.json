@@ -1,47 +1,76 @@
 {
-  "version": "2026-10-10",
+  "version": "2026-10-14-orvupi",
   "items": [
     {
-      "id": "talon-avatar-512",
-      "archivo": "assets/agente-talon-avatar-512.png",
+      "id": "orvupi-avatar",
+      "archivo": "assets/orvupi-avatar.png",
       "tipo": "avatar",
       "nombre": {
-        "es": "Agente Talón",
-        "en": "Agente Talón"
+        "es": "ORVUPI · Pulpo rosa",
+        "en": "ORVUPI · Pink octopus"
       },
       "licencia": {
-        "es": "Licencia del kit de memes STUBX · Agente Talón",
-        "en": "STUBX meme kit license · Agente Talón"
+        "es": "Recurso visual generado para ORVUPI. No se declara licencia CC0 o MIT ni exclusividad sobre la imagen.",
+        "en": "Visual asset generated for ORVUPI. No CC0 or MIT image license or exclusivity is asserted."
       },
-      "autor": "STUBX",
+      "autor": "Proyecto ORVUPI",
       "permitido": true,
       "aiOrigin": "mascota",
-      "sha256": "22e9182dbfa7fca0ed2c7fc8a52c305ee9df2d069530dd47a7cc80edf24d59d1"
+      "sha256": "352f34d82481ac001fb9746d4229289e7ab2b43de90a4d8249df83c1e41d6ac5",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1639042,
+      "origen": "outputs/avatars/ORVUPI_Pulpo_Rosa_v4_Cara_Referencias.png"
     },
     {
-      "id": "talon-cara-512",
-      "archivo": "assets/agente-talon-cara-512.png",
+      "id": "orvupi-saludo",
+      "archivo": "assets/orvupi-saludo.png",
       "tipo": "avatar",
       "nombre": {
-        "es": "Cara de Talón",
-        "en": "Talón face"
+        "es": "ORVUPI · Saludo",
+        "en": "ORVUPI · Wave"
       },
       "licencia": {
-        "es": "Licencia del kit de memes STUBX · Agente Talón",
-        "en": "STUBX meme kit license · Agente Talón"
+        "es": "Recurso visual generado para ORVUPI. No se declara licencia CC0 o MIT ni exclusividad sobre la imagen.",
+        "en": "Visual asset generated for ORVUPI. No CC0 or MIT image license or exclusivity is asserted."
       },
-      "autor": "STUBX",
+      "autor": "Proyecto ORVUPI",
       "permitido": true,
       "aiOrigin": "mascota",
-      "sha256": "d5dcf25a2321432271341291278c34637510ee21cbe033d0dcd7a1c8c2a8e542"
+      "sha256": "8f78c589b93169a19c2976296c981023d4752bad1e5a8219d6d13723e6799a41",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1627160,
+      "origen": "outputs/ORVUPI_Coleccion_250/02_gestos/026-saludo-amistoso.png"
+    },
+    {
+      "id": "orvupi-buen-humor",
+      "archivo": "assets/orvupi-buen-humor.png",
+      "tipo": "avatar",
+      "nombre": {
+        "es": "ORVUPI · Buen humor",
+        "en": "ORVUPI · Good mood"
+      },
+      "licencia": {
+        "es": "Recurso visual generado para ORVUPI. No se declara licencia CC0 o MIT ni exclusividad sobre la imagen.",
+        "en": "Visual asset generated for ORVUPI. No CC0 or MIT image license or exclusivity is asserted."
+      },
+      "autor": "Proyecto ORVUPI",
+      "permitido": true,
+      "aiOrigin": "mascota",
+      "sha256": "df294ee3efa2d3176262f8113dca55053261c613e119bfe3b73be6f6f7e7bf8d",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1746691,
+      "origen": "outputs/ORVUPI_Coleccion_250/03_emociones/071-buen-humor.png"
     },
     {
       "id": "fondo-solana",
       "archivo": "assets/fondo-solana-mini.png",
       "tipo": "fondo",
       "nombre": {
-        "es": "Solana",
-        "en": "Solana"
+        "es": "Red digital",
+        "en": "Digital network"
       },
       "fill": "#070418",
       "ink": "#f4f7fb",
@@ -49,7 +78,7 @@
         "es": "Código MIT. Dibujo del Studio, sin archivos de fuera.",
         "en": "MIT code. Studio drawing, with no outside files."
       },
-      "autor": "STUBX",
+      "autor": "ORVUPI",
       "permitido": true,
       "aiOrigin": "ninguno",
       "sha256": "ff8bdaa3d6006fb358700fdacd9cc4f9686aca9d1deab42d5fd2da90efa69a9c"
@@ -68,29 +97,10 @@
         "es": "Código MIT. Dibujo del Studio, sin archivos de fuera.",
         "en": "MIT code. Studio drawing, with no outside files."
       },
-      "autor": "STUBX",
+      "autor": "ORVUPI",
       "permitido": true,
       "aiOrigin": "ninguno",
       "sha256": "c3ca4223a2ea07f6b1622ba561e465d67ed86a23f6f99a1fbfc1924dde72a44b"
-    },
-    {
-      "id": "fondo-talon",
-      "archivo": "assets/fondo-talon-mini.png",
-      "tipo": "fondo",
-      "nombre": {
-        "es": "Talón",
-        "en": "Talón"
-      },
-      "fill": "#071422",
-      "ink": "#f4f7fb",
-      "licencia": {
-        "es": "Código MIT. Dibujo del Studio, sin archivos de fuera.",
-        "en": "MIT code. Studio drawing, with no outside files."
-      },
-      "autor": "STUBX",
-      "permitido": true,
-      "aiOrigin": "ninguno",
-      "sha256": "24254d94a482b1e30d1ff94701e6901da9ab57ca8a54b9fdc70364e239623a09"
     },
     {
       "id": "fondo-pixel",
@@ -106,7 +116,7 @@
         "es": "Código MIT. Dibujo del Studio, sin archivos de fuera.",
         "en": "MIT code. Studio drawing, with no outside files."
       },
-      "autor": "STUBX",
+      "autor": "ORVUPI",
       "permitido": true,
       "aiOrigin": "ninguno",
       "sha256": "8354acd4a1777562a0a720d96b6061d05acac8e7d9ac44c7add00b09d1469955"
@@ -125,7 +135,7 @@
         "es": "Código MIT. Dibujo del Studio, sin archivos de fuera.",
         "en": "MIT code. Studio drawing, with no outside files."
       },
-      "autor": "STUBX",
+      "autor": "ORVUPI",
       "permitido": true,
       "aiOrigin": "ninguno",
       "sha256": "07aec47a3de7a3fb16ed7c620530f8210d7d08c81c223bb499b412fe8bb9e021"
@@ -144,7 +154,7 @@
         "es": "Código MIT. Dibujo del Studio, sin archivos de fuera.",
         "en": "MIT code. Studio drawing, with no outside files."
       },
-      "autor": "STUBX",
+      "autor": "ORVUPI",
       "permitido": true,
       "aiOrigin": "ninguno",
       "sha256": "2614a2c4bb271464bf2605d722caf79faf609b50033da01d11e7bbeefdd07fbd"
@@ -163,7 +173,7 @@
         "es": "Código MIT. Dibujo del Studio, sin archivos de fuera.",
         "en": "MIT code. Studio drawing, with no outside files."
       },
-      "autor": "STUBX",
+      "autor": "ORVUPI",
       "permitido": true,
       "aiOrigin": "ninguno",
       "sha256": "8471f0e935bb96312301a2b95b60ed84c6f9a07e14fd2ee2654c883812ffd3aa"
@@ -182,7 +192,7 @@
         "es": "Código MIT. Dibujo del Studio, sin archivos de fuera.",
         "en": "MIT code. Studio drawing, with no outside files."
       },
-      "autor": "STUBX",
+      "autor": "ORVUPI",
       "permitido": true,
       "aiOrigin": "ninguno",
       "sha256": "f784730aa005eacfdbe72533b68302890905a6c4f71868ad499675710d3f963c"
@@ -198,10 +208,10 @@
       "fill": "#0a090d",
       "ink": "#fff3f5",
       "licencia": {
-        "es": "Código MIT. Color plano tomado de la paleta del kit de memes STUBX v0.2.",
-        "en": "MIT code. Flat color taken from the STUBX meme kit v0.2 palette."
+        "es": "Código MIT. Color plano tomado de la paleta del kit de memes ORVUPI.",
+        "en": "MIT code. Flat color taken from the ORVUPI meme kit palette."
       },
-      "autor": "STUBX",
+      "autor": "ORVUPI",
       "permitido": true,
       "aiOrigin": "ninguno",
       "sha256": "3395326290a7641f6c60d7746c2285a939f49181962d07d08623abfc96d75775"
@@ -217,10 +227,10 @@
       "fill": "#17131b",
       "ink": "#fff3f5",
       "licencia": {
-        "es": "Código MIT. Color plano tomado de la paleta del kit de memes STUBX v0.2.",
-        "en": "MIT code. Flat color taken from the STUBX meme kit v0.2 palette."
+        "es": "Código MIT. Color plano tomado de la paleta del kit de memes ORVUPI.",
+        "en": "MIT code. Flat color taken from the ORVUPI meme kit palette."
       },
-      "autor": "STUBX",
+      "autor": "ORVUPI",
       "permitido": true,
       "aiOrigin": "ninguno",
       "sha256": "f39b59bf1f4cd6c8a80e6fc66170064f4fcf8290eee278537300f758e7a62075"
@@ -236,10 +246,10 @@
       "fill": "#120a0e",
       "ink": "#fff3f5",
       "licencia": {
-        "es": "Código MIT. Color plano tomado de la paleta del kit de memes STUBX v0.2.",
-        "en": "MIT code. Flat color taken from the STUBX meme kit v0.2 palette."
+        "es": "Código MIT. Color plano tomado de la paleta del kit de memes ORVUPI.",
+        "en": "MIT code. Flat color taken from the ORVUPI meme kit palette."
       },
-      "autor": "STUBX",
+      "autor": "ORVUPI",
       "permitido": true,
       "aiOrigin": "ninguno",
       "sha256": "aa6abfcd5b8d58a6ae3cefcb92827d3ab6cb08223d39d29129a08bc656005eda"
@@ -255,10 +265,10 @@
       "fill": "#fe8596",
       "ink": "#120a0e",
       "licencia": {
-        "es": "Código MIT. Color plano tomado de la paleta del kit de memes STUBX v0.2.",
-        "en": "MIT code. Flat color taken from the STUBX meme kit v0.2 palette."
+        "es": "Código MIT. Color plano tomado de la paleta del kit de memes ORVUPI.",
+        "en": "MIT code. Flat color taken from the ORVUPI meme kit palette."
       },
-      "autor": "STUBX",
+      "autor": "ORVUPI",
       "permitido": true,
       "aiOrigin": "ninguno",
       "sha256": "142b878abbaaaa738796b1fa8d899700535d2e90d9803652732b8a02e97da3e8"
@@ -274,10 +284,10 @@
       "fill": "#fff3f5",
       "ink": "#120a0e",
       "licencia": {
-        "es": "Código MIT. Color plano tomado de la paleta del kit de memes STUBX v0.2.",
-        "en": "MIT code. Flat color taken from the STUBX meme kit v0.2 palette."
+        "es": "Código MIT. Color plano tomado de la paleta del kit de memes ORVUPI.",
+        "en": "MIT code. Flat color taken from the ORVUPI meme kit palette."
       },
-      "autor": "STUBX",
+      "autor": "ORVUPI",
       "permitido": true,
       "aiOrigin": "ninguno",
       "sha256": "78b1341dde13060e919236341a4d7056ec6289d1a76c4e06d420f564dff15bcb"

@@ -99,13 +99,13 @@ async function storeLegacy(page, records) {
       };
     });
     await new Promise((resolve, reject) => {
-      const request = indexedDB.deleteDatabase("stubx-cuaderno");
+      const request = indexedDB.deleteDatabase("orvupi-cuaderno");
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
       request.onblocked = () => resolve();
     });
     await new Promise((resolve, reject) => {
-      const request = indexedDB.open("stubx-cuaderno", 1);
+      const request = indexedDB.open("orvupi-cuaderno", 1);
       request.onupgradeneeded = () => {
         const db = request.result;
         if (!db.objectStoreNames.contains("records")) db.createObjectStore("records", { keyPath: "id" });
@@ -144,7 +144,7 @@ test("una ficha vieja gana red y dirección y entra en la lista", async ({ page 
   await expect(page.locator("#detener")).toBeHidden();
   await noticeNextToButton(page);
   const stored = await page.evaluate(() => new Promise((resolve) => {
-    const request = indexedDB.open("stubx-cuaderno");
+    const request = indexedDB.open("orvupi-cuaderno");
     request.onsuccess = () => {
       const db = request.result;
       const get = db.transaction("records", "readonly").objectStore("records").get("11111111-1111-4111-8111-111111111111");
@@ -178,8 +178,8 @@ test("volver a consultar marca el cambio, el clon y solo las direcciones elegida
     calls.push({ method, mint: Array.isArray(body?.params?.[0]) ? body.params[0][0] : body?.params?.[0] });
     if (method === "getMultipleAccounts") {
       const mint = body.params[0][0];
-      const name = mint === ERY ? "STUBX" : "USD Coin";
-      const symbol = mint === ERY ? "STUBX" : "USDC";
+      const name = mint === ERY ? "ORVUPI" : "USD Coin";
+      const symbol = mint === ERY ? "ORVUPI" : "USDC";
       const supply = mint === ERY ? 2_000_000n : 1_000_000n;
       return route.fulfill(rpcResult([
         account(TOKEN_PROGRAM, mintAccount(supply)),
@@ -210,23 +210,23 @@ test("volver a consultar marca el cambio, el clon y solo las direcciones elegida
       mint: ERY,
       at: "2026-10-09T12:00:00.000Z",
       supply: "1000000",
-      name: "STUBX",
-      symbol: "STUBX",
+      name: "ORVUPI",
+      symbol: "ORVUPI",
       note: "",
     },
   ]);
   await page.goto("/cuaderno/");
   const cloneRow = page.locator("#lista-seguimiento .seguimiento-fila").filter({ hasText: ERY });
-  await expect(cloneRow).toContainText("Dice llamarse «STUBX»");
-  await expect(cloneRow).toContainText("Se parece a STUBX pero no es la dirección oficial.");
+  await expect(cloneRow).toContainText("Dice llamarse «ORVUPI»");
+  await expect(cloneRow).toContainText("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.");
   await cloneRow.locator("input").check();
   await expect(page.locator("#seguir-alcance")).toHaveText("Se consultan solo las marcadas.");
   await page.locator("#seguir").click();
   const result = page.locator("#resultado-seguimiento article").filter({ hasText: ERY });
   await expect(result).toBeVisible({ timeout: 30_000 });
   await expect(result).toContainText("Cambió desde la última lectura.");
-  await expect(result).toContainText("Dice llamarse «STUBX»");
-  await expect(result).toContainText("Se parece a STUBX pero no es la dirección oficial.");
+  await expect(result).toContainText("Dice llamarse «ORVUPI»");
+  await expect(result).toContainText("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.");
   await expect(result).toContainText("Suministro total");
   await expect(page.locator("#resultado-seguimiento")).not.toContainText(USDC);
   const asked = calls.filter((item) => item.method === "getMultipleAccounts").map((item) => item.mint);
@@ -251,7 +251,7 @@ test("volver a consultar marca el cambio, el clon y solo las direcciones elegida
       const mint = body.params[0][0];
       return route.fulfill(rpcResult([
         account(TOKEN_PROGRAM, mintAccount(1_000_000n)),
-        account(METADATA_PROGRAM, metadataAccount(mint, mint === ERY ? "STUBX" : "USD Coin", mint === ERY ? "STUBX" : "USDC")),
+        account(METADATA_PROGRAM, metadataAccount(mint, mint === ERY ? "ORVUPI" : "USD Coin", mint === ERY ? "ORVUPI" : "USDC")),
         null,
       ]));
     }
@@ -277,7 +277,7 @@ test("si el servicio rechaza la consulta, queda en Qué falta con Reintentar y n
     if (body?.method === "getMultipleAccounts") {
       return route.fulfill(rpcResult([
         account(TOKEN_PROGRAM, mintAccount(2_000_000n)),
-        account(METADATA_PROGRAM, metadataAccount(ERY, "STUBX", "STUBX")),
+        account(METADATA_PROGRAM, metadataAccount(ERY, "ORVUPI", "ORVUPI")),
         null,
       ]));
     }
@@ -290,8 +290,8 @@ test("si el servicio rechaza la consulta, queda en Qué falta con Reintentar y n
     mint: ERY,
     at: "2026-10-09T12:00:00.000Z",
     supply: "1000000",
-    name: "STUBX",
-    symbol: "STUBX",
+    name: "ORVUPI",
+    symbol: "ORVUPI",
     note: "",
   }]);
   await page.goto("/cuaderno/");
@@ -301,15 +301,15 @@ test("si el servicio rechaza la consulta, queda en Qué falta con Reintentar y n
   await expect(result).toContainText("Qué falta");
   await expect(result).toContainText("Reintentar");
   await expect(result).toContainText("El servicio rechazó esta consulta. No se da por igual.");
-  await expect(result).toContainText("Dice llamarse «STUBX»");
-  await expect(result).toContainText("Se parece a STUBX pero no es la dirección oficial.");
+  await expect(result).toContainText("Dice llamarse «ORVUPI»");
+  await expect(result).toContainText("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.");
   await expect(result).not.toContainText("Sigue igual");
   await expect(result.locator('[data-estado="igual"]')).toHaveCount(0);
   await page.locator('[data-set-lang="en"]').click();
   await expect(result).toContainText("What is missing");
   await expect(result).toContainText("Try again");
-  await expect(result).toContainText("It says it is called «STUBX»");
-  await expect(result).toContainText("It looks like STUBX but it is not the official address.");
+  await expect(result).toContainText("It says it is called «ORVUPI»");
+  await expect(result).toContainText("It is named like ORVUPI, but ORVUPI does not have a contract yet.");
   await expect(result).not.toContainText("It is the same since the last reading.");
   const beforeRetry = hits.length;
   mode = "ok";
@@ -328,7 +328,7 @@ function fulfillStable(route) {
     const pump = String(mint).endsWith("pump");
     return route.fulfill(rpcResult([
       account(TOKEN_PROGRAM, mintAccount(1_000_000n)),
-      account(METADATA_PROGRAM, metadataAccount(mint, pump ? "STUBX" : "USD Coin", pump ? "STUBX" : "USDC")),
+      account(METADATA_PROGRAM, metadataAccount(mint, pump ? "ORVUPI" : "USD Coin", pump ? "ORVUPI" : "USDC")),
       null,
     ]));
   }
@@ -358,8 +358,8 @@ test("una lectura estable dice Sigue igual y Detener deja solo lo ya leído", as
       mint: ERY,
       at: "2026-10-09T12:00:00.000Z",
       supply: "1000000",
-      name: "STUBX",
-      symbol: "STUBX",
+      name: "ORVUPI",
+      symbol: "ORVUPI",
       note: "",
     },
   ]);

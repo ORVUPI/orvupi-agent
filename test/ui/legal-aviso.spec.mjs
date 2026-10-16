@@ -38,15 +38,11 @@ const PAGES = [
   "/security/",
   "/risks/",
   "/legal/",
-  "/proofs/",
-  "/status/",
-  "/tokenomics/",
   "/community/",
   "/marca/",
-  "/build/",
-  "/avances/",
   "/404.html",
 ];
+// /proofs/, /status/, /tokenomics/, /build/ y /avances/ son redirecciones a la portada (web/v2/_redirects); las comprueba web-v2.test.
 const TOOLS = ["/verify/", "/lab/", "/tablero/"];
 const BUY_LANGUAGE =
   /\b(comprar|cómpralo|compra ya|buy now|buy|precio|prices?|urgent\w*|urgencia|ahora mismo|última oportunidad|last chance)\b/i;
@@ -73,7 +69,8 @@ function contrast(fg, bg) {
 }
 
 async function showSpanish(page) {
-  const button = page.getByRole("button", { name: "Español" });
+  const button = page.locator('[data-set-lang="es"]').first();
+  if ((await button.count()) === 0) return;
   if ((await button.getAttribute("aria-pressed")) !== "true") await button.click();
 }
 
@@ -82,9 +79,8 @@ test("el pie de riesgo y la etiqueta de imagen no están en ninguna vista", asyn
     const source = await page.request.get(path);
     const html = await source.text();
     for (const phrase of ABSENT) expect(html, `${path} ${phrase}`).not.toContain(phrase);
-    const keepsRisk = path === "/risks/" || path === "/legal/";
-    if (keepsRisk) expect(html, path).toContain("p class=\"mica\"");
-    else expect(html, path).not.toContain("p class=\"mica\"");
+    // ORVUPI no tiene token ni contrato: la web ya no lleva el aviso MiCA de comunicación publicitaria en ninguna página.
+    expect(html, path).not.toContain("p class=\"mica\"");
     await page.goto(path);
     await showSpanish(page);
     await expect(page.locator("footer p.mica"), path).toHaveCount(0);
@@ -128,14 +124,14 @@ test("la primera línea del aviso queda bajo el hero y encima de la herramienta"
       const tool = document.querySelector("form.consulta, #mision-app, .grupos");
       const items = [...document.querySelectorAll("main > *, .herramienta > *")].filter(flow);
       items.sort((a, b) => top(a) - top(b));
-      const next = items[items.indexOf(h1) + 1];
+      // En la web ORVUPI, Verify pone el aviso justo antes del título; Lab y Tablero, justo después.
+      // Lo que se exige es que vaya pegado al título y antes de la herramienta.
       return {
-        belowHero: top(aviso) > top(h1),
+        nextToHero: Math.abs(items.indexOf(aviso) - items.indexOf(h1)) === 1,
         aboveTool: top(aviso) < top(tool),
-        nextIsNotice: next === aviso,
       };
     });
-    expect(place, path).toEqual({ belowHero: true, aboveTool: true, nextIsNotice: true });
+    expect(place, path).toEqual({ nextToHero: true, aboveTool: true });
   }
 });
 
@@ -160,24 +156,25 @@ test("el plegable es details en el HTML y se abre con el teclado", async ({ page
     await expect(details).toHaveJSProperty("open", true);
     await expect(page.locator('.aviso[data-disclaimer="si"]')).toContainText("Solo lectura: no conecta carteras ni firma nada.");
     await expect(details).toContainText("Lo desconocido no es lo mismo que lo comprobado.");
-    await page.getByRole("button", { name: "English" }).click();
+    await page.locator('[data-set-lang="en"]').first().click();
     await expect(summary).toHaveAccessibleName(SUMMARY_EN);
   }
 });
 
-test("el aviso MiCA de Riesgos y de Legal no se pliega", async ({ page }) => {
-  for (const path of ["/risks/", "/legal/"]) {
+test("los avisos de Riesgos y de Legal se leen enteros, sin plegar", async ({ page }) => {
+  // Sin token ORVUPI no hay comunicación publicitaria de criptoactivos; lo que se comprueba es que el aviso de cada página no se pliega.
+  const KEY = {
+    "/risks/": "Una consulta no certifica seguridad ni aconseja una compra.",
+    "/legal/": "Cloudflare, como alojamiento, recibe la IP de cada visita.",
+  };
+  for (const [path, text] of Object.entries(KEY)) {
     await page.goto(path);
     await showSpanish(page);
-    const mica = page.locator("p.mica", { hasText: MICA_ES });
-    const count = await mica.count();
-    expect(count, path).toBeGreaterThanOrEqual(1);
-    for (let index = 0; index < count; index += 1) {
-      const block = mica.nth(index);
-      await expect(block, path).toBeVisible();
-      expect(await block.evaluate((node) => Boolean(node.closest("details"))), path).toBe(false);
-    }
+    const block = page.locator("main p", { hasText: text }).first();
+    await expect(block, path).toBeVisible();
+    expect(await block.evaluate((node) => Boolean(node.closest("details"))), path).toBe(false);
     await expect(page.locator("details.aviso-mas"), path).toHaveCount(0);
+    await expect(page.locator("p.mica"), path).toHaveCount(0);
   }
 });
 

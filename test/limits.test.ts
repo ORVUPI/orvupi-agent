@@ -5,7 +5,7 @@ import { describe, test } from "node:test";
 import { fingerprint } from "../src/fingerprint.js";
 import { EXPECTED_LIMITS, KILL_SWITCH_CANNOT, loadPolicy, policyPath } from "../src/limits.js";
 import { repoRoot } from "../src/paths.js";
-import { STUBX_MINT } from "../src/public-mint.js";
+import { PREVIOUS_MINT } from "../src/public-mint.js";
 import type { LimitId } from "../src/types.js";
 import { LIMIT_IDS } from "../src/types.js";
 import { agent, letters, writeState, DISENGAGED, ENGAGED } from "./helpers.js";
@@ -51,7 +51,7 @@ describe("limits", () => {
     const term = letters(98, 117, 121);
     const result = denied("log:append", {
       kind: "social-draft",
-      detail: `please ${term} STUBX`,
+      detail: `please ${term} ORVUPI`,
     });
     assert.equal(result.limitId, "no-solicit-funds");
   });
@@ -83,7 +83,7 @@ describe("limits", () => {
   test("the public mint may be quoted", () => {
     const result = agent().dispatch("log:append", {
       kind: "note",
-      detail: `Mint público ${STUBX_MINT}.`,
+      detail: `Mint público ${PREVIOUS_MINT}.`,
     });
     assert.equal(result.ok, true);
   });
@@ -189,7 +189,7 @@ describe("limits", () => {
   test("a clean local note is accepted", () => {
     const result = agent(writeState("killswitch.json", DISENGAGED)).dispatch("log:append", {
       kind: "social-draft",
-      detail: "STUBX es un prototipo. El agente no tiene claves.",
+      detail: "ORVUPI es un prototipo. El agente no tiene claves.",
     });
     assert.equal(result.ok, true);
     if (result.ok) {

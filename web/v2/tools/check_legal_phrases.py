@@ -21,6 +21,9 @@ REPO = ROOT.parents[1]
 CURRENT = REPO / "web/current"
 V2 = ROOT
 PAIRS = Path(__file__).with_name("equivalencias-seguridad.json")
+# Lista base congelada (sacada del tag pre-orvupi-2026-10-16 y adaptada a ORVUPI).
+# Sustituye a web/current cuando esa carpeta ya no existe.
+BASE = Path(__file__).with_name("frases-base.json")
 
 SOURCES = [
     "index.html",
@@ -389,7 +392,7 @@ def without_risk_page_source(source: str) -> str:
 
 
 # La lista de la guardia y el filtro de Studio comparan estas frases; no las publican.
-SKIP_FILES = {"tools/check_legal_phrases.py", "studio/lib/filter.mjs"}
+SKIP_FILES = {"tools/check_legal_phrases.py", "tools/frases-base.json", "studio/lib/filter.mjs"}
 TEXT_SUFFIXES = {".html", ".js", ".mjs", ".json", ".md", ".css", ".txt", ".xml", ".py", ".webmanifest"}
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp"}
 
@@ -438,9 +441,13 @@ def _scan_root(root: Path, prefix: str) -> list[str]:
         binary = suffix in IMAGE_SUFFIXES
         if suffix not in TEXT_SUFFIXES and not binary:
             continue
-        raw = path.read_text(encoding="utf-8", errors="replace")
-        if rel == "tools/build_site.py":
-            raw = without_risk_page_source(raw)
+        if binary and path.stat().st_size > 512_000:
+            # Imágenes grandes (álbum): los metadatos de texto van fuera de los datos de
+            # imagen, al principio o al final del archivo. Leerlas enteras como texto tarda minutos.
+            data = path.read_bytes()
+            raw = (data[:131_072] + b"\n" + data[-131_072:]).decode("utf-8", errors="replace")
+        else:
+            raw = path.read_text(encoding="utf-8", errors="replace")
         for mark in phrase_hits(rel, raw, binary=binary):
             hits.append(f"{rel}: {mark}")
     return hits
@@ -449,7 +456,7 @@ def _scan_root(root: Path, prefix: str) -> list[str]:
 def forbidden_outside_risk_pages() -> list[str]:
     """Falla si el pie o la etiqueta salen fuera de /risks y /legal, o «no oficial» sale en Studio.
 
-    Revisa páginas, herramientas, imágenes, build_site.py y las plantillas (content y site-drafts).
+    Revisa páginas, herramientas, imágenes, las plantillas (content y site-drafts).
     """
     return _scan_root(V2, "") + _scan_root(REPO / "site-drafts", "site-drafts")
 
@@ -505,8 +512,6 @@ def self_check() -> None:
         raise SystemExit("no es oficial con Cf no es la marca de Studio")
     if phrase_hits("studio/reglas/index.html", "no oficiales"):
         raise SystemExit("no oficiales no es la marca de Studio")
-    if "tools/build_site.py" in SKIP_FILES:
-        raise SystemExit("build_site.py tiene que entrar en la guardia")
     if not phrase_hits("index.html", "Que no aparezca no significa que no haya riesgo."):
         raise SystemExit("la guardia no vio no haya riesgo")
     if not phrase_hits("index.html", "A signal not showing does not mean there is no risk."):
@@ -556,8 +561,49 @@ def retired_sentences() -> set[str]:
     return {normalize(footer), normalize(illustration)}
 
 
+def page_text(page: str) -> str:
+    raw = (V2 / page / "index.html").read_text(encoding="utf-8")
+    return normalize(html.unescape(re.sub(r"<[^>]+>", "", raw)))
+
+
+def load_base() -> list[dict[str, str]]:
+    if not BASE.exists():
+        return []
+    data = json.loads(BASE.read_text(encoding="utf-8"))
+    return [item for item in data.get("frases", []) if item.get("frase")]
+
+
+def base_missing(base: list[dict[str, str]], text_of=page_text) -> list[str]:
+    """Cada frase de la lista base tiene que estar, tal cual, en su página de web/v2."""
+    pages: dict[str, str] = {}
+    missing: list[str] = []
+    for item in base:
+        page = item["pagina"]
+        if page not in pages:
+            pages[page] = text_of(page)
+        if normalize(item["frase"]) not in pages[page]:
+            missing.append(f"{page} ({item.get('lang', '?')}): {item['frase']}")
+    return missing
+
+
+def base_self_check() -> None:
+    base = load_base()
+    if not CURRENT.exists() and len(base) < 40:
+        raise SystemExit("sin web/current y sin lista base de frases (frases-base.json): la guardia no tendría nada que comparar")
+    for need in ("Nadie de ORVUPI te escribirá por mensaje privado.", "orvupi.hq@gmail.com", "t.me/orvupi"):
+        if not any(need in item["frase"] for item in base):
+            raise SystemExit(f"la lista base no tiene: {need}")
+    if not any(item["pagina"] == "risks" and "consejo de inversión" in item["frase"] for item in base):
+        raise SystemExit("la lista base no tiene el aviso de /risks")
+    # La guardia tiene que fallar si falta una frase.
+    sample = base[:3]
+    if base_missing(sample, lambda page: "") != [f"{i['pagina']} ({i.get('lang', '?')}): {i['frase']}" for i in sample]:
+        raise SystemExit("la guardia no ve una frase que falta")
+
+
 def main() -> int:
     self_check()
+    base_self_check()
     pairs = json.loads(PAIRS.read_text(encoding="utf-8")) if PAIRS.exists() else []
     mapped = {normalize(item["current"]): item["v2"] for item in pairs}
     corpus = v2_corpus()
@@ -566,7 +612,12 @@ def main() -> int:
     missing: list[str] = []
     present: list[str] = []
     seen: set[str] = set()
-    for name in SOURCES:
+    # web/current era la web anterior (retirada con el paso a ORVUPI). Sin ella,
+    # solo quedan las comprobaciones sobre web/v2: frases retiradas y avisos fuera de /risks.
+    legacy = CURRENT.exists()
+    base = [] if legacy else load_base()
+    base_lost = base_missing(base)
+    for name in SOURCES if legacy else []:
         html = (CURRENT / name).read_text(encoding="utf-8")
         for sentence in sentences_from(html):
             key = normalize(sentence)
@@ -584,7 +635,8 @@ def main() -> int:
                 continue
             missing.append(sentence)
     repeat_parser = HowToExtractor()
-    repeat_parser.feed((CURRENT / "pruebas.html").read_text(encoding="utf-8"))
+    if legacy:
+        repeat_parser.feed((CURRENT / "pruebas.html").read_text(encoding="utf-8"))
     plain = plain_corpus()
 
     def how_covered(block: str) -> bool:
@@ -596,10 +648,14 @@ def main() -> int:
         return normalize(rewritten) in plain
 
     how_missing = [block for block in repeat_parser.blocks if not how_covered(block)]
-    if not repeat_parser.blocks:
+    if legacy and not repeat_parser.blocks:
         how_missing = ["pruebas.html no tiene secciones «Cómo repetirlo tú»"]
     forbidden = forbidden_outside_risk_pages()
-    if present or missing or how_missing or forbidden:
+    if present or missing or how_missing or forbidden or base_lost:
+        if base_lost:
+            sys.stderr.write(f"{len(base_lost)} frases de la lista base sin poner en web/v2:\n")
+            for line in base_lost:
+                sys.stderr.write(f"- {line}\n")
         if present:
             sys.stderr.write(f"{len(present)} frases retiradas siguen en web/v2:\n")
             for sentence in present:
@@ -617,7 +673,10 @@ def main() -> int:
             for hit in forbidden:
                 sys.stderr.write(f"- {hit}\n")
         return 1
-    print(f"frases de seguridad o legal cubiertas: {len(seen)}; bloques de repetición: {len(repeat_parser.blocks)}")
+    if legacy:
+        print(f"frases de seguridad o legal cubiertas: {len(seen)}; bloques de repetición: {len(repeat_parser.blocks)}")
+    else:
+        print(f"frases de la lista base cubiertas: {len(base)} (los bloques «Cómo repetirlo tú» eran del token anterior)")
     return 0
 
 

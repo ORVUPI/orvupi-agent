@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import { chromium, devices, webkit } from "playwright-core";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../web/v2");
-const shots = process.env.TABLERO_SHOTS || "/opt/cursor/artifacts/screenshots";
+const shots = process.env.TABLERO_SHOTS || "test-results/artifacts/screenshots";
 const FOOTER_ES = "Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión.";
 const FOOTER_EN = "High-risk crypto · You could lose everything · Not investment advice.";
 

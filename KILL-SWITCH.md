@@ -48,7 +48,7 @@ Qué comprueba, en este orden:
 
 Dónde ver el resultado: pestaña **Actions** del repositorio, workflow `killswitch-drill`:
 
-`https://github.com/stubxai/stubx-agent/actions/workflows/killswitch-drill.yml`
+`https://github.com/ORVUPI/orvupi-agent/actions/workflows/killswitch-drill.yml`
 
 Cada ejecución muestra un resumen con la fecha, el commit y si cada paso pasa o falla. El informe (`drill-report.json` y `drill-report.md`, con sus sha256) queda como artefacto `killswitch-drill-report` durante 90 días.
 
@@ -60,9 +60,9 @@ La casilla «Kill-switch» del PPM **no** se marca por tener este workflow. Solo
 
 Marcada el 05-10-2026, después de revisar estos simulacros públicos seguidos en verde y con el OK legal:
 
-- 26-09-2026 (manual): https://github.com/stubxai/stubx-agent/actions/runs/36264436020
-- 28-09-2026 (programado): https://github.com/stubxai/stubx-agent/actions/runs/36397668286
-- 05-10-2026 (programado): https://github.com/stubxai/stubx-agent/actions/runs/37284177840
+- 26-09-2026 (manual): https://github.com/ORVUPI/orvupi-agent/actions/runs/36264436020
+- 28-09-2026 (programado): https://github.com/ORVUPI/orvupi-agent/actions/runs/36397668286
+- 05-10-2026 (programado): https://github.com/ORVUPI/orvupi-agent/actions/runs/37284177840
 
 En los tres, con el interruptor activado o su archivo roto de 5 formas, se rechazan todas las acciones del agente. Marcada no significa auditada: un simulacro en verde solo demuestra lo que ese simulacro comprueba, en esa versión del código. Solo para el agente: no pausa transferencias ni congela tokens o cuentas. Si un simulacro sale en rojo, la casilla se desmarca y se explica en la web y aquí. `npm run ppm:print` lo refleja (`killSwitch.ppmMarked: true` con los enlaces) y la CI comprueba que están marcadas esta casilla, la de límites y la de logs (wallet sigue sin marcar).
 

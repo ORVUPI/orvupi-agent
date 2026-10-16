@@ -11,7 +11,7 @@ import {
   encodeMintAccount,
 } from "../../pares/chain-read.mjs";
 
-const shots = "/opt/cursor/artifacts/screenshots";
+const shots = "test-results/artifacts/screenshots";
 const FOOTER_ES = "Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión.";
 const FOOTER_EN = "High-risk crypto · You could lose everything · Not investment advice.";
 const MINT = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
@@ -80,11 +80,11 @@ test("el informe lee un paso y cambia de idioma", async ({ page }, info) => {
     seen.push(request.url());
   });
   await page.goto("/");
-  await page.getByRole("link", { name: "Abrir la curva" }).click();
+  await page.locator('main a.or-button[href="/pares/"]').click();
   await expect(page).toHaveURL(/\/pares\/?$/);
   await expect(page.locator("h1")).toContainText("Lectura de la curva");
   await expect(page.locator("main")).toContainText(
-    "Lectura de datos públicos. No es una comparación de calidad, ni una recomendación, ni un aval. STUBX no tiene relación con estos tokens salvo la CA oficial.",
+    "Lectura de datos públicos. No es una comparación de calidad, ni una recomendación, ni un aval. ORVUPI no tiene relación con estos tokens: todavía no tiene contrato.",
   );
   await expect(page.locator("footer")).not.toContainText(FOOTER_ES);
   await expect(page.locator("#exportar")).toBeHidden();
@@ -100,7 +100,7 @@ test("el informe lee un paso y cambia de idioma", async ({ page }, info) => {
   await expect(page.locator("#resultado")).toContainText("Curva: abierta");
   await expect(page.locator("#resultado")).toContainText("No se inventa ningún dato.");
   await expect(page.locator("#resultado")).toContainText("95");
-  await expect(page.locator("#resultado")).toContainText("Identidad del proyecto: esta dirección coincide con la CA publicada de STUBX.");
+  await expect(page.locator("#resultado")).toContainText("Identidad del proyecto, aparte de este análisis: ORVUPI no revisa ni respalda este token.");
   await expect(page.locator("#resultado")).toContainText("Un emparejamiento no es una colaboración ni un respaldo.");
   await expect(page.locator("#resultado")).toContainText(NAME);
   await expect(page.locator("#resultado")).toContainText("no se abre");
@@ -120,11 +120,11 @@ test("el informe lee un paso y cambia de idioma", async ({ page }, info) => {
   expect(downloads.some((name) => name.endsWith(".json"))).toBe(true);
   await page.screenshot({ path: `${shots}/u09-pares-${project}-es.png`, fullPage: project === "desktop" });
 
-  await page.getByRole("button", { name: "English" }).click();
+  await page.locator('[data-set-lang="en"]').first().click();
   await expect(page.locator("html")).toHaveAttribute("data-lang", "en");
   await expect(page.locator("h1")).toContainText("Curve reading");
   await expect(page.locator("main")).toContainText(
-    "Public data reading. It is not a quality comparison, a recommendation, or an endorsement. STUBX has no relationship with these tokens except the official CA.",
+    "Public data reading. It is not a quality comparison, a recommendation, or an endorsement. ORVUPI has no relationship with these tokens: it does not have a contract yet.",
   );
   await expect(page.locator("footer")).not.toContainText(FOOTER_EN);
   await expect(page.locator("#resultado")).toContainText("Base currency: SOL");

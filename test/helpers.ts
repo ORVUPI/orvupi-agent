@@ -24,7 +24,7 @@ export const ENGAGED = {
 };
 
 export function writeState(name: string, contents: string | unknown): string {
-  const dir = mkdtempSync(path.join(tmpdir(), "stubx-"));
+  const dir = mkdtempSync(path.join(tmpdir(), "orvupi-"));
   const file = path.join(dir, name);
   const raw = typeof contents === "string" ? contents : JSON.stringify(contents);
   writeFileSync(file, raw);

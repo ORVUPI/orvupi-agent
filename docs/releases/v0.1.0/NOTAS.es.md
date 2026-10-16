@@ -1,6 +1,6 @@
-# STUBX 0.1.0
+# ORVUPI 0.1.0
 
-Fecha de estas notas: 2026-10-10. El número del paquete `@stubx/agents` es `0.1.0`. El tag `v0.1.0` está descrito en [TAG.md](TAG.md) y no está creado.
+Fecha de estas notas: 2026-10-10. El número del paquete `@orvupi/agents` es `0.1.0`. El tag `v0.1.0` está descrito en [TAG.md](TAG.md) y no está creado.
 
 Esto no es una auditoría ni un consejo de inversión. Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión.
 
@@ -16,7 +16,7 @@ Cuatro piezas, todas de lectura o de aprendizaje. Ninguna pide una cartera, una 
 ## Verify
 
 - Carpeta `verify/`. El comando lee datos públicos si alguien lo ejecuta a propósito. Métodos de lectura en lista cerrada. Si un dato no llega, la ficha lo deja en no disponible: no inventa un cero ni una autoridad revocada.
-- Ejemplos fechados en `verify/examples/2026-10-08/` y `verify/examples/2026-10-09/`. La ficha oficial del mint de STUBX está releída el 2026-10-09.
+- Ejemplos fechados en `verify/examples/2026-10-08/` y `verify/examples/2026-10-09/`. La ficha del mint del proyecto anterior está releída el 2026-10-09.
 - En `web/v2/verify/` se pega una dirección. Verify universal, desplegado (merge `2434636`), la lee en el navegador, solo lectura, si es un mint SPL o Token-2022, y también la compara con las fichas fechadas. Si la dirección no es válida, la página lo dice. La lista de fichas no es un censo.
 
 Una ficha no dice si un token es bueno, seguro o una buena compra.

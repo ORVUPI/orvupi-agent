@@ -55,7 +55,7 @@
     var fromFragment = fragmentAddress();
     var asked = fragmentNetwork();
     if (!input.value && fromFragment) input.value = fromFragment;
-    if (asked && EVM.test(fromFragment)) window.stubxRedPedida = asked;
+    if (asked && EVM.test(fromFragment)) window.orvupiRedPedida = asked;
     scrubAddress();
     document.querySelectorAll('a[href^="/aprender/"]').forEach(function (link) {
       link.addEventListener("click", function () {

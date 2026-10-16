@@ -20,7 +20,7 @@ import { DISCLAIMER, type CanonicalToken, type Finding } from "../types.js";
 import { labFixtures, type AccountFixture, type LabFixture } from "./layouts.js";
 
 const root = repoRootFrom(import.meta.url);
-const registry = (JSON.parse(readFileSync(path.join(root, "verify", "registry", "canonical.json"), "utf8")) as { tokens: CanonicalToken[] }).tokens;
+const registry = (JSON.parse(readFileSync(path.join(root, "verify", "test", "fixtures", "registry-demo.json"), "utf8")) as { tokens: CanonicalToken[] }).tokens;
 const FIXED = "2026-10-08T07:00:00.000Z";
 
 function loadFixture(id: string): LabFixture {
@@ -133,7 +133,7 @@ function authorityState(value: unknown): string | null {
   return String((value as { state: unknown }).state);
 }
 
-describe("STUBX Verify offline", () => {
+describe("STUB Verify offline", () => {
   test("saved fixtures match the lab layout and cover the matrix", () => {
     const fixtures = labFixtures();
     assert.ok(fixtures.length >= 10);
@@ -172,13 +172,13 @@ describe("STUBX Verify offline", () => {
     assert.equal(report.identity.uri.value, "https://example.com/meta.json");
   });
 
-  test("a name that includes STUBX and is not the curated mint is flagged", async () => {
+  test("a name that includes STUB and is not the curated mint is flagged", async () => {
     const { report } = await runSaved("name-impersonation");
     assert.equal(report.authenticity.inRegistry.value, false);
     assert.equal(finding(report, "authenticity").level, "riesgo");
     assert.match(finding(report, "authenticity").reason, /Posible suplantación/);
     const signals = report.authenticity.signals.value;
-    assert.ok(Array.isArray(signals) && signals.some((item) => String(item).includes("STUBX")));
+    assert.ok(Array.isArray(signals) && signals.some((item) => String(item).includes("STUB")));
   });
 
   test("an image CID that matches the curated token is flagged", async () => {
@@ -197,7 +197,7 @@ describe("STUBX Verify offline", () => {
     assert.equal(markdown.includes("<script>"), false);
     assert.equal(html.includes("&lt;script&gt;"), true);
     assert.equal(html.includes(escapeHtml(DISCLAIMER)), true);
-    assert.equal(markdown.startsWith("# Ficha STUBX Verify"), true);
+    assert.equal(markdown.startsWith("# Ficha ORVUPI Verify"), true);
   });
 
   test("an unknown extension is listed as unsupported and not as absent", async () => {
@@ -389,7 +389,7 @@ describe("STUBX Verify offline", () => {
         const href = String(url);
         seen.push(href);
         if (hostnameOf(href) === "gateway.pinata.cloud") {
-          return new Response(JSON.stringify({ name: "STUBX" }), { status: 200 });
+          return new Response(JSON.stringify({ name: "STUB" }), { status: 200 });
         }
         return new Response("limited", { status: 429 });
       },

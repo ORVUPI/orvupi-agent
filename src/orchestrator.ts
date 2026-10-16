@@ -187,7 +187,7 @@ export class Orchestrator {
           ok: true,
           action,
           output: {
-            package: "@stubx/agents",
+            package: "@orvupi/agents",
             allowedActions: [
               "ppm:print",
               "ppm:check",

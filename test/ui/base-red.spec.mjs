@@ -158,7 +158,7 @@ async function shotNotice(page, name) {
     const bottom = Math.min(window.innerHeight, Math.max(buttonBox.bottom, noteBox.bottom) + 12);
     return { x: left, y: top, width: Math.max(1, right - left), height: Math.max(1, bottom - top) };
   });
-  await page.screenshot({ path: `/opt/cursor/artifacts/${name}.png`, clip });
+  await page.screenshot({ path: `test-results/artifacts/${name}.png`, clip });
 }
 
 async function chooseBase(page) {
@@ -194,12 +194,12 @@ test("Verify en Base lee USDC, un token sin owner, un proxy, una cuenta, una dir
   const shot = testInfo.project.name === "mobile" ? "mobile" : testInfo.project.name === "desktop" ? "desktop" : "";
   if (shot) {
     await shotNotice(page, `aviso-base-es-${shot}`);
-    await page.screenshot({ path: `/opt/cursor/artifacts/verify-base-es-${shot}.png`, fullPage: true });
+    await page.screenshot({ path: `test-results/artifacts/verify-base-es-${shot}.png`, fullPage: true });
     await page.locator("[data-set-lang='en']").click();
     await expectNoticeBesideButton(page, "en");
     await expect(page.locator("#resultado")).toContainText(/The contract wrote/);
     await shotNotice(page, `aviso-base-en-${shot}`);
-    await page.screenshot({ path: `/opt/cursor/artifacts/verify-base-en-${shot}.png`, fullPage: true });
+    await page.screenshot({ path: `test-results/artifacts/verify-base-en-${shot}.png`, fullPage: true });
     await page.locator("[data-set-lang='es']").click();
     await expectNoticeBesideButton(page, "es");
   } else {
@@ -212,24 +212,24 @@ test("Verify en Base lee USDC, un token sin owner, un proxy, una cuenta, una dir
   await expect(page.locator(".datos-mercado")).toContainText(/WETH/);
   await expect(page.locator(".datos-mercado")).not.toContainText(/priceUsd|precio por token/i);
 
-  await page.evaluate(() => window.stubxResetEvm && window.stubxResetEvm());
+  await page.evaluate(() => window.orvupiResetEvm && window.orvupiResetEvm());
   await page.locator("#direccion-token").fill(NO_OWNER);
   await page.locator("#consulta").locator("button[type=submit]").click();
   await expect(page.locator("#resultado")).toContainText(/Dice llamarse «Foo»|It says it is called «Foo»/, { timeout: 20000 });
   await expect(page.locator("#resultado")).toContainText(/ausente comprobado|confirmed absent/);
 
-  await page.evaluate(() => window.stubxResetEvm && window.stubxResetEvm());
+  await page.evaluate(() => window.orvupiResetEvm && window.orvupiResetEvm());
   await page.locator("#direccion-token").fill(PROXY);
   await page.locator("#consulta").locator("button[type=submit]").click();
   await expect(page.locator("#resultado")).toContainText(/EIP-1967/, { timeout: 20000 });
   await expect(page.locator("#resultado")).toContainText(/0x4444444444444444444444444444444444444444/i);
 
-  await page.evaluate(() => window.stubxResetEvm && window.stubxResetEvm());
+  await page.evaluate(() => window.orvupiResetEvm && window.orvupiResetEvm());
   await page.locator("#direccion-token").fill(EOA);
   await page.locator("#consulta").locator("button[type=submit]").click();
   await expect(page.locator("#resultado")).toContainText(/EOA/, { timeout: 20000 });
 
-  await page.evaluate(() => window.stubxResetEvm && window.stubxResetEvm());
+  await page.evaluate(() => window.orvupiResetEvm && window.orvupiResetEvm());
   await page.locator("#direccion-token").fill(DOWN);
   await page.locator("#consulta").locator("button[type=submit]").click();
   await expect(page.locator("#resultado")).toContainText(/consulta fallida|failed query/, { timeout: 20000 });
@@ -321,7 +321,7 @@ test("el cuaderno guarda la red y la dirección de Base", async ({ page }) => {
   await expect(page.locator("#lista-consultas")).toContainText(USDC.toLowerCase(), { timeout: 20000 });
   const stored = await page.evaluate(async () => {
     const db = await new Promise((resolve, reject) => {
-      const request = indexedDB.open("stubx-cuaderno");
+      const request = indexedDB.open("orvupi-cuaderno");
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
