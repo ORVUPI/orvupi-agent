@@ -457,7 +457,7 @@ test("USDC y ERYyy dejan un PNG en español y en inglés", async ({ page }, test
     for (const phrase of BANNED_IN_FILE) expect(text.includes(phrase), phrase).toBe(false);
     expect(result.title).toContain("·");
     expect(result.date).toMatch(/\d{2}:\d{2}:\d{2}/);
-    expect(result.origin).toContain("stubxai.com");
+    expect(result.origin).toContain("orvupi.com");
     expect(text).toContain(shot.lang === "en" ? "Limits" : "Límites");
     expect(result.falta.includes("Curva de Pump.fun") || result.falta.includes("Pump.fun curve")).toBe(false);
     if (!result.attentionLead) expect(result.attentionEmpty.length).toBeGreaterThan(0);
