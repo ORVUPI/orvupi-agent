@@ -33,3 +33,5 @@ git push origin v0.1.0
 ```
 
 No hay un workflow que cree este tag. El script [scripts/prepare-v0.1.0-tag.mjs](../../../scripts/prepare-v0.1.0-tag.mjs) sigue negándose a crear otro, también si se le pasa `--create`. El tag que ya existe no se vuelve a crear desde el repositorio.
+
+Nota (16-10-2026): este archivo usa ya el nombre ORVUPI. El tag `v0.1.0` publicado en GitHub conserva el mensaje original, con el nombre anterior del proyecto.

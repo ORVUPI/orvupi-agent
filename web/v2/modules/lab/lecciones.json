@@ -171,8 +171,8 @@
         "en": "Cards from 2026-10-16. The same name does not mean the same supply. And when the account sample does not arrive, the distribution is unknown: it is not a zero."
       },
       "closing": {
-        "es": "Has separado el suministro de un token de su nombre, y una muestra que no llegó de una concentración cero. No es un censo ni dice qué hacer con el token.",
-        "en": "You separated a token's supply from its name, and a sample that did not arrive from zero concentration. It is not a census and it does not say what to do with the token."
+        "es": "Has separado el suministro de un token de su nombre, y una muestra que no llegó de una concentración cero. No es un certificado ni un censo, y no dice qué hacer con el token.",
+        "en": "You separated a token's supply from its name, and a sample that did not arrive from zero concentration. It is not a certificate or a census, and it does not say what to do with the token."
       },
       "steps": [
         {

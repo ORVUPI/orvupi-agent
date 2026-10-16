@@ -593,7 +593,7 @@ describe("resumen de la lectura", () => {
     assert.equal(identity?.lead.es, "Dice llamarse «ORVUPI» (texto elegido por quien creó el token).");
     const attention = block(summary, "atencion").items;
     assert.equal(attention[0]?.lead.es, "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.");
-    assert.match(attention[0]?.detail?.es ?? "", /orvupi\.com/);
+    assert.match(attention[0]?.detail?.es ?? "", /stubxai\.com/);
     const dated = attention.find((item) => item.title.es === "Comprobación anterior");
     assert.equal(dated?.lead.es, "Es la ficha del 2026-10-09, no un dato de esta lectura.");
     assert.equal(dated?.lead.en, "It is the 2026-10-09 card, not a fact from this reading.");
@@ -619,7 +619,7 @@ describe("resumen de la lectura", () => {
     const summary = summaryFromCard(cloneCard("ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump", "ORVUPI", "ORVUPI"));
     const attention = block(summary, "atencion").items;
     assert.equal(attention[0]?.lead.es, "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.");
-    assert.match(attention[0]?.detail?.es ?? "", /orvupi\.com/);
+    assert.match(attention[0]?.detail?.es ?? "", /stubxai\.com/);
     assert.equal(attention.some((item) => item.title.es === "Permiso de emisión"), true);
     const supply = block(summary, "comprobado").items.find((item) => item.title.es === "Suministro total");
     assert.match(supply?.lead.es ?? "", /^Hay 1\.000\.000\.000 tokens/);

@@ -244,7 +244,7 @@ describe("web ORVUPI", () => {
     const data = JSON.parse(bundle.slice(bundle.indexOf("{", bundle.indexOf("const ORVUPI_VERIFY")), bundle.indexOf(";\n", bundle.indexOf("const ORVUPI_VERIFY")))) as { registry: unknown[]; evm: unknown[]; cards: { mint: string }[] };
     assert.deepEqual(data.registry, []);
     assert.deepEqual(data.evm, []);
-    assert.deepEqual(data.cards.map((card) => card.mint), [USDC]);
+    assert.deepEqual(data.cards.map((card) => card.mint), ["Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"]);
   });
 
   test("los enlaces locales llevan a un archivo o a una redirección", () => {

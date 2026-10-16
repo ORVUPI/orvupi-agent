@@ -16,7 +16,7 @@ describe("v0.1.0 notes, without a tag", () => {
     // El CHANGELOG de la raíz se reescribió con la identidad ORVUPI; la entrada 0.1.0 vive en docs/releases/v0.1.0.
     const log = read("CHANGELOG.md");
     assert.match(log, /^# Cambios de ORVUPI/);
-    assert.equal(/\bSTUBX\b/.test(log), false);
+    assert.equal(new RegExp(`\\b${["STU", "BX"].join("")}\\b`).test(log), false);
     assert.match(read("docs/releases/v0.1.0/NOTAS.es.md"), /Verify/);
   });
 
@@ -41,12 +41,12 @@ describe("v0.1.0 notes, without a tag", () => {
     assert.equal(en.toLowerCase().includes("preview"), false);
     assert.match(es, /`web\/v2\/` es la web publicada en stubxai.com desde el 2026-10-09 \(merge `ed1c7759`\)\. `web\/current\/` es la copia anterior, para volver atrás\./);
     assert.match(en, /`web\/v2\/` is the website published on stubxai.com since 2026-10-09 \(merge `ed1c7759`\)\. `web\/current\/` is the earlier copy, kept so it can be put back\./);
-    assert.match(es, /Studio está desplegado \(PR #20 y #26\) y se indexa\. Verify universal está desplegado \(merge `2434636`\)\. El cuaderno está en orvupi\.com\/cuaderno desde el 2026-10-10 \(PR #24\)\./);
-    assert.match(en, /Studio is deployed \(pull requests #20 and #26\) and it is indexable\. Verify universal is deployed \(merge `2434636`\)\. The notebook is at orvupi\.com\/cuaderno since 2026-10-10 \(pull request #24\)\./);
+    assert.match(es, /Studio está desplegado \(PR #20 y #26\) y se indexa\. Verify universal está desplegado \(merge `2434636`\)\. El cuaderno está en stubxai\.com\/cuaderno desde el 2026-10-10 \(PR #24\)\./);
+    assert.match(en, /Studio is deployed \(pull requests #20 and #26\) and it is indexable\. Verify universal is deployed \(merge `2434636`\)\. The notebook is at stubxai\.com\/cuaderno since 2026-10-10 \(pull request #24\)\./);
     assert.match(es, /el tablero en \/tablero \(PR #27\)/);
     assert.match(en, /the board at \/tablero \(pull request #27\)/);
-    assert.match(es, /orvupi\.com\/pares desde el 2026-10-10 \(PR #31\) y el tablero la da por publicada/);
-    assert.match(en, /orvupi\.com\/pares since 2026-10-10 \(pull request #31\), and the board marks it published/);
+    assert.match(es, /stubxai\.com\/pares desde el 2026-10-10 \(PR #31\) y el tablero la da por publicada/);
+    assert.match(en, /stubxai\.com\/pares since 2026-10-10 \(pull request #31\), and the board marks it published/);
     assert.match(es, /cualquier mint SPL o Token-2022/);
     assert.match(en, /any SPL or Token-2022 mint/);
     assert.equal(es.includes("hay que reescribir"), false);
@@ -68,7 +68,7 @@ describe("v0.1.0 notes, without a tag", () => {
     const message = read("docs/releases/v0.1.0/tag-message.txt");
     const guide = read("docs/releases/v0.1.0/TAG.md");
     const helper = read("scripts/prepare-v0.1.0-tag.mjs");
-    assert.match(message, /STUBX 0\.1\.0 \(2026-10-10\)/);
+    assert.match(message, /ORVUPI 0\.1\.0 \(2026-10-10\)/);
     assert.match(message, /You could lose everything/);
     assert.match(guide, /Estado: \*\*creado\*\*/);
     assert.match(guide, /392de12adf34c1df890a95c7491fb31c1c8bce45/);

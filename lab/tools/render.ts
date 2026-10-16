@@ -276,7 +276,7 @@ ${input.publish ? "" : `<p class="draft">${both(DRAFT_LINE)}</p>\n`}
 <div class="aviso" data-disclaimer="si">
 <p>${both(READONLY_LINE)}</p>
 <p>${both(input.current === "lab" ? { es: UNKNOWN_LINE.es, en: "Unknown is not the same as checked." } : UNKNOWN_LINE)}</p>
-<p>${both({ es: "Fichas del 2026-10-08 y, si las hay, ejemplos posteriores. No se actualizan solas. La hora de cada ficha va en Europe/Madrid.", en: "Cards from 2026-10-08 and, where present, later examples. They do not update themselves. Each card time is shown in Europe/Madrid." })}</p>
+<p>${both({ es: "Fichas del 2026-10-16. No se actualizan solas. La hora de cada ficha va en Europe/Madrid.", en: "Cards from 2026-10-16. They do not update themselves. Each card time is shown in Europe/Madrid." })}</p>
 </div>
 <p id="aviso-red" class="nota" hidden>${both(OFFLINE_LINE)}</p>
 <p id="aviso-version" class="nota" hidden>${both({ es: "Hay otra copia de estas páginas. Recargar no borra el progreso local.", en: "Another copy of these pages is available. Reloading does not delete local progress." })} <button type="button" id="recargar">${both({ es: "Recargar", en: "Reload" })}</button></p>
@@ -383,7 +383,7 @@ function renderLab(repoRoot: string, cards: readonly CardSummary[], mission: Mis
     .join("");
   const lessonHtml = lessons.map((lesson) => renderLesson(lesson, byMint, glossaryById)).join("");
   const main = `<h1>${both({ es: "Lecciones cortas con fichas reales", en: "Short lessons with real cards" })}</h1>
-<p class="lede">${both({ es: "Tres lecciones para empezar, con fichas de Verify del 2026-10-09, y la misión de cinco pasos. Si no aciertas, puedes volver a intentar. El progreso se queda en este navegador. No dice qué hacer con un token.", en: "Three lessons to start with, using Verify cards from 2026-10-09, and the five-step mission. If you miss, you can try again. Progress stays in this browser. It does not say what to do with a token." })}</p>
+<p class="lede">${both({ es: "Tres lecciones para empezar, con fichas de Verify del 2026-10-16, y la misión de cinco pasos. Si no aciertas, puedes volver a intentar. El progreso se queda en este navegador. No dice qué hacer con un token.", en: "Three lessons to start with, using Verify cards from 2026-10-16, and the five-step mission. If you miss, you can try again. Progress stays in this browser. It does not say what to do with a token." })}</p>
 <section class="lecciones" id="lecciones"><h2>${both({ es: "Para empezar", en: "Start here" })}</h2><nav class="lecciones-indice" aria-label="${escapeHtml("Lecciones / Lessons")}">${index}<a href="#mision-titulo">${both({ es: "Misión de cinco pasos", en: "Five-step mission" })}</a></nav>${lessonHtml}</section>
 ${howDetails(HOW_LAB)}
 <h2 id="mision-titulo" class="mision-titulo">${both(mission.title)}</h2>
@@ -394,7 +394,7 @@ ${howDetails(HOW_LAB)}
 <dialog id="ayuda" aria-labelledby="ayuda-titulo"><h2 id="ayuda-titulo"></h2><div id="ayuda-cuerpo"></div><form method="dialog"><button type="submit" id="ayuda-cerrar">${both({ es: "Cerrar", en: "Close" })}</button></form></dialog>`;
   return shell({
     title: "ORVUPI Lab · lecciones · borrador",
-    description: "Tres lecciones cortas con fichas de Verify del 2026-10-09, y una misión para distinguir un mint del registro de un clon.",
+    description: "Tres lecciones cortas con fichas de Verify del 2026-10-16, y una misión para distinguir un mint del registro de un clon.",
     prefix: "../",
     current: "lab",
     main,
@@ -464,7 +464,7 @@ ${privacyNotice()}
 </details>`;
   return shell({
     title: "ORVUPI Verify · borrador",
-    description: "Comprueba una dirección con las fichas públicas de ORVUPI Verify del 2026-10-08.",
+    description: "Comprueba una dirección con las fichas públicas de ORVUPI Verify del 2026-10-16.",
     prefix: "../",
     current: "verify",
     main,

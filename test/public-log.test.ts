@@ -282,7 +282,7 @@ describe("public append-only log", () => {
     assert.match(ks, /\*\*no se ejecuta ninguna acción\*\* del agente\. El log diario solo anota/);
     assert.match(ks, /Exception: the daily public-log entry/);
     assert.match(logs, /como excepción declarada en \[KILL-SWITCH\.md\]/);
-    assert.match(logs, /no tienen relación con STUBX ni con el token/i);
+    assert.match(logs, /no tienen relación con ORVUPI ni con el token/i);
   });
 
   test("appendDailyEntry refuses to extend a tampered log", () => {

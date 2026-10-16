@@ -1,4 +1,4 @@
-STUBX 0.1.0 (2026-10-10)
+ORVUPI 0.1.0 (2026-10-10)
 
 Paquete @orvupi/agents 0.1.0. Incluye el esqueleto del agente, Verify de solo lectura, la misión 1 de Lab, la web v2 bilingüe y la indexación (robots.txt y sitemap). No despliega la web y no conecta carteras. La v2 ya está desplegada desde el 2026-10-09.
 

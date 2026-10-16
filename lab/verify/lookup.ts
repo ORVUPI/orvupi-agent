@@ -275,7 +275,7 @@ function rowsFor(card: CardSummary): LookupRow[] {
     { label: pair("El nombre puede cambiar", "The name can change"), value: metadata },
     { label: pair("Señal de copia", "Copy signal"), value: copySignal },
     { label: pair("Avance de la curva", "Curve progress"), value: progressValue },
-    { label: pair("Fecha de la ficha", "Card date"), value: pair(card.createdAt ?? "2026-10-08", card.createdAt ?? "2026-10-08") },
+    { label: pair("Fecha de la ficha", "Card date"), value: pair(card.createdAt ?? "2026-10-16", card.createdAt ?? "2026-10-16") },
   ];
 }
 
@@ -373,8 +373,8 @@ export function classifyAddress(
 }
 
 const DATED_CARD_NOTE = pair(
-  "Es la ficha del 2026-10-09. No es una lectura en directo.",
-  "It is the 2026-10-09 card. It is not a live reading.",
+  "Es la ficha del 2026-10-16. No es una lectura en directo.",
+  "It is the 2026-10-16 card. It is not a live reading.",
 );
 
 /** La ficha fechada sigue, pero un fallo de los dos RPC no la pinta como lectura en verde. */

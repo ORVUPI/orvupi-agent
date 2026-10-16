@@ -89,7 +89,7 @@ describe("páginas estáticas", () => {
       assert.equal(item.body.includes("Cripto de alto riesgo · Puedes perderlo todo"), false, item.rel);
       assert.equal(item.body.includes("High-risk crypto · You could lose everything"), false, item.rel);
       assert.match(item.body, new RegExp(READONLY_LINE.es.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-      assert.match(item.body, /2026-10-08/);
+      assert.match(item.body, /2026-10-16/);
       assert.match(item.body, new RegExp(UNKNOWN_LINE.es.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
       assert.match(item.body, /lang="es"/);
       assert.match(item.body, /<main id="contenido"/);
@@ -173,7 +173,8 @@ describe("páginas estáticas", () => {
     assert.match(verify, /Paste an address first/);
     assert.match(verify, /id="resultado"/);
     assert.match(missionJs, /Paso /);
-    assert.match(lab, /TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump/);
+    assert.match(lab, /EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/);
+    assert.equal(lab.includes("TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump"), false);
     assert.match(missionJs, /function answer/);
     assert.match(missionJs, /Siguiente paso/);
     assert.match(missionJs, /Next step/);

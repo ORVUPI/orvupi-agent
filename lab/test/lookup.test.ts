@@ -9,10 +9,16 @@ import { classifyAddress, emptyView, pendingView, reserveWhenLiveFails, type Evm
 
 const root = repoRootFromMeta(import.meta.url);
 const cards = loadCards(root, loadFuentes(root));
-const evm = (JSON.parse(readFileSync(path.join(root, "verify/registry/clones.json"), "utf8")) as { evm: EvmExample[] }).evm;
-const official = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
-const clone = "DjEjb6bxQ3Hjej9CzUAVeRqyt7k1tevHgcS37t41PUhQ";
-const usdc = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+// La lista real de copias EVM está vacía desde el 16-10-2026; la lectura 0x se prueba con un ejemplo.
+const evm: EvmExample[] = [
+  ...(JSON.parse(readFileSync(path.join(root, "verify/registry/clones.json"), "utf8")) as { evm: EvmExample[] }).evm,
+  { chain: "eip155:5042", address: "0xc99056c762f0802e4154e6322bd71ae928857777", source: "ejemplo de prueba", verifiedOnChain: false },
+];
+// «official» es la ficha del registro curado (USDC); ORVUPI no tiene contrato.
+const official = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+const clone = "4XRbnGgay2XpqJ1F5jGPQ9pRh1JSX12RPCPJASMJU5JW";
+const usdc = official;
+const usdt = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB";
 const wrappedSol = "So11111111111111111111111111111111111111112";
 
 describe("lectura de una dirección", () => {
@@ -55,7 +61,7 @@ describe("lectura de una dirección", () => {
     assert.equal(copy.lightLabel.es, "Se parece a un token del registro, pero la dirección es otra");
     assert.match(copy.support.es, /ORVUPI todavía no tiene contrato\./);
     assert.equal(copy.rows.find((row) => row.label.es === "Señal de copia")?.value.es, "Sí");
-    const other = classifyAddress(usdc, cards, "lista");
+    const other = classifyAddress(usdt, cards, "lista");
     assert.equal(other.kind, "otra");
     assert.equal(other.title.es, "No está en el registro");
     assert.notEqual(other.light, "riesgo");
@@ -113,11 +119,10 @@ describe("lectura de una dirección", () => {
     assert.equal(diff, 5);
     expectNotOfficial(many, true);
     expectNotOfficial(official.slice(0, -1), false);
-    expectNotOfficial(`${official}1`, false);
-    const vanity = `TNWw${"1".repeat(official.length - 8)}pump`;
+    const vanity = `EPjF${"1".repeat(official.length - 8)}Dt1v`;
     const vanityView = expectNotOfficial(vanity, true);
-    assert.equal(vanity.startsWith("TNWw"), true);
-    assert.equal(vanity.endsWith("pump"), true);
+    assert.equal(vanity.startsWith("EPjF"), true);
+    assert.equal(vanity.endsWith("Dt1v"), true);
     assert.equal(vanityView.compare?.marks.slice(0, 4).every((mark) => !mark.changed), true);
     assert.equal(vanityView.compare?.marks.slice(-4).every((mark) => !mark.changed), true);
     assert.ok((vanityView.compare?.marks.filter((mark) => mark.changed).length ?? 0) >= 5);
@@ -131,7 +136,7 @@ describe("lectura de una dirección", () => {
     assert.equal(copy.light, "atencion");
     assert.equal(copy.title.es, "Se parece a un token del registro, pero la dirección es otra");
     assert.equal(/copia|riesgo/i.test(copy.title.es), false);
-    const other = classifyAddress(usdc, cards, "lista", evm);
+    const other = classifyAddress(usdt, cards, "lista", evm);
     assert.equal(other.title.es, "No está en el registro");
     const far = classifyAddress(wrappedSol, cards, "caida", evm);
     assert.equal(far.title.es, "No es la dirección oficial");
@@ -151,11 +156,11 @@ describe("lectura de una dirección", () => {
     assert.equal(down.title.en, "Could not check live");
     assert.equal(down.lightLabel.es, "No se pudo comprobar en directo");
     assert.equal(down.lightLabel.en, "Could not check live");
-    assert.match(down.partialNote?.es ?? "", /Es la ficha del 2026-10-09/);
-    assert.match(down.partialNote?.en ?? "", /2026-10-09 card/);
+    assert.match(down.partialNote?.es ?? "", /Es la ficha del 2026-10-16/);
+    assert.match(down.partialNote?.en ?? "", /2026-10-16 card/);
     assert.equal((down.partialNote?.es ?? "").includes("Está en el registro curado"), false);
     assert.ok(down.rows.length > 0);
-    assert.match(down.partialNote?.es ?? "", /censo|cuenta personal publicada/);
+    assert.match(down.partialNote?.es ?? "", /censo|no está|no se rellena/);
     const cloneCard = classifyAddress(clone, cards, "lista", evm);
     const cloneDown = reserveWhenLiveFails(cloneCard);
     assert.equal(cloneDown.title.es, "Se parece a un token del registro, pero la dirección es otra");
@@ -220,7 +225,7 @@ describe("lectura de una dirección", () => {
       pendingView(official),
       classifyAddress(official, cards, "lista"),
       classifyAddress(clone, cards, "lista"),
-      classifyAddress(usdc, cards, "lista"),
+      classifyAddress(usdt, cards, "lista"),
       classifyAddress(wrappedSol, cards, "lista"),
       classifyAddress(official, cards, "caida"),
       classifyAddress("???", cards, "lista"),

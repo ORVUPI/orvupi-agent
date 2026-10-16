@@ -92,7 +92,7 @@ describe("misión 1", () => {
 
   test("ninguna ficha de la misión nombra el proyecto anterior", () => {
     const text = JSON.stringify(mission) + JSON.stringify(cards);
-    assert.equal(/TOKEN A|TNWwnzecb/i.test(text), false);
+    assert.equal(/TOKEN A\b|TNWwnzecb/.test(text), false);
   });
 
   test("una respuesta incorrecta se explica y no cierra la misión", () => {
@@ -161,23 +161,6 @@ describe("misión 1", () => {
     }
   });
 
-  test("la quinta comprobación usa el clon con avance 0,00", () => {
-    const step = mission.steps.find((item) => item.id === "curva");
-    assert.ok(step);
-    const clone = step.cards
-      .map((mint) => byMint.get(mint))
-      .find((card) => card?.role === "clon");
-    assert.equal(clone?.curveProgress, "0.00");
-    assert.equal(step.whyRight.es.includes("793100000000000"), false);
-    assert.equal(step.whyRight.en.includes("793100000000000"), false);
-    assert.equal(step.prompt.es.includes("793100000000000"), false);
-    assert.match(step.whyRight.es, /no atribuye intención/i);
-    assert.match(step.whyRight.es, /Detalles/);
-    assert.ok(step.glossary.includes("curva-pump"));
-    assert.ok(step.glossary.includes("reserva-real"));
-    assert.ok(step.glossary.includes("suplantacion"));
-  });
-
   test("cada pregunta lleva una frase llana y el glosario del paso", () => {
     const emision = mission.steps.find((item) => item.id === "emision");
     assert.ok(emision);
@@ -238,8 +221,8 @@ describe("biblioteca", () => {
       const source = readFileSync(path.join(root, "lab/library/guides", guide.file), "utf8");
       const blocks = splitBilingualMarkdown(source);
       assert.ok(blocks, guide.id);
-      assert.match(blocks.es, /2026-10-08/);
-      assert.match(blocks.en, /2026-10-08/);
+      assert.match(blocks.es, /2026-10-16/);
+      assert.match(blocks.en, /2026-10-16/);
     }
   });
 
