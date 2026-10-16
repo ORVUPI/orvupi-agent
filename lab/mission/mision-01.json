@@ -12,8 +12,8 @@
     "en": "Five short questions using the 2026-10-08 cards. If you miss, you can try again. Progress stays in this browser."
   },
   "closing": {
-    "es": "Has separado la dirección oficial, una copia y un dato que no se pudo leer. No es un certificado. No hace falta una cuenta ni tener STUBX para leerlo.",
-    "en": "You separated the official address, a copy, and a fact that could not be read. This is not a certificate. No account is required, and holding STUBX is not required to read it."
+    "es": "Has separado la dirección oficial, una copia y un dato que no se pudo leer. No es un certificado. No hace falta una cuenta ni tener TOKEN A para leerlo.",
+    "en": "You separated the official address, a copy, and a fact that could not be read. This is not a certificate. No account is required, and holding TOKEN A is not required to read it."
   },
   "steps": [
     {
@@ -27,8 +27,8 @@
       ],
       "fields": ["name", "mint", "inRegistry"],
       "prompt": {
-        "es": "¿Cuál es la dirección del STUBX oficial?",
-        "en": "Which address is the official STUBX?"
+        "es": "¿Cuál es la dirección del TOKEN A oficial?",
+        "en": "Which address is the official TOKEN A?"
       },
       "guide": {
         "es": "La dirección del mint identifica ese token. El nombre se puede copiar; la dirección, no.",
@@ -62,17 +62,17 @@
       ],
       "correct": "oficial",
       "whyRight": {
-        "es": "Solo esta dirección está en el registro del 2026-10-08. Las otras se llaman parecido y la ficha indica que se parecen a STUBX pero no son la CA oficial. Eso no dice quién las creó ni con qué intención.",
-        "en": "Only this address is in the 2026-10-08 registry. The others have a similar name and the card indicates that they look like STUBX but they are not the official CA. That does not say who created them or why."
+        "es": "Solo esta dirección está en el registro del 2026-10-08. Las otras se llaman parecido y la ficha indica que se parecen a TOKEN A pero no son la CA oficial. Eso no dice quién las creó ni con qué intención.",
+        "en": "Only this address is in the 2026-10-08 registry. The others have a similar name and the card indicates that they look like TOKEN A but they are not the official CA. That does not say who created them or why."
       },
       "whyWrong": {
         "clon-dj": {
-          "es": "Se llama Comunidad STUBX, pero no está en el registro. El nombre no sustituye a la dirección.",
-          "en": "It is named Comunidad STUBX, but it is not in the registry. The name does not stand in for the address."
+          "es": "Se llama Comunidad TOKEN A, pero no está en el registro. El nombre no sustituye a la dirección.",
+          "en": "It is named Comunidad TOKEN A, but it is not in the registry. The name does not stand in for the address."
         },
         "clon-hh": {
-          "es": "Se llama Comunidad STUBX · Creador. El nombre coincide y la dirección es otra.",
-          "en": "It is named Comunidad STUBX · Creador. The name matches and the address is different."
+          "es": "Se llama Comunidad TOKEN A · Creador. El nombre coincide y la dirección es otra.",
+          "en": "It is named Comunidad TOKEN A · Creador. The name matches and the address is different."
         }
       }
     },

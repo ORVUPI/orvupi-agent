@@ -3,8 +3,8 @@
   "updated": "2026-10-11",
   "editor": "Equipo del repositorio. La revisión por una persona distinta está pendiente.",
   "note": {
-    "es": "Estados de un registro, no fechas prometidas. Una idea, código en el repositorio y una función en stubxai.com son cosas distintas. Este tablero solo cuenta el trabajo de STUBX. Citar la dirección de otro token, si hiciera falta en una prueba, no lo avala.",
-    "en": "These are record states, not promised dates. An idea, code in the repository, and a function on stubxai.com are different things. This board only records STUBX work. Citing another token’s address, if a test needs it, does not endorse it."
+    "es": "Estados de un registro, no fechas prometidas. Una idea, código en el repositorio y una función en stubxai.com son cosas distintas. Este tablero solo cuenta el trabajo de ORVUPI. Citar la dirección de otro token, si hiciera falta en una prueba, no lo avala.",
+    "en": "These are record states, not promised dates. An idea, code in the repository, and a function on stubxai.com are different things. This board only records ORVUPI work. Citing another token’s address, if a test needs it, does not endorse it."
   },
   "ci": {
     "workflow": ".github/workflows/ci.yml",
@@ -40,8 +40,8 @@
       "id": "VERIFY",
       "version": "0.1.0",
       "title": {
-        "es": "STUBX Verify, MVP de solo lectura",
-        "en": "STUBX Verify, read-only MVP"
+        "es": "ORVUPI Verify, MVP de solo lectura",
+        "en": "ORVUPI Verify, read-only MVP"
       },
       "status": "en_revision",
       "webPublished": true,
@@ -130,8 +130,8 @@
       "id": "U01",
       "version": "1.0.0",
       "title": {
-        "es": "STUBX Lab, misión 1",
-        "en": "STUBX Lab, mission 1"
+        "es": "ORVUPI Lab, misión 1",
+        "en": "ORVUPI Lab, mission 1"
       },
       "status": "en_revision",
       "webPublished": true,
@@ -447,8 +447,8 @@
       "id": "U02",
       "version": "1.0.0",
       "title": {
-        "es": "STUBX Studio",
-        "en": "STUBX Studio"
+        "es": "ORVUPI Studio",
+        "en": "ORVUPI Studio"
       },
       "status": "en_revision",
       "webPublished": true,

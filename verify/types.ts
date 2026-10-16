@@ -1,5 +1,5 @@
 export const DISCLAIMER =
-  "STUBX Verify muestra datos on-chain públicos. No es consejo de inversión ni garantiza que un token sea seguro.";
+  "ORVUPI Verify muestra datos on-chain públicos. No garantiza que un token sea seguro.";
 
 export const RULES_VERSION = "0.1.0";
 

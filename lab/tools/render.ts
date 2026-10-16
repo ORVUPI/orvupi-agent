@@ -35,7 +35,7 @@ const FIELD_LABEL: Record<string, Localized> = {
   mintAuthority: { es: "Autoridad de emisión", en: "Mint authority" },
   freezeAuthority: { es: "Autoridad de congelación", en: "Freeze authority" },
   metadata: { es: "Metadatos", en: "Metadata" },
-  holders: { es: "Muestra de cuentas con STUBX", en: "Token account sample" },
+  holders: { es: "Muestra de cuentas con el token", en: "Token account sample" },
   impersonation: { es: "Señal de suplantación", en: "Impersonation signal" },
   curvePresent: { es: "Cuenta de curva", en: "Curve account" },
   curveProgress: { es: "Avance de la curva clásica", en: "Classic curve progress" },
@@ -264,7 +264,7 @@ ${input.publish ? "" : `<meta name="robots" content="noindex">\n`}<title>${escap
 <a class="skip lang es" href="#contenido">Saltar al contenido</a>
 <a class="skip lang en" href="#contenido">Skip to content</a>
 <header class="site"><div class="${frame}">
-<p class="brand"><strong>STUBX</strong></p>
+<p class="brand"><strong>ORVUPI</strong></p>
 ${input.publish ? "" : `<p class="draft">${both(DRAFT_LINE)}</p>\n`}
 <nav class="site" aria-label="Secciones / Sections"><ul>${links}</ul></nav>
 <div class="langs" role="group" aria-label="Idioma / Language">
@@ -393,7 +393,7 @@ ${howDetails(HOW_LAB)}
 <details class="biblioteca-extra" id="biblioteca"><summary>${both({ es: "Para quien quiera más detalle", en: "For anyone who wants more detail" })}</summary><h2>${both({ es: "Biblioteca", en: "Library" })}</h2><p><a href="/aprender/">${both({ es: "Biblioteca para cualquier token", en: "Library for any token" })}</a></p><p class="muted">${both({ es: revision.enStatus, en: revision.enStatusEn || revision.enStatus })}</p><div class="fichas">${terms}</div><h2>${both({ es: "Guías", en: "Guides" })}</h2><div class="fichas">${guideSection(repoRoot)}</div></details>
 <dialog id="ayuda" aria-labelledby="ayuda-titulo"><h2 id="ayuda-titulo"></h2><div id="ayuda-cuerpo"></div><form method="dialog"><button type="submit" id="ayuda-cerrar">${both({ es: "Cerrar", en: "Close" })}</button></form></dialog>`;
   return shell({
-    title: "STUBX Lab · lecciones · borrador",
+    title: "ORVUPI Lab · lecciones · borrador",
     description: "Tres lecciones cortas con fichas de Verify del 2026-10-09, y una misión para distinguir un mint del registro de un clon.",
     prefix: "../",
     current: "lab",
@@ -454,7 +454,7 @@ ${privacyNotice()}
 <section id="resultado" class="resultado" data-state="vacio" data-luz="neutro" aria-live="polite">
 <h2>${both({ es: "La lectura aparece aquí", en: "The reading shows up here" })}</h2>
 <p class="apoyo">${both({ es: "La lectura será una de estas tres. Los detalles técnicos se quedan plegados.", en: "The reading will be one of these three. Technical details stay folded." })}</p>
-<ul class="leyenda"><li data-luz="ok">${both({ es: "Dirección del registro de STUBX", en: "STUBX registry address" })}</li><li data-luz="atencion">${both({ es: "Se parece a STUBX, pero no es la CA oficial", en: "Looks like STUBX, but it is not the official CA" })}</li><li data-luz="neutro">${both({ es: "No se pudo comprobar", en: "Could not be checked" })}</li></ul>
+<ul class="leyenda"><li data-luz="ok">${both({ es: "Dirección del registro de ORVUPI", en: "ORVUPI registry address" })}</li><li data-luz="atencion">${both({ es: "Se parece a ORVUPI, pero no es la CA oficial", en: "Looks like ORVUPI, but it is not the official CA" })}</li><li data-luz="neutro">${both({ es: "No se pudo comprobar", en: "Could not be checked" })}</li></ul>
 </section>
 </div>
 <details class="tecnico archivo"><summary>${both({ es: "Fichas de ejemplo", en: "Example cards" })}</summary>
@@ -463,8 +463,8 @@ ${privacyNotice()}
 <div class="fichas">${help}</div>
 </details>`;
   return shell({
-    title: "STUBX Verify · borrador",
-    description: "Comprueba una dirección con las fichas públicas de STUBX Verify del 2026-10-08.",
+    title: "ORVUPI Verify · borrador",
+    description: "Comprueba una dirección con las fichas públicas de ORVUPI Verify del 2026-10-08.",
     prefix: "../",
     current: "verify",
     main,
@@ -503,9 +503,9 @@ const MILESTONE_EN: Record<string, string> = {
     "2026-10-09 · Verify and Lab: the reading stays visible on a phone",
   "2026-10-09 · Revisión de seguridad de Verify y Lab (borrador, sin publicar)":
     "2026-10-09 · Verify and Lab security review (draft, unpublished)",
-  "2026-10-09 · STUBX Lab, misión 1 (borrador, sin publicar)":
-    "2026-10-09 · STUBX Lab, mission 1 (draft, unpublished)",
-  "2026-10-08 · STUBX Verify (MVP, solo lectura)": "2026-10-08 · STUBX Verify (MVP, read-only)",
+  "2026-10-09 · ORVUPI Lab, misión 1 (borrador, sin publicar)":
+    "2026-10-09 · ORVUPI Lab, mission 1 (draft, unpublished)",
+  "2026-10-08 · ORVUPI Verify (MVP, solo lectura)": "2026-10-08 · ORVUPI Verify (MVP, read-only)",
   "2026-10-05 · PPM: casilla Wallet → no aplica": "2026-10-05 · PPM: Wallet check → not applicable",
   "2026-10-05 · PPM: casilla Logs marcada": "2026-10-05 · PPM: Logs check marked",
   "Sin publicar": "Unpublished",
@@ -601,7 +601,7 @@ function renderBoard(repoRoot: string, board: BoardFile, options: RenderOptions)
 <div class="tareas">${groups}</div>
 <section class="card" id="plantilla">
 <h2>${both({ es: "Plantilla para copiar", en: "Template to copy" })}</h2>
-<p>${both({ es: "El tablero de arriba es el de STUBX. La plantilla vacía no trae un token: otro proyecto puede copiar el archivo y rellenar su propio trabajo. Copiarla no hace socio ni representante de STUBX, y no avala ningún token.", en: "The board above is STUBX’s. The empty template carries no token: another project can copy the file and fill in its own work. Copying it does not make anyone a partner or a representative of STUBX, and it endorses no token." })}</p>
+<p>${both({ es: "El tablero de arriba es el de ORVUPI. La plantilla vacía no trae un token: otro proyecto puede copiar el archivo y rellenar su propio trabajo. Copiarla no hace socio ni representante de ORVUPI, y no avala ningún token.", en: "The board above is ORVUPI’s. The empty template carries no token: another project can copy the file and fill in its own work. Copying it does not make anyone a partner or a representative of ORVUPI, and it endorses no token." })}</p>
 <p><a class="primary" href="/modules/tablero/plantilla.json">${both({ es: "Descargar plantilla.json", en: "Download plantilla.json" })}</a></p>
 <p class="source">${both({ es: "Licencia MIT, la misma del código. El archivo no se envía a ningún sitio al descargarlo.", en: "MIT license, the same as the code. Downloading the file does not send it anywhere." })}</p>
 </section>
@@ -609,8 +609,8 @@ function renderBoard(repoRoot: string, board: BoardFile, options: RenderOptions)
 <section><h2>${both({ es: "Pruebas en el repositorio", en: "Tests in the repository" })}</h2><ul>${tests.map((file) => `<li><code>${escapeHtml(file)}</code></li>`).join("")}</ul></section>
 <section><h2>${both({ es: "Hitos copiados de CHANGELOG.md", en: "Milestones copied from CHANGELOG.md" })}</h2><p class="muted">${both({ es: "Son encabezados del archivo, no compromisos de esta página.", en: "They are headings from the file, not commitments of this page." })}</p><ul>${changelog.map((line) => `<li>${both({ es: line, en: milestoneEn(line) })}</li>`).join("")}</ul></section>`;
   return shell({
-    title: "STUBX · tablero de construcción · borrador",
-    description: "Tablero estático del trabajo de STUBX, generado desde el repositorio y no publicado.",
+    title: "ORVUPI · tablero de construcción · borrador",
+    description: "Tablero estático del trabajo de ORVUPI, generado desde el repositorio y no publicado.",
     prefix: "../",
     current: "tablero",
     main,
@@ -627,7 +627,7 @@ function renderIndex(options: RenderOptions): string {
 <li><a href="./tablero/index.html">/tablero</a> — ${both({ es: "tablero de construcción", en: "construction board" })}</li>
 </ul>`;
   return shell({
-    title: "STUBX · borradores sin publicar",
+    title: "ORVUPI · borradores sin publicar",
     description: "Índice local de los borradores de Verify, Lab y el tablero.",
     prefix: "",
     current: "index",

@@ -12,6 +12,9 @@ import { inlineModule } from "./inline.js";
 import { renderPages } from "./render.js";
 import type { BuiltPage } from "./render.js";
 
+/** Vuelve a true solo cuando exista el contrato ORVUPI y esté en web/v2/shared/orvupi-contract.json. */
+const WEB_PUBLISHES_REGISTRY = false;
+
 export function buildOutputs(repoRoot: string, options: { publish?: boolean } = {}): BuiltPage[] {
   const fuentes = loadFuentes(repoRoot);
   const cards = loadCards(repoRoot, fuentes).map((card) => presentCard(card));
@@ -49,11 +52,13 @@ export function buildOutputs(repoRoot: string, options: { publish?: boolean } = 
     `${inlineModule(summaryPath)}\n${inlineModule(marketPath)}`,
     readFileSync(verifyUiPath, "utf8"),
     {
-      cards,
+      // ORVUPI todavía no tiene contrato: la web no publica registro, clones ni fichas del token anterior.
+      // Solo queda la ficha de contraste (USDC). canonical y clones siguen en verify/registry para el agente.
+      cards: cards.filter((card) => card.role === "contraste"),
       source: "lista" as const,
-      evm: Array.isArray(clones.evm) ? clones.evm : [],
+      evm: WEB_PUBLISHES_REGISTRY && Array.isArray(clones.evm) ? clones.evm : [],
       rpc: { primary: limits.defaultRpcUrl, fallback: limits.fallbackRpcUrl },
-      registry: canonical.tokens,
+      registry: WEB_PUBLISHES_REGISTRY ? canonical.tokens : [],
     },
   );
   const missionJs = bundleMission(readFileSync(enginePath, "utf8"), readFileSync(uiPath, "utf8"), {

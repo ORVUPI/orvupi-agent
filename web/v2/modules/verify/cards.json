@@ -5,8 +5,8 @@
       "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "role": "contraste",
       "roleNote": {
-        "es": "USDC, contraste. Bytes del mint el 2026-10-09 18:42 Europe/Madrid: 7.442.271.613,512366. getTokenSupply en ese minuto no coincidió, así que no hay porcentajes. No es STUBX y no está presentado como clon. La ficha del 2026-10-08 conserva la cifra de aquel día.",
-        "en": "USDC, a contrast. Mint bytes on 2026-10-09 18:42 Europe/Madrid: 7,442,271,613.512366. getTokenSupply did not match in that minute, so there are no percentages. It is not STUBX and is not presented as a clone. The 2026-10-08 card keeps that day's figure."
+        "es": "USDC, contraste. Bytes del mint el 2026-10-09 18:42 Europe/Madrid: 7.442.271.613,512366. getTokenSupply en ese minuto no coincidió, así que no hay porcentajes. No es TOKEN A y no está presentado como clon. La ficha del 2026-10-08 conserva la cifra de aquel día.",
+        "en": "USDC, a contrast. Mint bytes on 2026-10-09 18:42 Europe/Madrid: 7,442,271,613.512366. getTokenSupply did not match in that minute, so there are no percentages. It is not TOKEN A and is not presented as a clone. The 2026-10-08 card keeps that day's figure."
       },
       "id": "80671753ebbcdee3317b7b2bbf7ef14eba21f8a58e437bcfdab42da02b15d7a2",
       "createdAt": "2026-10-09T16:42:39.825Z",

@@ -131,7 +131,26 @@ function curveModuleEn(note: string | null): string | null {
   return null;
 }
 
+/**
+ * Las fichas fechadas son de un token anterior a ORVUPI. En la web su nombre sale como «TOKEN A»:
+ * los informes originales de verify/examples no se tocan (historial).
+ */
+function anonymizeLegacy<T>(value: T): T {
+  if (typeof value === "string") {
+    return value.replace(/STUBX\/STUBX/g, "TOKEN A").replace(/\(stubx\)/g, "(TOKEN A)").replace(/STUBX/g, "TOKEN A") as T;
+  }
+  if (Array.isArray(value)) return value.map((item) => anonymizeLegacy(item)) as T;
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, anonymizeLegacy(item)])) as T;
+  }
+  return value;
+}
+
 export function presentCard(card: CardSummary): DisplayCard {
+  return anonymizeLegacy(presentCardRaw(card));
+}
+
+function presentCardRaw(card: CardSummary): DisplayCard {
   return {
     ...card,
     holdersNote: holdersNoteEs(card.holdersNote),

@@ -100,16 +100,17 @@ const { presentCard, presentClones, presentEvmItem } = await import(
   pathToFileURL(path.join(root, "dist/lab/display-copy.js")).href
 );
 const clones = JSON.parse(readFileSync(path.join(root, "verify/registry/clones.json"), "utf8"));
-const cards = loadCards(root, loadFuentes(root)).map((card) => presentCard(card));
+// ORVUPI todavía no tiene contrato: la web solo publica la ficha de contraste (USDC), sin registro ni clones del token anterior.
+const cards = loadCards(root, loadFuentes(root)).map((card) => presentCard(card)).filter((card) => card.role === "contraste");
 const payload = {
   source: "lista",
   cards,
-  evm: (Array.isArray(clones.evm) ? clones.evm : []).map((item) => presentEvmItem(item)),
+  evm: [],
 };
 writeFileSync(path.join(root, "web/v2/modules/verify/cards.json"), `${JSON.stringify(payload, null, 2)}\n`);
 writeFileSync(
   path.join(root, "web/v2/modules/verify/clones.json"),
-  `${JSON.stringify(presentClones(clones), null, 2)}\n`,
+  `${JSON.stringify({ ...presentClones(clones), examples: [], evm: [] }, null, 2)}\n`,
 );
 writeFileSync(path.join(root, "web/v2/modules/verify/lookup.mjs"), lookupModule());
 copyFileSync(verifyBundle, path.join(root, "web/v2/assets/verify.js"));

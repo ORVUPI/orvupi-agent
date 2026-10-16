@@ -6,7 +6,7 @@ export function reportJson(report: Report): string {
 
 export function reportMarkdown(report: Report): string {
   const lines: string[] = [
-    "# Ficha STUBX Verify",
+    "# Ficha ORVUPI Verify",
     "",
     `> ${escapeMd(report.disclaimer)}`,
     "",
@@ -117,7 +117,7 @@ export function reportHtml(report: Report): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>STUBX Verify ${escapeHtml(report.mint)}</title>
+<title>ORVUPI Verify ${escapeHtml(report.mint)}</title>
 <style>
   body { font-family: Georgia, serif; margin: 2rem auto; max-width: 46rem; line-height: 1.45; color: #1c1917; background: #fafaf9; }
   h1, h2 { font-family: system-ui, sans-serif; }
@@ -135,7 +135,7 @@ export function reportHtml(report: Report): string {
 </style>
 </head>
 <body>
-<h1>Ficha STUBX Verify</h1>
+<h1>Ficha ORVUPI Verify</h1>
 <p class="note" role="note">${escapeHtml(DISCLAIMER)}</p>
 <p class="meta">Id <code>${escapeHtml(report.id)}</code><br>
 Reglas ${escapeHtml(report.rulesVersion)} · red ${escapeHtml(report.network)} · RPC ${escapeHtml(report.rpcEndpoint)}<br>

@@ -1,7 +1,8 @@
 "use strict";
 (() => {
-const STUBX_VERIFY = {"cards":[{"mint":"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v","role":"contraste","roleNote":{"es":"USDC, contraste. Bytes del mint el 2026-10-09 18:42 Europe/Madrid: 7.442.271.613,512366. getTokenSupply en ese minuto no coincidió, así que no hay porcentajes. No es STUBX y no está presentado como clon. La ficha del 2026-10-08 conserva la cifra de aquel día.","en":"USDC, a contrast. Mint bytes on 2026-10-09 18:42 Europe/Madrid: 7,442,271,613.512366. getTokenSupply did not match in that minute, so there are no percentages. It is not STUBX and is not presented as a clone. The 2026-10-08 card keeps that day's figure."},"id":"80671753ebbcdee3317b7b2bbf7ef14eba21f8a58e437bcfdab42da02b15d7a2","createdAt":"2026-10-09T16:42:39.825Z","partial":true,"referenceSlot":454929422,"name":"USD Coin","nameStatus":"verificado","symbol":"USDC","inRegistry":false,"inRegistryStatus":"verificado","mintAuthority":{"state":"activa","status":"verificado"},"freezeAuthority":{"state":"activa","status":"verificado"},"metadataReading":"mutables","metadataLevel":"atención","holdersStatus":"no_disponible","holdersNote":"Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como cantidad cero.","impersonation":false,"authenticityLevel":"ok","signals":[],"statement":"Este mint no está en el registro curado. Que no esté no significa que sea falso ni que sea una copia.","statementStatus":"verificado","curvePresent":false,"curvePresentStatus":"verificado","curveProgress":null,"curveProgressStatus":"no_aplica","curveProgressNote":"No hay curva. No se rellena con cero.","curveModuleNote":"La dirección derivada tiene una cuenta cuyo propietario no es el programa de Pump.fun. No es una curva y no se rellenan con cero las cantidades de la curva.","rulesVersion":"0.1.0","statement_en":"This mint is not in the curated registry. That does not mean it is fake or a copy.","holdersNote_en":"No usable response. It is not interpreted as a revoked authority, as immutability, or as a zero balance.","curveProgressNote_en":"There is no curve. It is not filled with zero.","curveModuleNote_en":"The derived address has an account whose owner is not the Pump.fun program. It is not a curve, and the curve amounts are not filled in with zero.","signals_en":[]}],"source":"lista","evm":[],"rpc":{"primary":"https://solana-rpc.publicnode.com","fallback":"https://api.mainnet-beta.solana.com"},"registry":[]};
+const STUBX_VERIFY = {"cards":[{"mint":"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v","role":"contraste","roleNote":{"es":"USDC, contraste. Bytes del mint el 2026-10-09 18:42 Europe/Madrid: 7.442.271.613,512366. getTokenSupply en ese minuto no coincidió, así que no hay porcentajes. No es TOKEN A y no está presentado como clon. La ficha del 2026-10-08 conserva la cifra de aquel día.","en":"USDC, a contrast. Mint bytes on 2026-10-09 18:42 Europe/Madrid: 7,442,271,613.512366. getTokenSupply did not match in that minute, so there are no percentages. It is not TOKEN A and is not presented as a clone. The 2026-10-08 card keeps that day's figure."},"id":"80671753ebbcdee3317b7b2bbf7ef14eba21f8a58e437bcfdab42da02b15d7a2","createdAt":"2026-10-09T16:42:39.825Z","partial":true,"referenceSlot":454929422,"name":"USD Coin","nameStatus":"verificado","symbol":"USDC","inRegistry":false,"inRegistryStatus":"verificado","mintAuthority":{"state":"activa","status":"verificado"},"freezeAuthority":{"state":"activa","status":"verificado"},"metadataReading":"mutables","metadataLevel":"atención","holdersStatus":"no_disponible","holdersNote":"Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como cantidad cero.","impersonation":false,"authenticityLevel":"ok","signals":[],"statement":"Este mint no está en el registro curado. Que no esté no significa que sea falso ni que sea una copia.","statementStatus":"verificado","curvePresent":false,"curvePresentStatus":"verificado","curveProgress":null,"curveProgressStatus":"no_aplica","curveProgressNote":"No hay curva. No se rellena con cero.","curveModuleNote":"La dirección derivada tiene una cuenta cuyo propietario no es el programa de Pump.fun. No es una curva y no se rellenan con cero las cantidades de la curva.","rulesVersion":"0.1.0","statement_en":"This mint is not in the curated registry. That does not mean it is fake or a copy.","holdersNote_en":"No usable response. It is not interpreted as a revoked authority, as immutability, or as a zero balance.","curveProgressNote_en":"There is no curve. It is not filled with zero.","curveModuleNote_en":"The derived address has an account whose owner is not the Pump.fun program. It is not a curve, and the curve amounts are not filled in with zero.","signals_en":[]}],"source":"lista","evm":[],"rpc":{"primary":"https://solana-rpc.publicnode.com","fallback":"https://api.mainnet-beta.solana.com"},"registry":[]};
 const BASE58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+// Contrato ORVUPI: aún no existe (web/v2/shared/orvupi-contract.json).
 const OFFICIAL_MINT = "";
 const COPY = {
     vacio: {
@@ -166,7 +167,7 @@ function notOfficialView(mint, official) {
         light: "atencion",
         lightLabel: pair("No es la oficial", "Not the official one"),
         title: pair("No es la dirección oficial", "Not the official address"),
-        support: pair(`No es la dirección oficial de ORVUPI. Esto no dice quién creó esta dirección ni con qué intención.`, `This is not the official ORVUPI address. The official one is ${official}. This does not say who created this address or why.`),
+        support: pair(`No es la dirección oficial de ORVUPI. Esto no dice quién creó esta dirección ni con qué intención.`, `This is not the official ORVUPI address. This does not say who created this address or why.`),
         mint,
         rows: [],
         partialNote: pair(caseOnly ? `${caseNote.es} ${NOT_OFFICIAL_GAP.es}` : NOT_OFFICIAL_GAP.es, caseOnly ? `${caseNote.en} ${NOT_OFFICIAL_GAP.en}` : NOT_OFFICIAL_GAP.en),
@@ -591,7 +592,7 @@ function evmMessage(input, knownEvm = []) {
     }
     const known = knownEvm.some((address) => address.toLowerCase() === trimmed.toLowerCase());
     if (known) {
-        return "Copia conocida. ORVUPI todavía no tiene contrato en ninguna red. Ejemplo de search-v2 de Pump.fun, 08-10 09:14, sin verificar en la cadena.";
+        return "Copia conocida de un token anterior. ORVUPI todavía no tiene contrato en ninguna red.";
     }
     return "ORVUPI todavía no tiene contrato en ninguna red.";
 }
@@ -1866,10 +1867,11 @@ function decodeBase64(value) {
     return out;
 }
 
+// Contrato ORVUPI: aún no existe (web/v2/shared/orvupi-contract.json).
 const OFFICIAL_CA = "";
 const AUDIT_NOTICE = {
-    es: "Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. ORVUPI no tiene relación con este token salvo que sea la CA oficial. Que no aparezcan señales no significa que esté todo comprobado.",
-    en: "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. ORVUPI has no relationship with this token unless it is the official CA. No signals showing does not mean everything was checked.",
+    es: "Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. ORVUPI no tiene relación con este token: todavía no tiene contrato. Que no aparezcan señales no significa que esté todo comprobado.",
+    en: "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. ORVUPI has no relationship with this token: it does not have a contract yet. No signals showing does not mean everything was checked.",
 };
 const PRIVACY_NOTICE = {
     es: "La lectura es directa y solo en lectura.",
@@ -2915,10 +2917,10 @@ const ATTENTION = {
   },
   copia: {
     title: { es: "Dirección", en: "Address" },
-    lead: { es: "Se parece a ORVUPI pero no es la dirección oficial.", en: "It looks like ORVUPI but it is not the official address." },
+    lead: { es: "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.", en: "It is named like ORVUPI, but ORVUPI does not have a contract yet." },
     detail: {
-      es: "ORVUPI todavía no tiene contrato. Un token que use su nombre no es de ORVUPI. Un nombre igual no cambia la dirección.",
-      en: "ORVUPI does not have a contract yet. A token that uses its name is not ORVUPI's. The same name does not change the address.",
+      es: "La dirección oficial está publicada en stubxai.com. Ábrela y compárala con la de esta lectura, carácter a carácter. Un nombre igual no cambia la dirección.",
+      en: "The official address is published on stubxai.com. Open it and compare it with the one in this reading, character by character. The same name does not change the address.",
     },
   },
   ficha: {
@@ -3048,7 +3050,7 @@ function contextFromCard(card) {
     symbol: summaryText(card && card.symbol && card.symbol.text),
     decimals: card ? card.decimals : null,
     extensions: Array.isArray(card && card.extensions) ? card.extensions : [],
-    official: Boolean(card && (card.officialStubx === true || card.mint === SUMMARY_OFFICIAL)),
+    official: Boolean(card && (card.mint === SUMMARY_OFFICIAL)),
   };
 }
 
@@ -3565,8 +3567,8 @@ function cloneWarningText(card, lang) {
   const context = contextFromCard(card);
   if (context.official || !looksLikeStubx(context)) return "";
   return lang === "en"
-    ? "It looks like ORVUPI but it is not the official address."
-    : "Se parece a ORVUPI pero no es la dirección oficial.";
+    ? "It is named like ORVUPI, but ORVUPI does not have a contract yet."
+    : "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.";
 }
 
 function comparisonBanner(left, right, lang) {
@@ -5004,7 +5006,7 @@ function paintVerify(out, view) {
     var list = verifyEl("ul", { class: "leyenda" });
     list.append(
       legendItem("ok", lang === "en" ? "ORVUPI registry address" : "Dirección del registro de ORVUPI"),
-      legendItem("atencion", lang === "en" ? "Looks like ORVUPI, but it is not the official CA" : "Se parece a ORVUPI, pero no es la CA oficial"),
+      legendItem("atencion", lang === "en" ? "Named like ORVUPI, but ORVUPI does not have a contract yet" : "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato"),
       legendItem("neutro", lang === "en" ? "Could not be checked" : "No se pudo comprobar"),
     );
     out.append(emptyTitle, emptySupport, list);
@@ -5189,8 +5191,8 @@ function bootVerify() {
         level: "atencion",
         cardDate: createdAt,
         title: {
-          es: "La ficha fechada también dice que se parece a ORVUPI y no es la CA oficial",
-          en: "The dated card also says it looks like ORVUPI and is not the official CA",
+          es: "La ficha fechada también dice que se parece a otro token y no es su dirección",
+          en: "The dated card also says it looks like another token and is not its address",
         },
         explain: cardView.support,
       };

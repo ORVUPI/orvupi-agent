@@ -1,4 +1,5 @@
 const BASE58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+// Contrato ORVUPI: aún no existe (web/v2/shared/orvupi-contract.json).
 export const OFFICIAL_MINT = "";
 const COPY = {
     vacio: {
@@ -163,7 +164,7 @@ function notOfficialView(mint, official) {
         light: "atencion",
         lightLabel: pair("No es la oficial", "Not the official one"),
         title: pair("No es la dirección oficial", "Not the official address"),
-        support: pair(`No es la dirección oficial de ORVUPI. Esto no dice quién creó esta dirección ni con qué intención.`, `This is not the official ORVUPI address. The official one is ${official}. This does not say who created this address or why.`),
+        support: pair(`No es la dirección oficial de ORVUPI. Esto no dice quién creó esta dirección ni con qué intención.`, `This is not the official ORVUPI address. This does not say who created this address or why.`),
         mint,
         rows: [],
         partialNote: pair(caseOnly ? `${caseNote.es} ${NOT_OFFICIAL_GAP.es}` : NOT_OFFICIAL_GAP.es, caseOnly ? `${caseNote.en} ${NOT_OFFICIAL_GAP.en}` : NOT_OFFICIAL_GAP.en),

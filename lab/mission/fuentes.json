@@ -41,8 +41,8 @@
       "role": "clon",
       "file": "verify/examples/2026-10-09/ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump.json",
       "roleNote": {
-        "es": "Ejemplo añadido el 2026-10-09. Se llama STUBX y no es el mint del registro. No es una lista completa.",
-        "en": "Example added on 2026-10-09. It is named STUBX and it is not the registry mint. This is not a complete list."
+        "es": "Ejemplo añadido el 2026-10-09. Se llama TOKEN A y no es el mint del registro. No es una lista completa.",
+        "en": "Example added on 2026-10-09. It is named TOKEN A and it is not the registry mint. This is not a complete list."
       }
     },
     {
@@ -50,8 +50,8 @@
       "role": "clon",
       "file": "verify/examples/2026-10-09/FMNb4CR8ksibmgY7Ztei6BWcZXi3WHcVeJhYb9TNpump.json",
       "roleNote": {
-        "es": "Ejemplo añadido el 2026-10-09. Se llama STUBX y no es el mint del registro. No es una lista completa.",
-        "en": "Example added on 2026-10-09. It is named STUBX and it is not the registry mint. This is not a complete list."
+        "es": "Ejemplo añadido el 2026-10-09. Se llama TOKEN A y no es el mint del registro. No es una lista completa.",
+        "en": "Example added on 2026-10-09. It is named TOKEN A and it is not the registry mint. This is not a complete list."
       }
     },
     {
@@ -59,8 +59,8 @@
       "role": "contraste",
       "file": "verify/examples/2026-10-09/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v.json",
       "roleNote": {
-        "es": "USDC, contraste. Bytes del mint el 2026-10-09 18:42 Europe/Madrid: 7.442.271.613,512366. getTokenSupply en ese minuto no coincidió, así que no hay porcentajes. No es STUBX y no está presentado como clon. La ficha del 2026-10-08 conserva la cifra de aquel día.",
-        "en": "USDC, a contrast. Mint bytes on 2026-10-09 18:42 Europe/Madrid: 7,442,271,613.512366. getTokenSupply did not match in that minute, so there are no percentages. It is not STUBX and is not presented as a clone. The 2026-10-08 card keeps that day's figure."
+        "es": "USDC, contraste. Bytes del mint el 2026-10-09 18:42 Europe/Madrid: 7.442.271.613,512366. getTokenSupply en ese minuto no coincidió, así que no hay porcentajes. No es TOKEN A y no está presentado como clon. La ficha del 2026-10-08 conserva la cifra de aquel día.",
+        "en": "USDC, a contrast. Mint bytes on 2026-10-09 18:42 Europe/Madrid: 7,442,271,613.512366. getTokenSupply did not match in that minute, so there are no percentages. It is not TOKEN A and is not presented as a clone. The 2026-10-08 card keeps that day's figure."
       }
     }
   ]

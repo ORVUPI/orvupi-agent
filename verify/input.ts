@@ -9,9 +9,9 @@ export function evmMessage(input: string, knownEvm: readonly string[] = []): str
   }
   const known = knownEvm.some((address) => address.toLowerCase() === trimmed.toLowerCase());
   if (known) {
-    return "Copia conocida. El STUBX oficial solo existe en Solana. Ejemplo de search-v2 de Pump.fun, 08-10 09:14, sin verificar en la cadena.";
+    return "Copia conocida de un token anterior. ORVUPI todavía no tiene contrato en ninguna red.";
   }
-  return "El STUBX oficial solo existe en Solana.";
+  return "ORVUPI todavía no tiene contrato en ninguna red.";
 }
 
 export function validateMint(input: string, knownEvm: readonly string[] = []): MintCheck {

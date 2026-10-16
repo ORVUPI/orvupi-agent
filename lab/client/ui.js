@@ -27,7 +27,7 @@ var FIELD_LABEL = {
   mintAuthority: { es: "Autoridad de emisión", en: "Mint authority" },
   freezeAuthority: { es: "Autoridad de congelación", en: "Freeze authority" },
   metadata: { es: "Metadatos", en: "Metadata" },
-  holders: { es: "Muestra de cuentas con STUBX", en: "Token account sample" },
+  holders: { es: "Muestra de cuentas con el token", en: "Token account sample" },
   impersonation: { es: "Señal de suplantación", en: "Impersonation signal" },
   curvePresent: { es: "Cuenta de curva", en: "Curve account" },
   curveProgress: { es: "Avance de la curva clásica", en: "Classic curve progress" },

@@ -252,7 +252,7 @@ export async function buildReport(input: BuildInput): Promise<Report> {
     LEGITIMACY_LIMIT,
     "La muestra de cuentas con tokens tiene como máximo 20. No es un censo ni un recuento de personas. Una cuenta puede ser un custodio.",
     "Si los slots de las consultas no coinciden, no es una instantánea atómica.",
-    "STUBX Verify no firma, no envía transacciones y no custodia claves.",
+    "ORVUPI Verify no firma, no envía transacciones y no custodia claves.",
     "Cada consulta nueva produce un id nuevo. Esta ficha no se actualiza sola.",
   ];
   if (slots.size > 1) {

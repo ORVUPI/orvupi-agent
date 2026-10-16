@@ -118,8 +118,8 @@ function paintVerify(out, view) {
     emptySupport.textContent = view.support[lang];
     var list = verifyEl("ul", { class: "leyenda" });
     list.append(
-      legendItem("ok", lang === "en" ? "STUBX registry address" : "Dirección del registro de STUBX"),
-      legendItem("atencion", lang === "en" ? "Looks like STUBX, but it is not the official CA" : "Se parece a STUBX, pero no es la CA oficial"),
+      legendItem("ok", lang === "en" ? "ORVUPI registry address" : "Dirección del registro de ORVUPI"),
+      legendItem("atencion", lang === "en" ? "Named like ORVUPI, but ORVUPI does not have a contract yet" : "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato"),
       legendItem("neutro", lang === "en" ? "Could not be checked" : "No se pudo comprobar"),
     );
     out.append(emptyTitle, emptySupport, list);
@@ -304,8 +304,8 @@ function bootVerify() {
         level: "atencion",
         cardDate: createdAt,
         title: {
-          es: "La ficha fechada también dice que se parece a STUBX y no es la CA oficial",
-          en: "The dated card also says it looks like STUBX and is not the official CA",
+          es: "La ficha fechada también dice que se parece a otro token y no es su dirección",
+          en: "The dated card also says it looks like another token and is not its address",
         },
         explain: cardView.support,
       };
