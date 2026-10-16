@@ -489,7 +489,7 @@ test("el pie antiguo no sale en el alt de la imagen OG", () => {
     }
     for (const attr of ["og:image", "twitter:image"]) {
       const match = html.match(new RegExp(`(?:property|name)="${attr}" content="([^"]*)"`));
-      assert.equal(match?.[1], `https://stubxai.com/assets/${OG_FILE}`, `${rel} ${attr}`);
+      assert.equal(match?.[1], `https://orvupi.com/assets/${OG_FILE}`, `${rel} ${attr}`);
     }
   }
   const banned = [...OLD_OG_FOOTER, FOOTER_ES.toLowerCase(), FOOTER_EN.toLowerCase(), AI_CREDIT_ES.toLowerCase(), AI_CREDIT_EN.toLowerCase(), AI_LABEL_ES.toLowerCase(), AI_LABEL_EN.toLowerCase()];

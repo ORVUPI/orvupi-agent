@@ -1,0 +1,14 @@
+{
+ "_nota": "PREPARADA, NO ACTIVA. Regla de redirección de Cloudflare (Rules > Redirect Rules, zona stubxai.com). Solo se aplica cuando haya OK expreso; ver docs/DOMINIO-ORVUPI.md.",
+ "description": "stubxai.com -> orvupi.com (301, conserva ruta y consulta)",
+ "expression": "(http.host eq \"stubxai.com\") or (http.host eq \"www.stubxai.com\")",
+ "action": "redirect",
+ "action_parameters": {
+  "from_value": {
+   "status_code": 301,
+   "target_url": { "expression": "concat(\"https://orvupi.com\", http.request.uri.path)" },
+   "preserve_query_string": true
+  }
+ },
+ "enabled": false
+}
