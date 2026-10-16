@@ -1,9 +1,0 @@
-# STUBX — contacto de seguridad (RFC 9116)
-# Único canal oficial en X: https://x.com/stubxai
-# Nunca pedimos dinero, fondos, claves privadas ni frases semilla.
-# Repositorio oficial (código abierto): https://github.com/stubxai/stubx-agent. Cualquier otra cuenta de GitHub, también github.com/stubx, no tiene relación con STUBX.
-# Política de seguridad del código del agente: https://github.com/stubxai/stubx-agent/blob/main/SECURITY.md
-Contact: mailto:stubxai.hq@gmail.com
-Expires: 2027-09-25T22:00:00.000Z
-Preferred-Languages: es, en
-Canonical: https://stubxai.com/.well-known/security.txt

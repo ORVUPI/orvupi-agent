@@ -420,7 +420,7 @@ html.js .estatica, html.js .leccion-estatica { display: none; }
   .resultado h2 { font-size: 1.35rem; }
   button, summary, .consulta button, .consulta input { min-height: 44px; }
 }
-}
+
 
 @font-face {
   font-family: Inter;
@@ -768,7 +768,7 @@ main h1::before {
   height: 2rem;
   margin-right: 0.55rem;
   vertical-align: -0.35rem;
-  background: url("talon-avatar-96.webp") center / cover no-repeat;
+  background: url("orvupi/avatar.png") center / cover no-repeat;
   border-radius: var(--radius-sm);
   border: 2px solid var(--accent);
   box-shadow: 0 0 0 2px var(--gem);
@@ -989,7 +989,7 @@ main h1::before {
   vertical-align: unset;
   border: 3px solid var(--tone);
   border-radius: 1rem;
-  background: url("talon-avatar-96.webp") center / cover no-repeat;
+  background: url("orvupi/avatar.png") center / cover no-repeat;
   box-shadow: 0 0 0 3px var(--tone-glow), 0 10px 22px rgba(4, 13, 31, 0.4);
 }
 main h1 > .lang { flex: 1 1 12rem; }
@@ -1021,7 +1021,7 @@ main h1::after {
   height: 3.5rem;
   border: 3px solid var(--card-tone, var(--pink));
   border-radius: 0.9rem;
-  background: url("talon-avatar-96.webp") center / cover no-repeat;
+  background: url("orvupi/avatar.png") center / cover no-repeat;
   box-shadow: 0 0 0 3px var(--card-glow, rgba(251, 67, 127, 0.4)), 0 10px 18px rgba(4, 13, 31, 0.35);
 }
 .tool-grid > :is(.card, .slot):has(a[href="/verify/"]) { --card-tone: var(--pink); --card-glow: rgba(251, 67, 127, 0.5); border-top-color: var(--pink); }
@@ -1108,7 +1108,7 @@ main h1 {
   border-radius: 1.35rem;
   background-color: var(--abyss);
   background-image:
-    url("talon-avatar-256.webp"),
+    url("orvupi/avatar.png"),
     radial-gradient(ellipse 48% 90% at 100% 0%, var(--tone-glow), transparent 58%),
     radial-gradient(ellipse 36% 70% at 0% 100%, rgba(27, 235, 145, 0.16), transparent 52%),
     linear-gradient(155deg, #140818 0%, var(--abyss) 58%, var(--bg) 100%);
@@ -1299,7 +1299,7 @@ main > article > h2::before,
   height: 2.7rem;
   border: 2px solid var(--tone);
   border-radius: 0.65rem;
-  background: url("talon-avatar-96.webp") center / cover no-repeat;
+  background: url("orvupi/avatar.png") center / cover no-repeat;
   box-shadow: 0 0 0 3px var(--tone-glow);
 }
 .ficha:hover, .tarea:hover, .paso:hover { transform: translateY(-3px); }
@@ -1438,7 +1438,7 @@ body:has(a[href="/aprender/"][aria-current="page"]) main > article.card::before 
   height: 2.45rem;
   border: 2px solid var(--muted);
   border-radius: 0.6rem;
-  background: url("talon-avatar-96.webp") center / cover no-repeat;
+  background: url("orvupi/avatar.png") center / cover no-repeat;
 }
 body:has(a[href="/pares/"][aria-current="page"]) main > p:has(strong),
 body:has(a[href="/comparar/"][aria-current="page"]) main > p:has(strong),

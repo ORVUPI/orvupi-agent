@@ -1,6 +1,6 @@
 "use strict";
 (() => {
-const STUBX_VERIFY = {"cards":[{"mint":"TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump","role":"registro","roleNote":{"es":"Mint del registro curado. Ficha releída el 2026-10-09: saldos de la curva, de la creadora y de la cuenta personal publicada. No es un censo. La ficha del 2026-10-08 se conserva.","en":"Curated registry mint. Card reread on 2026-10-09: balances of the curve, the creator, and the published personal account. It is not a census. The 2026-10-08 card is kept."},"id":"a9e7f8d9d16fa3113f669afbcb4966123279efed3efa0769a864be484f43d9eb","createdAt":"2026-10-09T17:06:59.737Z","partial":true,"referenceSlot":454936120,"name":"STUBX","nameStatus":"verificado","symbol":"STUBX","inRegistry":true,"inRegistryStatus":"verificado","mintAuthority":{"state":"revocada","status":"verificado"},"freezeAuthority":{"state":"revocada","status":"verificado"},"metadataReading":"no_mutables_en_fuentes","metadataLevel":"ok","holdersStatus":"verificado","holdersNote":"Saldos leídos de la curva, de la creadora y de la cuenta personal publicada (2fS12sTD4TNEEE9MoCEt19brV41UjGdAnaNaxWcmiWvX). El resto respecto al suministro es 0.0000 %. No es un censo de cuentas con tokens.","impersonation":false,"authenticityLevel":"ok","signals":["mint en el registro"],"statement":"El mint coincide con el registro curado (stubx). Que esté en el registro no es una auditoría.","statementStatus":"verificado","curvePresent":true,"curvePresentStatus":"verificado","curveProgress":"1.74","curveProgressStatus":"inferido","curveProgressNote":"Porcentaje inferido con la cantidad real inicial pública de la curva clásica (Pump.fun lo llama ‘reserves’) (793100000000000). Truncado a 2 decimales hacia cero.","curveModuleNote":"Cuenta con el discriminador público de BondingCurve.","rulesVersion":"0.1.0","statement_en":"The mint matches the curated registry (stubx). Being in the registry is not an audit.","holdersNote_en":"Balances read from the curve, from the creator, and from the published personal account (2fS12sTD4TNEEE9MoCEt19brV41UjGdAnaNaxWcmiWvX). The rest of the supply is 0.0000 %. It is not a census of token accounts.","curveProgressNote_en":"Percentage inferred from the public initial real curve amount of the classic curve (Pump.fun calls these ‘reserves’) (793100000000000). Truncated to 2 decimals toward zero.","curveModuleNote_en":"Account with the public BondingCurve discriminator.","signals_en":["mint in the registry"]},{"mint":"Hhq4ffySVX3UQqSowjhP1Lwa8YuJDf7iH2hYWvVHTuEf","role":"clon","roleNote":{"es":"Clon conocido en los ejemplos del 2026-10-08. La ficha marca posible suplantación y no atribuye intención.","en":"Known clone in the 2026-10-08 examples. The card marks possible impersonation and does not attribute intent."},"id":"2c5de795c4aab2014c94dd6ed2fbda4564256b5e00c6fe929f1b7392639393b0","createdAt":"2026-10-08T07:41:49.581Z","partial":true,"referenceSlot":454480545,"name":"Comunidad STUBX · Creador","nameStatus":"verificado","symbol":"COMUNIDAD","inRegistry":false,"inRegistryStatus":"verificado","mintAuthority":{"state":"revocada","status":"verificado"},"freezeAuthority":{"state":"revocada","status":"verificado"},"metadataReading":"no_mutables_en_fuentes","metadataLevel":"ok","holdersStatus":"no_disponible","holdersNote":"Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como cantidad cero.","impersonation":true,"authenticityLevel":"riesgo","signals":["nombre «Comunidad STUBX · Creador» incluye STUBX/STUBX","enlace «https://stubxai.com/canales» coincide con un enlace u host del registro"],"statement":"Posible suplantación: el nombre, el símbolo, la imagen o un enlace coinciden con un token del registro curado, pero el mint es otro. La coincidencia no atribuye intención.","statementStatus":"inferido","curvePresent":true,"curvePresentStatus":"verificado","curveProgress":"0.00","curveProgressStatus":"inferido","curveProgressNote":"Porcentaje inferido con la cantidad real inicial pública de la curva clásica (Pump.fun lo llama ‘reserves’) (793100000000000). Truncado a 2 decimales hacia cero.","curveModuleNote":"Cuenta con el discriminador público de BondingCurve.","rulesVersion":"0.1.0","statement_en":"Possible impersonation: the name, symbol, image, or a link matches a token in the curated registry, but the mint is different. The match does not attribute intent.","holdersNote_en":"No usable response. It is not interpreted as a revoked authority, as immutability, or as a zero balance.","curveProgressNote_en":"Percentage inferred from the public initial real curve amount of the classic curve (Pump.fun calls these ‘reserves’) (793100000000000). Truncated to 2 decimals toward zero.","curveModuleNote_en":"Account with the public BondingCurve discriminator.","signals_en":["name “Comunidad STUBX · Creador” includes STUBX","link “https://stubxai.com/canales” matches a link or host in the registry"]},{"mint":"DjEjb6bxQ3Hjej9CzUAVeRqyt7k1tevHgcS37t41PUhQ","role":"clon","roleNote":{"es":"Clon conocido en los ejemplos del 2026-10-08. La ficha marca posible suplantación y no atribuye intención.","en":"Known clone in the 2026-10-08 examples. The card marks possible impersonation and does not attribute intent."},"id":"e19ccb6b9ab284a1349b1c0bd7472c1cbb1f3eb9808c37c752c85418b4239a32","createdAt":"2026-10-08T07:42:08.413Z","partial":true,"referenceSlot":454480614,"name":"Comunidad STUBX","nameStatus":"verificado","symbol":"COMUNIDAD","inRegistry":false,"inRegistryStatus":"verificado","mintAuthority":{"state":"revocada","status":"verificado"},"freezeAuthority":{"state":"revocada","status":"verificado"},"metadataReading":"no_mutables_en_fuentes","metadataLevel":"ok","holdersStatus":"no_disponible","holdersNote":"Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como cantidad cero.","impersonation":true,"authenticityLevel":"riesgo","signals":["nombre «Comunidad STUBX» incluye STUBX/STUBX","enlace «https://stubxai.com/canales» coincide con un enlace u host del registro"],"statement":"Posible suplantación: el nombre, el símbolo, la imagen o un enlace coinciden con un token del registro curado, pero el mint es otro. La coincidencia no atribuye intención.","statementStatus":"inferido","curvePresent":true,"curvePresentStatus":"verificado","curveProgress":"0.00","curveProgressStatus":"inferido","curveProgressNote":"Porcentaje inferido con la cantidad real inicial pública de la curva clásica (Pump.fun lo llama ‘reserves’) (793100000000000). Truncado a 2 decimales hacia cero.","curveModuleNote":"Cuenta con el discriminador público de BondingCurve.","rulesVersion":"0.1.0","statement_en":"Possible impersonation: the name, symbol, image, or a link matches a token in the curated registry, but the mint is different. The match does not attribute intent.","holdersNote_en":"No usable response. It is not interpreted as a revoked authority, as immutability, or as a zero balance.","curveProgressNote_en":"Percentage inferred from the public initial real curve amount of the classic curve (Pump.fun calls these ‘reserves’) (793100000000000). Truncated to 2 decimals toward zero.","curveModuleNote_en":"Account with the public BondingCurve discriminator.","signals_en":["name “Comunidad STUBX” includes STUBX","link “https://stubxai.com/canales” matches a link or host in the registry"]},{"mint":"3Zi6p6wzYZYKyuHdBhsDfb2pRR7XTfTfLKkXL7rwpump","role":"clon","roleNote":{"es":"Clon conocido en los ejemplos del 2026-10-08. La ficha marca posible suplantación y no atribuye intención.","en":"Known clone in the 2026-10-08 examples. The card marks possible impersonation and does not attribute intent."},"id":"6da15234e08bd8507731922297162664cf9c16690397d4fbe2777a8f6c32d44c","createdAt":"2026-10-08T07:42:27.686Z","partial":true,"referenceSlot":454480685,"name":"Comunidad STUBX","nameStatus":"verificado","symbol":"COMUNIDAD","inRegistry":false,"inRegistryStatus":"verificado","mintAuthority":{"state":"revocada","status":"verificado"},"freezeAuthority":{"state":"revocada","status":"verificado"},"metadataReading":"no_mutables_en_fuentes","metadataLevel":"ok","holdersStatus":"no_disponible","holdersNote":"Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como cantidad cero.","impersonation":true,"authenticityLevel":"riesgo","signals":["nombre «Comunidad STUBX» incluye STUBX/STUBX","enlace «https://stubxai.com/canales» coincide con un enlace u host del registro"],"statement":"Posible suplantación: el nombre, el símbolo, la imagen o un enlace coinciden con un token del registro curado, pero el mint es otro. La coincidencia no atribuye intención.","statementStatus":"inferido","curvePresent":true,"curvePresentStatus":"verificado","curveProgress":"0.00","curveProgressStatus":"inferido","curveProgressNote":"Porcentaje inferido con la cantidad real inicial pública de la curva clásica (Pump.fun lo llama ‘reserves’) (793100000000000). Truncado a 2 decimales hacia cero.","curveModuleNote":"Cuenta con el discriminador público de BondingCurve.","rulesVersion":"0.1.0","statement_en":"Possible impersonation: the name, symbol, image, or a link matches a token in the curated registry, but the mint is different. The match does not attribute intent.","holdersNote_en":"No usable response. It is not interpreted as a revoked authority, as immutability, or as a zero balance.","curveProgressNote_en":"Percentage inferred from the public initial real curve amount of the classic curve (Pump.fun calls these ‘reserves’) (793100000000000). Truncated to 2 decimals toward zero.","curveModuleNote_en":"Account with the public BondingCurve discriminator.","signals_en":["name “Comunidad STUBX” includes STUBX","link “https://stubxai.com/canales” matches a link or host in the registry"]},{"mint":"ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump","role":"clon","roleNote":{"es":"Ejemplo añadido el 2026-10-09. Se llama STUBX y no es el mint del registro. No es una lista completa.","en":"Example added on 2026-10-09. It is named STUBX and it is not the registry mint. This is not a complete list."},"id":"efa9c02fbf4a0873c703d200f107c5951109174f0a15a2fcf898eeb5b735206b","createdAt":"2026-10-09T16:16:12.461Z","partial":true,"referenceSlot":454922187,"name":"STUBX","nameStatus":"verificado","symbol":"STUBX","inRegistry":false,"inRegistryStatus":"verificado","mintAuthority":{"state":"revocada","status":"verificado"},"freezeAuthority":{"state":"revocada","status":"verificado"},"metadataReading":"no_mutables_en_fuentes","metadataLevel":"ok","holdersStatus":"verificado","holdersNote":"Saldos leídos de la curva y de la creadora. El resto respecto al suministro es 0.0006 %. No es un censo de cuentas con tokens.","impersonation":true,"authenticityLevel":"riesgo","signals":["nombre «STUBX» incluye STUBX/STUBX","símbolo «STUBX» incluye STUBX/STUBX","enlace «https://.superb-horse-9036f5.netlify.app» coincide con un enlace u host del registro"],"statement":"Posible suplantación: el nombre, el símbolo, la imagen o un enlace coinciden con un token del registro curado, pero el mint es otro. La coincidencia no atribuye intención.","statementStatus":"inferido","curvePresent":true,"curvePresentStatus":"verificado","curveProgress":"0.00","curveProgressStatus":"inferido","curveProgressNote":"Porcentaje inferido con la cantidad real inicial pública de la curva clásica (Pump.fun lo llama ‘reserves’) (793100000000000). Truncado a 2 decimales hacia cero.","curveModuleNote":"Cuenta con el discriminador público de BondingCurve.","rulesVersion":"0.1.0","statement_en":"Possible impersonation: the name, symbol, image, or a link matches a token in the curated registry, but the mint is different. The match does not attribute intent.","holdersNote_en":"Balances read from the curve and from the creator. The rest of the supply is 0.0006 %. It is not a census of token accounts.","curveProgressNote_en":"Percentage inferred from the public initial real curve amount of the classic curve (Pump.fun calls these ‘reserves’) (793100000000000). Truncated to 2 decimals toward zero.","curveModuleNote_en":"Account with the public BondingCurve discriminator.","signals_en":["name “STUBX” includes STUBX","symbol “STUBX” includes STUBX","link “https://.superb-horse-9036f5.netlify.app” matches a link or host in the registry"]},{"mint":"FMNb4CR8ksibmgY7Ztei6BWcZXi3WHcVeJhYb9TNpump","role":"clon","roleNote":{"es":"Ejemplo añadido el 2026-10-09. Se llama STUBX y no es el mint del registro. No es una lista completa.","en":"Example added on 2026-10-09. It is named STUBX and it is not the registry mint. This is not a complete list."},"id":"d0fdaab557d36d442f688e25a71bbc54b3d61b5fffa2bf26c2a02ba1eb7a9c86","createdAt":"2026-10-09T16:16:39.440Z","partial":true,"referenceSlot":454922310,"name":"STUBX","nameStatus":"verificado","symbol":"STUBX","inRegistry":false,"inRegistryStatus":"verificado","mintAuthority":{"state":"revocada","status":"verificado"},"freezeAuthority":{"state":"revocada","status":"verificado"},"metadataReading":"no_mutables_en_fuentes","metadataLevel":"ok","holdersStatus":"verificado","holdersNote":"Saldos leídos de la curva y de la creadora. El resto respecto al suministro es 0.0000 %. No es un censo de cuentas con tokens.","impersonation":true,"authenticityLevel":"riesgo","signals":["nombre «STUBX» incluye STUBX/STUBX","símbolo «STUBX» incluye STUBX/STUBX","enlace «https://superb-horse-9036f5.netlify.app» coincide con un enlace u host del registro"],"statement":"Posible suplantación: el nombre, el símbolo, la imagen o un enlace coinciden con un token del registro curado, pero el mint es otro. La coincidencia no atribuye intención.","statementStatus":"inferido","curvePresent":true,"curvePresentStatus":"verificado","curveProgress":"0.00","curveProgressStatus":"inferido","curveProgressNote":"Porcentaje inferido con la cantidad real inicial pública de la curva clásica (Pump.fun lo llama ‘reserves’) (793100000000000). Truncado a 2 decimales hacia cero.","curveModuleNote":"Cuenta con el discriminador público de BondingCurve.","rulesVersion":"0.1.0","statement_en":"Possible impersonation: the name, symbol, image, or a link matches a token in the curated registry, but the mint is different. The match does not attribute intent.","holdersNote_en":"Balances read from the curve and from the creator. The rest of the supply is 0.0000 %. It is not a census of token accounts.","curveProgressNote_en":"Percentage inferred from the public initial real curve amount of the classic curve (Pump.fun calls these ‘reserves’) (793100000000000). Truncated to 2 decimals toward zero.","curveModuleNote_en":"Account with the public BondingCurve discriminator.","signals_en":["name “STUBX” includes STUBX","symbol “STUBX” includes STUBX","link “https://superb-horse-9036f5.netlify.app” matches a link or host in the registry"]},{"mint":"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v","role":"contraste","roleNote":{"es":"USDC, contraste. Bytes del mint el 2026-10-09 18:42 Europe/Madrid: 7.442.271.613,512366. getTokenSupply en ese minuto no coincidió, así que no hay porcentajes. No es STUBX y no está presentado como clon. La ficha del 2026-10-08 conserva la cifra de aquel día.","en":"USDC, a contrast. Mint bytes on 2026-10-09 18:42 Europe/Madrid: 7,442,271,613.512366. getTokenSupply did not match in that minute, so there are no percentages. It is not STUBX and is not presented as a clone. The 2026-10-08 card keeps that day's figure."},"id":"80671753ebbcdee3317b7b2bbf7ef14eba21f8a58e437bcfdab42da02b15d7a2","createdAt":"2026-10-09T16:42:39.825Z","partial":true,"referenceSlot":454929422,"name":"USD Coin","nameStatus":"verificado","symbol":"USDC","inRegistry":false,"inRegistryStatus":"verificado","mintAuthority":{"state":"activa","status":"verificado"},"freezeAuthority":{"state":"activa","status":"verificado"},"metadataReading":"mutables","metadataLevel":"atención","holdersStatus":"no_disponible","holdersNote":"Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como cantidad cero.","impersonation":false,"authenticityLevel":"ok","signals":[],"statement":"Este mint no está en el registro curado. Que no esté no significa que sea falso ni que sea una copia.","statementStatus":"verificado","curvePresent":false,"curvePresentStatus":"verificado","curveProgress":null,"curveProgressStatus":"no_aplica","curveProgressNote":"No hay curva. No se rellena con cero.","curveModuleNote":"La dirección derivada tiene una cuenta cuyo propietario no es el programa de Pump.fun. No es una curva y no se rellenan con cero las cantidades de la curva.","rulesVersion":"0.1.0","statement_en":"This mint is not in the curated registry. That does not mean it is fake or a copy.","holdersNote_en":"No usable response. It is not interpreted as a revoked authority, as immutability, or as a zero balance.","curveProgressNote_en":"There is no curve. It is not filled with zero.","curveModuleNote_en":"The derived address has an account whose owner is not the Pump.fun program. It is not a curve, and the curve amounts are not filled in with zero.","signals_en":[]}],"source":"lista","evm":[{"chain":"eip155:56","address":"0xC99056C762F0802e4154E6322bd71ae928857777","name":"STUBX","symbol":"STUBX","creator":"0x3fDBEEcf583A53eABb59c3Ab2eDdfa8a5dBA503e","notedOn":"2026-10-08","source":"search-v2 de Pump.fun, 08-10 09:14 CEST","verifiedOnChain":false},{"chain":"eip155:5042","address":"0xAEE5212f20cc95370cb3556c4493CFD07721a5a3","name":"STUBX","symbol":"STUBX","creator":"0x37623022B9B42C5F8187eCe013E768a094C1d1e5","notedOn":"2026-10-08","source":"search-v2 de Pump.fun, 08-10 09:14 CEST","verifiedOnChain":false,"note":"La red eip155:5042 no está identificada con certeza."}],"rpc":{"primary":"https://solana-rpc.publicnode.com","fallback":"https://api.mainnet-beta.solana.com"},"registry":[{"id":"stubx","mint":"TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump","name":"STUBX","symbol":"STUBX","imageUris":["https://ipfs.io/ipfs/bafkreiew224xxf6ncagzzew5bfxlc6hejrib6jmxx66kxdrv5pkeoavd5e"],"imageCids":["bafkreiew224xxf6ncagzzew5bfxlc6hejrib6jmxx66kxdrv5pkeoavd5e"],"links":["https://x.com/stubxai","https://stubxai.com/","https://superb-horse-9036f5.netlify.app/"],"webHosts":["stubxai.com","superb-horse-9036f5.netlify.app"],"publishedAccounts":[{"address":"2fS12sTD4TNEEE9MoCEt19brV41UjGdAnaNaxWcmiWvX","label":"cuenta personal publicada del creador, saldo leído; no es un censo"}]}]};
+const STUBX_VERIFY = {"cards":[{"mint":"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v","role":"contraste","roleNote":{"es":"USDC, contraste. Bytes del mint el 2026-10-09 18:42 Europe/Madrid: 7.442.271.613,512366. getTokenSupply en ese minuto no coincidió, así que no hay porcentajes. No es STUBX y no está presentado como clon. La ficha del 2026-10-08 conserva la cifra de aquel día.","en":"USDC, a contrast. Mint bytes on 2026-10-09 18:42 Europe/Madrid: 7,442,271,613.512366. getTokenSupply did not match in that minute, so there are no percentages. It is not STUBX and is not presented as a clone. The 2026-10-08 card keeps that day's figure."},"id":"80671753ebbcdee3317b7b2bbf7ef14eba21f8a58e437bcfdab42da02b15d7a2","createdAt":"2026-10-09T16:42:39.825Z","partial":true,"referenceSlot":454929422,"name":"USD Coin","nameStatus":"verificado","symbol":"USDC","inRegistry":false,"inRegistryStatus":"verificado","mintAuthority":{"state":"activa","status":"verificado"},"freezeAuthority":{"state":"activa","status":"verificado"},"metadataReading":"mutables","metadataLevel":"atención","holdersStatus":"no_disponible","holdersNote":"Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como cantidad cero.","impersonation":false,"authenticityLevel":"ok","signals":[],"statement":"Este mint no está en el registro curado. Que no esté no significa que sea falso ni que sea una copia.","statementStatus":"verificado","curvePresent":false,"curvePresentStatus":"verificado","curveProgress":null,"curveProgressStatus":"no_aplica","curveProgressNote":"No hay curva. No se rellena con cero.","curveModuleNote":"La dirección derivada tiene una cuenta cuyo propietario no es el programa de Pump.fun. No es una curva y no se rellenan con cero las cantidades de la curva.","rulesVersion":"0.1.0","statement_en":"This mint is not in the curated registry. That does not mean it is fake or a copy.","holdersNote_en":"No usable response. It is not interpreted as a revoked authority, as immutability, or as a zero balance.","curveProgressNote_en":"There is no curve. It is not filled with zero.","curveModuleNote_en":"The derived address has an account whose owner is not the Pump.fun program. It is not a curve, and the curve amounts are not filled in with zero.","signals_en":[]}],"source":"lista","evm":[],"rpc":{"primary":"https://solana-rpc.publicnode.com","fallback":"https://api.mainnet-beta.solana.com"},"registry":[{"id":"stubx","mint":"TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump","name":"STUBX","symbol":"STUBX","imageUris":["https://ipfs.io/ipfs/bafkreiew224xxf6ncagzzew5bfxlc6hejrib6jmxx66kxdrv5pkeoavd5e"],"imageCids":["bafkreiew224xxf6ncagzzew5bfxlc6hejrib6jmxx66kxdrv5pkeoavd5e"],"links":["https://x.com/stubxai","https://stubxai.com/","https://superb-horse-9036f5.netlify.app/"],"webHosts":["stubxai.com","superb-horse-9036f5.netlify.app"],"publishedAccounts":[{"address":"2fS12sTD4TNEEE9MoCEt19brV41UjGdAnaNaxWcmiWvX","label":"cuenta personal publicada del creador, saldo leído; no es un censo"}]}]};
 const BASE58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 const OFFICIAL_MINT = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
 const COPY = {
@@ -25,7 +25,7 @@ const COPY = {
     oficial: {
         light: "ok",
         lightLabel: { es: "Parece oficial", en: "Looks official" },
-        title: { es: "Parece el STUBX oficial", en: "Looks like the official STUBX" },
+        title: { es: "Parece el el token del registro oficial", en: "Looks like the official el token del registro" },
         support: {
             es: "La dirección coincide con la ficha del registro. La fecha va en los detalles. «Parece» no es una garantía permanente.",
             en: "The address matches the registry card. The date is in the details. “Looks like” is not a permanent guarantee.",
@@ -33,17 +33,17 @@ const COPY = {
     },
     copia: {
         light: "atencion",
-        lightLabel: { es: "Se parece a STUBX, pero no es la CA oficial", en: "Looks like STUBX, but it is not the official CA" },
-        title: { es: "Se parece a STUBX, pero no es la CA oficial", en: "Looks like STUBX, but it is not the official CA" },
+        lightLabel: { es: "Se parece a el token del registro, pero no es la CA oficial", en: "Looks like el token del registro, but it is not the official CA" },
+        title: { es: "Se parece a el token del registro, pero no es la CA oficial", en: "Looks like el token del registro, but it is not the official CA" },
         support: {
-            es: `El nombre o el símbolo se parece a STUBX y la dirección es otra. Esto no dice quién lo creó ni con qué intención. La única CA oficial es ${OFFICIAL_MINT}.`,
-            en: `The name or the symbol looks like STUBX and the address is different. This does not say who created it or why. The only official CA is ${OFFICIAL_MINT}.`,
+            es: `El nombre o el símbolo se parece a el token del registro y la dirección es otra. Esto no dice quién lo creó ni con qué intención. La única CA oficial es ${OFFICIAL_MINT}.`,
+            en: `The name or the symbol looks like el token del registro and the address is different. This does not say who created it or why. The only official CA is ${OFFICIAL_MINT}.`,
         },
     },
     otra: {
         light: "atencion",
         lightLabel: { es: "Otra dirección", en: "Another address" },
-        title: { es: "No es el STUBX oficial", en: "This is not the official STUBX" },
+        title: { es: "No es el el token del registro oficial", en: "This is not the official el token del registro" },
         support: {
             es: "Hay ficha de esta dirección y no es la del registro. Tampoco es una señal de copia.",
             en: "There is a card for this address and it is not the registry one. It is not a copy signal either.",
@@ -166,7 +166,7 @@ function notOfficialView(mint, official) {
         light: "atencion",
         lightLabel: pair("No es la oficial", "Not the official one"),
         title: pair("No es la dirección oficial", "Not the official address"),
-        support: pair(`No es la dirección oficial de STUBX. La oficial es ${official}. Esto no dice quién creó esta dirección ni con qué intención.`, `This is not the official STUBX address. The official one is ${official}. This does not say who created this address or why.`),
+        support: pair(`No es la dirección oficial de el token del registro. La oficial es ${official}. Esto no dice quién creó esta dirección ni con qué intención.`, `This is not the official el token del registro address. The official one is ${official}. This does not say who created this address or why.`),
         mint,
         rows: [],
         partialNote: pair(caseOnly ? `${caseNote.es} ${NOT_OFFICIAL_GAP.es}` : NOT_OFFICIAL_GAP.es, caseOnly ? `${caseNote.en} ${NOT_OFFICIAL_GAP.en}` : NOT_OFFICIAL_GAP.en),
@@ -215,7 +215,7 @@ function rowsFor(card) {
 const PARTIAL = pair("La ficha está incompleta: la muestra de cuentas con tokens no está. Eso no se rellena con un cero.", "The card is incomplete: the token account sample is missing. That is not filled in with a zero.");
 const CENSUS = pair("Hay saldos de la curva y de la creadora. No es un censo ni se rellena el resto con un cero.", "There are balances for the curve and the creator. It is not a census, and the rest is not filled in with a zero.");
 const CENSUS_PERSONAL = pair("Hay saldos de la curva, de la creadora y de la cuenta personal publicada. No es un censo ni se rellena el resto con un cero.", "There are balances for the curve, the creator, and the published personal account. It is not a census, and the rest is not filled in with a zero.");
-const SOLANA_ONLY = "El STUBX oficial solo existe en Solana";
+const SOLANA_ONLY = "El el token del registro oficial solo existe en Solana";
 function partialNoteFor(card) {
     if (!card.partial)
         return null;
@@ -235,7 +235,7 @@ function evmView(address, evm) {
             light: "riesgo",
             lightLabel: pair("Copia conocida", "Known copy"),
             title: pair("Copia conocida", "Known copy"),
-            support: pair(`${SOLANA_ONLY}. Ejemplo de search-v2 de Pump.fun, 08-10 09:14, sin verificar en la cadena (${chain}).`, `The official STUBX exists only on Solana. Example from Pump.fun search-v2, 2026-10-08 09:14, not verified on-chain (${chain}).`),
+            support: pair(`${SOLANA_ONLY}. Ejemplo de search-v2 de Pump.fun, 08-10 09:14, sin verificar en la cadena (${chain}).`, `The official el token del registro exists only on Solana. Example from Pump.fun search-v2, 2026-10-08 09:14, not verified on-chain (${chain}).`),
             mint: found.address,
             rows: [
                 { label: pair("Red", "Network"), value: pair(chain, chain) },
@@ -251,7 +251,7 @@ function evmView(address, evm) {
         kind: "evm",
         light: "atencion",
         lightLabel: pair("Otra red", "Another network"),
-        title: pair(SOLANA_ONLY, "The official STUBX exists only on Solana"),
+        title: pair(SOLANA_ONLY, "The official el token del registro exists only on Solana"),
         support: pair("Una dirección que empieza por 0x no es el mint de Solana. La lista de ejemplos no es completa y no se ha verificado en la cadena.", "An address that starts with 0x is not the Solana mint. The example list is not complete and it has not been verified on-chain."),
         mint: shown,
         rows: [],
@@ -591,9 +591,9 @@ function evmMessage(input, knownEvm = []) {
     }
     const known = knownEvm.some((address) => address.toLowerCase() === trimmed.toLowerCase());
     if (known) {
-        return "Copia conocida. El STUBX oficial solo existe en Solana. Ejemplo de search-v2 de Pump.fun, 08-10 09:14, sin verificar en la cadena.";
+        return "Copia conocida. El el token del registro oficial solo existe en Solana. Ejemplo de search-v2 de Pump.fun, 08-10 09:14, sin verificar en la cadena.";
     }
-    return "El STUBX oficial solo existe en Solana.";
+    return "El el token del registro oficial solo existe en Solana.";
 }
 function validateMint(input, knownEvm = []) {
     const evm = evmMessage(input, knownEvm);
@@ -1868,8 +1868,8 @@ function decodeBase64(value) {
 
 const OFFICIAL_CA = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
 const AUDIT_NOTICE = {
-    es: "Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. STUBX no tiene relación con este token salvo que sea la CA oficial. Que no aparezcan señales no significa que esté todo comprobado.",
-    en: "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. STUBX has no relationship with this token unless it is the official CA. No signals showing does not mean everything was checked.",
+    es: "Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. el token del registro no tiene relación con este token salvo que sea la CA oficial. Que no aparezcan señales no significa que esté todo comprobado.",
+    en: "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. el token del registro has no relationship with this token unless it is the official CA. No signals showing does not mean everything was checked.",
 };
 const PRIVACY_NOTICE = {
     es: "La lectura es directa y solo en lectura.",
@@ -2187,7 +2187,7 @@ async function readWith(mint, registry, rpc, input) {
             missing: loc("No falta ningún dato pedido en esta lectura.", "No requested fact is missing in this reading."),
             missingState: "ok",
             absent: loc("Comprobado: no existe: la cuenta.", "Confirmed: it does not exist: the account."),
-            identity: loc(`Identidad del proyecto, aparte de este análisis: la CA oficial de STUBX es ${OFFICIAL_CA}.`, `Project identity, separate from this analysis: the official STUBX CA is ${OFFICIAL_CA}.`),
+            identity: loc(`Identidad del proyecto, aparte de este análisis: la CA oficial de el token del registro es ${OFFICIAL_CA}.`, `Project identity, separate from this analysis: the official el token del registro CA is ${OFFICIAL_CA}.`),
         };
     }
     if (!isMintAccount(mintInfo.owner, mintInfo.data)) {
@@ -2285,7 +2285,7 @@ async function readWith(mint, registry, rpc, input) {
             id: "invisibles",
             level: "atencion",
             title: loc("Hay caracteres invisibles en el nombre", "There are invisible characters in the name"),
-            explain: loc("Al mostrar el nombre se marcaron caracteres de control o invisibles. La comparación con STUBX los quita antes de mirar.", "When showing the name, control or invisible characters were marked. The comparison with STUBX removes them first."),
+            explain: loc("Al mostrar el nombre se marcaron caracteres de control o invisibles. La comparación con el token del registro los quita antes de mirar.", "When showing the name, control or invisible characters were marked. The comparison with el token del registro removes them first."),
         });
     }
     // getTokenLargestAccounts en publicnode responde 403 por diseño. Solo se pide a mainnet-beta.
@@ -2318,7 +2318,7 @@ async function readWith(mint, registry, rpc, input) {
         signals.push({
             id: "registro",
             level: "ok",
-            title: loc("Está en el registro de STUBX", "It is in the STUBX registry"),
+            title: loc("Está en el registro de el token del registro", "It is in the el token del registro registry"),
             explain: loc("La dirección coincide con la del registro. La ficha fechada es una foto anterior. Estar en el registro no es una auditoría.", "The address matches the one in the registry. The dated card is an earlier snapshot. Being in the registry is not an audit."),
         });
     }
@@ -2326,8 +2326,8 @@ async function readWith(mint, registry, rpc, input) {
         signals.push({
             id: "copia",
             level: "atencion",
-            title: loc("Se parece a STUBX, pero no es la CA oficial", "Looks like STUBX, but it is not the official CA"),
-            explain: loc(`El nombre o el símbolo se parece a STUBX y la dirección es otra. Esto no dice quién lo creó ni con qué intención. La única CA oficial es ${OFFICIAL_CA}.`, `The name or the symbol looks like STUBX and the address is different. This does not say who created it or why. The only official CA is ${OFFICIAL_CA}.`),
+            title: loc("Se parece a el token del registro, pero no es la CA oficial", "Looks like el token del registro, but it is not the official CA"),
+            explain: loc(`El nombre o el símbolo se parece a el token del registro y la dirección es otra. Esto no dice quién lo creó ni con qué intención. La única CA oficial es ${OFFICIAL_CA}.`, `The name or the symbol looks like el token del registro and the address is different. This does not say who created it or why. The only official CA is ${OFFICIAL_CA}.`),
         });
     }
     else if (likeness.signals.length > 0) {
@@ -2353,17 +2353,17 @@ async function readWith(mint, registry, rpc, input) {
         ? {
             light: risky || attention ? "atencion" : "ok",
             lightLabel: loc("En el registro", "In the registry"),
-            title: loc("Esta dirección es la del registro de STUBX", "This address is the one in the STUBX registry"),
+            title: loc("Esta dirección es la del registro de el token del registro", "This address is the one in the el token del registro registry"),
             support: loc("La lectura de ahora coincide con la dirección del registro. Las fichas fechadas siguen abajo, como foto anterior.", "This reading matches the address in the registry. The dated cards remain below, as an earlier snapshot."),
         }
         : {
             light: (risky ? "riesgo" : copyByName || attention ? "atencion" : "neutro"),
             lightLabel: copyByName
-                ? loc("Se parece a STUBX, pero no es la CA oficial", "Looks like STUBX, but it is not the official CA")
+                ? loc("Se parece a el token del registro, pero no es la CA oficial", "Looks like el token del registro, but it is not the official CA")
                 : loc(risky || attention ? "Hay señales" : "Sin esas señales", risky || attention ? "Signals found" : "Without those signals"),
             title: loc("Lectura de este token", "Reading for this token"),
             support: copyByName
-                ? loc("No es la dirección oficial de STUBX. Cada señal describe un hecho leído ahora. No es una puntuación.", "This is not the official STUBX address. Each signal describes a fact read just now. It is not a score.")
+                ? loc("No es la dirección oficial de el token del registro. Cada señal describe un hecho leído ahora. No es una puntuación.", "This is not the official el token del registro address. Each signal describes a fact read just now. It is not a score.")
                 : loc("Cada señal describe un hecho leído ahora. No es una puntuación.", "Each signal describes a fact read just now. It is not a score."),
         };
     const quotedName = clipForeign(names[0] || "", likeness.inRegistry);
@@ -2392,10 +2392,10 @@ async function readWith(mint, registry, rpc, input) {
     const missing = grouped.missing;
     const absent = grouped.absent;
     const identity = loc(likeness.inRegistry
-        ? `Identidad del proyecto: esta dirección (${mint}) es la CA oficial de STUBX.`
-        : `Identidad del proyecto, aparte de este análisis: la CA oficial de STUBX es ${OFFICIAL_CA}.`, likeness.inRegistry
-        ? `Project identity: this address (${mint}) is the official STUBX CA.`
-        : `Project identity, separate from this analysis: the official STUBX CA is ${OFFICIAL_CA}.`);
+        ? `Identidad del proyecto: esta dirección (${mint}) es la CA oficial de el token del registro.`
+        : `Identidad del proyecto, aparte de este análisis: la CA oficial de el token del registro es ${OFFICIAL_CA}.`, likeness.inRegistry
+        ? `Project identity: this address (${mint}) is the official el token del registro CA.`
+        : `Project identity, separate from this analysis: the official el token del registro CA is ${OFFICIAL_CA}.`);
     const checkedEs = facts.filter((item) => item.state === "ok").map((item) => item.label.es);
     const checkedEn = facts.filter((item) => item.state === "ok").map((item) => item.label.en);
     const attentionEs = signals
@@ -2915,7 +2915,7 @@ const ATTENTION = {
   },
   copia: {
     title: { es: "Dirección", en: "Address" },
-    lead: { es: "Se parece a STUBX pero no es la dirección oficial.", en: "It looks like STUBX but it is not the official address." },
+    lead: { es: "Se parece a el token del registro pero no es la dirección oficial.", en: "It looks like el token del registro but it is not the official address." },
     detail: {
       es: "La dirección oficial está publicada en stubxai.com. Ábrela y compárala con la de esta lectura, carácter a carácter. Un nombre igual no cambia la dirección.",
       en: "The official address is published on stubxai.com. Open it and compare it with the one in this reading, character by character. The same name does not change the address.",
@@ -3565,8 +3565,8 @@ function cloneWarningText(card, lang) {
   const context = contextFromCard(card);
   if (context.official || !looksLikeStubx(context)) return "";
   return lang === "en"
-    ? "It looks like STUBX but it is not the official address."
-    : "Se parece a STUBX pero no es la dirección oficial.";
+    ? "It looks like el token del registro but it is not the official address."
+    : "Se parece a el token del registro pero no es la dirección oficial.";
 }
 
 function comparisonBanner(left, right, lang) {
@@ -4622,8 +4622,8 @@ function describeMarket(model, lang) {
     retry: status === "fallo" || status === "limite",
     detail: marketCopy(
       language,
-      "La liquidez es el dinero que la fuente dice que hay en ese par, en dólares. El volumen es lo que la fuente dice que se movió en el intervalo indicado. STUBX no la calcula.",
-      "Liquidity is the money the source says is in that pair, in dollars. Volume is what the source says moved in the stated interval. STUBX does not calculate it.",
+      "La liquidez es el dinero que la fuente dice que hay en ese par, en dólares. El volumen es lo que la fuente dice que se movió en el intervalo indicado. ORVUPI no la calcula.",
+      "Liquidity is the money the source says is in that pair, in dollars. Volume is what the source says moved in the stated interval. ORVUPI does not calculate it.",
     ),
     more: marketCopy(language, "Más detalle", "More detail"),
   };
@@ -5003,8 +5003,8 @@ function paintVerify(out, view) {
     emptySupport.textContent = view.support[lang];
     var list = verifyEl("ul", { class: "leyenda" });
     list.append(
-      legendItem("ok", lang === "en" ? "STUBX registry address" : "Dirección del registro de STUBX"),
-      legendItem("atencion", lang === "en" ? "Looks like STUBX, but it is not the official CA" : "Se parece a STUBX, pero no es la CA oficial"),
+      legendItem("ok", lang === "en" ? "el token del registro registry address" : "Dirección del registro de el token del registro"),
+      legendItem("atencion", lang === "en" ? "Looks like el token del registro, but it is not the official CA" : "Se parece a el token del registro, pero no es la CA oficial"),
       legendItem("neutro", lang === "en" ? "Could not be checked" : "No se pudo comprobar"),
     );
     out.append(emptyTitle, emptySupport, list);
@@ -5189,8 +5189,8 @@ function bootVerify() {
         level: "atencion",
         cardDate: createdAt,
         title: {
-          es: "La ficha fechada también dice que se parece a STUBX y no es la CA oficial",
-          en: "The dated card also says it looks like STUBX and is not the official CA",
+          es: "La ficha fechada también dice que se parece a el token del registro y no es la CA oficial",
+          en: "The dated card also says it looks like el token del registro and is not the official CA",
         },
         explain: cardView.support,
       };
