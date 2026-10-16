@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Esta plantilla no pide cuenta de STUBX ni datos personales.
+        Esta plantilla no pide cuenta de ORVUPI ni datos personales.
         No escribas semilla, clave privada, correo personal ni nombre real.
         Cualquier token de Solana puede ser el ejemplo. Escribir la dirección no avala el token.
         Do not include a seed, a private key, a personal email, or a real name.

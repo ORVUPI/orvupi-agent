@@ -80,7 +80,7 @@ function metadataBytes() {
     Buffer.from([4]),
     Buffer.alloc(32, 3),
     Buffer.alloc(32, 4),
-    borsh("STUBX"),
+    borsh("ORVUPI"),
     borsh("STB"),
     borsh("https://evil.example/phish"),
     Buffer.from([0, 0, 0, 0, 0]),
@@ -244,7 +244,7 @@ try {
     await page.locator("#consultar").click();
     await page.waitForFunction(() => (document.getElementById("resultado")?.textContent || "").includes("puede haber cambiado"), null, { timeout: 15000 });
     const text = await page.locator("#resultado").innerText();
-    if (/dirección oficial|official address/.test(text)) failures.push(`${profile.id}: presenta una dirección como oficial: ${(text.match(/.{0,80}(dirección oficial|official address|STUBX).{0,80}/) || [""])[0]}`);
+    if (/dirección oficial|official address/.test(text)) failures.push(`${profile.id}: presenta una dirección como oficial: ${(text.match(/.{0,80}(dirección oficial|official address).{0,80}/) || [""])[0]}`);
     const uriLinked = await page.locator("#resultado a").evaluateAll((nodes) =>
       nodes.some((node) => `${node.textContent || ""} ${node.getAttribute("href") || ""}`.includes("evil.example")),
     );

@@ -51,7 +51,7 @@ describe("limits", () => {
     const term = letters(98, 117, 121);
     const result = denied("log:append", {
       kind: "social-draft",
-      detail: `please ${term} STUBX`,
+      detail: `please ${term} ORVUPI`,
     });
     assert.equal(result.limitId, "no-solicit-funds");
   });
@@ -189,7 +189,7 @@ describe("limits", () => {
   test("a clean local note is accepted", () => {
     const result = agent(writeState("killswitch.json", DISENGAGED)).dispatch("log:append", {
       kind: "social-draft",
-      detail: "STUBX es un prototipo. El agente no tiene claves.",
+      detail: "ORVUPI es un prototipo. El agente no tiene claves.",
     });
     assert.equal(result.ok, true);
     if (result.ok) {

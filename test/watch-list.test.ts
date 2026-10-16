@@ -90,8 +90,8 @@ function filled(read: { blankCard: (mint: string, at: string, errors: unknown[])
   card.slotStatus = "verificado";
   card.mintAuthority = { state: "revocada", address: null, status: "verificado" };
   card.freezeAuthority = { state: "revocada", address: null, status: "verificado" };
-  card.name = { text: mint === ERY ? "STUBX" : "USD Coin", status: "verificado" };
-  card.symbol = { text: mint === ERY ? "STUBX" : "USDC", status: "verificado" };
+  card.name = { text: mint === ERY ? "ORVUPI" : "USD Coin", status: "verificado" };
+  card.symbol = { text: mint === ERY ? "ORVUPI" : "USDC", status: "verificado" };
   card.uri = { text: null, status: "ausente" };
   card.metadataMutable = "no";
   card.largestStatus = "ok";

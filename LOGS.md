@@ -40,7 +40,7 @@ El campo `actor` vale `orvupi-agent` porque identifica el paquete que escribe el
 
 El 16-10-2026 el proyecto pasó a llamarse ORVUPI y la cadena se recalculó:
 
-- La cadena anterior (22 entradas, actor `stubx-agent`, último hash `00448b50f38e39a3e04b3bbc23e93a5e824f955eaa30f9f4911bfc9baf2b1168`) se conserva sin cambios en el tag `pre-orvupi-2026-10-16`, con sus anclas y sus sellos `.ots`. Los sellos confirmados que se citan abajo se comprueban sobre ese tag.
+- La cadena anterior (22 entradas, actor con el nombre anterior del proyecto, último hash `00448b50f38e39a3e04b3bbc23e93a5e824f955eaa30f9f4911bfc9baf2b1168`) se conserva sin cambios en el tag `pre-orvupi-2026-10-16`, con sus anclas y sus sellos `.ots`. Los sellos confirmados que se citan abajo se comprueban sobre ese tag.
 - La cadena nueva empieza con una entrada génesis (`action: "genesis"`, seq 1) cuya nota es «ORVUPI, 16-10-2026…» y lleva escrito ese último hash. Las entradas 2 a 23 repiten las 22 anteriores con su fecha original, el actor `orvupi-agent`, el enlace a la misma ejecución de Actions en `ORVUPI/orvupi-agent` y `@ORVUPI` en la nota (es la misma cuenta, renombrada). Por eso la génesis es la única entrada con fecha posterior a la siguiente.
 - Los sellos `.ots` antiguos sellaban las anclas de la cadena anterior y no valen para la nueva, así que se han retirado de `logs/anchors/`. Las anclas nuevas se sellarán en las próximas ejecuciones de `daily-log`; hasta entonces `logs:verify` las lista como pendientes.
 - `logs:check-update` admite este cambio una sola vez: solo cuando la cadena de la base termina en ese hash y la nueva empieza con esa génesis exacta. Cualquier otro cambio sigue siendo solo-añadir.

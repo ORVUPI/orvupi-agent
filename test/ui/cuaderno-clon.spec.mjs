@@ -90,7 +90,7 @@ test("el cuaderno muestra el clon, el enlace ausente y la hora con segundos", as
   expect(plain).toHaveLength(2);
   for (const label of labels) {
     expect(label.startsWith("Dice llamarse «ORVUPI» · ERYy… · ")).toBe(true);
-    expect(label.startsWith("STUBX ·")).toBe(false);
+    expect(label.startsWith("ORVUPI ·")).toBe(false);
   }
   for (const label of plain) expect(label).toMatch(/\d{2}:\d{2}:\d{2}$/);
   expect(plain.some((label) => marked[0] === `${label} (2)`)).toBe(true);

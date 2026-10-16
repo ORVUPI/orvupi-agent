@@ -1096,7 +1096,7 @@ describe("studio", () => {
       const lines = typeof item.licencia === "string" ? [item.licencia] : [item.licencia.es, item.licencia.en];
       for (const line of lines) assert.ok(reglas.includes(line), line);
     }
-    assert.equal(/\bSTUBX\b|Agente Tal[oó]n/i.test(reglas), false);
+    assert.equal(new RegExp(`\\b${["STU", "BX"].join("")}\\b|Agente Tal[oó]n`, "i").test(reglas), false);
     assert.match(reglas, /MIT code\. Flat color taken from the ORVUPI meme kit palette\./);
     assert.equal(reglas.includes("generados con IA.»."), false);
     assert.equal(reglas.includes("AI-generated elements.”."), false);

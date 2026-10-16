@@ -1,0 +1,1255 @@
+{
+ "origin": "https://stubxai.com/assets/orvupi/album/",
+ "files": [
+  {
+   "file": "01_comunidad/001-bienvenida-a-la-comunidad.png",
+   "bytes": 2160201,
+   "sha256": "2d7c0242ced988294786129086959df7bc38d912a86855727c887777c953bc5c"
+  },
+  {
+   "file": "01_comunidad/002-la-plaza-de-todos.png",
+   "bytes": 2536930,
+   "sha256": "8f38a75aced0a23613825bdb39bf35855dfcc20b45bc795da33644cb107c4a89"
+  },
+  {
+   "file": "01_comunidad/003-mesa-abierta.png",
+   "bytes": 2192475,
+   "sha256": "0991e83b22dc878ffe4158dadc3b21498e833af8f176e8e793b48523c2bfefa8"
+  },
+  {
+   "file": "01_comunidad/004-una-idea-compartida.png",
+   "bytes": 2109170,
+   "sha256": "9f8ffb44cd9555912b1bb2ca625e713f740d07547111aec2dd8a2dd1998d12e1"
+  },
+  {
+   "file": "01_comunidad/005-puentes-entre-miembros.png",
+   "bytes": 2457989,
+   "sha256": "35853f43f53dc6754370aa722764a80dd1309cdca696b3c5b2fba7dd82482dcc"
+  },
+  {
+   "file": "01_comunidad/006-cafe-de-la-comunidad.png",
+   "bytes": 2236009,
+   "sha256": "6331f161237c4e6876a11bc3fee628c7463905cb040f99067575c74085969b4b"
+  },
+  {
+   "file": "01_comunidad/007-circulo-de-escucha.png",
+   "bytes": 2042047,
+   "sha256": "f657bf7343a8d0c1d0468a72e35aa27e9b6e2252ffe0760c240e8b15907e1b2a"
+  },
+  {
+   "file": "01_comunidad/008-jardin-colectivo.png",
+   "bytes": 2357314,
+   "sha256": "9907def968ed3ab717923d2d9fcca631c252c4e34e43e23707b49482e200ae87"
+  },
+  {
+   "file": "01_comunidad/009-encuentro-en-el-tejado.png",
+   "bytes": 2437378,
+   "sha256": "6eb26ec796ed407536e07ae7934b08dd8eb906dab20bc05e6692c56ec65f5f6a"
+  },
+  {
+   "file": "01_comunidad/010-la-fogata-digital.png",
+   "bytes": 2376129,
+   "sha256": "d5000ee3702db5344472bec8a65cb204ba5caf530b69fd60618578bfa7a07cf7"
+  },
+  {
+   "file": "01_comunidad/011-mural-de-todos.png",
+   "bytes": 2487818,
+   "sha256": "cd6503f6e8408a02bf402d162c8c36759f0ec3ad41d1da169051afc695908621"
+  },
+  {
+   "file": "01_comunidad/012-llegas-y-encajas.png",
+   "bytes": 2179421,
+   "sha256": "ab17a40cde71ce29e7e383455ea919450c57ebe5ed5e46d62ac5fd3f945da7f8"
+  },
+  {
+   "file": "01_comunidad/013-ayuda-entre-vecinos.png",
+   "bytes": 2277167,
+   "sha256": "d045703f224a3bb029c27f441f21028d1b868108e14fce890e3a0bb41d29c4f2"
+  },
+  {
+   "file": "01_comunidad/014-cadena-de-buenos-gestos.png",
+   "bytes": 2176940,
+   "sha256": "e8a7d8514e0c6493128207f8ce68aaaf771b39081324c5a52586d1bc3ef82761"
+  },
+  {
+   "file": "01_comunidad/015-pequenos-grupos-grandes-ideas.png",
+   "bytes": 2373563,
+   "sha256": "01fb471f9bc06c2e1803b2fdd76440b8b9d3bbd678ad780cd4016724bd015911"
+  },
+  {
+   "file": "01_comunidad/016-comunidad-en-movimiento.png",
+   "bytes": 2326203,
+   "sha256": "81852ad036577ba98a561b392c14baa0a50171319806a462ca9048e7ce03298a"
+  },
+  {
+   "file": "01_comunidad/017-rincon-para-preguntar.png",
+   "bytes": 2425712,
+   "sha256": "51a2b61a673c22116bd28a3b48b226bb44b79ef3826765e016a8585b43c9b8d7"
+  },
+  {
+   "file": "01_comunidad/018-la-biblioteca-comun.png",
+   "bytes": 2368759,
+   "sha256": "702c69094b65f45a5e8cf11b8c4cd0007d9560be3e4f96a41998aeffabd44429"
+  },
+  {
+   "file": "01_comunidad/019-sin-dejar-a-nadie-atras.png",
+   "bytes": 2118609,
+   "sha256": "03bcebd61e41821a10aa951c592cc01d3b8186e33c1d4685c0bed56e13f3ae53"
+  },
+  {
+   "file": "01_comunidad/020-el-mapa-de-la-comunidad.png",
+   "bytes": 2374696,
+   "sha256": "6749af12438f083ce3a1584f7702fe9e1c5bc3f967dc1a3e144bb864354cb0a0"
+  },
+  {
+   "file": "01_comunidad/021-construimos-juntos.png",
+   "bytes": 2411012,
+   "sha256": "754d9f96269e9b02217022c6f1ff5a4adce69a1a27829527d5f7d1cb2a22bf0c"
+  },
+  {
+   "file": "01_comunidad/022-voces-diferentes.png",
+   "bytes": 2233458,
+   "sha256": "634022593fac00c0166bc105361e4162875224ab7aa0248737a7d4350c95a361"
+  },
+  {
+   "file": "01_comunidad/023-una-pausa-juntos.png",
+   "bytes": 2322748,
+   "sha256": "ba6a8864c461e0903abafdda2091a7eb25214f6978aebe8db36d93617f87096d"
+  },
+  {
+   "file": "01_comunidad/024-abrir-la-puerta.png",
+   "bytes": 1990706,
+   "sha256": "dcf2f04813fa37b102539838d780b33436fd53758c9e590698f40c89fd6b3b77"
+  },
+  {
+   "file": "01_comunidad/025-la-red-de-confianza.png",
+   "bytes": 2176114,
+   "sha256": "29a2af79f4da202215e137e842baf258dfed28bed20ca1b2e4ea0b691fbe82aa"
+  },
+  {
+   "file": "02_gestos/026-saludo-amistoso.png",
+   "bytes": 1627160,
+   "sha256": "8f78c589b93169a19c2976296c981023d4752bad1e5a8219d6d13723e6799a41"
+  },
+  {
+   "file": "02_gestos/027-choca-el-tentaculo.png",
+   "bytes": 1830431,
+   "sha256": "68fe51cf66d5417982bd205d3fe59cba9b319ba50088371dd42365e112e2bdea"
+  },
+  {
+   "file": "02_gestos/028-ven-por-aqui.png",
+   "bytes": 1830801,
+   "sha256": "91fbe1a8c553562bf4b70b8123c82f70d9cc9550abc851b76ce4b5914ede97bd"
+  },
+  {
+   "file": "02_gestos/029-senalar-a-la-izquierda.png",
+   "bytes": 1470087,
+   "sha256": "e7609711850418888bf0a2a6715a2094e3c65713fa4f5fbf01d3517068d2af3d"
+  },
+  {
+   "file": "02_gestos/030-senalar-a-la-derecha.png",
+   "bytes": 1586649,
+   "sha256": "962a321ae4c77e33bdb9f31cbb124fc276de8eac3911e78088b8654bfd65e276"
+  },
+  {
+   "file": "02_gestos/031-mira-arriba.png",
+   "bytes": 1695984,
+   "sha256": "8088b6a36ee678cd241ce1469466d43fdf532dce44eb2684ecc44de0a7fcb052"
+  },
+  {
+   "file": "02_gestos/032-mira-abajo.png",
+   "bytes": 1705761,
+   "sha256": "d5d79a79920906eb833c2563b08328f61a6664c08c22276758d1e8d6aad38bae"
+  },
+  {
+   "file": "02_gestos/033-un-momento.png",
+   "bytes": 1603643,
+   "sha256": "44c6579abd1ddcd62199368499f16fee70e7c4ea72e193b11b310a7809312527"
+  },
+  {
+   "file": "02_gestos/034-todo-entendido.png",
+   "bytes": 1672625,
+   "sha256": "38f86cb618fa97434144cdd1fac79b5d815b68657d12990c9bb0ab1f89f67e06"
+  },
+  {
+   "file": "02_gestos/035-manos-a-la-obra.png",
+   "bytes": 1774091,
+   "sha256": "328de150544732fa840b28869e887471da23f326b3f62d7d18aeae98648a4e48"
+  },
+  {
+   "file": "02_gestos/036-abrazo-abierto.png",
+   "bytes": 1644949,
+   "sha256": "f9caa7b71a714b351c31c8b12d8f4e8cbb681878bc3bd178c5c05dcdeb93e5f4"
+  },
+  {
+   "file": "02_gestos/037-abrazo-a-si-mismo.png",
+   "bytes": 1598934,
+   "sha256": "d9ad3d71052e0c2eafcb9fde3b21982444e621a9de903beee7c726c3ff0806d0"
+  },
+  {
+   "file": "02_gestos/038-reverencia-amable.png",
+   "bytes": 1680901,
+   "sha256": "e796b1e156e85fe65fa6100105fb262cf195e72f65e61c66563bd188be01cbe1"
+  },
+  {
+   "file": "02_gestos/039-presentando-una-idea.png",
+   "bytes": 1717441,
+   "sha256": "6e33cf767c2adcab2e103666a406b9bebb53cd539937b0be7a0c5a85fbfed59e"
+  },
+  {
+   "file": "02_gestos/040-pensando-con-calma.png",
+   "bytes": 1584925,
+   "sha256": "4d74f0653661562c2428e60d42171de526bf609a402762b5903189a15984177c"
+  },
+  {
+   "file": "02_gestos/041-escuchando-de-cerca.png",
+   "bytes": 1708522,
+   "sha256": "75c251bdeccca1987e80edbd28b2ef6af4936da77cfba104828484b47f927fd1"
+  },
+  {
+   "file": "02_gestos/042-celebracion-silenciosa.png",
+   "bytes": 1734023,
+   "sha256": "e496507dbeb65ae2cebfc7823fdb3479c4750cb4f1af72f4140b761d60fcc7af"
+  },
+  {
+   "file": "02_gestos/043-tentaculos-cruzados.png",
+   "bytes": 1785835,
+   "sha256": "760e77cdaed220099cb674a3457410824dab15cde8d8e82a22fc9eceba0f8b51"
+  },
+  {
+   "file": "02_gestos/044-secreto-compartido.png",
+   "bytes": 1699021,
+   "sha256": "8439be725ba96eec3df3f51be3492543f12a6045c8739bf4d624c9b76ccdb10d"
+  },
+  {
+   "file": "02_gestos/045-encogerse-de-hombros.png",
+   "bytes": 1601972,
+   "sha256": "b2d10c82f71bc362a95cf915cbbca01cbfebd053500973413790566860b225bc"
+  },
+  {
+   "file": "02_gestos/046-ofrecer-ayuda.png",
+   "bytes": 1656753,
+   "sha256": "50e95d82c81d52b9e9b6f0f395562f48b750296ea65f64464f1bfc433b750f16"
+  },
+  {
+   "file": "02_gestos/047-recibir-algo.png",
+   "bytes": 1705187,
+   "sha256": "c9bf947dbf613e36801943a1e19e91532495f36ba0bfeb877c0b4e0404917351"
+  },
+  {
+   "file": "02_gestos/048-pase-adelante.png",
+   "bytes": 1666189,
+   "sha256": "14378231ef8e859b202eeef6f31789e8363b9e54ad0458278de39c5106a7b9f4"
+  },
+  {
+   "file": "02_gestos/049-una-vuelta-divertida.png",
+   "bytes": 1721805,
+   "sha256": "6ad6ab5b7617d0b1ace97c0e2a941635389a41859bfa9355a9ce2719e742e57d"
+  },
+  {
+   "file": "02_gestos/050-pose-de-curiosidad.png",
+   "bytes": 1683194,
+   "sha256": "59957690dc5db6fa71462dafcd749be53cbf34b6da9d7685a9f6355d54ec9aae"
+  },
+  {
+   "file": "03_emociones/051-alegria-tranquila.png",
+   "bytes": 1679580,
+   "sha256": "419f49c2448b59c53070aaf4a7a5137ea9323aa19c43fd1f98e70fc3b8b8c473"
+  },
+  {
+   "file": "03_emociones/052-curiosidad-despierta.png",
+   "bytes": 1779523,
+   "sha256": "30df69edb589e682dc8a3ed7e557b3a2bd1ba28d20e62534636269731eb9099a"
+  },
+  {
+   "file": "03_emociones/053-sorpresa-bonita.png",
+   "bytes": 1825096,
+   "sha256": "a4dc1f9470b88143d4e241c2b1a6300d8e3f2252e31d4f3e17cc7892542fcfb2"
+  },
+  {
+   "file": "03_emociones/054-orgullo-compartido.png",
+   "bytes": 1755407,
+   "sha256": "c5732364513a86bfd5a8eb9af1da34d7e918090ab8abd9a3372e4932ff38e29e"
+  },
+  {
+   "file": "03_emociones/055-ilusion-por-empezar.png",
+   "bytes": 1619672,
+   "sha256": "842fa7cd3227bbbf7d7f593e4c17963a76f3dcb2a211ba630413676c569980a8"
+  },
+  {
+   "file": "03_emociones/056-calma-profunda.png",
+   "bytes": 1592889,
+   "sha256": "b82e3fbb2487b593d25ce324ba8efde681684a53ee371278639c7afb938e9b1a"
+  },
+  {
+   "file": "03_emociones/057-gratitud-sincera.png",
+   "bytes": 1664979,
+   "sha256": "2d9f2d3853ff700d18f47f05e1694b7714d4191acd68b757576ea75e0bd54ffa"
+  },
+  {
+   "file": "03_emociones/058-timidez-simpatica.png",
+   "bytes": 1805434,
+   "sha256": "58de0856172775f7489b0bda5b67465279cd8bec0c610876777f1deeac4fa172"
+  },
+  {
+   "file": "03_emociones/059-determinacion-serena.png",
+   "bytes": 1682153,
+   "sha256": "14857fd6dc6b0722c5f50e57724820c4410b7c1345c4893403eaa2bc34400a48"
+  },
+  {
+   "file": "03_emociones/060-inspiracion-repentina.png",
+   "bytes": 1681271,
+   "sha256": "88526faa47470fa3a2324d80e3eef6afee02d59ed748a762d9d4507b3ba5dfad"
+  },
+  {
+   "file": "03_emociones/061-empatia.png",
+   "bytes": 1636164,
+   "sha256": "d385ab74f11a5cd6709c137a5adee3f1198f4d69ebd24817c6ca15dde28541dd"
+  },
+  {
+   "file": "03_emociones/062-alivio.png",
+   "bytes": 1653862,
+   "sha256": "4249f6fba92d2ffc1ecac99d082b1aaf0d2482153135065259b0da3a62267681"
+  },
+  {
+   "file": "03_emociones/063-nostalgia-suave.png",
+   "bytes": 1754035,
+   "sha256": "647dbfb1c32bce783493024604b8c74af3af60706e40b1479e809aa4bab08710"
+  },
+  {
+   "file": "03_emociones/064-asombro-inmenso.png",
+   "bytes": 1727357,
+   "sha256": "82d06d18420045dc248f39d4b38f97066e2725aa0d98d0fc166943f3b5e0a694"
+  },
+  {
+   "file": "03_emociones/065-paciencia.png",
+   "bytes": 1586856,
+   "sha256": "80cc7a08727ed6959ae678b7d19e30dfdefadc1003e1f418f6b04d5b811ad4fc"
+  },
+  {
+   "file": "03_emociones/066-verguenza-divertida.png",
+   "bytes": 1750082,
+   "sha256": "b9f0d4cd6a7085d71e7a8890be0b62f82682d0171b1fe440b30da429316d9fb0"
+  },
+  {
+   "file": "03_emociones/067-entusiasmo-contenido.png",
+   "bytes": 1807618,
+   "sha256": "fe09e4f93613f063cdf5c873e3adb9c15b84edbabc2eb3cb97fa085cbe880895"
+  },
+  {
+   "file": "03_emociones/068-duda-honesta.png",
+   "bytes": 1674062,
+   "sha256": "00e97fcfc80a92d27bc5f30bf4b19162b9a79d203b7b6b33d0117ffa608f2017"
+  },
+  {
+   "file": "03_emociones/069-concentracion.png",
+   "bytes": 1803781,
+   "sha256": "a7260742d6cd3e2c027b8cf8ce446880d36f2543255a9e6c754049d26afae57c"
+  },
+  {
+   "file": "03_emociones/070-melancolia-tierna.png",
+   "bytes": 1698625,
+   "sha256": "497ee07d393cc4b2fe96a31453ae9ceb95b12bfacbb87783f2a3de8836ff86d6"
+  },
+  {
+   "file": "03_emociones/071-buen-humor.png",
+   "bytes": 1746691,
+   "sha256": "df294ee3efa2d3176262f8113dca55053261c613e119bfe3b73be6f6f7e7bf8d"
+  },
+  {
+   "file": "03_emociones/072-preocupacion-cuidadosa.png",
+   "bytes": 1685893,
+   "sha256": "1e0ff4fb22c3cd54dfc69b1ee140dd107892094ceeacffc687b5bf4bf061cde5"
+  },
+  {
+   "file": "03_emociones/073-confianza-sin-presumir.png",
+   "bytes": 1702179,
+   "sha256": "9c9e49c1ae470c6cf76332bfb3508342b118240d4fdeb9eacc10a2cea7875ffe"
+  },
+  {
+   "file": "03_emociones/074-alegria-por-otro.png",
+   "bytes": 1721315,
+   "sha256": "a25e64ccc1e8336f854766b2750f444d5172e3a8293827e50e041e5d782ab9a3"
+  },
+  {
+   "file": "03_emociones/075-renovacion.png",
+   "bytes": 1895435,
+   "sha256": "e1af8b274981e611e1b519dfe874fad01542241e3d2508c1aded3a35e5bf7174"
+  },
+  {
+   "file": "04_reacciones_meme/076-eso-escalo-rapido.png",
+   "bytes": 1815600,
+   "sha256": "1900cb81f7481f88614637ad963e5a4c93406bd1799bf313bd587792602f7310"
+  },
+  {
+   "file": "04_reacciones_meme/077-no-me-lo-esperaba.png",
+   "bytes": 1669455,
+   "sha256": "b08575dcde0db6aa27e4ff1887c32dccc4ca99b25ad2f9b02adc8922ab8f39f0"
+  },
+  {
+   "file": "04_reacciones_meme/078-yo-lo-sabia.png",
+   "bytes": 1764870,
+   "sha256": "6d3a049558a8fb314cd5bbc09a1f726294610417e9196a068e3b8e2d63c01021"
+  },
+  {
+   "file": "04_reacciones_meme/079-necesito-procesarlo.png",
+   "bytes": 1662019,
+   "sha256": "a13ad7373eb73a44437a72af9613d2d234979f43363f47891a97d4b0f510ca86"
+  },
+  {
+   "file": "04_reacciones_meme/080-mirada-de-sospecha.png",
+   "bytes": 1727606,
+   "sha256": "088295a7dec2265205730f1aedc382d645fdada929dd3b6b28c31eb93b7d5f07"
+  },
+  {
+   "file": "04_reacciones_meme/081-interesante.png",
+   "bytes": 1720423,
+   "sha256": "44cafe3c1041d671e39f28783362d929cd3c6154b7edc42cf933e2a07b4368b5"
+  },
+  {
+   "file": "04_reacciones_meme/082-me-representa.png",
+   "bytes": 1685079,
+   "sha256": "5a5d500ff01f072dbf3c0c0547779f78b3a8506bd115c258dca48dc89f09014c"
+  },
+  {
+   "file": "04_reacciones_meme/083-estoy-dentro.png",
+   "bytes": 1762658,
+   "sha256": "73c75ba3448265ef2045b3d5175bbfe47698011d015b4f22f9c8adab8f8eecb6"
+  },
+  {
+   "file": "04_reacciones_meme/084-demasiadas-pestanas.png",
+   "bytes": 1846674,
+   "sha256": "d01256f2781d91fca603f96fcd4105286264b37a839cb52eb456e41975332fb2"
+  },
+  {
+   "file": "04_reacciones_meme/085-un-poquito-de-caos.png",
+   "bytes": 1845384,
+   "sha256": "7949a57af92d3fc833e805737e3a41ef10c7858e2ea621e1ccaea008937deb83"
+  },
+  {
+   "file": "04_reacciones_meme/086-modo-observador.png",
+   "bytes": 1666215,
+   "sha256": "d38f826b6507f169ab34e024ec1a84d613434454464ea18bbcf611077878b6bc"
+  },
+  {
+   "file": "04_reacciones_meme/087-me-hago-el-distraido.png",
+   "bytes": 1522553,
+   "sha256": "a96c2d368fb3a124ca237ad38a3fcb0b96e9e26a2170ffcb9e22c064866c00e0"
+  },
+  {
+   "file": "04_reacciones_meme/088-no-pienso-discutir.png",
+   "bytes": 1681503,
+   "sha256": "d2893b69d9bccd39333309bdc230fdbd5ae8c43603794e922b008a1d847ff057"
+  },
+  {
+   "file": "04_reacciones_meme/089-otra-vez-lo-mismo.png",
+   "bytes": 1753367,
+   "sha256": "a8a7e75098e0498aa56db134835a3893f6e48bf158f44499e215759c3d8e71f5"
+  },
+  {
+   "file": "04_reacciones_meme/090-ahora-todo-encaja.png",
+   "bytes": 1684714,
+   "sha256": "26654a13601234a42b17245f0c384170771eb4dcec72491e36cb8953e9a50c98"
+  },
+  {
+   "file": "04_reacciones_meme/091-se-viene-algo.png",
+   "bytes": 1892671,
+   "sha256": "47112d599972f49fbe56b8f578c5eb7e668f105a53eaeb36522808049103f320"
+  },
+  {
+   "file": "04_reacciones_meme/092-voy-tarde.png",
+   "bytes": 1616566,
+   "sha256": "792cdf65ecd06525f107c457ce06c31f4e88f35c234e540b048a9e0953d7aaa8"
+  },
+  {
+   "file": "04_reacciones_meme/093-pequena-victoria.png",
+   "bytes": 1677392,
+   "sha256": "47f8355bb89f155f489157b13024d7d512f5aa8c49ab7c71a0a23064e4f888e7"
+  },
+  {
+   "file": "04_reacciones_meme/094-quiero-verlo.png",
+   "bytes": 1495156,
+   "sha256": "76648c37ff298e8e8e4d77c4d3c6b067bcb11ae2f909706933f88c4f06aed7d4"
+  },
+  {
+   "file": "04_reacciones_meme/095-por-favor-funciona.png",
+   "bytes": 1758503,
+   "sha256": "19b7f0858a91c866ed84a07274ddd77fbadcdd821943d20739ea933d08549d3b"
+  },
+  {
+   "file": "04_reacciones_meme/096-lo-reviso-primero.png",
+   "bytes": 1788251,
+   "sha256": "374c8820e6114c31cb938d0fa51441dcc8031ecb591227736d480992e178c521"
+  },
+  {
+   "file": "04_reacciones_meme/098-cuando-llega-la-inspiracion.png",
+   "bytes": 1668844,
+   "sha256": "5830bd069c020a31f0b2b514d234c7fc6b7a72215eb815972b223c2e7298df9a"
+  },
+  {
+   "file": "04_reacciones_meme/099-una-cosa-mas.png",
+   "bytes": 1827416,
+   "sha256": "6fcc4a26e778294561bd619048120ebbf0a220d484473c303c297b30e821521a"
+  },
+  {
+   "file": "04_reacciones_meme/100-ya-puedo-descansar.png",
+   "bytes": 1683414,
+   "sha256": "736c3da715fd23fce1c24a3ac5adeddce968f753c2e6ca8e56e98b62ba2c5472"
+  },
+  {
+   "file": "05_humor/101-ocho-manos-y-el-cafe.png",
+   "bytes": 2245773,
+   "sha256": "09c237501e6bd486927e60591354993ba5389851994a365ed3cf8c6fe0500ae0"
+  },
+  {
+   "file": "05_humor/102-el-cable-rebelde.png",
+   "bytes": 2581147,
+   "sha256": "a8a601cbb44178fe841eda3c8dcc68b9c0256e794630f3a225ca0c715219cf20"
+  },
+  {
+   "file": "05_humor/103-la-impresora-dramatica.png",
+   "bytes": 1937338,
+   "sha256": "046d9e90a3babd4db54c36917199a85f89eba6b6b1b3b435a11c94eb0712c6e6"
+  },
+  {
+   "file": "05_humor/104-pulpo-contra-paraguas.png",
+   "bytes": 2473281,
+   "sha256": "94db3888e4c4cc4fdde525d65e34b5dc7e1569f2f1d95bba47a7df4c57c55f91"
+  },
+  {
+   "file": "05_humor/105-la-silla-giratoria.png",
+   "bytes": 2137130,
+   "sha256": "d4808d7be72ab94f655c36118c674d7b22a8d02a0780fc7fff6e0f4917874485"
+  },
+  {
+   "file": "05_humor/107-el-calcetin-perdido.png",
+   "bytes": 2361630,
+   "sha256": "2d171aec7d3cdeea0998b416822c6b346b126b9056a28f7edad273a31993e9c9"
+  },
+  {
+   "file": "05_humor/108-cocinero-multitarea.png",
+   "bytes": 2263741,
+   "sha256": "bdf1a82fe3a082bdb3c7e8479cc068f66e497be76e52aa3c033fa518f543fa63"
+  },
+  {
+   "file": "05_humor/109-el-paquete-interminable.png",
+   "bytes": 2214282,
+   "sha256": "12c9dbd86fdbcde6c64ab5d95315629604ef01a72863d3a21b00bfa348c6d519"
+  },
+  {
+   "file": "05_humor/111-el-selfie-imposible.png",
+   "bytes": 2196021,
+   "sha256": "74b447b7f76f9657a27905628ba77185882b4567b3fc18f1e2c61874a98a07c5"
+  },
+  {
+   "file": "05_humor/112-una-planta-muy-sedienta.png",
+   "bytes": 2265937,
+   "sha256": "8020734509c02a6a8b038fc67538c67e75763b01c0f6db98eec259473e7fef2c"
+  },
+  {
+   "file": "05_humor/113-pintura-hasta-en-el-rizo.png",
+   "bytes": 2372365,
+   "sha256": "9b905ba068627f61cb983cc5915c02c462453e61ddb2cee3d872eb0ca70fca05"
+  },
+  {
+   "file": "05_humor/115-la-tostada-escapista.png",
+   "bytes": 2134968,
+   "sha256": "6eb45462f3513e1a249fca2557dd45a94c43d81d6189f8947480f2fe674f9cb8"
+  },
+  {
+   "file": "05_humor/116-trabajando-desde-la-banera.png",
+   "bytes": 2143191,
+   "sha256": "63e6bee08557a133437eb49ba8338ca03b8d3e00f7bfdabe242b5d64f213838f"
+  },
+  {
+   "file": "05_humor/117-el-carrito-desobediente.png",
+   "bytes": 2171517,
+   "sha256": "b8e02ce714d969565b76f84fa3f6afd0381a0d7b307e9bad98e4c779b3ccf6c2"
+  },
+  {
+   "file": "05_humor/119-la-puerta-automatica.png",
+   "bytes": 2109954,
+   "sha256": "ce2b07b3e63619e288a70fa7cfd758f15e924cb1cf6263ba07513ef492abd551"
+  },
+  {
+   "file": "05_humor/120-el-ventilador-y-las-notas.png",
+   "bytes": 2038566,
+   "sha256": "4bbf23a0abf778b0d502ecdd566260337dc5dcc59949cf9acf2bdc1e52c54b00"
+  },
+  {
+   "file": "05_humor/121-malabarista-de-almohadas.png",
+   "bytes": 2294692,
+   "sha256": "424ed51c2c1b89ed58ba88fa7558eb79ac33426ce7976d51de2b4b1759d60e01"
+  },
+  {
+   "file": "05_humor/123-el-globo-que-no-cabe.png",
+   "bytes": 2325263,
+   "sha256": "4ddc00f4f21cd1b1825ae2290e2895d2665b8f6a9ad9f4c93023f9b2c5359205"
+  },
+  {
+   "file": "05_humor/124-el-despertador-valiente.png",
+   "bytes": 2215531,
+   "sha256": "8b9a27090b2c33a06dab672cb177c5e80bb503e88e3d67c98aab814a827d3558"
+  },
+  {
+   "file": "05_humor/125-un-tornillo-de-sobra.png",
+   "bytes": 2310453,
+   "sha256": "71d88364eb341847466995d75497d2be20e454ffcd63c5f22a3984091b64f53c"
+  },
+  {
+   "file": "06_web/126-portal-de-bienvenida.png",
+   "bytes": 2363365,
+   "sha256": "a08682dcffa2bc7cfc455269d93f9507bdccab1cc938b794bc8b570e5241e392"
+  },
+  {
+   "file": "06_web/127-las-herramientas-conectadas.png",
+   "bytes": 2094747,
+   "sha256": "13347ad62cfcb142ac46de9d7bb74700dceb1fa8dfa06cc145e166c36592b89e"
+  },
+  {
+   "file": "06_web/128-consultar-entender-compartir.png",
+   "bytes": 2021963,
+   "sha256": "09ac0f728c0acd8a6a5d80e5d5cfd1f8e32d3a1301acaecea975f36208d4057c"
+  },
+  {
+   "file": "06_web/129-explorar-sin-perderse.png",
+   "bytes": 2031028,
+   "sha256": "f359c7f4ae77bfaaf8131ca57edb23d5d78d19ecf74c1ad6ed7301cddf9be371"
+  },
+  {
+   "file": "06_web/130-tu-espacio-de-trabajo.png",
+   "bytes": 1871334,
+   "sha256": "589b09d1f6169d193f6cb18554b0f5dce00b23f6294b3819ccee0bfd01d9205c"
+  },
+  {
+   "file": "06_web/132-ideas-que-se-encuentran.png",
+   "bytes": 2275984,
+   "sha256": "ef65cbcd795f979987dea4e3b5ffee12e59307bd3384f9b1583058942f03ed03"
+  },
+  {
+   "file": "06_web/133-una-web-viva.png",
+   "bytes": 2211971,
+   "sha256": "7d039a87ecc63c0e31d260963b88abd7790a462c3ade665a7e133a8f68033da8"
+  },
+  {
+   "file": "06_web/134-biblioteca-de-posibilidades.png",
+   "bytes": 2036088,
+   "sha256": "f4e58e1ac26811eecc211dfb68553c73fd3b09688357bd877e463307909e06a7"
+  },
+  {
+   "file": "06_web/136-conectar-las-piezas.png",
+   "bytes": 1852633,
+   "sha256": "9c438aff21fce16f5ce8dfff65723858aa6b81e0b7919087b7fdd66d5c0c5a54"
+  },
+  {
+   "file": "06_web/137-centro-de-creacion.png",
+   "bytes": 2183244,
+   "sha256": "b1e8a66f860896bbd5b6406b5c052309c6c40772ce4b304aff2ecb54cd44f7f7"
+  },
+  {
+   "file": "06_web/138-ruta-del-conocimiento.png",
+   "bytes": 1964262,
+   "sha256": "2bba90e6018e0ca711d4b31037c8f361ec06675a6e56af33f23a04a4977a80fa"
+  },
+  {
+   "file": "06_web/140-comparar-con-perspectiva.png",
+   "bytes": 1949520,
+   "sha256": "b1278f876b0aa53767a95cbe4c61862543e0dd497d8e94225539a5e436550e03"
+  },
+  {
+   "file": "06_web/141-compartir-lo-aprendido.png",
+   "bytes": 1970150,
+   "sha256": "afff4f0e6ed1d420dfab78dc7dc564f7ddf87854299a75bb62c89bb3cf841bca"
+  },
+  {
+   "file": "06_web/142-un-ecosistema-accesible.png",
+   "bytes": 1938752,
+   "sha256": "0832c24f0d7c9e3b970a8b6cfc6d2ea9c3748d5f753b57bb7cb00c6fdc4091e6"
+  },
+  {
+   "file": "06_web/144-disenar-juntos.png",
+   "bytes": 1955606,
+   "sha256": "5475b0e22b0afa08674f3ff519911cf075776f6764cc29e9cf95963f0e04ab01"
+  },
+  {
+   "file": "06_web/145-la-comunidad-como-horizonte.png",
+   "bytes": 2115468,
+   "sha256": "d557f5f186068fa8d635e7c49b1d0faeba9553a4096d156e89b8ff68e935e8f2"
+  },
+  {
+   "file": "06_web/146-orden-para-las-ideas.png",
+   "bytes": 1890471,
+   "sha256": "34478cc67ab53a024d630d24cd8061f86e8d7c13fd489cff2181d3cf40076c0d"
+  },
+  {
+   "file": "06_web/148-herramientas-a-tu-alcance.png",
+   "bytes": 1979594,
+   "sha256": "ea2ea619e23b063036b3dc218491154fa78937174095ee440a95ac705a69c60e"
+  },
+  {
+   "file": "06_web/149-explorar-crear-aprender.png",
+   "bytes": 2062170,
+   "sha256": "01ef42f41684da2c57ec36b2d2f5855ed885ea31170a969cdaf4c045f0f6bc07"
+  },
+  {
+   "file": "06_web/150-una-nueva-etapa.png",
+   "bytes": 2145018,
+   "sha256": "dbc6e3d770511aaec8bf2d6f244b1d1cd97321e1a2bc0dea28387b82ebd28b73"
+  },
+  {
+   "file": "07_verify/151-verificar-antes-de-confiar.png",
+   "bytes": 2355093,
+   "sha256": "61fc5970b71006f25d34b4a40e9b347f81d5f5c6a3f0868d34abfd0324f8234a"
+  },
+  {
+   "file": "07_verify/152-las-capas-de-una-consulta.png",
+   "bytes": 2125620,
+   "sha256": "d109d48324dbf6012359546b4a22775d3a815501348fbde06b75a5d7260a0464"
+  },
+  {
+   "file": "07_verify/153-pistas-a-la-vista.png",
+   "bytes": 2153177,
+   "sha256": "1aa52ebfee3c4e2a768d3a06adf918832184197342f6eabaf8cc39fb6fd821b2"
+  },
+  {
+   "file": "07_verify/154-la-lupa-y-el-detalle.png",
+   "bytes": 2173118,
+   "sha256": "96a7b3f744f3887378886ad51ad5184a60d5c51c6819a622327fba836a88fef9"
+  },
+  {
+   "file": "07_verify/155-fuentes-sobre-la-mesa.png",
+   "bytes": 2091685,
+   "sha256": "aee037f4809cbcf76422eba810b2279d00640ab79cbd8f00837d5123a018c082"
+  },
+  {
+   "file": "07_verify/157-comparar-senales.png",
+   "bytes": 2253812,
+   "sha256": "50c723792510b7dc21323b8c0016474f91f5a0c93b2de3f7ff8f0430bf0704c2"
+  },
+  {
+   "file": "07_verify/158-separar-dato-y-apariencia.png",
+   "bytes": 2194949,
+   "sha256": "42d682120ab28b559a4d18b3b61de077827a4b385f67bee959c4b5bb09b31994"
+  },
+  {
+   "file": "07_verify/159-la-informacion-incompleta.png",
+   "bytes": 2279863,
+   "sha256": "5fe1b1f6b5fcd025899fe3a49235dd8680026a04b640de85f4d8f3adef83cbbf"
+  },
+  {
+   "file": "07_verify/161-una-ficha-comprensible.png",
+   "bytes": 2097822,
+   "sha256": "8bb7c3d22cd53b798013188e626f5bf15dbf762d95ea053e256205dbdd55ce4f"
+  },
+  {
+   "file": "07_verify/162-contexto-antes-de-conclusion.png",
+   "bytes": 2260370,
+   "sha256": "8e54024725df94d44b5d375ccf4364d4d153da30ef0e9b15c3e9a3aafdf91799"
+  },
+  {
+   "file": "07_verify/163-seguir-el-rastro.png",
+   "bytes": 2181038,
+   "sha256": "2e6e6961ab97cf70cc7221b2252081bf9edff5a8b75d164133031cb372f4b96b"
+  },
+  {
+   "file": "07_verify/165-la-anomalia-pequena.png",
+   "bytes": 2164011,
+   "sha256": "9d7e738369503d36ac5eb85873b306ea88cb0b0e0931fb1f4f77883368df1566"
+  },
+  {
+   "file": "07_verify/166-revisar-con-calma.png",
+   "bytes": 2014149,
+   "sha256": "bb9e8dfd92c2d813bcd03dab07a5adc8f5e2201bb757566fbac21121840604be"
+  },
+  {
+   "file": "07_verify/167-la-red-observada.png",
+   "bytes": 2247049,
+   "sha256": "fae68c3d4a11b868118cadefba40277385e4edb24ff1c6b0bceb72a45de5744f"
+  },
+  {
+   "file": "07_verify/169-explicar-una-senal.png",
+   "bytes": 2234496,
+   "sha256": "abac4e59bbd18279c2e173425e0995d869a8b3e4a9712192805b2b922bb35ba5"
+  },
+  {
+   "file": "07_verify/170-dos-vistas-del-mismo-objeto.png",
+   "bytes": 2195586,
+   "sha256": "db0fe6ed32bdba833b57eecd6a93717c66d57fdc73c941e92b485de90203c2ed"
+  },
+  {
+   "file": "07_verify/171-la-pregunta-correcta.png",
+   "bytes": 2472801,
+   "sha256": "57ac8e33f32f1e980092a26b3ac7d5dc70725bd068e2d724b8000ab15c119bd3"
+  },
+  {
+   "file": "07_verify/173-la-revision-pendiente.png",
+   "bytes": 2085050,
+   "sha256": "a8cf8f8ff20b503d761dd2b835b5e783847af3754eef1649a3a043b34a999239"
+  },
+  {
+   "file": "07_verify/174-detalle-sin-ruido.png",
+   "bytes": 2305570,
+   "sha256": "9c0b62ca3192d85932cef351f5d9af6ae6d400603f4a41b1d8ea1082906f7b14"
+  },
+  {
+   "file": "07_verify/175-antes-de-compartir.png",
+   "bytes": 2147899,
+   "sha256": "e7947207cdb2ddd1712546c6acef9ad29226a2a2ac3fd68d41e341d04b789755"
+  },
+  {
+   "file": "08_lab/176-primera-hipotesis.png",
+   "bytes": 2138463,
+   "sha256": "efbbd8e281803c777025e6877a2d2a1b8a2abfd1d8746ede17bb26272c06d2e4"
+  },
+  {
+   "file": "08_lab/177-probar-a-pequena-escala.png",
+   "bytes": 2319844,
+   "sha256": "435a41dd202739d7c8f202bd672b9838223ce9eddad5276ef7d9b87e9f3e0853"
+  },
+  {
+   "file": "08_lab/178-un-experimento-controlado.png",
+   "bytes": 2190694,
+   "sha256": "ad39ff76bda93b71dbf2044a719cc4c0a49347abf50e10bcfc6d04e7853f5202"
+  },
+  {
+   "file": "08_lab/179-cambiar-una-variable.png",
+   "bytes": 2012297,
+   "sha256": "fc29f56d63a9a36aa6feb859cd1f72f73886d65a0ff77938fd14af063fdefd7b"
+  },
+  {
+   "file": "08_lab/180-resultado-inesperado.png",
+   "bytes": 2201452,
+   "sha256": "f7af0512e8e6ddb640f5f6a078ba8507786a120a33128afcd1a8a810eb13a435"
+  },
+  {
+   "file": "08_lab/182-ensayo-y-aprendizaje.png",
+   "bytes": 2100136,
+   "sha256": "0fa98584a27f803bb58f4473d287afdbf432c585d5dbf82c3f5cb031870b57ba"
+  },
+  {
+   "file": "08_lab/183-laboratorio-de-conexiones.png",
+   "bytes": 2136042,
+   "sha256": "ca22887c49e31b3710583d97b9682220ecbae4f0c1b7dc0cd8695a555d5fb9bb"
+  },
+  {
+   "file": "08_lab/186-abrir-el-mecanismo.png",
+   "bytes": 2230844,
+   "sha256": "0cd412ad203394a913a9750704aa4b95da37f831bb8e6a8b90f5b32ce7fcdc6e"
+  },
+  {
+   "file": "08_lab/187-pruebas-en-arena-segura.png",
+   "bytes": 2119889,
+   "sha256": "96f57d55042d516c79e974ea2ae3b7326df560a9c5bad4da79ddda6248f08255"
+  },
+  {
+   "file": "08_lab/190-observacion-paciente.png",
+   "bytes": 2173285,
+   "sha256": "faba5884f3b14b7ba9949abd02164bc877b7ffc74c1948e0389b83c0c10b5ce5"
+  },
+  {
+   "file": "08_lab/191-repetir-la-prueba.png",
+   "bytes": 1996465,
+   "sha256": "d768e1fc091cf83ef0cf7fc6f6a2fd78f655f9359b476eeb03f17c664041ce7f"
+  },
+  {
+   "file": "09_studio/201-lienzo-abierto.png",
+   "bytes": 2380744,
+   "sha256": "fa13321a514746639287f9df5753736aba3d6b639643658b4ad81e7d732ab71a"
+  },
+  {
+   "file": "09_studio/202-modelar-una-idea.png",
+   "bytes": 2250819,
+   "sha256": "7a54318154a448987c9ab55fc5afe94b906e980be2cb8e9d802092dfa39642fd"
+  },
+  {
+   "file": "09_studio/203-la-mesa-creativa.png",
+   "bytes": 2179656,
+   "sha256": "db48ba499a67083b9de2260a8e0901b6ee83d75c0a7ef3e334d33f64b6e738cc"
+  },
+  {
+   "file": "09_studio/204-fotografia-de-objetos.png",
+   "bytes": 2053048,
+   "sha256": "07e50215133aab5f7be2cfa50590e27ddf41bc13100b4cd73cb1a37f3bdb5594"
+  },
+  {
+   "file": "09_studio/205-paleta-con-intencion.png",
+   "bytes": 2176108,
+   "sha256": "acfa2dec3cc558a949cb81ac8a2688390cf1974b5fa6e3b6c6cd176a7443f1a8"
+  },
+  {
+   "file": "09_studio/206-diseno-en-capas.png",
+   "bytes": 2251997,
+   "sha256": "7012e126557d4d1847c52a1ab95f141dfb42b6318fe9e6dc9c62935a2884c8a7"
+  },
+  {
+   "file": "09_studio/207-composicion-equilibrada.png",
+   "bytes": 2207275,
+   "sha256": "61b8c99918fd8ed7b41c0383a5bb14b79122cd70521a8cc80cd8f2cac58e588c"
+  },
+  {
+   "file": "10_cuaderno/226-primera-pagina.png",
+   "bytes": 1973036,
+   "sha256": "1c2c33d771efed30e842bba7acfc165669f461aa33c84b5062a0b864eceef664"
+  },
+  {
+   "file": "10_cuaderno/227-guardar-una-idea.png",
+   "bytes": 2003665,
+   "sha256": "02d1587ea21ee4284e120404271e8eb88e268becb48c1092ebffd73c92320e5c"
+  },
+  {
+   "file": "10_cuaderno/228-notas-de-exploracion.png",
+   "bytes": 2259205,
+   "sha256": "7e699d05e832799234b9f72908ecfb56cb01f534bcd75509f41a0a735a8d20b0"
+  },
+  {
+   "file": "10_cuaderno/229-la-pagina-recuperada.png",
+   "bytes": 2231257,
+   "sha256": "c9f241b95301833aecc8678d7a4817f30476dcdee2d8d1008e37b947ea21236e"
+  },
+  {
+   "file": "10_cuaderno/230-del-pensamiento-al-papel.png",
+   "bytes": 2106340,
+   "sha256": "89665d54af92b26850bb85f23a6ba278862fcd4f9110db64ee18dc36fcc8f4a3"
+  },
+  {
+   "file": "10_cuaderno/231-un-indice-visual.png",
+   "bytes": 2026922,
+   "sha256": "ef2cb64178167ba3d50d7827212d923f0768e1c63a8bdaba247aff8b07aace0e"
+  },
+  {
+   "file": "10_cuaderno/232-el-cuaderno-viajero.png",
+   "bytes": 2246625,
+   "sha256": "84c1d76460262f9656cae4e69aa4d9f1957f2cbd3805cd0fc49473f9d73ae005"
+  },
+  {
+   "file": "11_tablero/251-vista-de-conjunto.png",
+   "bytes": 2196723,
+   "sha256": "100046868ce2eb490de119c065b2186a80fe97945878d71fae1e92f9ce9f782c"
+  },
+  {
+   "file": "11_tablero/252-ordenar-prioridades.png",
+   "bytes": 2082848,
+   "sha256": "fcd5cf6d4cf8bef572129412097d44cc5b257ede4943d7e41dda7a180d644002"
+  },
+  {
+   "file": "11_tablero/253-mover-una-tarea.png",
+   "bytes": 2140431,
+   "sha256": "336f40413198e0969260ac8cfb7c6d1595943fcc66078c4786b3023c6afe08e1"
+  },
+  {
+   "file": "11_tablero/254-conectar-un-flujo.png",
+   "bytes": 1992991,
+   "sha256": "89163eef7a0060150e5baa97116a62a896bd90ed71e2fd9fe10d600d7e56ff24"
+  },
+  {
+   "file": "11_tablero/255-una-idea-en-espera.png",
+   "bytes": 2144197,
+   "sha256": "50c360489b5878c9db86e536285d150df85f150f5b309196df988175947a3694"
+  },
+  {
+   "file": "11_tablero/256-el-tablero-de-equipo.png",
+   "bytes": 2303345,
+   "sha256": "90dfb21d6059c455f466a458fb7bf69cb5be373f70ccfac386d4d28e38d11e65"
+  },
+  {
+   "file": "11_tablero/257-revisar-el-avance.png",
+   "bytes": 2214952,
+   "sha256": "108952b14fefdd1ec4ef954f529cb474af63eeba7335ddfcc702e2ff7184fc09"
+  },
+  {
+   "file": "12_curva/276-entender-una-curva.png",
+   "bytes": 2050731,
+   "sha256": "b84b5101aadbaa1bcc6a506c288eb7c450bc1ff029e70b98ea4ec61df0c8edc4"
+  },
+  {
+   "file": "12_curva/277-subidas-y-bajadas.png",
+   "bytes": 2170010,
+   "sha256": "94f86a5adafe854266f4689549b2e3495fa9b7226cd408496e34c1d3cd3286ef"
+  },
+  {
+   "file": "12_curva/278-cambiar-el-punto-de-vista.png",
+   "bytes": 2230585,
+   "sha256": "5b0d5a2f298dad8c711c8b7331eb695cbf05c641091dd5cdb234f3bcafd0f74c"
+  },
+  {
+   "file": "12_curva/279-escenarios-distintos.png",
+   "bytes": 2068844,
+   "sha256": "9566eea6045ebdf9855f772e89d52ead93bcf70eef801668c4b0bb2e5dc9bf7b"
+  },
+  {
+   "file": "12_curva/280-la-escala-importa.png",
+   "bytes": 2193347,
+   "sha256": "5c535767d6f6a978f47cc8b500dafde9245bba7fbc911369c4b8b88572800480"
+  },
+  {
+   "file": "12_curva/281-variacion-y-ruido.png",
+   "bytes": 2184151,
+   "sha256": "d01b4c29b253f88f88e56cbbecb64910a6a9be641f6afa793685becbd796b152"
+  },
+  {
+   "file": "12_curva/282-un-ejemplo-a-mano.png",
+   "bytes": 2076571,
+   "sha256": "b1394876657ac4623ff0607defddc6a63e2951d93a3def95719bdee758290a9f"
+  },
+  {
+   "file": "13_contribuir/301-tu-pieza-cuenta.png",
+   "bytes": 2564981,
+   "sha256": "1531fe12d6b76c0ea7feaa7c1fa93b6b731605989bd82258384f89741afadfba"
+  },
+  {
+   "file": "13_contribuir/302-una-idea-util.png",
+   "bytes": 2133807,
+   "sha256": "fb7fd41ce4255e23ac2473594ae9ad77e255fee0ae3e428bc9cb43492b3f355c"
+  },
+  {
+   "file": "13_contribuir/303-ayudar-con-lo-pequeno.png",
+   "bytes": 2389157,
+   "sha256": "7061b79386ed58c98ae71b961117c77c0a40668923e34c0565b70153875c9a3e"
+  },
+  {
+   "file": "13_contribuir/304-compartir-conocimiento.png",
+   "bytes": 1966263,
+   "sha256": "11273cdb334af2ee459abb3b9842df93b21ae8882b1dfe1f9a97b644e8c97ad1"
+  },
+  {
+   "file": "13_contribuir/305-revisar-una-propuesta.png",
+   "bytes": 2240290,
+   "sha256": "b9823c6691cbc95502d8c5336c514a31655fc8646b1be88987469500217ed484"
+  },
+  {
+   "file": "13_contribuir/306-traducir-para-entender.png",
+   "bytes": 2203727,
+   "sha256": "397735a005e84ee6c8b33c8d2c083d4e6113a5564cc7efb8fbefbc31d8947dd2"
+  },
+  {
+   "file": "13_contribuir/307-probar-y-contar.png",
+   "bytes": 2054267,
+   "sha256": "2e14ecc0332c3a01d764726ec109753f6024902ca277c1c4f825bb14935f2e21"
+  },
+  {
+   "file": "14_aprendizaje_web3/326-primeros-pasos-digitales.png",
+   "bytes": 2235197,
+   "sha256": "1ed6f75c1ba89420b9507466b48b8104cd1eb93768ad953f66365dcec257eb43"
+  },
+  {
+   "file": "14_aprendizaje_web3/327-la-cadena-explicada.png",
+   "bytes": 2063751,
+   "sha256": "3c69e567a9e403d86f2ba14dd53acbb351cf088d552cdd4946bd6b2511999783"
+  },
+  {
+   "file": "14_aprendizaje_web3/328-que-es-una-wallet.png",
+   "bytes": 2224174,
+   "sha256": "45114402d359abfc43840eab863ba79b59b28f430a771b8deca2db75a89c0f9f"
+  },
+  {
+   "file": "14_aprendizaje_web3/329-claves-diferentes.png",
+   "bytes": 2217911,
+   "sha256": "f01b9b505d3fc15b5b298bfc70451c7eefbf86f660d54a5add0d2211dcd680d0"
+  },
+  {
+   "file": "14_aprendizaje_web3/330-red-de-nodos.png",
+   "bytes": 2181510,
+   "sha256": "68e396a1a4c182b233ce8b8e5319c968a930227fca14545a953aaab3b7ba9fc8"
+  },
+  {
+   "file": "14_aprendizaje_web3/331-una-transaccion-como-recorrido.png",
+   "bytes": 2155707,
+   "sha256": "6d0ffbca697cb378bcfc5b9e1c1e3415f6bb8db060ecc43577c10e59c4059e65"
+  },
+  {
+   "file": "14_aprendizaje_web3/332-leer-antes-de-firmar.png",
+   "bytes": 2066645,
+   "sha256": "0208c94a153b94be9f6b98e44b99280ea9ac7877ade223f7a5ab1837f6c76779"
+  },
+  {
+   "file": "15_conexion_mundo/351-un-mundo-conectado.png",
+   "bytes": 2187129,
+   "sha256": "49c8c53812391d12e912c38f321b1d27c993ad93309b073d28ccd5a5f76aeccd"
+  },
+  {
+   "file": "15_conexion_mundo/352-conversacion-entre-continentes.png",
+   "bytes": 2253513,
+   "sha256": "7f1d346a994c83e310ecb38646172ae37f2e388230bfb2ca3687c0681937b1e3"
+  },
+  {
+   "file": "15_conexion_mundo/353-ventanas-al-mundo.png",
+   "bytes": 2446194,
+   "sha256": "d7c6c9fb95c7442dbefe344f6e17dc0edfde8cad4b19f030a53d8370c4067c0b"
+  },
+  {
+   "file": "15_conexion_mundo/354-puente-de-culturas.png",
+   "bytes": 2444694,
+   "sha256": "71480a11f2316ad1168c38fb96e99e08cd892c5e779e659c9ebaf6e0cf790385"
+  },
+  {
+   "file": "15_conexion_mundo/355-la-llamada-lejana.png",
+   "bytes": 2320737,
+   "sha256": "3fe441db5b6f78129eaae42b0ddeb41b517422c0431610e0c968b973e9cd077f"
+  },
+  {
+   "file": "15_conexion_mundo/356-de-la-costa-a-la-ciudad.png",
+   "bytes": 2365093,
+   "sha256": "2be34b0d687d056bb66ed9e0eb4cd4ea543e340ff120aebb37772dcbddec7f13"
+  },
+  {
+   "file": "15_conexion_mundo/357-horizonte-compartido.png",
+   "bytes": 2416217,
+   "sha256": "806a820a2a6829ea3707ab0611455f97e4cc21a5be547820954f2beadc74a3c7"
+  },
+  {
+   "file": "16_colaboracion_ia/376-asistente-de-ideas.png",
+   "bytes": 2094620,
+   "sha256": "f855f4780e7458cbdafdce1d8b47bf64ecf82a714b8095d906c2ce61f36d4e56"
+  },
+  {
+   "file": "16_colaboracion_ia/377-humano-al-mando.png",
+   "bytes": 2092708,
+   "sha256": "a40476720f2d875a33808426d3dd880b8958d5bcf2143f3e09aef17f2e66a6b6"
+  },
+  {
+   "file": "16_colaboracion_ia/378-revisar-la-propuesta.png",
+   "bytes": 2130025,
+   "sha256": "294e2ee786af56c3717ab0190a96ef810932de41248ca79f58d6a3e7961f9f08"
+  },
+  {
+   "file": "16_colaboracion_ia/379-conversacion-creativa.png",
+   "bytes": 2266980,
+   "sha256": "e63ee2ea9300f3db45e5d2b42d499d7162a633539e79140ef11e7ff8bc46ab59"
+  },
+  {
+   "file": "16_colaboracion_ia/380-un-borrador-mejorable.png",
+   "bytes": 2136003,
+   "sha256": "9da33554a66e4368fbc86c4d413b4de5cc846743051d1f05832a56f07ae2e843"
+  },
+  {
+   "file": "16_colaboracion_ia/381-dividir-el-trabajo.png",
+   "bytes": 2183236,
+   "sha256": "5daaf4b46019252ef4af9c8554912c8dc199f9ba640d95f4a6e8749996d6df70"
+  },
+  {
+   "file": "16_colaboracion_ia/382-comparar-sugerencias.png",
+   "bytes": 2199234,
+   "sha256": "ddeccddfb4a1e39544e4df3a6fa00afb3403afd25ad82f66f70cff683cbcd8a8"
+  },
+  {
+   "file": "17_seguridad_cripto/401-protege-la-llave.png",
+   "bytes": 2129023,
+   "sha256": "979cf0ee5cca3cc60cd599e37b752c03b26844c6f71d58f657349bf39bdc7165"
+  },
+  {
+   "file": "17_seguridad_cripto/402-no-compartas-secretos.png",
+   "bytes": 2256682,
+   "sha256": "e2135a0ceb34ca135b230a062eaaef3f2464ccd6389a380521cb355bbc7b6f7a"
+  },
+  {
+   "file": "17_seguridad_cripto/403-enlace-bajo-la-lupa.png",
+   "bytes": 2158707,
+   "sha256": "0d566b3799441eac5443da2735af5e695bc0ef429c5d746c9cc363dee7b2eda3"
+  },
+  {
+   "file": "17_seguridad_cripto/404-permisos-minimos.png",
+   "bytes": 2259953,
+   "sha256": "1ceaa52134ab65f2301b45eeff5ad97fdf365ea017ddc4480f91908ef3e90c70"
+  },
+  {
+   "file": "17_seguridad_cripto/405-una-copia-segura.png",
+   "bytes": 2300592,
+   "sha256": "1685e6f7e6f11fc1080f90d18dcedb0f0684c37f1b2c2a153f8c5e980e19c1cd"
+  },
+  {
+   "file": "17_seguridad_cripto/406-desconfia-de-la-prisa.png",
+   "bytes": 2464469,
+   "sha256": "f015f71f4e070542e0d734835d0966fe9f7ea613101e94829dc9ee71ed674f04"
+  },
+  {
+   "file": "18_ecosistema_cripto/426-islas-del-ecosistema.png",
+   "bytes": 2636125,
+   "sha256": "baef534924a60a45713ea0153cbadd93e264c070700ee02f9ec864dec447785a"
+  },
+  {
+   "file": "18_ecosistema_cripto/427-nodos-trabajando-juntos.png",
+   "bytes": 2178584,
+   "sha256": "620c59f19415e8526065b5b53d52dc997c79b99c4a9c6802709497d73502f0e6"
+  },
+  {
+   "file": "18_ecosistema_cripto/428-bloques-y-continuidad.png",
+   "bytes": 2254208,
+   "sha256": "48b70812830e044901034c6e8301a7683191e77f868da2379f6dd467abc559b4"
+  },
+  {
+   "file": "18_ecosistema_cripto/429-el-mercado-como-intercambio.png",
+   "bytes": 2194080,
+   "sha256": "224f78a8871741e427a18452ce2cc1ad6fb6e22249b1434a2d445e14032d103a"
+  },
+  {
+   "file": "18_ecosistema_cripto/430-liquidez-como-profundidad.png",
+   "bytes": 2098481,
+   "sha256": "8ec93df5a26b224f82aa5c6db6634b6dc05a9d47d08adc2a14cdd36f3b22fad9"
+  },
+  {
+   "file": "18_ecosistema_cripto/431-la-red-congestionada.png",
+   "bytes": 2174564,
+   "sha256": "655abe68d9fcf7e2af868208035e7afd0e5e88a0e304b23bc9fe00b890c84c41"
+  },
+  {
+   "file": "19_creatividad_fantasia/451-navegante-de-nubes.png",
+   "bytes": 1972938,
+   "sha256": "12280273759d033426901ac8ebe5d8261a1486b4b75cc169d71f1569949fc198"
+  },
+  {
+   "file": "19_creatividad_fantasia/452-el-bosque-de-ideas.png",
+   "bytes": 2444389,
+   "sha256": "612905aeb10047f81313b20599449d2d778126fd3e8b26fc73568140619bc6cc"
+  },
+  {
+   "file": "19_creatividad_fantasia/453-biblioteca-de-estrellas.png",
+   "bytes": 2524692,
+   "sha256": "40907ac0fa44dc7d2f5f113597b2688796ac6179d5c2758975ef93761df15ba6"
+  },
+  {
+   "file": "19_creatividad_fantasia/454-jardinero-de-planetas.png",
+   "bytes": 2375337,
+   "sha256": "14276db2e915d91ab96edf1ef08994a83185479ae70cf15711fba32643315d05"
+  },
+  {
+   "file": "19_creatividad_fantasia/455-el-faro-de-la-curiosidad.png",
+   "bytes": 2495713,
+   "sha256": "cba09f3c502b7904cf1d915826750c5c6a514f3b1de55eff376f4cc4da5fde98"
+  },
+  {
+   "file": "19_creatividad_fantasia/456-puente-de-papel.png",
+   "bytes": 2326949,
+   "sha256": "db5fb70456fb239d9b0baffa3cdb7ebcb85e5c8316eaaa6ec9b2087dc3e253e2"
+  },
+  {
+   "file": "20_celebraciones/476-una-nueva-bienvenida.png",
+   "bytes": 2205119,
+   "sha256": "6a67890648e8a2e456953ed6a67a28c53ece270ba6c05f515e208b8d285f3f55"
+  },
+  {
+   "file": "20_celebraciones/477-primer-proyecto-terminado.png",
+   "bytes": 2382381,
+   "sha256": "8f80b3ae54fb09eb9bac30f9f381cd31567713c864f6be7919d9a6359d512d10"
+  },
+  {
+   "file": "20_celebraciones/478-la-herramienta-funciona.png",
+   "bytes": 2075422,
+   "sha256": "19c1eb831e07b9e0bfc27d03f3c1b15af7ebbaf4ebc6a5dfbecf460b90bcf821"
+  },
+  {
+   "file": "20_celebraciones/479-la-primera-colaboracion.png",
+   "bytes": 2086336,
+   "sha256": "1e22ac422c6bf11953159af7a4151f8d2ebfc23fb3a6faddfea62d6c41d32b6d"
+  },
+  {
+   "file": "20_celebraciones/480-un-aprendizaje-celebrado.png",
+   "bytes": 2172709,
+   "sha256": "242aa1a5b85009eee4db170578384cbb9ba68f8e939a3fcf9bef442c328c986e"
+  },
+  {
+   "file": "20_celebraciones/481-fiesta-en-la-plaza.png",
+   "bytes": 2075871,
+   "sha256": "1ed963ba2bad2104842a906ea6d4722f610998f8029f7885e832843b3ce2200e"
+  }
+ ]
+}

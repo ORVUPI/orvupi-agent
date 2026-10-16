@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "playwright-core";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../web/v2");
-const official = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
+const official = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 
 function serve(dir) {
   return new Promise((resolve) => {
@@ -52,7 +52,7 @@ try {
   await page.goto(`http://127.0.0.1:${port}/verify/`, { waitUntil: "networkidle" });
   await page.locator("#direccion-token").fill(official);
   await page.locator("#consulta button[type=submit]").click();
-  await page.waitForFunction(() => document.querySelector("#resultado h2")?.textContent === "Parece el STUBX oficial");
+  await page.waitForFunction(() => document.querySelector("#resultado h2")?.textContent === "Está en el registro curado");
   const verdict = await page.evaluate(() => {
     const header = document.querySelector("header.site");
     const title = document.querySelector("#resultado h2");
@@ -74,7 +74,7 @@ try {
       headerCovers,
     };
   });
-  if (verdict.text !== "Parece el STUBX oficial") failed = `texto: ${verdict.text}`;
+  if (verdict.text !== "Está en el registro curado") failed = `texto: ${verdict.text}`;
   else if (verdict.pos === "fixed" || verdict.pos === "sticky") failed = `cabecera ${verdict.pos}`;
   else if (verdict.top < 0 || verdict.bottom > verdict.height) failed = `fuera de pantalla ${verdict.top}–${verdict.bottom}`;
   else if (!verdict.inside || verdict.headerCovers) failed = "el veredicto está tapado";

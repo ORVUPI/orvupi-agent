@@ -6,7 +6,7 @@ No es consejo de inversión ni una garantía. ORVUPI Verify es la identidad actu
 
 > ORVUPI Verify muestra datos on-chain públicos. No es consejo de inversión ni garantiza que un token sea seguro.
 
-El registro y los ejemplos fechados de STUBX se conservan como datos históricos. No son un registro de ORVUPI y ninguna dirección de esos ejemplos debe presentarse como token ORVUPI. Véase [la guía de transición](../docs/ORVUPI.md).
+El registro curado y los ejemplos fechados (2026-10-16) usan USDC como referencia neutra y copias reales que se llaman «USD Coin». No son un registro de ORVUPI: ORVUPI todavía no tiene contrato. Véase [la guía de transición](../docs/ORVUPI.md).
 
 No hay puntuación de compra o venta ni lenguaje de precio. Los hallazgos son informativos: `ok`, `atención` o `riesgo`, cada uno con su motivo.
 
@@ -20,7 +20,7 @@ Dado un mint SPL o Token-2022:
 - URI y el JSON público (nombre, símbolo, imagen, web, redes);
 - si hay cuenta de curva de Pump.fun en la PDA derivada, y sus campos públicos;
 - una muestra de como máximo 20 cuentas grandes y el porcentaje sobre el suministro verificado;
-- comparación local con `verify/registry/canonical.json` (registro heredado de STUBX; no contiene una dirección de ORVUPI).
+- comparación local con `verify/registry/canonical.json` (registro de ejemplo con USDC; no contiene una dirección de ORVUPI).
 
 Cada campo lleva método, cuenta, slot u hora UTC. Una consulta nueva crea otro `id` (sha256 del cuerpo canónico). La ficha no se actualiza sola.
 
@@ -114,7 +114,7 @@ Generadas contra la RPC pública el 2026-10-08 y guardadas en [`examples/2026-10
 
 ## Pruebas
 
-`npm test` incluye las pruebas de `verify/test/`, sin red, con fixtures en `verify/test/fixtures/`. Cubren, entre otros, mint revocada, freeze activa, metadatos mutables, nombre o imagen que coinciden con STUBX sin ser el mint curado, 429, una cuenta que no es un mint, una cuenta ausente, suministro que no cuadra, una extensión no soportada y texto que hay que escapar en HTML.
+`npm test` incluye las pruebas de `verify/test/`, sin red, con fixtures en `verify/test/fixtures/`. Cubren, entre otros, mint revocada, freeze activa, metadatos mutables, nombre o imagen que se parecen a un token curado o se llaman como ORVUPI sin serlo, 429, una cuenta que no es un mint, una cuenta ausente, suministro que no cuadra, una extensión no soportada y texto que hay que escapar en HTML.
 
 Para regenerar los fixtures de laboratorio (no son respuestas de mainnet):
 
