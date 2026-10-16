@@ -8,7 +8,7 @@ import { mountMarket } from "./market-view.js";
 import { checksFor, enabledNetworks, networkById, rpcHost } from "./networks.js";
 import { DISCLAIMER } from "./solana-read.js";
 import { EVM_CARD_SCHEMA, EVM_CARD_VERSION, cardDecimals, staleLine } from "./notebook-model.js";
-import { notebookNameText } from "./reading-summary.js";
+import { namedLikeOrvupiText, notebookNameText } from "./reading-summary.js";
 
 const COPY = {
   es: {
@@ -220,6 +220,7 @@ export function describeEvm(reading, lang) {
     card,
     disclaimer: DISCLAIMER[language],
     notOrvupi: text.notOrvupi,
+    namedLike: namedLikeOrvupiText(card.name && card.name.text, card.symbol && card.symbol.text, language),
     third: text.third,
     save: text.save,
   };
@@ -313,6 +314,7 @@ export function paintEvmResult(parent, reading, lang, options) {
   article.append(textNode("h2", view.headline));
   article.append(textNode("p", view.support, { class: "apoyo" }));
   if (view.partial) article.append(textNode("p", view.partialText, { class: "nota" }));
+  if (view.namedLike) article.append(textNode("p", view.namedLike, { class: "franja-identidad", "data-copia": "nombre" }));
   article.append(textNode("p", view.notOrvupi, { class: "franja-identidad" }));
   article.append(textNode("p", view.disclaimer, { class: "nota" }));
   if (view.address) {

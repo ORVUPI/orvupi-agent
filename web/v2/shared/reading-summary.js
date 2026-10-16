@@ -30,7 +30,7 @@ const TOPIC_BY_ID = {
   ficha: "metadatos",
 };
 
-const SUMMARY_OFFICIAL = "";
+import { isOfficialAddress } from "./orvupi-contract.js";
 
 const ATTENTION = {
   emision: {
@@ -233,7 +233,7 @@ function contextFromView(view) {
     symbol: summaryText(shown.symbol) || summaryText(row("Símbolo") && row("Símbolo").value && row("Símbolo").value.es),
     decimals: shown.decimals,
     extensions: Array.isArray(shown.extensions) ? shown.extensions : [],
-    official: view?.mint === SUMMARY_OFFICIAL || (view?.signals || []).some((item) => item && item.id === "registro"),
+    official: isOfficialAddress(view?.mint) || (view?.signals || []).some((item) => item && item.id === "registro"),
   };
 }
 
@@ -244,7 +244,7 @@ function contextFromCard(card) {
     symbol: summaryText(card && card.symbol && card.symbol.text),
     decimals: card ? card.decimals : null,
     extensions: Array.isArray(card && card.extensions) ? card.extensions : [],
-    official: Boolean(card && (card.mint === SUMMARY_OFFICIAL)),
+    official: Boolean(card && isOfficialAddress(card.mint)),
   };
 }
 
@@ -316,9 +316,23 @@ function summaryShown(value) {
   return clean.length > 64 ? `${clean.slice(0, 64)}…` : clean;
 }
 
+// Solo para comparar con «orvupi»: también con leet (0→o; 1, l, | y ! → i), como «0RVUP1» u «ORVUPl».
+function namesOrvupi(value) {
+  const folded = summaryNormalizeToken(value);
+  return folded.includes("orvupi") || folded.replace(/0/g, "o").replace(/[1l|!]/g, "i").includes("orvupi");
+}
+
 function looksLikeOrvupi(context) {
   if (!context) return false;
-  return summaryNormalizeToken(context.name).includes("orvupi") || summaryNormalizeToken(context.symbol).includes("orvupi");
+  return namesOrvupi(context.name) || namesOrvupi(context.symbol);
+}
+
+/** Franja «Se llama como ORVUPI…» para cualquier red, a partir del nombre y el símbolo leídos. */
+export function namedLikeOrvupiText(name, symbol, lang) {
+  if (!namesOrvupi(name) && !namesOrvupi(symbol)) return "";
+  return lang === "en"
+    ? "It is named like ORVUPI, but ORVUPI does not have a contract yet."
+    : "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.";
 }
 
 function quotedIdentity(context) {

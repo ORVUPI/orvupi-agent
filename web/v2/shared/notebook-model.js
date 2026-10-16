@@ -885,9 +885,18 @@ export function upgradeLegacyNames(value, depth = 0) {
   }
   if (Array.isArray(value)) return value.map((item) => upgradeLegacyNames(item, depth + 1));
   const out = {};
+  let legacyOfficial = false;
   for (const [key, item] of Object.entries(value)) {
-    const name = key === LEGACY_OFFICIAL_FIELD ? "officialProject" : key;
-    out[name] = key === "schema" || typeof item === "object" ? upgradeLegacyNames(item, depth + 1) : item;
+    if (key === LEGACY_OFFICIAL_FIELD) {
+      legacyOfficial = true;
+      continue;
+    }
+    out[key] = key === "schema" || typeof item === "object" ? upgradeLegacyNames(item, depth + 1) : item;
+  }
+  // El campo oficial antiguo no se copia: solo la ficha del token anterior conserva su marca
+  // (LEGACY_FLAG_MINT); cualquier otra dirección queda como no oficial.
+  if (legacyOfficial && !("officialProject" in out)) {
+    out.officialProject = value[LEGACY_OFFICIAL_FIELD] === true && out.mint === LEGACY_FLAG_MINT;
   }
   return out;
 }

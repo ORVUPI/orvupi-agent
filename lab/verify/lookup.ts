@@ -53,7 +53,8 @@ export type LookupView = {
 const BASE58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 
 // Contrato ORVUPI: aún no existe (web/v2/shared/orvupi-contract.json).
-export const OFFICIAL_MINT = "";
+// Contrato ORVUPI: aún no existe. En la web se lee de web/v2/shared/orvupi-contract.js; aquí solo cuenta el registro.
+export const OFFICIAL_MINT: string | null = null;
 
 const COPY = {
   vacio: {
@@ -200,7 +201,7 @@ export function addressMarks(mint: string, official: string): AddressMark[] {
   return marks;
 }
 
-function officialMintOf(cards: readonly CardSummary[]): string {
+function officialMintOf(cards: readonly CardSummary[]): string | null {
   return cards.find((card) => card.role === "registro")?.mint ?? OFFICIAL_MINT;
 }
 
@@ -209,8 +210,8 @@ const NOT_OFFICIAL_GAP = {
   en: "There is no example card. The list is not complete and there is no live reading of this address, so it does not fill the gap.",
 };
 
-function notOfficialView(mint: string, official: string): LookupView {
-  const caseOnly = mint !== official && mint.toLowerCase() === official.toLowerCase();
+function notOfficialView(mint: string, official: string | null): LookupView {
+  const caseOnly = official !== null && official !== "" && mint !== official && mint.toLowerCase() === official.toLowerCase();
   const caseNote = {
     es: "Las direcciones distinguen mayúsculas. Esta coincide con la oficial salvo por las mayúsculas.",
     en: "Addresses are case-sensitive. This one matches the official address except for the letter case.",
@@ -230,7 +231,7 @@ function notOfficialView(mint: string, official: string): LookupView {
       caseOnly ? `${caseNote.es} ${NOT_OFFICIAL_GAP.es}` : NOT_OFFICIAL_GAP.es,
       caseOnly ? `${caseNote.en} ${NOT_OFFICIAL_GAP.en}` : NOT_OFFICIAL_GAP.en,
     ),
-    compare: looksLikeOfficial(mint, official) ? { official, marks: addressMarks(mint, official) } : null,
+    compare: official && looksLikeOfficial(mint, official) ? { official, marks: addressMarks(mint, official) } : null,
   };
 }
 
@@ -355,7 +356,7 @@ export function classifyAddress(
   if (/^0x/i.test(mint)) return evmView(mint, evm);
   if (!isAddress(mint)) return viewOf("invalida", null, [], null);
   const official = officialMintOf(source === "caida" ? [] : cards);
-  if (mint === official) {
+  if (official !== null && official !== "" && mint === official) {
     if (source === "caida") return viewOf("lectura_caida", mint, [], null);
     const registry = cards.find((item) => item.mint === mint);
     if (!registry) return viewOf("lectura_caida", mint, [], null);

@@ -37,7 +37,8 @@ export const MARKET_TIMEOUT_MS = 8_000;
 export const MARKET_CLIENT_LIMIT = 6;
 export const MARKET_CLIENT_WINDOW_MS = 60_000;
 export const MARKET_LOW_USD = 1_000;
-export const MARKET_OFFICIAL_MINT = "";
+import { OFFICIAL_ADDRESS, isOfficialAddress } from "./orvupi-contract.js";
+export const MARKET_OFFICIAL_MINT = OFFICIAL_ADDRESS;
 // Lista cerrada, por mint exacto. El nombre es fijo: no se usa el símbolo de la fuente.
 const MARKET_KNOWN_QUOTES = new Map([
   ["So11111111111111111111111111111111111111112", "SOL"],
@@ -713,7 +714,7 @@ function sideName(symbol, address, lang, chain) {
   const fixed = MARKET_KNOWN_QUOTES.get(address);
   if (fixed) return fixed;
   if (!symbol) return marketCopy(lang, "sin símbolo", "no symbol");
-  if (address === MARKET_OFFICIAL_MINT) return symbol;
+  if (isOfficialAddress(address)) return symbol;
   return marketCopy(lang, `Dice llamarse «${symbol}»`, `It says it is called «${symbol}»`);
 }
 

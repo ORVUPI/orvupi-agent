@@ -1,31 +1,51 @@
 /* ORVUPI web v2. Mismo origen. Sin service worker y sin red. */
 (function () {
   var LANG_KEY = "orvupi-lab-lang";
-  // Claves guardadas antes del 16-10-2026 con el nombre anterior: se copian a orvupi-*,
-  // se comprueba la copia y solo entonces se borra la antigua. Si ya hay una clave nueva, manda la nueva.
+  // Claves guardadas antes del 16-10-2026 con el nombre anterior. Se copian a orvupi-* sin borrar
+  // las antiguas: así una vuelta atrás a la versión anterior sigue viendo sus datos (ver shared/ROLLBACK.md).
+  // Las antiguas se retirarán dentro de dos versiones. Solo se copian claves conocidas con un valor válido,
+  // y si ya hay una clave nueva, manda la nueva. Corre una vez por navegador (marca MIGRATION_MARK).
   var LEGACY_KEY_PREFIX = "stubx-";
+  var MIGRATION_MARK = "orvupi-migracion-claves";
+  var MAX_VALUE = 2000000;
+  function isJsonObject(value) {
+    try {
+      var parsed = JSON.parse(value);
+      return Boolean(parsed) && typeof parsed === "object" && !Array.isArray(parsed);
+    } catch (error) {
+      return false;
+    }
+  }
+  function legacyValueOk(suffix, value) {
+    if (typeof value !== "string" || value.length > MAX_VALUE) return false;
+    if (suffix === "lab-lang") return value === "es" || value === "en";
+    if (suffix === "studio-draft") return isJsonObject(value);
+    if (/^lab-[a-z0-9][a-z0-9-]{0,63}$/.test(suffix)) return isJsonObject(value);
+    return false;
+  }
   function migrateLegacyKeys(storage) {
     try {
+      if (storage.getItem(MIGRATION_MARK) !== null) return;
       var old = [];
       for (var i = 0; i < storage.length; i += 1) {
         var key = storage.key(i);
         if (key && key.indexOf(LEGACY_KEY_PREFIX) === 0) old.push(key);
       }
       old.forEach(function (key) {
-        var next = "orvupi-" + key.slice(LEGACY_KEY_PREFIX.length);
+        var suffix = key.slice(LEGACY_KEY_PREFIX.length);
         var value = storage.getItem(key);
-        if (value === null) return;
+        if (!legacyValueOk(suffix, value)) return;
+        var next = "orvupi-" + suffix;
         if (storage.getItem(next) === null) storage.setItem(next, value);
-        if (storage.getItem(next) !== null) storage.removeItem(key);
       });
+      storage.setItem(MIGRATION_MARK, "2026-10-16");
     } catch (error) {
       /* Sin almacenamiento o lleno: las claves antiguas se quedan como estaban. */
     }
   }
   try { migrateLegacyKeys(window.localStorage); } catch (error) { /* sin localStorage */ }
-  try { migrateLegacyKeys(window.sessionStorage); } catch (error) { /* sin sessionStorage */ }
   // Contrato ORVUPI: aún no existe (ver /shared/orvupi-contract.json). Sin contrato no hay nada que copiar.
-  var OFFICIAL_CA = "";
+  // La dirección se lee al copiar de /shared/orvupi-contract.js, el único módulo del contrato.
   document.documentElement.classList.add("js");
 
   function readLang() {
@@ -106,21 +126,25 @@
       };
       btn.addEventListener("click", function () {
         var value = (btn.getAttribute("data-copy") || "").trim();
-        if (!OFFICIAL_CA || value !== OFFICIAL_CA) {
-          say(value ? "Copia bloqueada" : "Vacío", "error");
-          return;
-        }
         var done = function () {
           say(document.documentElement.lang === "en" ? "Copied" : "Copiada", "ok");
         };
         var fail = function () {
           say(document.documentElement.lang === "en" ? "Could not copy" : "No se pudo copiar", "error");
         };
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(OFFICIAL_CA).then(done).catch(fail);
-        } else {
-          fail();
-        }
+        import("/shared/orvupi-contract.js").then(function (contract) {
+          if (!contract.isOfficialAddress(value)) {
+            say(value ? "Copia bloqueada" : "Vacío", "error");
+            return;
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(contract.OFFICIAL_ADDRESS).then(done).catch(fail);
+          } else {
+            fail();
+          }
+        }).catch(function () {
+          say("Copia bloqueada", "error");
+        });
       });
     });
 

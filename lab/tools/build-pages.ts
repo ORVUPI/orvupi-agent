@@ -49,7 +49,8 @@ export function buildOutputs(repoRoot: string, options: { publish?: boolean } = 
   const verifyJs = bundleVerify(
     readFileSync(lookupPath, "utf8"),
     inlineModule(signalsPath),
-    `${inlineModule(summaryPath)}\n${inlineModule(marketPath)}`,
+    // Una sola pasada: los dos leen shared/orvupi-contract.js y así sale una vez.
+    inlineModule([summaryPath, marketPath]),
     readFileSync(verifyUiPath, "utf8"),
     {
       // ORVUPI todavía no tiene contrato: la web no publica registro, clones ni fichas del token anterior.

@@ -2,7 +2,8 @@
  * Cuaderno en este navegador. La versión 2 añade red y dirección en cada entrada
  * sin borrar las fichas que ya estaban.
  */
-import { NOTEBOOK_DB_VERSION, migrateStoredRecord } from "./notebook-model.js";
+import { NOTEBOOK_DB_VERSION, migrateStoredRecord, validateAnyCard } from "./notebook-model.js";
+import { isEnabledNetwork } from "./networks.js";
 import { LEGACY_DB_NAME } from "./legacy-names.js";
 
 export const NOTEBOOK_DB_NAME = "orvupi-cuaderno";
@@ -161,51 +162,94 @@ function getById(db, id) {
   });
 }
 
-function deleteDb(name) {
-  return new Promise((resolve) => {
-    const request = indexedDB.deleteDatabase(name);
-    request.onsuccess = request.onerror = request.onblocked = () => resolve();
-  });
+/** Marca de que la copia ya se hizo en este navegador (la base anterior no se borra). */
+export const NOTEBOOK_MIGRATION_MARK = "orvupi-migracion-cuaderno";
+
+function readMark() {
+  try {
+    return globalThis.localStorage ? globalThis.localStorage.getItem(NOTEBOOK_MIGRATION_MARK) : "sin-almacenamiento";
+  } catch {
+    return "sin-almacenamiento";
+  }
+}
+
+function writeMark() {
+  try {
+    globalThis.localStorage.setItem(NOTEBOOK_MIGRATION_MARK, "2026-10-16");
+  } catch {
+    /* sin localStorage: la copia se repite, pero nunca pisa una entrada que ya exista */
+  }
+}
+
+function addressFitsNetwork(network, address) {
+  if (typeof address !== "string" || !address) return false;
+  if (network === "solana") return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
+  return /^0x[0-9a-f]{40}$/.test(address);
 }
 
 /**
- * Copia el cuaderno guardado con el nombre anterior a la base ORVUPI.
- * Primero copia, luego comprueba que cada entrada está en la base nueva y solo
- * entonces borra la anterior. Si algo falla, la base anterior se queda como estaba.
+ * Una entrada del cuaderno anterior solo se copia si, ya con los nombres ORVUPI, la ficha es válida,
+ * la red está habilitada y la dirección de la entrada es la de la ficha.
+ */
+export function legacyRecordForMigration(record) {
+  if (!record || typeof record !== "object" || Array.isArray(record)) return null;
+  if (typeof record.id !== "string" || !record.id || record.id.length > 100) return null;
+  const next = migrateStoredRecord(record).record;
+  if (!next || !next.card || typeof next.card !== "object") return null;
+  if (!validateAnyCard(next.card).ok) return null;
+  if (typeof next.network !== "string" || !isEnabledNetwork(next.network)) return null;
+  const fromCard = cardAddress(next.card).trim();
+  const canonical = /^0x[0-9a-fA-F]{40}$/.test(fromCard) ? fromCard.toLowerCase() : fromCard;
+  if (next.address !== canonical || !addressFitsNetwork(next.network, next.address)) return null;
+  if (typeof next.card.network === "string" && next.card.network && next.card.network !== next.network) return null;
+  return next;
+}
+
+/**
+ * Copia el cuaderno guardado con el nombre anterior a la base ORVUPI, sin borrar la anterior:
+ * así una vuelta atrás sigue viendo sus fichas (ver shared/ROLLBACK.md). Solo copia entradas válidas
+ * (legacyRecordForMigration); si ya hay una entrada con el mismo id, manda la nueva.
+ * Las que no se copian se quedan en la base anterior y se cuentan en skipped.
  */
 export async function migrateLegacyNotebook(hooks = {}) {
-  if (!("indexedDB" in globalThis)) return { migrated: 0, kept: false };
+  if (!("indexedDB" in globalThis)) return { migrated: 0, skipped: 0, kept: false };
+  if (readMark() !== null) return { migrated: 0, skipped: 0, kept: true };
   const legacy = await openLegacyIfPresent();
-  if (!legacy) return { migrated: 0, kept: false };
+  if (!legacy) return { migrated: 0, skipped: 0, kept: false };
   let records = [];
   try {
     records = await readAll(legacy);
   } catch {
     legacy.close();
-    return { migrated: 0, kept: true };
+    return { migrated: 0, skipped: 0, kept: true };
   }
+  legacy.close();
   const db = await openNotebookDbOnly(NOTEBOOK_DB_NAME, hooks);
+  let migrated = 0;
+  let skipped = 0;
   try {
     for (const record of records) {
-      if (!record || !record.id) continue;
-      const existing = await getById(db, record.id);
-      if (existing) continue;
-      const next = migrateStoredRecord(record);
-      await notebookDbPut(db, next && next.record ? next.record : record);
-    }
-    for (const record of records) {
-      if (!record || !record.id) continue;
-      if (!(await getById(db, record.id))) throw new Error("migración incompleta");
+      const next = legacyRecordForMigration(record);
+      if (!next) {
+        skipped += 1;
+        continue;
+      }
+      if (await getById(db, next.id)) {
+        skipped += 1;
+        continue;
+      }
+      await notebookDbPut(db, next);
+      if (!(await getById(db, next.id))) throw new Error("migración incompleta");
+      migrated += 1;
     }
   } catch {
     db.close();
-    legacy.close();
-    return { migrated: 0, kept: true };
+    return { migrated, skipped, kept: true };
   }
   db.close();
-  legacy.close();
-  await deleteDb(LEGACY_DB_NAME);
-  return { migrated: records.length, kept: false };
+  writeMark();
+  if (skipped && hooks && typeof hooks.onLegacySkipped === "function") hooks.onLegacySkipped(skipped);
+  return { migrated, skipped, kept: true };
 }
 
 let migration = null;

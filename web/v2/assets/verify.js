@@ -3,7 +3,8 @@
 const ORVUPI_VERIFY = {"cards":[{"mint":"Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB","role":"contraste","roleNote":{"es":"USDT en Solana, contraste: otro token conocido, con emisión y congelación activas. No se presenta como copia de USDC.","en":"USDT on Solana, a contrast: another known token, with active mint and freeze permissions. It is not presented as a copy of USDC."},"id":"47f903a397a460485f0c5c21a5169d9b411a04825d5deba818a2a67c8e23ec18","createdAt":"2026-10-16T18:46:30.731Z","partial":true,"referenceSlot":457742328,"name":"USDT","nameStatus":"verificado","symbol":"USDT","inRegistry":false,"inRegistryStatus":"verificado","mintAuthority":{"state":"activa","status":"verificado"},"freezeAuthority":{"state":"activa","status":"verificado"},"metadataReading":"mutables","metadataLevel":"atención","holdersStatus":"no_disponible","holdersNote":"Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como cantidad cero.","impersonation":false,"authenticityLevel":"ok","signals":[],"statement":"Este mint no está en el registro curado. Que no esté no significa que sea falso ni que sea una copia.","statementStatus":"verificado","curvePresent":false,"curvePresentStatus":"verificado","curveProgress":null,"curveProgressStatus":"no_aplica","curveProgressNote":"No hay curva. No se rellena con cero.","curveModuleNote":"No hay cuenta en la PDA. El módulo de otros mercados no está en esta versión. La ausencia no se rellena con una cantidad de cero.","rulesVersion":"0.1.0","statement_en":"This mint is not in the curated registry. That does not mean it is fake or a copy.","holdersNote_en":"No usable response. It is not interpreted as a revoked authority, as immutability, or as a zero balance.","curveProgressNote_en":"There is no curve. It is not filled with zero.","curveModuleNote_en":null,"signals_en":[]}],"source":"lista","evm":[],"rpc":{"primary":"https://solana-rpc.publicnode.com","fallback":"https://api.mainnet-beta.solana.com"},"registry":[]};
 const BASE58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 // Contrato ORVUPI: aún no existe (web/v2/shared/orvupi-contract.json).
-const OFFICIAL_MINT = "";
+// Contrato ORVUPI: aún no existe. En la web se lee de web/v2/shared/orvupi-contract.js; aquí solo cuenta el registro.
+const OFFICIAL_MINT = null;
 const COPY = {
     vacio: {
         light: "neutro",
@@ -157,7 +158,7 @@ const NOT_OFFICIAL_GAP = {
     en: "There is no example card. The list is not complete and there is no live reading of this address, so it does not fill the gap.",
 };
 function notOfficialView(mint, official) {
-    const caseOnly = mint !== official && mint.toLowerCase() === official.toLowerCase();
+    const caseOnly = official !== null && official !== "" && mint !== official && mint.toLowerCase() === official.toLowerCase();
     const caseNote = {
         es: "Las direcciones distinguen mayúsculas. Esta coincide con la oficial salvo por las mayúsculas.",
         en: "Addresses are case-sensitive. This one matches the official address except for the letter case.",
@@ -171,7 +172,7 @@ function notOfficialView(mint, official) {
         mint,
         rows: [],
         partialNote: pair(caseOnly ? `${caseNote.es} ${NOT_OFFICIAL_GAP.es}` : NOT_OFFICIAL_GAP.es, caseOnly ? `${caseNote.en} ${NOT_OFFICIAL_GAP.en}` : NOT_OFFICIAL_GAP.en),
-        compare: looksLikeOfficial(mint, official) ? { official, marks: addressMarks(mint, official) } : null,
+        compare: official && looksLikeOfficial(mint, official) ? { official, marks: addressMarks(mint, official) } : null,
     };
 }
 function pendingView(raw) {
@@ -269,7 +270,7 @@ function classifyAddress(raw, cards, source, evm = []) {
     if (!isAddress(mint))
         return viewOf("invalida", null, [], null);
     const official = officialMintOf(source === "caida" ? [] : cards);
-    if (mint === official) {
+    if (official !== null && official !== "" && mint === official) {
         if (source === "caida")
             return viewOf("lectura_caida", mint, [], null);
         const registry = cards.find((item) => item.mint === mint);
@@ -1867,12 +1868,15 @@ function decodeBase64(value) {
     return out;
 }
 
+/** Solo para comparar con «orvupi»: también con leet (0→o; 1, l, | y ! → i), como «0RVUP1» u «ORVUPl». */
+function namesProject(value) {
+    const folded = normalizeToken(value);
+    return folded.includes("orvupi") || folded.replace(/0/g, "o").replace(/[1l|!]/g, "i").includes("orvupi");
+}
 const NAMED_LIKE_PROJECT = {
     es: "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato",
     en: "It is named like ORVUPI, but ORVUPI does not have a contract yet",
 };
-// Contrato ORVUPI: aún no existe (web/v2/shared/orvupi-contract.json).
-const OFFICIAL_CA = "";
 const AUDIT_NOTICE = {
     es: "Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. ORVUPI no tiene relación con este token: todavía no tiene contrato. Que no aparezcan señales no significa que esté todo comprobado.",
     en: "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. ORVUPI has no relationship with this token: it does not have a contract yet. No signals showing does not mean everything was checked.",
@@ -2321,7 +2325,7 @@ async function readWith(mint, registry, rpc, input) {
     signals.push(curveNotOnPump ? curveDoesNotApplySignal() : curveSignal(curveInfo, bonding));
     const copyByName = !likeness.inRegistry && likeness.signals.some((item) => /^nombre |^símbolo /.test(item));
     // ORVUPI todavía no tiene contrato: un token que dice llamarse ORVUPI no es el oficial en ninguna red.
-    const namedLikeProject = !likeness.inRegistry && [...names, ...symbols].some((item) => normalizeToken(item).includes("orvupi"));
+    const namedLikeProject = !likeness.inRegistry && [...names, ...symbols].some((item) => namesProject(item));
     if (likeness.inRegistry) {
         signals.push({
             id: "registro",
@@ -2821,6 +2825,18 @@ function curveSignal(account, curve) {
     };
 }
 /**
+ * Contrato ORVUPI en la web: único módulo del que leen todas las páginas.
+ * Tiene que coincidir con shared/orvupi-contract.json (lo comprueba test/web-v2.test.ts).
+ * Hoy no existe: null. Una cadena vacía o un valor que falte nunca cuentan como oficiales.
+ */
+const OFFICIAL_NETWORK = null;
+const OFFICIAL_ADDRESS = null;
+
+function isOfficialAddress(value) {
+  return typeof OFFICIAL_ADDRESS === "string" && OFFICIAL_ADDRESS !== "" && typeof value === "string" && value === OFFICIAL_ADDRESS;
+}
+
+/**
  * Resumen en lenguaje sencillo de una lectura.
  * Tres bloques, sin puntuación, sin semáforo de «seguro» y sin recomendación.
  * Cada punto: título corto, una frase y un enlace a «Entender».
@@ -2852,7 +2868,6 @@ const TOPIC_BY_ID = {
   ficha: "metadatos",
 };
 
-const SUMMARY_OFFICIAL = "";
 
 const ATTENTION = {
   emision: {
@@ -3055,7 +3070,7 @@ function contextFromView(view) {
     symbol: summaryText(shown.symbol) || summaryText(row("Símbolo") && row("Símbolo").value && row("Símbolo").value.es),
     decimals: shown.decimals,
     extensions: Array.isArray(shown.extensions) ? shown.extensions : [],
-    official: view?.mint === SUMMARY_OFFICIAL || (view?.signals || []).some((item) => item && item.id === "registro"),
+    official: isOfficialAddress(view?.mint) || (view?.signals || []).some((item) => item && item.id === "registro"),
   };
 }
 
@@ -3066,7 +3081,7 @@ function contextFromCard(card) {
     symbol: summaryText(card && card.symbol && card.symbol.text),
     decimals: card ? card.decimals : null,
     extensions: Array.isArray(card && card.extensions) ? card.extensions : [],
-    official: Boolean(card && (card.mint === SUMMARY_OFFICIAL)),
+    official: Boolean(card && isOfficialAddress(card.mint)),
   };
 }
 
@@ -3138,9 +3153,23 @@ function summaryShown(value) {
   return clean.length > 64 ? `${clean.slice(0, 64)}…` : clean;
 }
 
+// Solo para comparar con «orvupi»: también con leet (0→o; 1, l, | y ! → i), como «0RVUP1» u «ORVUPl».
+function namesOrvupi(value) {
+  const folded = summaryNormalizeToken(value);
+  return folded.includes("orvupi") || folded.replace(/0/g, "o").replace(/[1l|!]/g, "i").includes("orvupi");
+}
+
 function looksLikeOrvupi(context) {
   if (!context) return false;
-  return summaryNormalizeToken(context.name).includes("orvupi") || summaryNormalizeToken(context.symbol).includes("orvupi");
+  return namesOrvupi(context.name) || namesOrvupi(context.symbol);
+}
+
+/** Franja «Se llama como ORVUPI…» para cualquier red, a partir del nombre y el símbolo leídos. */
+function namedLikeOrvupiText(name, symbol, lang) {
+  if (!namesOrvupi(name) && !namesOrvupi(symbol)) return "";
+  return lang === "en"
+    ? "It is named like ORVUPI, but ORVUPI does not have a contract yet."
+    : "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.";
 }
 
 function quotedIdentity(context) {
@@ -3778,6 +3807,7 @@ function openEntender(link, topic) {
   const target = nav.querySelector(`[data-tema="${topic}"]`) || panel;
   if (target && typeof target.focus === "function") target.focus();
 }
+
 let marketNetwork = () => null;
 
 /** Lo rellena networks.js. La lista completa no entra en el bundle de Solana. */
@@ -3817,7 +3847,7 @@ const MARKET_TIMEOUT_MS = 8_000;
 const MARKET_CLIENT_LIMIT = 6;
 const MARKET_CLIENT_WINDOW_MS = 60_000;
 const MARKET_LOW_USD = 1_000;
-const MARKET_OFFICIAL_MINT = "";
+const MARKET_OFFICIAL_MINT = OFFICIAL_ADDRESS;
 // Lista cerrada, por mint exacto. El nombre es fijo: no se usa el símbolo de la fuente.
 const MARKET_KNOWN_QUOTES = new Map([
   ["So11111111111111111111111111111111111111112", "SOL"],
@@ -4493,7 +4523,7 @@ function sideName(symbol, address, lang, chain) {
   const fixed = MARKET_KNOWN_QUOTES.get(address);
   if (fixed) return fixed;
   if (!symbol) return marketCopy(lang, "sin símbolo", "no symbol");
-  if (address === MARKET_OFFICIAL_MINT) return symbol;
+  if (isOfficialAddress(address)) return symbol;
   return marketCopy(lang, `Dice llamarse «${symbol}»`, `It says it is called «${symbol}»`);
 }
 

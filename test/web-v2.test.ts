@@ -232,13 +232,32 @@ describe("web ORVUPI", () => {
     assert.deepEqual(hits, []);
   });
 
+  test("el contrato se lee de un solo módulo, vale null y no casa con valores vacíos", async () => {
+    const contract = await import(pathToFileURL(path.join(siteRoot(), "shared/orvupi-contract.js")).href);
+    const config = JSON.parse(read("shared/orvupi-contract.json")) as { contract: unknown; network: unknown };
+    assert.equal(contract.OFFICIAL_ADDRESS, config.contract);
+    assert.equal(contract.OFFICIAL_NETWORK, config.network);
+    assert.equal(contract.OFFICIAL_ADDRESS, null);
+    for (const value of ["", null, undefined, 0, "null", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"]) assert.equal(contract.isOfficialAddress(value), false, String(value));
+    const hits: string[] = [];
+    for (const file of walk(siteRoot())) {
+      const rel = path.relative(siteRoot(), file).split(path.sep).join("/");
+      if (rel.startsWith("tools/") || rel.startsWith("content/") || !/\.(m?js)$/.test(rel)) continue;
+      const text = readFileSync(file, "utf8");
+      if (/(OFFICIAL_(MINT|CA)|SUMMARY_OFFICIAL)\s*=\s*["'`]/.test(text)) hits.push(rel);
+      if (/===\s*(OFFICIAL_MINT|MARKET_OFFICIAL_MINT|OFFICIAL_ADDRESS)\b/.test(text) && rel !== "shared/orvupi-contract.js" && rel !== "assets/verify.js" && rel !== "modules/verify/lookup.mjs") hits.push(`${rel}: comparación directa`);
+    }
+    assert.deepEqual(hits, []);
+  });
+
   test("el contrato ORVUPI tiene un único punto de configuración y hoy no existe", () => {
     const config = JSON.parse(read("shared/orvupi-contract.json")) as { contract: unknown; network: unknown; label: { es: string; en: string } };
     assert.equal(config.contract, null);
     assert.equal(config.network, null);
     assert.equal(config.label.es, "Contrato ORVUPI: aún no existe");
     assert.equal(config.label.en, "ORVUPI contract: does not exist yet");
-    assert.match(read("assets/shell.js"), /var OFFICIAL_CA = "";/);
+    assert.equal(/OFFICIAL_CA\s*=/.test(read("assets/shell.js")), false);
+    assert.match(read("assets/shell.js"), /import\("\/shared\/orvupi-contract\.js"\)/);
     assert.match(read("assets/verify.js"), /"Contrato ORVUPI: aún no existe\."/);
     const bundle = read("assets/verify.js");
     const data = JSON.parse(bundle.slice(bundle.indexOf("{", bundle.indexOf("const ORVUPI_VERIFY")), bundle.indexOf(";\n", bundle.indexOf("const ORVUPI_VERIFY")))) as { registry: unknown[]; evm: unknown[]; cards: { mint: string }[] };

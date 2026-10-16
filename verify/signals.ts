@@ -18,6 +18,12 @@ import { decodeBondingCurve } from "./pump.js";
 import { RpcClient, type AccountInfo, type ChainReader, type RpcResult, type RpcTransport, type TokenAmount } from "./rpc.js";
 import type { CanonicalToken, ExtensionReport } from "./types.js";
 
+/** Solo para comparar con «orvupi»: también con leet (0→o; 1, l, | y ! → i), como «0RVUP1» u «ORVUPl». */
+export function namesProject(value: string): boolean {
+  const folded = normalizeToken(value);
+  return folded.includes("orvupi") || folded.replace(/0/g, "o").replace(/[1l|!]/g, "i").includes("orvupi");
+}
+
 const NAMED_LIKE_PROJECT = {
   es: "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato",
   en: "It is named like ORVUPI, but ORVUPI does not have a contract yet",
@@ -38,7 +44,6 @@ export type Signal = {
 export type ReadSource = { dato: Localized; host: string };
 
 // Contrato ORVUPI: aún no existe (web/v2/shared/orvupi-contract.json).
-export const OFFICIAL_CA = "";
 
 export type LiveRow = { label: Localized; value: Localized };
 
@@ -658,7 +663,7 @@ async function readWith(
   signals.push(curveNotOnPump ? curveDoesNotApplySignal() : curveSignal(curveInfo, bonding));
   const copyByName = !likeness.inRegistry && likeness.signals.some((item) => /^nombre |^símbolo /.test(item));
   // ORVUPI todavía no tiene contrato: un token que dice llamarse ORVUPI no es el oficial en ninguna red.
-  const namedLikeProject = !likeness.inRegistry && [...names, ...symbols].some((item) => normalizeToken(item).includes("orvupi"));
+  const namedLikeProject = !likeness.inRegistry && [...names, ...symbols].some((item) => namesProject(item));
   if (likeness.inRegistry) {
     signals.push({
       id: "registro",

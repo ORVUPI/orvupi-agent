@@ -52,7 +52,7 @@ type MarketModule = {
   MARKET_CLIENT_LIMIT: number;
   MARKET_CLIENT_WINDOW_MS: number;
   MARKET_LOW_USD: number;
-  MARKET_OFFICIAL_MINT: string;
+  MARKET_OFFICIAL_MINT: string | null;
   MARKET_ATTRIBUTION: { es: string; en: string };
   marketNormalizeToken: (value: string) => string;
   marketPrivacy: (lang: string) => string;
@@ -755,7 +755,7 @@ describe("datos de mercado", () => {
     const market = await loadMarketModule();
     assert.equal(market.MARKET_TIMEOUT_MS, 8000);
     assert.equal(market.MARKET_LOW_USD, 1000);
-    assert.equal(market.MARKET_OFFICIAL_MINT, ""); // Contrato ORVUPI: aún no existe.
+    assert.equal(market.MARKET_OFFICIAL_MINT, null); // Contrato ORVUPI: aún no existe.
     assert.equal(market.MARKET_ATTRIBUTION.es, ACCURACY_ES);
     assert.equal(market.MARKET_ATTRIBUTION.en, ACCURACY_EN);
     const aviso = (await import(pathToFileURL(path.join(repoRoot(), "web/v2/shared/aviso-guardar.js")).href)) as {

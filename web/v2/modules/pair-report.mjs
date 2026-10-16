@@ -1,5 +1,6 @@
 export const REPORT_VERSION = "u09-pares-1";
-export const OFFICIAL_MINT = ""; // Contrato ORVUPI: aún no existe.
+import { OFFICIAL_ADDRESS, isOfficialAddress } from "../shared/orvupi-contract.js";
+export const OFFICIAL_MINT = OFFICIAL_ADDRESS; // Contrato ORVUPI: aún no existe (shared/orvupi-contract.js).
 export const QUERY_LIMIT = 6;
 export const QUERY_WINDOW_MS = 60_000;
 export const NAME_LIMIT = 48;
@@ -87,7 +88,7 @@ export function evidenceRecord(input) {
     slot: input.slot ?? null,
     source: input.source,
     readAt: input.readAt,
-    official: input.mint === OFFICIAL_MINT,
+    official: isOfficialAddress(input.mint),
   };
 }
 
