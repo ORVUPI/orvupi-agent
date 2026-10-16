@@ -17,7 +17,7 @@ beforeEach(() => {
 
 const root = repoRootFrom(import.meta.url);
 const registry = (
-  JSON.parse(readFileSync(path.join(root, "verify/registry/canonical.json"), "utf8")) as { tokens: CanonicalToken[] }
+  JSON.parse(readFileSync(path.join(root, "verify/test/fixtures/registry-demo.json"), "utf8")) as { tokens: CanonicalToken[] }
 ).tokens;
 const PUMP = Uint8Array.from([23, 183, 248, 55, 96, 216, 172, 96]);
 
@@ -177,16 +177,16 @@ describe("lectura universal con RPC simulado", () => {
     assert.equal(/scam|recomendado|\bseguro\b/i.test(textOf(reading)), false);
   });
 
-  test("un nombre parecido a STUBX con otra dirección no es la CA oficial", async () => {
+  test("un nombre parecido a STUB con otra dirección no es la CA oficial", async () => {
     const reading = await readFixture(fixture("name-impersonation"));
     assert.equal(reading.title.es, "Lectura de este token");
     assert.match(reading.support.es, /No está en el registro curado/);
     assert.equal(reading.signals.find((item) => item.id === "copia")?.title.es, "Se parece a un token del registro curado, pero la dirección es otra");
     assert.equal(reading.signals.find((item) => item.id === "copia")?.level, "atencion");
     const name = reading.rows.find((row) => row.label.es === "Nombre");
-    assert.equal(name?.value.es, "Dice llamarse «Comunidad STUBX»");
-    assert.equal(name?.value.en, "It says it is called «Comunidad STUBX»");
-    assert.equal(reading.signals.find((item) => item.id === "metadatos")?.title.es, "Nombre: Dice llamarse «Comunidad STUBX»");
+    assert.equal(name?.value.es, "Dice llamarse «Comunidad STUB»");
+    assert.equal(name?.value.en, "It says it is called «Comunidad STUB»");
+    assert.equal(reading.signals.find((item) => item.id === "metadatos")?.title.es, "Nombre: Dice llamarse «Comunidad STUB»");
     assert.equal(reading.light, "atencion");
     assert.equal(reading.mint === registry[0]?.mint, false);
     const locked = reading.signals.find((item) => item.id === "mutable");

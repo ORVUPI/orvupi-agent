@@ -181,14 +181,14 @@ export function labFixtures(): LabFixture[] {
       id: "name-impersonation",
       mint: cloneMint,
       slot: 103,
-      mintAccount: account(TOKEN22, token2022WithMetadata(SUPPLY, "Comunidad STUBX", "COMUNIDAD", "https://example.com/clone.json", null)),
+      mintAccount: account(TOKEN22, token2022WithMetadata(SUPPLY, "Comunidad STUB", "COMUNIDAD", "https://example.com/clone.json", null)),
       metaplex: null,
       curve: null,
       supply: { amount: SUPPLY.toString(), decimals: 6 },
       largest: [],
       metadata: {
         uri: "https://example.com/clone.json",
-        json: { name: "Comunidad STUBX", symbol: "COMUNIDAD", website: "https://stubxai.com/canales", image: "https://example.com/other.png" },
+        json: { name: "Comunidad STUB", symbol: "COMUNIDAD", website: "https://stubxai.com/canales", image: "https://example.com/other.png" },
       },
     },
     {
