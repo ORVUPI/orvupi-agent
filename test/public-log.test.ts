@@ -116,9 +116,9 @@ describe("public append-only log", () => {
       prevHash: null,
     });
     assert.equal(verifyLogText(`${serializeEntry(foreign)}\n`).ok, false);
-    assert.equal(runUrl("orvupi/orvupi-agent", "987"), "https://github.com/ORVUPI/orvupi-agent/actions/runs/987");
+    assert.equal(runUrl("ORVUPI/orvupi-agent", "987"), "https://github.com/ORVUPI/orvupi-agent/actions/runs/987");
     assert.equal(runUrl("someone/fork", "987"), null);
-    assert.equal(runUrl("orvupi/orvupi-agent", "abc"), null);
+    assert.equal(runUrl("ORVUPI/orvupi-agent", "abc"), null);
   });
 
   test("a drill cannot be reported as run while the kill-switch is on", () => {

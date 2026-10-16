@@ -78,7 +78,7 @@ jobs:
       - name: PPM marks logs, limits and kill-switch; wallet not-applicable
         run: |
           jq -e '
-            def run: test("^https://github\\.com/orvupi/orvupi-agent/actions/runs/[0-9]+$");
+            def run: test("^https://github\\.com/ORVUPI/orvupi-agent/actions/runs/[0-9]+$");
             .approved == false and
             .ppmMarkedCount == 3 and
             .ppmTotal == 4 and

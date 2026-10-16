@@ -15,7 +15,7 @@ import { isRecord, sameKeys } from "./json-file.js";
 export const LOG_FILE = "agent-log.jsonl";
 export const ANCHOR_DIR = "anchors";
 export const ANCHOR_HEADER = "orvupi-agent public log anchor v1";
-export const REPO_SLUG = "orvupi/orvupi-agent";
+export const REPO_SLUG = "ORVUPI/orvupi-agent";
 export const MAX_LINE_BYTES = 4096;
 export const MAX_ANCHOR_BYTES = 1024;
 export const MAX_OTS_BYTES = 65536;
@@ -29,10 +29,18 @@ export const MAX_OTS_BYTES = 65536;
 export const DAILY_NOTE =
   "Prototipo. El agente de este repositorio no publica en redes sociales, no firma y no mueve fondos. Los posts de @ORVUPI los prepara y publica otro agente de IA, fuera de este repositorio, a partir de textos aprobados antes de publicarse. Esta entrada la escribe el workflow daily-log y solo anota el estado del kill-switch y el resultado del simulacro en este repositorio.";
 
+/**
+ * Génesis de la cadena ORVUPI (16-10-2026). La cadena anterior, de 22 entradas,
+ * se conserva en el tag pre-orvupi-2026-10-16 y su último hash queda escrito aquí.
+ */
+export const PREVIOUS_CHAIN_TAG = "pre-orvupi-2026-10-16";
+export const PREVIOUS_CHAIN_HEAD = "00448b50f38e39a3e04b3bbc23e93a5e824f955eaa30f9f4911bfc9baf2b1168";
+export const GENESIS_NOTE = `ORVUPI, 16-10-2026. Génesis de la cadena ORVUPI. La cadena anterior (22 entradas) se conserva en el tag ${PREVIOUS_CHAIN_TAG}; su último hash es ${PREVIOUS_CHAIN_HEAD}. Las entradas 2 a 23 la repiten con los nombres ORVUPI.`;
+
 const ISO_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 const HEX64 = /^[0-9a-f]{64}$/;
 const SHA40 = /^[0-9a-f]{40}$/;
-const RUN_URL = /^https:\/\/github\.com\/orvupi\/orvupi-agent\/actions\/runs\/[1-9]\d{0,19}$/;
+const RUN_URL = /^https:\/\/github\.com\/ORVUPI\/orvupi-agent\/actions\/runs\/[1-9]\d{0,19}$/;
 const ANCHOR_NAME = /^(\d{4}-\d{2}-\d{2})-(\d{6})\.txt$/;
 
 export type KillSwitchSnapshot = {
@@ -60,7 +68,7 @@ export type PublicLogEntry = {
   seq: number;
   ts: string;
   actor: "orvupi-agent";
-  action: "daily-status";
+  action: "daily-status" | "genesis";
   detail: DailyDetail;
   evidence: string | null;
   contentSha256: string;
@@ -129,6 +137,7 @@ export function normalizeCommit(value: string | null | undefined): string | null
 }
 
 export function buildPublicLogEntry(input: {
+  action?: "daily-status" | "genesis";
   seq: number;
   ts: string;
   detail: DailyDetail;
@@ -140,7 +149,7 @@ export function buildPublicLogEntry(input: {
     seq: input.seq,
     ts: input.ts,
     actor: "orvupi-agent" as const,
-    action: "daily-status" as const,
+    action: input.action ?? ("daily-status" as const),
     detail: input.detail,
     evidence: input.evidence,
   };
@@ -255,15 +264,19 @@ export function parseLogText(text: string): { entries: PublicLogEntry[]; lines: 
     if (canonicalJson(value) !== line) {
       problems.push(`${where}: no está en forma canónica`);
     }
-    if (value.v !== 1 || value.actor !== "orvupi-agent" || value.action !== "daily-status") {
+    const genesis = n === 1 && value.action === "genesis";
+    if (value.v !== 1 || value.actor !== "orvupi-agent" || (value.action !== "daily-status" && !genesis)) {
       problems.push(`${where}: v, actor o action no admitidos`);
+    }
+    if (genesis && (value.evidence !== null || !isRecord(value.detail) || value.detail.note !== GENESIS_NOTE)) {
+      problems.push(`${where}: la entrada génesis no es la acordada`);
     }
     if (value.seq !== n) {
       problems.push(`${where}: seq debería ser ${n}`);
     }
     if (!isIsoUtc(value.ts)) {
       problems.push(`${where}: fecha no válida`);
-    } else if (prev && value.ts < prev.ts) {
+    } else if (prev && prev.action !== "genesis" && value.ts < prev.ts) {
       problems.push(`${where}: fecha anterior a la línea previa`);
     }
     if (value.evidence !== null && (typeof value.evidence !== "string" || !RUN_URL.test(value.evidence))) {
@@ -360,6 +373,19 @@ export type UpdateCheck = { ok: boolean; newEntries: number; problems: string[] 
  * Allowed: append lines to the log; add anchors for new entries; add .ots for
  * anchors; change an existing .ots (OpenTimestamps upgrade). Nothing else.
  */
+/** La cadena anterior termina en PREVIOUS_CHAIN_HEAD y la nueva empieza con la génesis ORVUPI. */
+export function isRegenesis(oldLog: string, newLog: string): boolean {
+  const oldLines = oldLog.trim().split("\n");
+  const newFirst = newLog.split("\n")[0] ?? "";
+  try {
+    const last = JSON.parse(oldLines[oldLines.length - 1] ?? "") as { hash?: unknown };
+    const first = JSON.parse(newFirst) as { action?: unknown; seq?: unknown; detail?: { note?: unknown } };
+    return last.hash === PREVIOUS_CHAIN_HEAD && first.action === "genesis" && first.seq === 1 && first.detail?.note === GENESIS_NOTE;
+  } catch {
+    return false;
+  }
+}
+
 export function checkLogsUpdate(current: LogsTree, next: LogsTree, maxNewEntries: number | null): UpdateCheck {
   const problems: string[] = [];
   const allowed = (p: string) =>
@@ -376,6 +402,21 @@ export function checkLogsUpdate(current: LogsTree, next: LogsTree, maxNewEntries
   }
   const oldLog = current.get(LOG_FILE)?.toString("utf8") ?? "";
   const newLog = next.get(LOG_FILE)?.toString("utf8") ?? "";
+  if (isRegenesis(oldLog, newLog)) {
+    // Cambio único del 16-10-2026: la cadena anterior (tag pre-orvupi-2026-10-16) se sustituye
+    // por la cadena ORVUPI, que empieza con la entrada génesis que cita su último hash.
+    const kept = problems.filter((problem) => !problem.startsWith("no se puede borrar"));
+    problems.length = 0;
+    problems.push(...kept);
+    const verified = verifyLogText(newLog);
+    problems.push(...verified.problems);
+    const anchors = new Map<string, string>();
+    for (const [p, data] of next) {
+      if (p.startsWith(`${ANCHOR_DIR}/`) && p.endsWith(".txt")) anchors.set(p.slice(ANCHOR_DIR.length + 1), data.toString("utf8"));
+    }
+    problems.push(...verifyAnchors(newLog, anchors));
+    return { ok: problems.length === 0, newEntries: verified.entries, problems };
+  }
   if (!newLog.startsWith(oldLog)) {
     problems.push("el log no es solo-añadir: cambia o borra líneas existentes");
   }

@@ -22,7 +22,7 @@ export type PpmBox = {
  * merging: evaluatePpmHonesty rejects anything that is not a run URL of this
  * repository, so CI stays red while a placeholder is left.
  */
-export const RUN_URL = /^https:\/\/github\.com\/orvupi\/orvupi-agent\/actions\/runs\/[0-9]+$/;
+export const RUN_URL = /^https:\/\/github\.com\/ORVUPI\/orvupi-agent\/actions\/runs\/[0-9]+$/;
 export const PPM_MARKED_ON = "2026-10-05";
 export const PPM_WALLET_NOT_APPLICABLE_ON = "2026-10-05";
 export const PPM_TOTAL = 4;

@@ -95,7 +95,7 @@ describe("logs:status (read-only summary for the PPM «Logs» box)", () => {
   });
 
   test("a run link of another repository makes the log fail and counts nothing", () => {
-    const items = [...daily(1, 7), { ts: "2026-09-09T06:23:00.000Z", evidence: "https://github.com/orvupi/orvupi-agent/actions/runs/9" }];
+    const items = [...daily(1, 7), { ts: "2026-09-09T06:23:00.000Z", evidence: "https://github.com/ORVUPI/orvupi-agent/actions/runs/9" }];
     const s = logsStatus(logsTree(items));
     assert.equal(s.ok, false);
     assert.equal(s.distinctDays, 0);
