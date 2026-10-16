@@ -220,7 +220,7 @@ function notOfficialView(mint: string, official: string | null): LookupView {
     kind: "sin_ficha",
     light: "atencion",
     lightLabel: pair("No es la oficial", "Not the official one"),
-    title: pair("No es la dirección oficial", "Not the official address"),
+    title: pair("No es un contrato de ORVUPI", "Not an ORVUPI contract"),
     support: pair(
       `No está en el registro. Esto no dice quién creó esta dirección ni con qué intención.`,
       `It is not in the registry. This does not say who created this address or why.`,

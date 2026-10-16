@@ -552,7 +552,7 @@ function taskArticle(task: TaskRecord): string {
   const history = task.history.map((item) => `<li><time datetime="${escapeHtml(item.on)}">${escapeHtml(item.on)}</time> — ${both(item.change)}</li>`).join("");
   const block = task.block ? `<p>${both({ es: "Bloqueo: ", en: "Blocker: " })}${both(task.block)}</p>` : "";
   const reviewed = task.reviewedOn ?? "—";
-  return `<article class="tarea" id="tarea-${escapeHtml(task.id)}" data-status="${escapeHtml(task.status)}" data-web="${task.webPublished ? "si" : "no"}"><h3>${escapeHtml(task.id)} · ${both(task.title)}</h3><p class="estado">${both(status)} · ${both(task.webPublished ? { es: "En stubxai.com: sí", en: "On stubxai.com: yes" } : { es: "En stubxai.com: no", en: "On stubxai.com: no" })}</p><p>${both(task.scope)}</p><dl><dt>${both({ es: "Responsable", en: "Owner" })}</dt><dd>${both(personLabel(task.owner))}</dd><dt>${both({ es: "Revisión", en: "Review" })}</dt><dd>${both(personLabel(task.reviewer))}</dd><dt>${both({ es: "Fecha de revisión del registro", en: "Record review date" })}</dt><dd>${escapeHtml(reviewed)}</dd></dl>${block}<h4>${both({ es: "Evidencia", en: "Evidence" })}</h4>${evidence ? `<ul>${evidence}</ul>` : `<p>${both({ es: "Todavía no hay evidencia de implementación.", en: "There is no implementation evidence yet." })}</p>`}<h4>${both({ es: "Historial", en: "History" })}</h4><ul>${history}</ul></article>`;
+  return `<article class="tarea" id="tarea-${escapeHtml(task.id)}" data-status="${escapeHtml(task.status)}" data-web="${task.webPublished ? "si" : "no"}"><h3>${escapeHtml(task.id)} · ${both(task.title)}</h3><p class="estado">${both(status)} · ${both(task.webPublished ? { es: "En orvupi.com: sí", en: "On orvupi.com: yes" } : { es: "En orvupi.com: no", en: "On orvupi.com: no" })}</p><p>${both(task.scope)}</p><dl><dt>${both({ es: "Responsable", en: "Owner" })}</dt><dd>${both(personLabel(task.owner))}</dd><dt>${both({ es: "Revisión", en: "Review" })}</dt><dd>${both(personLabel(task.reviewer))}</dd><dt>${both({ es: "Fecha de revisión del registro", en: "Record review date" })}</dt><dd>${escapeHtml(reviewed)}</dd></dl>${block}<h4>${both({ es: "Evidencia", en: "Evidence" })}</h4>${evidence ? `<ul>${evidence}</ul>` : `<p>${both({ es: "Todavía no hay evidencia de implementación.", en: "There is no implementation evidence yet." })}</p>`}<h4>${both({ es: "Historial", en: "History" })}</h4><ul>${history}</ul></article>`;
 }
 
 const STATUS_ORDER = ["en_revision", "en_curso", "propuesta", "publicada"] as const;
@@ -591,13 +591,13 @@ function renderBoard(repoRoot: string, board: BoardFile, options: RenderOptions)
 <ul class="clean">
 <li>${both({ es: "Propuesta: es una idea. Todavía no hay una entrega que puedas abrir.", en: "Proposal: it is an idea. There is no delivery you can open yet." })}</li>
 <li>${both({ es: "En curso o en revisión: hay trabajo en este repositorio. Puedes abrir la evidencia.", en: "In progress or in review: there is work in this repository. You can open the evidence." })}</li>
-<li>${both({ es: "La columna stubxai.com dice sí solo si la función se puede abrir hoy en la web.", en: "The stubxai.com column says yes only if the function can be opened on the website today." })}</li>
+<li>${both({ es: "La columna orvupi.com dice sí solo si la función se puede abrir hoy en la web.", en: "The orvupi.com column says yes only if the function can be opened on the website today." })}</li>
 <li>${both({ es: "Una fecha del historial dice cuándo se anotó el cambio. No es un plazo.", en: "A history date says when the change was written down. It is not a deadline." })}</li>
 </ul>
 </section>
 <nav class="grupos" aria-label="${escapeHtml("Estados / States")}">${jumps}</nav>
-<div class="tabla-scroll" tabindex="0"><table><caption>${both({ es: "Tareas de este registro", en: "Tasks in this record" })}</caption><thead><tr><th scope="col">ID</th><th scope="col">${both({ es: "Tarea", en: "Task" })}</th><th scope="col">${both({ es: "Estado", en: "State" })}</th><th scope="col">stubxai.com</th></tr></thead><tbody>${rows}</tbody></table></div>
-<p>${both({ es: "Propuesta es una idea. En curso o en revisión es trabajo en el repositorio. Publicada sería una función ya en stubxai.com.", en: "Proposal means an idea. In progress or in review means work in the repository. Published would mean a function already on stubxai.com." })}</p>
+<div class="tabla-scroll" tabindex="0"><table><caption>${both({ es: "Tareas de este registro", en: "Tasks in this record" })}</caption><thead><tr><th scope="col">ID</th><th scope="col">${both({ es: "Tarea", en: "Task" })}</th><th scope="col">${both({ es: "Estado", en: "State" })}</th><th scope="col">orvupi.com</th></tr></thead><tbody>${rows}</tbody></table></div>
+<p>${both({ es: "Propuesta es una idea. En curso o en revisión es trabajo en el repositorio. Publicada sería una función ya en orvupi.com.", en: "Proposal means an idea. In progress or in review means work in the repository. Published would mean a function already on orvupi.com." })}</p>
 <div class="tareas">${groups}</div>
 <section class="card" id="plantilla">
 <h2>${both({ es: "Plantilla para copiar", en: "Template to copy" })}</h2>
@@ -620,7 +620,7 @@ function renderBoard(repoRoot: string, board: BoardFile, options: RenderOptions)
 
 function renderIndex(options: RenderOptions): string {
   const main = `<h1>${both({ es: "Borradores para la web", en: "Drafts for the website" })}</h1>
-<p>${both({ es: "Tres páginas estáticas listas para copiar a stubxai.com cuando haya autorización. Este índice no se llama index.html: no sustituye la portada.", en: "Three static pages ready to copy onto stubxai.com when there is authorization. This index is not named index.html: it does not replace the homepage." })}</p>
+<p>${both({ es: "Tres páginas estáticas listas para copiar a orvupi.com cuando haya autorización. Este índice no se llama index.html: no sustituye la portada.", en: "Three static pages ready to copy onto orvupi.com when there is authorization. This index is not named index.html: it does not replace the homepage." })}</p>
 <ul>
 <li><a href="./verify/index.html">/verify</a> — ${both({ es: "lectura en vivo y fichas de ejemplo", en: "live reading and example cards" })}</li>
 <li><a href="./lab/index.html">/lab</a> — ${both({ es: "misión 1", en: "mission 1" })}</li>

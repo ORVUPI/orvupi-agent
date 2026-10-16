@@ -149,7 +149,7 @@ export function snapshotLines(evidence, lang) {
     { size: "body", text: feeText(en ? "en" : "es", "creator_fee_basis_points", 154, evidence.creatorFeeBps) },
     { size: "body", text: en ? "A pairing is not a collaboration or an endorsement." : "Un emparejamiento no es una colaboración ni un respaldo." },
     { size: "body", text: en ? "The hash detects changes against this evidence. It does not certify that it is true." : "El hash detecta cambios respecto a esta evidencia. No certifica que sea verdad." },
-    { size: "small", text: "generado con stubxai.com/verify" },
+    { size: "small", text: "generado con orvupi.com/verify" },
   ];
   const slotLine = evidence.slot === null || evidence.slot === undefined
     ? { size: "small", text: en ? "Technical detail. Network moment: not read." : "Detalle técnico. Momento de la red: no se leyó." }

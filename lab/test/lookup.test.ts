@@ -74,8 +74,8 @@ describe("lectura de una dirección", () => {
     const near = `${official.slice(0, -1)}q`;
     const view = classifyAddress(near, cards, "lista", evm);
     assert.equal(view.kind, "sin_ficha");
-    assert.equal(view.title.es, "No es la dirección oficial");
-    assert.equal(view.title.en, "Not the official address");
+    assert.equal(view.title.es, "No es un contrato de ORVUPI");
+    assert.equal(view.title.en, "Not an ORVUPI contract");
     assert.equal(
       view.support.es,
       `No está en el registro. Esto no dice quién creó esta dirección ni con qué intención.`,
@@ -92,14 +92,14 @@ describe("lectura de una dirección", () => {
     assert.equal(view.compare?.marks.at(-1)?.changed, true);
     assert.equal(view.compare?.marks[0]?.changed, false);
     const down = classifyAddress(near, cards, "caida", evm);
-    assert.equal(down.title.es, "No es la dirección oficial");
+    assert.equal(down.title.es, "No es un contrato de ORVUPI");
     assert.notEqual(down.kind, "lectura_caida");
   });
 
   test("una dirección válida distinta, aunque no se parezca, no es la oficial", () => {
     const expectNotOfficial = (raw: string, marks: boolean) => {
       const view = classifyAddress(raw, cards, "lista", evm);
-      assert.equal(view.title.es, "No es la dirección oficial", raw);
+      assert.equal(view.title.es, "No es un contrato de ORVUPI", raw);
       assert.equal(
         view.support.es,
         `No está en el registro. Esto no dice quién creó esta dirección ni con qué intención.`,
@@ -131,7 +131,7 @@ describe("lectura de una dirección", () => {
     assert.match(lower.partialNote?.en ?? "", /case-sensitive/);
     const exact = classifyAddress(official, cards, "lista", evm);
     assert.equal(exact.title.es, "Está en el registro curado");
-    assert.equal(exact.support.es.includes("No es la dirección oficial"), false);
+    assert.equal(exact.support.es.includes("No es un contrato de ORVUPI"), false);
     const copy = classifyAddress(clone, cards, "lista", evm);
     assert.equal(copy.light, "atencion");
     assert.equal(copy.title.es, "Se parece a un token del registro, pero la dirección es otra");
@@ -139,7 +139,7 @@ describe("lectura de una dirección", () => {
     const other = classifyAddress(usdt, cards, "lista", evm);
     assert.equal(other.title.es, "No está en el registro");
     const far = classifyAddress(wrappedSol, cards, "caida", evm);
-    assert.equal(far.title.es, "No es la dirección oficial");
+    assert.equal(far.title.es, "No es un contrato de ORVUPI");
     assert.notEqual(far.kind, "lectura_caida");
   });
 
@@ -184,7 +184,7 @@ describe("lectura de una dirección", () => {
   test("sin ficha conocida y con la lectura caída no se inventa un resultado", () => {
     const missing = classifyAddress(wrappedSol, cards, "lista");
     assert.equal(missing.kind, "sin_ficha");
-    assert.equal(missing.title.es, "No es la dirección oficial");
+    assert.equal(missing.title.es, "No es un contrato de ORVUPI");
     assert.equal(
       missing.partialNote?.es,
       "No hay ficha de ejemplo. La lista no es completa y no hay lectura en directo de esta dirección, así que no rellena el hueco.",

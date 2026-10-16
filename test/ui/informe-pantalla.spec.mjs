@@ -196,7 +196,7 @@ function expectSameReading(data) {
   ]) {
     expect(painted.includes(phrase), phrase).toBe(false);
   }
-  expect(painted).toContain(data.lang === "en" ? "Made on stubxai.com" : "Generado en stubxai.com");
+  expect(painted).toContain(data.lang === "en" ? "Made on orvupi.com" : "Generado en orvupi.com");
   expect(painted).toContain(data.lang === "en" ? "Limits" : "Límites");
   if (data.warning) {
     const needle = data.lang === "en" ? "It is named like ORVUPI" : "Se llama como ORVUPI";

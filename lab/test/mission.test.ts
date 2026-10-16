@@ -256,18 +256,18 @@ describe("tablero", () => {
     assert.equal(byId.get("U04")?.status, "en_revision");
     assert.ok((byId.get("U04")?.evidence.length ?? 0) > 0);
     assert.equal(byId.get("U04")?.webPublished, true);
-    assert.match(byId.get("U04")?.block?.es ?? "", /Publicada en stubxai.com\/contribuir el 2026-10-10/);
+    assert.match(byId.get("U04")?.block?.es ?? "", /Publicada en orvupi.com\/contribuir el 2026-10-10/);
     assert.equal(byId.get("U07")?.status, "en_revision");
     assert.ok((byId.get("U07")?.evidence.length ?? 0) > 0);
     assert.equal(byId.get("U07")?.webPublished, true);
     assert.match(byId.get("U07")?.block?.es ?? "", /Ejemplo educativo fijo, revisado por Legal/);
     assert.equal(byId.get("U09")?.status, "en_revision");
     assert.equal(byId.get("U09")?.webPublished, true);
-    assert.match(byId.get("U09")?.block?.es ?? "", /Publicada en stubxai.com\/pares el 2026-10-10/);
+    assert.match(byId.get("U09")?.block?.es ?? "", /Publicada en orvupi.com\/pares el 2026-10-10/);
     assert.ok((byId.get("U09")?.evidence.length ?? 0) > 0);
     assert.equal(byId.get("U05")?.status, "en_revision");
     assert.equal(byId.get("U05")?.webPublished, true);
-    assert.match(byId.get("U05")?.block?.es ?? "", /Publicado en stubxai.com\/cuaderno el 2026-10-10/);
+    assert.match(byId.get("U05")?.block?.es ?? "", /Publicado en orvupi.com\/cuaderno el 2026-10-10/);
     assert.ok((byId.get("U05")?.evidence.length ?? 0) > 0);
     const onWeb = new Set(["VERIFY", "U01", "U02", "U03", "U04", "U05", "U06", "U07", "U09"]);
     for (const task of board.tasks) {

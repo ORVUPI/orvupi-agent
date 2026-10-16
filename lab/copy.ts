@@ -22,8 +22,8 @@ export const OFFLINE_LINE = {
 } as const;
 
 export const DRAFT_LINE = {
-  es: "Borrador del repositorio. No publicado en stubxai.com.",
-  en: "Repository draft. Not published on stubxai.com.",
+  es: "Borrador del repositorio. No publicado en orvupi.com.",
+  en: "Repository draft. Not published on orvupi.com.",
 } as const;
 
 export const READONLY_LINE = {

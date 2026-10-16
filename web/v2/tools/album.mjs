@@ -3,7 +3,7 @@
 // añaden al directorio de despliegue justo antes de subirlo.
 //   node web/v2/tools/album.mjs manifest <dir>        genera album-manifest.json desde una copia local
 //   node web/v2/tools/album.mjs fetch <destino> [--from <dir>]
-//        copia (desde <dir>) o descarga (desde https://stubxai.com) cada imagen a
+//        copia (desde <dir>) o descarga (desde https://orvupi.com, o ALBUM_ORIGIN) cada imagen a
 //        <destino>/assets/orvupi/album y comprueba tamaño y sha256 del manifiesto.
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile, readdir, stat } from "node:fs/promises";
@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const manifestPath = path.join(here, "..", "assets", "orvupi", "album-manifest.json");
-const ORIGIN = "https://stubxai.com/assets/orvupi/album/";
+const ORIGIN = process.env.ALBUM_ORIGIN || "https://orvupi.com/assets/orvupi/album/";
 const sha = (buf) => createHash("sha256").update(buf).digest("hex");
 
 async function walk(dir, base = dir) {

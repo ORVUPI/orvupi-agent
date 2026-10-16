@@ -50,7 +50,17 @@
 
   function readLang() {
     try {
-      return localStorage.getItem(LANG_KEY) === "en" ? "en" : "es";
+      var saved = localStorage.getItem(LANG_KEY);
+      if (saved === null) {
+        // Idioma guardado con la clave anterior al cambio de nombre: se migra una vez.
+        var legacy = localStorage.getItem(LEGACY_KEY_PREFIX + "lang");
+        if (legacy === "en" || legacy === "es") {
+          localStorage.setItem(LANG_KEY, legacy);
+          localStorage.removeItem(LEGACY_KEY_PREFIX + "lang");
+          saved = legacy;
+        }
+      }
+      return saved === "en" ? "en" : "es";
     } catch (error) {
       return "es";
     }

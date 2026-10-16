@@ -174,7 +174,7 @@ describe("informe descargable", () => {
     }).formatToParts(new Date(WHEN)).find((part) => part.type === "timeZoneName")?.value;
     assert.ok(zone);
     assert.equal(model.date.includes(zone), true);
-    assert.equal(model.origin, "Generado en stubxai.com · herramienta para tokens de terceros");
+    assert.equal(model.origin, "Generado en orvupi.com · herramienta para tokens de terceros");
     assert.equal(model.network, "Solana mainnet");
     assert.equal(model.address, USDC);
     assert.deepEqual(model.blocks.map((item) => item.heading), ["Qué se comprobó", "Qué requiere atención", "Qué falta"]);
@@ -213,7 +213,7 @@ describe("informe descargable", () => {
     }).formatToParts(new Date(WHEN)).find((part) => part.type === "timeZoneName")?.value;
     assert.ok(englishZone);
     assert.equal(english.date.includes(englishZone), true);
-    assert.equal(english.origin, "Made on stubxai.com · not affiliated with third-party tokens");
+    assert.equal(english.origin, "Made on orvupi.com · not affiliated with third-party tokens");
     assert.deepEqual(english.limits, [
       "It is a reading of public data at the time stated. It may have changed.",
       "It is not an audit, an endorsement, or a recommendation.",
@@ -633,7 +633,7 @@ describe("informe descargable", () => {
       network: "solana",
       consultedAt: WHEN,
     }, "es");
-    assert.match(model.origin, /Generado en stubxai.com/);
+    assert.match(model.origin, /Generado en orvupi.com/);
     assert.match(model.warning, /todavía no tiene contrato/);
     const drawn = report.drawReport(mockCtx().ctx, model, 840);
     const foot = drawn.height - drawn.limitsTop;
@@ -813,7 +813,7 @@ describe("informe descargable", () => {
     assert.equal(painted.includes("\u202E"), false);
     assert.match(painted, new RegExp(`${USDC}<b>`));
     assertAbsent(painted);
-    assert.match(painted, /Generado en stubxai.com · herramienta para tokens de terceros/);
+    assert.match(painted, /Generado en orvupi.com · herramienta para tokens de terceros/);
     assert.match(painted, /Solana mainnet/);
     const titlePaint = calls.find((item) => item.op === "fillText" && item.text?.includes("no es un certificado"));
     assert.ok(titlePaint);

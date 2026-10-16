@@ -194,12 +194,12 @@ describe("páginas estáticas", () => {
     assert.equal(board.includes('id="tarea-U01" data-status="publicada"'), false);
     assert.match(board, /data-web="si"/);
     assert.match(board, /data-web="no"/);
-    assert.match(board, /La columna stubxai.com dice sí solo si la función se puede abrir hoy en la web/);
+    assert.match(board, /La columna orvupi.com dice sí solo si la función se puede abrir hoy en la web/);
     assert.equal(board.includes("Nada de esta página está publicado"), false);
     assert.equal(board.includes("Hoy ninguna lo está"), false);
     assert.match(board, /Ejemplo educativo fijo, revisado por Legal/);
-    assert.match(board, /Publicada en stubxai.com\/contribuir el 2026-10-10/);
-    assert.equal(board.includes("Hoy stubxai.com/comparar no existe"), false);
+    assert.match(board, /Publicada en orvupi.com\/contribuir el 2026-10-10/);
+    assert.equal(board.includes("Hoy orvupi.com/comparar no existe"), false);
     // La fila «Usage measurement» solo está en el tablero editado a mano en producción; el generado no la tiene (ya fallaba en main).
     assert.match(board, /id="tarea-U04" data-status="en_revision" data-web="si"/);
     assert.equal(board.includes("Hace falta un abogado"), false);
@@ -241,7 +241,7 @@ describe("páginas estáticas", () => {
     assert.match(verifyJs, /function pendingView/);
     assert.match(verifyJs, /lectura_caida/);
     assert.match(verifyJs, /Esta dirección no es válida/);
-    assert.match(verifyJs, /No es la dirección oficial/);
+    assert.match(verifyJs, /No es un contrato de ORVUPI/);
     assert.match(verifyJs, /scrollIntoView/);
     assert.match(verifyJs, /direccion-error/);
     assert.equal(verify.includes("frame-ancestors"), false);

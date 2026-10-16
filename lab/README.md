@@ -1,6 +1,6 @@
 # ORVUPI Lab
 
-Este directorio conserva la misión educativa y la biblioteca desarrolladas antes del cambio de marca. La web actual de ORVUPI ofrece Lab en https://stubxai.com/lab/ y Aprender en https://stubxai.com/aprender/. Generar los borradores de este directorio no publica cambios en esa web.
+Este directorio conserva la misión educativa y la biblioteca desarrolladas antes del cambio de marca. La web actual de ORVUPI ofrece Lab en https://orvupi.com/lab/ y Aprender en https://orvupi.com/aprender/. Generar los borradores de este directorio no publica cambios en esa web.
 
 Los ejemplos usan fichas reales de USDC, de USDT y de copias que se llaman «USD Coin», leídas el 2026-10-16. No representan un token ORVUPI: ORVUPI todavía no tiene contrato. Las claves de almacenamiento antiguas se migran solas a `orvupi-*` al cargar la página; véase [la guía de transición](../docs/ORVUPI.md).
 

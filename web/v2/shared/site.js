@@ -3,4 +3,4 @@
  * (por ejemplo el pie del informe PNG/PDF). Cuando orvupi.com sirva la web, se cambia aquí
  * (ver docs/DOMINIO-ORVUPI.md).
  */
-export const SITE_HOST = "stubxai.com";
+export const SITE_HOST = "orvupi.com";

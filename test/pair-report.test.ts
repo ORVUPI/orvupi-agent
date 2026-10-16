@@ -118,7 +118,7 @@ describe("informe de pares", () => {
     assert.match(card, /Un emparejamiento no es una colaboración ni un respaldo\./);
     assert.match(card, /<script>alert\(1\)<\/script>/);
     assert.equal(card.includes(FOOTER_ES), false);
-    assert.match(card, /generado con stubxai.com\/verify/);
+    assert.match(card, /generado con orvupi.com\/verify/);
     assert.equal(/\b(verificado|seguro|aprobado|socio)\b/i.test(card), false);
     assert.match(card, /creator_fee_basis_points/);
     const plain = lines.map((line: { text: string }) => line.text).join("\n");
