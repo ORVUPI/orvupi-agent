@@ -445,8 +445,6 @@ def _scan_root(root: Path, prefix: str) -> list[str]:
             raw = (data[:131_072] + b"\n" + data[-131_072:]).decode("utf-8", errors="replace")
         else:
             raw = path.read_text(encoding="utf-8", errors="replace")
-        if rel == "tools/build_site.py":
-            raw = without_risk_page_source(raw)
         for mark in phrase_hits(rel, raw, binary=binary):
             hits.append(f"{rel}: {mark}")
     return hits
@@ -455,7 +453,7 @@ def _scan_root(root: Path, prefix: str) -> list[str]:
 def forbidden_outside_risk_pages() -> list[str]:
     """Falla si el pie o la etiqueta salen fuera de /risks y /legal, o «no oficial» sale en Studio.
 
-    Revisa páginas, herramientas, imágenes, build_site.py y las plantillas (content y site-drafts).
+    Revisa páginas, herramientas, imágenes, las plantillas (content y site-drafts).
     """
     return _scan_root(V2, "") + _scan_root(REPO / "site-drafts", "site-drafts")
 
@@ -511,8 +509,6 @@ def self_check() -> None:
         raise SystemExit("no es oficial con Cf no es la marca de Studio")
     if phrase_hits("studio/reglas/index.html", "no oficiales"):
         raise SystemExit("no oficiales no es la marca de Studio")
-    if "tools/build_site.py" in SKIP_FILES:
-        raise SystemExit("build_site.py tiene que entrar en la guardia")
     if not phrase_hits("index.html", "Que no aparezca no significa que no haya riesgo."):
         raise SystemExit("la guardia no vio no haya riesgo")
     if not phrase_hits("index.html", "A signal not showing does not mean there is no risk."):

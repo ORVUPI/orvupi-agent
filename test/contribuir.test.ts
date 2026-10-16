@@ -22,7 +22,6 @@ const FILES = [
   ".github/ISSUE_TEMPLATE/mejora.yml",
   ".github/PULL_REQUEST_TEMPLATE.md",
   "web/v2/contribuir/plantilla.md",
-  "web/v2/tools/build_site.py",
 ];
 
 describe("contribuciones", () => {

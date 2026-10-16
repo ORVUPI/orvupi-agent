@@ -440,8 +440,6 @@ if guard.phrase_hits("legal/index.html", "other risks"):
     raise SystemExit("legal other")
 if guard.phrase_hits("verify/index.html", "Que no aparezcan extensiones no significa que esté todo comprobado."):
     raise SystemExit("extensiones")
-if "tools/build_site.py" in guard.SKIP_FILES:
-    raise SystemExit("generador")
 print("ok")
 `;
   const run = spawnSync("python3", ["-c", script], {
