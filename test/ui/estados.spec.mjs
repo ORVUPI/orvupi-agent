@@ -1,7 +1,8 @@
 import { test, expect } from "@playwright/test";
 
 const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
-const STUBX = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
+// Dirección del token anterior: hoy es una dirección más, sin ningún trato especial.
+const PREVIOUS = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
 
 function mintBytes(supply) {
   const data = Buffer.alloc(82);
@@ -66,7 +67,7 @@ async function readMint(page, mint) {
   await page.locator("#consulta button[type='submit']").click();
 }
 
-for (const mint of [STUBX, USDC]) {
+for (const mint of [PREVIOUS, USDC]) {
   test(`verify ${mint} muestra ok, 403 y ausencia`, async ({ page }) => {
     const rpc = await mockRpc(page);
     await readMint(page, mint);
@@ -96,6 +97,7 @@ for (const mint of [STUBX, USDC]) {
     await expect(page.locator("#resultado")).toContainText(/no existe/i);
     await expect(page.locator("#resultado")).not.toContainText("ausente comprobado");
     await expect(page.locator("#resultado")).not.toContainText("isMutable");
-    if (mint !== STUBX) await expect(page.locator(".franja-identidad")).toContainText(STUBX);
+    await expect(page.locator(".franja-identidad")).toContainText("Contrato ORVUPI: aún no existe.");
+    await expect(page.locator(".franja-identidad")).not.toContainText(PREVIOUS);
   });
 }

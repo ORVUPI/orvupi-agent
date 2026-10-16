@@ -2,8 +2,8 @@
   "kind": "verify-browser-snapshot",
   "pr": 21,
   "branch": "feat/verify-universal",
-  "commit": "edf0f9504ffaaf876fc2c4562ce0b6f9dc5b0a8a",
-  "commitDate": "2026-10-16T17:48:16+00:00",
+  "commit": "2e18f49956c99a59a5d3e452136c95a085b8671a",
+  "commitDate": "2026-10-16T19:02:44+00:00",
   "cardsDate": "2026-10-09",
   "earlierCardsDate": "2026-10-08",
   "liveNetwork": true,
@@ -14,5 +14,5 @@
   "missionBundle": "assets/mission.js",
   "browserApi": "modules/verify/lookup.mjs",
   "cards": "modules/verify/cards.json",
-  "note": "Bundle regenerado desde lab/ en edf0f9504ffaaf876fc2c4562ce0b6f9dc5b0a8a, rama feat/verify-universal, PR 21. La página /verify/ lee en el navegador, solo lectura, con los servicios públicos de limits.json. El aviso de Guardar está en web/v2/shared/aviso-guardar.js. inBranch significa que el commit citado es ancestro de esta rama. Esta copia no está publicada."
+  "note": "Bundle regenerado desde lab/ en 2e18f49956c99a59a5d3e452136c95a085b8671a, rama feat/verify-universal, PR 21. La página /verify/ lee en el navegador, solo lectura, con los servicios públicos de limits.json. El aviso de Guardar está en web/v2/shared/aviso-guardar.js. inBranch significa que el commit citado es ancestro de esta rama. Esta copia no está publicada."
 }

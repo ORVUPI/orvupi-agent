@@ -21,8 +21,8 @@ test("el cuaderno muestra el clon, el enlace ausente y la hora con segundos", as
       next.slotStatus = "verificado";
       next.mintAuthority = { state: "revocada", address: null, status: "verificado" };
       next.freezeAuthority = { state: "revocada", address: null, status: "verificado" };
-      next.name = { text: "STUBX", status: "verificado" };
-      next.symbol = { text: "STUBX", status: "verificado" };
+      next.name = { text: "ORVUPI", status: "verificado" };
+      next.symbol = { text: "ORVUPI", status: "verificado" };
       next.uri = { text: null, status: "ausente" };
       next.metadataMutable = "no";
       next.largestStatus = "no_consultado";
@@ -78,7 +78,7 @@ test("el cuaderno muestra el clon, el enlace ausente y la hora con segundos", as
     }
     return rows;
   });
-  expect(cells.Nombre).toBe("Dice llamarse «STUBX»");
+  expect(cells.Nombre).toBe("Dice llamarse «ORVUPI»");
   expect(cells["Enlace de metadatos"]).toBe("No tiene enlace de metadatos");
   expect(JSON.stringify(cells)).not.toMatch(/ausente comprobado|consulta fallida|no consultado/);
   const options = await page.locator("#comparar-izquierda option").allTextContents();
@@ -89,7 +89,7 @@ test("el cuaderno muestra el clon, el enlace ausente y la hora con segundos", as
   const plain = labels.filter((item) => !item.endsWith(" (2)"));
   expect(plain).toHaveLength(2);
   for (const label of labels) {
-    expect(label.startsWith("Dice llamarse «STUBX» · ERYy… · ")).toBe(true);
+    expect(label.startsWith("Dice llamarse «ORVUPI» · ERYy… · ")).toBe(true);
     expect(label.startsWith("STUBX ·")).toBe(false);
   }
   for (const label of plain) expect(label).toMatch(/\d{2}:\d{2}:\d{2}$/);
@@ -98,12 +98,12 @@ test("el cuaderno muestra el clon, el enlace ausente y la hora con segundos", as
   expect(labels[duplicateAt - 1]).toBe(marked[0].slice(0, -4));
   expect(plain[0].slice(-8)).not.toBe(plain[1].slice(-8));
   await page.locator("#comparar").click();
-  await expect(page.locator("#comparacion .franja-identidad").first()).toHaveText("Se parece a STUBX pero no es la dirección oficial.");
+  await expect(page.locator("#comparacion .franja-identidad").first()).toHaveText("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.");
   const stamps = page.locator("#comparacion > p.sello");
   await expect(stamps).toHaveCount(2);
   await expect(stamps.nth(0)).toHaveText(/Antes · Consultado el .+\d{2}:\d{2}:\d{2}.+puede haber cambiado/);
   await expect(stamps.nth(1)).toHaveText(/Ahora · Consultado el .+\d{2}:\d{2}:\d{2}.+puede haber cambiado/);
   const nameRow = page.locator("#comparacion article").filter({ has: page.getByRole("heading", { name: "Nombre", exact: true }) });
-  await expect(nameRow.locator("p").nth(0)).toHaveText("Antes: Dice llamarse «STUBX»");
-  await expect(nameRow.locator("p").nth(1)).toHaveText("Ahora: Dice llamarse «STUBX»");
+  await expect(nameRow.locator("p").nth(0)).toHaveText("Antes: Dice llamarse «ORVUPI»");
+  await expect(nameRow.locator("p").nth(1)).toHaveText("Ahora: Dice llamarse «ORVUPI»");
 });

@@ -1,7 +1,7 @@
 import { formatUnitsLocale, percentTruncated } from "./bytes.js";
 import { FallbackRpc, classifyRpcFailure } from "./fallback.js";
 import { validateMint } from "./input.js";
-import { compareCanonical } from "./impersonation.js";
+import { compareCanonical, normalizeToken } from "./impersonation.js";
 import { decodeMetaplex } from "./metadata.js";
 import { decodeMint, metadataLink, readTokenAccount } from "./mint.js";
 import {
@@ -17,6 +17,11 @@ import {
 import { decodeBondingCurve } from "./pump.js";
 import { RpcClient, type AccountInfo, type ChainReader, type RpcResult, type RpcTransport, type TokenAmount } from "./rpc.js";
 import type { CanonicalToken, ExtensionReport } from "./types.js";
+
+const NAMED_LIKE_PROJECT = {
+  es: "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato",
+  en: "It is named like ORVUPI, but ORVUPI does not have a contract yet",
+};
 
 export type Localized = { es: string; en: string };
 
@@ -652,6 +657,8 @@ async function readWith(
   const curveNotOnPump = !mint.endsWith("pump") && (!curveInfo || curveInfo.owner !== PUMP_PROGRAM);
   signals.push(curveNotOnPump ? curveDoesNotApplySignal() : curveSignal(curveInfo, bonding));
   const copyByName = !likeness.inRegistry && likeness.signals.some((item) => /^nombre |^símbolo /.test(item));
+  // ORVUPI todavía no tiene contrato: un token que dice llamarse ORVUPI no es el oficial en ninguna red.
+  const namedLikeProject = !likeness.inRegistry && [...names, ...symbols].some((item) => normalizeToken(item).includes("orvupi"));
   if (likeness.inRegistry) {
     signals.push({
       id: "registro",
@@ -660,6 +667,16 @@ async function readWith(
       explain: loc(
         "La dirección coincide con la del registro. La ficha fechada es una foto anterior. Estar en el registro no es una auditoría.",
         "The address matches the one in the registry. The dated card is an earlier snapshot. Being in the registry is not an audit.",
+      ),
+    });
+  } else if (namedLikeProject) {
+    signals.push({
+      id: "copia",
+      level: "atencion",
+      title: loc(NAMED_LIKE_PROJECT.es, NAMED_LIKE_PROJECT.en),
+      explain: loc(
+        "El nombre o el símbolo dice ORVUPI. ORVUPI todavía no tiene contrato en ninguna red, así que esta dirección no es la oficial. Esto no dice quién lo creó ni con qué intención.",
+        "The name or the symbol says ORVUPI. ORVUPI does not have a contract on any network yet, so this address is not the official one. This does not say who created it or why.",
       ),
     });
   } else if (copyByName) {
@@ -708,8 +725,10 @@ async function readWith(
         ),
       }
     : {
-        light: (risky ? "riesgo" : copyByName || attention ? "atencion" : "neutro") as "riesgo" | "atencion" | "neutro",
-        lightLabel: copyByName
+        light: (risky ? "riesgo" : copyByName || namedLikeProject || attention ? "atencion" : "neutro") as "riesgo" | "atencion" | "neutro",
+        lightLabel: namedLikeProject
+          ? loc(NAMED_LIKE_PROJECT.es, NAMED_LIKE_PROJECT.en)
+          : copyByName
           ? loc("Se parece a un token del registro curado, pero la dirección es otra", "Looks like a token in the curated registry, but the address is different")
           : loc(risky || attention ? "Hay señales" : "Sin esas señales", risky || attention ? "Signals found" : "Without those signals"),
         title: loc("Lectura de este token", "Reading for this token"),

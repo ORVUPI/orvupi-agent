@@ -118,14 +118,15 @@ async function expectFinalPng(page, bytes) {
   expect(img.width).toBeGreaterThan(preview.width);
   expect(img.height / img.width).toBeCloseTo(preview.height / preview.width, 1);
   const logo = await readLogoPng(yellowPng());
-  const item = templates.templates.find((entry) => entry.id === "aprendizaje");
+  // La web ORVUPI trae el título y el texto ya escritos en la página: se usan los que se ven.
+  const shown = await page.evaluate(() => ({ title: document.getElementById("titulo").value, body: document.getElementById("cuerpo").value }));
   const card = await renderCard({
     width: 1080,
     height: 1080,
     lang: "es",
-    title: item.title.es,
-    body: item.body.es,
-    token: "STUBX",
+    title: shown.title,
+    body: shown.body,
+    token: "ORVUPI",
     fill: "#070418",
     ink: "#f4f7fb",
     backgroundId: "fondo-solana",

@@ -7,3 +7,6 @@ body::before,a.brand::after{content:none!important;display:none!important}header
 @media(max-width:580px){main .or-hero h1{font-size:2.8rem}.or-hero figure{order:-1}.or-hero figure img{max-height:230px}.or-hero figure figcaption{font-size:.75rem;padding:6px 10px}header.site nav::before,header.site nav::after,header.site nav ul::before,header.site nav ul::after{display:none!important}}
 .studio-app h1,.studio-app h2,main .or-center h1,main .or-center h2{font-family:"Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;font-weight:900;letter-spacing:-.035em}.studio-app h1{font-size:clamp(2.4rem,6vw,4rem)}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* Móvil: la cabecera no se queda fija (como ya pedía site.css), para que con la barra de consulta fija abajo no tape el resultado. */
+@media(max-width:599px){header.site{position:static}}

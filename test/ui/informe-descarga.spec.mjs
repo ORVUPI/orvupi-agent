@@ -83,8 +83,8 @@ test("el informe se descarga en Verify y en el Cuaderno", async ({ page }, testI
     const method = body?.method;
     if (method === "getMultipleAccounts") {
       const mint = body.params[0][0];
-      const name = mint === CLONE ? "STUBX" : mint === FAIL ? "OTRO" : "USD Coin";
-      const symbol = mint === CLONE ? "STUBX" : mint === FAIL ? "OTRO" : "USDC";
+      const name = mint === CLONE ? "ORVUPI" : mint === FAIL ? "OTRO" : "USD Coin";
+      const symbol = mint === CLONE ? "ORVUPI" : mint === FAIL ? "OTRO" : "USDC";
       const active = mint === USDC;
       const supply = mint === CLONE ? CLONE_SUPPLY : SUPPLY;
       return route.fulfill(rpcResult([
@@ -150,20 +150,20 @@ test("el informe se descarga en Verify y en el Cuaderno", async ({ page }, testI
   expect(pdfBytes.subarray(0, 5).toString("utf8")).toBe("%PDF-");
   expect(pdfBytes.includes(Buffer.from("/Subtype /Image"))).toBe(true);
 
-  await page.getByRole("button", { name: "English" }).click();
+  await page.locator('[data-set-lang="en"]').first().click();
   await expect(report).toContainText("Downloadable report");
   await expect(report.getByRole("button", { name: "Download PNG" })).toBeVisible();
   await expect(report.getByRole("button", { name: "Download PDF" })).toBeVisible();
   await expect(report).toContainText("not sent to any server");
-  await page.getByRole("button", { name: "Español" }).click();
+  await page.locator('[data-set-lang="es"]').first().click();
   await expect(report).toContainText("Informe descargable");
 
   await page.locator("#direccion-token").fill(CLONE);
   await page.locator("#consulta button[type='submit']").click();
   const summary = page.locator("#resultado .resumen-informe");
-  await expect(summary).toContainText("Dice llamarse «STUBX»", { timeout: 20_000 });
-  await expect(summary).toContainText("Se parece a STUBX pero no es la dirección oficial");
-  await expect(summary).not.toContainText("1.000.000.000 STUBX");
+  await expect(summary).toContainText("Dice llamarse «ORVUPI»", { timeout: 20_000 });
+  await expect(summary).toContainText("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato");
+  await expect(summary).not.toContainText("1.000.000.000 ORVUPI");
   await expect(summary.locator(".informe-descarga")).toContainText("Informe descargable");
 
   failReads = true;

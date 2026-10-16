@@ -12,7 +12,7 @@ test.beforeAll(() => {
 test("contribuciones abre GitHub y cambia de idioma", async ({ page }, info) => {
   const project = info.project.name;
   await page.goto("/");
-  await expect(page.getByRole("link", { name: "Abrir contribuciones" })).toBeVisible();
+  await expect(page.locator('main a.or-button[href="/contribuir/"]').first()).toBeVisible();
   await page.goto("/contribuir/");
   await expect(page.locator("h1")).toContainText("Contribuir");
   await expect(page.getByRole("link", { name: "Informar un fallo" })).toHaveAttribute(
@@ -35,7 +35,7 @@ test("contribuciones abre GitHub y cambia de idioma", async ({ page }, info) => 
   await expect(page.locator("input, textarea")).toHaveCount(0);
   await page.screenshot({ path: `${shots}/u04-contribuir-${project}-es.png`, fullPage: project === "desktop" });
 
-  await page.getByRole("button", { name: "English" }).click();
+  await page.locator('[data-set-lang="en"]').first().click();
   await expect(page.locator("html")).toHaveAttribute("data-lang", "en");
   await expect(page.locator("h1")).toContainText("Contribute");
   await expect(page.getByRole("link", { name: "Report a bug" })).toBeVisible();

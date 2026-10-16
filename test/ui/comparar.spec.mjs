@@ -5,9 +5,9 @@ const shots = "test-results/artifacts/screenshots";
 const FOOTER_ES = "Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión.";
 const FOOTER_EN = "High-risk crypto · You could lose everything · Not investment advice.";
 const WARNING_ES =
-  "Ejemplo educativo. No es una comparación de calidad, ni una recomendación, ni un aval. STUBX no tiene relación con ningún token de este ejemplo.";
+  "Ejemplo educativo. No es una comparación de calidad, ni una recomendación, ni un aval. ORVUPI no tiene relación con ningún token de este ejemplo.";
 const WARNING_EN =
-  "Educational example. It is not a quality comparison, a recommendation, or an endorsement. STUBX has no relationship with any token in this example.";
+  "Educational example. It is not a quality comparison, a recommendation, or an endorsement. ORVUPI has no relationship with any token in this example.";
 
 test.beforeAll(() => {
   mkdirSync(shots, { recursive: true });
@@ -25,7 +25,7 @@ test("el ejemplo de la curva no lee una dirección", async ({ page }, info) => {
     }
   });
   await page.goto("/");
-  await expect(page.getByRole("link", { name: "Ver el ejemplo" })).toBeVisible();
+  await expect(page.locator('main a.or-button[href="/comparar/"]')).toBeVisible();
   await page.goto("/comparar/");
   await expect(page.locator("h1")).toContainText("Ejemplo de una curva");
   await expect(page.locator("main")).toContainText("Ejemplo hipotético, no leído de la cadena");
@@ -37,7 +37,7 @@ test("el ejemplo de la curva no lee una dirección", async ({ page }, info) => {
   expect(reads).toEqual([]);
   await page.screenshot({ path: `${shots}/u07-comparar-${project}-es.png`, fullPage: project === "desktop" });
 
-  await page.getByRole("button", { name: "English" }).click();
+  await page.locator('[data-set-lang="en"]').first().click();
   await expect(page.locator("html")).toHaveAttribute("data-lang", "en");
   await expect(page.locator("h1")).toContainText("Curve example");
   await expect(page.locator("main")).toContainText("Hypothetical example, not read from the chain");

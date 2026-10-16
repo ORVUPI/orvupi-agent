@@ -1,4 +1,11 @@
 import { test, expect } from "@playwright/test";
+
+// Antes de pulsar, el elemento se centra como haría una persona al desplazarse
+// (la web ORVUPI usa desplazamiento suave y una barra de consulta fija abajo en móvil).
+async function tap(locator) {
+  await locator.evaluate((node) => node.scrollIntoView({ block: "center", behavior: "instant" }));
+  await locator.click();
+}
 import { decodeBase58, METADATA_PROGRAM, TOKEN_PROGRAM } from "../../web/v2/shared/solana-read.js";
 
 const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
@@ -92,7 +99,7 @@ test("lectura, guardado y comparación en el uso real", async ({ page }, testInf
 
   await page.goto("/verify/");
   await page.locator("#direccion-token").fill(USDC);
-  await page.locator("#consulta button[type='submit']").click();
+  await tap(page.locator("#consulta button[type='submit']"));
   await expect(page.locator("#resultado")).toContainText("Hay 7.840.780.507,370947 tokens", { timeout: 20_000 });
   await expect(page.locator("#resultado")).not.toContainText("7840780507.370947");
   const missing = await page.locator("[data-bloque='falta']").innerText();
@@ -115,16 +122,16 @@ test("lectura, guardado y comparación en el uso real", async ({ page }, testInf
   await expect(entender.getByRole("link", { name: "Metadatos" })).toHaveAttribute("href", "/aprender/#metadatos-mutables");
   await expect(entender.getByRole("link", { name: "Distribución" })).toHaveAttribute("href", "/aprender/#censo");
 
-  await page.getByRole("button", { name: "English" }).click();
+  await tap(page.locator('[data-set-lang="en"]').first());
   await expect(page.locator("#resultado")).toContainText("There are 7,840,780,507.370947 tokens");
   await expect(page.locator("#resultado")).toContainText("Not applicable: this token was not created on Pump.fun");
   await expect(page.locator("#entender-resultado")).toContainText("Understand this result");
-  await page.getByRole("button", { name: "Español" }).click();
+  await tap(page.locator('[data-set-lang="es"]').first());
   await expect(page.locator("#resultado")).toContainText("Hay 7.840.780.507,370947 tokens");
 
-  await page.locator("#reintentar").click();
+  await tap(page.locator("#reintentar"));
   await expect(page.locator("#resultado")).toContainText("Hay 7.840.780.507,370947 tokens", { timeout: 20_000 });
-  await page.locator("#guardar-consulta").click();
+  await tap(page.locator("#guardar-consulta"));
   const saved = page.locator("#comparacion-verify");
   await expect(saved).toHaveAttribute("aria-live", "polite");
   await expect(saved).toContainText("Guardada en el Cuaderno de este navegador");
@@ -150,7 +157,7 @@ test("lectura, guardado y comparación en el uso real", async ({ page }, testInf
   await page.waitForURL(/\/cuaderno\/$/);
   supplyMode = "fail";
   await page.locator("#direccion-cuaderno").fill(USDC);
-  await page.locator("#consultar").click();
+  await tap(page.locator("#consultar"));
   await expect(page.locator("#consulta-error")).toContainText("Lectura incompleta: se guardará marcando lo que falta", { timeout: 30_000 });
   await expect(page.locator("#consulta-error")).toContainText("Guardada en el Cuaderno de este navegador");
   await expect(page.locator("#consulta-error")).toHaveAttribute("aria-live", "polite");
@@ -162,7 +169,7 @@ test("lectura, guardado y comparación en el uso real", async ({ page }, testInf
   expect(notebookMissing).not.toContain("Curva");
   await expect(page.locator("#resultado")).not.toContainText("Comprobado: no existe");
   await expect(page.locator("#resultado .resumen-datos")).toHaveCount(0);
-  await page.locator("#resultado .abrir-entender").click();
+  await tap(page.locator("#resultado .abrir-entender"));
   await expect(page.locator("#resultado .explicacion-resultado")).toBeVisible();
   await expect(page.locator("#resultado .explicacion-resultado")).toBeFocused();
   await expect(page.locator("#resultado").getByRole("link", { name: "Distribución" })).toHaveAttribute("href", "/aprender/#censo");
@@ -175,7 +182,7 @@ test("lectura, guardado y comparación en el uso real", async ({ page }, testInf
   const rightText = await page.locator("#comparar-derecha option").allTextContents();
   expect(rightText.filter((item) => item.includes("USDC")).length).toBe(1);
   expect(rightText.some((item) => item.includes("OTRO"))).toBe(false);
-  await page.locator("#comparar").click();
+  await tap(page.locator("#comparar"));
   const compared = page.locator("#comparacion");
   await expect(compared).toContainText("Lo que sigue igual");
   await expect(compared).toContainText("No aplica: este token no se creó en Pump.fun");
@@ -193,7 +200,7 @@ test("lectura, guardado y comparación en el uso real", async ({ page }, testInf
   }
 
   await page.locator("#direccion-cuaderno").fill(OTHER);
-  await page.locator("#consultar").click();
+  await tap(page.locator("#consultar"));
   await expect(page.locator("#comparar-izquierda option")).toHaveCount(4, { timeout: 30_000 });
   const usdcValue = await page.locator("#comparar-izquierda option", { hasText: "USDC" }).first().getAttribute("value");
   await page.locator("#comparar-izquierda").selectOption(usdcValue);

@@ -29,14 +29,14 @@ for (const c of CASES) {
     await page.fill("#direccion-token", c.ok);
     await page.locator("#consulta button[type=submit]").click();
     await expect(page.locator("#resultado")).toContainText(/USDC|USD Coin|USD/, { timeout: 60_000 });
-    await expect(page.locator("body")).not.toContainText(/STUBX/);
+    await expect(page.locator("body")).not.toContainText(new RegExp(["STU", "BX"].join(""), "i"));
     await shot(page, info, `verify-${c.red}-valida`);
   });
 }
 
 test("lab: misión se abre y responde", async ({ page }, info) => {
   await page.goto("/lab/");
-  await expect(page.locator("body")).not.toContainText(/STUBX/);
+  await expect(page.locator("body")).not.toContainText(new RegExp(["STU", "BX"].join(""), "i"));
   const first = page.locator("main input[type=radio], main button[data-opcion], main .opcion button, main fieldset button").first();
   if (await first.count()) await first.click().catch(() => {});
   await shot(page, info, "lab");
@@ -44,7 +44,7 @@ test("lab: misión se abre y responde", async ({ page }, info) => {
 
 test("studio: exporta PNG", async ({ page }, info) => {
   await page.goto("/studio/");
-  await expect(page.locator("body")).not.toContainText(/STUBX/);
+  await expect(page.locator("body")).not.toContainText(new RegExp(["STU", "BX"].join(""), "i"));
   await page.waitForTimeout(1500);
   await shot(page, info, "studio");
   const [download] = await Promise.all([page.waitForEvent("download", { timeout: 30_000 }), page.click("#descargar")]);

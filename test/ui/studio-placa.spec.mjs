@@ -30,7 +30,7 @@ test("la vista previa vertical no dibuja la marca de agua", async ({ page }) => 
     lang: "es",
     title: "",
     body: "",
-    token: "STUBX",
+    token: "ORVUPI",
     fill: "#070418",
     ink: "#f4f7fb",
     backgroundId: "fondo-solana",

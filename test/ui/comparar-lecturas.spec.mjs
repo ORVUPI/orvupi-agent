@@ -1,4 +1,11 @@
 import { test, expect } from "@playwright/test";
+
+// Antes de pulsar, el elemento se centra como haría una persona al desplazarse
+// (la web ORVUPI usa desplazamiento suave y una barra de consulta fija abajo en móvil).
+async function tap(locator) {
+  await locator.evaluate((node) => node.scrollIntoView({ block: "center", behavior: "instant" }));
+  await locator.click();
+}
 import { decodeBase58, METADATA_PROGRAM, TOKEN_PROGRAM } from "../../web/v2/shared/solana-read.js";
 
 const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
@@ -118,15 +125,15 @@ test("dos lecturas de la misma dirección se comparan en móvil y escritorio", a
 
   await page.goto("/cuaderno/");
   await page.locator("#direccion-cuaderno").fill(USDC);
-  await page.locator("#consultar").click();
+  await tap(page.locator("#consultar"));
   await expect(page.locator("#resultado")).toContainText("Suministro total", { timeout: 30_000 });
   await expect(page.locator("#resultado")).toContainText("7.723.351.880,366328 tokens");
   await expect(page.locator("#consulta-error")).toContainText("Guardada en el Cuaderno de este navegador");
-  await page.locator("#consultar").click();
+  await tap(page.locator("#consultar"));
   await expect(page.locator("#resultado")).toContainText("7.723.319.021,661631 tokens", { timeout: 30_000 });
   await expect(page.locator("#comparar-izquierda option")).toHaveCount(3);
 
-  await page.locator("#comparar").click();
+  await tap(page.locator("#comparar"));
   const compared = page.locator("#comparacion");
   await expect(compared).toContainText("Suministro total");
   await expect(compared).toContainText("7.723.351.880,366328 tokens");
@@ -215,7 +222,7 @@ test("una lectura incompleta se avisa y una lectura a medias no se guarda en sil
   await page.goto("/verify/");
   await expect(page.locator("#guardar-consulta")).toHaveCount(0);
   await page.locator("#direccion-token").fill(USDC);
-  await page.locator("#consulta button[type='submit']").click();
+  await tap(page.locator("#consulta button[type='submit']"));
   await expect(page.locator("#guardar-consulta")).toBeVisible({ timeout: 20_000 });
   const before = await recordCount(page);
   await page.evaluate(() => {
@@ -230,7 +237,7 @@ test("una lectura incompleta se avisa y una lectura a medias no se guarda en sil
 
   await page.goto("/cuaderno/");
   await page.locator("#direccion-cuaderno").fill(USDC);
-  await page.locator("#consultar").click();
+  await tap(page.locator("#consultar"));
   await expect(page.locator("#consulta-error")).toContainText("Lectura incompleta: se guardará marcando lo que falta", { timeout: 30_000 });
   await expect(page.locator("#consulta-error")).toContainText("Guardada en el Cuaderno de este navegador");
   await expect(page.locator("#comparar-izquierda option")).toHaveCount(2);

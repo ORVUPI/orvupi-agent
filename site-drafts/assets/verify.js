@@ -1867,6 +1867,10 @@ function decodeBase64(value) {
     return out;
 }
 
+const NAMED_LIKE_PROJECT = {
+    es: "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato",
+    en: "It is named like ORVUPI, but ORVUPI does not have a contract yet",
+};
 // Contrato ORVUPI: aún no existe (web/v2/shared/orvupi-contract.json).
 const OFFICIAL_CA = "";
 const AUDIT_NOTICE = {
@@ -2316,12 +2320,22 @@ async function readWith(mint, registry, rpc, input) {
     const curveNotOnPump = !mint.endsWith("pump") && (!curveInfo || curveInfo.owner !== PUMP_PROGRAM);
     signals.push(curveNotOnPump ? curveDoesNotApplySignal() : curveSignal(curveInfo, bonding));
     const copyByName = !likeness.inRegistry && likeness.signals.some((item) => /^nombre |^símbolo /.test(item));
+    // ORVUPI todavía no tiene contrato: un token que dice llamarse ORVUPI no es el oficial en ninguna red.
+    const namedLikeProject = !likeness.inRegistry && [...names, ...symbols].some((item) => normalizeToken(item).includes("orvupi"));
     if (likeness.inRegistry) {
         signals.push({
             id: "registro",
             level: "ok",
             title: loc("Está en el registro curado", "It is in the curated registry"),
             explain: loc("La dirección coincide con la del registro. La ficha fechada es una foto anterior. Estar en el registro no es una auditoría.", "The address matches the one in the registry. The dated card is an earlier snapshot. Being in the registry is not an audit."),
+        });
+    }
+    else if (namedLikeProject) {
+        signals.push({
+            id: "copia",
+            level: "atencion",
+            title: loc(NAMED_LIKE_PROJECT.es, NAMED_LIKE_PROJECT.en),
+            explain: loc("El nombre o el símbolo dice ORVUPI. ORVUPI todavía no tiene contrato en ninguna red, así que esta dirección no es la oficial. Esto no dice quién lo creó ni con qué intención.", "The name or the symbol says ORVUPI. ORVUPI does not have a contract on any network yet, so this address is not the official one. This does not say who created it or why."),
         });
     }
     else if (copyByName) {
@@ -2359,10 +2373,12 @@ async function readWith(mint, registry, rpc, input) {
             support: loc("La lectura de ahora coincide con la dirección del registro. Las fichas fechadas siguen abajo, como foto anterior.", "This reading matches the address in the registry. The dated cards remain below, as an earlier snapshot."),
         }
         : {
-            light: (risky ? "riesgo" : copyByName || attention ? "atencion" : "neutro"),
-            lightLabel: copyByName
-                ? loc("Se parece a un token del registro curado, pero la dirección es otra", "Looks like a token in the curated registry, but the address is different")
-                : loc(risky || attention ? "Hay señales" : "Sin esas señales", risky || attention ? "Signals found" : "Without those signals"),
+            light: (risky ? "riesgo" : copyByName || namedLikeProject || attention ? "atencion" : "neutro"),
+            lightLabel: namedLikeProject
+                ? loc(NAMED_LIKE_PROJECT.es, NAMED_LIKE_PROJECT.en)
+                : copyByName
+                    ? loc("Se parece a un token del registro curado, pero la dirección es otra", "Looks like a token in the curated registry, but the address is different")
+                    : loc(risky || attention ? "Hay señales" : "Sin esas señales", risky || attention ? "Signals found" : "Without those signals"),
             title: loc("Lectura de este token", "Reading for this token"),
             support: copyByName
                 ? loc("No está en el registro curado. Cada señal describe un hecho leído ahora. No es una puntuación.", "It is not in the curated registry. Each signal describes a fact read just now. It is not a score.")
