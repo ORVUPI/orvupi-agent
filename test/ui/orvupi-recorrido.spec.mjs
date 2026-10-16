@@ -43,6 +43,12 @@ test("lab: misión se abre y responde", async ({ page }, info) => {
 });
 
 test("studio: exporta PNG", async ({ page }, info) => {
+  // Guarda los blobs que Studio entrega, por si la pestaña los revoca antes de leerlos.
+  await page.addInitScript(() => {
+    const create = URL.createObjectURL.bind(URL);
+    window.__blobs = [];
+    URL.createObjectURL = (obj) => { if (obj instanceof Blob) window.__blobs.push(obj); return create(obj); };
+  });
   await page.goto("/studio/");
   await expect(page.locator("body")).not.toContainText(new RegExp(["STU", "BX"].join(""), "i"));
   await page.waitForTimeout(1500);
@@ -65,8 +71,10 @@ test("studio: exporta PNG", async ({ page }, info) => {
     await popup.waitForLoadState().catch(() => {});
     const url = popup.url();
     expect(url).toMatch(/^(blob:|data:image\/png)/);
-    const read = async (u) => Array.from(new Uint8Array(await (await fetch(u)).arrayBuffer()));
-    const bytes = await popup.evaluate(read, url).catch(() => page.evaluate(read, url));
+    const bytes = await page.evaluate(async () => {
+      const png = [...window.__blobs].reverse().find((b) => b.type === "image/png") ?? window.__blobs.at(-1);
+      return png ? Array.from(new Uint8Array(await png.arrayBuffer())) : [];
+    });
     buf = Buffer.from(bytes);
   }
   expect(buf.subarray(1, 4).toString()).toBe("PNG");
