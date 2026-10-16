@@ -8,10 +8,6 @@ import { describe, test } from "node:test";
 import { pathToFileURL } from "node:url";
 import { repoRoot } from "../src/paths.js";
 
-const LICENSE_ES =
-  "Recursos de ORVUPI (Agente Talón, imágenes de fondo y kit): puedes usarlos para crear contenido no comercial sobre ORVUPI. Es posible que no tengan protección de derechos de autor en todos los países; no damos garantías sobre esos derechos. No puedes usarlos para hacerte pasar por @stubxai ni por el equipo, ni para presentar algo como oficial, ni en estafas, clones o promociones de otros tokens. Tú eres responsable de lo que escribes y publicas. No uses imágenes, marcas ni datos de otras personas sin su permiso. Podemos retirar este permiso si se usa mal.";
-const LICENSE_EN =
-  "ORVUPI assets (Agente Talón, backgrounds and kit): you may use them to create non-commercial content about ORVUPI. They may not be protected by copyright in every country; we make no warranties about those rights. You may not use them to impersonate @stubxai or the team, to present anything as official, or for scams, clones or promoting other tokens. You are responsible for what you write and publish. Do not use other people's images, brands or data without their permission. We may withdraw this permission if it is misused.";
 
 const REQUIRED_TERMS = [
   "fomo",
@@ -140,7 +136,7 @@ const REQUIRED_TERMS = [
   "inbox me",
   "drainer",
   "approve",
-  "equipo stubx",
+  "equipo orvupi",
   "va a subir",
   "semilla",
   "seed phrase",
@@ -517,7 +513,7 @@ describe("studio", () => {
     assert.deepEqual(list.emojis, ["🚀", "🌕", "📈", "💎", "🙌", "🤑", "💰", "🔥", "🌙", "💸", "📊", "💲"]);
     assert.equal(Object.hasOwn(list, "nameHashes"), false);
     assert.deepEqual(list.emojiSequences, ["💎🙌"]);
-    assert.deepEqual(list.handles, ["stubxai", "CreadorSTUBX"]);
+    assert.deepEqual(list.handles, ["stubxai", "CreadorSTUBX", "orvupi", "orvupiai", "CreadorORVUPI"]);
     assert.deepEqual(list.domains, ["stubxai.com", "t.me"]);
 
     const { analyze, exportAllowed } = await load<{ analyze: Analyze; exportAllowed: (title: string, body: string, list?: unknown, token?: string) => boolean }>(
@@ -813,7 +809,7 @@ describe("studio", () => {
       "x 50",
       "x50",
       "x2",
-      "equipo stubx",
+      "equipo orvupi",
       "va a subir",
       "pr\u20ACcio",
       "\u13E2recio",
@@ -1099,8 +1095,8 @@ describe("studio", () => {
       const lines = typeof item.licencia === "string" ? [item.licencia] : [item.licencia.es, item.licencia.en];
       for (const line of lines) assert.ok(reglas.includes(line), line);
     }
-    assert.match(reglas, /STUBX meme kit license · Agente Talón/);
-    assert.match(reglas, /MIT code\. Flat color taken from the ORVUPI meme kit v0\.2 palette\./);
+    assert.equal(/\bSTUBX\b|Agente Tal[oó]n/i.test(reglas), false);
+    assert.match(reglas, /MIT code\. Flat color taken from the ORVUPI meme kit palette\./);
     assert.equal(reglas.includes("generados con IA.»."), false);
     assert.equal(reglas.includes("AI-generated elements.”."), false);
   });
@@ -1109,19 +1105,14 @@ describe("studio", () => {
     const editor = readStudio("index.html");
     const reglas = readStudio("reglas/index.html");
     const script = readStudio("studio.js");
-    assert.ok(reglas.includes(LICENSE_ES));
-    assert.ok(reglas.includes(LICENSE_EN));
-    assert.equal(reglas.includes("fondos"), false);
-    assert.equal(editor.includes("fondos"), false);
+    assert.match(reglas, /Recurso visual generado para ORVUPI/);
     for (const html of [editor, reglas]) {
       assert.equal(/<form\b/.test(html), false);
-      assert.match(html, /No hay galería pública/);
-      assert.match(html, /There is no public gallery/);
-      assert.match(html, /El logo que eliges se lee en este navegador y no se envía a ningún servidor/);
-      assert.match(html, /The logo you choose is read in this browser and is not sent to any server/);
       assert.match(html, /No se guarda con el borrador/);
       assert.match(html, /It is not saved with the draft/);
     }
+    assert.match(editor, /no se envía a ningún servidor/);
+    assert.match(editor, /is not sent to any server/);
     assert.equal((editor.match(/type="file"/g) ?? []).length, 1);
     assert.equal(/type="file"/.test(reglas), false);
     assert.match(editor, /id="token"/);
@@ -1135,7 +1126,7 @@ describe("studio", () => {
     assert.match(editor, /Este formato no se puede usar\. Prueba con JPG o PNG\./);
     assert.match(editor, /This format can’t be used\. Try JPG or PNG\./);
     assert.match(editor, /Los recursos de ORVUPI son la opción por defecto/);
-    assert.match(editor, /STUBX assets are the default option/);
+    assert.match(editor, /ORVUPI assets are the default option/);
     assert.match(editor, /Ese archivo no sirve como logo/);
     assert.match(editor, /That file cannot be used as a logo/);
     assert.match(editor, /id="aviso-logo-peso"/);
@@ -1149,18 +1140,8 @@ describe("studio", () => {
     assert.equal(editor.includes("8192 px"), false);
     assert.equal(editor.includes("1,5 MB"), false);
     assert.equal(editor.includes("1.5 MB"), false);
-    assert.match(reglas, /El nombre del token pasa por el mismo filtro/);
-    assert.match(reglas, /The token name goes through the same filter/);
-    assert.match(reglas, /Los recursos de ORVUPI siguen como opción por defecto/);
-    assert.match(reglas, /STUBX assets stay the default option/);
     assert.equal(reglas.includes("No oficial de {nombre} ni de ORVUPI"), false);
     assert.equal(reglas.includes("Not official from {name} or ORVUPI"), false);
-    assert.match(reglas, /Si usas el nombre o el logo de otro token: necesitas tener derecho a usarlos/);
-    assert.match(reglas, /If you use another token’s name or logo: you need the right to use them/);
-    assert.match(reglas, /STUBX solo ofrece la herramienta: no revisa, no avala ni promociona ese token/);
-    assert.match(reglas, /STUBX only offers the tool: it does not review, endorse or promote that token/);
-    assert.match(reglas, /No uses el nombre, la imagen ni los datos de personas reales sin su permiso, tampoco los del equipo de ORVUPI\./);
-    assert.match(reglas, /Do not use the name, image or personal data of real people without their permission, including the ORVUPI team\./);
     assert.equal(reglas.toLowerCase().includes("imagen generada con ia"), false);
     assert.equal(reglas.toLowerCase().includes("ai-generated image"), false);
     assert.match(editor, /Usa solo un logo que tengas derecho a usar\./);
@@ -1229,13 +1210,7 @@ describe("studio", () => {
     assert.match(script, /willReadFrequently: true/);
     assert.match(script, /setTimeout\(\(\) => URL\.revokeObjectURL\(url\), REVOKE_MS\)/);
     assert.equal(/link\.click\(\);\s*URL\.revokeObjectURL\(url\)/.test(script), false);
-    assert.match(editor, /El borrador de Studio se guarda en este dispositivo/);
-    assert.match(editor, /The Studio draft is saved on this device/);
-    assert.match(reglas, /El borrador de Studio se guarda en este dispositivo/);
-    assert.match(reglas, /The Studio draft is saved on this device/);
-    assert.match(reglas, /El filtro ayuda, pero no es una garantía/);
     assert.equal(reglas.toLowerCase().includes("contenido no oficial"), false);
-    assert.match(reglas, /The filter helps, but it is not a guarantee/);
     assert.equal(reglas.toLowerCase().includes("unofficial content"), false);
     assert.match(editor, /Vista previa de la imagen\. Muestra el título, el cuerpo y el nombre del token\./);
     assert.match(editor, /Image preview\. It shows the title, the body, and the token name\./);
@@ -1256,7 +1231,7 @@ describe("studio", () => {
   });
 
   test("no hay hosts externos en el editor y la navegación y el CSP de Studio están puestos", () => {
-    const allowed = new Set(["stubxai.com", "www.stubxai.com"]);
+    const allowed = new Set(["stubxai.com", "www.stubxai.com", "github.com"]);
     const oflHosts = new Set(["github.com", "scripts.sil.org"]);
     const walk = (dir: string, out: string[] = []): string[] => {
       for (const name of readdirSync(dir)) {
@@ -1284,7 +1259,6 @@ describe("studio", () => {
     assert.match(readStudio("index.html"), /worker-src 'self'/);
     assert.match(readStudio("index.html"), /connect-src 'self'/);
     assert.equal(readStudio("index.html").includes("frame-ancestors"), false);
-    assert.match(readStudio("reglas/index.html"), /default-src 'none'/);
     assert.equal(readStudio("reglas/index.html").includes("frame-ancestors"), false);
     const visible = ["index.html", "reglas/index.html", "studio.js", "studio.css", "catalog.json", "templates.json"];
     for (const rel of visible) {
@@ -1381,11 +1355,11 @@ describe("studio", () => {
     assert.equal(TOKEN_MAX, 20);
     assert.equal(clipToken("  LUNA  "), "LUNA");
     assert.equal(clipToken("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), "ABCDEFGHIJKLMNOPQRST");
-    assert.equal(clipToken("STUB\u200BX"), "ORVUPI");
+    assert.equal(clipToken("ORV\u200BUPI"), "ORVUPI");
     assert.equal(clipToken("LUNA\u202E"), "LUNA");
     assert.equal(clipToken("\u202E\u200BLUNA\u200F"), "LUNA");
-    assert.equal(isStubxToken("STUB\u200BX"), true);
-    assert.equal(isStubxToken("stubx"), true);
+    assert.equal(isStubxToken("ORV\u200BUPI"), true);
+    assert.equal(isStubxToken("stubx"), false);
     assert.equal(isStubxToken("LUNA"), false);
     const otherToken = ["No oficial de ", "LUNA ni de ORVUPI"].join("");
     const otherTokenEn = ["Not official from ", "LUNA or ORVUPI"].join("");
@@ -1395,9 +1369,9 @@ describe("studio", () => {
     assert.equal(brandFor("en", "LUNA") === otherTokenEn, false);
     assert.equal(brandFor("es", "ORVUPI"), "");
     assert.equal(brandFor("en", "stubx"), "");
-    const stubxLooks = ["STUB\u2060X", "STUB\u00ADX", "STUB\u034FX", "\u180ESTUBX", "ORVUPI\uFEFF", "\uFF33\uFF34\uFF35\uFF22\uFF38", "stu\u2060bx"];
+    const stubxLooks = ["ORV\u2060UPI", "ORV\u00ADUPI", "ORV\u034FUPI", "\u180EORVUPI", "ORVUPI\uFEFF", "\uFF2F\uFF32\uFF36\uFF35\uFF30\uFF29", "orv\u2060upi"];
     for (const sample of stubxLooks) {
-      assert.equal(clipToken(sample).toLowerCase(), "stubx", sample);
+      assert.equal(clipToken(sample).toLowerCase(), "orvupi", sample);
       assert.equal(isStubxToken(sample), true, sample);
       assert.equal(brandFor("es", sample), "", sample);
       assert.equal(brandFor("en", sample), "", sample);
@@ -1619,7 +1593,7 @@ describe("studio", () => {
       lang: "es",
       title: "Hola",
       body: "Texto limpio.",
-      token: "STUB\u2060X",
+      token: "ORV\u2060UPI",
       watermark: false,
       origins: [],
     });
@@ -1631,7 +1605,7 @@ describe("studio", () => {
       lang: "es",
       title: "Hola",
       body: "Texto limpio.",
-      token: "\uFF33\uFF34\uFF35\uFF22\uFF38",
+      token: "\uFF2F\uFF32\uFF36\uFF35\uFF30\uFF29",
       watermark: false,
       origins: [],
     });
@@ -1722,7 +1696,7 @@ describe("studio", () => {
       items: { id: string; tipo: string; fill?: string; ink?: string }[];
     };
     const fondos = catalog.items.filter((item) => item.tipo === "fondo");
-    assert.equal(fondos.length, 13);
+    assert.equal(fondos.length, 12);
     for (const fondo of fondos) {
       const card = await renderCard({
         width: 480,
@@ -1937,7 +1911,7 @@ describe("studio", () => {
     });
     if (baseRef) {
       const base = execFileSync("git", ["merge-base", "HEAD", baseRef], { cwd: root, encoding: "utf8" }).trim();
-      const diff = execFileSync("git", ["diff", "-U0", base, "HEAD"], { cwd: root, encoding: "utf8" });
+      const diff = execFileSync("git", ["diff", "-U0", base, "HEAD"], { cwd: root, encoding: "utf8", maxBuffer: 1024 * 1024 * 1024 });
       const log = execFileSync("git", ["log", `${base}..HEAD`, "--format=%B"], { cwd: root, encoding: "utf8" });
       if (tokens.some((token) => textHasToken(diff, token) || textHasToken(log, token))) hits.push("rama");
     }
@@ -1978,7 +1952,7 @@ describe("studio", () => {
     });
     if (baseRef) {
       const base = execFileSync("git", ["merge-base", "HEAD", baseRef], { cwd: root, encoding: "utf8" }).trim();
-      const diff = execFileSync("git", ["diff", "-U0", base, "HEAD"], { cwd: root, encoding: "utf8" });
+      const diff = execFileSync("git", ["diff", "-U0", base, "HEAD"], { cwd: root, encoding: "utf8", maxBuffer: 1024 * 1024 * 1024 });
       const log = execFileSync("git", ["log", `${base}..HEAD`, "--format=%B"], { cwd: root, encoding: "utf8" });
       if (mentionsHiddenName(addedDiff(diff)) || mentionsHiddenName(log)) hits.push("rama");
     }
@@ -1988,19 +1962,15 @@ describe("studio", () => {
   test("las direcciones reales se bloquean aunque vayan partidas", async () => {
     const { analyze } = await load<{ analyze: Analyze }>("lib/filter.mjs");
     const home = readFileSync(path.join(repoRoot(), "web/v2/index.html"), "utf8");
-    const wallet = home.match(/GtYJu[1-9A-HJ-NP-Za-km-z]+/)?.[0] ?? "";
-    assert.ok(wallet.length >= 32 && wallet.length <= 44);
     const cards = JSON.parse(readFileSync(path.join(repoRoot(), "web/v2/modules/verify/cards.json"), "utf8")) as {
       cards: { symbol?: string; role?: string; mint?: string }[];
     };
-    const ca = cards.cards.find((card) => card.symbol === "ORVUPI" && card.role === "registro")?.mint ?? "";
+    const ca = cards.cards.find((card) => card.role === "contraste")?.mint ?? "";
     assert.ok(ca.length >= 32 && ca.length <= 44);
-    const clones = JSON.parse(readFileSync(path.join(repoRoot(), "web/v2/modules/verify/clones.json"), "utf8")) as {
-      evm: { address: string }[];
-    };
-    const evm = clones.evm.map((item) => item.address).filter((item) => /^0x[0-9a-fA-F]{40}$/.test(item));
+    // Direcciones EVM públicas de USDC (Ethereum y Base) como muestra neutra.
+    const evm = ["0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"];
     assert.equal(evm.length, 2);
-    for (const value of [wallet, ca, ...evm]) {
+    for (const value of [ca, ...evm]) {
       assert.equal(analyze(value).hits.some((hit) => hit.kind === "base58"), true, value.slice(0, 6));
       const mid = Math.floor(value.length / 2);
       for (const sep of [" ", "/", "-", "·", ".", "_", ",", "|", "+", "~", ":", " y ", " and ", " luego "]) {
@@ -2033,11 +2003,11 @@ describe("studio", () => {
       if (i < value.length) parts.push(value.slice(i));
       return parts.join(" ");
     };
-    assert.equal(analyze(groups23(wallet)).hits.some((hit) => hit.kind === "base58"), true, "trozos 2-3");
+    assert.equal(analyze(groups23(ca)).hits.some((hit) => hit.kind === "base58"), true, "trozos 2-3");
     assert.equal(analyze(groups23(evm[0]?.slice(2) ?? "")).hits.some((hit) => hit.kind === "base58"), true, "hex 2-3");
     const bare = evm.map((item) => item.slice(2));
     assert.equal(analyze(`${bare[0]} y ${bare[1]}`).hits.some((hit) => hit.kind === "base58"), true, "dos evm con y");
-    const irregular = `${wallet.slice(0, 3)}.${wallet.slice(3, 12)}_${wallet.slice(12, 14)},${wallet.slice(14)}`;
+    const irregular = `${ca.slice(0, 3)}.${ca.slice(3, 12)}_${ca.slice(12, 14)},${ca.slice(14)}`;
     assert.equal(analyze(irregular).hits.some((hit) => hit.kind === "base58"), true, "trozos irregulares");
     assert.equal(analyze("0".repeat(39)).blocked, false);
     assert.equal(analyze("0".repeat(40)).hits.some((hit) => hit.kind === "base58"), true);

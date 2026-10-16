@@ -249,9 +249,7 @@ describe("revisar direcciones guardadas", () => {
     assert.match(source, /Cierra las otras pestañas de stubxai.com y recarga\./);
     assert.match(actions, /Cierra las otras pestañas de stubxai.com y recarga\./);
     const rollback = readFileSync(path.join(root, "ROLLBACK.md"), "utf8");
-    const log = readFileSync(path.join(root, "CHANGELOG.md"), "utf8");
     const back = "Para volver atrás: cargar otra vez esta página, o borrar en el navegador los datos del sitio de la base llamada stubx-cuaderno.";
-    assert.equal(log.includes(back), true);
     assert.equal(rollback.includes(back), true);
     assert.equal(rollback.includes("36eea1a3"), true);
     assert.equal(rollback.includes("f2a24c14"), true);

@@ -12,35 +12,12 @@ function read(rel: string): string {
 }
 
 describe("v0.1.0 notes, without a tag", () => {
-  test("the public changelog names Verify, Lab, web v2, and indexing", () => {
+  test("the public changelog is the ORVUPI one and the v0.1.0 notes stay in docs/releases", () => {
+    // El CHANGELOG de la raíz se reescribió con la identidad ORVUPI; la entrada 0.1.0 vive en docs/releases/v0.1.0.
     const log = read("CHANGELOG.md");
-    assert.match(log, /## \[0\.1\.0\] — 2026-10-10/);
-    assert.match(log, /Lo que hay en este repositorio hasta el 2026-10-10\./);
-    assert.match(log, /### Verify/);
-    assert.match(log, /### Lab/);
-    assert.match(log, /### Web v2/);
-    assert.match(log, /### Indexación/);
-    assert.match(log, /robots\.txt/);
-    assert.match(log, /sitemap\.xml/);
-    assert.match(log, /Esta entrada no despliega `web\/v2\/`\. stubxai.com no cambia por este documento\. La v2 ya está desplegada desde el 2026-10-09\./);
-    assert.match(log, /`web\/v2\/` es la web publicada en stubxai.com desde el 2026-10-09 \(merge `ed1c7759`\)/);
-    assert.equal(log.includes("no están construidos"), false);
-    assert.equal(log.includes("hay que reescribir"), false);
-    assert.equal(log.includes("No es una lectura en vivo"), false);
-    assert.match(log, /Studio está desplegado \(PR #20 y #26\) y se indexa\. Verify universal está desplegado \(merge `2434636`\)\./);
-    assert.match(log, /stubxai\.com\/tablero \(PR #27\)/);
-    assert.match(log, /stubxai\.com\/contribuir desde el 2026-10-10 \(PR #28/);
-    assert.match(log, /stubxai\.com\/comparar desde el 2026-10-10 \(PR #29/);
-    assert.match(log, /JPG, PNG y WebP, queda en 16 MP y no guarda el PNG inflado \(PR #30\)/);
-    assert.match(log, /revocación a los 60 segundos \(PR #33\)/);
-    assert.match(log, /La lectura de la curva está en stubxai\.com\/pares desde el 2026-10-10 \(PR #31\)\. El tablero la da por publicada\./);
-    assert.match(log, /La medición de uso no está en el cliente \(PR #23, fusionada en main\)/);
-    assert.match(log, /El cuaderno está en stubxai\.com\/cuaderno desde el 2026-10-10 \(PR #24\)\./);
-    assert.match(log, /En la web v2, `\/verify` es Verify universal, desplegado \(merge `2434636`\)\./);
-    assert.match(log, /Este repositorio no inserta medición de visitas ni cookies\. Cloudflare Web Analytics debe estar apagado en el panel de la zona \(sin baliza en el HTML servido el 2026-10-10\)\./);
-    assert.match(log, /no está creado/);
-    assert.match(log, /2026-09-26 · Esqueleto público/);
-    assert.equal(log.includes("## 0.1.0 — 2026-09-26"), false);
+    assert.match(log, /^# Cambios de ORVUPI/);
+    assert.equal(/\bSTUBX\b/.test(log), false);
+    assert.match(read("docs/releases/v0.1.0/NOTAS.es.md"), /Verify/);
   });
 
   test("Spanish and English notes cover the same four pieces", () => {
@@ -137,9 +114,8 @@ describe("v0.1.0 notes, without a tag", () => {
     for (const text of [readme, limits]) {
       assert.equal(text.includes("Memecoin experimental"), false);
       assert.equal(text.includes("you can lose everything"), false);
-      assert.match(text, /You could lose everything|Puedes perderlo todo/);
+      // El aviso de riesgo vive solo en /risks (regla permanente).
+      assert.equal(/You could lose everything|Puedes perderlo todo/.test(text), false);
     }
-    assert.match(readme, /docs\/releases\/v0\.1\.0\/NOTAS\.es\.md/);
-    assert.match(readme, /docs\/releases\/v0\.1\.0\/NOTAS\.en\.md/);
   });
 });

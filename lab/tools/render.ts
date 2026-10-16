@@ -97,7 +97,7 @@ export function safeHref(value: string | undefined): string | null {
   if (!value) {
     return null;
   }
-  if (value.startsWith("https://github.com/stubxai/stubx-agent/")) {
+  if (value.startsWith("https://github.com/ORVUPI/orvupi-agent/") || value.startsWith("https://github.com/stubxai/stubx-agent/")) {
     return value;
   }
   if (/^[a-z0-9./_-]+$/i.test(value) && !value.includes("..")) {

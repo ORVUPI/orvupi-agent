@@ -16,6 +16,7 @@ export function clipToken(value) {
 }
 
 export function isStubxToken(value) {
+  // El nombre de la API se conserva para las integraciones y los borradores.
   return clipToken(value).toLowerCase() === "orvupi";
 }
 

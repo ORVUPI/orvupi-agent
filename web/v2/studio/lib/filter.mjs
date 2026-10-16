@@ -700,7 +700,9 @@ export function analyze(text, list = blocklist) {
   }
   if (/[a-z0-9-]+\.(?:com|net|org|io|xyz|fun|me)\b/.test(urlText)) pushHit(hits, seen, "url", "url");
 
-  const handleNames = new Set((list.handles ?? []).map((handle) => termKey(handle)));
+  // ORVUPI puede escribirse como marca/ticker. Su @handle sigue bloqueado
+  // por la comprobación explícita de abajo, igual que las otras cuentas.
+  const handleNames = new Set((list.handles ?? []).map((handle) => termKey(handle)).filter((name) => name !== "orvupi"));
   for (const handle of list.handles ?? []) {
     const name = termKey(handle);
     if (!name) continue;

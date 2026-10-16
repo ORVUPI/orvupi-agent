@@ -438,7 +438,13 @@ def _scan_root(root: Path, prefix: str) -> list[str]:
         binary = suffix in IMAGE_SUFFIXES
         if suffix not in TEXT_SUFFIXES and not binary:
             continue
-        raw = path.read_text(encoding="utf-8", errors="replace")
+        if binary and path.stat().st_size > 512_000:
+            # Imágenes grandes (álbum): los metadatos de texto van fuera de los datos de
+            # imagen, al principio o al final del archivo. Leerlas enteras como texto tarda minutos.
+            data = path.read_bytes()
+            raw = (data[:131_072] + b"\n" + data[-131_072:]).decode("utf-8", errors="replace")
+        else:
+            raw = path.read_text(encoding="utf-8", errors="replace")
         if rel == "tools/build_site.py":
             raw = without_risk_page_source(raw)
         for mark in phrase_hits(rel, raw, binary=binary):
@@ -566,7 +572,10 @@ def main() -> int:
     missing: list[str] = []
     present: list[str] = []
     seen: set[str] = set()
-    for name in SOURCES:
+    # web/current era la web anterior (retirada con el paso a ORVUPI). Sin ella,
+    # solo quedan las comprobaciones sobre web/v2: frases retiradas y avisos fuera de /risks.
+    legacy = CURRENT.exists()
+    for name in SOURCES if legacy else []:
         html = (CURRENT / name).read_text(encoding="utf-8")
         for sentence in sentences_from(html):
             key = normalize(sentence)
@@ -584,7 +593,8 @@ def main() -> int:
                 continue
             missing.append(sentence)
     repeat_parser = HowToExtractor()
-    repeat_parser.feed((CURRENT / "pruebas.html").read_text(encoding="utf-8"))
+    if legacy:
+        repeat_parser.feed((CURRENT / "pruebas.html").read_text(encoding="utf-8"))
     plain = plain_corpus()
 
     def how_covered(block: str) -> bool:
@@ -596,7 +606,7 @@ def main() -> int:
         return normalize(rewritten) in plain
 
     how_missing = [block for block in repeat_parser.blocks if not how_covered(block)]
-    if not repeat_parser.blocks:
+    if legacy and not repeat_parser.blocks:
         how_missing = ["pruebas.html no tiene secciones «Cómo repetirlo tú»"]
     forbidden = forbidden_outside_risk_pages()
     if present or missing or how_missing or forbidden:

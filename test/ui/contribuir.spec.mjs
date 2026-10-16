@@ -17,7 +17,7 @@ test("contribuciones abre GitHub y cambia de idioma", async ({ page }, info) => 
   await expect(page.locator("h1")).toContainText("Contribuir");
   await expect(page.getByRole("link", { name: "Informar un fallo" })).toHaveAttribute(
     "href",
-    "https://github.com/stubxai/stubx-agent/issues/new?template=informe-fallo.yml",
+    "https://github.com/ORVUPI/orvupi-agent/issues/new?template=informe-fallo.yml",
   );
   await expect(page.getByRole("link", { name: "Proponer una mejora" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Descargar la plantilla" })).toHaveAttribute("href", "/contribuir/plantilla.md");

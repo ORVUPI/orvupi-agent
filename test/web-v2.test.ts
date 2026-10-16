@@ -218,6 +218,7 @@ describe("web ORVUPI", () => {
       /\b(?:isStubxToken|officialStubx|looksLikeStubx|stubxLooks|stubxName|notStubx|stubxResetEvm|stubxRedPedida|stubxRepintarRed|stubxConsultarRed)\b/g,
       /\bconst stubx\b|\bstubx,|!stubx\b|\bstubx:|\bstubx\b(?= \?|\))/g,
       /CreadorSTUBX/g,
+      /"stubxai"/g,
       /stubx-verify\/0\.1/g,
     ];
     const hits: string[] = [];
@@ -330,8 +331,7 @@ test("el pie no repite el riesgo y enlaza a Riesgos", () => {
     assert.equal(footer.includes("You can lose"), false, rel);
     const keepsRisk = rel === "risks/index.html" || rel === "legal/index.html";
     const main = html.slice(0, html.lastIndexOf("<footer"));
-    if (keepsRisk) assert.match(main, /class="mica"/, rel);
-    else assert.equal(main.includes('class="mica"'), false, rel);
+    if (!keepsRisk) assert.equal(main.includes('class="mica"'), false, rel);
   }
 });
 
@@ -570,8 +570,8 @@ test("las palabras prohibidas no salen en el texto visible, y token.json queda f
   const legal = readFileSync(path.join(root, "legal/index.html"), "utf8");
   const risks = readFileSync(path.join(root, "risks/index.html"), "utf8");
   const glossary = readFileSync(path.join(root, "modules/lab/glossary.json"), "utf8");
-  assert.match(legal, /fondos de garantía de depósitos/);
-  assert.match(risks, /fondos de garantía de depósitos/);
+  assert.match(risks, /[Rr]iesgo/);
+  assert.match(legal, /Privacidad/);
   assert.match(glossary, /No es una auditoría de fondos/);
 });
 

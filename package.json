@@ -8,7 +8,7 @@
   "homepage": "https://stubxai.com",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stubxai/stubx-agent.git"
+    "url": "git+https://github.com/ORVUPI/orvupi-agent.git"
   },
   "bugs": {
     "email": "orvupi.hq@gmail.com"

@@ -151,7 +151,7 @@ function vineta(rgba, width, height) {
   line(rgba, width, height, width * 0.04, height * 0.76, width * 0.48, height * 0.76, [255, 45, 111], 0.9, Math.max(3, width * 0.012));
 }
 
-function talon(rgba, width, height) {
+function rosa(rgba, width, height) {
   fill(rgba, width, height, [7, 20, 34]);
   radial(rgba, width, height, width * 0.22, height * 0.22, width * 0.5, [16, 36, 63], 1);
   radial(rgba, width, height, width * 0.78, height * 0.62, width * 0.48, [255, 45, 111], 0.55);
@@ -298,7 +298,7 @@ function rafaga(rgba, width, height) {
 export const BACKGROUND_PAINT = {
   "fondo-solana": solana,
   "fondo-vineta": vineta,
-  "fondo-talon": talon,
+  "fondo-rosa": rosa,
   "fondo-pixel": pixel,
   "fondo-velas": velas,
   "fondo-confeti": confeti,
@@ -314,8 +314,8 @@ export function paintBackground(rgba, width, height, id) {
     case "fondo-vineta":
       vineta(rgba, width, height);
       break;
-    case "fondo-talon":
-      talon(rgba, width, height);
+    case "fondo-rosa":
+      rosa(rgba, width, height);
       break;
     case "fondo-pixel":
       pixel(rgba, width, height);

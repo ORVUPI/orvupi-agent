@@ -54,7 +54,7 @@
               }
             },
             {
-              "id": "tambien-stubx",
+              "id": "tambien-token-a",
               "label": {
                 "es": "Sí, porque TOKEN A también lo tiene activo.",
                 "en": "Yes, because TOKEN A has it active too."
@@ -71,7 +71,7 @@
               "es": "El permiso dice que alguien puede crear más tokens. No dice que el proyecto engañe.",
               "en": "The permission says someone can create more tokens. It does not say the project is deceiving anyone."
             },
-            "tambien-stubx": {
+            "tambien-token-a": {
               "es": "En esa ficha TOKEN A los tiene cerrados. USDC los tiene activos. No es el mismo caso.",
               "en": "On that card TOKEN A has them closed. USDC has them active. It is not the same case."
             }

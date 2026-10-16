@@ -1,47 +1,76 @@
 {
-  "version": "2026-10-10",
+  "version": "2026-10-14-orvupi",
   "items": [
     {
-      "id": "orvupi-avatar-512",
-      "archivo": "assets/orvupi-avatar-512.png",
+      "id": "orvupi-avatar",
+      "archivo": "assets/orvupi-avatar.png",
       "tipo": "avatar",
       "nombre": {
-        "es": "Pulpo ORVUPI",
-        "en": "ORVUPI octopus"
+        "es": "ORVUPI · Pulpo rosa",
+        "en": "ORVUPI · Pink octopus"
       },
       "licencia": {
-        "es": "Imágenes de ORVUPI · uso libre para memes de la comunidad",
-        "en": "ORVUPI images · free to use for community memes"
+        "es": "Recurso visual generado para ORVUPI. No se declara licencia CC0 o MIT ni exclusividad sobre la imagen.",
+        "en": "Visual asset generated for ORVUPI. No CC0 or MIT image license or exclusivity is asserted."
       },
-      "autor": "ORVUPI",
+      "autor": "Proyecto ORVUPI",
       "permitido": true,
       "aiOrigin": "mascota",
-      "sha256": "8d377951c467c2c4066ef925559cd62d22f3dc33aafcf17a91f6cdfa1a1708bd"
+      "sha256": "352f34d82481ac001fb9746d4229289e7ab2b43de90a4d8249df83c1e41d6ac5",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1639042,
+      "origen": "outputs/avatars/ORVUPI_Pulpo_Rosa_v4_Cara_Referencias.png"
     },
     {
-      "id": "orvupi-cara-512",
-      "archivo": "assets/orvupi-cara-512.png",
+      "id": "orvupi-saludo",
+      "archivo": "assets/orvupi-saludo.png",
       "tipo": "avatar",
       "nombre": {
-        "es": "Cara del pulpo",
-        "en": "Octopus face"
+        "es": "ORVUPI · Saludo",
+        "en": "ORVUPI · Wave"
       },
       "licencia": {
-        "es": "Imágenes de ORVUPI · uso libre para memes de la comunidad",
-        "en": "ORVUPI images · free to use for community memes"
+        "es": "Recurso visual generado para ORVUPI. No se declara licencia CC0 o MIT ni exclusividad sobre la imagen.",
+        "en": "Visual asset generated for ORVUPI. No CC0 or MIT image license or exclusivity is asserted."
       },
-      "autor": "ORVUPI",
+      "autor": "Proyecto ORVUPI",
       "permitido": true,
       "aiOrigin": "mascota",
-      "sha256": "db2f9ff1b6489db1a6889f77bc5c728273c96127c34d75487e99dfff85bb5e99"
+      "sha256": "8f78c589b93169a19c2976296c981023d4752bad1e5a8219d6d13723e6799a41",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1627160,
+      "origen": "outputs/ORVUPI_Coleccion_250/02_gestos/026-saludo-amistoso.png"
+    },
+    {
+      "id": "orvupi-buen-humor",
+      "archivo": "assets/orvupi-buen-humor.png",
+      "tipo": "avatar",
+      "nombre": {
+        "es": "ORVUPI · Buen humor",
+        "en": "ORVUPI · Good mood"
+      },
+      "licencia": {
+        "es": "Recurso visual generado para ORVUPI. No se declara licencia CC0 o MIT ni exclusividad sobre la imagen.",
+        "en": "Visual asset generated for ORVUPI. No CC0 or MIT image license or exclusivity is asserted."
+      },
+      "autor": "Proyecto ORVUPI",
+      "permitido": true,
+      "aiOrigin": "mascota",
+      "sha256": "df294ee3efa2d3176262f8113dca55053261c613e119bfe3b73be6f6f7e7bf8d",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1746691,
+      "origen": "outputs/ORVUPI_Coleccion_250/03_emociones/071-buen-humor.png"
     },
     {
       "id": "fondo-solana",
       "archivo": "assets/fondo-solana-mini.png",
       "tipo": "fondo",
       "nombre": {
-        "es": "Solana",
-        "en": "Solana"
+        "es": "Red digital",
+        "en": "Digital network"
       },
       "fill": "#070418",
       "ink": "#f4f7fb",
@@ -72,25 +101,6 @@
       "permitido": true,
       "aiOrigin": "ninguno",
       "sha256": "c3ca4223a2ea07f6b1622ba561e465d67ed86a23f6f99a1fbfc1924dde72a44b"
-    },
-    {
-      "id": "fondo-talon",
-      "archivo": "assets/fondo-talon-mini.png",
-      "tipo": "fondo",
-      "nombre": {
-        "es": "Rosa",
-        "en": "Pink"
-      },
-      "fill": "#071422",
-      "ink": "#f4f7fb",
-      "licencia": {
-        "es": "Código MIT. Dibujo del Studio, sin archivos de fuera.",
-        "en": "MIT code. Studio drawing, with no outside files."
-      },
-      "autor": "ORVUPI",
-      "permitido": true,
-      "aiOrigin": "ninguno",
-      "sha256": "24254d94a482b1e30d1ff94701e6901da9ab57ca8a54b9fdc70364e239623a09"
     },
     {
       "id": "fondo-pixel",
@@ -198,8 +208,8 @@
       "fill": "#0a090d",
       "ink": "#fff3f5",
       "licencia": {
-        "es": "Imágenes de ORVUPI · uso libre para memes de la comunidad",
-        "en": "ORVUPI images · free to use for community memes"
+        "es": "Código MIT. Color plano tomado de la paleta del kit de memes ORVUPI.",
+        "en": "MIT code. Flat color taken from the ORVUPI meme kit palette."
       },
       "autor": "ORVUPI",
       "permitido": true,
@@ -217,8 +227,8 @@
       "fill": "#17131b",
       "ink": "#fff3f5",
       "licencia": {
-        "es": "Imágenes de ORVUPI · uso libre para memes de la comunidad",
-        "en": "ORVUPI images · free to use for community memes"
+        "es": "Código MIT. Color plano tomado de la paleta del kit de memes ORVUPI.",
+        "en": "MIT code. Flat color taken from the ORVUPI meme kit palette."
       },
       "autor": "ORVUPI",
       "permitido": true,
@@ -236,8 +246,8 @@
       "fill": "#120a0e",
       "ink": "#fff3f5",
       "licencia": {
-        "es": "Imágenes de ORVUPI · uso libre para memes de la comunidad",
-        "en": "ORVUPI images · free to use for community memes"
+        "es": "Código MIT. Color plano tomado de la paleta del kit de memes ORVUPI.",
+        "en": "MIT code. Flat color taken from the ORVUPI meme kit palette."
       },
       "autor": "ORVUPI",
       "permitido": true,
@@ -255,8 +265,8 @@
       "fill": "#fe8596",
       "ink": "#120a0e",
       "licencia": {
-        "es": "Imágenes de ORVUPI · uso libre para memes de la comunidad",
-        "en": "ORVUPI images · free to use for community memes"
+        "es": "Código MIT. Color plano tomado de la paleta del kit de memes ORVUPI.",
+        "en": "MIT code. Flat color taken from the ORVUPI meme kit palette."
       },
       "autor": "ORVUPI",
       "permitido": true,
@@ -274,8 +284,8 @@
       "fill": "#fff3f5",
       "ink": "#120a0e",
       "licencia": {
-        "es": "Imágenes de ORVUPI · uso libre para memes de la comunidad",
-        "en": "ORVUPI images · free to use for community memes"
+        "es": "Código MIT. Color plano tomado de la paleta del kit de memes ORVUPI.",
+        "en": "MIT code. Flat color taken from the ORVUPI meme kit palette."
       },
       "autor": "ORVUPI",
       "permitido": true,

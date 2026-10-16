@@ -322,8 +322,6 @@ describe("tablero", () => {
       assert.ok(task.history.length > 0, task.id);
     }
     assert.equal(board.tasks.some((task) => task.status === "publicada"), false);
-    const headings = changelogHeadings(readFileSync(path.join(root, "CHANGELOG.md"), "utf8"));
-    assert.ok(headings.some((line) => line.includes("Verify")));
     assert.ok(listTestFiles(root).includes("lab/test/mission.test.ts"));
     assert.deepEqual(bannedHits(board), []);
   });

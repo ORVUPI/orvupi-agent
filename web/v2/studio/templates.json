@@ -1,41 +1,93 @@
 {
-  "version": "2026-10-09",
-  "limits": { "title": 72, "body": 180 },
+  "version": "2026-10-14-orvupi",
+  "limits": {
+    "title": 72,
+    "body": 180
+  },
   "formats": [
-    { "id": "square", "width": 1080, "height": 1080, "nombre": { "es": "Cuadrado 1:1", "en": "Square 1:1" } },
-    { "id": "story", "width": 1080, "height": 1920, "nombre": { "es": "Vertical 9:16", "en": "Vertical 9:16" } }
+    {
+      "id": "square",
+      "width": 1080,
+      "height": 1080,
+      "nombre": {
+        "es": "Cuadrado 1:1",
+        "en": "Square 1:1"
+      }
+    },
+    {
+      "id": "story",
+      "width": 1080,
+      "height": 1920,
+      "nombre": {
+        "es": "Vertical 9:16",
+        "en": "Vertical 9:16"
+      }
+    }
   ],
   "zones": {
-    "title": { "x": 0.05, "y": 0.08, "w": 0.9, "h": 0.3 },
-    "body": { "x": 0.05, "y": 0.4, "w": 0.5, "h": 0.38 },
-    "avatar": { "x": 0.5, "y": 0.36, "w": 0.46, "h": 0.52 }
+    "title": {
+      "x": 0.05,
+      "y": 0.08,
+      "w": 0.9,
+      "h": 0.3
+    },
+    "body": {
+      "x": 0.05,
+      "y": 0.4,
+      "w": 0.5,
+      "h": 0.38
+    },
+    "avatar": {
+      "x": 0.5,
+      "y": 0.36,
+      "w": 0.46,
+      "h": 0.52
+    }
   },
   "templates": [
     {
       "id": "aprendizaje",
-      "nombre": { "es": "Aprendizaje", "en": "Learning" },
-      "title": { "es": "El nombre no basta", "en": "The name is not enough" },
+      "nombre": {
+        "es": "Aprendizaje",
+        "en": "Learning"
+      },
+      "title": {
+        "es": "La curiosidad nos conecta",
+        "en": "Curiosity connects us"
+      },
       "body": {
-        "es": "El nombre no sustituye a comprobar la dirección.",
-        "en": "The name does not replace checking the address."
+        "es": "Pregunta, aprende y comparte lo que descubres. Una idea abre muchos caminos.",
+        "en": "Ask, learn and share what you discover. One idea opens many paths."
       }
     },
     {
       "id": "bienvenida",
-      "nombre": { "es": "Bienvenida", "en": "Welcome" },
-      "title": { "es": "Hola", "en": "Hello" },
+      "nombre": {
+        "es": "Bienvenida",
+        "en": "Welcome"
+      },
+      "title": {
+        "es": "Hay sitio para tu idea",
+        "en": "There is room for your idea"
+      },
       "body": {
-        "es": "Esto sirve para saludar y recordar que un nombre no demuestra nada.",
-        "en": "This image is a greeting and a reminder that a name proves nothing."
+        "es": "Una comunidad para crear, reír y aprender juntos. ¿Qué quieres explorar?",
+        "en": "A community to create, laugh and learn together. What would you like to explore?"
       }
     },
     {
       "id": "meme",
-      "nombre": { "es": "Meme educativo", "en": "Educational meme" },
-      "title": { "es": "Pide pruebas", "en": "Ask for proof" },
+      "nombre": {
+        "es": "Meme educativo",
+        "en": "Educational meme"
+      },
+      "title": {
+        "es": "Ocho tentáculos, mil ideas",
+        "en": "Eight tentacles, endless ideas"
+      },
       "body": {
-        "es": "Una viñeta para aprender. La gracia no sustituye a mirar la dirección entera.",
-        "en": "A panel for learning. A joke does not replace looking at the whole address."
+        "es": "Cuando intentas hacerlo todo y terminas dibujando un meme.",
+        "en": "When you try to do everything and end up drawing a meme."
       }
     }
   ]
