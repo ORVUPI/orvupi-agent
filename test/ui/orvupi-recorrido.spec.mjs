@@ -47,10 +47,28 @@ test("studio: exporta PNG", async ({ page }, info) => {
   await expect(page.locator("body")).not.toContainText(new RegExp(["STU", "BX"].join(""), "i"));
   await page.waitForTimeout(1500);
   await shot(page, info, "studio");
-  const [download] = await Promise.all([page.waitForEvent("download", { timeout: 30_000 }), page.click("#descargar")]);
-  const file = `${OUT}/${info.project.name}-studio-export.png`;
-  await download.saveAs(file);
-  const buf = readFileSync(file);
+  // En iPhone (WebKit móvil) Descargar no dispara una descarga: abre el PNG en una pestaña nueva
+  // (o la hoja de compartir). Se acepta cualquiera de las dos salidas y se comprueba el PNG igual.
+  const outcome = Promise.race([
+    page.waitForEvent("download", { timeout: 30_000 }).then((download) => ({ download })),
+    page.context().waitForEvent("page", { timeout: 30_000 }).then((popup) => ({ popup })),
+  ]);
+  await page.click("#descargar");
+  const result = await outcome;
+  let buf;
+  if (result.download) {
+    const file = `${OUT}/${info.project.name}-studio-export.png`;
+    await result.download.saveAs(file);
+    buf = readFileSync(file);
+  } else {
+    const popup = result.popup;
+    await popup.waitForLoadState().catch(() => {});
+    const url = popup.url();
+    expect(url).toMatch(/^(blob:|data:image\/png)/);
+    const read = async (u) => Array.from(new Uint8Array(await (await fetch(u)).arrayBuffer()));
+    const bytes = await popup.evaluate(read, url).catch(() => page.evaluate(read, url));
+    buf = Buffer.from(bytes);
+  }
   expect(buf.subarray(1, 4).toString()).toBe("PNG");
   expect(buf.length).toBeGreaterThan(10_000);
 });
