@@ -1,20 +1,22 @@
 {
   "version": "1.0.0",
-  "updated": "2026-10-11",
+  "updated": "2026-10-16",
   "lessons": [
     {
       "id": "leccion-permisos",
-      "version": "1.0.0",
-      "updated": "2026-10-11",
-      "cardDate": "2026-10-09",
-      "entender": ["permisos"],
+      "version": "2.0.0",
+      "updated": "2026-10-16",
+      "cardDate": "2026-10-16",
+      "entender": [
+        "permisos"
+      ],
       "title": {
         "es": "Permisos: emisión y congelación",
         "en": "Permissions: mint and freeze"
       },
       "intro": {
-        "es": "Dos fichas del 2026-10-09. USDC es una moneda estable: un token pensado para seguir una moneda de curso. TOKEN A es un meme: no tiene esa función. Un permiso describe la cuenta, no acusa a nadie.",
-        "en": "Two cards from 2026-10-09. USDC is a stablecoin: a token meant to follow a currency. TOKEN A is a meme: it does not have that role. A permission describes the account. It does not accuse anyone."
+        "es": "Dos fichas del 2026-10-16. USDC es una moneda estable: un token pensado para seguir una moneda de curso. La copia 5vJm… solo se llama igual. Un permiso describe la cuenta, no acusa a nadie.",
+        "en": "Two cards from 2026-10-16. USDC is a stablecoin: a token meant to follow a currency. The 5vJm… copy only has the same name. A permission describes the account. It does not accuse anyone."
       },
       "closing": {
         "es": "Has separado un permiso activo de una acusación, y un permiso cerrado de una garantía. No es un certificado y no dice qué hacer con el token.",
@@ -24,19 +26,28 @@
         {
           "id": "contexto",
           "kind": "check",
-          "glossary": ["autoridad-emision", "autoridad-congelacion", "moneda-estable"],
+          "glossary": [
+            "autoridad-emision",
+            "autoridad-congelacion",
+            "moneda-estable"
+          ],
           "cards": [
             "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-            "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump"
+            "5vJmAfBjsS6wEHcgQGNm69P3fbyPmUU1dVfE5j1rraVZ"
           ],
-          "fields": ["name", "mint", "mintAuthority", "freezeAuthority"],
+          "fields": [
+            "name",
+            "mint",
+            "mintAuthority",
+            "freezeAuthority"
+          ],
           "prompt": {
             "es": "USDC tiene la emisión activa. ¿Eso acusa al proyecto?",
             "en": "USDC has an active mint permission. Does that accuse the project?"
           },
           "guide": {
-            "es": "Emisión: crear más tokens. Congelación: bloquear cuentas. USDC los tiene activos. TOKEN A, el 2026-10-09, los tiene cerrados.",
-            "en": "Mint permission: create more tokens. Freeze permission: block accounts. USDC has both active. On 2026-10-09, TOKEN A has both closed."
+            "es": "Emisión: crear más tokens. Congelación: bloquear cuentas. USDC los tiene activos. La copia 5vJm…, el 2026-10-16, los tiene cerrados.",
+            "en": "Mint permission: create more tokens. Freeze permission: block accounts. USDC has both active. On 2026-10-16, the 5vJm… copy has both closed."
           },
           "options": [
             {
@@ -54,41 +65,49 @@
               }
             },
             {
-              "id": "tambien-token-a",
+              "id": "tambien-copia",
               "label": {
-                "es": "Sí, porque TOKEN A también lo tiene activo.",
-                "en": "Yes, because TOKEN A has it active too."
+                "es": "Sí, y la copia es más fiable porque los tiene cerrados.",
+                "en": "Yes, and the copy is more reliable because it has them closed."
               }
             }
           ],
           "correct": "contexto",
           "whyRight": {
-            "es": "En la ficha del 2026-10-09, USDC tiene la emisión activa en BJE5MMbqXjVwjAF7oxwPYXnTXDyspzZyt4vwenNw5ruG y la congelación activa en 7dGbd2QZcCKcTndnHcTL8q7SMVXAkp688NTQYwrRCrar. TOKEN A las tiene cerradas. En una moneda estable, emisión activa puede ser la forma de crear unidades. En un meme, el mismo permiso deja crecer el suministro. La ficha no acusa.",
-            "en": "On the 2026-10-09 card, USDC has mint permission active at BJE5MMbqXjVwjAF7oxwPYXnTXDyspzZyt4vwenNw5ruG and freeze permission active at 7dGbd2QZcCKcTndnHcTL8q7SMVXAkp688NTQYwrRCrar. TOKEN A has both closed. On a stablecoin, an active mint permission can be how new units are created. On a meme, the same permission lets the supply grow. The card does not accuse."
+            "es": "En la ficha del 2026-10-16, USDC tiene la emisión activa en BJE5MMbqXjVwjAF7oxwPYXnTXDyspzZyt4vwenNw5ruG y la congelación activa en 7dGbd2QZcCKcTndnHcTL8q7SMVXAkp688NTQYwrRCrar. En una moneda estable, la emisión activa es la forma de crear unidades. Un permiso no es una acusación.",
+            "en": "On the 2026-10-16 card, USDC has the mint permission active at BJE5MMbqXjVwjAF7oxwPYXnTXDyspzZyt4vwenNw5ruG and the freeze permission active at 7dGbd2QZcCKcTndnHcTL8q7SMVXAkp688NTQYwrRCrar. For a stablecoin, an active mint is how units are created. A permission is not an accusation."
           },
           "whyWrong": {
             "acusa": {
               "es": "El permiso dice que alguien puede crear más tokens. No dice que el proyecto engañe.",
               "en": "The permission says someone can create more tokens. It does not say the project is deceiving anyone."
             },
-            "tambien-token-a": {
-              "es": "En esa ficha TOKEN A los tiene cerrados. USDC los tiene activos. No es el mismo caso.",
-              "en": "On that card TOKEN A has them closed. USDC has them active. It is not the same case."
+            "tambien-copia": {
+              "es": "Tener los permisos cerrados no hace fiable a una copia: la dirección sigue sin ser la de USDC.",
+              "en": "Having closed permissions does not make a copy reliable: the address is still not USDC's."
             }
           }
         },
         {
           "id": "cerrado",
           "kind": "check",
-          "glossary": ["autoridad-emision", "autoridad-congelacion"],
+          "glossary": [
+            "autoridad-emision",
+            "autoridad-congelacion"
+          ],
           "cards": [
-            "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump",
+            "5vJmAfBjsS6wEHcgQGNm69P3fbyPmUU1dVfE5j1rraVZ",
             "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
           ],
-          "fields": ["name", "mint", "mintAuthority", "freezeAuthority"],
+          "fields": [
+            "name",
+            "mint",
+            "mintAuthority",
+            "freezeAuthority"
+          ],
           "prompt": {
-            "es": "TOKEN A tiene los dos permisos cerrados. ¿Eso lo hace seguro?",
-            "en": "TOKEN A has both permissions closed. Does that make it safe?"
+            "es": "La copia 5vJm… tiene los dos permisos cerrados. ¿Eso la hace segura?",
+            "en": "The 5vJm… copy has both permissions closed. Does that make it safe?"
           },
           "guide": {
             "es": "Cerrado: ese permiso no está asignado en esta lectura. No demuestra que el proyecto sea legítimo.",
@@ -119,8 +138,8 @@
           ],
           "correct": "solo-permiso",
           "whyRight": {
-            "es": "El 2026-10-09 los dos figuran revocados y leídos en la cadena. Revocado no es una garantía. USDC los tiene activos y la ficha tampoco lo acusa. Una copia puede tenerlos cerrados igual.",
-            "en": "On 2026-10-09 both are revoked and read on-chain. Revoked is not a guarantee. USDC has them active and the card does not accuse it either. A copy can have them closed too."
+            "es": "El 2026-10-16 los dos figuran revocados y leídos en la cadena. Revocado no es una garantía, y esta dirección no es la de USDC. USDC los tiene activos y la ficha tampoco lo acusa.",
+            "en": "On 2026-10-16 both are revoked and read on-chain. Revoked is not a guarantee, and this address is not USDC's. USDC has them active and the card does not accuse it either."
           },
           "whyWrong": {
             "seguro": {
@@ -137,126 +156,147 @@
     },
     {
       "id": "leccion-reparto",
-      "version": "1.0.0",
-      "updated": "2026-10-11",
-      "cardDate": "2026-10-09",
-      "entender": ["distribucion"],
+      "version": "2.0.0",
+      "updated": "2026-10-16",
+      "cardDate": "2026-10-16",
+      "entender": [
+        "distribucion"
+      ],
       "title": {
-        "es": "Reparto: cuentas, no personas",
-        "en": "Distribution: accounts, not people"
+        "es": "Reparto: suministro y cuentas",
+        "en": "Distribution: supply and accounts"
       },
       "intro": {
-        "es": "Ficha de TOKEN A del 2026-10-09. La curva tiene el 98,6122 %. La creadora, el 0,5272 %. La cuenta personal (publicada en el registro oficial), el 0,8604 %. Una cuenta técnica es la de un programa. Un pool es la cuenta de un intercambio: tampoco es la cuenta de una persona. En esta ficha la curva no está completa, así que este saldo es la curva, no un pool.",
-        "en": "TOKEN A card from 2026-10-09. The curve holds 98.6122%. The creator holds 0.5272%. The personal account (listed in the official registry) holds 0.8604%. A technical account belongs to a program. A pool is an exchange account: it is not a person's account either. On this card the curve is not complete, so this balance is the curve, not a pool."
+        "es": "Fichas del 2026-10-16. Mismo nombre no quiere decir mismo suministro. Y cuando la muestra de cuentas no llega, no se sabe cómo está repartido: no es un cero.",
+        "en": "Cards from 2026-10-16. The same name does not mean the same supply. And when the account sample does not arrive, the distribution is unknown: it is not a zero."
       },
       "closing": {
-        "es": "Has separado la cuenta de la curva, la de la creadora y la cuenta personal (publicada en el registro oficial). Ninguna dirección de esta ficha es el nombre de una persona. No es un certificado.",
-        "en": "You separated the curve account, the creator account, and the personal account (listed in the official registry). No address on this card is a person's name. This is not a certificate."
+        "es": "Has separado el suministro de un token de su nombre, y una muestra que no llegó de una concentración cero. No es un censo ni dice qué hacer con el token.",
+        "en": "You separated a token's supply from its name, and a sample that did not arrive from zero concentration. It is not a census and it does not say what to do with the token."
       },
       "steps": [
         {
           "id": "curva",
           "kind": "check",
-          "glossary": ["cuenta-tecnica", "curva-pump", "titular"],
-          "cards": ["TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump"],
-          "fields": ["name", "mint", "holders", "curvePresent"],
+          "glossary": [
+            "titular",
+            "censo"
+          ],
+          "cards": [
+            "4XRbnGgay2XpqJ1F5jGPQ9pRh1JSX12RPCPJASMJU5JW",
+            "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+          ],
+          "fields": [
+            "name",
+            "mint",
+            "supply"
+          ],
           "prompt": {
-            "es": "El 98,6122 % está en la cuenta de la curva. ¿Es de una persona?",
-            "en": "98.6122% is on the curve account. Does it belong to a person?"
+            "es": "La copia 4XRb… y USDC se llaman igual. ¿Tienen el mismo suministro?",
+            "en": "The 4XRb… copy and USDC have the same name. Do they have the same supply?"
           },
           "guide": {
-            "es": "La cuenta de la curva es del programa. No es la cuenta de una persona. Un pool tampoco lo sería: es la cuenta del intercambio.",
-            "en": "The curve account belongs to the program. It is not a person's account. A pool would not be one either: it is the exchange account."
+            "es": "El suministro es cuántos tokens hay. Se lee del mint de cada dirección, no del nombre.",
+            "en": "Supply is how many tokens exist. It is read from each address's mint, not from the name."
           },
           "options": [
             {
               "id": "persona",
               "label": {
-                "es": "Sí. Quien tiene más tokens es una persona.",
-                "en": "Yes. Whoever holds the most tokens is a person."
+                "es": "Sí. Mismo nombre, mismo token.",
+                "en": "Yes. Same name, same token."
               }
             },
             {
               "id": "tecnica",
               "label": {
-                "es": "No. Es la cuenta de la curva, no la de una persona.",
-                "en": "No. It is the curve account, not a person's account."
+                "es": "No. Cada dirección tiene su propio suministro.",
+                "en": "No. Each address has its own supply."
               }
             },
             {
               "id": "pool",
               "label": {
-                "es": "Es un pool, porque el porcentaje es alto.",
-                "en": "It is a pool, because the percentage is high."
+                "es": "No se puede leer el suministro.",
+                "en": "The supply cannot be read."
               }
             }
           ],
           "correct": "tecnica",
           "whyRight": {
-            "es": "La ficha del 2026-10-09 lee 98,6122 % en la cuenta de la curva 3shQFExQ3rpFL6GaXPRQNTMYazVHmTvRfuazfv62toAE. La etiqueta dice que es un saldo leído, no un censo. complete es falso: sigue en la curva. Un pool también sería una cuenta del programa, no la de una persona, pero esta lectura no lo muestra.",
-            "en": "The 2026-10-09 card reads 98.6122% on the curve account 3shQFExQ3rpFL6GaXPRQNTMYazVHmTvRfuazfv62toAE. The label says it is a balance that was read, not a census. complete is false: it is still on the curve. A pool would also be a program account, not a person's account, but this reading does not show one."
+            "es": "El 2026-10-16, USDC tiene 7.902.630.871,234262 tokens con 6 decimales. La copia 4XRb… tiene 1.029.314.281,190085282 con 9 decimales. Son tokens distintos aunque se llamen igual.",
+            "en": "On 2026-10-16, USDC has 7,902,630,871.234262 tokens with 6 decimals. The 4XRb… copy has 1,029,314,281.190085282 with 9 decimals. They are different tokens even though they share a name."
           },
           "whyWrong": {
             "persona": {
-              "es": "Un saldo alto no convierte la cuenta en una persona. Esta dirección es la de la curva.",
-              "en": "A large balance does not turn the account into a person. This address is the curve account."
+              "es": "El nombre lo elige quien crea el token. El suministro sale de la dirección.",
+              "en": "The name is chosen by whoever creates the token. The supply comes from the address."
             },
             "pool": {
-              "es": "El porcentaje no dice que sea un pool. En esta ficha complete es falso: el saldo es de la curva.",
-              "en": "The percentage does not say it is a pool. On this card complete is false: the balance belongs to the curve."
+              "es": "El suministro sí se leyó: está en los bytes del mint de cada ficha.",
+              "en": "The supply was read: it is in the mint bytes of each card."
             }
           }
         },
         {
           "id": "tres-cuentas",
           "kind": "check",
-          "glossary": ["censo", "titular", "cuenta-tecnica"],
-          "cards": ["TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump"],
-          "fields": ["name", "mint", "holders"],
+          "glossary": [
+            "censo",
+            "desconocido"
+          ],
+          "cards": [
+            "H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R"
+          ],
+          "fields": [
+            "name",
+            "mint",
+            "holders"
+          ],
           "prompt": {
-            "es": "La ficha lee tres cuentas. ¿Eso es un censo de personas?",
-            "en": "The card reads three accounts. Is that a census of people?"
+            "es": "La muestra de cuentas de H5b7… no llegó. ¿Quiere decir que nadie tiene tokens?",
+            "en": "The account sample for H5b7… did not arrive. Does it mean nobody holds tokens?"
           },
           "guide": {
-            "es": "Un censo sería todas las cuentas. Aquí hay tres saldos leídos. El resto del suministro es 0,0000 %. Una dirección no es el nombre de una persona.",
-            "en": "A census would be every account. Here there are three balances that were read. The rest of the supply is 0.0000%. An address is not a person's name."
+            "es": "Sin muestra no se sabe cómo está repartido. No es un cero ni una concentración baja.",
+            "en": "Without a sample the distribution is unknown. It is not a zero or low concentration."
           },
           "options": [
             {
               "id": "si-censo",
               "label": {
-                "es": "Sí. Tres cuentas son todas las personas.",
-                "en": "Yes. Three accounts are every person."
+                "es": "Sí. Nadie tiene tokens.",
+                "en": "Yes. Nobody holds tokens."
               }
             },
             {
               "id": "no-censo",
               "label": {
-                "es": "No. No es un censo, y una dirección no es una persona.",
-                "en": "No. It is not a census, and an address is not a person."
+                "es": "No. El reparto sigue sin saberse.",
+                "en": "No. The distribution is still unknown."
               }
             },
             {
               "id": "nada-leido",
               "label": {
-                "es": "El 0,0000 % significa que no se leyó nada.",
-                "en": "0.0000% means nothing was read."
+                "es": "Está bien repartido, porque no sale nada.",
+                "en": "It is well distributed, because nothing shows up."
               }
             }
           ],
           "correct": "no-censo",
           "whyRight": {
-            "es": "Se leyeron la curva (98,6122 %, 3shQFExQ3rpFL6GaXPRQNTMYazVHmTvRfuazfv62toAE), la creadora (0,5272 %, 77RKUqMprQHDSkhFBpC1REU1kE9aM1uw189orHo7wypD) y la cuenta personal (publicada en el registro oficial) (0,8604 %, 2fS12sTD4TNEEE9MoCEt19brV41UjGdAnaNaxWcmiWvX). El resto del suministro es 0,0000 %. La ficha dice que no es un censo. Una dirección no nombra a una persona.",
-            "en": "The curve (98.6122%, 3shQFExQ3rpFL6GaXPRQNTMYazVHmTvRfuazfv62toAE), the creator (0.5272%, 77RKUqMprQHDSkhFBpC1REU1kE9aM1uw189orHo7wypD), and the personal account (listed in the official registry) (0.8604%, 2fS12sTD4TNEEE9MoCEt19brV41UjGdAnaNaxWcmiWvX) were read. The rest of the supply is 0.0000%. The card says it is not a census. An address does not name a person."
+            "es": "El 2026-10-16, getTokenLargestAccounts respondió HTTP 429 para H5b7…. El suministro (100.000.000 tokens) sí se leyó; el reparto queda no disponible.",
+            "en": "On 2026-10-16, getTokenLargestAccounts returned HTTP 429 for H5b7…. The supply (100,000,000 tokens) was read; the distribution stays unavailable."
           },
           "whyWrong": {
             "si-censo": {
-              "es": "Tres cuentas leídas no son la lista de todas, y la de la curva no es una persona.",
-              "en": "Three accounts that were read are not the list of every account, and the curve account is not a person."
+              "es": "Una muestra que no llegó no es un recuento.",
+              "en": "A sample that did not arrive is not a count."
             },
             "nada-leido": {
-              "es": "0,0000 % es el resto del suministro, no un hueco. Las tres cuentas sí se leyeron.",
-              "en": "0.0000% is the rest of the supply, not a gap. The three accounts were read."
+              "es": "Que no salga nada no dice cómo está repartido.",
+              "en": "Nothing showing up does not say how it is distributed."
             }
           }
         }
@@ -264,17 +304,20 @@
     },
     {
       "id": "leccion-huecos",
-      "version": "1.0.0",
-      "updated": "2026-10-11",
-      "cardDate": "2026-10-09",
-      "entender": ["distribucion", "metadatos"],
+      "version": "2.0.0",
+      "updated": "2026-10-16",
+      "cardDate": "2026-10-16",
+      "entender": [
+        "distribucion",
+        "metadatos"
+      ],
       "title": {
         "es": "Cuando falta un dato",
         "en": "When a fact is missing"
       },
       "intro": {
-        "es": "Tres huecos distintos, con fichas del 2026-10-09. Consulta fallida: se pidió y no hubo respuesta usable. Ausente comprobado: se pidió y el dato no está. No consultado: esta lectura no lo pidió. Ninguno de los tres es un cero.",
-        "en": "Three different gaps, using cards from 2026-10-09. Failed query: it was asked for and there was no usable answer. Confirmed absent: it was asked for and the fact is not there. Not queried: this reading did not ask for it. None of the three is a zero."
+        "es": "Tres huecos distintos, con fichas del 2026-10-16. Consulta fallida: se pidió y no hubo respuesta usable. Ausente comprobado: se pidió y el dato no está. No consultado: esta lectura no lo pidió. Ninguno de los tres es un cero.",
+        "en": "Three different gaps, using cards from 2026-10-16. Failed query: it was asked for and there was no usable answer. Confirmed absent: it was asked for and the fact is not there. Not queried: this reading did not ask for it. None of the three is a zero."
       },
       "closing": {
         "es": "Has separado una consulta que falló, un dato que no está y un dato que no se pidió. Ninguno se rellena con cero. No es un certificado.",
@@ -284,9 +327,18 @@
         {
           "id": "fallo",
           "kind": "check",
-          "glossary": ["consulta-fallida", "desconocido"],
-          "cards": ["EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"],
-          "fields": ["name", "mint", "holders"],
+          "glossary": [
+            "consulta-fallida",
+            "desconocido"
+          ],
+          "cards": [
+            "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+          ],
+          "fields": [
+            "name",
+            "mint",
+            "holders"
+          ],
           "prompt": {
             "es": "USDC pidió las cuentas grandes y recibió HTTP 429. ¿Qué es?",
             "en": "USDC asked for the largest accounts and got HTTP 429. What is that?"
@@ -320,8 +372,8 @@
           ],
           "correct": "fallo",
           "whyRight": {
-            "es": "El 2026-10-09, getTokenLargestAccounts sobre USDC respondió HTTP 429 a las 16:42:45 UTC. El estado es no disponible. No se rellena con cero ni se dice que las cuentas no existan.",
-            "en": "On 2026-10-09, getTokenLargestAccounts for USDC returned HTTP 429 at 16:42:45 UTC. The status is unavailable. It is not filled in with zero, and it does not say the accounts do not exist."
+            "es": "El 2026-10-16, getTokenLargestAccounts sobre USDC respondió HTTP 429. El estado es no disponible. No se rellena con cero ni se dice que las cuentas no existan.",
+            "en": "On 2026-10-16, getTokenLargestAccounts for USDC returned HTTP 429. The status is unavailable. It is not filled in with zero, and it does not say the accounts do not exist."
           },
           "whyWrong": {
             "cero": {
@@ -337,16 +389,25 @@
         {
           "id": "ausente",
           "kind": "check",
-          "glossary": ["ausente-comprobado", "metadatos-mutables"],
-          "cards": ["TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump"],
-          "fields": ["name", "mint", "metadata"],
+          "glossary": [
+            "ausente-comprobado",
+            "metadatos-mutables"
+          ],
+          "cards": [
+            "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+          ],
+          "fields": [
+            "name",
+            "mint",
+            "metadata"
+          ],
           "prompt": {
-            "es": "En TOKEN A se buscó la cuenta Metaplex y no está. ¿Qué es?",
-            "en": "On TOKEN A the Metaplex account was looked up and it is not there. What is that?"
+            "es": "En USDC se leyó la cuenta de metadatos y el enlace (URI) está vacío. ¿Qué es?",
+            "en": "On USDC the metadata account was read and the link (URI) is empty. What is that?"
           },
           "guide": {
-            "es": "Metaplex es un registro de nombre y símbolo. Se consultó y la cuenta no está: ausente comprobado. No es un fallo.",
-            "en": "Metaplex is a name and symbol record. It was queried and the account is not there: confirmed absent. It is not a failure."
+            "es": "Se consultó y el enlace no está: ausente comprobado. No es un fallo.",
+            "en": "It was queried and the link is not there: confirmed absent. It is not a failure."
           },
           "options": [
             {
@@ -373,8 +434,8 @@
           ],
           "correct": "ausente",
           "whyRight": {
-            "es": "El 2026-10-09 la consulta respondió y el valor está vacío: no hay cuenta de metadatos de Metaplex. La consulta respondió. El dato no está. No es un HTTP 429.",
-            "en": "On 2026-10-09 the query was answered and the value is empty: there is no Metaplex metadata account. The query answered. The fact is not there. It is not an HTTP 429."
+            "es": "El 2026-10-16 la cuenta de metadatos de USDC respondió y el campo URI está vacío. La consulta respondió. El dato no está. No es un HTTP 429.",
+            "en": "On 2026-10-16 USDC's metadata account answered and the URI field is empty. The query answered. The fact is not there. It is not an HTTP 429."
           },
           "whyWrong": {
             "fallo": {
@@ -390,16 +451,26 @@
         {
           "id": "no-pedido",
           "kind": "check",
-          "glossary": ["no-consultado", "censo", "desconocido"],
-          "cards": ["TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump"],
-          "fields": ["name", "mint", "holders"],
+          "glossary": [
+            "no-consultado",
+            "censo",
+            "desconocido"
+          ],
+          "cards": [
+            "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+          ],
+          "fields": [
+            "name",
+            "mint",
+            "holders"
+          ],
           "prompt": {
-            "es": "TOKEN A no pidió el ranking de cuentas grandes. ¿Qué haces?",
-            "en": "TOKEN A did not ask for the largest-account ranking. What do you do?"
+            "es": "Sin URI, la lectura de USDC no pidió el JSON de metadatos. ¿Qué haces?",
+            "en": "Without a URI, the USDC reading did not ask for the metadata JSON. What do you do?"
           },
           "guide": {
-            "es": "No consultado: esta lectura no pidió ese dato. No es un HTTP 429 ni un cero.",
-            "en": "Not queried: this reading did not ask for that fact. It is not an HTTP 429 and it is not a zero."
+            "es": "No consultado: esta lectura no pidió ese dato porque no había dónde. No es un HTTP 429 ni un cero.",
+            "en": "Not queried: this reading did not ask for that fact because there was nowhere to ask. It is not an HTTP 429 and it is not a zero."
           },
           "options": [
             {
@@ -426,8 +497,8 @@
           ],
           "correct": "no-pedido",
           "whyRight": {
-            "es": "La muestra del 2026-10-09 lee la curva, la creadora y la cuenta personal con getMultipleAccounts. No sustituye a getTokenLargestAccounts. El máximo fuera de la muestra no se calcula: la fuente está vacía. Eso no es el HTTP 429 de USDC.",
-            "en": "The 2026-10-09 sample reads the curve, the creator, and the personal account with getMultipleAccounts. It does not replace getTokenLargestAccounts. The maximum outside the sample is not calculated: the source is empty. That is not the USDC HTTP 429."
+            "es": "La ficha del 2026-10-16 deja el nombre del JSON como «no aplica»: sin URI no hay JSON que pedir. Eso no es el HTTP 429 de la muestra de cuentas.",
+            "en": "The 2026-10-16 card leaves the JSON name as “not applicable”: without a URI there is no JSON to fetch. That is not the HTTP 429 of the account sample."
           },
           "whyWrong": {
             "cero": {

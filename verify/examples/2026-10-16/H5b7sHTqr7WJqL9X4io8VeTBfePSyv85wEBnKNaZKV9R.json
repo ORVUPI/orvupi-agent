@@ -1,53 +1,55 @@
 {
   "tool": "stubx-verify",
   "rulesVersion": "0.1.0",
-  "disclaimer": "STUBX Verify muestra datos on-chain públicos. No es consejo de inversión ni garantiza que un token sea seguro.",
-  "id": "e79f2d70db92ceab639eccd2d30a32640fd8eb6baf2a0a764d4a7a587179ad60",
-  "createdAt": "2026-10-08T07:44:19.870Z",
+  "disclaimer": "ORVUPI Verify muestra datos on-chain públicos. No garantiza que un token sea seguro.",
+  "id": "5b661102b6ec5241904eebf786813cfbf17bc49ea7b3a2ec08184c580b81a0ed",
+  "createdAt": "2026-10-16T18:46:08.985Z",
   "network": "mainnet-beta",
-  "rpcEndpoint": "https://api.mainnet-beta.solana.com",
-  "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+  "rpcEndpoint": "https://solana-rpc.publicnode.com",
+  "mint": "H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R",
   "partial": true,
   "supportedMint": true,
-  "referenceSlot": 454481103,
+  "referenceSlot": 457742229,
   "limitations": [
     "No es una auditoría ni una recomendación. Que no haya autoridad de congelación reduce ese permiso concreto; no demuestra que el proyecto sea legítimo.",
-    "La muestra de holders tiene como máximo 20 cuentas. No es un censo ni un recuento de personas. Una cuenta puede ser un custodio.",
+    "La muestra de cuentas con tokens tiene como máximo 20. No es un censo ni un recuento de personas. Una cuenta puede ser un custodio.",
     "Si los slots de las consultas no coinciden, no es una instantánea atómica.",
-    "STUBX Verify no firma, no envía transacciones y no custodia claves.",
+    "ORVUPI Verify no firma, no envía transacciones y no custodia claves.",
     "Cada consulta nueva produce un id nuevo. Esta ficha no se actualiza sola.",
-    "Slots observados: 454481103, 454481105, 454481107, 454481108.",
-    "getTokenLargestAccounts: HTTP 429"
+    "Slots observados: 457742229, 457742231, 457742232, 457742234, 457742237.",
+    "No hay cuenta de curva de Pump.fun en la PDA derivada. El módulo de otros mercados no está disponible. La ausencia no se anota como cantidad 0.",
+    "getTokenLargestAccounts: HTTP 429",
+    "contenido de la URI: No se descarga la URI del creador. Solo entran pasarelas IPFS o Arweave de la lista blanca."
   ],
   "findings": [
     {
       "id": "mint-authority",
-      "level": "atención",
-      "title": "Autoridad de emisión activa",
-      "reason": "Sigue asignada a BJE5MMbqXjVwjAF7oxwPYXnTXDyspzZyt4vwenNw5ruG. Quien la controle puede aumentar el suministro."
+      "level": "ok",
+      "title": "Autoridad de emisión revocada",
+      "reason": "La opción del mint está en 0. Eso quita ese permiso concreto. No es una auditoría ni una recomendación. Que no haya autoridad de congelación reduce ese permiso concreto; no demuestra que el proyecto sea legítimo."
     },
     {
       "id": "freeze-authority",
       "level": "atención",
       "title": "Autoridad de congelación activa",
-      "reason": "Sigue asignada a 7dGbd2QZcCKcTndnHcTL8q7SMVXAkp688NTQYwrRCrar. Quien la controle puede congelar cuentas de este token."
+      "reason": "Sigue asignada a 3jSu6d3V8BXjnxAA5hDfj9x9NTduwuXQAXp2kubJdzdw. Quien la controle puede congelar cuentas de este token."
     },
     {
       "id": "metadata-mutability",
-      "level": "atención",
-      "title": "Metadatos mutables",
-      "reason": "Hay una autoridad de actualización o is_mutable es verdadero. El nombre, el símbolo o la imagen pueden cambiar."
+      "level": "ok",
+      "title": "Metadatos no mutables en las fuentes leídas",
+      "reason": "La autoridad de actualización está ausente o is_mutable es falso. No es una auditoría ni una recomendación. Que no haya autoridad de congelación reduce ese permiso concreto; no demuestra que el proyecto sea legítimo."
     },
     {
       "id": "authenticity",
-      "level": "ok",
-      "title": "Sin señales de suplantación en el registro",
-      "reason": "Este mint no está en el registro curado. Que no esté no significa que sea falso ni que sea una copia."
+      "level": "riesgo",
+      "title": "Posible suplantación",
+      "reason": "Posible suplantación: el nombre, el símbolo, la imagen o un enlace coinciden con un token del registro curado, pero el mint es otro. La coincidencia no atribuye intención."
     },
     {
       "id": "holders",
       "level": "atención",
-      "title": "Muestra de holders no disponible",
+      "title": "Muestra de cuentas con tokens no disponible",
       "reason": "No hubo lista de cuentas. No se interpreta como concentración cero."
     }
   ],
@@ -58,9 +60,9 @@
       "status": "verificado",
       "source": {
         "method": "getAccountInfo",
-        "account": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-        "slot": 454481103,
-        "fetchedAt": "2026-10-08T07:44:20.271Z",
+        "account": "H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R",
+        "slot": 457742231,
+        "fetchedAt": "2026-10-16T18:46:09.387Z",
         "detail": "Cuenta del mint, encoding base64, decodificada en local."
       },
       "note": null
@@ -71,9 +73,9 @@
       "status": "verificado",
       "source": {
         "method": "getAccountInfo",
-        "account": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-        "slot": 454481103,
-        "fetchedAt": "2026-10-08T07:44:20.271Z",
+        "account": "H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R",
+        "slot": 457742231,
+        "fetchedAt": "2026-10-16T18:46:09.387Z",
         "detail": "Cuenta del mint, encoding base64, decodificada en local."
       },
       "note": null
@@ -84,35 +86,35 @@
       "status": "verificado",
       "source": {
         "method": "getAccountInfo",
-        "account": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-        "slot": 454481103,
-        "fetchedAt": "2026-10-08T07:44:20.271Z",
+        "account": "H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R",
+        "slot": 457742231,
+        "fetchedAt": "2026-10-16T18:46:09.387Z",
         "detail": "Cuenta del mint, encoding base64, decodificada en local."
       },
       "note": "Suministro leído de los bytes del mint (u64 little-endian en el offset 36). Coincide con getTokenSupply (amount, no uiAmount)."
     },
     "supplyRaw": {
-      "value": "7762198313181372",
+      "value": "100000000000000",
       "unit": "unidades mínimas",
       "status": "verificado",
       "source": {
         "method": "getAccountInfo",
-        "account": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-        "slot": 454481103,
-        "fetchedAt": "2026-10-08T07:44:20.271Z",
+        "account": "H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R",
+        "slot": 457742231,
+        "fetchedAt": "2026-10-16T18:46:09.387Z",
         "detail": "Cuenta del mint, encoding base64, decodificada en local."
       },
       "note": "Suministro leído de los bytes del mint (u64 little-endian en el offset 36). Coincide con getTokenSupply (amount, no uiAmount)."
     },
     "supplyUi": {
-      "value": "7762198313.181372",
+      "value": "100000000",
       "unit": "tokens",
       "status": "verificado",
       "source": {
         "method": "getAccountInfo",
-        "account": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-        "slot": 454481103,
-        "fetchedAt": "2026-10-08T07:44:20.271Z",
+        "account": "H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R",
+        "slot": 457742231,
+        "fetchedAt": "2026-10-16T18:46:09.387Z",
         "detail": "Cuenta del mint, encoding base64, decodificada en local."
       },
       "note": "Calculado con enteros a partir de las unidades mínimas. No se usa uiAmount."
@@ -123,9 +125,9 @@
       "status": "verificado",
       "source": {
         "method": "getAccountInfo",
-        "account": "5x38Kp4hvdomTCnCrAny4UtMUt5rQBdB6px2K1Ui45Wq",
-        "slot": 454481105,
-        "fetchedAt": "2026-10-08T07:44:20.671Z",
+        "account": "3zLDwAQZmxog6ShV2kX6VBmY5rypxJM634KPvo99E2rj",
+        "slot": 457742232,
+        "fetchedAt": "2026-10-16T18:46:09.786Z",
         "detail": "PDA Metaplex: semillas metadata, programa de metadatos y mint."
       },
       "note": null
@@ -136,96 +138,138 @@
       "status": "verificado",
       "source": {
         "method": "getAccountInfo",
-        "account": "5x38Kp4hvdomTCnCrAny4UtMUt5rQBdB6px2K1Ui45Wq",
-        "slot": 454481105,
-        "fetchedAt": "2026-10-08T07:44:20.671Z",
+        "account": "3zLDwAQZmxog6ShV2kX6VBmY5rypxJM634KPvo99E2rj",
+        "slot": 457742232,
+        "fetchedAt": "2026-10-16T18:46:09.786Z",
         "detail": "PDA Metaplex: semillas metadata, programa de metadatos y mint."
       },
       "note": null
     },
     "uri": {
-      "value": null,
+      "value": "https://gateway.irys.xyz/tO9re5A9hQZ4gtlb9I2ttXwUN-eKrFgONsxeNys79MU",
       "unit": null,
       "status": "verificado",
       "source": {
         "method": "getAccountInfo",
-        "account": "5x38Kp4hvdomTCnCrAny4UtMUt5rQBdB6px2K1Ui45Wq",
-        "slot": 454481105,
-        "fetchedAt": "2026-10-08T07:44:20.671Z",
+        "account": "3zLDwAQZmxog6ShV2kX6VBmY5rypxJM634KPvo99E2rj",
+        "slot": 457742232,
+        "fetchedAt": "2026-10-16T18:46:09.786Z",
         "detail": "PDA Metaplex: semillas metadata, programa de metadatos y mint."
       },
-      "note": "La fuente leída no trae este campo."
+      "note": null
     },
     "jsonName": {
       "value": null,
       "unit": null,
-      "status": "no_aplica",
-      "source": null,
-      "note": "No hay URI on-chain que consultar."
+      "status": "no_disponible",
+      "source": {
+        "method": "GET",
+        "account": null,
+        "slot": null,
+        "fetchedAt": "2026-10-16T18:46:14.248Z",
+        "detail": "No se descarga la URI del creador. Solo entran pasarelas IPFS o Arweave de la lista blanca."
+      },
+      "note": "Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como cantidad cero."
     },
     "jsonSymbol": {
       "value": null,
       "unit": null,
-      "status": "no_aplica",
-      "source": null,
-      "note": "No hay URI on-chain que consultar."
+      "status": "no_disponible",
+      "source": {
+        "method": "GET",
+        "account": null,
+        "slot": null,
+        "fetchedAt": "2026-10-16T18:46:14.248Z",
+        "detail": "No se descarga la URI del creador. Solo entran pasarelas IPFS o Arweave de la lista blanca."
+      },
+      "note": "Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como cantidad cero."
     },
     "image": {
       "value": null,
       "unit": null,
-      "status": "no_aplica",
-      "source": null,
-      "note": "No hay URI on-chain que consultar."
+      "status": "no_disponible",
+      "source": {
+        "method": "GET",
+        "account": null,
+        "slot": null,
+        "fetchedAt": "2026-10-16T18:46:14.248Z",
+        "detail": "No se descarga la URI del creador. Solo entran pasarelas IPFS o Arweave de la lista blanca."
+      },
+      "note": "Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como cantidad cero."
     },
     "imageSha256": {
       "value": null,
       "unit": null,
-      "status": "no_aplica",
+      "status": "no_disponible",
       "source": null,
-      "note": "No hay URI de metadatos."
+      "note": "El JSON no trae imagen o no se pudo leer."
     },
     "website": {
       "value": null,
       "unit": null,
-      "status": "no_aplica",
-      "source": null,
-      "note": "No hay URI on-chain que consultar."
+      "status": "no_disponible",
+      "source": {
+        "method": "GET",
+        "account": null,
+        "slot": null,
+        "fetchedAt": "2026-10-16T18:46:14.248Z",
+        "detail": "No se descarga la URI del creador. Solo entran pasarelas IPFS o Arweave de la lista blanca."
+      },
+      "note": "Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como cantidad cero."
     },
     "twitter": {
       "value": null,
       "unit": null,
-      "status": "no_aplica",
-      "source": null,
-      "note": "No hay URI on-chain que consultar."
+      "status": "no_disponible",
+      "source": {
+        "method": "GET",
+        "account": null,
+        "slot": null,
+        "fetchedAt": "2026-10-16T18:46:14.248Z",
+        "detail": "No se descarga la URI del creador. Solo entran pasarelas IPFS o Arweave de la lista blanca."
+      },
+      "note": "Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como cantidad cero."
     },
     "telegram": {
       "value": null,
       "unit": null,
-      "status": "no_aplica",
-      "source": null,
-      "note": "No hay URI on-chain que consultar."
+      "status": "no_disponible",
+      "source": {
+        "method": "GET",
+        "account": null,
+        "slot": null,
+        "fetchedAt": "2026-10-16T18:46:14.248Z",
+        "detail": "No se descarga la URI del creador. Solo entran pasarelas IPFS o Arweave de la lista blanca."
+      },
+      "note": "Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como cantidad cero."
     },
     "description": {
       "value": null,
       "unit": null,
-      "status": "no_aplica",
-      "source": null,
-      "note": "No hay URI on-chain que consultar."
+      "status": "no_disponible",
+      "source": {
+        "method": "GET",
+        "account": null,
+        "slot": null,
+        "fetchedAt": "2026-10-16T18:46:14.248Z",
+        "detail": "No se descarga la URI del creador. Solo entran pasarelas IPFS o Arweave de la lista blanca."
+      },
+      "note": "Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como cantidad cero."
     }
   },
   "permissions": {
     "mintAuthority": {
       "value": {
-        "state": "activa",
-        "address": "BJE5MMbqXjVwjAF7oxwPYXnTXDyspzZyt4vwenNw5ruG"
+        "state": "revocada",
+        "address": null
       },
       "unit": null,
       "status": "verificado",
       "source": {
         "method": "getAccountInfo",
-        "account": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-        "slot": 454481103,
-        "fetchedAt": "2026-10-08T07:44:20.271Z",
+        "account": "H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R",
+        "slot": 457742231,
+        "fetchedAt": "2026-10-16T18:46:09.387Z",
         "detail": "Cuenta del mint, encoding base64, decodificada en local."
       },
       "note": "COption: 0 revocada, 1 activa. Otro valor no se trata como revocada."
@@ -233,41 +277,41 @@
     "freezeAuthority": {
       "value": {
         "state": "activa",
-        "address": "7dGbd2QZcCKcTndnHcTL8q7SMVXAkp688NTQYwrRCrar"
+        "address": "3jSu6d3V8BXjnxAA5hDfj9x9NTduwuXQAXp2kubJdzdw"
       },
       "unit": null,
       "status": "verificado",
       "source": {
         "method": "getAccountInfo",
-        "account": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-        "slot": 454481103,
-        "fetchedAt": "2026-10-08T07:44:20.271Z",
+        "account": "H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R",
+        "slot": 457742231,
+        "fetchedAt": "2026-10-16T18:46:09.387Z",
         "detail": "Cuenta del mint, encoding base64, decodificada en local."
       },
       "note": "COption: 0 revocada, 1 activa. Otro valor no se trata como revocada."
     },
     "metaplexUpdateAuthority": {
-      "value": "2wmVCSfPxGPjrnMMn7rchp4uaeoTqN39mXFC2zhPdri9",
+      "value": "3jSu6d3V8BXjnxAA5hDfj9x9NTduwuXQAXp2kubJdzdw",
       "unit": null,
       "status": "verificado",
       "source": {
         "method": "getAccountInfo",
-        "account": "5x38Kp4hvdomTCnCrAny4UtMUt5rQBdB6px2K1Ui45Wq",
-        "slot": 454481105,
-        "fetchedAt": "2026-10-08T07:44:20.671Z",
+        "account": "3zLDwAQZmxog6ShV2kX6VBmY5rypxJM634KPvo99E2rj",
+        "slot": 457742232,
+        "fetchedAt": "2026-10-16T18:46:09.786Z",
         "detail": "PDA Metaplex: semillas metadata, programa de metadatos y mint."
       },
       "note": null
     },
     "metaplexMutable": {
-      "value": true,
+      "value": false,
       "unit": null,
       "status": "verificado",
       "source": {
         "method": "getAccountInfo",
-        "account": "5x38Kp4hvdomTCnCrAny4UtMUt5rQBdB6px2K1Ui45Wq",
-        "slot": 454481105,
-        "fetchedAt": "2026-10-08T07:44:20.671Z",
+        "account": "3zLDwAQZmxog6ShV2kX6VBmY5rypxJM634KPvo99E2rj",
+        "slot": 457742232,
+        "fetchedAt": "2026-10-16T18:46:09.786Z",
         "detail": "PDA Metaplex: semillas metadata, programa de metadatos y mint."
       },
       "note": "Campo is_mutable de Metaplex. false no demuestra que el proyecto sea legítimo."
@@ -278,9 +322,9 @@
       "status": "no_aplica",
       "source": {
         "method": "getAccountInfo",
-        "account": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-        "slot": 454481103,
-        "fetchedAt": "2026-10-08T07:44:20.271Z",
+        "account": "H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R",
+        "slot": 457742231,
+        "fetchedAt": "2026-10-16T18:46:09.387Z",
         "detail": "Cuenta del mint, encoding base64, decodificada en local."
       },
       "note": "El mint no trae la extensión TokenMetadata."
@@ -291,9 +335,9 @@
       "status": "verificado",
       "source": {
         "method": "getAccountInfo",
-        "account": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-        "slot": 454481103,
-        "fetchedAt": "2026-10-08T07:44:20.271Z",
+        "account": "H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R",
+        "slot": 457742231,
+        "fetchedAt": "2026-10-16T18:46:09.387Z",
         "detail": "Cuenta del mint, encoding base64, decodificada en local."
       },
       "note": "TLV a partir del byte 166 (relleno hasta 165, tipo de cuenta en 165). Una extensión que no sale en la lista no está en la cuenta."
@@ -301,14 +345,14 @@
   },
   "distribution": {
     "denominatorRaw": {
-      "value": "7762198313181372",
+      "value": "100000000000000",
       "unit": "unidades mínimas",
       "status": "verificado",
       "source": {
         "method": "getAccountInfo",
-        "account": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-        "slot": 454481103,
-        "fetchedAt": "2026-10-08T07:44:20.271Z",
+        "account": "H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R",
+        "slot": 457742231,
+        "fetchedAt": "2026-10-16T18:46:09.387Z",
         "detail": "Cuenta del mint, encoding base64, decodificada en local."
       },
       "note": "Denominador común de los porcentajes."
@@ -319,19 +363,19 @@
       "status": "no_disponible",
       "source": {
         "method": "getTokenLargestAccounts",
-        "account": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "account": "H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R",
         "slot": null,
-        "fetchedAt": "2026-10-08T07:44:23.473Z",
+        "fetchedAt": "2026-10-16T18:46:14.202Z",
         "detail": "HTTP 429"
       },
-      "note": "Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como reserva cero."
+      "note": "Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como cantidad cero."
     },
     "largestNonTechnicalPercent": {
       "value": null,
       "unit": null,
       "status": "no_disponible",
       "source": null,
-      "note": "Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como reserva cero."
+      "note": "Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como cantidad cero."
     }
   },
   "market": {
@@ -341,25 +385,25 @@
       "status": "verificado",
       "source": {
         "method": "getAccountInfo",
-        "account": "8Rr2Qo9ch94zRZxojHfg7Xeq8DfAp9mfNaLZnQScnpbA",
-        "slot": 454481107,
-        "fetchedAt": "2026-10-08T07:44:21.071Z",
+        "account": "AJm1jAQd26bkf69ftjcT8bwCXsjV4CeqgUvmxLjR3W4h",
+        "slot": 457742234,
+        "fetchedAt": "2026-10-16T18:46:10.187Z",
         "detail": "PDA derivada con las semillas bonding-curve y el mint, programa Pump.fun."
       },
-      "note": "La dirección derivada tiene una cuenta cuyo propietario no es el programa de Pump.fun. No es una curva y no se rellenan reservas a cero."
+      "note": "No hay cuenta en la PDA. El módulo de otros mercados no está en esta versión. La ausencia no se rellena con una cantidad de cero."
     },
     "bondingCurve": {
-      "value": "8Rr2Qo9ch94zRZxojHfg7Xeq8DfAp9mfNaLZnQScnpbA",
+      "value": "AJm1jAQd26bkf69ftjcT8bwCXsjV4CeqgUvmxLjR3W4h",
       "unit": null,
       "status": "verificado",
       "source": {
         "method": "getAccountInfo",
-        "account": "8Rr2Qo9ch94zRZxojHfg7Xeq8DfAp9mfNaLZnQScnpbA",
-        "slot": 454481107,
-        "fetchedAt": "2026-10-08T07:44:21.071Z",
+        "account": "AJm1jAQd26bkf69ftjcT8bwCXsjV4CeqgUvmxLjR3W4h",
+        "slot": 457742234,
+        "fetchedAt": "2026-10-16T18:46:10.187Z",
         "detail": "PDA derivada con las semillas bonding-curve y el mint, programa Pump.fun."
       },
-      "note": "Propietario leído: 11111111111111111111111111111111."
+      "note": "PDA derivada. La cuenta no existe en el estado consultado."
     },
     "present": {
       "value": false,
@@ -367,12 +411,12 @@
       "status": "verificado",
       "source": {
         "method": "getAccountInfo",
-        "account": "8Rr2Qo9ch94zRZxojHfg7Xeq8DfAp9mfNaLZnQScnpbA",
-        "slot": 454481107,
-        "fetchedAt": "2026-10-08T07:44:21.071Z",
+        "account": "AJm1jAQd26bkf69ftjcT8bwCXsjV4CeqgUvmxLjR3W4h",
+        "slot": 457742234,
+        "fetchedAt": "2026-10-16T18:46:10.187Z",
         "detail": "PDA derivada con las semillas bonding-curve y el mint, programa Pump.fun."
       },
-      "note": "Propietario leído: 11111111111111111111111111111111."
+      "note": null
     },
     "complete": {
       "value": null,
@@ -380,9 +424,9 @@
       "status": "no_aplica",
       "source": {
         "method": "getAccountInfo",
-        "account": "8Rr2Qo9ch94zRZxojHfg7Xeq8DfAp9mfNaLZnQScnpbA",
-        "slot": 454481107,
-        "fetchedAt": "2026-10-08T07:44:21.071Z",
+        "account": "AJm1jAQd26bkf69ftjcT8bwCXsjV4CeqgUvmxLjR3W4h",
+        "slot": 457742234,
+        "fetchedAt": "2026-10-16T18:46:10.187Z",
         "detail": "PDA derivada con las semillas bonding-curve y el mint, programa Pump.fun."
       },
       "note": "No hay curva."
@@ -453,7 +497,7 @@
         "method": "local",
         "account": null,
         "slot": null,
-        "fetchedAt": "2026-10-08T07:44:19.870Z",
+        "fetchedAt": "2026-10-16T18:46:08.985Z",
         "detail": "Registro curado verify/registry/canonical.json"
       },
       "note": "Comparación local. No consulta una red para decidir el registro."
@@ -466,33 +510,36 @@
         "method": "local",
         "account": null,
         "slot": null,
-        "fetchedAt": "2026-10-08T07:44:19.870Z",
+        "fetchedAt": "2026-10-16T18:46:08.985Z",
         "detail": "Registro curado."
       },
       "note": null
     },
     "signals": {
-      "value": [],
+      "value": [
+        "nombre «USD Coin» incluye USD Coin/USDC",
+        "símbolo «USDC» incluye USD Coin/USDC"
+      ],
       "unit": null,
       "status": "verificado",
       "source": {
         "method": "local",
         "account": null,
         "slot": null,
-        "fetchedAt": "2026-10-08T07:44:19.870Z",
+        "fetchedAt": "2026-10-16T18:46:08.985Z",
         "detail": "Nombre, símbolo, imagen y enlaces frente al registro."
       },
       "note": null
     },
     "statement": {
-      "value": "Este mint no está en el registro curado. Que no esté no significa que sea falso ni que sea una copia.",
+      "value": "Posible suplantación: el nombre, el símbolo, la imagen o un enlace coinciden con un token del registro curado, pero el mint es otro. La coincidencia no atribuye intención.",
       "unit": null,
-      "status": "verificado",
+      "status": "inferido",
       "source": {
         "method": "local",
         "account": null,
         "slot": null,
-        "fetchedAt": "2026-10-08T07:44:19.870Z",
+        "fetchedAt": "2026-10-16T18:46:08.985Z",
         "detail": "Regla de autenticidad de rulesVersion."
       },
       "note": null

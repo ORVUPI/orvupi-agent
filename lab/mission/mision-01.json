@@ -1,34 +1,41 @@
 {
   "id": "mision-01",
-  "version": "1.1.0",
-  "updated": "2026-10-09",
-  "cardDate": "2026-10-08",
+  "version": "2.0.0",
+  "updated": "2026-10-16",
+  "cardDate": "2026-10-16",
   "title": {
     "es": "Cómo detectar un token clon en 5 pasos",
     "en": "How to spot a clone token in 5 steps"
   },
   "intro": {
-    "es": "Cinco preguntas cortas con las fichas del 2026-10-08. Si no aciertas, puedes volver a intentar. El progreso se queda en este navegador.",
-    "en": "Five short questions using the 2026-10-08 cards. If you miss, you can try again. Progress stays in this browser."
+    "es": "Cinco preguntas cortas con las fichas del 2026-10-16: USDC y tres copias que se llaman igual. Si no aciertas, puedes volver a intentar. El progreso se queda en este navegador.",
+    "en": "Five short questions using the 2026-10-16 cards: USDC and three copies with the same name. If you miss, you can try again. Progress stays in this browser."
   },
   "closing": {
-    "es": "Has separado la dirección oficial, una copia y un dato que no se pudo leer. No es un certificado. No hace falta una cuenta ni tener TOKEN A para leerlo.",
-    "en": "You separated the official address, a copy, and a fact that could not be read. This is not a certificate. No account is required, and holding TOKEN A is not required to read it."
+    "es": "Has separado la dirección de referencia, una copia y un dato que no se pudo leer. No es un certificado. No hace falta una cuenta ni tener ningún token para leerlo.",
+    "en": "You separated the reference address, a copy, and a fact that could not be read. This is not a certificate. No account is required, and holding any token is not required to read it."
   },
   "steps": [
     {
       "id": "direccion",
       "kind": "check",
-      "glossary": ["direccion", "registro"],
-      "cards": [
-        "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump",
-        "DjEjb6bxQ3Hjej9CzUAVeRqyt7k1tevHgcS37t41PUhQ",
-        "Hhq4ffySVX3UQqSowjhP1Lwa8YuJDf7iH2hYWvVHTuEf"
+      "glossary": [
+        "direccion",
+        "registro"
       ],
-      "fields": ["name", "mint", "inRegistry"],
+      "cards": [
+        "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "5vJmAfBjsS6wEHcgQGNm69P3fbyPmUU1dVfE5j1rraVZ",
+        "H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R"
+      ],
+      "fields": [
+        "name",
+        "mint",
+        "inRegistry"
+      ],
       "prompt": {
-        "es": "¿Cuál es la dirección del TOKEN A oficial?",
-        "en": "Which address is the official TOKEN A?"
+        "es": "Las tres se llaman «USD Coin». ¿Cuál es la dirección de USDC?",
+        "en": "All three are named “USD Coin”. Which one is the USDC address?"
       },
       "guide": {
         "es": "La dirección del mint identifica ese token. El nombre se puede copiar; la dirección, no.",
@@ -37,75 +44,83 @@
       "options": [
         {
           "id": "oficial",
-          "mint": "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump",
+          "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
           "label": {
-            "es": "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump",
-            "en": "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump"
+            "es": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+            "en": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
           }
         },
         {
           "id": "clon-dj",
-          "mint": "DjEjb6bxQ3Hjej9CzUAVeRqyt7k1tevHgcS37t41PUhQ",
+          "mint": "5vJmAfBjsS6wEHcgQGNm69P3fbyPmUU1dVfE5j1rraVZ",
           "label": {
-            "es": "DjEjb6bxQ3Hjej9CzUAVeRqyt7k1tevHgcS37t41PUhQ",
-            "en": "DjEjb6bxQ3Hjej9CzUAVeRqyt7k1tevHgcS37t41PUhQ"
+            "es": "5vJmAfBjsS6wEHcgQGNm69P3fbyPmUU1dVfE5j1rraVZ",
+            "en": "5vJmAfBjsS6wEHcgQGNm69P3fbyPmUU1dVfE5j1rraVZ"
           }
         },
         {
           "id": "clon-hh",
-          "mint": "Hhq4ffySVX3UQqSowjhP1Lwa8YuJDf7iH2hYWvVHTuEf",
+          "mint": "H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R",
           "label": {
-            "es": "Hhq4ffySVX3UQqSowjhP1Lwa8YuJDf7iH2hYWvVHTuEf",
-            "en": "Hhq4ffySVX3UQqSowjhP1Lwa8YuJDf7iH2hYWvVHTuEf"
+            "es": "H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R",
+            "en": "H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R"
           }
         }
       ],
       "correct": "oficial",
       "whyRight": {
-        "es": "Solo esta dirección está en el registro del 2026-10-08. Las otras se llaman parecido y la ficha indica que se parecen a TOKEN A pero no son la CA oficial. Eso no dice quién las creó ni con qué intención.",
-        "en": "Only this address is in the 2026-10-08 registry. The others have a similar name and the card indicates that they look like TOKEN A but they are not the official CA. That does not say who created them or why."
+        "es": "Solo esta dirección está en el registro del 2026-10-16. Las otras se llaman igual y la ficha indica que se parecen a USDC pero no son su mint. Eso no dice quién las creó ni con qué intención.",
+        "en": "Only this address is in the 2026-10-16 registry. The others have the same name and the card indicates that they look like USDC but are not its mint. That does not say who created them or why."
       },
       "whyWrong": {
         "clon-dj": {
-          "es": "Se llama Comunidad TOKEN A, pero no está en el registro. El nombre no sustituye a la dirección.",
-          "en": "It is named Comunidad TOKEN A, but it is not in the registry. The name does not stand in for the address."
+          "es": "Se llama «USD Coin», pero no está en el registro. El nombre no sustituye a la dirección.",
+          "en": "It is named “USD Coin”, but it is not in the registry. The name does not stand in for the address."
         },
         "clon-hh": {
-          "es": "Se llama Comunidad TOKEN A · Creador. El nombre coincide y la dirección es otra.",
-          "en": "It is named Comunidad TOKEN A · Creador. The name matches and the address is different."
+          "es": "Nombre y símbolo coinciden con USDC y la dirección es otra.",
+          "en": "The name and symbol match USDC and the address is different."
         }
       }
     },
     {
       "id": "emision",
       "kind": "check",
-      "glossary": ["autoridad-emision", "autoridad-congelacion"],
-      "cards": [
-        "DjEjb6bxQ3Hjej9CzUAVeRqyt7k1tevHgcS37t41PUhQ",
-        "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump"
+      "glossary": [
+        "autoridad-emision",
+        "autoridad-congelacion"
       ],
-      "fields": ["name", "mint", "mintAuthority", "freezeAuthority"],
+      "cards": [
+        "5vJmAfBjsS6wEHcgQGNm69P3fbyPmUU1dVfE5j1rraVZ",
+        "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+      ],
+      "fields": [
+        "name",
+        "mint",
+        "mintAuthority",
+        "freezeAuthority"
+      ],
       "prompt": {
-        "es": "Las dos fichas tienen el permiso cerrado. ¿Qué es cierto?",
-        "en": "Both cards show a closed permission. What is true?"
+        "es": "La copia tiene los permisos cerrados y USDC, abiertos. ¿Qué es cierto?",
+        "en": "The copy has its permissions closed and USDC has them open. What is true?"
       },
       "guide": {
-        "es": "Permiso cerrado = nadie puede crear más monedas de ese token. Las copias también pueden tenerlo.",
-        "en": "Closed permission = nobody can create more coins of that token. Copies can have it too."
+        "es": "Permiso cerrado = nadie puede crear más unidades ni congelar cuentas. Las copias también pueden tenerlo.",
+        "en": "Closed permission = nobody can create more units or freeze accounts. Copies can have it too."
       },
       "options": [
         {
           "id": "coincide",
           "label": {
-            "es": "Es la oficial, porque el permiso coincide.",
-            "en": "It is the official one, because the permission matches."
+            "es": "La copia es la buena, porque tiene los permisos cerrados.",
+            "en": "The copy is the real one, because its permissions are closed."
           }
         },
         {
           "id": "solo-permiso",
           "label": {
-            "es": "El permiso está cerrado. Eso no identifica la dirección.",
-            "en": "The permission is closed. That does not identify the address."
+            "es": "Los permisos describen la cuenta. No identifican la dirección.",
+            "en": "Permissions describe the account. They do not identify the address."
           }
         },
         {
@@ -118,13 +133,13 @@
       ],
       "correct": "solo-permiso",
       "whyRight": {
-        "es": "En la ficha del 2026-10-08, crear más tokens y congelar cuentas figuran cerrados en la oficial y en las copias. USDC los tiene abiertos. Cerrado no identifica la dirección.",
-        "en": "On the 2026-10-08 card, creating more tokens and freezing accounts are closed on the official one and on the copies. USDC has them open. Closed does not identify the address."
+        "es": "En la ficha del 2026-10-16, la copia 5vJm… tiene emisión y congelación revocadas. USDC las tiene activas: BJE5MMbqXjVwjAF7oxwPYXnTXDyspzZyt4vwenNw5ruG y 7dGbd2QZcCKcTndnHcTL8q7SMVXAkp688NTQYwrRCrar. Un permiso no identifica la dirección.",
+        "en": "On the 2026-10-16 card, the 5vJm… copy has mint and freeze revoked. USDC has them active: BJE5MMbqXjVwjAF7oxwPYXnTXDyspzZyt4vwenNw5ruG and 7dGbd2QZcCKcTndnHcTL8q7SMVXAkp688NTQYwrRCrar. A permission does not identify the address."
       },
       "whyWrong": {
         "coincide": {
-          "es": "Dos direcciones distintas pueden tener el mismo permiso. Esta no es la del registro.",
-          "en": "Two different addresses can have the same permission. This one is not the registry address."
+          "es": "Dos direcciones distintas pueden tener permisos distintos. La del registro es la de USDC.",
+          "en": "Two different addresses can have different permissions. The registry address is USDC's."
         },
         "no-leido": {
           "es": "En esta ficha el permiso sí se leyó. Si no se hubiera leído, no se rellenaría como cerrado.",
@@ -135,9 +150,19 @@
     {
       "id": "desconocido",
       "kind": "check",
-      "glossary": ["desconocido", "ficha", "censo"],
-      "cards": ["Hhq4ffySVX3UQqSowjhP1Lwa8YuJDf7iH2hYWvVHTuEf"],
-      "fields": ["name", "holders", "metadata"],
+      "glossary": [
+        "desconocido",
+        "ficha",
+        "censo"
+      ],
+      "cards": [
+        "4XRbnGgay2XpqJ1F5jGPQ9pRh1JSX12RPCPJASMJU5JW"
+      ],
+      "fields": [
+        "name",
+        "holders",
+        "metadata"
+      ],
       "prompt": {
         "es": "Si un dato dice «no disponible», ¿qué haces?",
         "en": "If a fact says “unavailable”, what do you do?"
@@ -171,8 +196,8 @@
       ],
       "correct": "sigue-desconocido",
       "whyRight": {
-        "es": "En las fichas que siguen fechadas el 2026-10-08 la muestra de cuentas con tokens está no disponible. Eso no es un cero ni anula lo que sí se leyó. La ficha oficial del 2026-10-09 lee la curva, la creadora y la cuenta personal (publicada en el registro oficial), y eso no es un censo.",
-        "en": "On the cards that stay dated 2026-10-08 the token account sample is unavailable. That is not a zero and it does not erase what was read. The official card from 2026-10-09 reads the curve, the creator, and the personal account (listed in the official registry), and that is not a census."
+        "es": "En las fichas del 2026-10-16 la muestra de cuentas con tokens está no disponible: el servicio respondió HTTP 429. Eso no es un cero ni anula lo que sí se leyó (nombre, permisos, suministro).",
+        "en": "On the 2026-10-16 cards the token account sample is unavailable: the service returned HTTP 429. That is not a zero and it does not erase what was read (name, permissions, supply)."
       },
       "whyWrong": {
         "prueba-y-cero": {
@@ -186,28 +211,34 @@
       }
     },
     {
-      "id": "curva",
+      "id": "suplantacion",
       "kind": "check",
-      "glossary": ["curva-pump", "reserva-real", "suplantacion"],
-      "cards": [
-        "3Zi6p6wzYZYKyuHdBhsDfb2pRR7XTfTfLKkXL7rwpump",
-        "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump"
+      "glossary": [
+        "suplantacion",
+        "direccion"
       ],
-      "fields": ["name", "impersonation", "curveProgress"],
+      "cards": [
+        "H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R",
+        "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+      ],
+      "fields": [
+        "name",
+        "impersonation"
+      ],
       "prompt": {
-        "es": "Una copia marca 0,00. ¿Eso prueba la intención de alguien?",
-        "en": "A copy shows 0.00. Does that prove someone’s intent?"
+        "es": "Una copia marca «posible suplantación». ¿Eso prueba la intención de alguien?",
+        "en": "A copy shows “possible impersonation”. Does that prove someone’s intent?"
       },
       "guide": {
-        "es": "El 0,00 es un cálculo de la curva en la ficha. No dice lo que alguien quiso hacer.",
-        "en": "0.00 is a curve calculation on the card. It does not say what someone meant to do."
+        "es": "La señal sale porque el nombre o el símbolo coinciden con un token del registro y la dirección es otra. No dice lo que alguien quiso hacer.",
+        "en": "The signal appears because the name or symbol matches a registry token and the address is different. It does not say what someone meant to do."
       },
       "options": [
         {
           "id": "no-leida",
           "label": {
-            "es": "No se leyó, y prueba la intención.",
-            "en": "It was not read, and it proves intent."
+            "es": "Sí: prueba que es una estafa.",
+            "en": "Yes: it proves it is a scam."
           }
         },
         {
@@ -220,31 +251,34 @@
         {
           "id": "virtual-retirable",
           "label": {
-            "es": "La cantidad virtual de la curva (Pump.fun lo llama ‘reserves’) se puede retirar.",
-            "en": "The virtual curve amount (Pump.fun calls these ‘reserves’) can be withdrawn."
+            "es": "No significa nada, porque el nombre es igual.",
+            "en": "It means nothing, because the name is the same."
           }
         }
       ],
       "correct": "senal-sin-intencion",
       "whyRight": {
-        "es": "En los tres clones, el 0,00 sale porque la cantidad real de la curva coincide con la inicial documentada. La señal de copia no atribuye intención. El número está en Detalles.",
-        "en": "On the three clones, 0.00 appears because the real curve amount matches the documented initial amount. The copy signal does not attribute intent. The number is in Details."
+        "es": "En H5b7… el nombre «USD Coin» y el símbolo «USDC» coinciden con USDC, y el mint es otro. La ficha lo marca como señal para comparar y no atribuye intención.",
+        "en": "On H5b7… the name “USD Coin” and the symbol “USDC” match USDC, and the mint is different. The card marks it as a signal to compare and does not attribute intent."
       },
       "whyWrong": {
         "no-leida": {
-          "es": "El cálculo sí se hizo. Un dato no leído no se rellena con cero, y la ficha no afirma la intención de nadie.",
-          "en": "The calculation was made. An unread fact is not filled in with zero, and the card does not assert anyone’s intent."
+          "es": "La ficha no afirma la intención de nadie. Es una coincidencia que conviene comprobar.",
+          "en": "The card does not assert anyone’s intent. It is a match worth checking."
         },
         "virtual-retirable": {
-          "es": "La cantidad virtual de la curva no es la cantidad que se puede retirar.",
-          "en": "The virtual curve amount is not the balance that can be withdrawn."
+          "es": "Justo porque el nombre es igual hay que mirar la dirección: esa es la señal.",
+          "en": "Precisely because the name is the same, you need to check the address: that is the signal."
         }
       }
     },
     {
       "id": "caso-nuevo",
       "kind": "comprehension",
-      "glossary": ["direccion", "autoridad-emision"],
+      "glossary": [
+        "direccion",
+        "autoridad-emision"
+      ],
       "cards": [],
       "fields": [],
       "prompt": {
@@ -273,8 +307,8 @@
         {
           "id": "revocada-es-registro",
           "label": {
-            "es": "Si el permiso está cerrado, ya es la oficial.",
-            "en": "If the permission is closed, it is already the official one."
+            "es": "Si el permiso está cerrado, ya es la buena.",
+            "en": "If the permission is closed, it is already the real one."
           }
         }
       ],
@@ -289,8 +323,8 @@
           "en": "The name, even if it says “official”, is not the address."
         },
         "revocada-es-registro": {
-          "es": "Un permiso cerrado describe ese permiso. Si la dirección es otra, no es la oficial.",
-          "en": "A closed permission describes that permission. If the address is different, it is not the official one."
+          "es": "Un permiso cerrado describe ese permiso. Si la dirección es otra, no es la del registro.",
+          "en": "A closed permission describes that permission. If the address is different, it is not the registry one."
         }
       }
     }

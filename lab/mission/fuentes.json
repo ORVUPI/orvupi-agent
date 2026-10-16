@@ -1,66 +1,46 @@
 {
-  "date": "2026-10-08",
-  "directory": "verify/examples/2026-10-08",
-  "readme": "verify/examples/2026-10-08/LEEME.md",
+  "date": "2026-10-16",
+  "directory": "verify/examples/2026-10-16",
+  "readme": "verify/examples/2026-10-16/LEEME.md",
   "cards": [
     {
-      "mint": "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump",
-      "role": "registro",
-      "file": "verify/examples/2026-10-09/TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump.json",
-      "roleNote": {
-        "es": "Mint del registro curado. Ficha releída el 2026-10-09: saldos de la curva, de la creadora y de la cuenta personal publicada. No es un censo. La ficha del 2026-10-08 se conserva.",
-        "en": "Curated registry mint. Card reread on 2026-10-09: balances of the curve, the creator, and the published personal account. It is not a census. The 2026-10-08 card is kept."
-      }
-    },
-    {
-      "mint": "Hhq4ffySVX3UQqSowjhP1Lwa8YuJDf7iH2hYWvVHTuEf",
-      "role": "clon",
-      "roleNote": {
-        "es": "Clon conocido en los ejemplos del 2026-10-08. La ficha marca posible suplantación y no atribuye intención.",
-        "en": "Known clone in the 2026-10-08 examples. The card marks possible impersonation and does not attribute intent."
-      }
-    },
-    {
-      "mint": "DjEjb6bxQ3Hjej9CzUAVeRqyt7k1tevHgcS37t41PUhQ",
-      "role": "clon",
-      "roleNote": {
-        "es": "Clon conocido en los ejemplos del 2026-10-08. La ficha marca posible suplantación y no atribuye intención.",
-        "en": "Known clone in the 2026-10-08 examples. The card marks possible impersonation and does not attribute intent."
-      }
-    },
-    {
-      "mint": "3Zi6p6wzYZYKyuHdBhsDfb2pRR7XTfTfLKkXL7rwpump",
-      "role": "clon",
-      "roleNote": {
-        "es": "Clon conocido en los ejemplos del 2026-10-08. La ficha marca posible suplantación y no atribuye intención.",
-        "en": "Known clone in the 2026-10-08 examples. The card marks possible impersonation and does not attribute intent."
-      }
-    },
-    {
-      "mint": "ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump",
-      "role": "clon",
-      "file": "verify/examples/2026-10-09/ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump.json",
-      "roleNote": {
-        "es": "Ejemplo añadido el 2026-10-09. Se llama TOKEN A y no es el mint del registro. No es una lista completa.",
-        "en": "Example added on 2026-10-09. It is named TOKEN A and it is not the registry mint. This is not a complete list."
-      }
-    },
-    {
-      "mint": "FMNb4CR8ksibmgY7Ztei6BWcZXi3WHcVeJhYb9TNpump",
-      "role": "clon",
-      "file": "verify/examples/2026-10-09/FMNb4CR8ksibmgY7Ztei6BWcZXi3WHcVeJhYb9TNpump.json",
-      "roleNote": {
-        "es": "Ejemplo añadido el 2026-10-09. Se llama TOKEN A y no es el mint del registro. No es una lista completa.",
-        "en": "Example added on 2026-10-09. It is named TOKEN A and it is not the registry mint. This is not a complete list."
-      }
-    },
-    {
       "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "role": "contraste",
-      "file": "verify/examples/2026-10-09/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v.json",
+      "role": "registro",
       "roleNote": {
-        "es": "USDC, contraste. Bytes del mint el 2026-10-09 18:42 Europe/Madrid: 7.442.271.613,512366. getTokenSupply en ese minuto no coincidió, así que no hay porcentajes. No es TOKEN A y no está presentado como clon. La ficha del 2026-10-08 conserva la cifra de aquel día.",
-        "en": "USDC, a contrast. Mint bytes on 2026-10-09 18:42 Europe/Madrid: 7,442,271,613.512366. getTokenSupply did not match in that minute, so there are no percentages. It is not TOKEN A and is not presented as a clone. The 2026-10-08 card keeps that day's figure."
+        "es": "USDC (Circle) en Solana: el token de referencia del registro curado. Se usa como ejemplo neutro; no es ORVUPI, que aún no tiene contrato.",
+        "en": "USDC (Circle) on Solana: the reference token in the curated registry. It is a neutral example; it is not ORVUPI, which does not have a contract yet."
+      }
+    },
+    {
+      "mint": "4XRbnGgay2XpqJ1F5jGPQ9pRh1JSX12RPCPJASMJU5JW",
+      "role": "clon",
+      "roleNote": {
+        "es": "Copia conocida del 2026-10-16: se llama «USD Coin» (USDC) y no es el mint de USDC. La ficha marca posible suplantación y no atribuye intención.",
+        "en": "Known copy from 2026-10-16: it is named “USD Coin” (USDC) and it is not the USDC mint. The card marks possible impersonation and does not attribute intent."
+      }
+    },
+    {
+      "mint": "5vJmAfBjsS6wEHcgQGNm69P3fbyPmUU1dVfE5j1rraVZ",
+      "role": "clon",
+      "roleNote": {
+        "es": "Copia conocida del 2026-10-16: se llama «USD Coin» (USDC) y no es el mint de USDC. La ficha marca posible suplantación y no atribuye intención.",
+        "en": "Known copy from 2026-10-16: it is named “USD Coin” (USDC) and it is not the USDC mint. The card marks possible impersonation and does not attribute intent."
+      }
+    },
+    {
+      "mint": "H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R",
+      "role": "clon",
+      "roleNote": {
+        "es": "Copia conocida del 2026-10-16: se llama «USD Coin» (USDC) y no es el mint de USDC. La ficha marca posible suplantación y no atribuye intención.",
+        "en": "Known copy from 2026-10-16: it is named “USD Coin” (USDC) and it is not the USDC mint. The card marks possible impersonation and does not attribute intent."
+      }
+    },
+    {
+      "mint": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+      "role": "contraste",
+      "roleNote": {
+        "es": "USDT en Solana, contraste: otro token conocido, con emisión y congelación activas. No se presenta como copia de USDC.",
+        "en": "USDT on Solana, a contrast: another known token, with active mint and freeze permissions. It is not presented as a copy of USDC."
       }
     }
   ]

@@ -1,33 +1,23 @@
 {
   "version": 1,
-  "note": "Lista curada. Que un mint no esté aquí no significa que sea falso. Que el nombre o un enlace coincidan tampoco atribuye intención: es una señal para comparar con el mint oficial.",
+  "note": "Lista curada de tokens de referencia para enseñar a detectar clones. ORVUPI aún no tiene contrato y no figura aquí. Que un mint no esté en la lista no significa que sea falso. Que coincidan el nombre o un enlace tampoco atribuye intención: es una señal para comparar con el mint de referencia.",
   "tokens": [
     {
-      "id": "stubx",
-      "mint": "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump",
-      "name": "STUBX",
-      "symbol": "STUBX",
-      "imageUris": [
-        "https://ipfs.io/ipfs/bafkreiew224xxf6ncagzzew5bfxlc6hejrib6jmxx66kxdrv5pkeoavd5e"
-      ],
-      "imageCids": [
-        "bafkreiew224xxf6ncagzzew5bfxlc6hejrib6jmxx66kxdrv5pkeoavd5e"
-      ],
+      "id": "usdc",
+      "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      "name": "USD Coin",
+      "symbol": "USDC",
+      "imageUris": [],
+      "imageCids": [],
       "links": [
-        "https://x.com/stubxai",
-        "https://stubxai.com/",
-        "https://superb-horse-9036f5.netlify.app/"
+        "https://www.circle.com/usdc"
       ],
       "webHosts": [
-        "stubxai.com",
-        "superb-horse-9036f5.netlify.app"
+        "circle.com",
+        "www.circle.com"
       ],
-      "publishedAccounts": [
-        {
-          "address": "2fS12sTD4TNEEE9MoCEt19brV41UjGdAnaNaxWcmiWvX",
-          "label": "cuenta personal publicada del creador, saldo leído; no es un censo"
-        }
-      ]
+      "publishedAccounts": []
     }
   ]
 }
+
