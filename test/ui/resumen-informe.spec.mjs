@@ -191,7 +191,7 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
   await expect(summary).toContainText("Dice llamarse «ORVUPI» (texto elegido por quien creó el token)");
   const likeness = summary.locator("[data-bloque='atencion'] .punto-resumen").first();
   await expect(likeness).toContainText("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato");
-  await expect(likeness.locator("details")).toContainText("stubxai.com");
+  await expect(likeness.locator("details")).toContainText("Ninguna dirección es la oficial");
   await expect(summary).not.toContainText("Es un dato de esta lectura");
   await shot("eryyy");
 
