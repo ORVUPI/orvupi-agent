@@ -11,14 +11,14 @@ Desde el 16-10-2026 `orvupi.com` es el dominio principal de ORVUPI.
 
 ## Pendiente, fuera del código (requiere OK expreso)
 
-1. Añadir `orvupi.com` (y `www.orvupi.com`) como dominio personalizado del proyecto de Cloudflare Pages `stubxai` y comprobar el certificado.
+1. Añadir `orvupi.com` (y `www.orvupi.com`) como dominio personalizado del proyecto de Cloudflare Pages que hoy sirve stubxai.com y comprobar el certificado.
 2. Activar la redirección de `stubxai.com` a `orvupi.com`.
 
 ## La redirección (preparada, sin activar)
 
 Cloudflare Pages no admite reglas por host en `_redirects` (solo rutas relativas), así que la redirección se hace con una regla de zona. Por eso no está en `_redirects` y no se activa con ningún despliegue.
 
-- Archivo listo: `web/v2/tools/redireccion-stubxai-a-orvupi.json` (`tools/` no se despliega). Lleva `"enabled": false`.
+- Archivo listo: `web/v2/tools/redireccion-a-orvupi.json` (`tools/` no se despliega). Lleva `"enabled": false`.
 - Cómo aplicarla: Cloudflare → zona `stubxai.com` → Rules → Redirect Rules → crear regla con esa expresión y ese destino (301, conserva ruta y consulta). La alternativa equivalente es una Bulk Redirect `stubxai.com` → `https://orvupi.com` con «Preserve path suffix» y «Preserve query string».
 - Comprobación después de activarla: `curl -sI https://stubxai.com/verify/?x=1` debe dar `301` con `location: https://orvupi.com/verify/?x=1`.
 - Marcha atrás: desactivar la regla.
