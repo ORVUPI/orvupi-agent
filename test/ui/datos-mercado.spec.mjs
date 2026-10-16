@@ -74,7 +74,7 @@ function rawPair(mint) {
 
 test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) => {
   test.setTimeout(90_000);
-  mkdirSync("/opt/cursor/artifacts", { recursive: true });
+  mkdirSync("test-results/artifacts", { recursive: true });
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(String(error)));
   const external = [];
@@ -140,7 +140,7 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
     if (testInfo.project.name !== "mobile" && testInfo.project.name !== "desktop") return;
     const block = page.locator("#resultado .datos-mercado");
     await block.scrollIntoViewIfNeeded();
-    const target = `/opt/cursor/artifacts/datos_mercado_${name}_${testInfo.project.name}.png`;
+    const target = `test-results/artifacts/datos_mercado_${name}_${testInfo.project.name}.png`;
     for (let attempt = 0; attempt < 3; attempt += 1) {
       try {
         await block.screenshot({ path: target });
@@ -303,7 +303,7 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
   await expect(saved).not.toContainText("1,0001");
   if (testInfo.project.name === "desktop" || testInfo.project.name === "mobile") {
     await saved.scrollIntoViewIfNeeded();
-    const target = `/opt/cursor/artifacts/datos_mercado_cuaderno_${testInfo.project.name}.png`;
+    const target = `test-results/artifacts/datos_mercado_cuaderno_${testInfo.project.name}.png`;
     for (let attempt = 0; attempt < 3; attempt += 1) {
       try {
         await saved.screenshot({ path: target });

@@ -11,7 +11,7 @@ import {
   encodeMintAccount,
 } from "../../pares/chain-read.mjs";
 
-const shots = "/opt/cursor/artifacts/screenshots";
+const shots = "test-results/artifacts/screenshots";
 const FOOTER_ES = "Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión.";
 const FOOTER_EN = "High-risk crypto · You could lose everything · Not investment advice.";
 const MINT = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";

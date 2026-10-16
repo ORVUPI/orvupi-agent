@@ -323,7 +323,7 @@ test("los fixtures dejan PNG y PDF con el texto de la cadena", async ({ page }, 
     { source: marked, lang: "en", stem: "informe-nombre-html-en", summary: true },
     { source: largo, lang: "es", stem: "informe-largo-es", summary: false },
   ];
-  const dir = "/opt/cursor/artifacts";
+  const dir = "test-results/artifacts";
   mkdirSync(dir, { recursive: true });
   for (const item of cases) {
     const result = await page.evaluate(async ({ source, lang, summary }) => {
@@ -414,7 +414,7 @@ test("USDC y ERYyy dejan un PNG en español y en inglés", async ({ page }, test
   test.setTimeout(120_000);
   await mockRpc(page);
   await page.goto("/verify/");
-  const dir = "/opt/cursor/artifacts";
+  const dir = "test-results/artifacts";
   mkdirSync(dir, { recursive: true });
   const shots = [
     { mint: USDC, lang: "es", stem: "informe-usdc-es", ready: "Dice llamarse «USD Coin»" },

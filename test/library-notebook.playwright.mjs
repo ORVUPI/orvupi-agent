@@ -9,7 +9,7 @@ import { chromium, devices, webkit } from "playwright";
 import { METADATA_PROGRAM, PUMP_PROGRAM, TOKEN_PROGRAM } from "../web/v2/shared/solana-read.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../web/v2");
-const shots = "/opt/cursor/artifacts/screenshots";
+const shots = "test-results/artifacts/screenshots";
 const official = "TNWwnzecb37272ZoySDE6D2UcmqNnU12EqtycNSpump";
 mkdirSync(shots, { recursive: true });
 

@@ -70,7 +70,7 @@ function rpcResult(value, status = 200) {
 
 test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) => {
   test.setTimeout(90_000);
-  mkdirSync("/opt/cursor/artifacts", { recursive: true });
+  mkdirSync("test-results/artifacts", { recursive: true });
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(String(error)));
   let failReads = true;
@@ -107,7 +107,7 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
     const summary = page.locator("#resultado .resumen-informe");
     await summary.scrollIntoViewIfNeeded();
     await summary.screenshot({
-      path: `/opt/cursor/artifacts/resumen_uso49_${name}_${testInfo.project.name}.png`,
+      path: `test-results/artifacts/resumen_uso49_${name}_${testInfo.project.name}.png`,
     });
   }
 
@@ -239,7 +239,7 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
   if (testInfo.project.name === "desktop" || testInfo.project.name === "mobile") {
     await saved.scrollIntoViewIfNeeded();
     await saved.screenshot({
-      path: `/opt/cursor/artifacts/resumen_b49_cuaderno_${testInfo.project.name}.png`,
+      path: `test-results/artifacts/resumen_b49_cuaderno_${testInfo.project.name}.png`,
     });
   }
 
