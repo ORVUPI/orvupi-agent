@@ -30,12 +30,15 @@ export const DAILY_NOTE =
   "Prototipo. El agente de este repositorio no publica en redes sociales, no firma y no mueve fondos. Los posts de @ORVUPI los prepara y publica otro agente de IA, fuera de este repositorio, a partir de textos aprobados antes de publicarse. Esta entrada la escribe el workflow daily-log y solo anota el estado del kill-switch y el resultado del simulacro en este repositorio.";
 
 /**
- * Génesis de la cadena ORVUPI (16-10-2026). La cadena anterior, de 22 entradas,
- * se conserva en el tag pre-orvupi-2026-10-16 y su último hash queda escrito aquí.
+ * Génesis de la cadena ORVUPI: la cadena se reinicia el 16-10-2026. La anterior, de 22 entradas,
+ * se conserva en el tag pre-orvupi-2026-10-16 y su último hash queda escrito aquí. Las entradas
+ * copiadas (anteriores a esa fecha) llevan una nota neutra, sin nombre de cuenta.
  */
+export const COPIED_NOTE_FROM_0928 =
+  "Prototipo. El agente de este repositorio no publica en redes sociales, no firma y no mueve fondos. Los posts de la cuenta del proyecto los prepara y publica otro agente de IA, fuera de este repositorio, a partir de textos aprobados antes de publicarse. Esta entrada la escribe el workflow daily-log y solo anota el estado del kill-switch y el resultado del simulacro en este repositorio.";
 export const PREVIOUS_CHAIN_TAG = "pre-orvupi-2026-10-16";
 export const PREVIOUS_CHAIN_HEAD = "00448b50f38e39a3e04b3bbc23e93a5e824f955eaa30f9f4911bfc9baf2b1168";
-export const GENESIS_NOTE = `ORVUPI, 16-10-2026. Génesis de la cadena ORVUPI. La cadena anterior (22 entradas) se conserva en el tag ${PREVIOUS_CHAIN_TAG}; su último hash es ${PREVIOUS_CHAIN_HEAD}. Las entradas 2 a 23 la repiten con los nombres ORVUPI.`;
+export const GENESIS_NOTE = `ORVUPI, 16-10-2026. La cadena se reinicia el 16-10-2026. La cadena anterior (22 entradas) se conserva sin cambios en el tag ${PREVIOUS_CHAIN_TAG}; su último hash es ${PREVIOUS_CHAIN_HEAD}. Las entradas 2 a 23 copian sus fechas, comprobaciones y enlaces, sin nombres de cuenta.`;
 
 const ISO_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 const HEX64 = /^[0-9a-f]{64}$/;

@@ -29,13 +29,15 @@ describe("ppm", () => {
     assert.equal(report.boxes.wallet.notApplicableOn, "2026-10-05");
   });
 
-  test("logs, limits and kill-switch are marked, each with a public run", () => {
+  test("limits and kill-switch are marked, each with a public run; logs is unmarked since the chain restarted", () => {
     const report = reportFrom();
     assert.equal(report.boxes.logs.status, "repo-tested");
     assert.equal(report.boxes.logs.provenByTests, true);
-    assert.equal(report.boxes.logs.ppmMarked, true);
-    assert.equal(report.boxes.logs.markedOn, "2026-10-05");
-    assert.equal(report.boxes.logs.publicEvidence, LOGS_DAILY_RUN);
+    assert.equal(report.boxes.logs.ppmMarked, false);
+    assert.equal(report.boxes.logs.markedOn, null);
+    assert.equal(report.boxes.logs.publicEvidence, null);
+    assert.match(report.boxes.logs.summary, /desmarcada desde el 16-10-2026/);
+    assert.equal(typeof LOGS_DAILY_RUN, "string");
     assert.match(LOGS_DAILY_RUN, RUN_URL);
     assert.equal(report.boxes.limits.status, "repo-tested");
     assert.equal(report.boxes.limits.provenByTests, true);
@@ -60,7 +62,7 @@ describe("ppm", () => {
   test("the report is not an approval", () => {
     const report = reportFrom();
     assert.equal(report.approved, false);
-    assert.equal(report.ppmMarkedCount, 3);
+    assert.equal(report.ppmMarkedCount, 2);
     assert.equal(report.ppmTotal, 4);
     assert.equal(report.ppmNotApplicableCount, 1);
     assert.equal(report.signing, false);
@@ -102,10 +104,10 @@ describe("ppm", () => {
     // A marked box needs a run link of this repository and the count must match.
     const noLink = evaluatePpmHonesty({
       ...report,
-      boxes: { ...report.boxes, logs: { ...report.boxes.logs, publicEvidence: "pending-link" } },
+      boxes: { ...report.boxes, limits: { ...report.boxes.limits, publicEvidence: "pending-link" } },
     });
     assert.equal(noLink.ok, false);
-    assert.ok(noLink.problems.includes("logs.publicEvidence"));
+    assert.ok(noLink.problems.includes("limits.publicEvidence"));
     const otherRepo = evaluatePpmHonesty({
       ...report,
       boxes: {
@@ -149,7 +151,7 @@ describe("ppm", () => {
     assert.notEqual(stub.hashLogs(), before);
   });
 
-  test("cli ppm:print exits 0 with not-applicable wallet and marked logs", () => {
+  test("cli ppm:print exits 0 with not-applicable wallet and unmarked logs", () => {
     const result = spawnSync(process.execPath, ["dist/src/cli.js", "ppm:print"], {
       cwd: repoRoot(),
       encoding: "utf8",
@@ -160,7 +162,7 @@ describe("ppm", () => {
     assert.equal(report.boxes.wallet.status, "not-applicable");
     assert.equal(report.boxes.wallet.notApplicableOn, "2026-10-05");
     assert.equal(report.boxes.logs.status, "repo-tested");
-    assert.equal(report.boxes.logs.ppmMarked, true);
+    assert.equal(report.boxes.logs.ppmMarked, false);
     assert.equal(report.boxes.limits.provenByTests, true);
     assert.equal(report.boxes.killSwitch.provenByTests, true);
   });

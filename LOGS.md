@@ -34,15 +34,16 @@ El campo `actor` vale `orvupi-agent` porque identifica el paquete que escribe el
 - Una entrada con el simulacro en verde solo demuestra lo que ese simulacro comprueba, en esa versión del código.
 - El agente sigue sin hacer acciones con efecto fuera de este repositorio. Si algún día las hace, se explicará antes en este archivo y se anotarán aquí.
 - El modo `prototipo` y la nota de cada entrada están fijados en el código. Si algún día el agente hace acciones con efecto fuera de este repositorio, se cambiarán antes, en un commit público.
-- Desde el 28-09-2026 la nota de cada entrada distingue el agente de este repositorio de los posts de @ORVUPI. Las entradas anteriores conservan la nota anterior («El agente no publica en redes sociales…»), que se refiere solo al agente de este repositorio; no se reescriben, porque el log es de solo añadir.
+- Desde el 28-09-2026 la nota de cada entrada distingue el agente de este repositorio de los posts de la cuenta del proyecto. Las entradas anteriores conservan la nota anterior («El agente no publica en redes sociales…»), que se refiere solo al agente de este repositorio. Las entradas nuevas, desde el 16-10-2026, nombran a @ORVUPI.
 
 ## Cambio de cadena del 16-10-2026 (ORVUPI)
 
-El 16-10-2026 el proyecto pasó a llamarse ORVUPI y la cadena se recalculó:
+El 16-10-2026 el proyecto pasó a llamarse ORVUPI y **la cadena se reinició**:
 
 - La cadena anterior (22 entradas, actor con el nombre anterior del proyecto, último hash `00448b50f38e39a3e04b3bbc23e93a5e824f955eaa30f9f4911bfc9baf2b1168`) se conserva sin cambios en el tag `pre-orvupi-2026-10-16`, con sus anclas y sus sellos `.ots`. Los sellos confirmados que se citan abajo se comprueban sobre ese tag.
-- La cadena nueva empieza con una entrada génesis (`action: "genesis"`, seq 1) cuya nota es «ORVUPI, 16-10-2026…» y lleva escrito ese último hash. Las entradas 2 a 23 repiten las 22 anteriores con su fecha original, el actor `orvupi-agent`, el enlace a la misma ejecución de Actions en `ORVUPI/orvupi-agent` y `@ORVUPI` en la nota (es la misma cuenta, renombrada). Por eso la génesis es la única entrada con fecha posterior a la siguiente.
-- Los sellos `.ots` antiguos sellaban las anclas de la cadena anterior y no valen para la nueva, así que se han retirado de `logs/anchors/`. Las anclas nuevas se sellarán en las próximas ejecuciones de `daily-log`; hasta entonces `logs:verify` las lista como pendientes.
+- La cadena nueva empieza con una entrada génesis (`action: "genesis"`, seq 1) cuya nota dice que la cadena se reinicia el 16-10-2026, que la anterior se conserva en el tag `pre-orvupi-2026-10-16` y cuál es su último hash. Las entradas 2 a 23 copian las 22 anteriores con su fecha original, su commit, el resultado del simulacro y el enlace a la misma ejecución de Actions (el repositorio se renombró a `ORVUPI/orvupi-agent`; GitHub redirige los enlaces antiguos). Su nota es neutra: no lleva ningún nombre de cuenta, para no atribuir a esas fechas un nombre que todavía no existía. El campo `actor` vale `orvupi-agent` porque el formato solo admite ese valor. Por eso la génesis es la única entrada con fecha posterior a la siguiente.
+- Los sellos `.ots` antiguos sellaban las anclas de la cadena anterior y no valen para la nueva, así que se han retirado de `logs/anchors/` (siguen en el tag). Las anclas nuevas se sellarán en las próximas ejecuciones de `daily-log`; hasta entonces `logs:verify` las lista como pendientes.
+- Por la regla de este archivo (si un sello confirmado deja de comprobarse, la casilla se desmarca), **la casilla «Logs» del PPM queda desmarcada desde el 16-10-2026**. Se podrá volver a marcar cuando la cadena nueva tenga un sello confirmado en Bitcoin y comprobado a mano, y haya revisión con OK legal.
 - `logs:check-update` admite este cambio una sola vez: solo cuando la cadena de la base termina en ese hash y la nueva empieza con esa génesis exacta. Cualquier otro cambio sigue siendo solo-añadir.
 
 ## Sello de tiempo (OpenTimestamps)
@@ -73,7 +74,9 @@ Con cada entrada, el workflow escribe un «ancla» en `logs/anchors/`: un archiv
 
 4. **Cada entrada.** El campo `evidence` enlaza con la ejecución de Actions que la escribió. Ahí se ven el resumen y el resultado del simulacro.
 
-## Comprobación manual de los sellos (03-10-2026)
+## Comprobación manual de los sellos (03-10-2026, cadena anterior)
+
+Esta comprobación es de la cadena anterior al 16-10-2026. Sus anclas y sellos están en el tag `pre-orvupi-2026-10-16`, no en `main`: para repetirla, usa ese tag.
 
 Hecha a mano el 03-10-2026 a las 12:17 (Madrid) y repetida el mismo día a las 13:59 sobre un clon nuevo del commit `5187264` de `main`, con el cliente `ots` 0.7.2 fijado en `.github/ots-requirements.txt`. Sin nodo de Bitcoin propio: el merkle root de cada bloque se ha comparado con el de dos exploradores públicos independientes (blockstream.info y blockcypher.com). Coinciden todas las atestaciones de Bitcoin de los 7 sellos (24 en total); la tabla da el bloque más antiguo de cada uno.
 
@@ -94,6 +97,7 @@ Pasos para repetirlo (Linux o macOS, con Python 3 y curl):
 
 ```bash
 git clone https://github.com/ORVUPI/orvupi-agent && cd orvupi-agent
+git checkout pre-orvupi-2026-10-16   # las anclas y sellos de esta tabla están en ese tag
 python3 -m venv /tmp/ots && /tmp/ots/bin/pip install --require-hashes --no-deps -r .github/ots-requirements.txt
 A=logs/anchors/2026-09-26-000001.txt
 sha256sum "$A"                      # debe coincidir con «File sha256 hash» de la línea siguiente
@@ -106,7 +110,7 @@ Si el merkle root del sello y el del bloque coinciden, el ancla existía como ta
 
 - Bitcoin y OpenTimestamps solo se usan como registro público de tiempo. No tienen relación con ORVUPI ni con el token y no le dan respaldo, seguridad ni valor.
 - Comparar con un explorador público es más débil que `ots verify` con un nodo propio: confía en ese explorador.
-- Esta comprobación del 03-10 fue un requisito previo. La casilla «Logs» se marcó el 05-10-2026 (ver «Casilla del PPM» abajo) con el OK legal.
+- Esta comprobación del 03-10 fue un requisito previo para marcar la casilla «Logs» el 05-10-2026. Esa marca valía para la cadena anterior (ver «Casilla del PPM» abajo).
 
 ## Qué commit hace el workflow
 
@@ -117,15 +121,17 @@ El workflow tiene dos jobs:
 
 ## Casilla del PPM
 
-Marcada el 05-10-2026, después de comprobar:
+**Desmarcada desde el 16-10-2026.** Se marcó el 05-10-2026 para la cadena anterior (entradas en `main` en al menos 7 días UTC, el ancla `2026-09-26-000001` confirmada en el bloque 968752 de Bitcoin y comprobada a mano, y OK legal). Al reiniciarse la cadena, esos sellos ya no valen para la cadena viva, así que, por la regla de abajo, la casilla se desmarca. La cadena anterior y sus sellos siguen comprobables en el tag `pre-orvupi-2026-10-16`.
 
-1. Entradas escritas por el workflow `daily-log` en `main` en al menos 7 días distintos (UTC): hoy hay 10 (`npm run logs:status` → `daysCriterionMet: true`), desde el 26-09 hasta el 05-10. Ejemplo de ejecución pública del 05-10: https://github.com/ORVUPI/orvupi-agent/actions/runs/37274282121
-2. Al menos un sello de OpenTimestamps confirmado en Bitcoin y comprobado a mano (pasos en «Comprobación manual de los sellos» arriba): el ancla `2026-09-26-000001` está en el bloque **968752**; el merkle root coincide con blockstream.info y mempool.space.
+Para volver a marcarla hacen falta, sobre la cadena nueva:
+
+1. Entradas escritas por el workflow `daily-log` en `main` en al menos 7 días distintos (UTC) (`npm run logs:status` → `daysCriterionMet: true`).
+2. Al menos un sello de OpenTimestamps confirmado en Bitcoin y comprobado a mano (pasos en «Comprobación manual de los sellos»).
 3. Revisión, incluido el OK legal.
 
 `npm run logs:status` sigue siendo de solo lectura: cuenta los días UTC y **no** marca la casilla (siempre responde `box: "pending"`). La marca vive en `src/ppm.ts` / `ppm:print`.
 
-Aunque esté marcada, solo quiere decir que existe un log público diario y verificable del estado del kill-switch y del simulacro. No quiere decir que registre todo lo que hace el agente ni que lo anotado sea cierto. Si la cadena deja de cuadrar o un sello confirmado deja de comprobarse, la casilla se desmarca y se explica. Bitcoin y OpenTimestamps solo se usan como registro público de tiempo; no tienen relación con ORVUPI ni le dan respaldo, seguridad ni valor.
+Una casilla marcada solo quiere decir que existe un log público diario y verificable del estado del kill-switch y del simulacro. No quiere decir que registre todo lo que hace el agente ni que lo anotado sea cierto. Si la cadena deja de cuadrar o un sello confirmado deja de comprobarse, la casilla se desmarca y se explica. Bitcoin y OpenTimestamps solo se usan como registro público de tiempo; no tienen relación con ORVUPI ni le dan respaldo, seguridad ni valor.
 
 ## Log en memoria (`log:append`)
 
@@ -133,4 +139,4 @@ La acción `log:append` del agente sigue siendo otra cosa: deja una nota en memo
 
 ## English
 
-`logs/agent-log.jsonl` is a public, append-only, hash-chained log written by the `daily-log` workflow (scheduled daily at 06:23 UTC, also runnable by hand; GitHub may delay or skip scheduled runs). The agent in this repository is a prototype and takes no actions with effects outside this repository (it posts nothing to social media, signs nothing and moves no funds), so each entry only records data produced by the repository in that run: the kill-switch state, the result of the kill-switch drill, the commit and the Actions run link. Anchors in `logs/anchors/` are submitted to OpenTimestamps (free, no wallet, relies on public calendar servers). A proof stays pending for hours until it is confirmed in a Bitcoin block; once confirmed, it only shows that the anchor existed no later than that block's time, not that the log is true or complete. Bitcoin and OpenTimestamps are used only as a public time record; they have no link to ORVUPI or the token and give it no backing, security or value. The daily entry is still written when the kill-switch is engaged or unreadable (see KILL-SWITCH.md); it only records that state and has no on-chain effect. `npm run logs:verify` recomputes the chain and checks the anchors (it only checks that each `.ots` file exists, not that it is confirmed). CI rejects any change that edits or removes existing lines; commits made by the `daily-log` workflow itself do not trigger CI, but that workflow runs the same checks before each commit. The chain shows that published entries were not changed later; it does not show that everything was logged. The PPM box was marked on 2026-10-05 after entries by the `daily-log` workflow on `main` on at least 7 distinct days (UTC), at least one OpenTimestamps proof confirmed by hand (see the manual check section; Bitcoin block 968752), and review including legal sign-off. Marked only means a public daily verifiable log of the kill-switch state and drill exists; it does not mean everything the agent does is logged or that the notes are true. If the chain or a confirmed stamp stops checking out, the box is unmarked. `npm run logs:status` is read-only: it counts distinct UTC days with entries linked to an Actions run of this repository and says whether they reach 7; it never marks the box (it always answers `box: "pending"`). Posts on @ORVUPI do not come from this repository: a separate AI agent prepares and publishes them from texts approved before publication. This log does not record them and this repository's kill-switch does not stop them. Since 2026-09-28 the fixed note of each entry says so; earlier entries keep the earlier note, which refers only to the agent in this repository, and are not rewritten (append-only). On 2026-10-16 the chain was recomputed once under the ORVUPI name: the previous chain is kept in tag `pre-orvupi-2026-10-16`, the new genesis entry («ORVUPI, 16-10-2026») records its last hash, and the old `.ots` proofs were removed because they do not apply to the new anchors.
+`logs/agent-log.jsonl` is a public, append-only, hash-chained log written by the `daily-log` workflow (scheduled daily at 06:23 UTC, also runnable by hand; GitHub may delay or skip scheduled runs). The agent in this repository is a prototype and takes no actions with effects outside this repository (it posts nothing to social media, signs nothing and moves no funds), so each entry only records data produced by the repository in that run: the kill-switch state, the result of the kill-switch drill, the commit and the Actions run link. Anchors in `logs/anchors/` are submitted to OpenTimestamps (free, no wallet, relies on public calendar servers). A proof stays pending for hours until it is confirmed in a Bitcoin block; once confirmed, it only shows that the anchor existed no later than that block's time, not that the log is true or complete. Bitcoin and OpenTimestamps are used only as a public time record; they have no link to ORVUPI or the token and give it no backing, security or value. The daily entry is still written when the kill-switch is engaged or unreadable (see KILL-SWITCH.md); it only records that state and has no on-chain effect. `npm run logs:verify` recomputes the chain and checks the anchors (it only checks that each `.ots` file exists, not that it is confirmed). CI rejects any change that edits or removes existing lines; commits made by the `daily-log` workflow itself do not trigger CI, but that workflow runs the same checks before each commit. The chain shows that published entries were not changed later; it does not show that everything was logged. The PPM box was marked on 2026-10-05 for the previous chain (entries on at least 7 distinct UTC days, an OpenTimestamps proof confirmed by hand in Bitcoin block 968752, and legal sign-off); since the chain restarted on 2026-10-16 and those proofs no longer apply to the live chain, the box is unmarked from that date until the new chain meets the same criteria. A marked box only means a public daily verifiable log of the kill-switch state and drill exists; it does not mean everything the agent does is logged or that the notes are true. If the chain or a confirmed stamp stops checking out, the box is unmarked. `npm run logs:status` is read-only: it counts distinct UTC days with entries linked to an Actions run of this repository and says whether they reach 7; it never marks the box (it always answers `box: "pending"`). Posts on @ORVUPI do not come from this repository: a separate AI agent prepares and publishes them from texts approved before publication. This log does not record them and this repository's kill-switch does not stop them. On 2026-10-16 the chain restarted under the ORVUPI name: the previous chain (22 entries) is kept unchanged in tag `pre-orvupi-2026-10-16`, the new genesis entry says the chain restarts on 2026-10-16 and records the previous last hash, and entries 2 to 23 copy the earlier dates, checks and links with a neutral note that names no account. The old `.ots` proofs were removed from `main` because they do not apply to the new anchors; they remain in the tag.
