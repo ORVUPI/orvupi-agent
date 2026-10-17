@@ -474,7 +474,7 @@ export function SheetsScreen() {
       <div className="ow-formula">
         <span className="ow-namebox" aria-label={workspace.t("nameBox")}>{cellRef(selected.row, selected.col)}</span>
         <span className="ow-fx" aria-hidden="true">fx</span>
-        <Input label={workspace.t("sheetFormula")} value={raw} onChange={(event) => setCell(event.target.value)} />
+        <Input label={workspace.t("sheetFormula")} placeholder={workspace.t("sheetFormula")} value={raw} onChange={(event) => setCell(event.target.value)} />
         {options.length > 0 ? (
           <label className="ow-field">
             {workspace.t("sheetValidation")}

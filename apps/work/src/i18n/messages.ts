@@ -534,6 +534,7 @@ export const es = {
   fileMissing: "Este archivo no está en este dispositivo",
   backToDrive: "Volver a Drive",
   moreFormat: "Más formato",
+  moreFilters: "Más filtros",
 } as const;
 
 export type MessageKey = keyof typeof es;
@@ -1074,4 +1075,5 @@ export const en: { [K in MessageKey]: string } = {
   fileMissing: "This file is not on this device",
   backToDrive: "Back to Drive",
   moreFormat: "More formatting",
+  moreFilters: "More filters",
 };

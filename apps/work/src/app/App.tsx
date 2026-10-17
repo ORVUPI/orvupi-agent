@@ -270,6 +270,7 @@ export function App() {
             if (!id || !file) return;
             void workspace.storage?.setFavorite(id, !file.favorite).then(() => workspace.refreshFiles()).catch(workspace.reportError);
           } : undefined}
+          chipsMoreLabel={workspace.t("moreFilters")}
           chips={workspace.view === "home" || workspace.view === "files" ? (
             <>
               <label className="ow-chip">
@@ -332,7 +333,7 @@ export function App() {
         <button type="button" onClick={() => void workspace.navigate("notes")}>{workspace.t("navNotes")}</button>
         <button type="button" onClick={() => workspace.setNavOpen(true)}>{workspace.t("tabMore")}</button>
       </nav>
-      <button type="button" className="ow-fab" aria-expanded={fabOpen} aria-haspopup="menu" onClick={() => setFabOpen((value) => !value)}>{workspace.t("newMenu")}</button>
+      <button type="button" className="ow-fab" aria-label={workspace.t("newMenu")} aria-expanded={fabOpen} aria-haspopup="menu" onClick={() => setFabOpen((value) => !value)}><span aria-hidden="true">+</span></button>
       {fabOpen ? (
         <div className="ow-fab-sheet" role="menu" aria-label={workspace.t("newMenu")}>
           <button type="button" role="menuitem" onClick={() => { setFabOpen(false); void workspace.createDocument(undefined, undefined, workspace.folderId); }}>{workspace.t("menuDocument")}</button>

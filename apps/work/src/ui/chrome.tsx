@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import type { SaveState } from "../docs/save-status";
 import { Icon, type IconName } from "./icons";
 import { IconButton, SearchField } from "./kit";
@@ -89,6 +89,7 @@ export function Topbar({
   closeDocLabel,
   onCloseDoc,
   chips,
+  chipsMoreLabel,
   starred,
   starLabel,
   onStar,
@@ -118,12 +119,15 @@ export function Topbar({
   closeDocLabel: string;
   onCloseDoc: (() => void) | null;
   chips?: ReactNode;
+  chipsMoreLabel: string;
   starred?: boolean;
   starLabel?: string;
   onStar?: () => void;
 }) {
+  const chipsRef = useRef<HTMLDivElement>(null);
   return (
     <header className="ow-topbar">
+      <div className="ow-top-actions">
       <IconButton label={menuLabel} className="ow-only-mobile" onClick={onMenu}>
         <Icon name="docs" />
       </IconButton>
@@ -144,13 +148,6 @@ export function Topbar({
       {fileName === null ? (
         <p className="ow-top-title">ORVUPI Work</p>
       ) : null}
-      <SearchField
-        label={searchLabel}
-        value={query}
-        placeholder={searchPlaceholder}
-        clearLabel={searchClear}
-        onValue={onQuery}
-      />
       {saveState ? (
         <span className={`ow-save ow-save-${saveState}`} role="status" data-state={saveState}>
           {saveLabel}
@@ -169,7 +166,27 @@ export function Topbar({
       <IconButton label={aiLabel} pressed={aiPressed} onClick={onAi}>
         <Icon name="ai" />
       </IconButton>
-      {chips ? <div className="ow-chips">{chips}</div> : null}
+      </div>
+      <SearchField
+        label={searchLabel}
+        value={query}
+        placeholder={searchPlaceholder}
+        clearLabel={searchClear}
+        onValue={onQuery}
+      />
+      {chips ? (
+        <div className="ow-chiprow">
+          <div className="ow-chips" ref={chipsRef}>{chips}</div>
+          <button
+            type="button"
+            className="ow-chip-more"
+            aria-label={chipsMoreLabel}
+            onClick={() => chipsRef.current?.scrollBy({ left: 140 })}
+          >
+            ›
+          </button>
+        </div>
+      ) : null}
     </header>
   );
 }

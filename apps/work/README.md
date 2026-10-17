@@ -2,7 +2,7 @@
 
 Suite de productividad en el navegador. Gratis, instalable y local-first. Los documentos se guardan en el dispositivo. Esta versión no tiene servidor, no llama a APIs de pago y no se vincula a ningún token.
 
-Esta entrega es la alfa 0.6.1: la misma suite local, legible en un teléfono de 412 px. La auditoría está en `docs/AUDITORIA_FUNCIONAL.md`. El visor PDF y el modelo de IA local siguen previstos y todavía no editan. La matriz de funciones está en `docs/PARIDAD_DRIVE.md`. Las medidas, en `docs/ANALISIS_DRIVE_UI.md`.
+Esta entrega es la alfa 0.6.2: la misma suite local, legible en un teléfono de 412 px. La auditoría está en `docs/AUDITORIA_FUNCIONAL.md`. El visor PDF y el modelo de IA local siguen previstos y todavía no editan. La matriz de funciones está en `docs/PARIDAD_DRIVE.md`. Las medidas, en `docs/ANALISIS_DRIVE_UI.md`.
 
 ## Arranque
 
@@ -33,6 +33,13 @@ npm run test:e2e
 ```
 
 `npm test` ejecuta Vitest (unidad e integración). `npm run test:e2e` construye la app y recorre con Playwright el ciclo de la sección 30 del manual, más el contraste con axe.
+
+## Qué hay en 0.6.2
+
+- El inicio deja la cabecera por debajo del 20 % de la altura. «Nuevo» es un icono y no tapa el texto de «Nueva hoja».
+- Si los filtros no caben, hay un fundido y una flecha.
+- La barra de Docs empieza por negrita, cursiva, subrayado y alineación. La tabla se ve entera.
+- La fórmula de Hojas cabe en una línea.
 
 ## Qué hay en 0.6.1
 

@@ -1,5 +1,15 @@
 # Registro de cambios
 
+## 0.6.2 — 2026-10-17
+
+Alfa de desarrollo. No es una versión de producción.
+
+- En el inicio el botón «Nuevo» es un icono y el contenido tiene sitio abajo, así que no tapa la descripción de «Nueva hoja». La cabecera ocupa menos de una quinta parte de la pantalla.
+- Los filtros siguen en una fila y, si no caben, se desvanecen y hay una flecha para seguir.
+- En Docs, la barra inferior empieza por negrita, cursiva, subrayado y alineación. El icono de tabla no queda partido por la flecha.
+- En Hojas, «Fórmula o valor» es un marcador de una sola línea.
+- Un archivo de 0.1 a 0.6.1 sigue abriendo: la versión del archivo sigue en 1.
+
 ## 0.6.1 — 2026-10-17
 
 Alfa de desarrollo. No es una versión de producción.

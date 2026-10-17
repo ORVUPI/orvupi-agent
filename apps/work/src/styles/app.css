@@ -554,7 +554,19 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
   border-radius: 12px;
   padding: 8px;
 }
-.ow-formula .ow-field { flex: 1; }
+.ow-formula .ow-field { flex: 1; position: relative; min-width: 0; }
+.ow-formula .ow-field > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.ow-formula .ow-field input { min-width: 0; }
 .ow-namebox {
   min-width: 84px;
   min-height: 40px;
@@ -906,7 +918,11 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-format-scroll { display: flex; align-items: center; gap: 2px; overflow-x: auto; flex: 1; min-width: 0; padding: 0 4px 4px; scrollbar-width: thin; scrollbar-color: #1d4e89 #edf2fa; }
 .ow-format-scroll::-webkit-scrollbar { height: 6px; }
 .ow-format-scroll::-webkit-scrollbar-thumb { background: #1d4e89; border-radius: 99px; }
-.ow-dock-more { flex: none; width: 36px; height: 44px; border: 0; background: linear-gradient(90deg, transparent, #fff 28%); color: #102032; font-size: 24px; font-weight: 700; cursor: pointer; }
+.ow-format-scroll > * { flex: none; }
+.ow-dock-end { width: 8px; height: 1px; }
+.ow-dock-more { flex: none; width: 36px; height: 44px; border: 0; background: #fff; box-shadow: -8px 0 8px #fff; color: #102032; font-size: 24px; font-weight: 700; cursor: pointer; position: relative; z-index: 1; }
+.ow-top-actions, .ow-chiprow { display: contents; }
+.ow-chip-more { display: none; }
 .ow-docs.is-narrow .ow-docs-toolwrap { display: none; }
 .ow-docs.is-narrow .ow-docs-actions,
 .ow-docs.is-narrow .ow-docs-save { display: none; }
@@ -970,10 +986,20 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
   .ow-menu-row > [role="menu"] { position: static; min-width: 0; box-shadow: none; }
   .ow-table-context { left: 0 !important; right: 0; top: auto !important; bottom: 0; width: auto; min-width: 0; max-height: 70dvh; border-radius: 16px 16px 0 0; }
   .ow-filename, .ow-search { min-width: 0; }
-  .ow-topbar { flex-wrap: wrap; align-items: center; }
+  .ow-page > .ow-page-head { display: none; }
+  .ow-page h2 { font-size: 1.05rem; margin: 8px 0; }
+  .ow-topbar { flex-wrap: wrap; align-items: center; padding: 4px 8px; gap: 4px; }
+  .ow-top-actions { display: flex; align-items: center; gap: 4px; flex: 1 0 100%; min-width: 0; flex-wrap: nowrap; overflow-x: auto; }
+  .ow-top-title { font-size: 15px; line-height: 32px; white-space: nowrap; }
+  .ow-topbar .ow-icon-button { min-width: 36px; min-height: 36px; }
+  .ow-topbar .ow-dropdown > button, .ow-topbar .ow-file span.ow-button { min-height: 32px; padding: 2px 8px; font-size: 13px; }
   .ow-search { flex: 1 0 100%; order: 5; }
-  .ow-chips { flex: 1 0 100%; order: 6; flex-wrap: nowrap; overflow-x: auto; gap: 6px; }
-  .ow-chip { flex: none; min-height: 36px; padding: 2px 10px; font-size: 13px; }
+  .ow-search input { min-height: 36px; }
+  .ow-chiprow { display: flex; align-items: center; gap: 0; flex: 1 0 100%; order: 6; min-width: 0; }
+  .ow-chips { flex: 1; min-width: 0; flex-wrap: nowrap; overflow-x: auto; gap: 6px; scrollbar-width: none; mask-image: linear-gradient(to right, #000 calc(100% - 16px), transparent); }
+  .ow-chips::-webkit-scrollbar { display: none; }
+  .ow-chip { flex: none; min-height: 32px; padding: 2px 10px; font-size: 13px; }
+  .ow-chip-more { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 32px; height: 32px; border: 0; background: #fff; color: #102032; font-size: 22px; font-weight: 700; border-radius: 999px; cursor: pointer; box-shadow: -8px 0 8px #fff; }
   .ow-sheet-page { height: 100%; min-height: 0; overflow: hidden; padding: 4px 8px 0; box-sizing: border-box; }
   .ow-sheet-wrap { touch-action: pan-x pan-y; flex: 1 1 auto; height: auto; min-height: 0; }
   .ow-editor-line { display: flex; align-items: center; gap: 4px; min-width: 0; }
@@ -1002,11 +1028,11 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
   .ow-slide-item { touch-action: none; }
   .ow-notes { columns: 1; }
   .ow-stage { padding: 16px; }
-  .ow-shell main { padding-bottom: 168px; }
+  .ow-shell main { padding: 8px 12px 220px; }
   .ow-shell.is-doc main { padding-bottom: 0; }
   .ow-tabbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 23; background: #fff; border-top: 1px solid #e1e3e1; min-height: 56px; padding-bottom: env(safe-area-inset-bottom); }
   .ow-tabbar button { flex: 1; border: 0; background: transparent; color: #102032; font-weight: 700; min-height: 48px; }
-  .ow-fab { display: inline-flex; align-items: center; justify-content: center; position: fixed; right: 16px; bottom: calc(72px + env(safe-area-inset-bottom)); z-index: 24; min-height: 48px; padding: 0 18px; border: 0; border-radius: 999px; background: #ff3070; color: #102032; font-weight: 800; box-shadow: 0 4px 0 #102032; }
+  .ow-fab { display: inline-flex; align-items: center; justify-content: center; position: fixed; right: 16px; bottom: calc(72px + env(safe-area-inset-bottom)); z-index: 24; width: 48px; min-width: 48px; height: 48px; min-height: 48px; padding: 0; border: 0; border-radius: 999px; background: #ff3070; color: #102032; font-size: 32px; font-weight: 500; line-height: 1; box-shadow: 0 4px 0 #102032; }
   .ow-fab-sheet { display: grid; position: fixed; left: 8px; right: 8px; bottom: calc(128px + env(safe-area-inset-bottom)); z-index: 24; background: #fff; border: 2px solid #102032; border-radius: 16px; padding: 8px; }
   .ow-fab-sheet button { text-align: left; border: 0; background: transparent; color: #102032; font-weight: 700; min-height: 44px; border-radius: 10px; padding: 8px 12px; }
   .ow-shell.is-doc .ow-tabbar, .ow-shell.is-doc .ow-fab, .ow-shell.is-doc .ow-fab-sheet { display: none; }

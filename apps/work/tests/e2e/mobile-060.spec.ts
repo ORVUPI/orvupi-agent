@@ -79,6 +79,40 @@ test("el inicio y Drive caben, y el móvil tiene barra y botón Nuevo", async ({
     await page.locator(".ow-fab").click();
     await expect(page.locator(".ow-fab-sheet").getByRole("menuitem", { name: "Documento", exact: true })).toBeVisible();
     await page.locator(".ow-fab").click();
+    const viewportHome = page.viewportSize();
+    if (!viewportHome) throw new Error("falta el alto");
+    const headerRatio = await page.evaluate(() => {
+      const bar = document.querySelector(".ow-topbar")?.getBoundingClientRect().height ?? 0;
+      const head = document.querySelector(".ow-page-head")?.getBoundingClientRect().height ?? 0;
+      return (bar + head) / window.innerHeight;
+    });
+    expect(headerRatio).toBeLessThan(0.2);
+    await expect(page.locator(".ow-chip-more")).toBeVisible();
+    const chipsMask = await page.locator(".ow-chips").evaluate((node) => getComputedStyle(node).maskImage || getComputedStyle(node).getPropertyValue("-webkit-mask-image"));
+    expect(chipsMask).not.toBe("none");
+    const sheetText = await page.evaluate(() => {
+      const fab = document.querySelector(".ow-fab")?.getBoundingClientRect();
+      const para = document.querySelector('.ow-card[data-tool="sheets"] p');
+      if (!fab || !para) return 1;
+      for (const rect of para.getClientRects()) {
+        const overlapX = Math.min(rect.right, fab.right) - Math.max(rect.left, fab.left);
+        const overlapY = Math.min(rect.bottom, fab.bottom) - Math.max(rect.top, fab.top);
+        if (overlapX > 2 && overlapY > 2) return 1;
+      }
+      return 0;
+    });
+    expect(sheetText).toBe(0);
+    await shot(page, "062-drive");
+    const modified = page.getByRole("combobox", { name: "Modificado" });
+    await modified.evaluate((node) => node.scrollIntoView({ inline: "nearest", block: "nearest" }));
+    const filterFits = await modified.evaluate((node) => {
+      const row = node.closest(".ow-chips");
+      if (!row) return false;
+      const rect = node.getBoundingClientRect();
+      const box = row.getBoundingClientRect();
+      return rect.left >= box.left - 1 && rect.right <= box.right + 1;
+    });
+    expect(filterFits).toBe(true);
     await page.locator(".ow-tabbar").getByRole("button", { name: "Más", exact: true }).click();
     const drawer = page.locator(".ow-sidebar.is-open");
     await expect(drawer).toBeVisible();
@@ -97,7 +131,7 @@ test("el inicio y Drive caben, y el móvil tiene barra y botón Nuevo", async ({
     if (!chipBox) throw new Error("faltan los filtros");
     expect(chipBox.height).toBeLessThan(64);
     const pad = await page.locator("main").evaluate((node) => Number.parseFloat(getComputedStyle(node).paddingBottom));
-    expect(pad).toBeGreaterThanOrEqual(150);
+    expect(pad).toBeGreaterThanOrEqual(200);
     await page.evaluate(() => {
       const main = document.querySelector("main");
       window.scrollTo(0, document.documentElement.scrollHeight);
@@ -120,7 +154,6 @@ test("el inicio y Drive caben, y el móvil tiene barra y botón Nuevo", async ({
   }
   await fits(page, "drive");
   await axe(page);
-  await shot(page, "061-drive");
 });
 
 function viewportOf(page: Page) {
@@ -146,10 +179,37 @@ test("Docs encaja, oculta la regla vertical y reserva sitio al teclado", async (
   expect(pageBox.x).toBeGreaterThanOrEqual(-1);
   expect(pageBox.x + pageBox.width).toBeLessThanOrEqual(viewport.width + 2);
   expect(await visualFont(docs, ".ow-a4 .ProseMirror")).toBeGreaterThanOrEqual(14);
+  let previous = -1;
+  for (const name of ["Negrita", "Cursiva", "Subrayado", "Alinear a la izquierda", "Centrar"]) {
+    const control = docs.getByRole("button", { name, exact: true });
+    await expect(control).toBeVisible();
+    const box = await control.boundingBox();
+    if (!box) throw new Error(`${name} no está en pantalla`);
+    expect(box.x).toBeGreaterThan(previous);
+    expect(box.x).toBeGreaterThanOrEqual(-1);
+    expect(box.x + box.width).toBeLessThanOrEqual(viewport.width - 28);
+    previous = box.x;
+  }
+  await shot(docs, "062-docs");
   const font = docs.getByRole("button", { name: /^Fuente/ });
+  await font.scrollIntoViewIfNeeded();
   await expect(font).toBeVisible();
   const fontBox = await font.boundingBox();
   if (!fontBox) throw new Error("la fuente no está en pantalla");
+  const dockOrder = await docs.locator(".ow-format-scroll").evaluate((node) => {
+    const place = (name: string, starts = false) => {
+      const el = [...node.querySelectorAll("button")].find((button) => {
+        const label = button.getAttribute("aria-label") || "";
+        return starts ? label.startsWith(name) : label === name;
+      });
+      if (!el) return -1;
+      return el.getBoundingClientRect().left - node.getBoundingClientRect().left + node.scrollLeft;
+    };
+    const names = ["Negrita", "Cursiva", "Subrayado", "Alinear a la izquierda", "Centrar"].map((name) => place(name));
+    return { names, font: place("Fuente", true) };
+  });
+  expect(dockOrder.names.every((value, index) => value >= 0 && (index === 0 || value > dockOrder.names[index - 1]!))).toBe(true);
+  expect(dockOrder.font).toBeGreaterThan(dockOrder.names[dockOrder.names.length - 1]!);
   expect(fontBox.x).toBeGreaterThanOrEqual(-1);
   expect(fontBox.x + fontBox.width).toBeLessThanOrEqual(viewport.width + 2);
   expect(fontBox.y + fontBox.height).toBeLessThanOrEqual(viewport.height + 2);
@@ -161,6 +221,14 @@ test("Docs encaja, oculta la regla vertical y reserva sitio al teclado", async (
     expect(box.x).toBeGreaterThanOrEqual(-1);
     expect(box.x + box.width).toBeLessThanOrEqual(viewport.width + 2);
   }
+  const table = docs.getByRole("button", { name: "Insertar tabla", exact: true });
+  const tableBox = await table.boundingBox();
+  const moreBox = await docs.locator(".ow-dock-more").boundingBox();
+  if (!tableBox || !moreBox) throw new Error("la tabla no está en pantalla");
+  expect(tableBox.width).toBeGreaterThanOrEqual(36);
+  const tableOverlap = Math.min(tableBox.x + tableBox.width, moreBox.x + moreBox.width) - Math.max(tableBox.x, moreBox.x);
+  const tableOverlapY = Math.min(tableBox.y + tableBox.height, moreBox.y + moreBox.height) - Math.max(tableBox.y, moreBox.y);
+  expect(tableOverlap > 0 && tableOverlapY > 0 ? tableOverlap : 0).toBeLessThanOrEqual(2);
   await docs.locator(".ow-menu-overflow").click();
   for (const label of ["Archivo", "Editar", "Ver", "Insertar", "Formato", "Herramientas", "Extensiones", "Ayuda"]) {
     await expect(docs.getByRole("menuitem", { name: label, exact: true })).toBeVisible();
@@ -174,7 +242,6 @@ test("Docs encaja, oculta la regla vertical y reserva sitio al teclado", async (
   await docs.evaluate(() => window.dispatchEvent(new CustomEvent("ow-keyboard-inset", { detail: 280 })));
   await expect(docs.locator(".ow-docs-scroll")).toHaveCSS("padding-bottom", "344px");
   await fits(docs, "docs");
-  await shot(docs, "061-docs");
   await axe(docs);
 });
 
@@ -228,6 +295,18 @@ test("la hoja responde al dedo y cubre escala, nota, validación, macro y consul
     return wrap.getBoundingClientRect().height / window.innerHeight;
   });
   expect(ratio).toBeGreaterThanOrEqual(0.65);
+  const formulaField = sheet.locator(".ow-formula .ow-field");
+  await expect(formulaField.locator("input")).toHaveAttribute("placeholder", "Fórmula o valor");
+  const formulaBox = await formulaField.boundingBox();
+  if (!formulaBox) throw new Error("falta la fórmula");
+  expect(formulaBox.height).toBeLessThanOrEqual(48);
+  const formulaLine = await formulaField.evaluate((node) => {
+    const span = node.querySelector("span");
+    if (!span) return false;
+    return getComputedStyle(span).position === "absolute" && span.getClientRects().length <= 1;
+  });
+  expect(formulaLine).toBe(true);
+  await shot(sheet, "062-sheets");
   await sheet.locator(".ow-menu-overflow").click();
   for (const label of ["Archivo", "Editar", "Ver", "Insertar", "Formato", "Herramientas", "Ayuda"]) {
     await expect(sheet.getByRole("menuitem", { name: label, exact: true })).toBeVisible();
@@ -312,7 +391,7 @@ test("la hoja responde al dedo y cubre escala, nota, validación, macro y consul
   await expect(sheet.getByRole("button", { name: /^B2 / })).toContainText("1");
   await expect(sheet.getByRole("button", { name: /^A3 / })).toContainText("Luis");
   await fits(sheet, "hoja");
-  await shot(sheet, "061-sheets");
+  await axe(sheet);
 });
 
 test("la presentación encaja, anima, muestra cuadrícula y patrón", async ({ page }) => {

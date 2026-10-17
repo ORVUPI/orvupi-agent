@@ -1,6 +1,6 @@
 {
   "name": "@orvupi/work",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "private": true,
   "type": "module",
   "description": "ORVUPI Work: suite de productividad gratuita, local-first y sin servidores.",

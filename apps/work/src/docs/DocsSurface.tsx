@@ -661,20 +661,21 @@ export function DocsSurface({
       {narrow ? (
         <div className="ow-format-dock" role="toolbar" aria-label={t("toolbarLabel")}>
           <div className="ow-format-scroll" ref={dockRef}>
-            <ToolMenu label={t("fontLabel")} value={font} options={FONTS.map((item) => ({ id: item, label: item, family: cssFamily(item) }))} onPick={(id) => run(() => editor?.chain().focus().setFontFamily(cssFamily(id)).run())} />
-            <SizeBox t={t} point={point} onApply={applySize} onRemember={rememberSelection} />
-            <ColorMenu t={t} editor={editor} run={run} kind="color" />
-            <DocIcon label={t("bullet")} pressed={editor?.isActive("bulletList")} onClick={() => run(() => editor?.chain().focus().toggleBulletList().run())}><List size={20} /></DocIcon>
-            <DocIcon label={t("ordered")} pressed={editor?.isActive("orderedList")} onClick={() => run(() => editor?.chain().focus().toggleOrderedList().run())}><ListOrdered size={20} /></DocIcon>
-            <DocIcon label={t("checklist")} pressed={editor?.isActive("taskList")} onClick={() => run(() => editor?.chain().focus().toggleTaskList().run())}><ListChecks size={20} /></DocIcon>
-            <DocIcon label={t("table")} onClick={() => run(() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run())}><span aria-hidden="true">⊞</span></DocIcon>
             <DocIcon label={t("bold")} pressed={editor?.isActive("bold")} onClick={() => run(() => editor?.chain().focus().toggleBold().run())}><strong>B</strong></DocIcon>
             <DocIcon label={t("italic")} pressed={editor?.isActive("italic")} onClick={() => run(() => editor?.chain().focus().toggleItalic().run())}><em>I</em></DocIcon>
             <DocIcon label={t("underline")} pressed={editor?.isActive("underline")} onClick={() => run(() => editor?.chain().focus().toggleUnderline().run())}><span className="ow-u">U</span></DocIcon>
             <DocIcon label={t("alignLeft")} pressed={align === "left"} onClick={() => run(() => editor?.chain().focus().setTextAlign("left").run())}>≡</DocIcon>
             <DocIcon label={t("alignCenter")} pressed={align === "center"} onClick={() => run(() => editor?.chain().focus().setTextAlign("center").run())}>☰</DocIcon>
+            <DocIcon label={t("bullet")} pressed={editor?.isActive("bulletList")} onClick={() => run(() => editor?.chain().focus().toggleBulletList().run())}><List size={20} /></DocIcon>
+            <DocIcon label={t("ordered")} pressed={editor?.isActive("orderedList")} onClick={() => run(() => editor?.chain().focus().toggleOrderedList().run())}><ListOrdered size={20} /></DocIcon>
+            <DocIcon label={t("checklist")} pressed={editor?.isActive("taskList")} onClick={() => run(() => editor?.chain().focus().toggleTaskList().run())}><ListChecks size={20} /></DocIcon>
+            <DocIcon label={t("table")} onClick={() => run(() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run())}><span aria-hidden="true">⊞</span></DocIcon>
+            <ToolMenu label={t("fontLabel")} value={font} options={FONTS.map((item) => ({ id: item, label: item, family: cssFamily(item) }))} onPick={(id) => run(() => editor?.chain().focus().setFontFamily(cssFamily(id)).run())} />
+            <SizeBox t={t} point={point} onApply={applySize} onRemember={rememberSelection} />
+            <ColorMenu t={t} editor={editor} run={run} kind="color" />
             <ColorMenu t={t} editor={editor} run={run} kind="highlight" />
             <DocIcon label={t("clearFormat")} onClick={() => run(() => editor?.chain().focus().unsetAllMarks().clearNodes().run())}><RemoveFormatting size={20} /></DocIcon>
+            <span className="ow-dock-end" aria-hidden="true" />
           </div>
           <button type="button" className="ow-dock-more" aria-label={t("moreFormat")} onMouseDown={(event) => event.preventDefault()} onClick={() => dockRef.current?.scrollBy({ left: 160 })}>›</button>
         </div>
