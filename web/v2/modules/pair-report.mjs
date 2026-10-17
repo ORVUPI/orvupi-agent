@@ -1,12 +1,12 @@
 export const REPORT_VERSION = "u09-pares-1";
 import { OFFICIAL_ADDRESS, isOfficialAddress } from "../shared/orvupi-contract.js";
-export const OFFICIAL_MINT = OFFICIAL_ADDRESS; // Contrato ORVUPI: aún no existe (shared/orvupi-contract.js).
+export const OFFICIAL_MINT = OFFICIAL_ADDRESS; // Contrato ORVUPI: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU (shared/orvupi-contract.js).
 export const QUERY_LIMIT = 6;
 export const QUERY_WINDOW_MS = 60_000;
 export const NAME_LIMIT = 48;
 export const PUBLIC_WARNING = {
-  es: "Lectura de datos públicos. No es una comparación de calidad, ni una recomendación, ni un aval. ORVUPI no tiene relación con estos tokens: todavía no tiene contrato.",
-  en: "Public data reading. It is not a quality comparison, a recommendation, or an endorsement. ORVUPI has no relationship with these tokens: it does not have a contract yet.",
+  es: "Lectura de datos públicos. No es una comparación de calidad, ni una recomendación, ni un aval. ORVUPI no tiene relación con estos tokens.",
+  en: "Public data reading. It is not a quality comparison, a recommendation, or an endorsement. ORVUPI has no relationship with these tokens.",
 };
 
 export function takeQuerySlot(stamps, now, limit = QUERY_LIMIT, windowMs = QUERY_WINDOW_MS) {

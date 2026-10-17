@@ -244,7 +244,9 @@ try {
     await page.locator("#consultar").click();
     await page.waitForFunction(() => (document.getElementById("resultado")?.textContent || "").includes("puede haber cambiado"), null, { timeout: 15000 });
     const text = await page.locator("#resultado").innerText();
-    if (/dirección oficial|official address/.test(text)) failures.push(`${profile.id}: presenta una dirección como oficial: ${(text.match(/.{0,80}(dirección oficial|official address).{0,80}/) || [""])[0]}`);
+    // Se permiten las negaciones («no es la dirección oficial») y el aviso que remite a orvupi.com/token.
+    const claims = text.replace(/no es la dirección oficial|not the official address|La única dirección oficial de ORVUPI está en orvupi\.com\/token|The only official ORVUPI address is on orvupi\.com\/token/g, "");
+    if (/dirección oficial|official address/.test(claims)) failures.push(`${profile.id}: presenta una dirección como oficial: ${(text.match(/.{0,80}(dirección oficial|official address).{0,80}/) || [""])[0]}`);
     const uriLinked = await page.locator("#resultado a").evaluateAll((nodes) =>
       nodes.some((node) => `${node.textContent || ""} ${node.getAttribute("href") || ""}`.includes("evil.example")),
     );
@@ -360,6 +362,23 @@ try {
   await verify.waitForFunction((mint) => location.pathname === "/aprender/" && !location.href.includes(mint), official);
   if (documentUrls.some((url) => url.includes(official) || url.includes("a="))) {
     failures.push(`la dirección llegó al servidor: ${documentUrls.filter((url) => url.includes(official) || url.includes("a=")).join(" ")}`);
+  }
+  // El CA oficial de ORVUPI tiene su propio estado en Verify (B65-1). El clon se sigue probando en el cuaderno.
+  {
+    const ctx = await contextFor(profiles.find((p) => p.id === "escritorio"));
+    const page = await ctx.newPage();
+    const net = { count: 0, external: 0 };
+    await mockRpc(page, net);
+    await page.goto(`${base}/verify/`, { waitUntil: "networkidle" });
+    await page.locator("#direccion-token").fill("Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU");
+    await page.locator("#direccion-token").press("Enter");
+    await page.waitForFunction(() => (document.getElementById("resultado")?.textContent || "").includes("Dirección oficial de ORVUPI"), null, { timeout: 20000 })
+      .catch(() => failures.push("verify: el CA oficial no muestra «Dirección oficial de ORVUPI»"));
+    const text = await page.locator("#resultado").innerText();
+    if (/no tiene relación con este token|Hay señales/.test(text)) failures.push("verify: el CA oficial sale como «Hay señales» o «no tiene relación»");
+    if (/Se llama como ORVUPI, pero no es la dirección oficial/.test(text)) failures.push("verify: el CA oficial sale como copia");
+    await shot(page, "verify-ca-oficial.png");
+    await ctx.close();
   }
   await desktop.close();
 } catch (error) {

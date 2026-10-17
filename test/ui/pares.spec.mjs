@@ -84,7 +84,7 @@ test("el informe lee un paso y cambia de idioma", async ({ page }, info) => {
   await expect(page).toHaveURL(/\/pares\/?$/);
   await expect(page.locator("h1")).toContainText("Lectura de la curva");
   await expect(page.locator("main")).toContainText(
-    "Lectura de datos públicos. No es una comparación de calidad, ni una recomendación, ni un aval. ORVUPI no tiene relación con estos tokens: todavía no tiene contrato.",
+    "Lectura de datos públicos. No es una comparación de calidad, ni una recomendación, ni un aval. ORVUPI no tiene relación con estos tokens.",
   );
   await expect(page.locator("footer")).not.toContainText(FOOTER_ES);
   await expect(page.locator("#exportar")).toBeHidden();
@@ -124,7 +124,7 @@ test("el informe lee un paso y cambia de idioma", async ({ page }, info) => {
   await expect(page.locator("html")).toHaveAttribute("data-lang", "en");
   await expect(page.locator("h1")).toContainText("Curve reading");
   await expect(page.locator("main")).toContainText(
-    "Public data reading. It is not a quality comparison, a recommendation, or an endorsement. ORVUPI has no relationship with these tokens: it does not have a contract yet.",
+    "Public data reading. It is not a quality comparison, a recommendation, or an endorsement. ORVUPI has no relationship with these tokens.",
   );
   await expect(page.locator("footer")).not.toContainText(FOOTER_EN);
   await expect(page.locator("#resultado")).toContainText("Base currency: SOL");

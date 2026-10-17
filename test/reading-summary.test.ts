@@ -193,7 +193,7 @@ describe("resumen de la lectura", () => {
       largestStatus: "ok",
     });
     assert.equal(block(card, "atencion").items.length, 1);
-    assert.equal(block(card, "atencion").items[0]?.lead.es, "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.");
+    assert.equal(block(card, "atencion").items[0]?.lead.es, "Se llama como ORVUPI, pero no es la dirección oficial.");
     assert.match(leads(card, "comprobado", "es"), /Hay 0,001 tokens/);
     assert.equal(leads(card, "comprobado", "es").includes("Dice llamarse «ORVUPI»"), true);
     assert.match(leads(card, "comprobado", "es"), /Nadie puede crear más tokens ni congelar cuentas/);
@@ -592,7 +592,7 @@ describe("resumen de la lectura", () => {
     const identity = block(summary, "comprobado").items.find((item) => item.title.es === "Nombre y símbolo");
     assert.equal(identity?.lead.es, "Dice llamarse «ORVUPI» (texto elegido por quien creó el token).");
     const attention = block(summary, "atencion").items;
-    assert.equal(attention[0]?.lead.es, "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.");
+    assert.equal(attention[0]?.lead.es, "Se llama como ORVUPI, pero no es la dirección oficial.");
     assert.match(attention[0]?.detail?.es ?? "", /Ninguna dirección es la oficial/);
     const dated = attention.find((item) => item.title.es === "Comprobación anterior");
     assert.equal(dated?.lead.es, "Es la ficha del 2026-10-09, no un dato de esta lectura.");
@@ -618,7 +618,7 @@ describe("resumen de la lectura", () => {
     const { summaryFromCard } = await load();
     const summary = summaryFromCard(cloneCard("ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump", "ORVUPI", "ORVUPI"));
     const attention = block(summary, "atencion").items;
-    assert.equal(attention[0]?.lead.es, "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.");
+    assert.equal(attention[0]?.lead.es, "Se llama como ORVUPI, pero no es la dirección oficial.");
     assert.match(attention[0]?.detail?.es ?? "", /Ninguna dirección es la oficial/);
     assert.equal(attention.some((item) => item.title.es === "Permiso de emisión"), true);
     const supply = block(summary, "comprobado").items.find((item) => item.title.es === "Suministro total");
@@ -632,7 +632,7 @@ describe("resumen de la lectura", () => {
     const { summaryFromCard } = await load();
     const summary = summaryFromCard(cloneCard("FMNb4CR8ksibmgY7Ztei6BWcZXi3WHcVeJhYb9TNpump", "Comunidad ORVUPI", "COMUNIDAD"));
     const attention = block(summary, "atencion").items;
-    assert.equal(attention[0]?.lead.es, "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.");
+    assert.equal(attention[0]?.lead.es, "Se llama como ORVUPI, pero no es la dirección oficial.");
     const identity = block(summary, "comprobado").items.find((item) => item.title.es === "Nombre y símbolo");
     assert.equal(identity?.lead.es, "Dice llamarse «Comunidad ORVUPI» («COMUNIDAD») (texto elegido por quien creó el token).");
     const supply = block(summary, "comprobado").items.find((item) => item.title.es === "Suministro total");
@@ -701,7 +701,7 @@ async function assertLookalike(name: string, symbol: string, quoted: string) {
   const { summaryFromCard } = await load();
   const summary = summaryFromCard(cloneCard("ERYyyaE2Y2GuKB28YbC2w1nCuQ5ENQ89LR44kicvpump", name, symbol));
   const attention = block(summary, "atencion").items;
-  assert.equal(attention[0]?.lead.es, "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.");
+  assert.equal(attention[0]?.lead.es, "Se llama como ORVUPI, pero no es la dirección oficial.");
   const identity = block(summary, "comprobado").items.find((item) => item.title.es === "Nombre y símbolo");
   assert.equal(identity?.lead.es, `Dice llamarse ${quoted} (texto elegido por quien creó el token).`);
   assert.equal(/[\u200B\u202E\u202A-\u202E]/.test(identity?.lead.es ?? ""), false);

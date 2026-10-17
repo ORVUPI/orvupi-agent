@@ -755,7 +755,7 @@ describe("datos de mercado", () => {
     const market = await loadMarketModule();
     assert.equal(market.MARKET_TIMEOUT_MS, 8000);
     assert.equal(market.MARKET_LOW_USD, 1000);
-    assert.equal(market.MARKET_OFFICIAL_MINT, null); // Contrato ORVUPI: aún no existe.
+    assert.equal(market.MARKET_OFFICIAL_MINT, "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU"); // Contrato ORVUPI: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU.
     assert.equal(market.MARKET_ATTRIBUTION.es, ACCURACY_ES);
     assert.equal(market.MARKET_ATTRIBUTION.en, ACCURACY_EN);
     const aviso = (await import(pathToFileURL(path.join(repoRoot(), "web/v2/shared/aviso-guardar.js")).href)) as {

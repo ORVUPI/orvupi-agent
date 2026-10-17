@@ -44,7 +44,7 @@
     }
   }
   try { migrateLegacyKeys(window.localStorage); } catch (error) { /* sin localStorage */ }
-  // Contrato ORVUPI: aún no existe (ver /shared/orvupi-contract.json). Sin contrato no hay nada que copiar.
+  // Contrato ORVUPI: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU (ver /shared/orvupi-contract.json). Sin contrato no hay nada que copiar.
   // La dirección se lee al copiar de /shared/orvupi-contract.js, el único módulo del contrato.
   document.documentElement.classList.add("js");
 
@@ -144,7 +144,8 @@
         };
         import("/shared/orvupi-contract.js").then(function (contract) {
           if (!contract.isOfficialAddress(value)) {
-            say(value ? "Copia bloqueada" : "Vacío", "error");
+            var en = document.documentElement.lang === "en";
+            say(value ? (en ? "Copy blocked" : "Copia bloqueada") : (en ? "Empty" : "Vacío"), "error");
             return;
           }
           if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -153,7 +154,7 @@
             fail();
           }
         }).catch(function () {
-          say("Copia bloqueada", "error");
+          say(document.documentElement.lang === "en" ? "Copy blocked" : "Copia bloqueada", "error");
         });
       });
     });

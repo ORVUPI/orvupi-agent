@@ -111,10 +111,10 @@ const ATTENTION = {
   },
   copia: {
     title: { es: "Dirección", en: "Address" },
-    lead: { es: "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.", en: "It is named like ORVUPI, but ORVUPI does not have a contract yet." },
+    lead: { es: "Se llama como ORVUPI, pero no es la dirección oficial.", en: "It is named like ORVUPI, but it is not the official address." },
     detail: {
-      es: "ORVUPI todavía no tiene contrato en ninguna red. Ninguna dirección es la oficial.",
-      en: "ORVUPI does not have a contract on any network yet. No address is the official one.",
+      es: "La única dirección oficial de ORVUPI está en orvupi.com/token. Ninguna dirección es la oficial.",
+      en: "The only official ORVUPI address is on orvupi.com/token. No address is the official one.",
     },
   },
   ficha: {
@@ -331,8 +331,8 @@ function looksLikeOrvupi(context) {
 export function namedLikeOrvupiText(name, symbol, lang) {
   if (!namesOrvupi(name) && !namesOrvupi(symbol)) return "";
   return lang === "en"
-    ? "It is named like ORVUPI, but ORVUPI does not have a contract yet."
-    : "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.";
+    ? "It is named like ORVUPI, but it is not the official address."
+    : "Se llama como ORVUPI, pero no es la dirección oficial.";
 }
 
 function quotedIdentity(context) {
@@ -775,8 +775,8 @@ export function cloneWarningText(card, lang) {
   const context = contextFromCard(card);
   if (context.official || !looksLikeOrvupi(context)) return "";
   return lang === "en"
-    ? "It is named like ORVUPI, but ORVUPI does not have a contract yet."
-    : "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.";
+    ? "It is named like ORVUPI, but it is not the official address."
+    : "Se llama como ORVUPI, pero no es la dirección oficial.";
 }
 
 export function comparisonBanner(left, right, lang) {

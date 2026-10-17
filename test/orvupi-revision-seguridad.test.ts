@@ -51,7 +51,7 @@ describe("revisión de seguridad PR #62", () => {
     const evm = await load("web/v2/shared/evm-view.js");
     const report = await load("web/v2/shared/informe.js");
     const view = evm.describeEvm(EVM, "es");
-    assert.equal(view.namedLike, "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.");
+    assert.equal(view.namedLike, "Se llama como ORVUPI, pero no es la dirección oficial.");
     const model = report.reportModel(evm.evmReportSource(EVM), "es");
     assert.equal(model.warning.startsWith("Se llama como ORVUPI"), true);
     assert.equal(model.network, "Base");

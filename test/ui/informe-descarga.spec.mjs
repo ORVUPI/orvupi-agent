@@ -162,7 +162,7 @@ test("el informe se descarga en Verify y en el Cuaderno", async ({ page }, testI
   await page.locator("#consulta button[type='submit']").click();
   const summary = page.locator("#resultado .resumen-informe");
   await expect(summary).toContainText("Dice llamarse «ORVUPI»", { timeout: 20_000 });
-  await expect(summary).toContainText("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato");
+  await expect(summary).toContainText("Se llama como ORVUPI, pero no es la dirección oficial");
   await expect(summary).not.toContainText("1.000.000.000 ORVUPI");
   await expect(summary.locator(".informe-descarga")).toContainText("Informe descargable");
 

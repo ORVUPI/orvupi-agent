@@ -44,7 +44,7 @@ const COPY = {
     checksTitle: "Qué puede comprobar esta red",
     can: "Esta lectura puede pedir",
     cannot: "Esta lectura no pide",
-    notOrvupi: "ORVUPI todavía no tiene contrato en ninguna red.",
+    notOrvupi: "La única dirección oficial de ORVUPI está en orvupi.com/token.",
     third: "El nombre y el símbolo son texto que escribió el contrato.",
   },
   en: {
@@ -79,7 +79,7 @@ const COPY = {
     checksTitle: "What this network can check",
     can: "This reading can ask for",
     cannot: "This reading does not ask for",
-    notOrvupi: "ORVUPI does not have a contract on any network yet.",
+    notOrvupi: "The only official ORVUPI address is on orvupi.com/token.",
     third: "The name and the symbol are text the contract wrote.",
   },
 };

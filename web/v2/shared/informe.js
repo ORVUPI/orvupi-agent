@@ -88,8 +88,8 @@ const NOTHING_TO_NOTE = {
 };
 
 const CLONE_WARNING = {
-  es: "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato",
-  en: "It is named like ORVUPI, but ORVUPI does not have a contract yet",
+  es: "Se llama como ORVUPI, pero no es la dirección oficial",
+  en: "It is named like ORVUPI, but it is not the official address",
 };
 
 const HIDDEN = /[\u0000-\u001F\u007F-\u009F\u061C\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u2069\uFEFF\uFFFD\p{Cf}]/gu;
