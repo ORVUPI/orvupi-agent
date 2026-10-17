@@ -18,6 +18,7 @@ export const ALLOWED_IMPORT_EXTENSIONS = new Set([
   "gif",
   "webp",
   "csv",
+  "xlsx",
 ]);
 
 const BLOCKED_EXTENSIONS = new Set([

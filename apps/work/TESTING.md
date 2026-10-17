@@ -10,13 +10,14 @@ npm run test:e2e
 
 ## Unidad e integración
 
-Vitest, entorno Node, cinco archivos y 19 pruebas. Cubren:
+Vitest, entorno Node. Cubren:
 
 - la cola de guardado y el testigo que impide que una escritura vieja marque «Guardado»;
 - el HTML escapado, el rechazo de una versión distinta de `orvupi-doc`, la cabecera `%PDF-`, la búsqueda y el saneado de nombres;
 - DOMPurify en jsdom;
 - la paridad de claves entre español e inglés y la clasificación del dispositivo;
-- IndexedDB con `fake-indexeddb`, la copia y la restauración, un hash que no coincide y la ausencia de OPFS en Node.
+- IndexedDB con `fake-indexeddb`, la copia y la restauración, un hash que no coincide y la ausencia de OPFS en Node;
+- SUMA, PROMEDIO, MIN, MAX, CONTAR, SI, un ciclo, el orden con fila inmovilizada, las carpetas y una ida y vuelta de XLSX.
 
 ## Extremo a extremo
 
@@ -35,7 +36,7 @@ El recorrido de la sección 30:
 
 Una segunda prueba ejecuta axe-core 4.14 con las etiquetas `wcag2a`, `wcag2aa`, `wcag21a` y `wcag21aa` en el inicio y en el editor. La tercera cambia el idioma a inglés y comprueba que sobrevive a la recarga.
 
-Resultado de esta entrega, en local: 19/19 de Vitest y 3/3 de Playwright.
+Resultado de esta entrega, en local: 26/26 de Vitest y 4/4 de Playwright, incluido el contraste en el inicio y en el editor y una hoja que muestra el resultado de SUMA.
 
 ## Qué no cubre esta tanda
 

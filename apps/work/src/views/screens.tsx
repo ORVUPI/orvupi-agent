@@ -10,11 +10,14 @@ import { errorMessageKey } from "../i18n";
 import { fileNameWithExtension } from "../security/names";
 import type { FileRecord } from "../storage/types";
 import { APP_VERSION } from "../version";
-import { Button, Card, EmptyState, ErrorState, Input, Select, TabPanel, Tabs } from "../ui/kit";
-import { ContextMenu, Dialog, FilePicker, Modal, type MenuItem } from "../ui/overlay";
+import { Button, Card, EmptyState, ErrorState, Select, TabPanel, Tabs } from "../ui/kit";
+import { Dialog, FilePicker } from "../ui/overlay";
 
 function kindLabel(kind: FileRecord["kind"], t: ReturnType<typeof useWorkspace>["t"]): string {
+  if (kind === "folder") return t("kindFolder");
   if (kind === "doc") return t("kindDoc");
+  if (kind === "sheet") return t("kindSheet");
+  if (kind === "slide") return t("kindSlide");
   if (kind === "pdf") return t("kindPdf");
   return t("kindOther");
 }
@@ -56,14 +59,14 @@ export function HomeScreen() {
         <Card
           title={workspace.t("newSheet")}
           tool="sheets"
-          body={workspace.t("laterSheetsBody")}
-          action={<Button onClick={() => void workspace.navigate("sheets")}>{workspace.t("newSheet")}</Button>}
+          body={workspace.t("sheetLimit")}
+          action={<Button onClick={() => void workspace.createSheet(null)}>{workspace.t("newSheet")}</Button>}
         />
         <Card
           title={workspace.t("newSlides")}
           tool="slides"
-          body={workspace.t("laterSlidesBody")}
-          action={<Button onClick={() => void workspace.navigate("slides")}>{workspace.t("newSlides")}</Button>}
+          body={workspace.t("slideHint")}
+          action={<Button onClick={() => void workspace.createSlides(null)}>{workspace.t("newSlides")}</Button>}
         />
         <Card
           title={workspace.t("openPdf")}
@@ -89,10 +92,7 @@ export function HomeScreen() {
             <FileButton
               key={file.id}
               file={file}
-              onOpen={() => {
-                if (file.kind === "doc") workspace.openDoc(file.id);
-                else void workspace.navigate(file.kind === "pdf" ? "pdf" : "files");
-              }}
+              onOpen={() => workspace.openRecord(file)}
             />
           ))}
         </div>
@@ -273,134 +273,6 @@ export function DocsScreen() {
   );
 }
 
-export function FilesScreen() {
-  const workspace = useWorkspace();
-  const [tab, setTab] = useState("active");
-  const [menu, setMenu] = useState<{ x: number; y: number; file: FileRecord } | null>(null);
-  const [rename, setRename] = useState<FileRecord | null>(null);
-  const [renameValue, setRenameValue] = useState("");
-  const [confirm, setConfirm] = useState<FileRecord | "all" | null>(null);
-  const visible = workspace.files.filter((file) => (tab === "active" ? file.deletedAt === null : file.deletedAt !== null));
-
-  const itemsFor = (file: FileRecord): MenuItem[] => [
-    { id: "open", label: workspace.t("open"), onSelect: () => (file.kind === "doc" ? workspace.openDoc(file.id) : void workspace.navigate(file.kind === "pdf" ? "pdf" : "files")) },
-    { id: "rename", label: workspace.t("rename"), onSelect: () => { setRename(file); setRenameValue(file.name); } },
-    {
-      id: "duplicate",
-      label: workspace.t("duplicate"),
-      onSelect: () => {
-        void workspace.storage?.duplicateFile(file.id).then(() => workspace.refreshFiles()).then(() => workspace.pushToast(workspace.t("toastDuplicated"))).catch(workspace.reportError);
-      },
-    },
-    {
-      id: "download",
-      label: workspace.t("download"),
-      onSelect: () => {
-        void workspace.storage?.exportFile(file.id).then((fileExport) => downloadBytes(fileExport.bytes, fileExport.filename, fileExport.record.mime)).catch(workspace.reportError);
-      },
-    },
-    {
-      id: "trash",
-      label: file.deletedAt ? workspace.t("restore") : workspace.t("remove"),
-      onSelect: () => {
-        const action = file.deletedAt ? workspace.storage?.restoreFile(file.id) : workspace.storage?.deleteFile(file.id);
-        void action?.then(() => workspace.refreshFiles()).then(() => workspace.pushToast(workspace.t(file.deletedAt ? "toastRestoredFile" : "toastDeleted"))).catch(workspace.reportError);
-      },
-    },
-  ];
-
-  return (
-    <div className="ow-page">
-      <h1>{workspace.t("navFiles")}</h1>
-      <Tabs
-        label={workspace.t("navFiles")}
-        value={tab}
-        onChange={setTab}
-        tabs={[
-          { id: "active", label: workspace.t("filesActive") },
-          { id: "trash", label: workspace.t("filesTrash") },
-        ]}
-      />
-      <TabPanel id={tab}>
-        {visible.length === 0 ? (
-          <EmptyState title={tab === "active" ? workspace.t("filesEmpty") : workspace.t("trashEmpty")} body={workspace.t("emptyBody")} />
-        ) : (
-          <div className="ow-list">
-            {visible.map((file) => (
-              <div
-                key={file.id}
-                className="ow-file-actions"
-                onContextMenu={(event) => {
-                  event.preventDefault();
-                  setMenu({ x: event.clientX, y: event.clientY, file });
-                }}
-              >
-                <FileButton file={file} onOpen={() => (file.kind === "doc" && !file.deletedAt ? workspace.openDoc(file.id) : undefined)} />
-                <Button onClick={() => { setRename(file); setRenameValue(file.name); }}>{workspace.t("rename")}</Button>
-                {file.deletedAt ? (
-                  <Button onClick={() => void workspace.storage?.restoreFile(file.id).then(() => workspace.refreshFiles())}>{workspace.t("restore")}</Button>
-                ) : (
-                  <Button onClick={() => void workspace.storage?.deleteFile(file.id).then(() => workspace.refreshFiles()).then(() => workspace.pushToast(workspace.t("toastDeleted")))}>{workspace.t("remove")}</Button>
-                )}
-                <Button onClick={() => setConfirm(file)}>{workspace.t("purge")}</Button>
-              </div>
-            ))}
-          </div>
-        )}
-        {tab === "trash" && visible.length > 0 ? (
-          <Button variant="danger" onClick={() => setConfirm("all")}>
-            {workspace.t("purgeAll")}
-          </Button>
-        ) : null}
-      </TabPanel>
-      {menu ? <ContextMenu x={menu.x} y={menu.y} items={itemsFor(menu.file)} onClose={() => setMenu(null)} /> : null}
-      <Modal
-        open={rename !== null}
-        title={workspace.t("renameTitle")}
-        onClose={() => setRename(null)}
-        footer={
-          <>
-            <Button onClick={() => setRename(null)}>{workspace.t("cancel")}</Button>
-            <Button
-              variant="primary"
-              onClick={() => {
-                if (!rename || !workspace.storage) return;
-                void workspace.storage
-                  .renameFile(rename.id, renameValue)
-                  .then(() => workspace.refreshFiles())
-                  .then(() => workspace.pushToast(workspace.t("toastRenamed")))
-                  .catch(workspace.reportError);
-                setRename(null);
-              }}
-            >
-              {workspace.t("apply")}
-            </Button>
-          </>
-        }
-      >
-        <Input label={workspace.t("fileName")} value={renameValue} onChange={(event) => setRenameValue(event.target.value)} />
-      </Modal>
-      <Dialog
-        open={confirm !== null}
-        title={workspace.t("purge")}
-        body={confirm === "all" ? workspace.t("purgeAllConfirm") : workspace.t("purgeConfirm")}
-        confirmLabel={workspace.t("purge")}
-        cancelLabel={workspace.t("cancel")}
-        danger
-        onClose={() => setConfirm(null)}
-        onConfirm={() => {
-          if (!workspace.storage) return;
-          const task = confirm === "all"
-            ? Promise.all(workspace.files.filter((file) => file.deletedAt).map((file) => workspace.storage?.purgeFile(file.id)))
-            : confirm ? workspace.storage.purgeFile(confirm.id) : Promise.resolve();
-          void task.then(() => workspace.refreshFiles()).then(() => workspace.pushToast(workspace.t("toastPurged"))).catch(workspace.reportError);
-          setConfirm(null);
-        }}
-      />
-    </div>
-  );
-}
-
 export function SettingsScreen() {
   const workspace = useWorkspace();
   const [tab, setTab] = useState("general");
@@ -522,8 +394,7 @@ export function SearchResults() {
               file={file}
               onOpen={() => {
                 workspace.setQuery("");
-                if (file.kind === "doc") workspace.openDoc(file.id);
-                else void workspace.navigate(file.kind === "pdf" ? "pdf" : "files");
+                workspace.openRecord(file);
               }}
             />
           ))}

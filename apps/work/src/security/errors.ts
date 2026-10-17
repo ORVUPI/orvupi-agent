@@ -10,6 +10,7 @@ export type WorkErrorCode =
   | "image-too-large"
   | "image-type"
   | "invalid-link"
+  | "invalid-move"
   | "ai-unavailable";
 
 export class WorkError extends Error {

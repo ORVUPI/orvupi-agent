@@ -2,10 +2,10 @@
 
 Esta es una alfa. Los puntos siguientes están abiertos a propósito o porque el navegador no da más de sí.
 
-1. Sheets, Slides y el visor PDF no editan. La pantalla lo dice. No es un fallo de un editor a medias.
-2. El gestor de archivos no tiene carpetas, etiquetas ni favoritos en la interfaz. El modelo ya reserva esos campos para que una copia futura los transporte.
+1. El visor PDF no edita ni muestra páginas. Un PDF se guarda y se descarga. La vista previa lo dice.
+2. La cuadrícula tiene 50 filas y 12 columnas. Ordenar mueve filas y no reescribe las referencias. El filtro solo oculta filas. No hay formato de moneda ni gráficos.
 3. El PDF exportado usa Helvetica, Times no está, y cualquier carácter fuera de WinAnsi pasa a `?`. No se anuncia paridad con un procesador de textos.
-4. No hay importación DOCX, XLSX ni PPTX. No se afirma esa compatibilidad.
+4. El DOCX exportado no incluye imágenes y aplana las tablas. No hay importación DOCX ni PPTX. El XLSX propio guarda fórmulas sencillas, números y texto; no es un libro de Excel completo.
 5. La IA no descarga un modelo. Las acciones no modifican el documento.
 6. No hay cifrado local con contraseña. Quien abra el perfil del navegador puede leer los archivos.
 7. Si OPFS falta, como en algunos modos privados, los bytes van a IndexedDB. El indicador de ajustes muestra el controlador real (`opfs` o `indexeddb`).

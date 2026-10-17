@@ -1,10 +1,10 @@
 # Arquitectura
 
-ORVUPI Work 0.1.0 corre entero en el navegador. El diagrama de esta fase:
+ORVUPI Work 0.2.0 corre entero en el navegador. El diagrama de esta fase:
 
 ```
 Persona
-  → interfaz React (shell, Docs, ajustes)
+  → interfaz React (shell, Docs, archivos, hojas, diapositivas, ajustes)
   → StorageService
        → metadatos en IndexedDB
        → bytes en OPFS, o en IndexedDB si OPFS no responde
@@ -19,8 +19,11 @@ No hay cuenta, ni red de documentos, ni worker que envíe el contenido fuera del
 | --- | --- |
 | `src/app` | Estado del espacio, navegación, órdenes |
 | `src/ui` | Design system, barras, diálogos, panel de IA |
-| `src/views` | Pantallas: inicio, docs, archivos mínimos, ajustes, fases posteriores |
+| `src/views` | Inicio, biblioteca, ajustes y la pantalla del PDF |
 | `src/docs` | Modelo, editor TipTap, cola de guardado, importación y exportación |
+| `src/files` | Carpetas, filtros, orden y vista previa |
+| `src/sheets` | Cuadrícula, fórmulas, CSV y XLSX |
+| `src/slides` | Título, cuerpo y presentación local |
 | `src/storage` | OPFS, IndexedDB, copia y restauración |
 | `src/security` | CSP, límites, nombres, SHA-256, DOMPurify |
 | `src/i18n` | Español e inglés, mismas claves |
@@ -37,7 +40,9 @@ El archivo propio es JSON:
 { "format": "orvupi-doc", "version": 1, "id": "uuid", "name": "Informe", "content": {} }
 ```
 
-`content` es el documento de TipTap. Importar `.orvdoc` o JSON compatible crea un id nuevo. TXT, Markdown y HTML se convierten después de sanear el HTML. Un PDF se guarda en bruto y no se abre en el editor. Otras extensiones permitidas se guardan como archivo, no como documento editable.
+`content` es el documento de TipTap. El mismo JSON puede llevar `header`, `footer`, `comments` y `versions`. Un archivo de la 0.1.0, sin esos campos, sigue abriéndose. Importar `.orvdoc` o JSON compatible crea un id nuevo. TXT, Markdown y HTML se convierten después de sanear el HTML. Un PDF se guarda en bruto y no se abre en el editor. CSV y XLSX se convierten en `orvupi-sheet` versión 1. Otras extensiones permitidas se guardan como archivo.
+
+Una hoja guarda el texto de cada celda. Lo que empieza por `=` se evalúa al mostrar. Una presentación es `orvupi-slides` versión 1.
 
 La primera línea cambia el nombre solo si el documento sigue llamándose «Sin título» o «Untitled».
 
@@ -51,8 +56,8 @@ La copia `orvupi-workspace` versión 1 incluye metadatos, ajustes y bytes en bas
 
 `createSaveQueue` espera 400 ms y serializa las escrituras. `SaveController` incrementa un testigo en cada cambio. Al terminar, el estado visible pasa a «Guardado» solo si ese testigo sigue siendo el último. Si la escritura falla, el estado sigue en «Cambios pendientes».
 
-## Fases que esta build no implementa
+## Límites de esta build
 
-Sheets, Slides, el visor y las herramientas PDF, carpetas y etiquetas, el modelo local y las automatizaciones tienen pantalla propia. Dicen qué fase las trae. No hay datos de ejemplo que finjan un resultado.
+El visor PDF, el modelo local y las automatizaciones siguen sin editor. La cuadrícula es de 50 por 12. El detalle de cada función está en `docs/PARIDAD_DRIVE.md`.
 
 Las decisiones y las alternativas rechazadas están en `ARCHITECTURE_DECISION_RECORD.md`.

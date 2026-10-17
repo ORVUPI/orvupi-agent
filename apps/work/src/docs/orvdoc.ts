@@ -1,7 +1,7 @@
 import { decodeUtf8, encodeUtf8 } from "../security/bytes";
 import { WorkError } from "../security/errors";
 import { sanitizeName } from "../security/names";
-import { emptyDoc, type JsonNode, type OrvdocFile } from "./model";
+import { emptyDoc, type DocComment, type DocVersion, type JsonNode, type OrvdocFile } from "./model";
 
 export type { OrvdocFile };
 
@@ -23,7 +23,37 @@ export function createOrvdoc(input: { id: string; title: string; content?: JsonN
     createdAt: stamp,
     updatedAt: stamp,
     content: input.content ?? emptyDoc(),
+    header: "",
+    footer: "",
+    comments: [],
+    versions: [],
   };
+}
+
+function commentsOf(value: unknown): DocComment[] {
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, 40).flatMap((entry) => {
+    if (!isRecord(entry) || typeof entry.id !== "string" || typeof entry.body !== "string") return [];
+    return [{
+      id: entry.id.slice(0, 80),
+      quote: typeof entry.quote === "string" ? entry.quote.slice(0, 180) : "",
+      body: entry.body.slice(0, 500),
+      createdAt: typeof entry.createdAt === "string" ? entry.createdAt : new Date().toISOString(),
+    }];
+  });
+}
+
+function versionsOf(value: unknown): DocVersion[] {
+  if (!Array.isArray(value)) return [];
+  return value.slice(-20).flatMap((entry) => {
+    if (!isRecord(entry) || typeof entry.id !== "string" || !isNode(entry.content) || entry.content.type !== "doc") return [];
+    return [{
+      id: entry.id.slice(0, 80),
+      at: typeof entry.at === "string" ? entry.at : new Date().toISOString(),
+      title: typeof entry.title === "string" ? entry.title.slice(0, 180) : "",
+      content: entry.content,
+    }];
+  });
 }
 
 export function serializeOrvdoc(file: OrvdocFile): Uint8Array {
@@ -50,6 +80,10 @@ export function parseOrvdoc(bytes: Uint8Array | string): OrvdocFile {
     createdAt: typeof parsed.createdAt === "string" ? parsed.createdAt : new Date().toISOString(),
     updatedAt: typeof parsed.updatedAt === "string" ? parsed.updatedAt : new Date().toISOString(),
     content: parsed.content,
+    header: typeof parsed.header === "string" ? parsed.header.slice(0, 240) : "",
+    footer: typeof parsed.footer === "string" ? parsed.footer.slice(0, 240) : "",
+    comments: commentsOf(parsed.comments),
+    versions: versionsOf(parsed.versions),
   };
 }
 

@@ -4,6 +4,8 @@ import type { DocSession, ExportKind } from "../docs/DocsEditor";
 import { prepareImport } from "../docs/incoming";
 import type { JsonNode } from "../docs/model";
 import { createOrvdoc, serializeOrvdoc } from "../docs/orvdoc";
+import { createSheetFile, serializeSheet } from "../sheets/model";
+import { createSlidesFile, serializeSlides } from "../slides/model";
 import { errorMessageKey, translate, type Locale, type MessageKey } from "../i18n";
 import { downloadBytes } from "../security/bytes";
 import { isWorkError, WorkError } from "../security/errors";
@@ -27,7 +29,12 @@ type WorkspaceValue = {
   setView: (view: ViewId) => void;
   navigate: (view: ViewId) => Promise<void>;
   openDocId: string | null;
+  openSheetId: string | null;
+  openSlideId: string | null;
   openDoc: (id: string) => void;
+  openSheet: (id: string) => void;
+  openSlide: (id: string) => void;
+  openRecord: (file: FileRecord) => void;
   closeDoc: () => void;
   query: string;
   setQuery: (value: string) => void;
@@ -46,8 +53,10 @@ type WorkspaceValue = {
   capabilities: CapabilitySnapshot;
   busy: string | null;
   storage: StorageService | null;
-  createDocument: (content?: JsonNode, name?: string) => Promise<void>;
-  importUserFile: (file: File) => Promise<void>;
+  createDocument: (content?: JsonNode, name?: string, folderId?: string | null) => Promise<void>;
+  createSheet: (folderId?: string | null) => Promise<void>;
+  createSlides: (folderId?: string | null) => Promise<void>;
+  importUserFile: (file: File, folderId?: string | null) => Promise<void>;
   exportBackup: () => Promise<void>;
   restoreBackup: (file: File) => Promise<void>;
   refreshFiles: () => Promise<void>;
@@ -72,6 +81,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [files, setFiles] = useState<FileRecord[]>([]);
   const [view, setView] = useState<ViewId>("home");
   const [openDocId, setOpenDocId] = useState<string | null>(null);
+  const [openSheetId, setOpenSheetId] = useState<string | null>(null);
+  const [openSlideId, setOpenSlideId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [aiOpen, setAiOpen] = useState(true);
   const [navOpen, setNavOpen] = useState(false);
@@ -152,7 +163,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   }, [locale]);
 
   const createDocument = useCallback(
-    async (content?: JsonNode, name?: string) => {
+    async (content?: JsonNode, name?: string, folderId?: string | null) => {
       if (!storage) return;
       const id = createId();
       const title = name?.trim() || t("untitled");
@@ -163,8 +174,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         kind: "doc",
         mime: "application/vnd.orvupi.doc+json",
         bytes: serializeOrvdoc(file),
+        folderId: folderId ?? null,
       });
       setFiles(await storage.listFiles({ includeDeleted: true }));
+      setOpenSheetId(null);
+      setOpenSlideId(null);
       setOpenDocId(id);
       setView("docs");
       setQuery("");
@@ -172,8 +186,56 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     [storage, t],
   );
 
+  const createSheet = useCallback(
+    async (folderId?: string | null) => {
+      if (!storage) return;
+      const id = createId();
+      const title = t("newSheet");
+      const file = createSheetFile({ id, title });
+      await storage.saveFile({
+        id,
+        name: title,
+        kind: "sheet",
+        mime: "application/vnd.orvupi.sheet+json",
+        bytes: serializeSheet(file),
+        folderId: folderId ?? null,
+      });
+      setFiles(await storage.listFiles({ includeDeleted: true }));
+      setOpenDocId(null);
+      setOpenSlideId(null);
+      setOpenSheetId(id);
+      setView("sheets");
+      setQuery("");
+    },
+    [storage, t],
+  );
+
+  const createSlides = useCallback(
+    async (folderId?: string | null) => {
+      if (!storage) return;
+      const id = createId();
+      const title = t("newSlides");
+      const file = createSlidesFile({ id, title });
+      await storage.saveFile({
+        id,
+        name: title,
+        kind: "slide",
+        mime: "application/vnd.orvupi.slides+json",
+        bytes: serializeSlides(file),
+        folderId: folderId ?? null,
+      });
+      setFiles(await storage.listFiles({ includeDeleted: true }));
+      setOpenDocId(null);
+      setOpenSheetId(null);
+      setOpenSlideId(id);
+      setView("slides");
+      setQuery("");
+    },
+    [storage, t],
+  );
+
   const importUserFile = useCallback(
-    async (file: File) => {
+    async (file: File, folderId?: string | null) => {
       if (!storage) return;
       try {
         const prepared = await prepareImport(file, t("untitled"));
@@ -182,11 +244,17 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
           kind: prepared.kind,
           mime: prepared.mime,
           bytes: prepared.bytes,
+          folderId: folderId ?? null,
         });
         setFiles(await storage.listFiles({ includeDeleted: true }));
         if (prepared.openAsDoc) {
           setOpenDocId(saved.id);
           setView("docs");
+          pushToast(t("toastImported"));
+        } else if (prepared.kind === "sheet") {
+          setOpenDocId(null);
+          setOpenSheetId(saved.id);
+          setView("sheets");
           pushToast(t("toastImported"));
         } else {
           setOpenDocId(null);
@@ -227,6 +295,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         setLocaleState(settings.locale);
         setFiles(await storage.listFiles({ includeDeleted: true }));
         setOpenDocId(null);
+        setOpenSheetId(null);
+        setOpenSlideId(null);
         setView("home");
         pushToast(t("toastRestored"));
       } catch (error) {
@@ -260,13 +330,59 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       } else if (next !== "docs") {
         setOpenDocId(null);
       }
+      if (next !== "sheets") setOpenSheetId(null);
+      if (next !== "slides") setOpenSlideId(null);
       setNavOpen(false);
       setView(next);
     },
     openDocId,
+    openSheetId,
+    openSlideId,
     openDoc: (id) => {
+      setOpenSheetId(null);
+      setOpenSlideId(null);
       setOpenDocId(id);
       setView("docs");
+      setQuery("");
+      setNavOpen(false);
+    },
+    openSheet: (id) => {
+      setOpenDocId(null);
+      setOpenSlideId(null);
+      setOpenSheetId(id);
+      setView("sheets");
+      setQuery("");
+      setNavOpen(false);
+    },
+    openSlide: (id) => {
+      setOpenDocId(null);
+      setOpenSheetId(null);
+      setOpenSlideId(id);
+      setView("slides");
+      setQuery("");
+      setNavOpen(false);
+    },
+    openRecord: (file) => {
+      if (file.kind === "doc") {
+        setOpenSheetId(null);
+        setOpenSlideId(null);
+        setOpenDocId(file.id);
+        setView("docs");
+      } else if (file.kind === "sheet") {
+        setOpenDocId(null);
+        setOpenSlideId(null);
+        setOpenSheetId(file.id);
+        setView("sheets");
+      } else if (file.kind === "slide") {
+        setOpenDocId(null);
+        setOpenSheetId(null);
+        setOpenSlideId(file.id);
+        setView("slides");
+      } else if (file.kind === "pdf") {
+        setView("pdf");
+      } else {
+        setView("files");
+      }
       setQuery("");
       setNavOpen(false);
     },
@@ -289,6 +405,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     busy,
     storage,
     createDocument,
+    createSheet,
+    createSlides,
     importUserFile,
     exportBackup,
     restoreBackup,

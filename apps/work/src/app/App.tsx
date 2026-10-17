@@ -6,7 +6,10 @@ import { CommandPalette, type Command } from "../ui/CommandPalette";
 import { ShellFrame, Sidebar, Topbar, type NavItem } from "../ui/chrome";
 import { Modal, Toasts } from "../ui/overlay";
 import { ErrorState } from "../ui/kit";
-import { DocsScreen, FilesScreen, HomeScreen, LaterScreen, SearchResults, SettingsScreen, TemplateLibrary } from "../views/screens";
+import { FilesScreen } from "../files/FilesScreen";
+import { SheetsScreen } from "../sheets/SheetScreen";
+import { SlidesScreen } from "../slides/SlidesScreen";
+import { DocsScreen, HomeScreen, LaterScreen, SearchResults, SettingsScreen, TemplateLibrary } from "../views/screens";
 import { useWorkspace, type ViewId } from "./workspace";
 
 const NAV: Array<NavItem & { id: ViewId }> = [
@@ -53,6 +56,7 @@ export function App() {
         { id: "html", label: workspace.t("exportHtml") },
         { id: "txt", label: workspace.t("exportTxt") },
         { id: "orvdoc", label: workspace.t("exportOrvdoc") },
+        { id: "docx", label: workspace.t("exportDocx") },
       ];
       return kinds.map((kind) => ({
         id: kind.id,
@@ -66,6 +70,8 @@ export function App() {
   const commands = useMemo<Command[]>(
     () => [
       { id: "new", label: workspace.t("commandNew"), keywords: "doc documento", run: () => void workspace.createDocument() },
+      { id: "sheet", label: workspace.t("newSheet"), keywords: "hoja sheet", run: () => void workspace.createSheet(null) },
+      { id: "slides", label: workspace.t("newSlides"), keywords: "presentacion slides", run: () => void workspace.createSlides(null) },
       { id: "home", label: workspace.t("commandHome"), run: () => void workspace.navigate("home") },
       { id: "docs", label: workspace.t("commandDocs"), run: () => void workspace.navigate("docs") },
       { id: "files", label: workspace.t("commandFiles"), run: () => void workspace.navigate("files") },
@@ -98,7 +104,9 @@ export function App() {
   else if (workspace.view === "files") content = <FilesScreen />;
   else if (workspace.view === "settings") content = <SettingsScreen />;
   else if (workspace.view === "templates") content = <div className="ow-page"><h1>{workspace.t("templates")}</h1><TemplateLibrary /></div>;
-  else if (workspace.view === "sheets" || workspace.view === "slides" || workspace.view === "pdf") content = <LaterScreen view={workspace.view} />;
+  else if (workspace.view === "sheets") content = <SheetsScreen />;
+  else if (workspace.view === "slides") content = <SlidesScreen />;
+  else if (workspace.view === "pdf") content = <LaterScreen view="pdf" />;
   else if (workspace.view === "ai") content = <div className="ow-page"><h1>{workspace.t("aiTitle")}</h1><p>{workspace.t("aiBody")}</p><p>{tier}</p></div>;
 
   if (workspace.bootError) {

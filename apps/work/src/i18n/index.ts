@@ -33,6 +33,8 @@ export function errorMessageKey(code: WorkErrorCode): MessageKey {
       return "reasonImageType";
     case "invalid-link":
       return "reasonLink";
+    case "invalid-move":
+      return "reasonMove";
     case "invalid-name":
       return "reasonInvalid";
     case "ai-unavailable":

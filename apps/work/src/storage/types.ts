@@ -1,4 +1,4 @@
-export type FileKind = "doc" | "sheet" | "slide" | "pdf" | "other";
+export type FileKind = "folder" | "doc" | "sheet" | "slide" | "pdf" | "other";
 
 export type BlobDriver = "opfs" | "indexeddb" | "memory";
 
@@ -9,6 +9,8 @@ export type FileRecord = {
   mime: string;
   tags: string[];
   favorite: boolean;
+  folderId: string | null;
+  color: string | null;
   deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -29,6 +31,7 @@ export type SaveFileInput = {
   kind: FileKind;
   mime: string;
   bytes: Uint8Array;
+  folderId?: string | null;
 };
 
 export type ImportFileInput = {
@@ -64,6 +67,11 @@ export interface StorageService {
   loadFile(id: string): Promise<LoadedFile>;
   listFiles(options?: { includeDeleted?: boolean }): Promise<FileRecord[]>;
   renameFile(id: string, name: string): Promise<FileRecord>;
+  createFolder(name: string, parentId: string | null): Promise<FileRecord>;
+  moveFile(id: string, folderId: string | null): Promise<FileRecord>;
+  setFavorite(id: string, favorite: boolean): Promise<FileRecord>;
+  setColor(id: string, color: string | null): Promise<FileRecord>;
+  setTags(id: string, tags: string[]): Promise<FileRecord>;
   deleteFile(id: string): Promise<void>;
   restoreFile(id: string): Promise<void>;
   purgeFile(id: string): Promise<void>;

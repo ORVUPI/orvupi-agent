@@ -1,9 +1,12 @@
+import { Node, mergeAttributes } from "@tiptap/core";
 import { Image } from "@tiptap/extension-image";
+import { TaskItem } from "@tiptap/extension-list/task-item";
+import { TaskList } from "@tiptap/extension-list/task-list";
 import { Link } from "@tiptap/extension-link";
 import { Placeholder } from "@tiptap/extension-placeholder";
 import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table";
 import { TextAlign } from "@tiptap/extension-text-align";
-import { Color, FontSize, TextStyle } from "@tiptap/extension-text-style";
+import { BackgroundColor, Color, FontFamily, FontSize, LineHeight, TextStyle } from "@tiptap/extension-text-style";
 import { StarterKit } from "@tiptap/starter-kit";
 import { safeHref, safeImageSrc, sanitizeForeignHtml } from "../security/sanitize";
 
@@ -23,6 +26,33 @@ const LocalImage = Image.extend({
   },
 }).configure({ allowBase64: true });
 
+const PageBreak = Node.create({
+  name: "pageBreak",
+  group: "block",
+  atom: true,
+  selectable: true,
+  parseHTML: () => [{ tag: "hr.ow-page-break" }],
+  renderHTML({ HTMLAttributes }) {
+    return ["hr", mergeAttributes(HTMLAttributes, { class: "ow-page-break" })];
+  },
+  addCommands() {
+    return {
+      insertPageBreak:
+        () =>
+        ({ commands }) =>
+          commands.insertContent({ type: this.name }),
+    };
+  },
+});
+
+declare module "@tiptap/core" {
+  interface Commands<ReturnType> {
+    pageBreak: {
+      insertPageBreak: () => ReturnType;
+    };
+  }
+}
+
 export function createExtensions(placeholder: string) {
   return [
     StarterKit.configure({
@@ -31,8 +61,14 @@ export function createExtensions(placeholder: string) {
     }),
     TextStyle,
     Color,
+    BackgroundColor,
+    FontFamily,
     FontSize,
+    LineHeight.configure({ types: ["heading", "paragraph"] }),
     TextAlign.configure({ types: ["heading", "paragraph"] }),
+    TaskList,
+    TaskItem.configure({ nested: true }),
+    PageBreak,
     Link.configure({
       openOnClick: false,
       autolink: false,

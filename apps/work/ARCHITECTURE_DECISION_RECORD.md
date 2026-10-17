@@ -1,6 +1,6 @@
 # Registro de decisiones de arquitectura
 
-Fecha de la revisión: 17 de octubre de 2026. Versiones tomadas del registro npm ese día. Esta entrega cubre las fases 0, 1 y 2. No es una versión de producción.
+Fecha de la revisión: 17 de octubre de 2026. Versiones tomadas del registro npm ese día. La alfa 0.2.0 cubre el núcleo, Docs, un gestor de archivos local y editores básicos de hojas y diapositivas. No es una versión de producción.
 
 ## Contexto
 
@@ -45,9 +45,11 @@ La cola de autoguardado espera 400 ms. `SaveController` usa un testigo de escrit
 
 El título sale de la primera línea solo mientras el nombre es «Sin título» o «Untitled».
 
-## ADR-007. Hojas de cálculo, aplazadas
+## ADR-007. Hojas de cálculo
 
-No hay editor de hojas en esta entrega. La investigación deja estas opciones para la fase 5, todas revisadas el 17 de octubre de 2026:
+La cuadrícula es propia: 50 filas y columnas A–L, varias pestañas y un evaluador escrito en el proyecto. Las funciones son SUMA, PROMEDIO, MIN, MAX, CONTAR y SI, con los alias ingleses SUM, AVERAGE, COUNT e IF. No se empaqueta HyperFormula.
+
+La investigación del 17 de octubre de 2026 deja estas opciones fuera:
 
 | Opción | Versión | Licencia | Decisión |
 | --- | --- | --- | --- |
@@ -57,10 +59,11 @@ No hay editor de hojas en esta entrega. La investigación deja estas opciones pa
 | `@fortune-sheet/react` | 1.0.4 | MIT, https://github.com/ruilisi/fortune-sheet | Disponible, demasiado pesada para embeberla ahora. |
 | `@univerjs/core` | 1.0.4 | Apache-2.0, https://github.com/dream-num/univer | Disponible, demasiado pesada para embeberla ahora. |
 | formulajs | 1.0.8 | MIT, https://github.com/sutoiku/formula.js (archivo `LICENSE`) | Candidata para un motor propio. |
-| PapaParse | 5.7.0 | MIT | Candidata para CSV. |
-| ExcelJS | 4.4.0 | MIT | Candidata para XLSX si se demuestra compatibilidad. |
+| PapaParse | 5.7.0 | MIT, https://github.com/mholt/PapaParse | Elegida para CSV. |
+| ExcelJS | 4.4.0 | MIT | Rechazada en esta tanda: arrastra `uuid` anterior a 11.1.1 (aviso GHSA-w5hq-g745-h8pq). |
+| `docx` | 9.12.0 | MIT, https://github.com/dolanmiu/docx | Elegida para exportar DOCX. |
 
-La fase 5 debe implementar un motor pequeño (`SUM`, `AVERAGE`, `MIN`, `MAX`, `COUNT`, `IF`) antes de anunciar compatibilidad con XLSX.
+El XLSX de esta alfa lo escribe y lo lee el propio código: un ZIP sin comprimir (método 0) y, al leer, inflate en bruto con `DecompressionStream`. No se afirma compatibilidad con un libro de Excel completo.
 
 ## ADR-008. IA local, no empaquetada
 
@@ -83,6 +86,10 @@ La CSP de producción va en una meta etiqueta de la build y, con `frame-ancestor
 
 DOMPurify 3.4.17 se distribuye como `MPL-2.0 OR Apache-2.0`. Esta aplicación elige Apache-2.0. El HTML pegado o importado pasa por DOMPurify. Los enlaces quedan limitados a `http`, `https` y `mailto`. Las imágenes remotas se eliminan.
 
+## ADR-011. Archivos y diapositivas locales
+
+Una carpeta es un archivo de tipo `folder`. Mover rechaza un ciclo. Destacados, etiquetas y un color de una lista cerrada viajan en los metadatos y en la copia del espacio. Las diapositivas son JSON `orvupi-slides` versión 1: título y cuerpo, hasta 30, con un modo de presentación local. No hay temas, transiciones ni PPTX.
+
 ## Consecuencias
 
-Sheets, Slides, el visor PDF, el gestor completo de archivos, el modelo de IA, la biblioteca amplia de plantillas y las automatizaciones quedan en fases posteriores. Los botones de esas secciones explican el estado real. No simulan un editor.
+El visor PDF, el modelo de IA, la biblioteca amplia de plantillas y las automatizaciones siguen en fases posteriores. La cuadrícula no crece, el DOCX no lleva imágenes y el XLSX no cubre el formato completo. La matriz está en `docs/PARIDAD_DRIVE.md`.

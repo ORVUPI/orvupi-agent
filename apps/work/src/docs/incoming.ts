@@ -2,6 +2,9 @@ import { encodeUtf8 } from "../security/bytes";
 import { WorkError } from "../security/errors";
 import { ALLOWED_IMPORT_EXTENSIONS, extensionOf, isBlockedExtension, MAX_FILE_BYTES } from "../security/limits";
 import { createId, sanitizeName } from "../security/names";
+import { csvToGrid } from "../sheets/csv";
+import { createSheetFile, serializeSheet } from "../sheets/model";
+import { xlsxToSheets } from "../sheets/xlsx";
 import { htmlToDoc, textToDoc } from "./import-html";
 import { createOrvdoc, parseOrvdoc, serializeOrvdoc } from "./orvdoc";
 import type { FileKind } from "../storage/types";
@@ -42,6 +45,12 @@ export async function prepareImport(file: File, titleFallback: string): Promise<
   }
   if (extension === "pdf") {
     return { name: base, kind: "pdf", mime: "application/pdf", bytes, openAsDoc: false };
+  }
+  if (extension === "csv" || extension === "xlsx") {
+    const id = createId();
+    const sheets = extension === "xlsx" ? await xlsxToSheets(bytes) : [{ name: "Hoja 1", cells: csvToGrid(new TextDecoder().decode(bytes)), freezeHeader: true }];
+    const sheet = createSheetFile({ id, title: base, sheets });
+    return { name: sheet.title, kind: "sheet", mime: "application/vnd.orvupi.sheet+json", bytes: serializeSheet(sheet), openAsDoc: false };
   }
   return { name: base, kind: "other", mime: file.type || "application/octet-stream", bytes, openAsDoc: false };
 }

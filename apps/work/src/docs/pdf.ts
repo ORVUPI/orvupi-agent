@@ -84,7 +84,7 @@ function pickFont(fonts: Fonts, inline: Inline): PDFFont {
   return fonts.regular;
 }
 
-export async function exportPdf(title: string, doc: JsonNode): Promise<Uint8Array> {
+export async function exportPdf(title: string, doc: JsonNode, header = "", footer = ""): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
   pdf.setTitle(title);
   pdf.setProducer("ORVUPI Work");
@@ -117,6 +117,7 @@ export async function exportPdf(title: string, doc: JsonNode): Promise<Uint8Arra
   };
 
   drawLines(wrap(fonts.bold, title, 22, maxWidth), 22, fonts.bold);
+  if (header.trim()) drawLines(wrap(fonts.italic, header, 10, maxWidth), 10, fonts.italic);
   y -= 8;
 
   const drawInlines = (inlines: Inline[], size: number) => {
@@ -138,6 +139,14 @@ export async function exportPdf(title: string, doc: JsonNode): Promise<Uint8Arra
         const text = prefix + item.map((inline) => (inline.type === "text" ? inline.text : inline.alt)).join("");
         drawLines(wrap(fonts.regular, text, 12, maxWidth), 12, fonts.regular);
       });
+    } else if (block.type === "checklist") {
+      for (const item of block.items) {
+        const text = `${item.checked ? "[x] " : "[ ] "}` + item.inlines.map((inline) => (inline.type === "text" ? inline.text : inline.alt)).join("");
+        drawLines(wrap(fonts.regular, text, 12, maxWidth), 12, fonts.regular);
+      }
+    } else if (block.type === "pageBreak") {
+      page = pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+      y = PAGE_HEIGHT - MARGIN;
     } else if (block.type === "table") {
       for (const row of block.rows) {
         drawLines(wrap(fonts.regular, row.join("  |  "), 11, maxWidth), 11, fonts.regular);
@@ -167,6 +176,10 @@ export async function exportPdf(title: string, doc: JsonNode): Promise<Uint8Arra
   for (const block of blocksFromDoc(doc)) {
     if (block.type === "image") await drawImage(block.src, 180);
     else await drawBlock(block);
+  }
+  if (footer.trim()) {
+    y -= 8;
+    drawLines(wrap(fonts.italic, footer, 10, maxWidth), 10, fonts.italic);
   }
 
   return pdf.save();

@@ -4,7 +4,7 @@ import type { Locale, MessageKey } from "../i18n";
 import { translate } from "../i18n";
 import { downloadBytes } from "../security/bytes";
 import { MAX_IMAGE_BYTES } from "../security/limits";
-import { fileNameWithExtension } from "../security/names";
+import { createId, fileNameWithExtension } from "../security/names";
 import { safeHref } from "../security/sanitize";
 import type { FileRecord, StorageService } from "../storage/types";
 import { Icon } from "../ui/icons";
@@ -13,11 +13,11 @@ import { Modal } from "../ui/overlay";
 import { createExtensions, pastedHtml } from "./extensions";
 import { findInSlices, type TextSlice } from "./find";
 import { exportHtml } from "./html";
-import { countWords, docToText, firstLine, UNTITLED_NAMES, type JsonNode } from "./model";
+import { countWords, docToText, firstLine, UNTITLED_NAMES, type DocComment, type DocVersion, type JsonNode } from "./model";
 import { serializeOrvdoc, withContent, type OrvdocFile } from "./orvdoc";
 import { SaveController, createSaveQueue, type SaveState } from "./save-status";
 
-export type ExportKind = "pdf" | "html" | "txt" | "orvdoc";
+export type ExportKind = "pdf" | "html" | "txt" | "orvdoc" | "docx";
 
 export type DocSession = {
   name: string;
@@ -81,14 +81,27 @@ export function DocsEditor({
   const [saveError, setSaveError] = useState(false);
   const fileRef = useRef(initial);
   const nameRef = useRef(initial.title);
+  const headerRef = useRef(initial.header);
+  const footerRef = useRef(initial.footer);
+  const commentsRef = useRef<DocComment[]>(initial.comments);
+  const versionsRef = useRef<DocVersion[]>(initial.versions);
   const writeRef = useRef<(snapshot: string) => Promise<void>>(async () => undefined);
   const closeRef = useRef<() => Promise<boolean>>(async () => false);
   const exportRef = useRef<(kind: ExportKind) => Promise<void>>(async () => undefined);
+  const snapshotOf = (content: JsonNode) =>
+    JSON.stringify({ content, header: headerRef.current, footer: footerRef.current, comments: commentsRef.current, versions: versionsRef.current });
   const queue = useState(() => {
     const controller = new SaveController();
-    controller.reset(JSON.stringify(initial.content));
+    controller.reset(snapshotOf(initial.content));
     return createSaveQueue(controller, (snapshot) => writeRef.current(snapshot), setSaveState);
   })[0];
+  const [header, setHeader] = useState(initial.header);
+  const [footer, setFooter] = useState(initial.footer);
+  const [commentOpen, setCommentOpen] = useState(false);
+  const [commentBody, setCommentBody] = useState("");
+  const [versionsOpen, setVersionsOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [rev, setRev] = useState(0);
 
   const editor = useEditor({
     immediatelyRender: true,
@@ -98,11 +111,12 @@ export function DocsEditor({
       attributes: { "aria-label": t("editorRegion") },
       transformPastedHTML: pastedHtml,
     },
-    onUpdate: ({ editor: current }) => queue.note(JSON.stringify(current.getJSON())),
+    onUpdate: ({ editor: current }) => queue.note(snapshotOf(current.getJSON() as JsonNode)),
   });
 
   writeRef.current = async (snapshot) => {
-    const content = JSON.parse(snapshot) as JsonNode;
+    const parsed = JSON.parse(snapshot) as { content?: JsonNode; header?: string; footer?: string; comments?: DocComment[]; versions?: DocVersion[] };
+    const content = parsed.content ?? (parsed as unknown as JsonNode);
     let title = nameRef.current;
     if (UNTITLED_NAMES.has(title)) {
       const derived = firstLine(docToText(content));
@@ -112,7 +126,13 @@ export function DocsEditor({
         setName(title);
       }
     }
-    const next = withContent(fileRef.current, content, title, new Date().toISOString());
+    const next = {
+      ...withContent(fileRef.current, content, title, new Date().toISOString()),
+      header: parsed.header ?? headerRef.current,
+      footer: parsed.footer ?? footerRef.current,
+      comments: parsed.comments ?? commentsRef.current,
+      versions: parsed.versions ?? versionsRef.current,
+    };
     const saved = await storage.saveFile({
       id: record.id,
       name: title,
@@ -202,11 +222,17 @@ export function DocsEditor({
       return;
     }
     if (kind === "orvdoc") {
-      downloadBytes(serializeOrvdoc({ ...current, title: nameRef.current, content }), fileNameWithExtension(nameRef.current, "orvdoc"), "application/json");
+      downloadBytes(serializeOrvdoc({ ...current, title: nameRef.current, content, header: headerRef.current, footer: footerRef.current }), fileNameWithExtension(nameRef.current, "orvdoc"), "application/json");
+      return;
+    }
+    if (kind === "docx") {
+      const { exportDocx } = await import("./docx");
+      const docx = await exportDocx(nameRef.current, content, headerRef.current, footerRef.current);
+      downloadBytes(docx, fileNameWithExtension(nameRef.current, "docx"), "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
       return;
     }
     const { exportPdf } = await import("./pdf");
-    const pdf = await exportPdf(nameRef.current, content);
+    const pdf = await exportPdf(nameRef.current, content, headerRef.current, footerRef.current);
     downloadBytes(pdf, fileNameWithExtension(nameRef.current, "pdf"), "application/pdf");
   }
 
@@ -390,8 +416,52 @@ export function DocsEditor({
         <IconButton label={t("redo")} onClick={() => editor?.chain().focus().redo().run()}>
           <Icon name="redo" />
         </IconButton>
+        <Button onClick={() => editor?.chain().focus().toggleTaskList().run()}>{t("checklist")}</Button>
+        <Select label={t("fontLabel")} value="Inter" onChange={(event) => editor?.chain().focus().setFontFamily(event.target.value).run()}>
+          <option value="Inter">Inter</option>
+          <option value="Georgia">Georgia</option>
+          <option value="Courier New">Courier New</option>
+        </Select>
+        <Select label={t("lineHeight")} value="1.5" onChange={(event) => editor?.chain().focus().setLineHeight(event.target.value).run()}>
+          <option value="1.2">1.2</option>
+          <option value="1.5">1.5</option>
+          <option value="2">2</option>
+        </Select>
+        <Select label={t("highlight")} value="" onChange={(event) => (event.target.value ? editor?.chain().focus().setBackgroundColor(event.target.value).run() : editor?.chain().focus().unsetBackgroundColor().run())}>
+          <option value="">{t("highlight")}</option>
+          <option value="#fff4b8">{t("colorAmber")}</option>
+          <option value="#d9f5e4">{t("colorGreen")}</option>
+          <option value="#fde2ea">{t("colorPink")}</option>
+          <option value="#dbe7f5">{t("colorBlue")}</option>
+        </Select>
+        <Button onClick={() => editor?.chain().focus().insertPageBreak().run()}>{t("pageBreak")}</Button>
+        <Button
+          onClick={() => {
+            if (!editor) return;
+            const lines = docToText(editor.getJSON() as JsonNode)
+              .split("\n")
+              .map((line) => line.trim())
+              .filter((line) => line.length > 0 && line.length < 80)
+              .slice(0, 12);
+            const headings = (editor.getJSON() as JsonNode).content?.filter((node) => node.type === "heading") ?? [];
+            const items = headings.map((node) => node.content?.map((child) => child.text ?? "").join("") ?? "").filter(Boolean);
+            editor.chain().focus().insertContent({
+              type: "bulletList",
+              content: (items.length > 0 ? items : lines.slice(0, 1)).map((item) => ({ type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: item }] }] })),
+            }).run();
+          }}
+        >
+          {t("toc")}
+        </Button>
+        <Button onClick={() => setCommentOpen(true)}>{t("comment")}</Button>
+        <Button onClick={() => setVersionsOpen(true)}>{t("versions")}</Button>
+        <Button onClick={() => setShortcutsOpen(true)}>{t("shortcuts")}</Button>
         <Button onClick={() => setFindOpen((value) => !value)}>{t("findReplace")}</Button>
         <Button onClick={() => window.print()}>{t("print")}</Button>
+      </div>
+      <div className="ow-row">
+        <Input label={t("header")} value={header} onChange={(event) => { headerRef.current = event.target.value.slice(0, 240); setHeader(headerRef.current); if (editor) queue.note(snapshotOf(editor.getJSON() as JsonNode)); }} />
+        <Input label={t("footer")} value={footer} onChange={(event) => { footerRef.current = event.target.value.slice(0, 240); setFooter(footerRef.current); if (editor) queue.note(snapshotOf(editor.getJSON() as JsonNode)); }} />
       </div>
       {findOpen ? (
         <form
@@ -411,8 +481,29 @@ export function DocsEditor({
         </form>
       ) : null}
       <div className="ow-paper">
+        {header ? <p className="ow-print-edge">{header}</p> : null}
         <EditorContent editor={editor} />
+        {footer ? <p className="ow-print-edge">{footer}</p> : null}
       </div>
+      {rev >= 0 && commentsRef.current.length > 0 ? (
+        <ul className="ow-list">
+          {commentsRef.current.map((comment) => (
+            <li key={comment.id}>
+              <strong>{comment.quote || t("comment")}</strong>
+              <p>{comment.body}</p>
+              <Button
+                onClick={() => {
+                  commentsRef.current = commentsRef.current.filter((item) => item.id !== comment.id);
+                  if (editor) queue.note(snapshotOf(editor.getJSON() as JsonNode));
+                  setRev((value) => value + 1);
+                }}
+              >
+                {t("remove")}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <p className="ow-count" aria-live="polite">
         {t("words", { count: counts.words })} · {t("characters", { count: counts.characters })}
       </p>
@@ -452,6 +543,68 @@ export function DocsEditor({
       >
         <Input label={t("linkUrl")} value={linkValue} onChange={(event) => setLinkValue(event.target.value)} />
         {linkError ? <p role="alert">{linkError}</p> : null}
+      </Modal>
+      <Modal
+        open={commentOpen}
+        title={t("comment")}
+        onClose={() => setCommentOpen(false)}
+        footer={
+          <>
+            <Button onClick={() => setCommentOpen(false)}>{t("cancel")}</Button>
+            <Button
+              variant="primary"
+              onClick={() => {
+                if (!editor || !commentBody.trim()) return;
+                const quote = editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to, " ").slice(0, 180);
+                commentsRef.current = [...commentsRef.current, { id: createId(), quote, body: commentBody.trim().slice(0, 500), createdAt: new Date().toISOString() }];
+                queue.note(snapshotOf(editor.getJSON() as JsonNode));
+                setCommentBody("");
+                setCommentOpen(false);
+                setRev((value) => value + 1);
+              }}
+            >
+              {t("apply")}
+            </Button>
+          </>
+        }
+      >
+        <Input label={t("commentBody")} value={commentBody} onChange={(event) => setCommentBody(event.target.value)} />
+      </Modal>
+      <Modal open={versionsOpen} title={t("versions")} onClose={() => setVersionsOpen(false)}>
+        <Button
+          variant="primary"
+          onClick={() => {
+            if (!editor) return;
+            const content = editor.getJSON() as JsonNode;
+            const last = versionsRef.current.at(-1);
+            if (last && JSON.stringify(last.content) === JSON.stringify(content)) return;
+            versionsRef.current = [...versionsRef.current, { id: createId(), at: new Date().toISOString(), title: nameRef.current, content }].slice(-20);
+            queue.note(snapshotOf(content));
+            setRev((value) => value + 1);
+          }}
+        >
+          {t("saveVersion")}
+        </Button>
+        <ul className="ow-list">
+          {versionsRef.current.map((version) => (
+            <li key={version.id}>
+              <span>{version.at}</span>
+              <Button
+                onClick={() => {
+                  editor?.commands.setContent(version.content);
+                  if (editor) queue.note(snapshotOf(version.content));
+                  setVersionsOpen(false);
+                }}
+              >
+                {t("restoreVersion")}
+              </Button>
+            </li>
+          ))}
+        </ul>
+        {versionsRef.current.length === 0 ? <p>{t("noVersions")}</p> : null}
+      </Modal>
+      <Modal open={shortcutsOpen} title={t("shortcuts")} onClose={() => setShortcutsOpen(false)}>
+        <p>{t("shortcutsBody")}</p>
       </Modal>
     </section>
   );

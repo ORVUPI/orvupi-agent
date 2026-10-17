@@ -26,7 +26,7 @@ Leyenda de obligaciones: «atribución» significa conservar el aviso de copyrig
 
 ### TipTap 3.32.0
 
-Paquetes directos: `@tiptap/core`, `@tiptap/react`, `@tiptap/starter-kit`, `@tiptap/extension-image`, `@tiptap/extension-link`, `@tiptap/extension-placeholder`, `@tiptap/extension-table`, `@tiptap/extension-text-align`, `@tiptap/extension-text-style`. `@tiptap/pm` 3.32.0 llega como dependencia transitiva.
+Paquetes directos: `@tiptap/core`, `@tiptap/react`, `@tiptap/starter-kit`, `@tiptap/extension-image`, `@tiptap/extension-link`, `@tiptap/extension-list`, `@tiptap/extension-placeholder`, `@tiptap/extension-table`, `@tiptap/extension-text-align`, `@tiptap/extension-text-style`. `@tiptap/pm` 3.32.0 llega como dependencia transitiva. `extension-list` aporta la lista de tareas.
 
 - Repositorio: https://github.com/ueberdosis/tiptap
 - Licencia: MIT
@@ -85,6 +85,24 @@ Versiones resueltas: `prosemirror-model` 1.25.12, `prosemirror-state` 1.4.4, `pr
 - Redistribución: sí, con la licencia. Copia en `licenses/Inter-OFL-1.1.txt`
 - Límites de marca: no renombrar la fuente ni afirmar que ORVUPI es autora de Inter
 
+### docx 9.12.0
+
+- Repositorio: https://github.com/dolanmiu/docx
+- Licencia: MIT
+- Uso comercial: sí
+- Obligaciones: atribución
+- Modificación y redistribución: sí
+- Límites de marca: ninguno. Se carga solo al exportar DOCX. Las imágenes del documento no entran en ese archivo
+
+### PapaParse 5.7.0
+
+- Repositorio: https://github.com/mholt/PapaParse
+- Licencia: MIT
+- Uso comercial: sí
+- Obligaciones: atribución
+- Modificación y redistribución: sí
+- Límites de marca: ninguno. Lee y escribe CSV
+
 ### Workbox 7.4.1, transitivo y empaquetado
 
 `vite-plugin-pwa` genera el service worker con `workbox-build`. El worker resultante forma parte de `dist/`.
@@ -110,6 +128,8 @@ No se sirven al usuario. Se listan porque participan en la build y en las prueba
 | fake-indexeddb | 6.2.6 | Apache-2.0 | https://github.com/dumbmatter/fakeIndexedDB |
 | Playwright | 1.64.1 | Apache-2.0 | https://github.com/microsoft/playwright |
 | `@axe-core/playwright` | 4.14.0 | MPL-2.0 | https://github.com/dequelabs/axe-core-npm |
+| `@types/node` | 22.19.7 | MIT | https://github.com/DefinitelyTyped/DefinitelyTyped |
+| `@types/papaparse` | 5.5.2 | MIT | https://github.com/DefinitelyTyped/DefinitelyTyped |
 
 `@axe-core/playwright` y axe-core son copyleft débil (MPL-2.0) y solo se usan en las pruebas. No entran en `dist/`. Si en el futuro se modificaran archivos de axe y se redistribuyeran, esos archivos tendrían que seguir bajo MPL-2.0. Hoy no se modifican ni se publican.
 
@@ -127,9 +147,8 @@ jsdom 30 pide Node `^22.22.2`. El entorno fijado es Node 22.14.0, así que se us
 | `xlsx` | 0.18.5 (2022-03-24) | Apache-2.0 en npm, sin versiones nuevas | No se añade |
 | `@fortune-sheet/react` | 1.0.4 | MIT | Demasiado pesada para esta fase |
 | `@univerjs/core` | 1.0.4 | Apache-2.0 | Demasiado pesada para esta fase |
-| formulajs | 1.0.8 | MIT | Candidata de la fase 5 |
-| PapaParse | 5.7.0 | MIT | Candidata de la fase 5 |
-| ExcelJS | 4.4.0 | MIT | Candidata de la fase 5 |
+| formulajs | 1.0.8 | MIT | No se usa. El evaluador de esta alfa es propio y más pequeño |
+| ExcelJS | 4.4.0 | MIT | Rechazada: su árbol trae `uuid` anterior a 11.1.1 (GHSA-w5hq-g745-h8pq) |
 
 ## Identidad visual
 
@@ -137,4 +156,6 @@ El avatar es el pulpo rosa que ya está en `web/v2/assets/orvupi/avatar.png`. Se
 
 ## npm audit
 
-`npm audit` en `apps/work` el 17 de octubre de 2026: 0 vulnerabilidades (64 dependencias de producción, 472 de desarrollo). `glob@11.1.0`, transitivo de Workbox, aparece como deprecado en el registro. No se parchea a mano porque el árbol lo fija `vite-plugin-pwa`.
+El XLSX no viene de un paquete. El escritor y el lector viven en `src/sheets/xlsx.ts` y `src/sheets/zip.ts`, con la licencia MIT del repositorio.
+
+`npm audit` en `apps/work` el 17 de octubre de 2026, después de quitar ExcelJS: 0 vulnerabilidades. `glob`, transitivo de Workbox, aparece como deprecado en el registro. No se parchea a mano porque el árbol lo fija `vite-plugin-pwa`. `docx` declara `@types/node` como dependencia de ejecución; los tipos no entran en el paquete del navegador. El proyecto fija `@types/node` 22.19.7 en desarrollo para que `tsc` vea `process` y `Buffer`.

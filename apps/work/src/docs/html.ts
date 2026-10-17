@@ -23,6 +23,8 @@ function renderInline(inline: Inline): string {
   const styles: string[] = [];
   if (inline.color) styles.push(`color: ${inline.color}`);
   if (inline.fontSize && SIZE_CLASS[inline.fontSize]) styles.push(`font-size: ${inline.fontSize}`);
+  if (inline.fontFamily) styles.push(`font-family: "${inline.fontFamily}"`);
+  if (inline.highlight) styles.push(`background: ${inline.highlight}`);
   if (styles.length > 0) html = `<span style="${styles.join("; ")}">${html}</span>`;
   const href = inline.href ? safeHref(inline.href) : null;
   if (href) html = `<a href="${escapeHtml(href)}" rel="noopener noreferrer">${html}</a>`;
@@ -51,6 +53,11 @@ export function docToHtmlBody(doc: JsonNode): string {
         const items = block.items.map((item) => `<li>${renderInlines(item)}</li>`).join("");
         return `<${tag}>${items}</${tag}>`;
       }
+      if (block.type === "checklist") {
+        const items = block.items.map((item) => `<li>${item.checked ? "☑" : "☐"} ${renderInlines(item.inlines)}</li>`).join("");
+        return `<ul>${items}</ul>`;
+      }
+      if (block.type === "pageBreak") return `<hr />`;
       if (block.type !== "table") return "";
       const rows = block.rows
         .map((row, index) => {
