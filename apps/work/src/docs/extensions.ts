@@ -1,4 +1,4 @@
-import { Node, mergeAttributes } from "@tiptap/core";
+import { Extension, Node, mergeAttributes } from "@tiptap/core";
 import { Image } from "@tiptap/extension-image";
 import { TaskItem } from "@tiptap/extension-list/task-item";
 import { TaskList } from "@tiptap/extension-list/task-list";
@@ -53,6 +53,28 @@ declare module "@tiptap/core" {
   }
 }
 
+const Indent = Extension.create({
+  name: "indent",
+  addGlobalAttributes() {
+    return [
+      {
+        types: ["paragraph", "heading"],
+        attributes: {
+          indent: {
+            default: 0,
+            parseHTML: (element: HTMLElement) => Number(element.getAttribute("data-indent") ?? 0) || 0,
+            renderHTML: (attributes: { indent?: number }) => {
+              const indent = Number(attributes.indent ?? 0);
+              if (!indent) return {};
+              return { "data-indent": String(indent), style: `margin-left: ${indent * 36}px` };
+            },
+          },
+        },
+      },
+    ];
+  },
+});
+
 export function createExtensions(placeholder: string) {
   return [
     StarterKit.configure({
@@ -66,6 +88,7 @@ export function createExtensions(placeholder: string) {
     FontSize,
     LineHeight.configure({ types: ["heading", "paragraph"] }),
     TextAlign.configure({ types: ["heading", "paragraph"] }),
+    Indent,
     TaskList,
     TaskItem.configure({ nested: true }),
     PageBreak,

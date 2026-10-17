@@ -2,7 +2,7 @@
 
 Suite de productividad en el navegador. Gratis, instalable y local-first. Los documentos se guardan en el dispositivo. Esta versión no tiene servidor, no llama a APIs de pago y no se vincula a ningún token.
 
-Esta entrega es la alfa 0.3.0: núcleo, ORVUPI Docs, archivos con la disposición de una unidad local, hojas de 1000 filas y diapositivas con miniaturas. El visor PDF y el modelo de IA local siguen previstos y todavía no editan. La matriz de funciones está en `docs/PARIDAD_DRIVE.md`. La disposición, en `docs/ANALISIS_DRIVE_UI.md`.
+Esta entrega es la alfa 0.4.0: núcleo, ORVUPI Docs con la disposición del editor de 2024–2026, archivos, hojas de 1000 filas y diapositivas con miniaturas. El visor PDF y el modelo de IA local siguen previstos y todavía no editan. La matriz de funciones está en `docs/PARIDAD_DRIVE.md`. Las medidas, en `docs/ANALISIS_DRIVE_UI.md`.
 
 ## Arranque
 
@@ -33,6 +33,13 @@ npm run test:e2e
 ```
 
 `npm test` ejecuta Vitest (unidad e integración). `npm run test:e2e` construye la app y recorre con Playwright el ciclo de la sección 30 del manual, más el contraste con axe.
+
+## Qué hay en 0.4.0
+
+- Docs a pantalla completa: título de 18 px, menús de 14 px, barra en píldora, reglas horizontal y vertical, hoja A4 y esquema de títulos.
+- Desplegables de zoom, estilo, fuente, tamaño, alineación, interlineado y modo. Atajos Ctrl+B, Ctrl+I, Ctrl+U, Ctrl+Z, Ctrl+Y, Ctrl+F y Ctrl+K.
+- Hojas con cuadro de nombre, marca `fx` y pestañas al pie. Archivos con buscador redondeado y tabla.
+- Lo de 0.3.0 sigue en su sitio. Un documento, una hoja o una diapositiva de esa versión abre igual.
 
 ## Qué hay en 0.3.0
 
@@ -66,7 +73,7 @@ npm run test:e2e
 
 ## English
 
-ORVUPI Work 0.3.0 is a free, local-first PWA. Documents stay on the device. There is no application server and no paid API. This build is an alpha, not a production release. The screen structure is described in `docs/ANALISIS_DRIVE_UI.md`. Feature parity is listed in `docs/PARIDAD_DRIVE.md`.
+ORVUPI Work 0.4.0 is a free, local-first PWA. Documents stay on the device. There is no application server and no paid API. This build is an alpha, not a production release. The screen structure is described in `docs/ANALISIS_DRIVE_UI.md`. Feature parity is listed in `docs/PARIDAD_DRIVE.md`.
 
 ```bash
 cd apps/work

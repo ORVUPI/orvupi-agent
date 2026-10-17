@@ -1,6 +1,6 @@
 # Análisis de la interfaz de Drive y de sus editores
 
-Fecha: 17 de octubre de 2026. Este documento describe la estructura, los componentes, los flujos, los atajos y los menús de Google Drive, Docs, Sheets y Slides, y qué parte de esa estructura adopta ORVUPI Work 0.3.0.
+Fecha: 17 de octubre de 2026. Este documento describe la estructura, los componentes, los flujos, los atajos y los menús de Google Drive, Docs, Sheets y Slides, y qué parte de esa estructura adopta ORVUPI Work 0.4.0.
 
 La fuente es la ayuda oficial de Google, consultada ese día, más la disposición pública de esas pantallas (barra, navegación izquierda, lista, cuadrícula, lienzo). Las capturas públicas se usaron solo como referencia de colocación. No se copian logotipos, iconos, nombres de producto, la tipografía Product Sans, los cuatro colores de marca ni el triángulo. Los iconos de esta app son Lucide 1.59.0 (ISC). La paleta y la tipografía son las de ORVUPI.
 
@@ -229,6 +229,22 @@ Referencia: https://support.google.com/keep/answer/2888248.
 Keep no es una lista de archivos. Es un muro de tarjetas. Arriba, «Tomar una nota». Las fijadas van primero. Cada tarjeta tiene color, título y un texto o una lista de casillas.
 
 ORVUPI Work hace ese muro en columnas. «Tomar una nota» crea una tarjeta. Fijar, el color de una lista cerrada y la lista de casillas se guardan en `orvupi-note` versión 1. El color oscuro usa texto crema. El verde y el ámbar usan texto oscuro de la paleta para seguir en AA.
+
+## Medidas de Docs en 0.4.0
+
+La URL de referencia devolvió 403, así que no hay captura de esa página. La tabla compara lo pedido en la descripción de esa pantalla con lo que pinta esta versión. El gris de las superficies es el de la referencia. El azul de marca no se usa: la píldora activa y los marcadores de la regla salen de `#1d4e89` y `#d9e6f7`, que ya estaban en la paleta de documentos.
+
+| Pieza | Pedido | ORVUPI Work 0.4.0 |
+| --- | --- | --- |
+| Fondo | `#f9fbfd` | `#f9fbfd` |
+| Título | 18 px, editable | 18 px, `line-height` 24 px |
+| Menú | 14 px, en línea | 14 px, color `#444746` |
+| Barra | píldora `#edf2fa`, iconos 20 px | altura 40 px, radio 24 px, iconos 20 px, color `#444746` (contraste 8,4:1) |
+| Hoja | A4, margen 2,54 cm | 794×1123 px a 96 ppp; margen 96 px |
+| Reglas | cm y marcadores | marcas cada milímetro; números en el área útil; marcador `#1d4e89` |
+| Panel | pestañas y esquema en cursiva | 256 px; píldora `#d9e6f7`; cursiva `#5f6368` |
+| Derecha | comentarios, compartir, avatar | comentarios, píldora Exportar, avatar «O» sobre `#1d4e89` |
+| Plan superior y videollamada | sustituir o quitar | quitados |
 
 ## Contraste
 

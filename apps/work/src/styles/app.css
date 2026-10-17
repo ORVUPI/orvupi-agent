@@ -741,9 +741,133 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
   .ow-drive { display: grid; }
 }
 
+.ow-shell { background: #f9fbfd; }
+.ow-maincol, .ow-shell main { background: #f9fbfd; }
+.ow-sidebar { background: #fff; border-right: 1px solid #e1e3e1; width: 256px; }
+.ow-sidebar button { border-radius: 16px; font-weight: 500; }
+.ow-sidebar button[aria-current="page"] { background: #d9e6f7; border-color: transparent; color: #102032; }
+.ow-search input { background: #edf2fa; border-color: transparent; min-height: 48px; }
+.ow-drive-table { border: 0; }
+.ow-drive-table th, .ow-drive-table td { border-bottom: 1px solid #e1e3e1; height: 48px; }
+.ow-drive-table th, .ow-drive-table th button { color: #444746; font-weight: 500; }
+.ow-formula { border: 1px solid #dadce0; border-radius: 4px; align-items: center; min-height: 34px; padding: 2px 4px; background: #fff; }
+.ow-namebox { min-width: 96px; min-height: 26px; border: 1px solid #dadce0; border-radius: 4px; background: #fff; font-weight: 500; color: #102032; }
+.ow-fx { width: 28px; text-align: center; font-style: italic; color: #444746; font-weight: 600; }
+.ow-sheet-cols, .ow-frozen, .ow-sheet-gutter, .ow-vcol, .ow-vrow { background: #f8f9fa; color: #444746; font-weight: 500; }
+.ow-sheet-tabs { background: #f9fbfd; border-radius: 0 0 8px 8px; padding: 4px; }
+.ow-sheet-tabs button[aria-selected="true"] { background: #fff; color: #102032; border-top: 3px solid #0b5d36; }
+.ow-form-page, .ow-draw-page, .ow-notes-page, .ow-slides-page { background: #f9fbfd; }
+.ow-form-card { border: 1px solid #e1e3e1; box-shadow: 0 1px 2px rgba(60, 64, 67, 0.08); }
+.ow-shell.is-doc .ow-sidebar,
+.ow-shell.is-doc .ow-topbar,
+.ow-shell.is-doc .ow-ai { display: none; }
+.ow-shell.is-doc .ow-maincol { display: block; }
+.ow-shell.is-doc main { padding: 0; height: 100vh; overflow: hidden; }
+.ow-docs { height: 100vh; display: flex; flex-direction: column; background: #f9fbfd; color: #102032; }
+.ow-docs-head { background: #f9fbfd; padding: 8px 12px 0; }
+.ow-docs-titlebar { display: flex; align-items: flex-start; gap: 8px; }
+.ow-docs-logo { border: 0; background: transparent; padding: 4px; cursor: pointer; border-radius: 8px; }
+.ow-docs-logo img { display: block; width: 40px; height: 40px; object-fit: contain; }
+.ow-docs-titleblock { flex: 1; min-width: 0; }
+.ow-docs-titlerow { display: flex; align-items: center; gap: 4px; min-height: 32px; }
+.ow-docs-name { border: 0; background: transparent; font-size: 18px; line-height: 24px; color: #102032; font-family: var(--font); padding: 2px 6px; border-radius: 4px; min-width: 180px; max-width: 420px; }
+.ow-docs-name:focus { outline: 2px solid #1d4e89; background: #fff; }
+.ow-docs-save { margin: 0; color: #444746; font-size: 13px; }
+.ow-docs-actions { display: flex; align-items: center; gap: 8px; padding-top: 4px; }
+.ow-docs-avatar { width: 32px; height: 32px; border-radius: 50%; background: #1d4e89; color: #fff; display: grid; place-items: center; font-weight: 700; }
+.ow-share { position: relative; display: flex; }
+.ow-share-main, .ow-share-caret { border: 0; background: #d9e6f7; color: #102032; min-height: 40px; cursor: pointer; font-weight: 600; }
+.ow-share-main { border-radius: 20px 0 0 20px; padding: 0 16px; }
+.ow-share-caret { border-radius: 0 20px 20px 0; border-left: 1px solid #c5d4e8; width: 36px; }
+.ow-share [role="menu"] { position: absolute; top: 44px; right: 0; background: #fff; border: 1px solid #dadce0; border-radius: 8px; min-width: 160px; z-index: 6; padding: 6px; display: grid; }
+.ow-share [role="menu"] button { border: 0; background: transparent; text-align: left; padding: 8px 10px; border-radius: 6px; cursor: pointer; color: #102032; }
+.ow-docs .ow-menubar { display: flex; gap: 2px; background: transparent; border: 0; padding: 0; margin: 0; flex-wrap: wrap; }
+.ow-docs .ow-menubar > div > button { border: 0; background: transparent; color: #444746; font-size: 14px; font-weight: 400; padding: 4px 8px; border-radius: 4px; min-height: 28px; }
+.ow-docs .ow-menubar [role="menu"] { background: #fff; border: 1px solid #dadce0; border-radius: 8px; box-shadow: 0 2px 6px rgba(60, 64, 67, 0.18); min-width: 240px; z-index: 8; }
+.ow-menu-row { position: relative; }
+.ow-menu-row > button { width: 100%; display: flex; justify-content: space-between; gap: 16px; align-items: center; }
+.ow-menu-row kbd { color: #444746; font-family: var(--font); font-size: 12px; }
+.ow-menu-row > [role="menu"] { left: 100%; top: 0; }
+.ow-docs-toolwrap { padding: 6px 12px 8px; }
+.ow-docs-toolbar { display: flex; align-items: center; gap: 2px; background: #edf2fa; border-radius: 24px; min-height: 40px; padding: 2px 8px; overflow-x: auto; }
+.ow-doc-icon { width: 32px; height: 32px; border: 0; background: transparent; color: #444746; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex: none; font: 700 15px Arial, sans-serif; }
+.ow-doc-icon[aria-pressed="true"], .ow-doc-icon.is-on { background: #d9e6f7; color: #102032; }
+.ow-doc-icon:focus-visible, .ow-docs .ow-menubar button:focus-visible, .ow-share button:focus-visible { outline: 2px solid #1d4e89; outline-offset: 1px; }
+.ow-tool-gap { width: 1px; height: 20px; background: #c5ced6; margin: 0 4px; flex: none; }
+.ow-tool-grow { flex: 1; }
+.ow-tool-select { position: relative; flex: none; }
+.ow-tool-select > button { display: flex; align-items: center; gap: 4px; border: 0; background: transparent; color: #102032; height: 32px; border-radius: 4px; padding: 0 6px; cursor: pointer; max-width: 132px; }
+.ow-tool-select.is-wide > button { min-width: 108px; }
+.ow-tool-select > button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.ow-tool-select [role="listbox"] { position: absolute; top: 36px; left: 0; background: #fff; border: 1px solid #dadce0; border-radius: 8px; box-shadow: 0 2px 6px rgba(60, 64, 67, 0.18); z-index: 7; min-width: 160px; padding: 6px; display: grid; }
+.ow-tool-select [role="option"] { border: 0; background: transparent; text-align: left; padding: 8px; border-radius: 6px; cursor: pointer; color: #102032; }
+.ow-sizebox { display: flex; align-items: center; }
+.ow-sizebox > span { min-width: 28px; text-align: center; color: #102032; font-size: 14px; }
+.ow-u { text-decoration: underline; }
+.ow-color-menu { position: relative; }
+.ow-color-trigger { flex-direction: column; gap: 1px; font-weight: 700; }
+.ow-color-trigger i { display: block; width: 16px; height: 3px; border-radius: 1px; }
+.ow-color-menu [role="menu"] { position: absolute; top: 36px; background: #fff; border: 1px solid #dadce0; border-radius: 8px; z-index: 7; padding: 6px; display: grid; min-width: 160px; }
+.ow-color-menu [role="menu"] button { display: flex; gap: 8px; align-items: center; border: 0; background: transparent; padding: 6px; cursor: pointer; color: #102032; }
+.ow-color-menu [role="menu"] i { width: 16px; height: 16px; border: 1px solid #c5ced6; border-radius: 4px; }
+.ow-docs-find { background: #fff; margin: 0 12px 8px; border: 1px solid #dadce0; border-radius: 12px; padding: 8px; }
+.ow-docs-body { flex: 1; min-height: 0; display: flex; }
+.ow-docs-tabs { width: 256px; flex: none; background: #fff; border-right: 1px solid #e1e3e1; padding: 8px; overflow: auto; }
+.ow-docs-tabs-open { width: 28px; border: 0; border-right: 1px solid #e1e3e1; background: #fff; color: #444746; cursor: pointer; }
+.ow-docs-tabhead { display: flex; align-items: center; gap: 6px; }
+.ow-docs-tabhead strong { flex: 1; font-size: 14px; font-weight: 500; }
+.ow-docs-tabhead button { border: 0; background: transparent; color: #444746; width: 32px; height: 32px; border-radius: 16px; cursor: pointer; font-size: 18px; }
+.ow-docs-tab { position: relative; display: flex; align-items: center; gap: 8px; background: #d9e6f7; color: #102032; border-radius: 16px; min-height: 36px; padding: 4px 8px; margin: 8px 0; }
+.ow-docs-tab span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.ow-docs-tab > button { border: 0; background: transparent; color: #102032; cursor: pointer; }
+.ow-docs-tab [role="menu"] { position: absolute; top: 36px; right: 0; background: #fff; border: 1px solid #dadce0; border-radius: 8px; z-index: 4; }
+.ow-docs-tab [role="menu"] button { border: 0; background: transparent; padding: 8px 12px; cursor: pointer; color: #102032; }
+.ow-docs-outline-empty { color: #5f6368; font-style: italic; font-size: 13px; line-height: 1.4; margin: 12px 8px; }
+.ow-docs-outline { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.ow-docs-outline li { font-size: 13px; color: #102032; }
+.ow-docs-outline li[data-level="2"] { padding-left: 12px; }
+.ow-docs-outline li[data-level="3"] { padding-left: 24px; }
+.ow-docs-scroll { flex: 1; overflow: auto; padding: 8px 24px 48px; }
+.ow-docs-sheet { width: max-content; margin: 0 auto; }
+.ow-ruler-row, .ow-docs-page-row { display: flex; }
+.ow-vruler-spacer { width: 24px; flex: none; }
+.ow-hruler, .ow-vruler { position: relative; background: #fff; color: #444746; font-size: 10px; }
+.ow-hruler { height: 24px; border-bottom: 1px solid #dadce0; }
+.ow-vruler { width: 24px; border-right: 1px solid #dadce0; flex: none; }
+.ow-hruler i, .ow-vruler i { position: absolute; background: #80868b; }
+.ow-hruler i { width: 1px; height: 4px; bottom: 0; }
+.ow-hruler i.is-mid { height: 7px; }
+.ow-hruler i.is-cm { height: 10px; }
+.ow-vruler i { height: 1px; width: 4px; right: 0; }
+.ow-vruler i.is-cm { width: 8px; }
+.ow-hruler span, .ow-vruler span { position: absolute; transform: translate(-50%, 0); top: 1px; }
+.ow-vruler span { transform: translate(0, -50%); left: 1px; }
+.ow-hruler em, .ow-vruler em { position: absolute; background: #f1f3f4; }
+.ow-hruler em { left: 0; top: 0; bottom: 0; }
+.ow-hruler em.is-end { left: auto; right: 0; }
+.ow-vruler em { left: 0; right: 0; top: 0; }
+.ow-vruler em.is-end { top: auto; bottom: 0; }
+.ow-hruler b { position: absolute; top: 0; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 8px solid #1d4e89; }
+.ow-hruler b.is-bar { width: 10px; height: 4px; border: 0; background: #1d4e89; top: 10px; }
+.ow-hruler b.is-end { border-top: 0; border-bottom: 8px solid #1d4e89; }
+.ow-a4 { position: relative; background: #fff; color: #102032; border: 1px solid #dadce0; box-shadow: 0 1px 3px rgba(60, 64, 67, 0.12); display: flex; flex-direction: column; }
+.ow-a4-body { padding: 96px; flex: 1; }
+.ow-a4-edge { position: absolute; left: 96px; right: 96px; margin: 0; border: 0; border-bottom: 1px solid transparent; background: transparent; color: #102032; font-size: 11pt; }
+.ow-a4 > input:first-child { top: 16px; }
+.ow-a4 > input:last-child { bottom: 16px; }
+.ow-a4-edge:focus { outline: none; border-bottom-color: #1d4e89; }
+.ow-a4 .ProseMirror { outline: none; min-height: 720px; font-family: Arial, Helvetica, sans-serif; font-size: 11pt; line-height: 1.15; color: #102032; }
+.ow-a4 .ProseMirror h1, .ow-a4 .ProseMirror h2, .ow-a4 .ProseMirror h3 { font-family: Arial, Helvetica, sans-serif; font-weight: 400; letter-spacing: 0; margin: 0 0 8px; color: #102032; }
+.ow-a4 .ProseMirror h1 { font-size: 26pt; }
+.ow-a4 .ProseMirror h2 { font-size: 18pt; }
+.ow-a4 .ProseMirror h3 { font-size: 14pt; }
+.ow-a4 .ProseMirror p { margin: 0 0 8px; }
+.ow-docs .ow-count { color: #444746; }
+.ow-editor .ow-list { position: fixed; right: 16px; bottom: 16px; width: min(320px, calc(100vw - 32px)); background: #fff; border: 1px solid #dadce0; border-radius: 12px; padding: 12px; z-index: 5; max-height: 240px; overflow: auto; }
+
 @media print {
-  .ow-sidebar, .ow-topbar, .ow-ai, .ow-toolbar, .ow-find, .ow-count, .ow-toasts, .ow-skip, .ow-menubar, .ow-ruler { display: none !important; }
-  .ow-shell { display: block; }
-  .ow-paper, .ow-page-canvas { border: 0; box-shadow: none; }
-  .ow-doc-stage { background: #fff; padding: 0; }
+  .ow-sidebar, .ow-topbar, .ow-ai, .ow-toolbar, .ow-find, .ow-count, .ow-toasts, .ow-skip, .ow-menubar, .ow-ruler,
+  .ow-docs-head, .ow-docs-toolwrap, .ow-docs-tabs, .ow-hruler, .ow-vruler, .ow-a4-edge, .ow-docs-find { display: none !important; }
+  .ow-shell, .ow-shell.is-doc main, .ow-docs, .ow-docs-body, .ow-docs-scroll { display: block; height: auto; overflow: visible; background: #fff; }
+  .ow-a4 { border: 0; box-shadow: none; }
 }

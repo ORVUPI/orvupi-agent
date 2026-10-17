@@ -180,15 +180,17 @@ export function ShellFrame({
   children,
   aside,
   skip,
+  className = "",
 }: {
   sidebar: ReactNode;
   topbar: ReactNode;
   children: ReactNode;
   aside: ReactNode;
   skip: string;
+  className?: string;
 }) {
   return (
-    <div className="ow-shell">
+    <div className={`ow-shell ${className}`.trim()}>
       <a className="ow-skip" href="#contenido">
         {skip}
       </a>

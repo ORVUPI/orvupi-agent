@@ -1,5 +1,15 @@
 # Registro de cambios
 
+## 0.4.0 — 2026-10-17
+
+Alfa de desarrollo. No es una versión de producción.
+
+- Docs ocupa la ventana, como el editor de referencia de 2024–2026: fondo `#f9fbfd`, título de 18 px, menú de 14 px, barra en una píldora `#edf2fa`, hoja A4 de 794×1123 px con margen de 96 px (2,54 cm), reglas en centímetros y panel de pestañas con el esquema de títulos.
+- La barra aplica zoom, estilo, fuente, tamaño en puntos, negrita, cursiva, subrayado, color, resaltado, enlace, imagen, comentario, alineación, interlineado, listas, sangría y borrar formato. Los menús muestran el atajo (Ctrl+B, Ctrl+I, Ctrl+U, Ctrl+Z, Ctrl+Y, Ctrl+F, Ctrl+K).
+- El icono es el de ORVUPI. La píldora de la derecha exporta en este dispositivo. No hay videollamada ni cambio de plan.
+- Hojas muestra `fx` junto al cuadro de nombre. Encabezados grises y pestaña activa con franja verde de la paleta. Archivos usa buscador `#edf2fa` y lista de 48 px.
+- Los archivos de 0.1, 0.2 y 0.3 siguen abriendo.
+
 ## 0.3.0 — 2026-10-17
 
 Alfa de desarrollo. No es una versión de producción.

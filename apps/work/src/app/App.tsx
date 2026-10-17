@@ -165,6 +165,7 @@ export function App() {
 
   return (
     <ShellFrame
+      className={workspace.openDocId ? "is-doc" : ""}
       skip={workspace.t("skip")}
       sidebar={
         <Sidebar
@@ -229,7 +230,7 @@ export function App() {
           }
         />
       }
-      topbar={
+      topbar={workspace.openDocId ? null : (
         <Topbar
           menuLabel={workspace.t("menu")}
           onMenu={() => workspace.setNavOpen(true)}
@@ -293,7 +294,7 @@ export function App() {
             </>
           ) : null}
         />
-      }
+      )}
       aside={
         <AiPanel
           open={workspace.aiOpen}

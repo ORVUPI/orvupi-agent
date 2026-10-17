@@ -1,4 +1,4 @@
-import { EditorContent, useEditor, type Editor } from "@tiptap/react";
+import { useEditor } from "@tiptap/react";
 import { useEffect, useRef, useState } from "react";
 import type { Locale, MessageKey } from "../i18n";
 import { translate } from "../i18n";
@@ -7,9 +7,8 @@ import { MAX_IMAGE_BYTES } from "../security/limits";
 import { createId, fileNameWithExtension } from "../security/names";
 import { safeHref } from "../security/sanitize";
 import type { FileRecord, StorageService } from "../storage/types";
-import { Icon } from "../ui/icons";
-import { Button, ErrorState, IconButton, Input, Select } from "../ui/kit";
-import { MenuBar } from "../ui/menus";
+import { Button, ErrorState, Input } from "../ui/kit";
+import { DocsSurface } from "./DocsSurface";
 import { Modal } from "../ui/overlay";
 import { createExtensions, pastedHtml } from "./extensions";
 import { findInSlices, type TextSlice } from "./find";
@@ -29,22 +28,7 @@ export type DocSession = {
   close: () => Promise<boolean>;
 };
 
-const COLORS: Array<{ id: string; value: string; key: MessageKey }> = [
-  { id: "ink", value: "#102032", key: "colorInk" },
-  { id: "pink", value: "#ad1645", key: "colorPink" },
-  { id: "green", value: "#0b5d36", key: "colorGreen" },
-  { id: "blue", value: "#1d4e89", key: "colorBlue" },
-  { id: "red", value: "#a3123f", key: "colorRed" },
-];
-
-const SIZES: Array<{ id: string; value: string; key: MessageKey }> = [
-  { id: "sm", value: "14px", key: "sizeSm" },
-  { id: "md", value: "16px", key: "sizeMd" },
-  { id: "lg", value: "20px", key: "sizeLg" },
-  { id: "xl", value: "28px", key: "sizeXl" },
-];
-
-function slicesOf(editor: Editor): TextSlice[] {
+function slicesOf(editor: NonNullable<ReturnType<typeof useEditor>>): TextSlice[] {
   const slices: TextSlice[] = [];
   editor.state.doc.descendants((node, pos) => {
     if (node.isText && node.text) slices.push({ text: node.text, pos });
@@ -102,8 +86,8 @@ export function DocsEditor({
   const [commentBody, setCommentBody] = useState("");
   const [versionsOpen, setVersionsOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
-  const [showRuler, setShowRuler] = useState(true);
   const [rev, setRev] = useState(0);
+  const [starred, setStarred] = useState(record.favorite);
 
   const editor = useEditor({
     immediatelyRender: true,
@@ -156,6 +140,10 @@ export function DocsEditor({
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "f") {
         event.preventDefault();
         setFindOpen(true);
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setLinkOpen(true);
       }
     };
     const onHide = () => {
@@ -323,208 +311,74 @@ export function DocsEditor({
     setLinkError("");
   }
 
-  const run = (command: () => boolean) => {
-    command();
-  };
-
   return (
     <section className="ow-editor" data-tool="docs" aria-label={t("editorRegion")}>
       <h1 className="ow-sr">{name}</h1>
-      <MenuBar
-        label={t("menuBar")}
-        menus={[
-          { id: "file", label: t("menuFile"), items: [
-            { id: "print", label: t("print"), onSelect: () => window.print() },
-            { id: "close", label: t("closeDoc"), onSelect: () => void closeDocument() },
-          ] },
-          { id: "edit", label: t("menuEdit"), items: [
-            { id: "undo", label: t("undo"), onSelect: () => editor?.chain().focus().undo().run() },
-            { id: "redo", label: t("redo"), onSelect: () => editor?.chain().focus().redo().run() },
-            { id: "find", label: t("findReplace"), onSelect: () => setFindOpen(true) },
-          ] },
-          { id: "view", label: t("menuView"), items: [
-            { id: "ruler", label: t("showRuler"), onSelect: () => setShowRuler((value) => !value) },
-          ] },
-          { id: "insert", label: t("menuInsert"), items: [
-            { id: "table", label: t("table"), onSelect: () => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run() },
-            { id: "link", label: t("link"), onSelect: () => setLinkOpen(true) },
-            { id: "break", label: t("pageBreak"), onSelect: () => editor?.chain().focus().insertPageBreak().run() },
-            { id: "comment", label: t("comment"), onSelect: () => setCommentOpen(true) },
-          ] },
-          { id: "format", label: t("menuFormat"), items: [
-            { id: "bold", label: t("bold"), onSelect: () => editor?.chain().focus().toggleBold().run() },
-            { id: "h1", label: t("heading1"), onSelect: () => editor?.chain().focus().toggleHeading({ level: 1 }).run() },
-            { id: "list", label: t("bullet"), onSelect: () => editor?.chain().focus().toggleBulletList().run() },
-            { id: "check", label: t("checklist"), onSelect: () => editor?.chain().focus().toggleTaskList().run() },
-          ] },
-          { id: "tools", label: t("menuTools"), items: [
-            { id: "versions", label: t("versions"), onSelect: () => setVersionsOpen(true) },
-          ] },
-          { id: "help", label: t("menuHelp"), items: [
-            { id: "keys", label: t("shortcuts"), onSelect: () => setShortcutsOpen(true) },
-          ] },
-        ]}
-      />
-      <div className="ow-toolbar" role="toolbar" aria-label={t("toolbarLabel")}>
-        <Select
-          label={t("styleLabel")}
-          value={editor?.isActive("heading", { level: 1 }) ? "1" : editor?.isActive("heading", { level: 2 }) ? "2" : editor?.isActive("heading", { level: 3 }) ? "3" : "0"}
-          onChange={(event) => {
-            const level = Number(event.target.value);
-            if (!editor) return;
-            if (level === 0) run(() => editor.chain().focus().setParagraph().run());
-            else run(() => editor.chain().focus().toggleHeading({ level: level as 1 | 2 | 3 }).run());
-          }}
-        >
-          <option value="0">{t("paragraphStyle")}</option>
-          <option value="1">{t("heading1")}</option>
-          <option value="2">{t("heading2")}</option>
-          <option value="3">{t("heading3")}</option>
-        </Select>
-        <IconButton label={t("bold")} pressed={editor?.isActive("bold")} onClick={() => editor?.chain().focus().toggleBold().run()}>
-          <Icon name="bold" />
-        </IconButton>
-        <IconButton label={t("italic")} pressed={editor?.isActive("italic")} onClick={() => editor?.chain().focus().toggleItalic().run()}>
-          <Icon name="italic" />
-        </IconButton>
-        <IconButton label={t("underline")} pressed={editor?.isActive("underline")} onClick={() => editor?.chain().focus().toggleUnderline().run()}>
-          <Icon name="underline" />
-        </IconButton>
-        <IconButton label={t("strike")} pressed={editor?.isActive("strike")} onClick={() => editor?.chain().focus().toggleStrike().run()}>
-          <Icon name="strike" />
-        </IconButton>
-        <IconButton label={t("bullet")} pressed={editor?.isActive("bulletList")} onClick={() => editor?.chain().focus().toggleBulletList().run()}>
-          <Icon name="list" />
-        </IconButton>
-        <IconButton label={t("ordered")} pressed={editor?.isActive("orderedList")} onClick={() => editor?.chain().focus().toggleOrderedList().run()}>
-          <Icon name="ordered" />
-        </IconButton>
-        <IconButton label={t("alignLeft")} pressed={editor?.isActive({ textAlign: "left" })} onClick={() => editor?.chain().focus().setTextAlign("left").run()}>
-          <Icon name="alignLeft" />
-        </IconButton>
-        <IconButton label={t("alignCenter")} pressed={editor?.isActive({ textAlign: "center" })} onClick={() => editor?.chain().focus().setTextAlign("center").run()}>
-          <Icon name="alignCenter" />
-        </IconButton>
-        <IconButton label={t("alignRight")} pressed={editor?.isActive({ textAlign: "right" })} onClick={() => editor?.chain().focus().setTextAlign("right").run()}>
-          <Icon name="alignRight" />
-        </IconButton>
-        <div className="ow-swatches" role="group" aria-label={t("color")}>
-          {COLORS.map((color) => (
-            <button
-              key={color.id}
-              type="button"
-              className="ow-swatch"
-              style={{ background: color.value }}
-              aria-label={t(color.key)}
-              aria-pressed={editor?.isActive("textStyle", { color: color.value })}
-              onClick={() => editor?.chain().focus().setColor(color.value).run()}
-            />
-          ))}
-        </div>
-        <Select
-          label={t("size")}
-          value="16px"
-          onChange={(event) => editor?.chain().focus().setFontSize(event.target.value).run()}
-        >
-          {SIZES.map((size) => (
-            <option key={size.id} value={size.value}>
-              {t(size.key)}
-            </option>
-          ))}
-        </Select>
-        <Button onClick={() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}>{t("table")}</Button>
-        <label className="ow-file">
-          <input
-            aria-label={t("image")}
-            type="file"
-            accept="image/png,image/jpeg,image/gif,image/webp"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              event.target.value = "";
-              if (file) void addImage(file);
+      <DocsSurface
+        t={t}
+        editor={editor}
+        name={name}
+        saveLabel={t(saveState === "saved" ? "statusSaved" : "statusPending")}
+        starred={starred}
+        onName={(value) => {
+          nameRef.current = value;
+          setName(value);
+        }}
+        onCommit={() => {
+          const title = nameRef.current.trim();
+          if (!title) return;
+          void storage.renameFile(record.id, title).then(async (saved) => {
+            nameRef.current = saved.name;
+            setName(saved.name);
+            fileRef.current = { ...fileRef.current, title: saved.name };
+            await onFilesChanged();
+          });
+        }}
+        onStar={() => {
+          const next = !starred;
+          setStarred(next);
+          void storage.setFavorite(record.id, next).then(() => onFilesChanged());
+        }}
+        onClose={() => void closeDocument()}
+        onExport={(kind) => void exportAs(kind)}
+        onFind={() => setFindOpen(true)}
+        onLink={() => setLinkOpen(true)}
+        onImage={(file) => void addImage(file)}
+        onComment={() => setCommentOpen(true)}
+        onVersions={() => setVersionsOpen(true)}
+        onShortcuts={() => setShortcutsOpen(true)}
+        onPrint={() => window.print()}
+        header={header}
+        footer={footer}
+        onHeader={(value) => {
+          headerRef.current = value;
+          setHeader(value);
+          if (editor) queue.note(snapshotOf(editor.getJSON() as JsonNode));
+        }}
+        onFooter={(value) => {
+          footerRef.current = value;
+          setFooter(value);
+          if (editor) queue.note(snapshotOf(editor.getJSON() as JsonNode));
+        }}
+        words={`${t("words", { count: counts.words })} · ${t("characters", { count: counts.characters })}`}
+        find={findOpen ? (
+          <form
+            className="ow-find ow-docs-find"
+            onSubmit={(event) => {
+              event.preventDefault();
+              findNext();
             }}
-          />
-          <span className="ow-button ow-button-secondary">{t("image")}</span>
-        </label>
-        <Button onClick={() => setLinkOpen(true)}>{t("link")}</Button>
-        <IconButton label={t("undo")} onClick={() => editor?.chain().focus().undo().run()}>
-          <Icon name="undo" />
-        </IconButton>
-        <IconButton label={t("redo")} onClick={() => editor?.chain().focus().redo().run()}>
-          <Icon name="redo" />
-        </IconButton>
-        <Button onClick={() => editor?.chain().focus().toggleTaskList().run()}>{t("checklist")}</Button>
-        <Select label={t("fontLabel")} value="Inter" onChange={(event) => editor?.chain().focus().setFontFamily(event.target.value).run()}>
-          <option value="Inter">Inter</option>
-          <option value="Georgia">Georgia</option>
-          <option value="Courier New">Courier New</option>
-        </Select>
-        <Select label={t("lineHeight")} value="1.5" onChange={(event) => editor?.chain().focus().setLineHeight(event.target.value).run()}>
-          <option value="1.2">1.2</option>
-          <option value="1.5">1.5</option>
-          <option value="2">2</option>
-        </Select>
-        <Select label={t("highlight")} value="" onChange={(event) => (event.target.value ? editor?.chain().focus().setBackgroundColor(event.target.value).run() : editor?.chain().focus().unsetBackgroundColor().run())}>
-          <option value="">{t("highlight")}</option>
-          <option value="#fff4b8">{t("colorAmber")}</option>
-          <option value="#d9f5e4">{t("colorGreen")}</option>
-          <option value="#fde2ea">{t("colorPink")}</option>
-          <option value="#dbe7f5">{t("colorBlue")}</option>
-        </Select>
-        <Button onClick={() => editor?.chain().focus().insertPageBreak().run()}>{t("pageBreak")}</Button>
-        <Button
-          onClick={() => {
-            if (!editor) return;
-            const lines = docToText(editor.getJSON() as JsonNode)
-              .split("\n")
-              .map((line) => line.trim())
-              .filter((line) => line.length > 0 && line.length < 80)
-              .slice(0, 12);
-            const headings = (editor.getJSON() as JsonNode).content?.filter((node) => node.type === "heading") ?? [];
-            const items = headings.map((node) => node.content?.map((child) => child.text ?? "").join("") ?? "").filter(Boolean);
-            editor.chain().focus().insertContent({
-              type: "bulletList",
-              content: (items.length > 0 ? items : lines.slice(0, 1)).map((item) => ({ type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: item }] }] })),
-            }).run();
-          }}
-        >
-          {t("toc")}
-        </Button>
-        <Button onClick={() => setCommentOpen(true)}>{t("comment")}</Button>
-        <Button onClick={() => setVersionsOpen(true)}>{t("versions")}</Button>
-        <Button onClick={() => setShortcutsOpen(true)}>{t("shortcuts")}</Button>
-        <Button onClick={() => setFindOpen((value) => !value)}>{t("findReplace")}</Button>
-        <Button onClick={() => window.print()}>{t("print")}</Button>
-      </div>
-      <div className="ow-row">
-        <Input label={t("header")} value={header} onChange={(event) => { headerRef.current = event.target.value.slice(0, 240); setHeader(headerRef.current); if (editor) queue.note(snapshotOf(editor.getJSON() as JsonNode)); }} />
-        <Input label={t("footer")} value={footer} onChange={(event) => { footerRef.current = event.target.value.slice(0, 240); setFooter(footerRef.current); if (editor) queue.note(snapshotOf(editor.getJSON() as JsonNode)); }} />
-      </div>
-      {findOpen ? (
-        <form
-          className="ow-find"
-          onSubmit={(event) => {
-            event.preventDefault();
-            findNext();
-          }}
-        >
-          <Input label={t("find")} value={findQuery} onChange={(event) => setFindQuery(event.target.value)} />
-          <Input label={t("replace")} value={replaceValue} onChange={(event) => setReplaceValue(event.target.value)} />
-          <Button type="submit">{t("findNext")}</Button>
-          <Button onClick={replaceOne}>{t("replaceOne")}</Button>
-          <Button onClick={replaceAll}>{t("replaceAll")}</Button>
-          <Button onClick={() => setFindOpen(false)}>{t("closeFind")}</Button>
-          {findNote ? <p role="status">{findNote}</p> : null}
-        </form>
-      ) : null}
-      <div className="ow-doc-stage">
-        {showRuler ? <div className="ow-ruler" aria-hidden="true" /> : null}
-        <div className="ow-paper ow-page-canvas">
-        {header ? <p className="ow-print-edge">{header}</p> : null}
-        <EditorContent editor={editor} />
-        {footer ? <p className="ow-print-edge">{footer}</p> : null}
-        </div>
-      </div>
+          >
+            <Input label={t("find")} value={findQuery} onChange={(event) => setFindQuery(event.target.value)} />
+            <Input label={t("replace")} value={replaceValue} onChange={(event) => setReplaceValue(event.target.value)} />
+            <Button type="submit">{t("findNext")}</Button>
+            <Button onClick={replaceOne}>{t("replaceOne")}</Button>
+            <Button onClick={replaceAll}>{t("replaceAll")}</Button>
+            <Button onClick={() => setFindOpen(false)}>{t("closeFind")}</Button>
+            {findNote ? <p role="status">{findNote}</p> : null}
+          </form>
+        ) : null}
+      />
       {rev >= 0 && commentsRef.current.length > 0 ? (
         <ul className="ow-list">
           {commentsRef.current.map((comment) => (
@@ -544,9 +398,6 @@ export function DocsEditor({
           ))}
         </ul>
       ) : null}
-      <p className="ow-count" aria-live="polite">
-        {t("words", { count: counts.words })} · {t("characters", { count: counts.characters })}
-      </p>
       {saveError ? (
         <ErrorState
           title={t("saveErrorTitle")}
