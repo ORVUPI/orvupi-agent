@@ -286,19 +286,21 @@ function classifyAddress(raw, cards, source, evm = []) {
             return viewOf(kind, card.mint, rowsFor(card), partialNoteFor(card));
         }
     }
-    if (mint === ORVUPI_CA)
+    if (isOrvupiOfficial(mint))
         return orvupiOfficialView(mint);
     return notOfficialView(mint, official);
 }
-/** CA oficial de ORVUPI en Solana (web/v2/shared/orvupi-contract.json). */
-const ORVUPI_CA = "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU";
+/** En verify.js lee el CA de shared/orvupi-contract.js (isOfficialAddress). Fuera del navegador usa esta copia, que test/web-v2.test.ts compara con orvupi-contract.json. */
+function isOrvupiOfficial(mint) {
+    return typeof isOfficialAddress === "function" ? isOfficialAddress(mint) : mint === "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU";
+}
 function orvupiOfficialView(mint) {
     return {
-        kind: "sin_ficha",
-        light: "ok",
+        kind: "lectura_caida",
+        light: "neutro",
         lightLabel: pair("Dirección oficial de ORVUPI", "Official ORVUPI address"),
-        title: pair("Dirección oficial de ORVUPI", "Official ORVUPI address"),
-        support: pair("Coincide con la dirección publicada en orvupi.com/token.", "It matches the address published on orvupi.com/token."),
+        title: pair("Dirección oficial de ORVUPI · lectura no disponible", "Official ORVUPI address · reading unavailable"),
+        support: pair("Coincide con la dirección publicada en orvupi.com/token. La lectura en directo no está disponible ahora: no hay resultado y no se inventa uno.", "It matches the address published on orvupi.com/token. The live reading is unavailable right now: there is no result, and none is invented."),
         mint,
         rows: [],
         partialNote: null,
@@ -2342,7 +2344,9 @@ async function readWith(mint, registry, rpc, input) {
     signals.push(curveNotOnPump ? curveDoesNotApplySignal() : curveSignal(curveInfo, bonding));
     const copyByName = !likeness.inRegistry && likeness.signals.some((item) => /^nombre |^símbolo /.test(item));
     // Contrato oficial ORVUPI (Solana): Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU. Otro token que dice llamarse ORVUPI no es el oficial.
-    const namedLikeProject = !likeness.inRegistry && mint !== "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU" && [...names, ...symbols].some((item) => namesProject(item));
+    // En verify.js el CA sale de shared/orvupi-contract.js; en Node, de esta copia (comprobada por test/web-v2.test.ts).
+    const officialOrvupi = typeof isOfficialAddress === "function" ? isOfficialAddress(mint) : mint === "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU";
+    const namedLikeProject = !likeness.inRegistry && !officialOrvupi && [...names, ...symbols].some((item) => namesProject(item));
     if (likeness.inRegistry) {
         signals.push({
             id: "registro",
@@ -2386,7 +2390,6 @@ async function readWith(mint, registry, rpc, input) {
     }
     const risky = signals.some((item) => item.level === "riesgo");
     const attention = signals.some((item) => item.level === "atencion");
-    const officialOrvupi = mint === "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU";
     const headline = officialOrvupi
         ? {
             light: "ok",
@@ -5137,7 +5140,10 @@ function paintVerify(out, view) {
     sampleBtn.textContent = lang === "en" ? "Try to read the largest accounts" : "Intentar leer las cuentas más grandes";
     out.append(sampleBtn);
   }
-  var failedRead = view.missingState === "falta" || view.kind === "red" || view.kind === "limite" || view.kind === "tiempo";
+  var isOfficial = !!view.mint && typeof isOfficialAddress === "function" && isOfficialAddress(view.mint);
+  var noLiveRead = !!view.mint && (view.kind === "lectura_caida" || view.kind === "sin_ficha");
+  var officialDown = noLiveRead && isOfficial;
+  var failedRead = noLiveRead || view.missingState === "falta" || view.kind === "red" || view.kind === "limite" || view.kind === "tiempo";
   if (failedRead && view.light !== "espera" && !out.querySelector("#reintentar")) {
     var retry = verifyEl("button", { type: "button", id: "reintentar" });
     retry.textContent = lang === "en" ? "Try again" : "Reintentar";
@@ -5145,7 +5151,15 @@ function paintVerify(out, view) {
   }
   if (view.kind !== "vacio" && typeof AUDIT_NOTICE !== "undefined") {
     var audit = verifyEl("p", { class: "aviso-fijo" });
-    audit.textContent = view.mint === "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU"
+    audit.textContent = officialDown
+      ? (lang === "en"
+        ? "The blockchain could not be read right now. This is the official ORVUPI address published on orvupi.com/token. Press «Try again»."
+        : "No se pudo leer la blockchain ahora. Esta es la dirección oficial de ORVUPI publicada en orvupi.com/token. Pulsa «Reintentar».")
+      : noLiveRead
+      ? (lang === "en"
+        ? "The blockchain could not be read right now. This address is not the official ORVUPI address (the official one is on orvupi.com/token). Press «Try again»."
+        : "No se pudo leer la blockchain ahora. Esta dirección no es la oficial de ORVUPI (la oficial está en orvupi.com/token). Pulsa «Reintentar».")
+      : isOfficial
       ? (lang === "en"
         ? "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. This is the official ORVUPI address published on orvupi.com/token."
         : "Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. Esta es la dirección oficial de ORVUPI publicada en orvupi.com/token.")

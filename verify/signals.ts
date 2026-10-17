@@ -663,7 +663,9 @@ async function readWith(
   signals.push(curveNotOnPump ? curveDoesNotApplySignal() : curveSignal(curveInfo, bonding));
   const copyByName = !likeness.inRegistry && likeness.signals.some((item) => /^nombre |^símbolo /.test(item));
   // Contrato oficial ORVUPI (Solana): Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU. Otro token que dice llamarse ORVUPI no es el oficial.
-  const namedLikeProject = !likeness.inRegistry && mint !== "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU" && [...names, ...symbols].some((item) => namesProject(item));
+  // En verify.js el CA sale de shared/orvupi-contract.js; en Node, de esta copia (comprobada por test/web-v2.test.ts).
+  const officialOrvupi = typeof isOfficialAddress === "function" ? isOfficialAddress(mint) : mint === "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU";
+  const namedLikeProject = !likeness.inRegistry && !officialOrvupi && [...names, ...symbols].some((item) => namesProject(item));
   if (likeness.inRegistry) {
     signals.push({
       id: "registro",
@@ -719,7 +721,6 @@ async function readWith(
   }
   const risky = signals.some((item) => item.level === "riesgo");
   const attention = signals.some((item) => item.level === "atencion");
-  const officialOrvupi = mint === "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU";
   const headline = officialOrvupi
     ? {
         light: "ok" as const,
@@ -1314,3 +1315,5 @@ function curveSignal(account: AccountInfo | null, curve: ReturnType<typeof decod
     ),
   };
 }
+
+declare const isOfficialAddress: ((value: string) => boolean) | undefined;
