@@ -790,7 +790,7 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-menu-row kbd { color: #444746; font-family: var(--font); font-size: 12px; }
 .ow-menu-row > [role="menu"] { left: 100%; top: 0; }
 .ow-docs-toolwrap { padding: 6px 12px 8px; }
-.ow-docs-toolbar { display: flex; align-items: center; gap: 2px; background: #edf2fa; border-radius: 24px; min-height: 40px; padding: 2px 8px; overflow-x: auto; }
+.ow-docs-toolbar { display: flex; align-items: center; gap: 2px; background: #edf2fa; border-radius: 24px; min-height: 40px; padding: 2px 8px; overflow: visible; flex-wrap: wrap; }
 .ow-doc-icon { width: 32px; height: 32px; border: 0; background: transparent; color: #444746; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex: none; font: 700 15px Arial, sans-serif; }
 .ow-doc-icon[aria-pressed="true"], .ow-doc-icon.is-on { background: #d9e6f7; color: #102032; }
 .ow-doc-icon:focus-visible, .ow-docs .ow-menubar button:focus-visible, .ow-share button:focus-visible { outline: 2px solid #1d4e89; outline-offset: 1px; }
@@ -802,15 +802,39 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-tool-select > button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
 .ow-tool-select [role="listbox"] { position: absolute; top: 36px; left: 0; background: #fff; border: 1px solid #dadce0; border-radius: 8px; box-shadow: 0 2px 6px rgba(60, 64, 67, 0.18); z-index: 7; min-width: 160px; padding: 6px; display: grid; }
 .ow-tool-select [role="option"] { border: 0; background: transparent; text-align: left; padding: 8px; border-radius: 6px; cursor: pointer; color: #102032; }
-.ow-sizebox { display: flex; align-items: center; }
-.ow-sizebox > span { min-width: 28px; text-align: center; color: #102032; font-size: 14px; }
+.ow-sizebox { position: relative; display: flex; align-items: center; }
+.ow-sizebox input { width: 42px; height: 28px; border: 0; background: transparent; color: #102032; text-align: center; font-size: 14px; }
+.ow-sizebox input:focus { outline: 2px solid #1d4e89; background: #fff; border-radius: 4px; }
+.ow-sizebox [role="listbox"] { position: absolute; top: 36px; left: 28px; z-index: 8; background: #fff; border: 1px solid #dadce0; border-radius: 8px; box-shadow: 0 2px 6px rgba(60, 64, 67, 0.18); padding: 4px; display: grid; min-width: 72px; max-height: 280px; overflow: auto; }
+.ow-sizebox [role="option"] { border: 0; background: transparent; text-align: left; padding: 6px 10px; border-radius: 6px; cursor: pointer; color: #102032; }
+.ow-sizebox [role="option"][aria-selected="true"] { background: #d9e6f7; }
 .ow-u { text-decoration: underline; }
+.ow-s { text-decoration: line-through; }
 .ow-color-menu { position: relative; }
 .ow-color-trigger { flex-direction: column; gap: 1px; font-weight: 700; }
 .ow-color-trigger i { display: block; width: 16px; height: 3px; border-radius: 1px; }
-.ow-color-menu [role="menu"] { position: absolute; top: 36px; background: #fff; border: 1px solid #dadce0; border-radius: 8px; z-index: 7; padding: 6px; display: grid; min-width: 160px; }
-.ow-color-menu [role="menu"] button { display: flex; gap: 8px; align-items: center; border: 0; background: transparent; padding: 6px; cursor: pointer; color: #102032; }
-.ow-color-menu [role="menu"] i { width: 16px; height: 16px; border: 1px solid #c5ced6; border-radius: 4px; }
+.ow-color-menu [role="menu"] { position: absolute; top: 36px; background: #fff; border: 1px solid #dadce0; border-radius: 8px; z-index: 8; padding: 8px; display: grid; gap: 8px; }
+.ow-color-grid { display: grid; grid-template-columns: repeat(10, 18px); gap: 3px; }
+.ow-color-grid button { width: 18px; height: 18px; padding: 0; border: 1px solid #c5ced6; border-radius: 2px; cursor: pointer; }
+.ow-color-menu label, .ow-table-context label { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #102032; font-size: 13px; padding: 0 4px; }
+.ow-color-menu [role="menu"] > button, .ow-table-context > button { border: 0; background: transparent; text-align: left; padding: 8px; border-radius: 6px; cursor: pointer; color: #102032; }
+.ow-menu-note { margin: 0; padding: 8px 10px; color: #444746; font-size: 14px; }
+.ow-docs .ow-menubar [role="menu"] .ow-table-grid button { width: 14px; height: 14px; min-height: 0; padding: 0; border: 1px solid #c5ced6; border-radius: 2px; background: #fff; }
+.ow-table-grid { padding: 8px; }
+.ow-table-grid p { margin: 0 0 6px; color: #102032; font-size: 13px; }
+.ow-table-grid > div { display: grid; grid-template-columns: repeat(20, 14px); gap: 2px; }
+.ow-table-grid button.is-hot { background: #d9e6f7; border-color: #1d4e89; }
+.ow-table-context { position: fixed; z-index: 30; background: #fff; border: 1px solid #dadce0; border-radius: 8px; box-shadow: 0 2px 8px rgba(60, 64, 67, 0.2); min-width: 260px; padding: 6px; display: grid; max-height: min(70vh, 520px); overflow: auto; }
+.ow-table-context p { margin: 8px 8px 4px; color: #102032; font-size: 13px; font-weight: 600; }
+.ow-swatches { display: flex; gap: 6px; padding: 0 8px 4px; }
+.ow-swatches button { width: 22px; height: 22px; border: 1px solid #c5ced6; border-radius: 4px; padding: 0; cursor: pointer; }
+.ow-a4 .ProseMirror .tableWrapper { overflow-x: auto; margin: 8px 0 12px; }
+.ow-a4 .ProseMirror table { border-collapse: collapse; table-layout: fixed; width: 100%; --table-border: #102032; }
+.ow-a4 .ProseMirror td, .ow-a4 .ProseMirror th { border: 1px solid var(--table-border, #102032); padding: 6px 8px; vertical-align: top; position: relative; min-width: 24px; }
+.ow-a4 .ProseMirror th { background: #f1f3f4; font-weight: 600; }
+.ow-a4 .ProseMirror .column-resize-handle { position: absolute; right: -2px; top: 0; bottom: -2px; width: 4px; background: #1d4e89; pointer-events: none; z-index: 2; }
+.ow-a4 .ProseMirror.resize-cursor { cursor: col-resize; }
+.ow-a4 .ProseMirror .selectedCell::after { content: ""; position: absolute; inset: 0; background: rgba(29, 78, 137, 0.16); pointer-events: none; z-index: 1; }
 .ow-docs-find { background: #fff; margin: 0 12px 8px; border: 1px solid #dadce0; border-radius: 12px; padding: 8px; }
 .ow-docs-body { flex: 1; min-height: 0; display: flex; }
 .ow-docs-tabs { width: 256px; flex: none; background: #fff; border-right: 1px solid #e1e3e1; padding: 8px; overflow: auto; }

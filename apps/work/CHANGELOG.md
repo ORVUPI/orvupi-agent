@@ -1,5 +1,17 @@
 # Registro de cambios
 
+## 0.4.1 — 2026-10-17
+
+Alfa de desarrollo. No es una versión de producción.
+
+- En la página real del editor (`/document/d/<id>/edit`) la barra y los menús conservan la selección: el `mousedown` no le quita el foco a TipTap.
+- Insertar tabla abre una rejilla de hasta 20×20. El clic derecho en una celda inserta o elimina filas, columnas y la tabla, combina y separa celdas, y cambia el borde y el fondo. Las columnas se arrastran.
+- La fuente aplica Arial, Times New Roman, Georgia, Verdana, Courier New, Comic Sans MS y, con licencia OFL, Roboto, Inter, Lora, Merriweather y Montserrat. El control muestra la fuente de la selección.
+- El tamaño baja y sube de uno en uno, acepta un número del 1 al 400 y ofrece la lista 8, 9, 10, 11, 12, 14, 18, 24, 30, 36, 48, 60, 72 y 96.
+- Negrita, cursiva, subrayado y tachado se aplican, quedan activos y responden a Ctrl+B, Ctrl+I, Ctrl+U y Alt+Mayús+5. El color del texto y el resaltado abren una cuadrícula y un color personalizado.
+- La alineación ofrece izquierda, centro, derecha y justificar, marca la opción activa y responde a Ctrl+Mayús+L, E, R y J.
+- Estilo, interlineado, listas, sangría, borrar formato, enlace, imagen, comentario, imprimir, zoom, copiar formato, deshacer y rehacer ejecutan su acción.
+
 ## 0.4.0 — 2026-10-17
 
 Alfa de desarrollo. No es una versión de producción.

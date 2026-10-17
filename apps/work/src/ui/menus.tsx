@@ -6,7 +6,37 @@ export type BarItem = {
   hint?: string;
   onSelect?: () => void;
   children?: BarItem[];
+  table?: (rows: number, cols: number) => void;
+  static?: boolean;
 };
+
+function TableGrid({ onPick }: { onPick: (rows: number, cols: number) => void }) {
+  const [hover, setHover] = useState({ row: 1, col: 1 });
+  return (
+    <div className="ow-table-grid" role="grid" aria-label={`${hover.row} × ${hover.col}`}>
+      <p>{hover.row} × {hover.col}</p>
+      <div>
+        {Array.from({ length: 20 }, (_, row) =>
+          Array.from({ length: 20 }, (_, col) => {
+            const hot = row < hover.row && col < hover.col;
+            return (
+              <button
+                key={`${row}-${col}`}
+                type="button"
+                role="gridcell"
+                aria-label={`${row + 1} × ${col + 1}`}
+                className={hot ? "is-hot" : ""}
+                onMouseEnter={() => setHover({ row: row + 1, col: col + 1 })}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => onPick(row + 1, col + 1)}
+              />
+            );
+          }),
+        )}
+      </div>
+    </div>
+  );
+}
 
 function Items({
   items,
@@ -20,29 +50,44 @@ function Items({
   const [sub, setSub] = useState<string | null>(null);
   return (
     <div role="menu" aria-label={label}>
-      {items.map((item) => (
-        <div key={item.id} className="ow-menu-row" onMouseEnter={() => setSub(item.children ? item.id : null)}>
-          <button
-            type="button"
-            role="menuitem"
-            aria-haspopup={item.children ? "menu" : undefined}
-            aria-expanded={item.children ? sub === item.id : undefined}
-            onClick={() => {
-              if (item.children) {
-                setSub((current) => (current === item.id ? null : item.id));
-                return;
-              }
-              item.onSelect?.();
-              onDone();
-            }}
-          >
-            <span>{item.label}</span>
-            {item.hint ? <kbd>{item.hint}</kbd> : null}
-            {item.children ? <span aria-hidden="true">›</span> : null}
-          </button>
-          {item.children && sub === item.id ? <Items items={item.children} label={item.label} onDone={onDone} /> : null}
-        </div>
-      ))}
+      {items.map((item) =>
+        item.static ? (
+          <p key={item.id} className="ow-menu-note" role="note">{item.label}</p>
+        ) : (
+          <div key={item.id} className="ow-menu-row" onMouseEnter={() => setSub(item.children || item.table ? item.id : null)}>
+            <button
+              type="button"
+              role="menuitem"
+              aria-haspopup={item.children || item.table ? "menu" : undefined}
+              aria-expanded={item.children || item.table ? sub === item.id : undefined}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => {
+                if (item.children || item.table) {
+                  setSub(item.id);
+                  return;
+                }
+                item.onSelect?.();
+                onDone();
+              }}
+            >
+              <span>{item.label}</span>
+              {item.hint ? <kbd>{item.hint}</kbd> : null}
+              {item.children || item.table ? <span aria-hidden="true">›</span> : null}
+            </button>
+            {item.table && sub === item.id ? (
+              <div role="menu" aria-label={item.label}>
+                <TableGrid
+                  onPick={(rows, cols) => {
+                    item.table?.(rows, cols);
+                    onDone();
+                  }}
+                />
+              </div>
+            ) : null}
+            {item.children && sub === item.id ? <Items items={item.children} label={item.label} onDone={onDone} /> : null}
+          </div>
+        ),
+      )}
     </div>
   );
 }
@@ -76,7 +121,17 @@ export function MenuBar({
   }, [open]);
 
   return (
-    <div className={`ow-menubar ${className}`.trim()} role="menubar" aria-label={label} ref={ref}>
+    <div
+      className={`ow-menubar ${className}`.trim()}
+      role="menubar"
+      aria-label={label}
+      ref={ref}
+      onMouseDown={(event) => {
+        const target = event.target;
+        if (target instanceof HTMLElement && target.closest("input, textarea, select")) return;
+        event.preventDefault();
+      }}
+    >
       {menus.map((menu) => (
         <div key={menu.id}>
           <button
@@ -84,6 +139,7 @@ export function MenuBar({
             role="menuitem"
             aria-haspopup="menu"
             aria-expanded={open === menu.id}
+            onMouseDown={(event) => event.preventDefault()}
             onClick={() => setOpen((current) => (current === menu.id ? null : menu.id))}
             onMouseEnter={() => {
               if (open) setOpen(menu.id);

@@ -56,8 +56,31 @@ export type OrvdocFile = {
 
 const COLORS = new Set(["#102032", "#ad1645", "#0b5d36", "#1d4e89", "#a3123f"]);
 const SIZES = new Set(["14px", "16px", "20px", "28px"]);
-const FONTS = new Set(["Inter", "Georgia", "Courier New"]);
-const HIGHLIGHTS = new Set(["#fff4b8", "#d9f5e4", "#fde2ea", "#dbe7f5"]);
+const FONTS = new Set(["Arial", "Times New Roman", "Georgia", "Verdana", "Courier New", "Comic Sans MS", "Roboto", "Inter", "Lora", "Merriweather", "Montserrat"]);
+const HEX = /^#[0-9a-f]{6}$/i;
+
+function knownColor(value: string): string | undefined {
+  const color = value.trim().toLowerCase();
+  if (COLORS.has(color) || HEX.test(color)) return color;
+  return undefined;
+}
+
+function knownSize(value: string): string | undefined {
+  if (SIZES.has(value)) return value;
+  const match = /^(\d{1,3})pt$/.exec(value.trim());
+  if (!match) return undefined;
+  const size = Number(match[1]);
+  if (size < 1 || size > 400) return undefined;
+  return `${size}pt`;
+}
+
+function knownFont(value: string): string | undefined {
+  const cleaned = value.replaceAll('"', "").replaceAll("'", "").split(",")[0]?.trim() ?? "";
+  for (const font of FONTS) {
+    if (font.toLowerCase() === cleaned.toLowerCase()) return font;
+  }
+  return undefined;
+}
 
 export function emptyDoc(): JsonNode {
   return { type: "doc", content: [{ type: "paragraph" }] };
@@ -98,10 +121,10 @@ function inlinesFrom(nodes: JsonNode[] | undefined): Inline[] {
       const marks = node.marks ?? [];
       const style = marks.find((mark) => mark.type === "textStyle");
       const link = marks.find((mark) => mark.type === "link");
-      const color = typeof style?.attrs?.color === "string" && COLORS.has(style.attrs.color) ? style.attrs.color : undefined;
-      const fontSize = typeof style?.attrs?.fontSize === "string" && SIZES.has(style.attrs.fontSize) ? style.attrs.fontSize : undefined;
-      const fontFamily = typeof style?.attrs?.fontFamily === "string" && FONTS.has(style.attrs.fontFamily) ? style.attrs.fontFamily : undefined;
-      const highlight = typeof style?.attrs?.backgroundColor === "string" && HIGHLIGHTS.has(style.attrs.backgroundColor) ? style.attrs.backgroundColor : undefined;
+      const color = typeof style?.attrs?.color === "string" ? knownColor(style.attrs.color) : undefined;
+      const fontSize = typeof style?.attrs?.fontSize === "string" ? knownSize(style.attrs.fontSize) : undefined;
+      const fontFamily = typeof style?.attrs?.fontFamily === "string" ? knownFont(style.attrs.fontFamily) : undefined;
+      const highlight = typeof style?.attrs?.backgroundColor === "string" ? knownColor(style.attrs.backgroundColor) : undefined;
       const href = typeof link?.attrs?.href === "string" ? link.attrs.href : undefined;
       result.push({
         type: "text",

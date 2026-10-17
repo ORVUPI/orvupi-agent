@@ -88,7 +88,9 @@ export function DocsEditor({
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [rev, setRev] = useState(0);
   const [starred, setStarred] = useState(record.favorite);
+  const rangeRef = useRef<{ from: number; to: number } | null>(null);
 
+  const editorRef = useRef<ReturnType<typeof useEditor>>(null);
   const editor = useEditor({
     immediatelyRender: true,
     extensions: createExtensions(t("placeholder")),
@@ -99,6 +101,21 @@ export function DocsEditor({
     },
     onUpdate: ({ editor: current }) => queue.note(snapshotOf(current.getJSON() as JsonNode)),
   });
+  editorRef.current = editor;
+
+  function keepRange() {
+    const current = editorRef.current;
+    if (!current) return;
+    rangeRef.current = { from: current.state.selection.from, to: current.state.selection.to };
+  }
+
+  function chainWithRange() {
+    const current = editorRef.current;
+    if (!current) return null;
+    const range = rangeRef.current;
+    const chain = current.chain().focus();
+    return range ? chain.setTextSelection(range) : chain;
+  }
 
   writeRef.current = async (snapshot) => {
     const parsed = JSON.parse(snapshot) as { content?: JsonNode; header?: string; footer?: string; comments?: DocComment[]; versions?: DocVersion[] };
@@ -143,6 +160,7 @@ export function DocsEditor({
       }
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
+        keepRange();
         setLinkOpen(true);
       }
     };
@@ -296,7 +314,8 @@ export function DocsEditor({
       reader.onerror = () => reject(new Error("read"));
       reader.readAsDataURL(file);
     });
-    editor.chain().focus().setImage({ src: dataUrl, alt: file.name }).run();
+    const chain = chainWithRange();
+    chain?.setImage({ src: dataUrl, alt: file.name }).run();
   }
 
   function applyLink() {
@@ -306,7 +325,8 @@ export function DocsEditor({
       setLinkError(t("reasonLink"));
       return;
     }
-    editor.chain().focus().extendMarkRange("link").setLink({ href }).run();
+    const chain = chainWithRange();
+    chain?.extendMarkRange("link").setLink({ href }).run();
     setLinkOpen(false);
     setLinkError("");
   }
@@ -342,9 +362,16 @@ export function DocsEditor({
         onClose={() => void closeDocument()}
         onExport={(kind) => void exportAs(kind)}
         onFind={() => setFindOpen(true)}
-        onLink={() => setLinkOpen(true)}
+        onLink={() => {
+          keepRange();
+          setLinkOpen(true);
+        }}
         onImage={(file) => void addImage(file)}
-        onComment={() => setCommentOpen(true)}
+        onComment={() => {
+          keepRange();
+          setCommentOpen(true);
+        }}
+        onCapture={keepRange}
         onVersions={() => setVersionsOpen(true)}
         onShortcuts={() => setShortcutsOpen(true)}
         onPrint={() => window.print()}
@@ -446,7 +473,8 @@ export function DocsEditor({
               variant="primary"
               onClick={() => {
                 if (!editor || !commentBody.trim()) return;
-                const quote = editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to, " ").slice(0, 180);
+                const range = rangeRef.current ?? { from: editor.state.selection.from, to: editor.state.selection.to };
+                const quote = editor.state.doc.textBetween(range.from, range.to, " ").slice(0, 180);
                 commentsRef.current = [...commentsRef.current, { id: createId(), quote, body: commentBody.trim().slice(0, 500), createdAt: new Date().toISOString() }];
                 queue.note(snapshotOf(editor.getJSON() as JsonNode));
                 setCommentBody("");

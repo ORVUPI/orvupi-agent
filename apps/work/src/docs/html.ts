@@ -22,7 +22,7 @@ function renderInline(inline: Inline): string {
   if (inline.strike) html = `<s>${html}</s>`;
   const styles: string[] = [];
   if (inline.color) styles.push(`color: ${inline.color}`);
-  if (inline.fontSize && SIZE_CLASS[inline.fontSize]) styles.push(`font-size: ${inline.fontSize}`);
+  if (inline.fontSize && (SIZE_CLASS[inline.fontSize] || /^\d{1,3}pt$/.test(inline.fontSize))) styles.push(`font-size: ${inline.fontSize}`);
   if (inline.fontFamily) styles.push(`font-family: "${inline.fontFamily}"`);
   if (inline.highlight) styles.push(`background: ${inline.highlight}`);
   if (styles.length > 0) html = `<span style="${styles.join("; ")}">${html}</span>`;

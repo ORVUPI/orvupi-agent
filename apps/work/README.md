@@ -2,7 +2,7 @@
 
 Suite de productividad en el navegador. Gratis, instalable y local-first. Los documentos se guardan en el dispositivo. Esta versión no tiene servidor, no llama a APIs de pago y no se vincula a ningún token.
 
-Esta entrega es la alfa 0.4.0: núcleo, ORVUPI Docs con la disposición del editor de 2024–2026, archivos, hojas de 1000 filas y diapositivas con miniaturas. El visor PDF y el modelo de IA local siguen previstos y todavía no editan. La matriz de funciones está en `docs/PARIDAD_DRIVE.md`. Las medidas, en `docs/ANALISIS_DRIVE_UI.md`.
+Esta entrega es la alfa 0.4.1: núcleo, ORVUPI Docs con la disposición del editor de 2024–2026 y los comandos de formato conectados a la página real del documento, archivos, hojas de 1000 filas y diapositivas con miniaturas. El visor PDF y el modelo de IA local siguen previstos y todavía no editan. La matriz de funciones está en `docs/PARIDAD_DRIVE.md`. Las medidas, en `docs/ANALISIS_DRIVE_UI.md`.
 
 ## Arranque
 
@@ -33,6 +33,12 @@ npm run test:e2e
 ```
 
 `npm test` ejecuta Vitest (unidad e integración). `npm run test:e2e` construye la app y recorre con Playwright el ciclo de la sección 30 del manual, más el contraste con axe.
+
+## Qué hay en 0.4.1
+
+- Docs en `/document/d/<id>/edit`: rejilla de tablas 20×20, menú contextual de celda, borde, fondo y ancho de columna.
+- Fuentes del sistema y OFL, tamaño 1–400, negrita, cursiva, subrayado, tachado, color, resaltado y alineación, con el atajo correspondiente.
+- El resto de la barra (estilo, interlineado, listas, sangría, borrar formato, enlace, imagen, comentario, imprimir, zoom, copiar formato, deshacer y rehacer) ejecuta su comando.
 
 ## Qué hay en 0.4.0
 
