@@ -125,12 +125,12 @@
   {
    "pagina": "security",
    "lang": "es",
-   "frase": "ORVUPI todavía no tiene contrato en ninguna red: cualquier token que diga ser ORVUPI no es oficial."
+   "frase": "La única dirección oficial de ORVUPI está en orvupi.com/token: cualquier token que diga ser ORVUPI no es oficial."
   },
   {
    "pagina": "security",
    "lang": "en",
-   "frase": "ORVUPI does not have a contract on any network yet: any token claiming to be ORVUPI is not official."
+   "frase": "The only official ORVUPI address is on orvupi.com/token: any token claiming to be ORVUPI is not official."
   },
   {
    "pagina": "security",
@@ -245,12 +245,12 @@
   {
    "pagina": "marca",
    "lang": "es",
-   "frase": "No pongas direcciones de contrato en tus memes: ORVUPI todavía no tiene contrato."
+   "frase": "No pongas direcciones de contrato en tus memes: la única oficial está en orvupi.com/token."
   },
   {
    "pagina": "marca",
    "lang": "en",
-   "frase": "Do not put contract addresses in your memes: ORVUPI does not have a contract yet."
+   "frase": "Do not put contract addresses in your memes: the only official one is on orvupi.com/token."
   },
   {
    "pagina": "marca",

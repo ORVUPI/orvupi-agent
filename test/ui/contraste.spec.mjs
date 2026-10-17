@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
 const PAGES = ["/", "/verify/", "/lab/", "/tablero/", "/aprender/", "/studio/", "/cuaderno/", "/comparar/", "/pares/",
-  "/risks/", "/legal/", "/security/", "/methodology/", "/vision/", "/marca/", "/memes/", "/community/", "/contribuir/", "/404.html"];
+  "/risks/", "/token/", "/legal/", "/security/", "/methodology/", "/vision/", "/marca/", "/memes/", "/community/", "/contribuir/", "/404.html"];
 const SHOTS = process.env.CONTRAST_SHOTS || "";
 
 for (const scheme of ["light", "dark"]) {

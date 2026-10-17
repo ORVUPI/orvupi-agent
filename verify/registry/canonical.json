@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "note": "Lista curada de tokens de referencia para enseñar a detectar clones. ORVUPI aún no tiene contrato y no figura aquí. Que un mint no esté en la lista no significa que sea falso. Que coincidan el nombre o un enlace tampoco atribuye intención: es una señal para comparar con el mint de referencia.",
+  "note": "Lista curada de tokens de referencia para enseñar a detectar clones. ORVUPI no figura aquí. Que un mint no esté en la lista no significa que sea falso. Que coincidan el nombre o un enlace tampoco atribuye intención: es una señal para comparar con el mint de referencia.",
   "tokens": [
     {
       "id": "usdc",

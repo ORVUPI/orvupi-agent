@@ -2,7 +2,7 @@
 
 Este directorio conserva la misión educativa y la biblioteca desarrolladas antes del cambio de marca. La web actual de ORVUPI ofrece Lab en https://orvupi.com/lab/ y Aprender en https://orvupi.com/aprender/. Generar los borradores de este directorio no publica cambios en esa web.
 
-Los ejemplos usan fichas reales de USDC, de USDT y de copias que se llaman «USD Coin», leídas el 2026-10-16. No representan un token ORVUPI: ORVUPI todavía no tiene contrato. Las claves de almacenamiento antiguas se migran solas a `orvupi-*` al cargar la página; véase [la guía de transición](../docs/ORVUPI.md).
+Los ejemplos usan fichas reales de USDC, de USDT y de copias que se llaman «USD Coin», leídas el 2026-10-16. No representan un token ORVUPI: La dirección oficial de ORVUPI está en orvupi.com/token. Las claves de almacenamiento antiguas se migran solas a `orvupi-*` al cargar la página; véase [la guía de transición](../docs/ORVUPI.md).
 
 La misión 1, «Cómo detectar un token clon en 5 pasos», lee las fichas de `verify/examples/2026-10-16/`. No vuelve a consultar la red. El progreso se guarda solo en el navegador (`localStorage`, clave `orvupi-lab-mision-01`). Se puede borrar. No es un certificado y no tiene valor.
 

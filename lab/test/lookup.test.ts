@@ -59,7 +59,7 @@ describe("lectura de una dirección", () => {
     assert.equal(copy.light, "atencion");
     assert.equal(copy.title.es, "Se parece a un token del registro, pero la dirección es otra");
     assert.equal(copy.lightLabel.es, "Se parece a un token del registro, pero la dirección es otra");
-    assert.match(copy.support.es, /ORVUPI todavía no tiene contrato\./);
+    assert.match(copy.support.es, /La única dirección oficial de ORVUPI está en orvupi.com\/token\./);
     assert.equal(copy.rows.find((row) => row.label.es === "Señal de copia")?.value.es, "Sí");
     const other = classifyAddress(usdt, cards, "lista");
     assert.equal(other.kind, "otra");
@@ -207,16 +207,16 @@ describe("lectura de una dirección", () => {
     const known = classifyAddress("0xC99056C762F0802e4154E6322bd71ae928857777", cards, "lista", evm);
     assert.equal(known.kind, "evm");
     assert.equal(known.title.es, "Copia conocida");
-    assert.match(known.support.es, /ORVUPI todavía no tiene contrato en ninguna red/);
+    assert.match(known.support.es, /La única dirección oficial de ORVUPI está en orvupi.com\/token/);
     assert.match(known.support.es, /sin verificar en la cadena/);
     const same = classifyAddress("0xc99056c762f0802e4154e6322bd71ae928857777", cards, "caida", evm);
     assert.equal(same.title.es, "Copia conocida");
     const other = classifyAddress("0x0000000000000000000000000000000000000001", cards, "lista", evm);
     assert.equal(other.kind, "evm");
-    assert.equal(other.title.es, "ORVUPI todavía no tiene contrato en ninguna red");
+    assert.equal(other.title.es, "La única dirección oficial de ORVUPI está en orvupi.com/token");
     assert.equal(other.title.es.includes("Copia conocida"), false);
     const loose = classifyAddress("0xhola", cards, "lista", evm);
-    assert.equal(loose.title.es, "ORVUPI todavía no tiene contrato en ninguna red");
+    assert.equal(loose.title.es, "La única dirección oficial de ORVUPI está en orvupi.com/token");
   });
 
   test("el texto de la lectura no promete rentabilidad ni urgencia", () => {

@@ -218,7 +218,7 @@ test("volver a consultar marca el cambio, el clon y solo las direcciones elegida
   await page.goto("/cuaderno/");
   const cloneRow = page.locator("#lista-seguimiento .seguimiento-fila").filter({ hasText: ERY });
   await expect(cloneRow).toContainText("Dice llamarse «ORVUPI»");
-  await expect(cloneRow).toContainText("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.");
+  await expect(cloneRow).toContainText("Se llama como ORVUPI, pero no es la dirección oficial.");
   await cloneRow.locator("input").check();
   await expect(page.locator("#seguir-alcance")).toHaveText("Se consultan solo las marcadas.");
   await page.locator("#seguir").click();
@@ -226,7 +226,7 @@ test("volver a consultar marca el cambio, el clon y solo las direcciones elegida
   await expect(result).toBeVisible({ timeout: 30_000 });
   await expect(result).toContainText("Cambió desde la última lectura.");
   await expect(result).toContainText("Dice llamarse «ORVUPI»");
-  await expect(result).toContainText("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.");
+  await expect(result).toContainText("Se llama como ORVUPI, pero no es la dirección oficial.");
   await expect(result).toContainText("Suministro total");
   await expect(page.locator("#resultado-seguimiento")).not.toContainText(USDC);
   const asked = calls.filter((item) => item.method === "getMultipleAccounts").map((item) => item.mint);
@@ -302,14 +302,14 @@ test("si el servicio rechaza la consulta, queda en Qué falta con Reintentar y n
   await expect(result).toContainText("Reintentar");
   await expect(result).toContainText("El servicio rechazó esta consulta. No se da por igual.");
   await expect(result).toContainText("Dice llamarse «ORVUPI»");
-  await expect(result).toContainText("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.");
+  await expect(result).toContainText("Se llama como ORVUPI, pero no es la dirección oficial.");
   await expect(result).not.toContainText("Sigue igual");
   await expect(result.locator('[data-estado="igual"]')).toHaveCount(0);
   await page.locator('[data-set-lang="en"]').click();
   await expect(result).toContainText("What is missing");
   await expect(result).toContainText("Try again");
   await expect(result).toContainText("It says it is called «ORVUPI»");
-  await expect(result).toContainText("It is named like ORVUPI, but ORVUPI does not have a contract yet.");
+  await expect(result).toContainText("It is named like ORVUPI, but it is not the official address.");
   await expect(result).not.toContainText("It is the same since the last reading.");
   const beforeRetry = hits.length;
   mode = "ok";

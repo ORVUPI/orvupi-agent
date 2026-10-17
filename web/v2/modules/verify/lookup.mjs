@@ -1,6 +1,6 @@
 const BASE58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
-// Contrato ORVUPI: aún no existe (web/v2/shared/orvupi-contract.json).
-// Contrato ORVUPI: aún no existe. En la web se lee de web/v2/shared/orvupi-contract.js; aquí solo cuenta el registro.
+// Contrato ORVUPI: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU (web/v2/shared/orvupi-contract.json).
+// Contrato ORVUPI: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU. En la web se lee de web/v2/shared/orvupi-contract.js; aquí solo cuenta el registro.
 export const OFFICIAL_MINT = null;
 const COPY = {
     vacio: {
@@ -35,8 +35,8 @@ const COPY = {
         lightLabel: { es: "Se parece a un token del registro, pero la dirección es otra", en: "Looks like a token in the registry, but the address is different" },
         title: { es: "Se parece a un token del registro, pero la dirección es otra", en: "Looks like a token in the registry, but the address is different" },
         support: {
-            es: `El nombre o el símbolo se parece a un token del registro y la dirección es otra. Esto no dice quién lo creó ni con qué intención. ORVUPI todavía no tiene contrato.`,
-            en: `The name or the symbol looks like a token in the registry and the address is different. This does not say who created it or why. ORVUPI does not have a contract yet.`,
+            es: `El nombre o el símbolo se parece a un token del registro y la dirección es otra. Esto no dice quién lo creó ni con qué intención. La única dirección oficial de ORVUPI está en orvupi.com/token.`,
+            en: `The name or the symbol looks like a token in the registry and the address is different. This does not say who created it or why. The only official ORVUPI address is on orvupi.com/token.`,
         },
     },
     otra: {
@@ -214,7 +214,7 @@ function rowsFor(card) {
 const PARTIAL = pair("La ficha está incompleta: la muestra de cuentas con tokens no está. Eso no se rellena con un cero.", "The card is incomplete: the token account sample is missing. That is not filled in with a zero.");
 const CENSUS = pair("Hay saldos de la curva y de la creadora. No es un censo ni se rellena el resto con un cero.", "There are balances for the curve and the creator. It is not a census, and the rest is not filled in with a zero.");
 const CENSUS_PERSONAL = pair("Hay saldos de la curva, de la creadora y de la cuenta personal publicada. No es un censo ni se rellena el resto con un cero.", "There are balances for the curve, the creator, and the published personal account. It is not a census, and the rest is not filled in with a zero.");
-const SOLANA_ONLY = "ORVUPI todavía no tiene contrato en ninguna red";
+const SOLANA_ONLY = "La única dirección oficial de ORVUPI está en orvupi.com/token";
 function partialNoteFor(card) {
     if (!card.partial)
         return null;
@@ -234,7 +234,7 @@ function evmView(address, evm) {
             light: "riesgo",
             lightLabel: pair("Copia conocida", "Known copy"),
             title: pair("Copia conocida", "Known copy"),
-            support: pair(`${SOLANA_ONLY}. Ejemplo de search-v2 de Pump.fun, 08-10 09:14, sin verificar en la cadena (${chain}).`, `ORVUPI does not have a contract on any network yet. Example from Pump.fun search-v2, 2026-10-08 09:14, not verified on-chain (${chain}).`),
+            support: pair(`${SOLANA_ONLY}. Ejemplo de search-v2 de Pump.fun, 08-10 09:14, sin verificar en la cadena (${chain}).`, `The only official ORVUPI address is on orvupi.com/token. Example from Pump.fun search-v2, 2026-10-08 09:14, not verified on-chain (${chain}).`),
             mint: found.address,
             rows: [
                 { label: pair("Red", "Network"), value: pair(chain, chain) },
@@ -250,7 +250,7 @@ function evmView(address, evm) {
         kind: "evm",
         light: "atencion",
         lightLabel: pair("Otra red", "Another network"),
-        title: pair(SOLANA_ONLY, "ORVUPI does not have a contract on any network yet"),
+        title: pair(SOLANA_ONLY, "The only official ORVUPI address is on orvupi.com/token"),
         support: pair("Una dirección que empieza por 0x no es el mint de Solana. La lista de ejemplos no es completa y no se ha verificado en la cadena.", "An address that starts with 0x is not the Solana mint. The example list is not complete and it has not been verified on-chain."),
         mint: shown,
         rows: [],
@@ -283,7 +283,26 @@ export function classifyAddress(raw, cards, source, evm = []) {
             return viewOf(kind, card.mint, rowsFor(card), partialNoteFor(card));
         }
     }
+    if (isOrvupiOfficial(mint))
+        return orvupiOfficialView(mint);
     return notOfficialView(mint, official);
+}
+/** En verify.js lee el CA de shared/orvupi-contract.js (isOfficialAddress). Fuera del navegador usa esta copia, que test/web-v2.test.ts compara con orvupi-contract.json. */
+function isOrvupiOfficial(mint) {
+    return typeof isOfficialAddress === "function" ? isOfficialAddress(mint) : mint === "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU";
+}
+function orvupiOfficialView(mint) {
+    return {
+        kind: "lectura_caida",
+        light: "neutro",
+        lightLabel: pair("Dirección oficial de ORVUPI", "Official ORVUPI address"),
+        title: pair("Dirección oficial de ORVUPI · lectura no disponible", "Official ORVUPI address · reading unavailable"),
+        support: pair("Coincide con la dirección publicada en orvupi.com/token. La lectura en directo no está disponible ahora: no hay resultado y no se inventa uno.", "It matches the address published on orvupi.com/token. The live reading is unavailable right now: there is no result, and none is invented."),
+        mint,
+        rows: [],
+        partialNote: null,
+        compare: null,
+    };
 }
 const DATED_CARD_NOTE = pair("Es la ficha del 2026-10-16. No es una lectura en directo.", "It is the 2026-10-16 card. It is not a live reading.");
 /** La ficha fechada sigue, pero un fallo de los dos RPC no la pinta como lectura en verde. */
@@ -301,3 +320,4 @@ export function reserveWhenLiveFails(view) {
             : DATED_CARD_NOTE,
     };
 }
+//# sourceMappingURL=lookup.js.map

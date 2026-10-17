@@ -242,7 +242,7 @@ describe("lector y cuaderno", () => {
     assert.equal(result.ok, false);
     assert.match((result.card?.errors ?? []).map((item) => item.message).join(" "), /volvió vacía/);
     assert.equal(JSON.stringify(result.card).includes("ausente comprobado"), false);
-    assert.equal(result.card?.officialProject, false); // ORVUPI todavía no tiene contrato: ninguna lectura nueva se marca como oficial.
+    assert.equal(result.card?.officialProject, false); // Contrato oficial en shared/orvupi-contract.json: ninguna lectura nueva se marca como oficial.
     assert.equal(result.card?.name.text?.includes("<"), false);
     assert.equal(result.card?.uri.text, "https://evil.example/phish");
     assert.equal(JSON.stringify(result.card).includes("uiAmount"), false);
@@ -1074,9 +1074,9 @@ describe("lector y cuaderno", () => {
     assert.equal(model.comparedSideText("Nombre", official, "ORVUPI", "es"), "Dice llamarse «ORVUPI»");
     assert.match(model.staleLine(WHEN, "es"), /Consultado el .+\d{2}:\d{2}:\d{2}.+puede haber cambiado/);
     assert.match(model.staleLine("2026-10-09T13:00:07.000Z", "es"), /\d{2}:\d{2}:\d{2}/);
-    assert.equal(summary.comparisonBanner(clone, other, "es"), "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.");
+    assert.equal(summary.comparisonBanner(clone, other, "es"), "Se llama como ORVUPI, pero no es la dirección oficial.");
     assert.equal(summary.comparisonBanner(usdc, usdc, "es"), "");
-    assert.equal(summary.comparisonBanner(official, official, "es"), "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.");
+    assert.equal(summary.comparisonBanner(official, official, "es"), "Se llama como ORVUPI, pero no es la dirección oficial.");
     assert.equal(model.tableCellText("uri", "ausente", null, "es"), "No tiene enlace de metadatos");
     assert.equal(model.tableCellText("uri", "ausente", null, "en"), "It has no metadata link");
     assert.equal(model.tableCellText("uri", "ausente", "   ", "es"), "No tiene enlace de metadatos");

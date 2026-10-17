@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "note": "Único punto de configuración del contrato ORVUPI. Hoy no existe: contract es null. Cuando exista, poner aquí la red y la dirección (aprobadas por el creador) y nada más.",
-  "network": null,
-  "contract": null,
+  "note": "Único punto de configuración del contrato ORVUPI. Creado el 17-10-2026 en Raydium LaunchLab (Solana). Dirección aprobada por el creador.",
+  "network": "solana",
+  "contract": "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU",
   "label": {
-    "es": "Contrato ORVUPI: aún no existe",
-    "en": "ORVUPI contract: does not exist yet"
+    "es": "Contrato ORVUPI: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU",
+    "en": "ORVUPI contract: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU"
   }
 }

@@ -237,7 +237,7 @@ describe("web ORVUPI", () => {
     const config = JSON.parse(read("shared/orvupi-contract.json")) as { contract: unknown; network: unknown };
     assert.equal(contract.OFFICIAL_ADDRESS, config.contract);
     assert.equal(contract.OFFICIAL_NETWORK, config.network);
-    assert.equal(contract.OFFICIAL_ADDRESS, null);
+    assert.equal(contract.OFFICIAL_ADDRESS, "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU");
     for (const value of ["", null, undefined, 0, "null", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"]) assert.equal(contract.isOfficialAddress(value), false, String(value));
     const hits: string[] = [];
     for (const file of walk(siteRoot())) {
@@ -250,15 +250,27 @@ describe("web ORVUPI", () => {
     assert.deepEqual(hits, []);
   });
 
-  test("el contrato ORVUPI tiene un único punto de configuración y hoy no existe", () => {
+  test("la copia del CA para fuera del navegador coincide con orvupi-contract.json", () => {
+    const config = JSON.parse(read("shared/orvupi-contract.json")) as { contract: string };
+    for (const rel of ["../../lab/verify/lookup.ts", "../../verify/signals.ts"]) {
+      const text = read(rel);
+      const m = text.match(/isOfficialAddress\(mint\) : mint === "([^"]+)"/);
+      assert.ok(m, `${rel}: falta isOrvupiOfficial`);
+      assert.equal(m[1], config.contract, rel);
+    }
+    const bundle = read("assets/verify.js");
+    assert.match(bundle, /typeof isOfficialAddress === "function" \? isOfficialAddress\(mint\)/);
+  });
+
+  test("el contrato ORVUPI tiene un único punto de configuración", () => {
     const config = JSON.parse(read("shared/orvupi-contract.json")) as { contract: unknown; network: unknown; label: { es: string; en: string } };
-    assert.equal(config.contract, null);
-    assert.equal(config.network, null);
-    assert.equal(config.label.es, "Contrato ORVUPI: aún no existe");
-    assert.equal(config.label.en, "ORVUPI contract: does not exist yet");
+    assert.equal(config.contract, "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU");
+    assert.equal(config.network, "solana");
+    assert.equal(config.label.es, "Contrato ORVUPI: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU");
+    assert.equal(config.label.en, "ORVUPI contract: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU");
     assert.equal(/OFFICIAL_CA\s*=/.test(read("assets/shell.js")), false);
     assert.match(read("assets/shell.js"), /import\("\/shared\/orvupi-contract\.js"\)/);
-    assert.match(read("assets/verify.js"), /"Contrato ORVUPI: aún no existe\."/);
+    assert.match(read("assets/verify.js"), /"Contrato ORVUPI: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU\."/);
     const bundle = read("assets/verify.js");
     const data = JSON.parse(bundle.slice(bundle.indexOf("{", bundle.indexOf("const ORVUPI_VERIFY")), bundle.indexOf(";\n", bundle.indexOf("const ORVUPI_VERIFY")))) as { registry: unknown[]; evm: unknown[]; cards: { mint: string }[] };
     assert.deepEqual(data.registry, []);

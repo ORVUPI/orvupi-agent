@@ -294,17 +294,17 @@ test("el informe repite lo que se ve en pantalla", async ({ page }) => {
   expect(htmlName.lines.join("\n")).toContain("«A&B<i>»");
   expect(htmlName.lines.join("\n").includes("&lt;")).toBe(false);
 
-  await lookup(page, CLONE, "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato");
+  await lookup(page, CLONE, "Se llama como ORVUPI, pero no es la dirección oficial");
   const clone = await readPair(page);
   expectSameReading(clone);
-  expect(clone.blocks.atencion.points[0].lead).toContain("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato");
+  expect(clone.blocks.atencion.points[0].lead).toContain("Se llama como ORVUPI, pero no es la dirección oficial");
 
   await page.locator("#guardar-consulta").click();
   await page.locator("#comparacion-verify").getByRole("link", { name: "Abrir Cuaderno" }).click();
   await page.waitForURL(/\/cuaderno\/$/);
   const saved = page.locator(".consulta-guardada", { hasText: CLONE }).first();
   const savedAttention = saved.locator("[data-bloque='atencion']");
-  await expect(savedAttention).toContainText("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato", { timeout: 20_000 });
+  await expect(savedAttention).toContainText("Se llama como ORVUPI, pero no es la dirección oficial", { timeout: 20_000 });
   await expect(savedAttention.locator(".punto-vacio")).toHaveCount(0);
   await expect(savedAttention).not.toContainText("Comprobación anterior");
   await expect(saved.locator(".informe-descarga")).toContainText("Informe descargable");
@@ -383,7 +383,7 @@ test("los fixtures dejan PNG y PDF con el texto de la cadena", async ({ page }, 
       expect(text.includes("&lt;")).toBe(false);
     }
     if (item.stem === "informe-largo-es") {
-      expect(result.warning).toContain("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato");
+      expect(result.warning).toContain("Se llama como ORVUPI, pero no es la dirección oficial");
       expect(text.includes("Curva de Pump.fun: no aplica")).toBe(true);
       const count = Number(/\/Count (\d+)/.exec(pdf.toString("latin1"))?.[1] || 0);
       expect(count).toBeGreaterThan(1);
@@ -418,8 +418,8 @@ test("USDC y ERYyy dejan un PNG en español y en inglés", async ({ page }, test
   const shots = [
     { mint: USDC, lang: "es", stem: "informe-usdc-es", ready: "Dice llamarse «USD Coin»" },
     { mint: USDC, lang: "en", stem: "informe-usdc-en", ready: "It says it is called" },
-    { mint: CLONE, lang: "es", stem: "informe-clon-es", ready: "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato" },
-    { mint: CLONE, lang: "en", stem: "informe-clon-en", ready: "It is named like ORVUPI, but ORVUPI does not have a contract yet" },
+    { mint: CLONE, lang: "es", stem: "informe-clon-es", ready: "Se llama como ORVUPI, pero no es la dirección oficial" },
+    { mint: CLONE, lang: "en", stem: "informe-clon-en", ready: "It is named like ORVUPI, but it is not the official address" },
   ];
   for (const shot of shots) {
     await page.locator(`[data-set-lang="${shot.lang}"]`).click();
@@ -504,16 +504,16 @@ test("el cuaderno compara el informe con lo que se ve en pantalla", async ({ pag
 
   await page.locator("[data-set-lang='es']").click();
   await page.goto("/verify/");
-  await lookup(page, CLONE, "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato");
+  await lookup(page, CLONE, "Se llama como ORVUPI, pero no es la dirección oficial");
   await page.locator("#guardar-consulta").click();
   await page.locator("#comparacion-verify").getByRole("link", { name: "Abrir Cuaderno" }).click();
   await page.waitForURL(/\/cuaderno\/$/);
   const cloneCard = page.locator(".consulta-guardada", { hasText: CLONE }).first();
-  await expect(cloneCard.locator("[data-bloque='atencion']")).toContainText("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato", { timeout: 20_000 });
+  await expect(cloneCard.locator("[data-bloque='atencion']")).toContainText("Se llama como ORVUPI, pero no es la dirección oficial", { timeout: 20_000 });
   const clone = await readSaved(cloneCard);
   expectSameReading(clone);
-  expect(clone.blocks.atencion.points[0].lead).toContain("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato");
-  expect(clone.reportBlocks.atencion.lines[0].lead).toContain("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato");
+  expect(clone.blocks.atencion.points[0].lead).toContain("Se llama como ORVUPI, pero no es la dirección oficial");
+  expect(clone.reportBlocks.atencion.lines[0].lead).toContain("Se llama como ORVUPI, pero no es la dirección oficial");
   expect(clone.blocks.atencion.text.includes("Comprobación anterior")).toBe(false);
   expect(clone.reportBlocks.atencion.text.includes("Comprobación anterior")).toBe(false);
   expect(clone.lines.join("\n")).toContain("Dice llamarse");

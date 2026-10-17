@@ -97,7 +97,7 @@ for (const mint of [PREVIOUS, USDC]) {
     await expect(page.locator("#resultado")).toContainText(/no existe/i);
     await expect(page.locator("#resultado")).not.toContainText("ausente comprobado");
     await expect(page.locator("#resultado")).not.toContainText("isMutable");
-    await expect(page.locator(".franja-identidad")).toContainText("Contrato ORVUPI: aún no existe.");
+    await expect(page.locator(".franja-identidad")).toContainText("Contrato ORVUPI: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU.");
     await expect(page.locator(".franja-identidad")).not.toContainText(PREVIOUS);
   });
 }

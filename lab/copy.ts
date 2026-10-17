@@ -36,10 +36,10 @@ export const PRIVACY_ES = avisoLine("es");
 export const PRIVACY_EN = avisoLine("en");
 
 export const AUDIT_ES =
-  "Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. ORVUPI no tiene relación con este token: todavía no tiene contrato. Que no aparezcan señales no significa que esté todo comprobado.";
+  "Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. ORVUPI no tiene relación con este token. Que no aparezcan señales no significa que esté todo comprobado.";
 
 export const AUDIT_EN =
-  "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. ORVUPI has no relationship with this token: it does not have a contract yet. No signals showing does not mean everything was checked.";
+  "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. ORVUPI has no relationship with this token. No signals showing does not mean everything was checked.";
 
 export const HOW_VERIFY = {
   es: [

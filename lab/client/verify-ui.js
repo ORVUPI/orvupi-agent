@@ -119,7 +119,7 @@ function paintVerify(out, view) {
     var list = verifyEl("ul", { class: "leyenda" });
     list.append(
       legendItem("ok", lang === "en" ? "ORVUPI registry address" : "Dirección del registro de ORVUPI"),
-      legendItem("atencion", lang === "en" ? "Named like ORVUPI, but ORVUPI does not have a contract yet" : "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato"),
+      legendItem("atencion", lang === "en" ? "Named like ORVUPI, but not the official address" : "Se llama como ORVUPI, pero no es la dirección oficial"),
       legendItem("neutro", lang === "en" ? "Could not be checked" : "No se pudo comprobar"),
     );
     out.append(emptyTitle, emptySupport, list);
@@ -179,7 +179,10 @@ function paintVerify(out, view) {
     sampleBtn.textContent = lang === "en" ? "Try to read the largest accounts" : "Intentar leer las cuentas más grandes";
     out.append(sampleBtn);
   }
-  var failedRead = view.missingState === "falta" || view.kind === "red" || view.kind === "limite" || view.kind === "tiempo";
+  var isOfficial = !!view.mint && typeof isOfficialAddress === "function" && isOfficialAddress(view.mint);
+  var noLiveRead = !!view.mint && (view.kind === "lectura_caida" || view.kind === "sin_ficha");
+  var officialDown = noLiveRead && isOfficial;
+  var failedRead = noLiveRead || view.missingState === "falta" || view.kind === "red" || view.kind === "limite" || view.kind === "tiempo";
   if (failedRead && view.light !== "espera" && !out.querySelector("#reintentar")) {
     var retry = verifyEl("button", { type: "button", id: "reintentar" });
     retry.textContent = lang === "en" ? "Try again" : "Reintentar";
@@ -187,7 +190,19 @@ function paintVerify(out, view) {
   }
   if (view.kind !== "vacio" && typeof AUDIT_NOTICE !== "undefined") {
     var audit = verifyEl("p", { class: "aviso-fijo" });
-    audit.textContent = AUDIT_NOTICE[lang];
+    audit.textContent = officialDown
+      ? (lang === "en"
+        ? "The blockchain could not be read right now. This is the official ORVUPI address published on orvupi.com/token. Press «Try again»."
+        : "No se pudo leer la blockchain ahora. Esta es la dirección oficial de ORVUPI publicada en orvupi.com/token. Pulsa «Reintentar».")
+      : noLiveRead
+      ? (lang === "en"
+        ? "The blockchain could not be read right now. This address is not the official ORVUPI address (the official one is on orvupi.com/token). Press «Try again»."
+        : "No se pudo leer la blockchain ahora. Esta dirección no es la oficial de ORVUPI (la oficial está en orvupi.com/token). Pulsa «Reintentar».")
+      : isOfficial
+      ? (lang === "en"
+        ? "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. This is the official ORVUPI address published on orvupi.com/token."
+        : "Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. Esta es la dirección oficial de ORVUPI publicada en orvupi.com/token.")
+      : AUDIT_NOTICE[lang];
     out.append(audit);
   }
   if (view.mint && view.kind === "lectura" && view.light !== "espera") {

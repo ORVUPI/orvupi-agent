@@ -2,8 +2,8 @@
 (() => {
 const ORVUPI_VERIFY = {"cards":[{"mint":"Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB","role":"contraste","roleNote":{"es":"USDT en Solana, contraste: otro token conocido, con emisión y congelación activas. No se presenta como copia de USDC.","en":"USDT on Solana, a contrast: another known token, with active mint and freeze permissions. It is not presented as a copy of USDC."},"id":"47f903a397a460485f0c5c21a5169d9b411a04825d5deba818a2a67c8e23ec18","createdAt":"2026-10-16T18:46:30.731Z","partial":true,"referenceSlot":457742328,"name":"USDT","nameStatus":"verificado","symbol":"USDT","inRegistry":false,"inRegistryStatus":"verificado","mintAuthority":{"state":"activa","status":"verificado"},"freezeAuthority":{"state":"activa","status":"verificado"},"metadataReading":"mutables","metadataLevel":"atención","holdersStatus":"no_disponible","holdersNote":"Sin respuesta utilizable. No se interpreta como autoridad revocada, como inmutabilidad ni como cantidad cero.","impersonation":false,"authenticityLevel":"ok","signals":[],"statement":"Este mint no está en el registro curado. Que no esté no significa que sea falso ni que sea una copia.","statementStatus":"verificado","curvePresent":false,"curvePresentStatus":"verificado","curveProgress":null,"curveProgressStatus":"no_aplica","curveProgressNote":"No hay curva. No se rellena con cero.","curveModuleNote":"No hay cuenta en la PDA. El módulo de otros mercados no está en esta versión. La ausencia no se rellena con una cantidad de cero.","rulesVersion":"0.1.0","statement_en":"This mint is not in the curated registry. That does not mean it is fake or a copy.","holdersNote_en":"No usable response. It is not interpreted as a revoked authority, as immutability, or as a zero balance.","curveProgressNote_en":"There is no curve. It is not filled with zero.","curveModuleNote_en":null,"signals_en":[]}],"source":"lista","evm":[],"rpc":{"primary":"https://solana-rpc.publicnode.com","fallback":"https://api.mainnet-beta.solana.com"},"registry":[]};
 const BASE58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
-// Contrato ORVUPI: aún no existe (web/v2/shared/orvupi-contract.json).
-// Contrato ORVUPI: aún no existe. En la web se lee de web/v2/shared/orvupi-contract.js; aquí solo cuenta el registro.
+// Contrato ORVUPI: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU (web/v2/shared/orvupi-contract.json).
+// Contrato ORVUPI: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU. En la web se lee de web/v2/shared/orvupi-contract.js; aquí solo cuenta el registro.
 const OFFICIAL_MINT = null;
 const COPY = {
     vacio: {
@@ -38,8 +38,8 @@ const COPY = {
         lightLabel: { es: "Se parece a un token del registro, pero la dirección es otra", en: "Looks like a token in the registry, but the address is different" },
         title: { es: "Se parece a un token del registro, pero la dirección es otra", en: "Looks like a token in the registry, but the address is different" },
         support: {
-            es: `El nombre o el símbolo se parece a un token del registro y la dirección es otra. Esto no dice quién lo creó ni con qué intención. ORVUPI todavía no tiene contrato.`,
-            en: `The name or the symbol looks like a token in the registry and the address is different. This does not say who created it or why. ORVUPI does not have a contract yet.`,
+            es: `El nombre o el símbolo se parece a un token del registro y la dirección es otra. Esto no dice quién lo creó ni con qué intención. La única dirección oficial de ORVUPI está en orvupi.com/token.`,
+            en: `The name or the symbol looks like a token in the registry and the address is different. This does not say who created it or why. The only official ORVUPI address is on orvupi.com/token.`,
         },
     },
     otra: {
@@ -217,7 +217,7 @@ function rowsFor(card) {
 const PARTIAL = pair("La ficha está incompleta: la muestra de cuentas con tokens no está. Eso no se rellena con un cero.", "The card is incomplete: the token account sample is missing. That is not filled in with a zero.");
 const CENSUS = pair("Hay saldos de la curva y de la creadora. No es un censo ni se rellena el resto con un cero.", "There are balances for the curve and the creator. It is not a census, and the rest is not filled in with a zero.");
 const CENSUS_PERSONAL = pair("Hay saldos de la curva, de la creadora y de la cuenta personal publicada. No es un censo ni se rellena el resto con un cero.", "There are balances for the curve, the creator, and the published personal account. It is not a census, and the rest is not filled in with a zero.");
-const SOLANA_ONLY = "ORVUPI todavía no tiene contrato en ninguna red";
+const SOLANA_ONLY = "La única dirección oficial de ORVUPI está en orvupi.com/token";
 function partialNoteFor(card) {
     if (!card.partial)
         return null;
@@ -237,7 +237,7 @@ function evmView(address, evm) {
             light: "riesgo",
             lightLabel: pair("Copia conocida", "Known copy"),
             title: pair("Copia conocida", "Known copy"),
-            support: pair(`${SOLANA_ONLY}. Ejemplo de search-v2 de Pump.fun, 08-10 09:14, sin verificar en la cadena (${chain}).`, `ORVUPI does not have a contract on any network yet. Example from Pump.fun search-v2, 2026-10-08 09:14, not verified on-chain (${chain}).`),
+            support: pair(`${SOLANA_ONLY}. Ejemplo de search-v2 de Pump.fun, 08-10 09:14, sin verificar en la cadena (${chain}).`, `The only official ORVUPI address is on orvupi.com/token. Example from Pump.fun search-v2, 2026-10-08 09:14, not verified on-chain (${chain}).`),
             mint: found.address,
             rows: [
                 { label: pair("Red", "Network"), value: pair(chain, chain) },
@@ -253,7 +253,7 @@ function evmView(address, evm) {
         kind: "evm",
         light: "atencion",
         lightLabel: pair("Otra red", "Another network"),
-        title: pair(SOLANA_ONLY, "ORVUPI does not have a contract on any network yet"),
+        title: pair(SOLANA_ONLY, "The only official ORVUPI address is on orvupi.com/token"),
         support: pair("Una dirección que empieza por 0x no es el mint de Solana. La lista de ejemplos no es completa y no se ha verificado en la cadena.", "An address that starts with 0x is not the Solana mint. The example list is not complete and it has not been verified on-chain."),
         mint: shown,
         rows: [],
@@ -286,7 +286,26 @@ function classifyAddress(raw, cards, source, evm = []) {
             return viewOf(kind, card.mint, rowsFor(card), partialNoteFor(card));
         }
     }
+    if (isOrvupiOfficial(mint))
+        return orvupiOfficialView(mint);
     return notOfficialView(mint, official);
+}
+/** En verify.js lee el CA de shared/orvupi-contract.js (isOfficialAddress). Fuera del navegador usa esta copia, que test/web-v2.test.ts compara con orvupi-contract.json. */
+function isOrvupiOfficial(mint) {
+    return typeof isOfficialAddress === "function" ? isOfficialAddress(mint) : mint === "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU";
+}
+function orvupiOfficialView(mint) {
+    return {
+        kind: "lectura_caida",
+        light: "neutro",
+        lightLabel: pair("Dirección oficial de ORVUPI", "Official ORVUPI address"),
+        title: pair("Dirección oficial de ORVUPI · lectura no disponible", "Official ORVUPI address · reading unavailable"),
+        support: pair("Coincide con la dirección publicada en orvupi.com/token. La lectura en directo no está disponible ahora: no hay resultado y no se inventa uno.", "It matches the address published on orvupi.com/token. The live reading is unavailable right now: there is no result, and none is invented."),
+        mint,
+        rows: [],
+        partialNote: null,
+        compare: null,
+    };
 }
 const DATED_CARD_NOTE = pair("Es la ficha del 2026-10-16. No es una lectura en directo.", "It is the 2026-10-16 card. It is not a live reading.");
 /** La ficha fechada sigue, pero un fallo de los dos RPC no la pinta como lectura en verde. */
@@ -593,9 +612,9 @@ function evmMessage(input, knownEvm = []) {
     }
     const known = knownEvm.some((address) => address.toLowerCase() === trimmed.toLowerCase());
     if (known) {
-        return "Copia conocida de un token anterior. ORVUPI todavía no tiene contrato en ninguna red.";
+        return "Copia conocida de un token anterior. La única dirección oficial de ORVUPI está en orvupi.com/token.";
     }
-    return "ORVUPI todavía no tiene contrato en ninguna red.";
+    return "La única dirección oficial de ORVUPI está en orvupi.com/token.";
 }
 function validateMint(input, knownEvm = []) {
     const evm = evmMessage(input, knownEvm);
@@ -1874,12 +1893,12 @@ function namesProject(value) {
     return folded.includes("orvupi") || folded.replace(/0/g, "o").replace(/[1l|!]/g, "i").includes("orvupi");
 }
 const NAMED_LIKE_PROJECT = {
-    es: "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato",
-    en: "It is named like ORVUPI, but ORVUPI does not have a contract yet",
+    es: "Se llama como ORVUPI, pero no es la dirección oficial",
+    en: "It is named like ORVUPI, but it is not the official address",
 };
 const AUDIT_NOTICE = {
-    es: "Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. ORVUPI no tiene relación con este token: todavía no tiene contrato. Que no aparezcan señales no significa que esté todo comprobado.",
-    en: "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. ORVUPI has no relationship with this token: it does not have a contract yet. No signals showing does not mean everything was checked.",
+    es: "Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. ORVUPI no tiene relación con este token. Que no aparezcan señales no significa que esté todo comprobado.",
+    en: "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. ORVUPI has no relationship with this token. No signals showing does not mean everything was checked.",
 };
 const PRIVACY_NOTICE = {
     es: "La lectura es directa y solo en lectura.",
@@ -2197,7 +2216,7 @@ async function readWith(mint, registry, rpc, input) {
             missing: loc("No falta ningún dato pedido en esta lectura.", "No requested fact is missing in this reading."),
             missingState: "ok",
             absent: loc("Comprobado: no existe: la cuenta.", "Confirmed: it does not exist: the account."),
-            identity: loc("Contrato ORVUPI: aún no existe.", "ORVUPI contract: does not exist yet."),
+            identity: loc("Contrato ORVUPI: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU.", "ORVUPI contract: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU."),
         };
     }
     if (!isMintAccount(mintInfo.owner, mintInfo.data)) {
@@ -2324,8 +2343,10 @@ async function readWith(mint, registry, rpc, input) {
     const curveNotOnPump = !mint.endsWith("pump") && (!curveInfo || curveInfo.owner !== PUMP_PROGRAM);
     signals.push(curveNotOnPump ? curveDoesNotApplySignal() : curveSignal(curveInfo, bonding));
     const copyByName = !likeness.inRegistry && likeness.signals.some((item) => /^nombre |^símbolo /.test(item));
-    // ORVUPI todavía no tiene contrato: un token que dice llamarse ORVUPI no es el oficial en ninguna red.
-    const namedLikeProject = !likeness.inRegistry && [...names, ...symbols].some((item) => namesProject(item));
+    // Contrato oficial ORVUPI (Solana): Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU. Otro token que dice llamarse ORVUPI no es el oficial.
+    // En verify.js el CA sale de shared/orvupi-contract.js; en Node, de esta copia (comprobada por test/web-v2.test.ts).
+    const officialOrvupi = typeof isOfficialAddress === "function" ? isOfficialAddress(mint) : mint === "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU";
+    const namedLikeProject = !likeness.inRegistry && !officialOrvupi && [...names, ...symbols].some((item) => namesProject(item));
     if (likeness.inRegistry) {
         signals.push({
             id: "registro",
@@ -2339,7 +2360,7 @@ async function readWith(mint, registry, rpc, input) {
             id: "copia",
             level: "atencion",
             title: loc(NAMED_LIKE_PROJECT.es, NAMED_LIKE_PROJECT.en),
-            explain: loc("El nombre o el símbolo dice ORVUPI. ORVUPI todavía no tiene contrato en ninguna red, así que esta dirección no es la oficial. Esto no dice quién lo creó ni con qué intención.", "The name or the symbol says ORVUPI. ORVUPI does not have a contract on any network yet, so this address is not the official one. This does not say who created it or why."),
+            explain: loc("El nombre o el símbolo dice ORVUPI. La única dirección oficial de ORVUPI está en orvupi.com/token, así que esta dirección no es la oficial. Esto no dice quién lo creó ni con qué intención.", "The name or the symbol says ORVUPI. The only official ORVUPI address is on orvupi.com/token, so this address is not the official one. This does not say who created it or why."),
         });
     }
     else if (copyByName) {
@@ -2369,25 +2390,32 @@ async function readWith(mint, registry, rpc, input) {
     }
     const risky = signals.some((item) => item.level === "riesgo");
     const attention = signals.some((item) => item.level === "atencion");
-    const headline = likeness.inRegistry
+    const headline = officialOrvupi
         ? {
-            light: risky || attention ? "atencion" : "ok",
-            lightLabel: loc("En el registro", "In the registry"),
-            title: loc("Esta dirección está en el registro curado", "This address is in the curated registry"),
-            support: loc("La lectura de ahora coincide con la dirección del registro. Las fichas fechadas siguen abajo, como foto anterior.", "This reading matches the address in the registry. The dated cards remain below, as an earlier snapshot."),
+            light: "ok",
+            lightLabel: loc("Dirección oficial de ORVUPI", "Official ORVUPI address"),
+            title: loc("Dirección oficial de ORVUPI", "Official ORVUPI address"),
+            support: loc("Coincide con la dirección publicada en orvupi.com/token. Cada señal de abajo describe un hecho leído ahora. No es una puntuación.", "It matches the address published on orvupi.com/token. Each signal below describes a fact read just now. It is not a score."),
         }
-        : {
-            light: (risky ? "riesgo" : copyByName || namedLikeProject || attention ? "atencion" : "neutro"),
-            lightLabel: namedLikeProject
-                ? loc(NAMED_LIKE_PROJECT.es, NAMED_LIKE_PROJECT.en)
-                : copyByName
-                    ? loc("Se parece a un token del registro curado, pero la dirección es otra", "Looks like a token in the curated registry, but the address is different")
-                    : loc(risky || attention ? "Hay señales" : "Sin esas señales", risky || attention ? "Signals found" : "Without those signals"),
-            title: loc("Lectura de este token", "Reading for this token"),
-            support: copyByName
-                ? loc("No está en el registro curado. Cada señal describe un hecho leído ahora. No es una puntuación.", "It is not in the curated registry. Each signal describes a fact read just now. It is not a score.")
-                : loc("Cada señal describe un hecho leído ahora. No es una puntuación.", "Each signal describes a fact read just now. It is not a score."),
-        };
+        : likeness.inRegistry
+            ? {
+                light: risky || attention ? "atencion" : "ok",
+                lightLabel: loc("En el registro", "In the registry"),
+                title: loc("Esta dirección está en el registro curado", "This address is in the curated registry"),
+                support: loc("La lectura de ahora coincide con la dirección del registro. Las fichas fechadas siguen abajo, como foto anterior.", "This reading matches the address in the registry. The dated cards remain below, as an earlier snapshot."),
+            }
+            : {
+                light: (risky ? "riesgo" : copyByName || namedLikeProject || attention ? "atencion" : "neutro"),
+                lightLabel: namedLikeProject
+                    ? loc(NAMED_LIKE_PROJECT.es, NAMED_LIKE_PROJECT.en)
+                    : copyByName
+                        ? loc("Se parece a un token del registro curado, pero la dirección es otra", "Looks like a token in the curated registry, but the address is different")
+                        : loc(risky || attention ? "Hay señales" : "Sin esas señales", risky || attention ? "Signals found" : "Without those signals"),
+                title: loc("Lectura de este token", "Reading for this token"),
+                support: copyByName
+                    ? loc("No está en el registro curado. Cada señal describe un hecho leído ahora. No es una puntuación.", "It is not in the curated registry. Each signal describes a fact read just now. It is not a score.")
+                    : loc("Cada señal describe un hecho leído ahora. No es una puntuación.", "Each signal describes a fact read just now. It is not a score."),
+            };
     const quotedName = clipForeign(names[0] || "", likeness.inRegistry);
     const displayName = likeness.inRegistry || !names[0] ? quotedName : `Dice llamarse ${quotedName}`;
     const displayNameEn = likeness.inRegistry || !names[0] ? quotedName : `It says it is called ${quotedName}`;
@@ -2414,10 +2442,10 @@ async function readWith(mint, registry, rpc, input) {
     const missing = grouped.missing;
     const absent = grouped.absent;
     const identity = loc(likeness.inRegistry
-        ? `Esta dirección (${mint}) está en el registro curado. Contrato ORVUPI: aún no existe.`
-        : "Contrato ORVUPI: aún no existe.", likeness.inRegistry
-        ? `This address (${mint}) is in the curated registry. ORVUPI contract: does not exist yet.`
-        : "ORVUPI contract: does not exist yet.");
+        ? `Esta dirección (${mint}) está en el registro curado. Contrato ORVUPI: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU.`
+        : "Contrato ORVUPI: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU.", likeness.inRegistry
+        ? `This address (${mint}) is in the curated registry. ORVUPI contract: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU.`
+        : "ORVUPI contract: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU.");
     const checkedEs = facts.filter((item) => item.state === "ok").map((item) => item.label.es);
     const checkedEn = facts.filter((item) => item.state === "ok").map((item) => item.label.en);
     const attentionEs = signals
@@ -2827,10 +2855,10 @@ function curveSignal(account, curve) {
 /**
  * Contrato ORVUPI en la web: único módulo del que leen todas las páginas.
  * Tiene que coincidir con shared/orvupi-contract.json (lo comprueba test/web-v2.test.ts).
- * Hoy no existe: null. Una cadena vacía o un valor que falte nunca cuentan como oficiales.
+ * Solana, creado el 17-10-2026. Una cadena vacía o un valor que falte nunca cuentan como oficiales.
  */
-const OFFICIAL_NETWORK = null;
-const OFFICIAL_ADDRESS = null;
+const OFFICIAL_NETWORK = "solana";
+const OFFICIAL_ADDRESS = "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU";
 
 function isOfficialAddress(value) {
   return typeof OFFICIAL_ADDRESS === "string" && OFFICIAL_ADDRESS !== "" && typeof value === "string" && value === OFFICIAL_ADDRESS;
@@ -2948,10 +2976,10 @@ const ATTENTION = {
   },
   copia: {
     title: { es: "Dirección", en: "Address" },
-    lead: { es: "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.", en: "It is named like ORVUPI, but ORVUPI does not have a contract yet." },
+    lead: { es: "Se llama como ORVUPI, pero no es la dirección oficial.", en: "It is named like ORVUPI, but it is not the official address." },
     detail: {
-      es: "ORVUPI todavía no tiene contrato en ninguna red. Ninguna dirección es la oficial.",
-      en: "ORVUPI does not have a contract on any network yet. No address is the official one.",
+      es: "La única dirección oficial de ORVUPI está en orvupi.com/token. Ninguna dirección es la oficial.",
+      en: "The only official ORVUPI address is on orvupi.com/token. No address is the official one.",
     },
   },
   ficha: {
@@ -3168,8 +3196,8 @@ function looksLikeOrvupi(context) {
 function namedLikeOrvupiText(name, symbol, lang) {
   if (!namesOrvupi(name) && !namesOrvupi(symbol)) return "";
   return lang === "en"
-    ? "It is named like ORVUPI, but ORVUPI does not have a contract yet."
-    : "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.";
+    ? "It is named like ORVUPI, but it is not the official address."
+    : "Se llama como ORVUPI, pero no es la dirección oficial.";
 }
 
 function quotedIdentity(context) {
@@ -3612,8 +3640,8 @@ function cloneWarningText(card, lang) {
   const context = contextFromCard(card);
   if (context.official || !looksLikeOrvupi(context)) return "";
   return lang === "en"
-    ? "It is named like ORVUPI, but ORVUPI does not have a contract yet."
-    : "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.";
+    ? "It is named like ORVUPI, but it is not the official address."
+    : "Se llama como ORVUPI, pero no es la dirección oficial.";
 }
 
 function comparisonBanner(left, right, lang) {
@@ -5052,7 +5080,7 @@ function paintVerify(out, view) {
     var list = verifyEl("ul", { class: "leyenda" });
     list.append(
       legendItem("ok", lang === "en" ? "ORVUPI registry address" : "Dirección del registro de ORVUPI"),
-      legendItem("atencion", lang === "en" ? "Named like ORVUPI, but ORVUPI does not have a contract yet" : "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato"),
+      legendItem("atencion", lang === "en" ? "Named like ORVUPI, but not the official address" : "Se llama como ORVUPI, pero no es la dirección oficial"),
       legendItem("neutro", lang === "en" ? "Could not be checked" : "No se pudo comprobar"),
     );
     out.append(emptyTitle, emptySupport, list);
@@ -5112,7 +5140,10 @@ function paintVerify(out, view) {
     sampleBtn.textContent = lang === "en" ? "Try to read the largest accounts" : "Intentar leer las cuentas más grandes";
     out.append(sampleBtn);
   }
-  var failedRead = view.missingState === "falta" || view.kind === "red" || view.kind === "limite" || view.kind === "tiempo";
+  var isOfficial = !!view.mint && typeof isOfficialAddress === "function" && isOfficialAddress(view.mint);
+  var noLiveRead = !!view.mint && (view.kind === "lectura_caida" || view.kind === "sin_ficha");
+  var officialDown = noLiveRead && isOfficial;
+  var failedRead = noLiveRead || view.missingState === "falta" || view.kind === "red" || view.kind === "limite" || view.kind === "tiempo";
   if (failedRead && view.light !== "espera" && !out.querySelector("#reintentar")) {
     var retry = verifyEl("button", { type: "button", id: "reintentar" });
     retry.textContent = lang === "en" ? "Try again" : "Reintentar";
@@ -5120,7 +5151,19 @@ function paintVerify(out, view) {
   }
   if (view.kind !== "vacio" && typeof AUDIT_NOTICE !== "undefined") {
     var audit = verifyEl("p", { class: "aviso-fijo" });
-    audit.textContent = AUDIT_NOTICE[lang];
+    audit.textContent = officialDown
+      ? (lang === "en"
+        ? "The blockchain could not be read right now. This is the official ORVUPI address published on orvupi.com/token. Press «Try again»."
+        : "No se pudo leer la blockchain ahora. Esta es la dirección oficial de ORVUPI publicada en orvupi.com/token. Pulsa «Reintentar».")
+      : noLiveRead
+      ? (lang === "en"
+        ? "The blockchain could not be read right now. This address is not the official ORVUPI address (the official one is on orvupi.com/token). Press «Try again»."
+        : "No se pudo leer la blockchain ahora. Esta dirección no es la oficial de ORVUPI (la oficial está en orvupi.com/token). Pulsa «Reintentar».")
+      : isOfficial
+      ? (lang === "en"
+        ? "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. This is the official ORVUPI address published on orvupi.com/token."
+        : "Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. Esta es la dirección oficial de ORVUPI publicada en orvupi.com/token.")
+      : AUDIT_NOTICE[lang];
     out.append(audit);
   }
   if (view.mint && view.kind === "lectura" && view.light !== "espera") {
