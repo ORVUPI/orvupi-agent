@@ -1,20 +1,27 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { useWorkspace } from "../app/workspace";
 import { loadFileWhenReady } from "../routing/load";
+import { downloadBytes } from "../security/bytes";
+import { fileNameWithExtension } from "../security/names";
 import { Button, Input, Select } from "../ui/kit";
 import { MenuBar } from "../ui/menus";
 import {
   SLIDE_FILLS,
   SLIDE_THEMES,
+  alignItem,
   defaultItems,
+  layoutItems,
+  orderItems,
   parseSlides,
   serializeSlides,
   syncSlideText,
   type Slide,
   type SlideItem,
+  type SlideLayout,
   type SlideTheme,
   type SlidesFile,
 } from "./model";
+import { slidesToPdf } from "./pdf";
 
 const CANVAS_W = 816;
 const CANVAS_H = 459;
@@ -35,7 +42,7 @@ function inkFor(fill: string): string {
 }
 
 function blankSlide(): Slide {
-  return { title: "", body: "", theme: "papel", items: defaultItems("", "") };
+  return { title: "", body: "", theme: "papel", items: defaultItems("", ""), notes: "", transition: "none", layout: "title-body" };
 }
 
 export function SlidesScreen() {
@@ -46,6 +53,7 @@ export function SlidesScreen() {
   const [present, setPresent] = useState(false);
   const [status, setStatus] = useState<"saved" | "pending">("saved");
   const [selectedId, setSelectedId] = useState<string | null>("title");
+  const [help, setHelp] = useState(false);
   const imageRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -169,27 +177,33 @@ export function SlidesScreen() {
 
   function renderItem(item: SlideItem, interactive: boolean) {
     const shape = item.kind === "shape";
+    const label = item.kind === "text" ? workspace.t("slideText") : item.kind === "image" ? workspace.t("slideImage") : item.kind === "line" ? workspace.t("slideLine") : workspace.t("slideShape");
     return (
       <button
         key={item.id}
         type="button"
         className={`ow-slide-item${selectedId === item.id ? " is-selected" : ""}`}
-        aria-label={item.kind === "text" ? workspace.t("slideText") : item.kind === "image" ? workspace.t("slideImage") : workspace.t("slideShape")}
+        aria-label={label}
         aria-pressed={selectedId === item.id}
         style={{
           left: `${(item.x / CANVAS_W) * 100}%`,
           top: `${(item.y / CANVAS_H) * 100}%`,
           width: `${(item.w / CANVAS_W) * 100}%`,
           height: `${(item.h / CANVAS_H) * 100}%`,
-          background: shape ? item.fill : item.kind === "image" ? "transparent" : undefined,
-          color: shape ? inkFor(item.fill) : undefined,
+          background: shape ? item.fill : item.kind === "text" ? item.fill : "transparent",
+          color: shape ? inkFor(item.fill) : item.kind === "text" ? item.color : undefined,
           borderRadius: shape && item.shape === "ellipse" ? "50%" : undefined,
+          fontWeight: item.kind === "text" && item.bold ? 800 : undefined,
+          fontStyle: item.kind === "text" && item.italic ? "italic" : undefined,
+          textAlign: item.kind === "text" ? item.align : undefined,
+          fontSize: item.kind === "text" && item.size ? item.size : undefined,
           pointerEvents: interactive ? "auto" : "none",
         }}
         onPointerDown={interactive ? (event) => startDrag(event, item) : undefined}
       >
         {item.kind === "text" ? item.text : null}
         {item.kind === "image" ? <img src={item.src} alt="" /> : null}
+        {item.kind === "line" ? <svg className="ow-slide-line" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="10" x2="100" y2="10" stroke="#102032" strokeWidth="4" /></svg> : null}
       </button>
     );
   }
@@ -198,7 +212,7 @@ export function SlidesScreen() {
     return (
       <section className={`ow-stage ow-present ow-theme-${slide.theme}`} aria-label={file.title}>
         <p>{index + 1} / {file.slides.length}</p>
-        <div className={`ow-slide-canvas ow-theme-${slide.theme}`}>
+        <div className={`ow-slide-canvas ow-theme-${slide.theme} ow-trans-${slide.transition ?? "none"}`} style={{ background: slide.background }}>
           {slide.items.map((item) => renderItem(item, false))}
         </div>
         <div className="ow-row">
@@ -223,6 +237,7 @@ export function SlidesScreen() {
         menus={[
           { id: "file", label: workspace.t("menuFile"), items: [
             { id: "present", label: workspace.t("slidePresent"), onSelect: () => setPresent(true) },
+            { id: "pdf", label: workspace.t("slidePdf"), onSelect: () => void slidesToPdf(file).then((bytes) => downloadBytes(bytes, fileNameWithExtension(file.title, "pdf"), "application/pdf")).catch(workspace.reportError) },
           ] },
           { id: "edit", label: workspace.t("menuEdit"), items: [
             { id: "remove", label: workspace.t("slideRemove"), onSelect: () => {
@@ -239,17 +254,39 @@ export function SlidesScreen() {
             { id: "rect", label: workspace.t("shapeRect"), onSelect: () => addItem({ id: crypto.randomUUID().slice(0, 12), kind: "shape", shape: "rect", x: 120, y: 120, w: 180, h: 100, fill: "#ff3070" }) },
             { id: "ellipse", label: workspace.t("shapeEllipse"), onSelect: () => addItem({ id: crypto.randomUUID().slice(0, 12), kind: "shape", shape: "ellipse", x: 160, y: 160, w: 140, h: 140, fill: "#1d4e89" }) },
             { id: "image", label: workspace.t("slideImage"), onSelect: () => imageRef.current?.click() },
+            { id: "line", label: workspace.t("slideLine"), onSelect: () => addItem({ id: crypto.randomUUID().slice(0, 12), kind: "line", x: 80, y: 220, w: 320, h: 12 }) },
           ] },
-          { id: "format", label: workspace.t("menuFormat"), items: SLIDE_THEMES.map((theme) => ({
-            id: theme,
-            label: workspace.t(THEME_KEY[theme]),
-            onSelect: () => patchCurrent((current) => ({ ...current, theme })),
-          })) },
+          { id: "format", label: workspace.t("menuFormat"), items: [
+            ...SLIDE_THEMES.map((theme) => ({
+              id: theme,
+              label: workspace.t(THEME_KEY[theme]),
+              onSelect: () => patchCurrent((current) => ({ ...current, theme })),
+            })),
+            { id: "bold", label: workspace.t("bold"), onSelect: () => patchCurrent((current) => ({ ...current, items: current.items.map((item) => item.id === selected?.id && item.kind === "text" ? { ...item, bold: !item.bold } : item) })) },
+            { id: "italic", label: workspace.t("italic"), onSelect: () => patchCurrent((current) => ({ ...current, items: current.items.map((item) => item.id === selected?.id && item.kind === "text" ? { ...item, italic: !item.italic } : item) })) },
+            { id: "paper", label: workspace.t("slideBackground"), onSelect: () => patchCurrent((current) => ({ ...current, background: current.background === "#fff0f5" ? "#fff8ec" : "#fff0f5" })) },
+            { id: "fade", label: workspace.t("transFade"), onSelect: () => patchCurrent((current) => ({ ...current, transition: "fade" })) },
+            { id: "move", label: workspace.t("transSlide"), onSelect: () => patchCurrent((current) => ({ ...current, transition: "slide" })) },
+            ...(["blank", "title", "title-body", "two"] as SlideLayout[]).map((layout) => ({
+              id: layout,
+              label: workspace.t(layout === "blank" ? "slideLayoutBlank" : layout === "title" ? "slideLayoutTitle" : layout === "two" ? "slideLayoutTwo" : "slideLayoutBody"),
+              onSelect: () => patchCurrent((current) => ({ ...current, layout, items: layoutItems(layout, current.title, current.body) })),
+            })),
+          ] },
           { id: "tools", label: workspace.t("menuTools"), items: [
-            { id: "hint", label: workspace.t("slideHint"), onSelect: () => workspace.pushToast(workspace.t("slideHint")) },
+            { id: "center", label: workspace.t("alignCenter"), onSelect: () => {
+              if (!selected) return;
+              patchCurrent((current) => ({ ...current, items: current.items.map((item) => item.id === selected.id ? alignItem(item, CANVAS_W, CANVAS_H, "center") : item) }));
+            } },
+            { id: "dist", label: workspace.t("slideDistribute"), onSelect: () => patchCurrent((current) => {
+              const gap = current.items.length > 1 ? (CANVAS_W - 80) / current.items.length : 0;
+              return { ...current, items: current.items.map((item, itemIndex) => ({ ...item, x: 24 + itemIndex * gap })) };
+            }) },
+            { id: "front", label: workspace.t("slideFront"), onSelect: () => { if (selected) patchCurrent((current) => ({ ...current, items: orderItems(current.items, selected.id, "front") })); } },
+            { id: "back", label: workspace.t("slideBack"), onSelect: () => { if (selected) patchCurrent((current) => ({ ...current, items: orderItems(current.items, selected.id, "back") })); } },
           ] },
           { id: "help", label: workspace.t("menuHelp"), items: [
-            { id: "keys", label: workspace.t("shortcuts"), onSelect: () => workspace.pushToast(workspace.t("shortcutsDriveBody")) },
+            { id: "keys", label: workspace.t("shortcuts"), onSelect: () => setHelp(true) },
           ] },
         ]}
       />
@@ -282,7 +319,7 @@ export function SlidesScreen() {
           </Button>
         </aside>
         <div className={`ow-slide-stage ow-theme-${slide.theme}`}>
-          <div className={`ow-slide-canvas ow-theme-${slide.theme}`} onPointerDown={() => setSelectedId(null)}>
+          <div className={`ow-slide-canvas ow-theme-${slide.theme} ow-trans-${slide.transition ?? "none"}`} style={{ background: slide.background }} onPointerDown={() => setSelectedId(null)}>
             {slide.items.map((item) => renderItem(item, true))}
           </div>
         </div>
@@ -296,6 +333,7 @@ export function SlidesScreen() {
               <option key={theme} value={theme}>{workspace.t(THEME_KEY[theme])}</option>
             ))}
           </Select>
+          {help ? <p role="status">{workspace.t("shortcutsBody")}</p> : null}
           {selected?.kind === "text" ? (
             <label className="ow-field">
               {selected.id === "title" ? workspace.t("slideTitle") : workspace.t("slideBody")}
@@ -329,6 +367,10 @@ export function SlidesScreen() {
               ))}
             </div>
           ) : null}
+          <label className="ow-field">
+            {workspace.t("slideNotes")}
+            <textarea className="ow-speaker" aria-label={workspace.t("slideNotes")} value={slide.notes ?? ""} onChange={(event) => patchCurrent((current) => ({ ...current, notes: event.target.value.slice(0, 2000) }))} />
+          </label>
           <input
             ref={imageRef}
             className="ow-sr"

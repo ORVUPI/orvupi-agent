@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { useWorkspace } from "../app/workspace";
 import { loadFileWhenReady } from "../routing/load";
+import { downloadBytes } from "../security/bytes";
 import { Button, Input } from "../ui/kit";
 import { MenuBar } from "../ui/menus";
-import { createId } from "../security/names";
-import { SLIDE_FILLS, type SlideItem } from "../slides/model";
+import { createId, fileNameWithExtension } from "../security/names";
+import { SLIDE_FILLS, alignItem, orderItems, type SlideItem } from "../slides/model";
 import { parseDrawing, serializeDrawing, type DrawingFile } from "./model";
 
 const CANVAS_W = 960;
@@ -24,6 +25,7 @@ export function DrawingsScreen() {
   const [file, setFile] = useState<DrawingFile | null>(null);
   const [status, setStatus] = useState<"saved" | "pending">("saved");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [help, setHelp] = useState(false);
   const imageRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -124,7 +126,7 @@ export function DrawingsScreen() {
       <MenuBar
         label={workspace.t("menuBar")}
         menus={[
-          { id: "file", label: workspace.t("menuFile"), items: [{ id: "hint", label: workspace.t("drawingHint"), onSelect: () => workspace.pushToast(workspace.t("drawingHint")) }] },
+          { id: "file", label: workspace.t("menuFile"), items: [{ id: "download", label: workspace.t("download"), onSelect: () => downloadBytes(serializeDrawing(file), fileNameWithExtension(file.title, "ordraw"), "application/vnd.orvupi.drawing+json") }] },
           { id: "edit", label: workspace.t("menuEdit"), items: [{ id: "remove", label: workspace.t("slideRemove"), onSelect: () => {
             if (!selected) return;
             update({ ...file, items: file.items.filter((item) => item.id !== selected.id) });
@@ -136,6 +138,7 @@ export function DrawingsScreen() {
             { id: "rect", label: workspace.t("shapeRect"), onSelect: () => addItem({ id: createId().slice(0, 12), kind: "shape", shape: "rect", x: 140, y: 120, w: 180, h: 110, fill: "#1d4e89" }) },
             { id: "ellipse", label: workspace.t("shapeEllipse"), onSelect: () => addItem({ id: createId().slice(0, 12), kind: "shape", shape: "ellipse", x: 200, y: 180, w: 140, h: 140, fill: "#ff3070" }) },
             { id: "image", label: workspace.t("slideImage"), onSelect: () => imageRef.current?.click() },
+            { id: "line", label: workspace.t("slideLine"), onSelect: () => addItem({ id: createId().slice(0, 12), kind: "line", x: 80, y: 200, w: 280, h: 12 }) },
           ] },
           { id: "format", label: workspace.t("menuFormat"), items: [{ id: "fill", label: workspace.t("slideShape"), onSelect: () => {
             if (!selected || selected.kind !== "shape") return;
@@ -143,16 +146,25 @@ export function DrawingsScreen() {
             const fill = SLIDE_FILLS[(index + 1) % SLIDE_FILLS.length] ?? "#1d4e89";
             update({ ...file, items: file.items.map((item) => item.id === selected.id && item.kind === "shape" ? { ...item, fill } : item) });
           } }] },
-          { id: "tools", label: workspace.t("menuTools"), items: [{ id: "hint", label: workspace.t("drawingHint"), onSelect: () => workspace.pushToast(workspace.t("drawingHint")) }] },
-          { id: "help", label: workspace.t("menuHelp"), items: [{ id: "keys", label: workspace.t("shortcuts"), onSelect: () => workspace.pushToast(workspace.t("shortcutsDriveBody")) }] },
+          { id: "tools", label: workspace.t("menuTools"), items: [
+            { id: "center", label: workspace.t("alignCenter"), onSelect: () => {
+              if (!selected) return;
+              update({ ...file, items: file.items.map((item) => item.id === selected.id ? alignItem(item, CANVAS_W, CANVAS_H, "center") : item) });
+            } },
+            { id: "front", label: workspace.t("slideFront"), onSelect: () => { if (selected) update({ ...file, items: orderItems(file.items, selected.id, "front") }); } },
+            { id: "back", label: workspace.t("slideBack"), onSelect: () => { if (selected) update({ ...file, items: orderItems(file.items, selected.id, "back") }); } },
+          ] },
+          { id: "help", label: workspace.t("menuHelp"), items: [{ id: "keys", label: workspace.t("shortcuts"), onSelect: () => setHelp(true) }] },
         ]}
       />
+      {help ? <p role="status">{workspace.t("drawingHint")}</p> : null}
       <div className="ow-draw-work">
         <div className="ow-draw-tools" role="toolbar" aria-label={workspace.t("menuInsert")}>
           <Button onClick={() => addItem({ id: createId().slice(0, 12), kind: "text", x: 80, y: 80, w: 240, h: 72, text: workspace.t("slideText") })}>{workspace.t("slideText")}</Button>
           <Button onClick={() => addItem({ id: createId().slice(0, 12), kind: "shape", shape: "rect", x: 140, y: 120, w: 180, h: 110, fill: "#1d4e89" })}>{workspace.t("shapeRect")}</Button>
           <Button onClick={() => addItem({ id: createId().slice(0, 12), kind: "shape", shape: "ellipse", x: 200, y: 180, w: 140, h: 140, fill: "#ff3070" })}>{workspace.t("shapeEllipse")}</Button>
           <Button onClick={() => imageRef.current?.click()}>{workspace.t("slideImage")}</Button>
+          <Button onClick={() => addItem({ id: createId().slice(0, 12), kind: "line", x: 80, y: 200, w: 280, h: 12 })}>{workspace.t("slideLine")}</Button>
         </div>
         <div className="ow-draw-stage">
           <div className="ow-draw-canvas" onPointerDown={() => setSelectedId(null)}>
@@ -161,21 +173,23 @@ export function DrawingsScreen() {
                 key={item.id}
                 type="button"
                 className={`ow-slide-item${selectedId === item.id ? " is-selected" : ""}`}
-                aria-label={item.kind === "text" ? workspace.t("slideText") : item.kind === "image" ? workspace.t("slideImage") : workspace.t("slideShape")}
-                aria-pressed={selectedId === item.id}
+                aria-label={item.kind === "text" ? workspace.t("slideText") : item.kind === "image" ? workspace.t("slideImage") : item.kind === "line" ? workspace.t("slideLine") : workspace.t("slideShape")}
                 style={{
                   left: `${(item.x / CANVAS_W) * 100}%`,
                   top: `${(item.y / CANVAS_H) * 100}%`,
                   width: `${(item.w / CANVAS_W) * 100}%`,
                   height: `${(item.h / CANVAS_H) * 100}%`,
-                  background: item.kind === "shape" ? item.fill : "transparent",
-                  color: item.kind === "shape" ? inkFor(item.fill) : "#102032",
+                  background: item.kind === "shape" ? item.fill : item.kind === "text" ? item.fill : "transparent",
+                  color: item.kind === "shape" ? inkFor(item.fill) : item.kind === "text" ? (item.color ?? "#102032") : "#102032",
+                  fontWeight: item.kind === "text" && item.bold ? 800 : undefined,
                   borderRadius: item.kind === "shape" && item.shape === "ellipse" ? "50%" : undefined,
                 }}
+                aria-pressed={selectedId === item.id}
                 onPointerDown={(event) => startDrag(event, item)}
               >
                 {item.kind === "text" ? item.text : null}
                 {item.kind === "image" ? <img src={item.src} alt="" /> : null}
+                {item.kind === "line" ? <svg className="ow-slide-line" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="10" x2="100" y2="10" stroke="#102032" strokeWidth="4" /></svg> : null}
               </button>
             ))}
           </div>

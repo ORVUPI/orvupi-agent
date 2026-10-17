@@ -1,5 +1,17 @@
 # Registro de cambios
 
+## 0.5.0 — 2026-10-17
+
+Alfa de desarrollo. No es una versión de producción.
+
+- Auditoría funcional contra la ayuda de Google en `docs/AUDITORIA_FUNCIONAL.md`: Drive, Docs, Sheets, Slides, Forms, Drawings y Notas. Cobertura 107 de 119 (89,9 %). Lo que necesita red o cuenta no aparece en los menús.
+- Hojas: formato de número, moneda, porcentaje y fecha; negrita y colores; bordes; combinar celdas; ajustar texto; alineación; inmovilizar filas y columnas; insertar y eliminar filas y columnas; ordenar y filtrar; formato condicional «mayor que»; validación con desplegable; gráficos de barras, líneas y circular con Chart.js 4.5.1 (MIT); autorrelleno arrastrando el cuadro de la celda; copiar y pegar con formato; buscar y reemplazar; más de cien funciones (SUMA, SI, BUSCARV, CONTAR.SI, SUMAR.SI, CONCATENAR, HOY, REDONDEAR y sus nombres en inglés) y referencias a otra hoja.
+- Diapositivas: cuadros de texto con negrita y cursiva, formas, líneas, imágenes, alinear y distribuir, orden de capas, fondo, diseños, transiciones de fundido y deslizar, notas del orador y PDF.
+- Archivos: detalles, actividad local, versiones, mover a, accesos directos, descarga de carpeta en ZIP y uso de almacenamiento. Compartir no está.
+- Formularios: opción, casillas, desplegable, escala, fecha, hora y cuadrícula; obligatoria; secciones; vista previa; respuestas con resumen y gráfico; exportar a una hoja.
+- Dibujos: línea, centrar y orden de capas, y descarga del `.ordraw`. Notas: etiqueta, archivar y copiar.
+- Un archivo de 0.1 a 0.4.1 sigue abriendo: los campos nuevos son opcionales y la versión del archivo sigue en 1.
+
 ## 0.4.1 — 2026-10-17
 
 Alfa de desarrollo. No es una versión de producción.

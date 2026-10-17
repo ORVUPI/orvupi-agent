@@ -3,6 +3,7 @@ import { useWorkspace } from "../app/workspace";
 import { docToText } from "../docs/model";
 import { parseOrvdoc } from "../docs/orvdoc";
 import { breadcrumb, sortFiles, visibleFiles, type FileSortKey } from "./query";
+import { zipStore } from "../sheets/zip";
 import { downloadBytes } from "../security/bytes";
 import { isWorkError } from "../security/errors";
 import { formatBytes } from "../security/names";
@@ -53,6 +54,7 @@ export function FilesScreen() {
   const [previewText, setPreviewText] = useState("");
   const [previewUrl, setPreviewUrl] = useState("");
   const [confirm, setConfirm] = useState<FileRecord | "all" | null>(null);
+  const [moving, setMoving] = useState<FileRecord | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [anchor, setAnchor] = useState<string | null>(null);
 
@@ -204,10 +206,38 @@ export function FilesScreen() {
         label: workspace.t("duplicate"),
         onSelect: () => void workspace.storage?.duplicateFile(file.id).then(() => workspace.refreshFiles()).then(() => workspace.pushToast(workspace.t("toastDuplicated"))).catch(workspace.reportError),
       },
+      { id: "move", label: workspace.t("moveTo"), onSelect: () => setMoving(file) },
+      { id: "shortcut", label: workspace.t("makeShortcut"), onSelect: () => void workspace.storage?.createShortcut(file.id).then(() => workspace.refreshFiles()).catch(workspace.reportError) },
       {
         id: "download",
-        label: workspace.t("download"),
-        onSelect: () => void workspace.storage?.exportFile(file.id).then((fileExport) => downloadBytes(fileExport.bytes, fileExport.filename, fileExport.record.mime)).catch(workspace.reportError),
+        label: file.kind === "folder" ? workspace.t("downloadFolder") : workspace.t("download"),
+        onSelect: () => {
+          if (!workspace.storage) return;
+          if (file.kind !== "folder") {
+            void workspace.storage.exportFile(file.id).then((fileExport) => downloadBytes(fileExport.bytes, fileExport.filename, fileExport.record.mime)).catch(workspace.reportError);
+            return;
+          }
+          const pending = [file.id];
+          const seen = new Set<string>();
+          const entries: Array<{ name: string; data: Uint8Array }> = [];
+          const walk = async () => {
+            while (pending.length > 0) {
+              const current = pending.shift();
+              if (!current || seen.has(current)) continue;
+              seen.add(current);
+              for (const child of workspace.files) {
+                if (child.folderId !== current || child.deletedAt) continue;
+                if (child.kind === "folder") pending.push(child.id);
+                else {
+                  const exported = await workspace.storage!.exportFile(child.id);
+                  entries.push({ name: exported.filename, data: exported.bytes });
+                }
+              }
+            }
+            downloadBytes(zipStore(entries), `${file.name}.zip`, "application/zip");
+          };
+          void walk().catch(workspace.reportError);
+        },
       },
       {
         id: "trash",
@@ -230,6 +260,7 @@ export function FilesScreen() {
           <div>
             <h1 className="ow-drive-title">{title}</h1>
             <p className="ow-muted">{workspace.t("dropFiles")}</p>
+            <p className="ow-storage-line">{workspace.t("storageOf", { used: workspace.usedLabel })}</p>
           </div>
         </header>
         {mode === "folder" ? (
@@ -376,6 +407,27 @@ export function FilesScreen() {
           <h3>{workspace.t("activity")}</h3>
           <p>{workspace.t("createdLabel")}: {formatWhen(details.createdAt, workspace.locale)}</p>
           <p>{workspace.t("colModified")}: {formatWhen(details.updatedAt, workspace.locale)}</p>
+          <h3>{workspace.t("versions")}</h3>
+          <Button onClick={() => {
+            if (!workspace.storage) return;
+            void workspace.storage.duplicateFile(details.id).then((copy) => workspace.storage?.renameFile(copy.id, `${details.name} · v ${new Date().toISOString().slice(0, 16).replace("T", " ")}`)).then(() => workspace.refreshFiles()).catch(workspace.reportError);
+          }}>{workspace.t("saveVersion")}</Button>
+          {workspace.files.filter((item) => item.name.startsWith(`${details.name} · v `) && item.deletedAt === null).map((version) => (
+            <p key={version.id}>
+              {version.name}
+              <Button onClick={() => {
+                if (!workspace.storage) return;
+                void workspace.storage.loadFile(version.id).then((loaded) => workspace.storage?.saveFile({
+                  id: details.id,
+                  name: details.name,
+                  kind: details.kind,
+                  mime: details.mime,
+                  bytes: loaded.bytes,
+                  folderId: details.folderId,
+                })).then(() => workspace.refreshFiles()).catch(workspace.reportError);
+              }}>{workspace.t("restoreVersion")}</Button>
+            </p>
+          ))}
           <p>{workspace.t("colSize")}: {formatBytes(details.size, workspace.locale === "es" ? "es" : "en")}</p>
           {details.tags.length > 0 ? <p>{details.tags.join(" · ")}</p> : null}
           <div className="ow-swatches" role="group" aria-label={workspace.t("labelColor")}>
@@ -397,6 +449,12 @@ export function FilesScreen() {
         </aside>
       ) : null}
       {menu ? <ContextMenu x={menu.x} y={menu.y} items={itemsFor(menu.file)} onClose={() => setMenu(null)} /> : null}
+      <Modal open={moving !== null} title={workspace.t("moveTo")} onClose={() => setMoving(null)} footer={<Button onClick={() => setMoving(null)}>{workspace.t("closeDialog")}</Button>}>
+        <Button onClick={() => { if (moving) void moveTo(moving.id, null).then(() => setMoving(null)); }}>{workspace.t("root")}</Button>
+        {workspace.files.filter((item) => item.kind === "folder" && item.deletedAt === null && item.id !== moving?.id).map((folder) => (
+          <Button key={folder.id} onClick={() => { if (moving) void moveTo(moving.id, folder.id).then(() => setMoving(null)); }}>{folder.name}</Button>
+        ))}
+      </Modal>
       <Modal
         open={rename !== null}
         title={workspace.t("renameTitle")}

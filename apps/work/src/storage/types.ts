@@ -17,6 +17,7 @@ export type FileRecord = {
   size: number;
   blobKey: string;
   contentHash: string;
+  shortcutOf?: string;
 };
 
 export type LoadedFile = {
@@ -76,6 +77,7 @@ export interface StorageService {
   restoreFile(id: string): Promise<void>;
   purgeFile(id: string): Promise<void>;
   duplicateFile(id: string): Promise<FileRecord>;
+  createShortcut(id: string): Promise<FileRecord>;
   exportFile(id: string): Promise<{ record: FileRecord; bytes: Uint8Array; filename: string }>;
   importFile(input: ImportFileInput): Promise<FileRecord>;
   backupWorkspace(): Promise<Uint8Array>;

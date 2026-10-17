@@ -2,7 +2,7 @@
 
 Suite de productividad en el navegador. Gratis, instalable y local-first. Los documentos se guardan en el dispositivo. Esta versión no tiene servidor, no llama a APIs de pago y no se vincula a ningún token.
 
-Esta entrega es la alfa 0.4.1: núcleo, ORVUPI Docs con la disposición del editor de 2024–2026 y los comandos de formato conectados a la página real del documento, archivos, hojas de 1000 filas y diapositivas con miniaturas. El visor PDF y el modelo de IA local siguen previstos y todavía no editan. La matriz de funciones está en `docs/PARIDAD_DRIVE.md`. Las medidas, en `docs/ANALISIS_DRIVE_UI.md`.
+Esta entrega es la alfa 0.5.0: núcleo, ORVUPI Docs con la disposición del editor de 2024–2026 y los comandos de formato conectados a la página real del documento, archivos, hojas de 1000 filas, diapositivas, formularios, dibujos y notas. La auditoría funcional está en `docs/AUDITORIA_FUNCIONAL.md`. El visor PDF y el modelo de IA local siguen previstos y todavía no editan. La matriz de funciones está en `docs/PARIDAD_DRIVE.md`. Las medidas, en `docs/ANALISIS_DRIVE_UI.md`.
 
 ## Arranque
 
@@ -33,6 +33,16 @@ npm run test:e2e
 ```
 
 `npm test` ejecuta Vitest (unidad e integración). `npm run test:e2e` construye la app y recorre con Playwright el ciclo de la sección 30 del manual, más el contraste con axe.
+
+## Qué hay en 0.5.0
+
+- Auditoría herramienta por herramienta en `docs/AUDITORIA_FUNCIONAL.md`. Cobertura 89,9 % (107 funciones de 119). Lo que exige red o cuenta no se muestra.
+- Hojas con formato, bordes, combinar, inmovilizar filas y columnas, ordenar, filtrar, validación, formato condicional, gráficos (Chart.js, MIT), autorrelleno arrastrando, copiar y pegar, buscar y reemplazar, y más de cien funciones, incluida la referencia a otra hoja.
+- Diapositivas con texto formateado, formas, líneas, alinear, capas, fondo, diseños, transiciones, notas del orador y PDF.
+- Archivos con detalles, actividad, versiones, mover, accesos directos, ZIP de carpeta y almacenamiento.
+- Formularios con los tipos de pregunta de la ayuda, secciones, vista previa, resumen con gráfico y exportación a una hoja.
+- Dibujos con línea y orden de capas. Notas con etiqueta, archivo y copia.
+- Un documento, una hoja o una nota de 0.4.1 abre igual.
 
 ## Qué hay en 0.4.1
 
@@ -77,6 +87,7 @@ npm run test:e2e
 - `KNOWN_ISSUES.md`
 - `docs/PARIDAD_DRIVE.md`
 - `docs/ANALISIS_DRIVE_UI.md`
+- `docs/AUDITORIA_FUNCIONAL.md`
 
 ## English
 

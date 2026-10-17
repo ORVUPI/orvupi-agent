@@ -1,7 +1,9 @@
 import { deflateRawSync } from "node:zlib";
 import { describe, expect, test } from "vitest";
 import { folderContains, sortFiles, visibleFiles } from "../../src/files/query";
-import { displayCell, emptyGrid, sortGrid } from "../../src/sheets/formulas";
+import { autofill, formatShown, replaceInGrid } from "../../src/sheets/format";
+import { FUNCTION_NAMES, displayCell, emptyGrid, shiftFormula, sortGrid, type FormulaBook } from "../../src/sheets/formulas";
+import { parseSheet, serializeSheet, createSheetFile } from "../../src/sheets/model";
 import { sheetsToXlsx, xlsxToSheets } from "../../src/sheets/xlsx";
 import { crc32, zipStore } from "../../src/sheets/zip";
 import type { FileRecord } from "../../src/storage/types";
@@ -61,6 +63,67 @@ describe("fórmulas", () => {
   test("un ciclo no se presenta como un número", () => {
     const grid = gridWith({ A1: "=B1", B1: "=A1" });
     expect(displayCell(grid, 0, 0)).toBe("#CICLO!");
+  });
+
+  test("hay al menos cien nombres de función y cubren búsqueda, fechas y texto", () => {
+    expect(FUNCTION_NAMES.length).toBeGreaterThanOrEqual(100);
+    const grid = gridWith({
+      A1: "10",
+      A2: "20",
+      A3: "Ana",
+      B1: "uno",
+      B2: "dos",
+      C1: "=BUSCARV(20,A1:B3,2)",
+      C2: '=CONTAR.SI(A1:A2,">5")',
+      C3: '=SUMAR.SI(A1:A2,">5")',
+      C4: '=CONCATENAR(A3," ",B2)',
+      C5: '=REDONDEAR(10.46,1)',
+      C6: '=SI.ERROR(1/0,"ups")',
+      C7: '=Y(A1>1,A2>1)',
+      C8: '=IZQUIERDA(A3,1)',
+      C9: '=FECHA(2026,10,17)',
+      C10: '=AÑO("2026-10-17")',
+      D1: "=ABS(-4)",
+      D2: '=SI(ESNUMERO(A1),"n","t")',
+      D3: "=PROMEDIO(A1:A2)",
+    });
+    expect(displayCell(grid, 0, 2)).toBe("dos");
+    expect(displayCell(grid, 1, 2)).toBe("2");
+    expect(displayCell(grid, 2, 2)).toBe("30");
+    expect(displayCell(grid, 3, 2)).toBe("Ana dos");
+    expect(displayCell(grid, 4, 2)).toBe("10.5");
+    expect(displayCell(grid, 5, 2)).toBe("ups");
+    expect(displayCell(grid, 6, 2)).toBe("TRUE");
+    expect(displayCell(grid, 7, 2)).toBe("A");
+    expect(displayCell(grid, 8, 2)).toBe("2026-10-17");
+    expect(displayCell(grid, 9, 2)).toBe("2026");
+    expect(displayCell(grid, 0, 3)).toBe("4");
+    expect(displayCell(grid, 1, 3)).toBe("n");
+  });
+
+  test("una fórmula puede leer otra hoja", () => {
+    const first = gridWith({ A1: "=Hoja2!A1" });
+    const second = gridWith({ A1: "7" });
+    const book: FormulaBook = { sheets: [{ name: "Hoja 1", cells: first }, { name: "Hoja2", cells: second }], active: 0 };
+    expect(displayCell(first, 0, 0, new Set(), book, "Hoja 1")).toBe("7");
+    const quoted = gridWith({ B1: "='Hoja 2'!A1" });
+    const spaced = gridWith({ A1: "9" });
+    const book2: FormulaBook = { sheets: [{ name: "Hoja 1", cells: quoted }, { name: "Hoja 2", cells: spaced }], active: 0 };
+    expect(displayCell(quoted, 0, 1, new Set(), book2, "Hoja 1")).toBe("9");
+  });
+
+  test("el formato, el autorrelleno y el reemplazo no pierden el valor", () => {
+    expect(formatShown("12.5", "currency")).toBe("12,50 €");
+    expect(formatShown("0.5", "percent")).toBe("50,00 %");
+    expect(shiftFormula("=A1+B$1", 1, 1)).toBe("=B2+C$1");
+    const filled = autofill(gridWith({ A1: "3", A2: "=A1*2" }), 1, 0, 1, true);
+    expect(filled[2]?.[0]).toBe("=A2*2");
+    const replaced = replaceInGrid(gridWith({ A1: "hola" }), "ho", "Ha");
+    expect(replaced.cells[0]?.[0]).toBe("Hala");
+    expect(replaced.count).toBe(1);
+    const legacy = parseSheet(serializeSheet(createSheetFile({ id: "s1", title: "Vieja" })));
+    expect(legacy.sheets[0]?.cells[0]?.[0]).toBe("");
+    expect(legacy.version).toBe(1);
   });
 
   test("ordenar deja la fila inmovilizada en su sitio", () => {

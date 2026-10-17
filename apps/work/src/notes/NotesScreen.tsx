@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useWorkspace } from "../app/workspace";
 import { Button, Input } from "../ui/kit";
 import { createId } from "../security/names";
-import { NOTE_COLORS, noteInk, parseNote, serializeNote, type NoteFile } from "./model";
+import { NOTE_COLORS, createNoteFile, noteInk, parseNote, serializeNote, type NoteFile } from "./model";
 
 export function NotesScreen() {
   const workspace = useWorkspace();
@@ -10,6 +10,7 @@ export function NotesScreen() {
   const [notes, setNotes] = useState<NoteFile[]>([]);
   const [draft, setDraft] = useState<NoteFile | null>(null);
   const [status, setStatus] = useState<"saved" | "pending">("saved");
+  const [showArchived, setShowArchived] = useState(false);
 
   useEffect(() => {
     if (!workspace.storage) return;
@@ -55,8 +56,9 @@ export function NotesScreen() {
     setStatus("pending");
   }
 
-  const pinned = notes.filter((note) => note.pinned);
-  const rest = notes.filter((note) => !note.pinned);
+  const visibleNotes = notes.filter((note) => showArchived || !note.archived);
+  const pinned = visibleNotes.filter((note) => note.pinned);
+  const rest = visibleNotes.filter((note) => !note.pinned);
 
   function wall(title: string, items: NoteFile[]) {
     if (items.length === 0) return null;
@@ -76,6 +78,7 @@ export function NotesScreen() {
               }}
             >
               <strong>{note.title}</strong>
+              {note.label ? <em>{note.label}</em> : null}
               <span>{note.checks.length > 0 ? note.checks.map((check) => check.text).filter(Boolean).slice(0, 3).join(" · ") : note.body}</span>
             </button>
           ))}
@@ -112,6 +115,24 @@ export function NotesScreen() {
           )}
           <div className="ow-row">
             <Button onClick={() => edit({ ...draft, pinned: !draft.pinned })}>{draft.pinned ? workspace.t("noteUnpin") : workspace.t("notePin")}</Button>
+            <Button onClick={() => edit({ ...draft, archived: !draft.archived })}>{draft.archived ? workspace.t("noteUnarchive") : workspace.t("noteArchive")}</Button>
+            <Button onClick={() => setShowArchived((value) => !value)}>{workspace.t("noteShowArchived")}</Button>
+            <Input label={workspace.t("noteLabel")} value={draft.label ?? ""} onChange={(event) => edit({ ...draft, label: event.target.value.slice(0, 40) })} />
+            <Button onClick={() => {
+              if (!workspace.storage) return;
+              const copy = createNoteFile({ id: createId(), title: `${draft.title} copia` });
+              copy.body = draft.body;
+              copy.color = draft.color;
+              copy.checks = draft.checks;
+              copy.label = draft.label;
+              void workspace.storage.saveFile({
+                id: copy.id,
+                name: copy.title,
+                kind: "note",
+                mime: "application/vnd.orvupi.note+json",
+                bytes: serializeNote(copy),
+              }).then(() => workspace.refreshFiles()).catch(workspace.reportError);
+            }}>{workspace.t("noteCopy")}</Button>
             <Button onClick={() => edit(draft.checks.length > 0 ? { ...draft, checks: [] } : { ...draft, checks: [{ id: createId().slice(0, 12), text: "", done: false }] })}>
               {draft.checks.length > 0 ? workspace.t("noteText") : workspace.t("noteList")}
             </Button>

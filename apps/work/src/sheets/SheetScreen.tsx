@@ -1,19 +1,43 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useWorkspace } from "../app/workspace";
 import { loadFileWhenReady } from "../routing/load";
 import { downloadBytes } from "../security/bytes";
-import { fileNameWithExtension } from "../security/names";
-import { Button, Input, Select } from "../ui/kit";
+import { createId, fileNameWithExtension } from "../security/names";
+import { Button, Input } from "../ui/kit";
 import { MenuBar } from "../ui/menus";
+import { Modal } from "../ui/overlay";
+import { OrvupiChart } from "../ui/chart";
 import { csvToGrid, gridToCsv } from "./csv";
-import { COL_COUNT, ROW_COUNT, cellRef, columnLabel, displayCell, emptyGrid, sortGrid } from "./formulas";
-import { parseSheet, serializeSheet, type SheetFile, type SheetTab } from "./model";
+import {
+  autofill,
+  cellSpan,
+  chartSeries,
+  formatShown,
+  mergeRange,
+  paintStyle,
+  remapStyles,
+  remapValidation,
+  replaceInGrid,
+  ruleMatches,
+  spliceGrid,
+  styleKey,
+  unmerge,
+  type CellFormatKind,
+  type CellStyle,
+  type CondRule,
+} from "./format";
+import { COL_COUNT, ROW_COUNT, cellRef, columnLabel, displayCell, sortGrid, type FormulaBook } from "./formulas";
+import { blankSheet, parseSheet, serializeSheet, type SheetFile, type SheetTab } from "./model";
 import { sheetsToXlsx, xlsxToSheets } from "./xlsx";
 
 const GUTTER = 46;
 const HEAD = 28;
 const ROW_H = 30;
 const COL_W = 92;
+const FILLS = ["#ffffff", "#fff4b8", "#e5f6ee", "#d9e6f7", "#fff0f5", "#102032"];
+const INKS = ["#102032", "#ff3070", "#0b5d36", "#1d4e89", "#7a4a00"];
+
+type Clip = { raw: string; style?: CellStyle };
 
 export function SheetsScreen() {
   const workspace = useWorkspace();
@@ -22,8 +46,15 @@ export function SheetsScreen() {
   const [status, setStatus] = useState<"saved" | "pending">("saved");
   const [filter, setFilter] = useState("");
   const [selected, setSelected] = useState({ row: 0, col: 0 });
+  const [anchor, setAnchor] = useState({ row: 0, col: 0 });
   const [error, setError] = useState("");
   const [win, setWin] = useState({ top: 0, left: 0, height: 520, width: 960 });
+  const [dialog, setDialog] = useState<"" | "find" | "valid" | "cond" | "help">("");
+  const [findQuery, setFindQuery] = useState("");
+  const [replaceQuery, setReplaceQuery] = useState("");
+  const [validText, setValidText] = useState("Sí, No");
+  const [condValue, setCondValue] = useState("10");
+  const clip = useRef<Clip | null>(null);
 
   useEffect(() => {
     if (!workspace.openSheetId || !workspace.storage) {
@@ -71,40 +102,87 @@ export function SheetsScreen() {
   }, [file, status, workspace.storage, workspace.refreshFiles, workspace.reportError]);
 
   const active = file?.sheets[file.active];
+  const book: FormulaBook | undefined = useMemo(() => (
+    file ? { sheets: file.sheets.map((sheet) => ({ name: sheet.name, cells: sheet.cells })), active: file.active } : undefined
+  ), [file]);
+  const styles = active?.styles ?? {};
+  const currentStyle = styles[styleKey(selected.row, selected.col)];
   const raw = active?.cells[selected.row]?.[selected.col] ?? "";
+  const frozenRows = active?.frozenRows ?? (active?.freezeHeader ? 1 : 0);
+  const frozenCols = active?.frozenCols ?? 0;
+  const options = active?.validation?.[styleKey(selected.row, selected.col)] ?? [];
+
   const rowIndexes = useMemo(() => {
     if (!active) return [];
     const query = filter.trim().toLowerCase();
     const indexes: number[] = [];
     for (let row = 0; row < active.cells.length; row += 1) {
-      if (!query || (active.freezeHeader && row === 0)) {
+      if (!query || row < frozenRows) {
         indexes.push(row);
         continue;
       }
       const line = active.cells[row] ?? [];
       const hit = line.some((value, col) => {
         if (value.toLowerCase().includes(query)) return true;
-        return value.startsWith("=") && displayCell(active.cells, row, col).toLowerCase().includes(query);
+        return value.startsWith("=") && displayCell(active.cells, row, col, new Set(), book).toLowerCase().includes(query);
       });
       if (hit) indexes.push(row);
     }
     return indexes;
-  }, [active, filter]);
+  }, [active, filter, frozenRows, book]);
 
   function update(mutator: (current: SheetFile) => SheetFile) {
     setFile((current) => (current ? mutator(current) : current));
     setStatus("pending");
   }
 
+  function mapActive(mutator: (sheet: SheetTab) => SheetTab) {
+    update((current) => ({
+      ...current,
+      sheets: current.sheets.map((sheet, index) => (index === current.active ? mutator(sheet) : sheet)),
+    }));
+  }
+
   function setCell(value: string) {
-    update((current) => {
-      const sheetsNext = current.sheets.map((sheet, index) => {
-        if (index !== current.active) return sheet;
-        const cells = sheet.cells.map((row) => [...row]);
-        cells[selected.row]![selected.col] = value.slice(0, 500);
-        return { ...sheet, cells };
-      });
-      return { ...current, sheets: sheetsNext };
+    mapActive((sheet) => {
+      const cells = sheet.cells.map((row) => [...row]);
+      cells[selected.row]![selected.col] = value.slice(0, 500);
+      return { ...sheet, cells };
+    });
+  }
+
+  function patch(partial: CellStyle) {
+    mapActive((sheet) => ({ ...sheet, styles: paintStyle(sheet.styles ?? {}, selected.row, selected.col, partial) }));
+  }
+
+  function shift(axis: "row" | "col", at: number, delta: number) {
+    mapActive((sheet) => ({
+      ...sheet,
+      cells: spliceGrid(sheet.cells, axis, at, delta),
+      styles: remapStyles(sheet.styles ?? {}, axis, at, delta),
+      validation: remapValidation(sheet.validation ?? {}, axis, at, delta),
+    }));
+  }
+
+  function choose(row: number, col: number, extend: boolean) {
+    setSelected({ row, col });
+    if (!extend) setAnchor({ row, col });
+  }
+
+  function copyCell() {
+    clip.current = { raw, style: currentStyle ? { ...currentStyle } : undefined };
+    void navigator.clipboard?.writeText(raw).catch(() => undefined);
+  }
+
+  function pasteCell() {
+    const stored = clip.current;
+    if (!stored) return;
+    mapActive((sheet) => {
+      const cells = sheet.cells.map((row) => [...row]);
+      cells[selected.row]![selected.col] = stored.raw;
+      const stylesNext = { ...(sheet.styles ?? {}) };
+      if (stored.style) stylesNext[styleKey(selected.row, selected.col)] = { ...stored.style };
+      return { ...sheet, cells, styles: stylesNext };
     });
   }
 
@@ -132,33 +210,92 @@ export function SheetsScreen() {
 
   if (!file || !active) return <p>{error || workspace.t("preparing")}</p>;
 
-  const frozen = active.freezeHeader && rowIndexes[0] === 0;
-  const bodyRows = frozen ? rowIndexes.slice(1) : rowIndexes;
-  const headBlock = HEAD + (frozen ? ROW_H : 0);
+  const pinned = rowIndexes.filter((row) => row < frozenRows);
+  const bodyRows = rowIndexes.filter((row) => row >= frozenRows);
+  const headBlock = HEAD + pinned.length * ROW_H;
   const bodyScroll = Math.max(0, win.top - headBlock);
   const rowStart = Math.max(0, Math.floor(bodyScroll / ROW_H) - 2);
   const rowEnd = Math.min(bodyRows.length, rowStart + Math.ceil(win.height / ROW_H) + 6);
-  const colStart = Math.max(0, Math.floor(win.left / COL_W) - 1);
+  const colStart = Math.max(frozenCols, Math.floor(win.left / COL_W) - 1);
   const colEnd = Math.min(COL_COUNT, Math.ceil((win.left + win.width) / COL_W) + 2);
   const gridWidth = GUTTER + COL_COUNT * COL_W;
 
+  function shownAt(rowIndex: number, colIndex: number) {
+    const computed = displayCell(active!.cells, rowIndex, colIndex, new Set(), book);
+    const rule = (active!.conditional ?? []).find((item) => item.col === colIndex && ruleMatches(computed, item));
+    const style = styles[styleKey(rowIndex, colIndex)];
+    return { text: formatShown(computed, style?.format), style, rule };
+  }
+
   function cellButton(rowIndex: number, colIndex: number, top: number | null) {
+    const span = cellSpan(styles, rowIndex, colIndex);
+    if (span === "covered") return null;
     const label = cellRef(rowIndex, colIndex);
-    const shown = displayCell(active!.cells, rowIndex, colIndex);
+    const view = shownAt(rowIndex, colIndex);
+    const pressed = selected.row === rowIndex && selected.col === colIndex;
+    const cellTop = top ?? 0;
+    const cellLeft = (top === null ? 0 : GUTTER) + colIndex * COL_W;
     return (
-      <button
-        key={label}
-        type="button"
-        className="ow-cell"
-        aria-label={shown ? `${label} ${shown}` : label}
-        aria-pressed={selected.row === rowIndex && selected.col === colIndex}
-        style={{ top: top ?? 0, left: (top === null ? 0 : GUTTER) + colIndex * COL_W, width: COL_W, height: ROW_H }}
-        onClick={() => setSelected({ row: rowIndex, col: colIndex })}
-      >
-        {shown}
-      </button>
+      <Fragment key={label}>
+        <button
+          type="button"
+          className={`ow-cell${view.style?.border ? " has-border" : ""}${view.style?.wrap ? " is-wrap" : ""}`}
+          aria-label={view.text ? `${label} ${view.text}` : label}
+          aria-pressed={pressed}
+          data-bold={view.style?.bold ? "true" : "false"}
+          style={{
+            top: cellTop,
+            left: cellLeft,
+            width: COL_W * span.colspan,
+            height: ROW_H * span.rowspan,
+            fontWeight: view.style?.bold ? 800 : 400,
+            color: view.style?.color,
+            background: view.rule?.fill ?? view.style?.fill,
+            textAlign: view.style?.align,
+          }}
+          onClick={(event) => choose(rowIndex, colIndex, event.shiftKey)}
+        >
+          {view.text}
+        </button>
+        {pressed ? (
+          <button
+            key={`${label}-fill`}
+            type="button"
+            className="ow-fill-handle"
+            aria-label={workspace.t("sheetAutofill")}
+            style={{ top: cellTop + ROW_H * span.rowspan - 8, left: cellLeft + COL_W * span.colspan - 8 }}
+            onPointerDown={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              const node = event.currentTarget;
+              node.setPointerCapture(event.pointerId);
+              const originX = event.clientX;
+              const originY = event.clientY;
+              const finish = (up: PointerEvent) => {
+                node.removeEventListener("pointerup", finish);
+                const rows = Math.round((up.clientY - originY) / ROW_H);
+                const cols = Math.round((up.clientX - originX) / COL_W);
+                if (rows > 0) mapActive((sheet) => ({ ...sheet, cells: autofill(sheet.cells, rowIndex, colIndex, rows, true) }));
+                else if (cols > 0) mapActive((sheet) => ({ ...sheet, cells: autofill(sheet.cells, rowIndex, colIndex, cols, false) }));
+              };
+              node.addEventListener("pointerup", finish);
+            }}
+          />
+        ) : null}
+      </Fragment>
     );
   }
+
+  function columns(from: number, to: number, rowIndex: number, top: number | null) {
+    return Array.from({ length: Math.max(0, to - from) }, (_, offset) => cellButton(rowIndex, from + offset, top));
+  }
+
+  const bounds = {
+    r1: Math.min(anchor.row, selected.row),
+    c1: Math.min(anchor.col, selected.col),
+    r2: Math.max(anchor.row, selected.row),
+    c2: Math.max(anchor.col, selected.col),
+  };
 
   return (
     <div className="ow-page ow-sheet-page" data-tool="sheets">
@@ -173,38 +310,91 @@ export function SheetsScreen() {
           { id: "file", label: workspace.t("menuFile"), items: [
             { id: "csv", label: workspace.t("sheetCsv"), onSelect: () => downloadBytes(new TextEncoder().encode(gridToCsv(active.cells)), fileNameWithExtension(file.title, "csv"), "text/csv") },
             { id: "xlsx", label: workspace.t("sheetXlsx"), onSelect: () => downloadBytes(sheetsToXlsx(file.sheets), fileNameWithExtension(file.title, "xlsx"), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") },
+            { id: "print", label: workspace.t("print"), onSelect: () => window.print() },
           ] },
           { id: "edit", label: workspace.t("menuEdit"), items: [
             { id: "clear", label: workspace.t("sheetClear"), onSelect: () => setCell("") },
+            { id: "copy", label: workspace.t("copy"), onSelect: copyCell },
+            { id: "paste", label: workspace.t("paste"), onSelect: pasteCell },
+            { id: "find", label: workspace.t("find"), hint: "Ctrl+F", onSelect: () => setDialog("find") },
           ] },
           { id: "view", label: workspace.t("menuView"), items: [
-            { id: "freeze", label: workspace.t("sheetFreeze"), onSelect: () => update((current) => ({ ...current, sheets: current.sheets.map((sheet, index) => (index === current.active ? { ...sheet, freezeHeader: !sheet.freezeHeader } : sheet)) })) },
+            { id: "rows", label: workspace.t("sheetFreezeRows"), onSelect: () => mapActive((sheet) => ({ ...sheet, freezeHeader: true, frozenRows: Math.max(1, selected.row + 1) })) },
+            { id: "cols", label: workspace.t("sheetFreezeCols"), onSelect: () => mapActive((sheet) => ({ ...sheet, frozenCols: Math.max(1, selected.col + 1) })) },
+            { id: "off", label: workspace.t("sheetUnfreeze"), onSelect: () => mapActive((sheet) => ({ ...sheet, freezeHeader: false, frozenRows: 0, frozenCols: 0 })) },
           ] },
           { id: "insert", label: workspace.t("menuInsert"), items: [
+            { id: "row", label: workspace.t("rowBelow"), onSelect: () => shift("row", selected.row + 1, 1) },
+            { id: "col", label: workspace.t("colRight"), onSelect: () => shift("col", selected.col + 1, 1) },
+            { id: "delrow", label: workspace.t("deleteRow"), onSelect: () => shift("row", selected.row, -1) },
+            { id: "delcol", label: workspace.t("deleteCol"), onSelect: () => shift("col", selected.col, -1) },
             { id: "add", label: workspace.t("sheetAdd"), onSelect: () => {
               if (file.sheets.length >= 12) return;
-              update((current) => ({
-                ...current,
-                active: current.sheets.length,
-                sheets: [...current.sheets, { name: `${workspace.t("navSheets")} ${current.sheets.length + 1}`, cells: emptyGrid(), freezeHeader: true }],
-              }));
+              update((current) => ({ ...current, active: current.sheets.length, sheets: [...current.sheets, blankSheet(`${workspace.t("navSheets")} ${current.sheets.length + 1}`)] }));
             } },
+            { id: "bar", label: workspace.t("sheetChartBar"), onSelect: () => mapActive((sheet) => ({ ...sheet, charts: [...(sheet.charts ?? []), { id: createId().slice(0, 8), kind: "bar", title: workspace.t("sheetChartBar"), labelCol: 0, valueCol: selected.col, rowFrom: 0, rowTo: 7 }] })) },
+            { id: "line", label: workspace.t("sheetChartLine"), onSelect: () => mapActive((sheet) => ({ ...sheet, charts: [...(sheet.charts ?? []), { id: createId().slice(0, 8), kind: "line", title: workspace.t("sheetChartLine"), labelCol: 0, valueCol: selected.col, rowFrom: 0, rowTo: 7 }] })) },
+            { id: "pie", label: workspace.t("sheetChartPie"), onSelect: () => mapActive((sheet) => ({ ...sheet, charts: [...(sheet.charts ?? []), { id: createId().slice(0, 8), kind: "pie", title: workspace.t("sheetChartPie"), labelCol: 0, valueCol: selected.col, rowFrom: 0, rowTo: 7 }] })) },
           ] },
           { id: "format", label: workspace.t("menuFormat"), items: [
-            { id: "sort", label: workspace.t("sheetSort"), onSelect: () => update((current) => ({ ...current, sheets: current.sheets.map((sheet, index) => (index === current.active ? { ...sheet, cells: sortGrid(sheet.cells, selected.col, "asc", sheet.freezeHeader) } : sheet)) })) },
+            { id: "bold", label: workspace.t("bold"), hint: "Ctrl+B", onSelect: () => patch({ bold: !currentStyle?.bold }) },
+            { id: "num", label: workspace.t("sheetNumber"), onSelect: () => patch({ format: "number" }) },
+            { id: "cur", label: workspace.t("sheetCurrency"), onSelect: () => patch({ format: "currency" }) },
+            { id: "pct", label: workspace.t("sheetPercent"), onSelect: () => patch({ format: "percent" }) },
+            { id: "date", label: workspace.t("sheetDate"), onSelect: () => patch({ format: "date" }) },
+            { id: "gen", label: workspace.t("sheetGeneral"), onSelect: () => patch({ format: "general" }) },
+            { id: "left", label: workspace.t("alignLeft"), onSelect: () => patch({ align: "left" }) },
+            { id: "center", label: workspace.t("alignCenter"), onSelect: () => patch({ align: "center" }) },
+            { id: "right", label: workspace.t("alignRight"), onSelect: () => patch({ align: "right" }) },
+            { id: "border", label: workspace.t("sheetBorder"), onSelect: () => patch({ border: !currentStyle?.border }) },
+            { id: "wrap", label: workspace.t("sheetWrap"), onSelect: () => patch({ wrap: !currentStyle?.wrap }) },
+            { id: "merge", label: workspace.t("mergeCells"), onSelect: () => mapActive((sheet) => ({ ...sheet, styles: mergeRange(sheet.styles ?? {}, bounds.r1, bounds.c1, bounds.r2 === bounds.r1 && bounds.c2 === bounds.c1 ? bounds.r1 : bounds.r2, bounds.c2 === bounds.c1 ? bounds.c1 + 1 : bounds.c2) })) },
+            { id: "split", label: workspace.t("splitCell"), onSelect: () => mapActive((sheet) => ({ ...sheet, styles: unmerge(sheet.styles ?? {}, selected.row, selected.col) })) },
+            { id: "sort", label: workspace.t("sheetSort"), onSelect: () => mapActive((sheet) => ({ ...sheet, cells: sortGrid(sheet.cells, selected.col, "asc", (sheet.frozenRows ?? (sheet.freezeHeader ? 1 : 0)) > 0, book) })) },
+            { id: "sortd", label: workspace.t("sheetSortDesc"), onSelect: () => mapActive((sheet) => ({ ...sheet, cells: sortGrid(sheet.cells, selected.col, "desc", (sheet.frozenRows ?? 0) > 0, book) })) },
           ] },
           { id: "tools", label: workspace.t("menuTools"), items: [
             { id: "filter", label: workspace.t("sheetFilter"), onSelect: () => document.getElementById("ow-sheet-filter")?.focus() },
+            { id: "valid", label: workspace.t("sheetValidation"), onSelect: () => setDialog("valid") },
+            { id: "cond", label: workspace.t("sheetConditional"), onSelect: () => setDialog("cond") },
+            { id: "fill", label: workspace.t("sheetAutofill"), onSelect: () => mapActive((sheet) => ({ ...sheet, cells: autofill(sheet.cells, selected.row, selected.col, 3, true) })) },
           ] },
           { id: "help", label: workspace.t("menuHelp"), items: [
-            { id: "limit", label: workspace.t("sheetLimit"), onSelect: () => workspace.pushToast(workspace.t("sheetLimit")) },
+            { id: "limit", label: workspace.t("shortcuts"), onSelect: () => setDialog("help") },
           ] },
         ]}
       />
+      <div className="ow-sheet-tools" role="toolbar" aria-label={workspace.t("menuFormat")}>
+        <Button aria-pressed={currentStyle?.bold === true} onClick={() => patch({ bold: !currentStyle?.bold })}>{workspace.t("bold")}</Button>
+        {(["number", "currency", "percent", "date"] as CellFormatKind[]).map((format) => (
+          <Button key={format} aria-pressed={currentStyle?.format === format} onClick={() => patch({ format })}>
+            {workspace.t(format === "number" ? "sheetNumber" : format === "currency" ? "sheetCurrency" : format === "percent" ? "sheetPercent" : "sheetDate")}
+          </Button>
+        ))}
+        <div className="ow-swatches" role="group" aria-label={workspace.t("cellColor")}>
+          {FILLS.map((fill) => (
+            <button key={fill} type="button" className="ow-swatch" style={{ background: fill }} aria-label={fill} aria-pressed={currentStyle?.fill === fill} onClick={() => patch({ fill })} />
+          ))}
+        </div>
+        <div className="ow-swatches" role="group" aria-label={workspace.t("sheetInk")}>
+          {INKS.map((color) => (
+            <button key={color} type="button" className="ow-swatch" style={{ background: color }} aria-label={color} aria-pressed={currentStyle?.color === color} onClick={() => patch({ color })} />
+          ))}
+        </div>
+      </div>
       <div className="ow-formula">
         <span className="ow-namebox" aria-label={workspace.t("nameBox")}>{cellRef(selected.row, selected.col)}</span>
         <span className="ow-fx" aria-hidden="true">fx</span>
         <Input label={workspace.t("sheetFormula")} value={raw} onChange={(event) => setCell(event.target.value)} />
+        {options.length > 0 ? (
+          <label className="ow-field">
+            {workspace.t("sheetValidation")}
+            <select aria-label={workspace.t("sheetValidation")} value={options.includes(raw) ? raw : ""} onChange={(event) => setCell(event.target.value)}>
+              <option value="">{workspace.t("sheetValidation")}</option>
+              {options.map((option) => <option key={option} value={option}>{option}</option>)}
+            </select>
+          </label>
+        ) : null}
       </div>
       <div className="ow-row">
         <Input id="ow-sheet-filter" label={workspace.t("sheetFilter")} value={filter} onChange={(event) => setFilter(event.target.value)} />
@@ -231,13 +421,23 @@ export function SheetsScreen() {
       </div>
       <div
         className="ow-sheet-wrap"
+        tabIndex={0}
         onScroll={(event) => {
           const node = event.currentTarget;
           setWin({ top: node.scrollTop, left: node.scrollLeft, height: node.clientHeight, width: node.clientWidth });
         }}
         onKeyDown={(event) => {
-          if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
-          if (event.key === "ArrowUp") moveSelection(-1, 0);
+          if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLSelectElement) return;
+          const key = event.key.toLowerCase();
+          if ((event.ctrlKey || event.metaKey) && key === "b") {
+            event.preventDefault();
+            patch({ bold: !currentStyle?.bold });
+          } else if ((event.ctrlKey || event.metaKey) && key === "c") copyCell();
+          else if ((event.ctrlKey || event.metaKey) && key === "v") pasteCell();
+          else if ((event.ctrlKey || event.metaKey) && key === "f") {
+            event.preventDefault();
+            setDialog("find");
+          } else if (event.key === "ArrowUp") moveSelection(-1, 0);
           else if (event.key === "ArrowDown") moveSelection(1, 0);
           else if (event.key === "ArrowLeft") moveSelection(0, -1);
           else if (event.key === "ArrowRight") moveSelection(0, 1);
@@ -251,26 +451,39 @@ export function SheetsScreen() {
             <div key={columnLabel(col)} className={`ow-vcol${selected.col === col ? " is-selected" : ""}`} style={{ width: COL_W, height: HEAD }}>{columnLabel(col)}</div>
           ))}
         </div>
-        {frozen ? (
-          <div className="ow-frozen" style={{ width: gridWidth, height: ROW_H, paddingLeft: GUTTER }}>
-            <div className="ow-vrow ow-vrow-pin" style={{ width: GUTTER, height: ROW_H, left: win.left }}>1</div>
+        {pinned.map((rowIndex) => (
+          <div key={`pin-${rowIndex}`} className="ow-frozen" style={{ width: gridWidth, height: ROW_H, paddingLeft: GUTTER, top: HEAD + rowIndex * ROW_H }}>
+            <div className="ow-vrow ow-vrow-pin" style={{ width: GUTTER, height: ROW_H, left: win.left }}>{rowIndex + 1}</div>
             <div className="ow-frozen-cells" style={{ width: COL_COUNT * COL_W, height: ROW_H }}>
-              {Array.from({ length: colEnd - colStart }, (_, offset) => cellButton(0, colStart + offset, null))}
+              {columns(0, colEnd, rowIndex, null)}
             </div>
           </div>
-        ) : null}
+        ))}
         <div className="ow-sheet-body" style={{ width: gridWidth, height: Math.max(bodyRows.length, 1) * ROW_H }}>
           {bodyRows.slice(rowStart, rowEnd).map((rowIndex, offset) => {
             const top = (rowStart + offset) * ROW_H;
             return (
               <div key={rowIndex}>
-                <div className="ow-vrow ow-vrow-pin" style={{ top, left: win.left, width: GUTTER, height: ROW_H }}>{rowIndex + 1}</div>
-                {Array.from({ length: colEnd - colStart }, (_, colOffset) => cellButton(rowIndex, colStart + colOffset, top))}
+                <div className={`ow-vrow ow-vrow-pin${selected.row === rowIndex ? " is-selected" : ""}`} style={{ top, left: win.left, width: GUTTER, height: ROW_H }}>{rowIndex + 1}</div>
+                {frozenCols > 0 ? (
+                  <div className="ow-pin-cols" style={{ top, left: win.left + GUTTER, width: frozenCols * COL_W, height: ROW_H }}>
+                    {Array.from({ length: frozenCols }, (_, col) => cellButton(rowIndex, col, null))}
+                  </div>
+                ) : null}
+                {columns(colStart, colEnd, rowIndex, top)}
               </div>
             );
           })}
         </div>
       </div>
+      {(active.charts ?? []).map((chart) => {
+        const series = chartSeries(active.cells, chart, book);
+        return (
+          <section key={chart.id} className="ow-chart-panel" aria-label={chart.title}>
+            <OrvupiChart kind={chart.kind} title={chart.title} labels={series.labels} values={series.values} />
+          </section>
+        );
+      })}
       <div className="ow-sheet-tabs">
         <div role="tablist" aria-label={workspace.t("navSheets")}>
           {file.sheets.map((sheet, index) => (
@@ -279,35 +492,39 @@ export function SheetsScreen() {
             </button>
           ))}
         </div>
-        <Button
-          onClick={() => {
-            if (file.sheets.length >= 12) return;
-            update((current) => ({
-              ...current,
-              active: current.sheets.length,
-              sheets: [...current.sheets, { name: `${workspace.t("navSheets")} ${current.sheets.length + 1}`, cells: emptyGrid(), freezeHeader: true }],
-            }));
-          }}
-        >
-          {workspace.t("sheetAdd")}
-        </Button>
+        <Button onClick={() => {
+          if (file.sheets.length >= 12) return;
+          update((current) => ({ ...current, active: current.sheets.length, sheets: [...current.sheets, blankSheet(`${workspace.t("navSheets")} ${current.sheets.length + 1}`)] }));
+        }}>{workspace.t("sheetAdd")}</Button>
       </div>
-      <Select
-        id="ow-sheet-preset"
-        label={workspace.t("sheetPreset")}
-        value=""
-        onChange={(event) => {
-          if (event.target.value) setCell(event.target.value);
-        }}
-      >
-        <option value="">{workspace.t("sheetPreset")}</option>
-        <option value="=SUMA(A1:A10)">=SUMA(A1:A10)</option>
-        <option value="=PROMEDIO(A1:A10)">=PROMEDIO(A1:A10)</option>
-        <option value="=MIN(A1:A10)">=MIN(A1:A10)</option>
-        <option value="=MAX(A1:A10)">=MAX(A1:A10)</option>
-        <option value="=CONTAR(A1:A10)">=CONTAR(A1:A10)</option>
-        <option value='=SI(A1>10,"alto","bajo")'>=SI(A1&gt;10,"alto","bajo")</option>
-      </Select>
+      <Modal open={dialog === "find"} title={workspace.t("find")} onClose={() => setDialog("")} footer={<Button onClick={() => setDialog("")}>{workspace.t("closeDialog")}</Button>}>
+        <Input label={workspace.t("find")} value={findQuery} onChange={(event) => setFindQuery(event.target.value)} />
+        <Input label={workspace.t("replace")} value={replaceQuery} onChange={(event) => setReplaceQuery(event.target.value)} />
+        <Button variant="primary" onClick={() => {
+          const found = replaceInGrid(active.cells, findQuery, replaceQuery, book);
+          mapActive((sheet) => ({ ...sheet, cells: found.cells }));
+        }}>{workspace.t("replace")}</Button>
+      </Modal>
+      <Modal open={dialog === "valid"} title={workspace.t("sheetValidation")} onClose={() => setDialog("")} footer={<Button onClick={() => setDialog("")}>{workspace.t("closeDialog")}</Button>}>
+        <Input label={workspace.t("sheetOptions")} value={validText} onChange={(event) => setValidText(event.target.value)} />
+        <Button variant="primary" onClick={() => {
+          const list = validText.split(",").map((item) => item.trim()).filter(Boolean).slice(0, 20);
+          mapActive((sheet) => ({ ...sheet, validation: { ...(sheet.validation ?? {}), [styleKey(selected.row, selected.col)]: list } }));
+          setDialog("");
+        }}>{workspace.t("sheetApply")}</Button>
+      </Modal>
+      <Modal open={dialog === "cond"} title={workspace.t("sheetConditional")} onClose={() => setDialog("")} footer={<Button onClick={() => setDialog("")}>{workspace.t("closeDialog")}</Button>}>
+        <Input label={workspace.t("sheetConditional")} value={condValue} onChange={(event) => setCondValue(event.target.value)} />
+        <Button variant="primary" onClick={() => {
+          const rule: CondRule = { id: createId().slice(0, 8), col: selected.col, op: "gt", value: condValue, fill: "#fff4b8" };
+          mapActive((sheet) => ({ ...sheet, conditional: [...(sheet.conditional ?? []).filter((item) => item.col !== selected.col), rule] }));
+          setDialog("");
+        }}>{workspace.t("sheetApply")}</Button>
+      </Modal>
+      <Modal open={dialog === "help"} title={workspace.t("shortcuts")} onClose={() => setDialog("")} footer={<Button onClick={() => setDialog("")}>{workspace.t("closeDialog")}</Button>}>
+        <p>{workspace.t("sheetLimit")}</p>
+        <p>{workspace.t("sheetHelp")}</p>
+      </Modal>
       {error ? <p role="alert">{error}</p> : null}
     </div>
   );

@@ -46,6 +46,15 @@ Versiones resueltas: `prosemirror-model` 1.25.12, `prosemirror-state` 1.4.4, `pr
 - Modificación y redistribución: sí
 - Límites de marca: ninguno adicional para este uso
 
+### chart.js 4.5.1
+
+- Repositorio: https://github.com/chartjs/Chart.js
+- Licencia: MIT
+- Uso comercial: sí
+- Obligaciones: atribución
+- Modificación y redistribución: sí
+- Límites de marca: el nombre Chart.js no se usa como marca de ORVUPI Work. Los gráficos de hojas y de respuestas usan la paleta de ORVUPI. El paquete va en el bundle; no se carga desde una CDN
+
 ### pdf-lib 1.17.1
 
 - Repositorio: https://github.com/Hopding/pdf-lib

@@ -1,24 +1,37 @@
 import { useEffect, useState } from "react";
 import { useWorkspace } from "../app/workspace";
 import { loadFileWhenReady } from "../routing/load";
+import { editorPath } from "../routing/paths";
 import { Button, Input, Select } from "../ui/kit";
 import { MenuBar } from "../ui/menus";
 import { createId } from "../security/names";
-import { missingRequired, parseForm, serializeForm, type FormFile, type QuestionKind } from "./model";
+import { createSheetFile, serializeSheet } from "../sheets/model";
+import { emptyGrid } from "../sheets/formulas";
+import { OrvupiChart } from "../ui/chart";
+import { answerCounts, missingRequired, parseForm, serializeForm, type FormFile, type QuestionKind } from "./model";
 
 const KIND_KEY = {
   short: "formShort",
   long: "formLong",
   choice: "formChoice",
   check: "formCheck",
+  dropdown: "formDropdown",
+  scale: "formScale",
+  date: "formDate",
+  time: "formTime",
+  grid: "formGrid",
+  section: "formSection",
 } as const;
+
+const WITH_OPTIONS = new Set<QuestionKind>(["choice", "check", "dropdown", "grid"]);
 
 export function FormsScreen() {
   const workspace = useWorkspace();
   const forms = workspace.files.filter((file) => file.deletedAt === null && file.kind === "form");
   const [file, setFile] = useState<FormFile | null>(null);
   const [status, setStatus] = useState<"saved" | "pending">("saved");
-  const [mode, setMode] = useState<"edit" | "fill" | "answers">("edit");
+  const [mode, setMode] = useState<"edit" | "fill" | "preview" | "answers">("edit");
+  const [help, setHelp] = useState(false);
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState("");
 
@@ -85,6 +98,7 @@ export function FormsScreen() {
         <p role="status">{status === "saved" ? workspace.t("statusSaved") : workspace.t("statusPending")}</p>
         <Button aria-pressed={mode === "edit"} onClick={() => setMode("edit")}>{workspace.t("formEdit")}</Button>
         <Button aria-pressed={mode === "fill"} onClick={() => { setMode("fill"); setDraft({}); setNotice(""); }}>{workspace.t("formFill")}</Button>
+        <Button aria-pressed={mode === "preview"} onClick={() => { setMode("preview"); setDraft({}); setNotice(""); }}>{workspace.t("formPreview")}</Button>
         <Button aria-pressed={mode === "answers"} onClick={() => setMode("answers")}>{workspace.t("formResponses")}</Button>
       </div>
       <MenuBar
@@ -104,9 +118,13 @@ export function FormsScreen() {
             if (file.questions.length >= 40) return;
             update({ ...file, questions: [...file.questions, { id: createId().slice(0, 12), prompt: "", kind: "choice", required: false, options: ["", ""] }] });
           } }] },
-          { id: "format", label: workspace.t("menuFormat"), items: [{ id: "required", label: workspace.t("formRequired"), onSelect: () => update({ ...file, questions: file.questions.map((question, index) => index === 0 ? { ...question, required: !question.required } : question) }) }] },
-          { id: "tools", label: workspace.t("menuTools"), items: [{ id: "hint", label: workspace.t("formHint"), onSelect: () => workspace.pushToast(workspace.t("formHint")) }] },
-          { id: "help", label: workspace.t("menuHelp"), items: [{ id: "keys", label: workspace.t("shortcuts"), onSelect: () => workspace.pushToast(workspace.t("shortcutsDriveBody")) }] },
+          { id: "format", label: workspace.t("menuFormat"), items: [{ id: "required", label: workspace.t("formRequired"), onSelect: () => {
+            const first = file.questions.find((question) => question.kind !== "section");
+            if (!first) return;
+            update({ ...file, questions: file.questions.map((question) => question.id === first.id ? { ...question, required: !question.required } : question) });
+          } }] },
+          { id: "tools", label: workspace.t("menuTools"), items: [{ id: "preview", label: workspace.t("formPreview"), onSelect: () => setMode("preview") }] },
+          { id: "help", label: workspace.t("menuHelp"), items: [{ id: "keys", label: workspace.t("shortcuts"), onSelect: () => setHelp(true) }] },
         ]}
       />
       <div className="ow-form-banner" aria-hidden="true" />
@@ -128,6 +146,40 @@ export function FormsScreen() {
       </article>
       {mode === "answers" ? (
         <div className="ow-list">
+          <Button onClick={() => {
+            if (!workspace.storage) return;
+            const id = createId();
+            const opened = window.open(editorPath("sheet", id), "_blank");
+            const cells = emptyGrid();
+            const questions = file.questions.filter((question) => question.kind !== "section");
+            questions.forEach((question, col) => {
+              cells[0]![col] = question.prompt || workspace.t("formPrompt");
+            });
+            file.responses.forEach((response, row) => {
+              questions.forEach((question, col) => {
+                cells[row + 1]![col] = response.answers[question.id] ?? "";
+              });
+            });
+            const sheet = createSheetFile({ id, title: `${file.title} ${workspace.t("formResponses")}`, sheets: [{ name: workspace.t("formResponses"), cells, freezeHeader: true }] });
+            void workspace.storage.saveFile({
+              id,
+              name: sheet.title,
+              kind: "sheet",
+              mime: "application/vnd.orvupi.sheet+json",
+              bytes: serializeSheet(sheet),
+            }).then(() => workspace.refreshFiles()).then(() => { if (!opened) workspace.openSheet(id); }).catch(workspace.reportError);
+          }}>{workspace.t("formExportSheet")}</Button>
+          {file.questions.filter((question) => question.kind === "choice" || question.kind === "check" || question.kind === "dropdown" || question.kind === "scale").map((question) => {
+            const counts = answerCounts(file, question.id);
+            return (
+              <article key={`sum-${question.id}`} className="ow-form-card ow-form-summary">
+                <h2>{workspace.t("formSummary")}: {question.prompt || workspace.t("formPrompt")}</h2>
+                <div className="ow-chart-panel">
+                  <OrvupiChart kind="bar" title={question.prompt || workspace.t("formSummary")} labels={counts.map((item) => item.label)} values={counts.map((item) => item.count)} />
+                </div>
+              </article>
+            );
+          })}
           {file.responses.length === 0 ? <p>{workspace.t("formEmptyResponses")}</p> : null}
           {file.responses.map((response) => (
             <article key={response.id} className="ow-form-card">
@@ -152,7 +204,7 @@ export function FormsScreen() {
                     const kind = event.target.value as QuestionKind;
                     update({
                       ...file,
-                      questions: file.questions.map((item) => item.id === question.id ? { ...item, kind, options: kind === "choice" || kind === "check" ? (item.options.length > 0 ? item.options : ["", ""]) : [] } : item),
+                      questions: file.questions.map((item) => item.id === question.id ? { ...item, kind, options: WITH_OPTIONS.has(kind) ? (item.options.length > 0 ? item.options : ["", ""]) : [] } : item),
                     });
                   }}>
                     {(Object.keys(KIND_KEY) as QuestionKind[]).map((kind) => (
@@ -184,7 +236,7 @@ export function FormsScreen() {
                 </>
               ) : (
                 <>
-                  <h3>{question.prompt || workspace.t("formPrompt")}{question.required ? " *" : ""}</h3>
+                  {question.kind === "section" ? <h2>{question.prompt || workspace.t("formSection")}</h2> : <h3>{question.prompt || workspace.t("formPrompt")}{question.required ? " *" : ""}</h3>}
                   {question.kind === "long" ? (
                     <label className="ow-field">
                       {workspace.t("formLong")}
@@ -200,6 +252,42 @@ export function FormsScreen() {
                         <label key={`${question.id}-c-${optionIndex}`} className="ow-check">
                           <input type="radio" name={question.id} checked={(draft[question.id] ?? "") === option} onChange={() => setDraft({ ...draft, [question.id]: option })} />
                           {option || `${workspace.t("formOption")} ${optionIndex + 1}`}
+                        </label>
+                      ))}
+                    </div>
+                  ) : null}
+                  {question.kind === "dropdown" ? (
+                    <label className="ow-field">
+                      {workspace.t("formDropdown")}
+                      <select aria-label={question.prompt || workspace.t("formDropdown")} value={draft[question.id] ?? ""} onChange={(event) => setDraft({ ...draft, [question.id]: event.target.value })}>
+                        <option value="">{workspace.t("formOption")}</option>
+                        {question.options.map((option) => <option key={option} value={option}>{option}</option>)}
+                      </select>
+                    </label>
+                  ) : null}
+                  {question.kind === "scale" ? (
+                    <div role="radiogroup" aria-label={question.prompt || workspace.t("formScale")}>
+                      {["1", "2", "3", "4", "5"].map((option) => (
+                        <label key={option} className="ow-check">
+                          <input type="radio" name={question.id} checked={(draft[question.id] ?? "") === option} onChange={() => setDraft({ ...draft, [question.id]: option })} />
+                          {option}
+                        </label>
+                      ))}
+                    </div>
+                  ) : null}
+                  {question.kind === "date" ? <Input label={workspace.t("formDate")} type="date" value={draft[question.id] ?? ""} onChange={(event) => setDraft({ ...draft, [question.id]: event.target.value })} /> : null}
+                  {question.kind === "time" ? <Input label={workspace.t("formTime")} type="time" value={draft[question.id] ?? ""} onChange={(event) => setDraft({ ...draft, [question.id]: event.target.value })} /> : null}
+                  {question.kind === "grid" ? (
+                    <div>
+                      {question.options.map((option) => (
+                        <label key={option} className="ow-field">
+                          {option || workspace.t("formGrid")}
+                          <select aria-label={option || workspace.t("formGrid")} value={(draft[question.id] ?? "").split("\n").find((line) => line.startsWith(`${option}=`))?.split("=")[1] ?? ""} onChange={(event) => {
+                            const lines = (draft[question.id] ?? "").split("\n").filter((line) => line && !line.startsWith(`${option}=`));
+                            setDraft({ ...draft, [question.id]: [...lines, `${option}=${event.target.value}`].join("\n") });
+                          }}>
+                            {["1", "2", "3", "4", "5"].map((column) => <option key={column} value={column}>{column}</option>)}
+                          </select>
                         </label>
                       ))}
                     </div>
@@ -225,12 +313,13 @@ export function FormsScreen() {
               )}
             </article>
           ))}
+          {help ? <p role="status">{workspace.t("formHint")}</p> : null}
           {mode === "edit" ? (
             <Button variant="primary" onClick={() => {
               if (file.questions.length >= 40) return;
               update({ ...file, questions: [...file.questions, { id: createId().slice(0, 12), prompt: "", kind: "short", required: false, options: [] }] });
             }}>{workspace.t("formAddQuestion")}</Button>
-          ) : (
+          ) : mode === "preview" ? <p role="status">{workspace.t("formPreview")}</p> : (
             <Button variant="primary" onClick={() => {
               if (missingRequired(file, draft)) {
                 setNotice(workspace.t("formMissing"));

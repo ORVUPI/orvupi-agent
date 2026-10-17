@@ -16,6 +16,8 @@ export type NoteFile = {
   pinned: boolean;
   color: NoteColor;
   checks: NoteCheck[];
+  label?: string;
+  archived?: boolean;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -43,6 +45,8 @@ export function createNoteFile(input: { id: string; title: string }): NoteFile {
     pinned: false,
     color: "#fff8ec",
     checks: [],
+    label: "",
+    archived: false,
   };
 }
 
@@ -78,5 +82,7 @@ export function parseNote(bytes: Uint8Array | string): NoteFile {
     pinned: parsed.pinned === true,
     color: colorOf(parsed.color),
     checks,
+    label: typeof parsed.label === "string" ? parsed.label.slice(0, 40) : "",
+    archived: parsed.archived === true,
   };
 }

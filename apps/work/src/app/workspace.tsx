@@ -556,9 +556,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     openDrawing: (id) => reveal("drawing", id),
     openNote: (id) => reveal("note", id),
     openRecord: (file) => {
-      const kind = editorKind(file.kind);
+      const target = file.shortcutOf ? files.find((item) => item.id === file.shortcutOf) ?? file : file;
+      const kind = editorKind(target.kind);
       if (kind) {
-        reveal(kind, file.id);
+        reveal(kind, target.id);
         return;
       }
       setView(file.kind === "pdf" ? "pdf" : "files");

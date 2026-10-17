@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "./kit";
 
 export function Modal({
@@ -194,6 +194,16 @@ export function ContextMenu({
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [place, setPlace] = useState({ left: x, top: y });
+  useLayoutEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const box = node.getBoundingClientRect();
+    const margin = 8;
+    const left = Math.max(margin, Math.min(x, window.innerWidth - box.width - margin));
+    const top = Math.max(margin, Math.min(y, window.innerHeight - box.height - margin));
+    setPlace({ left, top });
+  }, [x, y, items.length]);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -210,7 +220,7 @@ export function ContextMenu({
     };
   }, [onClose]);
   return (
-    <div ref={ref} className="ow-context" style={{ left: x, top: y }} role="menu">
+    <div ref={ref} className="ow-context" style={{ left: place.left, top: place.top }} role="menu">
       {items.map((item) => (
         <button
           key={item.id}

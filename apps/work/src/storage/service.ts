@@ -236,9 +236,38 @@ export function createStorageService(db: IDBPDatabase<WorkDb>, blobs: BlobStore)
 
   async function purgeFile(id: string): Promise<void> {
     const record = await readRecord(id);
-    await blobs.delete(record.blobKey);
+    const all = await listFiles({ includeDeleted: true });
+    const shared = all.some((file) => file.id !== record.id && file.blobKey === record.blobKey);
+    if (!shared) await blobs.delete(record.blobKey);
     await db.delete("files", record.id);
     publishFilesChanged();
+  }
+
+  async function createShortcut(id: string): Promise<FileRecord> {
+    const record = await readRecord(id);
+    const stamp = nowIso();
+    const shortcutId = createId();
+    const shortcut: FileRecord = {
+      id: shortcutId,
+      name: sanitizeName(`${record.name} · acceso`),
+      kind: record.kind,
+      mime: record.mime,
+      tags: [],
+      favorite: false,
+      folderId: record.folderId,
+      color: record.color,
+      deletedAt: null,
+      createdAt: stamp,
+      updatedAt: stamp,
+      size: record.size,
+      blobKey: record.kind === "folder" ? `files/${shortcutId}` : record.blobKey,
+      contentHash: record.contentHash,
+      shortcutOf: record.shortcutOf ?? record.id,
+    };
+    if (record.kind === "folder") await blobs.write(shortcut.blobKey, encodeUtf8("{}"));
+    await db.put("files", shortcut);
+    publishFilesChanged();
+    return shortcut;
   }
 
   async function duplicateFile(id: string): Promise<FileRecord> {
@@ -419,6 +448,7 @@ export function createStorageService(db: IDBPDatabase<WorkDb>, blobs: BlobStore)
     restoreFile,
     purgeFile,
     duplicateFile,
+    createShortcut,
     exportFile,
     importFile,
     backupWorkspace,

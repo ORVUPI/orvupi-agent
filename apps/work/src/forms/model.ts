@@ -2,7 +2,7 @@ import { decodeUtf8, encodeUtf8 } from "../security/bytes";
 import { WorkError } from "../security/errors";
 import { sanitizeName } from "../security/names";
 
-export const QUESTION_KINDS = ["short", "long", "choice", "check"] as const;
+export const QUESTION_KINDS = ["short", "long", "choice", "check", "dropdown", "scale", "date", "time", "grid", "section"] as const;
 export type QuestionKind = (typeof QUESTION_KINDS)[number];
 
 export type Question = {
@@ -44,7 +44,7 @@ function questionOf(value: unknown): Question | null {
     prompt: typeof value.prompt === "string" ? value.prompt.slice(0, 180) : "",
     kind,
     required: value.required === true,
-    options: kind === "choice" || kind === "check" ? (options.length > 0 ? options : ["", ""]) : [],
+    options: kind === "choice" || kind === "check" || kind === "dropdown" || kind === "grid" ? (options.length > 0 ? options : ["", ""]) : [],
   };
 }
 
@@ -111,5 +111,15 @@ export function parseForm(bytes: Uint8Array | string): FormFile {
 }
 
 export function missingRequired(file: FormFile, answers: Record<string, string>): boolean {
-  return file.questions.some((question) => question.required && (answers[question.id] ?? "").trim() === "");
+  return file.questions.some((question) => question.kind !== "section" && question.required && (answers[question.id] ?? "").trim() === "");
+}
+
+export function answerCounts(file: FormFile, questionId: string): Array<{ label: string; count: number }> {
+  const question = file.questions.find((item) => item.id === questionId);
+  if (!question) return [];
+  const labels = question.kind === "scale" ? ["1", "2", "3", "4", "5"] : question.options.filter(Boolean);
+  return labels.map((label) => ({
+    label,
+    count: file.responses.filter((response) => (response.answers[questionId] ?? "").split("\n").includes(label) || response.answers[questionId] === label).length,
+  }));
 }
