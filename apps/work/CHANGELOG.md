@@ -1,5 +1,16 @@
 # Registro de cambios
 
+## 0.7.0 — 2026-10-17
+
+Alfa de desarrollo. No es una versión de producción.
+
+- En el teléfono, una pulsación larga selecciona el texto de Docs con las asas y el menú del navegador. La barra inferior no se come el gesto y el menú de tabla ya no cancela el toque.
+- En una tabla de Docs y en Hojas se arrastra el dedo, o el asa, para marcar un rango. «Combinar celdas» está en la barra y en Formato.
+- En el escritorio, cada control de la barra y de Archivo, Editar, Ver, Insertar, Formato, Herramientas, Extensiones y Ayuda se pulsa con el ratón y cambia lo que se ve: estilos del título 1 al 6, caracteres, fecha, línea horizontal, configurar página y el recuento.
+- Insertar una tabla, un gráfico o un dibujo añade el objeto. Ya no sustituye a la imagen que estaba seleccionada.
+- En el teléfono la hoja solo pinta las filas que caben en pantalla, así que la rejilla no monta las mil filas.
+- La pasada queda en `docs/AUDITORIA_FUNCIONAL.md`. Un archivo de 0.1 a 0.6.3 sigue abriendo: la versión del archivo sigue en 1.
+
 ## 0.6.3 — 2026-10-17
 
 Alfa de desarrollo. No es una versión de producción.

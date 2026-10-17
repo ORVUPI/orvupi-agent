@@ -39,7 +39,7 @@ function blockFrom(element: Element): JsonNode[] {
       .map((item) => ({ type: "listItem", content: [{ type: "paragraph", content: inlineFrom(item) }] }));
     return [{ type: tag === "UL" ? "bulletList" : "orderedList", content: items }];
   }
-  if (tag === "H1" || tag === "H2" || tag === "H3") {
+  if (tag === "H1" || tag === "H2" || tag === "H3" || tag === "H4" || tag === "H5" || tag === "H6") {
     const level = Number(tag.slice(1));
     return [{ type: "heading", attrs: { level }, content: inlineFrom(element) }];
   }

@@ -1,13 +1,15 @@
 import type { Mark } from "@tiptap/pm/model";
+import { NodeSelection, TextSelection } from "@tiptap/pm/state";
+import { CellSelection, cellAround } from "@tiptap/pm/tables";
 import { EditorContent, type Editor } from "@tiptap/react";
 import { ChevronDown, ChevronUp, Highlighter, Image as ImageIcon, Link2, List, ListChecks, ListOrdered, MessageSquare, Minus, Paintbrush, Pencil, Plus, Printer, Redo2, RemoveFormatting, Search, SpellCheck2, Star, Undo2 } from "lucide-react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { MessageKey } from "../i18n";
 import { MenuBar } from "../ui/menus";
 import { usePhone } from "../ui/phone";
 import { APP_VERSION } from "../version";
 import { chartPng, drawingPng } from "./inserts";
-import type { JsonNode } from "./model";
+import type { JsonNode, PageMargin, PageOrientation, PageSize } from "./model";
 
 type ExportKind = "pdf" | "html" | "txt" | "orvdoc" | "docx";
 
@@ -36,6 +38,27 @@ const HIGHLIGHT_COLORS = [
 const BORDER_COLORS = ["#102032", "#1d4e89", "#ad1645", "#0b5d36", "#9a3412"];
 const CELL_COLORS = ["#fff4b8", "#d9f5e4", "#dbe7f5", "#fde2ea", "#ffffff"];
 const HEX = /^#[0-9a-f]{6}$/i;
+const SPECIAL = ["€", "£", "¥", "©", "®", "™", "—", "–", "…", "«", "»", "“", "”", "•", "§", "¶", "°", "±", "×", "÷", "á", "é", "í", "ó", "ú", "ñ", "¿", "¡"];
+const STYLE_KEY: Record<string, MessageKey> = {
+  "0": "styleNormal",
+  "1": "heading1",
+  "2": "heading2",
+  "3": "heading3",
+  "4": "heading4",
+  "5": "heading5",
+  "6": "heading6",
+};
+
+function pageBox(size: PageSize, orientation: PageOrientation): { width: number; height: number } {
+  const portrait = size === "letter" ? { width: 816, height: 1056 } : { width: PAGE_W, height: PAGE_H };
+  return orientation === "landscape" ? { width: portrait.height, height: portrait.width } : portrait;
+}
+
+function marginPx(margin: PageMargin): number {
+  if (margin === "narrow") return 48;
+  if (margin === "wide") return 144;
+  return MARGIN;
+}
 
 type TextRange = { from: number; to: number };
 
@@ -212,6 +235,9 @@ export function DocsSurface({
   dropCap = false,
   watermark = "",
   pageNumber = false,
+  pageSize = "a4",
+  pageOrientation = "portrait",
+  pageMargin = "normal",
   onLayout,
   find,
   words,
@@ -242,7 +268,10 @@ export function DocsSurface({
   dropCap?: boolean;
   watermark?: string;
   pageNumber?: boolean;
-  onLayout?: (patch: { columns?: 1 | 2 | 3; dropCap?: boolean; watermark?: string; pageNumber?: boolean }) => void;
+  pageSize?: PageSize;
+  pageOrientation?: PageOrientation;
+  pageMargin?: PageMargin;
+  onLayout?: (patch: { columns?: 1 | 2 | 3; dropCap?: boolean; watermark?: string; pageNumber?: boolean; pageSize?: PageSize; pageOrientation?: PageOrientation; pageMargin?: PageMargin }) => void;
   find: ReactNode;
   words: string;
 }) {
@@ -260,11 +289,19 @@ export function DocsSurface({
   const [tabMenu, setTabMenu] = useState(false);
   const [tabsOpen, setTabsOpen] = useState(true);
   const [context, setContext] = useState<{ x: number; y: number } | null>(null);
+  const [charsOpen, setCharsOpen] = useState(false);
+  const [pageOpen, setPageOpen] = useState(false);
+  const [countOpen, setCountOpen] = useState(false);
+  const [draftSize, setDraftSize] = useState<PageSize>(pageSize);
+  const [draftOrientation, setDraftOrientation] = useState<PageOrientation>(pageOrientation);
+  const [draftMargin, setDraftMargin] = useState<PageMargin>(pageMargin);
   const [, setTick] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
   const contextRef = useRef<HTMLDivElement>(null);
   const selectionRef = useRef<TextRange | null>(null);
+  const cellSelRef = useRef<{ anchor: number; head: number } | null>(null);
+  const suppressRef = useRef(false);
   const brushRef = useRef<readonly Mark[] | null>(null);
   const brushRange = useRef<TextRange | null>(null);
   useEffect(() => {
@@ -294,13 +331,7 @@ export function DocsSurface({
   const shownZoom = narrow ? 1 : zoom / 100;
   const point = shownPoint(editor?.getAttributes("textStyle")?.fontSize);
   const font = plainFont(editor?.getAttributes("textStyle")?.fontFamily);
-  const style = editor?.isActive("heading", { level: 1 })
-    ? "1"
-    : editor?.isActive("heading", { level: 2 })
-      ? "2"
-      : editor?.isActive("heading", { level: 3 })
-        ? "3"
-        : "0";
+  const style = (["1", "2", "3", "4", "5", "6"] as const).find((level) => editor?.isActive("heading", { level: Number(level) })) ?? "0";
   const headings = editor ? headingsOf(editor.getJSON() as JsonNode) : [];
 
   useEffect(() => {
@@ -316,7 +347,9 @@ export function DocsSurface({
     const root = document.querySelector(".ow-a4 .ProseMirror");
     if (!root) return;
     const clear = () => {
+      if (suppressRef.current) return;
       selectionRef.current = null;
+      cellSelRef.current = null;
     };
     root.addEventListener("mousedown", clear);
     return () => root.removeEventListener("mousedown", clear);
@@ -369,8 +402,9 @@ export function DocsSurface({
     const node = document.querySelector(".ow-a4 .ProseMirror");
     if (!node) return;
     const open = (event: Event) => {
-      if (!editor.isActive("table")) return;
       const mouse = event as MouseEvent;
+      if (mouse.button !== 2) return;
+      if (!editor.isActive("table")) return;
       mouse.preventDefault();
       const width = 280;
       const height = 420;
@@ -400,6 +434,118 @@ export function DocsSurface({
   }, [context]);
 
   useEffect(() => {
+    if (!editor) return;
+    const root = editor.view.dom;
+    const phone = window.matchMedia("(pointer: coarse), (max-width: 840px)").matches;
+    let drag: { id: number; x: number; y: number; anchor: number; on: boolean; cell: boolean } | null = null;
+
+    const pointPos = (x: number, y: number) => {
+      const found = editor.view.posAtCoords({ left: x, top: y });
+      if (found) return found.pos;
+      const node = document.elementFromPoint(x, y);
+      const element = node instanceof Element ? node : null;
+      if (!element || !root.contains(element)) return null;
+      try {
+        return editor.view.posAtDOM(element, 0);
+      } catch {
+        return null;
+      }
+    };
+
+    const at = (x: number, y: number) => {
+      for (const item of document.elementsFromPoint(x, y)) {
+        const dom = item.closest("td, th");
+        if (!(dom instanceof HTMLElement) || !root.contains(dom)) continue;
+        try {
+          return cellAround(editor.state.doc.resolve(editor.view.posAtDOM(dom, 0)));
+        } catch {
+          return null;
+        }
+      }
+      const pos = pointPos(x, y);
+      if (pos === null) return null;
+      return cellAround(editor.state.doc.resolve(pos));
+    };
+
+    const apply = (anchor: number, head: number) => {
+      try {
+        const selection = CellSelection.create(editor.state.doc, anchor, head);
+        if (!editor.state.selection.eq(selection)) editor.view.dispatch(editor.state.tr.setSelection(selection));
+        cellSelRef.current = { anchor: selection.$anchorCell.pos, head: selection.$headCell.pos };
+      } catch {
+        // The pointer left the table.
+      }
+    };
+
+    const down = (event: PointerEvent) => {
+      const touchLike = event.pointerType !== "mouse" || phone;
+      if (!touchLike) return;
+      const cell = at(event.clientX, event.clientY);
+      const pos = cell ? cell.pos : pointPos(event.clientX, event.clientY);
+      if (pos === null) return;
+      drag = { id: event.pointerId, x: event.clientX, y: event.clientY, anchor: pos, on: false, cell: Boolean(cell) };
+    };
+
+    const move = (event: PointerEvent) => {
+      if (!drag || event.pointerId !== drag.id) return;
+      const dx = event.clientX - drag.x;
+      const dy = event.clientY - drag.y;
+      if (!drag.on && dx * dx + dy * dy < 36) return;
+      if (drag.cell) {
+        const head = at(event.clientX, event.clientY);
+        if (!head || (!drag.on && head.pos === drag.anchor)) return;
+        drag.on = true;
+        if (event.cancelable) event.preventDefault();
+        root.setPointerCapture(event.pointerId);
+        apply(drag.anchor, head.pos);
+        return;
+      }
+      const head = pointPos(event.clientX, event.clientY);
+      if (head === null || head === drag.anchor) return;
+      drag.on = true;
+      if (event.cancelable) event.preventDefault();
+      const from = Math.min(drag.anchor, head);
+      const to = Math.max(drag.anchor, head);
+      const selection = TextSelection.create(editor.state.doc, from, to);
+      if (!editor.state.selection.eq(selection)) editor.view.dispatch(editor.state.tr.setSelection(selection));
+    };
+
+    const up = (event: PointerEvent) => {
+      if (!drag || drag.id !== event.pointerId) return;
+      if (drag.on) suppressRef.current = true;
+      drag = null;
+    };
+
+    const guard = (event: Event) => {
+      if (!suppressRef.current) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.type === "click") suppressRef.current = false;
+    };
+
+    const touchMove = (event: TouchEvent) => {
+      if (drag?.on && event.cancelable) event.preventDefault();
+    };
+
+    root.addEventListener("pointerdown", down);
+    root.addEventListener("pointermove", move);
+    root.addEventListener("pointerup", up);
+    root.addEventListener("pointercancel", up);
+    root.addEventListener("mousedown", guard, true);
+    root.addEventListener("click", guard, true);
+    root.addEventListener("touchmove", touchMove, { passive: false });
+    return () => {
+      root.removeEventListener("pointerdown", down);
+      root.removeEventListener("pointermove", move);
+      root.removeEventListener("pointerup", up);
+      root.removeEventListener("pointercancel", up);
+      root.removeEventListener("mousedown", guard, true);
+      root.removeEventListener("click", guard, true);
+      root.removeEventListener("touchmove", touchMove);
+    };
+  }, [editor]);
+
+  useEffect(() => {
     if (!exportOpen) return;
     const close = (event: PointerEvent) => {
       if (!exportRef.current?.contains(event.target as Node)) setExportOpen(false);
@@ -410,7 +556,15 @@ export function DocsSurface({
 
   function rememberSelection() {
     if (!editor) return;
-    const { from, to } = editor.state.selection;
+    const selection = editor.state.selection;
+    if (selection instanceof CellSelection) {
+      cellSelRef.current = { anchor: selection.$anchorCell.pos, head: selection.$headCell.pos };
+      selectionRef.current = null;
+      onCapture?.();
+      return;
+    }
+    cellSelRef.current = null;
+    const { from, to } = selection;
     const saved = selectionRef.current;
     if (from === to && saved && saved.from !== saved.to) return;
     selectionRef.current = { from, to };
@@ -424,11 +578,23 @@ export function DocsSurface({
     keepPointer(event);
   }
 
+  function restoreCells() {
+    const cells = cellSelRef.current;
+    if (!editor || !cells || editor.state.selection instanceof CellSelection) return;
+    try {
+      const next = CellSelection.create(editor.state.doc, cells.anchor, cells.head);
+      editor.view.dispatch(editor.state.tr.setSelection(next));
+    } catch {
+      cellSelRef.current = null;
+    }
+  }
+
   function run(command: () => boolean | void) {
     if (mode === "view" || !editor) return;
+    restoreCells();
     const saved = selectionRef.current;
     const current = editor.state.selection;
-    if (saved && current.empty && saved.from !== saved.to) editor.commands.setTextSelection(saved);
+    if (!cellSelRef.current && saved && current.empty && saved.from !== saved.to) editor.commands.setTextSelection(saved);
     command();
   }
 
@@ -496,7 +662,7 @@ export function DocsSurface({
             </div>
             {menus ? (
               <nav className="ow-docs-menus" aria-label={t("menuBar")} onMouseDown={holdPointer}>
-                <MenuInline t={t} editor={editor} run={run} onClose={onClose} onExport={onExport} onFind={onFind} onLink={onLink} onImage={() => { rememberSelection(); fileRef.current?.click(); }} onComment={onComment} onVersions={onVersions} onShortcuts={onShortcuts} onPrint={onPrint} onRuler={() => setRuler((value) => !value)} onZoom={setZoom} onMode={setMode} onHeaderFocus={() => document.querySelector<HTMLInputElement>(".ow-a4-edge")?.focus()} onFooterFocus={() => document.querySelectorAll<HTMLInputElement>(".ow-a4-edge")[1]?.focus()} onPageNumber={() => onLayout?.({ pageNumber: !pageNumber })} onColumns={() => onLayout?.({ columns: columns === 1 ? 2 : columns === 2 ? 3 : 1 })} onDropCap={() => onLayout?.({ dropCap: !dropCap })} onWatermark={() => onLayout?.({ watermark: watermark ? "" : "ORVUPI" })} onChart={() => run(() => editor?.chain().focus().setImage({ src: chartPng(), alt: t("docChart") }).run())} onDrawing={() => { const src = drawingPng(); if (src) run(() => editor?.chain().focus().setImage({ src, alt: t("docDrawing") }).run()); }} onEquation={() => run(() => editor?.chain().focus().insertContent({ type: "paragraph", attrs: { textAlign: "center" }, content: [{ type: "text", text: "E = mc²", marks: [{ type: "italic" }] }] }).run())} />
+                <MenuInline t={t} editor={editor} run={run} onClose={onClose} onExport={onExport} onFind={onFind} onLink={onLink} onImage={() => { rememberSelection(); fileRef.current?.click(); }} onComment={onComment} onVersions={onVersions} onShortcuts={onShortcuts} onPrint={onPrint} onRuler={() => setRuler((value) => !value)} onZoom={setZoom} onMode={setMode} onHeaderFocus={() => document.querySelector<HTMLInputElement>(".ow-a4-edge")?.focus()} onFooterFocus={() => document.querySelectorAll<HTMLInputElement>(".ow-a4-edge")[1]?.focus()} onPageNumber={() => onLayout?.({ pageNumber: !pageNumber })} onColumns={() => onLayout?.({ columns: columns === 1 ? 2 : columns === 2 ? 3 : 1 })} onDropCap={() => onLayout?.({ dropCap: !dropCap })} onWatermark={() => onLayout?.({ watermark: watermark ? "" : "ORVUPI" })} onChart={() => run(() => { if (editor) insertAtCaret(editor, { type: "image", attrs: { src: chartPng(), alt: t("docChart") } }); })} onDrawing={() => { const src = drawingPng(); if (src) run(() => { if (editor) insertAtCaret(editor, { type: "image", attrs: { src, alt: t("docDrawing") } }); }); }} onEquation={() => run(() => { if (editor) insertAtCaret(editor, { type: "paragraph", attrs: { textAlign: "center" }, content: [{ type: "text", text: "E = mc²", marks: [{ type: "italic" }] }] }); })} onPageSetup={() => { setDraftSize(pageSize); setDraftOrientation(pageOrientation); setDraftMargin(pageMargin); setPageOpen(true); }} onSpecial={() => setCharsOpen(true)} onDate={() => run(() => { if (!editor) return; const now = new Date(); const text = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`; insertAtCaret(editor, text); })} onRule={() => run(() => editor?.chain().focus().setHorizontalRule().run())} onWordCount={() => setCountOpen(true)} />
               </nav>
             ) : null}
           </div>
@@ -537,17 +703,12 @@ export function DocsSurface({
             <ToolMenu
               wide
               label={t("styleLabel")}
-              value={style === "0" ? t("styleNormal") : t(style === "1" ? "heading1" : style === "2" ? "heading2" : "heading3")}
-              options={[
-                { id: "0", label: t("styleNormal") },
-                { id: "1", label: t("heading1") },
-                { id: "2", label: t("heading2") },
-                { id: "3", label: t("heading3") },
-              ]}
+              value={t(STYLE_KEY[style] ?? "styleNormal")}
+              options={Object.entries(STYLE_KEY).map(([id, key]) => ({ id, label: t(key) }))}
               onPick={(id) => run(() => {
                 if (!editor) return;
                 if (id === "0") editor.chain().focus().setParagraph().run();
-                else editor.chain().focus().setHeading({ level: Number(id) as 1 | 2 | 3 }).run();
+                else editor.chain().focus().setHeading({ level: Number(id) as 1 | 2 | 3 | 4 | 5 | 6 }).run();
               })}
             />
             <ToolMenu label={t("fontLabel")} value={font} wide options={FONTS.map((item) => ({ id: item, label: item, family: cssFamily(item) }))} onPick={(id) => run(() => editor?.chain().focus().setFontFamily(cssFamily(id)).run())} />
@@ -635,7 +796,13 @@ export function DocsSurface({
             {ruler && !narrow ? <div className="ow-ruler-row"><div className="ow-vruler-spacer" /><RulerH /></div> : null}
             <div className="ow-docs-page-row">
               {ruler && !narrow ? <RulerV /> : null}
-              <article className={`ow-a4${narrow ? " is-flow" : ""}${columns === 2 ? " is-cols-2" : columns === 3 ? " is-cols-3" : ""}${dropCap ? " is-dropcap" : ""}`} style={narrow ? undefined : { width: PAGE_W, minHeight: PAGE_H }}>
+              <article
+                className={`ow-a4${narrow ? " is-flow" : ""}${columns === 2 ? " is-cols-2" : columns === 3 ? " is-cols-3" : ""}${dropCap ? " is-dropcap" : ""}`}
+                data-page-size={pageSize}
+                data-page-orientation={pageOrientation}
+                data-page-margin={pageMargin}
+                style={{ "--page-margin": `${marginPx(pageMargin)}px`, ...(narrow ? {} : { width: pageBox(pageSize, pageOrientation).width, minHeight: pageBox(pageSize, pageOrientation).height }) } as CSSProperties}
+              >
                 {watermark ? <p className="ow-watermark" aria-hidden="true">{watermark}</p> : null}
                 <input className="ow-a4-edge" aria-label={t("header")} value={header} placeholder={t("header")} onChange={(event) => onHeader(event.target.value.slice(0, 240))} />
                 <div className="ow-a4-body">
@@ -652,7 +819,7 @@ export function DocsSurface({
         </div>
       </div>
       {narrow ? (
-        <div className="ow-format-dock" role="toolbar" aria-label={t("toolbarLabel")}>
+        <div className="ow-format-dock" role="toolbar" aria-label={t("toolbarLabel")} onPointerDown={() => rememberSelection()}>
           <div className="ow-format-scroll" ref={dockRef}>
             <DocIcon label={t("bold")} pressed={editor?.isActive("bold")} onClick={() => run(() => editor?.chain().focus().toggleBold().run())}><strong>B</strong></DocIcon>
             <DocIcon label={t("italic")} pressed={editor?.isActive("italic")} onClick={() => run(() => editor?.chain().focus().toggleItalic().run())}><em>I</em></DocIcon>
@@ -662,7 +829,8 @@ export function DocsSurface({
             <DocIcon label={t("bullet")} pressed={editor?.isActive("bulletList")} onClick={() => run(() => editor?.chain().focus().toggleBulletList().run())}><List size={20} /></DocIcon>
             <DocIcon label={t("ordered")} pressed={editor?.isActive("orderedList")} onClick={() => run(() => editor?.chain().focus().toggleOrderedList().run())}><ListOrdered size={20} /></DocIcon>
             <DocIcon label={t("checklist")} pressed={editor?.isActive("taskList")} onClick={() => run(() => editor?.chain().focus().toggleTaskList().run())}><ListChecks size={20} /></DocIcon>
-            <DocIcon label={t("table")} onClick={() => run(() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run())}><span aria-hidden="true">⊞</span></DocIcon>
+            <DocIcon label={t("table")} onClick={() => run(() => { if (editor) insertTableAt(editor, 3, 3); })}><span aria-hidden="true">⊞</span></DocIcon>
+            <DocIcon label={t("mergeCells")} onClick={() => run(() => editor?.chain().focus().mergeCells().run())}><span aria-hidden="true">⧉</span></DocIcon>
             <ToolMenu label={t("fontLabel")} value={font} options={FONTS.map((item) => ({ id: item, label: item, family: cssFamily(item) }))} onPick={(id) => run(() => editor?.chain().focus().setFontFamily(cssFamily(id)).run())} />
             <SizeBox t={t} point={point} onApply={applySize} onRemember={rememberSelection} />
             <ColorMenu t={t} editor={editor} run={run} kind="color" />
@@ -685,6 +853,55 @@ export function DocsSurface({
           if (file) onImage(file);
         }}
       />
+      {narrow ? handlesOf(editor).map((handle) => (
+        <button
+          key={handle.id}
+          type="button"
+          className="ow-cell-handle"
+          aria-label={t("selectionHandle")}
+          style={{ left: handle.x, top: handle.y }}
+          onPointerDown={(event) => dragCellHandle(editor, event, handle.anchor, (anchor, head) => { cellSelRef.current = { anchor, head }; })}
+        />
+      )) : null}
+      {charsOpen ? (
+        <div className="ow-doc-dialog" role="dialog" aria-label={t("specialChar")}>
+          <div className="ow-char-grid">
+            {SPECIAL.map((symbol) => (
+              <button key={symbol} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => { run(() => { if (editor) insertAtCaret(editor, symbol); }); setCharsOpen(false); }}>
+                {symbol}
+              </button>
+            ))}
+          </div>
+          <button type="button" onClick={() => setCharsOpen(false)}>{t("closeFind")}</button>
+        </div>
+      ) : null}
+      {pageOpen ? (
+        <div className="ow-doc-dialog" role="dialog" aria-label={t("pageSetup")}>
+          <p>{t("pagePaper")}</p>
+          <div className="ow-row">
+            <button type="button" aria-pressed={draftSize === "a4"} onClick={() => setDraftSize("a4")}>{t("pageA4")}</button>
+            <button type="button" aria-pressed={draftSize === "letter"} onClick={() => setDraftSize("letter")}>{t("pageLetter")}</button>
+          </div>
+          <div className="ow-row">
+            <button type="button" aria-pressed={draftOrientation === "portrait"} onClick={() => setDraftOrientation("portrait")}>{t("pagePortrait")}</button>
+            <button type="button" aria-pressed={draftOrientation === "landscape"} onClick={() => setDraftOrientation("landscape")}>{t("pageLandscape")}</button>
+          </div>
+          <p>{t("pageMargin")}</p>
+          <div className="ow-row">
+            <button type="button" aria-pressed={draftMargin === "normal"} onClick={() => setDraftMargin("normal")}>{t("marginNormal")}</button>
+            <button type="button" aria-pressed={draftMargin === "narrow"} onClick={() => setDraftMargin("narrow")}>{t("marginNarrow")}</button>
+            <button type="button" aria-pressed={draftMargin === "wide"} onClick={() => setDraftMargin("wide")}>{t("marginWide")}</button>
+          </div>
+          <button type="button" onClick={() => { onLayout?.({ pageSize: draftSize, pageOrientation: draftOrientation, pageMargin: draftMargin }); setPageOpen(false); }}>{t("apply")}</button>
+          <button type="button" onClick={() => setPageOpen(false)}>{t("cancel")}</button>
+        </div>
+      ) : null}
+      {countOpen ? (
+        <div className="ow-doc-dialog" role="dialog" aria-label={t("wordCount")}>
+          <p>{words}</p>
+          <button type="button" onClick={() => setCountOpen(false)}>{t("closeFind")}</button>
+        </div>
+      ) : null}
       {context && editor ? (
         <div
           ref={contextRef}
@@ -730,6 +947,111 @@ export function DocsSurface({
       ) : null}
     </div>
   );
+}
+
+function handlesOf(editor: Editor | null): Array<{ id: string; x: number; y: number; anchor: number }> {
+  if (!editor) return [];
+  try {
+    const selection = editor.state.selection;
+    let anchorPos: number;
+    let headPos: number;
+    if (selection instanceof CellSelection) {
+      anchorPos = selection.$anchorCell.pos;
+      headPos = selection.$headCell.pos;
+    } else {
+      const cell = cellAround(selection.$from);
+      if (!cell) return [];
+      anchorPos = cell.pos;
+      headPos = cell.pos;
+    }
+    const anchorDom = editor.view.nodeDOM(anchorPos);
+    const headDom = editor.view.nodeDOM(headPos);
+    if (!(anchorDom instanceof HTMLElement) || !(headDom instanceof HTMLElement)) return [];
+    const anchorBox = anchorDom.getBoundingClientRect();
+    const headBox = headDom.getBoundingClientRect();
+    const left = Math.min(anchorBox.left, headBox.left);
+    const top = Math.min(anchorBox.top, headBox.top);
+    const right = Math.max(anchorBox.right, headBox.right);
+    const bottom = Math.max(anchorBox.bottom, headBox.bottom);
+    return [
+      { id: "nw", x: left - 9, y: top - 9, anchor: headPos },
+      { id: "se", x: right - 9, y: bottom - 9, anchor: anchorPos },
+    ];
+  } catch {
+    return [];
+  }
+}
+
+function insertAtCaret(editor: Editor, content: string | Record<string, unknown>) {
+  const selection = editor.state.selection;
+  const chain = editor.chain().focus();
+  if (selection instanceof NodeSelection) return chain.insertContentAt(selection.to, content).run();
+  return chain.insertContent(content).run();
+}
+
+function insertTableAt(editor: Editor, rows: number, cols: number) {
+  const selection = editor.state.selection;
+  let after: number | null = selection instanceof NodeSelection ? selection.to : null;
+  if (after === null && !selection.empty) {
+    editor.state.doc.nodesBetween(selection.from, selection.to, (node, pos) => {
+      if (node.type.name === "image" || node.isAtom) after = pos + node.nodeSize;
+    });
+  }
+  if (after !== null) {
+    const paragraph = editor.schema.nodes.paragraph?.create();
+    if (paragraph) {
+      const tr = editor.state.tr.insert(after, paragraph);
+      tr.setSelection(TextSelection.create(tr.doc, after + 1));
+      editor.view.dispatch(tr);
+    }
+  }
+  editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
+}
+
+function dragCellHandle(editor: Editor | null, event: { currentTarget: EventTarget | null; clientX: number; clientY: number; pointerId: number; preventDefault: () => void; stopPropagation: () => void }, anchor: number, remember: (anchor: number, head: number) => void) {
+  if (!editor) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const node = event.currentTarget;
+  if (!(node instanceof HTMLElement)) return;
+  try {
+    node.setPointerCapture(event.pointerId);
+  } catch {
+    // The pointer already ended.
+  }
+  const at = (x: number, y: number) => {
+    for (const item of document.elementsFromPoint(x, y)) {
+      if (item === node || node.contains(item)) continue;
+      const dom = item.closest("td, th");
+      if (!(dom instanceof HTMLElement) || !editor.view.dom.contains(dom)) continue;
+      try {
+        return cellAround(editor.state.doc.resolve(editor.view.posAtDOM(dom, 0)));
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  };
+  const move = (ev: PointerEvent) => {
+    if (ev.cancelable) ev.preventDefault();
+    const head = at(ev.clientX, ev.clientY);
+    if (!head) return;
+    try {
+      const selection = CellSelection.create(editor.state.doc, anchor, head.pos);
+      if (!editor.state.selection.eq(selection)) editor.view.dispatch(editor.state.tr.setSelection(selection));
+      remember(selection.$anchorCell.pos, selection.$headCell.pos);
+    } catch {
+      // The pointer left the table.
+    }
+  };
+  const up = () => {
+    window.removeEventListener("pointermove", move);
+    window.removeEventListener("pointerup", up);
+    window.removeEventListener("pointercancel", up);
+  };
+  window.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", up);
+  window.addEventListener("pointercancel", up);
 }
 
 function updateBlocks(editor: Editor, attributes: Record<string, unknown>) {
@@ -969,6 +1291,11 @@ function MenuInline({
   onChart,
   onDrawing,
   onEquation,
+  onPageSetup,
+  onSpecial,
+  onDate,
+  onRule,
+  onWordCount,
 }: {
   t: Translate;
   editor: Editor | null;
@@ -994,12 +1321,18 @@ function MenuInline({
   onChart: () => void;
   onDrawing: () => void;
   onEquation: () => void;
+  onPageSetup: () => void;
+  onSpecial: () => void;
+  onDate: () => void;
+  onRule: () => void;
+  onWordCount: () => void;
 }) {
   return (
     <MenuBar
       label={t("menuBar")}
       menus={[
         { id: "file", label: t("menuFile"), items: [
+          { id: "setup", label: t("pageSetup"), onSelect: onPageSetup },
           { id: "print", label: t("print"), hint: "Ctrl+P", onSelect: onPrint },
           { id: "export", label: t("export"), children: [
             { id: "pdf", label: "PDF", onSelect: () => onExport("pdf") },
@@ -1025,8 +1358,8 @@ function MenuInline({
         { id: "insert", label: t("menuInsert"), items: [
           { id: "image", label: t("image"), onSelect: onImage },
           { id: "link", label: t("link"), hint: "Ctrl+K", onSelect: onLink },
-          { id: "table", label: t("table"), table: (rows, cols) => run(() => editor?.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run()) },
-          { id: "break", label: t("pageBreak"), onSelect: () => run(() => editor?.chain().focus().insertPageBreak().run()) },
+          { id: "table", label: t("table"), table: (rows, cols) => run(() => { if (editor) insertTableAt(editor, rows, cols); }) },
+          { id: "break", label: t("pageBreak"), onSelect: () => run(() => { if (editor) insertAtCaret(editor, { type: "pageBreak" }); }) },
           { id: "comment", label: t("comment"), onSelect: onComment },
           { id: "header", label: t("header"), onSelect: onHeaderFocus },
           { id: "footer", label: t("footer"), onSelect: onFooterFocus },
@@ -1035,6 +1368,9 @@ function MenuInline({
           { id: "draw", label: t("docDrawing"), onSelect: onDrawing },
           { id: "eq", label: t("equation"), onSelect: onEquation },
           { id: "water", label: t("watermark"), onSelect: onWatermark },
+          { id: "chars", label: t("specialChar"), onSelect: onSpecial },
+          { id: "date", label: t("insertDate"), onSelect: onDate },
+          { id: "rule", label: t("horizontalLine"), onSelect: onRule },
         ] },
         { id: "format", label: t("menuFormat"), items: [
           { id: "bold", label: t("bold"), hint: "Ctrl+B", onSelect: () => run(() => editor?.chain().focus().toggleBold().run()) },
@@ -1050,6 +1386,17 @@ function MenuInline({
           ] },
           { id: "columns", label: t("docColumns"), onSelect: onColumns },
           { id: "drop", label: t("dropCap"), onSelect: onDropCap },
+          { id: "styles", label: t("styleLabel"), children: Object.entries(STYLE_KEY).map(([id, key]) => ({
+            id,
+            label: t(key),
+            onSelect: () => run(() => {
+              if (!editor) return;
+              if (id === "0") editor.chain().focus().setParagraph().run();
+              else editor.chain().focus().setHeading({ level: Number(id) as 1 | 2 | 3 | 4 | 5 | 6 }).run();
+            }),
+          })) },
+          { id: "merge", label: t("mergeCells"), onSelect: () => run(() => editor?.chain().focus().mergeCells().run()) },
+          { id: "split", label: t("splitCell"), onSelect: () => run(() => editor?.chain().focus().splitCell().run()) },
           { id: "lists", label: t("bullet"), children: [
             { id: "bullets", label: t("bullet"), onSelect: () => run(() => editor?.chain().focus().toggleBulletList().run()) },
             { id: "numbers", label: t("ordered"), onSelect: () => run(() => editor?.chain().focus().toggleOrderedList().run()) },
@@ -1058,6 +1405,7 @@ function MenuInline({
         ] },
         { id: "tools", label: t("menuTools"), items: [
           { id: "versions", label: t("versions"), onSelect: onVersions },
+          { id: "count", label: t("wordCount"), onSelect: onWordCount },
         ] },
         { id: "ext", label: t("menuExtensions"), items: [
           { id: "none", label: t("noExtensions"), static: true },

@@ -38,6 +38,15 @@ import { blankSheet, parseSheet, serializeSheet, type SheetFile, type SheetTab }
 import { sheetsToXlsx, xlsxToSheets } from "./xlsx";
 
 const GUTTER = 46;
+
+function paneSize(node: HTMLElement) {
+  const rect = node.getBoundingClientRect();
+  const onScreen = Math.max(0, Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0));
+  return {
+    height: Math.max(120, Math.min(node.clientHeight || onScreen || window.innerHeight, window.innerHeight, onScreen || window.innerHeight)),
+    width: Math.max(120, Math.min(node.clientWidth || window.innerWidth, window.innerWidth)),
+  };
+}
 const HEAD = 28;
 const ROW_H = 30;
 const COL_W = 92;
@@ -67,6 +76,8 @@ export function SheetsScreen() {
   const [condValue, setCondValue] = useState("10");
   const imageRef = useRef<HTMLInputElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const chooseRef = useRef<(row: number, col: number, extend: boolean) => void>(() => undefined);
+  const draggedRef = useRef(false);
   const clip = useRef<Clip | null>(null);
   const phone = usePhone();
   const [formatOpen, setFormatOpen] = useState(false);
@@ -76,11 +87,69 @@ export function SheetsScreen() {
     if (!node) return;
     node.scrollTop = 0;
     node.scrollLeft = 0;
-    setWin((current) => ({ ...current, top: 0, left: 0, height: node.clientHeight, width: node.clientWidth }));
-    const measure = () => setWin((current) => ({ ...current, height: node.clientHeight, width: node.clientWidth }));
+    setWin((current) => ({ ...current, top: 0, left: 0, ...paneSize(node) }));
+    const measure = () => setWin((current) => ({ ...current, ...paneSize(node) }));
     const observer = new ResizeObserver(measure);
     observer.observe(node);
     return () => observer.disconnect();
+  }, [file?.active]);
+
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    let drag: { id: number; row: number; col: number; x: number; y: number; on: boolean } | null = null;
+    const hit = (x: number, y: number) => {
+      const node = document.elementFromPoint(x, y);
+      const cell = node instanceof Element ? node.closest<HTMLElement>("[data-row][data-col]") : null;
+      if (!cell) return null;
+      const row = Number(cell.dataset.row);
+      const col = Number(cell.dataset.col);
+      if (!Number.isInteger(row) || !Number.isInteger(col)) return null;
+      return { row, col };
+    };
+    const down = (event: PointerEvent) => {
+      if (!event.isPrimary) return;
+      const handle = event.target instanceof Element && Boolean(event.target.closest(".ow-range-handle"));
+      const cell = hit(event.clientX, event.clientY);
+      if (!cell && !handle) return;
+      drag = { id: event.pointerId, row: cell?.row ?? 0, col: cell?.col ?? 0, x: event.clientX, y: event.clientY, on: handle };
+      if (handle) {
+        event.preventDefault();
+        wrap.setPointerCapture(event.pointerId);
+      } else if (cell && !event.shiftKey) chooseRef.current(cell.row, cell.col, false);
+    };
+    const move = (event: PointerEvent) => {
+      if (!drag || event.pointerId !== drag.id) return;
+      const dx = event.clientX - drag.x;
+      const dy = event.clientY - drag.y;
+      if (!drag.on && dx * dx + dy * dy < 36) return;
+      const cell = hit(event.clientX, event.clientY);
+      if (!cell || (!drag.on && cell.row === drag.row && cell.col === drag.col)) return;
+      drag.on = true;
+      if (event.cancelable) event.preventDefault();
+      wrap.setPointerCapture(event.pointerId);
+      chooseRef.current(cell.row, cell.col, true);
+    };
+    const up = (event: PointerEvent) => {
+      if (!drag || drag.id !== event.pointerId) return;
+      if (drag.on) draggedRef.current = true;
+      drag = null;
+    };
+    const touchMove = (event: TouchEvent) => {
+      if (drag?.on && event.cancelable) event.preventDefault();
+    };
+    wrap.addEventListener("pointerdown", down);
+    wrap.addEventListener("pointermove", move);
+    wrap.addEventListener("pointerup", up);
+    wrap.addEventListener("pointercancel", up);
+    wrap.addEventListener("touchmove", touchMove, { passive: false });
+    return () => {
+      wrap.removeEventListener("pointerdown", down);
+      wrap.removeEventListener("pointermove", move);
+      wrap.removeEventListener("pointerup", up);
+      wrap.removeEventListener("pointercancel", up);
+      wrap.removeEventListener("touchmove", touchMove);
+    };
   }, [file?.active]);
 
   useEffect(() => {
@@ -196,6 +265,7 @@ export function SheetsScreen() {
     setSelected({ row, col });
     if (!extend) setAnchor({ row, col });
   }
+  chooseRef.current = choose;
 
   function copyCell() {
     clip.current = { raw, style: currentStyle ? { ...currentStyle } : undefined };
@@ -284,10 +354,13 @@ export function SheetsScreen() {
       <Fragment key={label}>
         <button
           type="button"
-          className={`ow-cell${view.style?.border ? " has-border" : ""}${view.style?.wrap ? " is-wrap" : ""}`}
+          className={`ow-cell${view.style?.border ? " has-border" : ""}${view.style?.wrap ? " is-wrap" : ""}${bounds.r1 !== bounds.r2 || bounds.c1 !== bounds.c2 ? (rowIndex >= bounds.r1 && rowIndex <= bounds.r2 && colIndex >= bounds.c1 && colIndex <= bounds.c2 ? " is-range" : "") : ""}`}
           aria-label={view.text ? `${label} ${view.text}` : label}
         title={note || undefined}
           aria-pressed={pressed}
+          data-row={rowIndex}
+          data-col={colIndex}
+          data-range={bounds.r1 !== bounds.r2 || bounds.c1 !== bounds.c2 ? (rowIndex >= bounds.r1 && rowIndex <= bounds.r2 && colIndex >= bounds.c1 && colIndex <= bounds.c2 ? "true" : "false") : "false"}
           data-bold={view.style?.bold ? "true" : "false"}
           style={{
             top: cellTop,
@@ -299,7 +372,14 @@ export function SheetsScreen() {
             background: image ? `center / contain no-repeat url("${image}") ${view.scale ?? view.rule?.fill ?? view.style?.fill ?? "#fff"}` : (view.scale ?? view.rule?.fill ?? view.style?.fill),
             textAlign: view.style?.align,
           }}
-          onClick={(event) => choose(rowIndex, colIndex, event.shiftKey)}
+          onClick={(event) => {
+            if (draggedRef.current) {
+              draggedRef.current = false;
+              event.preventDefault();
+              return;
+            }
+            choose(rowIndex, colIndex, event.shiftKey);
+          }}
         >
           {view.text}
         </button>
@@ -343,6 +423,14 @@ export function SheetsScreen() {
     c2: Math.max(anchor.col, selected.col),
   };
 
+  function mergeSelection() {
+    const single = bounds.r2 === bounds.r1 && bounds.c2 === bounds.c1;
+    mapActive((sheet) => ({
+      ...sheet,
+      styles: mergeRange(sheet.styles ?? {}, bounds.r1, bounds.c1, single ? bounds.r1 : bounds.r2, single ? bounds.c1 + 1 : bounds.c2),
+    }));
+  }
+
   return (
     <div className="ow-page ow-sheet-page" data-tool="sheets">
       <h1 className="ow-sr">{file.title}</h1>
@@ -351,6 +439,7 @@ export function SheetsScreen() {
         <Input label={workspace.t("fileName")} value={file.title} onChange={(event) => update((current) => ({ ...current, title: event.target.value.slice(0, 180) }))} />
         <p className="ow-sheet-status" role="status">{status === "saved" ? workspace.t("statusSaved") : workspace.t("statusPending")}</p>
         {phone ? <Button aria-expanded={formatOpen} onClick={() => setFormatOpen((value) => !value)}>{workspace.t("menuFormat")}</Button> : null}
+        {phone ? <Button onClick={mergeSelection}>{workspace.t("mergeCells")}</Button> : null}
       </div>
       <MenuBar
         label={workspace.t("menuBar")}
@@ -398,7 +487,7 @@ export function SheetsScreen() {
             { id: "right", label: workspace.t("alignRight"), onSelect: () => patch({ align: "right" }) },
             { id: "border", label: workspace.t("sheetBorder"), onSelect: () => patch({ border: !currentStyle?.border }) },
             { id: "wrap", label: workspace.t("sheetWrap"), onSelect: () => patch({ wrap: !currentStyle?.wrap }) },
-            { id: "merge", label: workspace.t("mergeCells"), onSelect: () => mapActive((sheet) => ({ ...sheet, styles: mergeRange(sheet.styles ?? {}, bounds.r1, bounds.c1, bounds.r2 === bounds.r1 && bounds.c2 === bounds.c1 ? bounds.r1 : bounds.r2, bounds.c2 === bounds.c1 ? bounds.c1 + 1 : bounds.c2) })) },
+            { id: "merge", label: workspace.t("mergeCells"), onSelect: mergeSelection },
             { id: "split", label: workspace.t("splitCell"), onSelect: () => mapActive((sheet) => ({ ...sheet, styles: unmerge(sheet.styles ?? {}, selected.row, selected.col) })) },
             { id: "sort", label: workspace.t("sheetSort"), onSelect: () => mapActive((sheet) => ({ ...sheet, cells: sortGrid(sheet.cells, selected.col, "asc", (sheet.frozenRows ?? (sheet.freezeHeader ? 1 : 0)) > 0, book) })) },
             { id: "sortd", label: workspace.t("sheetSortDesc"), onSelect: () => mapActive((sheet) => ({ ...sheet, cells: sortGrid(sheet.cells, selected.col, "desc", (sheet.frozenRows ?? 0) > 0, book) })) },
@@ -501,7 +590,7 @@ export function SheetsScreen() {
         tabIndex={0}
         onScroll={(event) => {
           const node = event.currentTarget;
-          setWin({ top: node.scrollTop, left: node.scrollLeft, height: node.clientHeight, width: node.clientWidth });
+          setWin({ top: node.scrollTop, left: node.scrollLeft, ...paneSize(node) });
         }}
         onKeyDown={(event) => {
           if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLSelectElement) return;
@@ -551,6 +640,12 @@ export function SheetsScreen() {
               </div>
             );
           })}
+          <button
+            type="button"
+            className="ow-range-handle"
+            aria-label={workspace.t("selectionHandle")}
+            style={{ top: (bounds.r2 - (bounds.r2 >= frozenRows ? frozenRows : 0)) * ROW_H + ROW_H - 9, left: GUTTER + bounds.c2 * COL_W + COL_W - 9 }}
+          />
         </div>
       </div>
       {(active.charts ?? []).map((chart) => {

@@ -1,3 +1,4 @@
+import { NodeSelection } from "@tiptap/pm/state";
 import { useEditor } from "@tiptap/react";
 import { useEffect, useRef, useState } from "react";
 import type { Locale, MessageKey } from "../i18n";
@@ -13,7 +14,7 @@ import { Modal } from "../ui/overlay";
 import { createExtensions, pastedHtml } from "./extensions";
 import { findInSlices, type TextSlice } from "./find";
 import { exportHtml } from "./html";
-import { countWords, docToText, firstLine, UNTITLED_NAMES, type DocComment, type DocVersion, type JsonNode } from "./model";
+import { countWords, docToText, firstLine, UNTITLED_NAMES, type DocComment, type DocVersion, type JsonNode, type PageMargin, type PageOrientation, type PageSize } from "./model";
 import { serializeOrvdoc, withContent, type OrvdocFile } from "./orvdoc";
 import { SaveController, createSaveQueue, type SaveState } from "./save-status";
 
@@ -73,6 +74,9 @@ export function DocsEditor({
     dropCap: initial.dropCap === true,
     watermark: initial.watermark ?? "",
     pageNumber: initial.pageNumber === true,
+    pageSize: (initial.pageSize ?? "a4") as PageSize,
+    pageOrientation: (initial.pageOrientation ?? "portrait") as PageOrientation,
+    pageMargin: (initial.pageMargin ?? "normal") as PageMargin,
   });
   const commentsRef = useRef<DocComment[]>(initial.comments);
   const versionsRef = useRef<DocVersion[]>(initial.versions);
@@ -125,7 +129,7 @@ export function DocsEditor({
   }
 
   writeRef.current = async (snapshot) => {
-    const parsed = JSON.parse(snapshot) as { content?: JsonNode; header?: string; footer?: string; comments?: DocComment[]; versions?: DocVersion[]; columns?: 1 | 2 | 3; dropCap?: boolean; watermark?: string; pageNumber?: boolean };
+    const parsed = JSON.parse(snapshot) as { content?: JsonNode; header?: string; footer?: string; comments?: DocComment[]; versions?: DocVersion[]; columns?: 1 | 2 | 3; dropCap?: boolean; watermark?: string; pageNumber?: boolean; pageSize?: PageSize; pageOrientation?: PageOrientation; pageMargin?: PageMargin };
     const content = parsed.content ?? (parsed as unknown as JsonNode);
     let title = nameRef.current;
     if (UNTITLED_NAMES.has(title)) {
@@ -137,6 +141,9 @@ export function DocsEditor({
       }
     }
     const columns: 1 | 2 | 3 = parsed.columns === 3 ? 3 : parsed.columns === 2 ? 2 : 1;
+    const pageSize: PageSize = parsed.pageSize === "letter" ? "letter" : "a4";
+    const pageOrientation: PageOrientation = parsed.pageOrientation === "landscape" ? "landscape" : "portrait";
+    const pageMargin: PageMargin = parsed.pageMargin === "wide" ? "wide" : parsed.pageMargin === "narrow" ? "narrow" : "normal";
     const next = {
       ...withContent(fileRef.current, content, title, new Date().toISOString()),
       header: parsed.header ?? headerRef.current,
@@ -147,6 +154,9 @@ export function DocsEditor({
       dropCap: parsed.dropCap === true,
       watermark: typeof parsed.watermark === "string" ? parsed.watermark : "",
       pageNumber: parsed.pageNumber === true,
+      pageSize,
+      pageOrientation,
+      pageMargin,
     };
     const saved = await storage.saveFile({
       id: record.id,
@@ -326,6 +336,11 @@ export function DocsEditor({
       reader.onerror = () => reject(new Error("read"));
       reader.readAsDataURL(file);
     });
+    const current = editorRef.current;
+    if (current?.state.selection instanceof NodeSelection) {
+      current.chain().focus().insertContentAt(current.state.selection.to, { type: "image", attrs: { src: dataUrl, alt: file.name } }).run();
+      return;
+    }
     const chain = chainWithRange();
     chain?.setImage({ src: dataUrl, alt: file.name }).run();
   }
@@ -403,6 +418,9 @@ export function DocsEditor({
         dropCap={layout.dropCap}
         watermark={layout.watermark}
         pageNumber={layout.pageNumber}
+        pageSize={layout.pageSize}
+        pageOrientation={layout.pageOrientation}
+        pageMargin={layout.pageMargin}
         onLayout={(patch) => {
           const next = { ...layoutRef.current, ...patch };
           layoutRef.current = next;

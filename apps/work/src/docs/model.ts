@@ -40,6 +40,10 @@ export type Block =
 export type DocComment = { id: string; quote: string; body: string; createdAt: string };
 export type DocVersion = { id: string; at: string; title: string; content: JsonNode };
 
+export type PageSize = "a4" | "letter";
+export type PageOrientation = "portrait" | "landscape";
+export type PageMargin = "normal" | "narrow" | "wide";
+
 export type OrvdocFile = {
   format: "orvupi-doc";
   version: 1;
@@ -56,6 +60,9 @@ export type OrvdocFile = {
   dropCap?: boolean;
   watermark?: string;
   pageNumber?: boolean;
+  pageSize?: PageSize;
+  pageOrientation?: PageOrientation;
+  pageMargin?: PageMargin;
 };
 
 const COLORS = new Set(["#102032", "#ad1645", "#0b5d36", "#1d4e89", "#a3123f"]);
@@ -98,7 +105,7 @@ export function paragraph(value = ""): JsonNode {
   return value ? { type: "paragraph", content: [textNode(value)] } : { type: "paragraph" };
 }
 
-export function heading(level: 1 | 2 | 3, value: string): JsonNode {
+export function heading(level: 1 | 2 | 3 | 4 | 5 | 6, value: string): JsonNode {
   return { type: "heading", attrs: { level }, content: [textNode(value)] };
 }
 

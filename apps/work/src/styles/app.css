@@ -627,6 +627,8 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
   white-space: nowrap;
 }
 .ow-cell[aria-pressed="true"] { outline: 2px solid var(--gem); outline-offset: -2px; }
+.ow-cell.is-range { outline: 2px solid #1d4e89; outline-offset: -2px; background-image: linear-gradient(rgba(29, 78, 137, 0.16), rgba(29, 78, 137, 0.16)); }
+.ow-range-handle { position: absolute; width: 18px; height: 18px; margin: 0; padding: 0; border-radius: 50%; background: #1d4e89; border: 2px solid #fff; z-index: 7; touch-action: none; cursor: grab; }
 .ow-cell.has-border { box-shadow: inset 0 0 0 2px #102032; }
 .ow-cell.is-wrap { white-space: normal; }
 .ow-sheet-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -904,17 +906,23 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-hruler b.is-bar { width: 10px; height: 4px; border: 0; background: #1d4e89; top: 10px; }
 .ow-hruler b.is-end { border-top: 0; border-bottom: 8px solid #1d4e89; }
 .ow-a4 { position: relative; background: #fff; color: #102032; border: 1px solid #dadce0; box-shadow: 0 1px 3px rgba(60, 64, 67, 0.12); display: flex; flex-direction: column; }
-.ow-a4-body { padding: 96px; flex: 1; }
-.ow-a4-edge { position: absolute; left: 96px; right: 96px; margin: 0; border: 0; border-bottom: 1px solid transparent; background: transparent; color: #102032; font-size: 11pt; }
+.ow-a4-body { padding: var(--page-margin, 96px); flex: 1; }
+.ow-a4-edge { position: absolute; left: var(--page-margin, 96px); right: var(--page-margin, 96px); margin: 0; border: 0; border-bottom: 1px solid transparent; background: transparent; color: #102032; font-size: 11pt; }
 .ow-a4 > .ow-a4-edge { top: 16px; }
-.ow-a4-foot { position: absolute; left: 96px; right: 96px; bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.ow-a4-foot { position: absolute; left: var(--page-margin, 96px); right: var(--page-margin, 96px); bottom: 12px; display: flex; align-items: center; gap: 8px; }
 .ow-a4-foot .ow-a4-edge { position: static; flex: 1; }
 .ow-page-num { font-size: 11pt; color: #102032; }
 .ow-watermark { position: absolute; inset: 18% 8%; display: grid; place-items: center; margin: 0; font-size: 64px; font-weight: 800; color: rgba(16, 32, 50, 0.14); transform: rotate(-24deg); pointer-events: none; }
 .ow-a4.is-cols-2 .ProseMirror { column-count: 2; column-gap: 28px; }
 .ow-a4.is-cols-3 .ProseMirror { column-count: 3; column-gap: 16px; }
 .ow-a4.is-dropcap .ProseMirror > p:first-of-type::first-letter { float: left; font-size: 3em; line-height: 0.85; padding-right: 6px; color: #ff3070; font-weight: 700; }
-.ow-format-dock { position: fixed; left: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: 0; background: #fff; border-top: 1px solid #dadce0; z-index: 22; padding: 4px 0 calc(4px + env(safe-area-inset-bottom)); }
+.ow-format-dock { position: fixed; left: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: 0; background: #fff; border-top: 1px solid #dadce0; z-index: 22; padding: 4px 0 calc(4px + env(safe-area-inset-bottom)); pointer-events: none; }
+.ow-format-dock > * { pointer-events: auto; }
+.ow-cell-handle { position: fixed; width: 18px; height: 18px; margin: 0; padding: 0; border-radius: 50%; border: 2px solid #fff; background: #1d4e89; z-index: 21; touch-action: none; cursor: grab; }
+.ow-doc-dialog { position: fixed; z-index: 45; left: 50%; top: 16vh; transform: translateX(-50%); width: min(440px, calc(100vw - 24px)); background: #fff; color: #102032; border: 1px solid #dadce0; border-radius: 16px; padding: 16px; box-shadow: 0 8px 24px rgba(16, 32, 50, 0.16); }
+.ow-doc-dialog .ow-char-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.ow-doc-dialog button { min-height: 40px; min-width: 40px; margin: 4px 4px 0 0; border: 1px solid #dadce0; border-radius: 8px; background: #fff; color: #102032; cursor: pointer; }
+.ow-doc-dialog button[aria-pressed="true"] { outline: 2px solid #1d4e89; }
 .ow-format-scroll { display: flex; align-items: center; gap: 2px; overflow-x: auto; flex: 1; min-width: 0; padding: 0 4px 4px; scrollbar-width: thin; scrollbar-color: #1d4e89 #edf2fa; }
 .ow-format-scroll::-webkit-scrollbar { height: 6px; }
 .ow-format-scroll::-webkit-scrollbar-thumb { background: #1d4e89; border-radius: 99px; }
@@ -959,11 +967,17 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 @keyframes ow-pop { from { transform: scale(0.86); } to { transform: none; } }
 .ow-tabbar, .ow-fab, .ow-fab-sheet { display: none; }
 .ow-a4-edge:focus { outline: none; border-bottom-color: #1d4e89; }
-.ow-a4 .ProseMirror { outline: none; min-height: 720px; font-family: Arial, Helvetica, sans-serif; font-size: 11pt; line-height: 1.15; color: #102032; }
-.ow-a4 .ProseMirror h1, .ow-a4 .ProseMirror h2, .ow-a4 .ProseMirror h3 { font-family: Arial, Helvetica, sans-serif; font-weight: 400; letter-spacing: 0; margin: 0 0 8px; color: #102032; }
+.ow-a4 .ProseMirror { outline: none; min-height: 720px; font-family: Arial, Helvetica, sans-serif; font-size: 11pt; line-height: 1.15; color: #102032; -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; touch-action: pan-y; }
+.ow-a4 .ProseMirror td, .ow-a4 .ProseMirror th { touch-action: none; }
+.ow-a4 .ProseMirror h1, .ow-a4 .ProseMirror h2, .ow-a4 .ProseMirror h3, .ow-a4 .ProseMirror h4, .ow-a4 .ProseMirror h5, .ow-a4 .ProseMirror h6, .ow-a4 .ProseMirror p, .ow-a4 .ProseMirror li, .ow-a4 .ProseMirror td, .ow-a4 .ProseMirror th { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+.ow-a4 .ProseMirror h1, .ow-a4 .ProseMirror h2, .ow-a4 .ProseMirror h3, .ow-a4 .ProseMirror h4, .ow-a4 .ProseMirror h5, .ow-a4 .ProseMirror h6 { font-family: Arial, Helvetica, sans-serif; font-weight: 400; letter-spacing: 0; margin: 0 0 8px; color: #102032; }
 .ow-a4 .ProseMirror h1 { font-size: 26pt; }
 .ow-a4 .ProseMirror h2 { font-size: 18pt; }
 .ow-a4 .ProseMirror h3 { font-size: 14pt; }
+.ow-a4 .ProseMirror h4 { font-size: 12pt; font-weight: 700; }
+.ow-a4 .ProseMirror h5 { font-size: 11pt; font-weight: 700; }
+.ow-a4 .ProseMirror h6 { font-size: 11pt; font-style: italic; }
+.ow-a4 .ProseMirror hr:not(.ow-page-break) { border: 0; border-top: 2px solid #102032; margin: 12px 0; height: 0; }
 .ow-a4 .ProseMirror p { margin: 0 0 8px; }
 .ow-docs .ow-count { color: #444746; font-weight: 400; font-size: 12px; line-height: 1.3; padding: 8px 24px 16px; margin: 0; }
 .ow-a4 .ProseMirror .ow-ul { text-decoration-line: underline; text-decoration-style: solid; text-decoration-color: currentColor; text-decoration-thickness: 1px; text-underline-offset: 0.12em; text-decoration-skip-ink: none; color: inherit; font-family: inherit; }
@@ -1012,8 +1026,8 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
   .ow-chips::-webkit-scrollbar { display: none; }
   .ow-chip { flex: none; min-height: 32px; padding: 2px 10px; font-size: 13px; }
   .ow-chip-more { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 32px; height: 32px; border: 0; background: #fff; color: #102032; font-size: 22px; font-weight: 700; border-radius: 999px; cursor: pointer; box-shadow: -8px 0 8px #fff; }
-  .ow-sheet-page { height: 100%; min-height: 0; overflow: hidden; padding: 4px 8px 0; box-sizing: border-box; }
-  .ow-sheet-wrap { touch-action: pan-x pan-y; flex: 1 1 auto; height: auto; min-height: 0; }
+  .ow-sheet-page { height: 100dvh; max-height: 100dvh; min-height: 0; overflow: hidden; padding: 4px 8px 0; box-sizing: border-box; }
+  .ow-sheet-wrap { touch-action: pan-x pan-y; flex: 1 1 0%; height: auto; min-height: 0; overflow: auto; }
   .ow-editor-line { display: flex; align-items: center; gap: 4px; min-width: 0; }
   .ow-editor-line > .ow-row { flex: 1; min-width: 0; flex-wrap: nowrap; overflow-x: auto; margin: 0; }
   .ow-editor-line .ow-menubar { flex: none; }
@@ -1032,7 +1046,8 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
   .ow-notes-page .ow-note-editor .ow-row,
   .ow-draw-tools { flex-wrap: nowrap; overflow-x: auto; }
   .ow-formula { position: static; }
-  .ow-cell { touch-action: manipulation; }
+  .ow-cell { touch-action: none; }
+  .ow-vcol, .ow-vrow, .ow-sheet-gutter { touch-action: pan-x pan-y; }
   .ow-slides-work { grid-template-columns: 1fr; }
   .ow-filmstrip { display: flex; overflow-x: auto; }
   .ow-thumb { min-width: 128px; }

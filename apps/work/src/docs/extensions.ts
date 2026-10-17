@@ -333,7 +333,7 @@ const DocKeys = Extension.create({
 export function createExtensions(placeholder: string) {
   return [
     StarterKit.configure({
-      heading: { levels: [1, 2, 3] },
+      heading: { levels: [1, 2, 3, 4, 5, 6] },
       link: false,
       underline: false,
       code: false,

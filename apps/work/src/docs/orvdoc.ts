@@ -31,6 +31,9 @@ export function createOrvdoc(input: { id: string; title: string; content?: JsonN
     dropCap: false,
     watermark: "",
     pageNumber: false,
+    pageSize: "a4",
+    pageOrientation: "portrait",
+    pageMargin: "normal",
   };
 }
 
@@ -92,6 +95,9 @@ export function parseOrvdoc(bytes: Uint8Array | string): OrvdocFile {
     dropCap: parsed.dropCap === true,
     watermark: typeof parsed.watermark === "string" ? parsed.watermark.slice(0, 40) : "",
     pageNumber: parsed.pageNumber === true,
+    pageSize: parsed.pageSize === "letter" ? "letter" : "a4",
+    pageOrientation: parsed.pageOrientation === "landscape" ? "landscape" : "portrait",
+    pageMargin: parsed.pageMargin === "narrow" || parsed.pageMargin === "wide" ? parsed.pageMargin : "normal",
   };
 }
 

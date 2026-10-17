@@ -2,7 +2,7 @@
 
 Suite de productividad en el navegador. Gratis, instalable y local-first. Los documentos se guardan en el dispositivo. Esta versión no tiene servidor, no llama a APIs de pago y no se vincula a ningún token.
 
-Esta entrega es la alfa 0.6.3: la misma suite local, legible en un teléfono de 412 px. La auditoría está en `docs/AUDITORIA_FUNCIONAL.md`. El visor PDF y el modelo de IA local siguen previstos y todavía no editan. La matriz de funciones está en `docs/PARIDAD_DRIVE.md`. Las medidas, en `docs/ANALISIS_DRIVE_UI.md`.
+Esta entrega es la alfa 0.7.0: la misma suite local, con selección en el teléfono y los controles de Docs comprobados con clics reales. La auditoría está en `docs/AUDITORIA_FUNCIONAL.md`. El visor PDF y el modelo de IA local siguen previstos y todavía no editan. La matriz de funciones está en `docs/PARIDAD_DRIVE.md`. Las medidas, en `docs/ANALISIS_DRIVE_UI.md`.
 
 ## Arranque
 
@@ -33,6 +33,12 @@ npm run test:e2e
 ```
 
 `npm test` ejecuta Vitest (unidad e integración). `npm run test:e2e` construye la app y recorre con Playwright el ciclo de la sección 30 del manual, más el contraste con axe.
+
+## Qué hay en 0.7.0
+
+- En Docs del teléfono el texto se selecciona con una pulsación larga. En las tablas y en Hojas el dedo o el asa marcan varias celdas y «Combinar celdas» las une.
+- La barra y los ocho menús de Docs se han recorrido con el ratón. Lo que faltaba (títulos 4 a 6, caracteres, fecha, línea horizontal, configurar página y el recuento) ahora cambia el documento.
+- Un archivo de 0.1 a 0.6.3 sigue abriendo: la versión del archivo sigue en 1.
 
 ## Qué hay en 0.6.3
 

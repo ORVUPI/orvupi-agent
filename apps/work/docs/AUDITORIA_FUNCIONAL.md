@@ -1,4 +1,4 @@
-# Auditoría funcional 0.6.3
+# Auditoría funcional 0.7.0
 
 Comparación de ORVUPI Work con la ayuda oficial de Google. Cada fila es una función de menú, barra, menú contextual o panel. El aspecto y el atajo van en «para qué sirve». La columna «móvil» dice si esa función cabe en un teléfono.
 
@@ -8,9 +8,9 @@ Estados: `funciona`, `roto`, `falta`, `fuera de alcance` (hace falta red o una c
 
 Cobertura de la auditoría = `funciona` / (`funciona` + `roto` + `falta`). Lo que queda fuera de alcance no entra en el denominador.
 
-Recuento: 132 filas. `funciona` 119, `roto` 0, `falta` 0, `fuera de alcance` 13. Cobertura **100 %** (119 / 119).
+Recuento: 138 filas. `funciona` 125, `roto` 0, `falta` 0, `fuera de alcance` 13. Cobertura **100 %** (125 / 125).
 
-En 0.6.1 el teléfono no encoge la página de Docs: el texto queda a 16 px, los menús salen de un botón ⋮ y la rejilla de Hojas muestra al menos doce filas en 412×915. En 0.6.2 la cabecera de Drive cabe en menos de una quinta parte, «Nuevo» no tapa la tarjeta de la hoja y la fórmula es una sola línea. En 0.6.3 el modo de teléfono se activa hasta 840 px o con un puntero grueso, y Ayuda muestra la versión que cargó el dispositivo.
+En 0.6.1 el teléfono no encoge la página de Docs: el texto queda a 16 px, los menús salen de un botón ⋮ y la rejilla de Hojas muestra al menos doce filas en 412×915. En 0.6.2 la cabecera de Drive cabe en menos de una quinta parte, «Nuevo» no tapa la tarjeta de la hoja y la fórmula es una sola línea. En 0.6.3 el modo de teléfono se activa hasta 840 px o con un puntero grueso, y Ayuda muestra la versión que cargó el dispositivo. En 0.7.0 cada control de Docs se pulsó con el ratón sobre texto seleccionado. La tabla de esa pasada está al final.
 
 | herramienta | menú | función | para qué sirve | estado en ORVUPI | móvil | test |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -33,33 +33,39 @@ En 0.6.1 el teléfono no encoge la página de Docs: el texto queda a 16 px, los 
 | Drive | Contextual | Destacar, renombrar, etiquetas, duplicar, papelera | Acciones locales del menú contextual. | funciona | encaja | — |
 | Drive | Compartir | Compartir, enlace y permisos | Exigen una cuenta. No hay botón. | fuera de alcance | no aplica | — |
 | Drive | Vista previa | Vista previa de Office en la nube | El visor de Google necesita red. | fuera de alcance | no aplica | — |
-| Docs | Archivo | Imprimir | Abre el cuadro de impresión. Ctrl+P. | funciona | encaja | docs-commands |
+| Docs | Archivo | Imprimir | Abre el cuadro de impresión. Ctrl+P. | funciona | encaja | docs-070 |
+| Docs | Archivo | Configurar página | Cambia el papel (A4 o carta), la orientación y el margen. | funciona | encaja | docs-070 |
 | Docs | Archivo | Exportar ORVDOC, HTML, PDF y DOCX | Descarga el archivo real. Menú «Exportar». | funciona | encaja | work.spec |
 | Docs | Archivo | Cerrar | Cierra la pestaña del editor. | funciona | encaja | work.spec |
-| Docs | Editar | Deshacer y rehacer | Vuelven atrás o adelante. Ctrl+Z y Ctrl+Y. | funciona | encaja | docs-commands |
-| Docs | Editar | Buscar y reemplazar | Diálogo sobre el texto. Ctrl+F. | funciona | encaja | docs-commands |
-| Docs | Ver | Regla | Muestra u oculta la regla. | funciona | encaja | docs-commands |
-| Docs | Ver | Zoom | 50, 75, 100, 125 y 150 %. | funciona | encaja | docs-commands |
-| Docs | Ver | Modo edición y visualización | La visualización deja el texto sin editar. | funciona | encaja | docs-commands |
-| Docs | Insertar | Imagen | Elige una imagen local. | funciona | encaja | docs-commands |
-| Docs | Insertar | Enlace | Diálogo de URL. Ctrl+K. | funciona | encaja | docs-commands |
-| Docs | Insertar | Tabla | Rejilla hasta 20×20. | funciona | encaja | docs-commands |
-| Docs | Insertar | Salto de página | Inserta un salto. | funciona | encaja | docs-commands |
-| Docs | Insertar | Comentario | Nota local, no un hilo en la red. | funciona | encaja | docs-commands |
-| Docs | Formato | Negrita, cursiva, subrayado y tachado | Marcas sobre la selección. Ctrl+B/I/U y Alt+Mayús+5. | funciona | encaja | docs-commands |
-| Docs | Formato | Color de texto y resaltado | Rejillas de color y color propio. | funciona | encaja | docs-commands |
-| Docs | Formato | Fuente y tamaño | Familias del sistema y OFL. Tamaño 1–400. | funciona | encaja | docs-commands |
-| Docs | Formato | Alineación | Izquierda, centro, derecha y justificar. Ctrl+Mayús+L/E/R/J. | funciona | encaja | docs-commands |
-| Docs | Formato | Estilos de párrafo | Normal, título, subtítulo y título 3. | funciona | encaja | docs-commands |
-| Docs | Formato | Interlineado y sangría | Cambian el bloque. | funciona | encaja | docs-commands |
-| Docs | Formato | Listas y checklist | Viñetas, números y tareas. | funciona | encaja | docs-commands |
-| Docs | Formato | Borrar formato | Quita marcas y nodos. | funciona | encaja | docs-commands |
-| Docs | Formato | Copiar formato | Pincel que repite las marcas. | funciona | encaja | docs-commands |
-| Docs | Tabla | Filas, columnas, combinar, separar, borde y fondo | Menú contextual de la celda. | funciona | encaja | docs-commands |
+| Docs | Editar | Deshacer y rehacer | Vuelven atrás o adelante. Ctrl+Z y Ctrl+Y. | funciona | encaja | docs-070 |
+| Docs | Editar | Buscar y reemplazar | Sustituye el texto encontrado. Ctrl+F. | funciona | encaja | docs-070 |
+| Docs | Ver | Regla | Muestra u oculta la regla. | funciona | encaja | docs-070 |
+| Docs | Ver | Zoom | 50, 75, 100, 125 y 150 %. | funciona | encaja | docs-070 |
+| Docs | Ver | Modo edición y visualización | La visualización deja el texto sin editar. | funciona | encaja | docs-070 |
+| Docs | Insertar | Imagen | Elige una imagen local. | funciona | encaja | docs-070 |
+| Docs | Insertar | Enlace | Diálogo de URL. Ctrl+K. | funciona | encaja | docs-070 |
+| Docs | Insertar | Tabla | Rejilla hasta 20×20. | funciona | encaja | docs-070 |
+| Docs | Insertar | Salto de página | Inserta un salto. | funciona | encaja | docs-070 |
+| Docs | Insertar | Comentario | Nota local, no un hilo en la red. | funciona | encaja | docs-070 |
+| Docs | Insertar | Caracteres especiales | Inserta el símbolo elegido, por ejemplo €. | funciona | encaja | docs-070 |
+| Docs | Insertar | Fecha | Inserta la fecha de hoy como AAAA-MM-DD. | funciona | encaja | docs-070 |
+| Docs | Insertar | Línea horizontal | Inserta una línea de separación. | funciona | encaja | docs-070 |
+| Docs | Formato | Negrita, cursiva, subrayado y tachado | Marcas sobre la selección. Ctrl+B/I/U y Alt+Mayús+5. | funciona | encaja | docs-070 |
+| Docs | Formato | Color de texto y resaltado | Rejillas de color y color propio. | funciona | encaja | docs-070 |
+| Docs | Formato | Fuente y tamaño | Familias del sistema y OFL. Tamaño 1–400. El + y el − cambian un punto. | funciona | encaja | docs-070 |
+| Docs | Formato | Alineación | Izquierda, centro, derecha y justificar. Ctrl+Mayús+L/E/R/J. | funciona | encaja | docs-070 |
+| Docs | Formato | Estilos de párrafo | Texto normal y títulos 1 a 6. | funciona | encaja | docs-070 |
+| Docs | Formato | Interlineado y sangría | Cambian el bloque. | funciona | encaja | docs-070 |
+| Docs | Formato | Listas y checklist | Viñetas, números y tareas. | funciona | encaja | docs-070 |
+| Docs | Formato | Borrar formato | Quita marcas y nodos. | funciona | encaja | docs-070 |
+| Docs | Formato | Copiar formato | Pincel que repite las marcas. | funciona | encaja | docs-070 |
+| Docs | Tabla | Filas, columnas, combinar, separar, borde y fondo | Menú contextual con el botón derecho. En el teléfono el dedo o el asa marcan el rango y «Combinar celdas» está en la barra. | funciona | encaja | docs-070 |
+| Docs | Móvil | Selección de texto | Pulsación larga, asas y menú nativo. La barra no tapa el texto ni cancela el gesto. | funciona | encaja | docs-070 |
 | Docs | Tabla | Ancho de columna | Arrastre del borde. | funciona | encaja | docs-commands |
-| Docs | Herramientas | Versiones | Guarda y restaura dentro del documento. | funciona | encaja | docs-commands |
-| Docs | Herramientas | Ortografía del navegador | El corrector es el del navegador, se puede apagar. | funciona | encaja | docs-commands |
-| Docs | Ayuda | Atajos | Diálogo con la lista. Ctrl+/. | funciona | encaja | docs-commands |
+| Docs | Herramientas | Versiones | Guarda y restaura dentro del documento. | funciona | encaja | docs-070 |
+| Docs | Herramientas | Recuento de palabras | Abre el diálogo con las palabras y los caracteres. | funciona | encaja | docs-070 |
+| Docs | Herramientas | Ortografía del navegador | El corrector es el del navegador, se puede apagar. | funciona | encaja | docs-070 |
+| Docs | Ayuda | Atajos | Diálogo con la lista. Ctrl+/. | funciona | encaja | docs-070 |
 | Docs | Extensiones | Complementos | No hay tienda. La entrada es una nota, no un botón. | fuera de alcance | no aplica | docs-commands |
 | Docs | Archivo | Compartir y enviar por correo | Exigen cuenta. No están en el menú. | fuera de alcance | no aplica | — |
 | Docs | Herramientas | Traducir, diccionario y voz | Servicios de red. No están en el menú. | fuera de alcance | no aplica | — |
@@ -80,7 +86,7 @@ En 0.6.1 el teléfono no encoge la página de Docs: el texto queda a 16 px, los 
 | Sheets | Formato | Número, moneda, porcentaje, fecha y general | Cambian cómo se ve el valor. | funciona | encaja | suite-050 |
 | Sheets | Formato | Negrita y colores | Negrita, tinta y fondo de la celda. Ctrl+B. | funciona | encaja | suite-050 |
 | Sheets | Formato | Bordes, ajustar texto y alineación | Borde, salto de línea y alineación. | funciona | encaja | suite-050 |
-| Sheets | Formato | Combinar y separar | Une el rango o la celda con la de la derecha. | funciona | encaja | suite-050 |
+| Sheets | Formato | Combinar y separar | En el teléfono el dedo o el asa marcan el rango y «Combinar celdas» lo une. En el escritorio sigue el menú Formato. | funciona | encaja | docs-070 |
 | Sheets | Formato | Ordenar | Ascendente y descendente, con la fila fija quieta. | funciona | encaja | suite-050 |
 | Sheets | Herramientas | Filtrar | Campo que oculta filas. | funciona | encaja | suite-050 |
 | Sheets | Herramientas | Formato condicional | Pinta la columna si el valor es mayor que el umbral. | funciona | encaja | suite-050 |
@@ -146,3 +152,54 @@ En 0.6.1 el teléfono no encoge la página de Docs: el texto queda a 16 px, los 
 | Notas | Recordatorios | Fecha y lugar | Exigen cuenta o red. No hay botón. | fuera de alcance | no aplica | — |
 | Notas | Colaborar | Colaboradores | Exigen cuenta. No hay botón. | fuera de alcance | no aplica | — |
 | Notas | Buscar | Buscar dentro de las notas | Filtra por título, texto, etiqueta y casillas. | funciona | encaja | mobile-060 |
+
+## Pasada de interacción 0.7.0
+
+Cada fila se pulsó con el ratón, el teclado o el dedo. El resultado es el cambio visible en el DOM. `probado` significa que `docs-070` hizo ese gesto y comprobó el resultado. No es una paridad con Google: es la lista de lo que esta versión hace de verdad.
+
+| control | dónde | resultado visible | estado | test |
+| --- | --- | --- | --- | --- |
+| Buscar | Barra | Se abre el campo de búsqueda. | probado | docs-070 |
+| Deshacer y rehacer | Barra y Editar | El texto vuelve y se rehace. | probado | docs-070 |
+| Imprimir | Barra y Archivo | Se llama a la impresión. | probado | docs-070 |
+| Ortografía | Barra | `spellcheck` pasa a falso y otra vez a verdadero. | probado | docs-070 |
+| Copiar formato | Barra | La negrita del segundo tramo pasa al primero. | probado | docs-070 |
+| Zoom | Barra y Ver | La hoja pasa a 150 % y luego a 75 %. | probado | docs-070 |
+| Estilo H1–H6 y texto normal | Barra y Formato | El párrafo pasa a `h1`…`h6` y vuelve a `p`. | probado | docs-070 |
+| Fuente | Barra | El texto queda en Georgia. | probado | docs-070 |
+| Tamaño − y + | Barra | El tamaño baja a 10 pt y sube a 12 pt. | probado | docs-070 |
+| Negrita, cursiva, subrayado y tachado | Barra | `strong`, `em`, `.ow-ul` y `s`. | probado | docs-070 |
+| Color del texto | Barra | El color pasa a `#cc0000`. | probado | docs-070 |
+| Resaltado | Barra | El fondo pasa a `#fff4b8`. | probado | docs-070 |
+| Enlace | Barra e Insertar | El texto queda en un enlace. | probado | docs-070 |
+| Comentario | Barra e Insertar | Aparece la nota. | probado | docs-070 |
+| Imagen | Barra e Insertar | Aparece la imagen. | probado | docs-070 |
+| Alineación | Barra | El párrafo queda centrado, a la derecha, justificado y a la izquierda. | probado | docs-070 |
+| Interlineado | Barra | El bloque queda a 2. | probado | docs-070 |
+| Lista, lista numerada y checklist | Barra y Formato | `ul`, `ol` y la lista de tareas. | probado | docs-070 |
+| Sangría − y + | Barra | `data-indent` sube y baja. | probado | docs-070 |
+| Borrar formato | Barra y Formato | Desaparecen la negrita y el título. | probado | docs-070 |
+| Modo | Barra y Ver | `contenteditable` pasa a falso y vuelve a verdadero. | probado | docs-070 |
+| Ocultar y mostrar menús | Barra | La barra desaparece y vuelve. | probado | docs-070 |
+| Configurar página | Archivo | Carta, horizontal y margen estrecho: 1056 px de ancho y 48 px de margen. | probado | docs-070 |
+| Exportar TXT | Archivo | Se descarga un `.txt`. | probado | docs-070 |
+| Buscar y reemplazar | Editar | «alfa» pasa a «beta». | probado | docs-070 |
+| Regla | Ver | La regla se oculta. | probado | docs-070 |
+| Tabla 4×5 | Insertar | 4 filas y 5 celdas en la primera. | probado | docs-070 |
+| Fila y columna | Tabla, clic derecho | Crece y mengua la cuadrícula. | probado | docs-070 |
+| Combinar y separar | Tabla, clic derecho | `colspan` aparece y desaparece. | probado | docs-070 |
+| Borde y fondo | Tabla, clic derecho | El borde y el fondo de la celda cambian. | probado | docs-070 |
+| Salto de página | Insertar | Aparece `hr.ow-page-break`. | probado | docs-070 |
+| Línea horizontal | Insertar | Aparece otra `hr`. | probado | docs-070 |
+| Fecha | Insertar | Aparece la fecha AAAA-MM-DD. | probado | docs-070 |
+| Caracteres especiales | Insertar | Aparece €. | probado | docs-070 |
+| Encabezado, pie y número | Insertar | El encabezado, el pie y el «1». | probado | docs-070 |
+| Gráfico, dibujo, ecuación y marca de agua | Insertar | Imagen, E = mc² y el texto ORVUPI. | probado | docs-070 |
+| Columnas y letra capital | Formato | La hoja pasa a dos columnas y crece la primera letra. | probado | docs-070 |
+| Recuento de palabras | Herramientas | El diálogo muestra «1 palabra». | probado | docs-070 |
+| Versiones | Herramientas | Aparece «Restaurar esta versión». | probado | docs-070 |
+| Atajos | Ayuda | Se lee el atajo de tachado. | probado | docs-070 |
+| Extensiones | Extensiones | La nota dice que no hay extensiones. | probado | docs-070 |
+| Selección de texto | Docs, teléfono | `user-select` es `text`, el toque largo no se cancela y el dedo selecciona la palabra. La barra queda debajo. | probado | docs-070 |
+| Combinar celdas | Tabla de Docs, teléfono | El dedo marca dos celdas y la barra las une. El asa también marca el rango. | probado | docs-070 |
+| Combinar celdas | Hojas, teléfono | El dedo marca A1:B1, el asa marca otro rango y «Combinar celdas» deja una celda de dos columnas. | probado | docs-070 |
