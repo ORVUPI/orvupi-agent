@@ -13,6 +13,8 @@ import { errorMessageKey, translate, type Locale, type MessageKey } from "../i18
 import { downloadBytes } from "../security/bytes";
 import { isWorkError, WorkError } from "../security/errors";
 import { fileNameWithExtension, formatBytes, createId } from "../security/names";
+import { applyDocumentChrome, editorKind, editorPath, openEditorWindow, parseEditorPath, tabTitle, toolFavicon, viewForKind, type EditorKind } from "../routing/paths";
+import { subscribeFilesChanged } from "../routing/sync";
 import { createBrowserStorage } from "../storage/browser";
 import type { FileBrowseMode, DateFilter } from "../files/query";
 import type { FileKind, FileRecord, StorageService } from "../storage/types";
@@ -98,20 +100,35 @@ export function useWorkspace(): WorkspaceValue {
   return value;
 }
 
+function routeIds(pathname: string): { view: ViewId; doc: string | null; sheet: string | null; slide: string | null; form: string | null; drawing: string | null; note: string | null } {
+  const route = parseEditorPath(pathname);
+  return {
+    view: route ? viewForKind(route.kind) : "home",
+    doc: route?.kind === "doc" ? route.id : null,
+    sheet: route?.kind === "sheet" ? route.id : null,
+    slide: route?.kind === "slide" ? route.id : null,
+    form: route?.kind === "form" ? route.id : null,
+    drawing: route?.kind === "drawing" ? route.id : null,
+    note: route?.kind === "note" ? route.id : null,
+  };
+}
+
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
+  const bootPath = typeof window === "undefined" ? "/" : window.location.pathname;
+  const boot = routeIds(bootPath);
   const [storage, setStorage] = useState<StorageService | null>(null);
   const [ready, setReady] = useState(false);
   const [bootError, setBootError] = useState(false);
   const [bootAttempt, setBootAttempt] = useState(0);
   const [locale, setLocaleState] = useState<Locale>("es");
   const [files, setFiles] = useState<FileRecord[]>([]);
-  const [view, setView] = useState<ViewId>("home");
-  const [openDocId, setOpenDocId] = useState<string | null>(null);
-  const [openSheetId, setOpenSheetId] = useState<string | null>(null);
-  const [openSlideId, setOpenSlideId] = useState<string | null>(null);
-  const [openFormId, setOpenFormId] = useState<string | null>(null);
-  const [openDrawingId, setOpenDrawingId] = useState<string | null>(null);
-  const [openNoteId, setOpenNoteId] = useState<string | null>(null);
+  const [view, setView] = useState<ViewId>(boot.view);
+  const [openDocId, setOpenDocId] = useState<string | null>(boot.doc);
+  const [openSheetId, setOpenSheetId] = useState<string | null>(boot.sheet);
+  const [openSlideId, setOpenSlideId] = useState<string | null>(boot.slide);
+  const [openFormId, setOpenFormId] = useState<string | null>(boot.form);
+  const [openDrawingId, setOpenDrawingId] = useState<string | null>(boot.drawing);
+  const [openNoteId, setOpenNoteId] = useState<string | null>(boot.note);
   const [query, setQuery] = useState("");
   const [browse, setBrowse] = useState<FileBrowseMode>("folder");
   const [kindFilter, setKindFilter] = useState<"all" | FileKind>("all");
@@ -139,6 +156,54 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     if (!storage) return;
     setFiles(await storage.listFiles({ includeDeleted: true }));
   }, [storage]);
+
+  const reveal = useCallback((kind: EditorKind, id: string) => {
+    const opened = openEditorWindow(kind, id);
+    if (opened === null) window.location.assign(editorPath(kind, id));
+  }, []);
+
+  const showPath = useCallback((pathname: string) => {
+    const next = routeIds(pathname);
+    setOpenDocId(next.doc);
+    setOpenSheetId(next.sheet);
+    setOpenSlideId(next.slide);
+    setOpenFormId(next.form);
+    setOpenDrawingId(next.drawing);
+    setOpenNoteId(next.note);
+    setView(next.view);
+  }, []);
+
+  useEffect(() => subscribeFilesChanged(() => void refreshFiles()), [refreshFiles]);
+
+  useEffect(() => {
+    const onPop = () => showPath(window.location.pathname);
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [showPath]);
+
+  useEffect(() => {
+    const route = parseEditorPath(window.location.pathname);
+    if (!route) {
+      applyDocumentChrome("ORVUPI Work", "/favicon-32.png");
+      return;
+    }
+    const listed = files.find((file) => file.id === route.id)?.name ?? "";
+    const name = route.kind === "doc" && session && openDocId === route.id ? session.name : listed;
+    applyDocumentChrome(tabTitle(name, route.kind), toolFavicon(route.kind));
+  }, [files, session, openDocId, openSheetId, openSlideId, openFormId, openDrawingId, openNoteId]);
+
+  useEffect(() => {
+    if (!storage || !ready) return;
+    const route = parseEditorPath(window.location.pathname);
+    if (!route) return;
+    let tries = 0;
+    const timer = window.setInterval(() => {
+      tries += 1;
+      void refreshFiles();
+      if (tries > 20) window.clearInterval(timer);
+    }, 100);
+    return () => window.clearInterval(timer);
+  }, [storage, ready, refreshFiles]);
 
   useEffect(() => {
     let cancel = false;
@@ -202,6 +267,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       if (!storage) return;
       const id = createId();
       const title = name?.trim() || t("untitled");
+      const opened = openEditorWindow("doc", id);
       const file = createOrvdoc({ id, title, content });
       await storage.saveFile({
         id,
@@ -212,14 +278,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         folderId: folderId ?? null,
       });
       setFiles(await storage.listFiles({ includeDeleted: true }));
-      setOpenSheetId(null);
-      setOpenSlideId(null);
-      setOpenFormId(null);
-      setOpenDrawingId(null);
-      setOpenNoteId(null);
-      setOpenDocId(id);
-      setView("docs");
       setQuery("");
+      if (opened === null) window.location.assign(editorPath("doc", id));
     },
     [storage, t],
   );
@@ -229,6 +289,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       if (!storage) return;
       const id = createId();
       const title = t("newSheet");
+      const opened = openEditorWindow("sheet", id);
       const file = createSheetFile({ id, title });
       await storage.saveFile({
         id,
@@ -239,14 +300,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         folderId: folderId ?? null,
       });
       setFiles(await storage.listFiles({ includeDeleted: true }));
-      setOpenDocId(null);
-      setOpenSlideId(null);
-      setOpenFormId(null);
-      setOpenDrawingId(null);
-      setOpenNoteId(null);
-      setOpenSheetId(id);
-      setView("sheets");
       setQuery("");
+      if (opened === null) window.location.assign(editorPath("sheet", id));
     },
     [storage, t],
   );
@@ -256,6 +311,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       if (!storage) return;
       const id = createId();
       const title = t("newSlides");
+      const opened = openEditorWindow("slide", id);
       const file = createSlidesFile({ id, title });
       await storage.saveFile({
         id,
@@ -266,14 +322,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         folderId: folderId ?? null,
       });
       setFiles(await storage.listFiles({ includeDeleted: true }));
-      setOpenDocId(null);
-      setOpenSheetId(null);
-      setOpenFormId(null);
-      setOpenDrawingId(null);
-      setOpenNoteId(null);
-      setOpenSlideId(id);
-      setView("slides");
       setQuery("");
+      if (opened === null) window.location.assign(editorPath("slide", id));
     },
     [storage, t],
   );
@@ -283,6 +333,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       if (!storage) return;
       const id = createId();
       const title = t("newForm");
+      const opened = openEditorWindow("form", id);
       const file = createFormFile({ id, title });
       await storage.saveFile({
         id,
@@ -293,14 +344,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         folderId: folderId ?? null,
       });
       setFiles(await storage.listFiles({ includeDeleted: true }));
-      setOpenDocId(null);
-      setOpenSheetId(null);
-      setOpenSlideId(null);
-      setOpenDrawingId(null);
-      setOpenNoteId(null);
-      setOpenFormId(id);
-      setView("forms");
       setQuery("");
+      if (opened === null) window.location.assign(editorPath("form", id));
     },
     [storage, t],
   );
@@ -310,6 +355,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       if (!storage) return;
       const id = createId();
       const title = t("newDrawing");
+      const opened = openEditorWindow("drawing", id);
       const file = createDrawingFile({ id, title });
       await storage.saveFile({
         id,
@@ -320,14 +366,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         folderId: folderId ?? null,
       });
       setFiles(await storage.listFiles({ includeDeleted: true }));
-      setOpenDocId(null);
-      setOpenSheetId(null);
-      setOpenSlideId(null);
-      setOpenFormId(null);
-      setOpenNoteId(null);
-      setOpenDrawingId(id);
-      setView("drawings");
       setQuery("");
+      if (opened === null) window.location.assign(editorPath("drawing", id));
     },
     [storage, t],
   );
@@ -337,6 +377,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       if (!storage) return;
       const id = createId();
       const title = t("newNote");
+      const opened = openEditorWindow("note", id);
       const file = createNoteFile({ id, title });
       await storage.saveFile({
         id,
@@ -347,14 +388,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         folderId: folderId ?? null,
       });
       setFiles(await storage.listFiles({ includeDeleted: true }));
-      setOpenDocId(null);
-      setOpenSheetId(null);
-      setOpenSlideId(null);
-      setOpenFormId(null);
-      setOpenDrawingId(null);
-      setOpenNoteId(id);
-      setView("notes");
       setQuery("");
+      if (opened === null) window.location.assign(editorPath("note", id));
     },
     [storage, t],
   );
@@ -372,17 +407,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
           folderId: folderId ?? null,
         });
         setFiles(await storage.listFiles({ includeDeleted: true }));
-        if (prepared.openAsDoc) {
-          setOpenDocId(saved.id);
-          setView("docs");
-          pushToast(t("toastImported"));
-        } else if (prepared.kind === "sheet") {
-          setOpenDocId(null);
-          setOpenSheetId(saved.id);
-          setView("sheets");
+        const kind = editorKind(prepared.kind);
+        if (kind) {
+          const opened = openEditorWindow(kind, saved.id);
+          if (opened === null) window.location.assign(editorPath(kind, saved.id));
           pushToast(t("toastImported"));
         } else {
-          setOpenDocId(null);
           setView(prepared.kind === "pdf" ? "pdf" : "files");
           pushToast(t("toastStored"));
         }
@@ -509,6 +539,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       if (next !== "forms") setOpenFormId(null);
       if (next !== "drawings") setOpenDrawingId(null);
       if (next !== "notes") setOpenNoteId(null);
+      if (parseEditorPath(window.location.pathname)) window.history.pushState({}, "", "/");
       setNavOpen(false);
       setView(next);
     },
@@ -518,124 +549,31 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     openFormId,
     openDrawingId,
     openNoteId,
-    openDoc: (id) => {
-      setOpenSheetId(null);
-      setOpenSlideId(null);
-      setOpenDocId(id);
-      setView("docs");
-      setQuery("");
-      setNavOpen(false);
-    },
-    openSheet: (id) => {
-      setOpenDocId(null);
-      setOpenSlideId(null);
-      setOpenSheetId(id);
-      setView("sheets");
-      setQuery("");
-      setNavOpen(false);
-    },
-    openSlide: (id) => {
-      setOpenDocId(null);
-      setOpenSheetId(null);
-      setOpenFormId(null);
-      setOpenDrawingId(null);
-      setOpenNoteId(null);
-      setOpenSlideId(id);
-      setView("slides");
-      setQuery("");
-      setNavOpen(false);
-    },
-    openForm: (id) => {
-      setOpenDocId(null);
-      setOpenSheetId(null);
-      setOpenSlideId(null);
-      setOpenDrawingId(null);
-      setOpenNoteId(null);
-      setOpenFormId(id);
-      setView("forms");
-      setQuery("");
-      setNavOpen(false);
-    },
-    openDrawing: (id) => {
-      setOpenDocId(null);
-      setOpenSheetId(null);
-      setOpenSlideId(null);
-      setOpenFormId(null);
-      setOpenNoteId(null);
-      setOpenDrawingId(id);
-      setView("drawings");
-      setQuery("");
-      setNavOpen(false);
-    },
-    openNote: (id) => {
-      setOpenDocId(null);
-      setOpenSheetId(null);
-      setOpenSlideId(null);
-      setOpenFormId(null);
-      setOpenDrawingId(null);
-      setOpenNoteId(id);
-      setView("notes");
-      setQuery("");
-      setNavOpen(false);
-    },
+    openDoc: (id) => reveal("doc", id),
+    openSheet: (id) => reveal("sheet", id),
+    openSlide: (id) => reveal("slide", id),
+    openForm: (id) => reveal("form", id),
+    openDrawing: (id) => reveal("drawing", id),
+    openNote: (id) => reveal("note", id),
     openRecord: (file) => {
-      if (file.kind === "doc") {
-        setOpenSheetId(null);
-        setOpenSlideId(null);
-        setOpenFormId(null);
-        setOpenDrawingId(null);
-        setOpenNoteId(null);
-        setOpenDocId(file.id);
-        setView("docs");
-      } else if (file.kind === "sheet") {
-        setOpenDocId(null);
-        setOpenSlideId(null);
-        setOpenFormId(null);
-        setOpenDrawingId(null);
-        setOpenNoteId(null);
-        setOpenSheetId(file.id);
-        setView("sheets");
-      } else if (file.kind === "slide") {
-        setOpenDocId(null);
-        setOpenSheetId(null);
-        setOpenFormId(null);
-        setOpenDrawingId(null);
-        setOpenNoteId(null);
-        setOpenSlideId(file.id);
-        setView("slides");
-      } else if (file.kind === "form") {
-        setOpenDocId(null);
-        setOpenSheetId(null);
-        setOpenSlideId(null);
-        setOpenDrawingId(null);
-        setOpenNoteId(null);
-        setOpenFormId(file.id);
-        setView("forms");
-      } else if (file.kind === "drawing") {
-        setOpenDocId(null);
-        setOpenSheetId(null);
-        setOpenSlideId(null);
-        setOpenFormId(null);
-        setOpenNoteId(null);
-        setOpenDrawingId(file.id);
-        setView("drawings");
-      } else if (file.kind === "note") {
-        setOpenDocId(null);
-        setOpenSheetId(null);
-        setOpenSlideId(null);
-        setOpenFormId(null);
-        setOpenDrawingId(null);
-        setOpenNoteId(file.id);
-        setView("notes");
-      } else if (file.kind === "pdf") {
-        setView("pdf");
-      } else {
-        setView("files");
+      const kind = editorKind(file.kind);
+      if (kind) {
+        reveal(kind, file.id);
+        return;
       }
+      setView(file.kind === "pdf" ? "pdf" : "files");
       setQuery("");
       setNavOpen(false);
     },
-    closeDoc: () => setOpenDocId(null),
+    closeDoc: () => {
+      if (window.opener) {
+        window.close();
+        return;
+      }
+      setOpenDocId(null);
+      setView("home");
+      window.history.pushState({}, "", "/");
+    },
     query,
     setQuery,
     aiOpen,
@@ -674,6 +612,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       setOpenFormId(null);
       setOpenDrawingId(null);
       setOpenNoteId(null);
+      if (parseEditorPath(window.location.pathname)) window.history.pushState({}, "", "/");
       setBrowse(mode);
       setNavOpen(false);
       setView("files");

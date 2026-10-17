@@ -39,6 +39,7 @@ npm run test:e2e
 - Docs a pantalla completa: título de 18 px, menús de 14 px, barra en píldora, reglas horizontal y vertical, hoja A4 y esquema de títulos.
 - Desplegables de zoom, estilo, fuente, tamaño, alineación, interlineado y modo. Atajos Ctrl+B, Ctrl+I, Ctrl+U, Ctrl+Z, Ctrl+Y, Ctrl+F y Ctrl+K.
 - Hojas con cuadro de nombre, marca `fx` y pestañas al pie. Archivos con buscador redondeado y tabla.
+- Crear o abrir un archivo abre otra pestaña: `/document/d/<id>/edit`, `/spreadsheets/d/<id>/edit`, `/presentation/d/<id>/edit`, `/forms/d/<id>/edit`, `/drawings/d/<id>/edit` y `/notes/d/<id>/edit`. En Drive se abre con doble clic. Las pestañas se avisan entre sí.
 - Lo de 0.3.0 sigue en su sitio. Un documento, una hoja o una diapositiva de esa versión abre igual.
 
 ## Qué hay en 0.3.0

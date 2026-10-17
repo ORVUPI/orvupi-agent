@@ -4,6 +4,7 @@ import { WorkError } from "../security/errors";
 import { ALLOWED_IMPORT_EXTENSIONS, extensionOf, isBlockedExtension, MAX_BACKUP_BYTES, MAX_FILE_BYTES } from "../security/limits";
 import { folderContains } from "../files/query";
 import { assertId, createId, fileNameWithExtension, sanitizeName } from "../security/names";
+import { publishFilesChanged } from "../routing/sync";
 import { openWorkDb, type WorkDb } from "./db";
 import type {
   AppSettings,
@@ -126,6 +127,7 @@ export function createStorageService(db: IDBPDatabase<WorkDb>, blobs: BlobStore)
       contentHash,
     };
     await db.put("files", record);
+    publishFilesChanged();
     return record;
   }
 
@@ -167,6 +169,7 @@ export function createStorageService(db: IDBPDatabase<WorkDb>, blobs: BlobStore)
     }
     const next = { ...record, folderId, updatedAt: nowIso() };
     await db.put("files", next);
+    publishFilesChanged();
     return next;
   }
 
@@ -174,6 +177,7 @@ export function createStorageService(db: IDBPDatabase<WorkDb>, blobs: BlobStore)
     const record = await readRecord(id);
     const next = { ...record, favorite, updatedAt: nowIso() };
     await db.put("files", next);
+    publishFilesChanged();
     return next;
   }
 
@@ -182,6 +186,7 @@ export function createStorageService(db: IDBPDatabase<WorkDb>, blobs: BlobStore)
     const record = await readRecord(id);
     const next = { ...record, color, updatedAt: nowIso() };
     await db.put("files", next);
+    publishFilesChanged();
     return next;
   }
 
@@ -189,6 +194,7 @@ export function createStorageService(db: IDBPDatabase<WorkDb>, blobs: BlobStore)
     const record = await readRecord(id);
     const next = { ...record, tags: cleanTags(tags), updatedAt: nowIso() };
     await db.put("files", next);
+    publishFilesChanged();
     return next;
   }
 
@@ -196,6 +202,7 @@ export function createStorageService(db: IDBPDatabase<WorkDb>, blobs: BlobStore)
     const record = await readRecord(id);
     const next = { ...record, name: sanitizeName(name), updatedAt: nowIso() };
     await db.put("files", next);
+    publishFilesChanged();
     return next;
   }
 
@@ -207,6 +214,7 @@ export function createStorageService(db: IDBPDatabase<WorkDb>, blobs: BlobStore)
       if (!record || record.deletedAt) continue;
       await db.put("files", { ...record, deletedAt: stamp, updatedAt: stamp });
     }
+    publishFilesChanged();
   }
 
   async function restoreFile(id: string): Promise<void> {
@@ -223,12 +231,14 @@ export function createStorageService(db: IDBPDatabase<WorkDb>, blobs: BlobStore)
       }
       await db.put("files", { ...record, folderId, deletedAt: null, updatedAt: stamp });
     }
+    publishFilesChanged();
   }
 
   async function purgeFile(id: string): Promise<void> {
     const record = await readRecord(id);
     await blobs.delete(record.blobKey);
     await db.delete("files", record.id);
+    publishFilesChanged();
   }
 
   async function duplicateFile(id: string): Promise<FileRecord> {
@@ -244,6 +254,7 @@ export function createStorageService(db: IDBPDatabase<WorkDb>, blobs: BlobStore)
     });
     const next = { ...copy, tags: loaded.record.tags, favorite: false, color: loaded.record.color };
     await db.put("files", next);
+    publishFilesChanged();
     return next;
   }
 

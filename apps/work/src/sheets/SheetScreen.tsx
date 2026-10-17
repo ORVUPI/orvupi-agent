@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useWorkspace } from "../app/workspace";
+import { loadFileWhenReady } from "../routing/load";
 import { downloadBytes } from "../security/bytes";
 import { fileNameWithExtension } from "../security/names";
 import { Button, Input, Select } from "../ui/kit";
@@ -31,8 +32,7 @@ export function SheetsScreen() {
     }
     const id = workspace.openSheetId;
     let cancel = false;
-    workspace.storage
-      .loadFile(id)
+    loadFileWhenReady(workspace.storage, id)
       .then((loaded) => {
         if (cancel) return;
         if (loaded.integrity === "mismatch") {

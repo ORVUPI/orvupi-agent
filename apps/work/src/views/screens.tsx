@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 
 const DocsEditor = lazy(() => import("../docs/DocsEditor").then((module) => ({ default: module.DocsEditor })));
 import { parseOrvdoc } from "../docs/orvdoc";
+import { loadFileWhenReady } from "../routing/load";
 import { templateCategories, templates } from "../docs/templates";
 import { visibleFiles } from "../files/query";
 import { useWorkspace } from "../app/workspace";
@@ -216,8 +217,7 @@ export function DocsScreen() {
     const id = workspace.openDocId;
     let cancel = false;
     setError(null);
-    workspace.storage
-      .loadFile(id)
+    loadFileWhenReady(workspace.storage, id)
       .then((loadedFile) => {
         if (cancel) return;
         if (loadedFile.integrity === "mismatch") {

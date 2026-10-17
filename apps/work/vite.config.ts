@@ -9,7 +9,7 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: null,
-      includeAssets: ["favicon-32.png", "avatar.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png"],
+      includeAssets: ["favicon-32.png", "avatar.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "favicons/docs.svg", "favicons/sheets.svg", "favicons/slides.svg", "favicons/forms.svg", "favicons/drawings.svg", "favicons/notes.svg"],
       manifest: {
         name: "ORVUPI Work",
         short_name: "ORVUPI Work",

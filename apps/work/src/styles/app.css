@@ -457,6 +457,7 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-drive-table th button { background: transparent; border: 0; font-weight: 800; color: var(--muted); cursor: pointer; }
 .ow-crumbs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 8px 0 12px; }
 .ow-crumbs button { background: transparent; border: 0; font-weight: 800; color: var(--text); cursor: pointer; }
+.ow-actionbar.is-idle { visibility: hidden; }
 .ow-actionbar {
   display: flex;
   flex-wrap: wrap;

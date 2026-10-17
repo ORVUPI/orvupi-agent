@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { useWorkspace } from "../app/workspace";
+import { loadFileWhenReady } from "../routing/load";
 import { Button, Input, Select } from "../ui/kit";
 import { MenuBar } from "../ui/menus";
 import {
@@ -54,7 +55,7 @@ export function SlidesScreen() {
     }
     const id = workspace.openSlideId;
     let cancel = false;
-    workspace.storage.loadFile(id).then((loaded) => {
+    loadFileWhenReady(workspace.storage, id).then((loaded) => {
       if (cancel || loaded.integrity === "mismatch") return;
       setFile(parseSlides(loaded.bytes));
       setIndex(0);

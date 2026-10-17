@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type DragEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import { useWorkspace } from "../app/workspace";
 import { docToText } from "../docs/model";
 import { parseOrvdoc } from "../docs/orvdoc";
@@ -126,6 +126,23 @@ export function FilesScreen() {
     };
   }, [details, workspace.storage, workspace.t, workspace.detailsOpen]);
 
+  const lastClick = useRef<{ id: string; at: number } | null>(null);
+
+  function openName(file: FileRecord) {
+    if (file.kind === "folder" || file.deletedAt) {
+      openFile(file);
+      return;
+    }
+    const now = Date.now();
+    if (lastClick.current?.id === file.id && now - lastClick.current.at < 500) {
+      lastClick.current = null;
+      openFile(file);
+      return;
+    }
+    lastClick.current = { id: file.id, at: now };
+    toggleSelected(file, false);
+  }
+
   function openFile(file: FileRecord) {
     if (file.deletedAt) return;
     if (file.kind === "folder") {
@@ -251,8 +268,7 @@ export function FilesScreen() {
           </Select>
           <Button onClick={() => setDirection((value) => (value === "asc" ? "desc" : "asc"))}>{direction === "asc" ? "A–Z" : "Z–A"}</Button>
         </div>
-        {selected.length > 0 ? (
-          <div className="ow-actionbar" role="toolbar" aria-label={workspace.t("selectedCount", { count: selected.length })}>
+        <div className={`ow-actionbar ${selected.length === 0 ? "is-idle" : ""}`} role={selected.length > 0 ? "toolbar" : undefined} aria-hidden={selected.length === 0} inert={selected.length === 0} aria-label={selected.length > 0 ? workspace.t("selectedCount", { count: selected.length }) : undefined}>
             <strong>{workspace.t("selectedCount", { count: selected.length })}</strong>
             <Button onClick={() => {
               void Promise.all(selected.map((id) => workspace.storage?.setFavorite(id, true))).then(() => workspace.refreshFiles()).catch(workspace.reportError);
@@ -265,7 +281,6 @@ export function FilesScreen() {
             }}>{mode === "trash" ? workspace.t("restore") : workspace.t("remove")}</Button>
             <Button onClick={() => setSelected([])}>{workspace.t("clearSelection")}</Button>
           </div>
-        ) : null}
         {visible.length === 0 ? <EmptyState title={mode === "trash" ? workspace.t("trashEmpty") : workspace.t("filesEmpty")} body={workspace.t("emptyBody")} /> : null}
         {workspace.driveLayout === "list" ? (
           <table className="ow-drive-table">
@@ -305,7 +320,11 @@ export function FilesScreen() {
                     />
                   </td>
                   <td>
-                    <button type="button" className="ow-file-open" onClick={() => openFile(file)}>
+                    <button
+                      type="button"
+                      className="ow-file-open"
+                      onClick={() => openName(file)}
+                    >
                       <strong>{file.favorite ? "★ " : ""}{file.name}</strong>
                       <span className="ow-sr">{workspace.t(kindKey(file.kind))}</span>
                     </button>
@@ -331,7 +350,11 @@ export function FilesScreen() {
                 }}
               >
                 <input type="checkbox" aria-label={file.name} checked={selected.includes(file.id)} onClick={(event) => toggleSelected(file, event.shiftKey)} onChange={() => undefined} />
-                <button type="button" className="ow-file-open" onClick={() => openFile(file)}>
+                <button
+                  type="button"
+                  className="ow-file-open"
+                  onClick={() => openName(file)}
+                >
                   <strong>{file.favorite ? "★ " : ""}{file.name}</strong>
                   <span className="ow-sr">{workspace.t(kindKey(file.kind))}</span>
                 </button>

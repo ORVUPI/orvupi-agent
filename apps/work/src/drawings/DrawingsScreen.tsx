@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { useWorkspace } from "../app/workspace";
+import { loadFileWhenReady } from "../routing/load";
 import { Button, Input } from "../ui/kit";
 import { MenuBar } from "../ui/menus";
 import { createId } from "../security/names";
@@ -32,7 +33,7 @@ export function DrawingsScreen() {
     }
     const id = workspace.openDrawingId;
     let cancel = false;
-    workspace.storage.loadFile(id).then((loaded) => {
+    loadFileWhenReady(workspace.storage, id).then((loaded) => {
       if (cancel || loaded.integrity === "mismatch") return;
       setFile(parseDrawing(loaded.bytes));
       setStatus("saved");

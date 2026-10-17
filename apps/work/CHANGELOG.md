@@ -8,6 +8,8 @@ Alfa de desarrollo. No es una versión de producción.
 - La barra aplica zoom, estilo, fuente, tamaño en puntos, negrita, cursiva, subrayado, color, resaltado, enlace, imagen, comentario, alineación, interlineado, listas, sangría y borrar formato. Los menús muestran el atajo (Ctrl+B, Ctrl+I, Ctrl+U, Ctrl+Z, Ctrl+Y, Ctrl+F, Ctrl+K).
 - El icono es el de ORVUPI. La píldora de la derecha exporta en este dispositivo. No hay videollamada ni cambio de plan.
 - Hojas muestra `fx` junto al cuadro de nombre. Encabezados grises y pestaña activa con franja verde de la paleta. Archivos usa buscador `#edf2fa` y lista de 48 px.
+- Abrir o crear un documento, hoja, presentación, formulario, dibujo o nota abre otra pestaña del navegador. La URL es `/document/d/<id>/edit`, `/spreadsheets/d/<id>/edit`, `/presentation/d/<id>/edit`, `/forms/d/<id>/edit`, `/drawings/d/<id>/edit` o `/notes/d/<id>/edit`. El título es «nombre - ORVUPI Docs» (o la herramienta que corresponda) y cada una tiene su favicon. En Drive, el doble clic abre la pestaña. Un cambio en una pestaña avisa a las demás.
+- Cloudflare Pages reenvía cualquier ruta a `index.html` (`public/_redirects`).
 - Los archivos de 0.1, 0.2 y 0.3 siguen abriendo.
 
 ## 0.3.0 — 2026-10-17

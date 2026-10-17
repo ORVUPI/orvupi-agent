@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useWorkspace } from "../app/workspace";
+import { loadFileWhenReady } from "../routing/load";
 import { Button, Input, Select } from "../ui/kit";
 import { MenuBar } from "../ui/menus";
 import { createId } from "../security/names";
@@ -28,7 +29,7 @@ export function FormsScreen() {
     }
     const id = workspace.openFormId;
     let cancel = false;
-    workspace.storage.loadFile(id).then((loaded) => {
+    loadFileWhenReady(workspace.storage, id).then((loaded) => {
       if (cancel || loaded.integrity === "mismatch") return;
       setFile(parseForm(loaded.bytes));
       setStatus("saved");
