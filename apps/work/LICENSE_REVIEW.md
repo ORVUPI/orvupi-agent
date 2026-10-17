@@ -94,6 +94,15 @@ Versiones resueltas: `prosemirror-model` 1.25.12, `prosemirror-state` 1.4.4, `pr
 - Modificación y redistribución: sí
 - Límites de marca: ninguno. Se carga solo al exportar DOCX. Las imágenes del documento no entran en ese archivo
 
+### lucide-react 1.59.0
+
+- Repositorio: https://github.com/lucide-icons/lucide
+- Licencia: ISC
+- Uso comercial: sí
+- Obligaciones: conservar el aviso de copyright
+- Modificación y redistribución: sí
+- Límites de marca: el nombre Lucide no se usa como marca de ORVUPI Work. Los iconos no se presentan como los de otro producto. No se copian los iconos de marca de Google
+
 ### PapaParse 5.7.0
 
 - Repositorio: https://github.com/mholt/PapaParse

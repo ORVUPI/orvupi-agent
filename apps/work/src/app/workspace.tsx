@@ -11,7 +11,8 @@ import { downloadBytes } from "../security/bytes";
 import { isWorkError, WorkError } from "../security/errors";
 import { fileNameWithExtension, formatBytes, createId } from "../security/names";
 import { createBrowserStorage } from "../storage/browser";
-import type { FileRecord, StorageService } from "../storage/types";
+import type { FileBrowseMode, DateFilter } from "../files/query";
+import type { FileKind, FileRecord, StorageService } from "../storage/types";
 
 export type ViewId = "home" | "docs" | "sheets" | "slides" | "pdf" | "files" | "ai" | "templates" | "settings";
 
@@ -57,6 +58,19 @@ type WorkspaceValue = {
   createSheet: (folderId?: string | null) => Promise<void>;
   createSlides: (folderId?: string | null) => Promise<void>;
   importUserFile: (file: File, folderId?: string | null) => Promise<void>;
+  importTree: (files: File[], folderId?: string | null) => Promise<void>;
+  browse: FileBrowseMode;
+  showBrowse: (mode: FileBrowseMode) => Promise<void>;
+  kindFilter: "all" | FileKind;
+  setKindFilter: (kind: "all" | FileKind) => void;
+  dateFilter: DateFilter;
+  setDateFilter: (date: DateFilter) => void;
+  driveLayout: "list" | "grid";
+  setDriveLayout: (layout: "list" | "grid") => void;
+  detailsOpen: boolean;
+  setDetailsOpen: (open: boolean) => void;
+  folderId: string | null;
+  setFolderId: (id: string | null) => void;
   exportBackup: () => Promise<void>;
   restoreBackup: (file: File) => Promise<void>;
   refreshFiles: () => Promise<void>;
@@ -84,6 +98,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [openSheetId, setOpenSheetId] = useState<string | null>(null);
   const [openSlideId, setOpenSlideId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [browse, setBrowse] = useState<FileBrowseMode>("folder");
+  const [kindFilter, setKindFilter] = useState<"all" | FileKind>("all");
+  const [dateFilter, setDateFilter] = useState<DateFilter>("any");
+  const [driveLayout, setDriveLayout] = useState<"list" | "grid">("list");
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [folderId, setFolderId] = useState<string | null>(null);
   const [aiOpen, setAiOpen] = useState(true);
   const [navOpen, setNavOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -268,6 +288,52 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     [pushToast, reportError, storage, t],
   );
 
+  const importTree = useCallback(
+    async (list: File[], folderId?: string | null) => {
+      if (!storage) return;
+      const cache = new Map<string, string | null>();
+      cache.set("", folderId ?? null);
+      let stored = 0;
+      for (const file of list.slice(0, 40)) {
+        try {
+          const relative = file.webkitRelativePath || file.name;
+          const parts = relative.split("/").filter(Boolean);
+          const folders = parts.slice(0, -1);
+          let key = "";
+          let parent = folderId ?? null;
+          for (const part of folders) {
+            const nextKey = key ? `${key}/${part}` : part;
+            const known = cache.get(nextKey);
+            if (typeof known === "string") {
+              parent = known;
+              key = nextKey;
+              continue;
+            }
+            const created = await storage.createFolder(part, parent);
+            cache.set(nextKey, created.id);
+            parent = created.id;
+            key = nextKey;
+          }
+          const prepared = await prepareImport(file, t("untitled"));
+          await storage.saveFile({
+            name: prepared.name,
+            kind: prepared.kind,
+            mime: prepared.mime,
+            bytes: prepared.bytes,
+            folderId: parent,
+          });
+          stored += 1;
+        } catch (error) {
+          reportError(error);
+        }
+      }
+      setFiles(await storage.listFiles({ includeDeleted: true }));
+      if (stored > 0) pushToast(t("toastStored"));
+      setView("files");
+    },
+    [pushToast, reportError, storage, t],
+  );
+
   const exportBackup = useCallback(async () => {
     if (!storage) return;
     setBusy(t("backupProgress"));
@@ -408,6 +474,31 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     createSheet,
     createSlides,
     importUserFile,
+    importTree,
+    browse,
+    showBrowse: async (mode) => {
+      if (openDocId && session) {
+        const closed = await session.close();
+        if (!closed) return;
+      } else {
+        setOpenDocId(null);
+      }
+      setOpenSheetId(null);
+      setOpenSlideId(null);
+      setBrowse(mode);
+      setNavOpen(false);
+      setView("files");
+    },
+    kindFilter,
+    setKindFilter,
+    dateFilter,
+    setDateFilter,
+    driveLayout,
+    setDriveLayout,
+    detailsOpen,
+    setDetailsOpen,
+    folderId,
+    setFolderId,
     exportBackup,
     restoreBackup,
     refreshFiles,

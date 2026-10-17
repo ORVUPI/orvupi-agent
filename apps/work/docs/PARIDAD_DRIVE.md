@@ -26,7 +26,7 @@ Referencias: [organizar](https://support.google.com/drive/answer/2375091), [busc
 | Búsqueda por nombre y etiqueta | Alta | Hecha | El cuadro de la barra superior filtra la vista actual. |
 | Filtro por tipo | Alta | Hecha | Carpeta, documento, hoja, diapositivas, PDF y otros. |
 | Filtro por fecha | Alta | Parcial | Hoy, 7 días y 30 días. No hay un calendario de intervalo. |
-| Vista lista y cuadrícula | Alta | Hecha | |
+| Vista lista y cuadrícula | Alta | Hecha | Lista con Nombre, Modificado y Tamaño. El análisis de disposición está en `docs/ANALISIS_DRIVE_UI.md`. |
 | Ordenar | Alta | Hecha | Nombre, modificación, creación, tamaño y tipo. Las carpetas van primero, salvo cuando se ordena por tipo. |
 | Etiquetas | Alta | Hecha | Hasta 6, de 24 caracteres. Se escriben separadas por comas. |
 | Color de etiqueta | Alta | Hecha | Seis colores de la paleta, con nombre accesible. El color es el borde, no el único texto. |
@@ -77,7 +77,7 @@ Referencias: [AVERAGE](https://support.google.com/docs/answer/3093615), [inmovil
 
 | Función | Prioridad | Estado | Notas de esta alfa |
 | --- | --- | --- | --- |
-| Cuadrícula | Alta | Parcial | 50 filas y columnas A–L. No es infinita. |
+| Cuadrícula | Alta | Parcial | 1000 filas y columnas A–AF. Solo se pintan las celdas visibles. No es infinita. |
 | SUMA / SUM | Alta | Hecha | Rangos `A1:A10` y listas. |
 | PROMEDIO / AVERAGE | Alta | Hecha | El texto no numérico no cuenta. Vacío da `#DIV/0!`. |
 | MIN y MAX | Alta | Hecha | |
@@ -101,9 +101,9 @@ Referencia: [presentar](https://support.google.com/docs/answer/1696787).
 
 | Función | Prioridad | Estado | Notas de esta alfa |
 | --- | --- | --- | --- |
-| Varias diapositivas con título y texto | Media | Hecha | Hasta 30. Título 180 caracteres, cuerpo 4 000. |
-| Presentar en local | Media | Parcial | Escenario a pantalla de la app, anterior y siguiente. Sin láser, notas del presentador ni cronómetro. |
-| Temas, diseños, imágenes y transiciones | Baja | Fuera | |
+| Varias diapositivas con título y texto | Media | Hecha | Hasta 30. Miniaturas a la izquierda. Título y cuerpo siguen en el archivo. |
+| Presentar en local | Media | Parcial | Escenario con los objetos. Anterior, siguiente y Escape. Sin láser, notas del presentador ni cronómetro. |
+| Temas, formas e imágenes | Media | Parcial | Cuatro temas e objetos movibles (texto, rectángulo, elipse, imagen). Sin transiciones ni PPTX. |
 | Exportar PPTX o PDF de diapositivas | Baja | Fuera | |
 | Publicar en la web | Baja | Fuera | |
 

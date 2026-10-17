@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState, type DragEvent } from "react";
 import { useWorkspace } from "../app/workspace";
 import { docToText } from "../docs/model";
 import { parseOrvdoc } from "../docs/orvdoc";
-import { breadcrumb, sortFiles, visibleFiles, type DateFilter, type FileBrowseMode, type FileSortKey } from "./query";
+import { breadcrumb, sortFiles, visibleFiles, type FileSortKey } from "./query";
 import { downloadBytes } from "../security/bytes";
 import { isWorkError } from "../security/errors";
-import { fileNameWithExtension } from "../security/names";
+import { formatBytes } from "../security/names";
 import type { FileKind, FileRecord } from "../storage/types";
 import { Button, EmptyState, Input, Select } from "../ui/kit";
 import { ContextMenu, Dialog, Modal, type MenuItem } from "../ui/overlay";
@@ -28,38 +28,64 @@ function kindKey(kind: FileKind): "kindFolder" | "kindDoc" | "kindSheet" | "kind
   return "kindOther";
 }
 
+function formatWhen(iso: string, locale: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(date);
+}
+
 export function FilesScreen() {
   const workspace = useWorkspace();
-  const [mode, setMode] = useState<FileBrowseMode>("folder");
-  const [folderId, setFolderId] = useState<string | null>(null);
-  const [layout, setLayout] = useState<"list" | "grid">("list");
-  const [sortKey, setSortKey] = useState<FileSortKey>("name");
-  const [direction, setDirection] = useState<"asc" | "desc">("asc");
-  const [kind, setKind] = useState<"all" | FileKind>("all");
-  const [date, setDate] = useState<DateFilter>("any");
+  const mode = workspace.browse;
+  const folderId = workspace.folderId;
+  const setFolderId = workspace.setFolderId;
+  const [sortKey, setSortKey] = useState<FileSortKey>(mode === "recent" ? "updated" : "name");
+  const [direction, setDirection] = useState<"asc" | "desc">(mode === "recent" ? "desc" : "asc");
   const [menu, setMenu] = useState<{ x: number; y: number; file: FileRecord } | null>(null);
   const [rename, setRename] = useState<FileRecord | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [tagsFor, setTagsFor] = useState<FileRecord | null>(null);
   const [tagsValue, setTagsValue] = useState("");
-  const [preview, setPreview] = useState<FileRecord | null>(null);
+  const [detailsId, setDetailsId] = useState<string | null>(null);
   const [previewText, setPreviewText] = useState("");
   const [previewUrl, setPreviewUrl] = useState("");
   const [confirm, setConfirm] = useState<FileRecord | "all" | null>(null);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [anchor, setAnchor] = useState<string | null>(null);
 
   const crumbs = breadcrumb(workspace.files, folderId);
   const visible = useMemo(
     () =>
       sortFiles(
-        visibleFiles(workspace.files, { mode, folderId, query: workspace.query, kind, date }),
+        visibleFiles(workspace.files, {
+          mode,
+          folderId: mode === "folder" ? folderId : null,
+          query: workspace.query,
+          kind: workspace.kindFilter,
+          date: workspace.dateFilter,
+        }),
         sortKey,
         direction,
       ),
-    [workspace.files, workspace.query, mode, folderId, kind, date, sortKey, direction],
+    [workspace.files, workspace.query, workspace.kindFilter, workspace.dateFilter, mode, folderId, sortKey, direction],
   );
+  const details = workspace.files.find((file) => file.id === detailsId) ?? null;
 
   useEffect(() => {
-    if (!preview || !workspace.storage) {
+    const onShortcut = (event: Event) => {
+      const detail = (event as CustomEvent<string>).detail;
+      if (detail === "toggle-layout") workspace.setDriveLayout(workspace.driveLayout === "list" ? "grid" : "list");
+      if (detail === "toggle-details") workspace.setDetailsOpen(!workspace.detailsOpen);
+      if (detail === "new-folder" && mode === "folder") {
+        void workspace.storage?.createFolder(workspace.t("newFolder"), folderId).then(() => workspace.refreshFiles()).catch(workspace.reportError);
+      }
+    };
+    window.addEventListener("ow-drive", onShortcut);
+    return () => window.removeEventListener("ow-drive", onShortcut);
+  }, [folderId, mode, workspace]);
+
+  useEffect(() => {
+    if (!details || !workspace.storage || !workspace.detailsOpen) {
       setPreviewText("");
       setPreviewUrl("");
       return;
@@ -67,7 +93,7 @@ export function FilesScreen() {
     let url = "";
     let cancel = false;
     workspace.storage
-      .loadFile(preview.id)
+      .loadFile(details.id)
       .then((loaded) => {
         if (cancel) return;
         if (loaded.record.mime.startsWith("image/")) {
@@ -95,14 +121,14 @@ export function FilesScreen() {
       cancel = true;
       if (url) URL.revokeObjectURL(url);
     };
-  }, [preview, workspace.storage, workspace.t]);
+  }, [details, workspace.storage, workspace.t, workspace.detailsOpen]);
 
   function openFile(file: FileRecord) {
     if (file.deletedAt) return;
     if (file.kind === "folder") {
-      setMode("folder");
+      workspace.showBrowse("folder");
       setFolderId(file.id);
-      setPreview(null);
+      setSelected([]);
       return;
     }
     workspace.openRecord(file);
@@ -123,173 +149,209 @@ export function FilesScreen() {
       return;
     }
     const files = [...event.dataTransfer.files];
-    for (const file of files) void workspace.importUserFile(file, parentId);
+    if (files.some((file) => file.webkitRelativePath)) void workspace.importTree(files, parentId);
+    else for (const file of files) void workspace.importUserFile(file, parentId);
   }
 
-  const itemsFor = (file: FileRecord): MenuItem[] => [
-    { id: "open", label: workspace.t("open"), onSelect: () => openFile(file) },
-    { id: "preview", label: workspace.t("preview"), onSelect: () => setPreview(file) },
-    {
-      id: "star",
-      label: file.favorite ? workspace.t("unstar") : workspace.t("star"),
-      onSelect: () => void workspace.storage?.setFavorite(file.id, !file.favorite).then(() => workspace.refreshFiles()).catch(workspace.reportError),
-    },
-    { id: "rename", label: workspace.t("rename"), onSelect: () => { setRename(file); setRenameValue(file.name); } },
-    { id: "tags", label: workspace.t("tags"), onSelect: () => { setTagsFor(file); setTagsValue(file.tags.join(", ")); } },
-    {
-      id: "duplicate",
-      label: workspace.t("duplicate"),
-      onSelect: () => void workspace.storage?.duplicateFile(file.id).then(() => workspace.refreshFiles()).then(() => workspace.pushToast(workspace.t("toastDuplicated"))).catch(workspace.reportError),
-    },
-    {
-      id: "download",
-      label: workspace.t("download"),
-      onSelect: () => void workspace.storage?.exportFile(file.id).then((fileExport) => downloadBytes(fileExport.bytes, fileExport.filename, fileExport.record.mime)).catch(workspace.reportError),
-    },
-    {
-      id: "trash",
-      label: file.deletedAt ? workspace.t("restore") : workspace.t("remove"),
-      onSelect: () => {
-        const action = file.deletedAt ? workspace.storage?.restoreFile(file.id) : workspace.storage?.deleteFile(file.id);
-        void action?.then(() => workspace.refreshFiles()).then(() => workspace.pushToast(workspace.t(file.deletedAt ? "toastRestoredFile" : "toastDeleted"))).catch(workspace.reportError);
+  function toggleSelected(file: FileRecord, shift: boolean) {
+    setDetailsId(file.id);
+    if (shift && anchor) {
+      const from = visible.findIndex((item) => item.id === anchor);
+      const to = visible.findIndex((item) => item.id === file.id);
+      if (from >= 0 && to >= 0) {
+        const [start, end] = from < to ? [from, to] : [to, from];
+        setSelected(visible.slice(start, end + 1).map((item) => item.id));
+        return;
+      }
+    }
+    setAnchor(file.id);
+    setSelected((current) => (current.includes(file.id) ? current.filter((id) => id !== file.id) : [...current, file.id]));
+  }
+
+  function itemsFor(file: FileRecord): MenuItem[] {
+    return [
+      { id: "open", label: workspace.t("open"), onSelect: () => openFile(file) },
+      { id: "details", label: workspace.t("details"), onSelect: () => { setDetailsId(file.id); workspace.setDetailsOpen(true); } },
+      {
+        id: "star",
+        label: file.favorite ? workspace.t("unstar") : workspace.t("star"),
+        onSelect: () => void workspace.storage?.setFavorite(file.id, !file.favorite).then(() => workspace.refreshFiles()).catch(workspace.reportError),
       },
-    },
-  ];
+      { id: "rename", label: workspace.t("rename"), onSelect: () => { setRename(file); setRenameValue(file.name); } },
+      { id: "tags", label: workspace.t("tags"), onSelect: () => { setTagsFor(file); setTagsValue(file.tags.join(", ")); } },
+      {
+        id: "duplicate",
+        label: workspace.t("duplicate"),
+        onSelect: () => void workspace.storage?.duplicateFile(file.id).then(() => workspace.refreshFiles()).then(() => workspace.pushToast(workspace.t("toastDuplicated"))).catch(workspace.reportError),
+      },
+      {
+        id: "download",
+        label: workspace.t("download"),
+        onSelect: () => void workspace.storage?.exportFile(file.id).then((fileExport) => downloadBytes(fileExport.bytes, fileExport.filename, fileExport.record.mime)).catch(workspace.reportError),
+      },
+      {
+        id: "trash",
+        label: file.deletedAt ? workspace.t("restore") : workspace.t("remove"),
+        onSelect: () => {
+          const action = file.deletedAt ? workspace.storage?.restoreFile(file.id) : workspace.storage?.deleteFile(file.id);
+          void action?.then(() => workspace.refreshFiles()).then(() => workspace.pushToast(workspace.t(file.deletedAt ? "toastRestoredFile" : "toastDeleted"))).catch(workspace.reportError);
+        },
+      },
+    ];
+  }
+
+  const title =
+    mode === "recent" ? workspace.t("filesRecent") : mode === "starred" ? workspace.t("filesStarred") : mode === "trash" ? workspace.t("filesTrash") : workspace.t("navFiles");
 
   return (
-    <div className="ow-page" onDragOver={(event) => event.preventDefault()} onDrop={(event) => onDrop(event, mode === "folder" ? folderId : null)}>
-      <header className="ow-page-head">
-        <div>
-          <h1>{workspace.t("navFiles")}</h1>
-          <p>{workspace.t("dropFiles")}</p>
-        </div>
-      </header>
-      <div className="ow-row" role="tablist" aria-label={workspace.t("navFiles")}>
-        {([
-          ["folder", workspace.t("filesMy")],
-          ["recent", workspace.t("filesRecent")],
-          ["starred", workspace.t("filesStarred")],
-          ["trash", workspace.t("filesTrash")],
-        ] as const).map(([id, label]) => (
-          <button key={id} type="button" className="ow-button" aria-pressed={mode === id} onClick={() => setMode(id)}>
-            {label}
-          </button>
-        ))}
-      </div>
-      {mode === "folder" ? (
-        <nav className="ow-row" aria-label={workspace.t("root")} onDragOver={(event) => event.preventDefault()} onDrop={(event) => onDrop(event, null)}>
-          <button type="button" className="ow-button ow-button-ghost" onClick={() => setFolderId(null)}>
-            {workspace.t("root")}
-          </button>
-          {crumbs.map((crumb) => (
-            <button key={crumb.id} type="button" className="ow-button ow-button-ghost" onClick={() => setFolderId(crumb.id)}>
-              {crumb.name}
-            </button>
-          ))}
-        </nav>
-      ) : null}
-      <div className="ow-row">
+    <div className="ow-drive" onDragOver={(event) => event.preventDefault()} onDrop={(event) => onDrop(event, mode === "folder" ? folderId : null)}>
+      <div className="ow-drive-main">
+        <header className="ow-page-head">
+          <div>
+            <h1 className="ow-drive-title">{title}</h1>
+            <p className="ow-muted">{workspace.t("dropFiles")}</p>
+          </div>
+        </header>
         {mode === "folder" ? (
-          <>
+          <nav className="ow-crumbs" aria-label={workspace.t("root")} onDragOver={(event) => event.preventDefault()} onDrop={(event) => onDrop(event, null)}>
+            <button type="button" onClick={() => setFolderId(null)}>{workspace.t("root")}</button>
+            {crumbs.map((crumb) => (
+              <span key={crumb.id}>
+                <span aria-hidden="true">/</span>
+                <button type="button" onClick={() => setFolderId(crumb.id)}>{crumb.name}</button>
+              </span>
+            ))}
+          </nav>
+        ) : null}
+        <div className="ow-row">
+          {mode === "folder" ? (
             <Button
               variant="primary"
               onClick={() => {
-                const name = workspace.t("newFolder");
-                void workspace.storage?.createFolder(name, folderId).then(() => workspace.refreshFiles()).catch(workspace.reportError);
+                void workspace.storage?.createFolder(workspace.t("newFolder"), folderId).then(() => workspace.refreshFiles()).catch(workspace.reportError);
               }}
             >
               {workspace.t("newFolder")}
             </Button>
-            <Button onClick={() => void workspace.createDocument(undefined, undefined, folderId)}>{workspace.t("newDoc")}</Button>
-            <Button onClick={() => void workspace.createSheet(folderId)}>{workspace.t("newSheet")}</Button>
-            <Button onClick={() => void workspace.createSlides(folderId)}>{workspace.t("newSlides")}</Button>
-          </>
-        ) : null}
-        <Button aria-pressed={layout === "list"} onClick={() => setLayout("list")}>{workspace.t("viewList")}</Button>
-        <Button aria-pressed={layout === "grid"} onClick={() => setLayout("grid")}>{workspace.t("viewGrid")}</Button>
-      </div>
-      <div className="ow-row">
-        <Select label={workspace.t("sortBy")} value={sortKey} onChange={(event) => setSortKey(event.target.value as FileSortKey)}>
-          <option value="name">{workspace.t("sortName")}</option>
-          <option value="updated">{workspace.t("sortUpdated")}</option>
-          <option value="created">{workspace.t("sortCreated")}</option>
-          <option value="size">{workspace.t("sortSize")}</option>
-          <option value="kind">{workspace.t("sortKind")}</option>
-        </Select>
-        <Button onClick={() => setDirection((value) => (value === "asc" ? "desc" : "asc"))}>{direction === "asc" ? "A–Z" : "Z–A"}</Button>
-        <Select label={workspace.t("filterKind")} value={kind} onChange={(event) => setKind(event.target.value as "all" | FileKind)}>
-          <option value="all">{workspace.t("allTypes")}</option>
-          <option value="folder">{workspace.t("kindFolder")}</option>
-          <option value="doc">{workspace.t("kindDoc")}</option>
-          <option value="sheet">{workspace.t("kindSheet")}</option>
-          <option value="slide">{workspace.t("kindSlide")}</option>
-          <option value="pdf">{workspace.t("kindPdf")}</option>
-          <option value="other">{workspace.t("kindOther")}</option>
-        </Select>
-        <Select label={workspace.t("filterDate")} value={date} onChange={(event) => setDate(event.target.value as DateFilter)}>
-          <option value="any">{workspace.t("dateAny")}</option>
-          <option value="today">{workspace.t("dateToday")}</option>
-          <option value="week">{workspace.t("dateWeek")}</option>
-          <option value="month">{workspace.t("dateMonth")}</option>
-        </Select>
-      </div>
-      {visible.length === 0 ? <EmptyState title={mode === "trash" ? workspace.t("trashEmpty") : workspace.t("filesEmpty")} body={workspace.t("emptyBody")} /> : null}
-      <div className={layout === "grid" ? "ow-grid" : "ow-list"}>
-        {visible.map((file) => (
-          <article
-            key={file.id}
-            className="ow-file-card"
-            style={{ borderColor: file.color ?? undefined }}
-            draggable={file.deletedAt === null}
-            onDragStart={(event) => event.dataTransfer.setData("application/x-orvupi-id", file.id)}
-            onDragOver={(event) => {
-              if (file.kind === "folder") event.preventDefault();
-            }}
-            onDrop={(event) => {
-              if (file.kind !== "folder") return;
-              event.preventDefault();
-              event.stopPropagation();
-              onDrop(event, file.id);
-            }}
-            onContextMenu={(event) => {
-              event.preventDefault();
-              setMenu({ x: event.clientX, y: event.clientY, file });
-            }}
-          >
-            <button type="button" className="ow-file-open" onClick={() => openFile(file)}>
-              <strong>{file.favorite ? "★ " : ""}{file.name}</strong>
-              <span>{workspace.t(kindKey(file.kind))}</span>
-            </button>
-            {file.tags.length > 0 ? <p className="ow-muted">{file.tags.join(" · ")}</p> : null}
-            <div className="ow-row">
-              <Button onClick={() => setPreview(file)}>{workspace.t("preview")}</Button>
-              <Button onClick={() => { setRename(file); setRenameValue(file.name); }}>{workspace.t("rename")}</Button>
-              {file.deletedAt ? (
-                <Button onClick={() => void workspace.storage?.restoreFile(file.id).then(() => workspace.refreshFiles())}>{workspace.t("restore")}</Button>
-              ) : (
-                <Button onClick={() => void workspace.storage?.deleteFile(file.id).then(() => workspace.refreshFiles())}>{workspace.t("remove")}</Button>
-              )}
-            </div>
-          </article>
-        ))}
-      </div>
-      {mode === "trash" && visible.length > 0 ? <Button variant="danger" onClick={() => setConfirm("all")}>{workspace.t("purgeAll")}</Button> : null}
-      {preview ? (
-        <aside className="ow-preview" aria-label={workspace.t("preview")}>
-          <header className="ow-row">
-            <h2>{preview.name}</h2>
-            <Button onClick={() => setPreview(null)}>{workspace.t("closeDialog")}</Button>
-          </header>
-          {previewUrl ? <img src={previewUrl} alt={preview.name} /> : <pre>{previewText}</pre>}
-          {preview.kind === "pdf" ? (
-            <Button
-              onClick={() => {
-                void workspace.storage?.exportFile(preview.id).then((fileExport) => downloadBytes(fileExport.bytes, fileNameWithExtension(preview.name, "pdf"), "application/pdf"));
-              }}
-            >
-              {workspace.t("pdfDownload")}
-            </Button>
           ) : null}
+          <Button aria-pressed={workspace.driveLayout === "list"} onClick={() => workspace.setDriveLayout("list")}>{workspace.t("viewList")}</Button>
+          <Button aria-pressed={workspace.driveLayout === "grid"} onClick={() => workspace.setDriveLayout("grid")}>{workspace.t("viewGrid")}</Button>
+          <Button aria-pressed={workspace.detailsOpen} onClick={() => workspace.setDetailsOpen(!workspace.detailsOpen)}>
+            {workspace.detailsOpen ? workspace.t("detailsHide") : workspace.t("details")}
+          </Button>
+          <Select label={workspace.t("sortBy")} value={sortKey} onChange={(event) => setSortKey(event.target.value as FileSortKey)}>
+            <option value="name">{workspace.t("sortName")}</option>
+            <option value="updated">{workspace.t("sortUpdated")}</option>
+            <option value="created">{workspace.t("sortCreated")}</option>
+            <option value="size">{workspace.t("sortSize")}</option>
+            <option value="kind">{workspace.t("sortKind")}</option>
+          </Select>
+          <Button onClick={() => setDirection((value) => (value === "asc" ? "desc" : "asc"))}>{direction === "asc" ? "A–Z" : "Z–A"}</Button>
+        </div>
+        {selected.length > 0 ? (
+          <div className="ow-actionbar" role="toolbar" aria-label={workspace.t("selectedCount", { count: selected.length })}>
+            <strong>{workspace.t("selectedCount", { count: selected.length })}</strong>
+            <Button onClick={() => {
+              void Promise.all(selected.map((id) => workspace.storage?.setFavorite(id, true))).then(() => workspace.refreshFiles()).catch(workspace.reportError);
+            }}>{workspace.t("star")}</Button>
+            <Button onClick={() => {
+              const action = mode === "trash"
+                ? Promise.all(selected.map((id) => workspace.storage?.restoreFile(id)))
+                : Promise.all(selected.map((id) => workspace.storage?.deleteFile(id)));
+              void action.then(() => workspace.refreshFiles()).then(() => setSelected([])).catch(workspace.reportError);
+            }}>{mode === "trash" ? workspace.t("restore") : workspace.t("remove")}</Button>
+            <Button onClick={() => setSelected([])}>{workspace.t("clearSelection")}</Button>
+          </div>
+        ) : null}
+        {visible.length === 0 ? <EmptyState title={mode === "trash" ? workspace.t("trashEmpty") : workspace.t("filesEmpty")} body={workspace.t("emptyBody")} /> : null}
+        {workspace.driveLayout === "list" ? (
+          <table className="ow-drive-table">
+            <thead>
+              <tr>
+                <th />
+                <th><button type="button" onClick={() => setSortKey("name")}>{workspace.t("colName")}</button></th>
+                <th><button type="button" onClick={() => setSortKey("updated")}>{workspace.t("colModified")}</button></th>
+                <th><button type="button" onClick={() => setSortKey("size")}>{workspace.t("colSize")}</button></th>
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((file) => (
+                <tr
+                  key={file.id}
+                  draggable={file.deletedAt === null}
+                  onDragStart={(event) => event.dataTransfer.setData("application/x-orvupi-id", file.id)}
+                  onDragOver={(event) => { if (file.kind === "folder") event.preventDefault(); }}
+                  onDrop={(event) => {
+                    if (file.kind !== "folder") return;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onDrop(event, file.id);
+                  }}
+                  onContextMenu={(event) => {
+                    event.preventDefault();
+                    setMenu({ x: event.clientX, y: event.clientY, file });
+                  }}
+                >
+                  <td>
+                    <input
+                      type="checkbox"
+                      aria-label={file.name}
+                      checked={selected.includes(file.id)}
+                      onClick={(event) => toggleSelected(file, event.shiftKey)}
+                      onChange={() => undefined}
+                    />
+                  </td>
+                  <td>
+                    <button type="button" className="ow-file-open" onClick={() => openFile(file)}>
+                      <strong>{file.favorite ? "★ " : ""}{file.name}</strong>
+                      <span className="ow-sr">{workspace.t(kindKey(file.kind))}</span>
+                    </button>
+                  </td>
+                  <td>{formatWhen(file.updatedAt, workspace.locale === "es" ? "es" : "en")}</td>
+                  <td>{file.kind === "folder" ? "" : formatBytes(file.size, workspace.locale === "es" ? "es" : "en")}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div className="ow-grid">
+            {visible.map((file) => (
+              <article
+                key={file.id}
+                className="ow-file-card"
+                style={{ borderColor: file.color ?? undefined }}
+                draggable={file.deletedAt === null}
+                onDragStart={(event) => event.dataTransfer.setData("application/x-orvupi-id", file.id)}
+                onContextMenu={(event) => {
+                  event.preventDefault();
+                  setMenu({ x: event.clientX, y: event.clientY, file });
+                }}
+              >
+                <input type="checkbox" aria-label={file.name} checked={selected.includes(file.id)} onClick={(event) => toggleSelected(file, event.shiftKey)} onChange={() => undefined} />
+                <button type="button" className="ow-file-open" onClick={() => openFile(file)}>
+                  <strong>{file.favorite ? "★ " : ""}{file.name}</strong>
+                  <span className="ow-sr">{workspace.t(kindKey(file.kind))}</span>
+                </button>
+                <p className="ow-muted">{formatWhen(file.updatedAt, workspace.locale)}</p>
+              </article>
+            ))}
+          </div>
+        )}
+        {mode === "trash" && visible.length > 0 ? <Button variant="danger" onClick={() => setConfirm("all")}>{workspace.t("purgeAll")}</Button> : null}
+      </div>
+      {workspace.detailsOpen && details ? (
+        <aside className="ow-details" aria-label={workspace.t("details")}>
+          <header className="ow-row">
+            <h2>{details.name}</h2>
+            <Button onClick={() => workspace.setDetailsOpen(false)}>{workspace.t("detailsHide")}</Button>
+          </header>
+          <p>{workspace.t(kindKey(details.kind))}</p>
+          {previewUrl ? <img src={previewUrl} alt={details.name} /> : <pre>{previewText}</pre>}
+          <h3>{workspace.t("activity")}</h3>
+          <p>{workspace.t("createdLabel")}: {formatWhen(details.createdAt, workspace.locale)}</p>
+          <p>{workspace.t("colModified")}: {formatWhen(details.updatedAt, workspace.locale)}</p>
+          <p>{workspace.t("colSize")}: {formatBytes(details.size, workspace.locale === "es" ? "es" : "en")}</p>
+          {details.tags.length > 0 ? <p>{details.tags.join(" · ")}</p> : null}
           <div className="ow-swatches" role="group" aria-label={workspace.t("labelColor")}>
             {COLORS.map((color) => (
               <button
@@ -298,9 +360,10 @@ export function FilesScreen() {
                 className="ow-swatch"
                 style={{ background: color.id }}
                 aria-label={workspace.t(color.key)}
-                aria-pressed={preview.color === color.id}
+                aria-pressed={details.color === color.id}
                 onClick={() => {
-                  void workspace.storage?.setColor(preview.id, preview.color === color.id ? null : color.id).then(() => workspace.refreshFiles()).then(() => setPreview({ ...preview, color: preview.color === color.id ? null : color.id }));
+                  const next = details.color === color.id ? null : color.id;
+                  void workspace.storage?.setColor(details.id, next).then(() => workspace.refreshFiles());
                 }}
               />
             ))}
@@ -315,16 +378,11 @@ export function FilesScreen() {
         footer={
           <>
             <Button onClick={() => setRename(null)}>{workspace.t("cancel")}</Button>
-            <Button
-              variant="primary"
-              onClick={() => {
-                if (!rename || !workspace.storage) return;
-                void workspace.storage.renameFile(rename.id, renameValue).then(() => workspace.refreshFiles()).then(() => workspace.pushToast(workspace.t("toastRenamed"))).catch(workspace.reportError);
-                setRename(null);
-              }}
-            >
-              {workspace.t("apply")}
-            </Button>
+            <Button variant="primary" onClick={() => {
+              if (!rename || !workspace.storage) return;
+              void workspace.storage.renameFile(rename.id, renameValue).then(() => workspace.refreshFiles()).then(() => workspace.pushToast(workspace.t("toastRenamed"))).catch(workspace.reportError);
+              setRename(null);
+            }}>{workspace.t("apply")}</Button>
           </>
         }
       >
@@ -337,17 +395,12 @@ export function FilesScreen() {
         footer={
           <>
             <Button onClick={() => setTagsFor(null)}>{workspace.t("cancel")}</Button>
-            <Button
-              variant="primary"
-              onClick={() => {
-                if (!tagsFor || !workspace.storage) return;
-                const tags = tagsValue.split(",").map((tag) => tag.trim()).filter(Boolean);
-                void workspace.storage.setTags(tagsFor.id, tags).then(() => workspace.refreshFiles()).catch(workspace.reportError);
-                setTagsFor(null);
-              }}
-            >
-              {workspace.t("apply")}
-            </Button>
+            <Button variant="primary" onClick={() => {
+              if (!tagsFor || !workspace.storage) return;
+              const tags = tagsValue.split(",").map((tag) => tag.trim()).filter(Boolean);
+              void workspace.storage.setTags(tagsFor.id, tags).then(() => workspace.refreshFiles()).catch(workspace.reportError);
+              setTagsFor(null);
+            }}>{workspace.t("apply")}</Button>
           </>
         }
       >

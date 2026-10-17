@@ -36,7 +36,9 @@ El recorrido de la sección 30:
 
 Una segunda prueba ejecuta axe-core 4.14 con las etiquetas `wcag2a`, `wcag2aa`, `wcag21a` y `wcag21aa` en el inicio y en el editor. La tercera cambia el idioma a inglés y comprueba que sobrevive a la recarga.
 
-Resultado de esta entrega, en local: 26/26 de Vitest y 4/4 de Playwright, incluido el contraste en el inicio y en el editor y una hoja que muestra el resultado de SUMA.
+La tercera prueba abre Mi unidad, ya no la etiqueta antigua «Archivos».
+
+Resultado de esta entrega, en local: 26/26 de Vitest y 4/4 de Playwright, incluido el contraste en el inicio y en el editor, la navegación «Mi unidad» y una hoja virtual que muestra 30 en B1.
 
 ## Qué no cubre esta tanda
 

@@ -16,6 +16,8 @@ export function Sidebar({
   onClose,
   closeLabel,
   navLabel,
+  action,
+  footer,
 }: {
   brand: string;
   brandAlt: string;
@@ -26,6 +28,8 @@ export function Sidebar({
   onClose: () => void;
   closeLabel: string;
   navLabel: string;
+  action?: ReactNode;
+  footer?: ReactNode;
 }) {
   return (
     <aside className={`ow-sidebar ${open ? "is-open" : ""}`} data-tool="files">
@@ -36,6 +40,7 @@ export function Sidebar({
           <Icon name="close" />
         </IconButton>
       </div>
+      {action}
       <nav aria-label={navLabel}>
         <ul>
           {items.map((item) => (
@@ -53,6 +58,7 @@ export function Sidebar({
           ))}
         </ul>
       </nav>
+      {footer}
     </aside>
   );
 }
@@ -82,6 +88,10 @@ export function Topbar({
   onAi,
   closeDocLabel,
   onCloseDoc,
+  chips,
+  starred,
+  starLabel,
+  onStar,
 }: {
   menuLabel: string;
   onMenu: () => void;
@@ -107,6 +117,10 @@ export function Topbar({
   onAi: () => void;
   closeDocLabel: string;
   onCloseDoc: (() => void) | null;
+  chips?: ReactNode;
+  starred?: boolean;
+  starLabel?: string;
+  onStar?: () => void;
 }) {
   return (
     <header className="ow-topbar">
@@ -121,9 +135,15 @@ export function Topbar({
           onChange={(event) => onRename(event.target.value)}
           onBlur={() => onCommitName()}
         />
-      ) : (
+      ) : null}
+      {onStar && starLabel ? (
+        <IconButton label={starLabel} pressed={starred} onClick={onStar}>
+          <Icon name="star" />
+        </IconButton>
+      ) : null}
+      {fileName === null ? (
         <p className="ow-top-title">ORVUPI Work</p>
-      )}
+      ) : null}
       <SearchField
         label={searchLabel}
         value={query}
@@ -149,6 +169,7 @@ export function Topbar({
       <IconButton label={aiLabel} pressed={aiPressed} onClick={onAi}>
         <Icon name="ai" />
       </IconButton>
+      {chips ? <div className="ow-chips">{chips}</div> : null}
     </header>
   );
 }

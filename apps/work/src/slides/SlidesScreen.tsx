@@ -1,7 +1,41 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { useWorkspace } from "../app/workspace";
-import { Button, Input } from "../ui/kit";
-import { parseSlides, serializeSlides, type SlidesFile } from "./model";
+import { Button, Input, Select } from "../ui/kit";
+import { MenuBar } from "../ui/menus";
+import {
+  SLIDE_FILLS,
+  SLIDE_THEMES,
+  defaultItems,
+  parseSlides,
+  serializeSlides,
+  syncSlideText,
+  type Slide,
+  type SlideItem,
+  type SlideTheme,
+  type SlidesFile,
+} from "./model";
+
+const CANVAS_W = 816;
+const CANVAS_H = 459;
+
+const THEME_KEY: Record<SlideTheme, "themePaper" | "themeInk" | "themeGrove" | "themeRose"> = {
+  papel: "themePaper",
+  tinta: "themeInk",
+  bosque: "themeGrove",
+  rosa: "themeRose",
+};
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function inkFor(fill: string): string {
+  return fill === "#102032" || fill === "#0b5d36" || fill === "#1d4e89" ? "#fff8ec" : "#102032";
+}
+
+function blankSlide(): Slide {
+  return { title: "", body: "", theme: "papel", items: defaultItems("", "") };
+}
 
 export function SlidesScreen() {
   const workspace = useWorkspace();
@@ -10,6 +44,8 @@ export function SlidesScreen() {
   const [index, setIndex] = useState(0);
   const [present, setPresent] = useState(false);
   const [status, setStatus] = useState<"saved" | "pending">("saved");
+  const [selectedId, setSelectedId] = useState<string | null>("title");
+  const imageRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!workspace.openSlideId || !workspace.storage) {
@@ -22,6 +58,7 @@ export function SlidesScreen() {
       if (cancel || loaded.integrity === "mismatch") return;
       setFile(parseSlides(loaded.bytes));
       setIndex(0);
+      setSelectedId("title");
       setStatus("saved");
     }).catch(workspace.reportError);
     return () => {
@@ -43,6 +80,72 @@ export function SlidesScreen() {
     return () => window.clearTimeout(timer);
   }, [file, status, workspace.storage, workspace.refreshFiles, workspace.reportError]);
 
+  useEffect(() => {
+    if (!present || !file) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "ArrowRight" || event.key === "ArrowDown" || event.key === " ") {
+        event.preventDefault();
+        setIndex((value) => Math.min(file.slides.length - 1, value + 1));
+      } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+        event.preventDefault();
+        setIndex((value) => Math.max(0, value - 1));
+      } else if (event.key === "Escape") setPresent(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [present, file]);
+
+  function update(next: SlidesFile) {
+    setFile(next);
+    setStatus("pending");
+  }
+
+  function patchCurrent(mutator: (slide: Slide) => Slide) {
+    if (!file) return;
+    const slides = file.slides.map((slide, itemIndex) => (itemIndex === index ? syncSlideText(mutator(slide)) : slide));
+    update({ ...file, slides });
+  }
+
+  function addItem(item: SlideItem) {
+    patchCurrent((slide) => (slide.items.length >= 24 ? slide : { ...slide, items: [...slide.items, item] }));
+    setSelectedId(item.id);
+  }
+
+  function startDrag(event: ReactPointerEvent, item: SlideItem) {
+    if (present) return;
+    event.preventDefault();
+    event.stopPropagation();
+    setSelectedId(item.id);
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const originX = item.x;
+    const originY = item.y;
+    const move = (ev: PointerEvent) => {
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      setFile((current) => {
+        if (!current) return current;
+        const slides = current.slides.map((slide, itemIndex) => {
+          if (itemIndex !== index) return slide;
+          const items = slide.items.map((entry) => (
+            entry.id === item.id
+              ? { ...entry, x: clamp(originX + dx, 0, CANVAS_W - 40), y: clamp(originY + dy, 0, CANVAS_H - 28) }
+              : entry
+          ));
+          return syncSlideText({ ...slide, items });
+        });
+        return { ...current, slides };
+      });
+      setStatus("pending");
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  }
+
   if (!workspace.openSlideId) {
     return (
       <div className="ow-page" data-tool="slides">
@@ -61,18 +164,42 @@ export function SlidesScreen() {
   if (!file) return <p>{workspace.t("preparing")}</p>;
   const slide = file.slides[index] ?? file.slides[0];
   if (!slide) return null;
+  const selected = slide.items.find((item) => item.id === selectedId) ?? null;
 
-  function update(next: SlidesFile) {
-    setFile(next);
-    setStatus("pending");
+  function renderItem(item: SlideItem, interactive: boolean) {
+    const shape = item.kind === "shape";
+    return (
+      <button
+        key={item.id}
+        type="button"
+        className={`ow-slide-item${selectedId === item.id ? " is-selected" : ""}`}
+        aria-label={item.kind === "text" ? workspace.t("slideText") : item.kind === "image" ? workspace.t("slideImage") : workspace.t("slideShape")}
+        aria-pressed={selectedId === item.id}
+        style={{
+          left: `${(item.x / CANVAS_W) * 100}%`,
+          top: `${(item.y / CANVAS_H) * 100}%`,
+          width: `${(item.w / CANVAS_W) * 100}%`,
+          height: `${(item.h / CANVAS_H) * 100}%`,
+          background: shape ? item.fill : item.kind === "image" ? "transparent" : undefined,
+          color: shape ? inkFor(item.fill) : undefined,
+          borderRadius: shape && item.shape === "ellipse" ? "50%" : undefined,
+          pointerEvents: interactive ? "auto" : "none",
+        }}
+        onPointerDown={interactive ? (event) => startDrag(event, item) : undefined}
+      >
+        {item.kind === "text" ? item.text : null}
+        {item.kind === "image" ? <img src={item.src} alt="" /> : null}
+      </button>
+    );
   }
 
   if (present) {
     return (
-      <section className="ow-stage" aria-label={file.title}>
+      <section className={`ow-stage ow-present ow-theme-${slide.theme}`} aria-label={file.title}>
         <p>{index + 1} / {file.slides.length}</p>
-        <h1>{slide.title || file.title}</h1>
-        <p>{slide.body}</p>
+        <div className={`ow-slide-canvas ow-theme-${slide.theme}`}>
+          {slide.items.map((item) => renderItem(item, false))}
+        </div>
         <div className="ow-row">
           <Button onClick={() => setIndex((value) => Math.max(0, value - 1))}>{workspace.t("slidePrev")}</Button>
           <Button onClick={() => setIndex((value) => Math.min(file.slides.length - 1, value + 1))}>{workspace.t("slideNext")}</Button>
@@ -83,46 +210,145 @@ export function SlidesScreen() {
   }
 
   return (
-    <div className="ow-page" data-tool="slides">
+    <div className="ow-page ow-slides-page" data-tool="slides">
+      <h1 className="ow-sr">{file.title}</h1>
       <div className="ow-row">
-        <h1>{file.title}</h1>
+        <Input label={workspace.t("fileName")} value={file.title} onChange={(event) => update({ ...file, title: event.target.value.slice(0, 180) })} />
         <p role="status">{status === "saved" ? workspace.t("statusSaved") : workspace.t("statusPending")}</p>
-      </div>
-      <div className="ow-row">
-        {file.slides.map((item, itemIndex) => (
-          <button key={itemIndex} type="button" className="ow-button" aria-pressed={itemIndex === index} onClick={() => setIndex(itemIndex)}>
-            {itemIndex + 1}. {item.title || workspace.t("slideTitle")}
-          </button>
-        ))}
-        <Button
-          onClick={() => {
-            if (file.slides.length >= 30) return;
-            update({ ...file, slides: [...file.slides, { title: "", body: "" }] });
-            setIndex(file.slides.length);
-          }}
-        >
-          {workspace.t("slideAdd")}
-        </Button>
         <Button variant="primary" onClick={() => setPresent(true)}>{workspace.t("slidePresent")}</Button>
       </div>
-      <Input
-        label={workspace.t("slideTitle")}
-        value={slide.title}
-        onChange={(event) => {
-          const slides = file.slides.map((item, itemIndex) => (itemIndex === index ? { ...item, title: event.target.value } : item));
-          update({ ...file, slides });
-        }}
+      <MenuBar
+        label={workspace.t("menuBar")}
+        menus={[
+          { id: "file", label: workspace.t("menuFile"), items: [
+            { id: "present", label: workspace.t("slidePresent"), onSelect: () => setPresent(true) },
+          ] },
+          { id: "edit", label: workspace.t("menuEdit"), items: [
+            { id: "remove", label: workspace.t("slideRemove"), onSelect: () => {
+              if (!selected || selected.id === "title" || selected.id === "body") return;
+              patchCurrent((current) => ({ ...current, items: current.items.filter((item) => item.id !== selected.id) }));
+              setSelectedId("title");
+            } },
+          ] },
+          { id: "view", label: workspace.t("menuView"), items: [
+            { id: "present", label: workspace.t("slidePresent"), onSelect: () => setPresent(true) },
+          ] },
+          { id: "insert", label: workspace.t("menuInsert"), items: [
+            { id: "text", label: workspace.t("slideText"), onSelect: () => addItem({ id: crypto.randomUUID().slice(0, 12), kind: "text", x: 80, y: 80, w: 280, h: 80, text: workspace.t("slideText") }) },
+            { id: "rect", label: workspace.t("shapeRect"), onSelect: () => addItem({ id: crypto.randomUUID().slice(0, 12), kind: "shape", shape: "rect", x: 120, y: 120, w: 180, h: 100, fill: "#ff3070" }) },
+            { id: "ellipse", label: workspace.t("shapeEllipse"), onSelect: () => addItem({ id: crypto.randomUUID().slice(0, 12), kind: "shape", shape: "ellipse", x: 160, y: 160, w: 140, h: 140, fill: "#1d4e89" }) },
+            { id: "image", label: workspace.t("slideImage"), onSelect: () => imageRef.current?.click() },
+          ] },
+          { id: "format", label: workspace.t("menuFormat"), items: SLIDE_THEMES.map((theme) => ({
+            id: theme,
+            label: workspace.t(THEME_KEY[theme]),
+            onSelect: () => patchCurrent((current) => ({ ...current, theme })),
+          })) },
+          { id: "tools", label: workspace.t("menuTools"), items: [
+            { id: "hint", label: workspace.t("slideHint"), onSelect: () => workspace.pushToast(workspace.t("slideHint")) },
+          ] },
+          { id: "help", label: workspace.t("menuHelp"), items: [
+            { id: "keys", label: workspace.t("shortcuts"), onSelect: () => workspace.pushToast(workspace.t("shortcutsDriveBody")) },
+          ] },
+        ]}
       />
-      <label className="ow-field">
-        {workspace.t("slideBody")}
-        <textarea
-          value={slide.body}
-          onChange={(event) => {
-            const slides = file.slides.map((item, itemIndex) => (itemIndex === index ? { ...item, body: event.target.value } : item));
-            update({ ...file, slides });
-          }}
-        />
-      </label>
+      <div className="ow-slides-work">
+        <aside className="ow-filmstrip" aria-label={workspace.t("navSlides")}>
+          {file.slides.map((item, itemIndex) => (
+            <button
+              key={itemIndex}
+              type="button"
+              className={`ow-thumb ow-theme-${item.theme}`}
+              aria-pressed={itemIndex === index}
+              onClick={() => {
+                setIndex(itemIndex);
+                setSelectedId("title");
+              }}
+            >
+              <span>{itemIndex + 1}</span>
+              <strong>{item.title || workspace.t("slideTitle")}</strong>
+            </button>
+          ))}
+          <Button
+            onClick={() => {
+              if (file.slides.length >= 30) return;
+              update({ ...file, slides: [...file.slides, blankSlide()] });
+              setIndex(file.slides.length);
+              setSelectedId("title");
+            }}
+          >
+            {workspace.t("slideAdd")}
+          </Button>
+        </aside>
+        <div className={`ow-slide-stage ow-theme-${slide.theme}`}>
+          <div className={`ow-slide-canvas ow-theme-${slide.theme}`} onPointerDown={() => setSelectedId(null)}>
+            {slide.items.map((item) => renderItem(item, true))}
+          </div>
+        </div>
+        <aside className="ow-slide-tools" aria-label={workspace.t("slideTheme")}>
+          <Select
+            label={workspace.t("slideTheme")}
+            value={slide.theme}
+            onChange={(event) => patchCurrent((current) => ({ ...current, theme: event.target.value as SlideTheme }))}
+          >
+            {SLIDE_THEMES.map((theme) => (
+              <option key={theme} value={theme}>{workspace.t(THEME_KEY[theme])}</option>
+            ))}
+          </Select>
+          {selected?.kind === "text" ? (
+            <label className="ow-field">
+              {selected.id === "title" ? workspace.t("slideTitle") : workspace.t("slideBody")}
+              <textarea
+                value={selected.text}
+                onChange={(event) => {
+                  const text = event.target.value.slice(0, selected.id === "title" ? 180 : 4000);
+                  patchCurrent((current) => ({
+                    ...current,
+                    items: current.items.map((item) => (item.id === selected.id && item.kind === "text" ? { ...item, text } : item)),
+                  }));
+                }}
+              />
+            </label>
+          ) : null}
+          {selected?.kind === "shape" ? (
+            <div className="ow-swatches" role="group" aria-label={workspace.t("slideShape")}>
+              {SLIDE_FILLS.map((fill) => (
+                <button
+                  key={fill}
+                  type="button"
+                  className="ow-swatch"
+                  style={{ background: fill }}
+                  aria-label={fill}
+                  aria-pressed={selected.fill === fill}
+                  onClick={() => patchCurrent((current) => ({
+                    ...current,
+                    items: current.items.map((item) => (item.id === selected.id && item.kind === "shape" ? { ...item, fill } : item)),
+                  }))}
+                />
+              ))}
+            </div>
+          ) : null}
+          <input
+            ref={imageRef}
+            className="ow-sr"
+            type="file"
+            accept="image/png,image/jpeg,image/gif,image/webp"
+            aria-label={workspace.t("slideImage")}
+            onChange={(event) => {
+              const picked = event.target.files?.[0];
+              event.target.value = "";
+              if (!picked || picked.size > 2_000_000) return;
+              const reader = new FileReader();
+              reader.onload = () => {
+                const src = typeof reader.result === "string" ? reader.result : "";
+                if (!src.startsWith("data:image/") || src.length >= 2_800_000) return;
+                addItem({ id: crypto.randomUUID().slice(0, 12), kind: "image", x: 96, y: 96, w: 320, h: 200, src });
+              };
+              reader.readAsDataURL(picked);
+            }}
+          />
+        </aside>
+      </div>
     </div>
   );
 }

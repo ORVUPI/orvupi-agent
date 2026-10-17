@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 const DocsEditor = lazy(() => import("../docs/DocsEditor").then((module) => ({ default: module.DocsEditor })));
 import { parseOrvdoc } from "../docs/orvdoc";
 import { templateCategories, templates } from "../docs/templates";
+import { visibleFiles } from "../files/query";
 import { useWorkspace } from "../app/workspace";
 import { downloadBytes } from "../security/bytes";
 import { isWorkError } from "../security/errors";
@@ -34,7 +35,16 @@ export function FileButton({ file, onOpen }: { file: FileRecord; onOpen: () => v
 
 export function HomeScreen() {
   const workspace = useWorkspace();
-  const recent = workspace.files.filter((file) => file.deletedAt === null).slice(0, 8);
+  const suggested = visibleFiles(workspace.files, {
+    mode: "recent",
+    folderId: null,
+    query: workspace.query,
+    kind: workspace.kindFilter,
+    date: workspace.dateFilter,
+  })
+    .filter((file) => file.kind !== "folder")
+    .sort((left, right) => Number(right.favorite) - Number(left.favorite) || right.updatedAt.localeCompare(left.updatedAt))
+    .slice(0, 8);
   return (
     <div className="ow-page">
       <header className="ow-page-head">
@@ -75,8 +85,9 @@ export function HomeScreen() {
           action={<Button onClick={() => void workspace.navigate("pdf")}>{workspace.t("openPdf")}</Button>}
         />
       </div>
-      <h2>{workspace.t("recent")}</h2>
-      {recent.length === 0 ? (
+      <h2>{workspace.t("suggested")}</h2>
+      <p className="ow-muted">{workspace.t("suggestedBody")}</p>
+      {suggested.length === 0 ? (
         <EmptyState
           title={workspace.t("emptyTitle")}
           body={workspace.t("emptyBody")}
@@ -88,7 +99,7 @@ export function HomeScreen() {
         />
       ) : (
         <div className="ow-list">
-          {recent.map((file) => (
+          {suggested.map((file) => (
             <FileButton
               key={file.id}
               file={file}

@@ -9,6 +9,7 @@ import { safeHref } from "../security/sanitize";
 import type { FileRecord, StorageService } from "../storage/types";
 import { Icon } from "../ui/icons";
 import { Button, ErrorState, IconButton, Input, Select } from "../ui/kit";
+import { MenuBar } from "../ui/menus";
 import { Modal } from "../ui/overlay";
 import { createExtensions, pastedHtml } from "./extensions";
 import { findInSlices, type TextSlice } from "./find";
@@ -101,6 +102,7 @@ export function DocsEditor({
   const [commentBody, setCommentBody] = useState("");
   const [versionsOpen, setVersionsOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [showRuler, setShowRuler] = useState(true);
   const [rev, setRev] = useState(0);
 
   const editor = useEditor({
@@ -328,6 +330,41 @@ export function DocsEditor({
   return (
     <section className="ow-editor" aria-label={t("editorRegion")}>
       <h1 className="ow-sr">{name}</h1>
+      <MenuBar
+        label={t("menuBar")}
+        menus={[
+          { id: "file", label: t("menuFile"), items: [
+            { id: "print", label: t("print"), onSelect: () => window.print() },
+            { id: "close", label: t("closeDoc"), onSelect: () => void closeDocument() },
+          ] },
+          { id: "edit", label: t("menuEdit"), items: [
+            { id: "undo", label: t("undo"), onSelect: () => editor?.chain().focus().undo().run() },
+            { id: "redo", label: t("redo"), onSelect: () => editor?.chain().focus().redo().run() },
+            { id: "find", label: t("findReplace"), onSelect: () => setFindOpen(true) },
+          ] },
+          { id: "view", label: t("menuView"), items: [
+            { id: "ruler", label: t("showRuler"), onSelect: () => setShowRuler((value) => !value) },
+          ] },
+          { id: "insert", label: t("menuInsert"), items: [
+            { id: "table", label: t("table"), onSelect: () => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run() },
+            { id: "link", label: t("link"), onSelect: () => setLinkOpen(true) },
+            { id: "break", label: t("pageBreak"), onSelect: () => editor?.chain().focus().insertPageBreak().run() },
+            { id: "comment", label: t("comment"), onSelect: () => setCommentOpen(true) },
+          ] },
+          { id: "format", label: t("menuFormat"), items: [
+            { id: "bold", label: t("bold"), onSelect: () => editor?.chain().focus().toggleBold().run() },
+            { id: "h1", label: t("heading1"), onSelect: () => editor?.chain().focus().toggleHeading({ level: 1 }).run() },
+            { id: "list", label: t("bullet"), onSelect: () => editor?.chain().focus().toggleBulletList().run() },
+            { id: "check", label: t("checklist"), onSelect: () => editor?.chain().focus().toggleTaskList().run() },
+          ] },
+          { id: "tools", label: t("menuTools"), items: [
+            { id: "versions", label: t("versions"), onSelect: () => setVersionsOpen(true) },
+          ] },
+          { id: "help", label: t("menuHelp"), items: [
+            { id: "keys", label: t("shortcuts"), onSelect: () => setShortcutsOpen(true) },
+          ] },
+        ]}
+      />
       <div className="ow-toolbar" role="toolbar" aria-label={t("toolbarLabel")}>
         <Select
           label={t("styleLabel")}
@@ -480,10 +517,13 @@ export function DocsEditor({
           {findNote ? <p role="status">{findNote}</p> : null}
         </form>
       ) : null}
-      <div className="ow-paper">
+      <div className="ow-doc-stage">
+        {showRuler ? <div className="ow-ruler" aria-hidden="true" /> : null}
+        <div className="ow-paper ow-page-canvas">
         {header ? <p className="ow-print-edge">{header}</p> : null}
         <EditorContent editor={editor} />
         {footer ? <p className="ow-print-edge">{footer}</p> : null}
+        </div>
       </div>
       {rev >= 0 && commentsRef.current.length > 0 ? (
         <ul className="ow-list">

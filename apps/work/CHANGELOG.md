@@ -1,5 +1,18 @@
 # Registro de cambios
 
+## 0.3.0 — 2026-10-17
+
+Alfa de desarrollo. No es una versión de producción.
+
+- La disposición de archivos sigue la estructura de Drive: buscador grande, chips Tipo y Modificado, chip Personas desactivado, botón Nuevo, columna con Inicio, Mi unidad, Recientes, Destacados, Papelera y barra de almacenamiento local.
+- Lista con Nombre, Modificado y Tamaño, cuadrícula, migas, clic derecho, selección múltiple y panel de detalles. Inicio muestra sugeridos de este dispositivo.
+- Atajos de archivos: `/`, Ctrl o Cmd + `/`, Alt+C y luego F, D, S o P, Alt+V y luego L o D.
+- Docs, Hojas y Diapositivas tienen la fila Archivo, Editar, Ver, Insertar, Formato, Herramientas y Ayuda, estrella y título editable.
+- Docs centra la página y muestra una regla.
+- Hojas: barra de fórmulas, encabezados, pestañas al pie y cuadrícula virtual de 1000 filas por columnas A–AF. Un archivo de 50×12 de la 0.2.0 sigue abriendo.
+- Diapositivas: miniaturas, cuatro temas y objetos movibles. Título y cuerpo se mantienen en el JSON.
+- Iconos de Lucide 1.59.0 (ISC). El análisis está en `docs/ANALISIS_DRIVE_UI.md`.
+
 ## 0.2.0 — 2026-10-17
 
 Alfa de desarrollo. No es una versión de producción.

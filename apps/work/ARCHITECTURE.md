@@ -1,6 +1,6 @@
 # Arquitectura
 
-ORVUPI Work 0.2.0 corre entero en el navegador. El diagrama de esta fase:
+ORVUPI Work 0.3.0 corre entero en el navegador. El diagrama de esta fase:
 
 ```
 Persona
@@ -21,9 +21,9 @@ No hay cuenta, ni red de documentos, ni worker que envíe el contenido fuera del
 | `src/ui` | Design system, barras, diálogos, panel de IA |
 | `src/views` | Inicio, biblioteca, ajustes y la pantalla del PDF |
 | `src/docs` | Modelo, editor TipTap, cola de guardado, importación y exportación |
-| `src/files` | Carpetas, filtros, orden y vista previa |
-| `src/sheets` | Cuadrícula, fórmulas, CSV y XLSX |
-| `src/slides` | Título, cuerpo y presentación local |
+| `src/files` | Carpetas, filtros, lista, cuadrícula, selección y detalles |
+| `src/sheets` | Cuadrícula virtual de 1000×32, fórmulas, CSV y XLSX |
+| `src/slides` | Miniaturas, temas, objetos y presentación local |
 | `src/storage` | OPFS, IndexedDB, copia y restauración |
 | `src/security` | CSP, límites, nombres, SHA-256, DOMPurify |
 | `src/i18n` | Español e inglés, mismas claves |
@@ -42,7 +42,7 @@ El archivo propio es JSON:
 
 `content` es el documento de TipTap. El mismo JSON puede llevar `header`, `footer`, `comments` y `versions`. Un archivo de la 0.1.0, sin esos campos, sigue abriéndose. Importar `.orvdoc` o JSON compatible crea un id nuevo. TXT, Markdown y HTML se convierten después de sanear el HTML. Un PDF se guarda en bruto y no se abre en el editor. CSV y XLSX se convierten en `orvupi-sheet` versión 1. Otras extensiones permitidas se guardan como archivo.
 
-Una hoja guarda el texto de cada celda. Lo que empieza por `=` se evalúa al mostrar. Una presentación es `orvupi-slides` versión 1.
+Una hoja guarda el texto de cada celda usada. Al abrir se rellena hasta 1000 filas y 32 columnas. Lo que empieza por `=` se evalúa al mostrar, y solo en las celdas visibles. Una presentación es `orvupi-slides` versión 1, con `theme` e `items`. Si esos campos faltan, se reconstruyen desde el título y el cuerpo.
 
 La primera línea cambia el nombre solo si el documento sigue llamándose «Sin título» o «Untitled».
 

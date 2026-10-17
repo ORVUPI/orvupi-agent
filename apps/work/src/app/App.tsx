@@ -1,10 +1,11 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ExportKind } from "../docs/DocsEditor";
 import { ProgressBar } from "../ui/kit";
 import { AiPanel } from "../ui/AiPanel";
 import { CommandPalette, type Command } from "../ui/CommandPalette";
 import { ShellFrame, Sidebar, Topbar, type NavItem } from "../ui/chrome";
-import { Modal, Toasts } from "../ui/overlay";
+import { Icon } from "../ui/icons";
+import { Dropdown, Modal, Toasts } from "../ui/overlay";
 import { ErrorState } from "../ui/kit";
 import { FilesScreen } from "../files/FilesScreen";
 import { SheetsScreen } from "../sheets/SheetScreen";
@@ -12,42 +13,69 @@ import { SlidesScreen } from "../slides/SlidesScreen";
 import { DocsScreen, HomeScreen, LaterScreen, SearchResults, SettingsScreen, TemplateLibrary } from "../views/screens";
 import { useWorkspace, type ViewId } from "./workspace";
 
-const NAV: Array<NavItem & { id: ViewId }> = [
-  { id: "home", label: "", icon: "home", tool: "files" },
-  { id: "docs", label: "", icon: "docs", tool: "docs" },
-  { id: "sheets", label: "", icon: "sheets", tool: "sheets" },
-  { id: "slides", label: "", icon: "slides", tool: "slides" },
-  { id: "pdf", label: "", icon: "pdf", tool: "pdf" },
-  { id: "files", label: "", icon: "files", tool: "files" },
-  { id: "ai", label: "", icon: "ai", tool: "ai" },
-  { id: "templates", label: "", icon: "templates", tool: "docs" },
-  { id: "settings", label: "", icon: "settings", tool: "files" },
-];
-
 export function App() {
   const workspace = useWorkspace();
-  const items = NAV.map((item) => ({
-    ...item,
-    label: workspace.t(
-      item.id === "home"
-        ? "navHome"
-        : item.id === "docs"
-          ? "navDocs"
-          : item.id === "sheets"
-            ? "navSheets"
-            : item.id === "slides"
-              ? "navSlides"
-              : item.id === "pdf"
-                ? "navPdf"
-                : item.id === "files"
-                  ? "navFiles"
-                  : item.id === "ai"
-                    ? "navAi"
-                    : item.id === "templates"
-                      ? "navTemplates"
-                      : "navSettings",
-    ),
-  }));
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [quota, setQuota] = useState<number | null>(null);
+  const items: NavItem[] = [
+    { id: "home", label: workspace.t("navHome"), icon: "home", tool: "files" },
+    { id: "drive", label: workspace.t("navFiles"), icon: "drive", tool: "files" },
+    { id: "recent", label: workspace.t("filesRecent"), icon: "clock", tool: "files" },
+    { id: "starred", label: workspace.t("filesStarred"), icon: "star", tool: "files" },
+    { id: "trash", label: workspace.t("filesTrash"), icon: "trash", tool: "files" },
+    { id: "docs", label: workspace.t("navDocs"), icon: "docs", tool: "docs" },
+    { id: "sheets", label: workspace.t("navSheets"), icon: "sheets", tool: "sheets" },
+    { id: "slides", label: workspace.t("navSlides"), icon: "slides", tool: "slides" },
+    { id: "pdf", label: workspace.t("navPdf"), icon: "pdf", tool: "pdf" },
+    { id: "templates", label: workspace.t("navTemplates"), icon: "templates", tool: "docs" },
+    { id: "ai", label: workspace.t("navAi"), icon: "ai", tool: "ai" },
+    { id: "settings", label: workspace.t("navSettings"), icon: "settings", tool: "files" },
+  ];
+
+  useEffect(() => {
+    void navigator.storage?.estimate?.().then((estimate) => setQuota(estimate.quota ?? null)).catch(() => setQuota(null));
+  }, [workspace.files]);
+
+  useEffect(() => {
+    let chord: { key: string; at: number } | null = null;
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target instanceof HTMLElement ? event.target : null;
+      const typing = Boolean(target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable));
+      if ((event.ctrlKey || event.metaKey) && event.key === "/") {
+        event.preventDefault();
+        setHelpOpen(true);
+        return;
+      }
+      if (!typing && event.key === "/" && !event.ctrlKey && !event.metaKey && !event.altKey) {
+        event.preventDefault();
+        document.getElementById("ow-search")?.focus();
+        return;
+      }
+      if (typing) return;
+      const letter = event.key.toLowerCase();
+      if (event.altKey && (letter === "c" || letter === "v")) {
+        chord = { key: letter, at: Date.now() };
+        return;
+      }
+      if (!chord || Date.now() - chord.at > 1500) return;
+      const which = chord.key;
+      chord = null;
+      if (which === "v" && letter === "l") {
+        window.dispatchEvent(new CustomEvent("ow-drive", { detail: "toggle-layout" }));
+        return;
+      }
+      if (which === "v" && letter === "d") {
+        window.dispatchEvent(new CustomEvent("ow-drive", { detail: "toggle-details" }));
+        return;
+      }
+      if (which === "c" && letter === "f") window.dispatchEvent(new CustomEvent("ow-drive", { detail: "new-folder" }));
+      if (which === "c" && letter === "d") void workspace.createDocument(undefined, undefined, workspace.folderId);
+      if (which === "c" && letter === "s") void workspace.createSheet(workspace.folderId);
+      if (which === "c" && letter === "p") void workspace.createSlides(workspace.folderId);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [workspace]);
 
   const exportItems = useMemo(() => {
     if (workspace.session) {
@@ -131,19 +159,59 @@ export function App() {
           brand={workspace.t("appName")}
           brandAlt={workspace.t("brandAlt")}
           items={items}
-          current={workspace.view}
+          current={workspace.view === "files" ? (workspace.browse === "folder" ? "drive" : workspace.browse) : workspace.view}
           open={workspace.navOpen}
           onNavigate={(id) => {
-            if (id === "ai") {
+            if (id === "drive") void workspace.showBrowse("folder");
+            else if (id === "recent") void workspace.showBrowse("recent");
+            else if (id === "starred") void workspace.showBrowse("starred");
+            else if (id === "trash") void workspace.showBrowse("trash");
+            else if (id === "ai") {
               workspace.setAiOpen(true);
               void workspace.navigate("ai");
-              return;
-            }
-            void workspace.navigate(id as ViewId);
+            } else void workspace.navigate(id as ViewId);
           }}
           onClose={() => workspace.setNavOpen(false)}
           closeLabel={workspace.t("closeMenu")}
           navLabel={workspace.t("navLabel")}
+          action={
+            <div className="ow-new">
+              <Dropdown
+                label={workspace.t("newMenu")}
+                items={[
+                  { id: "folder", label: workspace.t("newFolder"), onSelect: () => window.dispatchEvent(new CustomEvent("ow-drive", { detail: "new-folder" })) },
+                  { id: "doc", label: workspace.t("menuDocument"), onSelect: () => void workspace.createDocument(undefined, undefined, workspace.folderId) },
+                  { id: "sheet", label: workspace.t("menuSheet"), onSelect: () => void workspace.createSheet(workspace.folderId) },
+                  { id: "slides", label: workspace.t("menuSlides"), onSelect: () => void workspace.createSlides(workspace.folderId) },
+                ]}
+              />
+              <label className="ow-file">
+                <input aria-label={workspace.t("uploadFile")} type="file" accept=".orvdoc,.json,.txt,.md,.html,.htm,.pdf,.png,.jpg,.jpeg,.gif,.webp,.csv,.xlsx" onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  event.target.value = "";
+                  if (file) void workspace.importUserFile(file, workspace.folderId);
+                }} />
+                <span className="ow-button">{workspace.t("uploadFile")}</span>
+              </label>
+              <label className="ow-file">
+                <input aria-label={workspace.t("uploadFolder")} type="file" multiple ref={(node) => { if (node) node.setAttribute("webkitdirectory", ""); }} onChange={(event) => {
+                  const files = [...(event.target.files ?? [])];
+                  event.target.value = "";
+                  if (files.length > 0) void workspace.importTree(files, workspace.folderId);
+                }} />
+                <span className="ow-button">{workspace.t("uploadFolder")}</span>
+              </label>
+            </div>
+          }
+          footer={
+            <button type="button" className="ow-storage" onClick={() => void workspace.navigate("settings")}>
+              <span><Icon name="database" /> {workspace.t("navStorage")}</span>
+              <span className="ow-meter" role="meter" aria-valuemin={0} aria-valuemax={quota ?? 1} aria-valuenow={Math.min(quota ?? 1, workspace.files.filter((file) => file.deletedAt === null).reduce((sum, file) => sum + file.size, 0))} aria-label={workspace.t("navStorage")}>
+                <i style={{ width: `${quota ? Math.min(100, (workspace.files.filter((file) => file.deletedAt === null).reduce((sum, file) => sum + file.size, 0) / quota) * 100) : 8}%` }} />
+              </span>
+              <small>{workspace.t("storageOf", { used: workspace.usedLabel })}</small>
+            </button>
+          }
         />
       }
       topbar={
@@ -172,6 +240,40 @@ export function App() {
           onAi={() => workspace.setAiOpen(!workspace.aiOpen)}
           closeDocLabel={workspace.t("closeDoc")}
           onCloseDoc={workspace.session ? () => void workspace.session?.close() : null}
+          starred={workspace.files.find((file) => file.id === (workspace.openDocId ?? workspace.openSheetId ?? workspace.openSlideId))?.favorite ?? false}
+          starLabel={workspace.t("star")}
+          onStar={workspace.openDocId || workspace.openSheetId || workspace.openSlideId ? () => {
+            const id = workspace.openDocId ?? workspace.openSheetId ?? workspace.openSlideId;
+            const file = workspace.files.find((item) => item.id === id);
+            if (!id || !file) return;
+            void workspace.storage?.setFavorite(id, !file.favorite).then(() => workspace.refreshFiles()).catch(workspace.reportError);
+          } : undefined}
+          chips={workspace.view === "home" || workspace.view === "files" ? (
+            <>
+              <label className="ow-chip">
+                {workspace.t("chipType")}
+                <select aria-label={workspace.t("chipType")} value={workspace.kindFilter} onChange={(event) => workspace.setKindFilter(event.target.value as typeof workspace.kindFilter)}>
+                  <option value="all">{workspace.t("allTypes")}</option>
+                  <option value="folder">{workspace.t("kindFolder")}</option>
+                  <option value="doc">{workspace.t("kindDoc")}</option>
+                  <option value="sheet">{workspace.t("kindSheet")}</option>
+                  <option value="slide">{workspace.t("kindSlide")}</option>
+                  <option value="pdf">{workspace.t("kindPdf")}</option>
+                  <option value="other">{workspace.t("kindOther")}</option>
+                </select>
+              </label>
+              <button type="button" className="ow-chip" disabled title={workspace.t("chipPeopleHint")}>{workspace.t("chipPeople")}</button>
+              <label className="ow-chip">
+                {workspace.t("chipModified")}
+                <select aria-label={workspace.t("chipModified")} value={workspace.dateFilter} onChange={(event) => workspace.setDateFilter(event.target.value as typeof workspace.dateFilter)}>
+                  <option value="any">{workspace.t("dateAny")}</option>
+                  <option value="today">{workspace.t("dateToday")}</option>
+                  <option value="week">{workspace.t("dateWeek")}</option>
+                  <option value="month">{workspace.t("dateMonth")}</option>
+                </select>
+              </label>
+            </>
+          ) : null}
         />
       }
       aside={
@@ -208,6 +310,10 @@ export function App() {
         onClose={() => workspace.setPaletteOpen(false)}
       />
       <Toasts items={workspace.toasts} onDismiss={workspace.dismissToast} />
+      <Modal open={helpOpen} title={workspace.t("shortcuts")} onClose={() => setHelpOpen(false)} footer={<button type="button" className="ow-button" onClick={() => setHelpOpen(false)}>{workspace.t("closeDialog")}</button>}>
+        <p>{workspace.t("shortcutsDriveBody")}</p>
+        <p>{workspace.t("shortcutsBody")}</p>
+      </Modal>
       <Modal open={workspace.busy !== null} title={workspace.t("appName")} onClose={() => undefined}>
         <ProgressBar label={workspace.busy ?? workspace.t("preparing")} />
       </Modal>

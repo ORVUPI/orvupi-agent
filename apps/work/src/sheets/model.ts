@@ -51,8 +51,27 @@ function fitCells(value: unknown): string[][] {
   return grid;
 }
 
+function compactCells(cells: string[][]): string[][] {
+  let lastRow = -1;
+  let lastCol = -1;
+  for (let row = 0; row < cells.length; row += 1) {
+    const line = cells[row] ?? [];
+    for (let col = 0; col < line.length; col += 1) {
+      if (!line[col]) continue;
+      if (row > lastRow) lastRow = row;
+      if (col > lastCol) lastCol = col;
+    }
+  }
+  if (lastRow < 0 || lastCol < 0) return [[""]];
+  return cells.slice(0, lastRow + 1).map((row) => row.slice(0, lastCol + 1));
+}
+
 export function serializeSheet(file: SheetFile): Uint8Array {
-  return encodeUtf8(JSON.stringify(file));
+  const compact: SheetFile = {
+    ...file,
+    sheets: file.sheets.map((sheet) => ({ ...sheet, cells: compactCells(sheet.cells) })),
+  };
+  return encodeUtf8(JSON.stringify(compact));
 }
 
 export function parseSheet(bytes: Uint8Array | string): SheetFile {

@@ -1,6 +1,5 @@
-export const COL_COUNT = 12;
-export const ROW_COUNT = 50;
-const COLS = "ABCDEFGHIJKL";
+export const COL_COUNT = 32;
+export const ROW_COUNT = 1000;
 
 export type CellValue =
   | { kind: "num"; value: number }
@@ -12,7 +11,14 @@ export type CellValue =
 const FUNCS = new Set(["SUMA", "SUM", "PROMEDIO", "AVERAGE", "MIN", "MAX", "CONTAR", "COUNT", "SI", "IF"]);
 
 export function columnLabel(index: number): string {
-  return COLS[index] ?? "";
+  let n = index + 1;
+  let label = "";
+  while (n > 0) {
+    const rem = (n - 1) % 26;
+    label = String.fromCharCode(65 + rem) + label;
+    n = Math.floor((n - 1) / 26);
+  }
+  return label;
 }
 
 export function cellRef(row: number, col: number): string {
@@ -24,11 +30,13 @@ export function emptyGrid(): string[][] {
 }
 
 export function parseCellRef(token: string): { row: number; col: number } | null {
-  const match = /^([A-L])([1-9][0-9]*)$/i.exec(token.trim());
+  const match = /^([A-Z]{1,3})([1-9][0-9]*)$/i.exec(token.trim());
   if (!match?.[1] || !match[2]) return null;
-  const col = COLS.indexOf(match[1].toUpperCase());
+  let col = 0;
+  for (const char of match[1].toUpperCase()) col = col * 26 + char.charCodeAt(0) - 64;
+  col -= 1;
   const row = Number(match[2]) - 1;
-  if (col < 0 || row < 0 || row >= ROW_COUNT) return null;
+  if (col < 0 || col >= COL_COUNT || row < 0 || row >= ROW_COUNT) return null;
   return { row, col };
 }
 

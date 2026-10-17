@@ -1,6 +1,6 @@
 # Registro de decisiones de arquitectura
 
-Fecha de la revisión: 17 de octubre de 2026. Versiones tomadas del registro npm ese día. La alfa 0.2.0 cubre el núcleo, Docs, un gestor de archivos local y editores básicos de hojas y diapositivas. No es una versión de producción.
+Fecha de la revisión: 17 de octubre de 2026. Versiones tomadas del registro npm ese día. La alfa 0.3.0 cubre el núcleo, Docs, un gestor de archivos con la disposición de una unidad local, una cuadrícula virtual y diapositivas con lienzo. No es una versión de producción.
 
 ## Contexto
 
@@ -88,8 +88,14 @@ DOMPurify 3.4.17 se distribuye como `MPL-2.0 OR Apache-2.0`. Esta aplicación el
 
 ## ADR-011. Archivos y diapositivas locales
 
-Una carpeta es un archivo de tipo `folder`. Mover rechaza un ciclo. Destacados, etiquetas y un color de una lista cerrada viajan en los metadatos y en la copia del espacio. Las diapositivas son JSON `orvupi-slides` versión 1: título y cuerpo, hasta 30, con un modo de presentación local. No hay temas, transiciones ni PPTX.
+Una carpeta es un archivo de tipo `folder`. Mover rechaza un ciclo. Destacados, etiquetas y un color de una lista cerrada viajan en los metadatos y en la copia del espacio. Las diapositivas son JSON `orvupi-slides` versión 1. Desde la 0.3.0 cada diapositiva añade `theme` e `items`. Título y cuerpo se siguen guardando para que un lector anterior no pierda el texto.
+
+## ADR-012. Disposición y cuadrícula virtual
+
+La estructura de pantalla sigue el análisis de `docs/ANALISIS_DRIVE_UI.md`: columna, buscador, chips, migas, lista, panel y la fila de menús de los editores. Los iconos vienen de `lucide-react` 1.59.0 (ISC). No se empaquetan iconos ni colores de marca de Google.
+
+La cuadrícula de hojas es de 1000×32 en memoria y se pinta por ventana. `serializeSheet` guarda solo el rectángulo usado, así que un archivo de la 0.2.0 sigue siendo pequeño y `parseSheet` lo rellena hasta el tamaño nuevo. No se adopta Handsontable ni HyperFormula.
 
 ## Consecuencias
 
-El visor PDF, el modelo de IA, la biblioteca amplia de plantillas y las automatizaciones siguen en fases posteriores. La cuadrícula no crece, el DOCX no lleva imágenes y el XLSX no cubre el formato completo. La matriz está en `docs/PARIDAD_DRIVE.md`.
+El visor PDF, el modelo de IA, la biblioteca amplia de plantillas y las automatizaciones siguen en fases posteriores. El DOCX no lleva imágenes y el XLSX no cubre el formato completo. La matriz está en `docs/PARIDAD_DRIVE.md`.

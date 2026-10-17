@@ -56,7 +56,7 @@ test("una hoja suma dos celdas y una carpeta se crea en archivos", async ({ page
   await page.getByRole("button", { name: "B1", exact: true }).click();
   await formula.fill("=SUMA(A1:A2)");
   await expect(page.getByRole("button", { name: "B1", exact: true })).toHaveText("30");
-  await page.getByRole("navigation", { name: "Secciones" }).getByRole("button", { name: "Archivos" }).click();
+  await page.getByRole("navigation", { name: "Secciones" }).getByRole("button", { name: "Mi unidad" }).click();
   await page.getByRole("button", { name: "Nueva carpeta" }).click();
   await expect(page.getByRole("button", { name: "Nueva carpeta Carpeta" })).toBeVisible();
 });
