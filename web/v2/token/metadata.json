@@ -1,0 +1,16 @@
+{
+  "name": "ORVUPI",
+  "symbol": "ORVUPI",
+  "description": "ORVUPI es un proyecto comunitario que crea herramientas web abiertas y locales. Más en https://orvupi.com",
+  "image": "https://orvupi.com/assets/orvupi/token-512.png",
+  "external_url": "https://orvupi.com",
+  "extensions": {
+    "website": "https://orvupi.com",
+    "twitter": "https://x.com/ORVUPI",
+    "telegram": "https://t.me/orvupi"
+  },
+  "properties": {
+    "files": [{ "uri": "https://orvupi.com/assets/orvupi/token-512.png", "type": "image/png" }],
+    "category": "image"
+  }
+}
