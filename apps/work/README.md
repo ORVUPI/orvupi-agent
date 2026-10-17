@@ -2,7 +2,7 @@
 
 Suite de productividad en el navegador. Gratis, instalable y local-first. Los documentos se guardan en el dispositivo. Esta versión no tiene servidor, no llama a APIs de pago y no se vincula a ningún token.
 
-Esta entrega es la alfa 0.6.0: la misma suite local, ahora usable en el móvil y con la auditoría funcional al completo. La auditoría está en `docs/AUDITORIA_FUNCIONAL.md`. El visor PDF y el modelo de IA local siguen previstos y todavía no editan. La matriz de funciones está en `docs/PARIDAD_DRIVE.md`. Las medidas, en `docs/ANALISIS_DRIVE_UI.md`.
+Esta entrega es la alfa 0.6.1: la misma suite local, legible en un teléfono de 412 px. La auditoría está en `docs/AUDITORIA_FUNCIONAL.md`. El visor PDF y el modelo de IA local siguen previstos y todavía no editan. La matriz de funciones está en `docs/PARIDAD_DRIVE.md`. Las medidas, en `docs/ANALISIS_DRIVE_UI.md`.
 
 ## Arranque
 
@@ -33,6 +33,13 @@ npm run test:e2e
 ```
 
 `npm test` ejecuta Vitest (unidad e integración). `npm run test:e2e` construye la app y recorre con Playwright el ciclo de la sección 30 del manual, más el contraste con axe.
+
+## Qué hay en 0.6.1
+
+- Docs en el teléfono: título completo, menú ⋮, texto a 16 px que ocupa el ancho y una barra inferior con fuente, tamaño, color, listas y tabla.
+- Hojas, presentaciones, formularios, dibujos y notas ocultan el cromo de Drive. La rejilla de Hojas deja ver al menos doce filas.
+- Inicio: búsqueda ancha, filtros en una fila y el botón «Nuevo» separado del contenido.
+- Un enlace a un archivo que no está guardado aquí muestra «Este archivo no está en este dispositivo» y un botón para volver a Drive.
 
 ## Qué hay en 0.6.0
 

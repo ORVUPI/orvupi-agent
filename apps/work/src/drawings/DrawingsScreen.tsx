@@ -3,6 +3,7 @@ import { useWorkspace } from "../app/workspace";
 import { loadFileWhenReady } from "../routing/load";
 import { downloadBytes } from "../security/bytes";
 import { Button, Input } from "../ui/kit";
+import { absentOnDevice, MissingFile } from "../ui/MissingFile";
 import { MenuBar } from "../ui/menus";
 import { createId, fileNameWithExtension } from "../security/names";
 import { SLIDE_FILLS, alignItem, orderItems, type SlideItem } from "../slides/model";
@@ -113,12 +114,17 @@ export function DrawingsScreen() {
     );
   }
 
+  if (absentOnDevice(workspace.ready, workspace.openDrawingId, workspace.files)) {
+    return <MissingFile message={workspace.t("fileMissing")} action={workspace.t("backToDrive")} onBack={() => void workspace.showBrowse("folder")} />;
+  }
+
   if (!file) return <p>{workspace.t("preparing")}</p>;
   const selected = file.items.find((item) => item.id === selectedId) ?? null;
 
   return (
     <div className="ow-page ow-draw-page" data-tool="drawings">
       <h1 className="ow-sr">{file.title}</h1>
+      <div className="ow-editor-line">
       <div className="ow-row">
         <Input label={workspace.t("fileName")} value={file.title} onChange={(event) => update({ ...file, title: event.target.value.slice(0, 180) })} />
         <p role="status">{status === "saved" ? workspace.t("statusSaved") : workspace.t("statusPending")}</p>
@@ -164,6 +170,7 @@ export function DrawingsScreen() {
           { id: "help", label: workspace.t("menuHelp"), items: [{ id: "keys", label: workspace.t("shortcuts"), onSelect: () => setHelp(true) }] },
         ]}
       />
+      </div>
       {help ? <p role="status">{workspace.t("drawingHint")}</p> : null}
       <div className="ow-draw-work">
         <div className="ow-draw-tools" role="toolbar" aria-label={workspace.t("menuInsert")}>

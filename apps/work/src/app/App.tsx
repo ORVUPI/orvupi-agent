@@ -164,9 +164,13 @@ export function App() {
     content = <ProgressBar label={workspace.t("preparing")} />;
   }
 
+  const editorOpen = Boolean(
+    workspace.openDocId || workspace.openSheetId || workspace.openSlideId || workspace.openFormId || workspace.openDrawingId || workspace.openNoteId,
+  );
+
   return (
     <ShellFrame
-      className={workspace.openDocId ? "is-doc" : ""}
+      className={editorOpen ? "is-doc" : ""}
       skip={workspace.t("skip")}
       sidebar={
         <Sidebar
@@ -232,7 +236,7 @@ export function App() {
           }
         />
       }
-      topbar={workspace.openDocId ? null : (
+      topbar={editorOpen ? null : (
         <Topbar
           menuLabel={workspace.t("menu")}
           onMenu={() => workspace.setNavOpen(true)}

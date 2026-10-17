@@ -3,6 +3,7 @@ import { useWorkspace } from "../app/workspace";
 import { loadFileWhenReady } from "../routing/load";
 import { editorPath } from "../routing/paths";
 import { Button, Input, Select } from "../ui/kit";
+import { absentOnDevice, MissingFile } from "../ui/MissingFile";
 import { MenuBar } from "../ui/menus";
 import { createId } from "../security/names";
 import { createSheetFile, serializeSheet } from "../sheets/model";
@@ -91,11 +92,16 @@ export function FormsScreen() {
     );
   }
 
+  if (absentOnDevice(workspace.ready, workspace.openFormId, workspace.files)) {
+    return <MissingFile message={workspace.t("fileMissing")} action={workspace.t("backToDrive")} onBack={() => void workspace.showBrowse("folder")} />;
+  }
+
   if (!file) return <p>{workspace.t("preparing")}</p>;
 
   return (
     <div className="ow-page ow-form-page" data-tool="forms">
       <h1 className="ow-sr">{file.title}</h1>
+      <div className="ow-editor-line">
       <div className="ow-row">
         <p role="status">{status === "saved" ? workspace.t("statusSaved") : workspace.t("statusPending")}</p>
         <Button aria-pressed={mode === "edit"} onClick={() => setMode("edit")}>{workspace.t("formEdit")}</Button>
@@ -129,6 +135,7 @@ export function FormsScreen() {
           { id: "help", label: workspace.t("menuHelp"), items: [{ id: "keys", label: workspace.t("shortcuts"), onSelect: () => setHelp(true) }] },
         ]}
       />
+      </div>
       <div className="ow-form-banner" aria-hidden="true" />
       <article className="ow-form-card">
         {mode === "edit" ? (

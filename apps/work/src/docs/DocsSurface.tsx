@@ -248,6 +248,7 @@ export function DocsSurface({
   const [ruler, setRuler] = useState(true);
   const [zoom, setZoom] = useState(100);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const dockRef = useRef<HTMLDivElement>(null);
   const [pane, setPane] = useState(() => (typeof window === "undefined" ? 1200 : window.innerWidth));
   const [inset, setInset] = useState(0);
   const [mode, setMode] = useState<"edit" | "view">("edit");
@@ -297,7 +298,7 @@ export function DocsSurface({
     };
   }, []);
   const narrow = pane < PAGE_W + 8;
-  const shownZoom = narrow ? Math.max(0.32, (pane - 32) / PAGE_W) : zoom / 100;
+  const shownZoom = narrow ? 1 : zoom / 100;
   const point = shownPoint(editor?.getAttributes("textStyle")?.fontSize);
   const font = plainFont(editor?.getAttributes("textStyle")?.fontFamily);
   const style = editor?.isActive("heading", { level: 1 })
@@ -477,7 +478,7 @@ export function DocsSurface({
   const align = String(editor?.getAttributes(block)?.textAlign ?? "left");
 
   return (
-    <div className="ow-docs" data-tool="docs">
+    <div className={`ow-docs${narrow ? " is-narrow" : ""}`} data-tool="docs">
       <header className="ow-docs-head">
         <div className="ow-docs-titlebar">
           <button type="button" className="ow-docs-logo" aria-label={t("closeDoc")} onClick={onClose}>
@@ -530,7 +531,7 @@ export function DocsSurface({
         </div>
       </header>
       {menus ? (
-        <div className="ow-docs-toolwrap">
+        <div className={`ow-docs-toolwrap${narrow ? " is-narrow" : ""}`}>
           <div className="ow-docs-toolbar" role="toolbar" aria-label={t("toolbarLabel")} onMouseDown={holdPointer}>
             <DocIcon label={t("find")} onClick={onFind}><Search size={20} /></DocIcon>
             <DocIcon label={t("undo")} onClick={() => run(() => editor?.chain().focus().undo().run())}><Undo2 size={20} /></DocIcon>
@@ -606,7 +607,7 @@ export function DocsSurface({
           </div>
         </div>
       ) : (
-        <div className="ow-docs-toolwrap is-collapsed">
+        <div className={`ow-docs-toolwrap is-collapsed${narrow ? " is-narrow" : ""}`}>
           <DocIcon label={t("showMenus")} onClick={() => setMenus(true)}><Pencil size={18} /></DocIcon>
         </div>
       )}
@@ -637,11 +638,11 @@ export function DocsSurface({
           <button type="button" className="ow-docs-tabs-open" aria-label={t("outlineTitle")} onClick={() => setTabsOpen(true)}>›</button>
         )}
         <div className="ow-docs-scroll" ref={scrollRef} style={{ paddingBottom: inset + (narrow ? 64 : 48) }}>
-          <div className="ow-docs-sheet" style={{ zoom: shownZoom }}>
-            {ruler ? <div className="ow-ruler-row">{narrow ? null : <div className="ow-vruler-spacer" />}<RulerH /></div> : null}
+          <div className={`ow-docs-sheet${narrow ? " is-flow" : ""}`} style={{ zoom: shownZoom }}>
+            {ruler && !narrow ? <div className="ow-ruler-row"><div className="ow-vruler-spacer" /><RulerH /></div> : null}
             <div className="ow-docs-page-row">
               {ruler && !narrow ? <RulerV /> : null}
-              <article className={`ow-a4${columns === 2 ? " is-cols-2" : columns === 3 ? " is-cols-3" : ""}${dropCap ? " is-dropcap" : ""}`} style={{ width: PAGE_W, minHeight: PAGE_H }}>
+              <article className={`ow-a4${narrow ? " is-flow" : ""}${columns === 2 ? " is-cols-2" : columns === 3 ? " is-cols-3" : ""}${dropCap ? " is-dropcap" : ""}`} style={narrow ? undefined : { width: PAGE_W, minHeight: PAGE_H }}>
                 {watermark ? <p className="ow-watermark" aria-hidden="true">{watermark}</p> : null}
                 <input className="ow-a4-edge" aria-label={t("header")} value={header} placeholder={t("header")} onChange={(event) => onHeader(event.target.value.slice(0, 240))} />
                 <div className="ow-a4-body">
@@ -659,10 +660,23 @@ export function DocsSurface({
       </div>
       {narrow ? (
         <div className="ow-format-dock" role="toolbar" aria-label={t("toolbarLabel")}>
-          <DocIcon label={t("bold")} pressed={editor?.isActive("bold")} onClick={() => run(() => editor?.chain().focus().toggleBold().run())}><strong>B</strong></DocIcon>
-          <DocIcon label={t("italic")} pressed={editor?.isActive("italic")} onClick={() => run(() => editor?.chain().focus().toggleItalic().run())}><em>I</em></DocIcon>
-          <DocIcon label={t("underline")} pressed={editor?.isActive("underline")} onClick={() => run(() => editor?.chain().focus().toggleUnderline().run())}><span className="ow-u">U</span></DocIcon>
-          <DocIcon label={t("alignLeft")} pressed={align === "left"} onClick={() => run(() => editor?.chain().focus().setTextAlign("left").run())}>≡</DocIcon>
+          <div className="ow-format-scroll" ref={dockRef}>
+            <ToolMenu label={t("fontLabel")} value={font} options={FONTS.map((item) => ({ id: item, label: item, family: cssFamily(item) }))} onPick={(id) => run(() => editor?.chain().focus().setFontFamily(cssFamily(id)).run())} />
+            <SizeBox t={t} point={point} onApply={applySize} onRemember={rememberSelection} />
+            <ColorMenu t={t} editor={editor} run={run} kind="color" />
+            <DocIcon label={t("bullet")} pressed={editor?.isActive("bulletList")} onClick={() => run(() => editor?.chain().focus().toggleBulletList().run())}><List size={20} /></DocIcon>
+            <DocIcon label={t("ordered")} pressed={editor?.isActive("orderedList")} onClick={() => run(() => editor?.chain().focus().toggleOrderedList().run())}><ListOrdered size={20} /></DocIcon>
+            <DocIcon label={t("checklist")} pressed={editor?.isActive("taskList")} onClick={() => run(() => editor?.chain().focus().toggleTaskList().run())}><ListChecks size={20} /></DocIcon>
+            <DocIcon label={t("table")} onClick={() => run(() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run())}><span aria-hidden="true">⊞</span></DocIcon>
+            <DocIcon label={t("bold")} pressed={editor?.isActive("bold")} onClick={() => run(() => editor?.chain().focus().toggleBold().run())}><strong>B</strong></DocIcon>
+            <DocIcon label={t("italic")} pressed={editor?.isActive("italic")} onClick={() => run(() => editor?.chain().focus().toggleItalic().run())}><em>I</em></DocIcon>
+            <DocIcon label={t("underline")} pressed={editor?.isActive("underline")} onClick={() => run(() => editor?.chain().focus().toggleUnderline().run())}><span className="ow-u">U</span></DocIcon>
+            <DocIcon label={t("alignLeft")} pressed={align === "left"} onClick={() => run(() => editor?.chain().focus().setTextAlign("left").run())}>≡</DocIcon>
+            <DocIcon label={t("alignCenter")} pressed={align === "center"} onClick={() => run(() => editor?.chain().focus().setTextAlign("center").run())}>☰</DocIcon>
+            <ColorMenu t={t} editor={editor} run={run} kind="highlight" />
+            <DocIcon label={t("clearFormat")} onClick={() => run(() => editor?.chain().focus().unsetAllMarks().clearNodes().run())}><RemoveFormatting size={20} /></DocIcon>
+          </div>
+          <button type="button" className="ow-dock-more" aria-label={t("moreFormat")} onMouseDown={(event) => event.preventDefault()} onClick={() => dockRef.current?.scrollBy({ left: 160 })}>›</button>
         </div>
       ) : null}
       <input

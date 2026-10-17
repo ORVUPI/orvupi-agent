@@ -13,6 +13,7 @@ import { fileNameWithExtension } from "../security/names";
 import type { FileRecord } from "../storage/types";
 import { APP_VERSION } from "../version";
 import { Button, Card, EmptyState, ErrorState, Select, TabPanel, Tabs } from "../ui/kit";
+import { absentOnDevice, MissingFile } from "../ui/MissingFile";
 import { Dialog, FilePicker } from "../ui/overlay";
 
 function kindLabel(kind: FileRecord["kind"], t: ReturnType<typeof useWorkspace>["t"]): string {
@@ -261,6 +262,16 @@ export function DocsScreen() {
           </div>
         )}
       </div>
+    );
+  }
+
+  if (absentOnDevice(workspace.ready, workspace.openDocId, workspace.files)) {
+    return (
+      <MissingFile
+        message={workspace.t("fileMissing")}
+        action={workspace.t("backToDrive")}
+        onBack={() => void workspace.showBrowse("folder")}
+      />
     );
   }
 

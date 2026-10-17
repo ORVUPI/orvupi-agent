@@ -531,6 +531,9 @@ export const es = {
   decorText: "Texto decorado",
   diagram: "Diagrama",
   tabMore: "Más",
+  fileMissing: "Este archivo no está en este dispositivo",
+  backToDrive: "Volver a Drive",
+  moreFormat: "Más formato",
 } as const;
 
 export type MessageKey = keyof typeof es;
@@ -1068,4 +1071,7 @@ export const en: { [K in MessageKey]: string } = {
   decorText: "Decorated text",
   diagram: "Diagram",
   tabMore: "More",
+  fileMissing: "This file is not on this device",
+  backToDrive: "Back to Drive",
+  moreFormat: "More formatting",
 };

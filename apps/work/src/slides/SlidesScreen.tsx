@@ -4,6 +4,7 @@ import { loadFileWhenReady } from "../routing/load";
 import { downloadBytes } from "../security/bytes";
 import { fileNameWithExtension } from "../security/names";
 import { Button, Input, Select } from "../ui/kit";
+import { absentOnDevice, MissingFile } from "../ui/MissingFile";
 import { MenuBar } from "../ui/menus";
 import {
   SLIDE_FILLS,
@@ -171,6 +172,10 @@ export function SlidesScreen() {
     );
   }
 
+  if (absentOnDevice(workspace.ready, workspace.openSlideId, workspace.files)) {
+    return <MissingFile message={workspace.t("fileMissing")} action={workspace.t("backToDrive")} onBack={() => void workspace.showBrowse("folder")} />;
+  }
+
   if (!file) return <p>{workspace.t("preparing")}</p>;
   const slide = file.slides[index] ?? file.slides[0];
   if (!slide) return null;
@@ -228,6 +233,7 @@ export function SlidesScreen() {
   return (
     <div className="ow-page ow-slides-page" data-tool="slides">
       <h1 className="ow-sr">{file.title}</h1>
+      <div className="ow-editor-line">
       <div className="ow-row">
         <Input label={workspace.t("fileName")} value={file.title} onChange={(event) => update({ ...file, title: event.target.value.slice(0, 180) })} />
         <p role="status">{status === "saved" ? workspace.t("statusSaved") : workspace.t("statusPending")}</p>
@@ -294,6 +300,7 @@ export function SlidesScreen() {
           ] },
         ]}
       />
+      </div>
       {grid ? (
         <div className="ow-slide-grid" role="list">
           {file.slides.map((item, itemIndex) => (

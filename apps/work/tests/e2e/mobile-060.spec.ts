@@ -48,8 +48,25 @@ async function openHomeTool(page: Page, name: string) {
 }
 
 async function menu(page: Page, name: string, item: string | RegExp) {
-  await page.getByRole("menuitem", { name, exact: true }).click();
-  await page.getByRole("menuitem", { name: item, exact: typeof item === "string" }).click();
+  const overflow = page.locator(".ow-menu-overflow");
+  const entry = page.getByRole("menuitem", { name, exact: true });
+  await expect.poll(async () => (await overflow.count()) + (await entry.count()), { timeout: 15_000 }).toBeGreaterThan(0);
+  if ((await overflow.count()) > 0 && (await overflow.getAttribute("aria-expanded")) !== "true") await overflow.click();
+  await entry.last().click();
+  await page.getByRole("menuitem", { name: item, exact: typeof item === "string" }).last().click();
+}
+
+async function visualFont(page: Page, selector: string) {
+  return page.locator(selector).evaluate((node) => {
+    let size = Number.parseFloat(getComputedStyle(node).fontSize);
+    let current: Element | null = node;
+    while (current) {
+      const zoom = Number.parseFloat(getComputedStyle(current).getPropertyValue("zoom") || "1");
+      if (Number.isFinite(zoom) && zoom > 0 && zoom !== 1) size *= zoom;
+      current = current.parentElement;
+    }
+    return size;
+  });
 }
 
 test("el inicio y Drive caben, y el móvil tiene barra y botón Nuevo", async ({ page }) => {
@@ -70,22 +87,84 @@ test("el inicio y Drive caben, y el móvil tiene barra y botón Nuevo", async ({
     await page.getByRole("navigation", { name: "Secciones" }).getByRole("button", { name: "Mi unidad", exact: true }).click();
   }
   await expect(page.locator(".ow-drive-title")).toBeVisible();
+  if (phone && viewportOf(page) <= 768) {
+    const viewport = page.viewportSize();
+    const search = await page.locator(".ow-search").boundingBox();
+    if (!search || !viewport) throw new Error("falta la búsqueda");
+    expect(search.width).toBeGreaterThan(viewport.width * 0.9);
+    const chips = page.locator(".ow-chips");
+    const chipBox = await chips.boundingBox();
+    if (!chipBox) throw new Error("faltan los filtros");
+    expect(chipBox.height).toBeLessThan(64);
+    const pad = await page.locator("main").evaluate((node) => Number.parseFloat(getComputedStyle(node).paddingBottom));
+    expect(pad).toBeGreaterThanOrEqual(150);
+    await page.evaluate(() => {
+      const main = document.querySelector("main");
+      window.scrollTo(0, document.documentElement.scrollHeight);
+      if (main) main.scrollTop = main.scrollHeight;
+    });
+    const covered = await page.evaluate(() => {
+      const fab = document.querySelector(".ow-fab")?.getBoundingClientRect();
+      const main = document.querySelector("main");
+      if (!fab || !main) return 1;
+      let hit = 0;
+      for (const node of main.querySelectorAll("h1, h2, h3, p, article, li, a")) {
+        const rect = node.getBoundingClientRect();
+        if (rect.width < 8 || rect.height < 8) continue;
+        const overlap = Math.min(rect.bottom, fab.bottom) - Math.max(rect.top, fab.top);
+        if (overlap > 8) hit += 1;
+      }
+      return hit;
+    });
+    expect(covered).toBe(0);
+  }
   await fits(page, "drive");
   await axe(page);
-  await shot(page, "060-drive");
+  await shot(page, "061-drive");
 });
+
+function viewportOf(page: Page) {
+  return page.viewportSize()?.width ?? 1360;
+}
 
 test("Docs encaja, oculta la regla vertical y reserva sitio al teclado", async ({ page }) => {
   const docs = await openHomeTool(page, "Nuevo documento");
   if ((docs.viewportSize()?.width ?? 1360) > 800) await docs.setViewportSize({ width: 460, height: 820 });
   await expect(docs.locator(".ow-vruler")).toHaveCount(0);
   await expect(docs.locator(".ow-format-dock")).toBeVisible();
-  await expect(docs.locator(".ow-docs-toolbar")).toBeVisible();
+  await expect(docs.locator(".ow-docs-toolbar")).toBeHidden();
+  const title = docs.locator(".ow-docs-name");
+  await expect(title).toHaveValue("Sin título");
+  const titleFit = await title.evaluate((node) => node.scrollWidth <= node.clientWidth + 1);
+  expect(titleFit).toBe(true);
+  const titleBox = await title.boundingBox();
   const pageBox = await docs.locator(".ow-a4").boundingBox();
   const viewport = docs.viewportSize();
-  if (!pageBox || !viewport) throw new Error("la hoja no está en pantalla");
+  if (!pageBox || !viewport || !titleBox) throw new Error("la hoja no está en pantalla");
+  expect(titleBox.x).toBeGreaterThanOrEqual(-1);
+  expect(titleBox.x + titleBox.width).toBeLessThanOrEqual(viewport.width + 2);
   expect(pageBox.x).toBeGreaterThanOrEqual(-1);
   expect(pageBox.x + pageBox.width).toBeLessThanOrEqual(viewport.width + 2);
+  expect(await visualFont(docs, ".ow-a4 .ProseMirror")).toBeGreaterThanOrEqual(14);
+  const font = docs.getByRole("button", { name: /^Fuente/ });
+  await expect(font).toBeVisible();
+  const fontBox = await font.boundingBox();
+  if (!fontBox) throw new Error("la fuente no está en pantalla");
+  expect(fontBox.x).toBeGreaterThanOrEqual(-1);
+  expect(fontBox.x + fontBox.width).toBeLessThanOrEqual(viewport.width + 2);
+  expect(fontBox.y + fontBox.height).toBeLessThanOrEqual(viewport.height + 2);
+  for (const name of ["Tamaño del texto", "Color del texto", "Lista", "Insertar tabla"]) {
+    const control = docs.getByRole(name === "Tamaño del texto" ? "textbox" : "button", { name, exact: true });
+    await control.scrollIntoViewIfNeeded();
+    const box = await control.boundingBox();
+    if (!box) throw new Error(`${name} no está en pantalla`);
+    expect(box.x).toBeGreaterThanOrEqual(-1);
+    expect(box.x + box.width).toBeLessThanOrEqual(viewport.width + 2);
+  }
+  await docs.locator(".ow-menu-overflow").click();
+  for (const label of ["Archivo", "Editar", "Ver", "Insertar", "Formato", "Herramientas", "Extensiones", "Ayuda"]) {
+    await expect(docs.getByRole("menuitem", { name: label, exact: true })).toBeVisible();
+  }
   await docs.getByRole("menuitem", { name: "Archivo", exact: true }).click();
   const menuBox = await docs.getByRole("menu", { name: "Archivo" }).boundingBox();
   if (!menuBox) throw new Error("el menú no se abrió");
@@ -95,7 +174,7 @@ test("Docs encaja, oculta la regla vertical y reserva sitio al teclado", async (
   await docs.evaluate(() => window.dispatchEvent(new CustomEvent("ow-keyboard-inset", { detail: 280 })));
   await expect(docs.locator(".ow-docs-scroll")).toHaveCSS("padding-bottom", "344px");
   await fits(docs, "docs");
-  await shot(docs, "060-docs");
+  await shot(docs, "061-docs");
   await axe(docs);
 });
 
@@ -122,6 +201,39 @@ test("Docs inserta gráfico, dibujo, ecuación, marca, número, columnas y letra
 
 test("la hoja responde al dedo y cubre escala, nota, validación, macro y consulta", async ({ page }) => {
   const sheet = await openHomeTool(page, "Nueva hoja");
+  const sheetSize = sheet.viewportSize();
+  const restoreWide = (sheetSize?.width ?? 1360) > 768;
+  if (restoreWide) await sheet.setViewportSize({ width: 412, height: 915 });
+  await expect(sheet.locator(".ow-topbar")).toHaveCount(0);
+  await expect(sheet.locator(".ow-tabbar")).toBeHidden();
+  await expect(sheet.locator(".ow-fab")).toBeHidden();
+  await expect.poll(async () => sheet.evaluate(() => {
+    const wrap = document.querySelector(".ow-sheet-wrap");
+    if (!wrap) return 0;
+    const box = wrap.getBoundingClientRect();
+    const top = Math.max(0, box.top);
+    const bottom = Math.min(window.innerHeight, box.bottom);
+    const labels = new Set<string>();
+    for (const node of wrap.querySelectorAll(".ow-vrow")) {
+      const rect = node.getBoundingClientRect();
+      if (rect.height < 10) continue;
+      const visible = Math.min(rect.bottom, bottom) - Math.max(rect.top, top);
+      if (visible >= 18) labels.add((node.textContent || "").trim());
+    }
+    return labels.size;
+  })).toBeGreaterThanOrEqual(12);
+  const ratio = await sheet.evaluate(() => {
+    const wrap = document.querySelector(".ow-sheet-wrap");
+    if (!wrap) return 0;
+    return wrap.getBoundingClientRect().height / window.innerHeight;
+  });
+  expect(ratio).toBeGreaterThanOrEqual(0.65);
+  await sheet.locator(".ow-menu-overflow").click();
+  for (const label of ["Archivo", "Editar", "Ver", "Insertar", "Formato", "Herramientas", "Ayuda"]) {
+    await expect(sheet.getByRole("menuitem", { name: label, exact: true })).toBeVisible();
+  }
+  await sheet.keyboard.press("Escape");
+  if (restoreWide && sheetSize) await sheet.setViewportSize({ width: sheetSize.width, height: sheetSize.height });
   await expect(sheet.getByRole("button", { name: /^A1(\s|$)/ })).toBeVisible();
   await expect(sheet.getByRole("textbox", { name: "Fórmula o valor" })).toBeVisible();
   await expect(sheet.locator(".ow-sheet-cols")).toHaveCSS("position", "sticky");
@@ -136,8 +248,7 @@ test("la hoja responde al dedo y cubre escala, nota, validación, macro y consul
   await formula.fill("1");
   await sheet.getByRole("button", { name: /^A3(\s|$)/ }).click();
   await formula.fill("10");
-  await sheet.getByRole("menuitem", { name: "Formato", exact: true }).click();
-  await sheet.getByRole("menuitem", { name: "Escala de color", exact: true }).click();
+  await menu(sheet, "Formato", "Escala de color");
   await expect(sheet.getByRole("button", { name: /^A2 / })).toHaveCSS("background-color", "rgb(255, 244, 184)");
   await expect(sheet.getByRole("button", { name: /^A3 / })).toHaveCSS("background-color", "rgb(11, 93, 54)");
 
@@ -185,7 +296,10 @@ test("la hoja responde al dedo y cubre escala, nota, validación, macro y consul
   await expect(sheet.getByRole("button", { name: /^E1(\s|$)/ })).toHaveCSS("background-image", /url\(/);
 
   await sheet.getByRole("button", { name: /^G1(\s|$)/ }).click();
-  await sheet.getByRole("button", { name: "Negrita", exact: true }).click();
+  const bold = sheet.getByRole("button", { name: "Negrita", exact: true });
+  if (!(await bold.isVisible())) await sheet.getByRole("button", { name: "Formato", exact: true }).click();
+  await bold.click();
+  if (await sheet.locator(".ow-sheet-tools.is-sheet").isVisible()) await sheet.getByRole("button", { name: "Formato", exact: true }).click();
   await menu(sheet, "Herramientas", "Grabar macro");
   await sheet.getByRole("button", { name: /^G2(\s|$)/ }).click();
   await menu(sheet, "Herramientas", "Ejecutar macro");
@@ -198,7 +312,7 @@ test("la hoja responde al dedo y cubre escala, nota, validación, macro y consul
   await expect(sheet.getByRole("button", { name: /^B2 / })).toContainText("1");
   await expect(sheet.getByRole("button", { name: /^A3 / })).toContainText("Luis");
   await fits(sheet, "hoja");
-  await shot(sheet, "060-sheets");
+  await shot(sheet, "061-sheets");
 });
 
 test("la presentación encaja, anima, muestra cuadrícula y patrón", async ({ page }) => {
@@ -217,7 +331,7 @@ test("la presentación encaja, anima, muestra cuadrícula y patrón", async ({ p
   await expect(slides.locator(".ow-master")).toHaveText("Patrón");
   await fits(slides, "presentación");
   await axe(slides);
-  await shot(slides, "060-slides");
+  await shot(slides, "061-slides");
 });
 
 test("el formulario acepta un archivo y un vídeo locales", async ({ page }) => {
@@ -233,7 +347,7 @@ test("el formulario acepta un archivo y un vídeo locales", async ({ page }) => 
   await expect(form.locator(".ow-form-card input[type='file']")).toHaveAttribute("accept", "video/*");
   await fits(form, "formulario");
   await axe(form);
-  await shot(form, "060-forms");
+  await shot(form, "061-forms");
 });
 
 test("el dibujo inserta texto decorado y un diagrama", async ({ page }) => {
@@ -249,7 +363,7 @@ test("el dibujo inserta texto decorado y un diagrama", async ({ page }) => {
   await expect(canvas.getByRole("button", { name: "Forma" })).toHaveCount(2);
   await fits(drawing, "dibujo");
   await axe(drawing);
-  await shot(drawing, "060-drawings");
+  await shot(drawing, "061-drawings");
 });
 
 test("las notas se filtran desde su propio buscador", async ({ page }) => {
@@ -263,7 +377,28 @@ test("las notas se filtran desde su propio buscador", async ({ page }) => {
   await expect(notes.locator(".ow-note-card", { hasText: "faro" })).toHaveCount(0);
   await fits(notes, "notas");
   await axe(notes);
-  await shot(notes, "060-notes");
+  await shot(notes, "061-notes");
+});
+
+test("un id desconocido avisa en cada editor y vuelve a Drive", async ({ page }) => {
+  const paths = [
+    "/document/d/no-esta/edit",
+    "/spreadsheets/d/no-esta/edit",
+    "/presentation/d/no-esta/edit",
+    "/forms/d/no-esta/edit",
+    "/drawings/d/no-esta/edit",
+    "/notes/d/no-esta/edit",
+  ];
+  for (const path of paths) {
+    await page.goto(path);
+    const card = page.locator(".ow-missing");
+    await expect(card).toBeVisible();
+    await expect(card).toContainText("Este archivo no está en este dispositivo");
+    await expect(card.getByRole("button", { name: "Volver a Drive", exact: true })).toBeVisible();
+  }
+  await page.getByRole("button", { name: "Volver a Drive", exact: true }).click();
+  await expect(page.locator(".ow-drive-title")).toBeVisible();
+  await shot(page, "061-missing");
 });
 
 test("no hay desbordamiento en 360, 390, 412, 460 ni 768", async ({ page }) => {

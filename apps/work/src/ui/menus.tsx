@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { usePhone } from "./phone";
 
 export type BarItem = {
   id: string;
@@ -101,16 +102,24 @@ export function MenuBar({
   menus: Array<{ id: string; label: string; items: BarItem[] }>;
   className?: string;
 }) {
+  const phone = usePhone();
   const [open, setOpen] = useState<string | null>(null);
+  const [hub, setHub] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open && !hub) return;
     const onPointer = (event: PointerEvent) => {
-      if (!ref.current?.contains(event.target as Node)) setOpen(null);
+      const target = event.target;
+      if (target instanceof Node && ref.current?.contains(target)) return;
+      setOpen(null);
+      setHub(false);
     };
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(null);
+      if (event.key === "Escape") {
+        setOpen(null);
+        setHub(false);
+      }
     };
     document.addEventListener("pointerdown", onPointer);
     document.addEventListener("keydown", onKey);
@@ -118,7 +127,52 @@ export function MenuBar({
       document.removeEventListener("pointerdown", onPointer);
       document.removeEventListener("keydown", onKey);
     };
-  }, [open]);
+  }, [open, hub]);
+
+  if (phone) {
+    const current = menus.find((menu) => menu.id === open) ?? null;
+    return (
+      <div className={`ow-menubar is-compact ${className}`.trim()} role="menubar" aria-label={label} ref={ref}>
+        <button
+          type="button"
+          className="ow-menu-overflow"
+          role="menuitem"
+          aria-label={label}
+          aria-haspopup="menu"
+          aria-expanded={hub || Boolean(current)}
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => {
+            setOpen(null);
+            setHub((value) => !value);
+          }}
+        >
+          ⋮
+        </button>
+        {hub || current ? (
+          current ? (
+            <Items items={current.items} label={current.label} onDone={() => { setOpen(null); setHub(false); }} />
+          ) : (
+            <div role="menu" aria-label={label}>
+              {menus.map((menu) => (
+                <button
+                  key={menu.id}
+                  type="button"
+                  role="menuitem"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => {
+                    setHub(false);
+                    setOpen(menu.id);
+                  }}
+                >
+                  {menu.label}
+                </button>
+              ))}
+            </div>
+          )
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <div

@@ -1,4 +1,4 @@
-# Auditoría funcional 0.6.0
+# Auditoría funcional 0.6.1
 
 Comparación de ORVUPI Work con la ayuda oficial de Google. Cada fila es una función de menú, barra, menú contextual o panel. El aspecto y el atajo van en «para qué sirve». La columna «móvil» dice si esa función cabe en un teléfono.
 
@@ -9,6 +9,8 @@ Estados: `funciona`, `roto`, `falta`, `fuera de alcance` (hace falta red o una c
 Cobertura de la auditoría = `funciona` / (`funciona` + `roto` + `falta`). Lo que queda fuera de alcance no entra en el denominador.
 
 Recuento: 132 filas. `funciona` 119, `roto` 0, `falta` 0, `fuera de alcance` 13. Cobertura **100 %** (119 / 119).
+
+En 0.6.1 el teléfono no encoge la página de Docs: el texto queda a 16 px, los menús salen de un botón ⋮ y la rejilla de Hojas muestra al menos doce filas en 412×915.
 
 | herramienta | menú | función | para qué sirve | estado en ORVUPI | móvil | test |
 | --- | --- | --- | --- | --- | --- | --- |

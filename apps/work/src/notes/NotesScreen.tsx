@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useWorkspace } from "../app/workspace";
 import { Button, Input } from "../ui/kit";
+import { absentOnDevice, MissingFile } from "../ui/MissingFile";
 import { createId } from "../security/names";
 import { NOTE_COLORS, createNoteFile, noteInk, parseNote, serializeNote, type NoteFile } from "./model";
 
@@ -88,8 +89,12 @@ export function NotesScreen() {
     );
   }
 
+  if (absentOnDevice(workspace.ready, workspace.openNoteId, workspace.files)) {
+    return <MissingFile message={workspace.t("fileMissing")} action={workspace.t("backToDrive")} onBack={() => void workspace.showBrowse("folder")} />;
+  }
+
   return (
-    <div className="ow-page" data-tool="notes">
+    <div className="ow-page ow-notes-page" data-tool="notes">
       <h1>{workspace.t("navNotes")}</h1>
       <p className="ow-muted">{workspace.t("noteHint")}</p>
       <button type="button" className="ow-note-compose" onClick={() => void workspace.createNote(null)}>

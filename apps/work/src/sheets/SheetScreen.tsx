@@ -4,6 +4,8 @@ import { loadFileWhenReady } from "../routing/load";
 import { downloadBytes } from "../security/bytes";
 import { createId, fileNameWithExtension } from "../security/names";
 import { Button, Input } from "../ui/kit";
+import { absentOnDevice, MissingFile } from "../ui/MissingFile";
+import { usePhone } from "../ui/phone";
 import { MenuBar } from "../ui/menus";
 import { Modal } from "../ui/overlay";
 import { OrvupiChart } from "../ui/chart";
@@ -65,13 +67,19 @@ export function SheetsScreen() {
   const imageRef = useRef<HTMLInputElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const clip = useRef<Clip | null>(null);
+  const phone = usePhone();
+  const [formatOpen, setFormatOpen] = useState(false);
 
   useEffect(() => {
     const node = wrapRef.current;
     if (!node) return;
     node.scrollTop = 0;
     node.scrollLeft = 0;
-    setWin((current) => ({ ...current, top: 0, left: 0 }));
+    setWin((current) => ({ ...current, top: 0, left: 0, height: node.clientHeight, width: node.clientWidth }));
+    const measure = () => setWin((current) => ({ ...current, height: node.clientHeight, width: node.clientWidth }));
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
   }, [file?.active]);
 
   useEffect(() => {
@@ -227,6 +235,16 @@ export function SheetsScreen() {
     );
   }
 
+  if (absentOnDevice(workspace.ready, workspace.openSheetId, workspace.files)) {
+    return (
+      <MissingFile
+        message={workspace.t("fileMissing")}
+        action={workspace.t("backToDrive")}
+        onBack={() => void workspace.showBrowse("folder")}
+      />
+    );
+  }
+
   if (!file || !active) return <p>{error || workspace.t("preparing")}</p>;
 
   const pinned = rowIndexes.filter((row) => row < frozenRows);
@@ -327,9 +345,11 @@ export function SheetsScreen() {
   return (
     <div className="ow-page ow-sheet-page" data-tool="sheets">
       <h1 className="ow-sr">{file.title}</h1>
+      <div className="ow-editor-line">
       <div className="ow-row">
         <Input label={workspace.t("fileName")} value={file.title} onChange={(event) => update((current) => ({ ...current, title: event.target.value.slice(0, 180) }))} />
-        <p role="status">{status === "saved" ? workspace.t("statusSaved") : workspace.t("statusPending")}</p>
+        <p className="ow-sheet-status" role="status">{status === "saved" ? workspace.t("statusSaved") : workspace.t("statusPending")}</p>
+        {phone ? <Button aria-expanded={formatOpen} onClick={() => setFormatOpen((value) => !value)}>{workspace.t("menuFormat")}</Button> : null}
       </div>
       <MenuBar
         label={workspace.t("menuBar")}
@@ -384,7 +404,10 @@ export function SheetsScreen() {
             { id: "scale", label: workspace.t("sheetScale"), onSelect: () => mapActive((sheet) => ({ ...sheet, conditional: [...(sheet.conditional ?? []).filter((item) => item.col !== selected.col), { id: createId().slice(0, 8), col: selected.col, op: "scale", value: "", fill: "#0b5d36" }] })) },
           ] },
           { id: "tools", label: workspace.t("menuTools"), items: [
-            { id: "filter", label: workspace.t("sheetFilter"), onSelect: () => document.getElementById("ow-sheet-filter")?.focus() },
+            { id: "filter", label: workspace.t("sheetFilter"), onSelect: () => {
+              setFormatOpen(true);
+              window.setTimeout(() => document.getElementById("ow-sheet-filter")?.focus(), 0);
+            } },
             { id: "valid", label: workspace.t("sheetValidation"), onSelect: () => setDialog("valid") },
             { id: "cond", label: workspace.t("sheetConditional"), onSelect: () => setDialog("cond") },
             { id: "fill", label: workspace.t("sheetAutofill"), onSelect: () => mapActive((sheet) => ({ ...sheet, cells: autofill(sheet.cells, selected.row, selected.col, 3, true) })) },
@@ -404,7 +427,9 @@ export function SheetsScreen() {
           ] },
         ]}
       />
-      <div className="ow-sheet-tools" role="toolbar" aria-label={workspace.t("menuFormat")}>
+      </div>
+      {!phone || formatOpen ? (
+      <div className={`ow-sheet-tools${phone ? " is-sheet" : ""}`} role="toolbar" aria-label={workspace.t("menuFormat")}>
         <Button aria-pressed={currentStyle?.bold === true} onClick={() => patch({ bold: !currentStyle?.bold })}>{workspace.t("bold")}</Button>
         {(["number", "currency", "percent", "date"] as CellFormatKind[]).map((format) => (
           <Button key={format} aria-pressed={currentStyle?.format === format} onClick={() => patch({ format })}>
@@ -421,7 +446,31 @@ export function SheetsScreen() {
             <button key={color} type="button" className="ow-swatch" style={{ background: color }} aria-label={color} aria-pressed={currentStyle?.color === color} onClick={() => patch({ color })} />
           ))}
         </div>
+        <div className="ow-row ow-sheet-extra">
+          <Input id="ow-sheet-filter" label={workspace.t("sheetFilter")} value={filter} onChange={(event) => setFilter(event.target.value)} />
+          <label className="ow-file">
+            <input
+              aria-label={workspace.t("import")}
+              type="file"
+              accept=".csv,.xlsx,text/csv"
+              onChange={(event) => {
+                const picked = event.target.files?.[0];
+                event.target.value = "";
+                if (!picked) return;
+                void picked.arrayBuffer().then(async (buffer) => {
+                  const bytes = new Uint8Array(buffer);
+                  const imported: SheetTab[] = picked.name.toLowerCase().endsWith(".xlsx")
+                    ? await xlsxToSheets(bytes)
+                    : [{ name: active.name, cells: csvToGrid(new TextDecoder().decode(bytes)), freezeHeader: true }];
+                  update((current) => ({ ...current, sheets: imported, active: 0 }));
+                }).catch(workspace.reportError);
+              }}
+            />
+            <span className="ow-button ow-button-secondary">{workspace.t("import")}</span>
+          </label>
+        </div>
       </div>
+      ) : null}
       <div className="ow-formula">
         <span className="ow-namebox" aria-label={workspace.t("nameBox")}>{cellRef(selected.row, selected.col)}</span>
         <span className="ow-fx" aria-hidden="true">fx</span>
@@ -443,29 +492,6 @@ export function SheetsScreen() {
         ) : null}
         {cellRule?.kind === "date" ? <Input label={workspace.t("sheetDate")} type="date" value={/^\d{4}-\d{2}-\d{2}/.test(raw) ? raw.slice(0, 10) : ""} onChange={(event) => setCell(event.target.value)} /> : null}
         {cellRule?.kind === "range" ? <Input label={workspace.t("sheetRange")} type="number" min={cellRule.min} max={cellRule.max} value={raw} onChange={(event) => setCell(event.target.value)} /> : null}
-      </div>
-      <div className="ow-row">
-        <Input id="ow-sheet-filter" label={workspace.t("sheetFilter")} value={filter} onChange={(event) => setFilter(event.target.value)} />
-        <label className="ow-file">
-          <input
-            aria-label={workspace.t("import")}
-            type="file"
-            accept=".csv,.xlsx,text/csv"
-            onChange={(event) => {
-              const picked = event.target.files?.[0];
-              event.target.value = "";
-              if (!picked) return;
-              void picked.arrayBuffer().then(async (buffer) => {
-                const bytes = new Uint8Array(buffer);
-                const imported: SheetTab[] = picked.name.toLowerCase().endsWith(".xlsx")
-                  ? await xlsxToSheets(bytes)
-                  : [{ name: active.name, cells: csvToGrid(new TextDecoder().decode(bytes)), freezeHeader: true }];
-                update((current) => ({ ...current, sheets: imported, active: 0 }));
-              }).catch(workspace.reportError);
-            }}
-          />
-          <span className="ow-button ow-button-secondary">{workspace.t("import")}</span>
-        </label>
       </div>
       <div
         ref={wrapRef}

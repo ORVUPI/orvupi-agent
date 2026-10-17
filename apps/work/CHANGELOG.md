@@ -1,5 +1,15 @@
 # Registro de cambios
 
+## 0.6.1 — 2026-10-17
+
+Alfa de desarrollo. No es una versión de producción.
+
+- En el teléfono, Docs muestra el título entero, cambia los menús por un botón ⋮ y deja la hoja a 16 px de ancho de pantalla, sin encoger el A4. La barra inferior lleva fuente, tamaño, color, listas, tabla y más.
+- Dentro de un editor se ocultan la barra de Drive, la navegación inferior y el botón «Nuevo». En Hojas, los menús y el formato caben en una fila y una hoja, y la rejilla ocupa la mayor parte de la pantalla.
+- El inicio tiene la búsqueda a todo el ancho, los filtros en una sola fila y sitio abajo para que «Nuevo» no tape la lista.
+- Si el enlace no corresponde a un archivo de este dispositivo, Docs, Hojas, Presentaciones, Formularios, Dibujos y Notas muestran la misma tarjeta: «Este archivo no está en este dispositivo» y «Volver a Drive».
+- Un archivo de 0.1 a 0.6.0 sigue abriendo: la versión del archivo sigue en 1.
+
 ## 0.6.0 — 2026-10-17
 
 Alfa de desarrollo. No es una versión de producción.
