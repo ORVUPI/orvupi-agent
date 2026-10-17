@@ -934,12 +934,12 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-docs.is-narrow .ow-docs-titlerow { flex: 1; min-width: 0; }
 .ow-docs.is-narrow .ow-docs-name { flex: 1; width: auto; min-width: 9em; max-width: none; }
 .ow-docs.is-narrow .ow-docs-menus { flex: none; }
-.ow-docs-sheet.is-flow { width: 100%; }
-.ow-a4.is-flow { width: 100%; min-height: 0; border: 0; box-shadow: none; }
-.ow-a4.is-flow .ow-a4-body { padding: 12px 16px 28px; }
-.ow-a4.is-flow .ProseMirror { font-size: 16px; line-height: 1.5; min-height: 48vh; }
-.ow-a4.is-flow > .ow-a4-edge { position: static; left: auto; right: auto; width: calc(100% - 32px); margin: 8px 16px 0; font-size: 16px; }
-.ow-a4.is-flow .ow-a4-foot { position: static; left: auto; right: auto; padding: 0 16px 12px; }
+.ow-docs-sheet.is-flow { width: 100%; flex: 1 0 auto; display: flex; flex-direction: column; min-height: 100%; background: #fff; box-sizing: border-box; }
+.ow-a4.is-flow { width: 100%; flex: 1; min-height: 100%; border: 0; box-shadow: none; background: #fff; }
+.ow-a4.is-flow .ow-a4-body { padding: 16px 24px 8px; flex: 1; }
+.ow-a4.is-flow .ProseMirror { font-size: 16px; line-height: 1.5; min-height: 100%; }
+.ow-a4.is-flow > .ow-a4-edge { position: static; left: auto; right: auto; width: calc(100% - 48px); margin: 8px 24px 0; font-size: 16px; }
+.ow-a4.is-flow .ow-a4-foot { position: static; left: auto; right: auto; padding: 0 24px 12px; }
 .ow-a4.is-flow .ow-a4-foot .ow-a4-edge { font-size: 16px; }
 .ow-format-dock .ow-tool-select > button,
 .ow-format-dock .ow-sizebox input { min-height: 40px; }
@@ -965,7 +965,13 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-a4 .ProseMirror h2 { font-size: 18pt; }
 .ow-a4 .ProseMirror h3 { font-size: 14pt; }
 .ow-a4 .ProseMirror p { margin: 0 0 8px; }
-.ow-docs .ow-count { color: #444746; }
+.ow-docs .ow-count { color: #444746; font-weight: 400; font-size: 12px; line-height: 1.3; padding: 8px 24px 16px; margin: 0; }
+.ow-a4 .ProseMirror .ow-ul { text-decoration-line: underline; text-decoration-style: solid; text-decoration-color: currentColor; text-decoration-thickness: 1px; text-underline-offset: 0.12em; text-decoration-skip-ink: none; color: inherit; font-family: inherit; }
+.ow-a4 .ProseMirror u { text-decoration-line: underline; text-decoration-style: solid; text-decoration-skip-ink: none; color: inherit; font-family: inherit; }
+.ow-a4 .ProseMirror code { font-family: inherit; font-size: inherit; color: inherit; background: transparent; padding: 0; }
+.ow-a4 .ProseMirror span[style*="monospace"] { font-family: inherit !important; color: inherit !important; }
+.ow-a4 .ProseMirror ::spelling-error { color: inherit; text-decoration-line: underline; text-decoration-style: wavy; text-decoration-color: #c5221f; text-decoration-thickness: 1px; text-underline-offset: 0.28em; }
+.ow-a4 .ProseMirror ::grammar-error { color: inherit; text-decoration-line: underline; text-decoration-style: wavy; text-decoration-color: #1d4e89; text-underline-offset: 0.28em; }
 .ow-editor .ow-list { position: fixed; right: 16px; bottom: 16px; width: min(320px, calc(100vw - 32px)); background: #fff; border: 1px solid #dadce0; border-radius: 12px; padding: 12px; z-index: 5; max-height: 240px; overflow: auto; }
 
 @media (max-width: 840px), (pointer: coarse) {
@@ -979,7 +985,10 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
   .ow-docs-tabs, .ow-docs-tabs-open, .ow-docs-avatar { display: none; }
   .ow-docs { height: 100dvh; }
   .ow-docs-toolbar { flex-wrap: nowrap; border-radius: 16px; }
-  .ow-docs-scroll { padding-left: 0; padding-right: 0; overflow-x: clip; }
+  .ow-docs.is-narrow, .ow-docs.is-narrow .ow-docs-scroll { background: #fff; }
+  .ow-docs.is-narrow .ow-docs-scroll { display: flex; flex-direction: column; padding-top: 0; padding-left: 0; padding-right: 0; overflow-x: clip; }
+  .ow-docs.is-narrow .ow-docs-page-row { flex: 0 0 auto; }
+  .ow-docs.is-narrow .ow-count { padding: 8px 24px 12px; }
   .ow-docs .ow-menubar { flex-wrap: nowrap; }
   .ow-menubar.is-compact, .ow-docs .ow-menubar.is-compact { overflow: visible; }
   .ow-docs-head, .ow-sheet-page .ow-menubar, .ow-slides-page .ow-menubar, .ow-form-page .ow-menubar, .ow-draw-page .ow-menubar { position: relative; z-index: 30; }

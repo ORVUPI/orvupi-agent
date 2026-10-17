@@ -8,6 +8,8 @@ Alfa de desarrollo. No es una versión de producción.
 - La meta viewport fija el ancho al dispositivo.
 - El service worker usa la red primero para la página y los archivos, toma el control en cuanto hay una versión nueva y muestra «Nueva versión» para recargar. La caché anterior se descarta.
 - Ayuda muestra el número de versión, para comprobar qué carga el teléfono.
+- El subrayado es una sola línea continua bajo la palabra. Negrita, cursiva, subrayado y tachado no cambian la fuente a monoespacio ni el color a morado, y no parten la palabra en una marca por letra. El corrector sigue en su línea ondulada.
+- El contador dice «1 palabra» en singular, en un texto pequeño y sin negrita. En el teléfono la hoja llega hasta la barra inferior y el texto tiene margen a los lados.
 - Un archivo de 0.1 a 0.6.2 sigue abriendo: la versión del archivo sigue en 1.
 
 ## 0.6.2 — 2026-10-17

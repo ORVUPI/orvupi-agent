@@ -38,6 +38,7 @@ npm run test:e2e
 
 - En un Android de unos 460 px, Docs usa el menú ⋮ y la barra inferior. El corte es 840 px o un puntero grueso.
 - Si el teléfono tenía guardada una versión anterior, aparece «Nueva versión» y al recargar entra la nueva. Ayuda muestra el número de versión.
+- El subrayado es una línea continua. El contador usa el singular y la hoja del teléfono ocupa el alto, con margen a los lados.
 
 ## Qué hay en 0.6.2
 

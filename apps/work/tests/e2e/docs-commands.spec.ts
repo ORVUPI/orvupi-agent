@@ -195,10 +195,10 @@ test("negrita, cursiva, subrayado y tachado marcan el botón y el atajo", async 
   await doc.keyboard.press("Control+i");
   await expect(editor.locator("em")).toHaveCount(0);
   await doc.getByRole("button", { name: "Subrayado" }).click();
-  await expect(editor.locator("u")).toContainText("Formato");
+  await expect(editor.locator(".ow-ul")).toContainText("Formato");
   await expect(doc.getByRole("button", { name: "Subrayado" })).toHaveAttribute("aria-pressed", "true");
   await doc.keyboard.press("Control+u");
-  await expect(editor.locator("u")).toHaveCount(0);
+  await expect(editor.locator(".ow-ul")).toHaveCount(0);
   await doc.getByRole("button", { name: "Tachado" }).click();
   await expect(editor.locator("s")).toContainText("Formato");
   await expect(doc.getByRole("button", { name: "Tachado" })).toHaveAttribute("aria-pressed", "true");

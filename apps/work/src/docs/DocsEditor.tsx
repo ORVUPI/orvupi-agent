@@ -409,7 +409,7 @@ export function DocsEditor({
           setLayout(next);
           if (editor) queue.note(snapshotOf(editor.getJSON() as JsonNode));
         }}
-        words={`${t("words", { count: counts.words })} · ${t("characters", { count: counts.characters })}`}
+        words={`${counts.words === 1 ? t("wordOne") : t("words", { count: counts.words })} · ${t("characters", { count: counts.characters })}`}
         find={findOpen ? (
           <form
             className="ow-find ow-docs-find"

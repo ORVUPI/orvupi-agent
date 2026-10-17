@@ -1,4 +1,5 @@
-import { Extension, Node, mergeAttributes } from "@tiptap/core";
+import { Extension, Node, getStyleProperty, mergeAttributes } from "@tiptap/core";
+import { Code } from "@tiptap/extension-code";
 import { Image } from "@tiptap/extension-image";
 import { TaskItem } from "@tiptap/extension-list/task-item";
 import { TaskList } from "@tiptap/extension-list/task-list";
@@ -8,7 +9,9 @@ import { Table, TableCell, TableHeader } from "@tiptap/extension-table";
 import { TableKit } from "@tiptap/extension-table/kit";
 import { TextAlign } from "@tiptap/extension-text-align";
 import { BackgroundColor, Color, FontFamily, FontSize, LineHeight, TextStyle } from "@tiptap/extension-text-style";
-import { Plugin } from "@tiptap/pm/state";
+import { Underline } from "@tiptap/extension-underline";
+import { Mark, type Node as ProseNode } from "@tiptap/pm/model";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { StarterKit } from "@tiptap/starter-kit";
 import { safeHref, safeImageSrc, sanitizeForeignHtml } from "../security/sanitize";
 
@@ -148,6 +151,174 @@ const DocsTable = Table.extend({
   },
 }).configure({ resizable: true, cellMinWidth: 48, handleWidth: 6 });
 
+const ALLOWED_FONTS = new Set(["arial", "times new roman", "georgia", "verdana", "courier new", "comic sans ms", "roboto", "inter", "lora", "merriweather", "montserrat"]);
+
+function fontToken(value: string | null | undefined): string {
+  return value?.replace(/["']/g, "").split(",")[0]?.trim().toLowerCase() ?? "";
+}
+
+/** El corrector de Chrome en Android envuelve cada letra con monoespacio y morado. */
+function spellPurple(value: string): boolean {
+  const color = value.trim().toLowerCase().replace(/\s+/g, "");
+  return color === "purple" || color === "rgb(128,0,128)" || color === "rgba(128,0,128,1)";
+}
+
+function injectedMonospace(value: string): boolean {
+  const name = fontToken(value);
+  if (!name || ALLOWED_FONTS.has(name)) return false;
+  return /mono|consolas|menlo|monaco|source code|courier/.test(name);
+}
+
+function browserInk(element: HTMLElement): boolean {
+  const font = getStyleProperty(element, "font-family") ?? element.style.fontFamily;
+  const color = getStyleProperty(element, "color") ?? element.style.color;
+  return Boolean((font && injectedMonospace(font)) || (color && spellPurple(color)));
+}
+
+const SafeFontFamily = FontFamily.extend({
+  addGlobalAttributes() {
+    return (this.parent?.() ?? []).map((group) => ({
+      ...group,
+      attributes: {
+        ...group.attributes,
+        fontFamily: {
+          ...group.attributes.fontFamily,
+          parseHTML: (element: HTMLElement) => {
+            const raw = getStyleProperty(element, "font-family") ?? element.style.fontFamily;
+            const name = fontToken(raw);
+            return raw && ALLOWED_FONTS.has(name) ? raw : null;
+          },
+        },
+      },
+    }));
+  },
+});
+
+const SafeColor = Color.extend({
+  addGlobalAttributes() {
+    return (this.parent?.() ?? []).map((group) => ({
+      ...group,
+      attributes: {
+        ...group.attributes,
+        color: {
+          ...group.attributes.color,
+          parseHTML: (element: HTMLElement) => {
+            const value = (getStyleProperty(element, "color") ?? element.style.color)?.replace(/['"]+/g, "");
+            if (!value || spellPurple(value)) return null;
+            return value;
+          },
+        },
+      },
+    }));
+  },
+});
+
+const SafeCode = Code.extend({
+  parseHTML() {
+    return [
+      {
+        tag: "code",
+        getAttrs: (element: HTMLElement) => (browserInk(element) ? false : null),
+      },
+    ];
+  },
+});
+
+const SolidUnderline = Underline.extend({
+  renderHTML({ HTMLAttributes }) {
+    return ["span", mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, { class: "ow-ul" }), 0];
+  },
+  parseHTML() {
+    return [
+      { tag: "span.ow-ul" },
+      { tag: "u" },
+      {
+        style: "text-decoration",
+        consuming: false,
+        getAttrs: (style: string) => (style.includes("underline") ? {} : false),
+      },
+    ];
+  },
+});
+
+function sameMarks(left: readonly Mark[], right: readonly Mark[]): boolean {
+  if (left.length !== right.length) return false;
+  const sort = (marks: readonly Mark[]) => [...marks].sort((a, b) => a.type.name.localeCompare(b.type.name));
+  const a = sort(left);
+  const b = sort(right);
+  return a.every((mark, index) => mark.eq(b[index]!));
+}
+
+function cleanedMarks(marks: readonly Mark[]): readonly Mark[] {
+  const next: Mark[] = [];
+  for (const mark of marks) {
+    if (mark.type.name !== "textStyle") {
+      next.push(mark);
+      continue;
+    }
+    const fontFamily = typeof mark.attrs.fontFamily === "string" ? mark.attrs.fontFamily : null;
+    const color = typeof mark.attrs.color === "string" ? mark.attrs.color : null;
+    const attrs = { ...mark.attrs };
+    if (fontFamily && injectedMonospace(fontFamily)) attrs.fontFamily = null;
+    if (color && spellPurple(color)) attrs.color = null;
+    if (Object.values(attrs).every((value) => value == null || value === "")) continue;
+    next.push(mark.type.create(attrs));
+  }
+  return Mark.setFrom(next);
+}
+
+function normalizeBlock(node: ProseNode): ProseNode[] | null {
+  if (!node.isTextblock) return null;
+  const children: ProseNode[] = [];
+  let dirty = false;
+  node.forEach((child) => {
+    if (!child.isText) {
+      children.push(child);
+      return;
+    }
+    const marks = cleanedMarks(child.marks);
+    const text = child.text ?? "";
+    const previous = children[children.length - 1];
+    if (previous?.isText && sameMarks(previous.marks, marks)) {
+      children[children.length - 1] = node.type.schema.text(`${previous.text ?? ""}${text}`, marks);
+      dirty = true;
+      return;
+    }
+    if (!sameMarks(marks, child.marks)) dirty = true;
+    children.push(sameMarks(marks, child.marks) ? child : node.type.schema.text(text, marks));
+  });
+  return dirty ? children : null;
+}
+
+const hygieneKey = new PluginKey("ow-mark-hygiene");
+
+const MarkHygiene = Extension.create({
+  name: "markHygiene",
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: hygieneKey,
+        appendTransaction(transactions, _old, state) {
+          if (!transactions.some((transaction) => transaction.docChanged)) return null;
+          if (transactions.some((transaction) => transaction.getMeta(hygieneKey))) return null;
+          const tr = state.tr;
+          const jobs: Array<{ from: number; to: number; children: ProseNode[] }> = [];
+          state.doc.descendants((node, pos) => {
+            const children = normalizeBlock(node);
+            if (!children) return;
+            jobs.push({ from: pos + 1, to: pos + node.nodeSize - 1, children });
+          });
+          if (jobs.length === 0) return null;
+          for (const job of jobs.reverse()) tr.replaceWith(job.from, job.to, job.children);
+          if (!tr.docChanged) return null;
+          tr.setMeta(hygieneKey, true);
+          return tr;
+        },
+      }),
+    ];
+  },
+});
+
 const DocKeys = Extension.create({
   name: "docKeys",
   addKeyboardShortcuts() {
@@ -164,16 +335,21 @@ export function createExtensions(placeholder: string) {
     StarterKit.configure({
       heading: { levels: [1, 2, 3] },
       link: false,
+      underline: false,
+      code: false,
     }),
+    SolidUnderline,
+    SafeCode,
     TextStyle,
-    Color,
+    SafeColor,
     BackgroundColor,
-    FontFamily,
+    SafeFontFamily,
     FontSize,
     LineHeight.configure({ types: ["heading", "paragraph"] }),
     TextAlign.configure({ types: ["heading", "paragraph"] }),
     Indent,
     DocKeys,
+    MarkHygiene,
     TaskList,
     TaskItem.configure({ nested: true }),
     PageBreak,
