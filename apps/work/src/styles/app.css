@@ -1033,6 +1033,9 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
   .ow-editor-line .ow-menubar { flex: none; }
   .ow-editor-line .ow-field { margin: 0; min-width: 0; flex: 1; }
   .ow-editor-line .ow-field input { min-height: 36px; }
+  .ow-editor-line .ow-field { display: block; min-width: 96px; }
+  .ow-editor-line .ow-field > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .ow-editor-line .ow-field input { width: 100%; box-sizing: border-box; }
   .ow-sheet-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .ow-formula { margin: 4px 0; position: static; }
   .ow-formula .ow-field { margin: 0; display: flex; align-items: center; gap: 6px; }
