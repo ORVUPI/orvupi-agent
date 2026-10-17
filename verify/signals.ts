@@ -25,8 +25,8 @@ export function namesProject(value: string): boolean {
 }
 
 const NAMED_LIKE_PROJECT = {
-  es: "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato",
-  en: "It is named like ORVUPI, but ORVUPI does not have a contract yet",
+  es: "Se llama como ORVUPI, pero no es la dirección oficial",
+  en: "It is named like ORVUPI, but it is not the official address",
 };
 
 export type Localized = { es: string; en: string };
@@ -43,13 +43,13 @@ export type Signal = {
 
 export type ReadSource = { dato: Localized; host: string };
 
-// Contrato ORVUPI: aún no existe (web/v2/shared/orvupi-contract.json).
+// Contrato ORVUPI: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU (web/v2/shared/orvupi-contract.json).
 
 export type LiveRow = { label: Localized; value: Localized };
 
 export const AUDIT_NOTICE: Localized = {
-  es: "Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. ORVUPI no tiene relación con este token: todavía no tiene contrato. Que no aparezcan señales no significa que esté todo comprobado.",
-  en: "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. ORVUPI has no relationship with this token: it does not have a contract yet. No signals showing does not mean everything was checked.",
+  es: "Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. ORVUPI no tiene relación con este token. Que no aparezcan señales no significa que esté todo comprobado.",
+  en: "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. ORVUPI has no relationship with this token. No signals showing does not mean everything was checked.",
 };
 
 export const PRIVACY_NOTICE: Localized = {
@@ -505,8 +505,8 @@ async function readWith(
         "Confirmed: it does not exist: the account.",
       ),
       identity: loc(
-        "Contrato ORVUPI: aún no existe.",
-        "ORVUPI contract: does not exist yet.",
+        "Contrato ORVUPI: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU.",
+        "ORVUPI contract: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU.",
       ),
     };
   }
@@ -662,8 +662,8 @@ async function readWith(
   const curveNotOnPump = !mint.endsWith("pump") && (!curveInfo || curveInfo.owner !== PUMP_PROGRAM);
   signals.push(curveNotOnPump ? curveDoesNotApplySignal() : curveSignal(curveInfo, bonding));
   const copyByName = !likeness.inRegistry && likeness.signals.some((item) => /^nombre |^símbolo /.test(item));
-  // ORVUPI todavía no tiene contrato: un token que dice llamarse ORVUPI no es el oficial en ninguna red.
-  const namedLikeProject = !likeness.inRegistry && [...names, ...symbols].some((item) => namesProject(item));
+  // Contrato oficial ORVUPI (Solana): Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU. Otro token que dice llamarse ORVUPI no es el oficial.
+  const namedLikeProject = !likeness.inRegistry && mint !== "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU" && [...names, ...symbols].some((item) => namesProject(item));
   if (likeness.inRegistry) {
     signals.push({
       id: "registro",
@@ -680,8 +680,8 @@ async function readWith(
       level: "atencion",
       title: loc(NAMED_LIKE_PROJECT.es, NAMED_LIKE_PROJECT.en),
       explain: loc(
-        "El nombre o el símbolo dice ORVUPI. ORVUPI todavía no tiene contrato en ninguna red, así que esta dirección no es la oficial. Esto no dice quién lo creó ni con qué intención.",
-        "The name or the symbol says ORVUPI. ORVUPI does not have a contract on any network yet, so this address is not the official one. This does not say who created it or why.",
+        "El nombre o el símbolo dice ORVUPI. La única dirección oficial de ORVUPI está en orvupi.com/token, así que esta dirección no es la oficial. Esto no dice quién lo creó ni con qué intención.",
+        "The name or the symbol says ORVUPI. The only official ORVUPI address is on orvupi.com/token, so this address is not the official one. This does not say who created it or why.",
       ),
     });
   } else if (copyByName) {
@@ -774,11 +774,11 @@ async function readWith(
   const absent = grouped.absent;
   const identity = loc(
     likeness.inRegistry
-      ? `Esta dirección (${mint}) está en el registro curado. Contrato ORVUPI: aún no existe.`
-      : "Contrato ORVUPI: aún no existe.",
+      ? `Esta dirección (${mint}) está en el registro curado. Contrato ORVUPI: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU.`
+      : "Contrato ORVUPI: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU.",
     likeness.inRegistry
-      ? `This address (${mint}) is in the curated registry. ORVUPI contract: does not exist yet.`
-      : "ORVUPI contract: does not exist yet.",
+      ? `This address (${mint}) is in the curated registry. ORVUPI contract: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU.`
+      : "ORVUPI contract: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU.",
   );
   const checkedEs = facts.filter((item) => item.state === "ok").map((item) => item.label.es);
   const checkedEn = facts.filter((item) => item.state === "ok").map((item) => item.label.en);

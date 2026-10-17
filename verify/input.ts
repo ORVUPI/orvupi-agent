@@ -9,9 +9,9 @@ export function evmMessage(input: string, knownEvm: readonly string[] = []): str
   }
   const known = knownEvm.some((address) => address.toLowerCase() === trimmed.toLowerCase());
   if (known) {
-    return "Copia conocida de un token anterior. ORVUPI todavía no tiene contrato en ninguna red.";
+    return "Copia conocida de un token anterior. La única dirección oficial de ORVUPI está en orvupi.com/token.";
   }
-  return "ORVUPI todavía no tiene contrato en ninguna red.";
+  return "La única dirección oficial de ORVUPI está en orvupi.com/token.";
 }
 
 export function validateMint(input: string, knownEvm: readonly string[] = []): MintCheck {

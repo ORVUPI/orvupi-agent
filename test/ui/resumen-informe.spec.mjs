@@ -175,7 +175,7 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
 
   await page.locator("#direccion-token").fill(PREVIOUS);
   await page.locator("#consulta button[type='submit']").click();
-  await expect(page.locator("#resultado")).toContainText("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato", { timeout: 20_000 });
+  await expect(page.locator("#resultado")).toContainText("Se llama como ORVUPI, pero no es la dirección oficial", { timeout: 20_000 });
   await expect(page.locator("#resultado")).not.toContainText("Esta dirección es la del registro");
   await expect(summary).toContainText("Qué se comprobó");
   await expect(summary).toContainText("Suministro total");
@@ -190,7 +190,7 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
   await expect(summary).not.toContainText("1.000.000.000 ORVUPI");
   await expect(summary).toContainText("Dice llamarse «ORVUPI» (texto elegido por quien creó el token)");
   const likeness = summary.locator("[data-bloque='atencion'] .punto-resumen").first();
-  await expect(likeness).toContainText("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato");
+  await expect(likeness).toContainText("Se llama como ORVUPI, pero no es la dirección oficial");
   await expect(likeness.locator("details")).toContainText("Ninguna dirección es la oficial");
   await expect(summary).not.toContainText("Es un dato de esta lectura");
   await shot("eryyy");

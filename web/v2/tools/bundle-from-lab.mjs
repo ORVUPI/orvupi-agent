@@ -90,7 +90,7 @@ const { presentCard, presentClones, presentEvmItem } = await import(
   pathToFileURL(path.join(root, "dist/lab/display-copy.js")).href
 );
 const clones = JSON.parse(readFileSync(path.join(root, "verify/registry/clones.json"), "utf8"));
-// ORVUPI todavía no tiene contrato: la web solo publica la ficha de contraste (USDC), sin registro ni clones del token anterior.
+// Contrato oficial en shared/orvupi-contract.json: la web solo publica la ficha de contraste (USDC), sin registro ni clones del token anterior.
 const cards = loadCards(root, loadFuentes(root)).map((card) => presentCard(card)).filter((card) => card.role === "contraste");
 const payload = {
   source: "lista",

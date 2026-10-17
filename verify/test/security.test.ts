@@ -301,19 +301,19 @@ describe("texto, puntero y holders", () => {
     assert.equal(copy.ok, false);
     if (!copy.ok) {
       assert.match(copy.message, /Copia conocida/);
-      assert.match(copy.message, /ORVUPI todavía no tiene contrato en ninguna red/);
+      assert.match(copy.message, /La única dirección oficial de ORVUPI está en orvupi.com\/token/);
       assert.match(copy.message, /Copia conocida de un token anterior/);
     }
     const other = validateMint("0x0000000000000000000000000000000000000001", known);
     assert.equal(other.ok, false);
     if (!other.ok) {
-      assert.match(other.message, /ORVUPI todavía no tiene contrato en ninguna red/);
+      assert.match(other.message, /La única dirección oficial de ORVUPI está en orvupi.com\/token/);
       assert.equal(other.message.includes("Copia conocida"), false);
     }
     const loose = validateMint("0xhola", known);
     assert.equal(loose.ok, false);
     if (!loose.ok) {
-      assert.match(loose.message, /ORVUPI todavía no tiene contrato en ninguna red/);
+      assert.match(loose.message, /La única dirección oficial de ORVUPI está en orvupi.com\/token/);
     }
   });
 

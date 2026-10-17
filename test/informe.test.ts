@@ -247,7 +247,7 @@ describe("informe descargable", () => {
     const attention = joined(model, "atencion");
     assert.match(checked, /Dice llamarse «ORVUPI»/);
     const lines = report.reportPaintLines(model);
-    const warningAt = lines.findIndex((line) => line.includes("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato"));
+    const warningAt = lines.findIndex((line) => line.includes("Se llama como ORVUPI, pero no es la dirección oficial"));
     const networkAt = lines.findIndex((line) => line === "Red");
     const checkedAt = lines.findIndex((line) => line === "Qué se comprobó");
     assert.ok(warningAt > 0);
@@ -256,8 +256,8 @@ describe("informe descargable", () => {
     assert.equal(lines[warningAt - 1]?.includes("Consultado el"), true);
     const attentionBlock = model.blocks.find((item) => item.id === "atencion");
     assert.ok(attentionBlock);
-    assert.match(attentionBlock.lines[0]?.lead || "", /Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato/);
-    assert.match(attention, /Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato/);
+    assert.match(attentionBlock.lines[0]?.lead || "", /Se llama como ORVUPI, pero no es la dirección oficial/);
+    assert.match(attention, /Se llama como ORVUPI, pero no es la dirección oficial/);
     const ordered = report.reportModel({
       summary: {
         blocks: [{
@@ -270,7 +270,7 @@ describe("informe descargable", () => {
             },
             {
               title: { es: "Dirección", en: "Address" },
-              lead: { es: "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.", en: "It is named like ORVUPI, but ORVUPI does not have a contract yet." },
+              lead: { es: "Se llama como ORVUPI, pero no es la dirección oficial.", en: "It is named like ORVUPI, but it is not the official address." },
             },
           ],
           empty: { es: "", en: "" },
@@ -281,8 +281,8 @@ describe("informe descargable", () => {
       consultedAt: WHEN,
     }, "es");
     const orderedAttention = ordered.blocks.find((item) => item.id === "atencion");
-    assert.match(ordered.warning, /Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato/);
-    assert.match(orderedAttention?.lines[0]?.lead || "", /Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato/);
+    assert.match(ordered.warning, /Se llama como ORVUPI, pero no es la dirección oficial/);
+    assert.match(orderedAttention?.lines[0]?.lead || "", /Se llama como ORVUPI, pero no es la dirección oficial/);
     assert.match(orderedAttention?.lines[1]?.lead || "", /2026-10-09/);
     assert.equal(/\d{2}:\d{2}:\d{2}/.test(orderedAttention?.lines[1]?.lead || ""), false);
     const dropped = report.reportModel({
@@ -577,9 +577,9 @@ describe("informe descargable", () => {
     const largo = read("largo.json");
     const longModel = report.reportModel(largo, "es");
     assert.match(longModel.date, /\d{2}:\d{2}:\d{2}/);
-    assert.match(longModel.warning, /Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato/);
+    assert.match(longModel.warning, /Se llama como ORVUPI, pero no es la dirección oficial/);
     const longAttention = longModel.blocks.find((item) => item.id === "atencion");
-    assert.match(longAttention?.lines[0]?.lead || "", /Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato/);
+    assert.match(longAttention?.lines[0]?.lead || "", /Se llama como ORVUPI, pero no es la dirección oficial/);
     assert.equal(joined(longModel, "falta").includes("Curva de Pump.fun"), false);
     assert.match(longModel.note, /Curva de Pump.fun: no aplica/);
     assertAbsent(report.reportPaintLines(longModel).join("\n"));
@@ -622,7 +622,7 @@ describe("informe descargable", () => {
             heading: { es: "Qué requiere atención", en: "What needs attention" },
             items: [{
               title: { es: "Parecido", en: "Lookalike" },
-              lead: { es: "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.", en: "It is named like ORVUPI, but ORVUPI does not have a contract yet." },
+              lead: { es: "Se llama como ORVUPI, pero no es la dirección oficial.", en: "It is named like ORVUPI, but it is not the official address." },
               note: { es: "", en: "" },
             }],
             empty: { es: "", en: "" },
@@ -634,7 +634,7 @@ describe("informe descargable", () => {
       consultedAt: WHEN,
     }, "es");
     assert.match(model.origin, /Generado en orvupi.com/);
-    assert.match(model.warning, /todavía no tiene contrato/);
+    assert.match(model.warning, /no es la dirección oficial|orvupi.com\/token/);
     const drawn = report.drawReport(mockCtx().ctx, model, 840);
     const foot = drawn.height - drawn.limitsTop;
     const bodyCards = drawn.cards.filter((item) => !item.header && !item.limits);
@@ -741,7 +741,7 @@ describe("informe descargable", () => {
             items: [
               {
                 title: { es: "Parecido", en: "Lookalike" },
-                lead: { es: "Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.", en: "It is named like ORVUPI, but ORVUPI does not have a contract yet." },
+                lead: { es: "Se llama como ORVUPI, pero no es la dirección oficial.", en: "It is named like ORVUPI, but it is not the official address." },
                 note: { es: "", en: "" },
               },
               {

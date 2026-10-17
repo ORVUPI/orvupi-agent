@@ -29,8 +29,8 @@
         "en": "Curated registry"
       },
       "means": {
-        "es": "Lista local que Verify compara con el mint, el nombre, el símbolo, la imagen y algunos enlaces. En los ejemplos incluye USDC. ORVUPI aún no tiene contrato y no está. Que un mint no esté no significa que sea falso.",
-        "en": "A local list Verify compares with the mint, name, symbol, image, and some links. In the examples it includes USDC. ORVUPI does not have a contract yet and is not on it. A mint that is not on the list is not necessarily fake."
+        "es": "Lista local que Verify compara con el mint, el nombre, el símbolo, la imagen y algunos enlaces. En los ejemplos incluye USDC. ORVUPI no está. Que un mint no esté no significa que sea falso.",
+        "en": "A local list Verify compares with the mint, name, symbol, image, and some links. In the examples it includes USDC. ORVUPI is not on it. A mint that is not on the list is not necessarily fake."
       },
       "example": {
         "es": "USDT, en la ficha del 2026-10-16, no está en el registro. La propia ficha dice que eso no significa que sea falso ni una copia.",

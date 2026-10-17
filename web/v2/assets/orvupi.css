@@ -10,3 +10,5 @@ body::before,a.brand::after{content:none!important;display:none!important}header
 
 /* Móvil: la cabecera no se queda fija (como ya pedía site.css), para que con la barra de consulta fija abajo no tape el resultado. */
 @media(max-width:599px){header.site{position:static}}
+
+.tok .tok-sym{font-size:.45em;vertical-align:middle;color:#5b2340}.tok .tok-buy{font-size:1.15rem;padding:18px 30px;background:#ff91b4}.tok-ca,.tok-aviso{border:2px solid var(--line);border-radius:22px;background:#fff;box-shadow:0 4px 0 var(--line);padding:20px 22px;margin:28px 0}.tok-ca .ca-value{font-size:1.05rem;font-weight:700;display:block;word-break:break-all}.tok-aviso{background:#fff8ec}.tok-table{overflow-x:auto}.tok-table table{width:100%;border-collapse:collapse;background:#fff}.tok-table th,.tok-table td{border:1px solid #aab0b8;padding:10px;text-align:left;vertical-align:top}.tok-table td:last-child{white-space:nowrap}.or-button.or-buy{background:#ff91b4}@media(max-width:580px){.tok-table th,.tok-table td{padding:8px;font-size:.88rem}.tok .tok-buy{width:100%}}

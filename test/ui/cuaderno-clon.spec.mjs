@@ -98,7 +98,7 @@ test("el cuaderno muestra el clon, el enlace ausente y la hora con segundos", as
   expect(labels[duplicateAt - 1]).toBe(marked[0].slice(0, -4));
   expect(plain[0].slice(-8)).not.toBe(plain[1].slice(-8));
   await page.locator("#comparar").click();
-  await expect(page.locator("#comparacion .franja-identidad").first()).toHaveText("Se llama como ORVUPI, pero ORVUPI todavía no tiene contrato.");
+  await expect(page.locator("#comparacion .franja-identidad").first()).toHaveText("Se llama como ORVUPI, pero no es la dirección oficial.");
   const stamps = page.locator("#comparacion > p.sello");
   await expect(stamps).toHaveCount(2);
   await expect(stamps.nth(0)).toHaveText(/Antes · Consultado el .+\d{2}:\d{2}:\d{2}.+puede haber cambiado/);

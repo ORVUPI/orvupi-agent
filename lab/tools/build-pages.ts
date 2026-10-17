@@ -53,7 +53,7 @@ export function buildOutputs(repoRoot: string, options: { publish?: boolean } = 
     inlineModule([summaryPath, marketPath]),
     readFileSync(verifyUiPath, "utf8"),
     {
-      // ORVUPI todavía no tiene contrato: la web no publica registro, clones ni fichas del token anterior.
+      // Contrato oficial en shared/orvupi-contract.json: la web no publica registro, clones ni fichas del token anterior.
       // Solo queda la ficha de contraste (USDC). canonical y clones siguen en verify/registry para el agente.
       cards: cards.filter((card) => card.role === "contraste"),
       source: "lista" as const,

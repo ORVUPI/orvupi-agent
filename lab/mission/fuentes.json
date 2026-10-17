@@ -7,8 +7,8 @@
       "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "role": "registro",
       "roleNote": {
-        "es": "USDC (Circle) en Solana: el token de referencia del registro curado. Se usa como ejemplo neutro; no es ORVUPI, que aún no tiene contrato.",
-        "en": "USDC (Circle) on Solana: the reference token in the curated registry. It is a neutral example; it is not ORVUPI, which does not have a contract yet."
+        "es": "USDC (Circle) en Solana: el token de referencia del registro curado. Se usa como ejemplo neutro; no es ORVUPI.",
+        "en": "USDC (Circle) on Solana: the reference token in the curated registry. It is a neutral example; it is not ORVUPI."
       }
     },
     {

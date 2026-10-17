@@ -44,7 +44,7 @@
     }
   }
   try { migrateLegacyKeys(window.localStorage); } catch (error) { /* sin localStorage */ }
-  // Contrato ORVUPI: aún no existe (ver /shared/orvupi-contract.json). Sin contrato no hay nada que copiar.
+  // Contrato ORVUPI: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU (ver /shared/orvupi-contract.json). Sin contrato no hay nada que copiar.
   // La dirección se lee al copiar de /shared/orvupi-contract.js, el único módulo del contrato.
   document.documentElement.classList.add("js");
 

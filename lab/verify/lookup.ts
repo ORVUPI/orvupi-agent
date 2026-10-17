@@ -52,8 +52,8 @@ export type LookupView = {
 
 const BASE58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 
-// Contrato ORVUPI: aún no existe (web/v2/shared/orvupi-contract.json).
-// Contrato ORVUPI: aún no existe. En la web se lee de web/v2/shared/orvupi-contract.js; aquí solo cuenta el registro.
+// Contrato ORVUPI: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU (web/v2/shared/orvupi-contract.json).
+// Contrato ORVUPI: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU. En la web se lee de web/v2/shared/orvupi-contract.js; aquí solo cuenta el registro.
 export const OFFICIAL_MINT: string | null = null;
 
 const COPY = {
@@ -89,7 +89,7 @@ const COPY = {
     lightLabel: { es: "Se parece a un token del registro, pero la dirección es otra", en: "Looks like a token in the registry, but the address is different" },
     title: { es: "Se parece a un token del registro, pero la dirección es otra", en: "Looks like a token in the registry, but the address is different" },
     support: {
-      es: `El nombre o el símbolo se parece a un token del registro y la dirección es otra. Esto no dice quién lo creó ni con qué intención. ORVUPI todavía no tiene contrato.`,
+      es: `El nombre o el símbolo se parece a un token del registro y la dirección es otra. Esto no dice quién lo creó ni con qué intención. La única dirección oficial de ORVUPI está en orvupi.com/token.`,
       en: `The name or the symbol looks like a token in the registry and the address is different. This does not say who created it or why. ORVUPI does not have a contract yet.`,
     },
   },
@@ -295,7 +295,7 @@ const CENSUS_PERSONAL = pair(
   "There are balances for the curve, the creator, and the published personal account. It is not a census, and the rest is not filled in with a zero.",
 );
 
-const SOLANA_ONLY = "ORVUPI todavía no tiene contrato en ninguna red";
+const SOLANA_ONLY = "La única dirección oficial de ORVUPI está en orvupi.com/token";
 
 function partialNoteFor(card: CardSummary): Localized | null {
   if (!card.partial) return null;
@@ -316,7 +316,7 @@ function evmView(address: string, evm: readonly EvmExample[]): LookupView {
       title: pair("Copia conocida", "Known copy"),
       support: pair(
         `${SOLANA_ONLY}. Ejemplo de search-v2 de Pump.fun, 08-10 09:14, sin verificar en la cadena (${chain}).`,
-        `ORVUPI does not have a contract on any network yet. Example from Pump.fun search-v2, 2026-10-08 09:14, not verified on-chain (${chain}).`,
+        `The only official ORVUPI address is on orvupi.com/token. Example from Pump.fun search-v2, 2026-10-08 09:14, not verified on-chain (${chain}).`,
       ),
       mint: found.address,
       rows: [
@@ -333,7 +333,7 @@ function evmView(address: string, evm: readonly EvmExample[]): LookupView {
     kind: "evm",
     light: "atencion",
     lightLabel: pair("Otra red", "Another network"),
-    title: pair(SOLANA_ONLY, "ORVUPI does not have a contract on any network yet"),
+    title: pair(SOLANA_ONLY, "The only official ORVUPI address is on orvupi.com/token"),
     support: pair(
       "Una dirección que empieza por 0x no es el mint de Solana. La lista de ejemplos no es completa y no se ha verificado en la cadena.",
       "An address that starts with 0x is not the Solana mint. The example list is not complete and it has not been verified on-chain.",

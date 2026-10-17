@@ -10,7 +10,7 @@ export const TOKEN_PROGRAM = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
 export const TOKEN_2022_PROGRAM = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
 export const METADATA_PROGRAM = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s";
 export const PUMP_PROGRAM = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P";
-// Contrato ORVUPI: aún no existe (ver /shared/orvupi-contract.json).
+// Contrato ORVUPI: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU (ver /shared/orvupi-contract.json).
 export { OFFICIAL_ADDRESS as OFFICIAL_MINT } from "./orvupi-contract.js";
 import { isOfficialAddress } from "./orvupi-contract.js";
 // Solo compatibilidad: fichas guardadas antes del 16-10-2026 llevan officialProject = true con esta dirección.
