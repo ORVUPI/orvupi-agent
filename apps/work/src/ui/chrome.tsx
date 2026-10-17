@@ -1,0 +1,182 @@
+import type { ReactNode } from "react";
+import type { SaveState } from "../docs/save-status";
+import { Icon, type IconName } from "./icons";
+import { IconButton, SearchField } from "./kit";
+import { Dropdown, FilePicker } from "./overlay";
+
+export type NavItem = { id: string; label: string; icon: IconName; tool: string };
+
+export function Sidebar({
+  brand,
+  brandAlt,
+  items,
+  current,
+  open,
+  onNavigate,
+  onClose,
+  closeLabel,
+  navLabel,
+}: {
+  brand: string;
+  brandAlt: string;
+  items: NavItem[];
+  current: string;
+  open: boolean;
+  onNavigate: (id: string) => void;
+  onClose: () => void;
+  closeLabel: string;
+  navLabel: string;
+}) {
+  return (
+    <aside className={`ow-sidebar ${open ? "is-open" : ""}`} data-tool="files">
+      <div className="ow-brand">
+        <img src="/avatar.png" alt={brandAlt} width={48} height={48} />
+        <strong>{brand}</strong>
+        <IconButton label={closeLabel} className="ow-only-mobile" onClick={onClose}>
+          <Icon name="close" />
+        </IconButton>
+      </div>
+      <nav aria-label={navLabel}>
+        <ul>
+          {items.map((item) => (
+            <li key={item.id}>
+              <button
+                type="button"
+                data-tool={item.tool}
+                aria-current={current === item.id ? "page" : undefined}
+                onClick={() => onNavigate(item.id)}
+              >
+                <Icon name={item.icon} />
+                <span>{item.label}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </aside>
+  );
+}
+
+export function Topbar({
+  menuLabel,
+  onMenu,
+  searchLabel,
+  searchPlaceholder,
+  searchClear,
+  query,
+  onQuery,
+  fileName,
+  fileNameLabel,
+  onRename,
+  onCommitName,
+  saveState,
+  saveLabel,
+  importLabel,
+  onImport,
+  exportLabel,
+  exportItems,
+  settingsLabel,
+  onSettings,
+  aiLabel,
+  aiPressed,
+  onAi,
+  closeDocLabel,
+  onCloseDoc,
+}: {
+  menuLabel: string;
+  onMenu: () => void;
+  searchLabel: string;
+  searchPlaceholder: string;
+  searchClear: string;
+  query: string;
+  onQuery: (value: string) => void;
+  fileName: string | null;
+  fileNameLabel: string;
+  onRename: (value: string) => void;
+  onCommitName: () => void;
+  saveState: SaveState | null;
+  saveLabel: string;
+  importLabel: string;
+  onImport: (file: File) => void;
+  exportLabel: string;
+  exportItems: Array<{ id: string; label: string; onSelect: () => void }>;
+  settingsLabel: string;
+  onSettings: () => void;
+  aiLabel: string;
+  aiPressed: boolean;
+  onAi: () => void;
+  closeDocLabel: string;
+  onCloseDoc: (() => void) | null;
+}) {
+  return (
+    <header className="ow-topbar">
+      <IconButton label={menuLabel} className="ow-only-mobile" onClick={onMenu}>
+        <Icon name="docs" />
+      </IconButton>
+      {fileName !== null ? (
+        <input
+          className="ow-filename"
+          aria-label={fileNameLabel}
+          value={fileName}
+          onChange={(event) => onRename(event.target.value)}
+          onBlur={() => onCommitName()}
+        />
+      ) : (
+        <p className="ow-top-title">ORVUPI Work</p>
+      )}
+      <SearchField
+        label={searchLabel}
+        value={query}
+        placeholder={searchPlaceholder}
+        clearLabel={searchClear}
+        onValue={onQuery}
+      />
+      {saveState ? (
+        <span className={`ow-save ow-save-${saveState}`} role="status" data-state={saveState}>
+          {saveLabel}
+        </span>
+      ) : null}
+      <FilePicker label={importLabel} accept=".orvdoc,.json,.txt,.md,.html,.htm,.pdf,.png,.jpg,.jpeg,.gif,.webp,.csv" onFile={onImport} />
+      <Dropdown label={exportLabel} items={exportItems} />
+      {onCloseDoc ? (
+        <button type="button" className="ow-button ow-button-secondary" onClick={onCloseDoc}>
+          {closeDocLabel}
+        </button>
+      ) : null}
+      <IconButton label={settingsLabel} onClick={onSettings}>
+        <Icon name="settings" />
+      </IconButton>
+      <IconButton label={aiLabel} pressed={aiPressed} onClick={onAi}>
+        <Icon name="ai" />
+      </IconButton>
+    </header>
+  );
+}
+
+export function ShellFrame({
+  sidebar,
+  topbar,
+  children,
+  aside,
+  skip,
+}: {
+  sidebar: ReactNode;
+  topbar: ReactNode;
+  children: ReactNode;
+  aside: ReactNode;
+  skip: string;
+}) {
+  return (
+    <div className="ow-shell">
+      <a className="ow-skip" href="#contenido">
+        {skip}
+      </a>
+      {sidebar}
+      <div className="ow-maincol">
+        {topbar}
+        <main id="contenido">{children}</main>
+      </div>
+      {aside}
+    </div>
+  );
+}
