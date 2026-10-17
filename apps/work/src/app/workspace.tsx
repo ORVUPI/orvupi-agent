@@ -13,7 +13,7 @@ import { errorMessageKey, translate, type Locale, type MessageKey } from "../i18
 import { downloadBytes } from "../security/bytes";
 import { isWorkError, WorkError } from "../security/errors";
 import { fileNameWithExtension, formatBytes, createId } from "../security/names";
-import { applyDocumentChrome, editorKind, editorPath, openEditorWindow, parseEditorPath, tabTitle, toolFavicon, viewForKind, type EditorKind } from "../routing/paths";
+import { applyDocumentChrome, withBase, editorKind, editorPath, openEditorWindow, parseEditorPath, tabTitle, toolFavicon, viewForKind, type EditorKind } from "../routing/paths";
 import { subscribeFilesChanged } from "../routing/sync";
 import { createBrowserStorage } from "../storage/browser";
 import type { FileBrowseMode, DateFilter } from "../files/query";
@@ -184,7 +184,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const route = parseEditorPath(window.location.pathname);
     if (!route) {
-      applyDocumentChrome("ORVUPI Work", "/favicon-32.png");
+      applyDocumentChrome("ORVUPI Work", withBase("/favicon-32.png"));
       return;
     }
     const listed = files.find((file) => file.id === route.id)?.name ?? "";
@@ -539,7 +539,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       if (next !== "forms") setOpenFormId(null);
       if (next !== "drawings") setOpenDrawingId(null);
       if (next !== "notes") setOpenNoteId(null);
-      if (parseEditorPath(window.location.pathname)) window.history.pushState({}, "", "/");
+      if (parseEditorPath(window.location.pathname)) window.history.pushState({}, "", withBase("/"));
       setNavOpen(false);
       setView(next);
     },
@@ -573,7 +573,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       }
       setOpenDocId(null);
       setView("home");
-      window.history.pushState({}, "", "/");
+      window.history.pushState({}, "", withBase("/"));
     },
     query,
     setQuery,
@@ -613,7 +613,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       setOpenFormId(null);
       setOpenDrawingId(null);
       setOpenNoteId(null);
-      if (parseEditorPath(window.location.pathname)) window.history.pushState({}, "", "/");
+      if (parseEditorPath(window.location.pathname)) window.history.pushState({}, "", withBase("/"));
       setBrowse(mode);
       setNavOpen(false);
       setView("files");

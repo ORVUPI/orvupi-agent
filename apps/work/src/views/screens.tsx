@@ -1,3 +1,4 @@
+import { withBase } from "../routing/paths";
 import { lazy, Suspense, useEffect, useState } from "react";
 
 const DocsEditor = lazy(() => import("../docs/DocsEditor").then((module) => ({ default: module.DocsEditor })));
@@ -53,7 +54,7 @@ export function HomeScreen() {
   return (
     <div className="ow-page">
       <header className="ow-page-head">
-        <img src="/avatar.png" alt="" width={72} height={72} />
+        <img src={withBase("/avatar.png")} alt="" width={72} height={72} />
         <div>
           <h1>{workspace.t("appName")}</h1>
           <p>{workspace.t("tagline")}</p>

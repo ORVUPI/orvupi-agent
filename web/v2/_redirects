@@ -40,3 +40,8 @@ https://superb-horse-9036f5.netlify.app/*  https://stubxai.com/:splat  301!
 /onchain/*          /            301
 /kit/*              /            301
 /logo/*             /            301
+
+# ORVUPI Work vive en /work/ (build de apps/work con --base=/work/). Sus rutas internas
+# (/work/document/d/<id>/edit, etc.) las resuelve la propia aplicación.
+/work               /work/              301
+/work/*             /work/index.html    200

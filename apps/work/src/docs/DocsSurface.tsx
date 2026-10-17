@@ -1,3 +1,4 @@
+import { withBase } from "../routing/paths";
 import type { Mark } from "@tiptap/pm/model";
 import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import { CellSelection, cellAround } from "@tiptap/pm/tables";
@@ -641,7 +642,7 @@ export function DocsSurface({
       <header className="ow-docs-head">
         <div className="ow-docs-titlebar">
           <button type="button" className="ow-docs-logo" aria-label={t("closeDoc")} onClick={onClose}>
-            <img src="/avatar.png" alt="" width={40} height={40} />
+            <img src={withBase("/avatar.png")} alt="" width={40} height={40} />
           </button>
           <div className="ow-docs-titleblock">
             <div className="ow-docs-titlerow">
@@ -774,7 +775,7 @@ export function DocsSurface({
             <button type="button" aria-label={t("heading1")} onClick={() => run(() => editor?.chain().focus("end").insertContent({ type: "heading", attrs: { level: 1 }, content: [{ type: "text", text: t("heading1") }] }).run())}>+</button>
           </div>
           <div className="ow-docs-tab">
-            <img src="/avatar.png" alt="" width={18} height={18} />
+            <img src={withBase("/avatar.png")} alt="" width={18} height={18} />
             <span>{name}</span>
             <button type="button" aria-label={t("menu")} aria-expanded={tabMenu} onClick={() => setTabMenu((value) => !value)}>⋮</button>
             {tabMenu ? (

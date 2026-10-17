@@ -1,14 +1,21 @@
 import type { FileKind } from "../storage/types";
 
+/** Prefijo donde vive Work: "" en la raíz, "/work" en orvupi.com/work/. */
+export const BASE = (import.meta.env.BASE_URL ?? "/").replace(/\/+$/, "");
+
+export function withBase(path: string): string {
+  return `${BASE}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
 export type EditorKind = "doc" | "sheet" | "slide" | "form" | "drawing" | "note";
 
 const TOOLS: Record<EditorKind, { segment: string; product: string; favicon: string; view: "docs" | "sheets" | "slides" | "forms" | "drawings" | "notes" }> = {
-  doc: { segment: "document", product: "ORVUPI Docs", favicon: "/favicons/docs.svg", view: "docs" },
-  sheet: { segment: "spreadsheets", product: "ORVUPI Sheets", favicon: "/favicons/sheets.svg", view: "sheets" },
-  slide: { segment: "presentation", product: "ORVUPI Slides", favicon: "/favicons/slides.svg", view: "slides" },
-  form: { segment: "forms", product: "ORVUPI Forms", favicon: "/favicons/forms.svg", view: "forms" },
-  drawing: { segment: "drawings", product: "ORVUPI Drawings", favicon: "/favicons/drawings.svg", view: "drawings" },
-  note: { segment: "notes", product: "ORVUPI Notes", favicon: "/favicons/notes.svg", view: "notes" },
+  doc: { segment: "document", product: "ORVUPI Docs", favicon: withBase("/favicons/docs.svg"), view: "docs" },
+  sheet: { segment: "spreadsheets", product: "ORVUPI Sheets", favicon: withBase("/favicons/sheets.svg"), view: "sheets" },
+  slide: { segment: "presentation", product: "ORVUPI Slides", favicon: withBase("/favicons/slides.svg"), view: "slides" },
+  form: { segment: "forms", product: "ORVUPI Forms", favicon: withBase("/favicons/forms.svg"), view: "forms" },
+  drawing: { segment: "drawings", product: "ORVUPI Drawings", favicon: withBase("/favicons/drawings.svg"), view: "drawings" },
+  note: { segment: "notes", product: "ORVUPI Notes", favicon: withBase("/favicons/notes.svg"), view: "notes" },
 };
 
 const SEGMENT = Object.fromEntries(Object.entries(TOOLS).map(([kind, tool]) => [tool.segment, kind])) as Record<string, EditorKind>;
@@ -19,10 +26,11 @@ export function editorKind(kind: FileKind): EditorKind | null {
 }
 
 export function editorPath(kind: EditorKind, id: string): string {
-  return `/${TOOLS[kind].segment}/d/${encodeURIComponent(id)}/edit`;
+  return `${BASE}/${TOOLS[kind].segment}/d/${encodeURIComponent(id)}/edit`;
 }
 
 export function parseEditorPath(pathname: string): { kind: EditorKind; id: string } | null {
+  if (BASE && pathname.startsWith(`${BASE}/`)) pathname = pathname.slice(BASE.length);
   const match = pathname.match(/^\/(document|spreadsheets|presentation|forms|drawings|notes)\/d\/([^/]+)\/edit\/?$/);
   if (!match) return null;
   const kind = SEGMENT[match[1] ?? ""];

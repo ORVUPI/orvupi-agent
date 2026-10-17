@@ -1,3 +1,4 @@
+import { withBase } from "../routing/paths";
 import { useRef, type ReactNode } from "react";
 import type { SaveState } from "../docs/save-status";
 import { Icon, type IconName } from "./icons";
@@ -34,7 +35,7 @@ export function Sidebar({
   return (
     <aside className={`ow-sidebar ${open ? "is-open" : ""}`} data-tool="files">
       <div className="ow-brand">
-        <img src="/avatar.png" alt={brandAlt} width={48} height={48} />
+        <img src={withBase("/avatar.png")} alt={brandAlt} width={48} height={48} />
         <strong>{brand}</strong>
         <IconButton label={closeLabel} className="ow-only-mobile" onClick={onClose}>
           <Icon name="close" />
