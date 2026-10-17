@@ -719,7 +719,18 @@ async function readWith(
   }
   const risky = signals.some((item) => item.level === "riesgo");
   const attention = signals.some((item) => item.level === "atencion");
-  const headline = likeness.inRegistry
+  const officialOrvupi = mint === "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU";
+  const headline = officialOrvupi
+    ? {
+        light: "ok" as const,
+        lightLabel: loc("Dirección oficial de ORVUPI", "Official ORVUPI address"),
+        title: loc("Dirección oficial de ORVUPI", "Official ORVUPI address"),
+        support: loc(
+          "Coincide con la dirección publicada en orvupi.com/token. Cada señal de abajo describe un hecho leído ahora. No es una puntuación.",
+          "It matches the address published on orvupi.com/token. Each signal below describes a fact read just now. It is not a score.",
+        ),
+      }
+    : likeness.inRegistry
     ? {
         light: risky || attention ? ("atencion" as const) : ("ok" as const),
         lightLabel: loc("En el registro", "In the registry"),

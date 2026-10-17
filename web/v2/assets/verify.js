@@ -39,7 +39,7 @@ const COPY = {
         title: { es: "Se parece a un token del registro, pero la dirección es otra", en: "Looks like a token in the registry, but the address is different" },
         support: {
             es: `El nombre o el símbolo se parece a un token del registro y la dirección es otra. Esto no dice quién lo creó ni con qué intención. La única dirección oficial de ORVUPI está en orvupi.com/token.`,
-            en: `The name or the symbol looks like a token in the registry and the address is different. This does not say who created it or why. ORVUPI does not have a contract yet.`,
+            en: `The name or the symbol looks like a token in the registry and the address is different. This does not say who created it or why. The only official ORVUPI address is on orvupi.com/token.`,
         },
     },
     otra: {
@@ -2325,7 +2325,7 @@ async function readWith(mint, registry, rpc, input) {
     signals.push(curveNotOnPump ? curveDoesNotApplySignal() : curveSignal(curveInfo, bonding));
     const copyByName = !likeness.inRegistry && likeness.signals.some((item) => /^nombre |^símbolo /.test(item));
     // Contrato oficial ORVUPI (Solana): Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU. Otro token que dice llamarse ORVUPI no es el oficial.
-    const namedLikeProject = !likeness.inRegistry && !isOfficialAddress(mint) && [...names, ...symbols].some((item) => namesProject(item));
+    const namedLikeProject = !likeness.inRegistry && mint !== "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU" && [...names, ...symbols].some((item) => namesProject(item));
     if (likeness.inRegistry) {
         signals.push({
             id: "registro",
@@ -2369,25 +2369,33 @@ async function readWith(mint, registry, rpc, input) {
     }
     const risky = signals.some((item) => item.level === "riesgo");
     const attention = signals.some((item) => item.level === "atencion");
-    const headline = likeness.inRegistry
+    const officialOrvupi = mint === "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU";
+    const headline = officialOrvupi
         ? {
-            light: risky || attention ? "atencion" : "ok",
-            lightLabel: loc("En el registro", "In the registry"),
-            title: loc("Esta dirección está en el registro curado", "This address is in the curated registry"),
-            support: loc("La lectura de ahora coincide con la dirección del registro. Las fichas fechadas siguen abajo, como foto anterior.", "This reading matches the address in the registry. The dated cards remain below, as an earlier snapshot."),
+            light: "ok",
+            lightLabel: loc("Dirección oficial de ORVUPI", "Official ORVUPI address"),
+            title: loc("Dirección oficial de ORVUPI", "Official ORVUPI address"),
+            support: loc("Coincide con la dirección publicada en orvupi.com/token. Cada señal de abajo describe un hecho leído ahora. No es una puntuación.", "It matches the address published on orvupi.com/token. Each signal below describes a fact read just now. It is not a score."),
         }
-        : {
-            light: (risky ? "riesgo" : copyByName || namedLikeProject || attention ? "atencion" : "neutro"),
-            lightLabel: namedLikeProject
-                ? loc(NAMED_LIKE_PROJECT.es, NAMED_LIKE_PROJECT.en)
-                : copyByName
-                    ? loc("Se parece a un token del registro curado, pero la dirección es otra", "Looks like a token in the curated registry, but the address is different")
-                    : loc(risky || attention ? "Hay señales" : "Sin esas señales", risky || attention ? "Signals found" : "Without those signals"),
-            title: loc("Lectura de este token", "Reading for this token"),
-            support: copyByName
-                ? loc("No está en el registro curado. Cada señal describe un hecho leído ahora. No es una puntuación.", "It is not in the curated registry. Each signal describes a fact read just now. It is not a score.")
-                : loc("Cada señal describe un hecho leído ahora. No es una puntuación.", "Each signal describes a fact read just now. It is not a score."),
-        };
+        : likeness.inRegistry
+            ? {
+                light: risky || attention ? "atencion" : "ok",
+                lightLabel: loc("En el registro", "In the registry"),
+                title: loc("Esta dirección está en el registro curado", "This address is in the curated registry"),
+                support: loc("La lectura de ahora coincide con la dirección del registro. Las fichas fechadas siguen abajo, como foto anterior.", "This reading matches the address in the registry. The dated cards remain below, as an earlier snapshot."),
+            }
+            : {
+                light: (risky ? "riesgo" : copyByName || namedLikeProject || attention ? "atencion" : "neutro"),
+                lightLabel: namedLikeProject
+                    ? loc(NAMED_LIKE_PROJECT.es, NAMED_LIKE_PROJECT.en)
+                    : copyByName
+                        ? loc("Se parece a un token del registro curado, pero la dirección es otra", "Looks like a token in the curated registry, but the address is different")
+                        : loc(risky || attention ? "Hay señales" : "Sin esas señales", risky || attention ? "Signals found" : "Without those signals"),
+                title: loc("Lectura de este token", "Reading for this token"),
+                support: copyByName
+                    ? loc("No está en el registro curado. Cada señal describe un hecho leído ahora. No es una puntuación.", "It is not in the curated registry. Each signal describes a fact read just now. It is not a score.")
+                    : loc("Cada señal describe un hecho leído ahora. No es una puntuación.", "Each signal describes a fact read just now. It is not a score."),
+            };
     const quotedName = clipForeign(names[0] || "", likeness.inRegistry);
     const displayName = likeness.inRegistry || !names[0] ? quotedName : `Dice llamarse ${quotedName}`;
     const displayNameEn = likeness.inRegistry || !names[0] ? quotedName : `It says it is called ${quotedName}`;
@@ -5120,7 +5128,11 @@ function paintVerify(out, view) {
   }
   if (view.kind !== "vacio" && typeof AUDIT_NOTICE !== "undefined") {
     var audit = verifyEl("p", { class: "aviso-fijo" });
-    audit.textContent = AUDIT_NOTICE[lang];
+    audit.textContent = view.mint === "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU"
+      ? (lang === "en"
+        ? "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. This is the official ORVUPI address published on orvupi.com/token."
+        : "Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. Esta es la dirección oficial de ORVUPI publicada en orvupi.com/token.")
+      : AUDIT_NOTICE[lang];
     out.append(audit);
   }
   if (view.mint && view.kind === "lectura" && view.light !== "espera") {

@@ -144,7 +144,8 @@
         };
         import("/shared/orvupi-contract.js").then(function (contract) {
           if (!contract.isOfficialAddress(value)) {
-            say(value ? "Copia bloqueada" : "Vacío", "error");
+            var en = document.documentElement.lang === "en";
+            say(value ? (en ? "Copy blocked" : "Copia bloqueada") : (en ? "Empty" : "Vacío"), "error");
             return;
           }
           if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -153,7 +154,7 @@
             fail();
           }
         }).catch(function () {
-          say("Copia bloqueada", "error");
+          say(document.documentElement.lang === "en" ? "Copy blocked" : "Copia bloqueada", "error");
         });
       });
     });

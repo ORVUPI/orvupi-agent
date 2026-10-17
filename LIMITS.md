@@ -130,6 +130,6 @@ No hay dependencias de ejecución. El test también falla si `package.json` decl
 
 ## English
 
-This is a prototype. ORVUPI does not have a contract yet. Risks are explained at https://stubxai.com/risks/. The agent holds no keys.
+This is a prototype. The only official ORVUPI address is on orvupi.com/token. Risks are explained at https://stubxai.com/risks/. The agent holds no keys.
 
 Limits v1 are deny-by-default. The agent does not sign, custody, exchange, send transactions, contact mainnet, ask anyone for assets, invent addresses or hashes, promise outcomes, draft a social note while the kill-switch is engaged, or store secrets. The kill-switch cannot pause holder transfers, freeze accounts, seize balances, or stop Solana. `npm test` is the check. The public PPM box for limits was marked on 2026-10-05 with a green public CI run and legal sign-off; marked does not mean audited, and a later failing run unmarks it.

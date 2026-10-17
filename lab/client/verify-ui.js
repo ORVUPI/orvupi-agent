@@ -187,7 +187,11 @@ function paintVerify(out, view) {
   }
   if (view.kind !== "vacio" && typeof AUDIT_NOTICE !== "undefined") {
     var audit = verifyEl("p", { class: "aviso-fijo" });
-    audit.textContent = AUDIT_NOTICE[lang];
+    audit.textContent = view.mint === "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU"
+      ? (lang === "en"
+        ? "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. This is the official ORVUPI address published on orvupi.com/token."
+        : "Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. Esta es la dirección oficial de ORVUPI publicada en orvupi.com/token.")
+      : AUDIT_NOTICE[lang];
     out.append(audit);
   }
   if (view.mint && view.kind === "lectura" && view.light !== "espera") {

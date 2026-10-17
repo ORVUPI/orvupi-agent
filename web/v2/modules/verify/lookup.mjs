@@ -36,7 +36,7 @@ const COPY = {
         title: { es: "Se parece a un token del registro, pero la dirección es otra", en: "Looks like a token in the registry, but the address is different" },
         support: {
             es: `El nombre o el símbolo se parece a un token del registro y la dirección es otra. Esto no dice quién lo creó ni con qué intención. La única dirección oficial de ORVUPI está en orvupi.com/token.`,
-            en: `The name or the symbol looks like a token in the registry and the address is different. This does not say who created it or why. ORVUPI does not have a contract yet.`,
+            en: `The name or the symbol looks like a token in the registry and the address is different. This does not say who created it or why. The only official ORVUPI address is on orvupi.com/token.`,
         },
     },
     otra: {
