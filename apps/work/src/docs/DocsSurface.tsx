@@ -4,6 +4,8 @@ import { ChevronDown, ChevronUp, Highlighter, Image as ImageIcon, Link2, List, L
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { MessageKey } from "../i18n";
 import { MenuBar } from "../ui/menus";
+import { usePhone } from "../ui/phone";
+import { APP_VERSION } from "../version";
 import { chartPng, drawingPng } from "./inserts";
 import type { JsonNode } from "./model";
 
@@ -249,7 +251,7 @@ export function DocsSurface({
   const [zoom, setZoom] = useState(100);
   const scrollRef = useRef<HTMLDivElement>(null);
   const dockRef = useRef<HTMLDivElement>(null);
-  const [pane, setPane] = useState(() => (typeof window === "undefined" ? 1200 : window.innerWidth));
+  const phone = usePhone();
   const [inset, setInset] = useState(0);
   const [mode, setMode] = useState<"edit" | "view">("edit");
   const [spell, setSpell] = useState(true);
@@ -265,15 +267,6 @@ export function DocsSurface({
   const selectionRef = useRef<TextRange | null>(null);
   const brushRef = useRef<readonly Mark[] | null>(null);
   const brushRange = useRef<TextRange | null>(null);
-  useEffect(() => {
-    const node = scrollRef.current;
-    if (!node) return;
-    const measure = () => setPane(node.clientWidth);
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
   useEffect(() => {
     const apply = (value: number) => {
       setInset(Math.max(0, value));
@@ -297,7 +290,7 @@ export function DocsSurface({
       viewport?.removeEventListener("scroll", onViewport);
     };
   }, []);
-  const narrow = pane < PAGE_W + 8;
+  const narrow = phone;
   const shownZoom = narrow ? 1 : zoom / 100;
   const point = shownPoint(editor?.getAttributes("textStyle")?.fontSize);
   const font = plainFont(editor?.getAttributes("textStyle")?.fontFamily);
@@ -478,7 +471,7 @@ export function DocsSurface({
   const align = String(editor?.getAttributes(block)?.textAlign ?? "left");
 
   return (
-    <div className={`ow-docs${narrow ? " is-narrow" : ""}`} data-tool="docs">
+    <div className={`ow-docs${narrow ? " is-narrow" : ""}`} data-tool="docs" data-layout={narrow ? "mobile" : "desktop"} data-version={APP_VERSION}>
       <header className="ow-docs-head">
         <div className="ow-docs-titlebar">
           <button type="button" className="ow-docs-logo" aria-label={t("closeDoc")} onClick={onClose}>
@@ -1071,6 +1064,7 @@ function MenuInline({
         ] },
         { id: "help", label: t("menuHelp"), items: [
           { id: "keys", label: t("shortcuts"), hint: "Ctrl+/", onSelect: onShortcuts },
+          { id: "version", label: t("appVersion", { version: APP_VERSION }), static: true },
         ] },
       ]}
     />

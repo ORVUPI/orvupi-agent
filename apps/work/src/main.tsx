@@ -12,8 +12,19 @@ import "@fontsource/montserrat/400.css";
 import "@fontsource/roboto/400.css";
 import "./styles/app.css";
 
+const viewport = document.querySelector('meta[name="viewport"]');
+if (viewport) viewport.setAttribute("content", "width=device-width, initial-scale=1, viewport-fit=cover");
+
 if (import.meta.env.PROD) {
-  registerSW({ immediate: true });
+  registerSW({
+    immediate: true,
+    onNeedReload() {
+      window.dispatchEvent(new Event("ow-update"));
+    },
+    onRegisteredSW(_url, registration) {
+      if (registration?.waiting) window.dispatchEvent(new Event("ow-update"));
+    },
+  });
 }
 
 const root = document.querySelector("#root");

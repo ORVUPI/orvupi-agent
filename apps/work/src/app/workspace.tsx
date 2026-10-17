@@ -136,7 +136,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [driveLayout, setDriveLayout] = useState<"list" | "grid">("list");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [folderId, setFolderId] = useState<string | null>(null);
-  const [aiOpen, setAiOpen] = useState(() => typeof window === "undefined" || window.innerWidth > 768);
+  const [aiOpen, setAiOpen] = useState(() => typeof window === "undefined" || !window.matchMedia("(max-width: 840px), (pointer: coarse)").matches);
   const [navOpen, setNavOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);

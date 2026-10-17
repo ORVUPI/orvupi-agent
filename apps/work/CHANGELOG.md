@@ -1,5 +1,15 @@
 # Registro de cambios
 
+## 0.6.3 — 2026-10-17
+
+Alfa de desarrollo. No es una versión de producción.
+
+- Docs entra en el modo de teléfono con un ancho de hasta 840 px o con un puntero grueso, sin mirar el ancho del papel. A 460 y 480 px se ven el menú ⋮ y la barra inferior, y no las reglas de escritorio.
+- La meta viewport fija el ancho al dispositivo.
+- El service worker usa la red primero para la página y los archivos, toma el control en cuanto hay una versión nueva y muestra «Nueva versión» para recargar. La caché anterior se descarta.
+- Ayuda muestra el número de versión, para comprobar qué carga el teléfono.
+- Un archivo de 0.1 a 0.6.2 sigue abriendo: la versión del archivo sigue en 1.
+
 ## 0.6.2 — 2026-10-17
 
 Alfa de desarrollo. No es una versión de producción.

@@ -27,9 +27,32 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,png,woff2,svg,ico}"],
-        navigateFallback: "index.html",
+        cacheId: "orvupi-work-063",
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
+        globPatterns: [],
+        navigateFallback: null,
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }: { request: Request }) => request.mode === "navigate",
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "orvupi-work-pages-063",
+              networkTimeoutSeconds: 3,
+            },
+          },
+          {
+            urlPattern: ({ request }: { request: Request }) => ["script", "style", "worker", "font", "image"].includes(request.destination),
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "orvupi-work-assets-063",
+              networkTimeoutSeconds: 4,
+              expiration: { maxEntries: 80, maxAgeSeconds: 7 * 24 * 60 * 60 },
+            },
+          },
+        ],
       },
     }),
     {

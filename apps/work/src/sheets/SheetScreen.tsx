@@ -6,6 +6,7 @@ import { createId, fileNameWithExtension } from "../security/names";
 import { Button, Input } from "../ui/kit";
 import { absentOnDevice, MissingFile } from "../ui/MissingFile";
 import { usePhone } from "../ui/phone";
+import { APP_VERSION } from "../version";
 import { MenuBar } from "../ui/menus";
 import { Modal } from "../ui/overlay";
 import { OrvupiChart } from "../ui/chart";
@@ -424,6 +425,7 @@ export function SheetsScreen() {
           ] },
           { id: "help", label: workspace.t("menuHelp"), items: [
             { id: "limit", label: workspace.t("shortcuts"), onSelect: () => setDialog("help") },
+            { id: "version", label: workspace.t("appVersion", { version: APP_VERSION }), static: true },
           ] },
         ]}
       />

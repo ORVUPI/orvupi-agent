@@ -6,6 +6,7 @@ import { fileNameWithExtension } from "../security/names";
 import { Button, Input, Select } from "../ui/kit";
 import { absentOnDevice, MissingFile } from "../ui/MissingFile";
 import { MenuBar } from "../ui/menus";
+import { APP_VERSION } from "../version";
 import {
   SLIDE_FILLS,
   SLIDE_THEMES,
@@ -296,6 +297,7 @@ export function SlidesScreen() {
             { id: "back", label: workspace.t("slideBack"), onSelect: () => { if (selected) patchCurrent((current) => ({ ...current, items: orderItems(current.items, selected.id, "back") })); } },
           ] },
           { id: "help", label: workspace.t("menuHelp"), items: [
+            { id: "version", label: workspace.t("appVersion", { version: APP_VERSION }), static: true },
             { id: "keys", label: workspace.t("shortcuts"), onSelect: () => setHelp(true) },
           ] },
         ]}

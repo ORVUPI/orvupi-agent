@@ -6,6 +6,7 @@ import { CommandPalette, type Command } from "../ui/CommandPalette";
 import { ShellFrame, Sidebar, Topbar, type NavItem } from "../ui/chrome";
 import { Icon } from "../ui/icons";
 import { Dropdown, Modal, Toasts } from "../ui/overlay";
+import { UpdateBanner } from "../ui/UpdateBanner";
 import { ErrorState } from "../ui/kit";
 import { DrawingsScreen } from "../drawings/DrawingsScreen";
 import { FilesScreen } from "../files/FilesScreen";
@@ -353,6 +354,7 @@ export function App() {
         onClose={() => workspace.setPaletteOpen(false)}
       />
       <Toasts items={workspace.toasts} onDismiss={workspace.dismissToast} />
+      <UpdateBanner title={workspace.t("newVersion")} action={workspace.t("reloadApp")} />
       <Modal open={helpOpen} title={workspace.t("shortcuts")} onClose={() => setHelpOpen(false)} footer={<button type="button" className="ow-button" onClick={() => setHelpOpen(false)}>{workspace.t("closeDialog")}</button>}>
         <p>{workspace.t("shortcutsDriveBody")}</p>
         <p>{workspace.t("shortcutsBody")}</p>

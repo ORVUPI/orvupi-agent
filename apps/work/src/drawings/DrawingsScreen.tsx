@@ -5,6 +5,7 @@ import { downloadBytes } from "../security/bytes";
 import { Button, Input } from "../ui/kit";
 import { absentOnDevice, MissingFile } from "../ui/MissingFile";
 import { MenuBar } from "../ui/menus";
+import { APP_VERSION } from "../version";
 import { createId, fileNameWithExtension } from "../security/names";
 import { SLIDE_FILLS, alignItem, orderItems, type SlideItem } from "../slides/model";
 import { parseDrawing, serializeDrawing, type DrawingFile } from "./model";
@@ -167,7 +168,10 @@ export function DrawingsScreen() {
             { id: "front", label: workspace.t("slideFront"), onSelect: () => { if (selected) update({ ...file, items: orderItems(file.items, selected.id, "front") }); } },
             { id: "back", label: workspace.t("slideBack"), onSelect: () => { if (selected) update({ ...file, items: orderItems(file.items, selected.id, "back") }); } },
           ] },
-          { id: "help", label: workspace.t("menuHelp"), items: [{ id: "keys", label: workspace.t("shortcuts"), onSelect: () => setHelp(true) }] },
+          { id: "help", label: workspace.t("menuHelp"), items: [
+            { id: "version", label: workspace.t("appVersion", { version: APP_VERSION }), static: true },
+            { id: "keys", label: workspace.t("shortcuts"), onSelect: () => setHelp(true) },
+          ] },
         ]}
       />
       </div>
