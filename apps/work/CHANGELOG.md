@@ -12,6 +12,7 @@ Alfa de desarrollo. No es una versión de producción.
 - Hojas: barra de fórmulas, encabezados, pestañas al pie y cuadrícula virtual de 1000 filas por columnas A–AF. Un archivo de 50×12 de la 0.2.0 sigue abriendo.
 - Diapositivas: miniaturas, cuatro temas y objetos movibles. Título y cuerpo se mantienen en el JSON.
 - Iconos de Lucide 1.59.0 (ISC). El análisis está en `docs/ANALISIS_DRIVE_UI.md`.
+- Formularios, Dibujos y Notas locales, con la disposición de esas herramientas: tarjetas de preguntas, lienzo y muro de notas. Los archivos antiguos de Docs, Hojas y Diapositivas siguen abriendo.
 
 ## 0.2.0 — 2026-10-17
 

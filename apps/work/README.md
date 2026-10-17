@@ -44,6 +44,9 @@ npm run test:e2e
 - Archivos: la columna Inicio, Mi unidad, Recientes, Destacados y Papelera; buscador con chips; Nuevo; lista Nombre, Modificado y Tamaño; cuadrícula; migas; clic derecho; selección; detalles y barra de uso local.
 - Hojas: cuadrícula virtual de 1000×32 (A–AF), barra de fórmulas, SUMA, PROMEDIO, MIN, MAX, CONTAR y SI, pestañas al pie, fila inmovilizada, CSV y un XLSX sencillo.
 - Diapositivas: miniaturas, cuatro temas, objetos movibles y presentación local.
+- Formularios: preguntas, respuestas y modo de rellenar, en este dispositivo.
+- Dibujos: lienzo con texto, formas e imágenes.
+- Notas: tarjetas, colores, fijar y listas.
 - ORVUPI AI muestra capacidades del equipo y deja claro que el modelo no está descargado.
 
 ## Documentación

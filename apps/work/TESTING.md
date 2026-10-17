@@ -38,7 +38,7 @@ Una segunda prueba ejecuta axe-core 4.14 con las etiquetas `wcag2a`, `wcag2aa`, 
 
 La tercera prueba abre Mi unidad, ya no la etiqueta antigua «Archivos».
 
-Resultado de esta entrega, en local: 26/26 de Vitest y 4/4 de Playwright, incluido el contraste en el inicio y en el editor, la navegación «Mi unidad» y una hoja virtual que muestra 30 en B1.
+Resultado de esta entrega, en local: 29/29 de Vitest y 4/4 de Playwright, incluido el contraste en el inicio y en el editor, la navegación «Mi unidad» y una hoja virtual que muestra 30 en B1.
 
 ## Qué no cubre esta tanda
 

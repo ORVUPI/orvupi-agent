@@ -3,6 +3,7 @@ import {
   AlignLeft,
   AlignRight,
   Bold,
+  ClipboardList,
   Clock3,
   Database,
   FileText,
@@ -15,8 +16,10 @@ import {
   LayoutTemplate,
   List,
   ListOrdered,
+  PenLine,
   Plus,
   Presentation,
+  StickyNote,
   Redo2,
   Search,
   Settings,
@@ -36,6 +39,9 @@ export type IconName =
   | "docs"
   | "sheets"
   | "slides"
+  | "forms"
+  | "drawings"
+  | "notes"
   | "pdf"
   | "files"
   | "ai"
@@ -68,6 +74,9 @@ const icons: Record<IconName, LucideIcon> = {
   docs: FileText,
   sheets: Table,
   slides: Presentation,
+  forms: ClipboardList,
+  drawings: PenLine,
+  notes: StickyNote,
   pdf: FileText,
   files: Folder,
   ai: Sparkles,

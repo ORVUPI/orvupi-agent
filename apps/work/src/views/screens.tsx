@@ -19,6 +19,9 @@ function kindLabel(kind: FileRecord["kind"], t: ReturnType<typeof useWorkspace>[
   if (kind === "doc") return t("kindDoc");
   if (kind === "sheet") return t("kindSheet");
   if (kind === "slide") return t("kindSlide");
+  if (kind === "form") return t("kindForm");
+  if (kind === "drawing") return t("kindDrawing");
+  if (kind === "note") return t("kindNote");
   if (kind === "pdf") return t("kindPdf");
   return t("kindOther");
 }
@@ -77,6 +80,24 @@ export function HomeScreen() {
           tool="slides"
           body={workspace.t("slideHint")}
           action={<Button onClick={() => void workspace.createSlides(null)}>{workspace.t("newSlides")}</Button>}
+        />
+        <Card
+          title={workspace.t("newForm")}
+          tool="forms"
+          body={workspace.t("formHint")}
+          action={<Button onClick={() => void workspace.createForm(null)}>{workspace.t("newForm")}</Button>}
+        />
+        <Card
+          title={workspace.t("newDrawing")}
+          tool="drawings"
+          body={workspace.t("drawingHint")}
+          action={<Button onClick={() => void workspace.createDrawing(null)}>{workspace.t("newDrawing")}</Button>}
+        />
+        <Card
+          title={workspace.t("newNote")}
+          tool="notes"
+          body={workspace.t("noteHint")}
+          action={<Button onClick={() => void workspace.createNote(null)}>{workspace.t("newNote")}</Button>}
         />
         <Card
           title={workspace.t("openPdf")}

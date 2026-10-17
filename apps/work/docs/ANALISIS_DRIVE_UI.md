@@ -178,6 +178,58 @@ Presentar ocupa el escenario. Flechas, espacio y los botones cambian de diaposit
 - Personas como filtro real, compartir, permisos, comentarios asignados, cursores en tiempo real, cuota de nube e IMPORTRANGE.
 - Sugeridos por un modelo remoto. Los de Inicio son una ordenación local.
 
+## Aspecto de cada herramienta
+
+La ayuda oficial describe la función. La disposición pública de cada herramienta, vista el 17 de octubre de 2026, describe el aspecto: qué ocupa el centro, qué va en una tarjeta y qué color identifica la herramienta. ORVUPI Work toma esa estructura y la pinta con su paleta. El violeta de Formularios es `#5b2a86`, el azul de Dibujos es `#1d4e89` y el ámbar de Notas es `#7a4a00`. Ninguno es un color de marca de Google.
+
+### Docs
+
+Referencia: https://support.google.com/docs/answer/179738 y la regla en https://support.google.com/docs/answer/6367684.
+
+El documento se lee como una página blanca centrada sobre un escritorio. Encima, el título y la estrella. Debajo, la fila de menús y una barra de iconos. La regla cruza el ancho de la página.
+
+En ORVUPI Work la página mide hasta 816 px, el escritorio es `#f3e6d4` y la regla es una tira de marcas. El icono de la sección usa `#1d4e89`.
+
+### Sheets
+
+Referencia: https://support.google.com/docs/answer/46977.
+
+La cuadrícula ocupa casi toda la ventana. Arriba, el recuadro del nombre de la celda y la fórmula en una sola línea. Las letras de columna y los números de fila enmarcan las celdas. La pestaña activa se distingue al pie.
+
+En ORVUPI Work la cuadrícula visible crece con la ventana, la celda elegida marca su columna en verde claro y la pestaña activa es `#0b5d36` con texto `#fff8ec`.
+
+### Slides
+
+Referencia: https://support.google.com/docs/answer/1694830.
+
+A la izquierda, una tira de miniaturas numeradas. En el centro, el lienzo sobre un fondo neutro. Presentar queda a mano.
+
+ORVUPI Work usa esa misma columna, el lienzo 16:9 y el botón Presentar. El icono de la sección es `#9a3412`.
+
+### Forms
+
+Referencias: crear un formulario https://support.google.com/docs/answer/2839737 y los tipos de pregunta https://support.google.com/docs/answer/7322334.
+
+La pantalla de preguntas es una pila de tarjetas. La primera lleva el título y la descripción, sobre una banda de color. Cada pregunta es otra tarjeta con el enunciado, el tipo y, si hace falta, las opciones. Un interruptor marca la pregunta como obligatoria. Otra vista lista las respuestas. Rellenar el formulario es una pantalla distinta de editarlo.
+
+ORVUPI Work replica esa pila. La banda es violeta `#5b2a86`. Las tarjetas son blancas con una franja izquierda del mismo violeta. Los tipos locales son respuesta corta, párrafo, varias opciones y casillas. Las respuestas viven en el mismo archivo, hasta 200. No hay envío a una cuenta ni hoja enlazada.
+
+### Drawings
+
+Referencia: https://support.google.com/docs/answer/1726905.
+
+Un dibujo es un lienzo en blanco con una barra de herramientas para texto, formas e imagen. Los objetos se seleccionan y se mueven. No hay páginas.
+
+ORVUPI Work centra un lienzo de 960×640 sobre el mismo escritorio que Docs. La barra inserta cuadro de texto, rectángulo, elipse e imagen. Se arrastran. El archivo es `orvupi-drawing` versión 1, hasta 40 objetos.
+
+### Keep
+
+Referencia: https://support.google.com/keep/answer/2888248.
+
+Keep no es una lista de archivos. Es un muro de tarjetas. Arriba, «Tomar una nota». Las fijadas van primero. Cada tarjeta tiene color, título y un texto o una lista de casillas.
+
+ORVUPI Work hace ese muro en columnas. «Tomar una nota» crea una tarjeta. Fijar, el color de una lista cerrada y la lista de casillas se guardan en `orvupi-note` versión 1. El color oscuro usa texto crema. El verde y el ámbar usan texto oscuro de la paleta para seguir en AA.
+
 ## Contraste
 
 Texto `#102032` sobre `#fff8ec`, `#ffffff` o `#fff0f5`. Texto apagado `#465365` sobre blanco. El chip Personas desactivado mantiene ese texto apagado, sin bajar la opacidad. La barra de acciones usa texto `#fff8ec` sobre `#102032`. El tema Tinta invierte esas dos tintas. El tema Bosque usa `#0b5d36` sobre `#e5f6ee`. Las líneas de la cuadrícula (`#c5ced6`) no son texto.

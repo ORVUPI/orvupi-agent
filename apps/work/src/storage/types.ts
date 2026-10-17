@@ -1,4 +1,4 @@
-export type FileKind = "folder" | "doc" | "sheet" | "slide" | "pdf" | "other";
+export type FileKind = "folder" | "doc" | "sheet" | "slide" | "form" | "drawing" | "note" | "pdf" | "other";
 
 export type BlobDriver = "opfs" | "indexeddb" | "memory";
 

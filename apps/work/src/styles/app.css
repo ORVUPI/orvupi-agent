@@ -613,7 +613,7 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
   white-space: nowrap;
 }
 .ow-cell[aria-pressed="true"] { outline: 2px solid var(--gem); outline-offset: -2px; background: #fff8ec; }
-.ow-sheet-tabs { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+.ow-sheet-tabs, .ow-sheet-tabs [role="tablist"] { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
 .ow-slides-work { display: grid; grid-template-columns: 168px minmax(0, 1fr) 240px; gap: 12px; align-items: start; }
 .ow-filmstrip { display: grid; gap: 8px; }
 .ow-thumb {
@@ -660,9 +660,83 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-slide-item img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
 .ow-slide-tools { display: grid; gap: 12px; background: #fff; border: 2px solid var(--line); border-radius: 16px; padding: 12px; }
 .ow-present .ow-slide-canvas { width: min(960px, 100%); }
+.ow-sidebar button[data-tool="docs"] .ow-icon { color: var(--docs); }
+.ow-sidebar button[data-tool="sheets"] .ow-icon { color: var(--sheets); }
+.ow-sidebar button[data-tool="slides"] .ow-icon { color: var(--slides); }
+.ow-sidebar button[data-tool="forms"] .ow-icon { color: #5b2a86; }
+.ow-sidebar button[data-tool="drawings"] .ow-icon { color: #1d4e89; }
+.ow-sidebar button[data-tool="notes"] .ow-icon { color: #7a4a00; }
+.ow-sidebar button[aria-current="page"] .ow-icon { color: var(--text); }
+.ow-card[data-tool="forms"] { border-top: 6px solid #5b2a86; }
+.ow-card[data-tool="drawings"] { border-top: 6px solid #1d4e89; }
+.ow-card[data-tool="notes"] { border-top: 6px solid #7a4a00; }
+.ow-editor[data-tool="docs"] .ow-menubar,
+.ow-sheet-page .ow-menubar,
+.ow-slides-page .ow-menubar,
+.ow-form-page .ow-menubar,
+.ow-draw-page .ow-menubar { border-radius: 0 0 12px 12px; }
+.ow-sheet-page { display: flex; flex-direction: column; }
+.ow-sheet-wrap { flex: 1; height: min(68vh, 640px); max-height: none; }
+.ow-vcol.is-selected, .ow-vrow.is-selected { background: #e5f6ee; }
+.ow-sheet-tabs button[aria-selected="true"] { background: #0b5d36; color: #fff8ec; }
+.ow-form-banner { height: 88px; border-radius: 16px 16px 0 0; background: #5b2a86; }
+.ow-form-card {
+  background: #fff;
+  color: var(--text);
+  border: 2px solid var(--line);
+  border-left: 8px solid #5b2a86;
+  border-radius: 16px;
+  padding: 16px;
+  margin: 0 0 12px;
+}
+.ow-form-page .ow-form-card:first-of-type { margin-top: -36px; }
+.ow-form-stack { display: grid; gap: 4px; }
+.ow-check { display: flex; gap: 8px; align-items: center; font-weight: 700; }
+.ow-check input[type="checkbox"], .ow-check input[type="radio"] { width: 18px; height: 18px; }
+.ow-draw-work { display: grid; gap: 12px; }
+.ow-draw-tools { display: flex; flex-wrap: wrap; gap: 8px; background: #fff; border: 2px solid var(--line); border-radius: 12px; padding: 8px; }
+.ow-draw-stage { background: #f3e6d4; border-radius: 16px; padding: 20px; }
+.ow-draw-canvas {
+  position: relative;
+  width: min(960px, 100%);
+  aspect-ratio: 960 / 640;
+  margin: 0 auto;
+  background: #fff;
+  border: 2px solid var(--line);
+  box-shadow: 0 10px 0 var(--line);
+  overflow: hidden;
+}
+.ow-note-compose {
+  width: min(640px, 100%);
+  text-align: left;
+  background: #fff;
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 16px;
+  font-weight: 800;
+  box-shadow: 0 4px 0 var(--line);
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+.ow-note-editor { border: 2px solid var(--line); border-radius: 16px; padding: 16px; margin-bottom: 16px; }
+.ow-notes { columns: 3; column-gap: 12px; }
+.ow-note-card {
+  width: 100%;
+  break-inside: avoid;
+  display: grid;
+  gap: 8px;
+  text-align: left;
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  padding: 12px;
+  margin: 0 0 12px;
+  cursor: pointer;
+  font-weight: 700;
+}
+.ow-note-card span { font-weight: 600; white-space: pre-wrap; }
 
 @media (max-width: 960px) {
-  .ow-slides-work { grid-template-columns: 1fr; }
+  .ow-slides-work, .ow-notes { columns: 1; grid-template-columns: 1fr; }
   .ow-details { position: static; width: 100%; }
   .ow-drive { display: grid; }
 }

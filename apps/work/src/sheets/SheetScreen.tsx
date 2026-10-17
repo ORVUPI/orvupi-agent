@@ -144,17 +144,18 @@ export function SheetsScreen() {
 
   function cellButton(rowIndex: number, colIndex: number, top: number | null) {
     const label = cellRef(rowIndex, colIndex);
+    const shown = displayCell(active!.cells, rowIndex, colIndex);
     return (
       <button
         key={label}
         type="button"
         className="ow-cell"
-        aria-label={label}
+        aria-label={shown ? `${label} ${shown}` : label}
         aria-pressed={selected.row === rowIndex && selected.col === colIndex}
         style={{ top: top ?? 0, left: (top === null ? 0 : GUTTER) + colIndex * COL_W, width: COL_W, height: ROW_H }}
         onClick={() => setSelected({ row: rowIndex, col: colIndex })}
       >
-        {displayCell(active!.cells, rowIndex, colIndex) || "\u00a0"}
+        {shown}
       </button>
     );
   }
@@ -200,7 +201,6 @@ export function SheetsScreen() {
           ] },
         ]}
       />
-      <p className="ow-muted">{workspace.t("sheetLimit")}</p>
       <div className="ow-formula">
         <span className="ow-namebox" aria-label={workspace.t("nameBox")}>{cellRef(selected.row, selected.col)}</span>
         <Input label={workspace.t("sheetFormula")} value={raw} onChange={(event) => setCell(event.target.value)} />
@@ -247,7 +247,7 @@ export function SheetsScreen() {
         <div className="ow-sheet-cols" style={{ width: gridWidth }}>
           <div className="ow-sheet-gutter" style={{ width: GUTTER, height: HEAD }} />
           {Array.from({ length: COL_COUNT }, (_, col) => (
-            <div key={columnLabel(col)} className="ow-vcol" style={{ width: COL_W, height: HEAD }}>{columnLabel(col)}</div>
+            <div key={columnLabel(col)} className={`ow-vcol${selected.col === col ? " is-selected" : ""}`} style={{ width: COL_W, height: HEAD }}>{columnLabel(col)}</div>
           ))}
         </div>
         {frozen ? (
@@ -270,12 +270,14 @@ export function SheetsScreen() {
           })}
         </div>
       </div>
-      <div className="ow-sheet-tabs" role="tablist" aria-label={workspace.t("navSheets")}>
-        {file.sheets.map((sheet, index) => (
-          <button key={`${sheet.name}-${index}`} type="button" role="tab" aria-selected={index === file.active} className="ow-button" onClick={() => update((current) => ({ ...current, active: index }))}>
-            {sheet.name}
-          </button>
-        ))}
+      <div className="ow-sheet-tabs">
+        <div role="tablist" aria-label={workspace.t("navSheets")}>
+          {file.sheets.map((sheet, index) => (
+            <button key={`${sheet.name}-${index}`} type="button" role="tab" aria-selected={index === file.active} className="ow-button" onClick={() => update((current) => ({ ...current, active: index }))}>
+              {sheet.name}
+            </button>
+          ))}
+        </div>
         <Button
           onClick={() => {
             if (file.sheets.length >= 12) return;

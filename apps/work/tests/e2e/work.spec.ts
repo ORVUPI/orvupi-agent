@@ -48,14 +48,14 @@ test("contraste WCAG AA en inicio y en el editor", async ({ page }) => {
 test("una hoja suma dos celdas y una carpeta se crea en archivos", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Nueva hoja" }).click();
-  await page.getByRole("button", { name: "A1", exact: true }).click();
+  await page.getByRole("button", { name: /^A1(\s|$)/ }).click();
   const formula = page.getByRole("textbox", { name: "Fórmula o valor" });
   await formula.fill("10");
-  await page.getByRole("button", { name: "A2", exact: true }).click();
+  await page.getByRole("button", { name: /^A2(\s|$)/ }).click();
   await formula.fill("20");
-  await page.getByRole("button", { name: "B1", exact: true }).click();
+  await page.getByRole("button", { name: /^B1(\s|$)/ }).click();
   await formula.fill("=SUMA(A1:A2)");
-  await expect(page.getByRole("button", { name: "B1", exact: true })).toHaveText("30");
+  await expect(page.getByRole("button", { name: /^B1(\s|$)/ })).toHaveText("30");
   await page.getByRole("navigation", { name: "Secciones" }).getByRole("button", { name: "Mi unidad" }).click();
   await page.getByRole("button", { name: "Nueva carpeta" }).click();
   await expect(page.getByRole("button", { name: "Nueva carpeta Carpeta" })).toBeVisible();

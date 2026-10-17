@@ -107,6 +107,17 @@ Referencia: [presentar](https://support.google.com/docs/answer/1696787).
 | Exportar PPTX o PDF de diapositivas | Baja | Fuera | |
 | Publicar en la web | Baja | Fuera | |
 
+## Formularios, dibujos y notas
+
+Referencias: [crear un formulario](https://support.google.com/docs/answer/2839737), [dibujos](https://support.google.com/docs/answer/1726905), [notas](https://support.google.com/keep/answer/2888248). El aspecto está en `docs/ANALISIS_DRIVE_UI.md`.
+
+| Función | Prioridad | Estado | Notas de esta alfa |
+| --- | --- | --- | --- |
+| Preguntas y respuestas locales | Media | Parcial | Corta, párrafo, opciones y casillas. Hasta 40 preguntas y 200 respuestas en el archivo. |
+| Lienzo de dibujo | Media | Parcial | Texto, rectángulo, elipse e imagen, movibles. Hasta 40 objetos. |
+| Muro de notas | Media | Parcial | Tarjetas, color, fijar y lista. Sin sincronización. |
+| Envío, colaboración y cuenta | Baja | Fuera | Nada sale del dispositivo. |
+
 ## Qué no se afirma
 
 Esta matriz no dice que ORVUPI Work sustituya a Drive, Docs, Sheets o Slides. Dice qué gesto local existe hoy, con qué límite, y qué queda fuera porque exigiría un servidor, una cuenta o una licencia que el proyecto rechaza.

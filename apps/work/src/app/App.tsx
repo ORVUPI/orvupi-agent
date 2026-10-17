@@ -7,7 +7,10 @@ import { ShellFrame, Sidebar, Topbar, type NavItem } from "../ui/chrome";
 import { Icon } from "../ui/icons";
 import { Dropdown, Modal, Toasts } from "../ui/overlay";
 import { ErrorState } from "../ui/kit";
+import { DrawingsScreen } from "../drawings/DrawingsScreen";
 import { FilesScreen } from "../files/FilesScreen";
+import { FormsScreen } from "../forms/FormsScreen";
+import { NotesScreen } from "../notes/NotesScreen";
 import { SheetsScreen } from "../sheets/SheetScreen";
 import { SlidesScreen } from "../slides/SlidesScreen";
 import { DocsScreen, HomeScreen, LaterScreen, SearchResults, SettingsScreen, TemplateLibrary } from "../views/screens";
@@ -26,6 +29,9 @@ export function App() {
     { id: "docs", label: workspace.t("navDocs"), icon: "docs", tool: "docs" },
     { id: "sheets", label: workspace.t("navSheets"), icon: "sheets", tool: "sheets" },
     { id: "slides", label: workspace.t("navSlides"), icon: "slides", tool: "slides" },
+    { id: "forms", label: workspace.t("navForms"), icon: "forms", tool: "forms" },
+    { id: "drawings", label: workspace.t("navDrawings"), icon: "drawings", tool: "drawings" },
+    { id: "notes", label: workspace.t("navNotes"), icon: "notes", tool: "notes" },
     { id: "pdf", label: workspace.t("navPdf"), icon: "pdf", tool: "pdf" },
     { id: "templates", label: workspace.t("navTemplates"), icon: "templates", tool: "docs" },
     { id: "ai", label: workspace.t("navAi"), icon: "ai", tool: "ai" },
@@ -100,6 +106,9 @@ export function App() {
       { id: "new", label: workspace.t("commandNew"), keywords: "doc documento", run: () => void workspace.createDocument() },
       { id: "sheet", label: workspace.t("newSheet"), keywords: "hoja sheet", run: () => void workspace.createSheet(null) },
       { id: "slides", label: workspace.t("newSlides"), keywords: "presentacion slides", run: () => void workspace.createSlides(null) },
+      { id: "form", label: workspace.t("newForm"), keywords: "formulario form", run: () => void workspace.createForm(null) },
+      { id: "drawing", label: workspace.t("newDrawing"), keywords: "dibujo drawing", run: () => void workspace.createDrawing(null) },
+      { id: "note", label: workspace.t("newNote"), keywords: "nota note", run: () => void workspace.createNote(null) },
       { id: "home", label: workspace.t("commandHome"), run: () => void workspace.navigate("home") },
       { id: "docs", label: workspace.t("commandDocs"), run: () => void workspace.navigate("docs") },
       { id: "files", label: workspace.t("commandFiles"), run: () => void workspace.navigate("files") },
@@ -134,6 +143,9 @@ export function App() {
   else if (workspace.view === "templates") content = <div className="ow-page"><h1>{workspace.t("templates")}</h1><TemplateLibrary /></div>;
   else if (workspace.view === "sheets") content = <SheetsScreen />;
   else if (workspace.view === "slides") content = <SlidesScreen />;
+  else if (workspace.view === "forms") content = <FormsScreen />;
+  else if (workspace.view === "drawings") content = <DrawingsScreen />;
+  else if (workspace.view === "notes") content = <NotesScreen />;
   else if (workspace.view === "pdf") content = <LaterScreen view="pdf" />;
   else if (workspace.view === "ai") content = <div className="ow-page"><h1>{workspace.t("aiTitle")}</h1><p>{workspace.t("aiBody")}</p><p>{tier}</p></div>;
 
@@ -183,6 +195,9 @@ export function App() {
                   { id: "doc", label: workspace.t("menuDocument"), onSelect: () => void workspace.createDocument(undefined, undefined, workspace.folderId) },
                   { id: "sheet", label: workspace.t("menuSheet"), onSelect: () => void workspace.createSheet(workspace.folderId) },
                   { id: "slides", label: workspace.t("menuSlides"), onSelect: () => void workspace.createSlides(workspace.folderId) },
+                  { id: "form", label: workspace.t("menuForm"), onSelect: () => void workspace.createForm(workspace.folderId) },
+                  { id: "drawing", label: workspace.t("menuDrawing"), onSelect: () => void workspace.createDrawing(workspace.folderId) },
+                  { id: "note", label: workspace.t("menuNote"), onSelect: () => void workspace.createNote(workspace.folderId) },
                 ]}
               />
               <label className="ow-file">
@@ -240,10 +255,10 @@ export function App() {
           onAi={() => workspace.setAiOpen(!workspace.aiOpen)}
           closeDocLabel={workspace.t("closeDoc")}
           onCloseDoc={workspace.session ? () => void workspace.session?.close() : null}
-          starred={workspace.files.find((file) => file.id === (workspace.openDocId ?? workspace.openSheetId ?? workspace.openSlideId))?.favorite ?? false}
+          starred={workspace.files.find((file) => file.id === (workspace.openDocId ?? workspace.openSheetId ?? workspace.openSlideId ?? workspace.openFormId ?? workspace.openDrawingId ?? workspace.openNoteId))?.favorite ?? false}
           starLabel={workspace.t("star")}
-          onStar={workspace.openDocId || workspace.openSheetId || workspace.openSlideId ? () => {
-            const id = workspace.openDocId ?? workspace.openSheetId ?? workspace.openSlideId;
+          onStar={workspace.openDocId || workspace.openSheetId || workspace.openSlideId || workspace.openFormId || workspace.openDrawingId || workspace.openNoteId ? () => {
+            const id = workspace.openDocId ?? workspace.openSheetId ?? workspace.openSlideId ?? workspace.openFormId ?? workspace.openDrawingId ?? workspace.openNoteId;
             const file = workspace.files.find((item) => item.id === id);
             if (!id || !file) return;
             void workspace.storage?.setFavorite(id, !file.favorite).then(() => workspace.refreshFiles()).catch(workspace.reportError);
@@ -258,6 +273,9 @@ export function App() {
                   <option value="doc">{workspace.t("kindDoc")}</option>
                   <option value="sheet">{workspace.t("kindSheet")}</option>
                   <option value="slide">{workspace.t("kindSlide")}</option>
+                  <option value="form">{workspace.t("kindForm")}</option>
+                  <option value="drawing">{workspace.t("kindDrawing")}</option>
+                  <option value="note">{workspace.t("kindNote")}</option>
                   <option value="pdf">{workspace.t("kindPdf")}</option>
                   <option value="other">{workspace.t("kindOther")}</option>
                 </select>

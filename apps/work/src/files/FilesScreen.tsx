@@ -19,11 +19,14 @@ const COLORS = [
   { id: "#7a4a00", key: "colorAmber" },
 ] as const;
 
-function kindKey(kind: FileKind): "kindFolder" | "kindDoc" | "kindSheet" | "kindSlide" | "kindPdf" | "kindOther" {
+function kindKey(kind: FileKind): "kindFolder" | "kindDoc" | "kindSheet" | "kindSlide" | "kindForm" | "kindDrawing" | "kindNote" | "kindPdf" | "kindOther" {
   if (kind === "folder") return "kindFolder";
   if (kind === "doc") return "kindDoc";
   if (kind === "sheet") return "kindSheet";
   if (kind === "slide") return "kindSlide";
+  if (kind === "form") return "kindForm";
+  if (kind === "drawing") return "kindDrawing";
+  if (kind === "note") return "kindNote";
   if (kind === "pdf") return "kindPdf";
   return "kindOther";
 }

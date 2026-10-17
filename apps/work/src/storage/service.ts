@@ -33,6 +33,9 @@ function mimeFor(kind: FileKind, extension: string): string {
   if (kind === "doc") return "application/vnd.orvupi.doc+json";
   if (kind === "sheet") return "application/vnd.orvupi.sheet+json";
   if (kind === "slide") return "application/vnd.orvupi.slides+json";
+  if (kind === "form") return "application/vnd.orvupi.form+json";
+  if (kind === "drawing") return "application/vnd.orvupi.drawing+json";
+  if (kind === "note") return "application/vnd.orvupi.note+json";
   if (kind === "folder") return "application/vnd.orvupi.folder+json";
   if (kind === "pdf") return "application/pdf";
   if (extension === "png") return "image/png";
@@ -253,6 +256,12 @@ export function createStorageService(db: IDBPDatabase<WorkDb>, blobs: BlobStore)
           ? "orsheet"
           : loaded.record.kind === "slide"
             ? "orslides"
+            : loaded.record.kind === "form"
+              ? "orform"
+              : loaded.record.kind === "drawing"
+                ? "ordraw"
+                : loaded.record.kind === "note"
+                  ? "ornote"
             : loaded.record.kind === "pdf"
               ? "pdf"
               : loaded.record.mime === "image/png"
@@ -346,7 +355,7 @@ export function createStorageService(db: IDBPDatabase<WorkDb>, blobs: BlobStore)
         id,
         name: sanitizeName(record.name),
         kind:
-          record.kind === "doc" || record.kind === "sheet" || record.kind === "slide" || record.kind === "pdf" || record.kind === "folder"
+          record.kind === "doc" || record.kind === "sheet" || record.kind === "slide" || record.kind === "form" || record.kind === "drawing" || record.kind === "note" || record.kind === "pdf" || record.kind === "folder"
             ? record.kind
             : "other",
         mime: typeof record.mime === "string" ? record.mime.slice(0, 120) : "application/octet-stream",

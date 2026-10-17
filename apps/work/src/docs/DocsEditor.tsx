@@ -328,7 +328,7 @@ export function DocsEditor({
   };
 
   return (
-    <section className="ow-editor" aria-label={t("editorRegion")}>
+    <section className="ow-editor" data-tool="docs" aria-label={t("editorRegion")}>
       <h1 className="ow-sr">{name}</h1>
       <MenuBar
         label={t("menuBar")}
