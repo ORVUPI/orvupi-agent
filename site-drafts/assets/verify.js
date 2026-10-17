@@ -2344,7 +2344,9 @@ async function readWith(mint, registry, rpc, input) {
     signals.push(curveNotOnPump ? curveDoesNotApplySignal() : curveSignal(curveInfo, bonding));
     const copyByName = !likeness.inRegistry && likeness.signals.some((item) => /^nombre |^símbolo /.test(item));
     // Contrato oficial ORVUPI (Solana): Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU. Otro token que dice llamarse ORVUPI no es el oficial.
-    const namedLikeProject = !likeness.inRegistry && !isOrvupiOfficial(mint) && [...names, ...symbols].some((item) => namesProject(item));
+    // En verify.js el CA sale de shared/orvupi-contract.js; en Node, de esta copia (comprobada por test/web-v2.test.ts).
+    const officialOrvupi = typeof isOfficialAddress === "function" ? isOfficialAddress(mint) : mint === "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU";
+    const namedLikeProject = !likeness.inRegistry && !officialOrvupi && [...names, ...symbols].some((item) => namesProject(item));
     if (likeness.inRegistry) {
         signals.push({
             id: "registro",
@@ -2388,7 +2390,6 @@ async function readWith(mint, registry, rpc, input) {
     }
     const risky = signals.some((item) => item.level === "riesgo");
     const attention = signals.some((item) => item.level === "atencion");
-    const officialOrvupi = isOrvupiOfficial(mint);
     const headline = officialOrvupi
         ? {
             light: "ok",
@@ -2850,10 +2851,6 @@ function curveSignal(account, curve) {
         title: loc("Curva de Pump.fun abierta", "Pump.fun curve still open"),
         explain: loc(`La curva sigue abierta. Cantidad real de la curva: ${real}. Cantidad virtual de la curva: ${virtual}.${progress}`, `The curve is still open. Real curve amount: ${real}. Virtual curve amount: ${virtual}.${progress ? ` Inferred classic-curve progress: ${curve.progressPercent}%.` : ""}`),
     };
-}
-/** En verify.js lee el CA de shared/orvupi-contract.js (isOfficialAddress). Fuera del navegador usa esta copia, que test/web-v2.test.ts compara con orvupi-contract.json. */
-function isOrvupiOfficial(mint) {
-    return typeof isOfficialAddress === "function" ? isOfficialAddress(mint) : mint === "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU";
 }
 /**
  * Contrato ORVUPI en la web: único módulo del que leen todas las páginas.
@@ -5143,8 +5140,10 @@ function paintVerify(out, view) {
     sampleBtn.textContent = lang === "en" ? "Try to read the largest accounts" : "Intentar leer las cuentas más grandes";
     out.append(sampleBtn);
   }
-  var officialDown = view.kind === "lectura_caida" && !!view.mint && typeof isOfficialAddress === "function" && isOfficialAddress(view.mint);
-  var failedRead = officialDown || view.missingState === "falta" || view.kind === "red" || view.kind === "limite" || view.kind === "tiempo";
+  var isOfficial = !!view.mint && typeof isOfficialAddress === "function" && isOfficialAddress(view.mint);
+  var noLiveRead = !!view.mint && (view.kind === "lectura_caida" || view.kind === "sin_ficha");
+  var officialDown = noLiveRead && isOfficial;
+  var failedRead = noLiveRead || view.missingState === "falta" || view.kind === "red" || view.kind === "limite" || view.kind === "tiempo";
   if (failedRead && view.light !== "espera" && !out.querySelector("#reintentar")) {
     var retry = verifyEl("button", { type: "button", id: "reintentar" });
     retry.textContent = lang === "en" ? "Try again" : "Reintentar";
@@ -5156,7 +5155,11 @@ function paintVerify(out, view) {
       ? (lang === "en"
         ? "The blockchain could not be read right now. This is the official ORVUPI address published on orvupi.com/token. Press «Try again»."
         : "No se pudo leer la blockchain ahora. Esta es la dirección oficial de ORVUPI publicada en orvupi.com/token. Pulsa «Reintentar».")
-      : view.mint && typeof isOfficialAddress === "function" && isOfficialAddress(view.mint)
+      : noLiveRead
+      ? (lang === "en"
+        ? "The blockchain could not be read right now. This address is not the official ORVUPI address (the official one is on orvupi.com/token). Press «Try again»."
+        : "No se pudo leer la blockchain ahora. Esta dirección no es la oficial de ORVUPI (la oficial está en orvupi.com/token). Pulsa «Reintentar».")
+      : isOfficial
       ? (lang === "en"
         ? "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. This is the official ORVUPI address published on orvupi.com/token."
         : "Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. Esta es la dirección oficial de ORVUPI publicada en orvupi.com/token.")

@@ -44,7 +44,7 @@ function serve(dir) {
                       : "text/html";
         res.writeHead(200, {
           "content-type": `${type}; charset=utf-8`,
-          "content-security-policy": file.endsWith("cuaderno/index.html")
+          "content-security-policy": file.endsWith("cuaderno/index.html") || file.endsWith("verify/index.html")
             ? "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://solana-rpc.publicnode.com https://api.mainnet-beta.solana.com; object-src 'none'; base-uri 'self'"
             : "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'",
         });
@@ -372,10 +372,31 @@ try {
       await page.route(/solana-rpc\.publicnode\.com|api\.mainnet-beta\.solana\.com/, (route) => route.fulfill({ status: 503, contentType: "application/json", body: "{}" }));
       await page.route("**/*", (route) => (allowedRequest(route.request().url()) ? route.fallback() : route.abort()));
     }
-    async function readVerify(mint, down, expect) {
+    // RPC simulado para Verify: el nombre de los metadatos se elige por prueba.
+    function b58(text) {
+      const abc = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+      let n = 0n;
+      for (const ch of text) n = n * 58n + BigInt(abc.indexOf(ch));
+      const out = Buffer.alloc(32);
+      for (let i = 31; i >= 0; i -= 1) { out[i] = Number(n & 255n); n >>= 8n; }
+      return out;
+    }
+    async function verifyRpc(page, name, mint) {
+      const meta = Buffer.concat([Buffer.from([4]), Buffer.alloc(32, 3), b58(mint), borsh(name), borsh("TKN"), borsh("https://evil.example/phish"), Buffer.from([0, 0, 0, 0, 0])]);
+      await page.route("**/*", (route) => (allowedRequest(route.request().url()) ? route.fallback() : route.abort()));
+      await page.route(/solana-rpc\.publicnode\.com|api\.mainnet-beta\.solana\.com/, async (route) => {
+        const body = route.request().postDataJSON();
+        const reply = (value) => route.fulfill({ status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: rpc(value) });
+        if (body.method === "getMultipleAccounts") return reply([account(TOKEN_PROGRAM, mintBytes()), account(METADATA_PROGRAM, meta), account(PUMP_PROGRAM, curveBytes())]);
+        if (body.method === "getTokenSupply") return reply({ amount: "1000", decimals: 6 });
+        if (body.method === "getTokenLargestAccounts") return reply([{ address: "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin", amount: "100", decimals: 6, uiAmount: 0.0001, uiAmountString: "0.0001" }]);
+        return route.fulfill({ status: 400, contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: rpc(null) });
+      });
+    }
+    async function readVerify(mint, down, expect, name = "ORVUPI") {
       const ctx = await contextFor(desk);
       const page = await ctx.newPage();
-      if (down) await rpcDown(page); else await mockRpc(page, { count: 0, external: 0 });
+      if (down) await rpcDown(page); else await verifyRpc(page, name, mint);
       await page.goto(`${base}/verify/`, { waitUntil: "networkidle" });
       await page.locator("#direccion-token").fill(mint);
       await page.locator("#direccion-token").press("Enter");
@@ -396,13 +417,20 @@ try {
     if (!r.text.includes("No se pudo leer la blockchain")) failures.push("verify caída: falta el aviso de fallo");
     await shot(r.page, "verify-ca-oficial-caida.png"); await r.ctx.close();
 
-    // El simulador de RPC no cubre todas las llamadas de Verify: el clon puede llegar como lectura o como ficha sin lectura.
-    r = await readVerify(official, false, "No es la oficial");
-    if (!/Se llama como ORVUPI, pero no es la dirección oficial|No es la oficial/.test(r.text)) failures.push("verify: el clon con nombre ORVUPI no se marca como no oficial");
+    r = await readVerify(official, false, "Se llama como ORVUPI, pero no es la dirección oficial");
+    if (!r.text.includes("Se llama como ORVUPI, pero no es la dirección oficial")) failures.push("verify: el clon con nombre ORVUPI no se marca");
     if (r.text.includes("Dirección oficial de ORVUPI")) failures.push("verify: el clon sale como oficial");
     await r.ctx.close();
 
-    r = await readVerify(RANDOM, true, "No es la oficial");
+    r = await readVerify(RANDOM, false, "Lectura de este token", "Otro token");
+    if (!r.text.includes("Lectura de este token")) failures.push("verify: una dirección cualquiera con lectura no muestra la lectura");
+    if (/Dirección oficial de ORVUPI|Se llama como ORVUPI/.test(r.text)) failures.push("verify: una dirección cualquiera con lectura sale como oficial o como clon");
+    await r.ctx.close();
+
+    r = await readVerify(RANDOM, true, "Reintentar");
+    if (!r.retry) failures.push("verify caída: falta «Reintentar» con una dirección cualquiera");
+    if (r.text.includes("Lectura en directo")) failures.push("verify caída: una dirección cualquiera dice «Lectura en directo»");
+    if (!r.text.includes("No se pudo leer la blockchain")) failures.push("verify caída: falta el aviso de fallo con una dirección cualquiera");
     if (r.text.includes("Dirección oficial de ORVUPI")) failures.push("verify: una dirección cualquiera sale como oficial");
     if (!r.text.includes("No es la oficial")) failures.push("verify: una dirección cualquiera sin lectura no dice «No es la oficial»");
     await r.ctx.close();

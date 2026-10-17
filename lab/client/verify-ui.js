@@ -179,8 +179,10 @@ function paintVerify(out, view) {
     sampleBtn.textContent = lang === "en" ? "Try to read the largest accounts" : "Intentar leer las cuentas más grandes";
     out.append(sampleBtn);
   }
-  var officialDown = view.kind === "lectura_caida" && !!view.mint && typeof isOfficialAddress === "function" && isOfficialAddress(view.mint);
-  var failedRead = officialDown || view.missingState === "falta" || view.kind === "red" || view.kind === "limite" || view.kind === "tiempo";
+  var isOfficial = !!view.mint && typeof isOfficialAddress === "function" && isOfficialAddress(view.mint);
+  var noLiveRead = !!view.mint && (view.kind === "lectura_caida" || view.kind === "sin_ficha");
+  var officialDown = noLiveRead && isOfficial;
+  var failedRead = noLiveRead || view.missingState === "falta" || view.kind === "red" || view.kind === "limite" || view.kind === "tiempo";
   if (failedRead && view.light !== "espera" && !out.querySelector("#reintentar")) {
     var retry = verifyEl("button", { type: "button", id: "reintentar" });
     retry.textContent = lang === "en" ? "Try again" : "Reintentar";
@@ -192,7 +194,11 @@ function paintVerify(out, view) {
       ? (lang === "en"
         ? "The blockchain could not be read right now. This is the official ORVUPI address published on orvupi.com/token. Press «Try again»."
         : "No se pudo leer la blockchain ahora. Esta es la dirección oficial de ORVUPI publicada en orvupi.com/token. Pulsa «Reintentar».")
-      : view.mint && typeof isOfficialAddress === "function" && isOfficialAddress(view.mint)
+      : noLiveRead
+      ? (lang === "en"
+        ? "The blockchain could not be read right now. This address is not the official ORVUPI address (the official one is on orvupi.com/token). Press «Try again»."
+        : "No se pudo leer la blockchain ahora. Esta dirección no es la oficial de ORVUPI (la oficial está en orvupi.com/token). Pulsa «Reintentar».")
+      : isOfficial
       ? (lang === "en"
         ? "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. This is the official ORVUPI address published on orvupi.com/token."
         : "Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. Esta es la dirección oficial de ORVUPI publicada en orvupi.com/token.")

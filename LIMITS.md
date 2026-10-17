@@ -2,7 +2,7 @@
 
 Política en lenguaje llano. La copia máquina es [`policy/limits.json`](policy/limits.json) (`id`: `orvupi-agent-limits`, `version`: `1.0.0`). Un test falla si el markdown, el JSON y el código no coinciden.
 
-Esto es un prototipo. ORVUPI todavía no tiene contrato. Los riesgos se explican en https://stubxai.com/risks/. El agente no tiene claves.
+Esto es un prototipo. La dirección oficial de ORVUPI está en https://orvupi.com/token/. Los riesgos se explican en https://orvupi.com/risks/. El agente no tiene claves.
 
 Estos límites están aplicados en este repositorio y cubiertos por tests. La casilla pública del PPM se marcó el 05-10-2026 con una ejecución pública de la CI en verde (https://github.com/ORVUPI/orvupi-agent/actions/runs/37278171372, commit a960380), incluidos los 20 tests de límites, y el OK legal. Marcada no significa auditada: un test en verde demuestra lo que ese test comprueba, en esa versión del código. Si una CI posterior falla en estos tests, se desmarca y se explica.
 
