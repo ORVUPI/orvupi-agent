@@ -244,7 +244,9 @@ try {
     await page.locator("#consultar").click();
     await page.waitForFunction(() => (document.getElementById("resultado")?.textContent || "").includes("puede haber cambiado"), null, { timeout: 15000 });
     const text = await page.locator("#resultado").innerText();
-    if (/dirección oficial|official address/.test(text)) failures.push(`${profile.id}: presenta una dirección como oficial: ${(text.match(/.{0,80}(dirección oficial|official address).{0,80}/) || [""])[0]}`);
+    // Se permiten las negaciones («no es la dirección oficial») y el aviso que remite a orvupi.com/token.
+    const claims = text.replace(/no es la dirección oficial|not the official address|La única dirección oficial de ORVUPI está en orvupi\.com\/token|The only official ORVUPI address is on orvupi\.com\/token/g, "");
+    if (/dirección oficial|official address/.test(claims)) failures.push(`${profile.id}: presenta una dirección como oficial: ${(text.match(/.{0,80}(dirección oficial|official address).{0,80}/) || [""])[0]}`);
     const uriLinked = await page.locator("#resultado a").evaluateAll((nodes) =>
       nodes.some((node) => `${node.textContent || ""} ${node.getAttribute("href") || ""}`.includes("evil.example")),
     );
