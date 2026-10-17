@@ -179,7 +179,8 @@ function paintVerify(out, view) {
     sampleBtn.textContent = lang === "en" ? "Try to read the largest accounts" : "Intentar leer las cuentas más grandes";
     out.append(sampleBtn);
   }
-  var failedRead = view.missingState === "falta" || view.kind === "red" || view.kind === "limite" || view.kind === "tiempo";
+  var officialDown = view.kind === "lectura_caida" && !!view.mint && typeof isOfficialAddress === "function" && isOfficialAddress(view.mint);
+  var failedRead = officialDown || view.missingState === "falta" || view.kind === "red" || view.kind === "limite" || view.kind === "tiempo";
   if (failedRead && view.light !== "espera" && !out.querySelector("#reintentar")) {
     var retry = verifyEl("button", { type: "button", id: "reintentar" });
     retry.textContent = lang === "en" ? "Try again" : "Reintentar";
@@ -187,7 +188,11 @@ function paintVerify(out, view) {
   }
   if (view.kind !== "vacio" && typeof AUDIT_NOTICE !== "undefined") {
     var audit = verifyEl("p", { class: "aviso-fijo" });
-    audit.textContent = view.mint === "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU"
+    audit.textContent = officialDown
+      ? (lang === "en"
+        ? "The blockchain could not be read right now. This is the official ORVUPI address published on orvupi.com/token. Press «Try again»."
+        : "No se pudo leer la blockchain ahora. Esta es la dirección oficial de ORVUPI publicada en orvupi.com/token. Pulsa «Reintentar».")
+      : view.mint && typeof isOfficialAddress === "function" && isOfficialAddress(view.mint)
       ? (lang === "en"
         ? "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. This is the official ORVUPI address published on orvupi.com/token."
         : "Lectura en directo de datos públicos de la blockchain. No es una auditoría, ni una recomendación, ni un aval. Esta es la dirección oficial de ORVUPI publicada en orvupi.com/token.")

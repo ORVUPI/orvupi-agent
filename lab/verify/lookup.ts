@@ -370,22 +370,25 @@ export function classifyAddress(
       return viewOf(kind, card.mint, rowsFor(card), partialNoteFor(card));
     }
   }
-  if (mint === ORVUPI_CA) return orvupiOfficialView(mint);
+  if (isOrvupiOfficial(mint)) return orvupiOfficialView(mint);
   return notOfficialView(mint, official);
 }
 
-/** CA oficial de ORVUPI en Solana (web/v2/shared/orvupi-contract.json). */
-const ORVUPI_CA = "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU";
+declare const isOfficialAddress: ((value: string) => boolean) | undefined;
+/** En verify.js lee el CA de shared/orvupi-contract.js (isOfficialAddress). Fuera del navegador usa esta copia, que test/web-v2.test.ts compara con orvupi-contract.json. */
+function isOrvupiOfficial(mint: string): boolean {
+  return typeof isOfficialAddress === "function" ? isOfficialAddress(mint) : mint === "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU";
+}
 
 function orvupiOfficialView(mint: string): LookupView {
   return {
-    kind: "sin_ficha",
-    light: "ok",
+    kind: "lectura_caida",
+    light: "neutro",
     lightLabel: pair("Dirección oficial de ORVUPI", "Official ORVUPI address"),
-    title: pair("Dirección oficial de ORVUPI", "Official ORVUPI address"),
+    title: pair("Dirección oficial de ORVUPI · lectura no disponible", "Official ORVUPI address · reading unavailable"),
     support: pair(
-      "Coincide con la dirección publicada en orvupi.com/token.",
-      "It matches the address published on orvupi.com/token.",
+      "Coincide con la dirección publicada en orvupi.com/token. La lectura en directo no está disponible ahora: no hay resultado y no se inventa uno.",
+      "It matches the address published on orvupi.com/token. The live reading is unavailable right now: there is no result, and none is invented.",
     ),
     mint,
     rows: [],

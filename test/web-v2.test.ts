@@ -250,6 +250,18 @@ describe("web ORVUPI", () => {
     assert.deepEqual(hits, []);
   });
 
+  test("la copia del CA para fuera del navegador coincide con orvupi-contract.json", () => {
+    const config = JSON.parse(read("shared/orvupi-contract.json")) as { contract: string };
+    for (const rel of ["../../lab/verify/lookup.ts", "../../verify/signals.ts"]) {
+      const text = read(rel);
+      const m = text.match(/isOfficialAddress\(mint\) : mint === "([^"]+)"/);
+      assert.ok(m, `${rel}: falta isOrvupiOfficial`);
+      assert.equal(m[1], config.contract, rel);
+    }
+    const bundle = read("assets/verify.js");
+    assert.match(bundle, /typeof isOfficialAddress === "function" \? isOfficialAddress\(mint\)/);
+  });
+
   test("el contrato ORVUPI tiene un único punto de configuración", () => {
     const config = JSON.parse(read("shared/orvupi-contract.json")) as { contract: unknown; network: unknown; label: { es: string; en: string } };
     assert.equal(config.contract, "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU");

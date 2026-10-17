@@ -363,22 +363,48 @@ try {
   if (documentUrls.some((url) => url.includes(official) || url.includes("a="))) {
     failures.push(`la dirección llegó al servidor: ${documentUrls.filter((url) => url.includes(official) || url.includes("a=")).join(" ")}`);
   }
-  // El CA oficial de ORVUPI tiene su propio estado en Verify (B65-1). El clon se sigue probando en el cuaderno.
+  // Verify: CA oficial (con lectura y con la red caída), clon con el mismo nombre y dirección cualquiera.
   {
-    const ctx = await contextFor(profiles.find((p) => p.id === "escritorio"));
-    const page = await ctx.newPage();
-    const net = { count: 0, external: 0 };
-    await mockRpc(page, net);
-    await page.goto(`${base}/verify/`, { waitUntil: "networkidle" });
-    await page.locator("#direccion-token").fill("Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU");
-    await page.locator("#direccion-token").press("Enter");
-    await page.waitForFunction(() => (document.getElementById("resultado")?.textContent || "").includes("Dirección oficial de ORVUPI"), null, { timeout: 20000 })
-      .catch(() => failures.push("verify: el CA oficial no muestra «Dirección oficial de ORVUPI»"));
-    const text = await page.locator("#resultado").innerText();
-    if (/no tiene relación con este token|Hay señales/.test(text)) failures.push("verify: el CA oficial sale como «Hay señales» o «no tiene relación»");
-    if (/Se llama como ORVUPI, pero no es la dirección oficial/.test(text)) failures.push("verify: el CA oficial sale como copia");
-    await shot(page, "verify-ca-oficial.png");
-    await ctx.close();
+    const CA = "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU";
+    const RANDOM = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin";
+    const desk = profiles.find((p) => p.id === "escritorio");
+    async function rpcDown(page) {
+      await page.route(/solana-rpc\.publicnode\.com|api\.mainnet-beta\.solana\.com/, (route) => route.fulfill({ status: 503, contentType: "application/json", body: "{}" }));
+      await page.route("**/*", (route) => (allowedRequest(route.request().url()) ? route.fallback() : route.abort()));
+    }
+    async function readVerify(mint, down, expect) {
+      const ctx = await contextFor(desk);
+      const page = await ctx.newPage();
+      if (down) await rpcDown(page); else await mockRpc(page, { count: 0, external: 0 });
+      await page.goto(`${base}/verify/`, { waitUntil: "networkidle" });
+      await page.locator("#direccion-token").fill(mint);
+      await page.locator("#direccion-token").press("Enter");
+      await page.waitForFunction((t) => (document.getElementById("resultado")?.textContent || "").includes(t), expect, { timeout: 20000 }).catch(() => {});
+      const text = await page.locator("#resultado").innerText();
+      const retry = await page.locator("#reintentar").count();
+      return { page, ctx, text, retry };
+    }
+    let r = await readVerify(CA, false, "Dirección oficial de ORVUPI");
+    if (!r.text.includes("Dirección oficial de ORVUPI")) failures.push("verify: el CA oficial no muestra «Dirección oficial de ORVUPI»");
+    if (/no tiene relación con este token|Hay señales|pero no es la dirección oficial/.test(r.text)) failures.push("verify: el CA oficial sale como señales, sin relación o copia");
+    await shot(r.page, "verify-ca-oficial.png"); await r.ctx.close();
+
+    r = await readVerify(CA, true, "Reintentar");
+    if (!r.text.includes("Dirección oficial de ORVUPI")) failures.push("verify caída: el CA oficial no se reconoce");
+    if (!r.retry) failures.push("verify caída: falta «Reintentar» con el CA oficial");
+    if (r.text.includes("Lectura en directo")) failures.push("verify caída: dice «Lectura en directo» sin lectura");
+    if (!r.text.includes("No se pudo leer la blockchain")) failures.push("verify caída: falta el aviso de fallo");
+    await shot(r.page, "verify-ca-oficial-caida.png"); await r.ctx.close();
+
+    r = await readVerify(official, false, "no es la dirección oficial");
+    if (!r.text.includes("Se llama como ORVUPI, pero no es la dirección oficial")) failures.push("verify: el clon con nombre ORVUPI no se marca");
+    if (r.text.includes("Dirección oficial de ORVUPI")) failures.push("verify: el clon sale como oficial");
+    await r.ctx.close();
+
+    r = await readVerify(RANDOM, true, "No es la oficial");
+    if (r.text.includes("Dirección oficial de ORVUPI")) failures.push("verify: una dirección cualquiera sale como oficial");
+    if (!r.text.includes("No es la oficial")) failures.push("verify: una dirección cualquiera sin lectura no dice «No es la oficial»");
+    await r.ctx.close();
   }
   await desktop.close();
 } catch (error) {

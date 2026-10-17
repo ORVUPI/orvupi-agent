@@ -6,7 +6,7 @@ No es consejo de inversión ni una garantía. ORVUPI Verify es la identidad actu
 
 > ORVUPI Verify muestra datos on-chain públicos. No es consejo de inversión ni garantiza que un token sea seguro.
 
-El registro curado y los ejemplos fechados (2026-10-16) usan USDC como referencia neutra y copias reales que se llaman «USD Coin». No son un registro de ORVUPI: ORVUPI todavía no tiene contrato. Véase [la guía de transición](../docs/ORVUPI.md).
+El registro curado y los ejemplos fechados (2026-10-16) usan USDC como referencia neutra y copias reales que se llaman «USD Coin». No son un registro de ORVUPI. La dirección oficial de ORVUPI está en orvupi.com/token. Véase [la guía de transición](../docs/ORVUPI.md).
 
 No hay puntuación de compra o venta ni lenguaje de precio. Los hallazgos son informativos: `ok`, `atención` o `riesgo`, cada uno con su motivo.
 
