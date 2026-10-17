@@ -283,7 +283,24 @@ export function classifyAddress(raw, cards, source, evm = []) {
             return viewOf(kind, card.mint, rowsFor(card), partialNoteFor(card));
         }
     }
+    if (mint === ORVUPI_CA)
+        return orvupiOfficialView(mint);
     return notOfficialView(mint, official);
+}
+/** CA oficial de ORVUPI en Solana (web/v2/shared/orvupi-contract.json). */
+const ORVUPI_CA = "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU";
+function orvupiOfficialView(mint) {
+    return {
+        kind: "sin_ficha",
+        light: "ok",
+        lightLabel: pair("Dirección oficial de ORVUPI", "Official ORVUPI address"),
+        title: pair("Dirección oficial de ORVUPI", "Official ORVUPI address"),
+        support: pair("Coincide con la dirección publicada en orvupi.com/token.", "It matches the address published on orvupi.com/token."),
+        mint,
+        rows: [],
+        partialNote: null,
+        compare: null,
+    };
 }
 const DATED_CARD_NOTE = pair("Es la ficha del 2026-10-16. No es una lectura en directo.", "It is the 2026-10-16 card. It is not a live reading.");
 /** La ficha fechada sigue, pero un fallo de los dos RPC no la pinta como lectura en verde. */
@@ -301,3 +318,4 @@ export function reserveWhenLiveFails(view) {
             : DATED_CARD_NOTE,
     };
 }
+//# sourceMappingURL=lookup.js.map

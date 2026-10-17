@@ -370,7 +370,28 @@ export function classifyAddress(
       return viewOf(kind, card.mint, rowsFor(card), partialNoteFor(card));
     }
   }
+  if (mint === ORVUPI_CA) return orvupiOfficialView(mint);
   return notOfficialView(mint, official);
+}
+
+/** CA oficial de ORVUPI en Solana (web/v2/shared/orvupi-contract.json). */
+const ORVUPI_CA = "Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU";
+
+function orvupiOfficialView(mint: string): LookupView {
+  return {
+    kind: "sin_ficha",
+    light: "ok",
+    lightLabel: pair("Dirección oficial de ORVUPI", "Official ORVUPI address"),
+    title: pair("Dirección oficial de ORVUPI", "Official ORVUPI address"),
+    support: pair(
+      "Coincide con la dirección publicada en orvupi.com/token.",
+      "It matches the address published on orvupi.com/token.",
+    ),
+    mint,
+    rows: [],
+    partialNote: null,
+    compare: null,
+  };
 }
 
 const DATED_CARD_NOTE = pair(
