@@ -211,7 +211,7 @@ jobs:
         run: npm test
 
       - name: Install browser
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium webkit
 
       - name: End to end
         run: npm run test:e2e
