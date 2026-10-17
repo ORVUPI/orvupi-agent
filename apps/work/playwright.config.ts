@@ -24,5 +24,15 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"], viewport: { width: 1360, height: 900 } },
     },
+    {
+      name: "pixel-7",
+      use: { ...devices["Pixel 7"] },
+      testMatch: /mobile-060/,
+    },
+    {
+      name: "iphone-14",
+      use: { ...devices["iPhone 14"] },
+      testMatch: /mobile-060/,
+    },
   ],
 });

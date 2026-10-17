@@ -139,6 +139,13 @@ export function DrawingsScreen() {
             { id: "ellipse", label: workspace.t("shapeEllipse"), onSelect: () => addItem({ id: createId().slice(0, 12), kind: "shape", shape: "ellipse", x: 200, y: 180, w: 140, h: 140, fill: "#ff3070" }) },
             { id: "image", label: workspace.t("slideImage"), onSelect: () => imageRef.current?.click() },
             { id: "line", label: workspace.t("slideLine"), onSelect: () => addItem({ id: createId().slice(0, 12), kind: "line", x: 80, y: 200, w: 280, h: 12 }) },
+            { id: "art", label: workspace.t("decorText"), onSelect: () => addItem({ id: createId().slice(0, 12), kind: "text", x: 70, y: 48, w: 420, h: 90, text: "ORVUPI", bold: true, size: 48, color: "#ff3070" }) },
+            { id: "diagram", label: workspace.t("diagram"), onSelect: () => {
+              const a = createId().slice(0, 12);
+              const b = createId().slice(0, 12);
+              const c = createId().slice(0, 12);
+              update({ ...file, items: [...file.items, { id: a, kind: "shape", shape: "rect", x: 40, y: 220, w: 160, h: 80, fill: "#1d4e89" }, { id: b, kind: "line", x: 200, y: 250, w: 80, h: 12 }, { id: c, kind: "shape", shape: "rect", x: 280, y: 220, w: 160, h: 80, fill: "#0b5d36" }] });
+            } },
           ] },
           { id: "format", label: workspace.t("menuFormat"), items: [{ id: "fill", label: workspace.t("slideShape"), onSelect: () => {
             if (!selected || selected.kind !== "shape") return;
@@ -173,7 +180,7 @@ export function DrawingsScreen() {
                 key={item.id}
                 type="button"
                 className={`ow-slide-item${selectedId === item.id ? " is-selected" : ""}`}
-                aria-label={item.kind === "text" ? workspace.t("slideText") : item.kind === "image" ? workspace.t("slideImage") : item.kind === "line" ? workspace.t("slideLine") : workspace.t("slideShape")}
+                aria-label={item.kind === "text" ? (item.text.trim() || workspace.t("slideText")) : item.kind === "image" ? workspace.t("slideImage") : item.kind === "line" ? workspace.t("slideLine") : workspace.t("slideShape")}
                 style={{
                   left: `${(item.x / CANVAS_W) * 100}%`,
                   top: `${(item.y / CANVAS_H) * 100}%`,
@@ -182,6 +189,7 @@ export function DrawingsScreen() {
                   background: item.kind === "shape" ? item.fill : item.kind === "text" ? item.fill : "transparent",
                   color: item.kind === "shape" ? inkFor(item.fill) : item.kind === "text" ? (item.color ?? "#102032") : "#102032",
                   fontWeight: item.kind === "text" && item.bold ? 800 : undefined,
+                  fontSize: item.kind === "text" && item.size ? item.size : undefined,
                   borderRadius: item.kind === "shape" && item.shape === "ellipse" ? "50%" : undefined,
                 }}
                 aria-pressed={selectedId === item.id}

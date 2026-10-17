@@ -2,7 +2,7 @@ import { decodeUtf8, encodeUtf8 } from "../security/bytes";
 import { WorkError } from "../security/errors";
 import { sanitizeName } from "../security/names";
 
-export const QUESTION_KINDS = ["short", "long", "choice", "check", "dropdown", "scale", "date", "time", "grid", "section"] as const;
+export const QUESTION_KINDS = ["short", "long", "choice", "check", "dropdown", "scale", "date", "time", "grid", "section", "file", "video"] as const;
 export type QuestionKind = (typeof QUESTION_KINDS)[number];
 
 export type Question = {

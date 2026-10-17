@@ -142,7 +142,8 @@ export function MenuBar({
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => setOpen((current) => (current === menu.id ? null : menu.id))}
             onMouseEnter={() => {
-              if (open) setOpen(menu.id);
+              if (!open || window.matchMedia("(hover: none)").matches) return;
+              setOpen(menu.id);
             }}
           >
             {menu.label}

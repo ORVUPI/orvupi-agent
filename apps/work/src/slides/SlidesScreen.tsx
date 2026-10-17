@@ -54,6 +54,7 @@ export function SlidesScreen() {
   const [status, setStatus] = useState<"saved" | "pending">("saved");
   const [selectedId, setSelectedId] = useState<string | null>("title");
   const [help, setHelp] = useState(false);
+  const [grid, setGrid] = useState(false);
   const imageRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -177,12 +178,12 @@ export function SlidesScreen() {
 
   function renderItem(item: SlideItem, interactive: boolean) {
     const shape = item.kind === "shape";
-    const label = item.kind === "text" ? workspace.t("slideText") : item.kind === "image" ? workspace.t("slideImage") : item.kind === "line" ? workspace.t("slideLine") : workspace.t("slideShape");
+    const label = item.kind === "text" ? (item.text.trim() || workspace.t("slideText")) : item.kind === "image" ? workspace.t("slideImage") : item.kind === "line" ? workspace.t("slideLine") : workspace.t("slideShape");
     return (
       <button
         key={item.id}
         type="button"
-        className={`ow-slide-item${selectedId === item.id ? " is-selected" : ""}`}
+        className={`ow-slide-item${selectedId === item.id ? " is-selected" : ""}${item.anim ? ` ow-anim-${item.anim}` : ""}`}
         aria-label={label}
         aria-pressed={selectedId === item.id}
         style={{
@@ -248,6 +249,8 @@ export function SlidesScreen() {
           ] },
           { id: "view", label: workspace.t("menuView"), items: [
             { id: "present", label: workspace.t("slidePresent"), onSelect: () => setPresent(true) },
+            { id: "grid", label: workspace.t("slideGrid"), onSelect: () => setGrid((value) => !value) },
+            { id: "master", label: workspace.t("slideMaster"), onSelect: () => update({ ...file, master: file.master ? "" : (slide.title || workspace.t("slideMaster")) }) },
           ] },
           { id: "insert", label: workspace.t("menuInsert"), items: [
             { id: "text", label: workspace.t("slideText"), onSelect: () => addItem({ id: crypto.randomUUID().slice(0, 12), kind: "text", x: 80, y: 80, w: 280, h: 80, text: workspace.t("slideText") }) },
@@ -267,6 +270,7 @@ export function SlidesScreen() {
             { id: "paper", label: workspace.t("slideBackground"), onSelect: () => patchCurrent((current) => ({ ...current, background: current.background === "#fff0f5" ? "#fff8ec" : "#fff0f5" })) },
             { id: "fade", label: workspace.t("transFade"), onSelect: () => patchCurrent((current) => ({ ...current, transition: "fade" })) },
             { id: "move", label: workspace.t("transSlide"), onSelect: () => patchCurrent((current) => ({ ...current, transition: "slide" })) },
+            { id: "anim", label: workspace.t("slideAnim"), onSelect: () => patchCurrent((current) => ({ ...current, items: current.items.map((item) => item.id === selected?.id ? { ...item, anim: item.anim === "fade" ? "pop" : "fade" } : item) })) },
             ...(["blank", "title", "title-body", "two"] as SlideLayout[]).map((layout) => ({
               id: layout,
               label: workspace.t(layout === "blank" ? "slideLayoutBlank" : layout === "title" ? "slideLayoutTitle" : layout === "two" ? "slideLayoutTwo" : "slideLayoutBody"),
@@ -290,6 +294,15 @@ export function SlidesScreen() {
           ] },
         ]}
       />
+      {grid ? (
+        <div className="ow-slide-grid" role="list">
+          {file.slides.map((item, itemIndex) => (
+            <button key={item.title + itemIndex} type="button" role="listitem" className={`ow-thumb ow-theme-${item.theme}`} onClick={() => { setIndex(itemIndex); setGrid(false); }}>
+              {item.title || workspace.t("slideTitle")}
+            </button>
+          ))}
+        </div>
+      ) : null}
       <div className="ow-slides-work">
         <aside className="ow-filmstrip" aria-label={workspace.t("navSlides")}>
           {file.slides.map((item, itemIndex) => (
@@ -320,6 +333,7 @@ export function SlidesScreen() {
         </aside>
         <div className={`ow-slide-stage ow-theme-${slide.theme}`}>
           <div className={`ow-slide-canvas ow-theme-${slide.theme} ow-trans-${slide.transition ?? "none"}`} style={{ background: slide.background }} onPointerDown={() => setSelectedId(null)}>
+            {file.master ? <p className="ow-master">{file.master}</p> : null}
             {slide.items.map((item) => renderItem(item, true))}
           </div>
         </div>

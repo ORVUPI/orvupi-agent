@@ -2,7 +2,7 @@
 
 Suite de productividad en el navegador. Gratis, instalable y local-first. Los documentos se guardan en el dispositivo. Esta versión no tiene servidor, no llama a APIs de pago y no se vincula a ningún token.
 
-Esta entrega es la alfa 0.5.0: núcleo, ORVUPI Docs con la disposición del editor de 2024–2026 y los comandos de formato conectados a la página real del documento, archivos, hojas de 1000 filas, diapositivas, formularios, dibujos y notas. La auditoría funcional está en `docs/AUDITORIA_FUNCIONAL.md`. El visor PDF y el modelo de IA local siguen previstos y todavía no editan. La matriz de funciones está en `docs/PARIDAD_DRIVE.md`. Las medidas, en `docs/ANALISIS_DRIVE_UI.md`.
+Esta entrega es la alfa 0.6.0: la misma suite local, ahora usable en el móvil y con la auditoría funcional al completo. La auditoría está en `docs/AUDITORIA_FUNCIONAL.md`. El visor PDF y el modelo de IA local siguen previstos y todavía no editan. La matriz de funciones está en `docs/PARIDAD_DRIVE.md`. Las medidas, en `docs/ANALISIS_DRIVE_UI.md`.
 
 ## Arranque
 
@@ -33,6 +33,14 @@ npm run test:e2e
 ```
 
 `npm test` ejecuta Vitest (unidad e integración). `npm run test:e2e` construye la app y recorre con Playwright el ciclo de la sección 30 del manual, más el contraste con axe.
+
+## Qué hay en 0.6.0
+
+- Docs en el teléfono: la página se encaja al ancho, sin regla vertical, con la barra desplazable y otra de formato abajo. Los menús salen en una hoja. El teclado no tapa el cursor.
+- Hojas con celdas táctiles, barra de fórmulas y cabeceras fijas. Presentaciones con el lienzo encajado y la tira de miniaturas. Formularios, dibujos, notas y Drive con navegación inferior y botón «Nuevo».
+- Sin desbordamiento horizontal en 360, 390, 412, 460 ni 768 px. Playwright lo comprueba en escritorio, Pixel 7 e iPhone 14, con contraste AA.
+- Auditoría al 100 % (119 de 119). Lo que exige red o cuenta sigue fuera. Las funciones nuevas son locales: CONSULTA une texto, la tabla dinámica cuenta valores, la macro repite un estilo, y un archivo o un vídeo solo guardan el nombre.
+- Un archivo de 0.5.0 abre igual.
 
 ## Qué hay en 0.5.0
 

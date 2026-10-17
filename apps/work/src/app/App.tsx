@@ -19,6 +19,7 @@ import { useWorkspace, type ViewId } from "./workspace";
 export function App() {
   const workspace = useWorkspace();
   const [helpOpen, setHelpOpen] = useState(false);
+  const [fabOpen, setFabOpen] = useState(false);
   const [quota, setQuota] = useState<number | null>(null);
   const items: NavItem[] = [
     { id: "home", label: workspace.t("navHome"), icon: "home", tool: "files" },
@@ -175,6 +176,7 @@ export function App() {
           current={workspace.view === "files" ? (workspace.browse === "folder" ? "drive" : workspace.browse) : workspace.view}
           open={workspace.navOpen}
           onNavigate={(id) => {
+            workspace.setNavOpen(false);
             if (id === "drive") void workspace.showBrowse("folder");
             else if (id === "recent") void workspace.showBrowse("recent");
             else if (id === "starred") void workspace.showBrowse("starred");
@@ -320,6 +322,23 @@ export function App() {
       }
     >
       {content}
+      <nav className="ow-tabbar" aria-label={workspace.t("navLabel")}>
+        <button type="button" onClick={() => void workspace.navigate("home")}>{workspace.t("navHome")}</button>
+        <button type="button" onClick={() => void workspace.showBrowse("folder")}>{workspace.t("navFiles")}</button>
+        <button type="button" onClick={() => void workspace.navigate("notes")}>{workspace.t("navNotes")}</button>
+        <button type="button" onClick={() => workspace.setNavOpen(true)}>{workspace.t("tabMore")}</button>
+      </nav>
+      <button type="button" className="ow-fab" aria-expanded={fabOpen} aria-haspopup="menu" onClick={() => setFabOpen((value) => !value)}>{workspace.t("newMenu")}</button>
+      {fabOpen ? (
+        <div className="ow-fab-sheet" role="menu" aria-label={workspace.t("newMenu")}>
+          <button type="button" role="menuitem" onClick={() => { setFabOpen(false); void workspace.createDocument(undefined, undefined, workspace.folderId); }}>{workspace.t("menuDocument")}</button>
+          <button type="button" role="menuitem" onClick={() => { setFabOpen(false); void workspace.createSheet(workspace.folderId); }}>{workspace.t("menuSheet")}</button>
+          <button type="button" role="menuitem" onClick={() => { setFabOpen(false); void workspace.createSlides(workspace.folderId); }}>{workspace.t("menuSlides")}</button>
+          <button type="button" role="menuitem" onClick={() => { setFabOpen(false); void workspace.createForm(workspace.folderId); }}>{workspace.t("menuForm")}</button>
+          <button type="button" role="menuitem" onClick={() => { setFabOpen(false); void workspace.createDrawing(workspace.folderId); }}>{workspace.t("menuDrawing")}</button>
+          <button type="button" role="menuitem" onClick={() => { setFabOpen(false); void workspace.createNote(workspace.folderId); }}>{workspace.t("menuNote")}</button>
+        </div>
+      ) : null}
       <CommandPalette
         open={workspace.paletteOpen}
         title={workspace.t("paletteTitle")}

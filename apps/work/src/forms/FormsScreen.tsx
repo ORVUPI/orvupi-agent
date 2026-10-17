@@ -21,6 +21,8 @@ const KIND_KEY = {
   time: "formTime",
   grid: "formGrid",
   section: "formSection",
+  file: "formFile",
+  video: "formVideo",
 } as const;
 
 const WITH_OPTIONS = new Set<QuestionKind>(["choice", "check", "dropdown", "grid"]);
@@ -291,6 +293,21 @@ export function FormsScreen() {
                         </label>
                       ))}
                     </div>
+                  ) : null}
+                  {question.kind === "file" || question.kind === "video" ? (
+                    <label className="ow-field">
+                      {workspace.t(question.kind === "file" ? "formFile" : "formVideo")}
+                      <input
+                        type="file"
+                        accept={question.kind === "video" ? "video/*" : undefined}
+                        aria-label={question.prompt || workspace.t(question.kind === "file" ? "formFile" : "formVideo")}
+                        onChange={(event) => {
+                          const picked = event.target.files?.[0];
+                          setDraft({ ...draft, [question.id]: picked ? picked.name.slice(0, 180) : "" });
+                        }}
+                      />
+                      {draft[question.id] ? <span>{draft[question.id]}</span> : null}
+                    </label>
                   ) : null}
                   {question.kind === "check" ? (
                     <div role="group" aria-label={question.prompt || workspace.t("formCheck")}>

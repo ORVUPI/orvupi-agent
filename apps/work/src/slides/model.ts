@@ -10,11 +10,13 @@ export type SlideAlign = "left" | "center" | "right" | "justify";
 export type SlideTransition = "none" | "fade" | "slide";
 export type SlideLayout = "blank" | "title" | "title-body" | "two";
 
+export type SlideAnim = "fade" | "pop";
+
 export type SlideItem =
-  | { id: string; kind: "text"; x: number; y: number; w: number; h: number; text: string; bold?: boolean; italic?: boolean; align?: SlideAlign; color?: string; size?: number; fill?: string }
-  | { id: string; kind: "shape"; x: number; y: number; w: number; h: number; shape: "rect" | "ellipse"; fill: string }
-  | { id: string; kind: "image"; x: number; y: number; w: number; h: number; src: string }
-  | { id: string; kind: "line"; x: number; y: number; w: number; h: number };
+  | { id: string; kind: "text"; x: number; y: number; w: number; h: number; text: string; bold?: boolean; italic?: boolean; align?: SlideAlign; color?: string; size?: number; fill?: string; anim?: SlideAnim }
+  | { id: string; kind: "shape"; x: number; y: number; w: number; h: number; shape: "rect" | "ellipse"; fill: string; anim?: SlideAnim }
+  | { id: string; kind: "image"; x: number; y: number; w: number; h: number; src: string; anim?: SlideAnim }
+  | { id: string; kind: "line"; x: number; y: number; w: number; h: number; anim?: SlideAnim };
 
 export type Slide = {
   title: string;
@@ -25,6 +27,7 @@ export type Slide = {
   notes?: string;
   transition?: SlideTransition;
   layout?: SlideLayout;
+  master?: string;
 };
 
 export type SlidesFile = {
@@ -33,6 +36,7 @@ export type SlidesFile = {
   id: string;
   title: string;
   slides: Slide[];
+  master?: string;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -77,17 +81,18 @@ export function itemOf(value: unknown, box = { maxX: 900, maxY: 560, maxW: 860, 
   const w = clamp(Number(value.w), value.kind === "line" ? 8 : 40, box.maxW);
   const h = clamp(Number(value.h), value.kind === "line" ? 4 : box.minH, box.maxH);
   const id = value.id.slice(0, 40);
+  const anim = value.anim === "fade" || value.anim === "pop" ? value.anim : undefined;
   if (value.kind === "text") {
-    return { id, kind: "text", x, y, w, h, text: typeof value.text === "string" ? value.text.slice(0, 4000) : "", ...textExtras(value) };
+    return { id, kind: "text", x, y, w, h, text: typeof value.text === "string" ? value.text.slice(0, 4000) : "", ...textExtras(value), anim };
   }
   if (value.kind === "shape") {
     const fill = SLIDE_FILLS.includes(value.fill as (typeof SLIDE_FILLS)[number]) ? String(value.fill) : "#ff3070";
-    return { id, kind: "shape", x, y, w, h, shape: value.shape === "ellipse" ? "ellipse" : "rect", fill };
+    return { id, kind: "shape", x, y, w, h, shape: value.shape === "ellipse" ? "ellipse" : "rect", fill, anim };
   }
   if (value.kind === "image" && typeof value.src === "string" && value.src.startsWith("data:image/") && value.src.length < 2_800_000) {
-    return { id, kind: "image", x, y, w, h, src: value.src };
+    return { id, kind: "image", x, y, w, h, src: value.src, anim };
   }
-  if (value.kind === "line") return { id, kind: "line", x, y, w, h };
+  if (value.kind === "line") return { id, kind: "line", x, y, w, h, anim };
   return null;
 }
 
@@ -109,6 +114,7 @@ function slideOf(entry: unknown): Slide | null {
     items,
     background: typeof entry.background === "string" && /^#[0-9a-f]{6}$/i.test(entry.background) ? entry.background.toLowerCase() : undefined,
     notes: typeof entry.notes === "string" ? entry.notes.slice(0, 2000) : "",
+    master: typeof entry.master === "string" ? entry.master.slice(0, 80) : "",
     transition: entry.transition === "fade" || entry.transition === "slide" || entry.transition === "none" ? entry.transition : "none",
     layout: entry.layout === "blank" || entry.layout === "title" || entry.layout === "two" || entry.layout === "title-body" ? entry.layout : "title-body",
   };
@@ -192,5 +198,6 @@ export function parseSlides(bytes: Uint8Array | string): SlidesFile {
     id: parsed.id,
     title: sanitizeName(parsed.title),
     slides: slides.length > 0 ? slides : [{ title: "", body: "", theme: "papel", items: defaultItems("", "") }],
+    master: typeof parsed.master === "string" ? parsed.master.slice(0, 80) : "",
   };
 }

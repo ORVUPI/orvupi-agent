@@ -11,6 +11,7 @@ export function NotesScreen() {
   const [draft, setDraft] = useState<NoteFile | null>(null);
   const [status, setStatus] = useState<"saved" | "pending">("saved");
   const [showArchived, setShowArchived] = useState(false);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     if (!workspace.storage) return;
@@ -56,7 +57,7 @@ export function NotesScreen() {
     setStatus("pending");
   }
 
-  const visibleNotes = notes.filter((note) => showArchived || !note.archived);
+  const visibleNotes = notes.filter((note) => (showArchived || !note.archived) && (!query.trim() || `${note.title} ${note.body} ${note.label ?? ""} ${note.checks.map((check) => check.text).join(" ")}`.toLowerCase().includes(query.trim().toLowerCase())));
   const pinned = visibleNotes.filter((note) => note.pinned);
   const rest = visibleNotes.filter((note) => !note.pinned);
 
@@ -94,6 +95,7 @@ export function NotesScreen() {
       <button type="button" className="ow-note-compose" onClick={() => void workspace.createNote(null)}>
         {workspace.t("noteTake")}
       </button>
+      <Input label={workspace.t("noteSearch")} value={query} onChange={(event) => setQuery(event.target.value.slice(0, 80))} />
       {draft ? (
         <article className="ow-note-editor" style={{ background: draft.color, color: noteInk(draft.color) }}>
           <Input label={workspace.t("fileName")} value={draft.title} onChange={(event) => edit({ ...draft, title: event.target.value.slice(0, 180) })} />

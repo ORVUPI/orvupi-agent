@@ -68,13 +68,19 @@ export function DocsEditor({
   const nameRef = useRef(initial.title);
   const headerRef = useRef(initial.header);
   const footerRef = useRef(initial.footer);
+  const layoutRef = useRef({
+    columns: initial.columns ?? 1,
+    dropCap: initial.dropCap === true,
+    watermark: initial.watermark ?? "",
+    pageNumber: initial.pageNumber === true,
+  });
   const commentsRef = useRef<DocComment[]>(initial.comments);
   const versionsRef = useRef<DocVersion[]>(initial.versions);
   const writeRef = useRef<(snapshot: string) => Promise<void>>(async () => undefined);
   const closeRef = useRef<() => Promise<boolean>>(async () => false);
   const exportRef = useRef<(kind: ExportKind) => Promise<void>>(async () => undefined);
   const snapshotOf = (content: JsonNode) =>
-    JSON.stringify({ content, header: headerRef.current, footer: footerRef.current, comments: commentsRef.current, versions: versionsRef.current });
+    JSON.stringify({ content, header: headerRef.current, footer: footerRef.current, comments: commentsRef.current, versions: versionsRef.current, ...layoutRef.current });
   const queue = useState(() => {
     const controller = new SaveController();
     controller.reset(snapshotOf(initial.content));
@@ -82,6 +88,7 @@ export function DocsEditor({
   })[0];
   const [header, setHeader] = useState(initial.header);
   const [footer, setFooter] = useState(initial.footer);
+  const [layout, setLayout] = useState(layoutRef.current);
   const [commentOpen, setCommentOpen] = useState(false);
   const [commentBody, setCommentBody] = useState("");
   const [versionsOpen, setVersionsOpen] = useState(false);
@@ -118,7 +125,7 @@ export function DocsEditor({
   }
 
   writeRef.current = async (snapshot) => {
-    const parsed = JSON.parse(snapshot) as { content?: JsonNode; header?: string; footer?: string; comments?: DocComment[]; versions?: DocVersion[] };
+    const parsed = JSON.parse(snapshot) as { content?: JsonNode; header?: string; footer?: string; comments?: DocComment[]; versions?: DocVersion[]; columns?: 1 | 2 | 3; dropCap?: boolean; watermark?: string; pageNumber?: boolean };
     const content = parsed.content ?? (parsed as unknown as JsonNode);
     let title = nameRef.current;
     if (UNTITLED_NAMES.has(title)) {
@@ -129,12 +136,17 @@ export function DocsEditor({
         setName(title);
       }
     }
+    const columns: 1 | 2 | 3 = parsed.columns === 3 ? 3 : parsed.columns === 2 ? 2 : 1;
     const next = {
       ...withContent(fileRef.current, content, title, new Date().toISOString()),
       header: parsed.header ?? headerRef.current,
       footer: parsed.footer ?? footerRef.current,
       comments: parsed.comments ?? commentsRef.current,
       versions: parsed.versions ?? versionsRef.current,
+      columns,
+      dropCap: parsed.dropCap === true,
+      watermark: typeof parsed.watermark === "string" ? parsed.watermark : "",
+      pageNumber: parsed.pageNumber === true,
     };
     const saved = await storage.saveFile({
       id: record.id,
@@ -385,6 +397,16 @@ export function DocsEditor({
         onFooter={(value) => {
           footerRef.current = value;
           setFooter(value);
+          if (editor) queue.note(snapshotOf(editor.getJSON() as JsonNode));
+        }}
+        columns={layout.columns}
+        dropCap={layout.dropCap}
+        watermark={layout.watermark}
+        pageNumber={layout.pageNumber}
+        onLayout={(patch) => {
+          const next = { ...layoutRef.current, ...patch };
+          layoutRef.current = next;
+          setLayout(next);
           if (editor) queue.note(snapshotOf(editor.getJSON() as JsonNode));
         }}
         words={`${t("words", { count: counts.words })} · ${t("characters", { count: counts.characters })}`}

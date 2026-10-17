@@ -12,12 +12,16 @@ import {
   autofill,
   cellSpan,
   chartSeries,
+  columnSpan,
   formatShown,
   mergeRange,
   paintStyle,
+  pivotGrid,
   remapStyles,
   remapValidation,
   replaceInGrid,
+  scaleColor,
+  scaleInk,
   ruleMatches,
   spliceGrid,
   styleKey,
@@ -49,12 +53,26 @@ export function SheetsScreen() {
   const [anchor, setAnchor] = useState({ row: 0, col: 0 });
   const [error, setError] = useState("");
   const [win, setWin] = useState({ top: 0, left: 0, height: 520, width: 960 });
-  const [dialog, setDialog] = useState<"" | "find" | "valid" | "cond" | "help">("");
+  const [dialog, setDialog] = useState<"" | "find" | "valid" | "cond" | "help" | "note">("");
   const [findQuery, setFindQuery] = useState("");
   const [replaceQuery, setReplaceQuery] = useState("");
+  const [validKind, setValidKind] = useState<"list" | "check" | "date" | "range">("list");
   const [validText, setValidText] = useState("Sí, No");
+  const [rangeMin, setRangeMin] = useState("0");
+  const [rangeMax, setRangeMax] = useState("10");
+  const [noteText, setNoteText] = useState("");
   const [condValue, setCondValue] = useState("10");
+  const imageRef = useRef<HTMLInputElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
   const clip = useRef<Clip | null>(null);
+
+  useEffect(() => {
+    const node = wrapRef.current;
+    if (!node) return;
+    node.scrollTop = 0;
+    node.scrollLeft = 0;
+    setWin((current) => ({ ...current, top: 0, left: 0 }));
+  }, [file?.active]);
 
   useEffect(() => {
     if (!workspace.openSheetId || !workspace.storage) {
@@ -110,7 +128,8 @@ export function SheetsScreen() {
   const raw = active?.cells[selected.row]?.[selected.col] ?? "";
   const frozenRows = active?.frozenRows ?? (active?.freezeHeader ? 1 : 0);
   const frozenCols = active?.frozenCols ?? 0;
-  const options = active?.validation?.[styleKey(selected.row, selected.col)] ?? [];
+  const cellRule = active?.validation?.[styleKey(selected.row, selected.col)];
+  const options = cellRule?.kind === "list" ? cellRule.options : [];
 
   const rowIndexes = useMemo(() => {
     if (!active) return [];
@@ -222,9 +241,14 @@ export function SheetsScreen() {
 
   function shownAt(rowIndex: number, colIndex: number) {
     const computed = displayCell(active!.cells, rowIndex, colIndex, new Set(), book);
-    const rule = (active!.conditional ?? []).find((item) => item.col === colIndex && ruleMatches(computed, item));
+    const rule = (active!.conditional ?? []).find((item) => item.col === colIndex && (item.op === "scale" || ruleMatches(computed, item)));
     const style = styles[styleKey(rowIndex, colIndex)];
-    return { text: formatShown(computed, style?.format), style, rule };
+    let scale: string | undefined;
+    if (rule?.op === "scale") {
+      const span = columnSpan(active!.cells, colIndex);
+      scale = scaleColor(computed, span.low, span.high);
+    }
+    return { text: formatShown(computed, style?.format), style, rule, scale };
   }
 
   function cellButton(rowIndex: number, colIndex: number, top: number | null) {
@@ -233,6 +257,8 @@ export function SheetsScreen() {
     const label = cellRef(rowIndex, colIndex);
     const view = shownAt(rowIndex, colIndex);
     const pressed = selected.row === rowIndex && selected.col === colIndex;
+    const image = active?.images?.[styleKey(rowIndex, colIndex)];
+    const note = active?.notes?.[styleKey(rowIndex, colIndex)];
     const cellTop = top ?? 0;
     const cellLeft = (top === null ? 0 : GUTTER) + colIndex * COL_W;
     return (
@@ -241,6 +267,7 @@ export function SheetsScreen() {
           type="button"
           className={`ow-cell${view.style?.border ? " has-border" : ""}${view.style?.wrap ? " is-wrap" : ""}`}
           aria-label={view.text ? `${label} ${view.text}` : label}
+        title={note || undefined}
           aria-pressed={pressed}
           data-bold={view.style?.bold ? "true" : "false"}
           style={{
@@ -249,8 +276,8 @@ export function SheetsScreen() {
             width: COL_W * span.colspan,
             height: ROW_H * span.rowspan,
             fontWeight: view.style?.bold ? 800 : 400,
-            color: view.style?.color,
-            background: view.rule?.fill ?? view.style?.fill,
+            color: view.scale ? scaleInk(view.scale) : view.style?.color,
+            background: image ? `center / contain no-repeat url("${image}") ${view.scale ?? view.rule?.fill ?? view.style?.fill ?? "#fff"}` : (view.scale ?? view.rule?.fill ?? view.style?.fill),
             textAlign: view.style?.align,
           }}
           onClick={(event) => choose(rowIndex, colIndex, event.shiftKey)}
@@ -335,6 +362,8 @@ export function SheetsScreen() {
             { id: "bar", label: workspace.t("sheetChartBar"), onSelect: () => mapActive((sheet) => ({ ...sheet, charts: [...(sheet.charts ?? []), { id: createId().slice(0, 8), kind: "bar", title: workspace.t("sheetChartBar"), labelCol: 0, valueCol: selected.col, rowFrom: 0, rowTo: 7 }] })) },
             { id: "line", label: workspace.t("sheetChartLine"), onSelect: () => mapActive((sheet) => ({ ...sheet, charts: [...(sheet.charts ?? []), { id: createId().slice(0, 8), kind: "line", title: workspace.t("sheetChartLine"), labelCol: 0, valueCol: selected.col, rowFrom: 0, rowTo: 7 }] })) },
             { id: "pie", label: workspace.t("sheetChartPie"), onSelect: () => mapActive((sheet) => ({ ...sheet, charts: [...(sheet.charts ?? []), { id: createId().slice(0, 8), kind: "pie", title: workspace.t("sheetChartPie"), labelCol: 0, valueCol: selected.col, rowFrom: 0, rowTo: 7 }] })) },
+            { id: "image", label: workspace.t("sheetImage"), onSelect: () => imageRef.current?.click() },
+            { id: "note", label: workspace.t("sheetNote"), onSelect: () => { setNoteText(active.notes?.[styleKey(selected.row, selected.col)] ?? ""); setDialog("note"); } },
           ] },
           { id: "format", label: workspace.t("menuFormat"), items: [
             { id: "bold", label: workspace.t("bold"), hint: "Ctrl+B", onSelect: () => patch({ bold: !currentStyle?.bold }) },
@@ -352,12 +381,23 @@ export function SheetsScreen() {
             { id: "split", label: workspace.t("splitCell"), onSelect: () => mapActive((sheet) => ({ ...sheet, styles: unmerge(sheet.styles ?? {}, selected.row, selected.col) })) },
             { id: "sort", label: workspace.t("sheetSort"), onSelect: () => mapActive((sheet) => ({ ...sheet, cells: sortGrid(sheet.cells, selected.col, "asc", (sheet.frozenRows ?? (sheet.freezeHeader ? 1 : 0)) > 0, book) })) },
             { id: "sortd", label: workspace.t("sheetSortDesc"), onSelect: () => mapActive((sheet) => ({ ...sheet, cells: sortGrid(sheet.cells, selected.col, "desc", (sheet.frozenRows ?? 0) > 0, book) })) },
+            { id: "scale", label: workspace.t("sheetScale"), onSelect: () => mapActive((sheet) => ({ ...sheet, conditional: [...(sheet.conditional ?? []).filter((item) => item.col !== selected.col), { id: createId().slice(0, 8), col: selected.col, op: "scale", value: "", fill: "#0b5d36" }] })) },
           ] },
           { id: "tools", label: workspace.t("menuTools"), items: [
             { id: "filter", label: workspace.t("sheetFilter"), onSelect: () => document.getElementById("ow-sheet-filter")?.focus() },
             { id: "valid", label: workspace.t("sheetValidation"), onSelect: () => setDialog("valid") },
             { id: "cond", label: workspace.t("sheetConditional"), onSelect: () => setDialog("cond") },
             { id: "fill", label: workspace.t("sheetAutofill"), onSelect: () => mapActive((sheet) => ({ ...sheet, cells: autofill(sheet.cells, selected.row, selected.col, 3, true) })) },
+            { id: "pivot", label: workspace.t("sheetPivot"), onSelect: () => {
+              if (file.sheets.length >= 12) return;
+              const grid = pivotGrid(active.cells, selected.col);
+              update((current) => ({ ...current, active: current.sheets.length, sheets: [...current.sheets, { ...blankSheet(workspace.t("sheetPivot")), cells: grid, freezeHeader: true, frozenRows: 1 }] }));
+            } },
+            { id: "macro", label: workspace.t("sheetMacro"), onSelect: () => mapActive((sheet) => ({ ...sheet, macro: { ...(sheet.styles ?? {})[styleKey(selected.row, selected.col)] } })) },
+            { id: "macroRun", label: workspace.t("sheetMacroRun"), onSelect: () => {
+              if (!active.macro) return;
+              mapActive((sheet) => ({ ...sheet, styles: paintStyle(sheet.styles ?? {}, selected.row, selected.col, sheet.macro ?? {}) }));
+            } },
           ] },
           { id: "help", label: workspace.t("menuHelp"), items: [
             { id: "limit", label: workspace.t("shortcuts"), onSelect: () => setDialog("help") },
@@ -395,6 +435,14 @@ export function SheetsScreen() {
             </select>
           </label>
         ) : null}
+        {cellRule?.kind === "check" ? (
+          <label className="ow-check">
+            <input type="checkbox" aria-label={workspace.t("sheetCheck")} checked={raw === "TRUE"} onChange={(event) => setCell(event.target.checked ? "TRUE" : "FALSE")} />
+            {workspace.t("sheetCheck")}
+          </label>
+        ) : null}
+        {cellRule?.kind === "date" ? <Input label={workspace.t("sheetDate")} type="date" value={/^\d{4}-\d{2}-\d{2}/.test(raw) ? raw.slice(0, 10) : ""} onChange={(event) => setCell(event.target.value)} /> : null}
+        {cellRule?.kind === "range" ? <Input label={workspace.t("sheetRange")} type="number" min={cellRule.min} max={cellRule.max} value={raw} onChange={(event) => setCell(event.target.value)} /> : null}
       </div>
       <div className="ow-row">
         <Input id="ow-sheet-filter" label={workspace.t("sheetFilter")} value={filter} onChange={(event) => setFilter(event.target.value)} />
@@ -420,6 +468,7 @@ export function SheetsScreen() {
         </label>
       </div>
       <div
+        ref={wrapRef}
         className="ow-sheet-wrap"
         tabIndex={0}
         onScroll={(event) => {
@@ -506,10 +555,30 @@ export function SheetsScreen() {
         }}>{workspace.t("replace")}</Button>
       </Modal>
       <Modal open={dialog === "valid"} title={workspace.t("sheetValidation")} onClose={() => setDialog("")} footer={<Button onClick={() => setDialog("")}>{workspace.t("closeDialog")}</Button>}>
-        <Input label={workspace.t("sheetOptions")} value={validText} onChange={(event) => setValidText(event.target.value)} />
+        <label className="ow-field">
+          {workspace.t("chipType")}
+          <select aria-label={workspace.t("chipType")} value={validKind} onChange={(event) => setValidKind(event.target.value as typeof validKind)}>
+            <option value="list">{workspace.t("sheetValidation")}</option>
+            <option value="check">{workspace.t("sheetCheck")}</option>
+            <option value="date">{workspace.t("sheetDate")}</option>
+            <option value="range">{workspace.t("sheetRange")}</option>
+          </select>
+        </label>
+        {validKind === "list" ? <Input label={workspace.t("sheetOptions")} value={validText} onChange={(event) => setValidText(event.target.value)} /> : null}
+        {validKind === "range" ? (
+          <>
+            <Input id="ow-range-min" label={workspace.t("sheetRange")} value={rangeMin} onChange={(event) => setRangeMin(event.target.value)} />
+            <Input id="ow-range-max" label={workspace.t("sheetRange")} value={rangeMax} onChange={(event) => setRangeMax(event.target.value)} />
+          </>
+        ) : null}
         <Button variant="primary" onClick={() => {
           const list = validText.split(",").map((item) => item.trim()).filter(Boolean).slice(0, 20);
-          mapActive((sheet) => ({ ...sheet, validation: { ...(sheet.validation ?? {}), [styleKey(selected.row, selected.col)]: list } }));
+          const rule = validKind === "list"
+            ? { kind: "list" as const, options: list }
+            : validKind === "range"
+              ? { kind: "range" as const, min: Number(rangeMin) || 0, max: Number(rangeMax) || 0 }
+              : { kind: validKind };
+          mapActive((sheet) => ({ ...sheet, validation: { ...(sheet.validation ?? {}), [styleKey(selected.row, selected.col)]: rule } }));
           setDialog("");
         }}>{workspace.t("sheetApply")}</Button>
       </Modal>
@@ -521,6 +590,32 @@ export function SheetsScreen() {
           setDialog("");
         }}>{workspace.t("sheetApply")}</Button>
       </Modal>
+      <Modal open={dialog === "note"} title={workspace.t("sheetNote")} onClose={() => setDialog("")} footer={<Button onClick={() => setDialog("")}>{workspace.t("closeDialog")}</Button>}>
+        <Input label={workspace.t("sheetNote")} value={noteText} onChange={(event) => setNoteText(event.target.value)} />
+        <Button variant="primary" onClick={() => {
+          mapActive((sheet) => ({ ...sheet, notes: { ...(sheet.notes ?? {}), [styleKey(selected.row, selected.col)]: noteText.slice(0, 240) } }));
+          setDialog("");
+        }}>{workspace.t("sheetApply")}</Button>
+      </Modal>
+      <input
+        ref={imageRef}
+        className="ow-sr"
+        aria-label={workspace.t("sheetImage")}
+        type="file"
+        accept="image/png,image/jpeg,image/gif,image/webp"
+        onChange={(event) => {
+          const picked = event.target.files?.[0];
+          event.target.value = "";
+          if (!picked || picked.size > 80_000) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            const src = typeof reader.result === "string" ? reader.result : "";
+            if (!src.startsWith("data:image/") || src.length > 120_000) return;
+            mapActive((sheet) => ({ ...sheet, images: { ...(sheet.images ?? {}), [styleKey(selected.row, selected.col)]: src } }));
+          };
+          reader.readAsDataURL(picked);
+        }}
+      />
       <Modal open={dialog === "help"} title={workspace.t("shortcuts")} onClose={() => setDialog("")} footer={<Button onClick={() => setDialog("")}>{workspace.t("closeDialog")}</Button>}>
         <p>{workspace.t("sheetLimit")}</p>
         <p>{workspace.t("sheetHelp")}</p>

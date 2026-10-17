@@ -1,5 +1,14 @@
 # Registro de cambios
 
+## 0.6.0 — 2026-10-17
+
+Alfa de desarrollo. No es una versión de producción.
+
+- En el móvil la hoja de Docs se ajusta al ancho, la regla vertical se oculta, la barra se desplaza en horizontal y hay una barra de formato abajo. Los menús se abren en una hoja inferior. El teclado deja sitio al cursor.
+- Hojas, presentaciones, formularios, dibujos, notas y Drive caben en 360, 390, 412, 460 y 768 px. En el teléfono hay navegación inferior y el botón «Nuevo».
+- La auditoría pasa a 119 de 119 (100 %). Entran gráfico, dibujo, marca de agua, ecuación, encabezado, pie, número de página, columnas y letra capital en Docs; escala de color, casilla, fecha, intervalo, imagen, nota, tabla dinámica, macro y CONSULTA en Hojas; animación, cuadrícula y patrón en Presentaciones; archivo y vídeo en Formularios; texto decorado y diagrama en Dibujos; búsqueda en Notas. Son subconjuntos locales: no hay SQL, hilos de comentarios ni subida a un servidor.
+- Un archivo de 0.1 a 0.5.0 sigue abriendo: los campos nuevos son opcionales y la versión del archivo sigue en 1.
+
 ## 0.5.0 — 2026-10-17
 
 Alfa de desarrollo. No es una versión de producción.

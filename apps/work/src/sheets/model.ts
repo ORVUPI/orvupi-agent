@@ -1,7 +1,7 @@
 import { decodeUtf8, encodeUtf8 } from "../security/bytes";
 import { WorkError } from "../security/errors";
 import { sanitizeName } from "../security/names";
-import { knownStyle, type CellStyle, type CondRule, type SheetChart } from "./format";
+import { knownStyle, type CellRule, type CellStyle, type CondRule, type SheetChart } from "./format";
 import { COL_COUNT, ROW_COUNT, emptyGrid } from "./formulas";
 
 export type SheetTab = {
@@ -12,7 +12,10 @@ export type SheetTab = {
   frozenRows?: number;
   frozenCols?: number;
   conditional?: CondRule[];
-  validation?: Record<string, string[]>;
+  validation?: Record<string, CellRule>;
+  images?: Record<string, string>;
+  notes?: Record<string, string>;
+  macro?: CellStyle;
   charts?: SheetChart[];
 };
 
@@ -55,7 +58,7 @@ function stylesOf(value: unknown): Record<string, CellStyle> {
 }
 
 function asOp(value: unknown): CondRule["op"] | null {
-  if (value === "gt" || value === "lt" || value === "eq" || value === "contains") return value;
+  if (value === "gt" || value === "lt" || value === "eq" || value === "contains" || value === "scale") return value;
   return null;
 }
 
@@ -97,15 +100,43 @@ function chartsOf(value: unknown): SheetChart[] {
   }).slice(0, 6);
 }
 
-function validationOf(value: unknown): Record<string, string[]> {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) return {};
-  const validation: Record<string, string[]> = {};
-  for (const [key, entry] of Object.entries(value)) {
-    if (!/^\d+:\d+$/.test(key) || !Array.isArray(entry)) continue;
+function cellRule(entry: unknown): CellRule | null {
+  if (Array.isArray(entry)) {
     const options = entry.filter((item): item is string => typeof item === "string").map((item) => item.slice(0, 80)).slice(0, 20);
-    if (options.length > 0) validation[key] = options;
+    return options.length > 0 ? { kind: "list", options } : null;
+  }
+  if (typeof entry !== "object" || entry === null) return null;
+  const rule = entry as Record<string, unknown>;
+  if (rule.kind === "check" || rule.kind === "date") return { kind: rule.kind };
+  if (rule.kind === "range") {
+    const min = Number(rule.min);
+    const max = Number(rule.max);
+    if (!Number.isFinite(min) || !Number.isFinite(max)) return null;
+    return { kind: "range", min, max: Math.max(min, max) };
+  }
+  if (rule.kind === "list" && Array.isArray(rule.options)) return cellRule(rule.options);
+  return null;
+}
+
+function validationOf(value: unknown): Record<string, CellRule> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return {};
+  const validation: Record<string, CellRule> = {};
+  for (const [key, entry] of Object.entries(value)) {
+    if (!/^\d+:\d+$/.test(key)) continue;
+    const rule = cellRule(entry);
+    if (rule) validation[key] = rule;
   }
   return validation;
+}
+
+function textMap(value: unknown, limit: number): Record<string, string> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return {};
+  const map: Record<string, string> = {};
+  for (const [key, entry] of Object.entries(value)) {
+    if (!/^\d+:\d+$/.test(key) || typeof entry !== "string" || entry.length > limit) continue;
+    map[key] = entry;
+  }
+  return map;
 }
 
 export function createSheetFile(input: { id: string; title: string; sheets?: SheetTab[] }): SheetFile {
@@ -182,6 +213,9 @@ export function parseSheet(bytes: Uint8Array | string): SheetFile {
         conditional: rulesOf(entry.conditional),
         validation: validationOf(entry.validation),
         charts: chartsOf(entry.charts),
+        images: textMap(entry.images, 120_000),
+        notes: textMap(entry.notes, 240),
+        macro: knownStyle(entry.macro) ?? undefined,
       },
     ];
   });

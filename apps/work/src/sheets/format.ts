@@ -18,10 +18,16 @@ export type CellStyle = {
 export type CondRule = {
   id: string;
   col: number;
-  op: "gt" | "lt" | "eq" | "contains";
+  op: "gt" | "lt" | "eq" | "contains" | "scale";
   value: string;
   fill: string;
 };
+
+export type CellRule =
+  | { kind: "list"; options: string[] }
+  | { kind: "check" }
+  | { kind: "date" }
+  | { kind: "range"; min: number; max: number };
 
 export type SheetChart = {
   id: string;
@@ -142,8 +148,62 @@ export function remapStyles(styles: Record<string, CellStyle>, axis: "row" | "co
   return next;
 }
 
-export function remapValidation(validation: Record<string, string[]>, axis: "row" | "col", at: number, delta: number): Record<string, string[]> {
-  const next: Record<string, string[]> = {};
+export function scaleInk(color: string): string {
+  const match = /rgb\((\d+), (\d+), (\d+)\)/.exec(color);
+  if (!match) return "#102032";
+  const channels = match.slice(1, 4).map((item) => Number(item) / 255);
+  const linear = (channel: number) => (channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);
+  const luminance = 0.2126 * linear(channels[0] ?? 0) + 0.7152 * linear(channels[1] ?? 0) + 0.0722 * linear(channels[2] ?? 0);
+  return luminance > 0.2 ? "#102032" : "#fff8ec";
+}
+
+export function scaleColor(shown: string, low: number, high: number): string | undefined {
+  const number = Number(shown);
+  if (!Number.isFinite(number) || high === low) return undefined;
+  const t = Math.min(1, Math.max(0, (number - low) / (high - low)));
+  const mix = (from: number, to: number) => Math.round(from + (to - from) * t);
+  return `rgb(${mix(255, 11)}, ${mix(244, 93)}, ${mix(184, 54)})`;
+}
+
+export function columnSpan(cells: string[][], col: number): { low: number; high: number } {
+  let low = Number.POSITIVE_INFINITY;
+  let high = Number.NEGATIVE_INFINITY;
+  for (const row of cells) {
+    const raw = String(row[col] ?? "").trim();
+    if (!raw) continue;
+    const number = Number(raw);
+    if (!Number.isFinite(number)) continue;
+    low = Math.min(low, number);
+    high = Math.max(high, number);
+  }
+  if (!Number.isFinite(low) || !Number.isFinite(high)) return { low: 0, high: 0 };
+  return { low, high };
+}
+
+export function pivotGrid(cells: string[][], col: number): string[][] {
+  const counts = new Map<string, number>();
+  for (let row = 1; row < cells.length; row += 1) {
+    const label = (cells[row]?.[col] ?? "").trim();
+    if (!label || label.startsWith("=")) continue;
+    counts.set(label, (counts.get(label) ?? 0) + 1);
+  }
+  const grid = cells.map((row) => row.map(() => ""));
+  if (grid[0]) {
+    grid[0][0] = "Valor";
+    grid[0][1] = "Cuenta";
+  }
+  let index = 1;
+  for (const [label, count] of counts) {
+    if (!grid[index]) break;
+    grid[index]![0] = label;
+    grid[index]![1] = String(count);
+    index += 1;
+  }
+  return grid;
+}
+
+export function remapValidation(validation: Record<string, CellRule>, axis: "row" | "col", at: number, delta: number): Record<string, CellRule> {
+  const next: Record<string, CellRule> = {};
   for (const [key, options] of Object.entries(validation)) {
     const [row, col] = key.split(":").map(Number);
     if (row === undefined || col === undefined) continue;

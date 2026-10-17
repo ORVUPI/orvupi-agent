@@ -371,10 +371,11 @@ main { padding: 24px; }
   .ow-sidebar.is-open { display: flex; }
   .ow-ai {
     position: fixed;
-    inset: auto 0 0 0;
+    inset: auto 0 56px 0;
     width: 100%;
-    max-height: 46vh;
-    z-index: 24;
+    max-height: min(46vh, 360px);
+    z-index: 26;
+    overflow: auto;
   }
   .ow-only-mobile { display: inline-flex; }
   main { padding: 16px; }
@@ -893,8 +894,21 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-a4 { position: relative; background: #fff; color: #102032; border: 1px solid #dadce0; box-shadow: 0 1px 3px rgba(60, 64, 67, 0.12); display: flex; flex-direction: column; }
 .ow-a4-body { padding: 96px; flex: 1; }
 .ow-a4-edge { position: absolute; left: 96px; right: 96px; margin: 0; border: 0; border-bottom: 1px solid transparent; background: transparent; color: #102032; font-size: 11pt; }
-.ow-a4 > input:first-child { top: 16px; }
-.ow-a4 > input:last-child { bottom: 16px; }
+.ow-a4 > .ow-a4-edge { top: 16px; }
+.ow-a4-foot { position: absolute; left: 96px; right: 96px; bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.ow-a4-foot .ow-a4-edge { position: static; flex: 1; }
+.ow-page-num { font-size: 11pt; color: #102032; }
+.ow-watermark { position: absolute; inset: 18% 8%; display: grid; place-items: center; margin: 0; font-size: 64px; font-weight: 800; color: rgba(16, 32, 50, 0.14); transform: rotate(-24deg); pointer-events: none; }
+.ow-a4.is-cols-2 .ProseMirror { column-count: 2; column-gap: 28px; }
+.ow-a4.is-cols-3 .ProseMirror { column-count: 3; column-gap: 16px; }
+.ow-a4.is-dropcap .ProseMirror > p:first-of-type::first-letter { float: left; font-size: 3em; line-height: 0.85; padding-right: 6px; color: #ff3070; font-weight: 700; }
+.ow-format-dock { position: fixed; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-around; gap: 8px; background: #fff; border-top: 1px solid #dadce0; z-index: 22; padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); }
+.ow-master { position: absolute; left: 12px; bottom: 8px; margin: 0; font-size: 12px; color: inherit; opacity: 0.75; pointer-events: none; }
+.ow-slide-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin: 8px 0; }
+.ow-present .ow-anim-fade { animation: ow-fade 0.45s ease; }
+.ow-present .ow-anim-pop { animation: ow-pop 0.4s ease; }
+@keyframes ow-pop { from { transform: scale(0.86); } to { transform: none; } }
+.ow-tabbar, .ow-fab, .ow-fab-sheet { display: none; }
 .ow-a4-edge:focus { outline: none; border-bottom-color: #1d4e89; }
 .ow-a4 .ProseMirror { outline: none; min-height: 720px; font-family: Arial, Helvetica, sans-serif; font-size: 11pt; line-height: 1.15; color: #102032; }
 .ow-a4 .ProseMirror h1, .ow-a4 .ProseMirror h2, .ow-a4 .ProseMirror h3 { font-family: Arial, Helvetica, sans-serif; font-weight: 400; letter-spacing: 0; margin: 0 0 8px; color: #102032; }
@@ -904,6 +918,48 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-a4 .ProseMirror p { margin: 0 0 8px; }
 .ow-docs .ow-count { color: #444746; }
 .ow-editor .ow-list { position: fixed; right: 16px; bottom: 16px; width: min(320px, calc(100vw - 32px)); background: #fff; border: 1px solid #dadce0; border-radius: 12px; padding: 12px; z-index: 5; max-height: 240px; overflow: auto; }
+
+@media (max-width: 768px) {
+  .ow-shell, .ow-maincol, .ow-shell main, .ow-page, .ow-drive, .ow-drive-main, .ow-docs, .ow-docs-head, .ow-docs-titlebar, .ow-docs-titleblock, .ow-docs-menus, .ow-docs-toolwrap, .ow-docs-body, .ow-sheet-page, .ow-slides-page, .ow-form-page, .ow-draw-page { max-width: 100%; min-width: 0; }
+  .ow-page-head { flex-wrap: wrap; }
+  .ow-page-head > div { min-width: 0; }
+  .ow-grid { grid-template-columns: 1fr; }
+  .ow-formula { flex-wrap: wrap; min-width: 0; }
+  .ow-drive-main, .ow-sheet-wrap, .ow-docs-toolbar, .ow-docs .ow-menubar, .ow-sheet-page .ow-menubar, .ow-slides-page .ow-menubar, .ow-form-page .ow-menubar, .ow-draw-page .ow-menubar { overflow-x: auto; max-width: 100%; min-width: 0; }
+  .ow-format-dock .ow-doc-icon { width: 44px; height: 44px; }
+  .ow-docs-tabs, .ow-docs-tabs-open, .ow-docs-avatar { display: none; }
+  .ow-docs { height: 100dvh; }
+  .ow-docs-titlebar { flex-wrap: wrap; }
+  .ow-docs-name { min-width: 0; width: min(100%, 220px); }
+  .ow-docs-toolbar { flex-wrap: nowrap; border-radius: 16px; }
+  .ow-docs-scroll { padding-left: 0; padding-right: 0; overflow-x: clip; }
+  .ow-docs .ow-menubar { flex-wrap: nowrap; }
+  .ow-docs-head, .ow-sheet-page .ow-menubar, .ow-slides-page .ow-menubar, .ow-form-page .ow-menubar, .ow-draw-page .ow-menubar { position: relative; z-index: 30; }
+  .ow-menubar:has(> div > button[aria-expanded="true"]) { overflow: visible; }
+  .ow-menubar [role="menu"] { position: fixed; left: 0; right: 0; bottom: 64px; top: auto; width: auto; max-height: calc(70dvh - 64px); overflow: auto; border-radius: 16px 16px 0 0; z-index: 40; }
+  .ow-menu-row > [role="menu"] { position: static; min-width: 0; box-shadow: none; }
+  .ow-table-context { left: 0 !important; right: 0; top: auto !important; bottom: 0; width: auto; min-width: 0; max-height: 70dvh; border-radius: 16px 16px 0 0; }
+  .ow-filename, .ow-search { min-width: 0; }
+  .ow-topbar { flex-wrap: wrap; }
+  .ow-sheet-wrap { touch-action: pan-x pan-y; height: min(58dvh, 640px); }
+  .ow-formula { position: sticky; top: 0; z-index: 8; }
+  .ow-cell { touch-action: manipulation; }
+  .ow-slides-work { grid-template-columns: 1fr; }
+  .ow-filmstrip { display: flex; overflow-x: auto; }
+  .ow-thumb { min-width: 128px; }
+  .ow-slide-canvas, .ow-draw-canvas { width: 100%; }
+  .ow-slide-item { touch-action: none; }
+  .ow-notes { columns: 1; }
+  .ow-stage { padding: 16px; }
+  .ow-shell main { padding-bottom: 88px; }
+  .ow-shell.is-doc main { padding-bottom: 0; }
+  .ow-tabbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 23; background: #fff; border-top: 1px solid #e1e3e1; min-height: 56px; padding-bottom: env(safe-area-inset-bottom); }
+  .ow-tabbar button { flex: 1; border: 0; background: transparent; color: #102032; font-weight: 700; min-height: 48px; }
+  .ow-fab { display: inline-flex; align-items: center; justify-content: center; position: fixed; right: 16px; bottom: calc(72px + env(safe-area-inset-bottom)); z-index: 24; min-height: 48px; padding: 0 18px; border: 0; border-radius: 999px; background: #ff3070; color: #102032; font-weight: 800; box-shadow: 0 4px 0 #102032; }
+  .ow-fab-sheet { display: grid; position: fixed; left: 8px; right: 8px; bottom: calc(128px + env(safe-area-inset-bottom)); z-index: 24; background: #fff; border: 2px solid #102032; border-radius: 16px; padding: 8px; }
+  .ow-fab-sheet button { text-align: left; border: 0; background: transparent; color: #102032; font-weight: 700; min-height: 44px; border-radius: 10px; padding: 8px 12px; }
+  .ow-shell.is-doc .ow-tabbar, .ow-shell.is-doc .ow-fab, .ow-shell.is-doc .ow-fab-sheet { display: none; }
+}
 
 @media print {
   .ow-sidebar, .ow-topbar, .ow-ai, .ow-toolbar, .ow-find, .ow-count, .ow-toasts, .ow-skip, .ow-menubar, .ow-ruler,

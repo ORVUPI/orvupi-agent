@@ -716,6 +716,17 @@ alias(["K.ESIMO.MENOR", "SMALL"], (args, resolve) => {
   const picked = sorted[index - 1];
   return picked === undefined ? err("#VALOR!") : { kind: "num", value: picked };
 });
+alias(["CONSULTA", "QUERY"], (args, resolve) => {
+  const values = listed(args, resolve);
+  if (!Array.isArray(values)) return values;
+  const parts: string[] = [];
+  for (const cell of values) {
+    const piece = textOf(cell);
+    if (typeof piece !== "string") return piece;
+    if (piece.trim()) parts.push(piece);
+  }
+  return { kind: "text", value: parts.join(" | ").slice(0, 240) };
+});
 alias(["REF"], () => err("#REF!"));
 
 export const FUNCTION_NAMES = Object.keys(FUNCTIONS);

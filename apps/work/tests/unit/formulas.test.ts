@@ -1,7 +1,7 @@
 import { deflateRawSync } from "node:zlib";
 import { describe, expect, test } from "vitest";
 import { folderContains, sortFiles, visibleFiles } from "../../src/files/query";
-import { autofill, formatShown, replaceInGrid } from "../../src/sheets/format";
+import { autofill, formatShown, pivotGrid, replaceInGrid, scaleColor } from "../../src/sheets/format";
 import { FUNCTION_NAMES, displayCell, emptyGrid, shiftFormula, sortGrid, type FormulaBook } from "../../src/sheets/formulas";
 import { parseSheet, serializeSheet, createSheetFile } from "../../src/sheets/model";
 import { sheetsToXlsx, xlsxToSheets } from "../../src/sheets/xlsx";
@@ -124,6 +124,18 @@ describe("fórmulas", () => {
     const legacy = parseSheet(serializeSheet(createSheetFile({ id: "s1", title: "Vieja" })));
     expect(legacy.sheets[0]?.cells[0]?.[0]).toBe("");
     expect(legacy.version).toBe(1);
+  });
+
+  test("CONSULTA une el texto del rango y la escala pinta de crema a verde", () => {
+    const grid = gridWith({ A1: "Ana", A2: "Luis", B1: "=CONSULTA(A1:A2)", B2: "=QUERY(A1:A2)" });
+    expect(displayCell(grid, 0, 1)).toBe("Ana | Luis");
+    expect(displayCell(grid, 1, 1)).toBe("Ana | Luis");
+    expect(scaleColor("1", 1, 10)).toBe("rgb(255, 244, 184)");
+    expect(scaleColor("10", 1, 10)).toBe("rgb(11, 93, 54)");
+    const pivot = pivotGrid(gridWith({ A1: "tipo", A2: "Ana", A3: "Ana" }), 0);
+    expect(pivot[0]?.[0]).toBe("Valor");
+    expect(pivot[1]?.[0]).toBe("Ana");
+    expect(pivot[1]?.[1]).toBe("2");
   });
 
   test("ordenar deja la fila inmovilizada en su sitio", () => {

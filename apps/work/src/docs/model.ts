@@ -52,6 +52,10 @@ export type OrvdocFile = {
   footer: string;
   comments: DocComment[];
   versions: DocVersion[];
+  columns?: 1 | 2 | 3;
+  dropCap?: boolean;
+  watermark?: string;
+  pageNumber?: boolean;
 };
 
 const COLORS = new Set(["#102032", "#ad1645", "#0b5d36", "#1d4e89", "#a3123f"]);

@@ -4,6 +4,7 @@ import { ChevronDown, ChevronUp, Highlighter, Image as ImageIcon, Link2, List, L
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { MessageKey } from "../i18n";
 import { MenuBar } from "../ui/menus";
+import { chartPng, drawingPng } from "./inserts";
 import type { JsonNode } from "./model";
 
 type ExportKind = "pdf" | "html" | "txt" | "orvdoc" | "docx";
@@ -205,6 +206,11 @@ export function DocsSurface({
   footer,
   onHeader,
   onFooter,
+  columns = 1,
+  dropCap = false,
+  watermark = "",
+  pageNumber = false,
+  onLayout,
   find,
   words,
 }: {
@@ -230,12 +236,20 @@ export function DocsSurface({
   footer: string;
   onHeader: (value: string) => void;
   onFooter: (value: string) => void;
+  columns?: 1 | 2 | 3;
+  dropCap?: boolean;
+  watermark?: string;
+  pageNumber?: boolean;
+  onLayout?: (patch: { columns?: 1 | 2 | 3; dropCap?: boolean; watermark?: string; pageNumber?: boolean }) => void;
   find: ReactNode;
   words: string;
 }) {
   const [menus, setMenus] = useState(true);
   const [ruler, setRuler] = useState(true);
   const [zoom, setZoom] = useState(100);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [pane, setPane] = useState(() => (typeof window === "undefined" ? 1200 : window.innerWidth));
+  const [inset, setInset] = useState(0);
   const [mode, setMode] = useState<"edit" | "view">("edit");
   const [spell, setSpell] = useState(true);
   const [exportOpen, setExportOpen] = useState(false);
@@ -250,6 +264,40 @@ export function DocsSurface({
   const selectionRef = useRef<TextRange | null>(null);
   const brushRef = useRef<readonly Mark[] | null>(null);
   const brushRange = useRef<TextRange | null>(null);
+  useEffect(() => {
+    const node = scrollRef.current;
+    if (!node) return;
+    const measure = () => setPane(node.clientWidth);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+  useEffect(() => {
+    const apply = (value: number) => {
+      setInset(Math.max(0, value));
+      const selection = window.getSelection();
+      const anchor = selection?.anchorNode;
+      const element = anchor instanceof Element ? anchor : anchor?.parentElement;
+      if (value > 0) element?.scrollIntoView({ block: "center" });
+    };
+    const onCustom = (event: Event) => apply(Number((event as CustomEvent<number>).detail) || 0);
+    const viewport = window.visualViewport;
+    const onViewport = () => {
+      if (!viewport) return;
+      apply(window.innerHeight - viewport.height - viewport.offsetTop);
+    };
+    window.addEventListener("ow-keyboard-inset", onCustom);
+    viewport?.addEventListener("resize", onViewport);
+    viewport?.addEventListener("scroll", onViewport);
+    return () => {
+      window.removeEventListener("ow-keyboard-inset", onCustom);
+      viewport?.removeEventListener("resize", onViewport);
+      viewport?.removeEventListener("scroll", onViewport);
+    };
+  }, []);
+  const narrow = pane < PAGE_W + 8;
+  const shownZoom = narrow ? Math.max(0.32, (pane - 32) / PAGE_W) : zoom / 100;
   const point = shownPoint(editor?.getAttributes("textStyle")?.fontSize);
   const font = plainFont(editor?.getAttributes("textStyle")?.fontFamily);
   const style = editor?.isActive("heading", { level: 1 })
@@ -454,7 +502,7 @@ export function DocsSurface({
             </div>
             {menus ? (
               <nav className="ow-docs-menus" aria-label={t("menuBar")} onMouseDown={holdPointer}>
-                <MenuInline t={t} editor={editor} run={run} onClose={onClose} onExport={onExport} onFind={onFind} onLink={onLink} onImage={() => { rememberSelection(); fileRef.current?.click(); }} onComment={onComment} onVersions={onVersions} onShortcuts={onShortcuts} onPrint={onPrint} onRuler={() => setRuler((value) => !value)} onZoom={setZoom} onMode={setMode} />
+                <MenuInline t={t} editor={editor} run={run} onClose={onClose} onExport={onExport} onFind={onFind} onLink={onLink} onImage={() => { rememberSelection(); fileRef.current?.click(); }} onComment={onComment} onVersions={onVersions} onShortcuts={onShortcuts} onPrint={onPrint} onRuler={() => setRuler((value) => !value)} onZoom={setZoom} onMode={setMode} onHeaderFocus={() => document.querySelector<HTMLInputElement>(".ow-a4-edge")?.focus()} onFooterFocus={() => document.querySelectorAll<HTMLInputElement>(".ow-a4-edge")[1]?.focus()} onPageNumber={() => onLayout?.({ pageNumber: !pageNumber })} onColumns={() => onLayout?.({ columns: columns === 1 ? 2 : columns === 2 ? 3 : 1 })} onDropCap={() => onLayout?.({ dropCap: !dropCap })} onWatermark={() => onLayout?.({ watermark: watermark ? "" : "ORVUPI" })} onChart={() => run(() => editor?.chain().focus().setImage({ src: chartPng(), alt: t("docChart") }).run())} onDrawing={() => { const src = drawingPng(); if (src) run(() => editor?.chain().focus().setImage({ src, alt: t("docDrawing") }).run()); }} onEquation={() => run(() => editor?.chain().focus().insertContent({ type: "paragraph", attrs: { textAlign: "center" }, content: [{ type: "text", text: "E = mc²", marks: [{ type: "italic" }] }] }).run())} />
               </nav>
             ) : null}
           </div>
@@ -588,23 +636,35 @@ export function DocsSurface({
         </aside> : (
           <button type="button" className="ow-docs-tabs-open" aria-label={t("outlineTitle")} onClick={() => setTabsOpen(true)}>›</button>
         )}
-        <div className="ow-docs-scroll">
-          <div className="ow-docs-sheet" style={{ zoom: zoom / 100 }}>
-            {ruler ? <div className="ow-ruler-row"><div className="ow-vruler-spacer" /><RulerH /></div> : null}
+        <div className="ow-docs-scroll" ref={scrollRef} style={{ paddingBottom: inset + (narrow ? 64 : 48) }}>
+          <div className="ow-docs-sheet" style={{ zoom: shownZoom }}>
+            {ruler ? <div className="ow-ruler-row">{narrow ? null : <div className="ow-vruler-spacer" />}<RulerH /></div> : null}
             <div className="ow-docs-page-row">
-              {ruler ? <RulerV /> : null}
-              <article className="ow-a4" style={{ width: PAGE_W, minHeight: PAGE_H }}>
+              {ruler && !narrow ? <RulerV /> : null}
+              <article className={`ow-a4${columns === 2 ? " is-cols-2" : columns === 3 ? " is-cols-3" : ""}${dropCap ? " is-dropcap" : ""}`} style={{ width: PAGE_W, minHeight: PAGE_H }}>
+                {watermark ? <p className="ow-watermark" aria-hidden="true">{watermark}</p> : null}
                 <input className="ow-a4-edge" aria-label={t("header")} value={header} placeholder={t("header")} onChange={(event) => onHeader(event.target.value.slice(0, 240))} />
                 <div className="ow-a4-body">
                   <EditorContent editor={editor} />
                 </div>
-                <input className="ow-a4-edge" aria-label={t("footer")} value={footer} placeholder={t("footer")} onChange={(event) => onFooter(event.target.value.slice(0, 240))} />
+                <div className="ow-a4-foot">
+                  <input className="ow-a4-edge" aria-label={t("footer")} value={footer} placeholder={t("footer")} onChange={(event) => onFooter(event.target.value.slice(0, 240))} />
+                  {pageNumber ? <span className="ow-page-num" aria-label={t("pageNumber")}>1</span> : null}
+                </div>
               </article>
             </div>
           </div>
           <p className="ow-count" aria-live="polite">{words}</p>
         </div>
       </div>
+      {narrow ? (
+        <div className="ow-format-dock" role="toolbar" aria-label={t("toolbarLabel")}>
+          <DocIcon label={t("bold")} pressed={editor?.isActive("bold")} onClick={() => run(() => editor?.chain().focus().toggleBold().run())}><strong>B</strong></DocIcon>
+          <DocIcon label={t("italic")} pressed={editor?.isActive("italic")} onClick={() => run(() => editor?.chain().focus().toggleItalic().run())}><em>I</em></DocIcon>
+          <DocIcon label={t("underline")} pressed={editor?.isActive("underline")} onClick={() => run(() => editor?.chain().focus().toggleUnderline().run())}><span className="ow-u">U</span></DocIcon>
+          <DocIcon label={t("alignLeft")} pressed={align === "left"} onClick={() => run(() => editor?.chain().focus().setTextAlign("left").run())}>≡</DocIcon>
+        </div>
+      ) : null}
       <input
         ref={fileRef}
         className="ow-sr"
@@ -892,6 +952,15 @@ function MenuInline({
   onRuler,
   onZoom,
   onMode,
+  onHeaderFocus,
+  onFooterFocus,
+  onPageNumber,
+  onColumns,
+  onDropCap,
+  onWatermark,
+  onChart,
+  onDrawing,
+  onEquation,
 }: {
   t: Translate;
   editor: Editor | null;
@@ -908,6 +977,15 @@ function MenuInline({
   onRuler: () => void;
   onZoom: (value: number) => void;
   onMode: (mode: "edit" | "view") => void;
+  onHeaderFocus: () => void;
+  onFooterFocus: () => void;
+  onPageNumber: () => void;
+  onColumns: () => void;
+  onDropCap: () => void;
+  onWatermark: () => void;
+  onChart: () => void;
+  onDrawing: () => void;
+  onEquation: () => void;
 }) {
   return (
     <MenuBar
@@ -942,6 +1020,13 @@ function MenuInline({
           { id: "table", label: t("table"), table: (rows, cols) => run(() => editor?.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run()) },
           { id: "break", label: t("pageBreak"), onSelect: () => run(() => editor?.chain().focus().insertPageBreak().run()) },
           { id: "comment", label: t("comment"), onSelect: onComment },
+          { id: "header", label: t("header"), onSelect: onHeaderFocus },
+          { id: "footer", label: t("footer"), onSelect: onFooterFocus },
+          { id: "page", label: t("pageNumber"), onSelect: onPageNumber },
+          { id: "chart", label: t("docChart"), onSelect: onChart },
+          { id: "draw", label: t("docDrawing"), onSelect: onDrawing },
+          { id: "eq", label: t("equation"), onSelect: onEquation },
+          { id: "water", label: t("watermark"), onSelect: onWatermark },
         ] },
         { id: "format", label: t("menuFormat"), items: [
           { id: "bold", label: t("bold"), hint: "Ctrl+B", onSelect: () => run(() => editor?.chain().focus().toggleBold().run()) },
@@ -955,6 +1040,8 @@ function MenuInline({
             { id: "right", label: t("alignRight"), hint: "Ctrl+Mayús+R", onSelect: () => run(() => editor?.chain().focus().setTextAlign("right").run()) },
             { id: "justify", label: t("alignJustify"), hint: "Ctrl+Mayús+J", onSelect: () => run(() => editor?.chain().focus().setTextAlign("justify").run()) },
           ] },
+          { id: "columns", label: t("docColumns"), onSelect: onColumns },
+          { id: "drop", label: t("dropCap"), onSelect: onDropCap },
           { id: "lists", label: t("bullet"), children: [
             { id: "bullets", label: t("bullet"), onSelect: () => run(() => editor?.chain().focus().toggleBulletList().run()) },
             { id: "numbers", label: t("ordered"), onSelect: () => run(() => editor?.chain().focus().toggleOrderedList().run()) },

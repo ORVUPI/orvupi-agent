@@ -27,6 +27,10 @@ export function createOrvdoc(input: { id: string; title: string; content?: JsonN
     footer: "",
     comments: [],
     versions: [],
+    columns: 1,
+    dropCap: false,
+    watermark: "",
+    pageNumber: false,
   };
 }
 
@@ -84,6 +88,10 @@ export function parseOrvdoc(bytes: Uint8Array | string): OrvdocFile {
     footer: typeof parsed.footer === "string" ? parsed.footer.slice(0, 240) : "",
     comments: commentsOf(parsed.comments),
     versions: versionsOf(parsed.versions),
+    columns: parsed.columns === 2 || parsed.columns === 3 ? parsed.columns : 1,
+    dropCap: parsed.dropCap === true,
+    watermark: typeof parsed.watermark === "string" ? parsed.watermark.slice(0, 40) : "",
+    pageNumber: parsed.pageNumber === true,
   };
 }
 
