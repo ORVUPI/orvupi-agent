@@ -9,7 +9,9 @@ import type { MessageKey } from "../i18n";
 import { MenuBar } from "../ui/menus";
 import { usePhone } from "../ui/phone";
 import { APP_VERSION } from "../version";
+import { pastedHtml } from "./extensions";
 import { chartPng, drawingPng } from "./inserts";
+import { jumpToHeading } from "./jump";
 import type { JsonNode, PageMargin, PageOrientation, PageSize } from "./model";
 
 type ExportKind = "pdf" | "html" | "txt" | "orvdoc" | "docx";
@@ -86,6 +88,18 @@ function keepPointer(event: { target: EventTarget | null; preventDefault: () => 
   const target = event.target;
   if (target instanceof HTMLElement && target.closest("input, textarea, select")) return;
   event.preventDefault();
+}
+
+function footnoteItems(editor: Editor | null): Array<{ n: number; text: string }> {
+  if (!editor) return [];
+  const items: Array<{ n: number; text: string }> = [];
+  editor.state.doc.descendants((node) => {
+    if (node.type.name !== "footnote") return;
+    const text = String(node.attrs.text ?? "").replace(/\s+/g, " ").trim().slice(0, 400);
+    const n = Number(node.attrs.n);
+    items.push({ n: Number.isFinite(n) && n > 0 ? n : items.length + 1, text });
+  });
+  return items;
 }
 
 function headingsOf(node: JsonNode | undefined, out: Array<{ text: string; level: number }> = []): Array<{ text: string; level: number }> {
@@ -227,6 +241,7 @@ export function DocsSurface({
   onVersions,
   onShortcuts,
   onPrint,
+  onCopy,
   onCapture,
   header,
   footer,
@@ -260,6 +275,7 @@ export function DocsSurface({
   onVersions: () => void;
   onShortcuts: () => void;
   onPrint: () => void;
+  onCopy?: () => void;
   onCapture?: () => void;
   header: string;
   footer: string;
@@ -293,6 +309,9 @@ export function DocsSurface({
   const [charsOpen, setCharsOpen] = useState(false);
   const [pageOpen, setPageOpen] = useState(false);
   const [countOpen, setCountOpen] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [noteDraft, setNoteDraft] = useState("");
+  const [clipNote, setClipNote] = useState("");
   const [draftSize, setDraftSize] = useState<PageSize>(pageSize);
   const [draftOrientation, setDraftOrientation] = useState<PageOrientation>(pageOrientation);
   const [draftMargin, setDraftMargin] = useState<PageMargin>(pageMargin);
@@ -338,9 +357,31 @@ export function DocsSurface({
   useEffect(() => {
     if (!editor) return;
     const bump = () => setTick((value) => value + 1);
+    const follow = () => {
+      const selection = editor.state.selection;
+      if (selection instanceof CellSelection) {
+        cellSelRef.current = { anchor: selection.$anchorCell.pos, head: selection.$headCell.pos };
+        selectionRef.current = null;
+        return;
+      }
+      cellSelRef.current = null;
+      if (selection.empty) {
+        const saved = selectionRef.current;
+        let focused = false;
+        try {
+          focused = editor.view.hasFocus();
+        } catch {
+          focused = false;
+        }
+        if (!focused && saved && saved.from !== saved.to) return;
+      }
+      selectionRef.current = { from: selection.from, to: selection.to };
+    };
     editor.on("transaction", bump);
+    editor.on("selectionUpdate", follow);
     return () => {
       editor.off("transaction", bump);
+      editor.off("selectionUpdate", follow);
     };
   }, [editor]);
 
@@ -590,12 +631,92 @@ export function DocsSurface({
     }
   }
 
-  function run(command: () => boolean | void) {
-    if (mode === "view" || !editor) return;
+  function restoreSavedRange() {
+    if (!editor) return;
     restoreCells();
     const saved = selectionRef.current;
     const current = editor.state.selection;
-    if (!cellSelRef.current && saved && current.empty && saved.from !== saved.to) editor.commands.setTextSelection(saved);
+    if (!cellSelRef.current && saved && current.empty && saved.from !== saved.to) editor.chain().focus().setTextSelection(saved).run();
+  }
+
+  async function selectedText(): Promise<string> {
+    if (!editor || editor.state.selection.empty) return "";
+    const { from, to } = editor.state.selection;
+    return editor.state.doc.textBetween(from, to, "\n");
+  }
+
+  async function copySelection() {
+    restoreSavedRange();
+    const text = await selectedText();
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      setClipNote("");
+    } catch {
+      setClipNote(t("clipboardDenied"));
+    }
+  }
+
+  async function cutSelection() {
+    restoreSavedRange();
+    if (!editor || editor.state.selection.empty) return;
+    const { from, to } = editor.state.selection;
+    const text = editor.state.doc.textBetween(from, to, "\n");
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      editor.chain().focus().deleteRange({ from, to }).run();
+      setClipNote("");
+    } catch {
+      setClipNote(t("clipboardDenied"));
+    }
+  }
+
+  function insertPlain(text: string) {
+    if (!editor) return;
+    editor.chain().focus().command(({ tr, state }) => {
+      tr.insertText(text, state.selection.from, state.selection.to);
+      return true;
+    }).run();
+  }
+
+  async function pasteSelection(plain: boolean) {
+    if (!editor) return;
+    restoreSavedRange();
+    try {
+      if (!plain && typeof navigator.clipboard.read === "function") {
+        const items = await navigator.clipboard.read();
+        for (const item of items) {
+          if (!item.types.includes("text/html")) continue;
+          const html = await (await item.getType("text/html")).text();
+          const clean = pastedHtml(html).trim();
+          if (!clean) continue;
+          editor.chain().focus().insertContent(clean).run();
+          setClipNote("");
+          return;
+        }
+      }
+      const text = await navigator.clipboard.readText();
+      insertPlain(text);
+      setClipNote("");
+    } catch {
+      setClipNote(t("clipboardDenied"));
+    }
+  }
+
+  function addFootnote() {
+    if (!editor) return;
+    const text = noteDraft.replace(/\s+/g, " ").trim().slice(0, 400);
+    if (!text) return;
+    const n = footnoteItems(editor).length + 1;
+    run(() => insertAtCaret(editor, { type: "footnote", attrs: { n, text } }));
+    setNoteDraft("");
+    setNoteOpen(false);
+  }
+
+  function run(command: () => boolean | void) {
+    if (mode === "view" || !editor) return;
+    restoreSavedRange();
     command();
   }
 
@@ -663,7 +784,7 @@ export function DocsSurface({
             </div>
             {menus ? (
               <nav className="ow-docs-menus" aria-label={t("menuBar")} onMouseDown={holdPointer}>
-                <MenuInline t={t} editor={editor} run={run} onClose={onClose} onExport={onExport} onFind={onFind} onLink={onLink} onImage={() => { rememberSelection(); fileRef.current?.click(); }} onComment={onComment} onVersions={onVersions} onShortcuts={onShortcuts} onPrint={onPrint} onRuler={() => setRuler((value) => !value)} onZoom={setZoom} onMode={setMode} onHeaderFocus={() => document.querySelector<HTMLInputElement>(".ow-a4-edge")?.focus()} onFooterFocus={() => document.querySelectorAll<HTMLInputElement>(".ow-a4-edge")[1]?.focus()} onPageNumber={() => onLayout?.({ pageNumber: !pageNumber })} onColumns={() => onLayout?.({ columns: columns === 1 ? 2 : columns === 2 ? 3 : 1 })} onDropCap={() => onLayout?.({ dropCap: !dropCap })} onWatermark={() => onLayout?.({ watermark: watermark ? "" : "ORVUPI" })} onChart={() => run(() => { if (editor) insertAtCaret(editor, { type: "image", attrs: { src: chartPng(), alt: t("docChart") } }); })} onDrawing={() => { const src = drawingPng(); if (src) run(() => { if (editor) insertAtCaret(editor, { type: "image", attrs: { src, alt: t("docDrawing") } }); }); }} onEquation={() => run(() => { if (editor) insertAtCaret(editor, { type: "paragraph", attrs: { textAlign: "center" }, content: [{ type: "text", text: "E = mc²", marks: [{ type: "italic" }] }] }); })} onPageSetup={() => { setDraftSize(pageSize); setDraftOrientation(pageOrientation); setDraftMargin(pageMargin); setPageOpen(true); }} onSpecial={() => setCharsOpen(true)} onDate={() => run(() => { if (!editor) return; const now = new Date(); const text = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`; insertAtCaret(editor, text); })} onRule={() => run(() => editor?.chain().focus().setHorizontalRule().run())} onWordCount={() => setCountOpen(true)} />
+                <MenuInline t={t} editor={editor} run={run} onClose={onClose} onExport={onExport} onFind={onFind} onLink={onLink} onImage={() => { rememberSelection(); fileRef.current?.click(); }} onComment={onComment} onVersions={onVersions} onShortcuts={onShortcuts} onPrint={onPrint} onRuler={() => setRuler((value) => !value)} onZoom={setZoom} onMode={setMode} onHeaderFocus={() => document.querySelector<HTMLInputElement>(".ow-a4-edge")?.focus()} onFooterFocus={() => document.querySelectorAll<HTMLInputElement>(".ow-a4-edge")[1]?.focus()} onPageNumber={() => onLayout?.({ pageNumber: !pageNumber })} onColumns={() => onLayout?.({ columns: columns === 1 ? 2 : columns === 2 ? 3 : 1 })} onDropCap={() => onLayout?.({ dropCap: !dropCap })} onWatermark={() => onLayout?.({ watermark: watermark ? "" : "ORVUPI" })} onChart={() => run(() => { if (editor) insertAtCaret(editor, { type: "image", attrs: { src: chartPng(), alt: t("docChart") } }); })} onDrawing={() => { const src = drawingPng(); if (src) run(() => { if (editor) insertAtCaret(editor, { type: "image", attrs: { src, alt: t("docDrawing") } }); }); }} onEquation={() => run(() => { if (editor) insertAtCaret(editor, { type: "paragraph", attrs: { textAlign: "center" }, content: [{ type: "text", text: "E = mc²", marks: [{ type: "italic" }] }] }); })} onPageSetup={() => { setDraftSize(pageSize); setDraftOrientation(pageOrientation); setDraftMargin(pageMargin); setPageOpen(true); }} onSpecial={() => setCharsOpen(true)} onDate={() => run(() => { if (!editor) return; const now = new Date(); const text = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`; insertAtCaret(editor, text); })} onRule={() => run(() => editor?.chain().focus().setHorizontalRule().run())} onWordCount={() => setCountOpen(true)} onSelectAll={() => run(() => editor?.chain().focus().selectAll().run())} onCut={() => void cutSelection()} onCopyText={() => void copySelection()} onPaste={() => void pasteSelection(false)} onPastePlain={() => void pasteSelection(true)} onContents={() => run(() => { if (editor) insertAtCaret(editor, { type: "contents" }); })} onFootnote={() => { rememberSelection(); setNoteOpen(true); }} onCopyDoc={() => onCopy?.()} />
               </nav>
             ) : null}
           </div>
@@ -718,6 +839,8 @@ export function DocsSurface({
             <DocIcon label={t("italic")} pressed={editor?.isActive("italic")} onClick={() => run(() => editor?.chain().focus().toggleItalic().run())}><em aria-hidden="true">I</em></DocIcon>
             <DocIcon label={t("underline")} pressed={editor?.isActive("underline")} onClick={() => run(() => editor?.chain().focus().toggleUnderline().run())}><span className="ow-u" aria-hidden="true">U</span></DocIcon>
             <DocIcon label={t("strike")} pressed={editor?.isActive("strike")} onClick={() => run(() => editor?.chain().focus().toggleStrike().run())}><span className="ow-s" aria-hidden="true">S</span></DocIcon>
+            <DocIcon label={`${t("subscript")} x₂`} pressed={editor?.isActive("subscript")} onClick={() => run(() => editor?.chain().focus().toggleSubscript().run())}><span aria-hidden="true">x₂</span></DocIcon>
+            <DocIcon label={`${t("superscript")} x²`} pressed={editor?.isActive("superscript")} onClick={() => run(() => editor?.chain().focus().toggleSuperscript().run())}><span aria-hidden="true">x²</span></DocIcon>
             <ColorMenu t={t} editor={editor} run={run} kind="color" />
             <ColorMenu t={t} editor={editor} run={run} kind="highlight" />
             <i className="ow-tool-gap" />
@@ -767,6 +890,7 @@ export function DocsSurface({
         </div>
       )}
       {find}
+      {clipNote ? <p className="ow-clip" role="status">{clipNote}</p> : null}
       <div className="ow-docs-body">
         {tabsOpen ? <aside className="ow-docs-tabs" aria-label={t("outlineTitle")}>
           <div className="ow-docs-tabhead">
@@ -786,7 +910,11 @@ export function DocsSurface({
           </div>
           {headings.length === 0 ? <p className="ow-docs-outline-empty">{t("outlineEmpty")}</p> : (
             <ol className="ow-docs-outline">
-              {headings.map((item) => <li key={`${item.level}-${item.text}`} data-level={item.level}>{item.text}</li>)}
+              {headings.map((item, index) => (
+                <li key={`${index}-${item.level}-${item.text}`} data-level={item.level}>
+                  <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => { if (editor) jumpToHeading(editor, index); }}>{item.text}</button>
+                </li>
+              ))}
             </ol>
           )}
         </aside> : (
@@ -808,6 +936,13 @@ export function DocsSurface({
                 <input className="ow-a4-edge" aria-label={t("header")} value={header} placeholder={t("header")} onChange={(event) => onHeader(event.target.value.slice(0, 240))} />
                 <div className="ow-a4-body">
                   <EditorContent editor={editor} />
+                  {footnoteItems(editor).length > 0 ? (
+                    <ol className="ow-footnotes">
+                      {footnoteItems(editor).map((item, index) => (
+                        <li key={`${item.n}-${index}`} value={item.n}>{item.text}</li>
+                      ))}
+                    </ol>
+                  ) : null}
                 </div>
                 <div className="ow-a4-foot">
                   <input className="ow-a4-edge" aria-label={t("footer")} value={footer} placeholder={t("footer")} onChange={(event) => onFooter(event.target.value.slice(0, 240))} />
@@ -825,6 +960,8 @@ export function DocsSurface({
             <DocIcon label={t("bold")} pressed={editor?.isActive("bold")} onClick={() => run(() => editor?.chain().focus().toggleBold().run())}><strong>B</strong></DocIcon>
             <DocIcon label={t("italic")} pressed={editor?.isActive("italic")} onClick={() => run(() => editor?.chain().focus().toggleItalic().run())}><em>I</em></DocIcon>
             <DocIcon label={t("underline")} pressed={editor?.isActive("underline")} onClick={() => run(() => editor?.chain().focus().toggleUnderline().run())}><span className="ow-u">U</span></DocIcon>
+            <DocIcon label={`${t("subscript")} x₂`} pressed={editor?.isActive("subscript")} onClick={() => run(() => editor?.chain().focus().toggleSubscript().run())}><span aria-hidden="true">x₂</span></DocIcon>
+            <DocIcon label={`${t("superscript")} x²`} pressed={editor?.isActive("superscript")} onClick={() => run(() => editor?.chain().focus().toggleSuperscript().run())}><span aria-hidden="true">x²</span></DocIcon>
             <DocIcon label={t("alignLeft")} pressed={align === "left"} onClick={() => run(() => editor?.chain().focus().setTextAlign("left").run())}>≡</DocIcon>
             <DocIcon label={t("alignCenter")} pressed={align === "center"} onClick={() => run(() => editor?.chain().focus().setTextAlign("center").run())}>☰</DocIcon>
             <DocIcon label={t("bullet")} pressed={editor?.isActive("bulletList")} onClick={() => run(() => editor?.chain().focus().toggleBulletList().run())}><List size={20} /></DocIcon>
@@ -902,6 +1039,24 @@ export function DocsSurface({
           <p>{words}</p>
           <button type="button" onClick={() => setCountOpen(false)}>{t("closeFind")}</button>
         </div>
+      ) : null}
+      {noteOpen ? (
+        <form
+          className="ow-doc-dialog"
+          role="dialog"
+          aria-label={t("footnote")}
+          onSubmit={(event) => {
+            event.preventDefault();
+            addFootnote();
+          }}
+        >
+          <label>
+            {t("footnoteLabel")}
+            <input aria-label={t("footnoteLabel")} value={noteDraft} maxLength={400} onChange={(event) => setNoteDraft(event.target.value)} />
+          </label>
+          <button type="submit">{t("footnoteAdd")}</button>
+          <button type="button" onClick={() => setNoteOpen(false)}>{t("cancel")}</button>
+        </form>
       ) : null}
       {context && editor ? (
         <div
@@ -1297,6 +1452,14 @@ function MenuInline({
   onDate,
   onRule,
   onWordCount,
+  onSelectAll,
+  onCut,
+  onCopyText,
+  onPaste,
+  onPastePlain,
+  onContents,
+  onFootnote,
+  onCopyDoc,
 }: {
   t: Translate;
   editor: Editor | null;
@@ -1327,6 +1490,14 @@ function MenuInline({
   onDate: () => void;
   onRule: () => void;
   onWordCount: () => void;
+  onSelectAll: () => void;
+  onCut: () => void;
+  onCopyText: () => void;
+  onPaste: () => void;
+  onPastePlain: () => void;
+  onContents: () => void;
+  onFootnote: () => void;
+  onCopyDoc: () => void;
 }) {
   return (
     <MenuBar
@@ -1334,6 +1505,7 @@ function MenuInline({
       menus={[
         { id: "file", label: t("menuFile"), items: [
           { id: "setup", label: t("pageSetup"), onSelect: onPageSetup },
+          { id: "copy", label: t("copyDoc"), onSelect: onCopyDoc },
           { id: "print", label: t("print"), hint: "Ctrl+P", onSelect: onPrint },
           { id: "export", label: t("export"), children: [
             { id: "pdf", label: "PDF", onSelect: () => onExport("pdf") },
@@ -1346,6 +1518,11 @@ function MenuInline({
         { id: "edit", label: t("menuEdit"), items: [
           { id: "undo", label: t("undo"), hint: "Ctrl+Z", onSelect: () => run(() => editor?.chain().focus().undo().run()) },
           { id: "redo", label: t("redo"), hint: "Ctrl+Y", onSelect: () => run(() => editor?.chain().focus().redo().run()) },
+          { id: "all", label: t("selectAll"), hint: "Ctrl+A", onSelect: onSelectAll },
+          { id: "cut", label: t("cut"), hint: "Ctrl+X", onSelect: onCut },
+          { id: "copy", label: t("copy"), hint: "Ctrl+C", onSelect: onCopyText },
+          { id: "paste", label: t("paste"), hint: "Ctrl+V", onSelect: onPaste },
+          { id: "plain", label: t("pastePlain"), onSelect: onPastePlain },
           { id: "find", label: t("findReplace"), hint: "Ctrl+F", onSelect: onFind },
         ] },
         { id: "view", label: t("menuView"), items: [
@@ -1369,6 +1546,8 @@ function MenuInline({
           { id: "draw", label: t("docDrawing"), onSelect: onDrawing },
           { id: "eq", label: t("equation"), onSelect: onEquation },
           { id: "water", label: t("watermark"), onSelect: onWatermark },
+          { id: "toc", label: t("toc"), onSelect: onContents },
+          { id: "note", label: t("footnote"), onSelect: onFootnote },
           { id: "chars", label: t("specialChar"), onSelect: onSpecial },
           { id: "date", label: t("insertDate"), onSelect: onDate },
           { id: "rule", label: t("horizontalLine"), onSelect: onRule },
@@ -1378,6 +1557,8 @@ function MenuInline({
           { id: "italic", label: t("italic"), hint: "Ctrl+I", onSelect: () => run(() => editor?.chain().focus().toggleItalic().run()) },
           { id: "underline", label: t("underline"), hint: "Ctrl+U", onSelect: () => run(() => editor?.chain().focus().toggleUnderline().run()) },
           { id: "strike", label: t("strike"), hint: "Alt+Mayús+5", onSelect: () => run(() => editor?.chain().focus().toggleStrike().run()) },
+          { id: "sub", label: t("subscript"), onSelect: () => run(() => editor?.chain().focus().toggleSubscript().run()) },
+          { id: "sup", label: t("superscript"), onSelect: () => run(() => editor?.chain().focus().toggleSuperscript().run()) },
           { id: "clear", label: t("clearFormat"), onSelect: () => run(() => editor?.chain().focus().unsetAllMarks().clearNodes().run()) },
           { id: "align", label: t("alignMenu"), children: [
             { id: "left", label: t("alignLeft"), hint: "Ctrl+Mayús+L", onSelect: () => run(() => editor?.chain().focus().setTextAlign("left").run()) },

@@ -18,6 +18,8 @@ export type FileRecord = {
   blobKey: string;
   contentHash: string;
   shortcutOf?: string;
+  /** Texto plano reciente, para buscar dentro del archivo. Los archivos viejos no lo traen. */
+  snippet?: string;
 };
 
 export type LoadedFile = {
@@ -33,6 +35,7 @@ export type SaveFileInput = {
   mime: string;
   bytes: Uint8Array;
   folderId?: string | null;
+  snippet?: string;
 };
 
 export type ImportFileInput = {

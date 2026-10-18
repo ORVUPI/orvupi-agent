@@ -68,9 +68,16 @@ function cleanTags(value: unknown): string[] {
   return tags;
 }
 
+export function cleanSnippet(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const text = value.replace(/\s+/g, " ").trim().slice(0, 4000);
+  return text || undefined;
+}
+
 function normalizeRecord(record: FileRecord): FileRecord {
   const color = typeof record.color === "string" && LABEL_COLORS.has(record.color) ? record.color : null;
-  return {
+  const snippet = cleanSnippet(record.snippet);
+  const next: FileRecord = {
     ...record,
     tags: cleanTags(record.tags),
     favorite: record.favorite === true,
@@ -78,6 +85,9 @@ function normalizeRecord(record: FileRecord): FileRecord {
     color,
     deletedAt: typeof record.deletedAt === "string" ? record.deletedAt : null,
   };
+  if (snippet) next.snippet = snippet;
+  else delete next.snippet;
+  return next;
 }
 
 function descendants(files: FileRecord[], rootId: string): string[] {
@@ -110,6 +120,7 @@ export function createStorageService(db: IDBPDatabase<WorkDb>, blobs: BlobStore)
     const blobKey = `files/${id}`;
     const contentHash = await sha256(input.bytes);
     await blobs.write(blobKey, input.bytes);
+    const snippet = input.snippet !== undefined ? cleanSnippet(input.snippet) : cleanSnippet(previous?.snippet);
     const record: FileRecord = {
       id,
       name,
@@ -125,6 +136,7 @@ export function createStorageService(db: IDBPDatabase<WorkDb>, blobs: BlobStore)
       size: input.bytes.byteLength,
       blobKey,
       contentHash,
+      ...(snippet ? { snippet } : {}),
     };
     await db.put("files", record);
     publishFilesChanged();
@@ -280,6 +292,7 @@ export function createStorageService(db: IDBPDatabase<WorkDb>, blobs: BlobStore)
       mime: loaded.record.mime,
       bytes: loaded.bytes,
       folderId: loaded.record.folderId,
+      ...(loaded.record.snippet ? { snippet: loaded.record.snippet } : {}),
     });
     const next = { ...copy, tags: loaded.record.tags, favorite: false, color: loaded.record.color };
     await db.put("files", next);
@@ -409,6 +422,7 @@ export function createStorageService(db: IDBPDatabase<WorkDb>, blobs: BlobStore)
         size: fileBytes.byteLength,
         blobKey: `files/${id}`,
         contentHash: await sha256(fileBytes),
+        ...(cleanSnippet(record.snippet) ? { snippet: cleanSnippet(record.snippet) } : {}),
       };
       next.push({ record: restored, bytes: fileBytes });
     }

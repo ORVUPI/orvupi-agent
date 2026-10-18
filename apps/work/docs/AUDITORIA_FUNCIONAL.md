@@ -1,4 +1,4 @@
-# Auditoría funcional 0.7.0
+# Auditoría funcional 0.8.0
 
 Comparación de ORVUPI Work con la ayuda oficial de Google. Cada fila es una función de menú, barra, menú contextual o panel. El aspecto y el atajo van en «para qué sirve». La columna «móvil» dice si esa función cabe en un teléfono.
 
@@ -8,7 +8,7 @@ Estados: `funciona`, `roto`, `falta`, `fuera de alcance` (hace falta red o una c
 
 Cobertura de la auditoría = `funciona` / (`funciona` + `roto` + `falta`). Lo que queda fuera de alcance no entra en el denominador.
 
-Recuento: 138 filas. `funciona` 125, `roto` 0, `falta` 0, `fuera de alcance` 13. Cobertura **100 %** (125 / 125).
+Recuento de esta tabla: 145 filas. `funciona` 132, `roto` 0, `falta` 0, `fuera de alcance` 13. Cobertura de lo que tiene botón **100 %** (132 / 132). La matriz más amplia, con lo que Google documenta y aquí no está, está en `ANALISIS_WORKSPACE.md`: 152 filas, cobertura **71,7 %** (109 / 152). No es paridad con Google.
 
 En 0.6.1 el teléfono no encoge la página de Docs: el texto queda a 16 px, los menús salen de un botón ⋮ y la rejilla de Hojas muestra al menos doce filas en 412×915. En 0.6.2 la cabecera de Drive cabe en menos de una quinta parte, «Nuevo» no tapa la tarjeta de la hoja y la fórmula es una sola línea. En 0.6.3 el modo de teléfono se activa hasta 840 px o con un puntero grueso, y Ayuda muestra la versión que cargó el dispositivo. En 0.7.0 cada control de Docs se pulsó con el ratón sobre texto seleccionado. La tabla de esa pasada está al final.
 
@@ -18,7 +18,7 @@ En 0.6.1 el teléfono no encoge la página de Docs: el texto queda a 16 px, los 
 | Drive | Nuevo | Documento, hoja, presentación, formulario, dibujo y nota | Abre el editor en otra pestaña. Menú «Nuevo». | funciona | encaja | work.spec, suite-050 |
 | Drive | Nuevo | Subir archivo | Elige un archivo local y lo guarda. Botón «Subir archivo». | funciona | encaja | — |
 | Drive | Nuevo | Subir carpeta | Lee un directorio con `webkitdirectory`. Botón «Subir carpeta». | funciona | encaja | — |
-| Drive | Barra | Buscar | Filtra por nombre. Campo de búsqueda. Atajo `/`. | funciona | encaja | — |
+| Drive | Barra | Buscar | Filtra por nombre, etiqueta y, en los documentos, por el texto guardado. Campo de búsqueda. Atajo `/`. | funciona | encaja | fase-080 |
 | Drive | Ver | Lista y cuadrícula | Cambia la presentación. Botones con estado pulsado. | funciona | encaja | — |
 | Drive | Ver | Ordenar por columnas | Nombre, modificado y tamaño. Cabeceras de la tabla. | funciona | encaja | suite-050 |
 | Drive | Ver | Ordenar por creado y tipo | Selector «Ordenar». | funciona | encaja | — |
@@ -37,8 +37,11 @@ En 0.6.1 el teléfono no encoge la página de Docs: el texto queda a 16 px, los 
 | Docs | Archivo | Configurar página | Cambia el papel (A4 o carta), la orientación y el margen. | funciona | encaja | docs-070 |
 | Docs | Archivo | Exportar ORVDOC, HTML, PDF y DOCX | Descarga el archivo real. Menú «Exportar». | funciona | encaja | work.spec |
 | Docs | Archivo | Cerrar | Cierra la pestaña del editor. | funciona | encaja | work.spec |
+| Docs | Archivo | Hacer una copia | Duplica el documento y abre la copia en otra pestaña. | funciona | encaja | fase-080 |
 | Docs | Editar | Deshacer y rehacer | Vuelven atrás o adelante. Ctrl+Z y Ctrl+Y. | funciona | encaja | docs-070 |
-| Docs | Editar | Buscar y reemplazar | Sustituye el texto encontrado. Ctrl+F. | funciona | encaja | docs-070 |
+| Docs | Editar | Buscar y reemplazar | Sustituye el texto encontrado. Ctrl+F. Anterior no da la vuelta. | funciona | encaja | docs-070, fase-080 |
+| Docs | Editar | Seleccionar todo, cortar, copiar y pegar | Usan la selección y el portapapeles del navegador. Si el navegador lo niega, se dice. | funciona | encaja | fase-080 |
+| Docs | Editar | Pegar sin formato | Inserta el texto plano, sin las marcas del HTML. | funciona | encaja | fase-080 |
 | Docs | Ver | Regla | Muestra u oculta la regla. | funciona | encaja | docs-070 |
 | Docs | Ver | Zoom | 50, 75, 100, 125 y 150 %. | funciona | encaja | docs-070 |
 | Docs | Ver | Modo edición y visualización | La visualización deja el texto sin editar. | funciona | encaja | docs-070 |
@@ -50,7 +53,11 @@ En 0.6.1 el teléfono no encoge la página de Docs: el texto queda a 16 px, los 
 | Docs | Insertar | Caracteres especiales | Inserta el símbolo elegido, por ejemplo €. | funciona | encaja | docs-070 |
 | Docs | Insertar | Fecha | Inserta la fecha de hoy como AAAA-MM-DD. | funciona | encaja | docs-070 |
 | Docs | Insertar | Línea horizontal | Inserta una línea de separación. | funciona | encaja | docs-070 |
+| Docs | Insertar | Índice | Inserta un índice que se rehace con los títulos y salta a ellos. | funciona | encaja | fase-080 |
+| Docs | Insertar | Nota al pie | Guarda el texto y lo lista bajo la hoja. | funciona | encaja | fase-080 |
+| Docs | Ver | Esquema | Cada título del esquema lleva el cursor a ese título. | funciona | encaja | fase-080 |
 | Docs | Formato | Negrita, cursiva, subrayado y tachado | Marcas sobre la selección. Ctrl+B/I/U y Alt+Mayús+5. | funciona | encaja | docs-070 |
+| Docs | Formato | Subíndice y superíndice | Marcas que se guardan en el documento. | funciona | encaja | fase-080 |
 | Docs | Formato | Color de texto y resaltado | Rejillas de color y color propio. | funciona | encaja | docs-070 |
 | Docs | Formato | Fuente y tamaño | Familias del sistema y OFL. Tamaño 1–400. El + y el − cambian un punto. | funciona | encaja | docs-070 |
 | Docs | Formato | Alineación | Izquierda, centro, derecha y justificar. Ctrl+Mayús+L/E/R/J. | funciona | encaja | docs-070 |
@@ -203,3 +210,32 @@ Cada fila se pulsó con el ratón, el teclado o el dedo. El resultado es el camb
 | Selección de texto | Docs, teléfono | `user-select` es `text`, el toque largo no se cancela y el dedo selecciona la palabra. La barra queda debajo. | probado | docs-070 |
 | Combinar celdas | Tabla de Docs, teléfono | El dedo marca dos celdas y la barra las une. El asa también marca el rango. | probado | docs-070 |
 | Combinar celdas | Hojas, teléfono | El dedo marca A1:B1, el asa marca otro rango y «Combinar celdas» deja una celda de dos columnas. | probado | docs-070 |
+
+## Pasada 0.8.0
+
+La fase 1 se ejecutó con el ratón, el teclado y el dedo. Cada archivo nuevo se abre en su propia pestaña. La copia de un documento también. Lo que no se puede hacer de verdad (compartir, traducir, diccionario, voz, extensiones) no tiene botón.
+
+Playwright, una pasada completa el 18 de octubre de 2026: 100 pruebas, 96 pasaron, 2 se saltaron y 2 fallaron. Las dos que fallaron se repitieron solas y pasaron. Vitest: 38 pasaron.
+
+| proyecto | resultado |
+| --- | --- |
+| Chromium, Firefox y WebKit en 1920×1080, 1366×768, 820×1180, 1180×820 y 390×844 | `fase-080` pasó. En el escritorio y el portátil el clic es de ratón. En tableta y teléfono el gesto es un toque, salvo Firefox, que no tiene pantalla táctil y usa clic. |
+| Chromium y WebKit en 360×740 | `fase-080` pasó. |
+| Firefox en 360×740 | La primera vez la consola registró un fallo del service worker al pedir `favicon-32.png`. El archivo responde y está en la precarga. La repetición pasó sin ese error. |
+| iPhone 14 (WebKit, viewport 390×664) | La rejilla de Hojas ocupa al menos el 65 % del alto. «Letra capital» no se aplicó en la primera pasada del menú; la repetición sí. |
+| Pixel 7 y el proyecto Chromium de 1360×900 | Pasaron, incluida la hoja en el teléfono. |
+
+En el documento, axe (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`) no marcó incumplimientos al terminar el recorrido. Lighthouse 12.8.2, Chrome headless, contra la vista previa de inicio en este equipo (formulario móvil): rendimiento **78**, accesibilidad **100**, contraste **100**. Primera pintura 3,5 s, LCP 4,2 s, bloqueo total 30 ms, salto de diseño 0. Esos tiempos son de esta máquina, no de un teléfono en la calle.
+
+| control | resultado visible | estado |
+| --- | --- | --- |
+| Buscar en Drive el texto guardado del documento | «claveunica080» muestra el archivo y un texto que no está lo oculta. | probado |
+| Hacer una copia | Otra pestaña, otra URL, el mismo texto. | probado |
+| Índice y esquema | El botón del índice y, en escritorio, el del esquema mueven el cursor al título. En tableta y teléfono el esquema está oculto: el salto se hace con el índice. | probado |
+| Subíndice y superíndice | `sub` y `sup` sobre «fase», guardados en el documento. | probado |
+| Nota al pie | El superíndice «1» y la lista con «nota de pie 080». | probado |
+| Buscar anterior | «Z» sustituye al primer «uno», no al segundo. | probado |
+| Seleccionar todo, copiar, pegar y pegar sin formato | El portapapeles queda en «fase». El pegado con formato deja `strong` y el pegado sin formato añade el texto plano. Si el navegador niega el portapapeles, se muestra el aviso. | probado |
+| Cortar | En Chromium desaparece el tramo cortado. En los otros, o se corta o se avisa. | probado |
+
+Queda fuera de esta fase lo que la matriz marca `parcial` o `pendiente`: Hojas, presentaciones, formularios, dibujos y notas, y en Docs el resto que no cabe en local (compartir, sugerencias, traducir, voz, importar DOCX). Cobertura de la matriz: **71,7 %** (109 / 152).

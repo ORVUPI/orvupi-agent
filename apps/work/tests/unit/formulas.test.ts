@@ -165,6 +165,8 @@ describe("archivos", () => {
     expect(visibleFiles(files, { mode: "folder", folderId: null, query: "", kind: "all", date: "any", now }).map((item) => item.id)).toEqual(["root", "box"]);
     expect(visibleFiles(files, { mode: "starred", folderId: null, query: "dentro", kind: "sheet", date: "week", now })).toHaveLength(1);
     expect(sortFiles(visibleFiles(files, { mode: "trash", folderId: null, query: "", kind: "all", date: "any", now }), "name", "asc")[0]?.name).toBe("Viejo");
+    const body = file({ id: "body", name: "Informe", kind: "doc", snippet: "claveunica080 en el cuerpo", updatedAt: "2026-10-16T00:00:00.000Z" });
+    expect(visibleFiles([...files, body], { mode: "recent", folderId: null, query: "claveunica080", kind: "all", date: "any", now }).map((item) => item.id)).toEqual(["body"]);
   });
 });
 

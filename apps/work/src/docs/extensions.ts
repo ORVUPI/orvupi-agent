@@ -1,4 +1,4 @@
-import { Extension, Node, getStyleProperty, mergeAttributes } from "@tiptap/core";
+import { Extension, Mark, Node, getStyleProperty, mergeAttributes } from "@tiptap/core";
 import { Code } from "@tiptap/extension-code";
 import { Image } from "@tiptap/extension-image";
 import { TaskItem } from "@tiptap/extension-list/task-item";
@@ -10,10 +10,11 @@ import { TableKit } from "@tiptap/extension-table/kit";
 import { TextAlign } from "@tiptap/extension-text-align";
 import { BackgroundColor, Color, FontFamily, FontSize, LineHeight, TextStyle } from "@tiptap/extension-text-style";
 import { Underline } from "@tiptap/extension-underline";
-import { Mark, type Node as ProseNode } from "@tiptap/pm/model";
+import { Mark as ProseMark, type Node as ProseNode } from "@tiptap/pm/model";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { StarterKit } from "@tiptap/starter-kit";
 import { safeHref, safeImageSrc, sanitizeForeignHtml } from "../security/sanitize";
+import { headingEntries, jumpToHeading } from "./jump";
 
 const HEX = /^#[0-9a-f]{6}$/i;
 
@@ -52,10 +53,136 @@ const PageBreak = Node.create({
   },
 });
 
+const SubscriptMark = Mark.create({
+  name: "subscript",
+  excludes: "superscript",
+  parseHTML() {
+    return [{ tag: "sub" }, { style: "vertical-align=sub" }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ["sub", mergeAttributes(HTMLAttributes), 0];
+  },
+  addCommands() {
+    return {
+      toggleSubscript: () => ({ commands }) => commands.toggleMark(this.name),
+    };
+  },
+});
+
+const SuperscriptMark = Mark.create({
+  name: "superscript",
+  excludes: "subscript",
+  parseHTML() {
+    return [
+      {
+        tag: "sup",
+        getAttrs: (element: HTMLElement) => (element.classList.contains("ow-fn") ? false : null),
+      },
+      { style: "vertical-align=super" },
+    ];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ["sup", mergeAttributes(HTMLAttributes), 0];
+  },
+  addCommands() {
+    return {
+      toggleSuperscript: () => ({ commands }) => commands.toggleMark(this.name),
+    };
+  },
+});
+
+const Contents = Node.create({
+  name: "contents",
+  group: "block",
+  atom: true,
+  selectable: true,
+  parseHTML: () => [{ tag: "nav.ow-contents" }],
+  renderHTML({ HTMLAttributes }) {
+    return ["nav", mergeAttributes(HTMLAttributes, { class: "ow-contents" })];
+  },
+  addNodeView() {
+    return ({ editor }) => {
+      const dom = document.createElement("nav");
+      dom.className = "ow-contents";
+      dom.setAttribute("contenteditable", "false");
+      const paint = () => {
+        const title = document.documentElement.lang === "en" ? "Contents" : "Índice";
+        dom.replaceChildren();
+        const strong = document.createElement("strong");
+        strong.textContent = title;
+        dom.append(strong);
+        headingEntries(editor).forEach((entry, index) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = entry.text;
+          button.addEventListener("mousedown", (event) => event.preventDefault());
+          button.addEventListener("click", () => jumpToHeading(editor, index));
+          dom.append(button);
+        });
+      };
+      paint();
+      editor.on("update", paint);
+      return {
+        dom,
+        update() {
+          paint();
+          return true;
+        },
+        destroy() {
+          editor.off("update", paint);
+        },
+      };
+    };
+  },
+  addCommands() {
+    return {
+      insertContents: () => ({ commands }) => commands.insertContent({ type: this.name }),
+    };
+  },
+});
+
+const Footnote = Node.create({
+  name: "footnote",
+  group: "inline",
+  inline: true,
+  atom: true,
+  selectable: true,
+  addAttributes() {
+    return {
+      n: {
+        default: 1,
+        parseHTML: (element: HTMLElement) => {
+          const value = Number(element.getAttribute("data-n"));
+          return Number.isFinite(value) && value > 0 ? Math.min(999, Math.round(value)) : 1;
+        },
+        renderHTML: (attributes: { n?: number }) => ({ "data-n": String(attributes.n ?? 1) }),
+      },
+      text: {
+        default: "",
+        parseHTML: (element: HTMLElement) => (element.getAttribute("data-text") ?? "").replace(/\s+/g, " ").trim().slice(0, 400),
+        renderHTML: (attributes: { text?: string }) => ({ "data-text": String(attributes.text ?? "").slice(0, 400) }),
+      },
+    };
+  },
+  parseHTML: () => [{ tag: "sup.ow-fn" }],
+  renderHTML({ HTMLAttributes, node }) {
+    return ["sup", mergeAttributes(HTMLAttributes, { class: "ow-fn" }), String(node.attrs.n ?? "")];
+  },
+});
+
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     pageBreak: {
       insertPageBreak: () => ReturnType;
+    };
+    subscript: {
+      toggleSubscript: () => ReturnType;
+    };
+    superscript: {
+      toggleSuperscript: () => ReturnType;
+    };
+    contents: {
+      insertContents: () => ReturnType;
     };
   }
 }
@@ -241,16 +368,16 @@ const SolidUnderline = Underline.extend({
   },
 });
 
-function sameMarks(left: readonly Mark[], right: readonly Mark[]): boolean {
+function sameMarks(left: readonly ProseMark[], right: readonly ProseMark[]): boolean {
   if (left.length !== right.length) return false;
-  const sort = (marks: readonly Mark[]) => [...marks].sort((a, b) => a.type.name.localeCompare(b.type.name));
+  const sort = (marks: readonly ProseMark[]) => [...marks].sort((a, b) => a.type.name.localeCompare(b.type.name));
   const a = sort(left);
   const b = sort(right);
   return a.every((mark, index) => mark.eq(b[index]!));
 }
 
-function cleanedMarks(marks: readonly Mark[]): readonly Mark[] {
-  const next: Mark[] = [];
+function cleanedMarks(marks: readonly ProseMark[]): readonly ProseMark[] {
+  const next: ProseMark[] = [];
   for (const mark of marks) {
     if (mark.type.name !== "textStyle") {
       next.push(mark);
@@ -264,7 +391,7 @@ function cleanedMarks(marks: readonly Mark[]): readonly Mark[] {
     if (Object.values(attrs).every((value) => value == null || value === "")) continue;
     next.push(mark.type.create(attrs));
   }
-  return Mark.setFrom(next);
+  return ProseMark.setFrom(next);
 }
 
 function normalizeBlock(node: ProseNode): ProseNode[] | null {
@@ -339,6 +466,8 @@ export function createExtensions(placeholder: string) {
       code: false,
     }),
     SolidUnderline,
+    SubscriptMark,
+    SuperscriptMark,
     SafeCode,
     TextStyle,
     SafeColor,
@@ -353,6 +482,8 @@ export function createExtensions(placeholder: string) {
     TaskList,
     TaskItem.configure({ nested: true }),
     PageBreak,
+    Contents,
+    Footnote,
     Link.configure({
       openOnClick: false,
       autolink: false,

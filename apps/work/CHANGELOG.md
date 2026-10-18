@@ -1,5 +1,16 @@
 # Registro de cambios
 
+## 0.8.0 — 2026-10-17
+
+Alfa de desarrollo. No es una versión de producción. Sigue en la vista previa.
+
+- Fase 1 de Docs y Drive. La matriz pública está en `ANALISIS_WORKSPACE.md`.
+- En Docs, subíndice y superíndice se guardan en el documento. Editar tiene seleccionar todo, cortar, copiar, pegar y pegar sin formato, con el portapapeles del navegador. Si el navegador lo niega, se dice.
+- El esquema lleva a cada título. El índice insertado se rehace con los títulos y también salta. La nota al pie guarda el texto y lo lista bajo la hoja.
+- Buscar tiene anterior. Archivo → Hacer una copia abre la copia en otra pestaña.
+- Drive encuentra una palabra del texto del documento, no solo el nombre. Hojas, diapositivas y formularios siguen buscándose por el nombre.
+- Un archivo de 0.1 a 0.7.0 sigue abriendo: la versión del archivo sigue en 1.
+
 ## 0.7.0 — 2026-10-17
 
 Alfa de desarrollo. No es una versión de producción.

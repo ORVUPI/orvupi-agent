@@ -7,12 +7,13 @@ import { downloadBytes } from "../security/bytes";
 import { MAX_IMAGE_BYTES } from "../security/limits";
 import { createId, fileNameWithExtension } from "../security/names";
 import { safeHref } from "../security/sanitize";
+import { editorPath, openEditorWindow } from "../routing/paths";
 import type { FileRecord, StorageService } from "../storage/types";
 import { Button, ErrorState, Input } from "../ui/kit";
 import { DocsSurface } from "./DocsSurface";
 import { Modal } from "../ui/overlay";
 import { createExtensions, pastedHtml } from "./extensions";
-import { findInSlices, type TextSlice } from "./find";
+import { findBefore, findInSlices, type TextSlice } from "./find";
 import { exportHtml } from "./html";
 import { countWords, docToText, firstLine, UNTITLED_NAMES, type DocComment, type DocVersion, type JsonNode, type PageMargin, type PageOrientation, type PageSize } from "./model";
 import { serializeOrvdoc, withContent, type OrvdocFile } from "./orvdoc";
@@ -100,6 +101,7 @@ export function DocsEditor({
   const [rev, setRev] = useState(0);
   const [starred, setStarred] = useState(record.favorite);
   const rangeRef = useRef<{ from: number; to: number } | null>(null);
+  const findAnchor = useRef<{ from: number; to: number } | null>(null);
 
   const editorRef = useRef<ReturnType<typeof useEditor>>(null);
   const editor = useEditor({
@@ -113,6 +115,30 @@ export function DocsEditor({
     onUpdate: ({ editor: current }) => queue.note(snapshotOf(current.getJSON() as JsonNode)),
   });
   editorRef.current = editor;
+
+  useEffect(() => {
+    if (!editor) return;
+    const save = () => {
+      const selection = editor.state.selection;
+      const previous = findAnchor.current;
+      if (!selection.empty) {
+        findAnchor.current = { from: selection.from, to: selection.to };
+        return;
+      }
+      if (previous && (selection.from === previous.from || selection.from === previous.to)) return;
+      let focused = false;
+      try {
+        focused = editor.view.hasFocus();
+      } catch {
+        return;
+      }
+      if (focused) findAnchor.current = { from: selection.from, to: selection.to };
+    };
+    editor.on("selectionUpdate", save);
+    return () => {
+      editor.off("selectionUpdate", save);
+    };
+  }, [editor]);
 
   function keepRange() {
     const current = editorRef.current;
@@ -164,6 +190,7 @@ export function DocsEditor({
       kind: "doc",
       mime: "application/vnd.orvupi.doc+json",
       bytes: serializeOrvdoc(next),
+      snippet: docToText(content).slice(0, 4000),
     });
     fileRef.current = { ...next, title: saved.name };
     await onFilesChanged();
@@ -284,13 +311,61 @@ export function DocsEditor({
   closeRef.current = closeDocument;
   exportRef.current = exportAs;
 
+  async function makeCopy() {
+    const ok = await queue.flush();
+    if (!ok) {
+      setSaveError(true);
+      return;
+    }
+    const copy = await storage.duplicateFile(record.id);
+    const opened = openEditorWindow("doc", copy.id);
+    if (!opened) window.location.assign(editorPath("doc", copy.id));
+  }
+
+  function pinFindSelection(event: { target: EventTarget | null }) {
+    const target = event.target;
+    if (!(target instanceof HTMLElement) || !target.closest("button")) return;
+    const current = editorRef.current;
+    if (!current || current.state.selection.empty) return;
+    findAnchor.current = { from: current.state.selection.from, to: current.state.selection.to };
+  }
+
+  function findEdge(edge: "from" | "to"): number {
+    const live = editor?.state.selection;
+    let focused = false;
+    try {
+      focused = Boolean(editor?.view.hasFocus());
+    } catch {
+      focused = false;
+    }
+    const pinned = findAnchor.current;
+    if (!focused && pinned) return pinned[edge];
+    if (live && !live.empty) return live[edge];
+    return pinned ? pinned[edge] : live ? live[edge] : 0;
+  }
+
+  function findPrevious() {
+    if (!editor) return;
+    if (!findQuery.trim()) {
+      setFindNote(t("findEmpty"));
+      return;
+    }
+    const found = findBefore(slicesOf(editor), findQuery, findEdge("from"));
+    if (!found) {
+      setFindNote(t("findNone"));
+      return;
+    }
+    editor.chain().focus().setTextSelection(found).run();
+    setFindNote("");
+  }
+
   function findNext() {
     if (!editor) return;
     if (!findQuery.trim()) {
       setFindNote(t("findEmpty"));
       return;
     }
-    const found = findInSlices(slicesOf(editor), findQuery, editor.state.selection.to);
+    const found = findInSlices(slicesOf(editor), findQuery, findEdge("to"));
     if (!found) {
       setFindNote(t("findNone"));
       return;
@@ -300,6 +375,7 @@ export function DocsEditor({
   }
 
   function replaceOne() {
+    findAnchor.current = null;
     if (!editor) return;
     const found = findInSlices(slicesOf(editor), findQuery, editor.state.selection.from);
     if (!found) {
@@ -310,6 +386,7 @@ export function DocsEditor({
   }
 
   function replaceAll() {
+    findAnchor.current = null;
     if (!editor || !findQuery) return;
     let guard = 0;
     let found = findInSlices(slicesOf(editor), findQuery, 0);
@@ -402,6 +479,7 @@ export function DocsEditor({
         onVersions={() => setVersionsOpen(true)}
         onShortcuts={() => setShortcutsOpen(true)}
         onPrint={() => window.print()}
+        onCopy={() => void makeCopy()}
         header={header}
         footer={footer}
         onHeader={(value) => {
@@ -431,6 +509,11 @@ export function DocsEditor({
         find={findOpen ? (
           <form
             className="ow-find ow-docs-find"
+            onPointerDown={pinFindSelection}
+            onMouseDown={(event) => {
+              const target = event.target;
+              if (target instanceof HTMLElement && target.closest("button")) event.preventDefault();
+            }}
             onSubmit={(event) => {
               event.preventDefault();
               findNext();
@@ -439,9 +522,10 @@ export function DocsEditor({
             <Input label={t("find")} value={findQuery} onChange={(event) => setFindQuery(event.target.value)} />
             <Input label={t("replace")} value={replaceValue} onChange={(event) => setReplaceValue(event.target.value)} />
             <Button type="submit">{t("findNext")}</Button>
+            <Button onClick={findPrevious}>{t("findPrev")}</Button>
             <Button onClick={replaceOne}>{t("replaceOne")}</Button>
             <Button onClick={replaceAll}>{t("replaceAll")}</Button>
-            <Button onClick={() => setFindOpen(false)}>{t("closeFind")}</Button>
+            <Button onClick={() => { findAnchor.current = null; setFindOpen(false); }}>{t("closeFind")}</Button>
             {findNote ? <p role="status">{findNote}</p> : null}
           </form>
         ) : null}

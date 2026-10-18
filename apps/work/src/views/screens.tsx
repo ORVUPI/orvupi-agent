@@ -423,8 +423,13 @@ export function SettingsScreen() {
 
 export function SearchResults() {
   const workspace = useWorkspace();
-  const needle = workspace.query.trim().toLowerCase();
-  const matches = workspace.files.filter((file) => file.deletedAt === null && file.name.toLowerCase().includes(needle));
+  const matches = visibleFiles(workspace.files, {
+    mode: "recent",
+    folderId: null,
+    query: workspace.query,
+    kind: workspace.kindFilter,
+    date: workspace.dateFilter,
+  });
   return (
     <div className="ow-page">
       <h1>{workspace.t("resultsTitle")}</h1>

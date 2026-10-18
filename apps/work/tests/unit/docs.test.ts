@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { filterCommands, findInSlices } from "../../src/docs/find";
+import { filterCommands, findBefore, findInSlices } from "../../src/docs/find";
 import { exportHtml } from "../../src/docs/html";
 import { countWords, docToText, documentNode, heading, paragraph } from "../../src/docs/model";
 import { createOrvdoc, parseOrvdoc, serializeOrvdoc } from "../../src/docs/orvdoc";
@@ -34,6 +34,24 @@ describe("documento", () => {
   test("buscar dentro de un nodo de texto", () => {
     expect(findInSlices([{ text: "alfa beta", pos: 1 }], "beta", 1)).toEqual({ from: 6, to: 10 });
     expect(findInSlices([{ text: "alfa", pos: 1 }], "", 1)).toBeNull();
+    expect(findBefore([{ text: "alfa beta alfa", pos: 1 }], "alfa", 11)).toEqual({ from: 1, to: 5 });
+    expect(findBefore([{ text: "alfa beta alfa", pos: 1 }], "alfa", 1)).toBeNull();
+  });
+
+  test("el subíndice, la nota y el índice salen en el html", () => {
+    const content = {
+      type: "doc",
+      content: [
+        { type: "heading", attrs: { level: 1 }, content: [{ type: "text", text: "Capítulo" }] },
+        { type: "contents" },
+        { type: "paragraph", content: [{ type: "text", text: "H2O", marks: [{ type: "subscript" }] }, { type: "footnote", attrs: { n: 1, text: "nota" } }] },
+      ],
+    };
+    const html = exportHtml("A", content, "es");
+    expect(html).toContain("<sub>H2O</sub>");
+    expect(html).toContain("ow-contents");
+    expect(html).toContain("Capítulo");
+    expect(docToText(content)).toContain("nota");
   });
 
   test("la paleta filtra por etiqueta", () => {

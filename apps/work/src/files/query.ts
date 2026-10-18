@@ -65,7 +65,8 @@ export function visibleFiles(
     if (options.kind !== "all" && file.kind !== options.kind) return false;
     if (!withinDate(file.updatedAt, options.date, now)) return false;
     if (!needle) return true;
-    return file.name.toLowerCase().includes(needle) || file.tags.some((tag) => tag.toLowerCase().includes(needle));
+    const snippet = file.snippet?.toLowerCase() ?? "";
+    return file.name.toLowerCase().includes(needle) || file.tags.some((tag) => tag.toLowerCase().includes(needle)) || snippet.includes(needle);
   });
 }
 

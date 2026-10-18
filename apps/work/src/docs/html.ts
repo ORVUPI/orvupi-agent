@@ -1,5 +1,5 @@
 import { escapeHtml, safeHref, safeImageSrc } from "../security/sanitize";
-import { blocksFromDoc, type Inline, type JsonNode } from "./model";
+import { blocksFromDoc, headingLines, type Inline, type JsonNode } from "./model";
 
 const SIZE_CLASS: Record<string, string> = {
   "14px": "14px",
@@ -20,6 +20,8 @@ function renderInline(inline: Inline): string {
   if (inline.italic) html = `<em>${html}</em>`;
   if (inline.underline) html = `<u>${html}</u>`;
   if (inline.strike) html = `<s>${html}</s>`;
+  if (inline.subscript) html = `<sub>${html}</sub>`;
+  if (inline.superscript) html = `<sup>${html}</sup>`;
   const styles: string[] = [];
   if (inline.color) styles.push(`color: ${inline.color}`);
   if (inline.fontSize && (SIZE_CLASS[inline.fontSize] || /^\d{1,3}pt$/.test(inline.fontSize))) styles.push(`font-size: ${inline.fontSize}`);
@@ -36,6 +38,7 @@ function renderInlines(inlines: Inline[]): string {
 }
 
 export function docToHtmlBody(doc: JsonNode): string {
+  const headings = headingLines(doc);
   return blocksFromDoc(doc)
     .map((block) => {
       if (block.type === "h1" || block.type === "h2" || block.type === "h3") {
@@ -58,6 +61,10 @@ export function docToHtmlBody(doc: JsonNode): string {
         return `<ul>${items}</ul>`;
       }
       if (block.type === "pageBreak") return `<hr />`;
+      if (block.type === "contents") {
+        const items = headings.map((line) => `<li>${escapeHtml(line)}</li>`).join("");
+        return `<nav class="ow-contents"><ul>${items}</ul></nav>`;
+      }
       if (block.type !== "table") return "";
       const rows = block.rows
         .map((row, index) => {

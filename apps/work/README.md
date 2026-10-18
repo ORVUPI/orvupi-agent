@@ -2,7 +2,7 @@
 
 Suite de productividad en el navegador. Gratis, instalable y local-first. Los documentos se guardan en el dispositivo. Esta versión no tiene servidor, no llama a APIs de pago y no se vincula a ningún token.
 
-Esta entrega es la alfa 0.7.0: la misma suite local, con selección en el teléfono y los controles de Docs comprobados con clics reales. La auditoría está en `docs/AUDITORIA_FUNCIONAL.md`. El visor PDF y el modelo de IA local siguen previstos y todavía no editan. La matriz de funciones está en `docs/PARIDAD_DRIVE.md`. Las medidas, en `docs/ANALISIS_DRIVE_UI.md`.
+Esta entrega es la alfa 0.8.0: la fase 1 de Docs y Drive, todavía en la vista previa. La matriz de Workspace está en `ANALISIS_WORKSPACE.md`. La auditoría de lo que se pulsó está en `docs/AUDITORIA_FUNCIONAL.md`. El visor PDF y el modelo de IA local siguen previstos y todavía no editan.
 
 ## Arranque
 
@@ -33,6 +33,14 @@ npm run test:e2e
 ```
 
 `npm test` ejecuta Vitest (unidad e integración). `npm run test:e2e` construye la app y recorre con Playwright el ciclo de la sección 30 del manual, más el contraste con axe.
+
+## Qué hay en 0.8.0
+
+Fase 1, solo en la vista previa. No es una publicación de producción.
+
+- Docs: subíndice y superíndice, seleccionar todo, cortar, copiar, pegar y pegar sin formato, índice que salta a los títulos, esquema clicable, nota al pie, buscar anterior y hacer una copia en otra pestaña.
+- Drive: la búsqueda también mira el texto guardado del documento.
+- Un archivo de 0.1 a 0.7.0 sigue abriendo: la versión del archivo sigue en 1.
 
 ## Qué hay en 0.7.0
 

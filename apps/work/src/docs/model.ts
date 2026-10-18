@@ -23,6 +23,8 @@ export type TextInline = {
   fontFamily?: string;
   highlight?: string;
   href?: string;
+  subscript?: boolean;
+  superscript?: boolean;
 };
 
 export type ImageInline = { type: "image"; src: string; alt: string };
@@ -35,7 +37,8 @@ export type Block =
   | { type: "checklist"; items: Array<{ checked: boolean; inlines: Inline[] }> }
   | { type: "table"; rows: string[][] }
   | { type: "image"; src: string; alt: string }
-  | { type: "pageBreak" };
+  | { type: "pageBreak" }
+  | { type: "contents" };
 
 export type DocComment = { id: string; quote: string; body: string; createdAt: string };
 export type DocVersion = { id: string; at: string; title: string; content: JsonNode };
@@ -149,7 +152,14 @@ function inlinesFrom(nodes: JsonNode[] | undefined): Inline[] {
         fontFamily,
         highlight,
         href,
+        subscript: marks.some((mark) => mark.type === "subscript") || undefined,
+        superscript: marks.some((mark) => mark.type === "superscript") || undefined,
       });
+    } else if (node.type === "footnote") {
+      const n = Number(node.attrs?.n);
+      const note = typeof node.attrs?.text === "string" ? node.attrs.text : "";
+      const label = Number.isFinite(n) && n > 0 ? `[${n}]` : "";
+      result.push({ type: "text", text: `${label} ${note}`.trim(), superscript: true });
     } else if (node.type === "hardBreak") {
       result.push({ type: "text", text: "\n" });
     } else if (node.type === "image") {
@@ -203,12 +213,28 @@ export function blocksFromDoc(doc: JsonNode): Block[] {
       blocks.push({ type: "image", src: stringAttr(node, "src"), alt: stringAttr(node, "alt") });
     } else if (node.type === "horizontalRule") {
       blocks.push({ type: "paragraph", inlines: [{ type: "text", text: "—" }] });
+    } else if (node.type === "contents") {
+      blocks.push({ type: "contents" });
     }
   }
   return blocks;
 }
 
+export function headingLines(doc: JsonNode): string[] {
+  const lines: string[] = [];
+  const walk = (node: JsonNode) => {
+    if (node.type === "heading") {
+      const text = (node.content ?? []).map((child) => child.text ?? "").join("").trim();
+      if (text) lines.push(text);
+    }
+    for (const child of node.content ?? []) walk(child);
+  };
+  walk(doc);
+  return lines;
+}
+
 export function docToText(doc: JsonNode): string {
+  const headings = headingLines(doc);
   return blocksFromDoc(doc)
     .map((block) => {
       if (block.type === "image") return block.alt;
@@ -225,6 +251,7 @@ export function docToText(doc: JsonNode): string {
         return block.items.map((item) => `${item.checked ? "[x]" : "[ ]"} ${inlineText(item.inlines)}`).join("\n");
       }
       if (block.type === "pageBreak") return "—";
+      if (block.type === "contents") return headings.join("\n");
       if (block.type === "paragraph" || block.type === "h1" || block.type === "h2" || block.type === "h3" || block.type === "quote") {
         return inlineText(block.inlines);
       }
