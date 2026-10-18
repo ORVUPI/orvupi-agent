@@ -39,13 +39,25 @@ export function createOrvdoc(input: { id: string; title: string; content?: JsonN
 
 function commentsOf(value: unknown): DocComment[] {
   if (!Array.isArray(value)) return [];
-  return value.slice(0, 40).flatMap((entry) => {
+  return value.slice(0, 200).flatMap((entry) => {
     if (!isRecord(entry) || typeof entry.id !== "string" || typeof entry.body !== "string") return [];
+    const replies = Array.isArray(entry.replies) ? entry.replies.slice(0, 50).flatMap((reply) => {
+      if (!isRecord(reply) || typeof reply.id !== "string" || typeof reply.body !== "string") return [];
+      return [{
+        id: reply.id.slice(0, 80),
+        body: reply.body.slice(0, 2000),
+        createdAt: typeof reply.createdAt === "string" ? reply.createdAt : new Date().toISOString(),
+        ...(typeof reply.author === "string" && reply.author ? { author: reply.author.slice(0, 80) } : {}),
+      }];
+    }) : [];
     return [{
       id: entry.id.slice(0, 80),
       quote: typeof entry.quote === "string" ? entry.quote.slice(0, 180) : "",
-      body: entry.body.slice(0, 500),
+      body: entry.body.slice(0, 2000),
       createdAt: typeof entry.createdAt === "string" ? entry.createdAt : new Date().toISOString(),
+      ...(typeof entry.author === "string" && entry.author ? { author: entry.author.slice(0, 80) } : {}),
+      ...(entry.resolved === true ? { resolved: true } : {}),
+      ...(replies.length > 0 ? { replies } : {}),
     }];
   });
 }

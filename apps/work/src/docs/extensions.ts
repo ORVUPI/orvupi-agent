@@ -18,6 +18,7 @@ import { headingEntries, jumpToHeading } from "./jump";
 import { DocChart, DocDrawing, Equation } from "./objects";
 import { ImagePaste } from "./image-paste";
 import { Pagination } from "./pagination";
+import { CommentMark, DocShape, NoteNumbering, Section, wrapAttributes } from "./layout-nodes";
 
 const HEX = /^#[0-9a-f]{6}$/i;
 
@@ -44,6 +45,7 @@ const LocalImage = Image.extend({
           return align === "left" ? {} : { "data-align": align };
         },
       },
+      ...wrapAttributes(),
     };
   },
 }).configure({ allowBase64: true });
@@ -227,16 +229,32 @@ const Footnote = Node.create({
       },
       text: {
         default: "",
-        parseHTML: (element: HTMLElement) => (element.getAttribute("data-text") ?? "").replace(/\s+/g, " ").trim().slice(0, 400),
-        renderHTML: (attributes: { text?: string }) => ({ "data-text": String(attributes.text ?? "").slice(0, 400) }),
+        parseHTML: (element: HTMLElement) => (element.getAttribute("data-text") ?? "").replace(/\s+/g, " ").trim().slice(0, 2000),
+        renderHTML: (attributes: { text?: string }) => ({ "data-text": String(attributes.text ?? "").slice(0, 2000) }),
+      },
+      kind: {
+        default: "foot",
+        parseHTML: (element: HTMLElement) => (element.getAttribute("data-kind") === "end" ? "end" : "foot"),
+        renderHTML: (attributes: { kind?: string }) => (attributes.kind === "end" ? { "data-kind": "end" } : {}),
       },
     };
   },
   parseHTML: () => [{ tag: "sup.ow-fn" }],
   renderHTML({ HTMLAttributes, node }) {
-    return ["sup", mergeAttributes(HTMLAttributes, { class: "ow-fn" }), String(node.attrs.n ?? "")];
+    const n = Number(node.attrs.n ?? 1);
+    const label = node.attrs.kind === "end" ? toRoman(n) : String(n);
+    return ["sup", mergeAttributes(HTMLAttributes, { class: node.attrs.kind === "end" ? "ow-fn is-end" : "ow-fn", title: String(node.attrs.text ?? "").slice(0, 200) }), label];
   },
 });
+
+/** Las notas finales se numeran i, ii, iii como en Word. */
+export function toRoman(value: number): string {
+  let n = Math.max(1, Math.min(3999, Math.round(value)));
+  const table: Array<[number, string]> = [[1000, "m"], [900, "cm"], [500, "d"], [400, "cd"], [100, "c"], [90, "xc"], [50, "l"], [40, "xl"], [10, "x"], [9, "ix"], [5, "v"], [4, "iv"], [1, "i"]];
+  let out = "";
+  for (const [size, letter] of table) while (n >= size) { out += letter; n -= size; }
+  return out;
+}
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -591,6 +609,10 @@ export function createExtensions(placeholder: string) {
     PageBreak,
     Contents,
     Footnote,
+    NoteNumbering,
+    DocShape,
+    Section,
+    CommentMark,
     Equation,
     DocChart,
     DocDrawing,

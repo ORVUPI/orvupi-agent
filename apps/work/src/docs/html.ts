@@ -1,5 +1,5 @@
 import { escapeHtml, safeHref, safeImageSrc } from "../security/sanitize";
-import { blocksFromDoc, headingLines, type Inline, type JsonNode } from "./model";
+import { blocksFromDoc, headingLines, notesFromDoc, type Inline, type JsonNode } from "./model";
 
 const SIZE_CLASS: Record<string, string> = {
   "14px": "14px",
@@ -61,6 +61,8 @@ export function docToHtmlBody(doc: JsonNode): string {
         return `<ul>${items}</ul>`;
       }
       if (block.type === "pageBreak") return `<hr />`;
+      if (block.type === "section") return `<hr data-section="${block.landscape ? "landscape" : "portrait"}" />`;
+      if (block.type === "shape") return `<div class="ow-shape" style="border: 1px solid; padding: 6px 10px; max-width: ${Math.round(block.width)}px">${escapeHtml(block.text).replace(/\n/g, "<br />")}</div>`;
       if (block.type === "contents") {
         const items = headings.map((line) => `<li>${escapeHtml(line)}</li>`).join("");
         return `<nav class="ow-contents"><ul>${items}</ul></nav>`;
@@ -74,7 +76,15 @@ export function docToHtmlBody(doc: JsonNode): string {
         .join("");
       return `<table>${rows}</table>`;
     })
-    .join("\n");
+    .join("\n") + notesHtml(doc);
+}
+
+function notesHtml(doc: JsonNode): string {
+  const notes = notesFromDoc(doc);
+  let html = "";
+  if (notes.foot.length > 0) html += `\n<hr /><ol class="ow-footnotes">${notes.foot.map((text) => `<li>${escapeHtml(text)}</li>`).join("")}</ol>`;
+  if (notes.end.length > 0) html += `\n<ol class="ow-endnotes" type="i">${notes.end.map((text) => `<li>${escapeHtml(text)}</li>`).join("")}</ol>`;
+  return html;
 }
 
 export function exportHtml(title: string, doc: JsonNode, lang: string): string {

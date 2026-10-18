@@ -11,6 +11,9 @@ import { editorPath, openEditorWindow } from "../routing/paths";
 import type { FileRecord, StorageService } from "../storage/types";
 import { Button, ErrorState, Input } from "../ui/kit";
 import { DocsSurface } from "./DocsSurface";
+import { CommentsRail } from "./CommentsRail";
+import { LayoutTools } from "./LayoutTools";
+import { usePhone } from "../ui/phone";
 import { Modal } from "../ui/overlay";
 import { createExtensions, pastedHtml } from "./extensions";
 import { imageAttrs, prepareImage } from "./image-paste";
@@ -57,6 +60,7 @@ export function DocsEditor({
   onClose: () => void;
 }) {
   const t = (key: MessageKey, vars?: Record<string, string | number>) => translate(locale, key, vars);
+  const phone = usePhone();
   const [name, setName] = useState(record.name || initial.title);
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const [findOpen, setFindOpen] = useState(false);
@@ -280,17 +284,17 @@ export function DocsEditor({
       return;
     }
     if (kind === "orvdoc") {
-      downloadBytes(serializeOrvdoc({ ...current, title: nameRef.current, content, header: headerRef.current, footer: footerRef.current }), fileNameWithExtension(nameRef.current, "orvdoc"), "application/json");
+      downloadBytes(serializeOrvdoc({ ...current, title: nameRef.current, content, header: headerRef.current, footer: footerRef.current, comments: commentsRef.current }), fileNameWithExtension(nameRef.current, "orvdoc"), "application/json");
       return;
     }
     if (kind === "docx") {
       const { exportDocx } = await import("./docx");
-      const docx = await exportDocx(nameRef.current, content, headerRef.current, footerRef.current, layoutRef.current.pageNumber, layoutRef.current);
+      const docx = await exportDocx(nameRef.current, content, headerRef.current, footerRef.current, layoutRef.current.pageNumber, { ...layoutRef.current, comments: commentsRef.current });
       downloadBytes(docx, fileNameWithExtension(nameRef.current, "docx"), "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
       return;
     }
     const { exportPdf } = await import("./pdf");
-    const pdf = await exportPdf(nameRef.current, content, headerRef.current, footerRef.current, layoutRef.current.pageNumber);
+    const pdf = await exportPdf(nameRef.current, content, headerRef.current, footerRef.current, layoutRef.current.pageNumber, layoutRef.current);
     downloadBytes(pdf, fileNameWithExtension(nameRef.current, "pdf"), "application/pdf");
   }
 
@@ -502,6 +506,20 @@ export function DocsEditor({
           setLayout(next);
           if (editor) queue.note(snapshotOf(editor.getJSON() as JsonNode));
         }}
+        rail={rev >= 0 ? (
+          <CommentsRail
+            editor={editor}
+            comments={commentsRef.current}
+            t={t}
+            locale={locale}
+            narrow={phone}
+            onChange={(next) => {
+              commentsRef.current = next;
+              if (editor) queue.note(snapshotOf(editor.getJSON() as JsonNode));
+              setRev((value) => value + 1);
+            }}
+          />
+        ) : null}
         words={`${counts.words === 1 ? t("wordOne") : t("words", { count: counts.words })} · ${t("characters", { count: counts.characters })}`}
         find={findOpen ? (
           <form
@@ -527,25 +545,7 @@ export function DocsEditor({
           </form>
         ) : null}
       />
-      {rev >= 0 && commentsRef.current.length > 0 ? (
-        <ul className="ow-list">
-          {commentsRef.current.map((comment) => (
-            <li key={comment.id}>
-              <strong>{comment.quote || t("comment")}</strong>
-              <p>{comment.body}</p>
-              <Button
-                onClick={() => {
-                  commentsRef.current = commentsRef.current.filter((item) => item.id !== comment.id);
-                  if (editor) queue.note(snapshotOf(editor.getJSON() as JsonNode));
-                  setRev((value) => value + 1);
-                }}
-              >
-                {t("remove")}
-              </Button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      <LayoutTools editor={editor} t={t} />
       {saveError ? (
         <ErrorState
           title={t("saveErrorTitle")}
@@ -596,7 +596,10 @@ export function DocsEditor({
                 if (!editor || !commentBody.trim()) return;
                 const range = rangeRef.current ?? { from: editor.state.selection.from, to: editor.state.selection.to };
                 const quote = editor.state.doc.textBetween(range.from, range.to, " ").slice(0, 180);
-                commentsRef.current = [...commentsRef.current, { id: createId(), quote, body: commentBody.trim().slice(0, 500), createdAt: new Date().toISOString() }];
+                const id = createId();
+                commentsRef.current = [...commentsRef.current, { id, quote, body: commentBody.trim().slice(0, 2000), createdAt: new Date().toISOString() }];
+                const markType = editor.schema.marks.comment;
+                if (markType && range.to > range.from) editor.view.dispatch(editor.state.tr.addMark(range.from, range.to, markType.create({ id })));
                 queue.note(snapshotOf(editor.getJSON() as JsonNode));
                 setCommentBody("");
                 setCommentOpen(false);

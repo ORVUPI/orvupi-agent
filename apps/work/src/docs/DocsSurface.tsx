@@ -9,9 +9,10 @@ import type { MessageKey } from "../i18n";
 import { MenuBar } from "../ui/menus";
 import { usePhone } from "../ui/phone";
 import { APP_VERSION } from "../version";
-import { pastedHtml } from "./extensions";
+import { pastedHtml, toRoman } from "./extensions";
 import { insertImages } from "./image-paste";
 import { jumpToHeading } from "./jump";
+import { TableDialog, TableGrid, openTableDialog } from "../ui/TablePicker";
 import type { JsonNode, PageMargin, PageOrientation, PageSize } from "./model";
 
 type ExportKind = "pdf" | "html" | "txt" | "orvdoc" | "docx";
@@ -90,16 +91,17 @@ function keepPointer(event: { target: EventTarget | null; preventDefault: () => 
   event.preventDefault();
 }
 
-function footnoteItems(editor: Editor | null): Array<{ n: number; text: string }> {
+function footnoteItems(editor: Editor | null): Array<{ n: number; text: string; end: boolean }> {
   if (!editor) return [];
-  const items: Array<{ n: number; text: string }> = [];
+  const items: Array<{ n: number; text: string; end: boolean }> = [];
   editor.state.doc.descendants((node) => {
     if (node.type.name !== "footnote") return;
-    const text = String(node.attrs.text ?? "").replace(/\s+/g, " ").trim().slice(0, 400);
+    const text = String(node.attrs.text ?? "").replace(/\s+/g, " ").trim().slice(0, 2000);
     const n = Number(node.attrs.n);
-    items.push({ n: Number.isFinite(n) && n > 0 ? n : items.length + 1, text });
+    items.push({ n: Number.isFinite(n) && n > 0 ? n : items.length + 1, text, end: node.attrs.kind === "end" });
   });
-  return items;
+  // Primero las notas al pie y después las finales, como al final de un documento de Word.
+  return [...items.filter((item) => !item.end), ...items.filter((item) => item.end)];
 }
 
 function headingsOf(node: JsonNode | undefined, out: Array<{ text: string; level: number }> = []): Array<{ text: string; level: number }> {
@@ -256,6 +258,7 @@ export function DocsSurface({
   pageMargin = "normal",
   onLayout,
   find,
+  rail,
   words,
 }: {
   t: Translate;
@@ -290,11 +293,13 @@ export function DocsSurface({
   pageMargin?: PageMargin;
   onLayout?: (patch: { columns?: 1 | 2 | 3; dropCap?: boolean; watermark?: string; pageNumber?: boolean; pageSize?: PageSize; pageOrientation?: PageOrientation; pageMargin?: PageMargin }) => void;
   find: ReactNode;
+  rail?: ReactNode;
   words: string;
 }) {
   const [menus, setMenus] = useState(true);
   const [ruler, setRuler] = useState(true);
   const [zoom, setZoom] = useState(100);
+  const [tablePick, setTablePick] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const dockRef = useRef<HTMLDivElement>(null);
   const phone = usePhone();
@@ -748,7 +753,7 @@ export function DocsSurface({
     if (!editor) return;
     const text = noteDraft.replace(/\s+/g, " ").trim().slice(0, 400);
     if (!text) return;
-    const n = footnoteItems(editor).length + 1;
+    const n = footnoteItems(editor).filter((item) => !item.end).length + 1;
     run(() => insertAtCaret(editor, { type: "footnote", attrs: { n, text } }));
     setNoteDraft("");
     setNoteOpen(false);
@@ -981,7 +986,7 @@ export function DocsSurface({
                   {footnoteItems(editor).length > 0 ? (
                     <ol className="ow-footnotes">
                       {footnoteItems(editor).map((item, index) => (
-                        <li key={`${item.n}-${index}`} value={item.n}>{item.text}</li>
+                        <li key={`${item.end ? "e" : "f"}${item.n}-${index}`} value={item.n} className={item.end ? "is-end" : undefined} data-label={item.end ? toRoman(item.n) : undefined}>{item.text}</li>
                       ))}
                     </ol>
                   ) : null}
@@ -992,11 +997,23 @@ export function DocsSurface({
                   {pageNumber ? <span className="ow-page-num" aria-label={t("pageNumber")}>1</span> : null}
                 </div>
               </article>
+              {!narrow ? rail : null}
             </div>
+            {narrow ? rail : null}
           </div>
           <p className="ow-count" aria-live="polite">{words}</p>
         </div>
       </div>
+      <TableDialog t={t} onInsert={(rows, cols) => run(() => { if (editor) insertTableAt(editor, rows, cols); })} />
+      {narrow && mode === "edit" && tablePick ? (
+        <div className="ow-table-pop" role="dialog" aria-label={t("table")} onKeyDown={(event) => { if (event.key === "Escape") setTablePick(false); }}>
+          <TableGrid
+            labels={tableLabels(t)}
+            onPick={(rows, cols) => { setTablePick(false); run(() => { if (editor) insertTableAt(editor, rows, cols); }); }}
+            onCustom={() => { setTablePick(false); openTableDialog(); }}
+          />
+        </div>
+      ) : null}
       {narrow && mode === "edit" ? (
         <div className="ow-format-dock" role="toolbar" aria-label={t("toolbarLabel")} onPointerDown={() => rememberSelection()}>
           <div className="ow-format-scroll" ref={dockRef}>
@@ -1010,7 +1027,9 @@ export function DocsSurface({
             <DocIcon label={t("bullet")} pressed={editor?.isActive("bulletList")} onClick={() => run(() => editor?.chain().focus().toggleBulletList().run())}><List size={20} /></DocIcon>
             <DocIcon label={t("ordered")} pressed={editor?.isActive("orderedList")} onClick={() => run(() => editor?.chain().focus().toggleOrderedList().run())}><ListOrdered size={20} /></DocIcon>
             <DocIcon label={t("checklist")} pressed={editor?.isActive("taskList")} onClick={() => run(() => editor?.chain().focus().toggleTaskList().run())}><ListChecks size={20} /></DocIcon>
-            <DocIcon label={t("table")} onClick={() => run(() => { if (editor) insertTableAt(editor, 3, 3); })}><span aria-hidden="true">⊞</span></DocIcon>
+            <span className="ow-dock-table">
+              <DocIcon label={t("table")} pressed={tablePick} onClick={() => setTablePick((open) => !open)}><span aria-hidden="true">⊞</span></DocIcon>
+            </span>
             <DocIcon label={t("mergeCells")} onClick={() => run(() => editor?.chain().focus().mergeCells().run())}><span aria-hidden="true">⧉</span></DocIcon>
             <ToolMenu label={t("fontLabel")} value={font} options={FONTS.map((item) => ({ id: item, label: item, family: cssFamily(item) }))} onPick={(id) => run(() => editor?.chain().focus().setFontFamily(cssFamily(id)).run())} />
             <SizeBox t={t} point={point} onApply={applySize} onRemember={rememberSelection} />
@@ -1181,11 +1200,20 @@ function handlesOf(editor: Editor | null): Array<{ id: string; x: number; y: num
   }
 }
 
+/** Abre una herramienta de maquetación (formas, ajuste, secciones, notas finales). */
+function layoutAction(action: string) {
+  window.dispatchEvent(new CustomEvent("ow-layout", { detail: { action } }));
+}
+
 function insertAtCaret(editor: Editor, content: string | Record<string, unknown>) {
   const selection = editor.state.selection;
   const chain = editor.chain().focus();
   if (selection instanceof NodeSelection) return chain.insertContentAt(selection.to, content).run();
   return chain.insertContent(content).run();
+}
+
+function tableLabels(t: Translate) {
+  return { custom: `${t("tableCustom")}…`, size: (r: number, c: number) => t("tableSize").replace("{r}", String(r)).replace("{c}", String(c)) };
 }
 
 function insertTableAt(editor: Editor, rows: number, cols: number) {
@@ -1579,7 +1607,7 @@ function MenuInline({
         { id: "insert", label: t("menuInsert"), items: [
           { id: "image", label: t("image"), onSelect: onImage },
           { id: "link", label: t("link"), hint: "Ctrl+K", onSelect: onLink },
-          { id: "table", label: t("table"), table: (rows, cols) => run(() => { if (editor) insertTableAt(editor, rows, cols); }) },
+          { id: "table", label: t("table"), tableLabels: tableLabels(t), table: (rows, cols) => run(() => { if (editor) insertTableAt(editor, rows, cols); }) },
           { id: "break", label: t("pageBreak"), onSelect: () => run(() => { if (editor) insertAtCaret(editor, { type: "pageBreak" }); }) },
           { id: "comment", label: t("comment"), onSelect: onComment },
           { id: "header", label: t("header"), onSelect: onHeaderFocus },
@@ -1591,6 +1619,10 @@ function MenuInline({
           { id: "water", label: t("watermark"), onSelect: onWatermark },
           { id: "toc", label: t("toc"), onSelect: onContents },
           { id: "note", label: t("footnote"), onSelect: onFootnote },
+          { id: "endnote", label: t("endnote"), onSelect: () => layoutAction("endnote") },
+          { id: "textbox", label: t("textBox"), onSelect: () => layoutAction("textbox") },
+          { id: "shape", label: t("shapeInsert"), onSelect: () => layoutAction("shape") },
+          { id: "sectionBreak", label: t("sectionBreak"), onSelect: () => layoutAction("sectionBreak") },
           { id: "chars", label: t("specialChar"), onSelect: onSpecial },
           { id: "date", label: t("insertDate"), onSelect: onDate },
           { id: "rule", label: t("horizontalLine"), onSelect: onRule },
@@ -1610,6 +1642,9 @@ function MenuInline({
             { id: "justify", label: t("alignJustify"), hint: "Ctrl+Mayús+J", onSelect: () => run(() => editor?.chain().focus().setTextAlign("justify").run()) },
           ] },
           { id: "columns", label: t("docColumns"), onSelect: onColumns },
+          { id: "sectionCols", label: t("sectionSetup"), onSelect: () => layoutAction("section") },
+          { id: "wrap", label: t("objectWrap"), onSelect: () => layoutAction("object") },
+          { id: "headerRow", label: t("repeatHeaderRow"), onSelect: () => run(() => editor?.chain().focus().toggleHeaderRow().run()) },
           { id: "drop", label: t("dropCap"), onSelect: onDropCap },
           { id: "styles", label: t("styleLabel"), children: Object.entries(STYLE_KEY).map(([id, key]) => ({
             id,

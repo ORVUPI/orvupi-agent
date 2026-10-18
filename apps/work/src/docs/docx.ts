@@ -1,11 +1,14 @@
 import { safeImageSrc } from "../security/sanitize";
-import type { JsonMark, JsonNode, PageMargin, PageOrientation, PageSize } from "./model";
+import type { DocComment, JsonMark, JsonNode, PageMargin, PageOrientation, PageSize } from "./model";
 
 type Docx = typeof import("docx");
+type Shapes = typeof import("docx/shapes");
 type Child = InstanceType<Docx["Paragraph"]> | InstanceType<Docx["Table"]>;
 type Run = InstanceType<Docx["TextRun"]> | InstanceType<Docx["ImageRun"]> | InstanceType<Docx["ExternalHyperlink"]>;
 
-export type DocxLayout = { pageSize?: PageSize; pageOrientation?: PageOrientation; pageMargin?: PageMargin };
+export type DocxLayout = { pageSize?: PageSize; pageOrientation?: PageOrientation; pageMargin?: PageMargin; columns?: number; comments?: DocComment[] };
+type Note = { children: InstanceType<Docx["Paragraph"]>[] };
+const EMU = 9525;
 
 const HEX = /^#([0-9a-f]{6})$/i;
 const PX_TO_TWIP = 15;
@@ -49,21 +52,126 @@ function pngSize(data: Uint8Array): { width: number; height: number } | null {
 }
 
 class Writer {
-  constructor(private docx: Docx, private maxWidth: number) {}
+  footnotes: Record<number, Note> = {};
+  endnotes: Record<number, Note> = {};
+  private noteId = 1;
+  private endId = 1;
+  commentIds = new Map<string, number>();
+  anchored = new Set<string>();
+  private pendingLoose: number[] = [];
+
+  constructor(private docx: Docx, private shapes: Shapes, public maxWidth: number, comments: DocComment[] = []) {
+    let next = 0;
+    for (const comment of comments) {
+      this.commentIds.set(comment.id, next);
+      next += 1 + (comment.replies?.length ?? 0);
+    }
+  }
+
+  /** Comentarios sin texto anclado: se anclan al primer párrafo para que Word los muestre. */
+  setLoose(ids: number[]) {
+    this.pendingLoose = ids;
+  }
+
+  commentWrap(runs: Run[]): Run[] {
+    if (this.pendingLoose.length === 0) return runs;
+    const d = this.docx;
+    const ids = this.pendingLoose;
+    this.pendingLoose = [];
+    const before = ids.map((id) => new d.CommentRangeStart(id) as unknown as Run);
+    const after = ids.flatMap((id) => [new d.CommentRangeEnd(id) as unknown as Run, new d.TextRun({ children: [new d.CommentReference(id)] })]);
+    return [...before, ...runs, ...after];
+  }
 
   runs(nodes: JsonNode[] | undefined, extra: { bold?: boolean; heading?: boolean } = {}): Run[] {
     const out: Run[] = [];
+    const d = this.docx;
+    const open = new Set<number>();
+    const syncComments = (marks: JsonMark[]) => {
+      const now = new Set<number>();
+      for (const mark of marks) {
+        if (mark.type !== "comment") continue;
+        const key = String(mark.attrs?.id ?? "");
+        const id = this.commentIds.get(key);
+        if (id === undefined) continue;
+        now.add(id);
+        this.anchored.add(key);
+      }
+      for (const id of [...open]) {
+        if (now.has(id)) continue;
+        out.push(new d.CommentRangeEnd(id) as unknown as Run, new d.TextRun({ children: [new d.CommentReference(id)] }));
+        open.delete(id);
+      }
+      for (const id of now) {
+        if (open.has(id)) continue;
+        out.push(new d.CommentRangeStart(id) as unknown as Run);
+        open.add(id);
+      }
+    };
     for (const node of nodes ?? []) {
+      if (node.type === "text") syncComments(node.marks ?? []);
       if (node.type === "text") out.push(this.textRun(node.text ?? "", node.marks ?? [], extra));
       else if (node.type === "hardBreak") out.push(new this.docx.TextRun({ text: "", break: 1 }));
       else if (node.type === "image") {
         const image = this.imageRun(node);
         if (image) out.push(image);
       } else if (node.type === "footnote") {
-        out.push(new this.docx.TextRun({ text: ` [${String(node.attrs?.n ?? "")}] ${String(node.attrs?.text ?? "")}`, superScript: true }));
+        const note = { children: String(node.attrs?.text ?? "").split("\n").map((line) => new d.Paragraph({ children: [new d.TextRun(line)] })) };
+        if (node.attrs?.kind === "end") {
+          const id = this.endId++;
+          this.endnotes[id] = note;
+          out.push(new d.EndnoteReferenceRun(id) as unknown as Run);
+        } else {
+          const id = this.noteId++;
+          this.footnotes[id] = note;
+          out.push(new d.FootnoteReferenceRun(id) as unknown as Run);
+        }
       } else if (node.content) out.push(...this.runs(node.content, extra));
     }
+    syncComments([]);
     return out;
+  }
+
+  floating(attrs: Record<string, unknown>) {
+    const d = this.docx;
+    const wrap = String(attrs.wrap ?? "inline");
+    if (wrap === "inline" || !wrap) return undefined;
+    const align = attrs.align === "right" ? d.HorizontalPositionAlign.RIGHT : attrs.align === "center" ? d.HorizontalPositionAlign.CENTER : undefined;
+    const ox = Math.round((Number(attrs.offsetX) || 0) * EMU);
+    const oy = Math.round((Number(attrs.offsetY) || 0) * EMU);
+    const square = wrap === "square";
+    return {
+      horizontalPosition: align && !(square && ox) ? { relative: d.HorizontalPositionRelativeFrom.COLUMN, align } : { relative: d.HorizontalPositionRelativeFrom.COLUMN, offset: align === d.HorizontalPositionAlign.RIGHT ? Math.max(0, Math.round(this.maxWidth * EMU) - ox - Math.round((Number(attrs.width) || 0) * EMU)) : ox },
+      verticalPosition: { relative: d.VerticalPositionRelativeFrom.PARAGRAPH, offset: oy },
+      behindDocument: wrap === "behind",
+      allowOverlap: true,
+      wrap: {
+        type: square ? d.TextWrappingType.SQUARE : wrap === "topBottom" ? d.TextWrappingType.TOP_AND_BOTTOM : d.TextWrappingType.NONE,
+        side: d.TextWrappingSide.BOTH_SIDES,
+      },
+      margins: { left: 114300, right: 114300, top: 0, bottom: 0 },
+    };
+  }
+
+  shapeRun(node: JsonNode): Run {
+    const d = this.docx;
+    const a = node.attrs ?? {};
+    const width = Math.max(16, Number(a.width) || 240);
+    const height = Math.max(16, Number(a.height) || 96);
+    const kind = a.shape === "ellipse" ? "ellipse" : a.shape === "roundRect" ? "roundedRectangle" : "rectangle";
+    const fill = typeof a.fill === "string" && HEX.test(a.fill) ? a.fill.slice(1).toUpperCase() : "none";
+    const line = typeof a.stroke === "string" && HEX.test(a.stroke) ? { color: a.stroke.slice(1).toUpperCase(), width: 1 } : "none";
+    const lines = String(a.text ?? "").split("\n");
+    const floating = this.floating({ ...a, width });
+    return new this.shapes.ShapeRun({
+      type: kind,
+      transformation: { width, height },
+      fill,
+      line,
+      children: lines.map((text) => new d.Paragraph({ children: [new d.TextRun({ text, color: "102032" })] })),
+      ...(floating ? { floating } : {}),
+      altText: { name: a.shape === "textbox" ? "Cuadro de texto" : "Forma", description: lines.join(" ").slice(0, 180) },
+    } as unknown as ConstructorParameters<Shapes["ShapeRun"]>[0]) as unknown as Run;
   }
 
   textRun(text: string, marks: JsonMark[], extra: { bold?: boolean; heading?: boolean }): Run {
@@ -107,11 +215,13 @@ class Writer {
       width = this.maxWidth;
     }
     const alt = String(node.attrs?.alt ?? "").slice(0, 180);
+    const floating = this.floating({ ...(node.attrs ?? {}), width });
     return new this.docx.ImageRun({
       type: decoded.type,
       data: decoded.data,
       transformation: { width, height },
       altText: alt ? { name: alt, description: alt, title: alt } : undefined,
+      ...(floating ? { floating } : {}),
     } as ConstructorParameters<Docx["ImageRun"]>[0]);
   }
 
@@ -141,12 +251,15 @@ class Writer {
     const d = this.docx;
     switch (node.type) {
       case "paragraph":
-        out.push(new d.Paragraph({ ...this.paragraphOptions(node), numbering: list ? { reference: list.reference, level: list.level } : undefined, children: this.runs(node.content) }));
+        out.push(new d.Paragraph({ ...this.paragraphOptions(node), numbering: list ? { reference: list.reference, level: list.level } : undefined, children: this.commentWrap(this.runs(node.content)) }));
+        return;
+      case "docShape":
+        out.push(new d.Paragraph({ children: [this.shapeRun(node)] }));
         return;
       case "heading": {
         const level = Number(node.attrs?.level ?? 1);
         const heading = [d.HeadingLevel.HEADING_1, d.HeadingLevel.HEADING_2, d.HeadingLevel.HEADING_3, d.HeadingLevel.HEADING_4, d.HeadingLevel.HEADING_5, d.HeadingLevel.HEADING_6][Math.min(5, Math.max(0, level - 1))];
-        out.push(new d.Paragraph({ ...this.paragraphOptions(node), heading, children: this.runs(node.content, { heading: true }) }));
+        out.push(new d.Paragraph({ ...this.paragraphOptions(node), heading, children: this.commentWrap(this.runs(node.content, { heading: true })) }));
         return;
       }
       case "blockquote":
@@ -207,6 +320,7 @@ class Writer {
   table(node: JsonNode): InstanceType<Docx["Table"]> {
     const d = this.docx;
     const rows = (node.content ?? []).map((row) => new d.TableRow({
+      tableHeader: (row.content ?? []).length > 0 && (row.content ?? []).every((cell) => cell.type === "tableHeader") ? true : undefined,
       children: (row.content ?? []).map((cell) => {
         const children: Child[] = [];
         for (const child of cell.content ?? []) this.block(child, children);
@@ -231,15 +345,56 @@ const PAGE_TWIPS: Record<PageSize, { width: number; height: number }> = {
   letter: { width: 12240, height: 15840 },
 };
 
+const MARGINS: Record<PageMargin, number> = { narrow: 720, normal: 1440, wide: 2160 };
+
 export async function exportDocx(title: string, doc: JsonNode, header: string, footer: string, pageNumber = false, layout: DocxLayout = {}): Promise<Uint8Array> {
   const docx = await import("docx");
+  const shapes = await import("docx/shapes");
   const size = PAGE_TWIPS[layout.pageSize ?? "a4"];
-  const landscape = layout.pageOrientation === "landscape";
-  const margin = layout.pageMargin === "narrow" ? 720 : layout.pageMargin === "wide" ? 2160 : 1440;
-  const usable = Math.round(((landscape ? size.height : size.width) - margin * 2) / PX_TO_TWIP);
-  const writer = new Writer(docx, usable);
-  const children: Child[] = [];
-  for (const node of doc.content ?? []) writer.block(node, children);
+  const baseOrientation: PageOrientation = layout.pageOrientation === "landscape" ? "landscape" : "portrait";
+  const baseMargin: PageMargin = layout.pageMargin ?? "normal";
+  const usableOf = (orientation: PageOrientation, margin: PageMargin, columns = 1) =>
+    Math.round((((orientation === "landscape" ? size.height : size.width) - MARGINS[margin] * 2) / PX_TO_TWIP) / Math.max(1, columns));
+  const comments = layout.comments ?? [];
+  const writer = new Writer(docx, shapes, usableOf(baseOrientation, baseMargin, layout.columns), comments);
+
+  // Cada nodo de sección es una sección de Word; el contenido suelto va en secciones con el formato del documento.
+  type Part = { children: Child[]; orientation: PageOrientation; margin: PageMargin; columns: number; type: "nextPage" | "continuous" };
+  const parts: Part[] = [];
+  let loose: Part | null = null;
+  for (const node of doc.content ?? []) {
+    if (node.type === "section") {
+      loose = null;
+      const a = node.attrs ?? {};
+      const part: Part = {
+        children: [],
+        orientation: a.orientation === "landscape" ? "landscape" : "portrait",
+        margin: a.margin === "narrow" || a.margin === "wide" ? a.margin : "normal",
+        columns: Math.max(1, Math.min(3, Number(a.columns) || 1)),
+        type: a.breakType === "continuous" ? "continuous" : "nextPage",
+      };
+      writer.maxWidth = usableOf(part.orientation, part.margin, part.columns);
+      for (const child of node.content ?? []) writer.block(child, part.children);
+      parts.push(part);
+      continue;
+    }
+    if (!loose) {
+      loose = { children: [], orientation: baseOrientation, margin: baseMargin, columns: Math.max(1, Math.min(3, layout.columns ?? 1)), type: "nextPage" };
+      parts.push(loose);
+    }
+    writer.maxWidth = usableOf(loose.orientation, loose.margin, loose.columns);
+    writer.block(node, loose.children);
+  }
+  if (parts.length === 0) parts.push({ children: [], orientation: baseOrientation, margin: baseMargin, columns: 1, type: "nextPage" });
+
+  // Comentarios sin texto anclado: se cuelgan del principio del documento.
+  const loose_ids = comments.filter((comment) => !writer.anchored.has(comment.id)).map((comment) => writer.commentIds.get(comment.id)!).filter((id) => id !== undefined);
+  if (loose_ids.length > 0) {
+    writer.setLoose(loose_ids);
+    const runs = writer.commentWrap([]);
+    parts[0]!.children.unshift(new docx.Paragraph({ children: runs }));
+  }
+
   const footerChildren: unknown[] = [];
   if (footer.trim()) footerChildren.push(new docx.TextRun({ text: footer, size: 18 }));
   if (pageNumber) {
@@ -253,23 +408,43 @@ export async function exportDocx(title: string, doc: JsonNode, header: string, f
     alignment: docx.AlignmentType.LEFT,
     style: { paragraph: { indent: { left: 720 * (level + 1), hanging: 360 } } },
   }));
+  const commentEntries = comments.flatMap((comment) => {
+    const id = writer.commentIds.get(comment.id)!;
+    const paragraphs = (text: string) => text.split("\n").map((line) => new docx.Paragraph({ children: [new docx.TextRun(line)] }));
+    const author = (comment.author || "ORVUPI Work").slice(0, 80);
+    const date = (value: string) => { const parsed = new Date(value); return Number.isNaN(parsed.getTime()) ? new Date() : parsed; };
+    return [
+      { id, author, initials: author.slice(0, 2).toUpperCase(), date: date(comment.createdAt), children: paragraphs(comment.body), resolved: comment.resolved === true },
+      ...(comment.replies ?? []).map((reply, index) => {
+        const replyAuthor = (reply.author || "ORVUPI Work").slice(0, 80);
+        return { id: id + 1 + index, author: replyAuthor, initials: replyAuthor.slice(0, 2).toUpperCase(), date: date(reply.createdAt), children: paragraphs(reply.body), parentId: id, resolved: comment.resolved === true };
+      }),
+    ];
+  });
+  const headers = header.trim() ? { default: new docx.Header({ children: [new docx.Paragraph({ children: [new docx.TextRun({ text: header, size: 18 })] })] }) } : undefined;
+  const footers = footerChildren.length > 0 ? { default: new docx.Footer({ children: [new docx.Paragraph({ children: footerChildren as InstanceType<typeof docx.TextRun>[] })] }) } : undefined;
   const file = new docx.Document({
     creator: "ORVUPI Work",
     title,
     styles: { default: { document: { run: { font: "Arial", size: 22 } } } },
     numbering: { config: [{ reference: "ow-bullet", levels: levels("bullet") }, { reference: "ow-ordered", levels: levels("decimal") }] },
-    sections: [{
+    ...(Object.keys(writer.footnotes).length > 0 ? { footnotes: writer.footnotes } : {}),
+    ...(Object.keys(writer.endnotes).length > 0 ? { endnotes: writer.endnotes } : {}),
+    ...(commentEntries.length > 0 ? { comments: { children: commentEntries } } : {}),
+    sections: parts.map((part, index) => ({
       properties: {
+        ...(index > 0 ? { type: part.type === "continuous" ? docx.SectionType.CONTINUOUS : docx.SectionType.NEXT_PAGE } : {}),
         page: {
-          size: { width: size.width, height: size.height, orientation: landscape ? docx.PageOrientation.LANDSCAPE : docx.PageOrientation.PORTRAIT },
-          margin: { top: margin, bottom: margin, left: margin, right: margin },
+          size: { width: size.width, height: size.height, orientation: part.orientation === "landscape" ? docx.PageOrientation.LANDSCAPE : docx.PageOrientation.PORTRAIT },
+          margin: { top: MARGINS[part.margin], bottom: MARGINS[part.margin], left: MARGINS[part.margin], right: MARGINS[part.margin] },
         },
+        ...(part.columns > 1 ? { column: { count: part.columns, space: 708, equalWidth: true } } : {}),
       },
-      headers: header.trim() ? { default: new docx.Header({ children: [new docx.Paragraph({ children: [new docx.TextRun({ text: header, size: 18 })] })] }) } : undefined,
-      footers: footerChildren.length > 0 ? { default: new docx.Footer({ children: [new docx.Paragraph({ children: footerChildren as InstanceType<typeof docx.TextRun>[] })] }) } : undefined,
-      children: children.length > 0 ? children : [new docx.Paragraph("")],
-    }],
-  });
+      headers,
+      footers,
+      children: part.children.length > 0 ? part.children : [new docx.Paragraph("")],
+    })),
+  } as ConstructorParameters<typeof docx.Document>[0]);
   const blob = await docx.Packer.toBlob(file);
   return new Uint8Array(await blob.arrayBuffer());
 }

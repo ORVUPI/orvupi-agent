@@ -1,5 +1,17 @@
 # Registro de cambios
 
+## 0.8.2 — 2026-10-18
+
+Docs y la importación de DOCX dan otro paso hacia un procesador de textos completo. Todo se edita, se guarda y se exporta a DOCX y PDF.
+
+- Cuadros de texto y formas (rectángulo, rectángulo redondeado, elipse). Se importan de DOCX (wps, grupos wpg y VML), se insertan desde Insertar, se escribe dentro y tienen ajuste de texto y desplazamiento.
+- Notas al pie y notas finales con numeración automática. Las notas al pie salen al pie de su hoja en la vista paginada y las finales al final (i, ii, iii…). Un clic en el número abre la nota para editarla o borrarla.
+- Secciones: columnas (w:cols), orientación y márgenes propios, y saltos de sección (página siguiente o continuo). Formato → Sección: columnas y orientación.
+- Comentarios en el margen, como en Google Docs: alineados con el texto, con respuestas, resolver y reabrir. Se importan de comments.xml (con respuestas y resueltos) y se exportan a DOCX.
+- Imágenes flotantes con ajuste cuadrado, arriba y abajo, detrás del texto o delante, y desplazamiento horizontal.
+- La vista paginada parte párrafos y tablas más altos que una hoja, sin dejar una línea sola a cada lado, y repite la fila de encabezado de la tabla si está marcada (Formato → Fila de encabezado).
+- Insertar tabla: cuadrícula de hasta 15 × 15 con ratón, toque o teclado (flechas e Intro) que indica «filas × columnas», y «Insertar tabla personalizada» con filas y columnas exactas (de 1 a 15, validado). En el teléfono, desde el botón de tabla de la barra inferior.
+
 ## 0.8.1 — 2026-10-18
 
 Corrige lo que se veía mal al subir un documento de Word y al pegar imágenes en Docs.

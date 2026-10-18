@@ -38,9 +38,33 @@ export type Block =
   | { type: "table"; rows: string[][] }
   | { type: "image"; src: string; alt: string; width?: number; height?: number; align?: string }
   | { type: "pageBreak" }
-  | { type: "contents" };
+  | { type: "contents" }
+  | { type: "section"; landscape: boolean; continuous: boolean; columns: number }
+  | { type: "shape"; text: string; fill: string; stroke: string; shape: string; width: number; height: number };
 
-export type DocComment = { id: string; quote: string; body: string; createdAt: string };
+export type DocNotes = { foot: string[]; end: string[] };
+
+function romanOf(value: number): string {
+  let n = Math.max(1, Math.min(3999, Math.round(value)));
+  const table: Array<[number, string]> = [[1000, "m"], [900, "cm"], [500, "d"], [400, "cd"], [100, "c"], [90, "xc"], [50, "l"], [40, "xl"], [10, "x"], [9, "ix"], [5, "v"], [4, "iv"], [1, "i"]];
+  let out = "";
+  for (const [size, letter] of table) while (n >= size) { out += letter; n -= size; }
+  return out;
+}
+
+/** Notas al pie y notas finales en orden de aparición, para exportar a PDF y HTML. */
+export function notesFromDoc(doc: JsonNode): DocNotes {
+  const notes: DocNotes = { foot: [], end: [] };
+  const walk = (node: JsonNode) => {
+    if (node.type === "footnote") (node.attrs?.kind === "end" ? notes.end : notes.foot).push(typeof node.attrs?.text === "string" ? node.attrs.text : "");
+    for (const child of node.content ?? []) walk(child);
+  };
+  walk(doc);
+  return notes;
+}
+
+export type DocReply = { id: string; body: string; createdAt: string; author?: string };
+export type DocComment = { id: string; quote: string; body: string; createdAt: string; author?: string; resolved?: boolean; replies?: DocReply[] };
 export type DocVersion = { id: string; at: string; title: string; content: JsonNode };
 
 export type PageSize = "a4" | "letter";
@@ -157,9 +181,8 @@ function inlinesFrom(nodes: JsonNode[] | undefined): Inline[] {
       });
     } else if (node.type === "footnote") {
       const n = Number(node.attrs?.n);
-      const note = typeof node.attrs?.text === "string" ? node.attrs.text : "";
-      const label = Number.isFinite(n) && n > 0 ? `[${n}]` : "";
-      result.push({ type: "text", text: `${label} ${note}`.trim(), superscript: true });
+      const valid = Number.isFinite(n) && n > 0 ? n : 1;
+      result.push({ type: "text", text: node.attrs?.kind === "end" ? romanOf(valid) : String(valid), superscript: true });
     } else if (node.type === "hardBreak") {
       result.push({ type: "text", text: "\n" });
     } else if (node.type === "image") {
@@ -179,7 +202,12 @@ export function plainText(node: JsonNode): string {
 export function blocksFromDoc(doc: JsonNode): Block[] {
   const blocks: Block[] = [];
   for (const node of doc.content ?? []) {
-    if (node.type === "heading") {
+    if (node.type === "section") {
+      blocks.push({ type: "section", landscape: node.attrs?.orientation === "landscape", continuous: node.attrs?.breakType === "continuous", columns: Number(node.attrs?.columns) || 1 });
+      blocks.push(...blocksFromDoc({ type: "doc", content: node.content ?? [] }));
+    } else if (node.type === "docShape") {
+      blocks.push({ type: "shape", text: stringAttr(node, "text"), fill: stringAttr(node, "fill") || "none", stroke: stringAttr(node, "stroke") || "#102032", shape: stringAttr(node, "shape") || "textbox", width: Number(node.attrs?.width) || 240, height: Number(node.attrs?.height) || 96 });
+    } else if (node.type === "heading") {
       const level = node.attrs?.level;
       const type = level === 1 ? "h1" : level === 2 ? "h2" : "h3";
       blocks.push({ type, inlines: inlinesFrom(node.content), align: stringAttr(node, "textAlign") || undefined });
@@ -270,8 +298,14 @@ export function docToText(doc: JsonNode): string {
       if (block.type === "paragraph" || block.type === "h1" || block.type === "h2" || block.type === "h3" || block.type === "quote") {
         return inlineText(block.inlines);
       }
+      if (block.type === "shape") return block.text;
       return "";
     })
+    .concat((() => {
+      const notes = notesFromDoc(doc);
+      return [...notes.foot, ...notes.end];
+    })())
+    .filter((part) => part !== "")
     .join("\n\n")
     .trim();
 }
