@@ -27,6 +27,8 @@ async function shot(page: Page, name: string) {
 }
 
 for (const mb of SIZES) {
+  // eslint-disable-next-line playwright/no-skipped-test
+  test.skip(Boolean(process.env.CI) && process.env.ORVUPI_BIG !== "1", "DOCX de decenas de MB: se ejecuta en local (ORVUPI_BIG=1 en CI)");
   test(`DOCX de ${mb} MB con muchas imágenes: importa, abre, edita, guarda, recarga y exporta`, async ({ page }, info) => {
     test.setTimeout(Math.max(240_000, mb * 6_000));
     const { path, bytes, images } = await fixture(mb);

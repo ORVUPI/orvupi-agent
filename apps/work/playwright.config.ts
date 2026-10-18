@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// En CI la matriz 0.8.3 completa no cabe en el tiempo del trabajo: una combinación por navegador. En local, todas.
+const D83_CI = new Set(["chromium-desk", "firefox-phone", "webkit-tablet"]);
+
 export default defineConfig({
   testDir: "tests/e2e",
   fullyParallel: false,
@@ -41,9 +44,9 @@ export default defineConfig({
       { name: `docx-${browser}-phone`, testMatch: /docx-081/, use: { browserName: browser, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: browser !== "firefox" } },
       { name: `d82-${browser}-desk`, testMatch: /docx-082/, use: { browserName: browser, viewport: { width: 1366, height: 900 } } },
       { name: `d82-${browser}-tablet`, testMatch: /docx-082/, use: { browserName: browser, viewport: { width: 820, height: 1180 }, hasTouch: true, isMobile: browser !== "firefox" } },
-      { name: `d83-${browser}-desk`, testMatch: /docx-083/, use: { browserName: browser, viewport: { width: 1366, height: 900 } } },
-      { name: `d83-${browser}-tablet`, testMatch: /docx-083/, use: { browserName: browser, viewport: { width: 820, height: 1180 }, hasTouch: true, isMobile: browser !== "firefox" } },
-      { name: `d83-${browser}-phone`, testMatch: /docx-083/, use: { browserName: browser, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: browser !== "firefox" } },
+      ...(process.env.CI && !D83_CI.has(`${browser}-desk`) ? [] : [{ name: `d83-${browser}-desk`, testMatch: /docx-083/, use: { browserName: browser, viewport: { width: 1366, height: 900 } } }]),
+      ...(process.env.CI && !D83_CI.has(`${browser}-tablet`) ? [] : [{ name: `d83-${browser}-tablet`, testMatch: /docx-083/, use: { browserName: browser, viewport: { width: 820, height: 1180 }, hasTouch: true, isMobile: browser !== "firefox" } }]),
+      ...(process.env.CI && !D83_CI.has(`${browser}-phone`) ? [] : [{ name: `d83-${browser}-phone`, testMatch: /docx-083/, use: { browserName: browser, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: browser !== "firefox" } }]),
       { name: `d82-${browser}-phone`, testMatch: /docx-082/, use: { browserName: browser, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: browser !== "firefox" } },
     ]),
   ],
