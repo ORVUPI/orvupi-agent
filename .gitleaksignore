@@ -27,3 +27,6 @@ d1028d902bd9620fcae923d15b879bde78dc4afc:verify/examples/2026-10-09/TNWwnzecb372
 
 # Misma huella pública (SHA-256 de token.json) tras pasar web/v2 a la versión de producción.
 b4ef7f7b956623f6f45f68e6071c6cf9a4cc554b:web/v2/tablero/index.html:generic-api-key:79
+
+# Mismo SHA-256 público de token.json (no es una clave) en el commit 02ddd4c8 de main; es y en en la línea 79.
+02ddd4c82a34628fef47b9b3a291811bc3690e14:web/v2/tablero/index.html:generic-api-key:79

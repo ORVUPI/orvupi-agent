@@ -13,6 +13,7 @@ import { Button, ErrorState, Input } from "../ui/kit";
 import { DocsSurface } from "./DocsSurface";
 import { Modal } from "../ui/overlay";
 import { createExtensions, pastedHtml } from "./extensions";
+import { imageAttrs, prepareImage } from "./image-paste";
 import { findBefore, findInSlices, type TextSlice } from "./find";
 import { exportHtml } from "./html";
 import { countWords, docToText, firstLine, UNTITLED_NAMES, type DocComment, type DocVersion, type JsonNode, type PageMargin, type PageOrientation, type PageSize } from "./model";
@@ -284,7 +285,7 @@ export function DocsEditor({
     }
     if (kind === "docx") {
       const { exportDocx } = await import("./docx");
-      const docx = await exportDocx(nameRef.current, content, headerRef.current, footerRef.current, layoutRef.current.pageNumber);
+      const docx = await exportDocx(nameRef.current, content, headerRef.current, footerRef.current, layoutRef.current.pageNumber, layoutRef.current);
       downloadBytes(docx, fileNameWithExtension(nameRef.current, "docx"), "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
       return;
     }
@@ -403,23 +404,19 @@ export function DocsEditor({
       setFindNote(t("reasonImageType"));
       return;
     }
-    if (file.size > MAX_IMAGE_BYTES) {
+    const prepared = await prepareImage(file, file.name);
+    if (!prepared || prepared.src.length * 0.75 > MAX_IMAGE_BYTES * 1.4) {
       setFindNote(t("reasonImageSize"));
       return;
     }
-    const dataUrl = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result));
-      reader.onerror = () => reject(new Error("read"));
-      reader.readAsDataURL(file);
-    });
+    const attrs = imageAttrs(prepared);
     const current = editorRef.current;
     if (current?.state.selection instanceof NodeSelection) {
-      current.chain().focus().insertContentAt(current.state.selection.to, { type: "image", attrs: { src: dataUrl, alt: file.name } }).run();
+      current.chain().focus().insertContentAt(current.state.selection.to, { type: "image", attrs }).run();
       return;
     }
     const chain = chainWithRange();
-    chain?.setImage({ src: dataUrl, alt: file.name }).run();
+    chain?.insertContent({ type: "image", attrs }).run();
   }
 
   function applyLink() {

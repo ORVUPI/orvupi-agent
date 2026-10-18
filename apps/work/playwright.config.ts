@@ -23,7 +23,7 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"], viewport: { width: 1360, height: 900 } },
-      testIgnore: /fase-080/,
+      testIgnore: /fase-080|docx-081/,
     },
     {
       name: "pixel-7",
@@ -36,6 +36,10 @@ export default defineConfig({
       testMatch: /mobile-060/,
     },
     ...faseProjects(),
+    ...(["chromium", "firefox", "webkit"] as const).flatMap((browser) => [
+      { name: `docx-${browser}-desk`, testMatch: /docx-081/, use: { browserName: browser, viewport: { width: 1366, height: 900 } } },
+      { name: `docx-${browser}-phone`, testMatch: /docx-081/, use: { browserName: browser, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: browser !== "firefox" } },
+    ]),
   ],
 });
 

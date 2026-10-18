@@ -2,7 +2,7 @@
 
 Suite de productividad en el navegador. Gratis, instalable y local-first. Los documentos se guardan en el dispositivo. Esta versión no tiene servidor, no llama a APIs de pago y no se vincula a ningún token.
 
-Esta entrega es la alfa 0.8.0: la fase 1 de Docs y Drive, todavía en la vista previa. La matriz de Workspace está en `ANALISIS_WORKSPACE.md`. La auditoría de lo que se pulsó está en `docs/AUDITORIA_FUNCIONAL.md`. El visor PDF y el modelo de IA local siguen previstos y todavía no editan.
+Esta entrega es la alfa 0.8.1 (importación DOCX fiel, vista paginada y pegar imágenes en Docs) sobre la 0.8.0: la fase 1 de Docs y Drive, todavía en la vista previa. La matriz de Workspace está en `ANALISIS_WORKSPACE.md`. La auditoría de lo que se pulsó está en `docs/AUDITORIA_FUNCIONAL.md`. El visor PDF y el modelo de IA local siguen previstos y todavía no editan.
 
 ## Arranque
 

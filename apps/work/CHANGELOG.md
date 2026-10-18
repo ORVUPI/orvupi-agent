@@ -1,5 +1,18 @@
 # Registro de cambios
 
+## 0.8.1 — 2026-10-18
+
+Corrige lo que se veía mal al subir un documento de Word y al pegar imágenes en Docs.
+
+- Importar DOCX ya no se queda solo con el texto. Lee los estilos de párrafo y de carácter: la negrita, cursiva, subrayado, tachado, color, tamaño, fuente y resaltado de cada tramo (también una palabra en negrita dentro de una línea), los títulos con su tamaño, la alineación, el interlineado y el espacio antes y después, las listas con viñetas y numeradas (con niveles), las tablas con celdas combinadas y fondo, los enlaces, el encabezado, el pie, el número de página, el tamaño, la orientación y los márgenes de la página.
+- Las imágenes del DOCX (word/media, en línea, flotantes y VML) entran con su tamaño y su alineación, y se guardan dentro del documento local.
+- Los saltos de página del DOCX (y «salto de página antes») se respetan.
+- Vista paginada en el ordenador y la tablet: el documento se reparte en hojas separadas con el fondo entre ellas, como en un procesador de textos. Cada hoja muestra encabezado, pie y número de página. En el teléfono sigue el modo continuo, con el salto marcado.
+- Pegar imágenes: una captura de pantalla (Ctrl+V / Cmd+V), «Copiar imagen» desde el navegador y HTML con imágenes incrustadas. También desde Editar → Pegar y arrastrando un archivo. Si una imagen es grande se reduce para que quepa en el almacenamiento local. Si solo llega el enlace a una imagen de otra web, se explica cómo pegarla.
+- Exportar a DOCX conserva negrita y estilos por tramo, imágenes con su tamaño, alineación, espaciado, listas reales, tablas, saltos de página y la configuración de página. El PDF respeta el tamaño de las imágenes, la alineación y el estilo de cada tramo.
+- Corregido: un documento que ya tenía saltos de página no abría el editor («The editor view is not available»).
+- El selector de «Subir archivo» de Drive ya ofrece .docx y .pptx.
+
 ## 0.8.0 — 2026-10-17
 
 Alfa de desarrollo. No es una versión de producción. Sigue en la vista previa.

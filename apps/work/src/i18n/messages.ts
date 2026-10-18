@@ -586,6 +586,8 @@ export const es = {
   footnoteAdd: "Añadir nota",
   copyDoc: "Hacer una copia",
   clipboardDenied: "El navegador no ha dejado usar el portapapeles.",
+  imageRemote: "Esa imagen está en otra web. Usa «Copiar imagen» o guárdala y pégala o arrástrala aquí.",
+  imagePasteFailed: "No se ha podido pegar la imagen (PNG, JPG, GIF o WebP).",
 } as const;
 
 export type MessageKey = keyof typeof es;
@@ -1178,4 +1180,6 @@ export const en: { [K in MessageKey]: string } = {
   footnoteAdd: "Add note",
   copyDoc: "Make a copy",
   clipboardDenied: "The browser did not allow the clipboard.",
+  imageRemote: "That image lives on another website. Use “Copy image” or save it, then paste or drop it here.",
+  imagePasteFailed: "The image could not be pasted (PNG, JPG, GIF or WebP).",
 };

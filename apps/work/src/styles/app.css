@@ -1162,3 +1162,22 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 /* Modo Visualización: los controles de edición se ven desactivados; el selector de modo sigue activo. */
 .ow-keep { display: contents; }
 .ow-docs-toolbar[data-viewing] > :not(.ow-keep):not(.ow-tool-grow) { opacity: 0.38; pointer-events: none; }
+
+/* 0.8.1: vista paginada, imágenes con tamaño y alineación, espaciado de párrafo */
+.ow-a4 .ProseMirror img { max-width: 100%; height: auto; display: block; margin: 0; }
+.ow-a4 .ProseMirror img[data-align="center"] { margin-left: auto; margin-right: auto; }
+.ow-a4 .ProseMirror img[data-align="right"] { margin-left: auto; }
+.ow-a4 .ProseMirror img.ProseMirror-selectednode { outline: 3px solid #1d4e89; outline-offset: 2px; }
+.ow-a4.is-paged .ProseMirror { min-height: 0; position: relative; }
+.ow-a4.is-paged .ProseMirror > .ow-break { margin: 8px 0 0; padding: 0; }
+.ow-a4.is-paged .ProseMirror > .ow-break .ow-break-head, .ow-a4.is-paged .ProseMirror > .ow-break .ow-break-foot, .ow-a4.is-paged .ProseMirror > .ow-break .ow-break-num { display: none; }
+.ow-a4.is-paged .ProseMirror > .ow-break .ow-page-break { margin: 0; border-top: 1px dashed #b8c2cf; }
+.ow-pgap { position: relative; margin: 0 calc(-1 * var(--pm, 96px)); display: flex; flex-direction: column; user-select: none; -webkit-user-select: none; cursor: default; }
+.ow-pgap-end { flex: 1; position: relative; min-height: var(--pm, 96px); }
+.ow-pgap-end > span, .ow-pgap-start > span { position: absolute; left: var(--pm, 96px); right: var(--pm, 96px); font-size: 11pt; color: #465365; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ow-pgap-foot { bottom: 12px; }
+.ow-pgap-num { bottom: 12px; text-align: right; color: #102032 !important; }
+.ow-pgap-start { height: var(--pm, 96px); position: relative; flex: none; }
+.ow-pgap-head { top: 16px; }
+.ow-pgap-band { flex: none; background: var(--docs-canvas, #f9fbfd); margin: 0 -1px; border-top: 1px solid #dadce0; border-bottom: 1px solid #dadce0; box-shadow: inset 0 3px 3px -2px rgba(60, 64, 67, 0.18), inset 0 -3px 3px -2px rgba(60, 64, 67, 0.18); }
+@media print { .ow-pgap { display: none !important; } .ow-a4.is-paged .ProseMirror { padding-bottom: 0 !important; } .ow-a4.is-paged .ProseMirror > .ow-break { break-after: page; } }
