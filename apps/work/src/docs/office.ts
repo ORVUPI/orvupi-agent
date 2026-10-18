@@ -1,13 +1,11 @@
 import { WorkError } from "../security/errors";
 import { unzip } from "../sheets/zip";
 
+const XML_ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: "\"", apos: "'" };
+
 function xmlText(source: string): string {
-  return source
-    .replaceAll("&amp;", "&")
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">")
-    .replaceAll("&quot;", "\"")
-    .replaceAll("&apos;", "'");
+  // Una sola pasada: "&amp;lt;" queda como "&lt;" y no se decodifica dos veces.
+  return source.replace(/&(amp|lt|gt|quot|apos);/g, (_, name: string) => XML_ENTITIES[name] ?? "");
 }
 
 function paragraphs(xml: string, pattern: RegExp): string[] {
