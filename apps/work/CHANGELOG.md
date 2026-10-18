@@ -12,6 +12,12 @@ Alfa de desarrollo. No es una versión de producción. Sigue en la vista previa.
 - Un archivo de 0.1 a 0.7.0 sigue abriendo: la versión del archivo sigue en 1.
 - En el teléfono, el asa de selección de Hojas queda en la esquina de la celda, también en la fila fijada. En el inicio, la fila de iconos cabe entera y no se desplaza de lado. Las capturas de las pruebas usan `ORVUPI_SCREENSHOTS` o una carpeta que se pueda escribir.
 - La pantalla de archivos sigue la disposición de un administrador de archivos: lugares y herramientas en la columna, barra de vista sobre la lista, cuadrícula con icono propio, menú de acciones en cada archivo y panel de detalles. En el teléfono ese panel es una hoja. La marca sigue siendo ORVUPI.
+- Docs guarda un gráfico, un dibujo y una ecuación que se editan, una marca de agua con texto propio, el número de cada página y un DOCX con negrita, tabla, encabezado y pie. También importa DOCX.
+- Hojas guarda el filtro y vistas con nombre, rangos con nombre, validación por fórmula, dispersión, área y medidor. Drive busca en el texto de hojas, diapositivas, formularios, dibujos y notas.
+- Presentaciones: vista del presentador con las notas al lado y puntero. Importa el texto de un PPTX.
+- Formularios saltan a una sección según la respuesta y guardan el archivo o el vídeo local si cabe.
+- Dibujos descarga PNG y SVG. Notas guardan una foto, un audio o un boceto.
+- La caché sigue en red primero. Precargar el paquete entero tapaba la barra con el aviso de nueva versión, así que no se hace. El icono de la pestaña no entra en esa caché. El cuadro de autorrelleno queda a la izquierda del asa, para que el arrastre continúe el número.
 
 ## 0.7.0 — 2026-10-17
 

@@ -8,6 +8,7 @@ import { MenuBar } from "../ui/menus";
 import { APP_VERSION } from "../version";
 import { createId, fileNameWithExtension } from "../security/names";
 import { SLIDE_FILLS, alignItem, orderItems, type SlideItem } from "../slides/model";
+import { drawingPng, drawingSvg } from "./export";
 import { parseDrawing, serializeDrawing, type DrawingFile } from "./model";
 
 const CANVAS_W = 960;
@@ -57,6 +58,7 @@ export function DrawingsScreen() {
         kind: "drawing",
         mime: "application/vnd.orvupi.drawing+json",
         bytes: serializeDrawing(file),
+        snippet: file.items.map((item) => item.kind === "text" ? item.text : item.kind).join(" ").slice(0, 4000),
       }).then(() => workspace.refreshFiles()).then(() => setStatus("saved")).catch(workspace.reportError);
     }, 400);
     return () => window.clearTimeout(timer);
@@ -133,7 +135,15 @@ export function DrawingsScreen() {
       <MenuBar
         label={workspace.t("menuBar")}
         menus={[
-          { id: "file", label: workspace.t("menuFile"), items: [{ id: "download", label: workspace.t("download"), onSelect: () => downloadBytes(serializeDrawing(file), fileNameWithExtension(file.title, "ordraw"), "application/vnd.orvupi.drawing+json") }] },
+          { id: "file", label: workspace.t("menuFile"), items: [
+            { id: "download", label: workspace.t("download"), onSelect: () => downloadBytes(serializeDrawing(file), fileNameWithExtension(file.title, "ordraw"), "application/vnd.orvupi.drawing+json") },
+            { id: "png", label: workspace.t("drawPng"), onSelect: () => {
+              const url = drawingPng(file.items);
+              const bytes = Uint8Array.from(atob(url.split(",")[1] ?? ""), (char) => char.charCodeAt(0));
+              downloadBytes(bytes, fileNameWithExtension(file.title, "png"), "image/png");
+            } },
+            { id: "svg", label: workspace.t("drawSvg"), onSelect: () => downloadBytes(new TextEncoder().encode(drawingSvg(file.items)), fileNameWithExtension(file.title, "svg"), "image/svg+xml") },
+          ] },
           { id: "edit", label: workspace.t("menuEdit"), items: [{ id: "remove", label: workspace.t("slideRemove"), onSelect: () => {
             if (!selected) return;
             update({ ...file, items: file.items.filter((item) => item.id !== selected.id) });

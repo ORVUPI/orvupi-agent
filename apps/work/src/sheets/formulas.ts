@@ -10,9 +10,12 @@ export type CellValue =
   | { kind: "err"; value: string }
   | { kind: "range"; cells: CellAddr[] };
 
+export type NamedRange = { name: string; ref: string };
+
 export type FormulaBook = {
   sheets: Array<{ name: string; cells: string[][] }>;
   active: number;
+  names?: NamedRange[];
 };
 
 const err = (value: string): CellValue => ({ kind: "err", value });
@@ -77,7 +80,7 @@ export function displayCell(
   const key = `${name}:${row}:${col}`;
   if (stack.has(key)) return "#CICLO!";
   stack.add(key);
-  const value = evaluateFormula(raw.slice(1), (ref) => {
+  const value = evaluateFormula(expandNames(raw.slice(1), book?.names), (ref) => {
     if (ref.sheet) {
       const found = book?.sheets.find((sheet) => sheet.name.toLowerCase() === ref.sheet?.toLowerCase());
       if (!found) return "#REF!";
@@ -717,16 +720,31 @@ alias(["K.ESIMO.MENOR", "SMALL"], (args, resolve) => {
   return picked === undefined ? err("#VALOR!") : { kind: "num", value: picked };
 });
 alias(["CONSULTA", "QUERY"], (args, resolve) => {
-  const values = listed(args, resolve);
+  const last = args.length >= 2 ? args[args.length - 1] : undefined;
+  const needle = last && last.kind !== "range" ? textOf(scalar(last, resolve)) : null;
+  const values = listed(typeof needle === "string" ? args.slice(0, -1) : args, resolve);
   if (!Array.isArray(values)) return values;
   const parts: string[] = [];
   for (const cell of values) {
     const piece = textOf(cell);
     if (typeof piece !== "string") return piece;
-    if (piece.trim()) parts.push(piece);
+    if (!piece.trim()) continue;
+    if (typeof needle === "string" && !piece.toLowerCase().includes(needle.toLowerCase())) continue;
+    parts.push(piece);
   }
   return { kind: "text", value: parts.join(" | ").slice(0, 240) };
 });
+
+function expandNames(source: string, names: NamedRange[] | undefined): string {
+  if (!names || names.length === 0) return source;
+  let next = source;
+  for (const entry of names) {
+    if (!/^[A-Za-z][A-Za-z0-9_]{0,31}$/.test(entry.name)) continue;
+    if (!/^[A-Za-z]{1,3}[1-9][0-9]*(?::[A-Za-z]{1,3}[1-9][0-9]*)?$/.test(entry.ref)) continue;
+    next = next.replace(new RegExp(`(?<![A-Za-z0-9_])${entry.name}(?![A-Za-z0-9_])`, "gi"), entry.ref);
+  }
+  return next;
+}
 alias(["REF"], () => err("#REF!"));
 
 export const FUNCTION_NAMES = Object.keys(FUNCTIONS);

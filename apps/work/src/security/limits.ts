@@ -19,6 +19,8 @@ export const ALLOWED_IMPORT_EXTENSIONS = new Set([
   "webp",
   "csv",
   "xlsx",
+  "docx",
+  "pptx",
 ]);
 
 const BLOCKED_EXTENSIONS = new Set([

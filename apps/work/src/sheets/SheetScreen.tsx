@@ -33,7 +33,7 @@ import {
   type CellStyle,
   type CondRule,
 } from "./format";
-import { COL_COUNT, ROW_COUNT, cellRef, columnLabel, displayCell, sortGrid, type FormulaBook } from "./formulas";
+import { COL_COUNT, ROW_COUNT, cellRef, columnLabel, displayCell, evaluateFormula, sortGrid, type FormulaBook } from "./formulas";
 import { blankSheet, parseSheet, serializeSheet, type SheetFile, type SheetTab } from "./model";
 import { sheetsToXlsx, xlsxToSheets } from "./xlsx";
 
@@ -60,7 +60,6 @@ export function SheetsScreen() {
   const sheets = workspace.files.filter((file) => file.deletedAt === null && file.kind === "sheet");
   const [file, setFile] = useState<SheetFile | null>(null);
   const [status, setStatus] = useState<"saved" | "pending">("saved");
-  const [filter, setFilter] = useState("");
   const [selected, setSelected] = useState({ row: 0, col: 0 });
   const [anchor, setAnchor] = useState({ row: 0, col: 0 });
   const [error, setError] = useState("");
@@ -68,7 +67,7 @@ export function SheetsScreen() {
   const [dialog, setDialog] = useState<"" | "find" | "valid" | "cond" | "help" | "note">("");
   const [findQuery, setFindQuery] = useState("");
   const [replaceQuery, setReplaceQuery] = useState("");
-  const [validKind, setValidKind] = useState<"list" | "check" | "date" | "range">("list");
+  const [validKind, setValidKind] = useState<"list" | "check" | "date" | "range" | "formula">("list");
   const [validText, setValidText] = useState("Sí, No");
   const [rangeMin, setRangeMin] = useState("0");
   const [rangeMax, setRangeMax] = useState("10");
@@ -109,6 +108,7 @@ export function SheetsScreen() {
     };
     const down = (event: PointerEvent) => {
       if (!event.isPrimary) return;
+      if (event.target instanceof Element && event.target.closest(".ow-fill-handle")) return;
       const handle = event.target instanceof Element && Boolean(event.target.closest(".ow-range-handle"));
       const cell = hit(event.clientX, event.clientY);
       if (!cell && !handle) return;
@@ -189,6 +189,7 @@ export function SheetsScreen() {
           kind: "sheet",
           mime: "application/vnd.orvupi.sheet+json",
           bytes: serializeSheet(file),
+          snippet: file.sheets.map((sheet) => sheet.cells.flat().filter((value) => value && !value.startsWith("=")).join(" ")).join("\n").slice(0, 4000),
         })
         .then(() => workspace.refreshFiles())
         .then(() => setStatus("saved"))
@@ -199,7 +200,7 @@ export function SheetsScreen() {
 
   const active = file?.sheets[file.active];
   const book: FormulaBook | undefined = useMemo(() => (
-    file ? { sheets: file.sheets.map((sheet) => ({ name: sheet.name, cells: sheet.cells })), active: file.active } : undefined
+    file ? { sheets: file.sheets.map((sheet) => ({ name: sheet.name, cells: sheet.cells })), active: file.active, names: file.sheets[file.active]?.names } : undefined
   ), [file]);
   const styles = active?.styles ?? {};
   const currentStyle = styles[styleKey(selected.row, selected.col)];
@@ -209,9 +210,10 @@ export function SheetsScreen() {
   const cellRule = active?.validation?.[styleKey(selected.row, selected.col)];
   const options = cellRule?.kind === "list" ? cellRule.options : [];
 
+  const filter = active?.filter ?? "";
   const rowIndexes = useMemo(() => {
     if (!active) return [];
-    const query = filter.trim().toLowerCase();
+    const query = (active.filter ?? "").trim().toLowerCase();
     const indexes: number[] = [];
     for (let row = 0; row < active.cells.length; row += 1) {
       if (!query || row < frozenRows) {
@@ -226,7 +228,7 @@ export function SheetsScreen() {
       if (hit) indexes.push(row);
     }
     return indexes;
-  }, [active, filter, frozenRows, book]);
+  }, [active, frozenRows, book]);
 
   function update(mutator: (current: SheetFile) => SheetFile) {
     setFile((current) => (current ? mutator(current) : current));
@@ -240,12 +242,34 @@ export function SheetsScreen() {
     }));
   }
 
+  function formulaAllows(sheet: SheetTab, row: number, col: number, value: string): boolean {
+    const rule = sheet.validation?.[styleKey(row, col)];
+    if (!rule || rule.kind !== "formula") return true;
+    const cells = sheet.cells.map((line) => [...line]);
+    const line = cells[row] ? [...cells[row]] : [];
+    line[col] = value.slice(0, 500);
+    cells[row] = line;
+    const result = evaluateFormula(rule.expr, (ref) => displayCell(cells, ref.row, ref.col, new Set(), book));
+    if (result.kind === "bool") return result.value;
+    if (result.kind === "num") return result.value !== 0;
+    return false;
+  }
+
   function setCell(value: string) {
+    if (active && !formulaAllows(active, selected.row, selected.col, value)) {
+      setError(workspace.t("sheetFormulaRule"));
+      return;
+    }
+    setError("");
     mapActive((sheet) => {
       const cells = sheet.cells.map((row) => [...row]);
       cells[selected.row]![selected.col] = value.slice(0, 500);
       return { ...sheet, cells };
     });
+  }
+
+  function setSheetFilter(value: string) {
+    mapActive((sheet) => ({ ...sheet, filter: value.slice(0, 80) }));
   }
 
   function patch(partial: CellStyle) {
@@ -389,7 +413,7 @@ export function SheetsScreen() {
             type="button"
             className="ow-fill-handle"
             aria-label={workspace.t("sheetAutofill")}
-            style={{ top: cellTop + ROW_H * span.rowspan - 8, left: cellLeft + COL_W * span.colspan - 8 }}
+            style={{ top: cellTop + ROW_H * span.rowspan - 8, left: cellLeft + COL_W * span.colspan - 32 }}
             onPointerDown={(event) => {
               event.preventDefault();
               event.stopPropagation();
@@ -482,6 +506,9 @@ export function SheetsScreen() {
             { id: "bar", label: workspace.t("sheetChartBar"), onSelect: () => mapActive((sheet) => ({ ...sheet, charts: [...(sheet.charts ?? []), { id: createId().slice(0, 8), kind: "bar", title: workspace.t("sheetChartBar"), labelCol: 0, valueCol: selected.col, rowFrom: 0, rowTo: 7 }] })) },
             { id: "line", label: workspace.t("sheetChartLine"), onSelect: () => mapActive((sheet) => ({ ...sheet, charts: [...(sheet.charts ?? []), { id: createId().slice(0, 8), kind: "line", title: workspace.t("sheetChartLine"), labelCol: 0, valueCol: selected.col, rowFrom: 0, rowTo: 7 }] })) },
             { id: "pie", label: workspace.t("sheetChartPie"), onSelect: () => mapActive((sheet) => ({ ...sheet, charts: [...(sheet.charts ?? []), { id: createId().slice(0, 8), kind: "pie", title: workspace.t("sheetChartPie"), labelCol: 0, valueCol: selected.col, rowFrom: 0, rowTo: 7 }] })) },
+            { id: "scatter", label: workspace.t("sheetChartScatter"), onSelect: () => mapActive((sheet) => ({ ...sheet, charts: [...(sheet.charts ?? []), { id: createId().slice(0, 8), kind: "scatter", title: workspace.t("sheetChartScatter"), labelCol: 0, valueCol: selected.col, rowFrom: 0, rowTo: 7 }] })) },
+            { id: "area", label: workspace.t("sheetChartArea"), onSelect: () => mapActive((sheet) => ({ ...sheet, charts: [...(sheet.charts ?? []), { id: createId().slice(0, 8), kind: "area", title: workspace.t("sheetChartArea"), labelCol: 0, valueCol: selected.col, rowFrom: 0, rowTo: 7 }] })) },
+            { id: "gauge", label: workspace.t("sheetChartGauge"), onSelect: () => mapActive((sheet) => ({ ...sheet, charts: [...(sheet.charts ?? []), { id: createId().slice(0, 8), kind: "gauge", title: workspace.t("sheetChartGauge"), labelCol: 0, valueCol: selected.col, rowFrom: 0, rowTo: 7 }] })) },
             { id: "image", label: workspace.t("sheetImage"), onSelect: () => imageRef.current?.click() },
             { id: "note", label: workspace.t("sheetNote"), onSelect: () => { setNoteText(active.notes?.[styleKey(selected.row, selected.col)] ?? ""); setDialog("note"); } },
           ] },
@@ -508,6 +535,25 @@ export function SheetsScreen() {
               setFormatOpen(true);
               window.setTimeout(() => document.getElementById("ow-sheet-filter")?.focus(), 0);
             } },
+            { id: "name", label: workspace.t("sheetNamedRange"), onSelect: () => mapActive((sheet) => {
+              const used = new Set((sheet.names ?? []).map((item) => item.name.toLowerCase()));
+              let name = "Rango";
+              let index = 1;
+              while (used.has(name.toLowerCase())) {
+                index += 1;
+                name = `Rango${index}`;
+              }
+              return { ...sheet, names: [...(sheet.names ?? []), { name, ref: cellRef(selected.row, selected.col) }].slice(0, 20) };
+            }) },
+            { id: "view", label: workspace.t("sheetFilterView"), onSelect: () => mapActive((sheet) => ({
+              ...sheet,
+              filterViews: [...(sheet.filterViews ?? []), { name: `${workspace.t("sheetFilterView")} ${(sheet.filterViews ?? []).length + 1}`.slice(0, 40), query: sheet.filter ?? "" }].slice(0, 12),
+            })) },
+            ...(active?.filterViews ?? []).map((view) => ({
+              id: `view-${view.name}`,
+              label: view.name,
+              onSelect: () => setSheetFilter(view.query),
+            })),
             { id: "valid", label: workspace.t("sheetValidation"), onSelect: () => setDialog("valid") },
             { id: "cond", label: workspace.t("sheetConditional"), onSelect: () => setDialog("cond") },
             { id: "fill", label: workspace.t("sheetAutofill"), onSelect: () => mapActive((sheet) => ({ ...sheet, cells: autofill(sheet.cells, selected.row, selected.col, 3, true) })) },
@@ -548,7 +594,7 @@ export function SheetsScreen() {
           ))}
         </div>
         <div className="ow-row ow-sheet-extra">
-          <Input id="ow-sheet-filter" label={workspace.t("sheetFilter")} value={filter} onChange={(event) => setFilter(event.target.value)} />
+          <Input id="ow-sheet-filter" label={workspace.t("sheetFilter")} value={filter} onChange={(event) => setSheetFilter(event.target.value)} />
           <label className="ow-file">
             <input
               aria-label={workspace.t("import")}
@@ -654,6 +700,7 @@ export function SheetsScreen() {
           {bounds.r2 >= frozenRows ? rangeHandle : null}
         </div>
       </div>
+      <aside className="ow-sheet-charts">
       {(active.charts ?? []).map((chart) => {
         const series = chartSeries(active.cells, chart, book);
         return (
@@ -662,6 +709,7 @@ export function SheetsScreen() {
           </section>
         );
       })}
+      </aside>
       <div className="ow-sheet-tabs">
         <div role="tablist" aria-label={workspace.t("navSheets")}>
           {file.sheets.map((sheet, index) => (
@@ -691,9 +739,11 @@ export function SheetsScreen() {
             <option value="check">{workspace.t("sheetCheck")}</option>
             <option value="date">{workspace.t("sheetDate")}</option>
             <option value="range">{workspace.t("sheetRange")}</option>
+            <option value="formula">{workspace.t("sheetFormulaRule")}</option>
           </select>
         </label>
         {validKind === "list" ? <Input label={workspace.t("sheetOptions")} value={validText} onChange={(event) => setValidText(event.target.value)} /> : null}
+        {validKind === "formula" ? <Input label={workspace.t("sheetFormulaRule")} value={validText} onChange={(event) => setValidText(event.target.value)} /> : null}
         {validKind === "range" ? (
           <>
             <Input id="ow-range-min" label={workspace.t("sheetRange")} value={rangeMin} onChange={(event) => setRangeMin(event.target.value)} />
@@ -706,7 +756,9 @@ export function SheetsScreen() {
             ? { kind: "list" as const, options: list }
             : validKind === "range"
               ? { kind: "range" as const, min: Number(rangeMin) || 0, max: Number(rangeMax) || 0 }
-              : { kind: validKind };
+              : validKind === "formula"
+                ? { kind: "formula" as const, expr: validText.replace(/^=/, "").slice(0, 120) }
+                : { kind: validKind };
           mapActive((sheet) => ({ ...sheet, validation: { ...(sheet.validation ?? {}), [styleKey(selected.row, selected.col)]: rule } }));
           setDialog("");
         }}>{workspace.t("sheetApply")}</Button>

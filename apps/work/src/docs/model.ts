@@ -215,6 +215,13 @@ export function blocksFromDoc(doc: JsonNode): Block[] {
       blocks.push({ type: "paragraph", inlines: [{ type: "text", text: "—" }] });
     } else if (node.type === "contents") {
       blocks.push({ type: "contents" });
+    } else if (node.type === "equation" || node.type === "docChart" || node.type === "docDrawing") {
+      const text = node.type === "equation"
+        ? String(node.attrs?.expr ?? "")
+        : node.type === "docChart"
+          ? String(node.attrs?.title ?? "")
+          : "Dibujo";
+      blocks.push({ type: "paragraph", inlines: [{ type: "text", text }] });
     }
   }
   return blocks;

@@ -17,6 +17,9 @@ export type SheetTab = {
   notes?: Record<string, string>;
   macro?: CellStyle;
   charts?: SheetChart[];
+  filter?: string;
+  filterViews?: Array<{ name: string; query: string }>;
+  names?: Array<{ name: string; ref: string }>;
 };
 
 export type SheetFile = {
@@ -63,7 +66,7 @@ function asOp(value: unknown): CondRule["op"] | null {
 }
 
 function asChart(value: unknown): SheetChart["kind"] | null {
-  if (value === "bar" || value === "line" || value === "pie") return value;
+  if (value === "bar" || value === "line" || value === "pie" || value === "scatter" || value === "area" || value === "gauge") return value;
   return null;
 }
 
@@ -114,8 +117,31 @@ function cellRule(entry: unknown): CellRule | null {
     if (!Number.isFinite(min) || !Number.isFinite(max)) return null;
     return { kind: "range", min, max: Math.max(min, max) };
   }
+  if (rule.kind === "formula" && typeof rule.expr === "string" && rule.expr.trim()) {
+    return { kind: "formula", expr: rule.expr.replace(/^=/, "").slice(0, 120) };
+  }
   if (rule.kind === "list" && Array.isArray(rule.options)) return cellRule(rule.options);
   return null;
+}
+
+function viewsOf(value: unknown): Array<{ name: string; query: string }> {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((entry) => {
+    if (!isRecord(entry) || typeof entry.name !== "string") return [];
+    const name = entry.name.trim().slice(0, 40);
+    if (!name) return [];
+    return [{ name, query: typeof entry.query === "string" ? entry.query.slice(0, 80) : "" }];
+  }).slice(0, 12);
+}
+
+function namesOf(value: unknown): Array<{ name: string; ref: string }> {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((entry) => {
+    if (!isRecord(entry) || typeof entry.name !== "string" || typeof entry.ref !== "string") return [];
+    if (!/^[A-Za-z][A-Za-z0-9_]{0,31}$/.test(entry.name)) return [];
+    if (!/^[A-Za-z]{1,3}[1-9][0-9]*(?::[A-Za-z]{1,3}[1-9][0-9]*)?$/.test(entry.ref)) return [];
+    return [{ name: entry.name, ref: entry.ref.toUpperCase() }];
+  }).slice(0, 20);
 }
 
 function validationOf(value: unknown): Record<string, CellRule> {
@@ -216,6 +242,9 @@ export function parseSheet(bytes: Uint8Array | string): SheetFile {
         images: textMap(entry.images, 120_000),
         notes: textMap(entry.notes, 240),
         macro: knownStyle(entry.macro) ?? undefined,
+        filter: typeof entry.filter === "string" ? entry.filter.slice(0, 80) : "",
+        filterViews: viewsOf(entry.filterViews),
+        names: namesOf(entry.names),
       },
     ];
   });

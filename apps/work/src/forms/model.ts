@@ -11,12 +11,16 @@ export type Question = {
   kind: QuestionKind;
   required: boolean;
   options: string[];
+  goTo?: Record<string, string>;
 };
+
+export type FormBlob = { name: string; type: string; data: string };
 
 export type FormResponse = {
   id: string;
   at: string;
   answers: Record<string, string>;
+  blobs?: Record<string, FormBlob>;
 };
 
 export type FormFile = {
@@ -39,12 +43,19 @@ function questionOf(value: unknown): Question | null {
   const options = Array.isArray(value.options)
     ? value.options.filter((item): item is string => typeof item === "string").map((item) => item.slice(0, 80)).slice(0, 8)
     : [];
+  const goTo: Record<string, string> = {};
+  if (isRecord(value.goTo)) {
+    for (const [option, target] of Object.entries(value.goTo)) {
+      if (typeof target === "string" && target.trim()) goTo[option.slice(0, 80)] = target.slice(0, 40);
+    }
+  }
   return {
     id: value.id.slice(0, 40),
     prompt: typeof value.prompt === "string" ? value.prompt.slice(0, 180) : "",
     kind,
     required: value.required === true,
     options: kind === "choice" || kind === "check" || kind === "dropdown" || kind === "grid" ? (options.length > 0 ? options : ["", ""]) : [],
+    ...(Object.keys(goTo).length > 0 ? { goTo } : {}),
   };
 }
 
@@ -54,11 +65,47 @@ function responseOf(value: unknown): FormResponse | null {
   for (const [key, answer] of Object.entries(value.answers)) {
     if (typeof answer === "string") answers[key.slice(0, 40)] = answer.slice(0, 2000);
   }
+  const blobs: Record<string, FormBlob> = {};
+  if (isRecord(value.blobs)) {
+    for (const [key, blob] of Object.entries(value.blobs)) {
+      if (!isRecord(blob) || typeof blob.name !== "string" || typeof blob.data !== "string") continue;
+      if (!blob.data.startsWith("data:") || blob.data.length > 400_000) continue;
+      blobs[key.slice(0, 40)] = {
+        name: blob.name.slice(0, 180),
+        type: typeof blob.type === "string" ? blob.type.slice(0, 80) : "",
+        data: blob.data,
+      };
+    }
+  }
   return {
     id: value.id.slice(0, 40),
     at: typeof value.at === "string" ? value.at.slice(0, 40) : "",
     answers,
+    ...(Object.keys(blobs).length > 0 ? { blobs } : {}),
   };
+}
+
+export function visibleQuestions(file: FormFile, answers: Record<string, string>): Question[] {
+  const shown: Question[] = [];
+  const seen = new Set<number>();
+  let index = 0;
+  while (index >= 0 && index < file.questions.length && shown.length < 40) {
+    if (seen.has(index)) break;
+    seen.add(index);
+    const question = file.questions[index];
+    if (!question) break;
+    shown.push(question);
+    const target = question.goTo?.[answers[question.id] ?? ""];
+    if (target) {
+      const next = file.questions.findIndex((item) => item.id === target);
+      if (next > index) {
+        index = next;
+        continue;
+      }
+    }
+    index += 1;
+  }
+  return shown;
 }
 
 export function createFormFile(input: { id: string; title: string }): FormFile {
@@ -111,7 +158,7 @@ export function parseForm(bytes: Uint8Array | string): FormFile {
 }
 
 export function missingRequired(file: FormFile, answers: Record<string, string>): boolean {
-  return file.questions.some((question) => question.kind !== "section" && question.required && (answers[question.id] ?? "").trim() === "");
+  return visibleQuestions(file, answers).some((question) => question.kind !== "section" && question.required && (answers[question.id] ?? "").trim() === "");
 }
 
 export function answerCounts(file: FormFile, questionId: string): Array<{ label: string; count: number }> {

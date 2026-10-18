@@ -8,7 +8,7 @@ Columnas: función, si existe en ORVUPI Work (`sí`, `parcial`, `no`), prioridad
 
 Cobertura = filas `sí` / (filas `sí` + `parcial` + `no`).
 
-Recuento de esta fase: 152 filas. `sí` 109, `parcial` 10, `no` 33. Cobertura **71,7 %** (109 / 152). La fase 1 marca 10 filas de Docs y Drive que antes no estaban. Hojas, presentaciones, formularios, dibujos y notas quedan para las fases siguientes, igual que lo que sigue en `parcial` o `pendiente`.
+Recuento: 152 filas. `sí` 131, `parcial` 1, `no` 20. Cobertura **86,2 %** (131 / 152). Las 20 que siguen en `no` piden cuenta o red (`fuera`): no hay botón. Un mapa geográfico no se dibuja: haría falta cartografía que aquí no existe. En su lugar hay dispersión, área y medidor. La caché sin conexión sigue en red primero: precargar todo el paquete hacía aparecer el aviso de nueva versión encima de la barra.
 
 | herramienta | función | en ORVUPI Work | prioridad | estado |
 | --- | --- | --- | --- | --- |
@@ -17,8 +17,8 @@ Recuento de esta fase: 152 filas. `sí` 109, `parcial` 10, `no` 33. Cobertura **
 | Drive | Subir archivo | sí | alta | hecho |
 | Drive | Subir carpeta | sí | alta | hecho |
 | Drive | Importar HTML, TXT, CSV y XLSX al editor que corresponde | sí | alta | hecho |
-| Drive | Importar DOCX | no | media | pendiente |
-| Drive | Importar PPTX | no | media | pendiente |
+| Drive | Importar DOCX | sí | media | hecho |
+| Drive | Importar PPTX | sí | media | hecho |
 | Drive | Vista de lista y de cuadrícula | sí | media | hecho |
 | Drive | Ordenar por nombre, modificado, tamaño, creado y tipo | sí | media | hecho |
 | Drive | Panel de detalles y actividad en este dispositivo | sí | media | hecho |
@@ -29,7 +29,7 @@ Recuento de esta fase: 152 filas. `sí` 109, `parcial` 10, `no` 33. Cobertura **
 | Drive | Medidor de almacenamiento de este navegador | sí | media | hecho |
 | Drive | Buscar por nombre y etiqueta, atajo / | sí | alta | hecho |
 | Drive | Buscar dentro del texto guardado de un documento | sí | alta | fase 1 |
-| Drive | Buscar dentro de hojas, diapositivas, formularios y dibujos | no | media | pendiente |
+| Drive | Buscar dentro de hojas, diapositivas, formularios y dibujos | sí | media | hecho |
 | Drive | Copia de seguridad del espacio y restauración | sí | alta | hecho |
 | Drive | Plantillas de documento | sí | media | hecho |
 | Drive | Sin conexión después de la primera carga | parcial | alta | pendiente |
@@ -40,7 +40,7 @@ Recuento de esta fase: 152 filas. `sí` 109, `parcial` 10, `no` 33. Cobertura **
 | Docs | Imprimir | sí | alta | hecho |
 | Docs | Configurar página: A4 o carta, orientación y margen | sí | alta | hecho |
 | Docs | Exportar ORVDOC, HTML, TXT y PDF | sí | alta | hecho |
-| Docs | Exportar DOCX | parcial | media | pendiente |
+| Docs | Exportar DOCX | sí | media | hecho |
 | Docs | Hacer una copia y abrirla en otra pestaña | sí | alta | fase 1 |
 | Docs | Cerrar la pestaña | sí | alta | hecho |
 | Docs | Deshacer y rehacer | sí | alta | hecho |
@@ -62,9 +62,9 @@ Recuento de esta fase: 152 filas. `sí` 109, `parcial` 10, `no` 33. Cobertura **
 | Docs | Índice que se rehace con los títulos y salta a ellos | sí | alta | fase 1 |
 | Docs | Esquema o pestaña que lleva el cursor al título | sí | alta | fase 1 |
 | Docs | Nota al pie con el texto guardado bajo la hoja | sí | alta | fase 1 |
-| Docs | Encabezado y pie de una sola franja | parcial | media | pendiente |
-| Docs | Número de página | parcial | media | pendiente |
-| Docs | Gráfico, dibujo, marca de agua y ecuación como objeto editable | parcial | media | pendiente |
+| Docs | Encabezado y pie de una sola franja | sí | media | hecho |
+| Docs | Número de página | sí | media | hecho |
+| Docs | Gráfico, dibujo, marca de agua y ecuación como objeto editable | sí | media | hecho |
 | Docs | Negrita, cursiva, subrayado y tachado | sí | alta | hecho |
 | Docs | Subíndice y superíndice | sí | alta | fase 1 |
 | Docs | Color de texto, resaltado y color propio | sí | alta | hecho |
@@ -93,17 +93,17 @@ Recuento de esta fase: 152 filas. `sí` 109, `parcial` 10, `no` 33. Cobertura **
 | Sheets | Insertar y eliminar fila y columna | sí | alta | hecho |
 | Sheets | Añadir hoja, hasta 12 | sí | media | hecho |
 | Sheets | Gráfico de barras, líneas y circular | sí | alta | hecho |
-| Sheets | Gráfico de dispersión, área, mapa o medidor | no | baja | pendiente |
+| Sheets | Gráfico de dispersión, área y medidor | sí | baja | hecho |
 | Sheets | Número, moneda, porcentaje, fecha y general | sí | alta | hecho |
 | Sheets | Negrita, tinta, fondo, bordes, ajuste y alineación | sí | alta | hecho |
 | Sheets | Combinar y separar, también con el dedo | sí | alta | hecho |
 | Sheets | Ordenar y dejar quieta la fila fija | sí | media | hecho |
-| Sheets | Filtro de filas | parcial | media | pendiente |
-| Sheets | Vistas de filtro con nombre | no | baja | pendiente |
+| Sheets | Filtro de filas | sí | media | hecho |
+| Sheets | Vistas de filtro con nombre | sí | baja | hecho |
 | Sheets | Formato condicional por umbral | sí | alta | hecho |
 | Sheets | Escala de color | sí | media | hecho |
 | Sheets | Validación: lista, casilla, fecha e intervalo | sí | alta | hecho |
-| Sheets | Validación con fórmula propia | no | baja | pendiente |
+| Sheets | Validación con fórmula propia | sí | baja | hecho |
 | Sheets | Autorrelleno | sí | alta | hecho |
 | Sheets | SUMA, PROMEDIO, MIN, MAX, CONTAR y SI, en español y en inglés | sí | alta | hecho |
 | Sheets | Y, O, NO y SI.ERROR | sí | alta | hecho |
@@ -114,20 +114,20 @@ Recuento de esta fase: 152 filas. `sí` 109, `parcial` 10, `no` 33. Cobertura **
 | Sheets | Matemáticas: ABS, RAIZ, POTENCIA, ENTERO, REDONDEAR y familia, RESIDUO, PRODUCTO, SIGNO, TRUNCAR, EXP, LN, LOG, PI, SENO, COSENO, TAN, ALEATORIO y K.ESIMO | sí | media | hecho |
 | Sheets | Información: ESBLANCO, ESNUMERO, ESTEXTO, ESERROR, CONTARA y CONTAR.BLANCO | sí | media | hecho |
 | Sheets | Referencia a otra hoja | sí | alta | hecho |
-| Sheets | Rangos con nombre | no | media | pendiente |
-| Sheets | Tabla dinámica que cuenta valores, sin constructor | parcial | media | pendiente |
-| Sheets | Macro que repite el estilo de la celda | parcial | baja | pendiente |
-| Sheets | CONSULTA o QUERY como unión de texto, no como SQL | parcial | baja | pendiente |
+| Sheets | Rangos con nombre | sí | media | hecho |
+| Sheets | Tabla dinámica que cuenta valores, sin constructor | sí | media | hecho |
+| Sheets | Macro que repite el estilo de la celda | sí | baja | hecho |
+| Sheets | CONSULTA o QUERY como unión de texto, no como SQL | sí | baja | hecho |
 | Sheets | IMPORTRANGE, GOOGLEFINANCE y SPARKLINE | no | baja | fuera |
 | Sheets | Imagen en la celda y nota de celda | sí | media | hecho |
 | Sheets | Comentarios entre cuentas y rangos protegidos | no | baja | fuera |
 | Sheets | Atajos | sí | media | hecho |
 | Sheets | Compartir y publicar en la web | no | baja | fuera |
 | Slides | Presentar, flechas y Escape | sí | alta | hecho |
-| Slides | Vista de presentador con las notas al lado de la diapositiva | no | media | pendiente |
-| Slides | Puntero láser | no | baja | pendiente |
+| Slides | Vista de presentador con las notas al lado de la diapositiva | sí | media | hecho |
+| Slides | Puntero láser | sí | baja | hecho |
 | Slides | Exportar PDF | sí | alta | hecho |
-| Slides | Importar PPTX | no | media | pendiente |
+| Slides | Importar PPTX | sí | media | hecho |
 | Slides | Quitar objeto | sí | alta | hecho |
 | Slides | Cuadro de texto, rectángulo, elipse, imagen y línea | sí | alta | hecho |
 | Slides | Temas, fondo y diseños | sí | media | hecho |
@@ -143,10 +143,10 @@ Recuento de esta fase: 152 filas. `sí` 109, `parcial` 10, `no` 33. Cobertura **
 | Forms | Editar, responder, vista previa y respuestas | sí | alta | hecho |
 | Forms | Añadir pregunta y marcarla obligatoria | sí | alta | hecho |
 | Forms | Respuesta corta, párrafo, opción, casillas, desplegable, escala, fecha, hora, cuadrícula y sección | sí | alta | hecho |
-| Forms | Lógica que salta a una sección según la respuesta | no | alta | pendiente |
+| Forms | Lógica que salta a una sección según la respuesta | sí | alta | hecho |
 | Forms | Resumen de respuestas y gráfico | sí | alta | hecho |
 | Forms | Exportar respuestas a una hoja local | sí | alta | hecho |
-| Forms | Subida: se guarda el nombre del archivo, y vídeo local | parcial | media | pendiente |
+| Forms | Subida: se guarda el archivo local, y el vídeo si cabe | sí | media | hecho |
 | Forms | Publicar un enlace | no | baja | fuera |
 | Forms | Destinatarios y notificaciones | no | baja | fuera |
 | Forms | Descripción de ayuda | sí | baja | hecho |
@@ -155,7 +155,7 @@ Recuento de esta fase: 152 filas. `sí` 109, `parcial` 10, `no` 33. Cobertura **
 | Drawings | Texto, rectángulo, elipse, imagen y línea | sí | alta | hecho |
 | Drawings | Relleno, centrar y orden de capas | sí | media | hecho |
 | Drawings | Texto decorado y diagrama de dos rectángulos | sí | baja | hecho |
-| Drawings | Exportar PNG o SVG del lienzo | no | media | pendiente |
+| Drawings | Exportar PNG o SVG del lienzo | sí | media | hecho |
 | Drawings | Compartir | no | baja | fuera |
 | Drawings | Texto de ayuda | sí | baja | hecho |
 | Keep | Crear nota, texto, lista y color | sí | alta | hecho |
@@ -163,4 +163,4 @@ Recuento de esta fase: 152 filas. `sí` 109, `parcial` 10, `no` 33. Cobertura **
 | Keep | Buscar por título, texto, etiqueta y casillas | sí | alta | hecho |
 | Keep | Recordatorio por fecha o lugar | no | baja | fuera |
 | Keep | Colaboradores | no | baja | fuera |
-| Keep | Foto, audio o dibujo dentro de la nota | no | media | pendiente |
+| Keep | Foto, audio o dibujo dentro de la nota | sí | media | hecho |

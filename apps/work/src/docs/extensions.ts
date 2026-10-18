@@ -15,6 +15,7 @@ import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { StarterKit } from "@tiptap/starter-kit";
 import { safeHref, safeImageSrc, sanitizeForeignHtml } from "../security/sanitize";
 import { headingEntries, jumpToHeading } from "./jump";
+import { DocChart, DocDrawing, Equation } from "./objects";
 
 const HEX = /^#[0-9a-f]{6}$/i;
 
@@ -42,6 +43,53 @@ const PageBreak = Node.create({
   parseHTML: () => [{ tag: "hr.ow-page-break" }],
   renderHTML({ HTMLAttributes }) {
     return ["hr", mergeAttributes(HTMLAttributes, { class: "ow-page-break" })];
+  },
+  addNodeView() {
+    return ({ editor, getPos }) => {
+      const dom = document.createElement("div");
+      dom.className = "ow-break";
+      dom.setAttribute("contenteditable", "false");
+      const rule = document.createElement("hr");
+      rule.className = "ow-page-break";
+      const head = document.createElement("p");
+      head.className = "ow-break-head";
+      const num = document.createElement("span");
+      num.className = "ow-break-num";
+      const foot = document.createElement("p");
+      foot.className = "ow-break-foot";
+      const paint = () => {
+        const root = editor.view.dom.closest(".ow-docs");
+        const edges = root?.querySelectorAll<HTMLInputElement>(".ow-a4-edge") ?? [];
+        head.textContent = edges[0]?.value ?? "";
+        foot.textContent = edges[1]?.value ?? "";
+        const numbered = root?.querySelector(".ow-page-num") != null;
+        const pos = getPos();
+        let page = 2;
+        if (typeof pos === "number") {
+          page = 2;
+          editor.state.doc.nodesBetween(0, pos, (node) => {
+            if (node.type.name === "pageBreak") page += 1;
+          });
+        }
+        num.textContent = numbered ? String(page) : "";
+        num.hidden = !numbered;
+      };
+      paint();
+      editor.on("update", paint);
+      editor.on("selectionUpdate", paint);
+      dom.append(rule, head, num, foot);
+      return {
+        dom,
+        update() {
+          paint();
+          return true;
+        },
+        destroy() {
+          editor.off("update", paint);
+          editor.off("selectionUpdate", paint);
+        },
+      };
+    };
   },
   addCommands() {
     return {
@@ -484,6 +532,9 @@ export function createExtensions(placeholder: string) {
     PageBreak,
     Contents,
     Footnote,
+    Equation,
+    DocChart,
+    DocDrawing,
     Link.configure({
       openOnClick: false,
       autolink: false,

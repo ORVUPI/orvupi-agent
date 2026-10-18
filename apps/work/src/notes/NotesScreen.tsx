@@ -39,6 +39,7 @@ export function NotesScreen() {
         kind: "note",
         mime: "application/vnd.orvupi.note+json",
         bytes: serializeNote(current),
+        snippet: `${current.title} ${current.body} ${current.label ?? ""} ${current.checks.map((check) => check.text).join(" ")}`.slice(0, 4000),
       }).then(() => workspace.refreshFiles()).then(() => setStatus("saved")).catch(workspace.reportError);
     }, 400);
     return () => window.clearTimeout(timer);
@@ -51,6 +52,37 @@ export function NotesScreen() {
     setDraft(match);
     setStatus("saved");
   }, [workspace.openNoteId, notes, draft?.id]);
+
+  function readMedia(picked: File | undefined, kind: "image" | "audio") {
+    if (!draft || !picked) return;
+    if (picked.size > 280_000) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const data = typeof reader.result === "string" ? reader.result : "";
+      if (!data.startsWith("data:")) return;
+      edit({ ...draft, media: { kind, name: picked.name.slice(0, 80), data } });
+    };
+    reader.readAsDataURL(picked);
+  }
+
+  function sketch() {
+    if (!draft) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = 320;
+    canvas.height = 160;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.fillStyle = "#fff8ec";
+    ctx.fillRect(0, 0, 320, 160);
+    ctx.strokeStyle = "#ff3070";
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(40, 110);
+    ctx.quadraticCurveTo(120, 20, 200, 90);
+    ctx.quadraticCurveTo(250, 130, 290, 50);
+    ctx.stroke();
+    edit({ ...draft, media: { kind: "drawing", name: workspace.t("noteSketch"), data: canvas.toDataURL("image/png") } });
+  }
 
   function edit(next: NoteFile) {
     setDraft(next);
@@ -143,6 +175,17 @@ export function NotesScreen() {
             <Button onClick={() => edit(draft.checks.length > 0 ? { ...draft, checks: [] } : { ...draft, checks: [{ id: createId().slice(0, 12), text: "", done: false }] })}>
               {draft.checks.length > 0 ? workspace.t("noteText") : workspace.t("noteList")}
             </Button>
+            <label className="ow-file">
+              {workspace.t("notePhoto")}
+              <input aria-label={workspace.t("notePhoto")} type="file" accept="image/*" onChange={(event) => readMedia(event.target.files?.[0], "image")} />
+            </label>
+            <label className="ow-file">
+              {workspace.t("noteAudio")}
+              <input aria-label={workspace.t("noteAudio")} type="file" accept="audio/*" onChange={(event) => readMedia(event.target.files?.[0], "audio")} />
+            </label>
+            <Button onClick={() => sketch()}>{workspace.t("noteSketch")}</Button>
+            {draft.media?.kind === "audio" ? <audio controls src={draft.media.data} /> : null}
+            {draft.media && draft.media.kind !== "audio" ? <img src={draft.media.data} alt={draft.media.name || workspace.t("notePhoto")} /> : null}
             <div className="ow-swatches" role="group" aria-label={workspace.t("labelColor")}>
               {NOTE_COLORS.map((color) => (
                 <button key={color} type="button" className="ow-swatch" style={{ background: color }} aria-label={color} aria-pressed={draft.color === color} onClick={() => edit({ ...draft, color })} />

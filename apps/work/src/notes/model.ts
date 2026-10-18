@@ -7,6 +7,8 @@ export type NoteColor = (typeof NOTE_COLORS)[number];
 
 export type NoteCheck = { id: string; text: string; done: boolean };
 
+export type NoteMedia = { kind: "image" | "audio" | "drawing"; name: string; data: string };
+
 export type NoteFile = {
   format: "orvupi-note";
   version: 1;
@@ -18,6 +20,7 @@ export type NoteFile = {
   checks: NoteCheck[];
   label?: string;
   archived?: boolean;
+  media?: NoteMedia;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -84,5 +87,16 @@ export function parseNote(bytes: Uint8Array | string): NoteFile {
     checks,
     label: typeof parsed.label === "string" ? parsed.label.slice(0, 40) : "",
     archived: parsed.archived === true,
+    media: mediaOf(parsed.media),
+  };
+}
+
+function mediaOf(value: unknown): NoteMedia | undefined {
+  if (!isRecord(value) || (value.kind !== "image" && value.kind !== "audio" && value.kind !== "drawing")) return undefined;
+  if (typeof value.data !== "string" || !value.data.startsWith("data:") || value.data.length > 400_000) return undefined;
+  return {
+    kind: value.kind,
+    name: typeof value.name === "string" ? value.name.slice(0, 80) : "",
+    data: value.data,
   };
 }

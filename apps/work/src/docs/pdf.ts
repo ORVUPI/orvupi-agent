@@ -84,7 +84,7 @@ function pickFont(fonts: Fonts, inline: Inline): PDFFont {
   return fonts.regular;
 }
 
-export async function exportPdf(title: string, doc: JsonNode, header = "", footer = ""): Promise<Uint8Array> {
+export async function exportPdf(title: string, doc: JsonNode, header = "", footer = "", pageNumber = false): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
   pdf.setTitle(title);
   pdf.setProducer("ORVUPI Work");
@@ -180,6 +180,11 @@ export async function exportPdf(title: string, doc: JsonNode, header = "", foote
   if (footer.trim()) {
     y -= 8;
     drawLines(wrap(fonts.italic, footer, 10, maxWidth), 10, fonts.italic);
+  }
+  if (pageNumber) {
+    pdf.getPages().forEach((item, index) => {
+      item.drawText(String(index + 1), { x: PAGE_WIDTH - MARGIN - 16, y: 28, size: 10, font: fonts.regular, color: rgb(0.063, 0.125, 0.196) });
+    });
   }
 
   return pdf.save();

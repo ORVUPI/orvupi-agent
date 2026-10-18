@@ -159,7 +159,7 @@ export function Topbar({
           {saveLabel}
         </span>
       ) : null}
-      <FilePicker label={importLabel} accept=".orvdoc,.json,.txt,.md,.html,.htm,.pdf,.png,.jpg,.jpeg,.gif,.webp,.csv" onFile={onImport} />
+      <FilePicker label={importLabel} accept=".orvdoc,.json,.txt,.md,.html,.htm,.pdf,.png,.jpg,.jpeg,.gif,.webp,.csv,.xlsx,.docx,.pptx" onFile={onImport} />
       <Dropdown label={exportLabel} items={exportItems} />
       {onCloseDoc ? (
         <button type="button" className="ow-button ow-button-secondary" onClick={onCloseDoc}>

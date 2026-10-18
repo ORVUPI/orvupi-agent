@@ -284,12 +284,12 @@ export function DocsEditor({
     }
     if (kind === "docx") {
       const { exportDocx } = await import("./docx");
-      const docx = await exportDocx(nameRef.current, content, headerRef.current, footerRef.current);
+      const docx = await exportDocx(nameRef.current, content, headerRef.current, footerRef.current, layoutRef.current.pageNumber);
       downloadBytes(docx, fileNameWithExtension(nameRef.current, "docx"), "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
       return;
     }
     const { exportPdf } = await import("./pdf");
-    const pdf = await exportPdf(nameRef.current, content, headerRef.current, footerRef.current);
+    const pdf = await exportPdf(nameRef.current, content, headerRef.current, footerRef.current, layoutRef.current.pageNumber);
     downloadBytes(pdf, fileNameWithExtension(nameRef.current, "pdf"), "application/pdf");
   }
 

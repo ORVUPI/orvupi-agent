@@ -27,11 +27,12 @@ export type CellRule =
   | { kind: "list"; options: string[] }
   | { kind: "check" }
   | { kind: "date" }
-  | { kind: "range"; min: number; max: number };
+  | { kind: "range"; min: number; max: number }
+  | { kind: "formula"; expr: string };
 
 export type SheetChart = {
   id: string;
-  kind: "bar" | "line" | "pie";
+  kind: "bar" | "line" | "pie" | "scatter" | "area" | "gauge";
   title: string;
   labelCol: number;
   valueCol: number;

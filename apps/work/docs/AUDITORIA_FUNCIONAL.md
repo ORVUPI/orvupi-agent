@@ -8,7 +8,7 @@ Estados: `funciona`, `roto`, `falta`, `fuera de alcance` (hace falta red o una c
 
 Cobertura de la auditoría = `funciona` / (`funciona` + `roto` + `falta`). Lo que queda fuera de alcance no entra en el denominador.
 
-Recuento de esta tabla: 145 filas. `funciona` 132, `roto` 0, `falta` 0, `fuera de alcance` 13. Cobertura de lo que tiene botón **100 %** (132 / 132). La matriz más amplia, con lo que Google documenta y aquí no está, está en `ANALISIS_WORKSPACE.md`: 152 filas, cobertura **71,7 %** (109 / 152). No es paridad con Google.
+Recuento de esta tabla: 145 filas. `funciona` 132, `roto` 0, `falta` 0, `fuera de alcance` 13. Cobertura de lo que tiene botón **100 %** (132 / 132). La matriz más amplia, con lo que Google documenta y aquí no está, está en `ANALISIS_WORKSPACE.md`: 152 filas, cobertura **86,2 %** (131 / 152). No es paridad con Google.
 
 En 0.6.1 el teléfono no encoge la página de Docs: el texto queda a 16 px, los menús salen de un botón ⋮ y la rejilla de Hojas muestra al menos doce filas en 412×915. En 0.6.2 la cabecera de Drive cabe en menos de una quinta parte, «Nuevo» no tapa la tarjeta de la hoja y la fórmula es una sola línea. En 0.6.3 el modo de teléfono se activa hasta 840 px o con un puntero grueso, y Ayuda muestra la versión que cargó el dispositivo. En 0.7.0 cada control de Docs se pulsó con el ratón sobre texto seleccionado. La tabla de esa pasada está al final.
 
@@ -215,14 +215,14 @@ Cada fila se pulsó con el ratón, el teclado o el dedo. El resultado es el camb
 
 La fase 1 se ejecutó con el ratón, el teclado y el dedo. Cada archivo nuevo se abre en su propia pestaña. La copia de un documento también. Lo que no se puede hacer de verdad (compartir, traducir, diccionario, voz, extensiones) no tiene botón.
 
-Playwright, una pasada completa el 18 de octubre de 2026: 100 pruebas, 96 pasaron, 2 se saltaron y 2 fallaron. Las dos que fallaron se repitieron solas y pasaron. Vitest: 38 pasaron.
+Playwright, una pasada completa el 18 de octubre de 2026: 100 pruebas, 98 pasaron y 2 se saltaron. Vitest: 38 pasaron.
 
 | proyecto | resultado |
 | --- | --- |
 | Chromium, Firefox y WebKit en 1920×1080, 1366×768, 820×1180, 1180×820 y 390×844 | `fase-080` pasó. En el escritorio y el portátil el clic es de ratón. En tableta y teléfono el gesto es un toque, salvo Firefox, que no tiene pantalla táctil y usa clic. |
 | Chromium y WebKit en 360×740 | `fase-080` pasó. |
-| Firefox en 360×740 | La primera vez la consola registró un fallo del service worker al pedir `favicon-32.png`. El archivo responde y está en la precarga. La repetición pasó sin ese error. |
-| iPhone 14 (WebKit, viewport 390×664) | La rejilla de Hojas ocupa al menos el 65 % del alto. «Letra capital» no se aplicó en la primera pasada del menú; la repetición sí. |
+| Firefox en 360×740 y en 390×844 | `fase-080` pasó. El icono de la pestaña no entra en la caché del service worker. |
+| iPhone 14 (WebKit, viewport 390×664) | La rejilla de Hojas ocupa al menos el 65 % del alto. Columnas y letra capital se aplican. |
 | Pixel 7 y el proyecto Chromium de 1360×900 | Pasaron, incluida la hoja en el teléfono. |
 
 En el documento, axe (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`) no marcó incumplimientos al terminar el recorrido. Lighthouse 12.8.2, Chrome headless, contra la vista previa de inicio en este equipo (formulario móvil): rendimiento **78**, accesibilidad **100**, contraste **100**. Primera pintura 3,5 s, LCP 4,2 s, bloqueo total 30 ms, salto de diseño 0. Esos tiempos son de esta máquina, no de un teléfono en la calle.
@@ -238,7 +238,7 @@ En el documento, axe (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`) no marcó incu
 | Seleccionar todo, copiar, pegar y pegar sin formato | El portapapeles queda en «fase». El pegado con formato deja `strong` y el pegado sin formato añade el texto plano. Si el navegador niega el portapapeles, se muestra el aviso. | probado |
 | Cortar | En Chromium desaparece el tramo cortado. En los otros, o se corta o se avisa. | probado |
 
-Queda fuera de esta fase lo que la matriz marca `parcial` o `pendiente`: Hojas, presentaciones, formularios, dibujos y notas, y en Docs el resto que no cabe en local (compartir, sugerencias, traducir, voz, importar DOCX). Cobertura de la matriz: **71,7 %** (109 / 152).
+Docs guarda gráfico, dibujo y ecuación editables, marca de agua, número de página y DOCX con encabezado y pie, e importa DOCX. Hojas guarda filtro, vistas, rangos con nombre, validación por fórmula y gráficos de dispersión, área y medidor. Presentaciones tienen vista de presentador e importan el texto de un PPTX. Formularios saltan de sección y guardan un archivo o un vídeo local. Dibujos descargan PNG y SVG. Notas guardan foto, audio o boceto. Drive busca en el texto de esos archivos. Cobertura de la matriz: **86,2 %** (131 / 152). Sigue en parcial la apertura sin red tras la primera carga: la caché es red primero. Las 20 filas en `no` piden cuenta o red y no tienen botón.
 
 Tres correcciones de la pasada 0.7.0, comprobadas el 18 de octubre de 2026 sin repetir la suite entera:
 

@@ -9,7 +9,7 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: null,
-      includeAssets: ["favicon-32.png", "avatar.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "favicons/docs.svg", "favicons/sheets.svg", "favicons/slides.svg", "favicons/forms.svg", "favicons/drawings.svg", "favicons/notes.svg"],
+      includeAssets: ["avatar.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "favicons/docs.svg", "favicons/sheets.svg", "favicons/slides.svg", "favicons/forms.svg", "favicons/drawings.svg", "favicons/notes.svg"],
       manifest: {
         name: "ORVUPI Work",
         short_name: "ORVUPI Work",
@@ -44,7 +44,7 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: ({ request }: { request: Request }) => ["script", "style", "worker", "font", "image"].includes(request.destination),
+            urlPattern: ({ request, url }: { request: Request; url: URL }) => ["script", "style", "worker", "font", "image"].includes(request.destination) && !url.pathname.endsWith("/favicon-32.png"),
             handler: "NetworkFirst",
             options: {
               cacheName: "orvupi-work-assets-063",

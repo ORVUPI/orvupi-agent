@@ -10,7 +10,7 @@ import { createId } from "../security/names";
 import { createSheetFile, serializeSheet } from "../sheets/model";
 import { emptyGrid } from "../sheets/formulas";
 import { OrvupiChart } from "../ui/chart";
-import { answerCounts, missingRequired, parseForm, serializeForm, type FormFile, type QuestionKind } from "./model";
+import { answerCounts, missingRequired, parseForm, serializeForm, visibleQuestions, type FormBlob, type FormFile, type QuestionKind } from "./model";
 
 const KIND_KEY = {
   short: "formShort",
@@ -37,6 +37,7 @@ export function FormsScreen() {
   const [mode, setMode] = useState<"edit" | "fill" | "preview" | "answers">("edit");
   const [help, setHelp] = useState(false);
   const [draft, setDraft] = useState<Record<string, string>>({});
+  const [blobs, setBlobs] = useState<Record<string, FormBlob>>({});
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
@@ -68,6 +69,7 @@ export function FormsScreen() {
         kind: "form",
         mime: "application/vnd.orvupi.form+json",
         bytes: serializeForm(file),
+        snippet: `${file.title} ${file.description} ${file.questions.map((question) => question.prompt).join(" ")}`.slice(0, 4000),
       }).then(() => workspace.refreshFiles()).then(() => setStatus("saved")).catch(workspace.reportError);
     }, 400);
     return () => window.clearTimeout(timer);
@@ -198,14 +200,14 @@ export function FormsScreen() {
             <article key={response.id} className="ow-form-card">
               <p className="ow-muted">{response.at}</p>
               {file.questions.map((question) => (
-                <p key={question.id}><strong>{question.prompt || workspace.t("formPrompt")}</strong> {response.answers[question.id] || "—"}</p>
+                <p key={question.id}><strong>{question.prompt || workspace.t("formPrompt")}</strong> {response.answers[question.id] || "—"} {response.blobs?.[question.id] ? <a href={response.blobs[question.id]?.data} download={response.blobs[question.id]?.name}>{response.blobs[question.id]?.name}</a> : null}</p>
               ))}
             </article>
           ))}
         </div>
       ) : (
         <div className="ow-form-stack">
-          {file.questions.map((question) => (
+          {(mode === "edit" ? file.questions : visibleQuestions(file, draft)).map((question) => (
             <article key={question.id} className="ow-form-card">
               {mode === "edit" ? (
                 <>
@@ -237,6 +239,26 @@ export function FormsScreen() {
                       questions: file.questions.map((item) => item.id === question.id ? { ...item, options: item.options.map((value, index) => index === optionIndex ? event.target.value.slice(0, 80) : value) } : item),
                     })} />
                   ))}
+                  {(question.kind === "choice" || question.kind === "dropdown") ? question.options.map((option, optionIndex) => (
+                    <label key={`${question.id}-go-${optionIndex}`} className="ow-field">
+                      {workspace.t("formGoTo")}
+                      <select aria-label={`${workspace.t("formGoTo")} ${option || optionIndex + 1}`} value={question.goTo?.[option] ?? ""} onChange={(event) => update({
+                        ...file,
+                        questions: file.questions.map((item) => {
+                          if (item.id !== question.id) return item;
+                          const goTo = { ...(item.goTo ?? {}) };
+                          if (event.target.value) goTo[option] = event.target.value;
+                          else delete goTo[option];
+                          return { ...item, goTo };
+                        }),
+                      })}>
+                        <option value="">{workspace.t("formSection")}</option>
+                        {file.questions.filter((item) => item.kind === "section").map((section) => (
+                          <option key={section.id} value={section.id}>{section.prompt || section.id}</option>
+                        ))}
+                      </select>
+                    </label>
+                  )) : null}
                   {question.options.length > 0 && question.options.length < 8 ? (
                     <Button onClick={() => update({
                       ...file,
@@ -314,10 +336,26 @@ export function FormsScreen() {
                         aria-label={question.prompt || workspace.t(question.kind === "file" ? "formFile" : "formVideo")}
                         onChange={(event) => {
                           const picked = event.target.files?.[0];
-                          setDraft({ ...draft, [question.id]: picked ? picked.name.slice(0, 180) : "" });
+                          event.target.value = "";
+                          if (!picked) return;
+                          if (picked.size > 280_000) {
+                            setNotice(workspace.t("reasonTooLarge"));
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            const data = typeof reader.result === "string" ? reader.result : "";
+                            if (!data.startsWith("data:")) return;
+                            setDraft((current) => ({ ...current, [question.id]: picked.name.slice(0, 180) }));
+                            setBlobs((current) => ({ ...current, [question.id]: { name: picked.name.slice(0, 180), type: picked.type.slice(0, 80), data } }));
+                            setNotice("");
+                          };
+                          reader.readAsDataURL(picked);
                         }}
                       />
                       {draft[question.id] ? <span>{draft[question.id]}</span> : null}
+                      {blobs[question.id]?.type.startsWith("video/") ? <video controls src={blobs[question.id]?.data} /> : null}
+                      {blobs[question.id]?.type.startsWith("image/") ? <img alt={blobs[question.id]?.name ?? ""} src={blobs[question.id]?.data} /> : null}
                     </label>
                   ) : null}
                   {question.kind === "check" ? (
@@ -355,11 +393,12 @@ export function FormsScreen() {
               }
               const next = {
                 ...file,
-                responses: [...file.responses, { id: createId().slice(0, 12), at: new Date().toISOString(), answers: draft }].slice(-200),
+                responses: [...file.responses, { id: createId().slice(0, 12), at: new Date().toISOString(), answers: draft, ...(Object.keys(blobs).length > 0 ? { blobs } : {}) }].slice(-200),
               };
               setFile(next);
               setStatus("pending");
               setDraft({});
+              setBlobs({});
               setNotice(workspace.t("formThanks"));
             }}>{workspace.t("formSend")}</Button>
           )}

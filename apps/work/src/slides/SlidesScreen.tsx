@@ -53,6 +53,8 @@ export function SlidesScreen() {
   const [file, setFile] = useState<SlidesFile | null>(null);
   const [index, setIndex] = useState(0);
   const [present, setPresent] = useState(false);
+  const [presenter, setPresenter] = useState(false);
+  const [laser, setLaser] = useState<{ x: number; y: number } | null>(null);
   const [status, setStatus] = useState<"saved" | "pending">("saved");
   const [selectedId, setSelectedId] = useState<string | null>("title");
   const [help, setHelp] = useState(false);
@@ -87,6 +89,7 @@ export function SlidesScreen() {
         kind: "slide",
         mime: "application/vnd.orvupi.slides+json",
         bytes: serializeSlides(file),
+        snippet: file.slides.map((item) => `${item.title} ${item.body} ${item.notes ?? ""}`).join("\n").slice(0, 4000),
       }).then(() => workspace.refreshFiles()).then(() => setStatus("saved")).catch(workspace.reportError);
     }, 400);
     return () => window.clearTimeout(timer);
@@ -217,15 +220,28 @@ export function SlidesScreen() {
 
   if (present) {
     return (
-      <section className={`ow-stage ow-present ow-theme-${slide.theme}`} aria-label={file.title}>
+      <section className={`ow-stage ow-present ow-theme-${slide.theme}${presenter ? " is-presenter" : ""}`} aria-label={file.title}>
         <p>{index + 1} / {file.slides.length}</p>
-        <div className={`ow-slide-canvas ow-theme-${slide.theme} ow-trans-${slide.transition ?? "none"}`} style={{ background: slide.background }}>
-          {slide.items.map((item) => renderItem(item, false))}
+        <div className="ow-present-split">
+          <div
+            className={`ow-slide-canvas ow-theme-${slide.theme} ow-trans-${slide.transition ?? "none"}`}
+            style={{ background: slide.background }}
+            onPointerMove={(event) => {
+              const box = event.currentTarget.getBoundingClientRect();
+              setLaser({ x: event.clientX - box.left, y: event.clientY - box.top });
+            }}
+            onPointerLeave={() => setLaser(null)}
+          >
+            {slide.items.map((item) => renderItem(item, false))}
+            {laser ? <span className="ow-laser" style={{ left: laser.x, top: laser.y }} aria-label={workspace.t("slideLaser")} /> : null}
+          </div>
+          {presenter ? <aside className="ow-presenter-notes" aria-label={workspace.t("slideNotes")}><p>{slide.notes || workspace.t("slideNotes")}</p></aside> : null}
         </div>
         <div className="ow-row">
           <Button onClick={() => setIndex((value) => Math.max(0, value - 1))}>{workspace.t("slidePrev")}</Button>
           <Button onClick={() => setIndex((value) => Math.min(file.slides.length - 1, value + 1))}>{workspace.t("slideNext")}</Button>
-          <Button onClick={() => setPresent(false)}>{workspace.t("slideExit")}</Button>
+          <Button aria-pressed={presenter} onClick={() => setPresenter((value) => !value)}>{workspace.t("slidePresenter")}</Button>
+          <Button onClick={() => { setPresent(false); setLaser(null); }}>{workspace.t("slideExit")}</Button>
         </div>
       </section>
     );
@@ -255,7 +271,8 @@ export function SlidesScreen() {
             } },
           ] },
           { id: "view", label: workspace.t("menuView"), items: [
-            { id: "present", label: workspace.t("slidePresent"), onSelect: () => setPresent(true) },
+            { id: "present", label: workspace.t("slidePresent"), onSelect: () => { setPresenter(false); setPresent(true); } },
+            { id: "presenter", label: workspace.t("slidePresenter"), onSelect: () => { setPresenter(true); setPresent(true); } },
             { id: "grid", label: workspace.t("slideGrid"), onSelect: () => setGrid((value) => !value) },
             { id: "master", label: workspace.t("slideMaster"), onSelect: () => update({ ...file, master: file.master ? "" : (slide.title || workspace.t("slideMaster")) }) },
           ] },

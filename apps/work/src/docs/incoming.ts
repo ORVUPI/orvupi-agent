@@ -5,7 +5,9 @@ import { createId, sanitizeName } from "../security/names";
 import { csvToGrid } from "../sheets/csv";
 import { createSheetFile, serializeSheet } from "../sheets/model";
 import { xlsxToSheets } from "../sheets/xlsx";
+import { createSlidesFile, defaultItems, serializeSlides, type SlidesFile } from "../slides/model";
 import { htmlToDoc, textToDoc } from "./import-html";
+import { docxParagraphs, pptxSlides } from "./office";
 import { createOrvdoc, parseOrvdoc, serializeOrvdoc } from "./orvdoc";
 import type { FileKind } from "../storage/types";
 
@@ -45,6 +47,28 @@ export async function prepareImport(file: File, titleFallback: string): Promise<
   }
   if (extension === "pdf") {
     return { name: base, kind: "pdf", mime: "application/pdf", bytes, openAsDoc: false };
+  }
+  if (extension === "docx") {
+    const lines = await docxParagraphs(bytes);
+    const doc = createOrvdoc({ id: createId(), title: base, content: textToDoc(lines.join("\n\n")) });
+    return { name: doc.title, kind: "doc", mime: "application/vnd.orvupi.doc+json", bytes: serializeOrvdoc(doc), openAsDoc: true };
+  }
+  if (extension === "pptx") {
+    const imported = await pptxSlides(bytes);
+    const blank = createSlidesFile({ id: createId(), title: base });
+    const file: SlidesFile = {
+      ...blank,
+      slides: imported.map((slide) => ({
+        title: slide.title,
+        body: slide.body,
+        theme: "papel",
+        items: defaultItems(slide.title, slide.body),
+        notes: "",
+        transition: "none",
+        layout: "title-body",
+      })),
+    };
+    return { name: file.title, kind: "slide", mime: "application/vnd.orvupi.slides+json", bytes: serializeSlides(file), openAsDoc: false };
   }
   if (extension === "csv" || extension === "xlsx") {
     const id = createId();
