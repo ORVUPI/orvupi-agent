@@ -54,7 +54,7 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: ({ request, url }: { request: Request; url: URL }) => ["script", "style", "worker", "font", "image"].includes(request.destination) && !url.pathname.endsWith("/favicon-32.png"),
+            urlPattern: ({ request, url }: { request: Request; url: URL }) => ["script", "style", "worker", "font", "image"].includes(request.destination) && !url.pathname.endsWith("/favicon-32.png") && !url.pathname.endsWith("/brand-work.svg"),
             handler: "NetworkFirst",
             options: {
               cacheName: "orvupi-work-assets-063",
