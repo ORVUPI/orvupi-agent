@@ -144,6 +144,12 @@ function dataUrlBlob(src: string): Blob {
   return new Blob([bytes], { type: mime });
 }
 
+/** Texto visible del HTML pegado (solo para decidir si hay algo más que imágenes; no se inserta). */
+function visibleText(html: string): string {
+  const tree = new DOMParser().parseFromString(html, "text/html");
+  return (tree.body.textContent ?? "").replace(/\u00a0/g, " ").trim();
+}
+
 export const imagePasteKey = new PluginKey("ow-image-paste");
 
 export const ImagePaste = Extension.create({
@@ -163,7 +169,7 @@ export const ImagePaste = Extension.create({
             const html = data?.getData("text/html") ?? "";
             if (files.length > 0) {
               // Con HTML que lleva texto además de la imagen (p. ej. una web copiada), se deja pegar el texto.
-              const text = html ? html.replace(/<img\b[^>]*>/gi, "").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").trim() : "";
+              const text = html ? visibleText(html) : "";
               if (text.length > 0) return false;
               event.preventDefault();
               void insertImages(view, files).then((count) => { if (count === 0) notify("error"); });
@@ -171,7 +177,7 @@ export const ImagePaste = Extension.create({
             }
             if (html) {
               const found = htmlImages(html);
-              const text = html.replace(/<img\b[^>]*>/gi, "").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").trim();
+              const text = visibleText(html);
               if (!text && found.data.length > 0) {
                 event.preventDefault();
                 void insertImages(view, found.data.map(dataUrlBlob));
