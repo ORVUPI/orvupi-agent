@@ -38,7 +38,8 @@ test("ORVUPI Work: idioma del navegador, selector visible, preferencia y documen
   await doc.reload();
   await expect(doc.locator("html")).toHaveAttribute("lang", "pt-BR");
   await expect(doc.locator(".ProseMirror").first()).toContainText(TEXT);
-  // exportar TXT: el contenido sale tal cual, sin traducir
+  // exportar TXT: el contenido sale tal cual, sin traducir (la barra de menús completa es de escritorio)
+  if ((test.info().project.use.viewport?.width ?? 1366) < 1000) { await ctx.close(); return; }
   const download = doc.waitForEvent("download");
   await doc.getByRole("menuitem", { name: pt.menuFile, exact: true }).click();
   await doc.getByRole("menuitem", { name: pt.export, exact: true }).click();

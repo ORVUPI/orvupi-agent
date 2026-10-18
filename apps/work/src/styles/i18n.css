@@ -1,7 +1,11 @@
 /* Internacionalización: fuentes CJK y selector de idioma. Archivo aparte para no chocar con app.css. */
 :root:lang(ja) { --font: "Inter", "Noto Sans JP", "Hiragino Sans", "Yu Gothic", "Meiryo", system-ui, sans-serif; --heading: "Noto Sans JP", var(--font); }
 :root:lang(ko) { --font: "Inter", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif; --heading: "Noto Sans KR", var(--font); }
-:root:lang(ja), :root:lang(ko) { word-break: keep-all; overflow-wrap: anywhere; line-break: strict; }
+:root:lang(ja) { line-break: strict; overflow-wrap: anywhere; }
+:root:lang(ko) { word-break: keep-all; overflow-wrap: anywhere; }
+/* Textos largos (pt-BR, ja, ko): los filtros no se salen de la pantalla. */
+.ow-chip { max-width: 100%; min-width: 0; }
+.ow-chip select { min-width: 0; max-width: 100%; text-overflow: ellipsis; }
 /* El texto del usuario puede estar en cualquiera de los cinco idiomas: respaldo CJK sin cambiar la fuente elegida. */
 .ow-a4 .ProseMirror, .ow-a4 .ProseMirror * { font-synthesis: none; }
 .ow-a4 .ProseMirror { font-family: Arial, Helvetica, "Noto Sans JP", "Noto Sans KR", "Hiragino Sans", "Apple SD Gothic Neo", "Malgun Gothic", "Yu Gothic", sans-serif; }
@@ -10,3 +14,5 @@
 .ow-lang select:focus-visible { outline: 3px solid #ff3070; outline-offset: 2px; }
 @media (max-width: 840px) { .ow-lang select { max-width: 7.5rem; font-size: 13px; padding: 4px 6px; } }
 .ow-visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+html body .ow-chips { flex-wrap: wrap; }
+@media (max-width: 520px) { html body .ow-top-actions { flex-wrap: wrap; row-gap: 6px; } }
