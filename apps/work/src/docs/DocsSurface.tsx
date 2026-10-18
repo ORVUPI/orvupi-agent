@@ -915,7 +915,7 @@ export function DocsSurface({
             ) : null}
           </div>
           <div className="ow-docs-actions">
-            {onAi ? <button type="button" className="ow-doc-ai" aria-label="ORVUPI AI" title="ORVUPI AI" onClick={onAi}>✨ <span>IA</span></button> : null}
+            {onAi ? <button type="button" className="ow-doc-ai" title="ORVUPI AI" onClick={onAi}><span aria-hidden="true">✨</span> <span>ORVUPI AI</span></button> : null}
             <DocIcon label={t("comment")} onClick={onComment}><MessageSquare size={20} /></DocIcon>
             <div className="ow-share" ref={exportRef}>
               <button type="button" className="ow-share-main" aria-haspopup="menu" aria-expanded={exportOpen} onClick={() => setExportOpen(true)}>

@@ -42,7 +42,7 @@ const ES = {
   rewrite: "Reescribir", rewriteHelp: "Mejora la claridad y la redacción sin cambiar el sentido.",
   translate: "Traducir", translateHelp: "Traduce al idioma que elijas.",
   outline: "Esquema", outlineHelp: "Títulos y subtítulos para organizar el texto.",
-  language: "Idioma",
+  language: "Traducir a",
   question: "Tu pregunta",
   send: "Enviar",
   result: "Resultado",

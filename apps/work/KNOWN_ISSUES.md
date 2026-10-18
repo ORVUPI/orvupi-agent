@@ -20,3 +20,10 @@ Esta es una alfa. Los puntos siguientes están abiertos a propósito o porque el
 - Las imágenes guardadas aparte (`orv-asset:`) de documentos borrados no se eliminan todavía del almacenamiento (huérfanas); se recuperan al restablecer el espacio de trabajo.
 - La importación DOCX no usa un Web Worker: la descompresión ya es asíncrona (DecompressionStream) y las imágenes se guardan una a una, así que la interfaz no se congela (pausa máxima medida ≈100 ms).
 - Restaurar una versión antigua solo afecta a la pestaña activa.
+
+## 0.8.4
+
+- La calidad de Qwen2.5 0.5B es modesta: los resúmenes pueden ser genéricos o repetir frases. El 1.5B es mejor pero más lento y pide más memoria.
+- En CPU (WASM) un resumen tarda unos 30–60 s en un portátil; la primera descarga del modelo pesa cientos de MB.
+- El motor WASM de onnxruntime se carga desde jsDelivr porque el archivo (26,8 MB) supera el límite de 25 MiB de Cloudflare Pages; la CSP de /work lo permite expresamente.
+- En móviles con poca memoria el modelo puede no cargar; se muestra el error y se recomienda SmolLM2 135M.

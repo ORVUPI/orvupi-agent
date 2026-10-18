@@ -1,5 +1,15 @@
 # Registro de cambios
 
+## 0.8.4 — 2026-10-18
+
+ORVUPI AI deja de ser una simulación: un modelo de lenguaje real, gratis, que se ejecuta dentro del navegador.
+
+- Modelo local con transformers.js en un Web Worker: WebGPU cuando hay (q4f16) y WASM/CPU si no (q8). Modelos: Qwen2.5 0.5B Instruct (recomendado), Qwen2.5 1.5B Instruct (mejor calidad, equipos con ≥ 8 GB) y SmolLM2 135M (muy ligero). Se descarga solo al pulsar «Descargar», con barra de progreso, y queda en la caché del navegador; botón para borrarla.
+- Origen del texto: el documento abierto (todas las pestañas), la selección, cualquier archivo de Work (documento, hoja como CSV, presentación, nota) o texto pegado.
+- Acciones: Resumir, Explicar, Preguntar (chat), Reescribir, Traducir y Esquema; textos largos se trocean y se combinan. Resultado en directo con Detener, Copiar e Insertar en el documento.
+- Botón ✨ ORVUPI AI dentro de Docs y guía de uso en el propio panel.
+- Privacidad: el documento nunca sale del navegador; la red solo descarga el modelo (Hugging Face) y el motor WASM (jsDelivr). Si el dispositivo no puede ejecutarlo se dice claramente.
+
 ## 0.8.3 — 2026-10-18
 
 Documentos grandes y cuatro arreglos de Docs pedidos desde producción, más pestañas del documento como en Google Docs.
