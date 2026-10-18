@@ -10,7 +10,7 @@ export type NavItem = { id: string; label: string; icon: IconName; tool: string 
 export function Sidebar({
   brand,
   brandAlt,
-  items,
+  groups,
   current,
   open,
   onNavigate,
@@ -22,7 +22,7 @@ export function Sidebar({
 }: {
   brand: string;
   brandAlt: string;
-  items: NavItem[];
+  groups: Array<{ id: string; label: string; items: NavItem[] }>;
   current: string;
   open: boolean;
   onNavigate: (id: string) => void;
@@ -43,21 +43,26 @@ export function Sidebar({
       </div>
       {action}
       <nav aria-label={navLabel}>
-        <ul>
-          {items.map((item) => (
-            <li key={item.id}>
-              <button
-                type="button"
-                data-tool={item.tool}
-                aria-current={current === item.id ? "page" : undefined}
-                onClick={() => onNavigate(item.id)}
-              >
-                <Icon name={item.icon} />
-                <span>{item.label}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
+        {groups.map((group) => (
+          <div key={group.id} className="ow-nav-group">
+            <p className="ow-nav-label">{group.label}</p>
+            <ul>
+              {group.items.map((item) => (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    data-tool={item.tool}
+                    aria-current={current === item.id ? "page" : undefined}
+                    onClick={() => onNavigate(item.id)}
+                  >
+                    <Icon name={item.icon} />
+                    <span>{item.label}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </nav>
       {footer}
     </aside>

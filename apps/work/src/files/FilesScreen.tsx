@@ -8,7 +8,8 @@ import { downloadBytes } from "../security/bytes";
 import { isWorkError } from "../security/errors";
 import { formatBytes } from "../security/names";
 import type { FileKind, FileRecord } from "../storage/types";
-import { Button, EmptyState, Input, Select } from "../ui/kit";
+import { Icon, type IconName } from "../ui/icons";
+import { Button, EmptyState, IconButton, Input, Select } from "../ui/kit";
 import { ContextMenu, Dialog, Modal, type MenuItem } from "../ui/overlay";
 
 const COLORS = [
@@ -19,6 +20,18 @@ const COLORS = [
   { id: "#5b2a86", key: "colorViolet" },
   { id: "#7a4a00", key: "colorAmber" },
 ] as const;
+
+function kindIcon(kind: FileKind): IconName {
+  if (kind === "folder") return "files";
+  if (kind === "doc") return "docs";
+  if (kind === "sheet") return "sheets";
+  if (kind === "slide") return "slides";
+  if (kind === "form") return "forms";
+  if (kind === "drawing") return "drawings";
+  if (kind === "note") return "notes";
+  if (kind === "pdf") return "pdf";
+  return "docs";
+}
 
 function kindKey(kind: FileKind): "kindFolder" | "kindDoc" | "kindSheet" | "kindSlide" | "kindForm" | "kindDrawing" | "kindNote" | "kindPdf" | "kindOther" {
   if (kind === "folder") return "kindFolder";
@@ -256,11 +269,42 @@ export function FilesScreen() {
   return (
     <div className="ow-drive" onDragOver={(event) => event.preventDefault()} onDrop={(event) => onDrop(event, mode === "folder" ? folderId : null)}>
       <div className="ow-drive-main">
-        <header className="ow-page-head">
-          <div>
+        <header className="ow-drive-bar">
+          <div className="ow-drive-heading">
             <h1 className="ow-drive-title">{title}</h1>
-            <p className="ow-muted">{workspace.t("dropFiles")}</p>
+            <p className="ow-muted ow-drop-hint">{workspace.t("dropFiles")}</p>
             <p className="ow-storage-line">{workspace.t("storageOf", { used: workspace.usedLabel })}</p>
+          </div>
+          <div className="ow-drive-tools" role="toolbar" aria-label={title}>
+            {mode === "folder" ? (
+              <Button
+                variant="primary"
+                onClick={() => {
+                  void workspace.storage?.createFolder(workspace.t("newFolder"), folderId).then(() => workspace.refreshFiles()).catch(workspace.reportError);
+                }}
+              >
+                {workspace.t("newFolder")}
+              </Button>
+            ) : null}
+            <div className="ow-view-toggle">
+              <IconButton label={workspace.t("viewList")} pressed={workspace.driveLayout === "list"} onClick={() => workspace.setDriveLayout("list")}>
+                <Icon name="list" />
+              </IconButton>
+              <IconButton label={workspace.t("viewGrid")} pressed={workspace.driveLayout === "grid"} onClick={() => workspace.setDriveLayout("grid")}>
+                <Icon name="grid" />
+              </IconButton>
+            </div>
+            <IconButton label={workspace.detailsOpen ? workspace.t("detailsHide") : workspace.t("details")} pressed={workspace.detailsOpen} onClick={() => workspace.setDetailsOpen(!workspace.detailsOpen)}>
+              <Icon name="info" />
+            </IconButton>
+            <Select label={workspace.t("sortBy")} value={sortKey} onChange={(event) => setSortKey(event.target.value as FileSortKey)}>
+              <option value="name">{workspace.t("sortName")}</option>
+              <option value="updated">{workspace.t("sortUpdated")}</option>
+              <option value="created">{workspace.t("sortCreated")}</option>
+              <option value="size">{workspace.t("sortSize")}</option>
+              <option value="kind">{workspace.t("sortKind")}</option>
+            </Select>
+            <Button onClick={() => setDirection((value) => (value === "asc" ? "desc" : "asc"))}>{direction === "asc" ? "A–Z" : "Z–A"}</Button>
           </div>
         </header>
         {mode === "folder" ? (
@@ -274,31 +318,6 @@ export function FilesScreen() {
             ))}
           </nav>
         ) : null}
-        <div className="ow-row">
-          {mode === "folder" ? (
-            <Button
-              variant="primary"
-              onClick={() => {
-                void workspace.storage?.createFolder(workspace.t("newFolder"), folderId).then(() => workspace.refreshFiles()).catch(workspace.reportError);
-              }}
-            >
-              {workspace.t("newFolder")}
-            </Button>
-          ) : null}
-          <Button aria-pressed={workspace.driveLayout === "list"} onClick={() => workspace.setDriveLayout("list")}>{workspace.t("viewList")}</Button>
-          <Button aria-pressed={workspace.driveLayout === "grid"} onClick={() => workspace.setDriveLayout("grid")}>{workspace.t("viewGrid")}</Button>
-          <Button aria-pressed={workspace.detailsOpen} onClick={() => workspace.setDetailsOpen(!workspace.detailsOpen)}>
-            {workspace.detailsOpen ? workspace.t("detailsHide") : workspace.t("details")}
-          </Button>
-          <Select label={workspace.t("sortBy")} value={sortKey} onChange={(event) => setSortKey(event.target.value as FileSortKey)}>
-            <option value="name">{workspace.t("sortName")}</option>
-            <option value="updated">{workspace.t("sortUpdated")}</option>
-            <option value="created">{workspace.t("sortCreated")}</option>
-            <option value="size">{workspace.t("sortSize")}</option>
-            <option value="kind">{workspace.t("sortKind")}</option>
-          </Select>
-          <Button onClick={() => setDirection((value) => (value === "asc" ? "desc" : "asc"))}>{direction === "asc" ? "A–Z" : "Z–A"}</Button>
-        </div>
         <div className={`ow-actionbar ${selected.length === 0 ? "is-idle" : ""}`} role={selected.length > 0 ? "toolbar" : undefined} aria-hidden={selected.length === 0} inert={selected.length === 0} aria-label={selected.length > 0 ? workspace.t("selectedCount", { count: selected.length }) : undefined}>
             <strong>{workspace.t("selectedCount", { count: selected.length })}</strong>
             <Button onClick={() => {
@@ -317,16 +336,18 @@ export function FilesScreen() {
           <table className="ow-drive-table">
             <thead>
               <tr>
-                <th />
+                <th><span className="ow-sr">{workspace.t("colSelect")}</span></th>
                 <th><button type="button" onClick={() => setSortKey("name")}>{workspace.t("colName")}</button></th>
-                <th><button type="button" onClick={() => setSortKey("updated")}>{workspace.t("colModified")}</button></th>
-                <th><button type="button" onClick={() => setSortKey("size")}>{workspace.t("colSize")}</button></th>
+                <th className="ow-col-extra"><button type="button" onClick={() => setSortKey("updated")}>{workspace.t("colModified")}</button></th>
+                <th className="ow-col-extra"><button type="button" onClick={() => setSortKey("size")}>{workspace.t("colSize")}</button></th>
+                <th><span className="ow-sr">{workspace.t("fileMenu")}</span></th>
               </tr>
             </thead>
             <tbody>
               {visible.map((file) => (
                 <tr
                   key={file.id}
+                  className={selected.includes(file.id) ? "is-selected" : undefined}
                   draggable={file.deletedAt === null}
                   onDragStart={(event) => event.dataTransfer.setData("application/x-orvupi-id", file.id)}
                   onDragOver={(event) => { if (file.kind === "folder") event.preventDefault(); }}
@@ -351,17 +372,32 @@ export function FilesScreen() {
                     />
                   </td>
                   <td>
-                    <button
-                      type="button"
-                      className="ow-file-open"
-                      onClick={() => openName(file)}
-                    >
-                      <strong>{file.favorite ? "★ " : ""}{file.name}</strong>
-                      <span className="ow-sr">{workspace.t(kindKey(file.kind))}</span>
-                    </button>
+                    <div className="ow-file-name">
+                      <span className={`ow-kind ow-kind-${file.kind}`} aria-hidden="true"><Icon name={kindIcon(file.kind)} /></span>
+                      <button
+                        type="button"
+                        className="ow-file-open"
+                        onClick={() => openName(file)}
+                      >
+                        <strong>{file.favorite ? "★ " : ""}{file.name}</strong>
+                        <span className="ow-sr">{workspace.t(kindKey(file.kind))}</span>
+                      </button>
+                    </div>
                   </td>
-                  <td>{formatWhen(file.updatedAt, workspace.locale === "es" ? "es" : "en")}</td>
-                  <td>{file.kind === "folder" ? "" : formatBytes(file.size, workspace.locale === "es" ? "es" : "en")}</td>
+                  <td className="ow-col-extra">{formatWhen(file.updatedAt, workspace.locale === "es" ? "es" : "en")}</td>
+                  <td className="ow-col-extra">{file.kind === "folder" ? "" : formatBytes(file.size, workspace.locale === "es" ? "es" : "en")}</td>
+                  <td>
+                    <IconButton
+                      label={workspace.t("fileMenu")}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        const box = event.currentTarget.getBoundingClientRect();
+                        setMenu({ x: box.right, y: box.bottom, file });
+                      }}
+                    >
+                      <Icon name="more" />
+                    </IconButton>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -371,16 +407,36 @@ export function FilesScreen() {
             {visible.map((file) => (
               <article
                 key={file.id}
-                className="ow-file-card"
+                className={`ow-file-card${selected.includes(file.id) ? " is-selected" : ""}`}
                 style={{ borderColor: file.color ?? undefined }}
                 draggable={file.deletedAt === null}
                 onDragStart={(event) => event.dataTransfer.setData("application/x-orvupi-id", file.id)}
+                onDragOver={(event) => { if (file.kind === "folder") event.preventDefault(); }}
+                onDrop={(event) => {
+                  if (file.kind !== "folder") return;
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onDrop(event, file.id);
+                }}
                 onContextMenu={(event) => {
                   event.preventDefault();
                   setMenu({ x: event.clientX, y: event.clientY, file });
                 }}
               >
-                <input type="checkbox" aria-label={file.name} checked={selected.includes(file.id)} onClick={(event) => toggleSelected(file, event.shiftKey)} onChange={() => undefined} />
+                <div className="ow-file-card-top">
+                  <input type="checkbox" aria-label={file.name} checked={selected.includes(file.id)} onClick={(event) => toggleSelected(file, event.shiftKey)} onChange={() => undefined} />
+                  <IconButton
+                    label={workspace.t("fileMenu")}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      const box = event.currentTarget.getBoundingClientRect();
+                      setMenu({ x: box.right, y: box.bottom, file });
+                    }}
+                  >
+                    <Icon name="more" />
+                  </IconButton>
+                </div>
+                <span className={`ow-kind ow-kind-lg ow-kind-${file.kind}`} aria-hidden="true"><Icon name={kindIcon(file.kind)} /></span>
                 <button
                   type="button"
                   className="ow-file-open"

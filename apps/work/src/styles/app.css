@@ -90,7 +90,10 @@ button, input, select, textarea { font: inherit; color: var(--text); }
 .ow-brand { display: flex; align-items: center; gap: 10px; }
 .ow-brand img { width: 48px; height: 48px; object-fit: contain; }
 .ow-brand strong { font-family: var(--heading); font-size: 1.2rem; }
-.ow-sidebar nav ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.ow-sidebar nav { min-height: 0; }
+.ow-nav-group + .ow-nav-group { margin-top: 8px; }
+.ow-nav-label { margin: 8px 12px 4px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.ow-sidebar nav ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .ow-sidebar button {
   width: 100%;
   display: flex;
@@ -451,7 +454,32 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-chip:disabled { opacity: 1; color: var(--muted); background: #fff; }
 .ow-drive { display: flex; gap: 16px; align-items: flex-start; }
 .ow-drive-main { flex: 1; min-width: 0; }
-.ow-drive-title { font-size: 1.75rem; }
+.ow-drive-bar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 16px; }
+.ow-drive-heading { min-width: 0; }
+.ow-drive-title { font-size: 1.75rem; margin: 0; }
+.ow-drive-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ow-drive-tools .ow-field { margin: 0; width: auto; }
+.ow-drive-tools .ow-field select { width: auto; min-width: 7.5rem; }
+.ow-view-toggle { display: inline-flex; border: 1px solid #dadce0; border-radius: 10px; overflow: hidden; background: #fff; }
+.ow-view-toggle .ow-icon-button { border: 0; border-radius: 0; min-width: 36px; min-height: 36px; background: #fff; }
+.ow-view-toggle .ow-icon-button[aria-pressed="true"] { background: #d9e6f7; }
+.ow-file-name { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.ow-file-name .ow-file-open { width: auto; flex: 1; min-width: 0; }
+.ow-kind { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 8px; flex: none; }
+.ow-kind-lg { width: 40px; height: 40px; }
+.ow-kind .ow-icon { width: 18px; height: 18px; }
+.ow-kind-folder { color: #5b2a86; background: #fff0f5; }
+.ow-kind-doc, .ow-kind-drawing { color: #1d4e89; background: #d9e6f7; }
+.ow-kind-sheet { color: #0b5d36; background: #e5f6ee; }
+.ow-kind-slide { color: #9a3412; background: #fff4e0; }
+.ow-kind-form { color: #5b2a86; background: #fff0f5; }
+.ow-kind-note { color: #7a4a00; background: #fff4e0; }
+.ow-kind-pdf { color: #a3123f; background: #fff0f5; }
+.ow-kind-other { color: #102032; background: #f4f7fb; }
+.ow-drive-table tr.is-selected td { background: #f4f7fb; }
+.ow-file-card { display: grid; gap: 6px; align-content: start; }
+.ow-file-card-top { display: flex; align-items: center; justify-content: space-between; }
+.ow-file-card.is-selected { outline: 2px solid #1d4e89; }
 .ow-drive-table { width: 100%; border-collapse: collapse; background: #fff; }
 .ow-drive-table th, .ow-drive-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #c5ced6; }
 .ow-drive-table th { color: var(--muted); font-size: 0.85rem; }
@@ -942,6 +970,14 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-dock-end { width: 8px; height: 1px; }
 .ow-dock-more { flex: none; width: 36px; height: 44px; border: 0; background: #fff; box-shadow: -8px 0 8px #fff; color: #102032; font-size: 24px; font-weight: 700; cursor: pointer; position: relative; z-index: 1; }
 .ow-top-actions, .ow-chiprow { display: contents; }
+@media (min-width: 841px) and (pointer: fine) {
+  .ow-top-title { order: 1; flex: none; }
+  .ow-search { order: 2; flex: 1 1 280px; }
+  .ow-topbar .ow-file, .ow-topbar .ow-dropdown, .ow-topbar .ow-save { order: 3; }
+  .ow-topbar .ow-icon-button { order: 4; }
+  .ow-chiprow { display: flex; flex: 1 0 100%; order: 6; align-items: center; min-width: 0; }
+  .ow-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+}
 .ow-chip-more { display: none; }
 .ow-update { position: fixed; left: 12px; right: 12px; bottom: 16px; z-index: 60; display: flex; gap: 12px; align-items: center; justify-content: space-between; background: #102032; color: #fff; border: 2px solid #ff3070; border-radius: 16px; padding: 12px 16px; }
 .ow-update p { margin: 0; font-weight: 800; }
@@ -1006,7 +1042,16 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
   .ow-page-head > div { min-width: 0; }
   .ow-grid { grid-template-columns: 1fr; }
   .ow-formula { flex-wrap: nowrap; overflow-x: auto; align-items: center; position: static; min-width: 0; }
-  .ow-drive-main, .ow-sheet-wrap, .ow-docs-toolbar, .ow-docs .ow-menubar, .ow-sheet-page .ow-menubar, .ow-slides-page .ow-menubar, .ow-form-page .ow-menubar, .ow-draw-page .ow-menubar { overflow-x: auto; max-width: 100%; min-width: 0; }
+  .ow-drive-main { overflow-x: clip; max-width: 100%; min-width: 0; }
+  .ow-sheet-wrap, .ow-docs-toolbar, .ow-docs .ow-menubar, .ow-sheet-page .ow-menubar, .ow-slides-page .ow-menubar, .ow-form-page .ow-menubar, .ow-draw-page .ow-menubar { overflow-x: auto; max-width: 100%; min-width: 0; }
+  .ow-drive-bar { align-items: center; }
+  .ow-drop-hint { display: none; }
+  .ow-drive-title { font-size: 1.25rem; }
+  .ow-drive-tools .ow-field > span { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  .ow-drive-tools .ow-field { position: relative; }
+  .ow-drive-tools .ow-field select { min-height: 36px; }
+  .ow-col-extra { display: none; }
+  .ow-details { position: fixed; left: 8px; right: 8px; bottom: calc(128px + env(safe-area-inset-bottom)); top: auto; width: auto; max-height: min(42dvh, 380px); overflow: auto; z-index: 26; border-radius: 16px; box-shadow: 0 8px 24px rgba(16, 32, 50, 0.16); }
   .ow-format-dock .ow-doc-icon { width: 40px; height: 40px; }
   .ow-docs-tabs, .ow-docs-tabs-open, .ow-docs-avatar { display: none; }
   .ow-docs { height: 100dvh; }

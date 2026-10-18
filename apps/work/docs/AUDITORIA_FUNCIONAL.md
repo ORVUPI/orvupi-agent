@@ -247,3 +247,11 @@ Tres correcciones de la pasada 0.7.0, comprobadas el 18 de octubre de 2026 sin r
 | El asa de Hojas cae en la esquina de la celda, también en la fila fijada (A1). | El centro del asa queda a 2 px o menos de la esquina inferior derecha. Pasó en `docs-070` (Chromium) y en «la hoja responde» de `mobile-060` (Chromium a 412 px, Pixel 7 e iPhone 14). El arrastre del asa hasta B2 sigue combinando el rango. |
 | En el inicio, el último icono de la barra cabe y la fila no se desplaza de lado. | «ORVUPI AI» queda dentro del ancho y `scrollWidth` de `.ow-top-actions` no supera al ancho visible. Pasó en Pixel 7, iPhone 14 y en 360, 390, 412, 460 y 768. |
 | Las capturas no dependen de una carpeta fija. | `ORVUPI_SCREENSHOTS` elige la ruta. Si no está, se usa `/opt/cursor/artifacts/screenshots` cuando se puede escribir; si no, una carpeta temporal. |
+
+La pantalla de archivos adopta la disposición de un administrador de archivos, con la marca de ORVUPI. Comprobado el 18 de octubre de 2026, sin repetir la suite entera ni Lighthouse.
+
+| comprobación | resultado |
+| --- | --- |
+| Escritorio 1366×768 | La columna separa Lugares y Herramientas. El buscador queda entre el título y los iconos. El panel de detalles mide 320 px y Actividad se ve. La página no se desplaza de lado. axe (AA) no marcó incumplimientos con el panel abierto. |
+| Teléfono 390×844 y 360×740, con toque | Modificado y tamaño quedan ocultos. El panel es una hoja fija. En 390 su borde inferior queda en 716 px y el botón Nuevo empieza en 724 px. En 360, 612 y 620. Actividad se ve. ORVUPI AI cabe (derecha 382 de 390, y 352 de 360). axe (AA) no marcó incumplimientos. |
+| Playwright | Pasaron `work.spec`, «Drive muestra almacenamiento…» y «el inicio y Drive» en Chromium, más el inicio en Pixel 7 e iPhone 14. «No hay desbordamiento» pasó en Chromium (360, 390, 412, 460 y 768) y se saltó en Pixel 7, que ya usa su propio ancho. |

@@ -11,6 +11,7 @@ Alfa de desarrollo. No es una versión de producción. Sigue en la vista previa.
 - Drive encuentra una palabra del texto del documento, no solo el nombre. Hojas, diapositivas y formularios siguen buscándose por el nombre.
 - Un archivo de 0.1 a 0.7.0 sigue abriendo: la versión del archivo sigue en 1.
 - En el teléfono, el asa de selección de Hojas queda en la esquina de la celda, también en la fila fijada. En el inicio, la fila de iconos cabe entera y no se desplaza de lado. Las capturas de las pruebas usan `ORVUPI_SCREENSHOTS` o una carpeta que se pueda escribir.
+- La pantalla de archivos sigue la disposición de un administrador de archivos: lugares y herramientas en la columna, barra de vista sobre la lista, cuadrícula con icono propio, menú de acciones en cada archivo y panel de detalles. En el teléfono ese panel es una hoja. La marca sigue siendo ORVUPI.
 
 ## 0.7.0 — 2026-10-17
 

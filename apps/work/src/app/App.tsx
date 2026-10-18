@@ -177,7 +177,10 @@ export function App() {
         <Sidebar
           brand={workspace.t("appName")}
           brandAlt={workspace.t("brandAlt")}
-          items={items}
+          groups={[
+            { id: "places", label: workspace.t("navPlaces"), items: items.filter((item) => ["home", "drive", "recent", "starred", "trash"].includes(item.id)) },
+            { id: "tools", label: workspace.t("navTools"), items: items.filter((item) => !["home", "drive", "recent", "starred", "trash"].includes(item.id)) },
+          ]}
           current={workspace.view === "files" ? (workspace.browse === "folder" ? "drive" : workspace.browse) : workspace.view}
           open={workspace.navOpen}
           onNavigate={(id) => {

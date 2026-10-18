@@ -12,6 +12,7 @@ import {
   Home,
   Info,
   Italic,
+  EllipsisVertical,
   LayoutGrid,
   LayoutTemplate,
   List,
@@ -67,7 +68,8 @@ export type IconName =
   | "database"
   | "grid"
   | "info"
-  | "drive";
+  | "drive"
+  | "more";
 
 const icons: Record<IconName, LucideIcon> = {
   home: Home,
@@ -103,6 +105,7 @@ const icons: Record<IconName, LucideIcon> = {
   grid: LayoutGrid,
   info: Info,
   drive: HardDrive,
+  more: EllipsisVertical,
 };
 
 export function Icon({ name }: { name: IconName }) {

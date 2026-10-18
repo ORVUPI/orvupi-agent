@@ -70,6 +70,8 @@ ORVUPI Work copia esa rejilla y le cambia la marca:
 
 Diferencia deliberada: en Drive un clic selecciona y un doble clic abre. Aquí un clic en el nombre abre, y la casilla selecciona. Así el teclado y el lector llegan al archivo en un solo paso, y la prueba de extremo a extremo sigue pudiendo abrir con un clic.
 
+La columna separa lugares (Inicio, Mi unidad, Recientes, Destacados, Papelera) de herramientas. La barra de la lista lleva el título a la izquierda y, a la derecha, carpeta nueva, lista, cuadrícula, detalles y orden. Cada archivo tiene el icono de ORVUPI de su tipo y un botón Acciones, para el teléfono, donde no hay clic derecho. En una pantalla estrecha o con puntero grueso, modificado y tamaño se ocultan y el panel de detalles queda en una hoja sobre la lista. El buscador ocupa el centro de la barra superior en el escritorio. No se usan el logotipo, los colores ni los iconos de Drive.
+
 ## Componentes de archivos
 
 - `Sidebar` con acción (Nuevo y subidas), navegación y pie de almacenamiento.
