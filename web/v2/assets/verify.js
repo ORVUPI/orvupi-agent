@@ -2674,6 +2674,20 @@ async function readWith(mint, registry, rpc, input) {
                 realToken: launch.pool.realA.toString(),
                 realQuote: launch.pool.realB.toString(),
                 complete: launch.pool.status !== "en_curva",
+                // Misma forma que curve.launchlab de las fichas del Cuaderno (web/v2/shared/solana-read.js).
+                launchlab: {
+                    platform: "raydium_launchlab",
+                    pool: launch.pool.poolAddress,
+                    quoteMint: launch.pool.mintB,
+                    quoteDecimals: launch.pool.decimalsB,
+                    raised: launch.pool.realB.toString(),
+                    target: launch.pool.totalFundRaisingB.toString(),
+                    progress: launch.pool.progressPercent,
+                    status: launch.pool.status,
+                    migrateType: launch.pool.migrateType,
+                    migratedPool: launch.migratedPool,
+                    migratedNote: launch.migratedNote,
+                },
             }
             : launchFailed && !mint.endsWith("pump")
                 ? { present: null, status: "fallo", virtualToken: null, virtualQuote: null, realToken: null, realQuote: null, complete: null }

@@ -658,6 +658,35 @@ function curveFromShown(value) {
     realToken: amountOrNull(value.realToken),
     realQuote: amountOrNull(value.realQuote),
     complete: value.complete === true || value.complete === false ? value.complete : null,
+    ...(status === "verificado" && launchlabFromShown(value.launchlab) ? { launchlab: launchlabFromShown(value.launchlab) } : {}),
+  };
+}
+
+/** Copia la curva de Raydium LaunchLab que trae Verify solo si tiene la forma exacta de la ficha. */
+function launchlabFromShown(value) {
+  if (!value || typeof value !== "object") return null;
+  const address = (item) => typeof item === "string" && /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(item);
+  const digits = (item) => typeof item === "string" && /^\d+$/.test(item);
+  if (value.platform !== "raydium_launchlab" || !address(value.pool) || !address(value.quoteMint)) return null;
+  if (!Number.isInteger(value.quoteDecimals) || value.quoteDecimals < 0 || value.quoteDecimals > 18) return null;
+  if (!digits(value.raised) || !digits(value.target)) return null;
+  if (value.progress !== null && !(typeof value.progress === "string" && /^\d+\.\d{2}$/.test(value.progress))) return null;
+  if (!["en_curva", "migrando", "migrado", "desconocido"].includes(value.status)) return null;
+  if (!["amm", "cpmm", "desconocido"].includes(value.migrateType)) return null;
+  if (value.migratedPool !== null && !address(value.migratedPool)) return null;
+  if (!["localizado", "no_localizado", "amm_v4_no_derivable", "no_aplica"].includes(value.migratedNote)) return null;
+  return {
+    platform: "raydium_launchlab",
+    pool: value.pool,
+    quoteMint: value.quoteMint,
+    quoteDecimals: value.quoteDecimals,
+    raised: value.raised,
+    target: value.target,
+    progress: value.progress,
+    status: value.status,
+    migrateType: value.migrateType,
+    migratedPool: value.migratedPool,
+    migratedNote: value.migratedNote,
   };
 }
 
