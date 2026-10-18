@@ -1,5 +1,16 @@
 # Registro de cambios
 
+## 0.8.5 — 2026-10-18
+
+ORVUPI AI: la descarga del modelo ya no falla con «network error» en el móvil.
+
+- Causa: el modelo de ~480 MB se pedía en una sola petición; en el móvil la conexión se corta a mitad (Chrome lo notifica como «network error») y se perdía todo. Además, la Cache API rechaza entradas de cientos de MB, así que ni siquiera una descarga completa quedaba guardada. La CSP y CORS no eran el problema (los redireccionamientos de Hugging Face a `*.hf.co` ya estaban permitidos).
+- Descarga por partes de 8 MB (peticiones Range) con hasta 6 reintentos por parte, espera progresiva, detección de conexiones colgadas y espera automática si el teléfono se queda sin conexión. Reanudable: lo descargado queda en el almacenamiento privado del navegador (OPFS) y continúa donde se quedó.
+- Los modelos se guardan en OPFS en lugar de la Cache API; «Borrar modelos descargados» limpia ambos.
+- En el móvil se recomienda por defecto el modelo más ligero (SmolLM2 135M, WASM, ~137 MB). Los demás siguen disponibles.
+- Errores claros con la causa real: sin conexión, cortes repetidos, error del servidor, dominio bloqueado (bloqueador/VPN), falta de espacio, falta de memoria o fallo de la GPU.
+- Privacidad sin cambios: solo se descargan los archivos públicos del modelo; el texto nunca sale del dispositivo.
+
 ## 0.8.4 — 2026-10-18
 
 ORVUPI AI deja de ser una simulación: un modelo de lenguaje real, gratis, que se ejecuta dentro del navegador.
