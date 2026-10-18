@@ -422,6 +422,16 @@ export function SheetsScreen() {
     r2: Math.max(anchor.row, selected.row),
     c2: Math.max(anchor.col, selected.col),
   };
+  const rangeHandle = (
+    <button
+      type="button"
+      className="ow-range-handle"
+      aria-label={workspace.t("selectionHandle")}
+      style={bounds.r2 < frozenRows
+        ? { top: ROW_H - 9, left: bounds.c2 * COL_W + COL_W - 9 }
+        : { top: (bounds.r2 - frozenRows) * ROW_H + ROW_H - 9, left: GUTTER + bounds.c2 * COL_W + COL_W - 9 }}
+    />
+  );
 
   function mergeSelection() {
     const single = bounds.r2 === bounds.r1 && bounds.c2 === bounds.c1;
@@ -622,6 +632,7 @@ export function SheetsScreen() {
             <div className="ow-vrow ow-vrow-pin" style={{ width: GUTTER, height: ROW_H, left: win.left }}>{rowIndex + 1}</div>
             <div className="ow-frozen-cells" style={{ width: COL_COUNT * COL_W, height: ROW_H }}>
               {columns(0, colEnd, rowIndex, null)}
+              {bounds.r2 === rowIndex ? rangeHandle : null}
             </div>
           </div>
         ))}
@@ -640,12 +651,7 @@ export function SheetsScreen() {
               </div>
             );
           })}
-          <button
-            type="button"
-            className="ow-range-handle"
-            aria-label={workspace.t("selectionHandle")}
-            style={{ top: (bounds.r2 - (bounds.r2 >= frozenRows ? frozenRows : 0)) * ROW_H + ROW_H - 9, left: GUTTER + bounds.c2 * COL_W + COL_W - 9 }}
-          />
+          {bounds.r2 >= frozenRows ? rangeHandle : null}
         </div>
       </div>
       {(active.charts ?? []).map((chart) => {

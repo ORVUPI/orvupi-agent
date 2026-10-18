@@ -1,7 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mkdir } from "node:fs/promises";
-
-const SHOTS = "/opt/cursor/artifacts/screenshots";
+import { screenshotDir } from "./shots";
 
 async function openDoc(page: Page) {
   await page.goto("/");
@@ -21,8 +19,7 @@ async function writeSelection(doc: Page, editor: ReturnType<Page["locator"]>, te
 }
 
 async function shot(doc: Page, name: string) {
-  await mkdir(SHOTS, { recursive: true });
-  await doc.screenshot({ path: `${SHOTS}/${name}.png` });
+  await doc.screenshot({ path: `${await screenshotDir()}/${name}.png` });
 }
 
 async function insertTable(doc: Page, rows: number, cols: number) {
@@ -33,7 +30,7 @@ async function insertTable(doc: Page, rows: number, cols: number) {
 }
 
 test.beforeAll(async () => {
-  await mkdir(SHOTS, { recursive: true });
+  await screenshotDir();
 });
 
 test("la rejilla inserta las filas y columnas elegidas", async ({ page }) => {

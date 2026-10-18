@@ -1,8 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator, type Page, type TestInfo } from "@playwright/test";
-import { mkdir } from "node:fs/promises";
-
-const SHOTS = "/opt/cursor/artifacts/screenshots";
+import { screenshotDir } from "./shots";
 
 function touchReady(info: TestInfo): boolean {
   return info.project.use.hasTouch === true && info.project.use.browserName !== "firefox";
@@ -46,7 +44,7 @@ async function checkAssets(page: Page) {
 }
 
 test.beforeAll(async () => {
-  await mkdir(SHOTS, { recursive: true });
+  await screenshotDir();
 });
 
 test("Docs y Drive de la fase 1 hacen el trabajo y lo guardan", async ({ page }, info) => {
@@ -209,7 +207,7 @@ test("Docs y Drive de la fase 1 hacen el trabajo y lo guardan", async ({ page },
 
   if (info.project.name.startsWith("fase-chromium-")) {
     const id = info.project.name.slice("fase-chromium-".length);
-    await doc.screenshot({ path: `${SHOTS}/080-${id}.png` });
+    await doc.screenshot({ path: `${await screenshotDir()}/080-${id}.png` });
   }
   expect(errors, errors.join("\n")).toEqual([]);
 });

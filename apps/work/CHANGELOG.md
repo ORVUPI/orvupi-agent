@@ -10,6 +10,7 @@ Alfa de desarrollo. No es una versión de producción. Sigue en la vista previa.
 - Buscar tiene anterior. Archivo → Hacer una copia abre la copia en otra pestaña.
 - Drive encuentra una palabra del texto del documento, no solo el nombre. Hojas, diapositivas y formularios siguen buscándose por el nombre.
 - Un archivo de 0.1 a 0.7.0 sigue abriendo: la versión del archivo sigue en 1.
+- En el teléfono, el asa de selección de Hojas queda en la esquina de la celda, también en la fila fijada. En el inicio, la fila de iconos cabe entera y no se desplaza de lado. Las capturas de las pruebas usan `ORVUPI_SCREENSHOTS` o una carpeta que se pueda escribir.
 
 ## 0.7.0 — 2026-10-17
 

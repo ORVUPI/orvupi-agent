@@ -32,7 +32,7 @@ npm test
 npm run test:e2e
 ```
 
-`npm test` ejecuta Vitest (unidad e integración). `npm run test:e2e` construye la app y recorre con Playwright el ciclo de la sección 30 del manual, más el contraste con axe.
+`npm test` ejecuta Vitest (unidad e integración). `npm run test:e2e` construye la app y recorre con Playwright el ciclo de la sección 30 del manual, más el contraste con axe. Las capturas van a `ORVUPI_SCREENSHOTS` si esa variable está definida; si no, a `/opt/cursor/artifacts/screenshots` cuando se puede escribir ahí, y si no a una carpeta temporal.
 
 ## Qué hay en 0.8.0
 

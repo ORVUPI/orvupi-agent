@@ -1,8 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { mkdir } from "node:fs/promises";
-
-const SHOTS = "/opt/cursor/artifacts/screenshots";
+import { screenshotDir } from "./shots";
 const WIDTHS = [360, 390, 412, 460, 768];
 const TINY_PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
@@ -11,8 +9,7 @@ const TINY_PNG = Buffer.from(
 
 async function shot(page: Page, name: string) {
   if (test.info().project.name !== "pixel-7") return;
-  await mkdir(SHOTS, { recursive: true });
-  await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: false });
+  await page.screenshot({ path: `${await screenshotDir()}/${name}.png`, fullPage: false });
 }
 
 async function fits(page: Page, label: string) {
@@ -87,6 +84,18 @@ test("el inicio y Drive caben, y el móvil tiene barra y botón Nuevo", async ({
       return (bar + head) / window.innerHeight;
     });
     expect(headerRatio).toBeLessThan(0.2);
+    const aiFits = await page.evaluate(() => {
+      const actions = document.querySelector(".ow-top-actions");
+      const ai = document.querySelector('.ow-top-actions .ow-icon-button[aria-label="ORVUPI AI"]');
+      if (!(actions instanceof HTMLElement) || !(ai instanceof HTMLElement)) return { gap: 99, inside: false };
+      const box = ai.getBoundingClientRect();
+      return {
+        gap: actions.scrollWidth - actions.clientWidth,
+        inside: box.left >= -1 && box.right <= window.innerWidth + 1 && box.width >= 32,
+      };
+    });
+    expect(aiFits.gap).toBeLessThanOrEqual(1);
+    expect(aiFits.inside).toBe(true);
     await expect(page.locator(".ow-chip-more")).toBeVisible();
     const chipsMask = await page.locator(".ow-chips").evaluate((node) => getComputedStyle(node).maskImage || getComputedStyle(node).getPropertyValue("-webkit-mask-image"));
     expect(chipsMask).not.toBe("none");
@@ -295,6 +304,18 @@ test("la hoja responde al dedo y cubre escala, nota, validación, macro y consul
     return wrap.getBoundingClientRect().height / window.innerHeight;
   });
   expect(ratio).toBeGreaterThanOrEqual(0.65);
+  const handleGap = await sheet.evaluate(() => {
+    const cell = document.querySelector('button.ow-cell[aria-pressed="true"]');
+    const handle = document.querySelector(".ow-range-handle");
+    if (!(cell instanceof HTMLElement) || !(handle instanceof HTMLElement)) return 99;
+    const box = cell.getBoundingClientRect();
+    const knob = handle.getBoundingClientRect();
+    return Math.max(
+      Math.abs(knob.top + knob.height / 2 - box.bottom),
+      Math.abs(knob.left + knob.width / 2 - box.right),
+    );
+  });
+  expect(handleGap).toBeLessThanOrEqual(2);
   const formulaField = sheet.locator(".ow-formula .ow-field");
   await expect(formulaField.locator("input")).toHaveAttribute("placeholder", "Fórmula o valor");
   const formulaBox = await formulaField.boundingBox();
@@ -487,6 +508,18 @@ test("no hay desbordamiento en 360, 390, 412, 460 ni 768", async ({ page }) => {
   for (const width of WIDTHS) {
     await page.setViewportSize({ width, height: 800 });
     await fits(page, `inicio ${width}`);
+    const aiFits = await page.evaluate(() => {
+      const actions = document.querySelector(".ow-top-actions");
+      const ai = document.querySelector('.ow-top-actions .ow-icon-button[aria-label="ORVUPI AI"]');
+      if (!(actions instanceof HTMLElement) || !(ai instanceof HTMLElement)) return { gap: 99, inside: false };
+      const box = ai.getBoundingClientRect();
+      return {
+        gap: actions.scrollWidth - actions.clientWidth,
+        inside: box.left >= -1 && box.right <= window.innerWidth + 1 && box.width >= 32,
+      };
+    });
+    expect(aiFits.gap, `barra ${width}`).toBeLessThanOrEqual(1);
+    expect(aiFits.inside, `icono ${width}`).toBe(true);
   }
   const tools = ["Nuevo documento", "Nueva hoja", "Nueva presentación", "Nuevo formulario", "Nuevo dibujo", "Nueva nota"] as const;
   for (const name of tools) {

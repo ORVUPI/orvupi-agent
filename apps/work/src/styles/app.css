@@ -628,7 +628,7 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 }
 .ow-cell[aria-pressed="true"] { outline: 2px solid var(--gem); outline-offset: -2px; }
 .ow-cell.is-range { outline: 2px solid #1d4e89; outline-offset: -2px; background-image: linear-gradient(rgba(29, 78, 137, 0.16), rgba(29, 78, 137, 0.16)); }
-.ow-range-handle { position: absolute; width: 18px; height: 18px; margin: 0; padding: 0; border-radius: 50%; background: #1d4e89; border: 2px solid #fff; z-index: 7; touch-action: none; cursor: grab; }
+.ow-range-handle { position: absolute; width: 18px; height: 18px; margin: 0; padding: 0; border-radius: 50%; background: #1d4e89; border: 2px solid #fff; z-index: 7; touch-action: none; cursor: grab; line-height: 0; }
 .ow-cell.has-border { box-shadow: inset 0 0 0 2px #102032; }
 .ow-cell.is-wrap { white-space: normal; }
 .ow-sheet-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -1027,10 +1027,16 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
   .ow-page > .ow-page-head { display: none; }
   .ow-page h2 { font-size: 1.05rem; margin: 8px 0; }
   .ow-topbar { flex-wrap: wrap; align-items: center; padding: 4px 8px; gap: 4px; }
-  .ow-top-actions { display: flex; align-items: center; gap: 4px; flex: 1 0 100%; min-width: 0; flex-wrap: nowrap; overflow-x: auto; }
-  .ow-top-title { font-size: 15px; line-height: 32px; white-space: nowrap; }
-  .ow-topbar .ow-icon-button { min-width: 36px; min-height: 36px; }
-  .ow-topbar .ow-dropdown > button, .ow-topbar .ow-file span.ow-button { min-height: 32px; padding: 2px 8px; font-size: 13px; }
+  .ow-top-actions { display: flex; align-items: center; gap: 4px; flex: 1 0 100%; min-width: 0; flex-wrap: nowrap; overflow: visible; }
+  .ow-top-actions > .ow-icon-button,
+  .ow-top-actions > .ow-file,
+  .ow-top-actions > .ow-dropdown,
+  .ow-top-actions > .ow-save,
+  .ow-top-actions > .ow-button { flex: none; }
+  .ow-top-title,
+  .ow-top-actions > .ow-filename { flex: 1 1 auto; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; font-size: 14px; line-height: 32px; white-space: nowrap; }
+  .ow-topbar .ow-icon-button { min-width: 32px; min-height: 32px; padding: 0; }
+  .ow-topbar .ow-dropdown > button, .ow-topbar .ow-file span.ow-button { min-height: 32px; padding: 2px 6px; font-size: 12px; white-space: nowrap; }
   .ow-search { flex: 1 0 100%; order: 5; }
   .ow-search input { min-height: 36px; }
   .ow-chiprow { display: flex; align-items: center; gap: 0; flex: 1 0 100%; order: 6; min-width: 0; }

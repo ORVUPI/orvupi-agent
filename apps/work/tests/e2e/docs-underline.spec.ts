@@ -1,7 +1,5 @@
 import { devices, expect, test, type Locator, type Page } from "@playwright/test";
-import { mkdir } from "node:fs/promises";
-
-const SHOTS = "/opt/cursor/artifacts/screenshots";
+import { screenshotDir } from "./shots";
 const WORD = "Hdjdjdj";
 const pixel = devices["Pixel 7"];
 const ANDROID = {
@@ -139,7 +137,6 @@ test.describe("Chrome de Android", () => {
     expect(sheet.y + sheet.height).toBeGreaterThanOrEqual(dock.y - 16);
     expect(scrollBg).toBe("rgb(255, 255, 255)");
     expect(weight === "400" || weight === "normal").toBe(true);
-    await mkdir(SHOTS, { recursive: true });
-    await doc.screenshot({ path: `${SHOTS}/063-underline.png` });
+    await doc.screenshot({ path: `${await screenshotDir()}/063-underline.png` });
   });
 });

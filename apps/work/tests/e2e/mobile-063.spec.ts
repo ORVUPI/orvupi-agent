@@ -1,10 +1,10 @@
 import { devices, expect, test, type Page } from "@playwright/test";
-import { appendFile, mkdir } from "node:fs/promises";
+import { appendFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { APP_VERSION } from "../../src/version";
 
-const SHOTS = "/opt/cursor/artifacts/screenshots";
+import { screenshotDir } from "./shots";
 const pixel7 = devices["Pixel 7"];
 const ANDROID = {
   userAgent: pixel7.userAgent,
@@ -70,9 +70,8 @@ test.describe("Chrome de Android", () => {
       await docs.getByRole("menuitem", { name: "Ayuda", exact: true }).click();
       await expect(docs.getByText(`Versión ${APP_VERSION}`)).toBeVisible();
       if (width === 460) {
-        await mkdir(SHOTS, { recursive: true });
         await docs.keyboard.press("Escape");
-        await docs.screenshot({ path: `${SHOTS}/063-docs.png` });
+        await docs.screenshot({ path: `${await screenshotDir()}/063-docs.png` });
       }
       await docs.close();
     }
@@ -117,8 +116,7 @@ test("un service worker viejo se sustituye y aparece Nueva versión", async ({ p
   });
   await expect(page.locator(".ow-update")).toBeVisible();
   await expect(page.getByRole("button", { name: "Recargar", exact: true })).toBeVisible();
-  await mkdir(SHOTS, { recursive: true });
-  await page.screenshot({ path: `${SHOTS}/063-update.png` });
+  await page.screenshot({ path: `${await screenshotDir()}/063-update.png` });
   await page.getByRole("button", { name: "Recargar", exact: true }).click();
   await expect(page.locator(".ow-top-title")).toBeVisible();
 });

@@ -1,7 +1,5 @@
 import { devices, expect, test, type Page } from "@playwright/test";
-import { mkdir } from "node:fs/promises";
-
-const SHOTS = "/opt/cursor/artifacts/screenshots";
+import { screenshotDir } from "./shots";
 const pixel7 = devices["Pixel 7"];
 const ANDROID = {
   userAgent: pixel7.userAgent,
@@ -23,8 +21,21 @@ async function openTool(page: Page, name: string) {
 }
 
 async function shot(doc: Page, name: string) {
-  await mkdir(SHOTS, { recursive: true });
-  await doc.screenshot({ path: `${SHOTS}/${name}.png` });
+  await doc.screenshot({ path: `${await screenshotDir()}/${name}.png` });
+}
+
+async function handleOnCorner(sheet: Page) {
+  const gap = await sheet.evaluate(() => {
+    const cell = document.querySelector('button.ow-cell[aria-pressed="true"]');
+    const handle = document.querySelector(".ow-range-handle");
+    if (!(cell instanceof HTMLElement) || !(handle instanceof HTMLElement)) return 99;
+    const box = cell.getBoundingClientRect();
+    const knob = handle.getBoundingClientRect();
+    const dy = Math.abs(knob.top + knob.height / 2 - box.bottom);
+    const dx = Math.abs(knob.left + knob.width / 2 - box.right);
+    return Math.max(dy, dx);
+  });
+  expect(gap).toBeLessThanOrEqual(2);
 }
 
 async function pick(doc: Page, menu: string, item: string) {
@@ -48,7 +59,7 @@ async function touchDrag(doc: Page, from: { x: number; y: number }, to: { x: num
 }
 
 test.beforeAll(async () => {
-  await mkdir(SHOTS, { recursive: true });
+  await screenshotDir();
 });
 
 test("la barra cambia el texto seleccionado", async ({ page }) => {
@@ -382,6 +393,8 @@ test.describe("teléfono", () => {
   test("en Hojas el dedo y el asa marcan un rango y lo combinan", async ({ page }) => {
     const sheet = await openTool(page, "Nueva hoja");
     const a1 = sheet.getByRole("button", { name: "A1", exact: true });
+    await expect(a1).toHaveAttribute("aria-pressed", "true");
+    await handleOnCorner(sheet);
     const b1 = sheet.getByRole("button", { name: "B1", exact: true });
     const from = await a1.boundingBox();
     const to = await b1.boundingBox();
@@ -393,6 +406,7 @@ test.describe("teléfono", () => {
     await expect(sheet.getByRole("button", { name: "B1", exact: true })).toHaveCount(0);
     await expect(a1).toHaveCSS("width", "184px");
     await sheet.getByRole("button", { name: "A2", exact: true }).click();
+    await handleOnCorner(sheet);
     const handle = await sheet.getByRole("button", { name: "Asa de selección" }).boundingBox();
     const b2 = await sheet.getByRole("button", { name: "B2", exact: true }).boundingBox();
     if (!handle || !b2) throw new Error("asa");

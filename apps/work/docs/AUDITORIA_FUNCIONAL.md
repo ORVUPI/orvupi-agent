@@ -239,3 +239,11 @@ En el documento, axe (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`) no marcó incu
 | Cortar | En Chromium desaparece el tramo cortado. En los otros, o se corta o se avisa. | probado |
 
 Queda fuera de esta fase lo que la matriz marca `parcial` o `pendiente`: Hojas, presentaciones, formularios, dibujos y notas, y en Docs el resto que no cabe en local (compartir, sugerencias, traducir, voz, importar DOCX). Cobertura de la matriz: **71,7 %** (109 / 152).
+
+Tres correcciones de la pasada 0.7.0, comprobadas el 18 de octubre de 2026 sin repetir la suite entera:
+
+| corrección | comprobación |
+| --- | --- |
+| El asa de Hojas cae en la esquina de la celda, también en la fila fijada (A1). | El centro del asa queda a 2 px o menos de la esquina inferior derecha. Pasó en `docs-070` (Chromium) y en «la hoja responde» de `mobile-060` (Chromium a 412 px, Pixel 7 e iPhone 14). El arrastre del asa hasta B2 sigue combinando el rango. |
+| En el inicio, el último icono de la barra cabe y la fila no se desplaza de lado. | «ORVUPI AI» queda dentro del ancho y `scrollWidth` de `.ow-top-actions` no supera al ancho visible. Pasó en Pixel 7, iPhone 14 y en 360, 390, 412, 460 y 768. |
+| Las capturas no dependen de una carpeta fija. | `ORVUPI_SCREENSHOTS` elige la ruta. Si no está, se usa `/opt/cursor/artifacts/screenshots` cuando se puede escribir; si no, una carpeta temporal. |
