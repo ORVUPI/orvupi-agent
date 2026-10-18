@@ -137,7 +137,7 @@ test("pegar una captura o una imagen copiada del navegador la inserta y se conse
   await imagesLoaded(doc, expected);
 });
 
-test("documento real de Cristian (solo local, con ORVUPI_DOCX)", async ({ page }) => {
+test("documento real del usuario (solo local, con ORVUPI_DOCX)", async ({ page }) => {
   test.skip(!REAL, "sin ORVUPI_DOCX");
   test.setTimeout(180_000);
   const doc = await importDoc(page, "Tarea 2.docx", await readFile(REAL!));
@@ -149,25 +149,25 @@ test("documento real de Cristian (solo local, con ORVUPI_DOCX)", async ({ page }
     await expect.poll(async () => Number(await doc.locator(".ow-a4").getAttribute("data-pages"))).toBeGreaterThanOrEqual(22);
   }
   await doc.waitForTimeout(500);
-  await shot(doc, "cristian-p1");
+  await shot(doc, "real-p1");
   const scroller = doc.locator(".ow-docs-scroll");
   const bands = editor.locator(".ow-pgap .ow-pgap-band");
   if ((await bands.count()) > 1) {
     await bands.nth(0).evaluate((node) => node.scrollIntoView({ block: "center" }));
     await doc.waitForTimeout(300);
-    await shot(doc, "cristian-salto");
+    await shot(doc, "real-salto");
     await bands.nth(0).evaluate((node) => node.scrollIntoView({ block: "start" }));
     await doc.waitForTimeout(300);
-    await shot(doc, "cristian-p2");
+    await shot(doc, "real-p2");
     // Vista alejada: varias hojas seguidas.
     await doc.locator(".ow-docs-sheet").evaluate((node) => { (node as HTMLElement).style.zoom = "0.4"; });
     await scroller.evaluate((node) => node.scrollTo(0, 0));
     await doc.waitForTimeout(400);
-    await shot(doc, "cristian-paginas");
+    await shot(doc, "real-paginas");
   } else {
     await scroller.evaluate((node) => node.scrollBy(0, 900));
     await doc.waitForTimeout(300);
-    await shot(doc, "cristian-p2");
+    await shot(doc, "real-p2");
   }
   await doc.reload();
   await imagesLoaded(doc, 22);

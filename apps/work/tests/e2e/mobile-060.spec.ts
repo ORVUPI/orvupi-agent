@@ -268,10 +268,19 @@ test("Docs inserta gráfico, dibujo, ecuación, marca, número, columnas y letra
   await expect(docs.getByRole("img", { name: "Dibujo", exact: true })).toBeVisible();
   await menu(docs, "Insertar", "Encabezado");
   await expect(docs.getByRole("textbox", { name: "Encabezado", exact: true })).toBeFocused();
-  await menu(docs, "Formato", "Columnas");
-  await expect(docs.locator(".ow-a4")).toHaveClass(/is-cols-2/);
-  await menu(docs, "Formato", "Letra capital");
-  await expect(docs.locator(".ow-a4")).toHaveClass(/is-dropcap/);
+  // En el iPhone, con el encabezado enfocado la barra de menús se oculta un momento y el toque se pierde
+  // (main rojo desde el 17-10): se quita el foco y se reintenta solo si la clase aún no está.
+  await docs.getByRole("textbox", { name: "Encabezado", exact: true }).blur();
+  await docs.locator(".ProseMirror").click();
+  const page4 = docs.locator(".ow-a4");
+  await expect(async () => {
+    if (!/is-cols-2/.test((await page4.getAttribute("class")) ?? "")) await menu(docs, "Formato", "Columnas");
+    await expect(page4).toHaveClass(/is-cols-2/, { timeout: 2_000 });
+  }).toPass({ timeout: 20_000 });
+  await expect(async () => {
+    if (!/is-dropcap/.test((await page4.getAttribute("class")) ?? "")) await menu(docs, "Formato", "Letra capital");
+    await expect(page4).toHaveClass(/is-dropcap/, { timeout: 2_000 });
+  }).toPass({ timeout: 20_000 });
   await fits(docs, "docs funciones");
 });
 
