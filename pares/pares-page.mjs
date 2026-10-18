@@ -1,4 +1,4 @@
-import { canonicalJson, describePair, drawSnapshot, evidenceRecord, FEE_CAVEAT, GLOBAL_FEE_ACCOUNT, PUBLIC_WARNING, readWithinLimit, sha256Hex, snapshotLines } from "../modules/pair-report.mjs";
+import { canonicalJson, describePair, launchlabLines, drawSnapshot, evidenceRecord, FEE_CAVEAT, GLOBAL_FEE_ACCOUNT, PUBLIC_WARNING, readWithinLimit, sha256Hex, snapshotLines } from "../modules/pair-report.mjs";
 
 const TEXT = {
   direccion: ["Esa dirección no es válida. Suele tener entre 32 y 44 letras y números.", "That address is not valid. It is usually 32 to 44 letters and numbers."],
@@ -129,7 +129,9 @@ function pageLines(evidence, digest) {
   const curve = {
     abierta: ["Curva: abierta.", "Curve: open."],
     completa: ["Curva: completa.", "Curve: complete."],
-    sin_curva: ["Curva: no hay curva.", "Curve: no curve."],
+    sin_curva: ["Curva: no hay curva de Pump.fun ni de Raydium LaunchLab.", "Curve: there is no Pump.fun or Raydium LaunchLab curve."],
+    migrada: ["Curva: graduada y migrada.", "Curve: graduated and migrated."],
+    migrando: ["Curva: migrando.", "Curve: migrating."],
   }[evidence.curve] ?? ["Curva: no disponible.", "Curve: unavailable."];
   const base = evidence.base === "desconocida"
     ? ["Moneda base: desconocida.", "Base currency: unknown."]
@@ -147,8 +149,13 @@ function pageLines(evidence, digest) {
   lines.push(
     { es: base[0], en: base[1] },
     { es: curve[0], en: curve[1] },
-    feeLine("fee_basis_points", 105, evidence.protocolFeeBps),
-    feeLine("creator_fee_basis_points", 154, evidence.creatorFeeBps),
+    ...(evidence.launchlab
+      ? launchlabLines(evidence)
+      : [
+          ...(evidence.platform === "pump_fun" ? [{ es: "Plataforma: Pump.fun.", en: "Platform: Pump.fun." }] : []),
+          feeLine("fee_basis_points", 105, evidence.protocolFeeBps),
+          feeLine("creator_fee_basis_points", 154, evidence.creatorFeeBps),
+        ]),
     { es: `Hora UTC: ${evidence.readAt}`, en: `UTC time: ${evidence.readAt}` },
     { es: `Fuente de las lecturas que respondieron: ${evidence.source}`, en: `Source of the reads that answered: ${evidence.source}` },
     { es: "Instantánea: puede haber cambiado.", en: "Snapshot: it may have changed." },
@@ -217,6 +224,8 @@ async function onSubmit(event) {
       uri: state.metadata?.uri || null,
       base: pair.base,
       curve: pair.curve,
+      platform: pair.platform,
+      launchlab: pair.launchlab,
       protocolFeeBps: pair.protocolFeeBps,
       creatorFeeBps: pair.creatorFeeBps,
       slot: state.slot,

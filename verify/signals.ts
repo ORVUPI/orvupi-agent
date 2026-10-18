@@ -15,6 +15,7 @@ import {
   metadataPda,
 } from "./programs.js";
 import { decodeBondingCurve } from "./pump.js";
+import { LAUNCHLAB_PROGRAM, quoteSymbol, readLaunchlab, type LaunchlabReading } from "./launchlab.js";
 import { RpcClient, type AccountInfo, type ChainReader, type RpcResult, type RpcTransport, type TokenAmount } from "./rpc.js";
 import type { CanonicalToken, ExtensionReport } from "./types.js";
 
@@ -60,8 +61,8 @@ export const PRIVACY_NOTICE: Localized = {
 export type FactState = "ok" | "ausente" | "fallo" | "no_consultado" | "no_aplica";
 
 const CURVE_NOT_ON_PUMP: Localized = {
-  es: "No aplica: este token no se creó en Pump.fun",
-  en: "Not applicable: this token was not created on Pump.fun",
+  es: "No aplica: no hay curva de Pump.fun ni de Raydium LaunchLab para este token",
+  en: "Not applicable: there is no Pump.fun or Raydium LaunchLab curve for this token",
 };
 
 export type ReadingFact = { id: string; label: Localized; state: FactState };
@@ -659,8 +660,24 @@ async function readWith(
     const sample = await accountSample(rpc, mint, mintInfo.owner, curve, largest, null);
     signals.push(sample.signal);
   }
-  const curveNotOnPump = !mint.endsWith("pump") && (!curveInfo || curveInfo.owner !== PUMP_PROGRAM);
-  signals.push(curveNotOnPump ? curveDoesNotApplySignal() : curveSignal(curveInfo, bonding));
+  const pumpMissing = !curveInfo || curveInfo.owner !== PUMP_PROGRAM;
+  let launch: LaunchlabReading | null = null;
+  let launchFailed = false;
+  if (pumpMissing) {
+    const ll = await readLaunchlab(mint, (addresses) => rpc.getMultipleAccounts(addresses));
+    launch = ll.reading;
+    launchFailed = !ll.ok;
+  }
+  const curveNotOnPump = !launch && !launchFailed && !mint.endsWith("pump") && pumpMissing;
+  signals.push(
+    launch
+      ? launchlabSignal(launch)
+      : launchFailed && !mint.endsWith("pump")
+        ? launchlabFailedSignal()
+        : curveNotOnPump
+          ? curveDoesNotApplySignal()
+          : curveSignal(curveInfo, bonding),
+  );
   const copyByName = !likeness.inRegistry && likeness.signals.some((item) => /^nombre |^símbolo /.test(item));
   // Contrato oficial ORVUPI (Solana): Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU. Otro token que dice llamarse ORVUPI no es el oficial.
   // En verify.js el CA sale de shared/orvupi-contract.js; en Node, de esta copia (comprobada por test/web-v2.test.ts).
@@ -778,7 +795,7 @@ async function readWith(
     {
       id: "curva",
       label: loc("Curva", "Curve"),
-      state: curveNotOnPump ? "no_aplica" : !curveInfo ? "ausente" : bonding ? "ok" : "fallo",
+      state: launch ? "ok" : launchFailed && !mint.endsWith("pump") ? "fallo" : curveNotOnPump ? "no_aplica" : !curveInfo ? "ausente" : bonding ? "ok" : "fallo",
     },
   ];
   const grouped = groupFacts(facts);
@@ -839,7 +856,19 @@ async function readWith(
     })),
     extensionsStatus: decoded.standard === "spl-token" ? "no_aplica" : decoded.extensionsParsed ? "verificado" : "fallo",
     largestStatus: largestState === "ok" ? "ok" : largestState,
-    curve: curveNotOnPump
+    curve: launch
+      ? {
+          present: true,
+          status: "verificado",
+          virtualToken: launch.pool.virtualA.toString(),
+          virtualQuote: launch.pool.virtualB.toString(),
+          realToken: launch.pool.realA.toString(),
+          realQuote: launch.pool.realB.toString(),
+          complete: launch.pool.status !== "en_curva",
+        }
+      : launchFailed && !mint.endsWith("pump")
+      ? { present: null, status: "fallo", virtualToken: null, virtualQuote: null, realToken: null, realQuote: null, complete: null }
+      : curveNotOnPump
       ? { present: false, status: "no_aplica", virtualToken: null, virtualQuote: null, realToken: null, realQuote: null, complete: null }
       : !curveInfo
       ? { present: false, status: "ausente", virtualToken: null, virtualQuote: null, realToken: null, realQuote: null, complete: null }
@@ -1255,6 +1284,51 @@ function emptySample(): Signal {
     explain: loc(
       "No se pudo leer la muestra. No es una concentración de cero.",
       "The sample could not be read. It is not zero concentration.",
+    ),
+  };
+}
+
+function quoteAmount(amount: bigint, decimals: number, lang: "es" | "en"): string {
+  return formatUnitsLocale(amount, decimals, lang);
+}
+
+export function launchlabSignal(reading: LaunchlabReading): Signal {
+  const { pool } = reading;
+  const quote = quoteSymbol(pool.mintB);
+  const raisedEs = `${quoteAmount(pool.realB, pool.decimalsB, "es")} ${quote}`;
+  const raisedEn = `${quoteAmount(pool.realB, pool.decimalsB, "en")} ${quote}`;
+  const targetEs = `${quoteAmount(pool.totalFundRaisingB, pool.decimalsB, "es")} ${quote}`;
+  const targetEn = `${quoteAmount(pool.totalFundRaisingB, pool.decimalsB, "en")} ${quote}`;
+  const progressEs = pool.progressPercent === null ? "no se calcula" : `${pool.progressPercent.replace(".", ",")} %`;
+  const progressEn = pool.progressPercent === null ? "not calculated" : `${pool.progressPercent}%`;
+  const stateEs = { en_curva: "en curva", migrando: "migración en curso", migrado: "migrado a Raydium", desconocido: "estado no reconocido" }[pool.status];
+  const stateEn = { en_curva: "on the curve", migrando: "migration in progress", migrado: "migrated to Raydium", desconocido: "unrecognised state" }[pool.status];
+  const target = pool.status === "migrado"
+    ? reading.migratedPool
+      ? loc(` Pool de Raydium al que migró: ${reading.migratedPool} (CPMM).`, ` Raydium pool it migrated to: ${reading.migratedPool} (CPMM).`)
+      : reading.migratedNote === "amm_v4_no_derivable"
+        ? loc(" Migró al AMM v4 de Raydium; ese pool no se localiza solo con lecturas de cuentas.", " It migrated to Raydium AMM v4; that pool cannot be located with account reads alone.")
+        : loc(" El pool de destino no se localizó en la cadena.", " The destination pool was not located on chain.")
+    : loc("", "");
+  return {
+    id: "curva",
+    level: "neutro",
+    title: loc(`Curva de Raydium LaunchLab: ${stateEs}`, `Raydium LaunchLab curve: ${stateEn}`),
+    explain: loc(
+      `Plataforma: Raydium LaunchLab (programa ${LAUNCHLAB_PROGRAM}). Cuenta de la curva: ${pool.poolAddress}. Moneda base: ${quote}. Reunido en la curva: ${raisedEs} de ${targetEs} para graduarse (${progressEs}).${target.es}`,
+      `Platform: Raydium LaunchLab (program ${LAUNCHLAB_PROGRAM}). Curve account: ${pool.poolAddress}. Base currency: ${quote}. Raised on the curve: ${raisedEn} of ${targetEn} to graduate (${progressEn}).${target.en}`,
+    ),
+  };
+}
+
+function launchlabFailedSignal(): Signal {
+  return {
+    id: "curva",
+    level: "neutro",
+    title: loc("Curva", "Curve"),
+    explain: loc(
+      "No se pudo comprobar si hay una curva de Raydium LaunchLab. No se rellena con cero.",
+      "It could not be checked whether there is a Raydium LaunchLab curve. It is not filled in with zero.",
     ),
   };
 }

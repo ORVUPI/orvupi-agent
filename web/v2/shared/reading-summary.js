@@ -650,7 +650,7 @@ function compose(facts, attention, context, signals, card) {
     } else if (curve?.state === "ok") {
       checked.push(summaryPoint(
         "curva",
-        summaryPair("Curva de Pump.fun", "Pump.fun curve"),
+        summaryPair("Curva (Pump.fun o Raydium LaunchLab)", "Curve (Pump.fun or Raydium LaunchLab)"),
         summaryPair("Se leyó la curva.", "The curve was read."),
       ));
     } else if (curve?.state === "ausente") {
@@ -663,7 +663,7 @@ function compose(facts, attention, context, signals, card) {
       pushMissing(
         missing,
         "curva",
-        summaryPair("Curva de Pump.fun", "Pump.fun curve"),
+        summaryPair("Curva (Pump.fun o Raydium LaunchLab)", "Curve (Pump.fun or Raydium LaunchLab)"),
         summaryPair("No se pudo leer la curva.", "The curve could not be read."),
       );
     }
