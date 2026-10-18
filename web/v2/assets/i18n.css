@@ -6,7 +6,7 @@
 .langpick ul { position: absolute; right: 0; top: calc(100% + .35rem); margin: 0; padding: .35rem; list-style: none; min-width: 13rem; max-width: calc(100vw - 2rem); background: #fff7ef; color: #102032; border: 2px solid #102032; border-radius: 14px; box-shadow: 4px 4px 0 #102032; }
 .langpick li a { display: block; padding: .6rem .8rem; border-radius: 10px; color: inherit; text-decoration: none; min-height: 44px; box-sizing: border-box; }
 .langpick li a:hover { background: #ffd6e2; }
-.langpick li a[aria-current="true"] { font-weight: 700; background: #ff3070; color: #fff; }
+.langpick li a[aria-current="true"] { font-weight: 700; background: #ffd6e2; color: #102032; box-shadow: inset 4px 0 0 #ff3070; }
 .langsuggest { position: fixed; left: 1rem; right: 1rem; bottom: 1rem; z-index: 60; max-width: 34rem; margin: 0 auto; display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; justify-content: space-between; padding: .75rem 1rem; background: #fff7ef; color: #102032; border: 2px solid #102032; border-radius: 14px; box-shadow: 4px 4px 0 #102032; }
 .langsuggest a { font-weight: 700; color: #c4004a; }
 .langsuggest button { min-width: 44px; min-height: 44px; border: 0; background: transparent; font-size: 1.4rem; cursor: pointer; color: inherit; }

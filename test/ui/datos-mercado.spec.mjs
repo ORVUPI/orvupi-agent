@@ -1,3 +1,4 @@
+import { switchLang } from "./lang.mjs";
 import { test, expect } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { decodeBase58, METADATA_PROGRAM, TOKEN_PROGRAM } from "../../web/v2/shared/solana-read.js";
@@ -234,13 +235,13 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
   expect(/\b(precio|compra|comprar|seguro|buy|sell|score|sube|baja|fomo)\b/i.test(advice)).toBe(false);
   await shot("ok");
 
-  await page.locator('[data-set-lang="en"]').first().click();
+  await switchLang(page, "en");
   await expect(page.locator("#aviso-guardar .aviso-nodos .lang.en")).toBeVisible();
   await expect(page.locator("#aviso-guardar .aviso-nodos .lang.en")).toContainText("it is sent to the Solana public nodes solana-rpc.publicnode.com and api.mainnet-beta.solana.com, which also see your IP");
   await expect(block).toContainText("Market data");
   await expect(block).toContainText("Data: DEX Screener. It may be inaccurate or out of date.");
   await expect(block).toContainText(STAMP_EN);
-  await page.locator('[data-set-lang="es"]').first().click();
+  await switchLang(page, "es");
 
   await page.locator("#direccion-token").fill(EMPTY);
   await page.locator("#consulta button[type='submit']").click();

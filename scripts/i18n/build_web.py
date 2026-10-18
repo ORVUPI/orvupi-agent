@@ -112,7 +112,8 @@ def local_page(page, locale, prefix, cat, en_attrs, missing):
         if locale != "en":
             opening = re.sub(r'\slang="en"', ' lang="%s"' % locale, opening)
         html = html[:s] + opening + inner + html[cs:]
-    html = strip_es(html)
+    if locale != "en":
+        html = strip_es(html)
     # 2) atributos y metadatos
     html = META.sub(lambda m: m.group(1) + attr(m.group(2)) + m.group(3), html)
     html = ATTR.sub(lambda m: m.group(1) + attr(m.group(2)) + m.group(3), html)
@@ -123,7 +124,8 @@ def local_page(page, locale, prefix, cat, en_attrs, missing):
         if locale == "en" and es_title in en_attrs: new = en_attrs[es_title]
         elif locale != "en" and es_title in attrs: new = attrs[es_title]
         else: new = seg(en_title.group(1)) if en_title else attr(es_title)
-        html = html[:t.start()] + "<title>%s</title>" % new + html[t.end():]
+        keep = t.group(1) if locale == "en" else ""
+        html = html[:t.start()] + "<title%s>%s</title>" % (keep, new) + html[t.end():]
     # 3) idioma del documento: data-lang="en" para que CSS y scripts usen la rama inglesa
     html = re.sub(r'<html lang="[^"]*"[^>]*>', '<html lang="%s" data-lang="en" data-locale="%s" data-fixed-lang>' % (locale, locale), html, count=1)
     # 4a) rutas relativas (../assets/…) a absolutas: la página vive un nivel más abajo (/ja/…)

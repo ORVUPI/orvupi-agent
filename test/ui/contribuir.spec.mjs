@@ -1,3 +1,4 @@
+import { switchLang } from "./lang.mjs";
 import { expect, test } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 
@@ -35,7 +36,7 @@ test("contribuciones abre GitHub y cambia de idioma", async ({ page }, info) => 
   await expect(page.locator("input, textarea")).toHaveCount(0);
   await page.screenshot({ path: `${shots}/u04-contribuir-${project}-es.png`, fullPage: project === "desktop" });
 
-  await page.locator('[data-set-lang="en"]').first().click();
+  await switchLang(page, "en");
   await expect(page.locator("html")).toHaveAttribute("data-lang", "en");
   await expect(page.locator("h1")).toContainText("Contribute");
   await expect(page.getByRole("link", { name: "Report a bug" })).toBeVisible();

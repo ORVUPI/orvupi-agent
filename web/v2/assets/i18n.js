@@ -128,6 +128,42 @@
     }).catch(function () { /* queda en inglés: es el respaldo */ });
   }
 
+  // Español <-> inglés: las dos versiones llevan los dos textos, así que se cambia sin recargar
+  // y sin perder nada de lo que hay en pantalla (lecturas de Verify, cuaderno, Studio…). La URL se actualiza.
+  function inPage(lang) {
+    if (!((lang === "es" || lang === "en") && (current === "es" || current === "en"))) return false;
+    if (!document.querySelector(".lang.es") || !document.querySelector(".lang.en")) return false;
+    var from = current;
+    current = lang;
+    root.setAttribute("lang", lang);
+    root.setAttribute("data-lang", lang);
+    root.setAttribute("data-locale", lang);
+    var title = document.querySelector("title");
+    var t = title && title.getAttribute("data-title-" + lang);
+    if (t) title.textContent = t;
+    try { history.replaceState(history.state, "", urlFor(lang)); } catch (e) { /* sin historial */ }
+    var pre = function (p) { return p === "en" ? "/en" : ""; };
+    document.querySelectorAll('a[href^="/"]:not([data-lang-link])').forEach(function (a) {
+      var h = a.getAttribute("href");
+      var base = basePath(h.split("#")[0].split("?")[0]);
+      var rest = h.slice(h.split("#")[0].split("?")[0].length);
+      if (/^\/(work|assets|fonts|i18n)\//.test(base)) return;
+      if (h.indexOf(pre(from) + "/") === 0 || (from === "es" && !/^\/(en|pt-br|ja|ko)\//.test(h))) a.setAttribute("href", pre(lang) + base + rest);
+    });
+    document.querySelectorAll(".langpick a[data-lang-link]").forEach(function (l) {
+      var code = l.getAttribute("data-lang-link");
+      l.setAttribute("href", urlFor(code).replace(location.search + location.hash, ""));
+      if (code === lang) l.setAttribute("aria-current", "true"); else l.removeAttribute("aria-current");
+    });
+    var sum = document.querySelector(".langpick summary span[lang]");
+    if (sum) { sum.setAttribute("lang", lang); sum.textContent = NAMES[lang]; }
+    var det = document.querySelector(".langpick details");
+    if (det) det.open = false;
+    try { localStorage.setItem("orvupi-lab-lang", lang); } catch (e) { /* nada */ }
+    document.dispatchEvent(new CustomEvent("orvupi-lang", { detail: lang }));
+    return true;
+  }
+
   function ready() {
     document.addEventListener("click", function (event) {
       var a = event.target && event.target.closest ? event.target.closest("a[data-lang-link]") : null;
@@ -135,8 +171,9 @@
       var lang = a.getAttribute("data-lang-link");
       store(KEY, lang);
       store("orvupi-lang-suggest-closed", "1");
-      carry();
       event.preventDefault();
+      if (inPage(lang)) return;
+      carry();
       location.href = urlFor(lang);
     });
     restore();

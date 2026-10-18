@@ -49,7 +49,7 @@ for (const loc of LOCALES) {
       const canon = await page.locator('link[rel="canonical"]').getAttribute("href");
       expect(new URL(canon).pathname).toBe((loc.pre || "") + path);
       expect(await visibleProblems(page)).toEqual([]);
-      if (loc.code !== "es") expect(await page.locator(".lang.es").count()).toBe(0);
+      if (!["es", "en"].includes(loc.code)) expect(await page.locator(".lang.es").count()).toBe(0);
       // el selector muestra el idioma con su nombre propio y no se sale de la pantalla
       const summary = page.locator(".langpick summary");
       await expect(summary).toContainText(loc.name);

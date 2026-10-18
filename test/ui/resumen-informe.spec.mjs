@@ -1,3 +1,4 @@
+import { switchLang } from "./lang.mjs";
 import { test, expect } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { decodeBase58, METADATA_PROGRAM, TOKEN_PROGRAM } from "../../web/v2/shared/solana-read.js";
@@ -159,7 +160,7 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
   expect(/\b(precio|compra|comprar|seguro|buy|sell)\b/i.test(banned)).toBe(false);
   await shot("usdc");
 
-  await page.locator('[data-set-lang="en"]').first().click();
+  await switchLang(page, "en");
   await expect(summary).toContainText("What was checked");
   await expect(summary).toContainText("What needs attention");
   await expect(summary).toContainText("What is missing");
@@ -170,7 +171,7 @@ test("el resumen en Verify y en la ficha guardada", async ({ page }, testInfo) =
   await expect(summary).toContainText("Freeze permission");
   await expect(summary.locator(".nota-curva")).toContainText("Pump.fun curve: not applicable");
   await expect(summary.getByRole("link", { name: "Understand →" }).first()).toBeVisible();
-  await page.locator('[data-set-lang="es"]').first().click();
+  await switchLang(page, "es");
   await expect(summary).toContainText("Qué se comprobó");
 
   await page.locator("#direccion-token").fill(PREVIOUS);
