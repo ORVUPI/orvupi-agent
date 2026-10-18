@@ -1,0 +1,557 @@
+import { Extension, Mark, Node, getStyleProperty, mergeAttributes } from "@tiptap/core";
+import { Code } from "@tiptap/extension-code";
+import { Image } from "@tiptap/extension-image";
+import { TaskItem } from "@tiptap/extension-list/task-item";
+import { TaskList } from "@tiptap/extension-list/task-list";
+import { Link } from "@tiptap/extension-link";
+import { Placeholder } from "@tiptap/extension-placeholder";
+import { Table, TableCell, TableHeader } from "@tiptap/extension-table";
+import { TableKit } from "@tiptap/extension-table/kit";
+import { TextAlign } from "@tiptap/extension-text-align";
+import { BackgroundColor, Color, FontFamily, FontSize, LineHeight, TextStyle } from "@tiptap/extension-text-style";
+import { Underline } from "@tiptap/extension-underline";
+import { Mark as ProseMark, type Node as ProseNode } from "@tiptap/pm/model";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
+import { StarterKit } from "@tiptap/starter-kit";
+import { safeHref, safeImageSrc, sanitizeForeignHtml } from "../security/sanitize";
+import { headingEntries, jumpToHeading } from "./jump";
+import { DocChart, DocDrawing, Equation } from "./objects";
+
+const HEX = /^#[0-9a-f]{6}$/i;
+
+const LocalImage = Image.extend({
+  addAttributes() {
+    return {
+      ...(this.parent?.() ?? {}),
+      src: {
+        default: null,
+        parseHTML: (element: HTMLElement) => safeImageSrc(element.getAttribute("src") ?? ""),
+        renderHTML: (attributes: { src?: string | null }) => {
+          const src = typeof attributes.src === "string" ? safeImageSrc(attributes.src) : null;
+          return src ? { src } : {};
+        },
+      },
+    };
+  },
+}).configure({ allowBase64: true });
+
+const PageBreak = Node.create({
+  name: "pageBreak",
+  group: "block",
+  atom: true,
+  selectable: true,
+  parseHTML: () => [{ tag: "hr.ow-page-break" }],
+  renderHTML({ HTMLAttributes }) {
+    return ["hr", mergeAttributes(HTMLAttributes, { class: "ow-page-break" })];
+  },
+  addNodeView() {
+    return ({ editor, getPos }) => {
+      const dom = document.createElement("div");
+      dom.className = "ow-break";
+      dom.setAttribute("contenteditable", "false");
+      const rule = document.createElement("hr");
+      rule.className = "ow-page-break";
+      const head = document.createElement("p");
+      head.className = "ow-break-head";
+      const num = document.createElement("span");
+      num.className = "ow-break-num";
+      const foot = document.createElement("p");
+      foot.className = "ow-break-foot";
+      const paint = () => {
+        const root = editor.view.dom.closest(".ow-docs");
+        const edges = root?.querySelectorAll<HTMLInputElement>(".ow-a4-edge") ?? [];
+        head.textContent = edges[0]?.value ?? "";
+        foot.textContent = edges[1]?.value ?? "";
+        const numbered = root?.querySelector(".ow-page-num") != null;
+        const pos = getPos();
+        let page = 2;
+        if (typeof pos === "number") {
+          page = 2;
+          editor.state.doc.nodesBetween(0, pos, (node) => {
+            if (node.type.name === "pageBreak") page += 1;
+          });
+        }
+        num.textContent = numbered ? String(page) : "";
+        num.hidden = !numbered;
+      };
+      paint();
+      editor.on("update", paint);
+      editor.on("selectionUpdate", paint);
+      dom.append(rule, head, num, foot);
+      return {
+        dom,
+        update() {
+          paint();
+          return true;
+        },
+        destroy() {
+          editor.off("update", paint);
+          editor.off("selectionUpdate", paint);
+        },
+      };
+    };
+  },
+  addCommands() {
+    return {
+      insertPageBreak:
+        () =>
+        ({ commands }) =>
+          commands.insertContent({ type: this.name }),
+    };
+  },
+});
+
+const SubscriptMark = Mark.create({
+  name: "subscript",
+  excludes: "superscript",
+  parseHTML() {
+    return [{ tag: "sub" }, { style: "vertical-align=sub" }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ["sub", mergeAttributes(HTMLAttributes), 0];
+  },
+  addCommands() {
+    return {
+      toggleSubscript: () => ({ commands }) => commands.toggleMark(this.name),
+    };
+  },
+});
+
+const SuperscriptMark = Mark.create({
+  name: "superscript",
+  excludes: "subscript",
+  parseHTML() {
+    return [
+      {
+        tag: "sup",
+        getAttrs: (element: HTMLElement) => (element.classList.contains("ow-fn") ? false : null),
+      },
+      { style: "vertical-align=super" },
+    ];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ["sup", mergeAttributes(HTMLAttributes), 0];
+  },
+  addCommands() {
+    return {
+      toggleSuperscript: () => ({ commands }) => commands.toggleMark(this.name),
+    };
+  },
+});
+
+const Contents = Node.create({
+  name: "contents",
+  group: "block",
+  atom: true,
+  selectable: true,
+  parseHTML: () => [{ tag: "nav.ow-contents" }],
+  renderHTML({ HTMLAttributes }) {
+    return ["nav", mergeAttributes(HTMLAttributes, { class: "ow-contents" })];
+  },
+  addNodeView() {
+    return ({ editor }) => {
+      const dom = document.createElement("nav");
+      dom.className = "ow-contents";
+      dom.setAttribute("contenteditable", "false");
+      const paint = () => {
+        const title = document.documentElement.lang === "en" ? "Contents" : "Índice";
+        dom.replaceChildren();
+        const strong = document.createElement("strong");
+        strong.textContent = title;
+        dom.append(strong);
+        headingEntries(editor).forEach((entry, index) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = entry.text;
+          button.addEventListener("mousedown", (event) => event.preventDefault());
+          button.addEventListener("click", () => jumpToHeading(editor, index));
+          dom.append(button);
+        });
+      };
+      paint();
+      editor.on("update", paint);
+      return {
+        dom,
+        update() {
+          paint();
+          return true;
+        },
+        destroy() {
+          editor.off("update", paint);
+        },
+      };
+    };
+  },
+  addCommands() {
+    return {
+      insertContents: () => ({ commands }) => commands.insertContent({ type: this.name }),
+    };
+  },
+});
+
+const Footnote = Node.create({
+  name: "footnote",
+  group: "inline",
+  inline: true,
+  atom: true,
+  selectable: true,
+  addAttributes() {
+    return {
+      n: {
+        default: 1,
+        parseHTML: (element: HTMLElement) => {
+          const value = Number(element.getAttribute("data-n"));
+          return Number.isFinite(value) && value > 0 ? Math.min(999, Math.round(value)) : 1;
+        },
+        renderHTML: (attributes: { n?: number }) => ({ "data-n": String(attributes.n ?? 1) }),
+      },
+      text: {
+        default: "",
+        parseHTML: (element: HTMLElement) => (element.getAttribute("data-text") ?? "").replace(/\s+/g, " ").trim().slice(0, 400),
+        renderHTML: (attributes: { text?: string }) => ({ "data-text": String(attributes.text ?? "").slice(0, 400) }),
+      },
+    };
+  },
+  parseHTML: () => [{ tag: "sup.ow-fn" }],
+  renderHTML({ HTMLAttributes, node }) {
+    return ["sup", mergeAttributes(HTMLAttributes, { class: "ow-fn" }), String(node.attrs.n ?? "")];
+  },
+});
+
+declare module "@tiptap/core" {
+  interface Commands<ReturnType> {
+    pageBreak: {
+      insertPageBreak: () => ReturnType;
+    };
+    subscript: {
+      toggleSubscript: () => ReturnType;
+    };
+    superscript: {
+      toggleSuperscript: () => ReturnType;
+    };
+    contents: {
+      insertContents: () => ReturnType;
+    };
+  }
+}
+
+const Indent = Extension.create({
+  name: "indent",
+  addGlobalAttributes() {
+    return [
+      {
+        types: ["paragraph", "heading"],
+        attributes: {
+          indent: {
+            default: 0,
+            parseHTML: (element: HTMLElement) => Number(element.getAttribute("data-indent") ?? 0) || 0,
+            renderHTML: (attributes: { indent?: number }) => {
+              const indent = Number(attributes.indent ?? 0);
+              if (!indent) return {};
+              return { "data-indent": String(indent), style: `margin-left: ${indent * 36}px` };
+            },
+          },
+        },
+      },
+    ];
+  },
+});
+
+function paintCell<T extends typeof TableCell>(node: T) {
+  return node.extend({
+    addAttributes() {
+      return {
+        ...(this.parent?.() ?? {}),
+        background: {
+          default: null,
+          parseHTML: (element: HTMLElement) => {
+            const value = element.style.backgroundColor;
+            return HEX.test(value) ? value : null;
+          },
+          renderHTML: (attributes: { background?: string | null }) => {
+            const background = attributes.background ?? "";
+            if (!HEX.test(background)) return {};
+            return { style: `background-color: ${background}` };
+          },
+        },
+      };
+    },
+  });
+}
+
+const DocsTable = Table.extend({
+  addAttributes() {
+    return {
+      ...(this.parent?.() ?? {}),
+      borderColor: {
+        default: null,
+        parseHTML: (element: HTMLElement) => {
+          const value = element.getAttribute("data-border") ?? "";
+          return HEX.test(value) ? value : null;
+        },
+        renderHTML: (attributes: { borderColor?: string | null }) => {
+          const borderColor = attributes.borderColor ?? "";
+          if (!HEX.test(borderColor)) return {};
+          return { "data-border": borderColor };
+        },
+      },
+    };
+  },
+  addProseMirrorPlugins() {
+    const plugins = this.parent?.() ?? [];
+    plugins.push(
+      new Plugin({
+        view: (view) => {
+          const paint = () => {
+            try {
+              view.state.doc.descendants((node, pos) => {
+                if (node.type.name !== "table") return;
+                const dom = view.nodeDOM(pos);
+                const table = dom instanceof HTMLTableElement ? dom : dom instanceof HTMLElement ? dom.querySelector("table") : null;
+                if (!(table instanceof HTMLTableElement)) return;
+                const color = node.attrs.borderColor;
+                if (typeof color === "string" && HEX.test(color)) table.style.setProperty("--table-border", color);
+                else table.style.removeProperty("--table-border");
+              });
+            } catch {
+              // The node view is not mounted on the first synchronous pass.
+            }
+          };
+          queueMicrotask(paint);
+          return { update: paint };
+        },
+      }),
+    );
+    return plugins;
+  },
+}).configure({ resizable: true, cellMinWidth: 48, handleWidth: 6 });
+
+const ALLOWED_FONTS = new Set(["arial", "times new roman", "georgia", "verdana", "courier new", "comic sans ms", "roboto", "inter", "lora", "merriweather", "montserrat"]);
+
+function fontToken(value: string | null | undefined): string {
+  return value?.replace(/["']/g, "").split(",")[0]?.trim().toLowerCase() ?? "";
+}
+
+/** El corrector de Chrome en Android envuelve cada letra con monoespacio y morado. */
+function spellPurple(value: string): boolean {
+  const color = value.trim().toLowerCase().replace(/\s+/g, "");
+  return color === "purple" || color === "rgb(128,0,128)" || color === "rgba(128,0,128,1)";
+}
+
+function injectedMonospace(value: string): boolean {
+  const name = fontToken(value);
+  if (!name || ALLOWED_FONTS.has(name)) return false;
+  return /mono|consolas|menlo|monaco|source code|courier/.test(name);
+}
+
+function browserInk(element: HTMLElement): boolean {
+  const font = getStyleProperty(element, "font-family") ?? element.style.fontFamily;
+  const color = getStyleProperty(element, "color") ?? element.style.color;
+  return Boolean((font && injectedMonospace(font)) || (color && spellPurple(color)));
+}
+
+const SafeFontFamily = FontFamily.extend({
+  addGlobalAttributes() {
+    return (this.parent?.() ?? []).map((group) => ({
+      ...group,
+      attributes: {
+        ...group.attributes,
+        fontFamily: {
+          ...group.attributes.fontFamily,
+          parseHTML: (element: HTMLElement) => {
+            const raw = getStyleProperty(element, "font-family") ?? element.style.fontFamily;
+            const name = fontToken(raw);
+            return raw && ALLOWED_FONTS.has(name) ? raw : null;
+          },
+        },
+      },
+    }));
+  },
+});
+
+const SafeColor = Color.extend({
+  addGlobalAttributes() {
+    return (this.parent?.() ?? []).map((group) => ({
+      ...group,
+      attributes: {
+        ...group.attributes,
+        color: {
+          ...group.attributes.color,
+          parseHTML: (element: HTMLElement) => {
+            const value = (getStyleProperty(element, "color") ?? element.style.color)?.replace(/['"]+/g, "");
+            if (!value || spellPurple(value)) return null;
+            return value;
+          },
+        },
+      },
+    }));
+  },
+});
+
+const SafeCode = Code.extend({
+  parseHTML() {
+    return [
+      {
+        tag: "code",
+        getAttrs: (element: HTMLElement) => (browserInk(element) ? false : null),
+      },
+    ];
+  },
+});
+
+const SolidUnderline = Underline.extend({
+  renderHTML({ HTMLAttributes }) {
+    return ["span", mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, { class: "ow-ul" }), 0];
+  },
+  parseHTML() {
+    return [
+      { tag: "span.ow-ul" },
+      { tag: "u" },
+      {
+        style: "text-decoration",
+        consuming: false,
+        getAttrs: (style: string) => (style.includes("underline") ? {} : false),
+      },
+    ];
+  },
+});
+
+function sameMarks(left: readonly ProseMark[], right: readonly ProseMark[]): boolean {
+  if (left.length !== right.length) return false;
+  const sort = (marks: readonly ProseMark[]) => [...marks].sort((a, b) => a.type.name.localeCompare(b.type.name));
+  const a = sort(left);
+  const b = sort(right);
+  return a.every((mark, index) => mark.eq(b[index]!));
+}
+
+function cleanedMarks(marks: readonly ProseMark[]): readonly ProseMark[] {
+  const next: ProseMark[] = [];
+  for (const mark of marks) {
+    if (mark.type.name !== "textStyle") {
+      next.push(mark);
+      continue;
+    }
+    const fontFamily = typeof mark.attrs.fontFamily === "string" ? mark.attrs.fontFamily : null;
+    const color = typeof mark.attrs.color === "string" ? mark.attrs.color : null;
+    const attrs = { ...mark.attrs };
+    if (fontFamily && injectedMonospace(fontFamily)) attrs.fontFamily = null;
+    if (color && spellPurple(color)) attrs.color = null;
+    if (Object.values(attrs).every((value) => value == null || value === "")) continue;
+    next.push(mark.type.create(attrs));
+  }
+  return ProseMark.setFrom(next);
+}
+
+function normalizeBlock(node: ProseNode): ProseNode[] | null {
+  if (!node.isTextblock) return null;
+  const children: ProseNode[] = [];
+  let dirty = false;
+  node.forEach((child) => {
+    if (!child.isText) {
+      children.push(child);
+      return;
+    }
+    const marks = cleanedMarks(child.marks);
+    const text = child.text ?? "";
+    const previous = children[children.length - 1];
+    if (previous?.isText && sameMarks(previous.marks, marks)) {
+      children[children.length - 1] = node.type.schema.text(`${previous.text ?? ""}${text}`, marks);
+      dirty = true;
+      return;
+    }
+    if (!sameMarks(marks, child.marks)) dirty = true;
+    children.push(sameMarks(marks, child.marks) ? child : node.type.schema.text(text, marks));
+  });
+  return dirty ? children : null;
+}
+
+const hygieneKey = new PluginKey("ow-mark-hygiene");
+
+const MarkHygiene = Extension.create({
+  name: "markHygiene",
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: hygieneKey,
+        appendTransaction(transactions, _old, state) {
+          if (!transactions.some((transaction) => transaction.docChanged)) return null;
+          if (transactions.some((transaction) => transaction.getMeta(hygieneKey))) return null;
+          const tr = state.tr;
+          const jobs: Array<{ from: number; to: number; children: ProseNode[] }> = [];
+          state.doc.descendants((node, pos) => {
+            const children = normalizeBlock(node);
+            if (!children) return;
+            jobs.push({ from: pos + 1, to: pos + node.nodeSize - 1, children });
+          });
+          if (jobs.length === 0) return null;
+          for (const job of jobs.reverse()) tr.replaceWith(job.from, job.to, job.children);
+          if (!tr.docChanged) return null;
+          tr.setMeta(hygieneKey, true);
+          return tr;
+        },
+      }),
+    ];
+  },
+});
+
+const DocKeys = Extension.create({
+  name: "docKeys",
+  addKeyboardShortcuts() {
+    const strike = () => this.editor.commands.toggleStrike();
+    return {
+      "Alt-Shift-5": strike,
+      "Alt-Shift-%": strike,
+    };
+  },
+});
+
+export function createExtensions(placeholder: string) {
+  return [
+    StarterKit.configure({
+      heading: { levels: [1, 2, 3, 4, 5, 6] },
+      link: false,
+      underline: false,
+      code: false,
+    }),
+    SolidUnderline,
+    SubscriptMark,
+    SuperscriptMark,
+    SafeCode,
+    TextStyle,
+    SafeColor,
+    BackgroundColor,
+    SafeFontFamily,
+    FontSize,
+    LineHeight.configure({ types: ["heading", "paragraph"] }),
+    TextAlign.configure({ types: ["heading", "paragraph"] }),
+    Indent,
+    DocKeys,
+    MarkHygiene,
+    TaskList,
+    TaskItem.configure({ nested: true }),
+    PageBreak,
+    Contents,
+    Footnote,
+    Equation,
+    DocChart,
+    DocDrawing,
+    Link.configure({
+      openOnClick: false,
+      autolink: false,
+      linkOnPaste: false,
+      defaultProtocol: "https",
+      HTMLAttributes: { rel: "noopener noreferrer" },
+      isAllowedUri: (url) => safeHref(url) !== null,
+    }),
+    LocalImage,
+    TableKit.configure({ table: false, tableCell: false, tableHeader: false }),
+    DocsTable,
+    paintCell(TableCell),
+    paintCell(TableHeader),
+    Placeholder.configure({ placeholder }),
+  ];
+}
+
+export function pastedHtml(html: string): string {
+  return sanitizeForeignHtml(html);
+}
