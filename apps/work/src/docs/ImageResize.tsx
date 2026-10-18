@@ -149,6 +149,7 @@ export function ImageResize({ editor, labels, editable }: { editor: Editor | nul
             onPointerMove={onMove}
             onPointerUp={onUp}
             onPointerCancel={onUp}
+            onLostPointerCapture={onUp}
           />
         ))}
         {live ? <span className="ow-imgframe-size" role="status">{labels.size.replace("{w}", String(live.w)).replace("{h}", String(live.h))}</span> : null}

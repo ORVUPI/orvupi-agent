@@ -68,8 +68,9 @@ for (const mb of SIZES) {
     await doc.keyboard.press("Home");
     await doc.keyboard.type(`Editado ${mb} MB. `);
     const saved = doc.getByRole("status").filter({ hasText: "Guardado" });
-    if (info.project.name.endsWith("-desk")) await expect(saved).toBeVisible({ timeout: 60_000 });
-    else await doc.waitForTimeout(3_000); // en el teléfono el estado no se muestra; se comprueba al recargar
+    void saved;
+    // En el teléfono el estado está oculto, pero sigue en el DOM
+    await expect(doc.locator(".ow-docs-save")).toHaveText("Guardado", { timeout: 60_000 });
     times.editSaveMs = Date.now() - t0;
     // Recargar: el texto y todas las imágenes siguen
     const t1 = Date.now();

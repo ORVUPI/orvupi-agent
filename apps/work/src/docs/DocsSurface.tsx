@@ -930,7 +930,6 @@ export function DocsSurface({
                 </div>
               ) : null}
             </div>
-            <span className="ow-docs-avatar" aria-hidden="true">O</span>
           </div>
         </div>
       </header>

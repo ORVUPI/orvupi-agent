@@ -38,8 +38,7 @@ test("tamaño de letra: − y + con selección y con el cursor, pasos como Googl
     const minus = doc.getByRole("button", { name: "Reducir tamaño" }).filter({ visible: true }).first();
     await plus.scrollIntoViewIfNeeded();
     // Selección: 11 → 12 → 14 → 18 (pasos), y luego − vuelve a 14
-    await editor.click();
-    await doc.keyboard.press("ControlOrMeta+a");
+    await editor.locator("p").first().selectText();
     await plus.click();
     await expect(input).toHaveValue("12");
     await plus.click();
@@ -112,6 +111,7 @@ test("redimensionar una imagen con los tiradores; se guarda y la barra cambia el
     await doc.keyboard.press("Enter");
     await doc.locator("input[type=file][accept*='image']").first().setInputFiles({ name: "foto.png", mimeType: "image/png", buffer: PNG });
     const img = editor.locator("img").first();
+    const selectImg = async () => { if (!(await doc.locator(".ow-imgframe").isVisible())) await img.click(); };
     await expect(img).toBeVisible({ timeout: 20_000 });
     await img.click();
     const frame = doc.locator(".ow-imgframe");
@@ -133,7 +133,7 @@ test("redimensionar una imagen con los tiradores; se guarda y la barra cambia el
     const h = Number(await img.getAttribute("height"));
     expect(Math.abs(w / h - 2)).toBeLessThan(0.08);
     // Lado: libre (solo cambia la altura)
-    await img.click();
+    await selectImg();
     const s = (await frame.locator(".is-s").boundingBox())!;
     await doc.mouse.move(s.x + s.width / 2, s.y + s.height / 2);
     await doc.mouse.down();
@@ -142,16 +142,16 @@ test("redimensionar una imagen con los tiradores; se guarda y la barra cambia el
     await expect.poll(async () => Number(await img.getAttribute("height"))).toBeGreaterThan(h + 20);
     expect(Number(await img.getAttribute("width"))).toBe(w);
     // Límite al ancho de la página
-    await img.click();
+    await selectImg();
     const e = (await frame.locator(".is-e").boundingBox())!;
     await doc.mouse.move(e.x + e.width / 2, e.y + e.height / 2);
     await doc.mouse.down();
-    await doc.mouse.move(e.x + 3000, e.y + e.height / 2, { steps: 5 });
+    await doc.mouse.move(doc.viewportSize()!.width - 4, e.y + e.height / 2, { steps: 5 });
     await doc.mouse.up();
     const pageWidth = await editor.evaluate((el) => el.clientWidth - parseFloat(getComputedStyle(el).paddingLeft) - parseFloat(getComputedStyle(el).paddingRight));
     await expect.poll(async () => Number(await img.getAttribute("width"))).toBeLessThanOrEqual(Math.ceil(pageWidth));
     // Barra: ajustar texto y tamaño original
-    await img.click();
+    await selectImg();
     const bar = doc.getByRole("toolbar", { name: "Imagen seleccionada" });
     await bar.getByRole("button", { name: "Ajustar texto" }).click();
     await expect(img).toHaveAttribute("data-wrap", "square");
