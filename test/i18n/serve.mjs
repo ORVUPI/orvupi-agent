@@ -7,8 +7,16 @@ const root = new URL("../../web/v2/", import.meta.url).pathname;
 const port = Number(process.argv[2] || 4180);
 const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".mjs": "text/javascript", ".css": "text/css", ".json": "application/json", ".xml": "application/xml", ".png": "image/png", ".jpg": "image/jpeg", ".webp": "image/webp", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".webmanifest": "application/manifest+json", ".txt": "text/plain" };
 async function file(p) { try { const s = await stat(p); if (s.isDirectory()) return file(join(p, "index.html")); return p; } catch { return null; } }
+const rules = (await readFile(join(root, "_redirects"), "utf8")).split("\n").map((l) => l.trim().split(/\s+/)).filter((p) => p.length === 3 && p[2] === "200" && p[0].startsWith("/"));
+function rewrite(path) {
+  for (const [from, to] of rules) {
+    if (from.endsWith("/*") && path.startsWith(from.slice(0, -1))) return to.replace(":splat", path.slice(from.length - 1));
+    if (from === path) return to;
+  }
+  return path;
+}
 createServer(async (req, res) => {
-  let path = decodeURIComponent(new URL(req.url, "http://x").pathname);
+  let path = rewrite(decodeURIComponent(new URL(req.url, "http://x").pathname));
   if (/^\/work\/(document|spreadsheets|presentation|forms|drawings|notes)\//.test(path)) path = "/work/";
   let f = await file(join(root, path));
   let status = 200;

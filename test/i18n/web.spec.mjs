@@ -36,8 +36,12 @@ for (const loc of LOCALES) {
   for (const path of PAGES) {
     test(`${loc.code} ${path}: idioma, SEO y texto`, async ({ page }) => {
       test.skip(!quick(path), "solo escritorio para páginas secundarias");
+      const broken = [];
+      page.on("response", (r) => { if (r.status() >= 400 && !r.url().includes("/assets/orvupi/album/") && new URL(r.url()).origin === new URL(page.url() || r.url()).origin) broken.push(r.status() + " " + new URL(r.url()).pathname); });
       const res = await page.goto(loc.pre + path);
       expect(res.status()).toBe(200);
+      await page.waitForLoadState("networkidle");
+      expect(broken, "recursos rotos").toEqual([]);
       await expect(page.locator("html")).toHaveAttribute("lang", loc.code);
       expect((await page.title()).length).toBeGreaterThan(3);
       const alts = await page.locator('link[rel="alternate"][hreflang]').evaluateAll((l) => l.map((x) => [x.hreflang, new URL(x.href).pathname]));
@@ -144,8 +148,8 @@ test("los textos dinámicos de los scripts salen traducidos (ja)", async ({ page
   await page.goto("/ja/verify/");
   await page.waitForLoadState("networkidle");
   const dict = await (await page.request.get("/i18n/web/dyn-ja.json")).json();
-  const body = await page.locator("main").innerText();
-  const leftover = Object.keys(dict).filter((k) => k.length > 12 && body.includes(k));
+  const nodes = await page.evaluate(() => { const r = []; const w = document.createTreeWalker(document.querySelector("main"), 4); while (w.nextNode()) r.push(w.currentNode.nodeValue.trim()); return r; });
+  const leftover = nodes.filter((t) => t && Object.prototype.hasOwnProperty.call(dict, t));
   expect(leftover).toEqual([]);
 });
 

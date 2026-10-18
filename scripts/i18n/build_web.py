@@ -126,6 +126,13 @@ def local_page(page, locale, prefix, cat, en_attrs, missing):
         html = html[:t.start()] + "<title>%s</title>" % new + html[t.end():]
     # 3) idioma del documento: data-lang="en" para que CSS y scripts usen la rama inglesa
     html = re.sub(r'<html lang="[^"]*"[^>]*>', '<html lang="%s" data-lang="en" data-locale="%s" data-fixed-lang>' % (locale, locale), html, count=1)
+    # 4a) rutas relativas (../assets/…) a absolutas: la página vive un nivel más abajo (/ja/…)
+    from urllib.parse import urljoin
+    def absol(v):
+        if re.match(r"^(/|#|[a-z][a-z0-9+.-]*:)", v) or not v: return v
+        return urljoin(path if path.endswith("/") else path, v)
+    html = re.sub(r'(\s(?:src|href|action|poster|data-src)=")([^"]*)(")', lambda m: m.group(1) + absol(m.group(2)) + m.group(3), html)
+    html = re.sub(r'(\ssrcset=")([^"]*)(")', lambda m: m.group(1) + ", ".join(" ".join([absol(p.strip().split(" ")[0])] + p.strip().split(" ")[1:]) for p in m.group(2).split(",")) + m.group(3), html)
     # 4) enlaces internos hacia la misma versión
     def relink(m):
         href = m.group(2)
@@ -157,6 +164,26 @@ def sitemap():
     rows.append("</urlset>")
     (ROOT / "sitemap.xml").write_text("\n".join(rows) + "\n")
 
+RW_A, RW_B = "# i18n:rewrites", "# /i18n:rewrites"
+
+def rewrites():
+    """Archivos que los scripts piden con ruta relativa (catálogo de Studio, sw.js de Lab…):
+    las versiones /en/, /ja/… los sirven desde el original con una reescritura 200, sin duplicarlos."""
+    rules = []
+    for d in PAGE_DIRS:
+        for f in sorted((ROOT / d).iterdir()):
+            if f.name.endswith(".html") or (f.is_dir() and any(f.rglob("*.html"))): continue
+            tail = "/*" if f.is_dir() else ""
+            for pre in PREFIXES:
+                src = "/%s/%s/%s%s" % (pre, d, f.name, tail)
+                dst = "/%s/%s%s" % (d, f.name, "/:splat" if tail else "")
+                rules.append("%-48s %s 200" % (src, dst))
+    red = ROOT / "_redirects"
+    txt = red.read_text()
+    txt = re.sub(re.escape(RW_A) + r".*?" + re.escape(RW_B) + r"\n?", "", txt, flags=re.S)
+    txt = txt.rstrip("\n") + "\n\n" + RW_A + "\n" + "\n".join(rules) + "\n" + RW_B + "\n"
+    red.write_text(txt)
+
 def main():
     for pre in PREFIXES:
         shutil.rmtree(ROOT / pre, ignore_errors=True)
@@ -171,6 +198,7 @@ def main():
     for page in PAGES:
         root_page(page)
     sitemap()
+    rewrites()
     (REPO / "i18n/web/missing.json").write_text(json.dumps(report, ensure_ascii=False, indent=1))
     print({k: len(v) for k, v in report.items()}, len(PAGES), "páginas")
 
