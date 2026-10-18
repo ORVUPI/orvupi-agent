@@ -4,6 +4,7 @@ import { sanitizeName } from "../security/names";
 import { emptyDoc, type DocComment, type DocVersion, type JsonNode, type OrvdocFile } from "./model";
 
 export type { OrvdocFile };
+import { tabsOf } from "./tabs";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -110,6 +111,7 @@ export function parseOrvdoc(bytes: Uint8Array | string): OrvdocFile {
     pageSize: parsed.pageSize === "letter" ? "letter" : "a4",
     pageOrientation: parsed.pageOrientation === "landscape" ? "landscape" : "portrait",
     pageMargin: parsed.pageMargin === "narrow" || parsed.pageMargin === "wide" ? parsed.pageMargin : "normal",
+    ...(Array.isArray(parsed.tabs) && parsed.tabs.length > 0 ? { tabs: tabsOf(parsed.tabs, parsed.content, "Pestaña 1").map((tab, i) => (i === 0 ? { ...tab, content: undefined } : tab)) } : {}),
   };
 }
 

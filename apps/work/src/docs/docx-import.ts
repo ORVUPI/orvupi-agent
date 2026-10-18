@@ -1,4 +1,5 @@
 import { WorkError } from "../security/errors";
+import { hasAssetStore, putAsset } from "../storage/assets";
 import { safeHref } from "../security/sanitize";
 import { unzip } from "../sheets/zip";
 import type { DocComment, JsonMark, JsonNode, PageMargin, PageOrientation, PageSize } from "./model";
@@ -291,6 +292,7 @@ class Numbering {
 }
 
 type Ctx = {
+  pending?: Map<string, { bytes: Uint8Array; mime: string }>;
   files: Map<string, Uint8Array>;
   rels: Map<string, { target: string; external: boolean }>;
   styles: Styles;
@@ -575,7 +577,14 @@ function imageNode(drawing: Element, ctx: Ctx): JsonNode | null {
   const cy = Number(extent?.getAttribute("cy") ?? 0);
   const docPr = descendants(drawing, "docPr")[0];
   const alt = (docPr?.getAttribute("descr") || docPr?.getAttribute("title") || docPr?.getAttribute("name") || "").slice(0, 180);
-  const attrs: Record<string, unknown> = { src: `data:${mime};base64,${toBase64(bytes)}`, alt };
+  // Con almacén de binarios la imagen se guarda aparte al final (sin base64); si no, va incrustada.
+  let src: string;
+  if (hasAssetStore()) {
+    src = `${PENDING}${rel.target}`;
+    ctx.pending ??= new Map();
+    ctx.pending.set(rel.target, { bytes, mime });
+  } else src = `data:${mime};base64,${toBase64(bytes)}`;
+  const attrs: Record<string, unknown> = { src, alt };
   if (cx > 0 && cy > 0) {
     attrs.width = Math.round(cx / EMU_PER_PX);
     attrs.height = Math.round(cy / EMU_PER_PX);
@@ -932,6 +941,7 @@ function sectInfo(sect: Element | null): SectInfo {
 
 export async function importDocx(bytes: Uint8Array): Promise<DocxImport> {
   const files = await unzip(bytes);
+  reportImportProgress("parse", 1, 1);
   const main = "word/document.xml";
   const document = parseXml(files.get(main));
   if (!document) throw new WorkError("invalid-format");
@@ -1038,8 +1048,10 @@ export async function importDocx(bytes: Uint8Array): Promise<DocxImport> {
   };
   const headerDoc = partOf(headerRef);
   const footerDoc = partOf(footerRef);
+  let docBody: JsonNode = { type: "doc", content: content.length > 0 ? content : [{ type: "paragraph" }] };
+  if (ctx.pending && ctx.pending.size > 0) docBody = await storePending(docBody, ctx.pending);
   return {
-    content: { type: "doc", content: content.length > 0 ? content : [{ type: "paragraph" }] },
+    content: docBody,
     header: plainOf(headerDoc),
     footer: plainOf(footerDoc),
     pageNumber: hasPageField(headerDoc) || hasPageField(footerDoc),
@@ -1053,4 +1065,37 @@ export async function importDocx(bytes: Uint8Array): Promise<DocxImport> {
     notes: ctx.notes,
     sections: sections.length,
   };
+}
+
+const PENDING = "orv-pending:";
+
+export function reportImportProgress(phase: string, done: number, total: number) {
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("ow-import-progress", { detail: { phase, done, total } }));
+}
+
+/** Guarda cada imagen una vez, como binario, y cambia las referencias provisionales por orv-asset:. */
+async function storePending(doc: JsonNode, pending: Map<string, { bytes: Uint8Array; mime: string }>): Promise<JsonNode> {
+  const map = new Map<string, string>();
+  let done = 0;
+  for (const [target, image] of pending) {
+    try {
+      map.set(target, await putAsset(image.bytes, image.mime));
+    } catch {
+      map.set(target, `data:${image.mime};base64,${toBase64(image.bytes)}`);
+    }
+    done += 1;
+    reportImportProgress("images", done, pending.size);
+  }
+  const swap = (node: unknown): unknown => {
+    if (Array.isArray(node)) return node.map(swap);
+    if (node && typeof node === "object") {
+      const out: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(node)) {
+        out[key] = key === "src" && typeof value === "string" && value.startsWith(PENDING) ? map.get(value.slice(PENDING.length)) ?? null : swap(value);
+      }
+      return out;
+    }
+    return node;
+  };
+  return swap(doc) as JsonNode;
 }

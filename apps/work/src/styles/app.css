@@ -1008,7 +1008,7 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-docs.is-narrow .ow-docs-titlebar { flex-wrap: nowrap; align-items: center; width: 100%; }
 .ow-docs.is-narrow .ow-docs-titleblock { display: flex; flex-direction: row; align-items: center; gap: 4px; }
 .ow-docs.is-narrow .ow-docs-titlerow { flex: 1; min-width: 0; }
-.ow-docs.is-narrow .ow-docs-name { flex: 1; width: auto; min-width: 9em; max-width: none; }
+.ow-docs.is-narrow .ow-docs-name { flex: 1; width: auto; min-width: 6em; max-width: none; }
 .ow-docs.is-narrow .ow-docs-menus { flex: none; }
 .ow-docs-sheet.is-flow { width: 100%; flex: 1 0 auto; display: flex; flex-direction: column; min-height: 100%; background: #fff; box-sizing: border-box; }
 .ow-a4.is-flow { width: 100%; flex: 1; min-height: 100%; border: 0; box-shadow: none; background: #fff; }
@@ -1073,7 +1073,7 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
   .ow-col-extra { display: none; }
   .ow-details { position: fixed; left: 8px; right: 8px; bottom: calc(128px + env(safe-area-inset-bottom)); top: auto; width: auto; max-height: min(42dvh, 380px); overflow: auto; z-index: 26; border-radius: 16px; box-shadow: 0 8px 24px rgba(16, 32, 50, 0.16); }
   .ow-format-dock .ow-doc-icon { width: 40px; height: 40px; }
-  .ow-docs-tabs, .ow-docs-tabs-open, .ow-docs-avatar { display: none; }
+  .ow-docs-avatar { display: none; }
   .ow-docs { height: 100dvh; }
   .ow-docs-toolbar { flex-wrap: nowrap; border-radius: 16px; }
   .ow-docs.is-narrow, .ow-docs.is-narrow .ow-docs-scroll { background: #fff; }
@@ -1292,3 +1292,76 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-toasts .ow-toast-action { background: #ff3070; color: #102032; }
 @media (max-width: 720px) { .ow-toasts { left: 12px; right: 12px; bottom: calc(132px + env(safe-area-inset-bottom, 0px)); z-index: 65; } }
 .ow-table-grid .ow-table-custom { white-space: nowrap; }
+/* 0.8.3 · progreso de importación de archivos grandes */
+.ow-import-progress { position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: 80; width: min(420px, calc(100vw - 24px)); background: #102032; color: #fff; border-radius: 12px; padding: 10px 14px 14px; box-shadow: 0 6px 18px rgba(16, 32, 50, 0.3); }
+.ow-import-progress p { margin: 0 0 8px; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ow-import-progress span { display: block; height: 6px; border-radius: 6px; background: #ff3070; transition: width 200ms ease; }
+/* 0.8.3 · hoja centrada en todo el ancho (como Google Docs); pestañas en el margen izquierdo */
+.ow-docs:not(.is-narrow) .ow-docs-body { position: relative; }
+.ow-docs:not(.is-narrow) .ow-docs-tabs, .ow-docs:not(.is-narrow) .ow-docs-tabs-open { position: absolute; left: 0; top: 0; bottom: 0; z-index: 6; }
+.ow-docs:not(.is-narrow) .ow-docs-tabs { background: var(--docs-canvas, #f9fbfd); border-right: 0; }
+.ow-docs-center { width: max-content; margin-left: max(calc(var(--tabs-w, 0px) + 20px), calc((100% - var(--sheet-w, 816px)) / 2)); }
+.ow-docs-center.is-flow { width: 100%; margin: 0; display: flex; flex-direction: column; flex: 1 0 auto; }
+.ow-docs-center > .ow-docs-sheet { margin: 0; }
+.ow-docs:not(.is-narrow) .ow-docs-page-row { position: relative; }
+.ow-docs:not(.is-narrow) .ow-docs-page-row > .ow-vruler { position: absolute; right: 100%; top: 0; bottom: 0; }
+.ow-docs:not(.is-narrow) .ow-vruler-spacer { display: none; }
+@media print { .ow-docs-center { margin: 0 !important; width: auto; } }
+/* 0.8.3 · redimensionar imágenes */
+.ow-imgframe { position: fixed; z-index: 35; pointer-events: none; outline: 2px solid #1a73e8; outline-offset: 0; box-sizing: border-box; }
+.ow-imgframe-h { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; background: #fff; border: 2px solid #1a73e8; border-radius: 2px; box-sizing: border-box; pointer-events: auto; touch-action: none; }
+.ow-imgframe-h.is-nw { left: 0; top: 0; cursor: nwse-resize; }
+.ow-imgframe-h.is-n { left: 50%; top: 0; cursor: ns-resize; }
+.ow-imgframe-h.is-ne { left: 100%; top: 0; cursor: nesw-resize; }
+.ow-imgframe-h.is-e { left: 100%; top: 50%; cursor: ew-resize; }
+.ow-imgframe-h.is-se { left: 100%; top: 100%; cursor: nwse-resize; }
+.ow-imgframe-h.is-s { left: 50%; top: 100%; cursor: ns-resize; }
+.ow-imgframe-h.is-sw { left: 0; top: 100%; cursor: nesw-resize; }
+.ow-imgframe-h.is-w { left: 0; top: 50%; cursor: ew-resize; }
+@media (pointer: coarse), (max-width: 720px) { .ow-imgframe-h { width: 24px; height: 24px; margin: -12px 0 0 -12px; border-radius: 50%; } }
+.ow-imgframe-size { position: absolute; left: 50%; top: 100%; transform: translate(-50%, 8px); background: #102032; color: #fff; font-size: 12px; padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
+.ow-imgbar { position: fixed; z-index: 36; display: flex; flex-wrap: wrap; gap: 4px; max-width: calc(100vw - 16px); background: #fff; border: 1px solid #dadce0; border-radius: 10px; padding: 4px; box-shadow: 0 2px 8px rgba(60, 64, 67, 0.25); }
+.ow-imgbar button { border: 0; background: transparent; color: #102032; font: inherit; font-size: 13px; padding: 6px 10px; border-radius: 6px; min-height: 32px; cursor: pointer; }
+.ow-imgbar button[aria-pressed="true"] { background: #d3e3fd; }
+.ow-imgbar button.is-danger { color: #b3261e; }
+@media (pointer: coarse) { .ow-imgbar button { min-height: 40px; } }
+
+/* 0.8.3 · Pestañas del documento (como Google Docs) */
+.ow-docs-tabs { display: flex; flex-direction: column; gap: 4px; }
+.ow-tablist { position: relative; display: flex; flex-direction: column; gap: 2px; padding-bottom: 8px; }
+.ow-docs-tab { margin: 0; background: transparent; padding: 0 2px 0 0; gap: 0; min-height: 36px; border-radius: 18px; touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.ow-docs-tab:hover { background: #eef1f5; }
+.ow-docs-tab.is-active { background: #fde2ea; }
+.ow-docs-tab.is-active .ow-tab-main, .ow-docs-tab.is-active .ow-tab-icon { color: #c2185b; font-weight: 600; }
+.ow-docs-tab.is-dragging { opacity: 0.45; }
+.ow-tab-caret { flex: none; width: 24px; height: 32px; border: 0; background: transparent; color: #444746; cursor: pointer; font-size: 14px; padding: 0; }
+.ow-tab-caret.is-empty { display: inline-block; }
+.ow-tab-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; border: 0; background: transparent; color: #1f1f1f; font: inherit; font-size: 14px; text-align: left; min-height: 36px; padding: 0 4px; cursor: pointer; border-radius: 18px; }
+.ow-tab-main:focus-visible { outline: 2px solid #1d4e89; outline-offset: -2px; }
+.ow-tab-icon { flex: none; width: 20px; display: inline-flex; justify-content: center; color: #444746; font-size: 16px; line-height: 1; }
+.ow-tab-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ow-docs-tab > .ow-tab-more { flex: none; width: 32px; height: 32px; border-radius: 16px; border: 0; background: transparent; color: #444746; cursor: pointer; font-size: 18px; opacity: 0; }
+.ow-docs-tab:hover > .ow-tab-more, .ow-docs-tab.is-active > .ow-tab-more, .ow-tab-more:focus-visible, .ow-tab-more[aria-expanded="true"] { opacity: 1; }
+.ow-tab-more:hover { background: rgba(0, 0, 0, 0.08); }
+@media (hover: none), (pointer: coarse) { .ow-docs-tab > .ow-tab-more { opacity: 1; width: 40px; height: 40px; } .ow-docs-tab, .ow-tab-main { min-height: 44px; } }
+.ow-tab-rename { flex: 1; min-width: 0; font: inherit; font-size: 14px; border: 2px solid #1d4e89; border-radius: 6px; padding: 4px 6px; margin: 2px 0; }
+.ow-tabdrop { position: absolute; right: 4px; height: 0; border-top: 2px solid #1a73e8; pointer-events: none; }
+.ow-tabdrop::before { content: ""; position: absolute; left: -4px; top: -5px; width: 8px; height: 8px; border-radius: 50%; border: 2px solid #1a73e8; background: #fff; }
+.ow-tabundo { display: flex; align-items: center; gap: 8px; margin: 8px 0 0; padding: 8px 12px; border-radius: 8px; background: #323232; color: #fff; font-size: 13px; }
+.ow-tabundo button { border: 0; background: transparent; color: #8ab4f8; font-weight: 600; cursor: pointer; min-height: 32px; }
+.ow-tabmenu { position: fixed; z-index: 80; min-width: 230px; max-width: calc(100vw - 8px); max-height: calc(100dvh - 8px); overflow: auto; background: #fff; border-radius: 8px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); padding: 6px 0; }
+.ow-tabmenu [role="menuitem"] { display: flex; justify-content: space-between; align-items: center; gap: 16px; width: 100%; border: 0; background: transparent; padding: 8px 16px; min-height: 36px; font: inherit; font-size: 14px; color: #1f1f1f; text-align: left; cursor: pointer; }
+.ow-tabmenu [role="menuitem"]:hover, .ow-tabmenu [role="menuitem"]:focus-visible { background: #f1f3f4; outline: none; }
+.ow-tabmenu [role="menuitem"][disabled] { color: #9aa0a6; cursor: default; background: transparent; }
+.ow-tabmenu [role="separator"] { height: 1px; background: #e0e0e0; margin: 6px 0; }
+.ow-tabemoji { display: grid; grid-template-columns: repeat(8, 1fr); padding: 4px 8px; }
+.ow-tabemoji [role="menuitem"] { justify-content: center; padding: 6px 0; font-size: 20px; min-height: 40px; }
+.ow-tabmenu.is-sheet { left: 0 !important; right: 0; top: auto !important; bottom: 0; width: 100%; max-width: none; border-radius: 16px 16px 0 0; padding-bottom: calc(8px + env(safe-area-inset-bottom)); max-height: 70dvh; }
+.ow-tabmenu.is-sheet [role="menuitem"] { min-height: 48px; font-size: 16px; }
+/* Móvil: cajón lateral */
+.ow-docs-tabs.is-drawer { position: fixed; left: 0; top: 0; bottom: 0; width: min(320px, 86vw); z-index: 60; background: #fff; box-shadow: 4px 0 16px rgba(0, 0, 0, 0.2); padding: calc(8px + env(safe-area-inset-top)) 8px 8px; overflow: auto; }
+.ow-tabs-scrim { position: fixed; inset: 0; z-index: 59; border: 0; background: rgba(0, 0, 0, 0.32); }
+.ow-docs .ow-docs-tabs-open.is-narrow { position: static; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 0; border-radius: 20px; background: transparent; color: #444746; font-size: 20px; flex: none; }
+.ow-docs-tab span.ow-tab-caret, .ow-docs-tab span.ow-tab-icon { flex: none; }
+.ow-docs-tab .ow-tab-main span.ow-tab-title { flex: 1; font-size: 14px; }
+.ow-tablist .ow-docs-outline { margin-top: 2px; margin-bottom: 6px; }

@@ -25,11 +25,13 @@ export function safeHref(value: string): string | null {
   return null;
 }
 
+/** Imágenes permitidas: data URL de imagen o una imagen del documento guardada aparte (orv-asset:). */
 export function safeImageSrc(value: string): string | null {
-  const match = /^data:image\/(png|jpeg|gif|webp);base64,[a-z0-9+/=\s]+$/i.exec(value.trim());
-  if (!match) return null;
-  if (value.length > 2_800_000) return null;
-  return value.trim();
+  const trimmed = value.trim();
+  if (/^orv-asset:[a-z0-9]{8,64}\.(png|jpg|gif|webp)$/.test(trimmed)) return trimmed;
+  if (trimmed.length > 120_000_000) return null;
+  if (!/^data:image\/(png|jpeg|gif|webp);base64,[a-z0-9+/=\s]+$/i.test(trimmed)) return null;
+  return trimmed;
 }
 
 function scrubTree(html: string): string {

@@ -18,6 +18,7 @@ import { headingEntries, jumpToHeading } from "./jump";
 import { DocChart, DocDrawing, Equation } from "./objects";
 import { ImagePaste } from "./image-paste";
 import { Pagination } from "./pagination";
+import { assetUrl, isAssetSrc } from "../storage/assets";
 import { CommentMark, DocShape, NoteNumbering, Section, wrapAttributes } from "./layout-nodes";
 
 const HEX = /^#[0-9a-f]{6}$/i;
@@ -28,9 +29,11 @@ const LocalImage = Image.extend({
       ...(this.parent?.() ?? {}),
       src: {
         default: null,
-        parseHTML: (element: HTMLElement) => safeImageSrc(element.getAttribute("src") ?? ""),
+        parseHTML: (element: HTMLElement) => safeImageSrc(element.getAttribute("data-asset") ?? "") ?? safeImageSrc(element.getAttribute("src") ?? ""),
         renderHTML: (attributes: { src?: string | null }) => {
           const src = typeof attributes.src === "string" ? safeImageSrc(attributes.src) : null;
+          // Imagen guardada aparte: el original vive en OPFS/IndexedDB y se pinta con una copia reducida.
+          if (src && isAssetSrc(src)) return { "data-asset": src, src: BLANK_GIF };
           return src ? { src } : {};
         },
       },
@@ -48,7 +51,42 @@ const LocalImage = Image.extend({
       ...wrapAttributes(),
     };
   },
+  addNodeView() {
+    return ({ HTMLAttributes }) => {
+      const dom = document.createElement("img");
+      const apply = (attrs: Record<string, unknown>) => {
+        for (const name of Array.from(dom.getAttributeNames())) if (name !== "src" || !attrs.src) dom.removeAttribute(name);
+        for (const [name, value] of Object.entries(attrs)) {
+          if (value === null || value === undefined || value === false) continue;
+          if (name === "src" && dom.dataset.loaded === String(attrs["data-asset"] ?? "")) continue;
+          dom.setAttribute(name, String(value));
+        }
+        const asset = attrs["data-asset"];
+        if (typeof asset === "string" && dom.dataset.loaded !== asset) {
+          dom.dataset.loaded = asset;
+          dom.setAttribute("data-asset", asset);
+          void assetUrl(asset).then((url) => {
+            if (url && dom.dataset.loaded === asset) dom.src = url;
+          });
+        } else if (typeof asset !== "string") delete dom.dataset.loaded;
+      };
+      apply(HTMLAttributes);
+      return {
+        dom,
+        update: (node) => {
+          if (node.type.name !== "image") return false;
+          const attrs = node.type.spec.toDOM?.(node) as unknown;
+          const next = Array.isArray(attrs) && attrs[1] && typeof attrs[1] === "object" ? (attrs[1] as Record<string, unknown>) : {};
+          apply(next);
+          return true;
+        },
+        ignoreMutation: () => true,
+      };
+    };
+  },
 }).configure({ allowBase64: true });
+
+const BLANK_GIF = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
 
 const PageBreak = Node.create({
   name: "pageBreak",

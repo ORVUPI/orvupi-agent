@@ -11,15 +11,18 @@ export type WorkErrorCode =
   | "image-type"
   | "invalid-link"
   | "invalid-move"
-  | "ai-unavailable";
+  | "ai-unavailable"
+  | "quota";
 
 export class WorkError extends Error {
   readonly code: WorkErrorCode;
+  readonly vars?: Record<string, string | number>;
 
-  constructor(code: WorkErrorCode) {
+  constructor(code: WorkErrorCode, vars?: Record<string, string | number>) {
     super(code);
     this.name = "WorkError";
     this.code = code;
+    this.vars = vars;
   }
 }
 
