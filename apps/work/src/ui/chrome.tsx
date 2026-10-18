@@ -99,6 +99,7 @@ export function Topbar({
   starred,
   starLabel,
   onStar,
+  language,
 }: {
   menuLabel: string;
   onMenu: () => void;
@@ -122,6 +123,8 @@ export function Topbar({
   aiLabel: string;
   aiPressed: boolean;
   onAi: () => void;
+  /** Selector de idioma siempre visible (escritorio y móvil). Nombres propios, sin banderas. */
+  language?: { label: string; value: string; options: ReadonlyArray<{ id: string; name: string }>; onChange: (value: string) => void };
   closeDocLabel: string;
   onCloseDoc: (() => void) | null;
   chips?: ReactNode;
@@ -165,6 +168,21 @@ export function Topbar({
         <button type="button" className="ow-button ow-button-secondary" onClick={onCloseDoc}>
           {closeDocLabel}
         </button>
+      ) : null}
+      {language ? (
+        <label className="ow-lang">
+          <span className="ow-visually-hidden">{language.label}</span>
+          <select
+            aria-label={language.label}
+            value={language.value}
+            data-testid="ow-lang"
+            onChange={(event) => language.onChange(event.target.value)}
+          >
+            {language.options.map((item) => (
+              <option key={item.id} value={item.id} lang={item.id}>{item.name}</option>
+            ))}
+          </select>
+        </label>
       ) : null}
       <IconButton label={settingsLabel} onClick={onSettings}>
         <Icon name="settings" />

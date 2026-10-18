@@ -1,3 +1,4 @@
+import { isLocale } from "../i18n";
 import type { IDBPDatabase } from "idb";
 import { base64ToBytes, bytesToBase64, decodeUtf8, encodeUtf8, sha256 } from "../security/bytes";
 import { WorkError } from "../security/errors";
@@ -348,12 +349,12 @@ export function createStorageService(db: IDBPDatabase<WorkDb>, blobs: BlobStore)
 
   async function getSettings(): Promise<AppSettings> {
     const stored = await db.get("settings", "app");
-    if (!stored || (stored.locale !== "es" && stored.locale !== "en")) return { ...defaultSettings };
-    return { locale: stored.locale };
+    if (!stored || !isLocale(stored.locale)) return { ...defaultSettings };
+    return { locale: stored.locale, explicit: true };
   }
 
   async function saveSettings(settings: AppSettings): Promise<void> {
-    if (settings.locale !== "es" && settings.locale !== "en") throw new WorkError("invalid-format");
+    if (!isLocale(settings.locale)) throw new WorkError("invalid-format");
     await db.put("settings", { locale: settings.locale }, "app");
   }
 
@@ -391,7 +392,7 @@ export function createStorageService(db: IDBPDatabase<WorkDb>, blobs: BlobStore)
     }
     if (!Array.isArray(parsed.files)) throw new WorkError("invalid-format");
     const rawLocale = isRecord(parsed.settings) ? parsed.settings.locale : null;
-    const settings: AppSettings = rawLocale === "es" || rawLocale === "en" ? { locale: rawLocale } : { ...defaultSettings };
+    const settings: AppSettings = isLocale(rawLocale) ? { locale: rawLocale, explicit: true } : { ...defaultSettings };
     const next: Array<{ record: FileRecord; bytes: Uint8Array }> = [];
     for (const entry of parsed.files) {
       if (!isRecord(entry) || !isRecord(entry.record) || typeof entry.bytesBase64 !== "string") {

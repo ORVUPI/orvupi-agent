@@ -9,7 +9,7 @@ import { createFormFile, serializeForm } from "../forms/model";
 import { createNoteFile, serializeNote } from "../notes/model";
 import { createSheetFile, serializeSheet } from "../sheets/model";
 import { createSlidesFile, serializeSlides } from "../slides/model";
-import { errorMessageKey, translate, type Locale, type MessageKey } from "../i18n";
+import { browserLocale, errorMessageKey, loadLocale, readSharedLocale, translate, writeSharedLocale, type Locale, type MessageKey } from "../i18n";
 import { downloadBytes } from "../security/bytes";
 import { isWorkError, WorkError } from "../security/errors";
 import { fileNameWithExtension, formatBytes, createId } from "../security/names";
@@ -120,7 +120,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [bootError, setBootError] = useState(false);
   const [bootAttempt, setBootAttempt] = useState(0);
-  const [locale, setLocaleState] = useState<Locale>("es");
+  const [locale, setLocaleState] = useState<Locale>("en");
   const [files, setFiles] = useState<FileRecord[]>([]);
   const [view, setView] = useState<ViewId>(boot.view);
   const [openDocId, setOpenDocId] = useState<string | null>(boot.doc);
@@ -214,8 +214,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         if (cancel) return;
         const settings = await service.getSettings();
         if (cancel) return;
+        // Orden: elección guardada en orvupi.com o en Work, después el navegador, después inglés.
+        const chosen = readSharedLocale() ?? (settings.explicit ? settings.locale : browserLocale());
+        await loadLocale(chosen).catch(() => undefined);
+        if (cancel) return;
         setStorage(service);
-        setLocaleState(settings.locale);
+        setLocaleState(chosen);
         setFiles(await service.listFiles({ includeDeleted: true }));
         setReady(true);
       })
@@ -251,8 +255,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   const setLocale = useCallback(
     async (next: Locale) => {
+      // El catálogo llega antes de cambiar: no hay parpadeo de claves ni se toca el documento abierto.
+      await loadLocale(next).catch(() => undefined);
       setLocaleState(next);
       document.documentElement.lang = next;
+      writeSharedLocale(next);
       if (storage) await storage.saveSettings({ locale: next });
     },
     [storage],
@@ -493,6 +500,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         const bytes = new Uint8Array(await file.arrayBuffer());
         await storage.restoreWorkspace(bytes);
         const settings = await storage.getSettings();
+        await loadLocale(settings.locale).catch(() => undefined);
         setLocaleState(settings.locale);
         setFiles(await storage.listFiles({ includeDeleted: true }));
         setOpenDocId(null);
@@ -631,7 +639,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     exportBackup,
     restoreBackup,
     refreshFiles,
-    usedLabel: formatBytes(used, locale === "es" ? "es" : "en"),
+    usedLabel: formatBytes(used, locale),
     reportError,
   };
 

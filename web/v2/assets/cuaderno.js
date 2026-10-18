@@ -273,7 +273,7 @@ const STATUS = {
 };
 
 function lang() {
-  return document.documentElement.lang === "en" ? "en" : "es";
+  return document.documentElement.getAttribute("data-lang") === "en" ? "en" : "es";
 }
 
 function t(key) {

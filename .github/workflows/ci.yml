@@ -181,6 +181,39 @@ jobs:
       - name: Playwright
         run: npx playwright test
 
+  i18n:
+    name: idiomas (5)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22.14.0"
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Páginas por idioma al día (falla si falta una traducción o hay que regenerar)
+        run: |
+          set -euo pipefail
+          python3 scripts/i18n/make_catalogs.py
+          python3 scripts/i18n/build_web.py
+          python3 -c "import json,sys; m=json.load(open('i18n/web/missing.json')); bad={k:v for k,v in m.items() if v}; print(bad) if bad else None; sys.exit(1 if bad else 0)"
+          git diff --exit-code -- web/v2 i18n apps/work/src/i18n
+
+      - name: Install browsers
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Playwright en los cinco idiomas
+        run: npx playwright test -c playwright.i18n.config.mjs --project=chromium-desktop --project=firefox-tablet --project=webkit-mobile
+
   work:
     name: orvupi work
     runs-on: ubuntu-latest
