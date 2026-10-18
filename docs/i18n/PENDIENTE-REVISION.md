@@ -12,9 +12,11 @@
 
 | Idioma | Manual | Borrador automático | Queda en inglés |
 |---|---:|---:|---:|
-| pt-BR | 215 | 1586 | 53 |
-| ja | 215 | 1627 | 12 |
-| ko | 215 | 1635 | 4 |
+| pt-BR | 215 | 1562 | 77 |
+| ja | 215 | 1626 | 13 |
+| ko | 215 | 1632 | 7 |
+
+Además se descartan (y quedan en inglés) las salidas automáticas con palabras vetadas por las reglas del proyecto (holder/reserva, analítica, «no oficial», STUBX) o con caracteres de otro alfabeto.
 
 ## Prioridad 1: legal, riesgos y finanzas (revisar primero)
 
@@ -30,9 +32,9 @@ Cualquier frase sobre riesgo, rentabilidad, custodia, firma, contrato, curva, li
 
 Lab (lecciones), Aprender, Cuaderno, Studio, Tablero, Contribuir, Marca, Memes, Visión, Comunidad.
 
-## Cadenas que caen al inglés (el borrador perdió un nombre protegido)
+## Cadenas que caen al inglés
 
-### pt-BR (53)
+### pt-BR (77)
 
 - 2026-10-08 · ORVUPI Verify (MVP, read-only)
 - 2026-10-09 · Verify and Lab security review (draft, unpublished)
@@ -42,8 +44,15 @@ Lab (lecciones), Aprender, Cuaderno, Studio, Tablero, Contribuir, Marca, Memes, 
 - Do not pretend to be ORVUPI: do not use the avatar as your profile picture or say your account is official.
 - Educational example. It is not a quality comparison, a recommendation, or an endorsement. ORVUPI has no relationship with any token in this example.
 - Educational exercises with real cards for USDC and for copies that use its name. None of them is an ORVUPI contract.
+- Legal reviews this fixed educational example. Any version with real data will need a new review. Still absent from this website.
+- Library and notebook.
+- Library for any token
+- Limits and risks
 - Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. ORVUPI has no relationship with this token. No signals showing does not mean everything was checked.
+- MIT code. Flat color taken from the ORVUPI meme kit palette.
 - MIT code. Studio drawing, with no outside files.
+- Meet the community
+- Merged into main. The page is at /verify.
 - Named like ORVUPI, but not the official address
 - Network selector on Verify and the Notebook, with Solana when the page opens. Read-only reading of a contract on Base through the public node mainnet.base.org. Ethereum and BNB Chain were switched on 
 - No account or mandatory wallet connection. Language, Lab progress, the Studio draft, and the notebook, if they are used, stay in this browser.
@@ -69,16 +78,28 @@ Lab (lecciones), Aprender, Cuaderno, Studio, Tablero, Contribuir, Marca, Memes, 
 - On the 2026-10-16 card, USDC has the mint permission active at BJE5MMbqXjVwjAF7oxwPYXnTXDyspzZyt4vwenNw5ruG and the freeze permission active at 7dGbd2QZcCKcTndnHcTL8q7SMVXAkp688NTQYwrRCrar. For a stab
 - On the 2026-10-16 cards, EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v (USDC) and 5vJmAfBjsS6wEHcgQGNm69P3fbyPmUU1dVfE5j1rraVZ are different addresses even though both are named “USD Coin”.
 - On these cards, the Pump.fun curve is a derived account. If the owner is the curve program, Verify reads public fields: virtual and real curve amounts, the supply on that account, and whether
+- Only the channels on this list are official. If an account, website or address is not listed here, treat it as unofficial until you check it on this website.
 - Paste any Solana mint. If there is a Pump.fun curve, you see the base currency and the curve state, as they are on chain. If there is no curve, the page says so.
 - Real amount of SOL
 - SHA-256 of token.json: 6b21145b7482cc649bc687e1a7b7794a3b946fd83c995c1abd6c66ea556b5f0c. securityNotice is still the 2026-10-05 text.
 - The 2026-10-16 cards for 4XRbnGgay2XpqJ1F5jGPQ9pRh1JSX12RPCPJASMJU5JW, 5vJmAfBjsS6wEHcgQGNm69P3fbyPmUU1dVfE5j1rraVZ, and H5b7sHTqr7WJqL9X4io8VeTBfePSyv85wEBnKNaZKV9R carry that signal: they are named 
+- The ORVUPI study proposes seven families for gradual growth. They are future directions, not seven finished applications or committed dates.
 - The ORVUPI token can lose all its value and has no guaranteed price. If the LaunchLab curve does not reach 30 SOL, the Raydium pool is not created and the team's 5% stays locked forever. There may be 
+- The Verify cards from 2026-10-16 include one mint in the curated registry, USDC&#39;s (
+- The copy has its permissions closed and USDC has them open. What is true?
+- The virtual_token_reserves or virtual_quote_reserves field. The card keeps it apart from the real curve amount. On the classic curve, and with the default quote, the quote amount is in lamports.
+- USDC, on 2026-10-16, asked for getTokenLargestAccounts and got HTTP 429. The sample stays unavailable.
+- We are ORVUPI. A curious octopus, a community to build and tools to explore Web3. Come learn, create and share.
+- ‘Holder’ (industry term)
+- ‘Holder’ (industry term): an account that holds tokens. It implies no rights and no investor community.
 - ≈ 200,000,000 (≈ 20%) when 30 SOL is reached, migration to Raydium CPMM
+- Likeness with the registry
 - Pump.fun curve: not applicable
 - This page is available in English.
 - work:laterSheetsTitle
 - work:laterSlidesTitle
+- work:aiBody
+- work:aiMemory
 - work:driverOpfs
 - work:tableSize
 - work:installDone
@@ -86,9 +107,14 @@ Lab (lecciones), Aprender, Cuaderno, Studio, Tablero, Contribuir, Marca, Memes, 
 - work:commandAi
 - work:brandAlt
 - work:pdfDownload
+- work:commentBody
+- work:formHint
+- work:mergeCells
+- work:sheetChartLine
+- work:pageMargin
 - tpl:City · name@example.com
 
-### ja (12)
+### ja (13)
 
 - Network selector on Verify and the Notebook, with Solana when the page opens. Read-only reading of a contract on Base through the public node mainnet.base.org. Ethereum and BNB Chain were switched on 
 - Nobody from ORVUPI will ask for your seed or funds by DM or email (the only official email:
@@ -97,15 +123,19 @@ Lab (lecciones), Aprender, Cuaderno, Studio, Tablero, Contribuir, Marca, Memes, 
 - On USDC, on 2026-10-16, the metadata account was queried. The query was answered and the link (URI) is empty: that fact is not there.
 - On every push and pull request: npm ci, typecheck, tests (including verify/ and lab/), a scan of the Verify component for signing code, logs, ppm:print, npm audit, verify:all, and gitleaks. The attest
 - On the 2026-10-16 card, USDC has the mint permission active at BJE5MMbqXjVwjAF7oxwPYXnTXDyspzZyt4vwenNw5ruG and the freeze permission active at 7dGbd2QZcCKcTndnHcTL8q7SMVXAkp688NTQYwrRCrar. For a stab
+- Only the channels on this list are official. If an account, website or address is not listed here, treat it as unofficial until you check it on this website.
 - SHA-256 of token.json: 6b21145b7482cc649bc687e1a7b7794a3b946fd83c995c1abd6c66ea556b5f0c. securityNotice is still the 2026-10-05 text.
 - The Verify cards from 2026-10-16 include one mint in the curated registry, USDC&#39;s (
 - USDC, on 2026-10-16, asked for getTokenLargestAccounts and got HTTP 429. The sample stays unavailable.
 - The blockchain could not be read right now. This is the official ORVUPI address published on orvupi.com/token. Press «Try again».
 - This page is available in English.
 
-### ko (4)
+### ko (7)
 
+- Only the channels on this list are official. If an account, website or address is not listed here, treat it as unofficial until you check it on this website.
 - SHA-256 of token.json: 6b21145b7482cc649bc687e1a7b7794a3b946fd83c995c1abd6c66ea556b5f0c. securityNotice is still the 2026-10-05 text.
 - The only example that uses a real token is the USDC address on Solana:
 - With another name the ORVUPI mascot is not used.
+- ‘Holder’ (industry term)
+- ‘Holder’ (industry term): an account that holds tokens. It implies no rights and no investor community.
 - This page is available in English.

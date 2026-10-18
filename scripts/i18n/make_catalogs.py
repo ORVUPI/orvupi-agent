@@ -8,6 +8,11 @@ src = json.load(open(R / "web/v2/i18n/source.json"))
 over = {k: v for k, v in json.load(open(R / "i18n/overrides.json")).items() if not k.startswith("_")}
 manual = {k: v for k, v in json.load(open(R / "i18n/attrs-manual.json")).items() if not k.startswith("_")}
 LANGS = ["pt-BR", "ja", "ko"]
+# Reglas del proyecto (test/web-v2.test.ts, src/metrics-policy.ts): el borrador automático no puede
+# introducir palabras vetadas ni basura de otro alfabeto; si pasa, la cadena se queda en inglés.
+BANNED = re.compile(r"\bholders?\b|\breserves?\b|\breserva\b|fondo de liquidez|withdrawable|umami|plausible|matomo|analytics|beacon|gtag|stubx|no oficial|unofficial|n[ãa]o oficial|非公式|비공식", re.I)
+SCRIPT = {"pt-BR": re.compile(r"[^\u0000-\u024F\u2000-\u206F\u20A0-\u20CF\u2190-\u21FF\u2600-\u27BF\U0001F300-\U0001FAFF·×→↗↓←…]"),
+          "ja": re.compile(r"[\u0370-\u03FF\u0400-\u04FF\uAC00-\uD7AF]"), "ko": re.compile(r"[\u0370-\u03FF\u0400-\u04FF\u3040-\u30FF]")}
 status = {}
 
 def work_en():
@@ -32,6 +37,10 @@ for i, lang in enumerate(LANGS):
         if en_text in over:
             st["manual"] += 1; return over[en_text][i]
         v = mt.get(en_text)
+        if v and (BANNED.search(v) and not BANNED.search(en_text) or BANNED.search(v) and en_text.lower().count("holder") != v.lower().count("holder") or SCRIPT[lang].search(v)):
+            v = None
+        if v and BANNED.search(v):
+            v = None
         if v and v.strip():
             st["auto"] += 1; return v
         st["fallback_en"].append(key_hint or en_text); return en_text
