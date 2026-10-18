@@ -56,8 +56,8 @@ export const ENTENDER_LINKS: readonly EntenderLink[] = [
     es: "Curva",
     en: "Curve",
     explain: {
-      es: "Curva: si el token no se creó en Pump.fun, este dato no aplica. Si se creó y no hay cuenta, esta lectura no la encontró.",
-      en: "Curve: if the token was not created on Pump.fun, this fact does not apply. If it was and there is no account, this reading did not find it.",
+      es: "Curva: si el token no tiene curva de Pump.fun ni de Raydium LaunchLab, este dato no aplica. Si la tiene y no hay cuenta, esta lectura no la encontró.",
+      en: "Curve: if the token has no Pump.fun or Raydium LaunchLab curve, this fact does not apply. If it has one and there is no account, this reading did not find it.",
     },
   },
 ];

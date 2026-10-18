@@ -86,6 +86,8 @@ async function mockRpc(page) {
     const body = route.request().postDataJSON();
     const method = body?.method;
     if (method === "getMultipleAccounts") {
+      // Segunda lectura: los dos candidatos de Raydium LaunchLab (SOL y USD1). Aquí no hay curva.
+      if (body.params[0].length === 2) return route.fulfill(rpcResult([null, null]));
       const mint = body.params[0][0];
       const item = profile(mint);
       return route.fulfill(rpcResult([

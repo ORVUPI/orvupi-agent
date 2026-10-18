@@ -416,6 +416,124 @@ export function decodeMetadata(owner, data, expectedMint) {
   return { name: name.text, symbol: symbol.text, uri: uri.text };
 }
 
+
+// Raydium LaunchLab. Programa y layout del SDK oficial raydium-sdk-V2 (src/raydium/launchpad/layout.ts y pda.ts).
+// Comprobado en la cadena con el pool de ORVUPI 8XidD43yueGuP31Zj4wpuyfAhVBEuCBfg1tvwZJ81jQk. Misma lógica que verify/launchlab.ts.
+export const LAUNCHLAB_PROGRAM = "LanMV9sAd7wArD4vJFi2qDdfnVhFxYSUg6eADduJ3uj";
+export const CPMM_PROGRAM = "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C";
+export const CPMM_DEFAULT_CONFIG = "D4FPEruKEHrG5TenZ2mpDGEfu1iUvTiqBxvpU8HLBvC2";
+export const USD1_MINT = "USD1ttGY1N17NEEHLmELoaybftRBUSErhqYiQzvEmuB";
+export const LAUNCHLAB_POOL_DISCRIMINATOR = Uint8Array.from([247, 237, 227, 245, 215, 195, 222, 70]);
+export const LAUNCHLAB_PLATFORM_DISCRIMINATOR = Uint8Array.from([160, 78, 128, 0, 248, 83, 230, 160]);
+const LAUNCHLAB_POOL_MIN_LEN = 365;
+
+function startsWith(data, disc) {
+  if (data.length < disc.length) return false;
+  for (let i = 0; i < disc.length; i += 1) if (data[i] !== disc[i]) return false;
+  return true;
+}
+
+export function launchlabPoolPda(mint, quote = WSOL_MINT) {
+  const a = decodePubkey(mint);
+  const b = decodePubkey(quote);
+  if (!a || !b) return null;
+  return pda(["pool", a, b], LAUNCHLAB_PROGRAM);
+}
+
+export function cpmmPoolPda(config, mintA, mintB) {
+  const a = decodePubkey(mintA);
+  const b = decodePubkey(mintB);
+  const c = decodePubkey(config);
+  if (!a || !b || !c) return null;
+  let first = a;
+  let second = b;
+  for (let i = 0; i < 32; i += 1) {
+    if (a[i] !== b[i]) {
+      if (a[i] > b[i]) {
+        first = b;
+        second = a;
+      }
+      break;
+    }
+  }
+  return pda(["pool", c, first, second], CPMM_PROGRAM);
+}
+
+export function decodeLaunchlabPool(address, owner, data, expectedMint) {
+  if (owner !== LAUNCHLAB_PROGRAM || data.length < LAUNCHLAB_POOL_MIN_LEN || !startsWith(data, LAUNCHLAB_POOL_DISCRIMINATOR)) return null;
+  const read = (offset) => readU64(data, offset) ?? 0n;
+  const statusCode = data[17];
+  const migrate = data[20];
+  const key = (index) => encodeBase58(data.subarray(141 + index * 32, 173 + index * 32));
+  const mintA = key(2);
+  if (expectedMint && mintA !== expectedMint) return null;
+  return {
+    poolAddress: address,
+    status: statusCode === 0 ? "en_curva" : statusCode === 1 ? "migrando" : statusCode === 2 ? "migrado" : "desconocido",
+    statusCode,
+    migrateType: migrate === 0 ? "amm" : migrate === 1 ? "cpmm" : "desconocido",
+    decimalsA: data[18],
+    decimalsB: data[19],
+    supply: read(21),
+    totalSellA: read(29),
+    virtualA: read(37),
+    virtualB: read(45),
+    realA: read(53),
+    realB: read(61),
+    totalFundRaisingB: read(69),
+    configId: key(0),
+    platformId: key(1),
+    mintA,
+    mintB: key(3),
+    vaultA: key(4),
+    vaultB: key(5),
+    creator: key(6),
+  };
+}
+
+export function decodePlatformCpConfig(owner, data) {
+  if (owner !== LAUNCHLAB_PROGRAM || !startsWith(data, LAUNCHLAB_PLATFORM_DISCRIMINATOR) || data.length < 720) return null;
+  return encodeBase58(data.subarray(688, 720));
+}
+
+export function cpmmPoolHoldsMints(owner, data, mintA, mintB) {
+  if (owner !== CPMM_PROGRAM || data.length < 232) return false;
+  const t0 = encodeBase58(data.subarray(168, 200));
+  const t1 = encodeBase58(data.subarray(200, 232));
+  return (t0 === mintA && t1 === mintB) || (t0 === mintB && t1 === mintA);
+}
+
+export async function readLaunchlab(mint, reader) {
+  const candidates = [launchlabPoolPda(mint, WSOL_MINT), launchlabPoolPda(mint, USD1_MINT)];
+  if (candidates.some((item) => !item)) return { ok: false, reading: null };
+  const first = await reader.getMultipleAccounts(candidates);
+  if (!first.ok || !Array.isArray(first.value)) return { ok: false, reading: null };
+  let pool = null;
+  for (let i = 0; i < candidates.length && !pool; i += 1) {
+    const account = first.value[i];
+    if (account) pool = decodeLaunchlabPool(candidates[i], account.owner, account.data, mint);
+  }
+  if (!pool) return { ok: true, reading: null };
+  if (pool.status !== "migrado") return { ok: true, reading: { pool, migratedPool: null, migratedNote: "no_aplica" } };
+  if (pool.migrateType !== "cpmm") return { ok: true, reading: { pool, migratedPool: null, migratedNote: "amm_v4_no_derivable" } };
+  const configs = [CPMM_DEFAULT_CONFIG];
+  const platform = await reader.getMultipleAccounts([pool.platformId]);
+  const platformAccount = platform.ok && Array.isArray(platform.value) ? platform.value[0] : null;
+  const cp = platformAccount ? decodePlatformCpConfig(platformAccount.owner, platformAccount.data) : null;
+  if (cp && !configs.includes(cp)) configs.push(cp);
+  const pdas = configs.map((config) => cpmmPoolPda(config, pool.mintA, pool.mintB));
+  const found = await reader.getMultipleAccounts(pdas);
+  if (found.ok && Array.isArray(found.value)) {
+    for (let i = 0; i < pdas.length; i += 1) {
+      const account = found.value[i];
+      if (account && cpmmPoolHoldsMints(account.owner, account.data, pool.mintA, pool.mintB)) {
+        return { ok: true, reading: { pool, migratedPool: pdas[i], migratedNote: "localizado" } };
+      }
+    }
+  }
+  return { ok: true, reading: { pool, migratedPool: null, migratedNote: "no_localizado" } };
+}
+
 export function isAllowedMethod(method) {
   return LIMITS.allowedRpcMethods.includes(method);
 }
@@ -613,11 +731,20 @@ export async function readCurveState(mint, options = {}) {
   const curve = curveAccount ? decodeCurve(curveAccount.owner, curveAccount.data) : null;
   const fees = globalAccount ? decodeGlobal(globalAccount.owner, globalAccount.data) : null;
   const metadata = metaAccount ? decodeMetadata(metaAccount.owner, metaAccount.data, trimmed) : null;
+  let launchlab = null;
+  let launchlabError = false;
+  if (!curve) {
+    const ll = await readLaunchlab(trimmed, reader);
+    launchlab = ll.reading;
+    launchlabError = !ll.ok;
+  }
   return {
     ok: true,
     mint: trimmed,
     mintDecoded,
     curve,
+    launchlab,
+    launchlabError,
     fees,
     metadata,
     slot: slotCall.ok ? slotCall.value : null,

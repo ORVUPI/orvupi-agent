@@ -846,8 +846,8 @@ describe("lector y cuaderno", () => {
     assert.equal(model.curveComparisonValue("Curva presente", "no_aplica", "es"), sentence.es);
     assert.equal(model.curveComparisonValue("Cantidad real de tokens de la curva", "no_aplica", "en"), sentence.en);
     assert.equal(model.curveComparisonValue("Nombre", "no_aplica", "es"), null);
-    assert.equal(sentence.es, "No aplica: este token no se creó en Pump.fun");
-    assert.equal(sentence.en, "Not applicable: this token was not created on Pump.fun");
+    assert.equal(sentence.es, "No aplica: no hay curva de Pump.fun ni de Raydium LaunchLab para este token");
+    assert.equal(sentence.en, "Not applicable: there is no Pump.fun or Raydium LaunchLab curve for this token");
   });
 
   test("solo se comparan dos fichas del mismo mint y la antigua no se presenta como actual", async () => {

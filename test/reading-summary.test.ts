@@ -87,7 +87,7 @@ describe("resumen de la lectura", () => {
         { id: "congelacion", level: "riesgo", title: { es: "Alguien puede congelar cuentas", en: "Someone can freeze accounts" }, explain: { es: "puede impedir", en: "can stop" } },
         { id: "mutable", level: "atencion", title: { es: "El nombre se puede cambiar", en: "The name can be changed" }, explain: { es: "puede actualizar", en: "can update" } },
         { id: "comision", level: "riesgo", title: { es: "Comisión de transferencia", en: "Transfer fee" }, explain: { es: "parte de cada envío", en: "part of each transfer" } },
-        { id: "curva", level: "neutro", title: { es: "Curva", en: "Curve" }, explain: { es: "No aplica: este token no se creó en Pump.fun", en: "Not applicable" } },
+        { id: "curva", level: "neutro", title: { es: "Curva", en: "Curve" }, explain: { es: "No aplica: no hay curva de Pump.fun ni de Raydium LaunchLab para este token", en: "Not applicable" } },
       ],
     });
     assert.equal(summary.title.es, "Resumen");

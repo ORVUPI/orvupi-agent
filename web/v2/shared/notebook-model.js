@@ -512,8 +512,8 @@ const COMPARED_TEXT = {
 };
 
 export const CURVE_NOT_ON_PUMP = {
-  es: "No aplica: este token no se creó en Pump.fun",
-  en: "Not applicable: this token was not created on Pump.fun",
+  es: "No aplica: no hay curva de Pump.fun ni de Raydium LaunchLab para este token",
+  en: "Not applicable: there is no Pump.fun or Raydium LaunchLab curve for this token",
 };
 
 export function curveComparisonValue(fieldEs, state, lang) {
