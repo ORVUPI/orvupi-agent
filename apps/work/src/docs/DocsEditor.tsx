@@ -12,6 +12,7 @@ import { editorPath, openEditorWindow } from "../routing/paths";
 import type { FileRecord, StorageService } from "../storage/types";
 import { Button, ErrorState, Input } from "../ui/kit";
 import { DocsSurface } from "./DocsSurface";
+import { AiStudio } from "../ai/AiStudio";
 import { combinedContent, tabsOf, type DocTab } from "./tabs";
 import { tabFromHash } from "./DocTabs";
 import { CommentsRail } from "./CommentsRail";
@@ -121,6 +122,8 @@ export function DocsEditor({
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [rev, setRev] = useState(0);
   const [starred, setStarred] = useState(record.favorite);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiFiles, setAiFiles] = useState<FileRecord[]>([]);
   const rangeRef = useRef<{ from: number; to: number } | null>(null);
   const findAnchor = useRef<{ from: number; to: number } | null>(null);
 
@@ -491,6 +494,7 @@ export function DocsEditor({
         tabs={tabs}
         activeTab={activeTab}
         onSelectTab={(id) => selectTab(id)}
+        onAi={() => { void storage.listFiles().then(setAiFiles); setAiOpen(true); }}
         tabsSnapshot={() => (editor ? withActive(editor.getJSON() as JsonNode) : tabsRef.current)}
         onTabsChange={(next, select) => {
           // Guarda primero lo escrito en la pestaña activa
@@ -605,6 +609,35 @@ export function DocsEditor({
         ) : null}
       />
       <LayoutTools editor={editor} t={t} />
+      {aiOpen ? (
+        <aside className="ow-doc-aipanel" data-tool="ai" aria-label="ORVUPI AI">
+          <header>
+            <h2>ORVUPI AI</h2>
+            <button type="button" className="ow-button ow-button-ghost" onClick={() => setAiOpen(false)}>{t("closeAi")}</button>
+          </header>
+          <AiStudio
+            locale={locale}
+            storage={storage}
+            files={aiFiles.filter((file) => file.id !== record.id)}
+            compact
+            openDoc={{
+              name,
+              text: () => (editor ? docToText(combinedContent(withActive(editor.getJSON() as JsonNode))) : ""),
+              selection: () => {
+                if (!editor) return "";
+                const { from, to } = editor.state.selection;
+                return editor.state.doc.textBetween(from, to, "\n");
+              },
+            }}
+            onInsert={(text) => {
+              if (!editor) return;
+              const paragraphs = text.split(/\n+/).map((line) => line.trim()).filter(Boolean).map((line) => ({ type: "paragraph", content: [{ type: "text", text: line }] }));
+              const { to } = editor.state.selection;
+              editor.chain().focus().insertContentAt(to, paragraphs).run();
+            }}
+          />
+        </aside>
+      ) : null}
       {saveError ? (
         <ErrorState
           title={t("saveErrorTitle")}
