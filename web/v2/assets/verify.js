@@ -1595,6 +1595,167 @@ function decodeBondingCurve(owner, data) {
     };
 }
 
+/**
+ * Raydium LaunchLab: lectura de la curva de un mint, solo con getMultipleAccounts.
+ * Programa y layout: raydium-sdk-V2, src/raydium/launchpad/{layout,pda}.ts
+ * (LaunchpadPool, getPdaLaunchpadPoolId = ["pool", mintA, mintB]).
+ * Comprobado en la cadena con el pool de ORVUPI 8XidD43yueGuP31Zj4wpuyfAhVBEuCBfg1tvwZJ81jQk.
+ */
+const LAUNCHLAB_PROGRAM = "LanMV9sAd7wArD4vJFi2qDdfnVhFxYSUg6eADduJ3uj";
+const CPMM_PROGRAM = "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C";
+/** Configuración CPMM 0 de Raydium (0,25 %), la que usa la migración por defecto. */
+const CPMM_DEFAULT_CONFIG = "D4FPEruKEHrG5TenZ2mpDGEfu1iUvTiqBxvpU8HLBvC2";
+const LAUNCHLAB_WSOL = "So11111111111111111111111111111111111111112";
+const LAUNCHLAB_USD1 = "USD1ttGY1N17NEEHLmELoaybftRBUSErhqYiQzvEmuB";
+/** sha256("account:PoolState")[0..8] */
+const LAUNCHLAB_POOL_DISCRIMINATOR = Uint8Array.from([247, 237, 227, 245, 215, 195, 222, 70]);
+/** sha256("account:PlatformConfig")[0..8] */
+const LAUNCHLAB_PLATFORM_DISCRIMINATOR = Uint8Array.from([160, 78, 128, 0, 248, 83, 230, 160]);
+/** Hasta creator incluido: 8 + 8 + 5 + 10·8 + 40 + 7·32. */
+const LAUNCHLAB_POOL_MIN_LEN = 365;
+const PLATFORM_CP_CONFIG_OFFSET = 688;
+function same(data, disc) {
+    if (data.length < disc.length)
+        return false;
+    for (let i = 0; i < disc.length; i += 1)
+        if (data[i] !== disc[i])
+            return false;
+    return true;
+}
+function must(value) {
+    const bytes = decodePubkey(value);
+    if (!bytes)
+        throw new Error(`Dirección no decodifica: ${value}`);
+    return bytes;
+}
+function launchlabPoolPda(mint, quote = LAUNCHLAB_WSOL) {
+    const seed = new TextEncoder().encode("pool");
+    return encodeBase58(findProgramAddress([seed, must(mint), must(quote)], must(LAUNCHLAB_PROGRAM)).address);
+}
+function launchlabCandidates(mint) {
+    return [launchlabPoolPda(mint, LAUNCHLAB_WSOL), launchlabPoolPda(mint, LAUNCHLAB_USD1)];
+}
+function compare(a, b) {
+    for (let i = 0; i < 32; i += 1)
+        if ((a[i] ?? 0) !== (b[i] ?? 0))
+            return (a[i] ?? 0) - (b[i] ?? 0);
+    return 0;
+}
+/** CPMM: ["pool", amm_config, token_0_mint, token_1_mint], con token_0 < token_1 por bytes. */
+function cpmmPoolPda(config, mintA, mintB) {
+    const a = must(mintA);
+    const b = must(mintB);
+    const [t0, t1] = compare(a, b) < 0 ? [a, b] : [b, a];
+    return encodeBase58(findProgramAddress([new TextEncoder().encode("pool"), must(config), t0, t1], must(CPMM_PROGRAM)).address);
+}
+function decodeLaunchlabPool(address, owner, data, expectedMint) {
+    if (owner !== LAUNCHLAB_PROGRAM || data.length < LAUNCHLAB_POOL_MIN_LEN || !same(data, LAUNCHLAB_POOL_DISCRIMINATOR))
+        return null;
+    const statusCode = data[17] ?? 255;
+    const migrate = data[20] ?? 255;
+    const u = (offset) => readU64(data, offset) ?? 0n;
+    let o = 21;
+    const fields = ["supply", "totalSellA", "virtualA", "virtualB", "realA", "realB", "totalFundRaisingB"];
+    const values = {};
+    for (const name of fields) {
+        values[name] = u(o);
+        o += 8;
+    }
+    o += 3 * 8 + 40; // protocolFee, platformFee, migrateFee, vestingSchedule
+    const keys = [];
+    for (let i = 0; i < 7; i += 1) {
+        keys.push(encodeBase58(data.subarray(o, o + 32)));
+        o += 32;
+    }
+    const [configId, platformId, mintA, mintB, vaultA, vaultB, creator] = keys;
+    if (expectedMint && mintA !== expectedMint)
+        return null;
+    const target = values.totalFundRaisingB ?? 0n;
+    const realB = values.realB ?? 0n;
+    return {
+        poolAddress: address,
+        status: statusCode === 0 ? "en_curva" : statusCode === 1 ? "migrando" : statusCode === 2 ? "migrado" : "desconocido",
+        statusCode,
+        migrateType: migrate === 0 ? "amm" : migrate === 1 ? "cpmm" : "desconocido",
+        decimalsA: data[18] ?? 0,
+        decimalsB: data[19] ?? 0,
+        supply: values.supply ?? 0n,
+        totalSellA: values.totalSellA ?? 0n,
+        virtualA: values.virtualA ?? 0n,
+        virtualB: values.virtualB ?? 0n,
+        realA: values.realA ?? 0n,
+        realB,
+        totalFundRaisingB: target,
+        configId,
+        platformId,
+        mintA,
+        mintB,
+        vaultA,
+        vaultB,
+        creator,
+        progressPercent: target > 0n ? percentTruncated(realB, target, 2) : null,
+    };
+}
+function decodePlatformCpConfig(owner, data) {
+    if (owner !== LAUNCHLAB_PROGRAM || !same(data, LAUNCHLAB_PLATFORM_DISCRIMINATOR) || data.length < PLATFORM_CP_CONFIG_OFFSET + 32)
+        return null;
+    return encodeBase58(data.subarray(PLATFORM_CP_CONFIG_OFFSET, PLATFORM_CP_CONFIG_OFFSET + 32));
+}
+/** CPMM PoolState: token_0_mint en 168 y token_1_mint en 200. */
+function cpmmPoolHoldsMints(owner, data, mintA, mintB) {
+    if (owner !== CPMM_PROGRAM || data.length < 232)
+        return false;
+    const t0 = encodeBase58(data.subarray(168, 200));
+    const t1 = encodeBase58(data.subarray(200, 232));
+    return (t0 === mintA && t1 === mintB) || (t0 === mintB && t1 === mintA);
+}
+function quoteSymbol(mintB) {
+    if (mintB === LAUNCHLAB_WSOL)
+        return "SOL";
+    if (mintB === LAUNCHLAB_USD1)
+        return "USD1";
+    return mintB;
+}
+/** Lee los dos candidatos (SOL y USD1) y, si migró a CPMM, localiza el pool. Null si no hay curva o falla la lectura. */
+async function readLaunchlab(mint, read) {
+    const candidates = launchlabCandidates(mint);
+    const first = await read(candidates);
+    if (!first.ok || !Array.isArray(first.value))
+        return { ok: false, reading: null };
+    let pool = null;
+    for (let index = 0; index < candidates.length && !pool; index += 1) {
+        const account = first.value[index];
+        if (account)
+            pool = decodeLaunchlabPool(candidates[index], account.owner, account.data, mint);
+    }
+    if (!pool)
+        return { ok: true, reading: null };
+    return { ok: true, reading: await locateMigration(pool, read) };
+}
+async function locateMigration(pool, read) {
+    if (pool.status !== "migrado")
+        return { pool, migratedPool: null, migratedProgram: null, migratedNote: "no_aplica" };
+    if (pool.migrateType !== "cpmm")
+        return { pool, migratedPool: null, migratedProgram: null, migratedNote: "amm_v4_no_derivable" };
+    const configs = [CPMM_DEFAULT_CONFIG];
+    const platform = await read([pool.platformId]);
+    const platformAccount = platform.ok && Array.isArray(platform.value) ? platform.value[0] : null;
+    const cp = platformAccount ? decodePlatformCpConfig(platformAccount.owner, platformAccount.data) : null;
+    if (cp && !configs.includes(cp))
+        configs.push(cp);
+    const pdas = configs.map((config) => cpmmPoolPda(config, pool.mintA, pool.mintB));
+    const found = await read(pdas);
+    if (found.ok && Array.isArray(found.value)) {
+        for (let i = 0; i < pdas.length; i += 1) {
+            const account = found.value[i];
+            if (account && cpmmPoolHoldsMints(account.owner, account.data, pool.mintA, pool.mintB)) {
+                return { pool, migratedPool: pdas[i], migratedProgram: CPMM_PROGRAM, migratedNote: "localizado" };
+            }
+        }
+    }
+    return { pool, migratedPool: null, migratedProgram: null, migratedNote: "no_localizado" };
+}
+
 const ALLOWED_RPC_METHODS = [
     "getAccountInfo",
     "getMultipleAccounts",
@@ -1905,8 +2066,8 @@ const PRIVACY_NOTICE = {
     en: "The read is live and read-only.",
 };
 const CURVE_NOT_ON_PUMP = {
-    es: "No aplica: este token no se creó en Pump.fun",
-    en: "Not applicable: this token was not created on Pump.fun",
+    es: "No aplica: no hay curva de Pump.fun ni de Raydium LaunchLab para este token",
+    en: "Not applicable: there is no Pump.fun or Raydium LaunchLab curve for this token",
 };
 function loadingView(mint) {
     return {
@@ -2340,8 +2501,22 @@ async function readWith(mint, registry, rpc, input) {
         const sample = await accountSample(rpc, mint, mintInfo.owner, curve, largest, null);
         signals.push(sample.signal);
     }
-    const curveNotOnPump = !mint.endsWith("pump") && (!curveInfo || curveInfo.owner !== PUMP_PROGRAM);
-    signals.push(curveNotOnPump ? curveDoesNotApplySignal() : curveSignal(curveInfo, bonding));
+    const pumpMissing = !curveInfo || curveInfo.owner !== PUMP_PROGRAM;
+    let launch = null;
+    let launchFailed = false;
+    if (pumpMissing) {
+        const ll = await readLaunchlab(mint, (addresses) => rpc.getMultipleAccounts(addresses));
+        launch = ll.reading;
+        launchFailed = !ll.ok;
+    }
+    const curveNotOnPump = !launch && !launchFailed && !mint.endsWith("pump") && pumpMissing;
+    signals.push(launch
+        ? launchlabSignal(launch)
+        : launchFailed && !mint.endsWith("pump")
+            ? launchlabFailedSignal()
+            : curveNotOnPump
+                ? curveDoesNotApplySignal()
+                : curveSignal(curveInfo, bonding));
     const copyByName = !likeness.inRegistry && likeness.signals.some((item) => /^nombre |^símbolo /.test(item));
     // Contrato oficial ORVUPI (Solana): Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU. Otro token que dice llamarse ORVUPI no es el oficial.
     // En verify.js el CA sale de shared/orvupi-contract.js; en Node, de esta copia (comprobada por test/web-v2.test.ts).
@@ -2435,7 +2610,7 @@ async function readWith(mint, registry, rpc, input) {
         {
             id: "curva",
             label: loc("Curva", "Curve"),
-            state: curveNotOnPump ? "no_aplica" : !curveInfo ? "ausente" : bonding ? "ok" : "fallo",
+            state: launch ? "ok" : launchFailed && !mint.endsWith("pump") ? "fallo" : curveNotOnPump ? "no_aplica" : !curveInfo ? "ausente" : bonding ? "ok" : "fallo",
         },
     ];
     const grouped = groupFacts(facts);
@@ -2490,21 +2665,33 @@ async function readWith(mint, registry, rpc, input) {
         })),
         extensionsStatus: decoded.standard === "spl-token" ? "no_aplica" : decoded.extensionsParsed ? "verificado" : "fallo",
         largestStatus: largestState === "ok" ? "ok" : largestState,
-        curve: curveNotOnPump
-            ? { present: false, status: "no_aplica", virtualToken: null, virtualQuote: null, realToken: null, realQuote: null, complete: null }
-            : !curveInfo
-                ? { present: false, status: "ausente", virtualToken: null, virtualQuote: null, realToken: null, realQuote: null, complete: null }
-                : !bonding
-                    ? { present: null, status: "fallo", virtualToken: null, virtualQuote: null, realToken: null, realQuote: null, complete: null }
-                    : {
-                        present: true,
-                        status: "verificado",
-                        virtualToken: bonding.virtualTokenReserves.toString(),
-                        virtualQuote: bonding.virtualQuoteReserves.toString(),
-                        realToken: bonding.realTokenReserves.toString(),
-                        realQuote: bonding.realQuoteReserves.toString(),
-                        complete: bonding.complete,
-                    },
+        curve: launch
+            ? {
+                present: true,
+                status: "verificado",
+                virtualToken: launch.pool.virtualA.toString(),
+                virtualQuote: launch.pool.virtualB.toString(),
+                realToken: launch.pool.realA.toString(),
+                realQuote: launch.pool.realB.toString(),
+                complete: launch.pool.status !== "en_curva",
+            }
+            : launchFailed && !mint.endsWith("pump")
+                ? { present: null, status: "fallo", virtualToken: null, virtualQuote: null, realToken: null, realQuote: null, complete: null }
+                : curveNotOnPump
+                    ? { present: false, status: "no_aplica", virtualToken: null, virtualQuote: null, realToken: null, realQuote: null, complete: null }
+                    : !curveInfo
+                        ? { present: false, status: "ausente", virtualToken: null, virtualQuote: null, realToken: null, realQuote: null, complete: null }
+                        : !bonding
+                            ? { present: null, status: "fallo", virtualToken: null, virtualQuote: null, realToken: null, realQuote: null, complete: null }
+                            : {
+                                present: true,
+                                status: "verificado",
+                                virtualToken: bonding.virtualTokenReserves.toString(),
+                                virtualQuote: bonding.virtualQuoteReserves.toString(),
+                                realToken: bonding.realTokenReserves.toString(),
+                                realQuote: bonding.realQuoteReserves.toString(),
+                                complete: bonding.complete,
+                            },
     };
     return {
         ok: true,
@@ -2807,6 +2994,42 @@ function emptySample() {
         level: "atencion",
         title: loc("Cuentas con tokens", "Token accounts"),
         explain: loc("No se pudo leer la muestra. No es una concentración de cero.", "The sample could not be read. It is not zero concentration."),
+    };
+}
+function quoteAmount(amount, decimals, lang) {
+    return formatUnitsLocale(amount, decimals, lang);
+}
+function launchlabSignal(reading) {
+    const { pool } = reading;
+    const quote = quoteSymbol(pool.mintB);
+    const raisedEs = `${quoteAmount(pool.realB, pool.decimalsB, "es")} ${quote}`;
+    const raisedEn = `${quoteAmount(pool.realB, pool.decimalsB, "en")} ${quote}`;
+    const targetEs = `${quoteAmount(pool.totalFundRaisingB, pool.decimalsB, "es")} ${quote}`;
+    const targetEn = `${quoteAmount(pool.totalFundRaisingB, pool.decimalsB, "en")} ${quote}`;
+    const progressEs = pool.progressPercent === null ? "no se calcula" : `${pool.progressPercent.replace(".", ",")} %`;
+    const progressEn = pool.progressPercent === null ? "not calculated" : `${pool.progressPercent}%`;
+    const stateEs = { en_curva: "en curva", migrando: "migración en curso", migrado: "migrado a Raydium", desconocido: "estado no reconocido" }[pool.status];
+    const stateEn = { en_curva: "on the curve", migrando: "migration in progress", migrado: "migrated to Raydium", desconocido: "unrecognised state" }[pool.status];
+    const target = pool.status === "migrado"
+        ? reading.migratedPool
+            ? loc(` Pool de Raydium al que migró: ${reading.migratedPool} (CPMM).`, ` Raydium pool it migrated to: ${reading.migratedPool} (CPMM).`)
+            : reading.migratedNote === "amm_v4_no_derivable"
+                ? loc(" Migró al AMM v4 de Raydium; ese pool no se localiza solo con lecturas de cuentas.", " It migrated to Raydium AMM v4; that pool cannot be located with account reads alone.")
+                : loc(" El pool de destino no se localizó en la cadena.", " The destination pool was not located on chain.")
+        : loc("", "");
+    return {
+        id: "curva",
+        level: "neutro",
+        title: loc(`Curva de Raydium LaunchLab: ${stateEs}`, `Raydium LaunchLab curve: ${stateEn}`),
+        explain: loc(`Plataforma: Raydium LaunchLab (programa ${LAUNCHLAB_PROGRAM}). Cuenta de la curva: ${pool.poolAddress}. Moneda base: ${quote}. Reunido en la curva: ${raisedEs} de ${targetEs} para graduarse (${progressEs}).${target.es}`, `Platform: Raydium LaunchLab (program ${LAUNCHLAB_PROGRAM}). Curve account: ${pool.poolAddress}. Base currency: ${quote}. Raised on the curve: ${raisedEn} of ${targetEn} to graduate (${progressEn}).${target.en}`),
+    };
+}
+function launchlabFailedSignal() {
+    return {
+        id: "curva",
+        level: "neutro",
+        title: loc("Curva", "Curve"),
+        explain: loc("No se pudo comprobar si hay una curva de Raydium LaunchLab. No se rellena con cero.", "It could not be checked whether there is a Raydium LaunchLab curve. It is not filled in with zero."),
     };
 }
 function curveDoesNotApplySignal() {
@@ -3515,7 +3738,7 @@ function compose(facts, attention, context, signals, card) {
     } else if (curve?.state === "ok") {
       checked.push(summaryPoint(
         "curva",
-        summaryPair("Curva de Pump.fun", "Pump.fun curve"),
+        summaryPair("Curva (Pump.fun o Raydium LaunchLab)", "Curve (Pump.fun or Raydium LaunchLab)"),
         summaryPair("Se leyó la curva.", "The curve was read."),
       ));
     } else if (curve?.state === "ausente") {
@@ -3528,7 +3751,7 @@ function compose(facts, attention, context, signals, card) {
       pushMissing(
         missing,
         "curva",
-        summaryPair("Curva de Pump.fun", "Pump.fun curve"),
+        summaryPair("Curva (Pump.fun o Raydium LaunchLab)", "Curve (Pump.fun or Raydium LaunchLab)"),
         summaryPair("No se pudo leer la curva.", "The curve could not be read."),
       );
     }
@@ -4994,14 +5217,14 @@ function entenderResultado(lang) {
       "Supply: it is the total number of tokens in this reading, using this token's decimals.",
       "Metadata: if they can change, the name or symbol in this reading may not be tomorrow's.",
       "Distribution: a sample of accounts is not a census of who holds the tokens.",
-      "Curve: if the token was not created on Pump.fun, this fact does not apply. If it was and there is no account, this reading did not find it.",
+      "Curve: if the token has no Pump.fun or Raydium LaunchLab curve, this fact does not apply. If it has one and there is no account, this reading did not find it.",
     ]
     : [
       "Permisos: el de emisión permite crear más tokens. El de congelación permite bloquear cuentas. Ninguno de los dos dice si el proyecto es legítimo.",
       "Suministro: es la cantidad total de tokens en esta lectura, con los decimales de este token.",
       "Metadatos: si se pueden cambiar, puede que mañana el nombre o el símbolo ya no sean los de esta lectura.",
       "Distribución: una muestra de cuentas no es un censo de quién tiene los tokens.",
-      "Curva: si el token no se creó en Pump.fun, este dato no aplica. Si se creó y no hay cuenta, esta lectura no la encontró.",
+      "Curva: si el token no tiene curva de Pump.fun ni de Raydium LaunchLab, este dato no aplica. Si la tiene y no hay cuenta, esta lectura no la encontró.",
     ];
   var topics = ["permisos", "suministro", "metadatos", "distribucion", "curva"];
   lines.forEach(function (line, index) {

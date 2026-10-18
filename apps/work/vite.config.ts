@@ -6,6 +6,16 @@ import { CONTENT_SECURITY_POLICY } from "./src/security/csp";
 export default defineConfig({
   plugins: [
     react(),
+    {
+      // El motor WASM de ORVUPI AI pesa más de lo que admite el alojamiento (25 MiB por archivo):
+      // no se publica; el worker lo descarga de jsDelivr (versión fijada) y lo guarda en caché.
+      name: "orvupi-drop-big-wasm",
+      generateBundle(_options, bundle) {
+        for (const [name, item] of Object.entries(bundle)) {
+          if (name.endsWith(".wasm") && item.type === "asset" && (item.source as Uint8Array).length > 24 * 1024 * 1024) delete bundle[name];
+        }
+      },
+    },
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: null,
@@ -44,7 +54,7 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: ({ request, url }: { request: Request; url: URL }) => ["script", "style", "worker", "font", "image"].includes(request.destination) && !url.pathname.endsWith("/favicon-32.png"),
+            urlPattern: ({ request, url }: { request: Request; url: URL }) => ["script", "style", "worker", "font", "image"].includes(request.destination) && !url.pathname.endsWith("/favicon-32.png") && !url.pathname.endsWith("/brand-work.svg"),
             handler: "NetworkFirst",
             options: {
               cacheName: "orvupi-work-assets-063",

@@ -80,6 +80,8 @@ test("lectura, guardado y comparación en el uso real", async ({ page }, testInf
     const method = body?.method;
     const asked = Array.isArray(body?.params?.[0]) ? body.params[0][0] : body?.params?.[0];
     if (method === "getMultipleAccounts") {
+      // Segunda lectura: los dos candidatos de Raydium LaunchLab (SOL y USD1). Aquí no hay curva.
+      if (body.params[0].length === 2) return route.fulfill(rpcResult([null, null]));
       const mint = body.params[0][0];
       const symbol = mint === OTHER ? "OTRO" : "USDC";
       return route.fulfill(rpcResult([
@@ -106,7 +108,7 @@ test("lectura, guardado y comparación en el uso real", async ({ page }, testInf
   expect(missing).toContain("El servicio público no respondió, prueba otra vez en un minuto");
   expect(missing).not.toContain("ausente comprobado");
   expect(missing).not.toContain("Curva");
-  await expect(page.locator("#resultado")).toContainText("No aplica: este token no se creó en Pump.fun");
+  await expect(page.locator("#resultado")).toContainText("No aplica: no hay curva de Pump.fun ni de Raydium LaunchLab para este token");
   await expect(page.locator("#resultado")).not.toContainText("Comprobado: no existe");
   await expect(page.locator(".resumen-datos")).toHaveCount(0);
   const linkText = await page.locator(".resumen-informe").innerText();
@@ -124,7 +126,7 @@ test("lectura, guardado y comparación en el uso real", async ({ page }, testInf
 
   await tap(page.locator('[data-set-lang="en"]').first());
   await expect(page.locator("#resultado")).toContainText("There are 7,840,780,507.370947 tokens");
-  await expect(page.locator("#resultado")).toContainText("Not applicable: this token was not created on Pump.fun");
+  await expect(page.locator("#resultado")).toContainText("Not applicable: there is no Pump.fun or Raydium LaunchLab curve for this token");
   await expect(page.locator("#entender-resultado")).toContainText("Understand this result");
   await tap(page.locator('[data-set-lang="es"]').first());
   await expect(page.locator("#resultado")).toContainText("Hay 7.840.780.507,370947 tokens");
@@ -164,7 +166,7 @@ test("lectura, guardado y comparación en el uso real", async ({ page }, testInf
   await expect(page.locator("#consulta-error")).toContainText("El servicio público no respondió, prueba otra vez en un minuto");
   await expect(page.locator("#consulta-error").getByRole("link", { name: "Abrir Cuaderno" })).toBeVisible();
   await expect(page.locator("#resultado")).toContainText("Entender este resultado");
-  await expect(page.locator("#resultado")).toContainText("No aplica: este token no se creó en Pump.fun");
+  await expect(page.locator("#resultado")).toContainText("No aplica: no hay curva de Pump.fun ni de Raydium LaunchLab para este token");
   const notebookMissing = await page.locator("#resultado [data-bloque='falta']").innerText();
   expect(notebookMissing).not.toContain("Curva");
   await expect(page.locator("#resultado")).not.toContainText("Comprobado: no existe");
@@ -185,7 +187,7 @@ test("lectura, guardado y comparación en el uso real", async ({ page }, testInf
   await tap(page.locator("#comparar"));
   const compared = page.locator("#comparacion");
   await expect(compared).toContainText("Lo que sigue igual");
-  await expect(compared).toContainText("No aplica: este token no se creó en Pump.fun");
+  await expect(compared).toContainText("No aplica: no hay curva de Pump.fun ni de Raydium LaunchLab para este token");
   await expect(compared).toContainText("Suministro total");
   await expect(compared).toContainText("Permiso de emisión");
   await expect(compared).toContainText("Decimales");

@@ -1,4 +1,4 @@
-export const REPORT_VERSION = "u09-pares-1";
+export const REPORT_VERSION = "u09-pares-2";
 import { OFFICIAL_ADDRESS, isOfficialAddress } from "../shared/orvupi-contract.js";
 export const OFFICIAL_MINT = OFFICIAL_ADDRESS; // Contrato ORVUPI: Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU (shared/orvupi-contract.js).
 export const QUERY_LIMIT = 6;
@@ -65,6 +65,12 @@ export function describePair(state) {
       creatorFeeBps: null,
     };
   }
+  if (!state.curve && state.launchlab) {
+    return { ok: true, ...describeLaunchlab(state.launchlab), protocolFeeBps: null, creatorFeeBps: null };
+  }
+  if (!state.curve && state.launchlabError) {
+    return { ok: true, curve: "no_disponible", base: "desconocida", protocolFeeBps, creatorFeeBps };
+  }
   if (!state.curve) {
     return { ok: true, curve: "sin_curva", base: "desconocida", protocolFeeBps, creatorFeeBps };
   }
@@ -75,9 +81,83 @@ export function describePair(state) {
   return { ok: true, curve: "abierta", base, protocolFeeBps, creatorFeeBps };
 }
 
+export const LAUNCHLAB_QUOTES = {
+  So11111111111111111111111111111111111111112: "SOL",
+  USD1ttGY1N17NEEHLmELoaybftRBUSErhqYiQzvEmuB: "USD1",
+};
+
+/** Cantidad entera en unidades mínimas a texto decimal, sin redondeo y sin pasar por float. */
+export function formatUnits(raw, decimals) {
+  const value = BigInt(raw);
+  const scale = 10n ** BigInt(decimals);
+  const whole = value / scale;
+  const frac = (value % scale).toString().padStart(decimals, "0").replace(/0+$/, "");
+  return frac ? `${whole}.${frac}` : whole.toString();
+}
+
+/** Porcentaje truncado a 2 decimales hacia cero. Null si el objetivo es 0. */
+export function percentOf(part, whole) {
+  const p = BigInt(part);
+  const w = BigInt(whole);
+  if (w <= 0n || p < 0n) return null;
+  const scaled = (p * 10000n) / w;
+  return `${scaled / 100n}.${(scaled % 100n).toString().padStart(2, "0")}`;
+}
+
+export function describeLaunchlab(reading) {
+  const pool = reading.pool;
+  const quote = LAUNCHLAB_QUOTES[pool.mintB] ?? pool.mintB;
+  return {
+    platform: "raydium_launchlab",
+    curve: pool.status === "en_curva" ? "abierta" : pool.status === "migrado" ? "migrada" : pool.status === "migrando" ? "migrando" : "no_disponible",
+    base: quote,
+    launchlab: {
+      pool: pool.poolAddress,
+      status: pool.status,
+      quoteMint: pool.mintB,
+      raised: formatUnits(pool.realB, pool.decimalsB),
+      target: formatUnits(pool.totalFundRaisingB, pool.decimalsB),
+      progress: percentOf(pool.realB, pool.totalFundRaisingB),
+      migrateType: pool.migrateType,
+      migratedPool: reading.migratedPool ?? null,
+      migratedNote: reading.migratedNote,
+    },
+  };
+}
+
+export function launchlabLines(evidence) {
+  const ll = evidence.launchlab;
+  if (!ll) return [];
+  const local = (text, lang) => (lang === "es" ? text.replace(".", ",") : text);
+  const unit = evidence.base;
+  const progressEs = ll.progress === null ? "no se calcula" : `${local(ll.progress, "es")} %`;
+  const progressEn = ll.progress === null ? "not calculated" : `${ll.progress}%`;
+  const state = {
+    en_curva: ["Estado: en curva, todavía no se ha graduado.", "Status: on the curve, not graduated yet."],
+    migrando: ["Estado: migración en curso.", "Status: migration in progress."],
+    migrado: ["Estado: migrado a Raydium.", "Status: migrated to Raydium."],
+  }[ll.status] ?? ["Estado: no reconocido.", "Status: not recognised."];
+  const lines = [
+    { es: "Plataforma: Raydium LaunchLab.", en: "Platform: Raydium LaunchLab." },
+    { es: `Cuenta de la curva: ${ll.pool}`, en: `Curve account: ${ll.pool}` },
+    { es: `${unit} reunido en la curva: ${local(ll.raised, "es")} ${unit}.`, en: `${unit} raised on the curve: ${ll.raised} ${unit}.` },
+    { es: `Objetivo de graduación: ${local(ll.target, "es")} ${unit}.`, en: `Graduation target: ${ll.target} ${unit}.` },
+    { es: `Progreso: ${progressEs}.`, en: `Progress: ${progressEn}.` },
+    { es: state[0], en: state[1] },
+  ];
+  if (ll.status === "migrado") {
+    if (ll.migratedPool) lines.push({ es: `Pool de Raydium al que migró (CPMM): ${ll.migratedPool}`, en: `Raydium pool it migrated to (CPMM): ${ll.migratedPool}` });
+    else if (ll.migratedNote === "amm_v4_no_derivable") lines.push({ es: "Migró al AMM v4 de Raydium. Ese pool no se localiza solo con lecturas de cuentas.", en: "It migrated to Raydium AMM v4. That pool cannot be located with account reads alone." });
+    else lines.push({ es: "El pool de destino no se localizó en la cadena. No se inventa.", en: "The destination pool was not located on chain. It is not invented." });
+  }
+  return lines;
+}
+
 export function evidenceRecord(input) {
   return {
     version: REPORT_VERSION,
+    platform: input.platform ?? (input.curve === "sin_curva" || input.curve === "no_disponible" ? null : "pump_fun"),
+    launchlab: input.launchlab ?? null,
     mint: input.mint,
     name: input.name ?? null,
     uri: input.uri ?? null,
@@ -119,8 +199,10 @@ export function snapshotLines(evidence, lang) {
   const curve = {
     abierta: en ? "Curve: open." : "Curva: abierta.",
     completa: en ? "Curve: complete." : "Curva: completa.",
-    sin_curva: en ? "Curve: no curve." : "Curva: no hay curva.",
+    sin_curva: en ? "Curve: there is no Pump.fun or Raydium LaunchLab curve." : "Curva: no hay curva de Pump.fun ni de Raydium LaunchLab.",
     no_disponible: en ? "Curve: unavailable." : "Curva: no disponible.",
+    migrada: en ? "Curve: graduated and migrated." : "Curva: graduada y migrada.",
+    migrando: en ? "Curve: migrating." : "Curva: migrando.",
   };
   const base = evidence.base === "desconocida"
     ? (en ? "Base currency: unknown." : "Moneda base: desconocida.")
@@ -145,8 +227,12 @@ export function snapshotLines(evidence, lang) {
     { size: "body", text: name },
     { size: "body", text: base },
     { size: "body", text: curve[evidence.curve] ?? curve.no_disponible },
-    { size: "body", text: feeText(en ? "en" : "es", "fee_basis_points", 105, evidence.protocolFeeBps) },
-    { size: "body", text: feeText(en ? "en" : "es", "creator_fee_basis_points", 154, evidence.creatorFeeBps) },
+    ...(evidence.launchlab
+      ? launchlabLines(evidence).map((line) => ({ size: "body", text: en ? line.en : line.es }))
+      : [
+          { size: "body", text: feeText(en ? "en" : "es", "fee_basis_points", 105, evidence.protocolFeeBps) },
+          { size: "body", text: feeText(en ? "en" : "es", "creator_fee_basis_points", 154, evidence.creatorFeeBps) },
+        ]),
     { size: "body", text: en ? "A pairing is not a collaboration or an endorsement." : "Un emparejamiento no es una colaboración ni un respaldo." },
     { size: "body", text: en ? "The hash detects changes against this evidence. It does not certify that it is true." : "El hash detecta cambios respecto a esta evidencia. No certifica que sea verdad." },
     { size: "small", text: "generado con orvupi.com/verify" },

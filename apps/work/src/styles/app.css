@@ -1414,3 +1414,40 @@ body, .ow-shell, .ow-docs, .ow-docs-body, .ow-docs-scroll { background-color: va
 .ow-imgmenu button[aria-checked="true"] { background: var(--pink-soft); }
 :focus-visible { outline-color: #102032; }
 .ow-docs .ow-menubar { border: 0; box-shadow: none; background: transparent; }
+
+/* 0.8.4 · ORVUPI AI (modelo local en el navegador) */
+.ow-aistudio { display: grid; gap: 16px; max-width: 880px; }
+.ow-aistudio section { background: #fff; border: 2px solid #102032; border-radius: 16px; box-shadow: 3px 3px 0 #102032; padding: 12px 14px; display: grid; gap: 10px; }
+.ow-aistudio h3 { margin: 0; font-family: var(--heading); font-size: 1.05rem; }
+.ow-ai-privacy { margin: 0; padding: 10px 12px; border-radius: 12px; background: #e5f6ee; color: #0b5d36; font-weight: 600; border: 2px solid #0b5d36; }
+.ow-ai-note { margin: 0; color: #7a4a00; background: #fff4e0; border-radius: 10px; padding: 8px 10px; font-size: 0.92rem; }
+.ow-ai-ready { margin: 0; font-weight: 700; color: #0b5d36; }
+.ow-ai-error { margin: 0; color: #a3123f; font-weight: 600; }
+.ow-ai-progress [role="progressbar"] { height: 14px; border: 2px solid #102032; border-radius: 999px; background: #fff8ec; overflow: hidden; }
+.ow-ai-progress [role="progressbar"] span { display: block; height: 100%; background: #ff3070; transition: width 0.2s; }
+.ow-ai-progress p { margin: 6px 0 0; font-size: 0.9rem; }
+.ow-ai-sources { display: flex; flex-wrap: wrap; gap: 8px; }
+.ow-ai-sources label { display: inline-flex; align-items: center; gap: 6px; border: 2px solid #102032; border-radius: 999px; padding: 6px 12px; cursor: pointer; background: #fff; min-height: 40px; }
+.ow-ai-sources label.is-on { background: #ffe1ea; }
+.ow-ai-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.ow-ai-grid li { display: grid; gap: 4px; align-content: start; }
+.ow-ai-grid p { margin: 0; font-size: 0.86rem; color: #465365; }
+.ow-ai-ask { display: flex; gap: 8px; align-items: end; flex-wrap: wrap; }
+.ow-ai-ask .ow-field { flex: 1; min-width: 200px; }
+.ow-ai-chat { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.ow-ai-chat li { padding: 8px 10px; border-radius: 12px; white-space: pre-wrap; }
+.ow-ai-chat li[data-role="user"] { background: #ffe1ea; justify-self: end; max-width: 85%; }
+.ow-ai-chat li[data-role="assistant"] { background: #fff8ec; border: 1px solid #e8d6c0; }
+.ow-ai-output { white-space: pre-wrap; min-height: 3em; line-height: 1.5; background: #fff8ec; border-radius: 12px; padding: 10px; }
+.ow-ai-status { margin: 0; font-size: 0.85rem; color: #465365; }
+.ow-ai-guide summary { cursor: pointer; font-weight: 700; }
+.ow-aistudio.is-compact .ow-ai-grid { grid-template-columns: 1fr 1fr; }
+.ow-ai .ow-aistudio { max-width: none; }
+.ow-ai { overflow: auto; }
+.ow-doc-ai { border: 2px solid #102032; background: #fff; border-radius: 999px; min-height: 36px; padding: 0 12px; font-weight: 800; cursor: pointer; box-shadow: 2px 2px 0 #102032; }
+.ow-doc-aipanel { position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 100vw); z-index: 70; background: #fff8ec; border-left: 2px solid #102032; padding: 12px; box-shadow: -4px 0 0 #102032; }
+.ow-doc-aipanel header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+@media (max-width: 840px), (pointer: coarse) { .ow-doc-aipanel { width: 100vw; border-left: 0; box-shadow: none; padding-bottom: calc(12px + env(safe-area-inset-bottom)); } .ow-aistudio.is-compact .ow-ai-grid { grid-template-columns: 1fr; } }
+.ow-ai { width: 380px; }
+.ow-doc-aipanel { overflow: auto; }
+@media (max-width: 960px) { .ow-ai { max-height: 82dvh; border-top: 2px solid #102032; } }
