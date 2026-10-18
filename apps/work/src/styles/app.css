@@ -1303,6 +1303,9 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-docs-center { width: max-content; margin-left: max(calc(var(--tabs-w, 0px) + 20px), calc((100% - var(--sheet-w, 816px)) / 2)); }
 .ow-docs-center.is-flow { width: 100%; margin: 0; display: flex; flex-direction: column; flex: 1 0 auto; }
 .ow-docs-center > .ow-docs-sheet { margin: 0; }
+.ow-docs-center.is-flow { min-height: 100%; }
+.ow-docs-center.is-flow > .ow-docs-sheet.is-flow { flex: 1 0 auto; }
+.ow-docs.is-narrow .ow-docs-scroll { background-color: #fff; }
 .ow-docs:not(.is-narrow) .ow-docs-page-row { position: relative; }
 .ow-docs:not(.is-narrow) .ow-docs-page-row > .ow-vruler { position: absolute; right: 100%; top: 0; bottom: 0; }
 .ow-docs:not(.is-narrow) .ow-vruler-spacer { display: none; }
@@ -1373,6 +1376,7 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-top-title { display: inline-flex; align-items: center; gap: 8px; line-height: 1; }
 .ow-top-logo { display: block; width: 28px; height: 28px; flex: none; }
 @media (max-width: 960px) { .ow-brandmark { display: inline-flex; } .ow-top-logo { display: none; } .ow-top-actions { align-items: center; } }
+@media (max-width: 768px) { .ow-brandmark { width: 32px; height: 32px; border-radius: 10px; } .ow-brandmark img { width: 28px; height: 28px; } }
 
 /* 0.8.3 · Identidad ORVUPI en todas las herramientas: crema, rosa del pulpo, bordes gruesos y sombra «sticker» */
 :root { --sticker: 3px 3px 0 #102032; --pink-soft: #ffe1ea; --cream: #fff8ec; }

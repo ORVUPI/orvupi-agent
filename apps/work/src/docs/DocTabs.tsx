@@ -378,7 +378,7 @@ export function DocTabs({
         <strong id="ow-tabs-title">{t("outlineTitle")}</strong>
         <button type="button" className="ow-tabs-add" aria-label={t("tabAdd")} title={t("tabAdd")} onClick={act.add}>+</button>
       </div>
-      <div className="ow-tablist" ref={listRef} role="tree" aria-labelledby="ow-tabs-title">
+      <div className="ow-tablist" ref={listRef} aria-labelledby="ow-tabs-title">
         {shown.map(({ tab, index }, pos) => {
           const selected = tab.id === activeId;
           const kids = hasChildren(tabs, index);
@@ -413,9 +413,7 @@ export function DocTabs({
                   <button
                     type="button"
                     className="ow-tab-main"
-                    role="treeitem"
-                    aria-selected={selected}
-                    aria-level={tab.depth + 1}
+                    aria-current={selected ? "page" : undefined}
                     aria-expanded={kids ? !tab.collapsed : undefined}
                     tabIndex={selected ? 0 : -1}
                     onClick={() => { if (suppressClick.current) return; onSelect(tab.id); }}
