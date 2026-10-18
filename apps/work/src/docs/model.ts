@@ -32,11 +32,11 @@ export type ImageInline = { type: "image"; src: string; alt: string };
 export type Inline = TextInline | ImageInline;
 
 export type Block =
-  | { type: "paragraph" | "h1" | "h2" | "h3" | "quote"; inlines: Inline[] }
+  | { type: "paragraph" | "h1" | "h2" | "h3" | "quote"; inlines: Inline[]; align?: string }
   | { type: "bullet" | "ordered"; items: Inline[][] }
   | { type: "checklist"; items: Array<{ checked: boolean; inlines: Inline[] }> }
   | { type: "table"; rows: string[][] }
-  | { type: "image"; src: string; alt: string }
+  | { type: "image"; src: string; alt: string; width?: number; height?: number; align?: string }
   | { type: "pageBreak" }
   | { type: "contents" };
 
@@ -81,7 +81,7 @@ function knownColor(value: string): string | undefined {
 
 function knownSize(value: string): string | undefined {
   if (SIZES.has(value)) return value;
-  const match = /^(\d{1,3})pt$/.exec(value.trim());
+  const match = /^(\d{1,3}(?:\.\d)?)pt$/.exec(value.trim());
   if (!match) return undefined;
   const size = Number(match[1]);
   if (size < 1 || size > 400) return undefined;
@@ -93,7 +93,7 @@ function knownFont(value: string): string | undefined {
   for (const font of FONTS) {
     if (font.toLowerCase() === cleaned.toLowerCase()) return font;
   }
-  return undefined;
+  return /^[\p{L}\p{N} .\-]{1,60}$/u.test(cleaned) ? cleaned : undefined;
 }
 
 export function emptyDoc(): JsonNode {
@@ -182,9 +182,9 @@ export function blocksFromDoc(doc: JsonNode): Block[] {
     if (node.type === "heading") {
       const level = node.attrs?.level;
       const type = level === 1 ? "h1" : level === 2 ? "h2" : "h3";
-      blocks.push({ type, inlines: inlinesFrom(node.content) });
+      blocks.push({ type, inlines: inlinesFrom(node.content), align: stringAttr(node, "textAlign") || undefined });
     } else if (node.type === "paragraph") {
-      blocks.push({ type: "paragraph", inlines: inlinesFrom(node.content) });
+      blocks.push({ type: "paragraph", inlines: inlinesFrom(node.content), align: stringAttr(node, "textAlign") || undefined });
     } else if (node.type === "blockquote") {
       blocks.push({ type: "quote", inlines: inlinesFrom(node.content) });
     } else if (node.type === "bulletList" || node.type === "orderedList") {
@@ -210,7 +210,15 @@ export function blocksFromDoc(doc: JsonNode): Block[] {
       );
       blocks.push({ type: "table", rows });
     } else if (node.type === "image") {
-      blocks.push({ type: "image", src: stringAttr(node, "src"), alt: stringAttr(node, "alt") });
+      const width = Number(node.attrs?.width);
+      const height = Number(node.attrs?.height);
+      blocks.push({
+        type: "image",
+        src: stringAttr(node, "src"),
+        alt: stringAttr(node, "alt"),
+        ...(width > 0 && height > 0 ? { width, height } : {}),
+        align: stringAttr(node, "align") || undefined,
+      });
     } else if (node.type === "horizontalRule") {
       blocks.push({ type: "paragraph", inlines: [{ type: "text", text: "—" }] });
     } else if (node.type === "contents") {

@@ -10,6 +10,7 @@ import { MenuBar } from "../ui/menus";
 import { usePhone } from "../ui/phone";
 import { APP_VERSION } from "../version";
 import { pastedHtml } from "./extensions";
+import { insertImages } from "./image-paste";
 import { jumpToHeading } from "./jump";
 import type { JsonNode, PageMargin, PageOrientation, PageSize } from "./model";
 
@@ -326,6 +327,21 @@ export function DocsSurface({
   }, [charsOpen, pageOpen, countOpen, noteOpen]);
   const [noteDraft, setNoteDraft] = useState("");
   const [clipNote, setClipNote] = useState("");
+  useEffect(() => {
+    if (!editor) return;
+    let dom: HTMLElement;
+    try {
+      dom = editor.view.dom;
+    } catch {
+      return;
+    }
+    const onNote = (event: Event) => {
+      const kind = (event as CustomEvent<string>).detail;
+      setClipNote(kind === "remote" ? t("imageRemote") : t("imagePasteFailed"));
+    };
+    dom.addEventListener("ow-image-note", onNote);
+    return () => dom.removeEventListener("ow-image-note", onNote);
+  }, [editor, t]);
   const [draftSize, setDraftSize] = useState<PageSize>(pageSize);
   const [draftOrientation, setDraftOrientation] = useState<PageOrientation>(pageOrientation);
   const [draftMargin, setDraftMargin] = useState<PageMargin>(pageMargin);
@@ -701,6 +717,16 @@ export function DocsSurface({
       if (!plain && typeof navigator.clipboard.read === "function") {
         const items = await navigator.clipboard.read();
         for (const item of items) {
+          const imageType = item.types.find((type) => /^image\/(png|jpeg|gif|webp)$/.test(type));
+          if (!imageType) continue;
+          const blob = await item.getType(imageType);
+          const count = await insertImages(editor.view, [blob]);
+          if (count > 0) {
+            setClipNote("");
+            return;
+          }
+        }
+        for (const item of items) {
           if (!item.types.includes("text/html")) continue;
           const html = await (await item.getType("text/html")).text();
           const clean = pastedHtml(html).trim();
@@ -942,11 +968,11 @@ export function DocsSurface({
             <div className="ow-docs-page-row">
               {ruler && !narrow ? <RulerV /> : null}
               <article
-                className={`ow-a4${narrow ? " is-flow" : ""}${columns === 2 ? " is-cols-2" : columns === 3 ? " is-cols-3" : ""}${dropCap ? " is-dropcap" : ""}`}
+                className={`ow-a4${narrow ? " is-flow" : " is-paged"}${columns === 2 ? " is-cols-2" : columns === 3 ? " is-cols-3" : ""}${dropCap ? " is-dropcap" : ""}`}
                 data-page-size={pageSize}
                 data-page-orientation={pageOrientation}
                 data-page-margin={pageMargin}
-                style={{ "--page-margin": `${marginPx(pageMargin)}px`, ...(narrow ? {} : { width: pageBox(pageSize, pageOrientation).width, minHeight: pageBox(pageSize, pageOrientation).height }) } as CSSProperties}
+                style={{ "--page-margin": `${marginPx(pageMargin)}px`, "--page-h": `${pageBox(pageSize, pageOrientation).height}px`, ...(narrow ? {} : { width: pageBox(pageSize, pageOrientation).width, minHeight: pageBox(pageSize, pageOrientation).height }) } as CSSProperties}
               >
                 {watermark ? <p className="ow-watermark" aria-hidden="true">{watermark}</p> : null}
                 <input className="ow-a4-edge" aria-label={t("header")} value={header} placeholder={t("header")} onChange={(event) => onHeader(event.target.value.slice(0, 240))} />

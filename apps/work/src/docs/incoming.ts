@@ -7,6 +7,7 @@ import { createSheetFile, serializeSheet } from "../sheets/model";
 import { xlsxToSheets } from "../sheets/xlsx";
 import { createSlidesFile, defaultItems, serializeSlides, type SlidesFile } from "../slides/model";
 import { htmlToDoc, textToDoc } from "./import-html";
+import { importDocx } from "./docx-import";
 import { docxParagraphs, pptxSlides } from "./office";
 import { createOrvdoc, parseOrvdoc, serializeOrvdoc } from "./orvdoc";
 import type { FileKind } from "../storage/types";
@@ -49,8 +50,23 @@ export async function prepareImport(file: File, titleFallback: string): Promise<
     return { name: base, kind: "pdf", mime: "application/pdf", bytes, openAsDoc: false };
   }
   if (extension === "docx") {
-    const lines = await docxParagraphs(bytes);
-    const doc = createOrvdoc({ id: createId(), title: base, content: textToDoc(lines.join("\n\n")) });
+    let doc;
+    try {
+      const imported = await importDocx(bytes);
+      doc = {
+        ...createOrvdoc({ id: createId(), title: base, content: imported.content }),
+        header: imported.header,
+        footer: imported.footer,
+        pageNumber: imported.pageNumber,
+        pageSize: imported.pageSize,
+        pageOrientation: imported.pageOrientation,
+        pageMargin: imported.pageMargin,
+      };
+    } catch {
+      // Respaldo: solo el texto, si el XML no se puede interpretar.
+      const lines = await docxParagraphs(bytes);
+      doc = createOrvdoc({ id: createId(), title: base, content: textToDoc(lines.join("\n\n")) });
+    }
     return { name: doc.title, kind: "doc", mime: "application/vnd.orvupi.doc+json", bytes: serializeOrvdoc(doc), openAsDoc: true };
   }
   if (extension === "pptx") {

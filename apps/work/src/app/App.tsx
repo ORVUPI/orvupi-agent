@@ -212,7 +212,7 @@ export function App() {
                 ]}
               />
               <label className="ow-file">
-                <input aria-label={workspace.t("uploadFile")} type="file" accept=".orvdoc,.json,.txt,.md,.html,.htm,.pdf,.png,.jpg,.jpeg,.gif,.webp,.csv,.xlsx" onChange={(event) => {
+                <input aria-label={workspace.t("uploadFile")} type="file" accept=".orvdoc,.json,.txt,.md,.html,.htm,.pdf,.png,.jpg,.jpeg,.gif,.webp,.csv,.xlsx,.docx,.pptx" onChange={(event) => {
                   const file = event.target.files?.[0];
                   event.target.value = "";
                   if (file) void workspace.importUserFile(file, workspace.folderId);

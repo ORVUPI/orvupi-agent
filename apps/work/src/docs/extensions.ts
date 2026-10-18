@@ -16,6 +16,8 @@ import { StarterKit } from "@tiptap/starter-kit";
 import { safeHref, safeImageSrc, sanitizeForeignHtml } from "../security/sanitize";
 import { headingEntries, jumpToHeading } from "./jump";
 import { DocChart, DocDrawing, Equation } from "./objects";
+import { ImagePaste } from "./image-paste";
+import { Pagination } from "./pagination";
 
 const HEX = /^#[0-9a-f]{6}$/i;
 
@@ -29,6 +31,17 @@ const LocalImage = Image.extend({
         renderHTML: (attributes: { src?: string | null }) => {
           const src = typeof attributes.src === "string" ? safeImageSrc(attributes.src) : null;
           return src ? { src } : {};
+        },
+      },
+      align: {
+        default: "left",
+        parseHTML: (element: HTMLElement) => {
+          const value = element.getAttribute("data-align");
+          return value === "center" || value === "right" ? value : "left";
+        },
+        renderHTML: (attributes: { align?: string }) => {
+          const align = attributes.align === "center" || attributes.align === "right" ? attributes.align : "left";
+          return align === "left" ? {} : { "data-align": align };
         },
       },
     };
@@ -58,7 +71,14 @@ const PageBreak = Node.create({
       const foot = document.createElement("p");
       foot.className = "ow-break-foot";
       const paint = () => {
-        const root = editor.view.dom.closest(".ow-docs");
+        let root: Element | null = null;
+        try {
+          root = editor.view.dom.closest(".ow-docs");
+        } catch {
+          // Al abrir un documento que ya tiene saltos, la vista aún no está montada.
+          setTimeout(() => { if (!editor.isDestroyed) paint(); }, 0);
+          return;
+        }
         const edges = root?.querySelectorAll<HTMLInputElement>(".ow-a4-edge") ?? [];
         head.textContent = edges[0]?.value ?? "";
         foot.textContent = edges[1]?.value ?? "";
@@ -234,6 +254,42 @@ declare module "@tiptap/core" {
     };
   }
 }
+
+function points(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0 && n <= 200 ? Math.round(n) : null;
+}
+
+/** Espaciado anterior y posterior del párrafo (pt), como en Word y Google Docs. */
+const ParagraphSpacing = Extension.create({
+  name: "paragraphSpacing",
+  addGlobalAttributes() {
+    return [
+      {
+        types: ["paragraph", "heading"],
+        attributes: {
+          spaceBefore: {
+            default: null,
+            parseHTML: (element: HTMLElement) => points(element.getAttribute("data-space-before")),
+            renderHTML: (attributes: { spaceBefore?: number | null }) => {
+              const value = points(attributes.spaceBefore);
+              return value === null ? {} : { "data-space-before": String(value), style: `margin-top: ${value}pt` };
+            },
+          },
+          spaceAfter: {
+            default: null,
+            parseHTML: (element: HTMLElement) => points(element.getAttribute("data-space-after")),
+            renderHTML: (attributes: { spaceAfter?: number | null }) => {
+              const value = points(attributes.spaceAfter);
+              return value === null ? {} : { "data-space-after": String(value), style: `margin-bottom: ${value}pt` };
+            },
+          },
+        },
+      },
+    ];
+  },
+});
 
 const Indent = Extension.create({
   name: "indent",
@@ -525,6 +581,9 @@ export function createExtensions(placeholder: string) {
     LineHeight.configure({ types: ["heading", "paragraph"] }),
     TextAlign.configure({ types: ["heading", "paragraph"] }),
     Indent,
+    ParagraphSpacing,
+    Pagination,
+    ImagePaste,
     DocKeys,
     MarkHygiene,
     TaskList,

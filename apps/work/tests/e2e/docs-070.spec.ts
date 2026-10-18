@@ -238,7 +238,9 @@ test("insertar, la tabla y la página cambian el documento", async ({ page }) =>
   await doc.keyboard.type("Pie");
   await expect(doc.getByRole("textbox", { name: "Pie", exact: true })).toHaveValue("Pie");
   await pick(doc, "Insertar", "Número de página");
-  await expect(doc.locator(".ow-page-num")).toHaveText("1");
+  // Vista paginada (0.8.1): el pie de abajo es el de la última hoja; el salto añadido hace dos.
+  await expect(doc.locator(".ow-page-num")).toHaveText("2");
+  await expect(editor.locator(".ow-pgap .ow-pgap-num")).toHaveText("1");
   await editor.click();
   await doc.keyboard.press("Control+End");
   await doc.keyboard.press("Enter");
