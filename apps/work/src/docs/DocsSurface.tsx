@@ -309,6 +309,21 @@ export function DocsSurface({
   const [pageOpen, setPageOpen] = useState(false);
   const [countOpen, setCountOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
+  useEffect(() => {
+    if (!charsOpen && !pageOpen && !countOpen && !noteOpen) return;
+    // Los diálogos sueltos de Docs se cierran con Escape y reciben el foco al abrirse.
+    const first = document.querySelector<HTMLElement>(".ow-doc-dialog input, .ow-doc-dialog button");
+    if (!charsOpen) first?.focus({ preventScroll: true });
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setCharsOpen(false);
+      setPageOpen(false);
+      setCountOpen(false);
+      setNoteOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [charsOpen, pageOpen, countOpen, noteOpen]);
   const [noteDraft, setNoteDraft] = useState("");
   const [clipNote, setClipNote] = useState("");
   const [draftSize, setDraftSize] = useState<PageSize>(pageSize);
@@ -812,7 +827,7 @@ export function DocsSurface({
       </header>
       {menus ? (
         <div className={`ow-docs-toolwrap${narrow ? " is-narrow" : ""}`}>
-          <div className="ow-docs-toolbar" role="toolbar" aria-label={t("toolbarLabel")} onMouseDown={holdPointer}>
+          <div className="ow-docs-toolbar" role="toolbar" aria-label={t("toolbarLabel")} data-viewing={mode === "view" ? "" : undefined} onMouseDown={holdPointer}>
             <DocIcon label={t("find")} onClick={onFind}><Search size={20} /></DocIcon>
             <DocIcon label={t("undo")} onClick={() => run(() => editor?.chain().focus().undo().run())}><Undo2 size={20} /></DocIcon>
             <DocIcon label={t("redo")} onClick={() => run(() => editor?.chain().focus().redo().run())}><Redo2 size={20} /></DocIcon>
@@ -871,6 +886,7 @@ export function DocsSurface({
             <DocIcon label={t("indentMore")} onClick={() => bumpIndent(1)}><span className="ow-indent" aria-hidden="true">→</span></DocIcon>
             <DocIcon label={t("clearFormat")} onClick={() => run(() => editor?.chain().focus().unsetAllMarks().clearNodes().run())}><RemoveFormatting size={20} /></DocIcon>
             <span className="ow-tool-grow" />
+            <span className="ow-keep">
             <ToolMenu
               label={t("modeLabel")}
               value={mode === "edit" ? t("modeEdit") : t("modeView")}
@@ -881,6 +897,7 @@ export function DocsSurface({
               onPick={(id) => setMode(id === "view" ? "view" : "edit")}
             />
             <DocIcon label={t("hideMenus")} onClick={() => setMenus(false)}><ChevronUp size={20} /></DocIcon>
+            </span>
           </div>
         </div>
       ) : (
@@ -954,7 +971,7 @@ export function DocsSurface({
           <p className="ow-count" aria-live="polite">{words}</p>
         </div>
       </div>
-      {narrow ? (
+      {narrow && mode === "edit" ? (
         <div className="ow-format-dock" role="toolbar" aria-label={t("toolbarLabel")} onPointerDown={() => rememberSelection()}>
           <div className="ow-format-scroll" ref={dockRef}>
             <DocIcon label={t("bold")} pressed={editor?.isActive("bold")} onClick={() => run(() => editor?.chain().focus().toggleBold().run())}><strong>B</strong></DocIcon>
@@ -976,7 +993,7 @@ export function DocsSurface({
             <DocIcon label={t("clearFormat")} onClick={() => run(() => editor?.chain().focus().unsetAllMarks().clearNodes().run())}><RemoveFormatting size={20} /></DocIcon>
             <span className="ow-dock-end" aria-hidden="true" />
           </div>
-          <button type="button" className="ow-dock-more" aria-label={t("moreFormat")} onMouseDown={(event) => event.preventDefault()} onClick={() => dockRef.current?.scrollBy({ left: 160 })}>›</button>
+          <button type="button" className="ow-dock-more" aria-label={t("moreFormat")} onMouseDown={(event) => event.preventDefault()} onClick={() => { const dock = dockRef.current; if (!dock) return; if (dock.scrollLeft + dock.clientWidth >= dock.scrollWidth - 2) dock.scrollTo({ left: 0 }); else dock.scrollBy({ left: 160 }); }}>›</button>
         </div>
       ) : null}
       <input
@@ -1588,9 +1605,6 @@ function MenuInline({
         { id: "tools", label: t("menuTools"), items: [
           { id: "versions", label: t("versions"), onSelect: onVersions },
           { id: "count", label: t("wordCount"), onSelect: onWordCount },
-        ] },
-        { id: "ext", label: t("menuExtensions"), items: [
-          { id: "none", label: t("noExtensions"), static: true },
         ] },
         { id: "help", label: t("menuHelp"), items: [
           { id: "keys", label: t("shortcuts"), hint: "Ctrl+/", onSelect: onShortcuts },

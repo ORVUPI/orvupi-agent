@@ -239,7 +239,7 @@ test("Docs encaja, oculta la regla vertical y reserva sitio al teclado", async (
   const tableOverlapY = Math.min(tableBox.y + tableBox.height, moreBox.y + moreBox.height) - Math.max(tableBox.y, moreBox.y);
   expect(tableOverlap > 0 && tableOverlapY > 0 ? tableOverlap : 0).toBeLessThanOrEqual(2);
   await docs.locator(".ow-menu-overflow").click();
-  for (const label of ["Archivo", "Editar", "Ver", "Insertar", "Formato", "Herramientas", "Extensiones", "Ayuda"]) {
+  for (const label of ["Archivo", "Editar", "Ver", "Insertar", "Formato", "Herramientas", "Ayuda"]) {
     await expect(docs.getByRole("menuitem", { name: label, exact: true })).toBeVisible();
   }
   await docs.getByRole("menuitem", { name: "Archivo", exact: true }).click();

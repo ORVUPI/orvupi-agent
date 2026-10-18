@@ -1158,3 +1158,7 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
   .ow-shell, .ow-shell.is-doc main, .ow-docs, .ow-docs-body, .ow-docs-scroll { display: block; height: auto; overflow: visible; background: #fff; }
   .ow-a4 { border: 0; box-shadow: none; }
 }
+
+/* Modo Visualización: los controles de edición se ven desactivados; el selector de modo sigue activo. */
+.ow-keep { display: contents; }
+.ow-docs-toolbar[data-viewing] > :not(.ow-keep):not(.ow-tool-grow) { opacity: 0.38; pointer-events: none; }

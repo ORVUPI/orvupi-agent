@@ -67,5 +67,7 @@ export default defineConfig({
   build: {
     sourcemap: false,
     chunkSizeWarningLimit: 1200,
+    // Las fuentes nunca van en línea: la CSP solo permite font-src 'self'.
+    assetsInlineLimit: (file: string) => (/\.(woff2?|ttf|otf)$/i.test(file) ? false : undefined),
   },
 });

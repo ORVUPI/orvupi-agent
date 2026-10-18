@@ -355,9 +355,7 @@ test("buscar, salto de página, ortografía, regla, modo, menús, versiones, ata
   await doc.getByRole("menuitem", { name: "Atajos" }).click();
   await expect(doc.getByText("Alt + Mayús + 5 tacha")).toBeVisible();
   await doc.keyboard.press("Escape");
-  await doc.getByRole("menuitem", { name: "Extensiones" }).click();
-  await expect(doc.getByText("No hay extensiones en este dispositivo")).toBeVisible();
-  await doc.keyboard.press("Escape");
+  await expect(doc.getByRole("menuitem", { name: "Extensiones" })).toHaveCount(0);
   await doc.getByRole("button", { name: "Ocultar menús" }).click();
   await expect(doc.locator(".ow-docs-toolbar")).toHaveCount(0);
   await doc.getByRole("button", { name: "Mostrar menús" }).click();

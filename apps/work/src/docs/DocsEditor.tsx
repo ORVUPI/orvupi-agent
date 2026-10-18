@@ -56,7 +56,7 @@ export function DocsEditor({
   onClose: () => void;
 }) {
   const t = (key: MessageKey, vars?: Record<string, string | number>) => translate(locale, key, vars);
-  const [name, setName] = useState(initial.title);
+  const [name, setName] = useState(record.name || initial.title);
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const [findOpen, setFindOpen] = useState(false);
   const [findQuery, setFindQuery] = useState("");
@@ -67,7 +67,7 @@ export function DocsEditor({
   const [linkError, setLinkError] = useState("");
   const [saveError, setSaveError] = useState(false);
   const fileRef = useRef(initial);
-  const nameRef = useRef(initial.title);
+  const nameRef = useRef(record.name || initial.title);
   const headerRef = useRef(initial.header);
   const footerRef = useRef(initial.footer);
   const layoutRef = useRef({

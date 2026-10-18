@@ -309,9 +309,7 @@ test("archivo, editar, ver, herramientas, extensiones y ayuda responden", async 
   await pick(doc, "Ayuda", "Atajos");
   await expect(doc.getByText("Alt + Mayús + 5 tacha")).toBeVisible();
   await doc.keyboard.press("Escape");
-  await doc.getByRole("menuitem", { name: "Extensiones", exact: true }).click();
-  await expect(doc.getByText("No hay extensiones en este dispositivo")).toBeVisible();
-  await doc.keyboard.press("Escape");
+  await expect(doc.getByRole("menuitem", { name: "Extensiones", exact: true })).toHaveCount(0);
   await doc.evaluate(() => {
     window.print = () => {
       document.documentElement.dataset.printed = "1";
