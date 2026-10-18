@@ -1,3 +1,5 @@
+import { clearStored, isStored, modelWeightsKey } from "./download";
+
 /** ORVUPI AI en el navegador: catálogo de modelos, comprobación del dispositivo, descarga con progreso y generación en un Web Worker. */
 
 export type AiDevice = "webgpu" | "wasm";
@@ -49,10 +51,13 @@ export function usableModels(support: AiSupport): AiModel[] {
   });
 }
 
-/** El más adecuado: GPU pequeño si hay WebGPU con f16; si no, CPU (WASM); en móviles con poca memoria, el muy ligero. */
+/** El más adecuado. En el móvil, el más ligero (SmolLM2 135M, ~137 MB, WASM): cabe en memoria y se descarga en poco
+ *  tiempo; los de ~500 MB fallaban al descargar o al cargarse en teléfonos. En ordenador: GPU pequeño si hay WebGPU
+ *  con f16; si no, CPU (WASM). */
 export function recommendedModel(support: AiSupport): AiModel | null {
   const list = usableModels(support);
   if (list.length === 0) return null;
+  if (support.mobile) return list.find((model) => model.id === "smol135-cpu") ?? list[0]!;
   const gpu = list.find((model) => model.id === "qwen05-gpu");
   if (gpu) return gpu;
   if (support.mobile && (support.memoryGb ?? 4) < 4) return list.find((model) => model.id === "smol135-cpu") ?? list[0]!;
@@ -61,19 +66,20 @@ export function recommendedModel(support: AiSupport): AiModel | null {
 
 /** ¿Ya está descargado? (caché del navegador de transformers.js) */
 export async function isModelCached(model: AiModel): Promise<boolean> {
-  try {
-    if (typeof caches === "undefined") return false;
-    const cache = await caches.open("transformers-cache");
-    const keys = await cache.keys();
-    const file = model.dtype === "q8" ? "model_quantized.onnx" : `model_${model.dtype}.onnx`;
-    return keys.some((request) => request.url.includes(model.repo) && request.url.includes(file));
-  } catch {
-    return false;
-  }
+  return isStored(modelWeightsKey(model.repo, model.dtype));
 }
 
 export async function removeCachedModels(): Promise<void> {
-  if (typeof caches !== "undefined") await caches.delete("transformers-cache");
+  await clearStored();
+  // Restos de la versión 0.8.4, que guardaba en la Cache API
+  if (typeof caches !== "undefined") await caches.delete("transformers-cache").catch(() => false);
+}
+
+/** Error de carga con la causa clasificada en el worker. */
+export class AiLoadError extends Error {
+  constructor(message: string, public readonly kind: string, public readonly detail: Record<string, string | number>) {
+    super(message);
+  }
 }
 
 export type ChatMessage = { role: "system" | "user" | "assistant"; content: string };
@@ -90,13 +96,13 @@ export class AiEngine {
     if (this.worker) return this.worker;
     const worker = new Worker(new URL("./worker.ts", import.meta.url), { type: "module" });
     worker.addEventListener("message", (event: MessageEvent) => {
-      const msg = event.data as { type: string; id?: number; text?: string; loaded?: number; total?: number; key?: string; tokens?: number; ms?: number; message?: string };
+      const msg = event.data as { type: string; id?: number; text?: string; loaded?: number; total?: number; key?: string; tokens?: number; ms?: number; message?: string; kind?: string; detail?: Record<string, string | number> };
       if (msg.type === "progress") this.loading?.onProgress(msg.loaded ?? 0, msg.total ?? 0);
       else if (msg.type === "ready") { this.loadedKey = msg.key ?? ""; this.loading?.resolve(); this.loading = null; }
       else if (msg.type === "token" && msg.id !== undefined) this.pending.get(msg.id)?.onToken(msg.text ?? "");
       else if (msg.type === "done" && msg.id !== undefined) { this.pending.get(msg.id)?.resolve({ text: msg.text ?? "", tokens: msg.tokens ?? 0, ms: msg.ms ?? 0 }); this.pending.delete(msg.id); }
       else if (msg.type === "error") {
-        const error = new Error(msg.message ?? "error");
+        const error = new AiLoadError(msg.message ?? "error", msg.kind ?? "other", msg.detail ?? {});
         if (msg.id !== undefined && this.pending.has(msg.id)) { this.pending.get(msg.id)!.reject(error); this.pending.delete(msg.id); }
         else if (this.loading) { this.loading.reject(error); this.loading = null; }
       }

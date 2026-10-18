@@ -1,10 +1,19 @@
 /// <reference lib="webworker" />
 /** ORVUPI AI: el modelo corre aquí, en un Web Worker del propio navegador. El texto nunca sale del dispositivo;
  *  solo se descargan los pesos del modelo (Hugging Face) y el motor WASM la primera vez, y quedan en caché. */
+import { ModelDownloadError, robustFetch } from "./download";
 import { env, InterruptableStoppingCriteria, pipeline, TextStreamer, type TextGenerationPipeline } from "@huggingface/transformers";
 
 env.allowLocalModels = false;
-env.useBrowserCache = true;
+// Los pesos se guardan en OPFS con nuestra descarga por partes (la Cache API falla con entradas de cientos de MB).
+env.useBrowserCache = false;
+let onFileProgress: (file: string, loaded: number, total: number) => void = () => undefined;
+const nativeFetch = fetch.bind(self);
+env.fetch = (input: string | URL, init?: RequestInit) => {
+  const url = String(input);
+  if (/^https:\/\/huggingface\.co\//.test(url) && (!init?.method || init.method === "GET")) return robustFetch(url, (f, l, t) => onFileProgress(f, l, t), nativeFetch);
+  return nativeFetch(input, init);
+};
 // Motor ONNX en WebAssembly desde jsDelivr (gratuito, versión fijada al paquete instalado).
 const onnx = env.backends.onnx as { wasm?: { wasmPaths?: string } };
 if (onnx.wasm) onnx.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/dist/";
@@ -34,18 +43,20 @@ self.addEventListener("message", async (event: MessageEvent<Incoming>) => {
         return;
       }
       const files = new Map<string, { loaded: number; total: number }>();
+      let last = 0;
+      onFileProgress = (file, loadedNow, totalNow) => {
+        files.set(file, { loaded: loadedNow, total: totalNow });
+        const now = Date.now();
+        if (now - last < 200 && loadedNow < totalNow) return;
+        last = now;
+        let loaded = 0;
+        let total = 0;
+        for (const f of files.values()) { loaded += f.loaded; total += f.total; }
+        post({ type: "progress", loaded, total, file });
+      };
       generator = (await pipeline("text-generation", msg.model, {
         device: msg.device,
         dtype: msg.dtype as "q4f16",
-        progress_callback: (info: { status: string; file?: string; loaded?: number; total?: number }) => {
-          if (info.status === "progress" && info.file && info.total) {
-            files.set(info.file, { loaded: info.loaded ?? 0, total: info.total });
-            let loaded = 0;
-            let total = 0;
-            for (const f of files.values()) { loaded += f.loaded; total += f.total; }
-            post({ type: "progress", loaded, total, file: info.file });
-          }
-        },
       })) as TextGenerationPipeline;
       loadedKey = key;
       // Calentamiento corto: compila el modelo para que la primera respuesta no tarde de más
@@ -78,6 +89,17 @@ self.addEventListener("message", async (event: MessageEvent<Incoming>) => {
       post({ type: "done", id: msg.id, text, tokens, ms: Math.round(performance.now() - started) });
     }
   } catch (error) {
-    post({ type: "error", id: (msg as { id?: number }).id, message: error instanceof Error ? error.message : String(error) });
+    post({ type: "error", id: (msg as { id?: number }).id, ...describeError(error, msg.type === "load" ? msg.device : undefined) });
   }
 });
+
+/** Clasifica el error para que la interfaz explique la causa real. */
+function describeError(error: unknown, device?: string): { message: string; kind: string; detail: Record<string, string | number> } {
+  if (error instanceof ModelDownloadError) return { message: error.message, kind: error.kind, detail: error.detail };
+  const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+  if (/allocat|out of memory|Aborted\(\)|memory access out of bounds|OOM|RangeError: Array buffer/i.test(message)) return { message, kind: "memory", detail: {} };
+  if (device === "webgpu" && /webgpu|gpu|adapter|device lost|no available backend/i.test(message)) return { message, kind: "gpu", detail: {} };
+  if (/QuotaExceeded/i.test(message)) return { message, kind: "quota", detail: {} };
+  if (/network error|Failed to fetch|NetworkError|Load failed/i.test(message)) return { message, kind: "network", detail: {} };
+  return { message, kind: "other", detail: {} };
+}

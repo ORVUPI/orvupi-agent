@@ -403,6 +403,145 @@ export function decodeCurveAccount(owner, data) {
   };
 }
 
+
+// Raydium LaunchLab: programa y layout de raydium-sdk-V2 (src/raydium/launchpad). Misma lógica que verify/launchlab.ts.
+export const LAUNCHLAB_PROGRAM = "LanMV9sAd7wArD4vJFi2qDdfnVhFxYSUg6eADduJ3uj";
+export const CPMM_PROGRAM = "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C";
+const CPMM_DEFAULT_CONFIG = "D4FPEruKEHrG5TenZ2mpDGEfu1iUvTiqBxvpU8HLBvC2";
+const LL_WSOL = "So11111111111111111111111111111111111111112";
+const LL_USD1 = "USD1ttGY1N17NEEHLmELoaybftRBUSErhqYiQzvEmuB";
+const LL_POOL_DISC = [247, 237, 227, 245, 215, 195, 222, 70];
+const LL_PLATFORM_DISC = [160, 78, 128, 0, 248, 83, 230, 160];
+export const LAUNCHLAB_QUOTE_SYMBOLS = Object.freeze({ [LL_WSOL]: "SOL", [LL_USD1]: "USD1" });
+
+function startsWithDisc(data, disc) {
+  if (!data || data.length < disc.length) return false;
+  return disc.every((byte, i) => data[i] === byte);
+}
+
+export async function launchlabPoolPda(mint, quote = LL_WSOL) {
+  const a = decodeBase58(mint);
+  const b = decodeBase58(quote);
+  if (!a || !b || a.length !== 32) throw new Error("Mint no decodifica.");
+  return pda([new TextEncoder().encode("pool"), a, b], LAUNCHLAB_PROGRAM);
+}
+
+export async function cpmmPoolPda(config, mintA, mintB) {
+  const a = decodeBase58(mintA);
+  const b = decodeBase58(mintB);
+  let first = a;
+  let second = b;
+  for (let i = 0; i < 32; i += 1) {
+    if (a[i] !== b[i]) {
+      if (a[i] > b[i]) [first, second] = [b, a];
+      break;
+    }
+  }
+  return pda([new TextEncoder().encode("pool"), decodeBase58(config), first, second], CPMM_PROGRAM);
+}
+
+export function decodeLaunchlabPool(address, owner, data, expectedMint) {
+  if (owner !== LAUNCHLAB_PROGRAM || !data || data.length < 365 || !startsWithDisc(data, LL_POOL_DISC)) return null;
+  const read = (offset) => readU64(data, offset) ?? 0n;
+  const key = (index) => encodeBase58(data.subarray(141 + index * 32, 173 + index * 32));
+  const mintA = key(2);
+  if (expectedMint && mintA !== expectedMint) return null;
+  const code = data[17];
+  const realB = read(61);
+  const target = read(69);
+  const scaled = target > 0n ? (realB * 10000n) / target : null;
+  return {
+    pool: address,
+    status: code === 0 ? "en_curva" : code === 1 ? "migrando" : code === 2 ? "migrado" : "desconocido",
+    migrateType: data[20] === 0 ? "amm" : data[20] === 1 ? "cpmm" : "desconocido",
+    decimalsQuote: data[19],
+    virtualA: read(37),
+    virtualB: read(45),
+    realA: read(53),
+    realB,
+    target,
+    progress: scaled === null ? null : `${scaled / 100n}.${(scaled % 100n).toString().padStart(2, "0")}`,
+    platformId: key(1),
+    mintA,
+    mintB: key(3),
+  };
+}
+
+function platformCpConfig(account) {
+  if (!account || account.owner !== LAUNCHLAB_PROGRAM || !startsWithDisc(account.data, LL_PLATFORM_DISC) || account.data.length < 720) return null;
+  return encodeBase58(account.data.subarray(688, 720));
+}
+
+function cpmmHolds(account, mintA, mintB) {
+  if (!account || account.owner !== CPMM_PROGRAM || account.data.length < 232) return false;
+  const t0 = encodeBase58(account.data.subarray(168, 200));
+  const t1 = encodeBase58(account.data.subarray(200, 232));
+  return (t0 === mintA && t1 === mintB) || (t0 === mintB && t1 === mintA);
+}
+
+async function readAccounts(state, addresses) {
+  const result = await rpcCall(state, "getMultipleAccounts", [addresses, { encoding: "base64", commitment: "confirmed" }]);
+  const list = result.ok && result.value && result.value.value;
+  if (!Array.isArray(list) || list.length !== addresses.length) return null;
+  try {
+    return list.map((item) => parseAccount(item));
+  } catch {
+    return null;
+  }
+}
+
+/** Curva de Raydium LaunchLab en la forma de la ficha. Null si no hay; { failed: true } si no se pudo leer. */
+async function readLaunchlabCurve(state, mint) {
+  const candidates = [await launchlabPoolPda(mint, LL_WSOL), await launchlabPoolPda(mint, LL_USD1)];
+  const accounts = await readAccounts(state, candidates);
+  if (!accounts) return { failed: true };
+  let pool = null;
+  for (let i = 0; i < candidates.length && !pool; i += 1) {
+    if (accounts[i]) pool = decodeLaunchlabPool(candidates[i], accounts[i].owner, accounts[i].data, mint);
+  }
+  if (!pool) return null;
+  let migratedPool = null;
+  let migratedNote = "no_aplica";
+  if (pool.status === "migrado" && pool.migrateType !== "cpmm") migratedNote = "amm_v4_no_derivable";
+  else if (pool.status === "migrado") {
+    migratedNote = "no_localizado";
+    const configs = [CPMM_DEFAULT_CONFIG];
+    const platform = await readAccounts(state, [pool.platformId]);
+    const cp = platform ? platformCpConfig(platform[0]) : null;
+    if (cp && !configs.includes(cp)) configs.push(cp);
+    const pdas = [];
+    for (const config of configs) pdas.push(await cpmmPoolPda(config, pool.mintA, pool.mintB));
+    const found = await readAccounts(state, pdas);
+    const index = found ? found.findIndex((account) => cpmmHolds(account, pool.mintA, pool.mintB)) : -1;
+    if (index >= 0) {
+      migratedPool = pdas[index];
+      migratedNote = "localizado";
+    }
+  }
+  return {
+    present: true,
+    status: "verificado",
+    virtualToken: pool.virtualA.toString(),
+    virtualQuote: pool.virtualB.toString(),
+    realToken: pool.realA.toString(),
+    realQuote: pool.realB.toString(),
+    complete: pool.status !== "en_curva",
+    launchlab: {
+      platform: "raydium_launchlab",
+      pool: pool.pool,
+      quoteMint: pool.mintB,
+      quoteDecimals: pool.decimalsQuote,
+      raised: pool.realB.toString(),
+      target: pool.target.toString(),
+      progress: pool.progress,
+      status: pool.status,
+      migrateType: pool.migrateType,
+      migratedPool,
+      migratedNote,
+    },
+  };
+}
+
 function fromBase64(value) {
   const binary = atob(value);
   const out = new Uint8Array(binary.length);
@@ -519,6 +658,35 @@ function curveFromShown(value) {
     realToken: amountOrNull(value.realToken),
     realQuote: amountOrNull(value.realQuote),
     complete: value.complete === true || value.complete === false ? value.complete : null,
+    ...(status === "verificado" && launchlabFromShown(value.launchlab) ? { launchlab: launchlabFromShown(value.launchlab) } : {}),
+  };
+}
+
+/** Copia la curva de Raydium LaunchLab que trae Verify solo si tiene la forma exacta de la ficha. */
+function launchlabFromShown(value) {
+  if (!value || typeof value !== "object") return null;
+  const address = (item) => typeof item === "string" && /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(item);
+  const digits = (item) => typeof item === "string" && /^\d+$/.test(item);
+  if (value.platform !== "raydium_launchlab" || !address(value.pool) || !address(value.quoteMint)) return null;
+  if (!Number.isInteger(value.quoteDecimals) || value.quoteDecimals < 0 || value.quoteDecimals > 18) return null;
+  if (!digits(value.raised) || !digits(value.target)) return null;
+  if (value.progress !== null && !(typeof value.progress === "string" && /^\d+\.\d{2}$/.test(value.progress))) return null;
+  if (!["en_curva", "migrando", "migrado", "desconocido"].includes(value.status)) return null;
+  if (!["amm", "cpmm", "desconocido"].includes(value.migrateType)) return null;
+  if (value.migratedPool !== null && !address(value.migratedPool)) return null;
+  if (!["localizado", "no_localizado", "amm_v4_no_derivable", "no_aplica"].includes(value.migratedNote)) return null;
+  return {
+    platform: "raydium_launchlab",
+    pool: value.pool,
+    quoteMint: value.quoteMint,
+    quoteDecimals: value.quoteDecimals,
+    raised: value.raised,
+    target: value.target,
+    progress: value.progress,
+    status: value.status,
+    migrateType: value.migrateType,
+    migratedPool: value.migratedPool,
+    migratedNote: value.migratedNote,
   };
 }
 
@@ -997,6 +1165,22 @@ export async function readMint(options) {
     if (curve.status === "no_disponible") card.curve.status = "fallo";
   } else {
     card.curve = curveAbsent(mint);
+  }
+  if (card.curve.present === false) {
+    let launch = null;
+    try {
+      launch = await readLaunchlabCurve(state, mint);
+    } catch {
+      launch = { failed: true };
+    }
+    if (launch && launch.failed) {
+      if (!String(mint).endsWith("pump")) {
+        card.curve = { ...emptyCurve(), status: "fallo" };
+        errors.push({ method: "getMultipleAccounts", httpStatus: null, message: "No se pudo comprobar la curva de Raydium LaunchLab. No se rellena con cero.", at: state.now().toISOString() });
+      }
+    } else if (launch) {
+      card.curve = launch;
+    }
   }
   const supply = await rpcCall(state, "getTokenSupply", [mint, { commitment: "confirmed" }]);
   if (!supply.ok) {

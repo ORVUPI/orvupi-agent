@@ -160,5 +160,27 @@ describe("Raydium LaunchLab con cuentas reales capturadas", () => {
     assert.doesNotMatch(curve.explain.es, /No aplica/);
     assert.equal(reading.facts?.find((item) => item.id === "curva")?.state, "ok");
     assert.equal((reading.shown as { curve?: { status?: string } } | null)?.curve?.status, "verificado");
+    // Guardar en el Cuaderno desde Verify conserva la curva de LaunchLab.
+    const read = await import(pathToFileURL(path.join(repoRoot(), "web/v2/shared/solana-read.js")).href);
+    const model = await import(pathToFileURL(path.join(repoRoot(), "web/v2/shared/notebook-model.js")).href);
+    const card = read.cardFromShown(reading.shown);
+    assert.ok(card);
+    assert.deepEqual(card.curve.launchlab, {
+      platform: "raydium_launchlab",
+      pool: ORVUPI_POOL,
+      quoteMint: WSOL,
+      quoteDecimals: 9,
+      raised: "494750000",
+      target: "30000000000",
+      progress: "1.64",
+      status: "en_curva",
+      migrateType: "cpmm",
+      migratedPool: null,
+      migratedNote: "no_aplica",
+    });
+    assert.deepEqual(model.validateCard(card).error ?? null, null);
+    const tampered = structuredClone(reading.shown) as { curve: { launchlab: { raised: string } } };
+    tampered.curve.launchlab.raised = "1e9";
+    assert.equal(Object.hasOwn(read.cardFromShown(tampered).curve, "launchlab"), false);
   });
 });
