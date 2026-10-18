@@ -1,5 +1,15 @@
 # Registro de cambios
 
+## 0.8.3 — 2026-10-18
+
+Documentos grandes y cuatro arreglos de Docs pedidos desde producción, más pestañas del documento como en Google Docs.
+
+- Documentos grandes: el límite por archivo pasa a 1 GB (imágenes sueltas 64 MB) y lo que manda es la cuota real del navegador (`navigator.storage.estimate`, con `persist()`). Las imágenes se guardan aparte como binarios en OPFS/IndexedDB (`orv-asset:`), no como base64 dentro del documento; se muestran reducidas (lado máx. 2000 px) pero se exportan originales. Barra de progreso al importar. Si no cabe: «No hay espacio: el archivo ocupa X y el navegador solo deja Y libres…». Probado con DOCX de 30, 100 y 250 MB.
+- Tamaño de letra: − y + funcionan con selección y con el cursor dentro de una palabra, con los pasos de Google Docs (8…96) y el número se puede escribir.
+- La hoja se centra en todo el ancho como en Google Docs, con el panel de pestañas abierto o cerrado y con zoom; la regla queda alineada.
+- Imágenes: marco con 8 tiradores (esquinas mantienen proporción, lados no; Mayús lo invierte), ratón y táctil, tamaño en vivo, límite al ancho de página y barra flotante (en línea, ajustar texto, detrás, delante, tamaño original, eliminar). El tamaño se guarda y se exporta.
+- Pestañas del documento: añadir, subpestañas anidadas con contraer/expandir, menú ⋮ y clic derecho (añadir subpestaña, eliminar con confirmación y deshacer, duplicar, cambiar nombre, emoji, copiar enlace #tab=, ocultar esquema, mover arriba/abajo, mover a / sacar del grupo), arrastrar y soltar (pulsación larga en táctil), esquema de títulos, teclado, cajón lateral en móvil. Se guardan y se exportan a DOCX/PDF como secciones con título y salto de página.
+
 ## 0.8.2 — 2026-10-18
 
 Docs y la importación de DOCX dan otro paso hacia un procesador de textos completo. Todo se edita, se guarda y se exporta a DOCX y PDF.

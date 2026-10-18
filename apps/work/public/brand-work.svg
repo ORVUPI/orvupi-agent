@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ORVUPI Work">
+  <title>ORVUPI Work</title>
+  <defs>
+    <radialGradient id="g" cx="0.38" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#ff8fb0"/>
+      <stop offset="0.55" stop-color="#ff4f86"/>
+      <stop offset="1" stop-color="#e23170"/>
+    </radialGradient>
+  </defs>
+  <!-- tentáculos -->
+  <g fill="none" stroke="#f0447d" stroke-width="5.5" stroke-linecap="round">
+    <path d="M17 36c-6 2-10 7-8 12 1.6 3.6 6 3.2 6.4 0.2"/>
+    <path d="M22 41c-3 6-3 12 2 15 3.4 2 6-1 4.4-3.4"/>
+    <path d="M47 36c6 2 10 7 8 12-1.6 3.6-6 3.2-6.4 0.2"/>
+  </g>
+  <!-- documento -->
+  <g transform="rotate(-8 41 46)">
+    <path d="M31 33h15l6 6v19a2 2 0 0 1-2 2H31a2 2 0 0 1-2-2V35a2 2 0 0 1 2-2z" fill="#fff" stroke="#102032" stroke-width="2"/>
+    <path d="M46 33v6h6" fill="#e8eef7" stroke="#102032" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M33.5 43h14M33.5 47.5h14M33.5 52h9" stroke="#1d4e89" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <!-- cabeza -->
+  <path d="M32 4c2.4 0 4 1.4 4.2 3.2C45 8.8 51 15.6 51 24c0 9.6-8.5 16-19 16S13 33.6 13 24c0-8.6 6.2-15.4 15-16.8C28.3 5.4 29.8 4 32 4z" fill="url(#g)"/>
+  <ellipse cx="25.5" cy="24" rx="4.6" ry="5.2" fill="#fff"/>
+  <ellipse cx="38.5" cy="24" rx="4.6" ry="5.2" fill="#fff"/>
+  <circle cx="26.6" cy="25" r="2.8" fill="#102032"/>
+  <circle cx="39.6" cy="25" r="2.8" fill="#102032"/>
+  <circle cx="27.6" cy="23.8" r="0.9" fill="#fff"/>
+  <circle cx="40.6" cy="23.8" r="0.9" fill="#fff"/>
+  <path d="M28.5 32.5c2.2 1.8 4.8 1.8 7 0" fill="none" stroke="#9c1446" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- tentáculos que sujetan el documento -->
+  <g fill="none" stroke="#f0447d" stroke-width="5.5" stroke-linecap="round">
+    <path d="M27 38c0 4 2 6 5 6.5"/>
+    <path d="M40 39c2 3 3.5 6 3 10"/>
+  </g>
+  <g fill="#ffd6c2"><circle cx="31.5" cy="44.3" r="1.1"/><circle cx="43" cy="48.5" r="1.1"/><circle cx="10.5" cy="47" r="1"/><circle cx="53.5" cy="47" r="1"/></g>
+</svg>

@@ -14,3 +14,9 @@ Esta es una alfa. Los puntos siguientes están abiertos a propósito o porque el
 10. El job de CI de esta app cubre Chromium. Firefox, Safari y Edge quedan por recorrer.
 11. `glob`, transitivo de Workbox, está marcado como deprecado en npm. No hay aviso de vulnerabilidad en `npm audit`.
 12. El panel de IA cabe en una columna de 300 px. En pantallas de menos de 960 px ocupa hasta el 46 % inferior y puede tapar parte del papel hasta que se cierra.
+
+## 0.8.3
+
+- Las imágenes guardadas aparte (`orv-asset:`) de documentos borrados no se eliminan todavía del almacenamiento (huérfanas); se recuperan al restablecer el espacio de trabajo.
+- La importación DOCX no usa un Web Worker: la descompresión ya es asíncrona (DecompressionStream) y las imágenes se guardan una a una, así que la interfaz no se congela (pausa máxima medida ≈100 ms).
+- Restaurar una versión antigua solo afecta a la pestaña activa.

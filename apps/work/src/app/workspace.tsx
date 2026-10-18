@@ -184,7 +184,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const route = parseEditorPath(window.location.pathname);
     if (!route) {
-      applyDocumentChrome("ORVUPI Work", withBase("/favicon-32.png"));
+      applyDocumentChrome("ORVUPI Work", withBase("/brand-work.svg"));
       return;
     }
     const listed = files.find((file) => file.id === route.id)?.name ?? "";

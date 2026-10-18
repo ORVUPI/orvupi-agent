@@ -1365,3 +1365,11 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-docs-tab span.ow-tab-caret, .ow-docs-tab span.ow-tab-icon { flex: none; }
 .ow-docs-tab .ow-tab-main span.ow-tab-title { flex: 1; font-size: 14px; }
 .ow-tablist .ow-docs-outline { margin-top: 2px; margin-bottom: 6px; }
+
+/* 0.8.3 · Marca de Work: pulpo con documento, centrado con el texto */
+.ow-brandmark { display: none; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 0; margin: 0; border: 0; border-radius: 12px; background: transparent; cursor: pointer; flex: none; }
+.ow-brandmark img { display: block; width: 32px; height: 32px; }
+.ow-brandmark:focus-visible { outline: 2px solid #1d4e89; outline-offset: 1px; }
+.ow-top-title { display: inline-flex; align-items: center; gap: 8px; line-height: 1; }
+.ow-top-logo { display: block; width: 28px; height: 28px; flex: none; }
+@media (max-width: 960px) { .ow-brandmark { display: inline-flex; } .ow-top-logo { display: none; } .ow-top-actions { align-items: center; } }
