@@ -1074,7 +1074,7 @@ export function DocsSurface({
           <p className="ow-count" aria-live="polite">{words}</p>
         </div>
       </div>
-      <ImageResize editor={editor} editable={mode === "edit"} labels={{ inline: t("imgInline"), square: t("imgSquare"), behind: t("imgBehind"), front: t("imgFront"), original: t("imgOriginal"), remove: t("imgRemove"), frame: t("imgFrame"), size: t("imgSize"), more: t("imgMore") }} />
+      <ImageResize editor={editor} editable={mode === "edit"} labels={{ inline: t("imgInline"), square: t("imgSquare"), behind: t("imgBehind"), front: t("imgFront"), original: t("imgOriginal"), remove: t("imgRemove"), frame: t("imgFrame"), size: t("imgSize"), more: t("imgMore"), move: t("imgMove") }} />
       <TableDialog t={t} onInsert={(rows, cols) => run(() => { if (editor) insertTableAt(editor, rows, cols); })} />
       {narrow && mode === "edit" && tablePick ? (
         <div className="ow-table-pop" role="dialog" aria-label={t("table")} onKeyDown={(event) => { if (event.key === "Escape") setTablePick(false); }}>

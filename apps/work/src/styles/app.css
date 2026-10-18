@@ -1323,6 +1323,9 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-imgframe-h.is-w { left: 0; top: 50%; cursor: ew-resize; }
 @media (pointer: coarse), (max-width: 720px) { .ow-imgframe-h { width: 24px; height: 24px; margin: -12px 0 0 -12px; border-radius: 50%; } }
 .ow-imgframe-size { position: absolute; left: 50%; top: 100%; transform: translate(-50%, 8px); background: #102032; color: #fff; font-size: 12px; padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
+.ow-imgframe-move { position: absolute; inset: 0; pointer-events: auto; cursor: move; touch-action: none; -webkit-user-select: none; user-select: none; }
+.ow-imgframe.is-moving { outline-style: dashed; }
+.ow-imgcaret { position: fixed; z-index: 38; height: 3px; border-radius: 2px; background: #e0245e; pointer-events: none; box-shadow: 0 0 0 1px #fff; }
 .ow-imgmore { position: absolute; right: 16px; top: 16px; width: 28px; height: 28px; padding: 0; display: grid; place-items: center; border-radius: 50%; border: 2px solid #102032; background: #fff; color: #102032; fill: currentColor; box-shadow: 0 1px 4px rgba(16, 32, 50, 0.3); cursor: pointer; pointer-events: auto; touch-action: manipulation; }
 .ow-imgmore:hover, .ow-imgmore[aria-expanded="true"] { background: #ffe1ea; }
 .ow-imgmore.is-outside { right: auto; left: 100%; top: 0; margin-left: 16px; }

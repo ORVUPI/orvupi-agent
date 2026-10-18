@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
 import type { Editor } from "@tiptap/react";
 import { NodeSelection } from "@tiptap/pm/state";
+import { clampNum } from "./layout-nodes";
 
 /**
  * Redimensionar imágenes como en Google Docs: marco con 8 tiradores (las esquinas mantienen la
@@ -9,11 +10,14 @@ import { NodeSelection } from "@tiptap/pm/state";
  * seleccionar solo hay tiradores y un botón pequeño ⋯ en la esquina de la imagen que abre un menú
  * compacto. El menú se cierra al elegir, al tocar fuera o con Esc, no aparece mientras se arrastra
  * y se coloca dentro de la parte visible (visualViewport, teclado del móvil). Ratón, táctil y teclado.
+ * Mover: con la imagen ya seleccionada, arrastrar desde el centro. «En línea» la recoloca en otra
+ * posición del texto (cursor de inserción visible); «Ajustar texto», «Detrás» y «Delante» la mueven
+ * libremente y guardan offsetX/offsetY. Sin seleccionar, el dedo desplaza la página como siempre.
  */
 
 type Handle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
 const HANDLES: Handle[] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
-type Labels = { inline: string; square: string; behind: string; front: string; original: string; remove: string; frame: string; size: string; more: string };
+type Labels = { inline: string; square: string; behind: string; front: string; original: string; remove: string; frame: string; size: string; more: string; move: string };
 
 const MENU_W = 196;
 const GAP = 8;
@@ -37,6 +41,9 @@ export function ImageResize({ editor, labels, editable }: { editor: Editor | nul
   const [menuPos, setMenuPos] = useState<{ left: number; top: number; maxHeight: number } | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const moreRef = useRef<HTMLButtonElement | null>(null);
+  const move = useRef<{ id: number; x: number; y: number; active: boolean; zoom: number; drop: number | null } | null>(null);
+  const [caret, setCaret] = useState<{ left: number; top: number; width: number } | null>(null);
+  const [moving, setMoving] = useState(false);
   const drag = useRef<{ handle: Handle; x: number; y: number; w: number; h: number; ratio: number; max: number; zoom: number; id: number } | null>(null);
 
   useEffect(() => {
@@ -228,6 +235,84 @@ export function ImageResize({ editor, labels, editable }: { editor: Editor | nul
     if (size) commit({ width: size.w, height: size.h });
   };
 
+  const wrapNow = String(node.attrs.wrap ?? "inline");
+  const onMoveDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0 && event.pointerType === "mouse") return;
+    event.preventDefault();
+    event.stopPropagation();
+    try {
+      (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    } catch {
+      // Algunos navegadores no capturan punteros sintéticos; el arrastre sigue funcionando.
+    }
+    move.current = { id: event.pointerId, x: event.clientX, y: event.clientY, active: false, zoom: box.zoom || 1, drop: null };
+  };
+  const onMoveMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const m = move.current;
+    if (!m || m.id !== event.pointerId) return;
+    const dx = event.clientX - m.x;
+    const dy = event.clientY - m.y;
+    if (!m.active) {
+      if (Math.hypot(dx, dy) < 5) return;
+      m.active = true;
+      setMoving(true);
+      setMenuOpen(false);
+    }
+    if (wrapNow === "inline") {
+      // La imagen es un bloque: se coloca entre párrafos (línea de inserción visible).
+      const hit = editor.view.posAtCoords({ left: event.clientX, top: event.clientY });
+      if (!hit) return;
+      const doc = editor.state.doc;
+      let start = 0;
+      let found: { start: number; size: number } | null = null;
+      doc.forEach((child, offset) => {
+        if (!found && hit.pos >= offset && hit.pos <= offset + child.nodeSize) found = { start: offset, size: child.nodeSize };
+        start = offset;
+      });
+      void start;
+      if (!found) return;
+      const block = found as { start: number; size: number };
+      const dom = editor.view.nodeDOM(block.start);
+      if (!(dom instanceof HTMLElement)) return;
+      const r = dom.getBoundingClientRect();
+      const before = event.clientY < r.top + r.height / 2;
+      m.drop = before ? block.start : block.start + block.size;
+      setCaret({ left: r.left, top: before ? r.top - 2 : r.bottom, width: Math.max(24, r.width) });
+    } else {
+      target.img.style.transform = `translate(${dx}px, ${dy}px)`;
+    }
+  };
+  const onMoveUp = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const m = move.current;
+    if (!m || m.id !== event.pointerId) return;
+    move.current = null;
+    setMoving(false);
+    setCaret(null);
+    target.img.style.transform = "";
+    if (!m.active || event.type === "pointercancel") return;
+    if (wrapNow === "inline") {
+      const drop = m.drop;
+      if (drop === null || (drop >= target.pos && drop <= target.pos + node.nodeSize)) return;
+      editor.chain().command(({ tr }) => {
+        const current = tr.doc.nodeAt(target.pos);
+        if (!current) return false;
+        tr.delete(target.pos, target.pos + current.nodeSize);
+        const at = tr.mapping.map(drop);
+        tr.insert(at, current);
+        tr.setSelection(NodeSelection.create(tr.doc, at));
+        return true;
+      }).run();
+      return;
+    }
+    const sign = String(node.attrs.align ?? "left") === "right" ? -1 : 1;
+    const dx = ((event.clientX - m.x) / m.zoom) * sign;
+    const dy = (event.clientY - m.y) / m.zoom;
+    commit({
+      offsetX: clampNum((Number(node.attrs.offsetX) || 0) + dx, -2000, 2000, 0),
+      offsetY: clampNum((Number(node.attrs.offsetY) || 0) + dy, -2000, 2000, 0),
+    });
+  };
+
   const original = () => {
     const natural = { w: target.img.naturalWidth || Number(node.attrs.width) || 300, h: target.img.naturalHeight || Number(node.attrs.height) || 200 };
     const max = pageWidth();
@@ -254,12 +339,23 @@ export function ImageResize({ editor, labels, editable }: { editor: Editor | nul
     else if (event.key === "End") go(items.length - 1);
     else if (event.key === "Tab") setMenuOpen(false);
   };
-  const dragging = live !== null;
+  const dragging = live !== null || moving;
   const small = box.width < 72 || box.height < 56;
   return (
     <>
-      <div className="ow-imgframe" role="group" aria-label={labels.frame} style={{ left: box.left, top: box.top, width: box.width, height: box.height }}>
-        {HANDLES.map((handle) => (
+      <div className={`ow-imgframe${moving ? " is-moving" : ""}`} role="group" aria-label={labels.frame} style={{ left: box.left, top: box.top, width: box.width, height: box.height }}>
+        {live ? null : (
+          <div
+            className="ow-imgframe-move"
+            title={labels.move}
+            aria-hidden="true"
+            onPointerDown={onMoveDown}
+            onPointerMove={onMoveMove}
+            onPointerUp={onMoveUp}
+            onPointerCancel={onMoveUp}
+          />
+        )}
+        {moving ? null : HANDLES.map((handle) => (
           <span
             key={handle}
             className={`ow-imgframe-h is-${handle}`}
@@ -297,6 +393,7 @@ export function ImageResize({ editor, labels, editable }: { editor: Editor | nul
           </button>
         )}
       </div>
+      {caret ? <div className="ow-imgcaret" aria-hidden="true" style={{ left: caret.left, top: caret.top, width: caret.width }} /> : null}
       {menuOpen && !dragging ? (
         <div
           ref={menuRef}
