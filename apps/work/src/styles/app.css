@@ -1323,11 +1323,18 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-imgframe-h.is-w { left: 0; top: 50%; cursor: ew-resize; }
 @media (pointer: coarse), (max-width: 720px) { .ow-imgframe-h { width: 24px; height: 24px; margin: -12px 0 0 -12px; border-radius: 50%; } }
 .ow-imgframe-size { position: absolute; left: 50%; top: 100%; transform: translate(-50%, 8px); background: #102032; color: #fff; font-size: 12px; padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
-.ow-imgbar { position: fixed; z-index: 36; display: flex; flex-wrap: wrap; gap: 4px; max-width: calc(100vw - 16px); background: #fff; border: 1px solid #e8d6c0; border-radius: 10px; padding: 4px; box-shadow: 0 2px 8px rgba(60, 64, 67, 0.25); }
-.ow-imgbar button { border: 0; background: transparent; color: #102032; font: inherit; font-size: 13px; padding: 6px 10px; border-radius: 6px; min-height: 32px; cursor: pointer; }
-.ow-imgbar button[aria-pressed="true"] { background: #ffe1ea; }
-.ow-imgbar button.is-danger { color: #b3261e; }
-@media (pointer: coarse) { .ow-imgbar button { min-height: 40px; } }
+.ow-imgmore { position: absolute; right: 16px; top: 16px; width: 28px; height: 28px; padding: 0; display: grid; place-items: center; border-radius: 50%; border: 2px solid #102032; background: #fff; color: #102032; fill: currentColor; box-shadow: 0 1px 4px rgba(16, 32, 50, 0.3); cursor: pointer; pointer-events: auto; touch-action: manipulation; }
+.ow-imgmore:hover, .ow-imgmore[aria-expanded="true"] { background: #ffe1ea; }
+.ow-imgmore.is-outside { right: auto; left: 100%; top: 0; margin-left: 16px; }
+.ow-imgmore:focus-visible { outline: 3px solid #e0245e; outline-offset: 2px; }
+@media (pointer: coarse) { .ow-imgmore { width: 36px; height: 36px; right: 20px; top: 20px; } }
+.ow-imgmenu { position: fixed; z-index: 37; box-sizing: border-box; display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; background: #fff; border: 2px solid #102032; border-radius: 10px; padding: 4px; box-shadow: 0 4px 14px rgba(16, 32, 50, 0.28); }
+.ow-imgmenu button { display: flex; align-items: center; gap: 6px; width: 100%; text-align: left; border: 0; background: transparent; color: #102032; font: inherit; font-size: 14px; padding: 6px 10px 6px 6px; border-radius: 6px; min-height: 34px; cursor: pointer; }
+.ow-imgmenu button:hover, .ow-imgmenu button:focus-visible { background: #ffe1ea; outline: none; }
+.ow-imgmenu button.is-danger { color: #b3261e; }
+.ow-imgmenu-check { display: inline-block; width: 18px; text-align: center; color: #e0245e; font-weight: 700; }
+.ow-imgmenu-sep { height: 1px; background: #e8d6c0; margin: 4px 2px; }
+@media (pointer: coarse) { .ow-imgmenu button { min-height: 42px; } }
 
 /* 0.8.3 · Pestañas del documento (como Google Docs) */
 .ow-docs-tabs { display: flex; flex-direction: column; gap: 4px; }
@@ -1400,7 +1407,7 @@ body, .ow-shell, .ow-docs, .ow-docs-body, .ow-docs-scroll { background-color: va
 .ow-sidebar a[aria-current="page"], .ow-sidebar button[aria-current="page"], .ow-nav-group [aria-current="page"] { background: var(--pink-soft); box-shadow: inset 0 0 0 2px #102032; color: #102032; }
 .ow-menubar { background: #fff; border: 2px solid #102032; box-shadow: var(--sticker); }
 .ow-sheet-grid th, .ow-grid-head, .ow-col-head, .ow-row-head { background: var(--cream); }
-.ow-imgbar { border: 2px solid #102032; box-shadow: var(--sticker); background: #fff; }
-.ow-imgbar button[aria-pressed="true"] { background: var(--pink-soft); }
+.ow-imgmenu { box-shadow: var(--sticker); }
+.ow-imgmenu button[aria-checked="true"] { background: var(--pink-soft); }
 :focus-visible { outline-color: #102032; }
 .ow-docs .ow-menubar { border: 0; box-shadow: none; background: transparent; }

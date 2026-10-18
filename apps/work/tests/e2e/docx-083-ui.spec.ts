@@ -152,10 +152,13 @@ test("redimensionar una imagen con los tiradores; se guarda y la barra cambia el
     await expect.poll(async () => Number(await img.getAttribute("width"))).toBeLessThanOrEqual(Math.ceil(pageWidth));
     // Barra: ajustar texto y tamaño original
     await selectImg();
-    const bar = doc.getByRole("toolbar", { name: "Imagen seleccionada" });
-    await bar.getByRole("button", { name: "Ajustar texto" }).click();
+    const more = doc.getByRole("button", { name: "Opciones de imagen" });
+    await more.click();
+    await doc.getByRole("menuitemradio", { name: "Ajustar texto" }).click();
     await expect(img).toHaveAttribute("data-wrap", "square");
-    await bar.getByRole("button", { name: "Tamaño original" }).click();
+    await selectImg();
+    await more.click();
+    await doc.getByRole("menuitem", { name: "Tamaño original" }).click();
     await expect.poll(async () => Number(await img.getAttribute("width"))).toBe(Math.min(400, Math.floor(pageWidth)));
     await shot(doc, "imagen-barra", size);
     // Se guarda: recargar y sigue con su tamaño
