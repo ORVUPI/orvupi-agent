@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { FileRecord, StorageService } from "../storage/types";
 import { formatBytes } from "../security/names";
-import { aiEngine, detectAiSupport, isModelCached, recommendedModel, usableModels, type AiModel, type AiSupport, type ChatMessage } from "./engine";
+import { AiLoadError, aiEngine, detectAiSupport, isModelCached, recommendedModel, usableModels, type AiModel, type AiSupport, type ChatMessage } from "./engine";
 import { buildMessages, combineMessages, MAX_PARTS, MAX_TOKENS, splitText, type AiAction } from "./prompts";
 import { aiFiles, textOfFile } from "./sources";
 
@@ -26,6 +26,13 @@ const ES = {
   noGpu: "Este dispositivo no ofrece WebGPU con f16: se usará el modo sin GPU (más lento pero funciona).",
   mobileNote: "En el móvil la primera respuesta puede tardar; el modelo muy ligero es más rápido.",
   loadError: "No se pudo cargar el modelo: {error}. Prueba con el modelo más ligero o revisa la conexión para la primera descarga.",
+  errOffline: "No hay conexión a internet. La descarga se ha guardado hasta donde llegó ({done} de {total}): conéctate y pulsa de nuevo para continuar.",
+  errNetwork: "La conexión se cortó varias veces mientras se descargaba el modelo ({done} de {total}). Lo descargado queda guardado: pulsa de nuevo para continuar donde se quedó, mejor con wifi.",
+  errHttp: "El servidor de modelos (Hugging Face) respondió con el error {status}. Inténtalo más tarde.",
+  errBlocked: "El navegador bloqueó la conexión con {host} (un bloqueador de anuncios, una VPN o la red del trabajo). Permite ese dominio y vuelve a intentarlo.",
+  errQuota: "No hay espacio suficiente en el navegador para guardar el modelo (necesita {need}, hay {free} libres). Libera espacio o elige el modelo muy ligero.",
+  errMemory: "El modelo no cabe en la memoria de este dispositivo. Elige «SmolLM2 135M · muy ligero».",
+  errGpu: "La GPU de este dispositivo no pudo ejecutar el modelo (WebGPU). Elige un modelo «sin GPU (WASM)».",
   source: "2. Qué texto usar",
   srcOpen: "Documento abierto",
   srcSelection: "Texto seleccionado",
@@ -107,6 +114,7 @@ export function AiStudio({
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
   const stopRef = useRef(false);
+  const progressRef = useRef<{ loaded: number; total: number } | null>(null);
   const uid = useId();
 
   useEffect(() => {
@@ -141,13 +149,32 @@ export function AiStudio({
     setLoadError("");
     setProgress(null);
     try {
-      await engine.load(model, (loaded, total) => setProgress({ loaded, total }));
+      progressRef.current = null;
+      await engine.load(model, (loaded, total) => { progressRef.current = { loaded, total }; setProgress({ loaded, total }); });
       setCached((c) => ({ ...c, [model.id]: true }));
       setPhase("ready");
     } catch (error) {
       setPhase("error");
-      setLoadError(f(L.loadError, { error: error instanceof Error ? error.message : String(error) }));
+      setLoadError(explainLoadError(error));
     }
+  }
+
+  function explainLoadError(error: unknown): string {
+    const size = (n: number) => formatBytes(n, locale);
+    const p = progressRef.current;
+    const done = size(p?.loaded ?? 0);
+    const total = size(p?.total ?? (model?.sizeMb ?? 0) * 1_000_000);
+    if (error instanceof AiLoadError) {
+      const d = error.detail;
+      if (error.kind === "offline") return f(L.errOffline, { done, total });
+      if (error.kind === "network") return f(L.errNetwork, { done, total });
+      if (error.kind === "http") return f(L.errHttp, { status: d.status ?? "?" });
+      if (error.kind === "blocked") return f(L.errBlocked, { host: d.host ?? "huggingface.co" });
+      if (error.kind === "quota") return f(L.errQuota, { need: size(Number(d.need ?? (model?.sizeMb ?? 0) * 1_000_000)), free: size(Number(d.free ?? 0)) });
+      if (error.kind === "memory") return L.errMemory;
+      if (error.kind === "gpu") return L.errGpu;
+    }
+    return f(L.loadError, { error: error instanceof Error ? error.message : String(error) });
   }
 
   async function sourceText(): Promise<string> {

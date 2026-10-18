@@ -21,6 +21,11 @@ Esta es una alfa. Los puntos siguientes están abiertos a propósito o porque el
 - La importación DOCX no usa un Web Worker: la descompresión ya es asíncrona (DecompressionStream) y las imágenes se guardan una a una, así que la interfaz no se congela (pausa máxima medida ≈100 ms).
 - Restaurar una versión antigua solo afecta a la pestaña activa.
 
+## 0.8.5
+
+- SmolLM2 135M (el recomendado en el móvil) es rápido pero sus resúmenes en español son básicos; Qwen2.5 0.5B da mejores resultados si el teléfono tiene memoria y buena conexión (la descarga ya es por partes y reanudable).
+- El modelo se sirve desde Hugging Face (CDN gratuito). Alojarlo en orvupi.com no es viable con el límite de 25 MiB por archivo del alojamiento sin trocear los pesos.
+
 ## 0.8.4
 
 - La calidad de Qwen2.5 0.5B es modesta: los resúmenes pueden ser genéricos o repetir frases. El 1.5B es mejor pero más lento y pide más memoria.
