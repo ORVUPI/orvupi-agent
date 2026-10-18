@@ -111,9 +111,9 @@ test("redimensionar una imagen con los tiradores; se guarda y la barra cambia el
     await doc.keyboard.press("Enter");
     await doc.locator("input[type=file][accept*='image']").first().setInputFiles({ name: "foto.png", mimeType: "image/png", buffer: PNG });
     const img = editor.locator("img").first();
-    const selectImg = async () => { if (!(await doc.locator(".ow-imgframe").isVisible())) await img.click(); };
+    const selectImg = async () => { if (!(await doc.locator(".ow-imgframe").isVisible())) await img.click({ force: true }); };
     await expect(img).toBeVisible({ timeout: 20_000 });
-    await img.click();
+    await img.click({ force: true });
     const frame = doc.locator(".ow-imgframe");
     await expect(frame).toBeVisible();
     await expect(frame.locator(".ow-imgframe-h")).toHaveCount(8);
@@ -152,10 +152,13 @@ test("redimensionar una imagen con los tiradores; se guarda y la barra cambia el
     await expect.poll(async () => Number(await img.getAttribute("width"))).toBeLessThanOrEqual(Math.ceil(pageWidth));
     // Barra: ajustar texto y tamaño original
     await selectImg();
-    const bar = doc.getByRole("toolbar", { name: "Imagen seleccionada" });
-    await bar.getByRole("button", { name: "Ajustar texto" }).click();
+    const more = doc.getByRole("button", { name: "Opciones de imagen" });
+    await more.click();
+    await doc.getByRole("menuitemradio", { name: "Ajustar texto" }).click();
     await expect(img).toHaveAttribute("data-wrap", "square");
-    await bar.getByRole("button", { name: "Tamaño original" }).click();
+    await selectImg();
+    await more.click();
+    await doc.getByRole("menuitem", { name: "Tamaño original" }).click();
     await expect.poll(async () => Number(await img.getAttribute("width"))).toBe(Math.min(400, Math.floor(pageWidth)));
     await shot(doc, "imagen-barra", size);
     // Se guarda: recargar y sigue con su tamaño
