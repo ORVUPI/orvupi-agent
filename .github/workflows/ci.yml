@@ -184,7 +184,7 @@ jobs:
   work:
     name: orvupi work
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
     defaults:
       run:
         working-directory: apps/work

@@ -2,11 +2,12 @@ import { Extension } from "@tiptap/core";
 import { NodeSelection, Plugin, PluginKey, Selection } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
 import { safeImageSrc } from "../security/sanitize";
+import { hasAssetStore, putAsset } from "../storage/assets";
 
 /** Imágenes pegadas o arrastradas: capturas (image/png), «Copiar imagen» del navegador y HTML con <img>. */
 
 const TYPES = /^image\/(png|jpeg|gif|webp)$/;
-const MAX_INPUT_BYTES = 25 * 1024 * 1024;
+const MAX_INPUT_BYTES = 64 * 1024 * 1024;
 const TARGET_BYTES = 900 * 1024;
 const MAX_SIDE = 2000;
 
@@ -33,6 +34,26 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 /** Lee la imagen y, si es grande, la reduce para que quepa en el almacenamiento local. */
 export async function prepareImage(blob: Blob, alt = ""): Promise<PreparedImage | null> {
   if (!TYPES.test(blob.type) || blob.size <= 0 || blob.size > MAX_INPUT_BYTES) return null;
+  if (hasAssetStore()) {
+    // Se guarda el original como binario; en pantalla se pinta una copia reducida.
+    try {
+      let w = 0;
+      let h = 0;
+      try {
+        const bitmap = await createImageBitmap(blob);
+        w = bitmap.width;
+        h = bitmap.height;
+        bitmap.close();
+      } catch {
+        /* sin dimensiones: el editor usa las naturales */
+      }
+      const scale = Math.min(1, MAX_SIDE / Math.max(w, h || 1));
+      const asset = await putAsset(new Uint8Array(await blob.arrayBuffer()), blob.type);
+      return { src: asset, width: Math.round(w * scale), height: Math.round(h * scale), alt: alt.slice(0, 180) };
+    } catch {
+      /* sigue con la imagen incrustada */
+    }
+  }
   let src = await readAsDataUrl(blob);
   let width = 0;
   let height = 0;

@@ -366,12 +366,24 @@ export function createStorageService(db: IDBPDatabase<WorkDb>, blobs: BlobStore)
       if (!bytes) continue;
       packed.push({ record, bytesBase64: bytesToBase64(bytes) });
     }
+    // Imágenes de documentos guardadas aparte (orv-asset:): viajan en la copia.
+    const assetRefs = new Set<string>();
+    for (const entry of packed) {
+      if (entry.record.kind !== "doc") continue;
+      for (const match of decodeUtf8(base64ToBytes(entry.bytesBase64)).matchAll(/orv-asset:([a-z0-9]{8,64})\.(png|jpg|gif|webp)/g)) assetRefs.add(`${match[1]}.${match[2]}`);
+    }
+    const assets: Array<{ name: string; bytesBase64: string }> = [];
+    for (const name of assetRefs) {
+      const bytes = await blobs.read(`assets/${name}`);
+      if (bytes) assets.push({ name, bytesBase64: bytesToBase64(bytes) });
+    }
     const payload: WorkspaceBackup = {
       format: "orvupi-workspace",
       version: 1,
       exportedAt: nowIso(),
       settings,
       files: packed,
+      ...(assets.length > 0 ? { assets } : {}),
     };
     const encoded = encodeUtf8(JSON.stringify(payload));
     if (encoded.byteLength > MAX_BACKUP_BYTES) throw new WorkError("too-large");
@@ -390,6 +402,13 @@ export function createStorageService(db: IDBPDatabase<WorkDb>, blobs: BlobStore)
       throw new WorkError(parsed && isRecord(parsed) && parsed.format === "orvupi-workspace" ? "unsupported-version" : "invalid-format");
     }
     if (!Array.isArray(parsed.files)) throw new WorkError("invalid-format");
+    if (Array.isArray(parsed.assets)) {
+      for (const asset of parsed.assets) {
+        if (!isRecord(asset) || typeof asset.name !== "string" || typeof asset.bytesBase64 !== "string") continue;
+        if (!/^[a-z0-9]{8,64}\.(png|jpg|gif|webp)$/.test(asset.name)) continue;
+        await blobs.write(`assets/${asset.name}`, base64ToBytes(asset.bytesBase64));
+      }
+    }
     const rawLocale = isRecord(parsed.settings) ? parsed.settings.locale : null;
     const settings: AppSettings = rawLocale === "es" || rawLocale === "en" ? { locale: rawLocale } : { ...defaultSettings };
     const next: Array<{ record: FileRecord; bytes: Uint8Array }> = [];

@@ -4,14 +4,17 @@ import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import { CellSelection, cellAround } from "@tiptap/pm/tables";
 import { EditorContent, type Editor } from "@tiptap/react";
 import { ChevronDown, ChevronUp, Highlighter, Image as ImageIcon, Link2, List, ListChecks, ListOrdered, MessageSquare, Minus, Paintbrush, Pencil, Plus, Printer, Redo2, RemoveFormatting, Search, SpellCheck2, Star, Undo2 } from "lucide-react";
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { MessageKey } from "../i18n";
 import { MenuBar } from "../ui/menus";
-import { usePhone } from "../ui/phone";
+import { PHONE_QUERY, usePhone } from "../ui/phone";
 import { APP_VERSION } from "../version";
 import { pastedHtml, toRoman } from "./extensions";
 import { insertImages } from "./image-paste";
 import { jumpToHeading } from "./jump";
+import { ImageResize } from "./ImageResize";
+import { DocTabs } from "./DocTabs";
+import type { DocTab } from "./tabs";
 import { TableDialog, TableGrid, openTableDialog } from "../ui/TablePicker";
 import type { JsonNode, PageMargin, PageOrientation, PageSize } from "./model";
 
@@ -76,6 +79,37 @@ function plainFont(raw: unknown): string {
 }
 
 type Translate = (key: MessageKey, vars?: Record<string, string | number>) => string;
+
+/** Pasos del tamaño de letra (como Google Docs); fuera de ellos, de uno en uno. */
+const SIZE_STEPS = [8, 9, 10, 11, 12, 14, 18, 24, 30, 36, 48, 60, 72, 96];
+
+export function nextSize(current: number, dir: 1 | -1): number {
+  if (dir > 0) {
+    const up = SIZE_STEPS.find((step) => step > current);
+    return Math.min(400, up ?? current + 1);
+  }
+  const down = [...SIZE_STEPS].reverse().find((step) => step < current);
+  if (current > 96) return Math.max(96, current - 1);
+  return Math.max(1, down ?? current - 1);
+}
+
+/** Tamaño en el cursor: la marca de estilo o, si no la hay (título, estilo de párrafo), el tamaño real. */
+function currentPoint(editor: Editor | null): number {
+  if (!editor) return 11;
+  const raw = editor.getAttributes("textStyle")?.fontSize;
+  if (typeof raw === "string" && raw) return shownPoint(raw);
+  try {
+    const { node } = editor.view.domAtPos(editor.state.selection.from);
+    const element = node instanceof HTMLElement ? node : node.parentElement;
+    const px = element ? Number.parseFloat(getComputedStyle(element).fontSize) : NaN;
+    // Relativo al cuerpo del documento: en móvil el texto se muestra más grande (16px) pero sigue siendo 11 pt.
+    const base = Number.parseFloat(getComputedStyle(editor.view.dom).fontSize);
+    if (Number.isFinite(px) && px > 0 && Number.isFinite(base) && base > 0) return Math.min(400, Math.max(1, Math.round((11 * px) / base)));
+  } catch {
+    /* sin vista todavía */
+  }
+  return 11;
+}
 
 function shownPoint(raw: unknown): number {
   if (typeof raw !== "string" || raw.length === 0) return 11;
@@ -260,6 +294,11 @@ export function DocsSurface({
   find,
   rail,
   words,
+  tabs,
+  activeTab,
+  onSelectTab,
+  onTabsChange,
+  tabsSnapshot,
 }: {
   t: Translate;
   editor: Editor | null;
@@ -295,11 +334,28 @@ export function DocsSurface({
   find: ReactNode;
   rail?: ReactNode;
   words: string;
+  tabs: DocTab[];
+  activeTab: string;
+  onSelectTab: (id: string) => void;
+  onTabsChange: (tabs: DocTab[], select?: string) => void;
+  tabsSnapshot?: () => DocTab[];
 }) {
   const [menus, setMenus] = useState(true);
   const [ruler, setRuler] = useState(true);
   const [zoom, setZoom] = useState(100);
   const [tablePick, setTablePick] = useState(false);
+  // La hoja se centra en todo el ancho, como en Google Docs; el panel de pestañas va en el margen izquierdo.
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const [sheetW, setSheetW] = useState(816);
+  useLayoutEffect(() => {
+    const node = sheetRef.current;
+    if (!node || typeof ResizeObserver === "undefined") return;
+    const measure = () => setSheetW(Math.round(node.getBoundingClientRect().width));
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
   const scrollRef = useRef<HTMLDivElement>(null);
   const dockRef = useRef<HTMLDivElement>(null);
   const phone = usePhone();
@@ -308,8 +364,7 @@ export function DocsSurface({
   const [spell, setSpell] = useState(true);
   const [exportOpen, setExportOpen] = useState(false);
   const [brush, setBrush] = useState(false);
-  const [tabMenu, setTabMenu] = useState(false);
-  const [tabsOpen, setTabsOpen] = useState(true);
+  const [tabsOpen, setTabsOpen] = useState(() => !(typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia(PHONE_QUERY).matches));
   const [context, setContext] = useState<{ x: number; y: number } | null>(null);
   const [charsOpen, setCharsOpen] = useState(false);
   const [pageOpen, setPageOpen] = useState(false);
@@ -384,7 +439,7 @@ export function DocsSurface({
   }, []);
   const narrow = phone;
   const shownZoom = narrow ? 1 : zoom / 100;
-  const point = shownPoint(editor?.getAttributes("textStyle")?.fontSize);
+  const point = currentPoint(editor);
   const font = plainFont(editor?.getAttributes("textStyle")?.fontFamily);
   const style = (["1", "2", "3", "4", "5", "6"] as const).find((level) => editor?.isActive("heading", { level: Number(level) })) ?? "0";
   const headings = editor ? headingsOf(editor.getJSON() as JsonNode) : [];
@@ -768,7 +823,29 @@ export function DocsSurface({
   function applySize(next: number) {
     if (!Number.isFinite(next)) return;
     const size = Math.min(400, Math.max(1, Math.round(next)));
-    run(() => editor?.chain().focus().setFontSize(`${size}pt`).run());
+    run(() => {
+      if (!editor) return;
+      const { selection } = editor.state;
+      // Como Google Docs: con el cursor dentro de una palabra, el tamaño se aplica a esa palabra.
+      if (selection.empty) {
+        const $pos = selection.$from;
+        const text = $pos.parent.textContent;
+        const at = $pos.parentOffset;
+        const isWord = (ch: string | undefined) => !!ch && /[\p{L}\p{N}_]/u.test(ch);
+        let plain = true;
+        $pos.parent.forEach((child) => { if (!child.isText) plain = false; });
+        if (plain && isWord(text[at - 1]) && isWord(text[at])) {
+          let start = at;
+          let end = at;
+          while (isWord(text[start - 1])) start -= 1;
+          while (isWord(text[end])) end += 1;
+          const base = $pos.start();
+          editor.chain().focus().setTextSelection({ from: base + start, to: base + end }).setFontSize(`${size}pt`).setTextSelection(selection.from).run();
+          return;
+        }
+      }
+      editor.chain().focus().setFontSize(`${size}pt`).run();
+    });
   }
 
   function copyFormat() {
@@ -825,6 +902,7 @@ export function DocsSurface({
               <button type="button" className={`ow-doc-icon ${starred ? "is-on" : ""}`} aria-label={t("star")} aria-pressed={starred} onClick={onStar}>
                 <Star size={20} />
               </button>
+              {narrow ? <button type="button" className="ow-doc-icon ow-docs-tabs-open is-narrow" aria-label={t("tabsShow")} title={t("tabsShow")} aria-expanded={tabsOpen} onClick={() => setTabsOpen(true)}>☰</button> : null}
               <p role="status" className="ow-docs-save">{saveLabel}</p>
             </div>
             {menus ? (
@@ -852,7 +930,6 @@ export function DocsSurface({
                 </div>
               ) : null}
             </div>
-            <span className="ow-docs-avatar" aria-hidden="true">O</span>
           </div>
         </div>
       </header>
@@ -939,36 +1016,28 @@ export function DocsSurface({
       {find}
       {clipNote ? <p className="ow-clip" role="status">{clipNote}</p> : null}
       <div className="ow-docs-body">
-        {tabsOpen ? <aside className="ow-docs-tabs" aria-label={t("outlineTitle")}>
-          <div className="ow-docs-tabhead">
-            <button type="button" aria-label={t("outlineTitle")} onClick={() => setTabsOpen(false)}>‹</button>
-            <strong>{t("outlineTitle")}</strong>
-            <button type="button" aria-label={t("heading1")} onClick={() => run(() => editor?.chain().focus("end").insertContent({ type: "heading", attrs: { level: 1 }, content: [{ type: "text", text: t("heading1") }] }).run())}>+</button>
-          </div>
-          <div className="ow-docs-tab">
-            <img src={withBase("/avatar.png")} alt="" width={18} height={18} />
-            <span>{name}</span>
-            <button type="button" aria-label={t("menu")} aria-expanded={tabMenu} onClick={() => setTabMenu((value) => !value)}>⋮</button>
-            {tabMenu ? (
-              <div role="menu" aria-label={name}>
-                <button type="button" role="menuitem" onClick={() => { setTabMenu(false); onClose(); }}>{t("closeDoc")}</button>
-              </div>
-            ) : null}
-          </div>
-          {headings.length === 0 ? <p className="ow-docs-outline-empty">{t("outlineEmpty")}</p> : (
-            <ol className="ow-docs-outline">
-              {headings.map((item, index) => (
-                <li key={`${index}-${item.level}-${item.text}`} data-level={item.level}>
-                  <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => { if (editor) jumpToHeading(editor, index); }}>{item.text}</button>
-                </li>
-              ))}
-            </ol>
-          )}
-        </aside> : (
-          <button type="button" className="ow-docs-tabs-open" aria-label={t("outlineTitle")} onClick={() => setTabsOpen(true)}>›</button>
+        {tabsOpen ? (
+          <>
+            {narrow ? <button type="button" className="ow-tabs-scrim" aria-label={t("tabsHide")} tabIndex={-1} onClick={() => setTabsOpen(false)} /> : null}
+            <DocTabs
+              t={t}
+              tabs={tabs}
+              activeId={activeTab}
+              headings={headings}
+              narrow={narrow}
+              onSelect={(id) => { onSelectTab(id); if (narrow) setTabsOpen(false); }}
+              onChange={(next, select, keepOpen) => { onTabsChange(next, select); if (narrow && select && !keepOpen) setTabsOpen(false); }}
+              onJump={(index) => { if (editor) jumpToHeading(editor, index); if (narrow) setTabsOpen(false); }}
+              onHide={() => setTabsOpen(false)}
+              snapshot={tabsSnapshot}
+            />
+          </>
+        ) : narrow ? null : (
+          <button type="button" className="ow-docs-tabs-open" aria-label={t("tabsShow")} title={t("tabsShow")} onClick={() => setTabsOpen(true)}>›</button>
         )}
-        <div className="ow-docs-scroll" ref={scrollRef} style={{ paddingBottom: inset + (narrow ? 64 : 48) }}>
-          <div className={`ow-docs-sheet${narrow ? " is-flow" : ""}`} style={{ zoom: shownZoom }}>
+        <div className="ow-docs-scroll" ref={scrollRef} style={{ paddingBottom: inset + (narrow ? 64 : 48), "--tabs-w": `${tabsOpen ? 256 : 28}px`, "--sheet-w": `${sheetW}px` } as CSSProperties}>
+          <div className={`ow-docs-center${narrow ? " is-flow" : ""}`}>
+          <div ref={sheetRef} className={`ow-docs-sheet${narrow ? " is-flow" : ""}`} style={{ zoom: shownZoom }}>
             {ruler && !narrow ? <div className="ow-ruler-row"><div className="ow-vruler-spacer" /><RulerH /></div> : null}
             <div className="ow-docs-page-row">
               {ruler && !narrow ? <RulerV /> : null}
@@ -1001,9 +1070,11 @@ export function DocsSurface({
             </div>
             {narrow ? rail : null}
           </div>
+          </div>
           <p className="ow-count" aria-live="polite">{words}</p>
         </div>
       </div>
+      <ImageResize editor={editor} editable={mode === "edit"} labels={{ inline: t("imgInline"), square: t("imgSquare"), behind: t("imgBehind"), front: t("imgFront"), original: t("imgOriginal"), remove: t("imgRemove"), frame: t("imgFrame"), size: t("imgSize") }} />
       <TableDialog t={t} onInsert={(rows, cols) => run(() => { if (editor) insertTableAt(editor, rows, cols); })} />
       {narrow && mode === "edit" && tablePick ? (
         <div className="ow-table-pop" role="dialog" aria-label={t("table")} onKeyDown={(event) => { if (event.key === "Escape") setTablePick(false); }}>
@@ -1358,7 +1429,7 @@ function SizeBox({
   }
   return (
     <div className="ow-sizebox" ref={ref}>
-      <DocIcon label={t("sizeDown")} onClick={() => onApply(point - 1)}><Minus size={18} /></DocIcon>
+      <DocIcon label={t("sizeDown")} onClick={() => { const next = nextSize(point, -1); setDraft(String(next)); onApply(next); }}><Minus size={18} /></DocIcon>
       <input
         aria-label={t("size")}
         inputMode="numeric"
@@ -1382,7 +1453,7 @@ function SizeBox({
           }
         }}
       />
-      <DocIcon label={t("sizeUp")} onClick={() => onApply(point + 1)}><Plus size={18} /></DocIcon>
+      <DocIcon label={t("sizeUp")} onClick={() => { const next = nextSize(point, 1); setDraft(String(next)); onApply(next); }}><Plus size={18} /></DocIcon>
       {open ? (
         <div role="listbox" aria-label={t("size")}>
           {POINTS.map((size) => (

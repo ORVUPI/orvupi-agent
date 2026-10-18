@@ -1,4 +1,5 @@
 import { safeImageSrc } from "../security/sanitize";
+import { imageBytesSync, preloadAssets, releaseExportAssets } from "../storage/assets";
 import type { DocComment, JsonMark, JsonNode, PageMargin, PageOrientation, PageSize } from "./model";
 
 type Docx = typeof import("docx");
@@ -35,12 +36,11 @@ function fontName(value: unknown): string | undefined {
 function decodeImage(src: string): { data: Uint8Array; type: "png" | "jpg" | "gif" } | null {
   const safe = safeImageSrc(src);
   if (!safe) return null;
-  const mime = /^data:image\/(png|jpeg|gif|webp)/i.exec(safe)?.[1]?.toLowerCase();
+  const hit = imageBytesSync(safe);
+  if (!hit) return null;
+  const mime = hit.mime.split("/")[1];
   if (!mime || mime === "webp") return null;
-  const binary = atob((safe.split(",")[1] ?? "").replace(/\s+/g, ""));
-  const data = new Uint8Array(binary.length);
-  for (let index = 0; index < binary.length; index += 1) data[index] = binary.charCodeAt(index);
-  return { data, type: mime === "jpeg" ? "jpg" : (mime as "png" | "gif") };
+  return { data: hit.data, type: mime === "jpeg" ? "jpg" : (mime as "png" | "gif") };
 }
 
 function pngSize(data: Uint8Array): { width: number; height: number } | null {
@@ -348,6 +348,15 @@ const PAGE_TWIPS: Record<PageSize, { width: number; height: number }> = {
 const MARGINS: Record<PageMargin, number> = { narrow: 720, normal: 1440, wide: 2160 };
 
 export async function exportDocx(title: string, doc: JsonNode, header: string, footer: string, pageNumber = false, layout: DocxLayout = {}): Promise<Uint8Array> {
+  await preloadAssets(doc);
+  try {
+    return await buildDocx(title, doc, header, footer, pageNumber, layout);
+  } finally {
+    releaseExportAssets();
+  }
+}
+
+async function buildDocx(title: string, doc: JsonNode, header: string, footer: string, pageNumber = false, layout: DocxLayout = {}): Promise<Uint8Array> {
   const docx = await import("docx");
   const shapes = await import("docx/shapes");
   const size = PAGE_TWIPS[layout.pageSize ?? "a4"];

@@ -184,7 +184,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const route = parseEditorPath(window.location.pathname);
     if (!route) {
-      applyDocumentChrome("ORVUPI Work", withBase("/favicon-32.png"));
+      applyDocumentChrome("ORVUPI Work", withBase("/brand-work.svg"));
       return;
     }
     const listed = files.find((file) => file.id === route.id)?.name ?? "";
@@ -243,7 +243,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const reportError = useCallback(
     (error: unknown) => {
       const key = isWorkError(error) ? errorMessageKey(error.code) : "reasonGeneric";
-      pushToast(t(key));
+      pushToast(t(key, isWorkError(error) ? error.vars : undefined));
       if (import.meta.env.DEV) console.error(error);
     },
     [pushToast, t],
@@ -397,8 +397,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const importUserFile = useCallback(
     async (file: File, folderId?: string | null) => {
       if (!storage) return;
+      const progress = (phase: string, done = 0, total = 1) => window.dispatchEvent(new CustomEvent("ow-import-progress", { detail: { phase, done, total, name: file.name, size: file.size } }));
+      progress("start");
       try {
         const prepared = await prepareImport(file, t("untitled"));
+        progress("save");
         const saved = await storage.saveFile({
           name: prepared.name,
           kind: prepared.kind,
@@ -418,6 +421,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         reportError(error);
+      } finally {
+        progress("done");
       }
     },
     [pushToast, reportError, storage, t],

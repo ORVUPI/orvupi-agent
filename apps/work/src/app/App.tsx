@@ -5,7 +5,7 @@ import { AiPanel } from "../ui/AiPanel";
 import { CommandPalette, type Command } from "../ui/CommandPalette";
 import { ShellFrame, Sidebar, Topbar, type NavItem } from "../ui/chrome";
 import { Icon } from "../ui/icons";
-import { Dropdown, Modal, Toasts } from "../ui/overlay";
+import { Dropdown, Modal, ImportProgress, Toasts } from "../ui/overlay";
 import { UpdateBanner } from "../ui/UpdateBanner";
 import { ErrorState } from "../ui/kit";
 import { DrawingsScreen } from "../drawings/DrawingsScreen";
@@ -357,6 +357,7 @@ export function App() {
         onClose={() => workspace.setPaletteOpen(false)}
       />
       <Toasts items={workspace.toasts} onDismiss={workspace.dismissToast} />
+      <ImportProgress t={workspace.t} />
       <UpdateBanner title={workspace.t("newVersion")} action={workspace.t("reloadApp")} />
       <Modal open={helpOpen} title={workspace.t("shortcuts")} onClose={() => setHelpOpen(false)} footer={<button type="button" className="ow-button" onClick={() => setHelpOpen(false)}>{workspace.t("closeDialog")}</button>}>
         <p>{workspace.t("shortcutsDriveBody")}</p>

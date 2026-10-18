@@ -1,3 +1,5 @@
+import { setAssetStore } from "./assets";
+import { askPersistence } from "./quota";
 import { openWorkDb } from "./db";
 import { createOpfsBlobStore } from "./opfs";
 import { createStorageService } from "./service";
@@ -37,6 +39,9 @@ class IndexedDbBlobStore implements BlobStore {
 export async function createBrowserStorage(): Promise<StorageService> {
   const opfs = await createOpfsBlobStore();
   const blobs = opfs ?? new IndexedDbBlobStore("orvupi-work");
+  // Las imágenes de los documentos van al mismo almacén de binarios, sin base64.
+  setAssetStore(blobs);
+  void askPersistence();
   const db = await openWorkDb("orvupi-work");
   return createStorageService(db, blobs);
 }

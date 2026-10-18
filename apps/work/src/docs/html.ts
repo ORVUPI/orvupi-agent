@@ -1,4 +1,5 @@
 import { escapeHtml, safeHref, safeImageSrc } from "../security/sanitize";
+import { assetDataUrlSync, isAssetSrc } from "../storage/assets";
 import { blocksFromDoc, headingLines, notesFromDoc, type Inline, type JsonNode } from "./model";
 
 const SIZE_CLASS: Record<string, string> = {
@@ -10,7 +11,7 @@ const SIZE_CLASS: Record<string, string> = {
 
 function renderInline(inline: Inline): string {
   if (inline.type === "image") {
-    const src = safeImageSrc(inline.src);
+    const src = htmlSrc(inline.src);
     if (!src) return "";
     return `<img src="${escapeHtml(src)}" alt="${escapeHtml(inline.alt)}" />`;
   }
@@ -47,7 +48,7 @@ export function docToHtmlBody(doc: JsonNode): string {
       if (block.type === "quote") return `<blockquote><p>${renderInlines(block.inlines)}</p></blockquote>`;
       if (block.type === "paragraph") return `<p>${renderInlines(block.inlines)}</p>`;
       if (block.type === "image") {
-        const src = safeImageSrc(block.src);
+        const src = htmlSrc(block.src);
         if (!src) return "";
         return `<img src="${escapeHtml(src)}" alt="${escapeHtml(block.alt)}" />`;
       }
@@ -102,4 +103,11 @@ ${docToHtmlBody(doc)}
 </body>
 </html>
 `;
+}
+
+/** En HTML la imagen guardada aparte va incrustada (si se cargó antes con preloadAssets). */
+function htmlSrc(value: string): string | null {
+  const safe = safeImageSrc(value);
+  if (!safe) return null;
+  return isAssetSrc(safe) ? assetDataUrlSync(safe) : safe;
 }

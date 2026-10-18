@@ -1,6 +1,9 @@
-export const MAX_FILE_BYTES = 20 * 1024 * 1024;
-export const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
-export const MAX_BACKUP_BYTES = 80 * 1024 * 1024;
+/** 1 GB por archivo: el límite real lo pone la cuota del navegador (ver storage/quota.ts). */
+export const MAX_FILE_BYTES = 1024 * 1024 * 1024;
+/** Imagen pegada o insertada en un documento (el original se guarda aparte, sin base64). */
+export const MAX_IMAGE_BYTES = 64 * 1024 * 1024;
+/** Copia de seguridad completa (se arma en memoria). */
+export const MAX_BACKUP_BYTES = 1024 * 1024 * 1024;
 export const MAX_NAME_LENGTH = 180;
 
 export const ALLOWED_IMPORT_EXTENSIONS = new Set([

@@ -287,3 +287,32 @@ export function Toasts({ items, onDismiss }: { items: Array<{ id: string; messag
     </div>
   );
 }
+
+/** Barra de progreso de importación (archivos grandes): lee, descomprime, guarda imágenes y guarda. */
+export function ImportProgress({ t }: { t: (key: "importProgress", vars?: Record<string, string | number>) => string }) {
+  const [state, setState] = useState<{ name: string; pct: number } | null>(null);
+  useEffect(() => {
+    let name = "";
+    const weights: Record<string, [number, number]> = { start: [0, 2], read: [2, 10], parse: [10, 30], images: [30, 90], save: [90, 99] };
+    const on = (event: Event) => {
+      const detail = (event as CustomEvent<{ phase: string; done: number; total: number; name?: string }>).detail;
+      if (detail.name) name = detail.name;
+      if (detail.phase === "done") {
+        setState(null);
+        return;
+      }
+      const [from, to] = weights[detail.phase] ?? [0, 100];
+      const pct = Math.round(from + (to - from) * (detail.total > 0 ? detail.done / detail.total : 0));
+      setState({ name, pct });
+    };
+    window.addEventListener("ow-import-progress", on);
+    return () => window.removeEventListener("ow-import-progress", on);
+  }, []);
+  if (!state) return null;
+  return (
+    <div className="ow-import-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={state.pct} aria-label={t("importProgress", { name: state.name, pct: state.pct })}>
+      <p>{t("importProgress", { name: state.name, pct: state.pct })}</p>
+      <span style={{ width: `${state.pct}%` }} />
+    </div>
+  );
+}
