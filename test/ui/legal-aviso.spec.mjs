@@ -70,9 +70,8 @@ function contrast(fg, bg) {
 }
 
 async function showSpanish(page) {
-  const button = page.locator('[data-set-lang="es"]').first();
-  if ((await button.count()) === 0) return;
-  if ((await button.getAttribute("aria-pressed")) !== "true") await button.click();
+  // Con una elección guardada, la web abre la versión elegida; se vuelve al español con el selector.
+  if ((await page.locator("html").getAttribute("data-lang")) !== "es") await switchLang(page, "es");
 }
 
 test("el pie de riesgo y la etiqueta de imagen no están en ninguna vista", async ({ page }) => {
