@@ -182,8 +182,16 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
   if (barBox) {
     const noticeBox = await page.locator("#aviso-guardar").boundingBox();
     expect(noticeBox).toBeTruthy();
-    expect(besideLookup(noticeBox, barBox)).toBeLessThan(24);
-    expect(nodesBox.y).toBeGreaterThanOrEqual(barBox.y - noticeBox.height - 24);
+    // En móvil la barra de consulta va fija abajo y el aviso va en el flujo del formulario,
+    // sin quedarse fijo encima del contenido ni de la barra (se puede cerrar con la X).
+    const barFixed = await page.locator(".consulta-barra").evaluate((el) => getComputedStyle(el).position === "fixed");
+    if (barFixed) {
+      expect(await page.locator("#aviso-guardar").evaluate((el) => getComputedStyle(el).position)).not.toBe("fixed");
+      await expect(page.locator("#aviso-guardar .aviso-cerrar")).toBeVisible();
+    } else {
+      expect(besideLookup(noticeBox, barBox)).toBeLessThan(24);
+      expect(nodesBox.y).toBeGreaterThanOrEqual(barBox.y - noticeBox.height - 24);
+    }
   } else {
     expect(nextToLookup).toBeLessThan(80);
   }

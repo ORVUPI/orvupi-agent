@@ -2209,6 +2209,7 @@ article[id] { scroll-margin-top: 1rem; }
   .hero figure { grid-template-columns: 4.25rem minmax(0, 1fr); }
   .hero img { width: 4.25rem; }
   .hero-actions a.primary { min-height: 3.7rem; }
+}
 
 .lecciones { display: grid; gap: 1rem; }
 .lecciones-indice {
@@ -2267,4 +2268,31 @@ article[id] { scroll-margin-top: 1rem; }
     display: block;
     margin: 0 0 0.65rem;
   }
+}
 
+/* Verify: el aviso de privacidad va en el flujo normal (no se queda fijo) y se cierra con la X. */
+#aviso-guardar, .aviso-fijo.privacidad { position: relative; padding-right: 3.4rem; }
+.aviso-fijo.privacidad[hidden], .privacidad-abrir[hidden] { display: none !important; }
+.consulta .aviso-fijo.privacidad .aviso-cerrar,
+.aviso-fijo.privacidad .aviso-cerrar {
+  position: absolute; top: 0.3rem; right: 0.3rem;
+  width: 46px !important; height: 46px !important; min-width: 46px !important; min-height: 46px !important; padding: 0 !important; margin: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--line); border-radius: 999px; background: var(--bg); color: inherit;
+  font-size: 1.6rem; line-height: 1; cursor: pointer;
+}
+.aviso-cerrar:focus-visible, .aviso-abrir:focus-visible { outline: 3px solid var(--tone, currentColor); outline-offset: 2px; }
+.privacidad-abrir { margin: 0.5rem 0 0; }
+.consulta .privacidad-abrir .aviso-abrir,
+.aviso-abrir {
+  width: auto; min-width: 0; min-height: 44px; padding: 0 0.9rem; background: transparent; border: 0; color: inherit;
+  text-decoration: underline; cursor: pointer; font: inherit;
+}
+@media (max-width: 48rem) {
+  #aviso-guardar {
+    position: relative !important; left: auto !important; right: auto !important; bottom: auto !important;
+    z-index: auto !important; max-height: none !important; overflow: visible !important;
+    margin: 0.85rem 0 0 !important; box-shadow: none;
+  }
+  body:has(#aviso-guardar) { padding-bottom: calc(8.5rem + env(safe-area-inset-bottom)); }
+}
