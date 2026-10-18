@@ -63,3 +63,22 @@ test("Verify muestra la curva de Raydium LaunchLab y no dice No aplica", async (
   await expect(out).toContainText("0,49475 SOL de 30 SOL");
   await expect(out).not.toContainText("No aplica: no hay curva");
 });
+
+test("al guardar desde Verify, la ficha del Cuaderno conserva la curva de Raydium LaunchLab", async ({ page }, info) => {
+  test.setTimeout(90000);
+  await page.route(/solana-rpc\.publicnode\.com|api\.mainnet-beta\.solana\.com/, answer);
+  await page.goto("/verify/");
+  await page.locator("#direccion-token").fill(ORVUPI);
+  await page.locator("#consulta button[type=submit]").click();
+  await expect(page.locator("#resultado")).toContainText("Raydium LaunchLab", { timeout: 30000 });
+  await page.locator("#guardar-consulta").click();
+  await page.locator("#comparacion-verify").getByRole("link", { name: "Abrir Cuaderno" }).click();
+  await page.waitForURL(/\/cuaderno\/$/);
+  const card = page.locator(".consulta-guardada", { hasText: ORVUPI }).first().locator("article.ficha");
+  await expect(card).toContainText("Plataforma de la curva", { timeout: 20000 });
+  await expect(card).toContainText("Raydium LaunchLab");
+  await expect(card).toContainText("0,49475 SOL");
+  await expect(card).toContainText("1,64 %");
+  await expect(card).toContainText("En curva, todavía no se ha graduado");
+  await card.screenshot({ path: `${shots}/curva-launchlab-verify-a-cuaderno-${info.project.name}.png` });
+});
