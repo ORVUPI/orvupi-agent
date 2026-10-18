@@ -180,71 +180,105 @@ export function FilePicker({
   );
 }
 
-export type MenuItem = { id: string; label: string; onSelect: () => void };
+export type MenuItem = { id: string; label: string; onSelect: () => void; danger?: boolean };
 
 export function ContextMenu({
   x,
   y,
   items,
   onClose,
+  title,
 }: {
   x: number;
   y: number;
   items: MenuItem[];
   onClose: () => void;
+  title?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [place, setPlace] = useState({ left: x, top: y });
+  // En pantallas estrechas el menú es una hoja inferior por encima de la barra y del botón +.
+  const sheet = typeof window !== "undefined" && window.matchMedia?.("(max-width: 720px)").matches;
+  const [place, setPlace] = useState<{ left: number; top: number; maxHeight?: number }>({ left: x, top: y });
   useLayoutEffect(() => {
     const node = ref.current;
-    if (!node) return;
-    const box = node.getBoundingClientRect();
+    if (!node || sheet) return;
     const margin = 8;
+    const vh = window.innerHeight;
+    const box = node.getBoundingClientRect();
+    const height = Math.min(box.height, vh - margin * 2);
     const left = Math.max(margin, Math.min(x, window.innerWidth - box.width - margin));
-    const top = Math.max(margin, Math.min(y, window.innerHeight - box.height - margin));
-    setPlace({ left, top });
-  }, [x, y, items.length]);
+    // Si no cabe debajo se abre hacia arriba; si tampoco, se ajusta y se desplaza por dentro.
+    let top = y;
+    if (y + height > vh - margin) top = y - height >= margin ? y - height : Math.max(margin, vh - height - margin);
+    setPlace({ left, top, maxHeight: vh - margin * 2 });
+  }, [x, y, items.length, sheet]);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        const buttons = Array.from(ref.current?.querySelectorAll<HTMLButtonElement>("[role=menuitem]") ?? []);
+        if (buttons.length === 0) return;
+        event.preventDefault();
+        const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
+        const next = event.key === "ArrowDown" ? (index + 1) % buttons.length : (index - 1 + buttons.length) % buttons.length;
+        buttons[next]?.focus();
+      }
     };
     const onPointer = (event: PointerEvent) => {
       if (!ref.current?.contains(event.target as Node)) onClose();
     };
     document.addEventListener("keydown", onKey);
     document.addEventListener("pointerdown", onPointer);
-    ref.current?.querySelector("button")?.focus();
+    ref.current?.querySelector<HTMLButtonElement>("[role=menuitem]")?.focus({ preventScroll: true });
     return () => {
       document.removeEventListener("keydown", onKey);
       document.removeEventListener("pointerdown", onPointer);
     };
   }, [onClose]);
+  const list = items.map((item) => (
+    <button
+      key={item.id}
+      type="button"
+      role="menuitem"
+      className={item.danger ? "is-danger" : undefined}
+      onClick={() => {
+        item.onSelect();
+        onClose();
+      }}
+    >
+      {item.label}
+    </button>
+  ));
+  if (sheet) {
+    return (
+      <div className="ow-sheet-backdrop">
+        <div ref={ref} className="ow-context is-sheet" role="menu" aria-label={title}>
+          <span className="ow-sheet-grip" aria-hidden="true" />
+          {title ? <p className="ow-sheet-title">{title}</p> : null}
+          {list}
+        </div>
+      </div>
+    );
+  }
   return (
-    <div ref={ref} className="ow-context" style={{ left: place.left, top: place.top }} role="menu">
-      {items.map((item) => (
-        <button
-          key={item.id}
-          type="button"
-          role="menuitem"
-          onClick={() => {
-            item.onSelect();
-            onClose();
-          }}
-        >
-          {item.label}
-        </button>
-      ))}
+    <div ref={ref} className="ow-context" style={{ left: place.left, top: place.top, maxHeight: place.maxHeight }} role="menu" aria-label={title}>
+      {list}
     </div>
   );
 }
 
-export function Toasts({ items, onDismiss }: { items: Array<{ id: string; message: string }>; onDismiss: (id: string) => void }) {
+export function Toasts({ items, onDismiss }: { items: Array<{ id: string; message: string; action?: { label: string; run: () => void } }>; onDismiss: (id: string) => void }) {
   if (items.length === 0) return null;
   return (
     <div className="ow-toasts" aria-live="polite">
       {items.map((item) => (
         <p key={item.id} role="status">
           {item.message}
+          {item.action ? (
+            <button type="button" className="ow-toast-action" onClick={() => { item.action?.run(); onDismiss(item.id); }}>
+              {item.action.label}
+            </button>
+          ) : null}
           <button type="button" aria-label="OK" onClick={() => onDismiss(item.id)}>
             OK
           </button>

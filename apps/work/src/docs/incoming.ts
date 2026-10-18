@@ -61,6 +61,8 @@ export async function prepareImport(file: File, titleFallback: string): Promise<
         pageSize: imported.pageSize,
         pageOrientation: imported.pageOrientation,
         pageMargin: imported.pageMargin,
+        columns: imported.columns,
+        comments: imported.comments,
       };
     } catch {
       // Respaldo: solo el texto, si el XML no se puede interpretar.

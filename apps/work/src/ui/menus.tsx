@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { usePhone } from "./phone";
+import { TableGrid, openTableDialog } from "./TablePicker";
 
 export type BarItem = {
   id: string;
@@ -8,36 +9,9 @@ export type BarItem = {
   onSelect?: () => void;
   children?: BarItem[];
   table?: (rows: number, cols: number) => void;
+  tableLabels?: { custom: string; size: (r: number, c: number) => string };
   static?: boolean;
 };
-
-function TableGrid({ onPick }: { onPick: (rows: number, cols: number) => void }) {
-  const [hover, setHover] = useState({ row: 1, col: 1 });
-  return (
-    <div className="ow-table-grid" role="grid" aria-label={`${hover.row} × ${hover.col}`}>
-      <p>{hover.row} × {hover.col}</p>
-      <div>
-        {Array.from({ length: 20 }, (_, row) =>
-          Array.from({ length: 20 }, (_, col) => {
-            const hot = row < hover.row && col < hover.col;
-            return (
-              <button
-                key={`${row}-${col}`}
-                type="button"
-                role="gridcell"
-                aria-label={`${row + 1} × ${col + 1}`}
-                className={hot ? "is-hot" : ""}
-                onMouseEnter={() => setHover({ row: row + 1, col: col + 1 })}
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() => onPick(row + 1, col + 1)}
-              />
-            );
-          }),
-        )}
-      </div>
-    </div>
-  );
-}
 
 function Items({
   items,
@@ -78,6 +52,11 @@ function Items({
             {item.table && sub === item.id ? (
               <div role="menu" aria-label={item.label}>
                 <TableGrid
+                  labels={item.tableLabels}
+                  onCustom={() => {
+                    onDone();
+                    openTableDialog();
+                  }}
                   onPick={(rows, cols) => {
                     item.table?.(rows, cols);
                     onDone();

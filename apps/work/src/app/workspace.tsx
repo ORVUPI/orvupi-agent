@@ -21,7 +21,7 @@ import type { FileKind, FileRecord, StorageService } from "../storage/types";
 
 export type ViewId = "home" | "docs" | "sheets" | "slides" | "forms" | "drawings" | "notes" | "pdf" | "files" | "ai" | "templates" | "settings";
 
-type Toast = { id: string; message: string };
+type Toast = { id: string; message: string; action?: { label: string; run: () => void } };
 
 type WorkspaceValue = {
   ready: boolean;
@@ -58,7 +58,7 @@ type WorkspaceValue = {
   setPaletteOpen: (open: boolean) => void;
   toasts: Toast[];
   dismissToast: (id: string) => void;
-  pushToast: (message: string) => void;
+  pushToast: (message: string, action?: { label: string; run: () => void }) => void;
   session: DocSession | null;
   setSession: (session: DocSession | null) => void;
   driver: "opfs" | "indexeddb" | null;
@@ -146,10 +146,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   const t = useCallback((key: MessageKey, vars?: Record<string, string | number>) => translate(locale, key, vars), [locale]);
 
-  const pushToast = useCallback((message: string) => {
+  const pushToast = useCallback((message: string, action?: { label: string; run: () => void }) => {
     const id = createId();
-    setToasts((current) => [...current, { id, message }]);
-    window.setTimeout(() => setToasts((current) => current.filter((item) => item.id !== id)), 5000);
+    setToasts((current) => [...current, { id, message, action }]);
+    window.setTimeout(() => setToasts((current) => current.filter((item) => item.id !== id)), action ? 8000 : 5000);
   }, []);
 
   const refreshFiles = useCallback(async () => {

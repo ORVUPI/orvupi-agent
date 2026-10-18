@@ -254,10 +254,18 @@ export function FilesScreen() {
       },
       {
         id: "trash",
-        label: file.deletedAt ? workspace.t("restore") : workspace.t("remove"),
+        label: file.deletedAt ? workspace.t("restore") : workspace.t("removeShort"),
+        danger: !file.deletedAt,
         onSelect: () => {
-          const action = file.deletedAt ? workspace.storage?.restoreFile(file.id) : workspace.storage?.deleteFile(file.id);
-          void action?.then(() => workspace.refreshFiles()).then(() => workspace.pushToast(workspace.t(file.deletedAt ? "toastRestoredFile" : "toastDeleted"))).catch(workspace.reportError);
+          if (file.deletedAt) {
+            void workspace.storage?.restoreFile(file.id).then(() => workspace.refreshFiles()).then(() => workspace.pushToast(workspace.t("toastRestoredFile"))).catch(workspace.reportError);
+            return;
+          }
+          // Eliminar mueve a la papelera (recuperable) y ofrece deshacer.
+          void workspace.storage?.deleteFile(file.id).then(() => workspace.refreshFiles()).then(() => workspace.pushToast(workspace.t("toastDeleted"), {
+            label: workspace.t("undo"),
+            run: () => void workspace.storage?.restoreFile(file.id).then(() => workspace.refreshFiles()).catch(workspace.reportError),
+          })).catch(workspace.reportError);
         },
       },
     ];
@@ -504,7 +512,7 @@ export function FilesScreen() {
           </div>
         </aside>
       ) : null}
-      {menu ? <ContextMenu x={menu.x} y={menu.y} items={itemsFor(menu.file)} onClose={() => setMenu(null)} /> : null}
+      {menu ? <ContextMenu x={menu.x} y={menu.y} title={menu.file.name} items={itemsFor(menu.file)} onClose={() => setMenu(null)} /> : null}
       <Modal open={moving !== null} title={workspace.t("moveTo")} onClose={() => setMoving(null)} footer={<Button onClick={() => setMoving(null)}>{workspace.t("closeDialog")}</Button>}>
         <Button onClick={() => { if (moving) void moveTo(moving.id, null).then(() => setMoving(null)); }}>{workspace.t("root")}</Button>
         {workspace.files.filter((item) => item.kind === "folder" && item.deletedAt === null && item.id !== moving?.id).map((folder) => (
