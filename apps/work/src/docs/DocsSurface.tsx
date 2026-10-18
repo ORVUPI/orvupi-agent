@@ -299,6 +299,7 @@ export function DocsSurface({
   onSelectTab,
   onTabsChange,
   tabsSnapshot,
+  onAi,
 }: {
   t: Translate;
   editor: Editor | null;
@@ -339,6 +340,7 @@ export function DocsSurface({
   onSelectTab: (id: string) => void;
   onTabsChange: (tabs: DocTab[], select?: string) => void;
   tabsSnapshot?: () => DocTab[];
+  onAi?: () => void;
 }) {
   const [menus, setMenus] = useState(true);
   const [ruler, setRuler] = useState(true);
@@ -902,6 +904,7 @@ export function DocsSurface({
               <button type="button" className={`ow-doc-icon ${starred ? "is-on" : ""}`} aria-label={t("star")} aria-pressed={starred} onClick={onStar}>
                 <Star size={20} />
               </button>
+              {narrow && onAi ? <button type="button" className="ow-doc-icon ow-doc-ai-narrow" aria-label="ORVUPI AI" onClick={onAi}>✨</button> : null}
               {narrow ? <button type="button" className="ow-doc-icon ow-docs-tabs-open is-narrow" aria-label={t("tabsShow")} title={t("tabsShow")} aria-expanded={tabsOpen} onClick={() => setTabsOpen(true)}>☰</button> : null}
               <p role="status" className="ow-docs-save">{saveLabel}</p>
             </div>
@@ -912,6 +915,7 @@ export function DocsSurface({
             ) : null}
           </div>
           <div className="ow-docs-actions">
+            {onAi ? <button type="button" className="ow-doc-ai" title="ORVUPI AI" onClick={onAi}><span aria-hidden="true">✨</span> <span>ORVUPI AI</span></button> : null}
             <DocIcon label={t("comment")} onClick={onComment}><MessageSquare size={20} /></DocIcon>
             <div className="ow-share" ref={exportRef}>
               <button type="button" className="ow-share-main" aria-haspopup="menu" aria-expanded={exportOpen} onClick={() => setExportOpen(true)}>
