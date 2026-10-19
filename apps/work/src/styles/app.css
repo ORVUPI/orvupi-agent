@@ -857,6 +857,9 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-tool-select { position: relative; flex: none; }
 .ow-tool-select > button { display: flex; align-items: center; gap: 4px; border: 0; background: transparent; color: #102032; height: 32px; border-radius: 4px; padding: 0 6px; cursor: pointer; max-width: 132px; }
 .ow-tool-select.is-wide > button { min-width: 108px; }
+/* Fuente: tan ancha como su nombre, sin hueco antes de − / + (como Google Docs). */
+.ow-tool-select.is-font > button { min-width: 0; padding-right: 2px; }
+.ow-tool-select.is-font + .ow-sizebox { margin-left: 0; }
 .ow-tool-select > button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
 .ow-tool-select [role="listbox"] { position: absolute; top: 36px; left: 0; background: #fff; border: 1px solid #e8d6c0; border-radius: 8px; box-shadow: 0 2px 6px rgba(60, 64, 67, 0.18); z-index: 7; min-width: 160px; padding: 6px; display: grid; }
 .ow-tool-select [role="option"] { border: 0; background: transparent; text-align: left; padding: 8px; border-radius: 6px; cursor: pointer; color: #102032; }
@@ -1014,6 +1017,13 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-a4.is-flow { width: 100%; flex: 1; min-height: 100%; border: 0; box-shadow: none; background: #fff; }
 .ow-a4.is-flow .ow-a4-body { padding: 16px 24px 8px; flex: 1; }
 .ow-a4.is-flow .ProseMirror { font-size: 16px; line-height: 1.5; min-height: 100%; }
+/* En el móvil el cuerpo se ve a 16px (11 pt): los títulos y los tamaños elegidos se escalan igual, para que cada punto se note. */
+.ow-a4.is-flow .ProseMirror h1 { font-size: calc(26 * 16px / 11); }
+.ow-a4.is-flow .ProseMirror h2 { font-size: calc(18 * 16px / 11); }
+.ow-a4.is-flow .ProseMirror h3 { font-size: calc(14 * 16px / 11); }
+.ow-a4.is-flow .ProseMirror h4 { font-size: calc(12 * 16px / 11); }
+.ow-a4.is-flow .ProseMirror h5, .ow-a4.is-flow .ProseMirror h6 { font-size: 16px; }
+.ow-a4.is-flow .ProseMirror [style*="--ow-pt"] { font-size: calc(var(--ow-pt) * 16px / 11) !important; }
 .ow-a4.is-flow > .ow-a4-edge { position: static; left: auto; right: auto; width: calc(100% - 48px); margin: 8px 24px 0; font-size: 16px; }
 .ow-a4.is-flow .ow-a4-foot { position: static; left: auto; right: auto; padding: 0 24px 12px; }
 .ow-a4.is-flow .ow-a4-foot .ow-a4-edge { font-size: 16px; }

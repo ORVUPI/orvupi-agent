@@ -1,5 +1,15 @@
 # Registro de cambios
 
+## 0.8.7 — 2026-10-19
+
+Docs: tamaño de letra como Google Docs, sin saltos y sin hueco en la barra.
+
+- Ya no hay espacio en blanco entre la fuente («Arial») y − / +: el selector de fuente mide lo que su nombre y los controles van seguidos, en el escritorio y en el móvil.
+- − y + bajan o suben 1 pt en cada pulsación (de 1 a 400), en una palabra, en varias, en una parte de un párrafo, en varios párrafos y en los títulos (H1–H6). Con tamaños mezclados cada trozo se mueve 1 desde el suyo. En un título sin tamaño propio se parte de su tamaño real (H1 = 26, H2 = 18…) y se aplica una marca explícita.
+- La caja del número muestra el tamaño real de la selección (también en títulos) y acepta un número escrito con Intro. Salir de la caja sin cambiar el número ya no toca el texto.
+- La lista de tamaños va del 1 al 96, todos los números en orden y sin saltos, se puede desplazar, se abre en el tamaño actual y lo resalta.
+- Móvil: el texto se muestra algo más grande que en la hoja (16 px = 11 pt); los títulos y los tamaños elegidos se escalan igual, así que cada punto que se sube o se baja se nota (antes 12 pt se veía igual que 11).
+
 ## 0.8.5 — 2026-10-18
 
 ORVUPI AI: la descarga del modelo ya no falla con «network error» en el móvil.

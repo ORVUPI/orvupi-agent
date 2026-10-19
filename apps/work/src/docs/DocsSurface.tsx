@@ -14,6 +14,7 @@ import { insertImages } from "./image-paste";
 import { jumpToHeading } from "./jump";
 import { ImageResize } from "./ImageResize";
 import { DocTabs } from "./DocTabs";
+import { BODY_POINT, POINTS, applyRuns, clampPoint, nextSize, selectionPoint, selectionRuns, stylePoint, wordAround, type BlockPoint } from "./font-size";
 import type { DocTab } from "./tabs";
 import { TableDialog, TableGrid, openTableDialog } from "../ui/TablePicker";
 import type { JsonNode, PageMargin, PageOrientation, PageSize } from "./model";
@@ -26,7 +27,6 @@ const MARGIN = 96;
 const CM = 96 / 2.54;
 
 const FONTS = ["Arial", "Times New Roman", "Georgia", "Verdana", "Courier New", "Comic Sans MS", "Roboto", "Inter", "Lora", "Merriweather", "Montserrat"];
-const POINTS = [8, 9, 10, 11, 12, 14, 18, 24, 30, 36, 48, 60, 72, 96];
 const ZOOMS = [50, 75, 100, 125, 150];
 const TEXT_COLORS = [
   "#000000", "#434343", "#666666", "#999999", "#b7b7b7", "#cccccc", "#d9d9d9", "#efefef", "#f3f3f3", "#ffffff",
@@ -80,43 +80,33 @@ function plainFont(raw: unknown): string {
 
 type Translate = (key: MessageKey, vars?: Record<string, string | number>) => string;
 
-/** Pasos del tamaño de letra (como Google Docs); fuera de ellos, de uno en uno. */
-const SIZE_STEPS = [8, 9, 10, 11, 12, 14, 18, 24, 30, 36, 48, 60, 72, 96];
-
-export function nextSize(current: number, dir: 1 | -1): number {
-  if (dir > 0) {
-    const up = SIZE_STEPS.find((step) => step > current);
-    return Math.min(400, up ?? current + 1);
-  }
-  const down = [...SIZE_STEPS].reverse().find((step) => step < current);
-  if (current > 96) return Math.max(96, current - 1);
-  return Math.max(1, down ?? current - 1);
+/** Tamaño real de un párrafo sin marca: el estilo calculado (título, normal…), relativo al cuerpo del documento. */
+function domBlockPoint(editor: Editor | null): BlockPoint {
+  return (block, pos) => {
+    try {
+      const view = editor?.view;
+      const element = view?.nodeDOM(pos);
+      if (view && element instanceof HTMLElement) {
+        const px = Number.parseFloat(getComputedStyle(element).fontSize);
+        // En móvil el cuerpo se ve a 16px pero sigue siendo 11 pt: se mide relativo al cuerpo.
+        const base = Number.parseFloat(getComputedStyle(view.dom).fontSize);
+        if (Number.isFinite(px) && px > 0 && Number.isFinite(base) && base > 0) return clampPoint((BODY_POINT * px) / base);
+      }
+    } catch {
+      /* sin vista todavía */
+    }
+    return stylePoint(block);
+  };
 }
 
-/** Tamaño en el cursor: la marca de estilo o, si no la hay (título, estilo de párrafo), el tamaño real. */
+/** Tamaño de la selección (o del cursor): la marca o, si no la hay (título, estilo de párrafo), el tamaño real. */
 function currentPoint(editor: Editor | null): number {
-  if (!editor) return 11;
-  const raw = editor.getAttributes("textStyle")?.fontSize;
-  if (typeof raw === "string" && raw) return shownPoint(raw);
+  if (!editor) return BODY_POINT;
   try {
-    const { node } = editor.view.domAtPos(editor.state.selection.from);
-    const element = node instanceof HTMLElement ? node : node.parentElement;
-    const px = element ? Number.parseFloat(getComputedStyle(element).fontSize) : NaN;
-    // Relativo al cuerpo del documento: en móvil el texto se muestra más grande (16px) pero sigue siendo 11 pt.
-    const base = Number.parseFloat(getComputedStyle(editor.view.dom).fontSize);
-    if (Number.isFinite(px) && px > 0 && Number.isFinite(base) && base > 0) return Math.min(400, Math.max(1, Math.round((11 * px) / base)));
+    return selectionPoint(editor.state, domBlockPoint(editor));
   } catch {
-    /* sin vista todavía */
+    return BODY_POINT;
   }
-  return 11;
-}
-
-function shownPoint(raw: unknown): number {
-  if (typeof raw !== "string" || raw.length === 0) return 11;
-  const parsed = Number.parseFloat(raw);
-  if (!Number.isFinite(parsed)) return 11;
-  const points = raw.endsWith("px") ? parsed * 0.75 : parsed;
-  return Math.min(400, Math.max(1, Math.round(points)));
 }
 
 function keepPointer(event: { target: EventTarget | null; preventDefault: () => void }) {
@@ -193,12 +183,14 @@ function ToolMenu({
   value,
   options,
   wide,
+  font,
   onPick,
 }: {
   label: string;
   value: string;
   options: Array<{ id: string; label: string; family?: string }>;
   wide?: boolean;
+  font?: boolean;
   onPick: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -212,7 +204,7 @@ function ToolMenu({
     return () => document.removeEventListener("pointerdown", close);
   }, [open]);
   return (
-    <div className={`ow-tool-select ${wide ? "is-wide" : ""}`} ref={ref} onMouseDown={keepPointer}>
+    <div className={`ow-tool-select${wide ? " is-wide" : ""}${font ? " is-font" : ""}`} ref={ref} onMouseDown={keepPointer}>
       <button type="button" aria-haspopup="listbox" aria-expanded={open} aria-label={`${label} ${value}`} onMouseDown={(event) => event.preventDefault()} onClick={() => setOpen((current) => !current)}>
         <span>{value}</span>
         <ChevronDown size={16} aria-hidden="true" />
@@ -822,32 +814,34 @@ export function DocsSurface({
     command();
   }
 
-  function applySize(next: number) {
-    if (!Number.isFinite(next)) return;
-    const size = Math.min(400, Math.max(1, Math.round(next)));
+  /** Cambia el tamaño de la selección; sin selección, de la palabra del cursor o del texto que se escriba. */
+  function changeSize(size: (point: number) => number) {
     run(() => {
       if (!editor) return;
-      const { selection } = editor.state;
-      // Como Google Docs: con el cursor dentro de una palabra, el tamaño se aplica a esa palabra.
-      if (selection.empty) {
-        const $pos = selection.$from;
-        const text = $pos.parent.textContent;
-        const at = $pos.parentOffset;
-        const isWord = (ch: string | undefined) => !!ch && /[\p{L}\p{N}_]/u.test(ch);
-        let plain = true;
-        $pos.parent.forEach((child) => { if (!child.isText) plain = false; });
-        if (plain && isWord(text[at - 1]) && isWord(text[at])) {
-          let start = at;
-          let end = at;
-          while (isWord(text[start - 1])) start -= 1;
-          while (isWord(text[end])) end += 1;
-          const base = $pos.start();
-          editor.chain().focus().setTextSelection({ from: base + start, to: base + end }).setFontSize(`${size}pt`).setTextSelection(selection.from).run();
-          return;
-        }
+      const state = editor.state;
+      const range = state.selection.empty ? wordAround(state) : null;
+      const runs = selectionRuns(state, domBlockPoint(editor), range ?? undefined);
+      if (runs.length === 0) {
+        if (!state.selection.empty) return;
+        editor.chain().focus().setFontSize(`${clampPoint(size(currentPoint(editor)))}pt`).run();
+        return;
       }
-      editor.chain().focus().setFontSize(`${size}pt`).run();
+      editor.chain().focus().command(({ tr }) => {
+        applyRuns(tr, runs, size);
+        return true;
+      }).run();
     });
+  }
+
+  function applySize(next: number) {
+    if (!Number.isFinite(next)) return;
+    const size = clampPoint(next);
+    changeSize(() => size);
+  }
+
+  /** − y +: cada trozo baja o sube 1 pt desde su propio tamaño (como Google Docs). */
+  function stepSize(dir: 1 | -1) {
+    changeSize((point) => nextSize(point, dir));
   }
 
   function copyFormat() {
@@ -959,8 +953,8 @@ export function DocsSurface({
                 else editor.chain().focus().setHeading({ level: Number(id) as 1 | 2 | 3 | 4 | 5 | 6 }).run();
               })}
             />
-            <ToolMenu label={t("fontLabel")} value={font} wide options={FONTS.map((item) => ({ id: item, label: item, family: cssFamily(item) }))} onPick={(id) => run(() => editor?.chain().focus().setFontFamily(cssFamily(id)).run())} />
-            <SizeBox t={t} point={point} onApply={applySize} onRemember={rememberSelection} />
+            <ToolMenu font label={t("fontLabel")} value={font} options={FONTS.map((item) => ({ id: item, label: item, family: cssFamily(item) }))} onPick={(id) => run(() => editor?.chain().focus().setFontFamily(cssFamily(id)).run())} />
+            <SizeBox t={t} point={point} onApply={applySize} onStep={stepSize} onRemember={rememberSelection} />
             <DocIcon label={t("bold")} pressed={editor?.isActive("bold")} onClick={() => run(() => editor?.chain().focus().toggleBold().run())}><strong aria-hidden="true">B</strong></DocIcon>
             <DocIcon label={t("italic")} pressed={editor?.isActive("italic")} onClick={() => run(() => editor?.chain().focus().toggleItalic().run())}><em aria-hidden="true">I</em></DocIcon>
             <DocIcon label={t("underline")} pressed={editor?.isActive("underline")} onClick={() => run(() => editor?.chain().focus().toggleUnderline().run())}><span className="ow-u" aria-hidden="true">U</span></DocIcon>
@@ -1106,8 +1100,8 @@ export function DocsSurface({
               <DocIcon label={t("table")} pressed={tablePick} onClick={() => setTablePick((open) => !open)}><span aria-hidden="true">⊞</span></DocIcon>
             </span>
             <DocIcon label={t("mergeCells")} onClick={() => run(() => editor?.chain().focus().mergeCells().run())}><span aria-hidden="true">⧉</span></DocIcon>
-            <ToolMenu label={t("fontLabel")} value={font} options={FONTS.map((item) => ({ id: item, label: item, family: cssFamily(item) }))} onPick={(id) => run(() => editor?.chain().focus().setFontFamily(cssFamily(id)).run())} />
-            <SizeBox t={t} point={point} onApply={applySize} onRemember={rememberSelection} />
+            <ToolMenu font label={t("fontLabel")} value={font} options={FONTS.map((item) => ({ id: item, label: item, family: cssFamily(item) }))} onPick={(id) => run(() => editor?.chain().focus().setFontFamily(cssFamily(id)).run())} />
+            <SizeBox t={t} point={point} onApply={applySize} onStep={stepSize} onRemember={rememberSelection} />
             <ColorMenu t={t} editor={editor} run={run} kind="color" />
             <ColorMenu t={t} editor={editor} run={run} kind="highlight" />
             <DocIcon label={t("clearFormat")} onClick={() => run(() => editor?.chain().focus().unsetAllMarks().clearNodes().run())}><RemoveFormatting size={20} /></DocIcon>
@@ -1400,16 +1394,19 @@ function SizeBox({
   t,
   point,
   onApply,
+  onStep,
   onRemember,
 }: {
   t: Translate;
   point: number;
   onApply: (size: number) => void;
+  onStep: (dir: 1 | -1) => void;
   onRemember: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(String(point));
   const ref = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const focused = useRef(false);
   useEffect(() => {
     if (!focused.current) setDraft(String(point));
@@ -1422,18 +1419,27 @@ function SizeBox({
     document.addEventListener("pointerdown", close);
     return () => document.removeEventListener("pointerdown", close);
   }, [open]);
+  // La lista se abre en el tamaño actual, centrado (sin mover la página).
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!open || !list) return;
+    const current = list.querySelector<HTMLElement>('[aria-selected="true"]');
+    if (current) list.scrollTop = Math.max(0, current.offsetTop - (list.clientHeight - current.offsetHeight) / 2);
+  }, [open, point]);
   function commit(raw: string) {
     const next = Number.parseInt(raw, 10);
     if (!Number.isInteger(next)) {
       setDraft(String(point));
       return;
     }
-    onApply(next);
-    setDraft(String(Math.min(400, Math.max(1, next))));
+    const size = clampPoint(next);
+    setDraft(String(size));
+    // Al salir sin cambiar el número no se toca el texto (un título sigue sin marca).
+    if (size !== point) onApply(size);
   }
   return (
     <div className="ow-sizebox" ref={ref}>
-      <DocIcon label={t("sizeDown")} onClick={() => { const next = nextSize(point, -1); setDraft(String(next)); onApply(next); }}><Minus size={18} /></DocIcon>
+      <DocIcon label={t("sizeDown")} onClick={() => { focused.current = false; setDraft(String(nextSize(point, -1))); onStep(-1); }}><Minus size={18} /></DocIcon>
       <input
         aria-label={t("size")}
         inputMode="numeric"
@@ -1452,14 +1458,22 @@ function SizeBox({
         onKeyDown={(event) => {
           if (event.key === "Enter") {
             event.preventDefault();
-            commit(draft);
+            const next = Number.parseInt(draft, 10);
+            if (Number.isInteger(next)) {
+              const size = clampPoint(next);
+              setDraft(String(size));
+              onApply(size);
+            } else setDraft(String(point));
+            setOpen(false);
+          } else if (event.key === "Escape") {
+            setDraft(String(point));
             setOpen(false);
           }
         }}
       />
-      <DocIcon label={t("sizeUp")} onClick={() => { const next = nextSize(point, 1); setDraft(String(next)); onApply(next); }}><Plus size={18} /></DocIcon>
+      <DocIcon label={t("sizeUp")} onClick={() => { focused.current = false; setDraft(String(nextSize(point, 1))); onStep(1); }}><Plus size={18} /></DocIcon>
       {open ? (
-        <div role="listbox" aria-label={t("size")}>
+        <div role="listbox" aria-label={t("size")} ref={listRef}>
           {POINTS.map((size) => (
             <button
               key={size}

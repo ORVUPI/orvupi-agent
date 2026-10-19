@@ -26,7 +26,7 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"], viewport: { width: 1360, height: 900 } },
-      testIgnore: /fase-080|docx-081|docx-082|docx-083|imgmenu-084/,
+      testIgnore: /fase-080|docx-081|docx-082|docx-083|imgmenu-084|fuente-087/,
     },
     {
       name: "pixel-7",
@@ -49,6 +49,8 @@ export default defineConfig({
       ...(process.env.CI && !D83_CI.has(`${browser}-phone`) ? [] : [{ name: `d83-${browser}-phone`, testMatch: /docx-083/, use: { browserName: browser, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: browser !== "firefox" } }]),
       { name: `img84-${browser}-desk`, testMatch: /imgmenu-084/, use: { browserName: browser, viewport: { width: 1366, height: 900 } } },
       { name: `img84-${browser}-phone`, testMatch: /imgmenu-084/, use: { browserName: browser, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: browser !== "firefox" } },
+      { name: `fuente87-${browser}-desk`, testMatch: /fuente-087/, use: { browserName: browser, viewport: { width: 1366, height: 900 } } },
+      { name: `fuente87-${browser}-phone`, testMatch: /fuente-087/, use: { browserName: browser, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: browser !== "firefox" } },
       { name: `d82-${browser}-phone`, testMatch: /docx-082/, use: { browserName: browser, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: browser !== "firefox" } },
     ]),
   ],
