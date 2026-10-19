@@ -599,6 +599,13 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
     patchItems(selection, (i) => (i.kind === "line" ? i : { ...i, rot: ((((i.rot ?? 0) + delta) % 360) + 360) % 360 }));
   }
 
+  /** Como Slides: abre los comentarios con el cuadro de nuevo comentario listo para escribir. */
+  function addComment() {
+    setPanel("comments");
+    const focus = (n: number) => requestAnimationFrame(() => { const t = document.querySelector<HTMLTextAreaElement>(".sl-root .sl-comment-new"); if (t) t.focus(); else if (n > 0) focus(n - 1); });
+    focus(5);
+  }
+
   function group(on: boolean) {
     patchSlide((s) => ({ ...s, items: on ? groupIds(s.items, selection) : ungroupIds(s.items, selection) }));
   }
@@ -732,7 +739,7 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
       if (mod && !typing && key === "z") { event.preventDefault(); if (event.shiftKey) redo(); else undo(); return; }
       if (mod && !typing && key === "y") { event.preventDefault(); redo(); return; }
       if (mod && !event.altKey && key === "m") { event.preventDefault(); newSlide(); return; }
-      if (mod && event.altKey && key === "m") { event.preventDefault(); setPanel("comments"); return; }
+      if (mod && event.altKey && key === "m") { event.preventDefault(); addComment(); return; }
       if (mod && event.altKey && event.shiftKey && key === "p") { event.preventDefault(); setPresent({ from: index, presenter: true }); return; }
       if (mod && !event.altKey && !event.shiftKey && key === "p") { event.preventDefault(); setPrinting(true); return; }
       if ((mod && key === "enter") || (mod && event.key === "F5")) { event.preventDefault(); setPresent({ from: event.shiftKey ? 0 : index, presenter: false }); return; }
@@ -1312,7 +1319,7 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
       { id: "arrow", label: tx("Flecha", "Arrow"), onSelect: () => insertLine(true) },
       { id: "anim", label: tx("Animación", "Animation"), onSelect: () => setPanel("motion") },
       { id: "link", label: tx("Enlace", "Link"), hint: "Ctrl+K", onSelect: needSel(() => setDialog("link")) },
-      { id: "comment", label: tx("Comentario", "Comment"), hint: "Ctrl+Alt+M", onSelect: () => setPanel("comments") },
+      { id: "comment", label: tx("Comentario", "Comment"), hint: "Ctrl+Alt+M", onSelect: () => addComment() },
       { id: "newslide", label: tx("Nueva diapositiva", "New slide"), hint: "Ctrl+M", onSelect: () => newSlide() },
       { id: "numbers", label: file.numbers ? tx("Quitar números de diapositiva", "Remove slide numbers") : tx("Números de diapositiva", "Slide numbers"), onSelect: () => setFile((f) => ({ ...f, numbers: f.numbers ? undefined : true })) },
     ] },
@@ -1438,7 +1445,7 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
       ...(selectedItems.some((i) => i.group) ? [{ id: "ungroup", label: tx("Desagrupar", "Ungroup"), hint: "Ctrl+Mayús+G", run: () => group(false) }] : []),
       { id: "link", label: tx("Enlace", "Link"), hint: "Ctrl+K", run: () => setDialog("link") },
       { id: "anim", label: tx("Animar", "Animate"), run: () => setPanel("motion") },
-      { id: "comment", label: tx("Comentar", "Comment"), run: () => setPanel("comments") },
+      { id: "comment", label: tx("Comentar", "Comment"), run: () => addComment() },
       { id: "format", label: tx("Opciones de formato", "Format options"), run: () => setPanel("format") },
     ];
     return [
@@ -1765,7 +1772,7 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
             </div>
           )}
         </ToolPop>
-        <Icon label={tx("Añadir comentario", "Add comment")} onClick={() => setPanel("comments")}><MessageSquarePlus size={18} /></Icon>
+        <Icon label={tx("Añadir comentario", "Add comment")} onClick={() => addComment()}><MessageSquarePlus size={18} /></Icon>
         <span className="sl-sep" />
         {selection.length === 0 && !editingId ? (
           <span className="sl-context">
@@ -2213,7 +2220,7 @@ function CommentsPanel({ tx, locale, comments, onChange }: { tx: Tx; locale: str
   return (
     <div className="sl-comments">
       <label className="sl-field">{tx("Nuevo comentario en esta diapositiva", "New comment on this slide")}
-        <textarea value={text} onChange={(e) => setText(e.target.value.slice(0, 2000))} />
+        <textarea className="sl-comment-new" value={text} onChange={(e) => setText(e.target.value.slice(0, 2000))} />
       </label>
       <Button variant="primary" onClick={() => {
         if (!text.trim()) return;

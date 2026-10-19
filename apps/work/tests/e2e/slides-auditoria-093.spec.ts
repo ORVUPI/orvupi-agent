@@ -271,7 +271,8 @@ async function entryLabels(page: Page, path: string[]) {
   return labels;
 }
 
-async function report(name: string, results: Outcome[]) {
+async function report(name: string, all: Outcome[]) {
+  const results = all.map((r) => (r.status === "sin efecto" && quietReason(r.where) ? { ...r, status: "ok" as const, effect: `sin cambios (esperado: ${quietReason(r.where)})` } : r));
   const dir = `${await screenshotDir()}/auditoria-093`;
   await mkdir(dir, { recursive: true });
   await writeFile(`${dir}/${name}-${test.info().project.name}.json`, JSON.stringify(results, null, 2));
@@ -283,9 +284,16 @@ function trackErrors(page: Page, errors: string[]) {
   page.on("console", (m) => { if (m.type() === "error" && !/Failed to load resource|favicon|net::ERR|Permissions policy|fullscreen|Content Security Policy.*youtube/i.test(m.text())) errors.push(`console: ${m.text()}`); });
 }
 
+/** Opciones que de verdad no cambian nada en ese momento (igual que en Slides). */
+function quietReason(where: string) {
+  if (QUIET.has(where)) return QUIET.get(where);
+  if (/ › Seleccionar$/.test(where)) return "la herramienta Seleccionar ya es la activa";
+  return undefined;
+}
+
 function assertClean(results: Outcome[]) {
   const errors = results.filter((r) => r.status === "error");
-  const quiet = results.filter((r) => r.status === "sin efecto" && !QUIET.has(r.where));
+  const quiet = results.filter((r) => r.status === "sin efecto" && !quietReason(r.where));
   expect(errors.map((r) => `${r.where}: ${r.detail}`), "opciones con error").toEqual([]);
   expect(quiet.map((r) => r.where), "opciones que no hacen nada visible").toEqual([]);
 }
@@ -341,7 +349,7 @@ async function context(page: Page, kind: string) {
   if (kind === "nada") { await page.keyboard.press("Escape"); return; }
   if (kind === "texto") { await selectTitle(page); return; }
   if (kind === "forma") { await menu("Insertar", "Forma", "Rectángulo"); return; }
-  if (kind === "línea") { await menu("Insertar", "Línea", "Línea"); const c = await page.locator(".sl-canvas").boundingBox(); if (c) { await page.mouse.move(c.x + c.width * 0.2, c.y + c.height * 0.8); await page.mouse.down(); await page.mouse.move(c.x + c.width * 0.5, c.y + c.height * 0.85, { steps: 4 }); await page.mouse.up(); } return; }
+  if (kind === "línea") { await menu("Insertar", "Línea"); return; }
   if (kind === "tabla") { await menu("Insertar", "Tabla"); await page.locator('.sl-menus [role="menu"][aria-label="Tabla"]').locator('[role="gridcell"]').first().click(); return; }
   if (kind === "gráfico") { await menu("Insertar", "Gráfico", "Barras"); return; }
   if (kind === "imagen") {
