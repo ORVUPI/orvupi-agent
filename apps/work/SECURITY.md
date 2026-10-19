@@ -6,9 +6,9 @@ La build inyecta esta CSP en el HTML:
 
 ```
 default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';
-img-src 'self' data: blob:; font-src 'self'; connect-src 'self';
+img-src 'self' data: blob: https:; media-src 'self' data: blob:; font-src 'self'; connect-src 'self';
 worker-src 'self'; manifest-src 'self'; object-src 'none';
-base-uri 'self'; form-action 'self'; frame-src 'none'
+base-uri 'self'; form-action 'self'; frame-src https://www.youtube-nocookie.com
 ```
 
 `style-src` permite estilo en línea porque el editor aplica color y tamaño en el documento. `script-src` no permite scripts en línea. El service worker se registra desde un módulo.

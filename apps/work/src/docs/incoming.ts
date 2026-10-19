@@ -83,20 +83,29 @@ export async function prepareImport(file: File, titleFallback: string): Promise<
     return { name: doc.title, kind: "doc", mime: "application/vnd.orvupi.doc+json", bytes: serializeOrvdoc(doc), openAsDoc: true };
   }
   if (extension === "pptx") {
-    const imported = await pptxSlides(bytes);
     const blank = createSlidesFile({ id: createId(), title: base });
-    const file: SlidesFile = {
-      ...blank,
-      slides: imported.map((slide) => ({
-        title: slide.title,
-        body: slide.body,
-        theme: "papel",
-        items: defaultItems(slide.title, slide.body),
-        notes: "",
-        transition: "none",
-        layout: "title-body",
-      })),
-    };
+    let file: SlidesFile;
+    try {
+      // Importación real: formas, texto con formato, imágenes, tablas, notas y fondos.
+      const { importPptx } = await import("../slides/pptx");
+      const imported = await importPptx(bytes);
+      file = { ...blank, slides: imported.slides };
+    } catch {
+      // Respaldo: solo títulos y texto, si el paquete no se puede interpretar.
+      const imported = await pptxSlides(bytes);
+      file = {
+        ...blank,
+        slides: imported.map((slide) => ({
+          title: slide.title,
+          body: slide.body,
+          theme: "papel",
+          items: defaultItems(slide.title, slide.body),
+          notes: "",
+          transition: "none",
+          layout: "title-body",
+        })),
+      };
+    }
     return { name: file.title, kind: "slide", mime: "application/vnd.orvupi.slides+json", bytes: serializeSlides(file), openAsDoc: false };
   }
   if (extension === "csv" || extension === "xlsx") {
