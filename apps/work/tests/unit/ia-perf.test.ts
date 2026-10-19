@@ -14,10 +14,13 @@ const phone: AiSupport = { webgpu: false, f16: false, wasm: true, memoryGb: 4, m
 
 describe("ORVUPI AI: elección automática del modo", () => {
   it("prueba GPU → CPU → modelos ligeros, y deja al final lo que falló en este dispositivo", () => {
-    expect(modelChain(desk).map((m) => m.id)).toEqual(["qwen05-gpu", "qwen05-cpu", "lfm350-cpu", "smol135-cpu"]);
-    expect(modelChain(desk, { device: "", bad: { "qwen05-gpu": Date.now() } }).map((m) => m.id)).toEqual(["qwen05-cpu", "lfm350-cpu", "smol135-cpu", "qwen05-gpu"]);
-    expect(modelChain(desk, { device: "", good: "lfm350-cpu", bad: {} })[0]!.id).toBe("lfm350-cpu");
-    expect(modelChain(phone).map((m) => m.id)).toEqual(["lfm350-cpu", "smol135-cpu"]);
+    expect(modelChain(desk).map((m) => m.id)).toEqual(["qwen05-gpu", "lfm350-gpu32", "qwen05-cpu", "smol135-cpu"]);
+    expect(modelChain(desk, { device: "", bad: { "qwen05-gpu": Date.now() } }).map((m) => m.id)).toEqual(["lfm350-gpu32", "qwen05-cpu", "smol135-cpu", "qwen05-gpu"]);
+    expect(modelChain(desk, { device: "", good: "qwen05-cpu", bad: {} })[0]!.id).toBe("qwen05-cpu");
+    expect(modelChain({ ...desk, webgpu: false, f16: false }).map((m) => m.id)).toEqual(["qwen05-cpu", "smol135-cpu"]);
+    // Móvil: LFM2 solo con WebGPU (el motor WASM no tiene GatherBlockQuantized); sin GPU, SmolLM2 por WASM
+    expect(modelChain(phone).map((m) => m.id)).toEqual(["smol135-cpu"]);
+    expect(modelChain({ ...phone, webgpu: true, f16: true }).map((m) => m.id)).toEqual(["lfm350-gpu", "lfm350-gpu32", "smol135-cpu"]);
     expect(modelChain({ ...phone, memoryGb: 2 })[0]!.id).toBe("smol135-cpu");
     // Los modelos grandes nunca se eligen solos
     expect(modelChain(desk).some((m) => m.id.startsWith("qwen15"))).toBe(false);

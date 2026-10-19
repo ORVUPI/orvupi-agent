@@ -125,11 +125,10 @@ export async function hybridSummary(text: string, generate: Generate, onStep?: (
 }
 
 export function explainMessages(sentences: string[], terms: string[]): ChatMessage[] {
+  // Sin ejemplo: los modelos pequeños copiaban el tema del ejemplo en lugar del texto
   return [
     { role: "system", content: SYSTEM },
-    { role: "user", content: `Ideas principales de un texto:\n${numbered(["La inflación es el aumento generalizado y sostenido de los precios de bienes y servicios durante un periodo de tiempo.", "Cuando hay inflación, con el mismo dinero se pueden comprar menos cosas."])}\n\nExplica de qué trata el texto con palabras sencillas, como a alguien que no conoce el tema: un párrafo corto de 2 o 3 frases. Usa solo estas ideas.` },
-    { role: "assistant", content: "El texto explica qué es la inflación: los precios de las cosas suben de forma general y durante bastante tiempo. Por eso, con el mismo dinero se puede comprar menos." },
-    { role: "user", content: `Ideas principales de un texto:\n${numbered(sentences)}\n\nTérminos importantes: ${terms.join(", ")}.\n\nExplica de qué trata el texto con palabras sencillas, como a alguien que no conoce el tema: un párrafo corto de 2 o 3 frases. Usa solo estas ideas.` },
+    { role: "user", content: `Ideas principales de un texto:\n${numbered(sentences)}\n\nTérminos importantes: ${terms.join(", ")}.\n\nExplica de qué trata este texto con palabras sencillas, como a alguien que no conoce el tema: un párrafo corto de 2 o 3 frases. Usa solo estas ideas y estos términos.` },
   ];
 }
 

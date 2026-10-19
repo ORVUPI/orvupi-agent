@@ -27,8 +27,7 @@ const ES = {
   modelCpu: "Qwen2.5 0.5B · sin GPU (WASM)",
   modelCpuLarge: "Qwen2.5 1.5B · más preciso sin GPU (lento, ordenadores con 8 GB o más)",
   modelTiny: "SmolLM2 135M · muy ligero",
-  modelLfm: "LFM2 350M · ligero y multilingüe, bueno en español",
-  modelGemma: "Gemma 3 270M · ligero y multilingüe",
+  modelLfm: "LFM2 350M · ligero y multilingüe, bueno en español (GPU)",
   prepare: "Preparar ORVUPI AI ({size}, solo la primera vez)",
   prepareCached: "Preparar ORVUPI AI",
   ready: "IA lista en este dispositivo",
@@ -168,6 +167,8 @@ export function AiStudio({
   const [created, setCreated] = useState<{ id: string; name: string } | null>(null);
   const stopRef = useRef(false);
   const preparingRef = useRef<Promise<AiModel | null> | null>(null);
+  // Si ninguna opción funcionó, no se reintenta en cada acción (se vuelve a probar al pulsar «Preparar»)
+  const allFailedRef = useRef(false);
   const uid = useId();
 
   // La vista previa se actualiza como mucho ~8 veces por segundo: repintar en cada token hacía ir la web a tirones
@@ -235,6 +236,7 @@ export function AiStudio({
         try {
           await engine.load(candidate, (loaded, total) => { setPreparing(i === 0 ? "download" : "retry"); setProgress({ loaded, total }); }, () => setPreparing("check"));
           rememberModel(found, candidate.id, true);
+          allFailedRef.current = false;
           setCached((c) => ({ ...c, [candidate.id]: true }));
           setPhase("ready");
           return candidate;
@@ -247,6 +249,7 @@ export function AiStudio({
           rememberModel(found, candidate.id, false);
         }
       }
+      allFailedRef.current = true;
       setPhase("error");
       setLoadError(lastKind === "offline" || lastKind === "network" ? L.offline : lastKind === "quota" ? L.quota : L.allFailed);
       return null;
@@ -258,6 +261,7 @@ export function AiStudio({
 
   async function ensureModel(): Promise<AiModel | null> {
     if (model && engine.isLoaded(model)) return model;
+    if (allFailedRef.current) return null;
     return prepare();
   }
 
@@ -480,7 +484,7 @@ export function AiStudio({
                 <button type="button" className="ow-button ow-button-ghost" onClick={() => { engine.reset(); setPhase("idle"); preparingRef.current = null; }}>{L.cancel}</button>
               </div>
             ) : (
-              <button type="button" className="ow-button ow-button-primary" data-ai-prepare onClick={() => void prepare()}>
+              <button type="button" className="ow-button ow-button-primary" data-ai-prepare onClick={() => { allFailedRef.current = false; void prepare(); }}>
                 {first && cached[first.id] ? L.prepareCached : f(L.prepare, { size: formatBytes((first?.sizeMb ?? 0) * 1_000_000, locale) })}
               </button>
             )}

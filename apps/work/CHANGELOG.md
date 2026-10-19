@@ -1,5 +1,18 @@
 # Registro de cambios
 
+## 0.8.11 — 2026-10-19
+
+ORVUPI AI automática, fluida y fiable en español; plantillas mejor ordenadas.
+
+- Modo automático: «Preparar ORVUPI AI» elige solo cómo ejecutar la IA en este dispositivo. Tras cargar cada opción hace una prueba real y corta; si da «!!!!» o nada, pasa a la siguiente (GPU → LFM2 con GPU sin fp16 → CPU (WASM) → SmolLM2). Si una respuesta degenera dos veces con la GPU, cambia sola de modo y repite. Recuerda en el dispositivo qué funcionó y qué falló. Ya no hay mensajes que pidan cambiar de modelo o de GPU; si nada funciona, un aviso amable. Los modelos se pueden elegir a mano en «Opciones avanzadas».
+- Causa de «!!!!» con WebGPU: con pesos q4f16 algunas GPU desbordan las activaciones en fp16, los logits salen NaN y el modelo solo emite el token 0, que en Qwen es «!». La prueba inicial lo detecta y se usa una variante sin fp16 (LFM2 q4) o la CPU.
+- Preparar sin atascos: si compilar y probar un modelo tarda más de 150 s («Preparando el modelo…» del 1.5B) se pasa a la siguiente opción; un fallo al crear la sesión reinicia el worker; los modelos grandes ya no se eligen solos. Botón Cancelar también durante la descarga.
+- Fluidez: el modelo sigue en un Web Worker; la vista previa se repinta como mucho ~8 veces por segundo (antes se re-analizaba todo el texto en cada token y la web iba a tirones al reescribir); WASM deja un núcleo libre a la página; las peticiones van en cola; «Liberar memoria» y liberación tras 15 min sin uso; si ya funcionó y está descargado, se prepara sola al abrir el panel.
+- Fases visibles: Preparando IA → Analizando documento → Generando respuesta → Aplicando formato → Creando documento (DOCX/PDF) → Documento listo, con Cancelar.
+- Español de verdad: el contenido sale del propio texto (frases más representativas con TextRank, términos clave) y el modelo solo redacta; cada viñeta se compara con su frase original (palabras nuevas, cifras, negaciones, cobertura) y lo que no se apoya en el texto se sustituye por la frase original. Funciona igual con textos largos.
+- Funciones: Resumir (ideas principales + términos clave), Explicar, Reescribir y Traducir (por párrafos, comprobando sentido e idioma), Esquema (secciones y subsecciones), Generar preguntas (con su respuesta), Analizar (datos, legibilidad Fernández Huerta, temas, estructura y sugerencias; sin descargar nada), Preguntar sobre el documento, Generar contenido y una caja «Pide lo que quieras» que entiende peticiones como «Resume este documento y créame un DOCX».
+- Resultado: Insertar en el documento, Reemplazar selección, Añadir debajo, Copiar, Crear documento nuevo, Exportar DOCX (con encabezado, pie y número de página) y PDF. El formato admite títulos, negrita, cursiva, listas, numeración, tablas y saltos de página.
+- Plantillas: cada categoría (Personal, Estudios, Empresas, Gestión…) es una sección con su título separado de las tarjetas y de la categoría anterior; una tarjeta sola ya no ocupa todo el ancho; en el móvil, una columna.
 ## 0.8.9 — 2026-10-19
 
 Docs: tamaño de letra como Google Docs, sin saltos y sin hueco en la barra.

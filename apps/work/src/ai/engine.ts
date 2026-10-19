@@ -9,7 +9,7 @@ export type AiModel = {
   device: AiDevice;
   dtype: string;
   sizeMb: number;
-  label: "modelGpuSmall" | "modelGpuLarge" | "modelCpu" | "modelCpuLarge" | "modelTiny" | "modelLfm" | "modelGemma";
+  label: "modelGpuSmall" | "modelGpuLarge" | "modelCpu" | "modelCpuLarge" | "modelTiny" | "modelLfm";
   needs: "webgpu-f16" | "webgpu" | "wasm";
   minMemoryGb?: number;
   /** Pesos en un archivo aparte («.onnx_data») */
@@ -21,8 +21,10 @@ export const AI_MODELS: AiModel[] = [
   { id: "qwen15-gpu", repo: "onnx-community/Qwen2.5-1.5B-Instruct", device: "webgpu", dtype: "q4f16", sizeMb: 1240, label: "modelGpuLarge", needs: "webgpu-f16", minMemoryGb: 8 },
   { id: "qwen05-cpu", repo: "onnx-community/Qwen2.5-0.5B-Instruct", device: "wasm", dtype: "q8", sizeMb: 520, label: "modelCpu", needs: "wasm" },
   { id: "qwen15-cpu", repo: "onnx-community/Qwen2.5-1.5B-Instruct", device: "wasm", dtype: "q8", sizeMb: 1580, label: "modelCpuLarge", needs: "wasm", minMemoryGb: 8 },
-  { id: "lfm350-cpu", repo: "onnx-community/LFM2-350M-ONNX", device: "wasm", dtype: "q4", sizeMb: 295, label: "modelLfm", needs: "wasm", externalData: true },
-  { id: "gemma270-cpu", repo: "onnx-community/gemma-3-270m-it-ONNX", device: "wasm", dtype: "q4", sizeMb: 325, label: "modelGemma", needs: "wasm", externalData: true },
+  // LFM2 (multilingüe, bueno en español) usa GatherBlockQuantized, que el motor WASM de onnxruntime-web no tiene:
+  // solo funciona con WebGPU
+  { id: "lfm350-gpu", repo: "onnx-community/LFM2-350M-ONNX", device: "webgpu", dtype: "q4f16", sizeMb: 255, label: "modelLfm", needs: "webgpu-f16", externalData: true },
+  { id: "lfm350-gpu32", repo: "onnx-community/LFM2-350M-ONNX", device: "webgpu", dtype: "q4", sizeMb: 295, label: "modelLfm", needs: "webgpu", externalData: true },
   { id: "smol135-cpu", repo: "HuggingFaceTB/SmolLM2-135M-Instruct", device: "wasm", dtype: "q8", sizeMb: 140, label: "modelTiny", needs: "wasm" },
 ];
 
@@ -83,9 +85,10 @@ export function rememberModel(support: AiSupport, id: string, ok: boolean): void
  *  Los que fallaron en este dispositivo se dejan para el final. Los grandes (1.5B) solo se eligen a mano. */
 export function modelChain(support: AiSupport, mem: DeviceMemory = { device: "", bad: {} }): AiModel[] {
   const list = usableModels(support);
+  const small = (support.memoryGb ?? 4) <= 2;
   const ids = support.mobile
-    ? ((support.memoryGb ?? 4) <= 2 ? ["smol135-cpu", "lfm350-cpu"] : ["lfm350-cpu", "smol135-cpu"])
-    : ["qwen05-gpu", "qwen05-cpu", "lfm350-cpu", "smol135-cpu"];
+    ? (small ? ["smol135-cpu"] : ["lfm350-gpu", "lfm350-gpu32", "smol135-cpu"])
+    : ["qwen05-gpu", "lfm350-gpu32", "qwen05-cpu", "smol135-cpu"];
   const chain = ids.map((id) => list.find((m) => m.id === id)).filter((m): m is AiModel => Boolean(m));
   const good = chain.find((m) => m.id === mem.good);
   const ok = chain.filter((m) => m !== good && !mem.bad[m.id]);
@@ -113,20 +116,11 @@ export function usableModels(support: AiSupport): AiModel[] {
   });
 }
 
-/** El más adecuado. En el móvil, LFM2 350M (q4, ~295 MB, WASM): multilingüe y bueno en español, más rápido que
- *  SmolLM2 135M y con menos memoria que Qwen2.5 0.5B (que fallaba al descargarse o cargarse en teléfonos). Con poca
- *  memoria (≤ 2 GB) se queda en SmolLM2 135M. En ordenador: GPU pequeño si hay WebGPU con f16; si no, CPU (WASM).
+/** El más adecuado: el primero de la cadena automática (ver `modelChain`). En el móvil, LFM2 350M con WebGPU si
+ *  hay (multilingüe, bueno en español); si no, SmolLM2 135M por WASM. En ordenador, Qwen2.5 0.5B (GPU o CPU).
  *  En todos los casos el contenido sale del propio texto (extracción) y el modelo solo redacta lo que se comprueba. */
 export function recommendedModel(support: AiSupport): AiModel | null {
-  const list = usableModels(support);
-  if (list.length === 0) return null;
-  if (support.mobile) {
-    const small = (support.memoryGb ?? 4) <= 2;
-    return list.find((model) => model.id === (small ? "smol135-cpu" : "lfm350-cpu")) ?? list.find((model) => model.id === "smol135-cpu") ?? list[0]!;
-  }
-  const gpu = list.find((model) => model.id === "qwen05-gpu");
-  if (gpu) return gpu;
-  return list.find((model) => model.id === "qwen05-cpu") ?? list[0]!;
+  return modelChain(support)[0] ?? usableModels(support)[0] ?? null;
 }
 
 /** ¿Ya está descargado? (caché del navegador de transformers.js) */
@@ -199,7 +193,13 @@ export class AiEngine {
       else if (msg.type === "error") {
         const error = new AiLoadError(msg.message ?? "error", msg.kind ?? "other", msg.detail ?? {});
         if (msg.id !== undefined && this.pending.has(msg.id)) { this.pending.get(msg.id)!.reject(error); this.pending.delete(msg.id); }
-        else if (this.loading) { this.loading.reject(error); this.loading = null; }
+        else if (this.loading) {
+          // Un fallo al crear la sesión deja el worker en mal estado: se descarta y el siguiente intento empieza limpio
+          const pending = this.loading;
+          this.loading = null;
+          this.reset();
+          pending.reject(error);
+        }
       }
     });
     worker.addEventListener("error", (event) => {
