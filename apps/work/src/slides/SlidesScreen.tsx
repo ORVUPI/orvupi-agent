@@ -12,7 +12,7 @@ import { Button } from "../ui/kit";
 import { absentOnDevice, MissingFile } from "../ui/MissingFile";
 import { MenuBar, type BarItem } from "../ui/menus";
 import { Modal } from "../ui/overlay";
-import { usePhone } from "../ui/phone";
+import { useDeviceLayout } from "../ui/phone";
 import { APP_VERSION } from "../version";
 import {
   LIMITS, PT, SHAPES, SLIDE_ANIMS, SLIDE_FONTS, SLIDE_H, SLIDE_LAYOUTS, SLIDE_THEMES, SLIDE_TRANSITIONS, SLIDE_W, applyLayout, blankSlide, lineBox, moveItem, newId, orderItems,
@@ -245,7 +245,9 @@ function SlidesLoader({ id }: { id: string }) {
 
 function SlidesEditor({ initial }: { initial: SlidesFile }) {
   const workspace = useWorkspace();
-  const phone = usePhone();
+  const device = useDeviceLayout();
+  const phone = device === "phone";
+  const tablet = device === "tablet";
   const tx: Tx = useCallback((es: string, en: string) => (workspace.locale === "en" ? en : es), [workspace.locale]);
   const record = workspace.files.find((f) => f.id === initial.id);
   const [file, setFileState] = useState<SlidesFile>(initial);
@@ -348,7 +350,7 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
     const stage = stageRef.current;
     if (!stage) return;
     const measure = () => {
-      const pad = phone ? 16 : rulers ? 64 : 40;
+      const pad = phone ? 16 : tablet ? 28 : rulers ? 64 : 40;
       const w = stage.clientWidth - pad;
       const h = stage.clientHeight - pad;
       if (w <= 0 || h <= 0) return;
@@ -358,7 +360,7 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
     const ro = new ResizeObserver(measure);
     ro.observe(stage);
     return () => ro.disconnect();
-  }, [phone, rulers, grid]);
+  }, [phone, tablet, rulers, grid]);
 
   /* ---------- historial (deshacer / rehacer) */
   const setFile = useCallback((next: SlidesFile | ((f: SlidesFile) => SlidesFile), opts: { history?: boolean; key?: string } = {}) => {
@@ -1456,7 +1458,7 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
   const canvasW = SLIDE_W * scale;
   const canvasH = SLIDE_H * scale;
   const selBox = boxOf(selectedItems);
-  const showRulers = rulers && !phone;
+  const showRulers = rulers && !phone && !tablet;
   const R = showRulers ? 18 : 0;
   const saveLabel = status === "saved" ? tx("Guardado en este dispositivo", "Saved on this device") : tx("Guardando…", "Saving…");
   const panelTitle = panel === "themes" ? tx("Temas", "Themes") : panel === "motion" ? tx("Movimiento", "Motion") : panel === "comments" ? tx("Comentarios", "Comments") : tx("Opciones de formato", "Format options");
@@ -1673,7 +1675,7 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
 
   const zoomText = zoom === "fit" ? tx("Ajustar", "Fit") : `${Math.round(scale * 100)} %`;
   return (
-    <div className={`ow-slides-page sl-root${phone ? " is-phone" : ""}${panel ? " has-panel" : ""}${filmOpen ? "" : " no-film"}`} data-tool="slides" data-version={APP_VERSION}>
+    <div className={`ow-slides-page sl-root${phone ? " is-phone" : tablet ? " is-tablet" : ""}${panel ? " has-panel" : ""}${filmOpen ? "" : " no-film"}`} data-tool="slides" data-version={APP_VERSION}>
       <h1 className="ow-sr">{file.title}</h1>
       <header className="sl-head">
         <button type="button" className="sl-logo" aria-label={tx("Volver a ORVUPI Work", "Back to ORVUPI Work")} onClick={() => workspace.closeDoc()}>
@@ -1689,7 +1691,7 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
             }}><Star size={18} fill={starred ? "currentColor" : "none"} /></Icon>
             <p role="status" className="sl-save">{saveLabel}</p>
           </div>
-          {menusOpen ? <MenuBar className="sl-menus" label={tx("Barra de menús", "Menu bar")} menus={menus} /> : null}
+          {menusOpen ? <MenuBar className="sl-menus" label={tx("Barra de menús", "Menu bar")} menus={menus} compact={phone} /> : null}
         </div>
         <div className="sl-actions">
           {!phone ? <Icon label={tx("Comentarios", "Comments")} pressed={panel === "comments"} onClick={() => setPanel((p) => (p === "comments" ? null : "comments"))}><MessageSquarePlus size={20} /></Icon> : null}
@@ -1793,7 +1795,7 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
                   <span className="ow-sr">{`${tx("Diapositiva", "Slide")} ${i + 1}${s.hidden ? ` (${tx("omitida", "skipped")})` : ""}: `}</span>
                   <span className="sl-film-num" aria-hidden="true">{i + 1}</span>
                   <span className="sl-film-thumb ow-thumb">
-                    <Thumb slide={s} width={phone ? 104 : 148} number={file.numbers ? i + 1 : undefined} master={file.master} />
+                    <Thumb slide={s} width={phone ? 104 : tablet ? 108 : 148} number={file.numbers ? i + 1 : undefined} master={file.master} />
                     {s.hidden ? <span className="sl-film-skip" aria-hidden="true">⊘</span> : null}
                   </span>
                 </div>

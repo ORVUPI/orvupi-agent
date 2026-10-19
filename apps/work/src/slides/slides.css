@@ -358,17 +358,29 @@
   .ow-shell.is-doc main, .sl-root { height: auto !important; overflow: visible !important; }
 }
 
-/* ---------- tableta */
-@media (max-width: 1100px) {
-  .sl-film { width: 160px; }
-  .sl-panel { width: 260px; }
-  .sl-save { display: none; }
-}
-@media (max-width: 900px) and (min-width: 721px) {
-  .sl-toolbar { overflow-x: auto; scrollbar-width: thin; }
-  .sl-toolbar .sl-pop { position: fixed; top: auto; bottom: 12px; left: 12px; right: 12px; max-height: 55vh; }
-  .sl-panel { position: absolute; right: 8px; top: 0; bottom: 8px; z-index: 35; margin: 0; }
-}
+/* ---------- tableta (768–1199 px o con el dedo): como Slides en tableta */
+@media (max-width: 1199px) { .sl-root:not(.is-phone) .sl-save { display: none; } }
+.sl-root.is-tablet .sl-head { padding: 6px 12px 0; gap: 8px; }
+.sl-root.is-tablet .sl-menus.ow-menubar { overflow-x: auto; scrollbar-width: none; flex-wrap: nowrap; }
+.sl-root.is-tablet .sl-menus.ow-menubar::-webkit-scrollbar { display: none; }
+.sl-root.is-tablet .sl-menus.ow-menubar > [role="menuitem"] { min-height: 36px; padding: 0 10px; flex: none; }
+.sl-root.is-tablet .ow-menubar [role="menu"] [role="menuitem"], .sl-root.is-tablet .ow-menubar [role="menu"] [role="menuitemradio"], .sl-root.is-tablet .ow-menubar [role="menu"] [role="menuitemcheckbox"] { min-height: 44px; }
+.sl-root.is-tablet .sl-toolbar { margin: 4px 10px 6px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; min-height: 48px; }
+.sl-root.is-tablet .sl-toolbar::-webkit-scrollbar { display: none; }
+.sl-root.is-tablet .sl-icon { min-width: 40px; height: 40px; }
+.sl-root.is-tablet .sl-font { min-height: 36px; }
+.sl-root.is-tablet .sl-toolbar .sl-pop, .sl-root.is-tablet .sl-size-list { position: fixed; top: auto; left: 50% !important; right: auto !important; bottom: 16px; transform: translateX(-50%); width: min(520px, calc(100vw - 32px)); max-height: 50dvh; border-radius: 18px; z-index: 80; }
+.sl-root.is-tablet .sl-size-list { grid-template-columns: repeat(8, 1fr); }
+.sl-root.is-tablet .sl-swatch { width: 30px; height: 30px; }
+.sl-root.is-tablet .sl-film { width: 156px; }
+.sl-root.is-tablet .sl-root .sl-film-list, .sl-root.is-tablet .sl-film-list { touch-action: pan-y; }
+.sl-root.is-tablet .sl-stage { margin: 0 10px 0 0; }
+.sl-root.is-tablet .sl-panel { position: absolute; right: 10px; top: 0; bottom: 10px; width: 300px; max-width: 46vw; z-index: 35; margin: 0; }
+.sl-root.is-tablet .sl-handle { width: 16px; height: 16px; margin: -8px 0 0 -8px; }
+.sl-root.is-tablet .sl-rotate { width: 18px; height: 18px; margin-left: -9px; top: -32px; }
+.sl-root.is-tablet .sl-rotate::after { top: 17px; height: 14px; }
+.sl-root.is-tablet .sl-end { width: 18px; height: 18px; margin: -9px 0 0 -9px; }
+.sl-root.is-tablet .sl-grid.ow-slide-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
 
 /* ---------- móvil */
 .sl-root.is-phone .sl-head { z-index: 90; padding: 6px 8px 0; gap: 4px; align-items: center; flex-wrap: wrap; }
@@ -414,3 +426,4 @@
 
 /* 0.9.3: enlaces dentro del texto mientras se edita */
 .sl-root .sl-editable a { color: #1a73e8; text-decoration: underline; }
+.sl-root .sl-film-thumb.ow-thumb { min-width: 0; flex: none; width: max-content; }

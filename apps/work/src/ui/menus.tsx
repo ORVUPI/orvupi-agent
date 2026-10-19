@@ -76,12 +76,16 @@ export function MenuBar({
   label,
   menus,
   className = "",
+  compact,
 }: {
   label: string;
   menus: Array<{ id: string; label: string; items: BarItem[] }>;
   className?: string;
+  /** Fuerza (o evita) la barra compacta de móvil; por defecto, según el dispositivo. */
+  compact?: boolean;
 }) {
-  const phone = usePhone();
+  const auto = usePhone();
+  const phone = compact ?? auto;
   const [open, setOpen] = useState<string | null>(null);
   const [hub, setHub] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
