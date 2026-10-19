@@ -426,10 +426,13 @@ export function AiStudio({
       setStatus(L.stageFormat);
       result = result.trim();
       setOutput(result, true);
+      // Se cede el hilo entre pintar el resultado y crear el documento: así ninguna tarea pasa de 50 ms
+      await new Promise((resolve) => setTimeout(resolve, 0));
       // El resultado principal es un documento: se crea en Mi unidad y se abre; y si se pidió, también el DOCX/PDF
       setStage("create");
       setStatus(L.stageCreate);
       if (result) await saveAsDocument(result, title, !opts.exportAs);
+      await new Promise((resolve) => setTimeout(resolve, 0));
       if (opts.exportAs) await exportAs(opts.exportAs, result, title);
       const secs = ((performance.now() - started) / 1000).toFixed(1);
       setStage("done");
