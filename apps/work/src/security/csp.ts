@@ -3,7 +3,8 @@ export const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
   "script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
+  "img-src 'self' data: blob: https:",
+  "media-src 'self' data: blob:",
   "font-src 'self'",
   "connect-src 'self' https://huggingface.co https://*.huggingface.co https://*.hf.co https://cdn.jsdelivr.net",
   "worker-src 'self' blob:",
@@ -11,5 +12,5 @@ export const CONTENT_SECURITY_POLICY = [
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
-  "frame-src 'none'",
+  "frame-src https://www.youtube-nocookie.com",
 ].join("; ");
