@@ -108,6 +108,7 @@ export function ImageResize({ editor, labels, editable }: { editor: Editor | nul
   const moreRef = useRef<HTMLButtonElement | null>(null);
   const drag = useRef<Resize | null>(null);
   const move = useRef<Move | null>(null);
+  const placeRef = useRef<() => void>(() => undefined);
 
   useEffect(() => {
     if (!editor) return;
@@ -148,12 +149,16 @@ export function ImageResize({ editor, labels, editable }: { editor: Editor | nul
           : { left: r.left, top: r.top, width: r.width, height: r.height, zoom, clip: c },
       );
     };
+    placeRef.current = place;
     const loop = () => {
       place();
       frame = requestAnimationFrame(loop);
     };
     loop();
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(frame);
+      placeRef.current = () => undefined;
+    };
   }, [target]);
 
   // Cerrar el menú al tocar fuera o con Esc.
@@ -301,6 +306,7 @@ export function ImageResize({ editor, labels, editable }: { editor: Editor | nul
     d.size = size;
     img.style.width = `${size.w}px`;
     img.style.height = `${size.h}px`;
+    placeRef.current();
   };
   const onDown = (handle: Handle) => (event: ReactPointerEvent<HTMLSpanElement>) => {
     event.preventDefault();
@@ -381,12 +387,14 @@ export function ImageResize({ editor, labels, editable }: { editor: Editor | nul
       const area = visibleArea(img);
       const speed = m.py < area.top + EDGE ? -Math.ceil((area.top + EDGE - m.py) / 4) : m.py > area.top + area.height - EDGE ? Math.ceil((m.py - (area.top + area.height - EDGE)) / 4) : 0;
       if (speed) {
-        m.sc.scrollTop += Math.max(-24, Math.min(24, speed));
+        m.sc.scrollTop += Math.max(-16, Math.min(16, speed));
         m.raf = requestAnimationFrame(stepMove);
       }
     }
     const { dx, dy } = delta(m);
     img.style.transform = `translate(${Math.round(dx)}px, ${Math.round(dy)}px)`;
+    // El marco se recoloca en el mismo frame que la imagen (sin desfase durante el auto-scroll).
+    placeRef.current();
     if (wrapNow === "inline") {
       // Referencia: el borde superior de la imagen arrastrada (como la vista previa que se ve).
       const y = m.start.top - (m.sc ? m.sc.scrollTop - m.scrollTop0 : 0) + dy;
