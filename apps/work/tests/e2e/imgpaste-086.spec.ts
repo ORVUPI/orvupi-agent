@@ -178,18 +178,23 @@ test("redimensionar por la esquina sin parpadeo: tamaño monótono, proporción 
   await doc.close();
 });
 
-test("lado: cambia una dimensión sin parpadeo", async ({ page }) => {
+test("lado con Mayús: cambia una sola dimensión y se mantiene al soltar", async ({ page }) => {
   const { doc } = await newDoc(page);
   const img = await pasteImage(doc, 600, 400);
   await select(doc, img);
   const w0 = Number(await img.getAttribute("width"));
   const s = (await doc.locator(".ow-imgframe .is-s").boundingBox())!;
   await doc.mouse.move(s.x + s.width / 2, s.y + s.height / 2);
+  await doc.keyboard.down("Shift");
   await doc.mouse.down();
   for (let i = 1; i <= 8; i++) await doc.mouse.move(s.x + s.width / 2, s.y + s.height / 2 - i * 8);
   await doc.mouse.up();
+  await doc.keyboard.up("Shift");
   await expect.poll(async () => Number(await img.getAttribute("height"))).toBeLessThan(400 * (w0 / 600) - 30);
   expect(Number(await img.getAttribute("width"))).toBe(w0);
+  // Lo que se ve es lo guardado (antes volvía a la proporción natural al soltar).
+  const r = (await img.boundingBox())!;
+  expect(Math.abs(r.height - Number(await img.getAttribute("height")))).toBeLessThanOrEqual(1.5);
   await doc.close();
 });
 

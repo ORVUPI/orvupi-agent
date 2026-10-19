@@ -1016,7 +1016,7 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-docs-sheet.is-flow { width: 100%; flex: 1 0 auto; display: flex; flex-direction: column; min-height: 100%; background: #fff; box-sizing: border-box; }
 .ow-a4.is-flow { width: 100%; flex: 1; min-height: 100%; border: 0; box-shadow: none; background: #fff; }
 .ow-a4.is-flow .ow-a4-body { padding: 16px 24px 8px; flex: 1; }
-.ow-a4.is-flow .ProseMirror { font-size: 16px; line-height: 1.5; min-height: 100%; }
+.ow-a4.is-flow .ProseMirror { font-size: 16px; line-height: 1.5; min-height: max(100%, var(--ow-reserve, 0px)); }
 /* En el móvil el cuerpo se ve a 16px (11 pt): los títulos y los tamaños elegidos se escalan igual, para que cada punto se note. */
 .ow-a4.is-flow .ProseMirror h1 { font-size: calc(26 * 16px / 11); }
 .ow-a4.is-flow .ProseMirror h2 { font-size: calc(18 * 16px / 11); }
@@ -1045,7 +1045,7 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 @keyframes ow-pop { from { transform: scale(0.86); } to { transform: none; } }
 .ow-tabbar, .ow-fab, .ow-fab-sheet { display: none; }
 .ow-a4-edge:focus { outline: none; border-bottom-color: #b0124f; }
-.ow-a4 .ProseMirror { outline: none; min-height: 720px; font-family: Arial, Helvetica, sans-serif; font-size: 11pt; line-height: 1.15; color: #102032; -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; touch-action: pan-y; }
+.ow-a4 .ProseMirror { outline: none; min-height: max(720px, var(--ow-reserve, 0px)); font-family: Arial, Helvetica, sans-serif; font-size: 11pt; line-height: 1.15; color: #102032; -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; touch-action: pan-y; }
 .ow-a4 .ProseMirror td, .ow-a4 .ProseMirror th { touch-action: none; }
 .ow-a4 .ProseMirror h1, .ow-a4 .ProseMirror h2, .ow-a4 .ProseMirror h3, .ow-a4 .ProseMirror h4, .ow-a4 .ProseMirror h5, .ow-a4 .ProseMirror h6, .ow-a4 .ProseMirror p, .ow-a4 .ProseMirror li, .ow-a4 .ProseMirror td, .ow-a4 .ProseMirror th { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
 .ow-a4 .ProseMirror h1, .ow-a4 .ProseMirror h2, .ow-a4 .ProseMirror h3, .ow-a4 .ProseMirror h4, .ow-a4 .ProseMirror h5, .ow-a4 .ProseMirror h6 { font-family: Arial, Helvetica, sans-serif; font-weight: 400; letter-spacing: 0; margin: 0 0 8px; color: #102032; }

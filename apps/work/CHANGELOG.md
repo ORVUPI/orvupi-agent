@@ -13,6 +13,14 @@ ORVUPI AI automática, fluida y fiable en español; plantillas mejor ordenadas.
 - Funciones: Resumir (ideas principales + términos clave), Explicar, Reescribir y Traducir (por párrafos, comprobando sentido e idioma), Esquema (secciones y subsecciones), Generar preguntas (con su respuesta), Analizar (datos, legibilidad Fernández Huerta, temas, estructura y sugerencias; sin descargar nada), Preguntar sobre el documento, Generar contenido y una caja «Pide lo que quieras» que entiende peticiones como «Resume este documento y créame un DOCX».
 - Resultado: Insertar en el documento, Reemplazar selección, Añadir debajo, Copiar, Crear documento nuevo, Exportar DOCX (con encabezado, pie y número de página) y PDF. El formato admite títulos, negrita, cursiva, listas, numeración, tablas y saltos de página.
 - Plantillas: cada categoría (Personal, Estudios, Empresas, Gestión…) es una sección con su título separado de las tarjetas y de la categoría anterior; una tarjeta sola ya no ocupa todo el ancho; en el móvil, una columna.
+## 0.9.1 — 2026-10-19
+
+Docs: lo que ves al soltar una imagen es lo que queda.
+
+- Redimensionar por un lado (arriba, abajo, izquierda o derecha) ya no vuelve al tamaño original al soltar, en todos los modos («En línea», «Ajustar texto», «Detrás», «Delante»). Los lados conservan la proporción, como las esquinas; con Mayús se estira libremente y esa proporción se guarda.
+- Mover desde el modo por defecto («En línea»): si se arrastra a un lado o a una zona de la página sin otro hueco entre párrafos, la imagen pasa a «Delante» y queda exactamente donde se suelta, sin mover el texto (ya no vuelve atrás ni salta a la esquina; se puede cambiar a «Ajustar texto» o «Detrás» en ⋯). Soltarla junto a otro párrafo la sigue recolocando entre párrafos con la línea de inserción.
+- Se puede bajar la imagen hasta el final de la hoja también en un documento corto (antes el límite era poco más que el texto escrito). En el móvil (documento continuo) el límite es todo el lienzo y el documento crece para incluir las imágenes «Detrás»/«Delante».
+
 ## 0.9.0 — 2026-10-19
 
 Presentaciones: la estructura y las funciones de Google Slides, con la identidad ORVUPI (crema, rosa y tinta, bordes redondeados, el pulpo y el botón rosa «Presentar»).
