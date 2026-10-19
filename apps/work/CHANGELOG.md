@@ -1,5 +1,13 @@
 # Registro de cambios
 
+## 0.8.10 — 2026-10-19
+
+Docs: lo que ves al soltar una imagen es lo que queda.
+
+- Redimensionar por un lado (arriba, abajo, izquierda o derecha) ya no vuelve al tamaño original al soltar, en todos los modos («En línea», «Ajustar texto», «Detrás», «Delante»). Los lados conservan la proporción, como las esquinas; con Mayús se estira libremente y esa proporción se guarda.
+- Mover desde el modo por defecto («En línea»): si se arrastra a un lado o a una zona de la página sin otro hueco entre párrafos, la imagen pasa a «Ajustar texto» y queda exactamente donde se suelta (ya no vuelve atrás ni salta a la esquina). Soltarla junto a otro párrafo la sigue recolocando entre párrafos con la línea de inserción.
+- Se puede bajar la imagen hasta el final de la hoja también en un documento corto (antes el límite era poco más que el texto escrito).
+
 ## 0.9.0 — 2026-10-19
 
 Presentaciones: la estructura y las funciones de Google Slides, con la identidad ORVUPI (crema, rosa y tinta, bordes redondeados, el pulpo y el botón rosa «Presentar»).

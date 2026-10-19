@@ -61,6 +61,11 @@ const LocalImage = Image.extend({
           if (name === "src" && dom.dataset.loaded === String(attrs["data-asset"] ?? "")) continue;
           dom.setAttribute(name, String(value));
         }
+        // La proporción guardada manda sobre la natural: un estirado por un lado se mantiene al soltar.
+        const w = Number(attrs.width);
+        const h = Number(attrs.height);
+        if (w > 0 && h > 0) dom.style.aspectRatio = `${w} / ${h}`;
+        else dom.style.removeProperty("aspect-ratio");
         const asset = attrs["data-asset"];
         if (typeof asset === "string" && dom.dataset.loaded !== asset) {
           dom.dataset.loaded = asset;
