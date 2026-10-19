@@ -25,19 +25,20 @@ test("ORVUPI AI: resultado limpio como documento, PDF y Word", async ({ page }) 
   await page.reload();
   const panel = page.locator("aside.ow-ai");
   if (!(await panel.isVisible())) await page.locator('.ow-top-actions [aria-label="ORVUPI AI"]').first().click();
-  await panel.locator("select").first().selectOption(process.env.ORVUPI_AI_MODEL ?? "smol135-cpu");
-  await panel.getByRole("button", { name: /Descargar y activar|Activar/ }).click();
+  await panel.getByText("Opciones avanzadas").click();
+  await panel.locator(".ow-ai-advanced select").selectOption(process.env.ORVUPI_AI_MODEL ?? "smol135-cpu");
+  await panel.getByRole("button", { name: "Usar este modelo" }).click();
   await expect(panel.locator(".ow-ai-ready")).toBeVisible({ timeout: 1_500_000 });
   await panel.getByRole("radio", { name: "Otro archivo de Work" }).check();
   const created = page.waitForEvent("popup", { timeout: 900_000 });
   await panel.getByRole("button", { name: "Resumir", exact: true }).click();
-  await expect(panel.locator(".ow-ai-status")).toContainText(/fragmentos|válido/, { timeout: 900_000 });
+  await expect(panel.locator(".ow-ai-status")).toContainText(/Documento listo|fiable/, { timeout: 900_000 });
   const out = await panel.locator(".ow-ai-output").innerText();
   expect(out).not.toMatch(/!\[|\]\(|!!!!/);
   const newDoc = await created;
   await expect(newDoc.locator(".ProseMirror")).toBeVisible({ timeout: 30_000 });
   expect(await newDoc.title()).toContain("Resumen");
-  for (const [name, ext] of [["Descargar PDF", ".pdf"], ["Descargar Word (.docx)", ".docx"]] as const) {
+  for (const [name, ext] of [["Exportar PDF", ".pdf"], ["Exportar DOCX", ".docx"]] as const) {
     const download = page.waitForEvent("download");
     await panel.getByRole("button", { name }).click();
     expect((await download).suggestedFilename()).toMatch(new RegExp(`\\${ext}$`));
