@@ -62,6 +62,8 @@ export function cleanOutput(output: string): string {
   s = s.replace(/!\[[^\]\n]*\]?/g, "");
   s = s.replace(/\bdata:[^\s)]+/gi, "");
   s = s.replace(/([^\p{L}\p{N}\s*#_-])\1{3,}/gu, "$1");
+  // Restos del prompt: comillas triples, vallas de código y «TEXTO:» repetido
+  s = s.replace(/"{3}|`{3}[a-z]*|'{3}/gi, "").replace(/^\s*TEXTO:\s*$/gim, "");
   s = s.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n");
   return s.trim();
 }

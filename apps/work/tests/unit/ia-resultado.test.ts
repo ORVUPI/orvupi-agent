@@ -45,6 +45,7 @@ describe("ORVUPI AI: texto limpio para el modelo", () => {
     expect(isDegenerate("- La prevención protege la salud de la plantilla.\n- La empresa evalúa los riesgos.\n- Hay que formar e informar.")).toBe(false);
     expect(isDegenerate("**Resumen**\n\n1. Presupuesto de 2026: 12.500 € en total.\n2. Plazo: 3 meses.")).toBe(false);
     expect(cleanOutput("- Uno ![](x)\n- Dos!!!!!!")).toBe("- Uno\n- Dos!");
+    expect(cleanOutput('"""Previsión de riesgos."""')).toBe("Previsión de riesgos.");
   });
 });
 
