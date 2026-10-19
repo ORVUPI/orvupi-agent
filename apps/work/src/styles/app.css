@@ -1440,7 +1440,15 @@ body, .ow-shell, .ow-docs, .ow-docs-body, .ow-docs-scroll { background-color: va
 .ow-ai-chat li { padding: 8px 10px; border-radius: 12px; white-space: pre-wrap; }
 .ow-ai-chat li[data-role="user"] { background: #ffe1ea; justify-self: end; max-width: 85%; }
 .ow-ai-chat li[data-role="assistant"] { background: #fff8ec; border: 1px solid #e8d6c0; }
-.ow-ai-output { white-space: pre-wrap; min-height: 3em; line-height: 1.5; background: #fff8ec; border-radius: 12px; padding: 10px; }
+.ow-ai-output { white-space: normal; min-height: 3em; line-height: 1.5; background: #fff8ec; border-radius: 12px; padding: 10px 14px; overflow-wrap: anywhere; }
+.ow-ai-output h4 { font-size: 1.1rem; margin: 0.4em 0 0.3em; }
+.ow-ai-output h5 { font-size: 1rem; margin: 0.6em 0 0.2em; }
+.ow-ai-output p { margin: 0 0 0.6em; }
+.ow-ai-output ul, .ow-ai-output ol { margin: 0 0 0.6em; padding-left: 1.3em; }
+.ow-ai-output li { margin: 0.15em 0; }
+.ow-ai-preview-label { font-size: 0.85rem; color: #5a4a3a; margin: 0 0 4px; }
+.ow-ai-created { font-size: 0.9rem; color: #1e6b3a; margin: 6px 0 0; }
+.ow-aistudio .ow-ai-result .ow-row { flex-wrap: wrap; gap: 8px; }
 .ow-ai-status { margin: 0; font-size: 0.85rem; color: #465365; }
 .ow-ai-guide summary { cursor: pointer; font-weight: 700; }
 .ow-aistudio.is-compact .ow-ai-grid { grid-template-columns: 1fr 1fr; }

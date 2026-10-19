@@ -83,7 +83,9 @@ export class AiLoadError extends Error {
 }
 
 export type ChatMessage = { role: "system" | "user" | "assistant"; content: string };
-type Pending = { onToken: (text: string) => void; resolve: (r: { text: string; tokens: number; ms: number }) => void; reject: (e: Error) => void };
+export type GenResult = { text: string; tokens: number; ms: number; degenerate?: boolean };
+export type GenOptions = { repetitionPenalty?: number; noRepeatNgram?: number; sample?: boolean };
+type Pending = { onToken: (text: string) => void; resolve: (r: GenResult) => void; reject: (e: Error) => void };
 
 export class AiEngine {
   private worker: Worker | null = null;
@@ -96,11 +98,11 @@ export class AiEngine {
     if (this.worker) return this.worker;
     const worker = new Worker(new URL("./worker.ts", import.meta.url), { type: "module" });
     worker.addEventListener("message", (event: MessageEvent) => {
-      const msg = event.data as { type: string; id?: number; text?: string; loaded?: number; total?: number; key?: string; tokens?: number; ms?: number; message?: string; kind?: string; detail?: Record<string, string | number> };
+      const msg = event.data as { type: string; id?: number; text?: string; loaded?: number; total?: number; key?: string; tokens?: number; ms?: number; degenerate?: boolean; message?: string; kind?: string; detail?: Record<string, string | number> };
       if (msg.type === "progress") this.loading?.onProgress(msg.loaded ?? 0, msg.total ?? 0);
       else if (msg.type === "ready") { this.loadedKey = msg.key ?? ""; this.loading?.resolve(); this.loading = null; }
       else if (msg.type === "token" && msg.id !== undefined) this.pending.get(msg.id)?.onToken(msg.text ?? "");
-      else if (msg.type === "done" && msg.id !== undefined) { this.pending.get(msg.id)?.resolve({ text: msg.text ?? "", tokens: msg.tokens ?? 0, ms: msg.ms ?? 0 }); this.pending.delete(msg.id); }
+      else if (msg.type === "done" && msg.id !== undefined) { this.pending.get(msg.id)?.resolve({ text: msg.text ?? "", tokens: msg.tokens ?? 0, ms: msg.ms ?? 0, degenerate: msg.degenerate }); this.pending.delete(msg.id); }
       else if (msg.type === "error") {
         const error = new AiLoadError(msg.message ?? "error", msg.kind ?? "other", msg.detail ?? {});
         if (msg.id !== undefined && this.pending.has(msg.id)) { this.pending.get(msg.id)!.reject(error); this.pending.delete(msg.id); }
@@ -132,12 +134,12 @@ export class AiEngine {
     });
   }
 
-  generate(messages: ChatMessage[], maxTokens: number, onToken: (text: string) => void): Promise<{ text: string; tokens: number; ms: number }> {
+  generate(messages: ChatMessage[], maxTokens: number, onToken: (text: string) => void, options: GenOptions = {}): Promise<GenResult> {
     const worker = this.ensureWorker();
     const id = ++this.seq;
     return new Promise((resolve, reject) => {
       this.pending.set(id, { onToken, resolve, reject });
-      worker.postMessage({ type: "generate", id, messages, maxTokens });
+      worker.postMessage({ type: "generate", id, messages, maxTokens, options });
     });
   }
 
