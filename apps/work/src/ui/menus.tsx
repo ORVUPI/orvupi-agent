@@ -29,7 +29,7 @@ function Items({
         item.static ? (
           <p key={item.id} className="ow-menu-note" role="note">{item.label}</p>
         ) : (
-          <div key={item.id} className="ow-menu-row" onMouseEnter={() => setSub(item.children || item.table ? item.id : null)}>
+          <div key={item.id} className="ow-menu-row" onMouseEnter={() => { if (window.matchMedia("(hover: none)").matches) return; setSub(item.children || item.table ? item.id : null); }}>
             <button
               type="button"
               role="menuitem"

@@ -1699,8 +1699,8 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
                   </span>
                 </div>
               ))}
-              {phone ? <button type="button" className="sl-film-add" aria-label={tx("Nueva diapositiva", "New slide")} onClick={() => newSlide()}><Plus size={22} /></button> : null}
             </div>
+            {phone ? <button type="button" className="sl-film-add" aria-label={tx("Añadir diapositiva", "Add slide")} onClick={() => newSlide()}><Plus size={22} /></button> : null}
             {!phone ? (
               <div className="sl-film-foot">
                 <Icon label={tx("Vista de cuadrícula", "Grid view")} pressed={grid} onClick={() => setGrid((v) => !v)}><LayoutGrid size={18} /></Icon>

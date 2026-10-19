@@ -1,5 +1,17 @@
 # Registro de cambios
 
+## 0.9.0 — 2026-10-19
+
+Presentaciones: la estructura y las funciones de Google Slides, con la identidad ORVUPI (crema, rosa y tinta, bordes redondeados, el pulpo y el botón rosa «Presentar»).
+
+- Barra superior como Slides: pulpo, título editable, destacar, estado de guardado, menús completos (Archivo, Editar, Ver, Insertar, Formato, Diapositiva, Organizar, Herramientas, Ayuda), comentarios y «Presentar» con su menú (desde el principio, vista del presentador).
+- Barra de herramientas: buscar en los menús, nueva diapositiva con menú de diseños, deshacer/rehacer, imprimir, copiar formato, zoom/Ajustar, seleccionar, cuadro de texto, imagen, formas (19), líneas y flechas, comentario, Fondo, Diseño, Tema y Transición; con un objeto seleccionado cambia a sus herramientas (fuente, − / tamaño / + de 1 en 1 y lista 1–96, negrita, cursiva, subrayado, tachado, color, resaltado, alineación, interlineado, listas, relleno, borde, grosor, trazo, puntas, recortar, enlace, opciones de formato y animar). Se puede contraer.
+- Diapositivas de 16:9 (10 × 5,625 in) con 11 diseños reales y marcadores «Haz clic para añadir un título / subtítulo / texto»; 10 temas con vista previa; tira de miniaturas reales que se reordenan arrastrando; vista de cuadrícula; reglas en cm; notas del orador debajo con altura ajustable.
+- Objetos: texto con formato, formas, líneas y flechas, imágenes (subir, pegar, por URL, recortar, transparencia), tablas, gráficos (barras, columnas, líneas, circular), diagramas y vídeo (YouTube o archivo). Seleccionar, mover, cambiar tamaño (8 tiradores), girar, guías inteligentes, selección por recuadro, agrupar, ordenar, alinear, distribuir, voltear, copiar/cortar/pegar entre diapositivas, deshacer y combinaciones de teclas de Slides. Funciona con ratón y con el dedo.
+- Presentar a pantalla completa con transiciones (disolver, atenuar, deslizar, voltear, cubo, galería), animaciones al hacer clic, puntero láser, pantalla negra/blanca, saltar a una diapositiva y diapositivas omitidas; vista del presentador en otra ventana con siguiente diapositiva, notas y cronómetro.
+- Exportar a PDF (con texto seleccionable), PNG, PowerPoint (.pptx real con texto editable, formas, líneas, imágenes, tablas, notas, transiciones y enlaces), texto y .orvslides; importar .pptx de verdad (formas, texto con formato, imágenes, tablas, fondos, notas). Historial de versiones con restaurar. Comentarios con respuestas y resolver. Imprimir una diapositiva por página.
+- Seguridad: la CSP permite solo lo necesario para vídeo de YouTube (youtube-nocookie) e imágenes por URL.
+
 ## 0.8.9 — 2026-10-19
 
 Docs: tamaño de letra como Google Docs, sin saltos y sin hueco en la barra.

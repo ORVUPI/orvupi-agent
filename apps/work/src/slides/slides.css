@@ -371,7 +371,7 @@
 }
 
 /* ---------- móvil */
-.sl-root.is-phone .sl-head { padding: 6px 8px 0; gap: 4px; align-items: center; flex-wrap: wrap; }
+.sl-root.is-phone .sl-head { z-index: 90; padding: 6px 8px 0; gap: 4px; align-items: center; flex-wrap: wrap; }
 .sl-root.is-phone .sl-logo img { width: 32px; height: 32px; }
 .sl-root.is-phone .sl-titleblock { display: contents; }
 .sl-root.is-phone .sl-titlerow { flex: 1; min-width: 0; order: 1; }
@@ -389,7 +389,10 @@
 .sl-root.is-phone .sl-colors { width: 100%; }
 .sl-root.is-phone .sl-swatch { width: 32px; height: 32px; }
 .sl-root.is-phone .sl-body { flex-direction: column-reverse; }
-.sl-root.is-phone .sl-film { width: 100%; flex: none; }
+.sl-root.is-phone .sl-film { width: 100%; flex: none; flex-direction: row; align-items: stretch; }
+.sl-root.is-phone .sl-film-add { margin: 6px 8px 8px 0; }
+.sl-root.is-phone .ow-menubar [role="menu"] { z-index: 95; }
+.sl-root.is-phone .sl-film-list { flex: 1; min-width: 0; }
 .sl-root.is-phone .sl-film-list { flex-direction: row; overflow-x: auto; overflow-y: hidden; padding: 6px 8px 8px; gap: 8px; touch-action: pan-x; }
 .sl-root.is-phone .sl-film-item { flex-direction: column; align-items: center; flex: none; touch-action: pan-x; }
 .sl-root.is-phone .sl-film-num { width: auto; padding: 0; order: 2; }
