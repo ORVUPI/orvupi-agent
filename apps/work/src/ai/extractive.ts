@@ -247,3 +247,34 @@ export function looksSpanish(text: string): boolean {
   const es = all.filter((w) => ES_FUNC.has(w)).length;
   return es / all.length > 0.12;
 }
+
+/** Frases de la salida del modelo que se apoyan en el texto: sin palabras ni cifras ajenas, completas, sin
+ *  repetirse y cercanas a alguna frase de apoyo (`support`). Devuelve las aceptadas y la proporción aceptada. */
+export function faithfulSentences(output: string, source: string, opts: { maxNovel: number; minSupport: number; support?: string[] }): { kept: string[]; share: number } {
+  const src = new Set(contentWords(source).map(stem));
+  const srcNumbers = new Set((source.match(/\d+(?:[.,]\d+)*/g) ?? []).map((n) => n.replace(/[.,]/g, "")));
+  const supports = (opts.support ?? splitSentences(source).map((s) => s.text)).map((s) => new Set(contentWords(s).map(stem)));
+  const sentences = splitSentences(output.replace(/^\s*[-*•]\s+/gm, "")).map((s) => s.text).filter((s) => !/^\*\*.*\*\*$/.test(s));
+  const kept: string[] = [];
+  const seen: Set<string>[] = [];
+  let total = 0;
+  let good = 0;
+  sentences.forEach((s, i) => {
+    total += s.length;
+    const cw = contentWords(s).map(stem);
+    if (cw.length < 3) return;
+    if (i === sentences.length - 1 && sentences.length > 1 && !/[.!?…»")]$/.test(s.trim())) return;
+    const novel = cw.filter((w) => !src.has(w)).length / cw.length;
+    if (novel > opts.maxNovel) return;
+    const nums = (s.match(/\d+(?:[.,]\d+)*/g) ?? []).map((n) => n.replace(/[.,]/g, ""));
+    if (nums.some((n) => !srcNumbers.has(n))) return;
+    const set = new Set(cw);
+    const support = Math.max(0, ...supports.map((sup) => [...set].filter((w) => sup.has(w)).length / set.size));
+    if (support < opts.minSupport) return;
+    if (seen.some((prev) => [...set].filter((w) => prev.has(w)).length / set.size > 0.7)) return;
+    seen.push(set);
+    kept.push(s.trim());
+    good += s.length;
+  });
+  return { kept, share: total ? good / total : 0 };
+}

@@ -53,11 +53,14 @@ describe("ORVUPI AI: descarga por partes", () => {
     expect(modelWeightsKey("HuggingFaceTB/SmolLM2-135M-Instruct", "q8")).toBe(storageKey(URL_MODEL));
   });
 
-  it("en el móvil recomienda el modelo más ligero (WASM)", () => {
+  it("en el móvil recomienda un modelo ligero y multilingüe por WASM (y el más ligero con poca memoria)", () => {
     const m = recommendedModel({ webgpu: true, f16: true, wasm: true, memoryGb: 8, mobile: true });
-    expect(m?.id).toBe("smol135-cpu");
+    expect(m?.id).toBe("lfm350-cpu");
+    expect(m?.device).toBe("wasm");
+    expect(m!.sizeMb).toBeLessThan(400);
     const lightest = [...AI_MODELS].sort((a, b) => a.sizeMb - b.sizeMb)[0]!;
-    expect(m?.id).toBe(lightest.id);
+    expect(recommendedModel({ webgpu: false, f16: false, wasm: true, memoryGb: 2, mobile: true })?.id).toBe(lightest.id);
+    expect(modelWeightsKey("onnx-community/LFM2-350M-ONNX", "q4", true)).toBe(storageKey("https://huggingface.co/onnx-community/LFM2-350M-ONNX/resolve/main/onnx/model_q4.onnx_data"));
     expect(recommendedModel({ webgpu: true, f16: true, wasm: true, memoryGb: 8, mobile: false })?.id).toBe("qwen05-gpu");
   });
 
