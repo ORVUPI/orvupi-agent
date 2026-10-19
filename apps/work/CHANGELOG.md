@@ -1,6 +1,6 @@
 # Registro de cambios
 
-## 0.8.7 — 2026-10-19
+## 0.8.9 — 2026-10-19
 
 Docs: tamaño de letra como Google Docs, sin saltos y sin hueco en la barra.
 
@@ -9,6 +9,23 @@ Docs: tamaño de letra como Google Docs, sin saltos y sin hueco en la barra.
 - La caja del número muestra el tamaño real de la selección (también en títulos) y acepta un número escrito con Intro. Salir de la caja sin cambiar el número ya no toca el texto.
 - La lista de tamaños va del 1 al 96, todos los números en orden y sin saltos, se puede desplazar, se abre en el tamaño actual y lo resalta.
 - Móvil: el texto se muestra algo más grande que en la hoja (16 px = 11 pt); los títulos y los tamaños elegidos se escalan igual, así que cada punto que se sube o se baja se nota (antes 12 pt se veía igual que 11).
+## 0.8.8 — 2026-10-19
+
+ORVUPI AI: resultados limpios y entregados como documento.
+
+- Entrada limpia: antes de enviar el texto al modelo se quitan imágenes (markdown y HTML), data URLs, `blob:`, URLs largas (se quedan en el dominio), marcado HTML, bloques base64 y rachas de símbolos. Los textos largos siguen yendo por partes.
+- Salida controlada: se detecta la salida degenerada («![](![](!!!!…», rachas del mismo carácter, bucles de palabras, pocas letras) y se corta la generación en cuanto aparece; se reintenta una vez con más penalización de repetición y `no_repeat_ngram_size`, y si vuelve a fallar se muestra un mensaje claro (en WebGPU recomienda el modelo sin GPU, porque «!!!!» es el síntoma de NaN en fp16) en lugar de la basura.
+- El resultado se muestra con formato (títulos, listas, negrita, cursiva) como vista previa.
+- Cada función (resumir, explicar, preguntar, reescribir, traducir, esquema) entrega el resultado como documento: al terminar se crea en Mi unidad un documento de ORVUPI Work con formato, titulado con la función y el nombre del origen, y se abre. Botones: Copiar, Abrir el documento, Insertar en el documento (dentro de Docs, con formato), Descargar PDF y Descargar Word (.docx).
+## 0.8.6 — 2026-10-19
+
+Imágenes en Docs (pegadas, insertadas o importadas), sin fallos al moverlas ni al cambiarles el tamaño.
+
+- Una imagen pegada o insertada nunca sale de los márgenes: su ancho se limita al ancho útil de la página.
+- Redimensionar sin parpadeo: la paginación se congela durante el arrastre (antes recolocaba la imagen entre páginas en cada movimiento), el tamaño se aplica en requestAnimationFrame y sin transacciones hasta soltar. Las esquinas mantienen la proporción (Mayús la libera) con un cambio continuo; los lados cambian una dimensión. Nunca más ancha que la página. Ya no hay etiqueta de píxeles durante el arrastre.
+- Mover con el ratón o con el dedo (con la imagen seleccionada) desde el centro: «En línea» la recoloca entre párrafos con línea de inserción; «Ajustar texto», «Detrás» y «Delante» se mueven libremente por todo el documento (se anclan al párrafo de destino) y siempre dentro de la página. Desplazamiento automático cerca de los bordes.
+- El marco, los tiradores y el botón ⋯ se recortan por el área del documento: al hacer scroll ya no flotan sobre la barra de herramientas y desaparecen si la imagen sale de la vista. El ⋯ se coloca en la parte visible de la imagen.
+- Menú ⋯ (0.8.5+): sin cambios de uso.
 
 ## 0.8.5 — 2026-10-18
 

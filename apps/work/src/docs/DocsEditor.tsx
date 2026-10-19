@@ -13,6 +13,7 @@ import type { FileRecord, StorageService } from "../storage/types";
 import { Button, ErrorState, Input } from "../ui/kit";
 import { DocsSurface } from "./DocsSurface";
 import { AiStudio } from "../ai/AiStudio";
+import { markdownToNodes } from "../ai/markdown";
 import { combinedContent, tabsOf, type DocTab } from "./tabs";
 import { tabFromHash } from "./DocTabs";
 import { CommentsRail } from "./CommentsRail";
@@ -20,7 +21,7 @@ import { LayoutTools } from "./LayoutTools";
 import { usePhone } from "../ui/phone";
 import { Modal } from "../ui/overlay";
 import { createExtensions, pastedHtml } from "./extensions";
-import { imageAttrs, prepareImage } from "./image-paste";
+import { imageAttrs, contentWidth, prepareImage } from "./image-paste";
 import { findBefore, findInSlices, type TextSlice } from "./find";
 import { exportHtml } from "./html";
 import { countWords, docToText, firstLine, UNTITLED_NAMES, type DocComment, type DocVersion, type JsonNode, type PageMargin, type PageOrientation, type PageSize } from "./model";
@@ -461,8 +462,8 @@ export function DocsEditor({
       setFindNote(t("reasonImageSize"));
       return;
     }
-    const attrs = imageAttrs(prepared);
     const current = editorRef.current;
+    const attrs = imageAttrs(prepared, current ? contentWidth(current.view) : undefined);
     if (current?.state.selection instanceof NodeSelection) {
       current.chain().focus().insertContentAt(current.state.selection.to, { type: "image", attrs }).run();
       return;
@@ -631,7 +632,7 @@ export function DocsEditor({
             }}
             onInsert={(text) => {
               if (!editor) return;
-              const paragraphs = text.split(/\n+/).map((line) => line.trim()).filter(Boolean).map((line) => ({ type: "paragraph", content: [{ type: "text", text: line }] }));
+              const paragraphs = markdownToNodes(text);
               const { to } = editor.state.selection;
               editor.chain().focus().insertContentAt(to, paragraphs).run();
             }}

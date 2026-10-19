@@ -1321,7 +1321,8 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-docs:not(.is-narrow) .ow-vruler-spacer { display: none; }
 @media print { .ow-docs-center { margin: 0 !important; width: auto; } }
 /* 0.8.3 · redimensionar imágenes */
-.ow-imgframe { position: fixed; z-index: 35; pointer-events: none; outline: 2px solid #e0245e; outline-offset: 0; box-sizing: border-box; }
+.ow-imglayer { position: fixed; z-index: 35; overflow: hidden; pointer-events: none; contain: layout paint; }
+.ow-imgframe { position: absolute; pointer-events: none; outline: 2px solid #e0245e; outline-offset: 0; box-sizing: border-box; }
 .ow-imgframe-h { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; background: #fff; border: 2px solid #e0245e; border-radius: 2px; box-sizing: border-box; pointer-events: auto; touch-action: none; }
 .ow-imgframe-h.is-nw { left: 0; top: 0; cursor: nwse-resize; }
 .ow-imgframe-h.is-n { left: 50%; top: 0; cursor: ns-resize; }
@@ -1332,15 +1333,16 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-imgframe-h.is-sw { left: 0; top: 100%; cursor: nesw-resize; }
 .ow-imgframe-h.is-w { left: 0; top: 50%; cursor: ew-resize; }
 @media (pointer: coarse), (max-width: 720px) { .ow-imgframe-h { width: 24px; height: 24px; margin: -12px 0 0 -12px; border-radius: 50%; } }
+.ProseMirror img[data-ow-resizing] { max-width: none !important; object-fit: fill !important; transition: none !important; }
+.ProseMirror img[data-ow-moving] { opacity: 0.88; transition: none !important; will-change: transform; position: relative; z-index: 4; }
 .ow-imgframe-size { position: absolute; left: 50%; top: 100%; transform: translate(-50%, 8px); background: #102032; color: #fff; font-size: 12px; padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
 .ow-imgframe-move { position: absolute; inset: 0; pointer-events: auto; cursor: move; touch-action: none; -webkit-user-select: none; user-select: none; }
 .ow-imgframe.is-moving { outline-style: dashed; }
-.ow-imgcaret { position: fixed; z-index: 38; height: 3px; border-radius: 2px; background: #e0245e; pointer-events: none; box-shadow: 0 0 0 1px #fff; }
-.ow-imgmore { position: absolute; right: 16px; top: 16px; width: 28px; height: 28px; padding: 0; display: grid; place-items: center; border-radius: 50%; border: 2px solid #102032; background: #fff; color: #102032; fill: currentColor; box-shadow: 0 1px 4px rgba(16, 32, 50, 0.3); cursor: pointer; pointer-events: auto; touch-action: manipulation; }
+.ow-imgcaret { position: absolute; z-index: 2; height: 3px; border-radius: 2px; background: #e0245e; pointer-events: none; box-shadow: 0 0 0 1px #fff; }
+.ow-imgmore { position: absolute; width: 28px; height: 28px; padding: 0; display: grid; place-items: center; border-radius: 50%; border: 2px solid #102032; background: #fff; color: #102032; fill: currentColor; box-shadow: 0 1px 4px rgba(16, 32, 50, 0.3); cursor: pointer; pointer-events: auto; touch-action: manipulation; }
 .ow-imgmore:hover, .ow-imgmore[aria-expanded="true"] { background: #ffe1ea; }
-.ow-imgmore.is-outside { right: auto; left: 100%; top: 0; margin-left: 16px; }
 .ow-imgmore:focus-visible { outline: 3px solid #e0245e; outline-offset: 2px; }
-@media (pointer: coarse) { .ow-imgmore { width: 36px; height: 36px; right: 20px; top: 20px; } }
+@media (pointer: coarse) { .ow-imgmore { width: 36px; height: 36px; } }
 .ow-imgmenu { position: fixed; z-index: 37; box-sizing: border-box; display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; background: #fff; border: 2px solid #102032; border-radius: 10px; padding: 4px; box-shadow: 0 4px 14px rgba(16, 32, 50, 0.28); }
 .ow-imgmenu button { display: flex; align-items: center; gap: 6px; width: 100%; text-align: left; border: 0; background: transparent; color: #102032; font: inherit; font-size: 14px; padding: 6px 10px 6px 6px; border-radius: 6px; min-height: 34px; cursor: pointer; }
 .ow-imgmenu button:hover, .ow-imgmenu button:focus-visible { background: #ffe1ea; outline: none; }
@@ -1448,7 +1450,15 @@ body, .ow-shell, .ow-docs, .ow-docs-body, .ow-docs-scroll { background-color: va
 .ow-ai-chat li { padding: 8px 10px; border-radius: 12px; white-space: pre-wrap; }
 .ow-ai-chat li[data-role="user"] { background: #ffe1ea; justify-self: end; max-width: 85%; }
 .ow-ai-chat li[data-role="assistant"] { background: #fff8ec; border: 1px solid #e8d6c0; }
-.ow-ai-output { white-space: pre-wrap; min-height: 3em; line-height: 1.5; background: #fff8ec; border-radius: 12px; padding: 10px; }
+.ow-ai-output { white-space: normal; min-height: 3em; line-height: 1.5; background: #fff8ec; border-radius: 12px; padding: 10px 14px; overflow-wrap: anywhere; }
+.ow-ai-output h4 { font-size: 1.1rem; margin: 0.4em 0 0.3em; }
+.ow-ai-output h5 { font-size: 1rem; margin: 0.6em 0 0.2em; }
+.ow-ai-output p { margin: 0 0 0.6em; }
+.ow-ai-output ul, .ow-ai-output ol { margin: 0 0 0.6em; padding-left: 1.3em; }
+.ow-ai-output li { margin: 0.15em 0; }
+.ow-ai-preview-label { font-size: 0.85rem; color: #5a4a3a; margin: 0 0 4px; }
+.ow-ai-created { font-size: 0.9rem; color: #1e6b3a; margin: 6px 0 0; }
+.ow-aistudio .ow-ai-result .ow-row { flex-wrap: wrap; gap: 8px; }
 .ow-ai-status { margin: 0; font-size: 0.85rem; color: #465365; }
 .ow-ai-guide summary { cursor: pointer; font-weight: 700; }
 .ow-aistudio.is-compact .ow-ai-grid { grid-template-columns: 1fr 1fr; }
