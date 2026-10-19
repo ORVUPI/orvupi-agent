@@ -58,8 +58,12 @@ test("la lista de tamaños va del 1 al 96 de 1 en 1, sin saltos, y se abre en el
   expect(c.y).toBeGreaterThanOrEqual(l.y - 1);
   expect(c.y + c.height).toBeLessThanOrEqual(l.y + l.height + 1);
   // Se puede desplazar: el 96 existe y se elige
-  await list.getByRole("option", { name: "96", exact: true }).click();
+  const last = list.getByRole("option", { name: "96", exact: true });
+  await last.scrollIntoViewIfNeeded();
+  await expect(last).toBeInViewport();
+  await last.click();
   await expect(input).toHaveValue("96");
+  await expect(list).toHaveCount(0);
   await doc.close();
 });
 
