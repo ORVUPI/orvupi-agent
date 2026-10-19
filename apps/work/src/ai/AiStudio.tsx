@@ -2,7 +2,8 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { FileRecord, StorageService } from "../storage/types";
 import { formatBytes } from "../security/names";
 import { AiLoadError, aiEngine, detectAiSupport, isModelCached, recommendedModel, usableModels, type AiModel, type AiSupport, type ChatMessage } from "./engine";
-import { buildMessages, combineMessages, MAX_PARTS, MAX_TOKENS, splitText, type AiAction } from "./prompts";
+import { buildMessages, CHUNK_CHARS, MAX_PARTS, type AiAction } from "./prompts";
+import { hybridAsk, hybridExplain, hybridOutline, hybridSummary, paragraphChunks, rewriteMessages, rewriteOk, translationOk, type Generate } from "./hybrid";
 import { aiFiles, textOfFile } from "./sources";
 import { cleanInput, cleanOutput } from "./clean";
 import { markdownToDoc, markdownToPlain, parseMarkdown, type MdBlock, type Span } from "./markdown";
@@ -50,7 +51,7 @@ const ES = {
   pasteLabel: "Texto",
   emptySelection: "No hay texto seleccionado en el documento.",
   actions: "3. Qué hacer",
-  summarize: "Resumir", summarizeHelp: "Las ideas principales en viñetas. Los textos largos se resumen por partes.",
+  summarize: "Resumir", summarizeHelp: "Las ideas principales en viñetas, elegidas del propio texto y redactadas por el modelo. Funciona también con textos largos.",
   explain: "Explicar", explainHelp: "Lo explica con palabras sencillas y ejemplos.",
   ask: "Preguntar", askHelp: "Chatea sobre el texto: responde solo con lo que pone.",
   rewrite: "Reescribir", rewriteHelp: "Mejora la claridad y la redacción sin cambiar el sentido.",
@@ -63,6 +64,14 @@ const ES = {
   working: "Generando…",
   part: "Resumiendo la parte {n} de {total}…",
   truncated: "El texto es largo: se usaron {used} de {total} caracteres.",
+  partRewrite: "Reescribiendo la parte {n} de {total}…",
+  partTranslate: "Traduciendo la parte {n} de {total}…",
+  originModel: "redactado por el modelo y comprobado con el texto original",
+  originMixed: "{model} de {total} puntos redactados por el modelo; el resto, frases literales del texto (lo que el modelo escribió no se apoyaba en el original)",
+  originText: "frases elegidas del propio texto (la redacción del modelo no era fiel al original y se descartó)",
+  keptRewrite: "{kept} de {total} partes se dejaron como estaban (la reescritura del modelo cambiaba el contenido)",
+  keptTranslate: "{kept} de {total} partes quedaron sin traducir (la traducción del modelo no era fiable)",
+  untranslated: "[Sin traducir: el modelo no dio una traducción fiable de esta parte]",
   stop: "Detener",
   copy: "Copiar",
   copied: "Copiado",
@@ -271,8 +280,8 @@ export function AiStudio({
     if (phase !== "ready" || !model || !engine.isLoaded(model)) { setNote(L.needModel); return; }
     const raw = (await sourceText()).trim();
     // Texto plano limpio: sin imágenes, data URLs, URLs larguísimas ni marcado (hacían degenerar al modelo)
-    const text = cleanInput(raw);
-    if (!text) { setNote(source === "selection" ? L.emptySelection : L.needText); return; }
+    const full = cleanInput(raw);
+    if (!full) { setNote(source === "selection" ? L.emptySelection : L.needText); return; }
     if (action === "ask" && !question.trim()) return;
     setBusy(true);
     stopRef.current = false;
@@ -283,53 +292,62 @@ export function AiStudio({
     setStatus(L.working);
     const started = performance.now();
     let tokens = 0;
-    try {
-      const parts = splitText(text);
-      const used = parts.slice(0, MAX_PARTS);
-      const usedChars = used.reduce((n, p) => n + p.length, 0);
-      const truncated = usedChars < text.length - 10;
-      let result = "";
-      if (action === "summarize" && used.length > 1) {
-        const partials: string[] = [];
-        for (let i = 0; i < used.length && !stopRef.current; i += 1) {
-          setStatus(f(L.part, { n: i + 1, total: used.length }));
-          const r = await generateClean(action, buildMessages("summarize", used[i]!), 220, false).catch(() => null);
-          if (r) { tokens += r.tokens; partials.push(r.text); }
-        }
-        if (partials.length === 0) throw new Error(L.garbage);
-        setStatus(L.working);
-        const final = await generateClean(action, combineMessages(partials), MAX_TOKENS.summarize, true);
-        tokens += final.tokens;
-        result = final.text;
-      } else if ((action === "rewrite" || action === "translate") && used.length > 1) {
-        for (let i = 0; i < used.length && !stopRef.current; i += 1) {
-          setStatus(f(L.part, { n: i + 1, total: used.length }).replace(/Resumiendo/, action === "translate" ? "Traduciendo" : "Reescribiendo"));
-          const r = await generateClean(action, buildMessages(action, used[i]!, { language }), MAX_TOKENS[action], false);
-          tokens += r.tokens;
-          result += `${r.text}\n\n`;
-          setOutput(result.trim());
-        }
-      } else {
-        const body = used[0]!;
-        const messages = buildMessages(action, body, { question, language, history });
-        const r = await generateClean(action, messages, MAX_TOKENS[action], true);
+    // El modelo solo redacta; si su salida es basura devuelve null y se usa el texto original
+    const generate: Generate = async (messages, maxTokens) => {
+      if (stopRef.current) return null;
+      try {
+        const r = await generateClean(action, messages, maxTokens, true);
         tokens += r.tokens;
-        result = r.text;
+        return r.text;
+      } catch {
+        return null;
+      }
+    };
+    try {
+      const limit = CHUNK_CHARS * MAX_PARTS;
+      const text = full.length > limit ? full.slice(0, limit) : full;
+      const truncated = text.length < full.length;
+      let result = "";
+      let origin = "";
+      if (action === "summarize" || action === "explain" || action === "outline" || action === "ask") {
+        // Extracción determinista (TextRank) + redacción del modelo + comprobación contra el original
+        const r = action === "summarize"
+          ? await hybridSummary(text, generate, (n, total) => setStatus(total > 1 ? f(L.part, { n, total }) : L.working))
+          : action === "explain" ? await hybridExplain(text, generate)
+          : action === "outline" ? await hybridOutline(text, generate)
+          : await hybridAsk(text, question, generate);
+        result = r.markdown;
+        origin = r.mode === "model" ? L.originModel : r.mode === "mixed" ? f(L.originMixed, { model: r.fromModel, total: r.fromModel + r.fromText }) : L.originText;
         if (action === "ask") {
-          setHistory((h) => [...h, { role: "user" as const, content: question }, { role: "assistant" as const, content: r.text }].slice(-8));
+          const answer = "answer" in r ? String(r.answer) : r.markdown;
+          setHistory((h) => [...h, { role: "user" as const, content: question }, { role: "assistant" as const, content: answer }].slice(-8));
           setQuestion("");
         }
+      } else {
+        // Reescribir y traducir: por trozos cortos, y cada trozo se comprueba (fiel, sin inventar, idioma correcto)
+        const chunks = paragraphChunks(text);
+        const toSpanish = /español/i.test(language);
+        let kept = 0;
+        for (let i = 0; i < chunks.length && !stopRef.current; i += 1) {
+          if (chunks.length > 1) setStatus(f(action === "translate" ? L.partTranslate : L.partRewrite, { n: i + 1, total: chunks.length }));
+          const chunk = chunks[i]!;
+          const messages = action === "rewrite" ? rewriteMessages(chunk) : buildMessages("translate", chunk, { language });
+          const out = await generate(messages, Math.min(900, Math.ceil(chunk.length / 2.2) + 80));
+          const ok = out !== null && (action === "rewrite" ? rewriteOk(out, chunk) : translationOk(out, chunk, toSpanish));
+          if (!ok) kept += 1;
+          result += `${ok ? out : action === "translate" ? `*${L.untranslated}*\n\n${chunk}` : chunk}\n\n`;
+          setOutput(result.trim());
+        }
+        if (kept === chunks.length) throw new Error(model?.device === "webgpu" ? L.garbageGpu : L.garbage);
+        origin = kept ? f(action === "translate" ? L.keptTranslate : L.keptRewrite, { kept, total: chunks.length }) : L.originModel;
       }
       result = result.trim();
+      if (action === "ask") result = `**${question.trim()}**\n\n${result}`;
       setOutput(result);
       const secs = ((performance.now() - started) / 1000).toFixed(1);
-      setStatus(`${f(L.stats, { tokens, secs })}${truncated ? ` · ${f(L.truncated, { used: usedChars, total: text.length })}` : ""}`);
+      setStatus(`${f(L.stats, { tokens, secs })}${origin ? ` · ${origin}` : ""}${truncated ? ` · ${f(L.truncated, { used: text.length, total: full.length })}` : ""}`);
       // El resultado principal es un documento: se crea en Mi unidad y se abre
-      if (result && !stopRef.current) {
-        const body = action === "ask" ? `**${question.trim() || ""}**\n\n${result}` : result;
-        if (action === "ask") setOutput(body);
-        await saveAsDocument(body, title, true);
-      }
+      if (result && !stopRef.current) await saveAsDocument(result, title, true);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
     } finally {
