@@ -22,7 +22,7 @@ export function cleanInput(text: string): string {
     try { return new URL(url).host; } catch { return " "; }
   });
   s = s.replace(/<\/?[a-z][a-z0-9-]*(\s[^>]*)?>/gi, " ");
-  s = s.replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").replace(/&quot;/gi, '"');
+  s = s.replace(/&(nbsp|lt|gt|quot|amp);/gi, (_, e: string) => ({ nbsp: " ", lt: "<", gt: ">", quot: '"', amp: "&" })[e.toLowerCase() as "nbsp"]);
   // Bloques base64 o hashes muy largos sin espacios
   s = s.replace(/[A-Za-z0-9+/=_-]{80,}/g, " ");
   // Rachas del mismo carácter (no letra/dígito): «!!!!!!» → «!!!»

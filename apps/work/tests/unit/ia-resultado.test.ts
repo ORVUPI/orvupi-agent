@@ -37,7 +37,7 @@ describe("ORVUPI AI: texto limpio para el modelo", () => {
     expect(splitText(clean)).toHaveLength(1);
   });
 
-  it("detecta la salida basura de la captura de Cristian y acepta un resumen normal", () => {
+  it("detecta la salida basura de la captura del usuario y acepta un resumen normal", () => {
     expect(isDegenerate("![](![](!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")).toBe(true);
     expect(isDegenerate("![](https://!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")).toBe(true);
     expect(isDegenerate("la salud la salud la salud la salud la salud la salud la salud la salud la salud la salud la salud la salud la salud la salud la salud")).toBe(true);
