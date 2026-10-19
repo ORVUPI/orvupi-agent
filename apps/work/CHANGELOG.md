@@ -1,6 +1,6 @@
 # Registro de cambios
 
-## 0.9.1 — 2026-10-19
+## 0.9.2 — 2026-10-19
 
 ORVUPI AI automática, fluida y fiable en español; plantillas mejor ordenadas.
 
