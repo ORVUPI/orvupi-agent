@@ -886,7 +886,7 @@ function tableNode(table: Element, ctx: Ctx): JsonNode {
     const count = Math.max(...rows.map((row) => kids(row, "tc").reduce((n, tc) => n + Math.max(1, Number(attr(kid(kid(tc, "tcPr"), "gridSpan"), "val") ?? 1) || 1), 0)), 1);
     grid = total > 0 ? Array.from({ length: count }, () => total / count) : [];
   }
-  const available = Math.max(120, ctx.contentWidthPx);
+  const available = Math.max(120, ctx.contentWidthPx - 4); // margen para los bordes de la hoja y de la tabla
   const sum = grid.reduce((a, b) => a + b, 0);
   const scale = sum > available ? available / sum : 1;
   const cols = grid.map((w) => Math.max(24, Math.floor(w * scale)));

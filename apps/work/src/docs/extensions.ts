@@ -501,7 +501,9 @@ function paintCell<T extends typeof TableCell>(node: T) {
           renderHTML: (attributes: { padding?: string | null }) => {
             const value = cellPadding(attributes.padding);
             if (!value) return {};
-            return { "data-padding": value, style: `padding: ${value.split(" ").map((n) => `${n}px`).join(" ")}` };
+            const [top, right, bottom, left] = value.split(" ");
+            // Variables: la paginación suma su hueco al relleno superior sin pisarlo.
+            return { "data-padding": value, style: `--cell-pt: ${top}px; --cell-pr: ${right}px; --cell-pb: ${bottom}px; --cell-pl: ${left}px` };
           },
         },
         valign: {
@@ -539,10 +541,14 @@ export function fitTable(table: HTMLTableElement) {
     table.style.width = "100%";
     table.style.minWidth = "";
     table.dataset.fit = "1";
+    // En el móvil la letra de una tabla encogida baja algo (sin pasar de ~70 %) para que las palabras quepan.
+    const ratio = avail / total;
+    table.style.setProperty("--ow-fit-text", String(Math.round(Math.max(0.68, Math.min(1, ratio * 1.35)) * 100) / 100));
   } else if (table.dataset.fit === "1") {
     cols.forEach((col, index) => { if (px[index]) col.style.width = `${px[index]}px`; });
     if (known) table.style.width = `${total}px`;
     delete table.dataset.fit;
+    table.style.removeProperty("--ow-fit-text");
   }
 }
 

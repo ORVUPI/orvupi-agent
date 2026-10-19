@@ -892,9 +892,14 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-a4 .ProseMirror .tableWrapper { overflow: visible; max-width: 100%; margin: 8px 0 12px; }
 .ow-a4 .ProseMirror table[data-fit="1"] { width: 100% !important; }
 .ow-a4 .ProseMirror td img, .ow-a4 .ProseMirror th img { max-width: 100%; height: auto; }
+.ow-a4 .ProseMirror table[data-fit="1"] td, .ow-a4 .ProseMirror table[data-fit="1"] th { overflow-wrap: break-word; }
+.ow-a4.is-flow .ProseMirror table[data-fit="1"] td, .ow-a4.is-flow .ProseMirror table[data-fit="1"] th { hyphens: auto; -webkit-hyphens: auto; }
+.ow-a4.is-flow .ProseMirror table[data-fit="1"] td, .ow-a4.is-flow .ProseMirror table[data-fit="1"] th { font-size: calc(16px * var(--ow-fit-text, 1)); --cell-pl: 4px; --cell-pr: 4px; }
+.ow-a4.is-flow .ProseMirror table[data-fit="1"] [style*="--ow-pt"] { font-size: calc(var(--ow-pt) * 16px / 11 * var(--ow-fit-text, 1)) !important; }
+.ow-a4.is-flow .ProseMirror table[data-fit="1"] td > ul, .ow-a4.is-flow .ProseMirror table[data-fit="1"] td > ol { padding-left: 1.1em; }
 .ow-a4 .ProseMirror td > ul, .ow-a4 .ProseMirror td > ol, .ow-a4 .ProseMirror th > ul, .ow-a4 .ProseMirror th > ol { margin: 0; padding-left: 1.4em; }
 .ow-a4 .ProseMirror table { border-collapse: collapse; table-layout: fixed; width: 100%; --table-border: #102032; }
-.ow-a4 .ProseMirror td, .ow-a4 .ProseMirror th { border: 1px solid var(--table-border, #102032); padding: 6px 8px; vertical-align: top; position: relative; min-width: 24px; }
+.ow-a4 .ProseMirror td, .ow-a4 .ProseMirror th { border: 1px solid var(--table-border, #102032); padding: var(--cell-pt, 6px) var(--cell-pr, 8px) var(--cell-pb, 6px) var(--cell-pl, 8px); vertical-align: top; position: relative; min-width: 24px; }
 .ow-a4 .ProseMirror th { background: #fff0f5; font-weight: 600; }
 .ow-a4 .ProseMirror .column-resize-handle { position: absolute; right: -2px; top: 0; bottom: -2px; width: 4px; background: #b0124f; pointer-events: none; z-index: 2; }
 .ow-a4 .ProseMirror.resize-cursor { cursor: col-resize; }
@@ -1237,14 +1242,14 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-pgap-notes { border-top-color: transparent; }
 .ow-pgap.is-inline { display: flex; text-indent: 0; font-weight: 400; font-style: normal; text-align: left; line-height: normal; }
 .ow-a4.is-measuring .ow-pgap, .ow-a4.is-measuring .ow-pfinal, .ow-a4.is-measuring .ow-pgov-layer { display: none !important; }
-.ow-a4 .ProseMirror tr.ow-pgrow > td, .ow-a4 .ProseMirror tr.ow-pgrow > th { padding-top: calc(var(--pg, 0px) + 6px); }
-.ow-a4.is-measuring .ProseMirror tr.ow-pgrow > td, .ow-a4.is-measuring .ProseMirror tr.ow-pgrow > th { padding-top: 6px; }
+.ow-a4 .ProseMirror tr.ow-pgrow > td, .ow-a4 .ProseMirror tr.ow-pgrow > th { padding-top: calc(var(--pg, 0px) + var(--cell-pt, 6px)); }
+.ow-a4.is-measuring .ProseMirror tr.ow-pgrow > td, .ow-a4.is-measuring .ProseMirror tr.ow-pgrow > th { padding-top: var(--cell-pt, 6px); }
 .ow-pgov-layer { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
 .ow-pgov { position: absolute; left: 0; right: 0; margin: 0; background: #fff; display: flex; flex-direction: column; }
 .ow-pgov .ow-pgap-band { margin: 0 -1px; }
 .ow-pgov-head { flex: none; margin-top: 0; overflow: hidden; }
 .ow-pgov-head table { border-collapse: collapse; table-layout: fixed; width: 100%; }
-.ow-pgov-head th, .ow-pgov-head td { border: 1px solid #102032; padding: 6px 8px; background: #fff0f5; font-weight: 600; vertical-align: top; text-align: left; }
+.ow-pgov-head th, .ow-pgov-head td { border: 1px solid #102032; padding: var(--cell-pt, 6px) var(--cell-pr, 8px) var(--cell-pb, 6px) var(--cell-pl, 8px); background: #fff0f5; font-weight: 600; vertical-align: top; text-align: left; }
 .ow-pfinal { position: relative; margin: 0 calc(-1 * var(--pm, 96px)); padding: 0 var(--pm, 96px); user-select: none; -webkit-user-select: none; }
 .ow-pfinal .ow-pgap-notes.is-last { position: static; margin-top: -1px; }
 .ow-endnotes { border-top: 1px solid #102032; width: 33%; padding-top: 6px; margin-top: 12px; }
