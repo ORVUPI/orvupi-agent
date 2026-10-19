@@ -2,6 +2,11 @@ import type { CSSProperties, ReactNode } from "react";
 import { PT, SLIDE_H, SLIDE_W, type ChartItem, type LineItem, type Slide, type SlideItem, type TableItem, type TextStyle } from "./model";
 import { shapePath } from "./shapes";
 import { THEMES, fontStack, type ThemeSpec } from "./themes";
+import { hasRunStyle, parasOf, runCss } from "./rich";
+
+function cssObject(css: Record<string, string>): CSSProperties {
+  return Object.fromEntries(Object.entries(css).map(([k, v]) => [k.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase()), v])) as CSSProperties;
+}
 
 export type PlaceholderLabels = Partial<Record<string, string>>;
 
@@ -53,7 +58,16 @@ function TextLines({ item, placeholder }: { item: SlideItem & TextStyle; placeho
   if (empty && placeholder) return <div className="sl-lines is-ph">{placeholder}</div>;
   return (
     <div className={`sl-lines${list}`} style={{ background: item.highlight }}>
-      {lines(item.text).map((line, i) => <div key={i}>{line || <br />}</div>)}
+      {item.rich && hasRunStyle(item.rich)
+        ? parasOf(item).map((para, i) => (
+          <div key={i}>
+            {para.some((r) => r.t) ? para.map((r, k) => {
+              const span = <span key={k} style={cssObject(runCss(r))}>{r.t}</span>;
+              return r.link ? <a key={k} href={r.link} className="sl-run-link" onClick={(e) => e.preventDefault()}>{span}</a> : span;
+            }) : <br />}
+          </div>
+        ))
+        : lines(item.text).map((line, i) => <div key={i}>{line || <br />}</div>)}
     </div>
   );
 }

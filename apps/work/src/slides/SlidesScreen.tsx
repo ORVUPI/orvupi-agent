@@ -15,7 +15,7 @@ import { Modal } from "../ui/overlay";
 import { usePhone } from "../ui/phone";
 import { APP_VERSION } from "../version";
 import {
-  LIMITS, SHAPES, SLIDE_ANIMS, SLIDE_FONTS, SLIDE_H, SLIDE_LAYOUTS, SLIDE_THEMES, SLIDE_TRANSITIONS, SLIDE_W, applyLayout, blankSlide, lineBox, moveItem, newId, orderItems,
+  LIMITS, PT, SHAPES, SLIDE_ANIMS, SLIDE_FONTS, SLIDE_H, SLIDE_LAYOUTS, SLIDE_THEMES, SLIDE_TRANSITIONS, SLIDE_W, applyLayout, blankSlide, lineBox, moveItem, newId, orderItems,
   parseSlides, serializeSlides, setBox, syncSlideText,
   type Dash, type LineItem, type ShapeKind, type Slide, type SlideAnim, type SlideItem, type SlideLayout, type SlideTheme, type SlideTransition, type SlidesFile, type TextStyle,
 } from "./model";
@@ -26,6 +26,7 @@ import {
 import { Presenter } from "./Present";
 import { exportPdf, exportPng } from "./render";
 import { exportPptx } from "./pptx";
+import { againstBase, hasRunStyle, parasHtml, parasOf, plainOf, readEditor, stripStyle, type RunStyle } from "./rich";
 import { shapePath } from "./shapes";
 import { ItemBody, SlideView, itemFrameStyle, slideBackground, themeOf, ThemeDeco } from "./SlideView";
 import { PALETTE } from "./themes";
@@ -428,8 +429,21 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
   }, [index, setFile]);
 
   function patchText(style: Partial<TextStyle>, key?: string) {
+    if (editingId && inlineFormat(style)) return;
     const ids = editingId ? [editingId] : selection;
-    patchItems(ids, (i) => (hasText(i) ? ({ ...i, ...style } as SlideItem) : i), key);
+    // Formato a todo el cuadro: quita el mismo formato de las palabras sueltas, como en Slides.
+    const runKeys: Record<string, keyof RunStyle> = { bold: "b", italic: "i", underline: "u", strike: "s", color: "color", highlight: "hl", font: "font", size: "size" };
+    const strip = Object.keys(style).map((k) => runKeys[k]).filter((k): k is keyof RunStyle => Boolean(k));
+    patchItems(ids, (i) => (hasText(i) ? ({ ...i, ...style, rich: strip.length > 0 ? stripStyle(i.rich, strip) : i.rich } as SlideItem) : i), key);
+    if (editingId && editRef.current && strip.length > 0) {
+      // El editor abierto se rehace con el formato nuevo.
+      const node = editRef.current;
+      requestAnimationFrame(() => {
+        const item = fileRef.current.slides[index]?.items.find((it) => it.id === editingId);
+        if (!item || !hasText(item) || !node.isConnected) return;
+        node.innerHTML = item.rich && hasRunStyle(item.rich) ? parasHtml(parasOf(item)) : linesHtml(item.text);
+      });
+    }
   }
 
   function addItems(items: SlideItem[], edit = false) {
@@ -724,7 +738,7 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
       if (mod && key === "h") { event.preventDefault(); setDialog("find"); return; }
       if (mod && key === "k") { event.preventDefault(); if (selection.length > 0 || editingId) setDialog("link"); return; }
       if (textItem && mod && !event.altKey) {
-        const size = textItem.size ?? 18;
+        const size = (editingId ? selFmt?.size : undefined) ?? textItem.size ?? 18;
         if (key === "b") { event.preventDefault(); patchText({ bold: !textItem.bold }); return; }
         if (key === "i") { event.preventDefault(); patchText({ italic: !textItem.italic }); return; }
         if (key === "u") { event.preventDefault(); patchText({ underline: !textItem.underline }); return; }
@@ -1008,12 +1022,14 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
     editRef.current = node;
     if (!node || node.dataset.ready === "1") return;
     const item = fileRef.current.slides[index]?.items.find((i) => i.id === editingId);
-    node.innerHTML = linesHtml(item && hasText(item) ? item.text : "");
+    node.innerHTML = item && hasText(item) && item.rich && hasRunStyle(item.rich) ? parasHtml(parasOf(item)) : linesHtml(item && hasText(item) ? item.text : "");
     node.dataset.ready = "1";
     node.focus({ preventScroll: true });
     const range = document.createRange();
-    range.selectNodeContents(node);
-    range.collapse(false);
+    // El cursor va dentro del último párrafo (Firefox, si no, escribe fuera del <div>).
+    const last = node.lastElementChild;
+    if (last && last.textContent === "") { range.setStart(last, 0); range.collapse(true); }
+    else { range.selectNodeContents(last ?? node); range.collapse(false); }
     const sel = window.getSelection();
     sel?.removeAllRanges();
     sel?.addRange(range);
@@ -1033,9 +1049,87 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
   function onEditInput() {
     const node = editRef.current;
     if (!node || !editingId) return;
-    const text = editableText(node).slice(0, 4000);
     const id = editingId;
-    setFile((f) => ({ ...f, slides: f.slides.map((s, i) => (i === index ? syncSlideText({ ...s, items: s.items.map((it) => (it.id === id && hasText(it) ? ({ ...it, text } as SlideItem) : it)) }) : s)) }), { history: false });
+    const current = fileRef.current.slides[index]?.items.find((it) => it.id === id);
+    if (!current || !hasText(current)) return;
+    const base = baseTextStyle(current);
+    const paras = againstBase(readEditor(node), base);
+    let text = plainOf(paras);
+    if (text.length > 4000) text = editableText(node).slice(0, 4000);
+    const rich = text.length <= 4000 && plainOf(paras) === text && hasRunStyle(paras) ? paras : undefined;
+    setFile((f) => ({ ...f, slides: f.slides.map((s, i) => (i === index ? syncSlideText({ ...s, items: s.items.map((it) => (it.id === id && hasText(it) ? ({ ...it, text, rich } as SlideItem) : it)) }) : s)) }), { history: false });
+  }
+
+  /* ---------- formato por selección dentro del cuadro (como en Slides y Docs) */
+  const savedRange = useRef<Range | null>(null);
+  const [selFmt, setSelFmt] = useState<SelFmt | null>(null);
+  useEffect(() => {
+    if (!editingId) { setSelFmt(null); savedRange.current = null; return; }
+    const read = () => {
+      const node = editRef.current;
+      const sel = window.getSelection();
+      if (!node || !sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      if (!node.contains(range.commonAncestorContainer)) return;
+      savedRange.current = range.cloneRange();
+      setSelFmt(readSelFmt(node, range));
+    };
+    document.addEventListener("selectionchange", read);
+    read();
+    return () => document.removeEventListener("selectionchange", read);
+  }, [editingId]);
+
+  /** Devuelve el rango del editor (restaurado si el foco se fue a un control de la barra). */
+  function editorRange(): Range | null {
+    const node = editRef.current;
+    if (!node || !editingId) return null;
+    const sel = window.getSelection();
+    let range = sel && sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
+    if (!range || !node.contains(range.commonAncestorContainer)) {
+      range = savedRange.current;
+      if (!range || !node.contains(range.commonAncestorContainer)) return null;
+      node.focus({ preventScroll: true });
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+    }
+    return range;
+  }
+
+  /** Aplica formato solo a lo seleccionado dentro del cuadro que se edita. Devuelve false si no hay selección de texto. */
+  function inlineFormat(style: Partial<TextStyle>): boolean {
+    const range = editorRange();
+    const node = editRef.current;
+    if (!range || !node) return false;
+    const keys = Object.keys(style);
+    const inlineKeys = ["bold", "italic", "underline", "strike", "color", "highlight", "font", "size"];
+    if (keys.length === 0 || !keys.every((k) => inlineKeys.includes(k))) return false;
+    // Con el cursor sin seleccionar nada, Slides aplica el formato a la palabra en la que está.
+    if (range.collapsed && !selectWordAt(range)) return false;
+    document.execCommand("styleWithCSS", false, "true");
+    // Como en Docs: si todo lo seleccionado ya lo tiene, se quita; si no, se pone.
+    const toggle = (cmd: string, _want: boolean | undefined) => { document.execCommand(cmd, false); };
+    if ("bold" in style) toggle("bold", style.bold);
+    if ("italic" in style) toggle("italic", style.italic);
+    if ("underline" in style) toggle("underline", style.underline);
+    if ("strike" in style) toggle("strikeThrough", style.strike);
+    if ("color" in style) document.execCommand("foreColor", false, style.color ?? (editingItem && baseTextStyle(editingItem as SlideItem & TextStyle).isTitle ? theme.title : theme.text));
+    if ("highlight" in style) document.execCommand("hiliteColor", false, style.highlight ?? "transparent");
+    if ("font" in style && style.font) document.execCommand("fontName", false, style.font);
+    if ("size" in style && style.size) wrapFontSize(node, style.size);
+    onEditInput();
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) { savedRange.current = sel.getRangeAt(0).cloneRange(); setSelFmt(readSelFmt(node, sel.getRangeAt(0))); }
+    return true;
+  }
+
+  /** Enlace sobre el texto seleccionado (Ctrl+K con texto seleccionado). */
+  function inlineLink(url: string | null): boolean {
+    const range = editorRange();
+    if (!range || (range.collapsed && !selectWordAt(range))) return false;
+    if (url) document.execCommand("createLink", false, url);
+    else document.execCommand("unlink", false);
+    onEditInput();
+    return true;
   }
 
   /* ---------- tira: arrastrar para ordenar (ratón al momento; dedo con pulsación larga) */
@@ -1367,9 +1461,13 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
   const saveLabel = status === "saved" ? tx("Guardado en este dispositivo", "Saved on this device") : tx("Guardando…", "Saving…");
   const panelTitle = panel === "themes" ? tx("Temas", "Themes") : panel === "motion" ? tx("Movimiento", "Motion") : panel === "comments" ? tx("Comentarios", "Comments") : tx("Opciones de formato", "Format options");
 
-  function textTools(it: SlideItem & TextStyle) {
-    const size = it.size ?? (it.kind === "text" && it.placeholder === "title" ? 32 : it.kind === "text" && it.placeholder === "subtitle" ? 24 : it.kind === "text" && it.placeholder === "number" ? 120 : 18);
-    const font = it.font ?? (it.kind === "text" && (it.placeholder === "title" || it.placeholder === "number") ? theme.titleFont : theme.bodyFont);
+  function textTools(box: SlideItem & TextStyle) {
+    const live = editingId === box.id ? selFmt : null;
+    const it = live ? { ...box, bold: live.bold, italic: live.italic, underline: live.underline, strike: live.strike, color: live.color ?? box.color } : box;
+    const boxSize = box.size ?? (box.kind === "text" && box.placeholder === "title" ? 32 : box.kind === "text" && box.placeholder === "subtitle" ? 24 : box.kind === "text" && box.placeholder === "number" ? 120 : 18);
+    const size = live?.size ?? boxSize;
+    const boxFont = box.font ?? (box.kind === "text" && (box.placeholder === "title" || box.placeholder === "number") ? theme.titleFont : theme.bodyFont);
+    const font = live && (SLIDE_FONTS as readonly string[]).includes(live.font) ? live.font : boxFont;
     return (
       <span className="sl-texttools">
         <select className="sl-font" value={font} onChange={(e) => patchText({ font: e.target.value })} aria-label={tx("Fuente", "Font")}>
@@ -1783,7 +1881,7 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
                                 onPaste={(e) => { e.preventDefault(); e.stopPropagation(); document.execCommand("insertText", false, e.clipboardData.getData("text/plain")); }}
                                 onBlur={(e) => {
                                   const next = e.relatedTarget as HTMLElement | null;
-                                  if (next && next.closest(".sl-toolbar, .sl-pop, .sl-panel, .ow-menubar")) return;
+                                  if (next && next.closest(".sl-toolbar, .sl-pop, .sl-panel, .ow-menubar, .ow-modal, [role=menu]")) return;
                                   setEditingId((id) => (id === item.id ? null : id));
                                 }}
                               />
@@ -1899,14 +1997,14 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
           </div>
         </Modal>
       ) : null}
-      {dialog === "link" ? <LinkDialog tx={tx} initial={single?.link ?? ""} slides={file.slides.length} onClose={() => setDialog(null)} onApply={(link) => patchItems(editingId ? [editingId] : selection, (i) => ({ ...i, link }))} /> : null}
+      {dialog === "link" ? <LinkDialog tx={tx} initial={(editingId ? selFmt?.link : undefined) ?? single?.link ?? ""} slides={file.slides.length} onClose={() => setDialog(null)} onApply={(link) => { if (editingId && inlineLink(link || null)) return; patchItems(editingId ? [editingId] : selection, (i) => ({ ...i, link })); }} /> : null}
       {dialog === "video" ? <VideoDialog tx={tx} onClose={() => setDialog(null)} onUpload={() => videoRef.current?.click()} onYoutube={(id) => addItems([{ id: newId(), kind: "video", x: 200, y: 112, w: 560, h: 315, src: "", youtube: id }])} /> : null}
       {dialog === "imageUrl" ? <ImageUrlDialog tx={tx} onClose={() => setDialog(null)} onFile={(f) => insertImageFile(f)} /> : null}
       {dialog === "crop" && single?.kind === "image" ? <CropDialog tx={tx} image={single} theme={theme} onClose={() => setDialog(null)} onApply={(next) => patchItems([single.id], () => next)} /> : null}
       {dialog === "table" && single?.kind === "table" ? <TableDialog tx={tx} table={single} onClose={() => setDialog(null)} onApply={(next) => patchItems([single.id], () => next)} /> : null}
       {dialog === "chart" && single?.kind === "chart" ? <ChartDialog tx={tx} chart={single} onClose={() => setDialog(null)} onApply={(next) => patchItems([single.id], () => next)} /> : null}
       {dialog === "find" ? <FindDialog tx={tx} menus={menus} file={file} onClose={() => setDialog(null)} onReplace={(find, replace) => {
-        setFile((f) => ({ ...f, slides: f.slides.map((s) => syncSlideText({ ...s, items: s.items.map((i) => (hasText(i) ? ({ ...i, text: i.text.split(find).join(replace) } as SlideItem) : i)) })) }));
+        setFile((f) => ({ ...f, slides: f.slides.map((s) => syncSlideText({ ...s, items: s.items.map((i) => (hasText(i) ? ({ ...i, text: i.text.split(find).join(replace), rich: i.rich ? i.rich.map((p) => p.map((r) => ({ ...r, t: r.t.split(find).join(replace) }))) : undefined } as SlideItem) : i)) })) }));
       }} /> : null}
       {dialog === "versions" ? (
         <Modal open title={tx("Historial de versiones", "Version history")} onClose={() => setDialog(null)}>
@@ -1939,6 +2037,97 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
 }
 
 /* ================================================================ componentes con estado propio */
+
+type SelFmt = { bold: boolean; italic: boolean; underline: boolean; strike: boolean; size: number; font: string; color?: string; link?: string };
+
+/** Formato del cuadro sin palabras sueltas (para no guardar lo que ya hereda). */
+function baseTextStyle(item: SlideItem & TextStyle) {
+  const isTitle = item.kind === "text" && (item.placeholder === "title" || item.placeholder === "number");
+  const baseSize = item.kind === "text" && item.placeholder === "title" ? 32 : item.kind === "text" && item.placeholder === "subtitle" ? 24 : item.kind === "text" && item.placeholder === "number" ? 120 : 18;
+  return { bold: item.bold, italic: item.italic, underline: item.underline, strike: item.strike, color: item.color, font: item.font, size: item.size, baseSize, baseColor: undefined as string | undefined, baseFont: undefined as string | undefined, isTitle };
+}
+
+function rgbHex(value: string): string | undefined {
+  const m = /^rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(value);
+  return m ? `#${[m[1], m[2], m[3]].map((n) => Number(n).toString(16).padStart(2, "0")).join("")}` : undefined;
+}
+
+/** Lee el formato en el inicio de la selección del editor. */
+function readSelFmt(root: HTMLElement, range: Range): SelFmt {
+  let el: Node | null = range.startContainer;
+  if (el.nodeType !== Node.TEXT_NODE) {
+    // La selección empieza en un elemento: busca el primer texto que abarca.
+    const walker = document.createTreeWalker(range.commonAncestorContainer, NodeFilter.SHOW_TEXT);
+    let t: Node | null = walker.nextNode();
+    let found: Node | null = null;
+    while (t) { if ((t.textContent ?? "").trim() && (range.collapsed ? true : range.intersectsNode(t))) { found = t; if (!range.collapsed) break; } if (range.collapsed && found) break; t = walker.nextNode(); }
+    if (found) el = found;
+  }
+  if (el.nodeType === Node.TEXT_NODE) el = el.parentNode;
+  const target = el instanceof HTMLElement ? el : root;
+  const cs = getComputedStyle(target);
+  const deco = (() => { let n: HTMLElement | null = target; let u = false; let s = false; while (n && n !== root.parentElement) { const d = getComputedStyle(n).textDecorationLine; if (d.includes("underline")) u = true; if (d.includes("line-through")) s = true; if (n === root) break; n = n.parentElement; } return { u, s }; })();
+  const link = target.closest("a")?.getAttribute("href") ?? undefined;
+  return {
+    bold: Number(cs.fontWeight) >= 600,
+    italic: cs.fontStyle === "italic",
+    underline: deco.u,
+    strike: deco.s,
+    size: Math.round((Number.parseFloat(cs.fontSize) / PT) * 2) / 2,
+    font: cs.fontFamily.split(",")[0]!.replace(/["']/g, "").trim(),
+    color: rgbHex(cs.color),
+    link,
+  };
+}
+
+/** Con el cursor dentro de una palabra, la selecciona (como Slides al aplicar formato). */
+function selectWordAt(range: Range): boolean {
+  const node = range.startContainer;
+  if (node.nodeType !== Node.TEXT_NODE) return false;
+  const text = node.textContent ?? "";
+  let a = range.startOffset;
+  let b = range.startOffset;
+  const word = /[\p{L}\p{N}_'’-]/u;
+  while (a > 0 && word.test(text[a - 1]!)) a--;
+  while (b < text.length && word.test(text[b]!)) b++;
+  if (a === b) return false;
+  const next = document.createRange();
+  next.setStart(node, a);
+  next.setEnd(node, b);
+  const sel = window.getSelection();
+  sel?.removeAllRanges();
+  sel?.addRange(next);
+  return true;
+}
+
+/** Tamaño de letra en pt sobre lo seleccionado (execCommand solo sabe de 1 a 7). */
+function wrapFontSize(root: HTMLElement, pt: number) {
+  document.execCommand("styleWithCSS", false, "false");
+  document.execCommand("fontSize", false, "7");
+  document.execCommand("styleWithCSS", false, "true");
+  const fonts = Array.from(root.querySelectorAll<HTMLElement>('font[size="7"]'));
+  const sel = window.getSelection();
+  let first: Node | null = null;
+  let last: Node | null = null;
+  for (const f of fonts) {
+    const span = document.createElement("span");
+    span.style.fontSize = `${pt * PT}px`;
+    f.querySelectorAll<HTMLElement>("[style]").forEach((n) => { n.style.fontSize = ""; if (!n.getAttribute("style")) n.removeAttribute("style"); });
+    while (f.firstChild) span.appendChild(f.firstChild);
+    f.replaceWith(span);
+    first ??= span;
+    last = span;
+  }
+  // Algunos navegadores ponen el tamaño como estilo en vez de <font>.
+  root.querySelectorAll<HTMLElement>("span").forEach((n) => { if (n.style.fontSize === "xxx-large" || n.style.fontSize === "-webkit-xxx-large") n.style.fontSize = `${pt * PT}px`; });
+  if (first && last && sel) {
+    const r = document.createRange();
+    r.setStartBefore(first);
+    r.setEndAfter(last);
+    sel.removeAllRanges();
+    sel.addRange(r);
+  }
+}
 
 function SizeBox({ tx, size, onSet }: { tx: Tx; size: number; onSet: (n: number, key?: string) => void }) {
   const [draft, setDraft] = useState(String(size));

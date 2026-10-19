@@ -1,6 +1,7 @@
 import { decodeUtf8, encodeUtf8 } from "../security/bytes";
 import { WorkError } from "../security/errors";
 import { sanitizeName } from "../security/names";
+import { sanitizeRuns, type Para } from "./rich";
 
 /** Tamaño lógico de la diapositiva (16:9, 10 × 5,625 pulgadas a 96 ppp, como Google Slides). */
 export const SLIDE_W = 960;
@@ -44,6 +45,8 @@ export type TextStyle = {
   valign?: SlideVAlign;
   lineHeight?: number;
   list?: ListKind;
+  /** Formato por palabras (párrafos con tramos). `text` es siempre su texto plano. */
+  rich?: Para[];
 };
 
 type Base = { id: string; x: number; y: number; w: number; h: number; rot?: number; group?: string; anim?: SlideAnim; link?: string };
@@ -121,8 +124,10 @@ function textStyleOf(value: Record<string, unknown>, scale: number): TextStyle {
   // Las versiones antiguas guardaban el tamaño en px de pantalla; se pasa a pt.
   const rawSize = typeof value.size === "number" ? value.size : undefined;
   const size = rawSize === undefined ? undefined : Math.round(num(scale === 1 ? rawSize : rawSize * 0.75, 1, 400, 14));
+  const text = typeof value.text === "string" ? value.text.slice(0, 4000) : "";
   return {
-    text: typeof value.text === "string" ? value.text.slice(0, 4000) : "",
+    text,
+    rich: sanitizeRuns(value.rich, text),
     font,
     size,
     color: hex(value.color),
