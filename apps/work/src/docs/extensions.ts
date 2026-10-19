@@ -450,6 +450,22 @@ const Indent = Extension.create({
   },
 });
 
+const BORDER_SIDE = /^(none|[1-6]px solid #[0-9a-f]{6})$/i;
+
+/** Bordes de celda: «none», «Npx solid #rrggbb» o cuatro lados (arriba|derecha|abajo|izquierda). */
+export function cellBorders(value: unknown): string | null {
+  if (typeof value !== "string" || value.length > 120) return null;
+  const sides = value.split("|");
+  if ((sides.length !== 1 && sides.length !== 4) || !sides.every((side) => BORDER_SIDE.test(side))) return null;
+  return value;
+}
+
+/** Relleno de celda en px: «arriba derecha abajo izquierda». */
+export function cellPadding(value: unknown): string | null {
+  if (typeof value !== "string" || !/^\d{1,2} \d{1,2} \d{1,2} \d{1,2}$/.test(value)) return null;
+  return value;
+}
+
 function paintCell<T extends typeof TableCell>(node: T) {
   return node.extend({
     addAttributes() {
@@ -467,9 +483,67 @@ function paintCell<T extends typeof TableCell>(node: T) {
             return { style: `background-color: ${background}` };
           },
         },
+        // Bordes, relleno y alineación vertical del documento original (DOCX importado).
+        borders: {
+          default: null,
+          parseHTML: (element: HTMLElement) => cellBorders(element.getAttribute("data-borders")),
+          renderHTML: (attributes: { borders?: string | null }) => {
+            const value = cellBorders(attributes.borders);
+            if (!value) return {};
+            const sides = value.split("|");
+            const [top, right, bottom, left] = sides.length === 4 ? sides : [value, value, value, value];
+            return { "data-borders": value, style: `border-top: ${top}; border-right: ${right}; border-bottom: ${bottom}; border-left: ${left}` };
+          },
+        },
+        padding: {
+          default: null,
+          parseHTML: (element: HTMLElement) => cellPadding(element.getAttribute("data-padding")),
+          renderHTML: (attributes: { padding?: string | null }) => {
+            const value = cellPadding(attributes.padding);
+            if (!value) return {};
+            return { "data-padding": value, style: `padding: ${value.split(" ").map((n) => `${n}px`).join(" ")}` };
+          },
+        },
+        valign: {
+          default: null,
+          parseHTML: (element: HTMLElement) => { const v = element.getAttribute("data-valign"); return v === "middle" || v === "bottom" ? v : null; },
+          renderHTML: (attributes: { valign?: string | null }) => (attributes.valign === "middle" || attributes.valign === "bottom" ? { "data-valign": attributes.valign, style: `vertical-align: ${attributes.valign}` } : {}),
+        },
       };
     },
   });
+}
+
+/**
+ * Una tabla nunca es más ancha que la hoja: si sus columnas suman más que el ancho disponible
+ * se pintan en proporción (porcentajes) al 100 %, sin desplazador horizontal ni cortes.
+ * Solo cambia la vista: los anchos guardados no se tocan.
+ */
+export function fitTable(table: HTMLTableElement) {
+  const holder = table.parentElement;
+  const cols = Array.from(table.querySelectorAll(":scope > colgroup > col")) as HTMLTableColElement[];
+  if (!holder || cols.length === 0) return;
+  const avail = holder.clientWidth;
+  if (!(avail > 0)) return;
+  const px = cols.map((col) => {
+    const raw = col.dataset.px ?? (col.style.width.endsWith("px") ? col.style.width : "");
+    const n = Number.parseFloat(raw);
+    return Number.isFinite(n) ? n : 0;
+  });
+  // Si el TableView ha vuelto a poner px, se toman como referencia nueva.
+  cols.forEach((col, index) => { if (col.style.width.endsWith("px")) col.dataset.px = col.style.width; else if (!col.dataset.px && px[index]) col.dataset.px = `${px[index]}px`; });
+  const total = px.reduce((a, b) => a + b, 0);
+  const known = px.every((w) => w > 0);
+  if (known && total > avail + 0.5) {
+    cols.forEach((col, index) => { col.style.width = `${((px[index]! / total) * 100).toFixed(4)}%`; });
+    table.style.width = "100%";
+    table.style.minWidth = "";
+    table.dataset.fit = "1";
+  } else if (table.dataset.fit === "1") {
+    cols.forEach((col, index) => { if (px[index]) col.style.width = `${px[index]}px`; });
+    if (known) table.style.width = `${total}px`;
+    delete table.dataset.fit;
+  }
 }
 
 const DocsTable = Table.extend({
@@ -505,13 +579,21 @@ const DocsTable = Table.extend({
                 const color = node.attrs.borderColor;
                 if (typeof color === "string" && HEX.test(color)) table.style.setProperty("--table-border", color);
                 else table.style.removeProperty("--table-border");
+                fitTable(table);
               });
             } catch {
               // The node view is not mounted on the first synchronous pass.
             }
           };
           queueMicrotask(paint);
-          return { update: paint };
+          // Al cambiar el ancho (girar el móvil, abrir paneles, zoom) se vuelve a ajustar.
+          let frame = 0;
+          const again = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(paint); };
+          const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(again) : null;
+          observer?.observe(view.dom);
+          window.addEventListener("resize", again);
+          requestAnimationFrame(paint);
+          return { update: paint, destroy: () => { observer?.disconnect(); window.removeEventListener("resize", again); cancelAnimationFrame(frame); } };
         },
       }),
     );

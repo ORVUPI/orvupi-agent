@@ -888,7 +888,11 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-table-context p { margin: 8px 8px 4px; color: #102032; font-size: 13px; font-weight: 600; }
 .ow-swatches { display: flex; gap: 6px; padding: 0 8px 4px; }
 .ow-swatches button { width: 22px; height: 22px; border: 1px solid #c5ced6; border-radius: 4px; padding: 0; cursor: pointer; }
-.ow-a4 .ProseMirror .tableWrapper { overflow-x: auto; margin: 8px 0 12px; }
+/* 0.9.4: la tabla se ajusta al ancho de la hoja (fitTable); nunca hay desplazador horizontal dentro del documento. */
+.ow-a4 .ProseMirror .tableWrapper { overflow: visible; max-width: 100%; margin: 8px 0 12px; }
+.ow-a4 .ProseMirror table[data-fit="1"] { width: 100% !important; }
+.ow-a4 .ProseMirror td img, .ow-a4 .ProseMirror th img { max-width: 100%; height: auto; }
+.ow-a4 .ProseMirror td > ul, .ow-a4 .ProseMirror td > ol, .ow-a4 .ProseMirror th > ul, .ow-a4 .ProseMirror th > ol { margin: 0; padding-left: 1.4em; }
 .ow-a4 .ProseMirror table { border-collapse: collapse; table-layout: fixed; width: 100%; --table-border: #102032; }
 .ow-a4 .ProseMirror td, .ow-a4 .ProseMirror th { border: 1px solid var(--table-border, #102032); padding: 6px 8px; vertical-align: top; position: relative; min-width: 24px; }
 .ow-a4 .ProseMirror th { background: #fff0f5; font-weight: 600; }

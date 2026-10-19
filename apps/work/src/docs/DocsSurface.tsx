@@ -61,7 +61,8 @@ function pageBox(size: PageSize, orientation: PageOrientation): { width: number;
   return orientation === "landscape" ? { width: portrait.height, height: portrait.width } : portrait;
 }
 
-function marginPx(margin: PageMargin): number {
+function marginPx(margin: PageMargin, exactTw?: number): number {
+  if (exactTw && exactTw >= 144 && exactTw <= 4320) return Math.round((exactTw / 15) * 10) / 10;
   if (margin === "narrow") return 48;
   if (margin === "wide") return 144;
   return MARGIN;
@@ -282,6 +283,7 @@ export function DocsSurface({
   pageSize = "a4",
   pageOrientation = "portrait",
   pageMargin = "normal",
+  pageMarginTw,
   onLayout,
   find,
   rail,
@@ -323,6 +325,7 @@ export function DocsSurface({
   pageSize?: PageSize;
   pageOrientation?: PageOrientation;
   pageMargin?: PageMargin;
+  pageMarginTw?: number;
   onLayout?: (patch: { columns?: 1 | 2 | 3; dropCap?: boolean; watermark?: string; pageNumber?: boolean; pageSize?: PageSize; pageOrientation?: PageOrientation; pageMargin?: PageMargin }) => void;
   find: ReactNode;
   rail?: ReactNode;
@@ -1044,7 +1047,7 @@ export function DocsSurface({
                 data-page-size={pageSize}
                 data-page-orientation={pageOrientation}
                 data-page-margin={pageMargin}
-                style={{ "--page-margin": `${marginPx(pageMargin)}px`, "--page-h": `${pageBox(pageSize, pageOrientation).height}px`, ...(narrow ? {} : { width: pageBox(pageSize, pageOrientation).width, minHeight: pageBox(pageSize, pageOrientation).height }) } as CSSProperties}
+                style={{ "--page-margin": `${marginPx(pageMargin, pageMarginTw)}px`, "--page-h": `${pageBox(pageSize, pageOrientation).height}px`, ...(narrow ? {} : { width: pageBox(pageSize, pageOrientation).width, minHeight: pageBox(pageSize, pageOrientation).height }) } as CSSProperties}
               >
                 {watermark ? <p className="ow-watermark" aria-hidden="true">{watermark}</p> : null}
                 <input className="ow-a4-edge" aria-label={t("header")} value={header} placeholder={t("header")} onChange={(event) => onHeader(event.target.value.slice(0, 240))} />
@@ -1161,7 +1164,7 @@ export function DocsSurface({
             <button type="button" aria-pressed={draftMargin === "narrow"} onClick={() => setDraftMargin("narrow")}>{t("marginNarrow")}</button>
             <button type="button" aria-pressed={draftMargin === "wide"} onClick={() => setDraftMargin("wide")}>{t("marginWide")}</button>
           </div>
-          <button type="button" onClick={() => { onLayout?.({ pageSize: draftSize, pageOrientation: draftOrientation, pageMargin: draftMargin }); setPageOpen(false); }}>{t("apply")}</button>
+          <button type="button" onClick={() => { onLayout?.({ pageSize: draftSize, pageOrientation: draftOrientation, ...(draftMargin !== pageMargin || !pageMarginTw ? { pageMargin: draftMargin } : {}) }); setPageOpen(false); }}>{t("apply")}</button>
           <button type="button" onClick={() => setPageOpen(false)}>{t("cancel")}</button>
         </div>
       ) : null}

@@ -72,6 +72,7 @@ export async function prepareImport(file: File, titleFallback: string): Promise<
         pageSize: imported.pageSize,
         pageOrientation: imported.pageOrientation,
         pageMargin: imported.pageMargin,
+        ...(imported.pageMarginTw ? { pageMarginTw: imported.pageMarginTw } : {}),
         columns: imported.columns,
         comments: imported.comments,
       };

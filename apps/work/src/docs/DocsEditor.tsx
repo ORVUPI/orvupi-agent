@@ -25,7 +25,7 @@ import { imageAttrs, contentWidth, prepareImage } from "./image-paste";
 import { findBefore, findInSlices, type TextSlice } from "./find";
 import { exportHtml } from "./html";
 import { countWords, docToText, firstLine, UNTITLED_NAMES, type DocComment, type DocVersion, type JsonNode, type PageMargin, type PageOrientation, type PageSize } from "./model";
-import { serializeOrvdoc, withContent, type OrvdocFile } from "./orvdoc";
+import { marginTw, serializeOrvdoc, withContent, type OrvdocFile } from "./orvdoc";
 import { SaveController, createSaveQueue, type SaveState } from "./save-status";
 
 export type ExportKind = "pdf" | "html" | "txt" | "orvdoc" | "docx";
@@ -88,6 +88,7 @@ export function DocsEditor({
     pageSize: (initial.pageSize ?? "a4") as PageSize,
     pageOrientation: (initial.pageOrientation ?? "portrait") as PageOrientation,
     pageMargin: (initial.pageMargin ?? "normal") as PageMargin,
+    pageMarginTw: marginTw(initial.pageMarginTw),
   });
   const commentsRef = useRef<DocComment[]>(initial.comments);
   const versionsRef = useRef<DocVersion[]>(initial.versions);
@@ -180,7 +181,7 @@ export function DocsEditor({
   }
 
   writeRef.current = async (snapshot) => {
-    const parsed = JSON.parse(snapshot) as { tabs?: DocTab[]; content?: JsonNode; header?: string; footer?: string; comments?: DocComment[]; versions?: DocVersion[]; columns?: 1 | 2 | 3; dropCap?: boolean; watermark?: string; pageNumber?: boolean; pageSize?: PageSize; pageOrientation?: PageOrientation; pageMargin?: PageMargin };
+    const parsed = JSON.parse(snapshot) as { tabs?: DocTab[]; content?: JsonNode; header?: string; footer?: string; comments?: DocComment[]; versions?: DocVersion[]; columns?: 1 | 2 | 3; dropCap?: boolean; watermark?: string; pageNumber?: boolean; pageSize?: PageSize; pageOrientation?: PageOrientation; pageMargin?: PageMargin; pageMarginTw?: number };
     const content = parsed.content ?? (parsed as unknown as JsonNode);
     let title = nameRef.current;
     if (UNTITLED_NAMES.has(title)) {
@@ -208,6 +209,7 @@ export function DocsEditor({
       pageSize,
       pageOrientation,
       pageMargin,
+      ...(marginTw(parsed.pageMarginTw) ? { pageMarginTw: marginTw(parsed.pageMarginTw) } : {}),
     };
     if (parsed.tabs && parsed.tabs.length > 0) next.tabs = parsed.tabs; else delete next.tabs;
     const allText = parsed.tabs && parsed.tabs.length > 1 ? docToText(combinedContent(parsed.tabs.map((tab, i) => (i === 0 ? { ...tab, content } : tab)))) : docToText(content);
@@ -564,8 +566,11 @@ export function DocsEditor({
         pageSize={layout.pageSize}
         pageOrientation={layout.pageOrientation}
         pageMargin={layout.pageMargin}
+        pageMarginTw={layout.pageMarginTw}
         onLayout={(patch) => {
           const next = { ...layoutRef.current, ...patch };
+          // Elegir un margen predefinido sustituye al margen exacto del documento importado.
+          if (patch.pageMargin) next.pageMarginTw = undefined;
           layoutRef.current = next;
           setLayout(next);
           if (editor) queue.note(snapshotOf(editor.getJSON() as JsonNode));
