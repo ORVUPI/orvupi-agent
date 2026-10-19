@@ -413,6 +413,8 @@ export function AiStudio({
           const out = await generate(messages, Math.min(900, Math.ceil(chunk.length / 2.2) + 80));
           const ok = out !== null && (task === "rewrite" ? rewriteOk(out, chunk) : translationOk(out, chunk, toSpanish));
           if (!ok) kept += 1;
+          // Si las dos primeras partes ya fallan, este modelo no sirve para este texto: no se hace esperar más
+          if (i === 1 && kept === 2 && chunks.length > 2) { kept = chunks.length; break; }
           result += `${ok ? out : task === "translate" ? `*${L.untranslated}*\n\n${chunk}` : chunk}\n\n`;
           setOutput(result.trim());
         }
