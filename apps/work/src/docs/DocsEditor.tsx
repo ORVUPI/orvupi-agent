@@ -20,7 +20,7 @@ import { LayoutTools } from "./LayoutTools";
 import { usePhone } from "../ui/phone";
 import { Modal } from "../ui/overlay";
 import { createExtensions, pastedHtml } from "./extensions";
-import { imageAttrs, prepareImage } from "./image-paste";
+import { imageAttrs, contentWidth, prepareImage } from "./image-paste";
 import { findBefore, findInSlices, type TextSlice } from "./find";
 import { exportHtml } from "./html";
 import { countWords, docToText, firstLine, UNTITLED_NAMES, type DocComment, type DocVersion, type JsonNode, type PageMargin, type PageOrientation, type PageSize } from "./model";
@@ -461,8 +461,8 @@ export function DocsEditor({
       setFindNote(t("reasonImageSize"));
       return;
     }
-    const attrs = imageAttrs(prepared);
     const current = editorRef.current;
+    const attrs = imageAttrs(prepared, current ? contentWidth(current.view) : undefined);
     if (current?.state.selection instanceof NodeSelection) {
       current.chain().focus().insertContentAt(current.state.selection.to, { type: "image", attrs }).run();
       return;

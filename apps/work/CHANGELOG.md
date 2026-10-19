@@ -1,5 +1,15 @@
 # Registro de cambios
 
+## 0.8.6 — 2026-10-19
+
+Imágenes en Docs (pegadas, insertadas o importadas), sin fallos al moverlas ni al cambiarles el tamaño.
+
+- Una imagen pegada o insertada nunca sale de los márgenes: su ancho se limita al ancho útil de la página.
+- Redimensionar sin parpadeo: la paginación se congela durante el arrastre (antes recolocaba la imagen entre páginas en cada movimiento), el tamaño se aplica en requestAnimationFrame y sin transacciones hasta soltar. Las esquinas mantienen la proporción (Mayús la libera) con un cambio continuo; los lados cambian una dimensión. Nunca más ancha que la página. Ya no hay etiqueta de píxeles durante el arrastre.
+- Mover con el ratón o con el dedo (con la imagen seleccionada) desde el centro: «En línea» la recoloca entre párrafos con línea de inserción; «Ajustar texto», «Detrás» y «Delante» se mueven libremente por todo el documento (se anclan al párrafo de destino) y siempre dentro de la página. Desplazamiento automático cerca de los bordes.
+- El marco, los tiradores y el botón ⋯ se recortan por el área del documento: al hacer scroll ya no flotan sobre la barra de herramientas y desaparecen si la imagen sale de la vista. El ⋯ se coloca en la parte visible de la imagen.
+- Menú ⋯ (0.8.5+): sin cambios de uso.
+
 ## 0.8.5 — 2026-10-18
 
 ORVUPI AI: la descarga del modelo ya no falla con «network error» en el móvil.

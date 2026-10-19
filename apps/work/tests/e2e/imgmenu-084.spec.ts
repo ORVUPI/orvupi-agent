@@ -157,7 +157,7 @@ test("sin seleccionar no hay zona de arrastre (el dedo desplaza la página)", as
 });
 
 test("«Ajustar texto»: arrastrar desde el centro la mueve libremente y se guarda", async ({ page }) => {
-  const { doc, img } = await docWithImage(page);
+  const { doc, img, editor } = await docWithImage(page);
   await doc.getByRole("button", { name: "Opciones de imagen" }).click();
   await doc.getByRole("menuitemradio", { name: "Ajustar texto" }).click();
   await expect(img).toHaveAttribute("data-wrap", "square");
@@ -167,14 +167,18 @@ test("«Ajustar texto»: arrastrar desde el centro la mueve libremente y se guar
     await expect(doc.locator(".ow-imgframe-h")).toHaveCount(0);
     await expect(doc.getByRole("button", { name: "Opciones de imagen" })).toHaveCount(0);
   });
-  await expect.poll(async () => Number(await img.getAttribute("data-ox"))).toBeGreaterThan(20);
-  expect(Number(await img.getAttribute("data-oy"))).toBeGreaterThan(15);
+  await expect.poll(async () => (await img.boundingBox())!.y).toBeGreaterThan(frame.y + 25);
+  const after = (await img.boundingBox())!;
+  const pg = await editor.evaluate((el) => { const r = el.getBoundingClientRect(); const cs = getComputedStyle(el); return { left: r.left + parseFloat(cs.paddingLeft), right: r.right - parseFloat(cs.paddingRight) }; });
+  expect(after.x).toBeGreaterThanOrEqual(pg.left - 1);
+  expect(after.x + after.width).toBeLessThanOrEqual(pg.right + 1);
+  if (after.width + 60 < pg.right - pg.left) expect(after.x).toBeGreaterThan(frame.x + 25);
   expect(await img.getAttribute("width")).toBe(w0);
-  const ox = await img.getAttribute("data-ox");
+  const ox = await img.getAttribute("data-oy");
   await doc.screenshot({ path: `/tmp/orvupi-img-mover-${test.info().project.name}.png` }).catch(() => undefined);
   await doc.waitForTimeout(1500);
   await doc.reload();
-  await expect(doc.locator(".ProseMirror img").first()).toHaveAttribute("data-ox", ox!, { timeout: 20_000 });
+  await expect(doc.locator(".ProseMirror img").first()).toHaveAttribute("data-oy", ox!, { timeout: 20_000 });
   await doc.close();
 });
 
