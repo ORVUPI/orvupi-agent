@@ -9,7 +9,7 @@ import { clampNum } from "./layout-nodes";
  *   se guarda y se ve igual al soltar). Nunca más ancha que el ancho útil de la página.
  * - Arrastrar desde el centro (con la imagen ya seleccionada) la mueve: «En línea» la recoloca entre
  *   párrafos con una línea de inserción si se suelta junto a otro hueco; si se lleva a un lado o a una
- *   zona sin hueco pasa a «Ajustar texto» y queda donde se suelta. Los modos libres se mueven libremente por
+ *   zona sin hueco pasa a «Delante» y queda donde se suelta (el texto no se mueve). Los modos libres se mueven libremente por
  *   el documento (se ancla al párrafo de destino y guarda offsetX/offsetY), siempre dentro de la página.
  * - Sin parpadeo: mientras se arrastra solo se cambia el estilo de la <img> en requestAnimationFrame, la
  *   paginación queda congelada y no hay transacciones hasta soltar.
@@ -85,7 +85,13 @@ function contentBox(img: HTMLElement): { left: number; right: number; top: numbe
   const sheet = page.closest(".ow-a4") as HTMLElement | null;
   // (El relleno inferior del editor paginado incluye el hueco hasta el final de la hoja: se usa el margen superior.)
   const sheetBottom = sheet ? sheet.getBoundingClientRect().bottom - Math.min(pb, pt) : r.bottom - pb;
-  return { left: r.left + pl, right: r.right - pr, top: r.top + pt, bottom: Math.max(r.bottom - pb, sheetBottom), width: Math.max(32, (page.clientWidth - parseFloat(css.paddingLeft) - parseFloat(css.paddingRight))), zoom };
+  // Móvil (documento continuo, sin hojas): la «página» es todo el lienzo blanco, hasta el final del contenido con scroll.
+  let flowBottom = 0;
+  if (sheet?.classList.contains("is-flow")) {
+    const sc = scroller(page);
+    if (sc) flowBottom = sc.getBoundingClientRect().top - sc.scrollTop + sc.scrollHeight - 16;
+  }
+  return { left: r.left + pl, right: r.right - pr, top: r.top + pt, bottom: Math.max(r.bottom - pb, sheetBottom, flowBottom), width: Math.max(32, (page.clientWidth - parseFloat(css.paddingLeft) - parseFloat(css.paddingRight))), zoom };
 }
 
 /** Congela la paginación mientras se arrastra para que la imagen no salte de página en cada frame. */
@@ -472,8 +478,8 @@ export function ImageResize({ editor, labels, editable }: { editor: Editor | nul
         freeze(editor, false);
         return;
       }
-      // «En línea» solo se reordena entre bloques: para dejarla donde se suelta pasa a «Ajustar texto».
-      extra = { wrap: "square" };
+      // «En línea» solo se reordena entre bloques: para dejarla donde se suelta pasa a «Delante» (el texto no se mueve).
+      extra = { wrap: "front" };
     }
     // Libre: destino en pantalla (sin la imagen), anclado al bloque de debajo y desplazado dentro de la página.
     const scrollNow = m.sc ? m.sc.scrollTop - m.scrollTop0 : 0;

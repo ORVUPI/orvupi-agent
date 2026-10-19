@@ -5,8 +5,8 @@
 Docs: lo que ves al soltar una imagen es lo que queda.
 
 - Redimensionar por un lado (arriba, abajo, izquierda o derecha) ya no vuelve al tamaño original al soltar, en todos los modos («En línea», «Ajustar texto», «Detrás», «Delante»). Los lados conservan la proporción, como las esquinas; con Mayús se estira libremente y esa proporción se guarda.
-- Mover desde el modo por defecto («En línea»): si se arrastra a un lado o a una zona de la página sin otro hueco entre párrafos, la imagen pasa a «Ajustar texto» y queda exactamente donde se suelta (ya no vuelve atrás ni salta a la esquina). Soltarla junto a otro párrafo la sigue recolocando entre párrafos con la línea de inserción.
-- Se puede bajar la imagen hasta el final de la hoja también en un documento corto (antes el límite era poco más que el texto escrito).
+- Mover desde el modo por defecto («En línea»): si se arrastra a un lado o a una zona de la página sin otro hueco entre párrafos, la imagen pasa a «Delante» y queda exactamente donde se suelta, sin mover el texto (ya no vuelve atrás ni salta a la esquina; se puede cambiar a «Ajustar texto» o «Detrás» en ⋯). Soltarla junto a otro párrafo la sigue recolocando entre párrafos con la línea de inserción.
+- Se puede bajar la imagen hasta el final de la hoja también en un documento corto (antes el límite era poco más que el texto escrito). En el móvil (documento continuo) el límite es todo el lienzo y el documento crece para incluir las imágenes «Detrás»/«Delante».
 
 ## 0.9.0 — 2026-10-19
 

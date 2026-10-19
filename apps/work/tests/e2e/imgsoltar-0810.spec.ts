@@ -4,7 +4,7 @@ import { expect, test, type Page, type Locator } from "@playwright/test";
  * 0.8.10: lo que se ve al soltar es lo que queda.
  * - Redimensionar por cualquier lado (n, s, e, o) se mantiene al soltar y conserva la proporción, en todos los modos.
  * - Mover desde el modo por defecto («En línea») con una sola línea de texto: la imagen queda donde se suelta
- *   (pasa a «Ajustar texto»), dentro de la página, y no vuelve atrás ni salta a la esquina.
+ *   (pasa a «Delante», el texto no se mueve), dentro de la página, y no vuelve atrás ni salta a la esquina.
  */
 
 async function newDoc(page: Page, paragraphs = 3, text?: string) {
@@ -154,6 +154,9 @@ test("una línea de texto + imagen pegada: arrastrar a la derecha y al centro la
   await expect.poll(async () => Number(await img.getAttribute("width"))).toBeLessThan(r0.width - 20);
   expect((await img.getAttribute("data-wrap")) ?? "inline").toBe("inline");
   const touch = browserName === "chromium" && !!isMobile;
+  const text = doc.locator(".ProseMirror p", { hasText: "ZCXZCzXC" });
+  const textTop = async () => (await text.boundingBox())!.y + (await doc.locator(".ow-docs-scroll").first().evaluate((el) => el.scrollTop).catch(() => 0));
+  const t0 = await textTop();
   for (const [name, fx, fy] of [["derecha", 0.6, 0.1], ["centro", 0.3, 0.25], ["izquierda arriba", 0.05, 0.02]] as const) {
     await select(doc, img);
     const start = await settled(doc, img);
@@ -177,13 +180,14 @@ test("una línea de texto + imagen pegada: arrastrar a la derecha y al centro la
     // Dentro de la página.
     expect(after.x).toBeGreaterThanOrEqual(c.left - 0.5);
     expect(after.x + after.width).toBeLessThanOrEqual(c.right + 0.5);
-    await expect(img).toHaveAttribute("data-wrap", "square");
+    await expect(img).toHaveAttribute("data-wrap", "front");
     // Sigue ahí un rato después (no vuelve atrás).
     await doc.waitForTimeout(600);
     const later = (await img.boundingBox())!;
     expect(Math.abs(later.x - after.x) + Math.abs(later.y - after.y)).toBeLessThanOrEqual(1);
   }
-  // El texto sigue ahí.
+  // El texto sigue ahí, arriba (no se ha movido).
   await expect(doc.locator(".ProseMirror")).toContainText("ZCXZCzXC");
+  expect(Math.abs((await textTop()) - t0)).toBeLessThanOrEqual(2);
   await doc.close();
 });
