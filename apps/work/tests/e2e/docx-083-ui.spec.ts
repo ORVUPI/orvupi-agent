@@ -125,7 +125,8 @@ test("redimensionar una imagen con los tiradores; se guarda y la barra cambia el
     await doc.mouse.move(se.x + se.width / 2, se.y + se.height / 2);
     await doc.mouse.down();
     await doc.mouse.move(se.x + se.width / 2 - before.width * 0.4, se.y + se.height / 2 - 5, { steps: 6 });
-    await expect(frame.locator(".ow-imgframe-size")).toContainText("×");
+    // 0.8.6: sin etiqueta de píxeles durante el arrastre (no tapa nada).
+    await expect(frame.locator(".ow-imgframe-size")).toHaveCount(0);
     await shot(doc, "imagen-arrastre", size);
     await doc.mouse.up();
     await expect.poll(async () => Number(await img.getAttribute("width"))).toBeLessThan(before.width);

@@ -511,6 +511,8 @@ export const Pagination = Extension.create({
           const run = () => {
             frame = 0;
             if (view.isDestroyed) return;
+            // Congelada mientras se arrastra una imagen: al soltar se vuelve a medir.
+            if ((view.dom as HTMLElement).dataset.owFreeze === "1") return;
             const next = measure(view);
             if (!next) {
               if (layout) {

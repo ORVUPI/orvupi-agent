@@ -128,13 +128,21 @@ export function htmlImages(html: string): { data: string[]; remote: number } {
   return { data, remote };
 }
 
+/** Ancho útil de la página del editor (para que una imagen pegada nunca se salga de los márgenes). */
+export function contentWidth(view: EditorView): number {
+  const dom = view.dom as HTMLElement;
+  const css = getComputedStyle(dom);
+  const width = dom.clientWidth - (parseFloat(css.paddingLeft) || 0) - (parseFloat(css.paddingRight) || 0);
+  return width > 32 ? Math.floor(width) : 602;
+}
+
 export async function insertImages(view: EditorView, blobs: Blob[], pos?: number): Promise<number> {
   let inserted = 0;
   let at = pos;
   for (const blob of blobs) {
     const image = await prepareImage(blob, blob instanceof File ? blob.name : "");
     if (!image) continue;
-    const node = view.state.schema.nodes.image?.create(imageAttrs(image));
+    const node = view.state.schema.nodes.image?.create(imageAttrs(image, contentWidth(view)));
     if (!node) continue;
     const { state } = view;
     let tr = state.tr;

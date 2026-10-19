@@ -65,9 +65,15 @@ const LocalImage = Image.extend({
         if (typeof asset === "string" && dom.dataset.loaded !== asset) {
           dom.dataset.loaded = asset;
           dom.setAttribute("data-asset", asset);
-          void assetUrl(asset).then((url) => {
-            if (url && dom.dataset.loaded === asset) dom.src = url;
-          });
+          // Si ya se cargó antes (p. ej. al mover la imagen se recrea el nodo), se pinta al instante: sin destello.
+          const known = LOADED_ASSETS.get(asset);
+          if (known) dom.src = known;
+          else
+            void assetUrl(asset).then((url) => {
+              if (!url) return;
+              LOADED_ASSETS.set(asset, url);
+              if (dom.dataset.loaded === asset) dom.src = url;
+            });
         } else if (typeof asset !== "string") delete dom.dataset.loaded;
       };
       apply(HTMLAttributes);
@@ -85,6 +91,9 @@ const LocalImage = Image.extend({
     };
   },
 }).configure({ allowBase64: true });
+
+/** URL ya resueltas de imágenes guardadas aparte (asset → blob:). */
+const LOADED_ASSETS = new Map<string, string>();
 
 const BLANK_GIF = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
 
