@@ -23,7 +23,50 @@ import { CommentMark, DocShape, NoteNumbering, Section, wrapAttributes } from ".
 
 const HEX = /^#[0-9a-f]{6}$/i;
 
+/**
+ * Las imágenes «Detrás»/«Delante» no ocupan sitio en el flujo: fuera del modo paginado el editor crece
+ * hasta la imagen más baja para que nunca quede fuera del documento (y se pueda seguir moviendo).
+ */
+const reserveFloating = new Plugin({
+  key: new PluginKey("owImageReserve"),
+  view: (view) => {
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      const dom = view.dom as HTMLElement;
+      if (!dom.isConnected || dom.closest(".is-paged")) {
+        dom.style.removeProperty("--ow-reserve");
+        return;
+      }
+      const top = dom.getBoundingClientRect().top;
+      let need = 0;
+      for (const img of Array.from(dom.querySelectorAll<HTMLElement>('img[data-wrap="behind"], img[data-wrap="front"]'))) need = Math.max(need, img.getBoundingClientRect().bottom - top);
+      const next = need > 0 ? `${Math.ceil(need + (parseFloat(getComputedStyle(dom).paddingBottom) || 0))}px` : "";
+      if (dom.style.getPropertyValue("--ow-reserve") !== next) {
+        if (next) dom.style.setProperty("--ow-reserve", next);
+        else dom.style.removeProperty("--ow-reserve");
+      }
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(measure);
+    };
+    schedule();
+    const onLoad = () => schedule();
+    view.dom.addEventListener("load", onLoad, true);
+    return {
+      update: schedule,
+      destroy: () => {
+        if (frame) cancelAnimationFrame(frame);
+        view.dom.removeEventListener("load", onLoad, true);
+      },
+    };
+  },
+});
+
 const LocalImage = Image.extend({
+  addProseMirrorPlugins() {
+    return [...(this.parent?.() ?? []), reserveFloating];
+  },
   addAttributes() {
     return {
       ...(this.parent?.() ?? {}),
@@ -61,6 +104,11 @@ const LocalImage = Image.extend({
           if (name === "src" && dom.dataset.loaded === String(attrs["data-asset"] ?? "")) continue;
           dom.setAttribute(name, String(value));
         }
+        // La proporción guardada manda sobre la natural: un estirado por un lado se mantiene al soltar.
+        const w = Number(attrs.width);
+        const h = Number(attrs.height);
+        if (w > 0 && h > 0) dom.style.aspectRatio = `${w} / ${h}`;
+        else dom.style.removeProperty("aspect-ratio");
         const asset = attrs["data-asset"];
         if (typeof asset === "string" && dom.dataset.loaded !== asset) {
           dom.dataset.loaded = asset;

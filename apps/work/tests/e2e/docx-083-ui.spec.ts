@@ -134,7 +134,7 @@ test("redimensionar una imagen con los tiradores; se guarda y la barra cambia el
     const w = Number(await img.getAttribute("width"));
     const h = Number(await img.getAttribute("height"));
     expect(Math.abs(w / h - 2)).toBeLessThan(0.08);
-    // Lado: libre (solo cambia la altura)
+    // Lado (0.8.10): conserva la proporción y el tamaño se mantiene al soltar
     await selectImg();
     const s = (await frame.locator(".is-s").boundingBox())!;
     await doc.mouse.move(s.x + s.width / 2, s.y + s.height / 2);
@@ -142,7 +142,10 @@ test("redimensionar una imagen con los tiradores; se guarda y la barra cambia el
     await doc.mouse.move(s.x + s.width / 2, s.y + s.height / 2 + 40, { steps: 5 });
     await doc.mouse.up();
     await expect.poll(async () => Number(await img.getAttribute("height"))).toBeGreaterThan(h + 20);
-    expect(Number(await img.getAttribute("width"))).toBe(w);
+    expect(Number(await img.getAttribute("width"))).toBeGreaterThan(w);
+    const shown = (await img.boundingBox())!;
+    expect(Math.abs(shown.height - Number(await img.getAttribute("height")))).toBeLessThanOrEqual(1.5);
+    expect(Math.abs(shown.width / shown.height - 2)).toBeLessThan(0.08);
     // Límite al ancho de la página
     await selectImg();
     const e = (await frame.locator(".is-e").boundingBox())!;

@@ -5,10 +5,11 @@ import { clampNum } from "./layout-nodes";
 
 /**
  * Imagen seleccionada en Docs, como en Google Docs:
- * - Marco con 8 tiradores. Las esquinas mantienen la proporción (Mayús la libera); los lados cambian
- *   una sola dimensión. Nunca más ancha que el ancho útil de la página.
+ * - Marco con 8 tiradores. Esquinas y lados mantienen la proporción (Mayús la libera; la proporción libre
+ *   se guarda y se ve igual al soltar). Nunca más ancha que el ancho útil de la página.
  * - Arrastrar desde el centro (con la imagen ya seleccionada) la mueve: «En línea» la recoloca entre
- *   párrafos con una línea de inserción; «Ajustar texto», «Detrás» y «Delante» la mueven libremente por
+ *   párrafos con una línea de inserción si se suelta junto a otro hueco; si se lleva a un lado o a una
+ *   zona sin hueco pasa a «Delante» y queda donde se suelta (el texto no se mueve). Los modos libres se mueven libremente por
  *   el documento (se ancla al párrafo de destino y guarda offsetX/offsetY), siempre dentro de la página.
  * - Sin parpadeo: mientras se arrastra solo se cambia el estilo de la <img> en requestAnimationFrame, la
  *   paginación queda congelada y no hay transacciones hasta soltar.
@@ -26,6 +27,9 @@ const MENU_W = 196;
 const GAP = 8;
 const MOVE_SLOP_MOUSE = 4;
 const MOVE_SLOP_TOUCH = 8;
+/** Más allá de esto (px en pantalla) una imagen «En línea» deja de reordenarse y se coloca libre. */
+const FREE_DX = 40;
+const FREE_DY = 40;
 const EDGE = 48;
 
 function selectedImage(editor: Editor | null): { pos: number; img: HTMLImageElement } | null {
@@ -79,8 +83,15 @@ function contentBox(img: HTMLElement): { left: number; right: number; top: numbe
   const pb = parseFloat(css.paddingBottom) * zoom;
   // Abajo: hasta el final de la hoja (no solo del texto escrito), para poder bajarla en una página corta.
   const sheet = page.closest(".ow-a4") as HTMLElement | null;
-  const sheetBottom = sheet ? sheet.getBoundingClientRect().bottom - pb : r.bottom - pb;
-  return { left: r.left + pl, right: r.right - pr, top: r.top + pt, bottom: Math.max(r.bottom - pb, sheetBottom), width: Math.max(32, (page.clientWidth - parseFloat(css.paddingLeft) - parseFloat(css.paddingRight))), zoom };
+  // (El relleno inferior del editor paginado incluye el hueco hasta el final de la hoja: se usa el margen superior.)
+  const sheetBottom = sheet ? sheet.getBoundingClientRect().bottom - Math.min(pb, pt) : r.bottom - pb;
+  // Móvil (documento continuo, sin hojas): la «página» es todo el lienzo blanco, hasta el final del contenido con scroll.
+  let flowBottom = 0;
+  if (sheet?.classList.contains("is-flow")) {
+    const sc = scroller(page);
+    if (sc) flowBottom = sc.getBoundingClientRect().top - sc.scrollTop + sc.scrollHeight - 16;
+  }
+  return { left: r.left + pl, right: r.right - pr, top: r.top + pt, bottom: Math.max(r.bottom - pb, sheetBottom, flowBottom), width: Math.max(32, (page.clientWidth - parseFloat(css.paddingLeft) - parseFloat(css.paddingRight))), zoom };
 }
 
 /** Congela la paginación mientras se arrastra para que la imagen no salte de página en cada frame. */
@@ -281,8 +292,8 @@ export function ImageResize({ editor, labels, editable }: { editor: Editor | nul
     d.raf = 0;
     const dx = (d.px - d.x) / d.zoom;
     const dy = (d.py - d.y) / d.zoom;
-    const corner = d.handle.length === 2;
-    const keep = corner !== d.shift;
+    // Por defecto se conserva la proporción también en los lados; Mayús la libera.
+    const keep = !d.shift;
     const sx = d.handle.includes("e") ? 1 : d.handle.includes("w") ? -1 : 0;
     const sy = d.handle.includes("s") ? 1 : d.handle.includes("n") ? -1 : 0;
     let w = d.w + sx * dx;
@@ -405,7 +416,12 @@ export function ImageResize({ editor, labels, editable }: { editor: Editor | nul
           if (!best || Math.abs(edge - y) < Math.abs(best.y - y)) best = { at, y: edge, left: b.rect.left, width: b.rect.width };
         }
       }
-      if (best) {
+      const own = (at: number) => at >= target.pos && at <= target.pos + node.nodeSize;
+      // Si se desplaza a un lado o no hay otro hueco entre bloques, se colocará libre donde se suelte (sin línea de inserción).
+      if (!best || own(best.at) || Math.abs(dx) > FREE_DX || Math.abs(best.y - y) > FREE_DY) {
+        m.drop = null;
+        setCaret(null);
+      } else {
         m.drop = best.at;
         setCaret((prev) => (prev && prev.left === best!.left && prev.top === best!.y - 1 && prev.width === best!.width ? prev : { left: best!.left, top: best!.y - 1, width: Math.max(24, best!.width) }));
       }
@@ -450,11 +466,20 @@ export function ImageResize({ editor, labels, editable }: { editor: Editor | nul
       freeze(editor, false);
       return;
     }
+    let extra: Record<string, unknown> = {};
     if (wrapNow === "inline") {
       const drop = m.drop;
-      if (drop !== null && !(drop >= target.pos && drop <= target.pos + node.nodeSize)) relocate(drop, {});
-      freeze(editor, false);
-      return;
+      if (drop !== null && !(drop >= target.pos && drop <= target.pos + node.nodeSize)) {
+        relocate(drop, {});
+        freeze(editor, false);
+        return;
+      }
+      if (Math.abs(dx) < 3 && Math.abs(dy) < 3) {
+        freeze(editor, false);
+        return;
+      }
+      // «En línea» solo se reordena entre bloques: para dejarla donde se suelta pasa a «Delante» (el texto no se mueve).
+      extra = { wrap: "front" };
     }
     // Libre: destino en pantalla (sin la imagen), anclado al bloque de debajo y desplazado dentro de la página.
     const scrollNow = m.sc ? m.sc.scrollTop - m.scrollTop0 : 0;
@@ -468,7 +493,7 @@ export function ImageResize({ editor, labels, editable }: { editor: Editor | nul
     const w = m.start.width / z;
     const ox = clampNum((wantLeft - c.left) / z, 0, Math.max(0, Math.floor(c.width - w)), 0);
     const oy = anchor ? clampNum((wantTop - anchor.rect.top) / z, 0, 2000, 0) : 0;
-    const attrs = { offsetX: ox, offsetY: oy, align: "left" };
+    const attrs = { ...extra, offsetX: ox, offsetY: oy, align: "left" };
     const pos = anchor ? (anchor.start > target.pos ? anchor.start : anchor.start) : target.pos;
     const at = relocate(anchor && anchor.start !== target.pos + node.nodeSize ? pos : null, attrs);
     // Corrección fina: medir dónde quedó y ajustar el desplazamiento (sigue congelada la paginación).
