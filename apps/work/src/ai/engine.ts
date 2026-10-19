@@ -9,9 +9,11 @@ export type AiModel = {
   device: AiDevice;
   dtype: string;
   sizeMb: number;
-  label: "modelGpuSmall" | "modelGpuLarge" | "modelCpu" | "modelCpuLarge" | "modelTiny";
+  label: "modelGpuSmall" | "modelGpuLarge" | "modelCpu" | "modelCpuLarge" | "modelTiny" | "modelLfm" | "modelGemma";
   needs: "webgpu-f16" | "webgpu" | "wasm";
   minMemoryGb?: number;
+  /** Pesos en un archivo aparte («.onnx_data») */
+  externalData?: boolean;
 };
 
 export const AI_MODELS: AiModel[] = [
@@ -19,6 +21,8 @@ export const AI_MODELS: AiModel[] = [
   { id: "qwen15-gpu", repo: "onnx-community/Qwen2.5-1.5B-Instruct", device: "webgpu", dtype: "q4f16", sizeMb: 1240, label: "modelGpuLarge", needs: "webgpu-f16", minMemoryGb: 8 },
   { id: "qwen05-cpu", repo: "onnx-community/Qwen2.5-0.5B-Instruct", device: "wasm", dtype: "q8", sizeMb: 520, label: "modelCpu", needs: "wasm" },
   { id: "qwen15-cpu", repo: "onnx-community/Qwen2.5-1.5B-Instruct", device: "wasm", dtype: "q8", sizeMb: 1580, label: "modelCpuLarge", needs: "wasm", minMemoryGb: 8 },
+  { id: "lfm350-cpu", repo: "onnx-community/LFM2-350M-ONNX", device: "wasm", dtype: "q4", sizeMb: 295, label: "modelLfm", needs: "wasm", externalData: true },
+  { id: "gemma270-cpu", repo: "onnx-community/gemma-3-270m-it-ONNX", device: "wasm", dtype: "q4", sizeMb: 325, label: "modelGemma", needs: "wasm", externalData: true },
   { id: "smol135-cpu", repo: "HuggingFaceTB/SmolLM2-135M-Instruct", device: "wasm", dtype: "q8", sizeMb: 140, label: "modelTiny", needs: "wasm" },
 ];
 
@@ -51,22 +55,25 @@ export function usableModels(support: AiSupport): AiModel[] {
   });
 }
 
-/** El más adecuado. En el móvil, el más ligero (SmolLM2 135M, ~137 MB, WASM): cabe en memoria y se descarga en poco
- *  tiempo; los de ~500 MB fallaban al descargar o al cargarse en teléfonos. En ordenador: GPU pequeño si hay WebGPU
- *  con f16; si no, CPU (WASM). */
+/** El más adecuado. En el móvil, LFM2 350M (q4, ~295 MB, WASM): multilingüe y bueno en español, más rápido que
+ *  SmolLM2 135M y con menos memoria que Qwen2.5 0.5B (que fallaba al descargarse o cargarse en teléfonos). Con poca
+ *  memoria (≤ 2 GB) se queda en SmolLM2 135M. En ordenador: GPU pequeño si hay WebGPU con f16; si no, CPU (WASM).
+ *  En todos los casos el contenido sale del propio texto (extracción) y el modelo solo redacta lo que se comprueba. */
 export function recommendedModel(support: AiSupport): AiModel | null {
   const list = usableModels(support);
   if (list.length === 0) return null;
-  if (support.mobile) return list.find((model) => model.id === "smol135-cpu") ?? list[0]!;
+  if (support.mobile) {
+    const small = (support.memoryGb ?? 4) <= 2;
+    return list.find((model) => model.id === (small ? "smol135-cpu" : "lfm350-cpu")) ?? list.find((model) => model.id === "smol135-cpu") ?? list[0]!;
+  }
   const gpu = list.find((model) => model.id === "qwen05-gpu");
   if (gpu) return gpu;
-  if (support.mobile && (support.memoryGb ?? 4) < 4) return list.find((model) => model.id === "smol135-cpu") ?? list[0]!;
   return list.find((model) => model.id === "qwen05-cpu") ?? list[0]!;
 }
 
 /** ¿Ya está descargado? (caché del navegador de transformers.js) */
 export async function isModelCached(model: AiModel): Promise<boolean> {
-  return isStored(modelWeightsKey(model.repo, model.dtype));
+  return isStored(modelWeightsKey(model.repo, model.dtype, model.externalData));
 }
 
 export async function removeCachedModels(): Promise<void> {

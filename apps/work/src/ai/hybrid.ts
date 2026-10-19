@@ -4,7 +4,7 @@
  *  3) Cada resultado se comprueba contra el original (palabras inventadas, términos clave, idioma); lo que no se
  *     apoya en el texto se sustituye por la frase original. Así el contenido es fiel aunque el modelo sea pequeño. */
 import type { ChatMessage } from "./engine";
-import { checkFaithful, contentWords, extractSentences, keyTerms, looksSpanish, relevantSentences, splitSentences, stem, tidySentence, type Sentence } from "./extractive";
+import { checkFaithful, contentWords, faithfulSentences, extractSentences, keyTerms, looksSpanish, relevantSentences, splitSentences, stem, tidySentence, type Sentence } from "./extractive";
 import { isDegenerate } from "./clean";
 
 /** Genera con el modelo; devuelve null si la salida era basura o falló. */
@@ -53,9 +53,38 @@ function overlap(a: string, b: string): number {
   return A.length ? A.filter((w) => B.has(w)).length / A.length : 0;
 }
 
+const NEGATION = /\b(no|nunca|jamás|ni|sin|tampoco|ningún|ninguna|ninguno|nada)\b/i;
+
+function numbersOf(text: string): string[] {
+  return (text.match(/\d+(?:[.,\s]\d{3})*(?:[.,]\d+)?/g) ?? []).map((n) => n.replace(/[.,\s]/g, ""));
+}
+
+/** ¿La viñeta dice lo mismo que su frase? Casi sin palabras nuevas, las mismas cifras, la misma negación y
+ *  conservando buena parte de su contenido. */
+export function bulletMatches(bullet: string, sentence: string): boolean {
+  if (bullet.length < 20 || bullet.length > Math.max(320, sentence.length * 1.2) || isDegenerate(bullet)) return false;
+  const b = contentWords(bullet).map(stem);
+  const sset = new Set(contentWords(sentence).map(stem));
+  if (b.length < 3) return false;
+  const novel = b.filter((w) => !sset.has(w)).length / b.length;
+  const recall = [...sset].filter((w) => b.includes(w)).length / Math.max(1, sset.size);
+  if (novel > 0.15 || b.length - b.filter((w) => sset.has(w)).length > 3 || recall < 0.45) return false;
+  const sn = new Set(numbersOf(sentence));
+  if (numbersOf(bullet).some((n) => !sn.has(n))) return false;
+  if (NEGATION.test(bullet) !== NEGATION.test(sentence)) return false;
+  return checkFaithful(bullet, sentence, { maxNovel: 0.25, minCoverage: 0 }).spanish;
+}
+
+/** Quita etiquetas que añade el modelo al principio («Dignidad y participación: …», «No: …»). */
+function dropLabel(bullet: string): string {
+  const m = bullet.match(/^([^:.]{1,40}):\s+(.+)$/);
+  return m && m[1]!.split(/\s+/).length <= 5 ? m[2]!.charAt(0).toUpperCase() + m[2]!.slice(1) : bullet;
+}
+
 /** Une la redacción del modelo con las frases elegidas: cada viñeta debe corresponder a una frase y no inventar. */
 export function mergeBullets(output: string | null, chosen: string[], source: string): { bullets: string[]; fromModel: number } {
-  const candidates = output && !isDegenerate(output) ? bulletsOf(output) : [];
+  void source;
+  const candidates = output && !isDegenerate(output) ? bulletsOf(output).map(dropLabel) : [];
   const used = new Set<number>();
   let fromModel = 0;
   const bullets = chosen.map((sentence, i) => {
@@ -67,9 +96,7 @@ export function mergeBullets(output: string | null, chosen: string[], source: st
       if (score > bestScore) { bestScore = score; best = j; }
     });
     const c = best >= 0 ? candidates[best]! : "";
-    const check = c ? checkFaithful(c, source, { maxNovel: 0.25, minCoverage: 0 }) : null;
-    const fits = c.length >= 20 && c.length <= Math.max(320, sentence.length * 1.2) && overlap(c, sentence) >= 0.5 && check?.ok && !isDegenerate(c);
-    if (fits) { used.add(best); fromModel += 1; return c.replace(/\s+/g, " "); }
+    if (c && bulletMatches(c, sentence)) { used.add(best); fromModel += 1; return c.replace(/\s+/g, " "); }
     return tidySentence(sentence);
   });
   return { bullets, fromModel };
@@ -110,10 +137,10 @@ export async function hybridExplain(text: string, generate: Generate): Promise<H
   const chosen = extractSentences(text, Math.min(5, summaryCount(text.length))).map((s) => tidySentence(s.text, 300));
   const terms = keyTerms(text, 6);
   const out = await generate(explainMessages(chosen, terms), 260);
-  const para = (out ?? "").replace(/^\s*[-*•]\s+/gm, "").trim();
-  const check = para ? checkFaithful(para, text, { maxNovel: 0.4, minCoverage: 0.15 }) : null;
+  // Solo se aceptan las frases del modelo que se apoyan en el texto; si descarta la mayoría, no se usa
+  const { kept, share } = out && !isDegenerate(out) ? faithfulSentences(out, text, { maxNovel: 0.3, minSupport: 0.4, support: chosen }) : { kept: [], share: 0 };
   const keys = `**Ideas clave del texto:**\n${chosen.slice(0, 3).map((s) => `- ${s}`).join("\n")}${terms.length >= 3 ? `\n\n**Conceptos:** ${terms.join(", ")}.` : ""}`;
-  if (para && check?.ok && !isDegenerate(para)) return { markdown: `${para}\n\n${keys}`, fromModel: 1, fromText: 0, mode: "model" };
+  if (kept.length >= 1 && share >= 0.6) return { markdown: `${kept.join(" ")}\n\n${keys}`, fromModel: 1, fromText: 0, mode: "model" };
   return { markdown: `**En pocas palabras:** ${chosen[0] ?? ""}\n\n${keys}`, fromModel: 0, fromText: 1, mode: "extractive" };
 }
 
@@ -132,10 +159,12 @@ export async function hybridAsk(text: string, question: string, generate: Genera
   }
   const frags = sentences.map((s) => tidySentence(s.text, 400));
   const out = (await generate(askMessages(frags, question), 200))?.trim() ?? "";
-  const check = out ? checkFaithful(out, `${text}\n${question}`, { maxNovel: 0.35, minCoverage: 0 }) : null;
   const quotes = `**Lo que dice el texto:**\n${frags.map((s) => `- «${s}»`).join("\n")}`;
-  if (out && (check?.ok || /no lo dice/i.test(out)) && !isDegenerate(out)) {
-    return { markdown: `${out}\n\n${quotes}`, answer: out, fromModel: 1, fromText: 0, mode: "model" };
+  if (/^el texto no lo dice/i.test(out)) return { markdown: `El texto no lo dice.\n\n${quotes}`, answer: "El texto no lo dice.", fromModel: 1, fromText: 0, mode: "model" };
+  const { kept, share } = out && !isDegenerate(out) ? faithfulSentences(out, `${text}\n${question}`, { maxNovel: 0.25, minSupport: 0.5, support: frags.map((f) => `${f} ${question}`) }) : { kept: [], share: 0 };
+  if (kept.length >= 1 && share >= 0.6) {
+    const answer = kept.join(" ");
+    return { markdown: `${answer}\n\n${quotes}`, answer, fromModel: 1, fromText: 0, mode: "model" };
   }
   return { markdown: quotes, answer: quotes, fromModel: 0, fromText: 1, mode: "extractive" };
 }
@@ -174,13 +203,23 @@ export function titleMessages(groups: string[][]): ChatMessage[] {
   ];
 }
 
-function fallbackTitle(sentences: string[], source: string): string {
-  const terms = keyTerms(sentences.join(" "), 3).filter((t) => keyTerms(source, 30).some((k) => stem(k) === stem(t)));
-  const list = (terms.length ? terms : keyTerms(sentences.join(" ") + " " + sentences.join(" "), 3)).slice(0, 3);
-  if (list.length === 0) return tidySentence(sentences[0] ?? "", 60);
-  const text = list.length > 1 ? `${list.slice(0, -1).join(", ")} y ${list.at(-1)}` : list[0]!;
-  return text.charAt(0).toUpperCase() + text.slice(1);
+/** Un título vale si sus palabras con contenido están, en su mayoría, en esa parte del texto. */
+export function titleOk(title: string, sectionText: string): boolean {
+  const cw = contentWords(title).map(stem);
+  if (cw.length === 0 || cw.length > 8) return false;
+  const src = new Set(contentWords(sectionText).map(stem));
+  return cw.filter((w) => src.has(w)).length / cw.length >= 0.5;
 }
+
+/** Título de reserva, sacado del propio texto: el comienzo de la frase principal de esa parte. */
+export function fallbackTitle(sentences: string[]): string {
+  const first = (sentences[0] ?? "").replace(/[\u200B-\u200D\u2060\uFEFF]/g, "").split(/[,;:(—–]/)[0]!.trim();
+  const list = first.split(/\s+/).slice(0, 7);
+  while (list.length > 2 && STOPWORD_END.test(list.at(-1)!)) list.pop();
+  const t = list.join(" ").replace(/[.…]+$/, "");
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+const STOPWORD_END = /^(el|la|los|las|de|del|en|y|o|a|al|un|una|que|con|por|para|se|su|sus|es|son|lo|como|e|u)$/i;
 
 export async function hybridOutline(text: string, generate: Generate): Promise<HybridResult> {
   const sections = sectionsOf(text);
@@ -194,13 +233,13 @@ export async function hybridOutline(text: string, generate: Generate): Promise<H
   const missing = titles.some((t) => !t);
   if (missing) {
     const out = (await generate(titleMessages(points.map((p) => p.slice(0, 2))), 30 * points.length + 20)) ?? "";
-    const lines = out.split(/\n+/).map((l) => l.match(/^\s*(?:[-*]\s*)?Parte\s*(\d+)\s*[:.-]\s*(.+)$/i)).filter(Boolean) as RegExpMatchArray[];
+    const lines = out.split(/\n+/).map((l) => l.replace(/\*\*/g, "").match(/^\s*(?:[-*]\s*)?(?:Parte|Título)\s*(\d+)\s*[:.-]\s*(.+)$/i)).filter(Boolean) as RegExpMatchArray[];
     titles = titles.map((t, i) => {
       if (t) return t;
       const line = lines.find((m) => Number(m[1]) === i + 1)?.[2]?.replace(/[«»"*]/g, "").trim() ?? "";
-      const ok = line.length >= 3 && line.length <= 70 && !isDegenerate(`${line} ${line}`) && checkFaithful(line, points[i]!.join(" "), { maxNovel: 0.5, minCoverage: 0 }).ok && contentWords(line).length >= 1;
+      const ok = line.length >= 3 && line.length <= 70 && titleOk(line, sections[i]!.sentences.map((x) => x.text).join(" "));
       if (ok) { fromModel += 1; return line; }
-      return fallbackTitle(points[i]!, text);
+      return fallbackTitle(points[i]!);
     });
   }
   const markdown = sections
