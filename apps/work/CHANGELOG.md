@@ -1,6 +1,6 @@
 # Registro de cambios
 
-## 0.8.10 — 2026-10-19
+## 0.9.1 — 2026-10-19
 
 Docs: lo que ves al soltar una imagen es lo que queda.
 
