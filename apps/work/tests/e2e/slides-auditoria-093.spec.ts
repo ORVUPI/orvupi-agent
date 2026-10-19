@@ -194,6 +194,8 @@ let START = "";
 async function ensureState(page: Page): Promise<Page> {
   if (page.isClosed() || (START && page.url() !== START)) return fresh(page);
   await cleanup(page);
+  const show = page.locator(".sl-toolbar").getByRole("button", { name: "Mostrar los menús", exact: true });
+  if (await show.isVisible().catch(() => false)) await show.click();
   if (!(await page.locator(".sl-canvas").isVisible().catch(() => false))) {
     // vista de cuadrícula u otra: volver a la normal
     const grid = page.locator(".sl-grid");
@@ -231,8 +233,9 @@ async function prepare(page: Page, where: string) {
     await openTop(page, "Insertar"); await clickEntry(page, "Insertar", "Forma"); await clickEntry(page, "Forma", "Triángulo");
     if (/Enviar|fondo|atrás/i.test(where)) return;
     await openTop(page, "Insertar"); await clickEntry(page, "Insertar", "Forma"); await clickEntry(page, "Forma", "Rectángulo");
-    for (let i = 0; i < 12; i += 1) await page.keyboard.press("Shift+ArrowRight");
     const items = page.locator(".sl-canvas .sl-item");
+    const r = await items.last().boundingBox();
+    if (r) { await page.mouse.move(r.x + r.width / 2, r.y + r.height / 2); await page.mouse.down(); await page.mouse.move(r.x + r.width / 2 + 260, r.y + r.height / 2 + 40, { steps: 5 }); await page.mouse.up(); }
     const tri = items.nth((await items.count()) - 2);
     const b = await tri.boundingBox();
     if (b) await page.mouse.click(b.x + b.width / 2, b.y + b.height * 0.75);
@@ -244,14 +247,21 @@ async function prepare(page: Page, where: string) {
     await (await chooser).setFiles({ name: "punto.png", mimeType: "image/png", buffer: PNG });
     await expect(page.locator(".sl-canvas .sl-item.is-image.is-selected")).toBeVisible();
   }
+  if (where === "Formato › Imagen › Restablecer imagen") { await openPath(page, ["Organizar", "Girar", "Girar 90° a la derecha"]); }
+  if (where === "Formato › Borrar formato") await page.keyboard.press("Control+b");
   if (where === "Editar › Pegar") await page.keyboard.press("Control+c");
   if (/^Diapositiva › Mover diapositiva/.test(where)) {
     // tres diapositivas y la del medio elegida
-    await page.keyboard.press("Escape");
-    await page.keyboard.press("Control+m");
-    await page.keyboard.press("Control+m");
-    await page.locator(".sl-film-list").getByRole("option").nth(1).click();
+    await threeSlides(page);
   }
+}
+
+/** Tres diapositivas iguales (con el título) y la del medio elegida. */
+async function threeSlides(page: Page) {
+  await page.keyboard.press("Escape");
+  for (let i = 0; i < 2; i += 1) { await openTop(page, "Diapositiva"); await clickEntry(page, "Diapositiva", "Duplicar diapositiva"); }
+  await page.locator(".sl-film-list").getByRole("option").nth(1).click();
+  await selectTitle(page);
 }
 
 async function entryLabels(page: Page, path: string[]) {
@@ -417,15 +427,14 @@ test("combinaciones de teclas", async ({ page }) => {
   let slides = await openSlides(page);
   const errors: string[] = [];
   trackErrors(slides, errors);
-  await slides.keyboard.press("Control+m");
+  await threeSlides(slides);
   const results: Outcome[] = [];
   for (const s of SHORTCUTS) {
     const fresh = await ensureState(slides);
-    if (fresh !== slides) { slides = fresh; trackErrors(slides, errors); }
+    if (fresh !== slides) { slides = fresh; trackErrors(slides, errors); await threeSlides(slides); }
     if (s.setup === "nada") await slides.keyboard.press("Escape");
-    if (s.label === "Agrupar") await slides.keyboard.press("Control+a");
+    if (s.label === "Agrupar") await prepare(slides, "Organizar › Agrupar");
     if (s.label === "Rehacer") { await slides.keyboard.press("Control+b"); await slides.keyboard.press("Control+z"); }
-    if (s.label === "Diapositiva anterior") await slides.keyboard.press("PageDown");
     results.push(await probe(slides, `${s.keys} (${s.label})`, async () => { await slides.keyboard.press(s.keys); }, errors));
   }
   await report("teclas", results);

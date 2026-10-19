@@ -1459,6 +1459,8 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
   const canvasW = SLIDE_W * scale;
   const canvasH = SLIDE_H * scale;
   const selBox = boxOf(selectedItems);
+  // Como Slides: un grupo se ve como un solo objeto (un marco, sin los marcos de cada pieza)
+  const asGroup = selectedItems.length > 1 && Boolean(selectedItems[0]!.group) && selectedItems.every((i) => i.group === selectedItems[0]!.group);
   const showRulers = rulers && !phone && !tablet;
   const R = showRulers ? 18 : 0;
   const saveLabel = status === "saved" ? tx("Guardado en este dispositivo", "Saved on this device") : tx("Guardando…", "Saving…");
@@ -1907,8 +1909,8 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
                         <span className="sl-end" data-handle="end2" style={{ left: single.x2 * scale, top: single.y2 * scale }} onPointerDown={(e) => onEndDown(e, 2)} />
                       </>
                     ) : selBox && !editingId ? (
-                      <div className={`sl-selbox${selectedItems.length > 1 ? " is-multi" : ""}`} style={{ left: selBox.x * scale, top: selBox.y * scale, width: selBox.w * scale, height: selBox.h * scale, transform: single?.rot ? `rotate(${single.rot}deg)` : undefined }}>
-                        {selectedItems.length > 1 ? selectedItems.map((i) => <span key={i.id} className="sl-subsel" style={{ left: (i.x - selBox.x) * scale, top: (i.y - selBox.y) * scale, width: i.w * scale, height: i.h * scale }} />) : null}
+                      <div className={`sl-selbox${selectedItems.length > 1 ? (asGroup ? " is-group" : " is-multi") : ""}`} style={{ left: selBox.x * scale, top: selBox.y * scale, width: selBox.w * scale, height: selBox.h * scale, transform: single?.rot ? `rotate(${single.rot}deg)` : undefined }}>
+                        {selectedItems.length > 1 && !asGroup ? selectedItems.map((i) => <span key={i.id} className="sl-subsel" style={{ left: (i.x - selBox.x) * scale, top: (i.y - selBox.y) * scale, width: i.w * scale, height: i.h * scale }} />) : null}
                         {["nw", "n", "ne", "e", "se", "s", "sw", "w"].map((h) => <span key={h} className={`sl-handle is-${h}`} data-handle={h} onPointerDown={(e) => onHandleDown(e, h)} />)}
                         {single ? <span className="sl-rotate" data-handle="rotate" onPointerDown={onRotateDown} /> : null}
                       </div>
