@@ -295,6 +295,30 @@ const Footnote = Node.create({
 });
 
 /** Las notas finales se numeran i, ii, iii como en Word. */
+/** Tamaño de letra con una variable --ow-pt (en puntos) para que el modo móvil lo escale igual que el cuerpo. */
+const ScaledFontSize = FontSize.extend({
+  addGlobalAttributes() {
+    return [
+      {
+        types: this.options.types,
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: (element: HTMLElement) => getStyleProperty(element, "font-size") ?? (element.style.fontSize || null),
+            renderHTML: (attributes: Record<string, unknown>) => {
+              const raw = typeof attributes.fontSize === "string" ? attributes.fontSize.trim() : "";
+              const match = /^(\d+(?:\.\d+)?)(pt|px)$/.exec(raw);
+              if (!match) return raw && /^[\w.%\s-]+$/.test(raw) ? { style: `font-size: ${raw}` } : {};
+              const pt = match[2] === "px" ? Number(match[1]) * 0.75 : Number(match[1]);
+              return { style: `font-size: ${raw}; --ow-pt: ${Math.round(pt * 100) / 100}` };
+            },
+          },
+        },
+      },
+    ];
+  },
+});
+
 export function toRoman(value: number): string {
   let n = Math.max(1, Math.min(3999, Math.round(value)));
   const table: Array<[number, string]> = [[1000, "m"], [900, "cm"], [500, "d"], [400, "cd"], [100, "c"], [90, "xc"], [50, "l"], [40, "xl"], [10, "x"], [9, "ix"], [5, "v"], [4, "iv"], [1, "i"]];
@@ -642,7 +666,7 @@ export function createExtensions(placeholder: string) {
     SafeColor,
     BackgroundColor,
     SafeFontFamily,
-    FontSize,
+    ScaledFontSize,
     LineHeight.configure({ types: ["heading", "paragraph"] }),
     TextAlign.configure({ types: ["heading", "paragraph"] }),
     Indent,

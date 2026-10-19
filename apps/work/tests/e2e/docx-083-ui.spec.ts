@@ -26,7 +26,7 @@ async function newDoc(page: Page, size: { width: number; height: number }): Prom
 const shot = async (page: Page, name: string, size: { width: number }) =>
   page.screenshot({ path: join(await screenshotDir(), `083-${name}-${size.width}-${test.info().project.name}.png`) });
 
-test("tamaño de letra: − y + con selección y con el cursor, pasos como Google Docs", async ({ page }, info) => {
+test("tamaño de letra: − y + con selección y con el cursor, de 1 en 1", async ({ page }, info) => {
   test.setTimeout(180_000);
   for (const size of viewports(info.project.name)) {
     const doc = await newDoc(page, size);
@@ -37,28 +37,29 @@ test("tamaño de letra: − y + con selección y con el cursor, pasos como Googl
     const plus = doc.getByRole("button", { name: "Aumentar tamaño" }).filter({ visible: true }).first();
     const minus = doc.getByRole("button", { name: "Reducir tamaño" }).filter({ visible: true }).first();
     await plus.scrollIntoViewIfNeeded();
-    // Selección: 11 → 12 → 14 → 18 (pasos), y luego − vuelve a 14
+    // Selección: 11 → 12 → 13 → 14 (de 1 en 1, 0.8.7), y luego − vuelve a 13
     await editor.locator("p").first().selectText();
     await plus.click();
     await expect(input).toHaveValue("12");
     await plus.click();
-    await expect(input).toHaveValue("14");
+    await expect(input).toHaveValue("13");
     await plus.click();
-    await expect(input).toHaveValue("18");
-    await expect(editor.locator("span[style*='font-size: 18pt']")).toContainText("Hola mundo ORVUPI");
-    await minus.click();
     await expect(input).toHaveValue("14");
+    await expect(editor.locator("span[style*='font-size: 14pt']")).toContainText("Hola mundo ORVUPI");
+    await minus.click();
+    await expect(input).toHaveValue("13");
     // La selección sigue: se escribe un tamaño y se aplica
     await input.fill("30");
     await input.press("Enter");
     await expect(editor.locator("span[style*='font-size: 30pt']")).toContainText("Hola mundo ORVUPI");
     // Cursor dentro de una palabra: se aplica a la palabra
     await editor.locator("p").first().click();
-    await doc.keyboard.press("End");
+    // Fin del documento (con 30 pt el párrafo ocupa dos líneas en el móvil y «End» solo va al final de la línea)
+    await doc.keyboard.press("Control+End");
     await doc.keyboard.press("ArrowLeft");
     await doc.keyboard.press("ArrowLeft");
     await minus.click();
-    await expect(editor.locator("span[style*='font-size: 24pt']")).toHaveText("ORVUPI");
+    await expect(editor.locator("span[style*='font-size: 29pt']")).toHaveText("ORVUPI");
     await shot(doc, "fuente", size);
     await doc.close();
   }
