@@ -7,7 +7,7 @@ import { absentOnDevice, MissingFile } from "../ui/MissingFile";
 import { MenuBar } from "../ui/menus";
 import { APP_VERSION } from "../version";
 import { createId, fileNameWithExtension } from "../security/names";
-import { SLIDE_FILLS, alignItem, orderItems, type SlideItem } from "../slides/model";
+import { SLIDE_FILLS, alignItem, orderItems, type SlideItem } from "./items";
 import { drawingPng, drawingSvg } from "./export";
 import { parseDrawing, serializeDrawing, type DrawingFile } from "./model";
 

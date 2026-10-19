@@ -189,12 +189,15 @@ test("una celda puede leer otra hoja", async ({ page }) => {
 test("la presentación formatea texto, dibuja una línea, anota y exporta PDF", async ({ page }) => {
   const slides = await openHomeTool(page, "Nueva presentación");
   await expect(slides).toHaveURL(/\/presentation\/d\/[^/]+\/edit$/);
+  // 0.9.0: el formato se aplica al cuadro seleccionado, como en Google Slides.
+  const title = slides.locator(".sl-canvas").getByRole("button", { name: "Haz clic para añadir un título", exact: true });
+  await title.click();
   await slides.getByRole("menuitem", { name: "Formato", exact: true }).click();
-  await slides.getByRole("menuitem", { name: "Negrita", exact: true }).click();
-  await expect(slides.getByRole("button", { name: "Cuadro de texto" }).first()).toHaveCSS("font-weight", "800");
+  await slides.getByRole("menuitem", { name: /^Negrita/ }).click();
+  await expect(title.locator(".sl-text")).toHaveCSS("font-weight", "700");
   await slides.getByRole("menuitem", { name: "Insertar", exact: true }).click();
   await slides.getByRole("menuitem", { name: "Línea", exact: true }).click();
-  await expect(slides.getByRole("button", { name: "Línea" })).toBeVisible();
+  await expect(slides.locator(".sl-canvas").getByRole("button", { name: "Línea" })).toBeAttached();
   await slides.getByRole("menuitem", { name: "Herramientas", exact: true }).click();
   await slides.getByRole("menuitem", { name: "Centrar", exact: true }).click();
   await slides.getByLabel("Notas del orador").fill("Hablar despacio");
