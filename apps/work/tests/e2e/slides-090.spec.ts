@@ -6,6 +6,16 @@ import { screenshotDir } from "./shots";
 
 /** 0.9.0: Presentaciones con la estructura y las funciones de Google Slides (escritorio, tableta y móvil). */
 
+/** Pulsa en el fondo del área de trabajo, fuera de la diapositiva (sin esquinas redondeadas). */
+async function blank(page: Page) {
+  const canvas = await page.locator(".sl-canvas").boundingBox();
+  const stage = await page.locator(".sl-stage").boundingBox();
+  if (!canvas || !stage) throw new Error("falta el lienzo");
+  const below = canvas.y + canvas.height + 14;
+  const point = below < stage.y + stage.height - 6 ? { x: canvas.x + canvas.width / 2, y: below } : { x: Math.min(canvas.x + canvas.width + 14, stage.x + stage.width - 8), y: canvas.y + canvas.height / 2 };
+  await page.mouse.click(point.x, point.y);
+}
+
 async function openSlides(page: Page): Promise<Page> {
   await page.goto("/");
   const button = page.getByRole("button", { name: "Nueva presentación", exact: true }).first();
@@ -94,7 +104,7 @@ test("marcadores, nueva diapositiva con diseño, miniaturas reales y reordenar",
   // Duplicar y deshacer
   await menu(slides, "Diapositiva", "Duplicar diapositiva");
   await expect(slides.locator(".sl-film-list").getByRole("option")).toHaveCount(3);
-  await slides.locator(".sl-stage").click({ position: { x: 4, y: 4 } });
+  await blank(slides);
   await slides.keyboard.press("Control+z");
   await expect(slides.locator(".sl-film-list").getByRole("option")).toHaveCount(2);
   await slides.keyboard.press("Control+y");

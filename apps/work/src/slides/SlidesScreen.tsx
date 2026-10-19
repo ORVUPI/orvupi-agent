@@ -1573,6 +1573,7 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
     );
   }
 
+  const zoomText = zoom === "fit" ? tx("Ajustar", "Fit") : `${Math.round(scale * 100)} %`;
   return (
     <div className={`ow-slides-page sl-root${phone ? " is-phone" : ""}${panel ? " has-panel" : ""}${filmOpen ? "" : " no-film"}`} data-tool="slides" data-version={APP_VERSION}>
       <h1 className="ow-sr">{file.title}</h1>
@@ -1630,7 +1631,7 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
           const style = hasText(src) ? { font: src.font, size: src.size, color: src.color, bold: src.bold, italic: src.italic, underline: src.underline, strike: src.strike, align: src.align, lineHeight: src.lineHeight } : {};
           setPainter({ ...style, ...(src.kind === "shape" ? { fill: src.fill, stroke: src.stroke } : {}) });
         }}><Paintbrush size={18} /></Icon>
-        <ToolPop label={tx("Zoom", "Zoom")} className="is-wide" icon={<span className="sl-zoom-label">{zoom === "fit" ? tx("Ajustar", "Fit") : `${Math.round(scale * 100)} %`}<ChevronDown size={14} /></span>}>
+        <ToolPop label={`${tx("Zoom", "Zoom")}: ${zoomText}`} className="is-wide" icon={<span className="sl-zoom-label">{zoomText}<ChevronDown size={14} /></span>}>
           {(close) => (
             <div role="menu" aria-label="Zoom" className="sl-list">
               <button type="button" role="menuitem" onClick={() => { setZoom("fit"); close(); }}>{tx("Ajustar", "Fit")}</button>
@@ -1685,13 +1686,13 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
                   className={`sl-film-item${i === index ? " is-current" : ""}${filmSel.includes(i) ? " is-picked" : ""}${s.hidden ? " is-hidden" : ""}${dragSlide && dragSlide.to === i && dragSlide.from !== i ? " is-drop" : ""}${dragSlide && dragSlide.to === file.slides.length && i === file.slides.length - 1 ? " is-drop-after" : ""}${dragSlide?.from === i ? " is-dragging" : ""}`}
                   role="option"
                   aria-selected={i === index || filmSel.includes(i)}
-                  aria-label={`${tx("Diapositiva", "Slide")} ${i + 1}${s.title ? `: ${s.title}` : ""}${s.hidden ? ` (${tx("omitida", "skipped")})` : ""}`}
                   tabIndex={i === index ? 0 : -1}
                   data-slide={i + 1}
                   onPointerDown={(e) => onThumbDown(e, i)}
                   onContextMenu={(e) => { e.preventDefault(); if (!filmSel.includes(i) && i !== index) goTo(i); setFocusArea("film"); setCtx({ x: e.clientX, y: e.clientY, on: "slide", slide: i }); }}
                   onFocus={() => setFocusArea("film")}
                 >
+                  <span className="ow-sr">{`${tx("Diapositiva", "Slide")} ${i + 1}${s.hidden ? ` (${tx("omitida", "skipped")})` : ""}: `}</span>
                   <span className="sl-film-num" aria-hidden="true">{i + 1}</span>
                   <span className="sl-film-thumb ow-thumb">
                     <Thumb slide={s} width={phone ? 104 : 148} number={file.numbers ? i + 1 : undefined} master={file.master} />

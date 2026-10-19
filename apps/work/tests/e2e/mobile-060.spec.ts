@@ -436,6 +436,8 @@ test("la presentación encaja, anima, muestra cuadrícula y patrón", async ({ p
   await expect(slides.locator(".ow-anim-fade").first()).toBeVisible();
   await menu(slides, "Ver", "Cuadrícula");
   await expect(slides.getByRole("list").getByRole("listitem").first()).toBeVisible();
+  // Como en Google Slides, la cuadrícula sustituye al lienzo: se cierra antes de ver el patrón
+  await menu(slides, "Ver", "Cuadrícula");
   await menu(slides, "Ver", "Patrón");
   await expect(slides.locator(".ow-master")).toHaveText("Patrón");
   await fits(slides, "presentación");
