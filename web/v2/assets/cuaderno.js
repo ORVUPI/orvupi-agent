@@ -19,6 +19,7 @@ import {
   isAllowedRpcUrl,
   isMintAddress,
   readMint,
+  LAUNCHLAB_QUOTE_SYMBOLS,
 } from "../shared/solana-read.js";
 import { takeQuerySlot } from "../modules/pair-report.mjs";
 import {
@@ -526,6 +527,51 @@ function dataRow(list, label, status, value, field) {
   return { label, state: factState(status, value) };
 }
 
+function launchlabUnits(raw, decimals) {
+  const value = BigInt(raw);
+  const scale = 10n ** BigInt(decimals);
+  const frac = (value % scale).toString().padStart(decimals, "0").replace(/0+$/, "");
+  const whole = (value / scale).toString();
+  const sep = lang() === "en" ? "." : ",";
+  return frac ? `${whole}${sep}${frac}` : whole;
+}
+
+function renderLaunchlab(list, ll) {
+  const en = lang() === "en";
+  const quote = LAUNCHLAB_QUOTE_SYMBOLS[ll.quoteMint] || ll.quoteMint;
+  const progress = ll.progress === null ? (en ? "not calculated" : "no se calcula") : en ? `${ll.progress}%` : `${ll.progress.replace(".", ",")} %`;
+  const state = {
+    en_curva: en ? "On the curve, not graduated yet" : "En curva, todavía no se ha graduado",
+    migrando: en ? "Migration in progress" : "Migración en curso",
+    migrado: en ? "Graduated and migrated to Raydium" : "Graduada y migrada a Raydium",
+  }[ll.status] || (en ? "Not recognised" : "No reconocido");
+  const rows = [
+    [en ? "Curve platform" : "Plataforma de la curva", "Raydium LaunchLab"],
+    [en ? "Curve account" : "Cuenta de la curva", ll.pool],
+    [en ? "Base currency" : "Moneda base", quote],
+    [en ? `${quote} raised` : `${quote} reunido`, `${launchlabUnits(ll.raised, ll.quoteDecimals)} ${quote}`],
+    [en ? "Graduation target" : "Objetivo de graduación", `${launchlabUnits(ll.target, ll.quoteDecimals)} ${quote}`],
+    [en ? "Progress" : "Progreso", progress],
+    [en ? "Graduation status" : "Estado de graduación", state],
+  ];
+  if (ll.status === "migrado") {
+    rows.push([
+      en ? "Raydium pool it migrated to" : "Pool de Raydium al que migró",
+      ll.migratedPool
+        ? `${ll.migratedPool} (CPMM)`
+        : ll.migratedNote === "amm_v4_no_derivable"
+          ? (en ? "Raydium AMM v4; it cannot be located with account reads alone" : "AMM v4 de Raydium; no se localiza solo con lecturas de cuentas")
+          : (en ? "Not located on chain" : "No se localizó en la cadena"),
+    ]);
+  }
+  for (const [label, value] of rows) {
+    const detail = text("dd", value);
+    detail.dataset.estado = "ok";
+    detail.dataset.campo = "launchlab";
+    list.append(text("dt", label), detail);
+  }
+}
+
 function renderCard(card, options) {
   const article = el("article", { class: "ficha" });
   article.append(text("p", staleLine(card.consultedAt, lang()), { class: "sello" }));
@@ -581,6 +627,8 @@ function renderCard(card, options) {
     const detail = text("dd", CURVE_NOT_ON_PUMP[lang()] || CURVE_NOT_ON_PUMP.es);
     detail.dataset.estado = "no_aplica";
     list.append(term, detail);
+  } else if (curve.launchlab) {
+    renderLaunchlab(list, curve.launchlab);
   } else {
     const curveValue = curve.present === true ? t("yes") : null;
     dataRow(list, t("curve"), curve.status, curveValue, "curve");

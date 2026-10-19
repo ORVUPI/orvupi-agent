@@ -6,6 +6,7 @@ import { formatAmount } from "./amount.js";
 import { factState } from "./fact-state.js";
 import { notebookNameText } from "./reading-summary.js";
 import { CARD_SCHEMA, CARD_VERSION, DISCLAIMER, LEGACY_FLAG_MINT, isMintAddress } from "./solana-read.js";
+import { isOfficialAddress } from "./orvupi-contract.js";
 import { LEGACY_OFFICIAL_FIELD, LEGACY_SCHEMA_PREFIX } from "./legacy-names.js";
 
 export const EXPORT_SCHEMA = "orvupi.notebook.export";
@@ -74,6 +75,21 @@ const BANNED_KEYS = new Set(["price", "bought", "amountbought", "wallet", "seed"
 
 function fail(es, en) {
   return { ok: false, error: { es, en } };
+}
+
+const LAUNCHLAB_KEYS = ["platform", "pool", "quoteMint", "quoteDecimals", "raised", "target", "progress", "status", "migrateType", "migratedPool", "migratedNote"];
+const ADDRESS = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+
+function validLaunchlab(value) {
+  if (!sameKeys(value, LAUNCHLAB_KEYS)) return false;
+  if (value.platform !== "raydium_launchlab" || !ADDRESS.test(value.pool) || !ADDRESS.test(value.quoteMint)) return false;
+  if (!Number.isInteger(value.quoteDecimals) || value.quoteDecimals < 0 || value.quoteDecimals > 18) return false;
+  if (!/^\d+$/.test(value.raised) || !/^\d+$/.test(value.target)) return false;
+  if (value.progress !== null && !/^\d+\.\d{2}$/.test(value.progress)) return false;
+  if (!["en_curva", "migrando", "migrado", "desconocido"].includes(value.status)) return false;
+  if (!["amm", "cpmm", "desconocido"].includes(value.migrateType)) return false;
+  if (value.migratedPool !== null && !ADDRESS.test(value.migratedPool)) return false;
+  return ["localizado", "no_localizado", "amm_v4_no_derivable", "no_aplica"].includes(value.migratedNote);
 }
 
 function sameKeys(value, allowed) {
@@ -297,7 +313,8 @@ export function validateCard(card) {
     }
   }
   const curve = card.curve;
-  if (!sameKeys(curve, CURVE_KEYS)) return fail("La curva tiene campos de más o de menos.", "The curve has extra or missing fields.");
+  if (!sameKeys(curve, CURVE_KEYS) && !sameKeys(curve, [...CURVE_KEYS, "launchlab"])) return fail("La curva tiene campos de más o de menos.", "The curve has extra or missing fields.");
+  if (Object.hasOwn(curve, "launchlab") && !validLaunchlab(curve.launchlab)) return fail("La curva de Raydium LaunchLab no se puede leer.", "The Raydium LaunchLab curve cannot be read.");
   if (curve.present !== null && typeof curve.present !== "boolean") return fail("La curva no es un sí o un no.", "The curve is not a yes or a no.");
   if (!STATUSES.has(curve.status)) return fail("El estado de la curva no está en la lista.", "The curve status is not on the list.");
   for (const key of ["virtualToken", "virtualQuote", "realToken", "realQuote"]) {
@@ -306,7 +323,7 @@ export function validateCard(card) {
   if (curve.complete !== null && typeof curve.complete !== "boolean") {
     return fail("El campo complete no es un sí o un no.", "The complete field is not a yes or a no.");
   }
-  if (typeof card.officialProject !== "boolean" || (card.officialProject === true && card.mint !== LEGACY_FLAG_MINT)) {
+  if (typeof card.officialProject !== "boolean" || (card.officialProject === true && card.mint !== LEGACY_FLAG_MINT && !isOfficialAddress(card.mint))) {
     return fail("La marca de proyecto no coincide con la dirección.", "The project mark does not match the address.");
   }
   if (!card.disclaimer || card.disclaimer.es !== DISCLAIMER.es || card.disclaimer.en !== DISCLAIMER.en) {
@@ -512,8 +529,8 @@ const COMPARED_TEXT = {
 };
 
 export const CURVE_NOT_ON_PUMP = {
-  es: "No aplica: este token no se creó en Pump.fun",
-  en: "Not applicable: this token was not created on Pump.fun",
+  es: "No aplica: no hay curva de Pump.fun ni de Raydium LaunchLab para este token",
+  en: "Not applicable: there is no Pump.fun or Raydium LaunchLab curve for this token",
 };
 
 export function curveComparisonValue(fieldEs, state, lang) {

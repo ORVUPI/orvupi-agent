@@ -300,6 +300,14 @@ describe("web ORVUPI", () => {
     assert.deepEqual(redirectCycles(read("_redirects"), siteRoot()), []);
   });
 
+  test("el wasm de onnxruntime de Work redirige a la versión fijada en jsDelivr", () => {
+    const worker = readFileSync(path.join(repoRoot(), "apps/work/src/ai/worker.ts"), "utf8");
+    const base = /wasmPaths = "(https:\/\/cdn\.jsdelivr\.net\/npm\/onnxruntime-web@[^"]+\/dist\/)"/.exec(worker)?.[1];
+    assert.ok(base);
+    const line = read("_redirects").split("\n").find((l) => l.startsWith("/work/assets/ort-wasm-simd-threaded.asyncify-*"));
+    assert.deepEqual(line?.trim().split(/\s+/), ["/work/assets/ort-wasm-simd-threaded.asyncify-*", `${base}ort-wasm-simd-threaded.asyncify.wasm`, "302"]);
+  });
+
   test("las páginas no nombran a la persona creadora", () => {
     for (const rel of ROUTES) assert.equal(mentionsHiddenName(read(rel)), false, rel);
   });

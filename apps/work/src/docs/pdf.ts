@@ -1,4 +1,5 @@
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+import { imageBytesSync, preloadAssets, releaseExportAssets } from "../storage/assets";
 import { safeImageSrc } from "../security/sanitize";
 import { blocksFromDoc, notesFromDoc, type Block, type Inline, type JsonNode, type PageOrientation } from "./model";
 
@@ -85,6 +86,15 @@ function pickFont(fonts: Fonts, inline: Inline): PDFFont {
 }
 
 export async function exportPdf(title: string, doc: JsonNode, header = "", footer = "", pageNumber = false, layout: { pageOrientation?: PageOrientation } = {}): Promise<Uint8Array> {
+  await preloadAssets(doc);
+  try {
+    return await buildPdf(title, doc, header, footer, pageNumber, layout);
+  } finally {
+    releaseExportAssets();
+  }
+}
+
+async function buildPdf(title: string, doc: JsonNode, header = "", footer = "", pageNumber = false, layout: { pageOrientation?: PageOrientation } = {}): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
   pdf.setTitle(title);
   pdf.setProducer("ORVUPI Work");
@@ -265,10 +275,11 @@ export async function exportPdf(title: string, doc: JsonNode, header = "", foote
   const drawImage = async (block: Extract<Block, { type: "image" }>) => {
     const safe = safeImageSrc(block.src);
     if (!safe) return;
-    const encoded = safe.split(",")[1] ?? "";
-    const bytes = Uint8Array.from(atob(encoded.replace(/\s+/g, "")), (char) => char.charCodeAt(0));
+    const hit = imageBytesSync(safe);
+    if (!hit) return;
+    const bytes = hit.data;
     try {
-      const image = safe.startsWith("data:image/png") ? await pdf.embedPng(bytes) : await pdf.embedJpg(bytes);
+      const image = hit.mime === "image/png" ? await pdf.embedPng(bytes) : await pdf.embedJpg(bytes);
       // Tamaño del documento (px CSS a puntos) o, si no lo hay, el natural; nunca más que el ancho útil.
       let width = block.width ? block.width * 0.75 : image.width * 0.75;
       let height = block.height ? block.height * 0.75 : image.height * 0.75;

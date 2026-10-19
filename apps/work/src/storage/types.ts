@@ -58,6 +58,7 @@ export type WorkspaceBackup = {
   exportedAt: string;
   settings: AppSettings;
   files: Array<{ record: FileRecord; bytesBase64: string }>;
+  assets?: Array<{ name: string; bytesBase64: string }>;
 };
 
 export interface BlobStore {

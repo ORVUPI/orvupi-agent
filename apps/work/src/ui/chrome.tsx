@@ -137,9 +137,9 @@ export function Topbar({
   return (
     <header className="ow-topbar">
       <div className="ow-top-actions">
-      <IconButton label={menuLabel} className="ow-only-mobile" onClick={onMenu}>
-        <Icon name="docs" />
-      </IconButton>
+      <button type="button" aria-label={menuLabel} className="ow-brandmark ow-only-mobile" onClick={onMenu}>
+        <img src={withBase("/brand-work.svg")} alt="" width={32} height={32} />
+      </button>
       {fileName !== null ? (
         <input
           className="ow-filename"
@@ -155,7 +155,7 @@ export function Topbar({
         </IconButton>
       ) : null}
       {fileName === null ? (
-        <p className="ow-top-title">ORVUPI Work</p>
+        <p className="ow-top-title"><img className="ow-top-logo" src={withBase("/brand-work.svg")} alt="" width={28} height={28} />ORVUPI Work</p>
       ) : null}
       {saveState ? (
         <span className={`ow-save ow-save-${saveState}`} role="status" data-state={saveState}>

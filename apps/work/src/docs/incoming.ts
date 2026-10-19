@@ -1,4 +1,7 @@
 import { encodeUtf8 } from "../security/bytes";
+import { externalizeImages } from "../storage/assets";
+import { ensureRoom } from "../storage/quota";
+import { reportImportProgress } from "./docx-import";
 import { WorkError } from "../security/errors";
 import { ALLOWED_IMPORT_EXTENSIONS, extensionOf, isBlockedExtension, MAX_FILE_BYTES } from "../security/limits";
 import { createId, sanitizeName } from "../security/names";
@@ -25,6 +28,9 @@ async function readFile(file: File): Promise<Uint8Array> {
   if (isBlockedExtension(file.name) || !ALLOWED_IMPORT_EXTENSIONS.has(extensionOf(file.name))) {
     throw new WorkError("unsupported-type");
   }
+  // Antes de leer: ¿cabe en la cuota real del navegador? (el original y sus imágenes)
+  await ensureRoom(Math.round(file.size * 1.1) + 1024 * 1024);
+  reportImportProgress("read", 0, 1);
   return new Uint8Array(await file.arrayBuffer());
 }
 
@@ -35,7 +41,12 @@ export async function prepareImport(file: File, titleFallback: string): Promise<
   if (extension === "orvdoc" || extension === "json") {
     const parsed = parseOrvdoc(bytes);
     const id = createId();
-    const next = createOrvdoc({ id, title: parsed.title || base, content: parsed.content, now: new Date().toISOString() });
+    const next = createOrvdoc({ id, title: parsed.title || base, content: await externalizeImages(parsed.content), now: new Date().toISOString() });
+    if (parsed.tabs && parsed.tabs.length > 0) {
+      const tabs = [];
+      for (const tab of parsed.tabs) tabs.push(tab.content ? { ...tab, content: await externalizeImages(tab.content) } : tab);
+      next.tabs = tabs;
+    }
     return { name: next.title, kind: "doc", mime: "application/vnd.orvupi.doc+json", bytes: serializeOrvdoc(next), openAsDoc: true };
   }
   if (extension === "txt" || extension === "text" || extension === "md") {

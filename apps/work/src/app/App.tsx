@@ -2,11 +2,11 @@ import { isLocale, LOCALES } from "../i18n";
 import { useEffect, useMemo, useState } from "react";
 import type { ExportKind } from "../docs/DocsEditor";
 import { ProgressBar } from "../ui/kit";
-import { AiPanel } from "../ui/AiPanel";
+import { AiStudio } from "../ai/AiStudio";
 import { CommandPalette, type Command } from "../ui/CommandPalette";
 import { ShellFrame, Sidebar, Topbar, type NavItem } from "../ui/chrome";
 import { Icon } from "../ui/icons";
-import { Dropdown, Modal, Toasts } from "../ui/overlay";
+import { Dropdown, Modal, ImportProgress, Toasts } from "../ui/overlay";
 import { UpdateBanner } from "../ui/UpdateBanner";
 import { ErrorState } from "../ui/kit";
 import { DrawingsScreen } from "../drawings/DrawingsScreen";
@@ -122,22 +122,6 @@ export function App() {
     [workspace],
   );
 
-  const aiActions =
-    workspace.openDocId
-      ? [workspace.t("aiCorrect"), workspace.t("aiSummarize"), workspace.t("aiRewrite"), workspace.t("aiTranslate"), workspace.t("aiExplain")]
-      : workspace.view === "pdf"
-        ? [workspace.t("aiPdfSummary"), workspace.t("aiPdfPoints"), workspace.t("aiPdfExplain")]
-        : workspace.view === "sheets"
-          ? [workspace.t("aiSheetsAnalyze"), workspace.t("aiSheetsExplain"), workspace.t("aiSheetsFormula"), workspace.t("aiSheetsAnomaly"), workspace.t("aiSheetsSummary")]
-          : [workspace.t("aiSummarize"), workspace.t("aiExplain")];
-
-  const tier =
-    workspace.capabilities.tier === "high"
-      ? workspace.t("aiTierHigh")
-      : workspace.capabilities.tier === "medium"
-        ? workspace.t("aiTierMedium")
-        : workspace.t("aiTierNone");
-
   let content = <HomeScreen />;
   if (workspace.query.trim()) content = <SearchResults />;
   else if (workspace.view === "docs") content = <DocsScreen />;
@@ -150,7 +134,7 @@ export function App() {
   else if (workspace.view === "drawings") content = <DrawingsScreen />;
   else if (workspace.view === "notes") content = <NotesScreen />;
   else if (workspace.view === "pdf") content = <LaterScreen view="pdf" />;
-  else if (workspace.view === "ai") content = <div className="ow-page"><h1>{workspace.t("aiTitle")}</h1><p>{workspace.t("aiBody")}</p><p>{tier}</p></div>;
+  else if (workspace.view === "ai") content = <div className="ow-page ow-ai-page"><h1>{workspace.t("aiTitle")}</h1><AiStudio locale={workspace.locale} storage={workspace.storage} files={workspace.files} /></div>;
 
   if (workspace.bootError) {
     content = (
@@ -316,27 +300,15 @@ export function App() {
         />
       )}
       aside={
-        <AiPanel
-          open={workspace.aiOpen}
-          title={workspace.t("aiTitle")}
-          body={workspace.t("aiBody")}
-          closeLabel={workspace.t("closeAi")}
-          onClose={() => workspace.setAiOpen(false)}
-          contextLabel={workspace.t("aiFor")}
-          actions={aiActions}
-          unavailable={workspace.t("aiUnavailable")}
-          onAction={() => workspace.pushToast(workspace.t("aiUnavailable"))}
-          capabilities={workspace.capabilities}
-          labels={{
-            webgpu: workspace.t("aiWebgpu"),
-            memory: workspace.t("aiMemory"),
-            browser: workspace.t("aiBrowser"),
-            yes: workspace.t("aiYes"),
-            no: workspace.t("aiNo"),
-            unknown: workspace.t("aiUnknown"),
-            tier,
-          }}
-        />
+        workspace.aiOpen ? (
+          <aside className="ow-ai" data-tool="ai" aria-label={workspace.t("aiTitle")}>
+            <header>
+              <h2>{workspace.t("aiTitle")}</h2>
+              <button type="button" className="ow-button ow-button-ghost" onClick={() => workspace.setAiOpen(false)}>{workspace.t("closeAi")}</button>
+            </header>
+            <AiStudio locale={workspace.locale} storage={workspace.storage} files={workspace.files} compact />
+          </aside>
+        ) : null
       }
     >
       {content}
@@ -366,6 +338,7 @@ export function App() {
         onClose={() => workspace.setPaletteOpen(false)}
       />
       <Toasts items={workspace.toasts} onDismiss={workspace.dismissToast} />
+      <ImportProgress t={workspace.t} />
       <UpdateBanner title={workspace.t("newVersion")} action={workspace.t("reloadApp")} />
       <Modal open={helpOpen} title={workspace.t("shortcuts")} onClose={() => setHelpOpen(false)} footer={<button type="button" className="ow-button" onClick={() => setHelpOpen(false)}>{workspace.t("closeDialog")}</button>}>
         <p>{workspace.t("shortcutsDriveBody")}</p>

@@ -34,7 +34,7 @@ export function fileNameWithExtension(name: string, extension: string): string {
 
 export function formatBytes(bytes: number, locale: string): string {
   if (bytes < 1024) return `${bytes} B`;
-  const unit = bytes < 1024 * 1024 ? "KB" : "MB";
-  const value = bytes / (unit === "KB" ? 1024 : 1024 * 1024);
+  const unit = bytes < 1024 * 1024 ? "KB" : bytes < 1024 * 1024 * 1024 ? "MB" : "GB";
+  const value = bytes / (unit === "KB" ? 1024 : unit === "MB" ? 1024 * 1024 : 1024 * 1024 * 1024);
   return `${value.toLocaleString(locale, { maximumFractionDigits: 1 })} ${unit}`;
 }

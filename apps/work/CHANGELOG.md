@@ -1,5 +1,63 @@
 # Registro de cambios
 
+## 0.8.9 — 2026-10-19
+
+Docs: tamaño de letra como Google Docs, sin saltos y sin hueco en la barra.
+
+- Ya no hay espacio en blanco entre la fuente («Arial») y − / +: el selector de fuente mide lo que su nombre y los controles van seguidos, en el escritorio y en el móvil.
+- − y + bajan o suben 1 pt en cada pulsación (de 1 a 400), en una palabra, en varias, en una parte de un párrafo, en varios párrafos y en los títulos (H1–H6). Con tamaños mezclados cada trozo se mueve 1 desde el suyo. En un título sin tamaño propio se parte de su tamaño real (H1 = 26, H2 = 18…) y se aplica una marca explícita.
+- La caja del número muestra el tamaño real de la selección (también en títulos) y acepta un número escrito con Intro. Salir de la caja sin cambiar el número ya no toca el texto.
+- La lista de tamaños va del 1 al 96, todos los números en orden y sin saltos, se puede desplazar, se abre en el tamaño actual y lo resalta.
+- Móvil: el texto se muestra algo más grande que en la hoja (16 px = 11 pt); los títulos y los tamaños elegidos se escalan igual, así que cada punto que se sube o se baja se nota (antes 12 pt se veía igual que 11).
+## 0.8.8 — 2026-10-19
+
+ORVUPI AI: resultados limpios y entregados como documento.
+
+- Entrada limpia: antes de enviar el texto al modelo se quitan imágenes (markdown y HTML), data URLs, `blob:`, URLs largas (se quedan en el dominio), marcado HTML, bloques base64 y rachas de símbolos. Los textos largos siguen yendo por partes.
+- Salida controlada: se detecta la salida degenerada («![](![](!!!!…», rachas del mismo carácter, bucles de palabras, pocas letras) y se corta la generación en cuanto aparece; se reintenta una vez con más penalización de repetición y `no_repeat_ngram_size`, y si vuelve a fallar se muestra un mensaje claro (en WebGPU recomienda el modelo sin GPU, porque «!!!!» es el síntoma de NaN en fp16) en lugar de la basura.
+- El resultado se muestra con formato (títulos, listas, negrita, cursiva) como vista previa.
+- Cada función (resumir, explicar, preguntar, reescribir, traducir, esquema) entrega el resultado como documento: al terminar se crea en Mi unidad un documento de ORVUPI Work con formato, titulado con la función y el nombre del origen, y se abre. Botones: Copiar, Abrir el documento, Insertar en el documento (dentro de Docs, con formato), Descargar PDF y Descargar Word (.docx).
+## 0.8.6 — 2026-10-19
+
+Imágenes en Docs (pegadas, insertadas o importadas), sin fallos al moverlas ni al cambiarles el tamaño.
+
+- Una imagen pegada o insertada nunca sale de los márgenes: su ancho se limita al ancho útil de la página.
+- Redimensionar sin parpadeo: la paginación se congela durante el arrastre (antes recolocaba la imagen entre páginas en cada movimiento), el tamaño se aplica en requestAnimationFrame y sin transacciones hasta soltar. Las esquinas mantienen la proporción (Mayús la libera) con un cambio continuo; los lados cambian una dimensión. Nunca más ancha que la página. Ya no hay etiqueta de píxeles durante el arrastre.
+- Mover con el ratón o con el dedo (con la imagen seleccionada) desde el centro: «En línea» la recoloca entre párrafos con línea de inserción; «Ajustar texto», «Detrás» y «Delante» se mueven libremente por todo el documento (se anclan al párrafo de destino) y siempre dentro de la página. Desplazamiento automático cerca de los bordes.
+- El marco, los tiradores y el botón ⋯ se recortan por el área del documento: al hacer scroll ya no flotan sobre la barra de herramientas y desaparecen si la imagen sale de la vista. El ⋯ se coloca en la parte visible de la imagen.
+- Menú ⋯ (0.8.5+): sin cambios de uso.
+
+## 0.8.5 — 2026-10-18
+
+ORVUPI AI: la descarga del modelo ya no falla con «network error» en el móvil.
+
+- Causa: el modelo de ~480 MB se pedía en una sola petición; en el móvil la conexión se corta a mitad (Chrome lo notifica como «network error») y se perdía todo. Además, la Cache API rechaza entradas de cientos de MB, así que ni siquiera una descarga completa quedaba guardada. La CSP y CORS no eran el problema (los redireccionamientos de Hugging Face a `*.hf.co` ya estaban permitidos).
+- Descarga por partes de 8 MB (peticiones Range) con hasta 6 reintentos por parte, espera progresiva, detección de conexiones colgadas y espera automática si el teléfono se queda sin conexión. Reanudable: lo descargado queda en el almacenamiento privado del navegador (OPFS) y continúa donde se quedó.
+- Los modelos se guardan en OPFS en lugar de la Cache API; «Borrar modelos descargados» limpia ambos.
+- En el móvil se recomienda por defecto el modelo más ligero (SmolLM2 135M, WASM, ~137 MB). Los demás siguen disponibles.
+- Errores claros con la causa real: sin conexión, cortes repetidos, error del servidor, dominio bloqueado (bloqueador/VPN), falta de espacio, falta de memoria o fallo de la GPU.
+- Privacidad sin cambios: solo se descargan los archivos públicos del modelo; el texto nunca sale del dispositivo.
+
+## 0.8.4 — 2026-10-18
+
+ORVUPI AI deja de ser una simulación: un modelo de lenguaje real, gratis, que se ejecuta dentro del navegador.
+
+- Modelo local con transformers.js en un Web Worker: WebGPU cuando hay (q4f16) y WASM/CPU si no (q8). Modelos: Qwen2.5 0.5B Instruct (recomendado), Qwen2.5 1.5B Instruct (mejor calidad, equipos con ≥ 8 GB) y SmolLM2 135M (muy ligero). Se descarga solo al pulsar «Descargar», con barra de progreso, y queda en la caché del navegador; botón para borrarla.
+- Origen del texto: el documento abierto (todas las pestañas), la selección, cualquier archivo de Work (documento, hoja como CSV, presentación, nota) o texto pegado.
+- Acciones: Resumir, Explicar, Preguntar (chat), Reescribir, Traducir y Esquema; textos largos se trocean y se combinan. Resultado en directo con Detener, Copiar e Insertar en el documento.
+- Botón ✨ ORVUPI AI dentro de Docs y guía de uso en el propio panel.
+- Privacidad: el documento nunca sale del navegador; la red solo descarga el modelo (Hugging Face) y el motor WASM (jsDelivr). Si el dispositivo no puede ejecutarlo se dice claramente.
+
+## 0.8.3 — 2026-10-18
+
+Documentos grandes y cuatro arreglos de Docs pedidos desde producción, más pestañas del documento como en Google Docs.
+
+- Documentos grandes: el límite por archivo pasa a 1 GB (imágenes sueltas 64 MB) y lo que manda es la cuota real del navegador (`navigator.storage.estimate`, con `persist()`). Las imágenes se guardan aparte como binarios en OPFS/IndexedDB (`orv-asset:`), no como base64 dentro del documento; se muestran reducidas (lado máx. 2000 px) pero se exportan originales. Barra de progreso al importar. Si no cabe: «No hay espacio: el archivo ocupa X y el navegador solo deja Y libres…». Probado con DOCX de 30, 100 y 250 MB.
+- Tamaño de letra: − y + funcionan con selección y con el cursor dentro de una palabra, con los pasos de Google Docs (8…96) y el número se puede escribir.
+- La hoja se centra en todo el ancho como en Google Docs, con el panel de pestañas abierto o cerrado y con zoom; la regla queda alineada.
+- Imágenes: marco con 8 tiradores (esquinas mantienen proporción, lados no; Mayús lo invierte), ratón y táctil, tamaño en vivo, límite al ancho de página y barra flotante (en línea, ajustar texto, detrás, delante, tamaño original, eliminar). El tamaño se guarda y se exporta.
+- Pestañas del documento: añadir, subpestañas anidadas con contraer/expandir, menú ⋮ y clic derecho (añadir subpestaña, eliminar con confirmación y deshacer, duplicar, cambiar nombre, emoji, copiar enlace #tab=, ocultar esquema, mover arriba/abajo, mover a / sacar del grupo), arrastrar y soltar (pulsación larga en táctil), esquema de títulos, teclado, cajón lateral en móvil. Se guardan y se exportan a DOCX/PDF como secciones con título y salto de página.
+
 ## 0.8.2 — 2026-10-18
 
 Docs y la importación de DOCX dan otro paso hacia un procesador de textos completo. Todo se edita, se guarda y se exporta a DOCX y PDF.

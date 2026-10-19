@@ -93,7 +93,34 @@ async function modules(): Promise<{ read: ReadModule; model: ModelModule }> {
   const read = (await import(pathToFileURL(path.join(root, "web/v2/shared/solana-read.js")).href)) as ReadModule;
   const model = (await import(pathToFileURL(path.join(root, "web/v2/shared/notebook-model.js")).href)) as ModelModule;
   read.clearBlockedMethods();
-  return { read, model };
+  // Estas pruebas son de Pump.fun y del lector general. La segunda lectura, la de los dos
+  // candidatos de Raydium LaunchLab, se contesta aquí sin curva para no mezclarla con sus
+  // recuentos de llamadas. test/cuaderno-launchlab.test.ts prueba esa lectura con cuentas reales.
+  const original = read.readMint;
+  const wrapped = (async (options: Record<string, unknown>) => {
+    const mint = typeof options.mint === "string" ? options.mint.trim() : "";
+    const transport = options.transport as ((endpoint: string, body: string, timeoutMs: number) => Promise<{ status: number; body: string }>) | undefined;
+    if (!transport || !mint) return original(options);
+    let candidates: string[] = [];
+    try {
+      candidates = [await launchlab.launchlabPoolPda(mint), await launchlab.launchlabPoolPda(mint, "USD1ttGY1N17NEEHLmELoaybftRBUSErhqYiQzvEmuB")];
+    } catch {
+      return original(options);
+    }
+    return original({
+      ...options,
+      transport: async (endpoint: string, body: string, timeoutMs: number) => {
+        const parsed = JSON.parse(body) as { method: string; params?: unknown[] };
+        const ids = parsed.method === "getMultipleAccounts" && Array.isArray(parsed.params?.[0]) ? (parsed.params?.[0] as string[]) : null;
+        if (ids && ids.length === 2 && ids[0] === candidates[0] && ids[1] === candidates[1]) {
+          return { status: 200, body: JSON.stringify({ jsonrpc: "2.0", result: { context: { slot: 1 }, value: [null, null] } }) };
+        }
+        return transport(endpoint, body, timeoutMs);
+      },
+    });
+  }) as ReadModule["readMint"];
+  const launchlab = read as unknown as { launchlabPoolPda: (mint: string, quote?: string) => Promise<string> };
+  return { read: { ...read, readMint: wrapped } as ReadModule, model };
 }
 
 function u32(value: number): Buffer {
@@ -846,8 +873,8 @@ describe("lector y cuaderno", () => {
     assert.equal(model.curveComparisonValue("Curva presente", "no_aplica", "es"), sentence.es);
     assert.equal(model.curveComparisonValue("Cantidad real de tokens de la curva", "no_aplica", "en"), sentence.en);
     assert.equal(model.curveComparisonValue("Nombre", "no_aplica", "es"), null);
-    assert.equal(sentence.es, "No aplica: este token no se creó en Pump.fun");
-    assert.equal(sentence.en, "Not applicable: this token was not created on Pump.fun");
+    assert.equal(sentence.es, "No aplica: no hay curva de Pump.fun ni de Raydium LaunchLab para este token");
+    assert.equal(sentence.en, "Not applicable: there is no Pump.fun or Raydium LaunchLab curve for this token");
   });
 
   test("solo se comparan dos fichas del mismo mint y la antigua no se presenta como actual", async () => {

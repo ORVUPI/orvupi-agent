@@ -18,6 +18,7 @@ import { headingEntries, jumpToHeading } from "./jump";
 import { DocChart, DocDrawing, Equation } from "./objects";
 import { ImagePaste } from "./image-paste";
 import { Pagination } from "./pagination";
+import { assetUrl, isAssetSrc } from "../storage/assets";
 import { CommentMark, DocShape, NoteNumbering, Section, wrapAttributes } from "./layout-nodes";
 
 const HEX = /^#[0-9a-f]{6}$/i;
@@ -28,9 +29,11 @@ const LocalImage = Image.extend({
       ...(this.parent?.() ?? {}),
       src: {
         default: null,
-        parseHTML: (element: HTMLElement) => safeImageSrc(element.getAttribute("src") ?? ""),
+        parseHTML: (element: HTMLElement) => safeImageSrc(element.getAttribute("data-asset") ?? "") ?? safeImageSrc(element.getAttribute("src") ?? ""),
         renderHTML: (attributes: { src?: string | null }) => {
           const src = typeof attributes.src === "string" ? safeImageSrc(attributes.src) : null;
+          // Imagen guardada aparte: el original vive en OPFS/IndexedDB y se pinta con una copia reducida.
+          if (src && isAssetSrc(src)) return { "data-asset": src, src: BLANK_GIF };
           return src ? { src } : {};
         },
       },
@@ -48,7 +51,51 @@ const LocalImage = Image.extend({
       ...wrapAttributes(),
     };
   },
+  addNodeView() {
+    return ({ HTMLAttributes }) => {
+      const dom = document.createElement("img");
+      const apply = (attrs: Record<string, unknown>) => {
+        for (const name of Array.from(dom.getAttributeNames())) if (name !== "src" || !attrs.src) dom.removeAttribute(name);
+        for (const [name, value] of Object.entries(attrs)) {
+          if (value === null || value === undefined || value === false) continue;
+          if (name === "src" && dom.dataset.loaded === String(attrs["data-asset"] ?? "")) continue;
+          dom.setAttribute(name, String(value));
+        }
+        const asset = attrs["data-asset"];
+        if (typeof asset === "string" && dom.dataset.loaded !== asset) {
+          dom.dataset.loaded = asset;
+          dom.setAttribute("data-asset", asset);
+          // Si ya se cargó antes (p. ej. al mover la imagen se recrea el nodo), se pinta al instante: sin destello.
+          const known = LOADED_ASSETS.get(asset);
+          if (known) dom.src = known;
+          else
+            void assetUrl(asset).then((url) => {
+              if (!url) return;
+              LOADED_ASSETS.set(asset, url);
+              if (dom.dataset.loaded === asset) dom.src = url;
+            });
+        } else if (typeof asset !== "string") delete dom.dataset.loaded;
+      };
+      apply(HTMLAttributes);
+      return {
+        dom,
+        update: (node) => {
+          if (node.type.name !== "image") return false;
+          const attrs = node.type.spec.toDOM?.(node) as unknown;
+          const next = Array.isArray(attrs) && attrs[1] && typeof attrs[1] === "object" ? (attrs[1] as Record<string, unknown>) : {};
+          apply(next);
+          return true;
+        },
+        ignoreMutation: () => true,
+      };
+    };
+  },
 }).configure({ allowBase64: true });
+
+/** URL ya resueltas de imágenes guardadas aparte (asset → blob:). */
+const LOADED_ASSETS = new Map<string, string>();
+
+const BLANK_GIF = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
 
 const PageBreak = Node.create({
   name: "pageBreak",
@@ -248,6 +295,30 @@ const Footnote = Node.create({
 });
 
 /** Las notas finales se numeran i, ii, iii como en Word. */
+/** Tamaño de letra con una variable --ow-pt (en puntos) para que el modo móvil lo escale igual que el cuerpo. */
+const ScaledFontSize = FontSize.extend({
+  addGlobalAttributes() {
+    return [
+      {
+        types: this.options.types,
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: (element: HTMLElement) => getStyleProperty(element, "font-size") ?? (element.style.fontSize || null),
+            renderHTML: (attributes: Record<string, unknown>) => {
+              const raw = typeof attributes.fontSize === "string" ? attributes.fontSize.trim() : "";
+              const match = /^(\d+(?:\.\d+)?)(pt|px)$/.exec(raw);
+              if (!match) return raw && /^[\w.%\s-]+$/.test(raw) ? { style: `font-size: ${raw}` } : {};
+              const pt = match[2] === "px" ? Number(match[1]) * 0.75 : Number(match[1]);
+              return { style: `font-size: ${raw}; --ow-pt: ${Math.round(pt * 100) / 100}` };
+            },
+          },
+        },
+      },
+    ];
+  },
+});
+
 export function toRoman(value: number): string {
   let n = Math.max(1, Math.min(3999, Math.round(value)));
   const table: Array<[number, string]> = [[1000, "m"], [900, "cm"], [500, "d"], [400, "cd"], [100, "c"], [90, "xc"], [50, "l"], [40, "xl"], [10, "x"], [9, "ix"], [5, "v"], [4, "iv"], [1, "i"]];
@@ -595,7 +666,7 @@ export function createExtensions(placeholder: string) {
     SafeColor,
     BackgroundColor,
     SafeFontFamily,
-    FontSize,
+    ScaledFontSize,
     LineHeight.configure({ types: ["heading", "paragraph"] }),
     TextAlign.configure({ types: ["heading", "paragraph"] }),
     Indent,

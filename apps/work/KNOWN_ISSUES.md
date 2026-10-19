@@ -14,3 +14,21 @@ Esta es una alfa. Los puntos siguientes están abiertos a propósito o porque el
 10. El job de CI de esta app cubre Chromium. Firefox, Safari y Edge quedan por recorrer.
 11. `glob`, transitivo de Workbox, está marcado como deprecado en npm. No hay aviso de vulnerabilidad en `npm audit`.
 12. El panel de IA cabe en una columna de 300 px. En pantallas de menos de 960 px ocupa hasta el 46 % inferior y puede tapar parte del papel hasta que se cierra.
+
+## 0.8.3
+
+- Las imágenes guardadas aparte (`orv-asset:`) de documentos borrados no se eliminan todavía del almacenamiento (huérfanas); se recuperan al restablecer el espacio de trabajo.
+- La importación DOCX no usa un Web Worker: la descompresión ya es asíncrona (DecompressionStream) y las imágenes se guardan una a una, así que la interfaz no se congela (pausa máxima medida ≈100 ms).
+- Restaurar una versión antigua solo afecta a la pestaña activa.
+
+## 0.8.5
+
+- SmolLM2 135M (el recomendado en el móvil) es rápido pero sus resúmenes en español son básicos; Qwen2.5 0.5B da mejores resultados si el teléfono tiene memoria y buena conexión (la descarga ya es por partes y reanudable).
+- El modelo se sirve desde Hugging Face (CDN gratuito). Alojarlo en orvupi.com no es viable con el límite de 25 MiB por archivo del alojamiento sin trocear los pesos.
+
+## 0.8.4
+
+- La calidad de Qwen2.5 0.5B es modesta: los resúmenes pueden ser genéricos o repetir frases. El 1.5B es mejor pero más lento y pide más memoria.
+- En CPU (WASM) un resumen tarda unos 30–60 s en un portátil; la primera descarga del modelo pesa cientos de MB.
+- El motor WASM de onnxruntime se carga desde jsDelivr porque el archivo (26,8 MB) supera el límite de 25 MiB de Cloudflare Pages; la CSP de /work lo permite expresamente.
+- En móviles con poca memoria el modelo puede no cargar; se muestra el error y se recomienda SmolLM2 135M.

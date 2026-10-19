@@ -1,4 +1,5 @@
 import { NodeSelection } from "@tiptap/pm/state";
+import { inlineAssets, preloadAssets, releaseExportAssets } from "../storage/assets";
 import { useEditor } from "@tiptap/react";
 import { useEffect, useRef, useState } from "react";
 import type { Locale, MessageKey } from "../i18n";
@@ -11,12 +12,16 @@ import { editorPath, openEditorWindow } from "../routing/paths";
 import type { FileRecord, StorageService } from "../storage/types";
 import { Button, ErrorState, Input } from "../ui/kit";
 import { DocsSurface } from "./DocsSurface";
+import { AiStudio } from "../ai/AiStudio";
+import { markdownToNodes } from "../ai/markdown";
+import { combinedContent, tabsOf, type DocTab } from "./tabs";
+import { tabFromHash } from "./DocTabs";
 import { CommentsRail } from "./CommentsRail";
 import { LayoutTools } from "./LayoutTools";
 import { usePhone } from "../ui/phone";
 import { Modal } from "../ui/overlay";
 import { createExtensions, pastedHtml } from "./extensions";
-import { imageAttrs, prepareImage } from "./image-paste";
+import { imageAttrs, contentWidth, prepareImage } from "./image-paste";
 import { findBefore, findInSlices, type TextSlice } from "./find";
 import { exportHtml } from "./html";
 import { countWords, docToText, firstLine, UNTITLED_NAMES, type DocComment, type DocVersion, type JsonNode, type PageMargin, type PageOrientation, type PageSize } from "./model";
@@ -89,11 +94,24 @@ export function DocsEditor({
   const writeRef = useRef<(snapshot: string) => Promise<void>>(async () => undefined);
   const closeRef = useRef<() => Promise<boolean>>(async () => false);
   const exportRef = useRef<(kind: ExportKind) => Promise<void>>(async () => undefined);
-  const snapshotOf = (content: JsonNode) =>
-    JSON.stringify({ content, header: headerRef.current, footer: footerRef.current, comments: commentsRef.current, versions: versionsRef.current, ...layoutRef.current });
+  // Pestañas: la activa vive en el editor; las demás guardan su contenido en tabsRef.
+  const tabsRef = useRef<DocTab[]>(tabsOf(initial.tabs, initial.content, `${t("tabDefault")} 1`));
+  const [tabs, setTabs] = useState<DocTab[]>(tabsRef.current);
+  const activeRef = useRef<string>((() => {
+    const wanted = typeof window === "undefined" ? null : tabFromHash();
+    return tabsRef.current.some((tab) => tab.id === wanted) ? wanted! : tabsRef.current[0]!.id;
+  })());
+  const [activeTab, setActiveTab] = useState(activeRef.current);
+  const withActive = (content: JsonNode): DocTab[] => tabsRef.current.map((tab) => (tab.id === activeRef.current ? { ...tab, content } : tab));
+  const snapshotOf = (active: JsonNode) => {
+    const all = withActive(active);
+    const content = all[0]!.content ?? active;
+    const tabsOut = all.length > 1 || all[0]!.emoji || all[0]!.title !== `${t("tabDefault")} 1` || all[0]!.hideOutline ? all.map((tab, i) => (i === 0 ? { ...tab, content: undefined } : tab)) : undefined;
+    return JSON.stringify({ content, tabs: tabsOut, header: headerRef.current, footer: footerRef.current, comments: commentsRef.current, versions: versionsRef.current, ...layoutRef.current });
+  };
   const queue = useState(() => {
     const controller = new SaveController();
-    controller.reset(snapshotOf(initial.content));
+    controller.reset(snapshotOf(tabsRef.current.find((tab) => tab.id === activeRef.current)?.content ?? initial.content));
     return createSaveQueue(controller, (snapshot) => writeRef.current(snapshot), setSaveState);
   })[0];
   const [header, setHeader] = useState(initial.header);
@@ -105,6 +123,8 @@ export function DocsEditor({
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [rev, setRev] = useState(0);
   const [starred, setStarred] = useState(record.favorite);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiFiles, setAiFiles] = useState<FileRecord[]>([]);
   const rangeRef = useRef<{ from: number; to: number } | null>(null);
   const findAnchor = useRef<{ from: number; to: number } | null>(null);
 
@@ -112,7 +132,7 @@ export function DocsEditor({
   const editor = useEditor({
     immediatelyRender: true,
     extensions: createExtensions(t("placeholder")),
-    content: initial.content,
+    content: tabsRef.current.find((tab) => tab.id === activeRef.current)?.content ?? initial.content,
     editorProps: {
       attributes: { "aria-label": t("editorRegion") },
       transformPastedHTML: pastedHtml,
@@ -160,7 +180,7 @@ export function DocsEditor({
   }
 
   writeRef.current = async (snapshot) => {
-    const parsed = JSON.parse(snapshot) as { content?: JsonNode; header?: string; footer?: string; comments?: DocComment[]; versions?: DocVersion[]; columns?: 1 | 2 | 3; dropCap?: boolean; watermark?: string; pageNumber?: boolean; pageSize?: PageSize; pageOrientation?: PageOrientation; pageMargin?: PageMargin };
+    const parsed = JSON.parse(snapshot) as { tabs?: DocTab[]; content?: JsonNode; header?: string; footer?: string; comments?: DocComment[]; versions?: DocVersion[]; columns?: 1 | 2 | 3; dropCap?: boolean; watermark?: string; pageNumber?: boolean; pageSize?: PageSize; pageOrientation?: PageOrientation; pageMargin?: PageMargin };
     const content = parsed.content ?? (parsed as unknown as JsonNode);
     let title = nameRef.current;
     if (UNTITLED_NAMES.has(title)) {
@@ -189,13 +209,15 @@ export function DocsEditor({
       pageOrientation,
       pageMargin,
     };
+    if (parsed.tabs && parsed.tabs.length > 0) next.tabs = parsed.tabs; else delete next.tabs;
+    const allText = parsed.tabs && parsed.tabs.length > 1 ? docToText(combinedContent(parsed.tabs.map((tab, i) => (i === 0 ? { ...tab, content } : tab)))) : docToText(content);
     const saved = await storage.saveFile({
       id: record.id,
       name: title,
       kind: "doc",
       mime: "application/vnd.orvupi.doc+json",
       bytes: serializeOrvdoc(next),
-      snippet: docToText(content).slice(0, 4000),
+      snippet: allText.slice(0, 4000),
     });
     fileRef.current = { ...next, title: saved.name };
     await onFilesChanged();
@@ -270,21 +292,48 @@ export function DocsEditor({
   const text = editor ? docToText(editor.getJSON() as JsonNode) : "";
   const counts = countWords(text);
 
+  function selectTab(id: string, force = false) {
+    if (!editor || (!force && id === activeRef.current)) return;
+    const target = tabsRef.current.find((tab) => tab.id === id);
+    if (!target) return;
+    if (!force || tabsRef.current.some((tab) => tab.id === activeRef.current)) tabsRef.current = withActive(editor.getJSON() as JsonNode);
+    activeRef.current = id;
+    setActiveTab(id);
+    setTabs(tabsRef.current);
+    const fresh = tabsRef.current.find((tab) => tab.id === id);
+    editor.commands.setContent(fresh?.content ?? { type: "doc", content: [{ type: "paragraph" }] }, { emitUpdate: false });
+    try {
+      window.history.replaceState(window.history.state, "", `#tab=${encodeURIComponent(id)}`);
+    } catch {
+      /* sin historial */
+    }
+    editor.commands.focus("start");
+    queue.note(snapshotOf(editor.getJSON() as JsonNode));
+  }
+
   async function exportAs(kind: ExportKind): Promise<void> {
     await queue.flush();
     const current = fileRef.current;
-    const content = (editor?.getJSON() as JsonNode | undefined) ?? current.content;
+    const active = (editor?.getJSON() as JsonNode | undefined) ?? current.content;
+    const allTabs = withActive(active);
+    // Cada pestaña se exporta como una sección con su título y salto de página.
+    const content = combinedContent(allTabs);
     if (kind === "txt") {
       downloadBytes(new TextEncoder().encode(docToText(content)), fileNameWithExtension(nameRef.current, "txt"), "text/plain");
       return;
     }
     if (kind === "html") {
-      const html = exportHtml(nameRef.current, content, locale);
+      await preloadAssets(content);
+      const html = (() => { try { return exportHtml(nameRef.current, content, locale); } finally { releaseExportAssets(); } })();
       downloadBytes(new TextEncoder().encode(html), fileNameWithExtension(nameRef.current, "html"), "text/html");
       return;
     }
     if (kind === "orvdoc") {
-      downloadBytes(serializeOrvdoc({ ...current, title: nameRef.current, content, header: headerRef.current, footer: footerRef.current, comments: commentsRef.current }), fileNameWithExtension(nameRef.current, "orvdoc"), "application/json");
+      // El .orvdoc se lleva las imágenes incrustadas para abrirse en otro dispositivo.
+      await preloadAssets(content);
+      const portableTabs = (() => { try { return allTabs.map((tab) => ({ ...tab, content: inlineAssets(tab.content ?? active) })); } finally { releaseExportAssets(); } })();
+      const portable = portableTabs[0]!.content;
+      downloadBytes(serializeOrvdoc({ ...current, ...(allTabs.length > 1 ? { tabs: portableTabs.map((tab, i) => (i === 0 ? { ...tab, content: undefined } : tab)) } : {}), title: nameRef.current, content: portable, header: headerRef.current, footer: footerRef.current, comments: commentsRef.current }), fileNameWithExtension(nameRef.current, "orvdoc"), "application/json");
       return;
     }
     if (kind === "docx") {
@@ -409,12 +458,12 @@ export function DocsEditor({
       return;
     }
     const prepared = await prepareImage(file, file.name);
-    if (!prepared || prepared.src.length * 0.75 > MAX_IMAGE_BYTES * 1.4) {
+    if (!prepared || (prepared.src.startsWith("data:") && prepared.src.length * 0.75 > MAX_IMAGE_BYTES * 1.4)) {
       setFindNote(t("reasonImageSize"));
       return;
     }
-    const attrs = imageAttrs(prepared);
     const current = editorRef.current;
+    const attrs = imageAttrs(prepared, current ? contentWidth(current.view) : undefined);
     if (current?.state.selection instanceof NodeSelection) {
       current.chain().focus().insertContentAt(current.state.selection.to, { type: "image", attrs }).run();
       return;
@@ -443,6 +492,21 @@ export function DocsEditor({
         t={t}
         editor={editor}
         name={name}
+        tabs={tabs}
+        activeTab={activeTab}
+        onSelectTab={(id) => selectTab(id)}
+        onAi={() => { void storage.listFiles().then(setAiFiles); setAiOpen(true); }}
+        tabsSnapshot={() => (editor ? withActive(editor.getJSON() as JsonNode) : tabsRef.current)}
+        onTabsChange={(next, select) => {
+          // Guarda primero lo escrito en la pestaña activa
+          const active = editor ? (editor.getJSON() as JsonNode) : undefined;
+          const merged = next.map((tab) => (tab.id === activeRef.current && active ? { ...tab, content: active } : tab));
+          tabsRef.current = merged;
+          setTabs(merged);
+          const target = select ?? (merged.some((tab) => tab.id === activeRef.current) ? activeRef.current : merged[0]!.id);
+          if (target !== activeRef.current) selectTab(target, true);
+          else if (active) queue.note(snapshotOf(active));
+        }}
         saveLabel={t(saveState === "saved" ? "statusSaved" : "statusPending")}
         starred={starred}
         onName={(value) => {
@@ -546,6 +610,35 @@ export function DocsEditor({
         ) : null}
       />
       <LayoutTools editor={editor} t={t} />
+      {aiOpen ? (
+        <aside className="ow-doc-aipanel" data-tool="ai" aria-label="ORVUPI AI">
+          <header>
+            <h2>ORVUPI AI</h2>
+            <button type="button" className="ow-button ow-button-ghost" onClick={() => setAiOpen(false)}>{t("closeAi")}</button>
+          </header>
+          <AiStudio
+            locale={locale}
+            storage={storage}
+            files={aiFiles.filter((file) => file.id !== record.id)}
+            compact
+            openDoc={{
+              name,
+              text: () => (editor ? docToText(combinedContent(withActive(editor.getJSON() as JsonNode))) : ""),
+              selection: () => {
+                if (!editor) return "";
+                const { from, to } = editor.state.selection;
+                return editor.state.doc.textBetween(from, to, "\n");
+              },
+            }}
+            onInsert={(text) => {
+              if (!editor) return;
+              const paragraphs = markdownToNodes(text);
+              const { to } = editor.state.selection;
+              editor.chain().focus().insertContentAt(to, paragraphs).run();
+            }}
+          />
+        </aside>
+      ) : null}
       {saveError ? (
         <ErrorState
           title={t("saveErrorTitle")}

@@ -208,6 +208,13 @@ jobs:
           python3 -c "import json,sys; m=json.load(open('i18n/web/missing.json')); bad={k:v for k,v in m.items() if v}; print(bad) if bad else None; sys.exit(1 if bad else 0)"
           git diff --exit-code -- web/v2 i18n apps/work/src/i18n
 
+      - name: Build ORVUPI Work en web/v2/work (como en producción)
+        run: |
+          set -euo pipefail
+          cd apps/work
+          npm ci
+          npx vite build --base /work/ --outDir ../../web/v2/work --emptyOutDir
+
       - name: Install browsers
         run: npx playwright install --with-deps chromium firefox webkit
 
@@ -217,7 +224,7 @@ jobs:
   work:
     name: orvupi work
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
     defaults:
       run:
         working-directory: apps/work

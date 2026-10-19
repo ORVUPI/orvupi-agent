@@ -120,12 +120,12 @@
     {
       "id": "curva-pump",
       "term": {
-        "es": "Curva de Pump.fun",
-        "en": "Pump.fun curve"
+        "es": "Curva (Pump.fun o Raydium LaunchLab)",
+        "en": "Curve (Pump.fun or Raydium LaunchLab)"
       },
       "means": {
-        "es": "Si la cuenta derivada es del programa de la curva, Verify lee sus campos públicos. El avance clásico es un cálculo inferido, no un campo de la cuenta. Si no hay curva, no se rellenan con cero las cantidades de la curva (Pump.fun lo llama ‘reserves’).",
-        "en": "If the derived account belongs to the curve program, Verify reads its public fields. Classic progress is an inferred calculation, not a field of the account. If there is no curve, the curve amounts (Pump.fun calls these ‘reserves’) are not filled in with zero."
+        "es": "Si la cuenta derivada es del programa de la curva, Verify lee sus campos públicos. El avance clásico es un cálculo inferido, no un campo de la cuenta. Si no hay curva, no se rellenan con cero las cantidades de la curva (Pump.fun lo llama ‘reserves’). En Raydium LaunchLab, Verify lee la cuenta del pool de la curva: moneda base, cantidad reunida, objetivo de graduación, progreso y si ya migró.",
+        "en": "If the derived account belongs to the curve program, Verify reads its public fields. Classic progress is an inferred calculation, not a field of the account. If there is no curve, the curve amounts (Pump.fun calls these ‘reserves’) are not filled in with zero. On Raydium LaunchLab, Verify reads the curve pool account: base currency, amount raised, graduation target, progress, and whether it has migrated."
       },
       "example": {
         "es": "Ninguna ficha del 2026-10-16 es una curva de Pump.fun: en USDC, USDT y las copias el avance queda en no aplica. En un token que sí esté en la curva, el avance se infiere de la cantidad real que queda.",

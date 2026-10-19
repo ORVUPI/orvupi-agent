@@ -90,6 +90,8 @@ export type OrvdocFile = {
   pageSize?: PageSize;
   pageOrientation?: PageOrientation;
   pageMargin?: PageMargin;
+  /** Pestañas (0.8.3). La primera usa `content`; las demás llevan el suyo. */
+  tabs?: import("./tabs").DocTab[];
 };
 
 const COLORS = new Set(["#102032", "#ad1645", "#0b5d36", "#1d4e89", "#a3123f"]);

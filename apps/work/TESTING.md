@@ -52,3 +52,13 @@ Resultado de esta entrega, en local: 29/29 de Vitest y 4/4 de Playwright, inclui
 Firefox, Safari y Edge no están en el job. La prioridad del manual los nombra. El job de `apps/work` instala Chromium. La detección de navegador existe para cuando OPFS o WebGPU falten.
 
 No hay prueba de carga de un archivo de 20 MB en el navegador real. El límite se rechaza en la capa de almacenamiento. La restauración se prueba en integración, no en el recorrido visual.
+
+## 0.8.3
+
+- `npx vitest run tests/unit/grandes-083.test.ts tests/unit/tabs-083.test.ts`
+- Matriz d83 (Chromium, Firefox, WebKit × escritorio 1366/1920/1024, tablet 820×1180, móvil 360×740 y 390×844): `ORVUPI_BIG_SIZES=30,100,250 npx playwright test --project='d83-*'` — documentos grandes (tiempos en `ORVUPI_BIG_TIMES`), fuente −/+, centrado, redimensionar imágenes y pestañas. Capturas `083-*.png`.
+
+## 0.8.4 (ORVUPI AI)
+
+- Interfaz: `npx playwright test tests/e2e/docx-083-ia.spec.ts --project='d83-*'`.
+- Modelo real (descarga el modelo): `ORVUPI_AI_REAL=1 ORVUPI_AI_MODEL=qwen05-cpu npx playwright test tests/e2e/docx-083-ia.spec.ts -g real --project=d83-chromium-desk` (y `d83-chromium-phone`). Comprueba que ninguna petición de red contiene el texto del documento; tiempos en `ORVUPI_AI_TIMES`.

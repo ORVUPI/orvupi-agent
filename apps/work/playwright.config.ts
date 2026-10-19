@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// En CI la matriz 0.8.3 completa no cabe en el tiempo del trabajo: una combinación por navegador. En local, todas.
+const D83_CI = new Set(["chromium-desk", "firefox-phone", "webkit-tablet"]);
+
 export default defineConfig({
   testDir: "tests/e2e",
   fullyParallel: false,
@@ -25,7 +28,7 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"], viewport: { width: 1360, height: 900 } },
-      testIgnore: /fase-080|docx-081|docx-082/,
+      testIgnore: /fase-080|docx-081|docx-082|docx-083|imgmenu-084|imgpaste-086|fuente-087/,
     },
     {
       name: "pixel-7",
@@ -43,6 +46,15 @@ export default defineConfig({
       { name: `docx-${browser}-phone`, testMatch: /docx-081/, use: { browserName: browser, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: browser !== "firefox" } },
       { name: `d82-${browser}-desk`, testMatch: /docx-082/, use: { browserName: browser, viewport: { width: 1366, height: 900 } } },
       { name: `d82-${browser}-tablet`, testMatch: /docx-082/, use: { browserName: browser, viewport: { width: 820, height: 1180 }, hasTouch: true, isMobile: browser !== "firefox" } },
+      ...(process.env.CI && !D83_CI.has(`${browser}-desk`) ? [] : [{ name: `d83-${browser}-desk`, testMatch: /docx-083/, use: { browserName: browser, viewport: { width: 1366, height: 900 } } }]),
+      ...(process.env.CI && !D83_CI.has(`${browser}-tablet`) ? [] : [{ name: `d83-${browser}-tablet`, testMatch: /docx-083/, use: { browserName: browser, viewport: { width: 820, height: 1180 }, hasTouch: true, isMobile: browser !== "firefox" } }]),
+      ...(process.env.CI && !D83_CI.has(`${browser}-phone`) ? [] : [{ name: `d83-${browser}-phone`, testMatch: /docx-083/, use: { browserName: browser, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: browser !== "firefox" } }]),
+      { name: `img84-${browser}-desk`, testMatch: /imgmenu-084/, use: { browserName: browser, viewport: { width: 1366, height: 900 } } },
+      { name: `img84-${browser}-phone`, testMatch: /imgmenu-084/, use: { browserName: browser, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: browser !== "firefox" } },
+      { name: `img86-${browser}-desk`, testMatch: /imgpaste-086/, use: { browserName: browser, viewport: { width: 1912, height: 904 } } },
+      { name: `img86-${browser}-phone`, testMatch: /imgpaste-086/, use: { browserName: browser, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: browser !== "firefox" } },
+      { name: `fuente87-${browser}-desk`, testMatch: /fuente-087/, use: { browserName: browser, viewport: { width: 1366, height: 900 } } },
+      { name: `fuente87-${browser}-phone`, testMatch: /fuente-087/, use: { browserName: browser, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: browser !== "firefox" } },
       { name: `d82-${browser}-phone`, testMatch: /docx-082/, use: { browserName: browser, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: browser !== "firefox" } },
     ]),
   ],

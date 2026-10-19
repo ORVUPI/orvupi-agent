@@ -178,6 +178,7 @@ test("volver a consultar marca el cambio, el clon y solo las direcciones elegida
     const method = body?.method;
     calls.push({ method, mint: Array.isArray(body?.params?.[0]) ? body.params[0][0] : body?.params?.[0] });
     if (method === "getMultipleAccounts") {
+      if (body.params[0].length === 2) return route.fulfill(rpcResult([null, null]));
       const mint = body.params[0][0];
       const name = mint === ERY ? "ORVUPI" : "USD Coin";
       const symbol = mint === ERY ? "ORVUPI" : "USDC";
@@ -325,6 +326,8 @@ test("si el servicio rechaza la consulta, queda en Qué falta con Reintentar y n
 function fulfillStable(route) {
   const body = route.request().postDataJSON();
   if (body?.method === "getMultipleAccounts") {
+    // Segunda lectura: los dos candidatos de Raydium LaunchLab. Aquí no hay curva.
+    if (body.params[0].length === 2) return route.fulfill(rpcResult([null, null]));
     const mint = body.params[0][0];
     const pump = String(mint).endsWith("pump");
     return route.fulfill(rpcResult([

@@ -101,6 +101,8 @@ export function errorMessageKey(code: WorkErrorCode): MessageKey {
     case "too-large":
     case "image-too-large":
       return code === "image-too-large" ? "reasonImageSize" : "reasonTooLarge";
+    case "quota":
+      return "reasonQuota";
     case "invalid-format":
       return "reasonInvalid";
     case "unsupported-version":

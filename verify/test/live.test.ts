@@ -603,7 +603,8 @@ describe("lectura universal con RPC simulado", () => {
     assert.equal(reading.ok, true);
     assert.deepEqual(hosts.getTokenSupply, ["api.mainnet-beta.solana.com"]);
     assert.deepEqual(hosts.getTokenLargestAccounts, ["api.mainnet-beta.solana.com"]);
-    assert.deepEqual(hosts.getMultipleAccounts, ["solana-rpc.publicnode.com"]);
+    // Mint, metadatos y curva de Pump.fun; después, los dos candidatos de Raydium LaunchLab.
+    assert.deepEqual(hosts.getMultipleAccounts, ["solana-rpc.publicnode.com", "solana-rpc.publicnode.com"]);
     assert.equal(reading.sources.some((item) => item.host === "api.mainnet-beta.solana.com"), false);
   });
 
@@ -914,7 +915,7 @@ describe("lectura universal con RPC simulado", () => {
     assert.equal(recovered.facts?.find((item) => item.id === "curva")?.state, "no_aplica");
     assert.deepEqual(
       recoveredCalls.filter((item) => item.endsWith("getMultipleAccounts")),
-      ["rpc-a.invalid getMultipleAccounts", "rpc-b.invalid getMultipleAccounts"],
+      ["rpc-a.invalid getMultipleAccounts", "rpc-b.invalid getMultipleAccounts", "rpc-a.invalid getMultipleAccounts"],
     );
     assert.deepEqual(
       recoveredCalls.filter((item) => item.endsWith("getTokenSupply") || item.endsWith("getTokenLargestAccounts")),
@@ -946,8 +947,8 @@ describe("lectura universal con RPC simulado", () => {
     const curve = reading.signals.find((item) => item.id === "curva");
     assert.equal(curve?.title.es, "Curva");
     assert.equal(curve?.title.en, "Curve");
-    assert.equal(curve?.explain.es, "No aplica: este token no se creó en Pump.fun");
-    assert.equal(curve?.explain.en, "Not applicable: this token was not created on Pump.fun");
+    assert.equal(curve?.explain.es, "No aplica: no hay curva de Pump.fun ni de Raydium LaunchLab para este token");
+    assert.equal(curve?.explain.en, "Not applicable: there is no Pump.fun or Raydium LaunchLab curve for this token");
     assert.equal(reading.facts?.find((item) => item.id === "curva")?.state, "no_aplica");
     assert.equal((reading.missing?.es ?? "").includes("Curva"), false);
     assert.equal((reading.missing?.en ?? "").includes("Curve"), false);
@@ -1050,8 +1051,9 @@ describe("lectura universal con RPC simulado", () => {
     assert.equal(reading.ok, true);
     assert.equal(reading.usedFallback, true);
     assert.equal(reading.endpointHost, "rpc-b.invalid");
-    assert.equal(packed(once.calls).length, 1);
-    assert.equal(once.calls.filter((item) => item.method === "getMultipleAccounts" && item.endpoint === live).length, 1);
+    // Una lectura de mint y curva de Pump.fun y otra de los candidatos de Raydium LaunchLab.
+    assert.equal(packed(once.calls).length, 2);
+    assert.equal(once.calls.filter((item) => item.method === "getMultipleAccounts" && item.endpoint === live).length, 2);
     const twice = track();
     const retried = await readAnyMint({
       mint: sample.mint,
@@ -1065,7 +1067,7 @@ describe("lectura universal con RPC simulado", () => {
     assert.equal(retried.ok, true);
     assert.equal(retried.usedFallback, true);
     assert.equal(retried.endpointHost, "rpc-b.invalid");
-    assert.equal(packed(twice.calls).length, 2);
+    assert.equal(packed(twice.calls).length, 4);
     const fetches: string[] = [];
     const fetched = await readAnyMint({
       mint: sample.mint,
@@ -1083,7 +1085,7 @@ describe("lectura universal con RPC simulado", () => {
       minIntervalMs: 0,
       sleep: async () => {},
     });
-    assert.equal(fetches.length, 1);
+    assert.equal(fetches.length, 2);
     assert.equal(fetched.ok, true);
     assert.equal(fetched.usedFallback, true);
     assert.equal(fetched.endpointHost, "rpc-b.invalid");
