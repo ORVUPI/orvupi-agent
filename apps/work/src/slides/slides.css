@@ -411,3 +411,6 @@
 @media (prefers-reduced-motion: reduce) {
   .sl-tr-layer, .sl-anim-in { animation-duration: 0.01s !important; }
 }
+
+/* 0.9.3: enlaces dentro del texto mientras se edita */
+.sl-root .sl-editable a { color: #1a73e8; text-decoration: underline; }

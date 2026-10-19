@@ -84,14 +84,15 @@ export function sanitizeRuns(value: unknown, text: string): Para[] | undefined {
 }
 
 /** Estilo CSS de un tramo (unidades de diapositiva). */
-export function runCss(r: RunStyle): Record<string, string> {
+export function runCss(r: RunStyle, linkLook = true): Record<string, string> {
   const css: Record<string, string> = {};
   if (r.b !== undefined) css["font-weight"] = r.b ? "700" : "400";
   if (r.i !== undefined) css["font-style"] = r.i ? "italic" : "normal";
   const deco = [r.u ? "underline" : "", r.s ? "line-through" : ""].filter(Boolean).join(" ");
-  if (r.u !== undefined || r.s !== undefined || r.link) css["text-decoration"] = deco || (r.link ? "underline" : "none");
+  const look = linkLook && Boolean(r.link);
+  if (r.u !== undefined || r.s !== undefined || look) css["text-decoration"] = deco || (look ? "underline" : "none");
   if (r.color) css.color = r.color;
-  else if (r.link) css.color = "#1a73e8";
+  else if (look) css.color = "#1a73e8";
   if (r.hl) css["background-color"] = r.hl;
   if (r.font) css["font-family"] = `"${r.font}", sans-serif`;
   if (r.size) css["font-size"] = `${r.size * PT}px`;
@@ -106,7 +107,7 @@ function styleAttr(css: Record<string, string>): string {
 export function parasHtml(paras: Para[]): string {
   return paras.map((p) => {
     const inner = p.filter((r) => r.t).map((r) => {
-      const style = styleAttr(runCss(r));
+      const style = styleAttr(runCss(r, false));
       const body = escapeHtml(r.t);
       const span = style ? `<span style="${escapeHtml(style)}">${body}</span>` : body;
       return r.link ? `<a href="${escapeHtml(r.link)}" data-link="1">${span}</a>` : span;
