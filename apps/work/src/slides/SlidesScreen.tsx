@@ -1238,6 +1238,7 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
 
   /* ---------- menús (los mismos que Google Slides) */
   const sel = selection.length > 0;
+  const needImage = (run: () => void) => () => { if (single?.kind !== "image") { workspace.pushToast(tx("Selecciona antes una imagen.", "Select an image first.")); return; } run(); };
   const needSel = (run: () => void) => () => { if (selection.length === 0 && !editingId) { workspace.pushToast(tx("Selecciona antes un objeto.", "Select an object first.")); return; } run(); };
   const menus: Array<{ id: string; label: string; items: BarItem[] }> = [
     { id: "file", label: tx("Archivo", "File"), items: [
@@ -1252,7 +1253,7 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
         { id: "orv", label: tx("Presentación ORVUPI (.orvslides)", "ORVUPI presentation (.orvslides)"), onSelect: () => void doExport("orvslides") },
       ] },
       { id: "pdf", label: tx("Exportar PDF", "Export PDF"), onSelect: () => void doExport("pdf") },
-      { id: "rename", label: tx("Cambiar nombre", "Rename"), onSelect: () => document.querySelector<HTMLInputElement>(".sl-name")?.select() },
+      { id: "rename", label: tx("Cambiar nombre", "Rename"), onSelect: () => requestAnimationFrame(() => { const name = document.querySelector<HTMLInputElement>(".sl-name"); name?.focus(); name?.select(); }) },
       { id: "versions", label: tx("Historial de versiones", "Version history"), onSelect: () => setDialog("versions") },
       { id: "print", label: tx("Imprimir", "Print"), hint: "Ctrl+P", onSelect: () => setPrinting(true) },
       { id: "close", label: tx("Cerrar", "Close"), onSelect: () => workspace.closeDoc() },
@@ -1345,9 +1346,9 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
         { id: "none", label: tx("Sin lista", "No list"), onSelect: needSel(() => patchText({ list: "none" })) },
       ] },
       { id: "image", label: tx("Imagen", "Image"), children: [
-        { id: "crop", label: tx("Recortar imagen", "Crop image"), onSelect: () => { if (single?.kind === "image") setDialog("crop"); } },
-        { id: "reset", label: tx("Restablecer imagen", "Reset image"), onSelect: () => { if (single?.kind === "image") patchItems([single.id], (i) => (i.kind === "image" ? { ...i, crop: undefined, opacity: undefined, rot: undefined } : i)); } },
-        { id: "replace", label: tx("Sustituir imagen", "Replace image"), onSelect: () => { if (single?.kind === "image") replaceRef.current?.click(); } },
+        { id: "crop", label: tx("Recortar imagen", "Crop image"), onSelect: needImage(() => setDialog("crop")) },
+        { id: "reset", label: tx("Restablecer imagen", "Reset image"), onSelect: needImage(() => single && patchItems([single.id], (i) => (i.kind === "image" ? { ...i, crop: undefined, opacity: undefined, rot: undefined, flipH: undefined, flipV: undefined } : i))) },
+        { id: "replace", label: tx("Sustituir imagen", "Replace image"), onSelect: needImage(() => replaceRef.current?.click()) },
       ] },
       { id: "options", label: tx("Opciones de formato", "Format options"), onSelect: () => setPanel("format") },
       { id: "anim", label: tx("Animar objeto", "Animate object"), onSelect: () => {

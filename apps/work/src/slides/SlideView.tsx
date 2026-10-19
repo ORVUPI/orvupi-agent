@@ -206,7 +206,7 @@ export function ItemBody({ item, theme, placeholder, editor, live }: { item: Sli
     const sw = item.stroke === "none" ? 0 : item.strokeWidth ?? 2;
     return (
       <>
-        <svg className="sl-shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <svg className="sl-shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" style={flipCss(item)}>
           <path d={shapePath(item.shape)} fill={item.fill === "none" ? "transparent" : item.fill} stroke={sw > 0 ? item.stroke ?? "#102032" : "none"} strokeWidth={sw} vectorEffect="non-scaling-stroke" strokeDasharray={dashArray(item.dash, sw)} />
         </svg>
         <div className="sl-text sl-shape-text" style={{ ...textCss(item, theme), color: item.color ?? inkOn(item.fill), textAlign: item.align ?? "center", justifyContent: item.valign === "top" ? "flex-start" : item.valign === "bottom" ? "flex-end" : "center" }}>
@@ -220,7 +220,7 @@ export function ItemBody({ item, theme, placeholder, editor, live }: { item: Sli
     const sw = 1 / Math.max(0.1, 1 - c.l - c.r);
     const sh = 1 / Math.max(0.1, 1 - c.t - c.b);
     return (
-      <div className="sl-img" style={{ opacity: item.opacity }}>
+      <div className="sl-img" style={{ opacity: item.opacity, ...flipCss(item) }}>
         <img src={item.src} alt="" draggable={false} style={{ width: `${sw * 100}%`, height: `${sh * 100}%`, left: `${-c.l * sw * 100}%`, top: `${-c.t * sh * 100}%` }} />
       </div>
     );
@@ -241,6 +241,11 @@ export function ItemBody({ item, theme, placeholder, editor, live }: { item: Sli
     );
   }
   return null;
+}
+
+function flipCss(item: SlideItem): CSSProperties | undefined {
+  if (!item.flipH && !item.flipV) return undefined;
+  return { transform: `scale(${item.flipH ? -1 : 1}, ${item.flipV ? -1 : 1})` };
 }
 
 export function itemFrameStyle(item: SlideItem): CSSProperties {

@@ -59,6 +59,7 @@ function linkXml(ctx: Ctx, link: string | undefined): string {
 
 function xfrm(item: SlideItem, extra = ""): string {
   const rot = item.rot ? ` rot="${Math.round((((item.rot % 360) + 360) % 360) * 60000)}"` : "";
+  if (item.kind !== "line" && item.kind !== "text" && !extra) extra = `${item.flipH ? ' flipH="1"' : ""}${item.flipV ? ' flipV="1"' : ""}`;
   return `<a:xfrm${rot}${extra}><a:off x="${e(item.x)}" y="${e(item.y)}"/><a:ext cx="${e(Math.max(1, item.w))}" cy="${e(Math.max(1, item.h))}"/></a:xfrm>`;
 }
 
@@ -641,7 +642,7 @@ export async function importPptx(bytes: Uint8Array): Promise<{ slides: Slide[]; 
             const placeholder: Placeholder | undefined = key?.type === "title" || key?.type === "ctrTitle" ? "title" : key?.type === "subTitle" ? "subtitle" : key ? "body" : undefined;
             items.push({ ...base, kind: "text", ...style, fill: fill && fill !== "none" ? fill : undefined, stroke: lineColor, placeholder: placeholder === "title" ? "title" : undefined });
           } else {
-            items.push({ ...base, kind: "shape", shape: FROM_PRESET[prst] ?? "rect", ...style, fill: fill ?? scheme.accent1 ?? "#ff3070", stroke: lineColor ?? (ln ? "none" : undefined), strokeWidth: lineW, dash });
+            items.push({ ...base, flipH: g.flipH || undefined, flipV: g.flipV || undefined, kind: "shape", shape: FROM_PRESET[prst] ?? "rect", ...style, fill: fill ?? scheme.accent1 ?? "#ff3070", stroke: lineColor ?? (ln ? "none" : undefined), strokeWidth: lineW, dash });
           }
           continue;
         }
@@ -676,7 +677,7 @@ export async function importPptx(bytes: Uint8Array): Promise<{ slides: Slide[]; 
           const sr = deep(kid(el, P, "blipFill"), A, "srcRect");
           const c = sr ? { l: Number(sr.getAttribute("l") ?? 0) / 100000, t: Number(sr.getAttribute("t") ?? 0) / 100000, r: Number(sr.getAttribute("r") ?? 0) / 100000, b: Number(sr.getAttribute("b") ?? 0) / 100000 } : undefined;
           const alpha = blip ? deep(blip, A, "alphaModFix")?.getAttribute("amt") : undefined;
-          items.push({ id: newId(), kind: "image", src, x: g.x, y: g.y, w: Math.max(4, g.w), h: Math.max(4, g.h), rot: g.rot ? Math.round(g.rot) : undefined, crop: c && c.l + c.t + c.r + c.b > 0 ? { l: Math.min(0.45, c.l), t: Math.min(0.45, c.t), r: Math.min(0.45, c.r), b: Math.min(0.45, c.b) } : undefined, opacity: alpha ? Number(alpha) / 100000 : undefined, link: linkOf(el) });
+          items.push({ id: newId(), kind: "image", src, flipH: g.flipH || undefined, flipV: g.flipV || undefined, x: g.x, y: g.y, w: Math.max(4, g.w), h: Math.max(4, g.h), rot: g.rot ? Math.round(g.rot) : undefined, crop: c && c.l + c.t + c.r + c.b > 0 ? { l: Math.min(0.45, c.l), t: Math.min(0.45, c.t), r: Math.min(0.45, c.r), b: Math.min(0.45, c.b) } : undefined, opacity: alpha ? Number(alpha) / 100000 : undefined, link: linkOf(el) });
           continue;
         }
         if (name === "graphicFrame") {

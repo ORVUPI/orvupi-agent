@@ -119,7 +119,9 @@ export function flipItem(item: SlideItem, axis: "h" | "v"): SlideItem {
       ? lineBox({ ...item, x1: item.x2, x2: item.x1 } as LineItem)
       : lineBox({ ...item, y1: item.y2, y2: item.y1 } as LineItem);
   }
-  return { ...item, rot: ((item.rot ?? 0) * -1) % 360 };
+  // Como en Slides: espejo de la forma o imagen (el texto sigue legible) y el giro se invierte.
+  const rot = item.rot ? ((item.rot * -1) % 360) || undefined : undefined;
+  return axis === "h" ? { ...item, rot, flipH: item.flipH ? undefined : true } : { ...item, rot, flipV: item.flipV ? undefined : true };
 }
 
 /** Lee el texto de un elemento editable: cada bloque o salto es una línea. */

@@ -2,6 +2,8 @@ import { defineConfig, devices } from "@playwright/test";
 
 // En CI la matriz 0.8.3 completa no cabe en el tiempo del trabajo: una combinación por navegador. En local, todas.
 const D83_CI = new Set(["chromium-desk", "firefox-phone", "webkit-tablet"]);
+// Auditoría 0.9.3 de Presentaciones: en CI escritorio, tableta y móvil con Chromium y WebKit; en local, los tres navegadores.
+const A93_CI = new Set(["chromium-desk", "webkit-tablet", "chromium-phone"]);
 
 export default defineConfig({
   testDir: "tests/e2e",
@@ -26,7 +28,7 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"], viewport: { width: 1360, height: 900 } },
-      testIgnore: /fase-080|docx-081|docx-082|docx-083|docx-094|imgmenu-084|imgpaste-086|fuente-087/,
+      testIgnore: /fase-080|docx-081|docx-082|docx-083|docx-094|imgmenu-084|imgpaste-086|fuente-087|slides-auditoria-093/,
     },
     {
       name: "pixel-7",
@@ -50,6 +52,11 @@ export default defineConfig({
       { name: `s90-${browser}-desk`, testMatch: /slides-090/, use: { browserName: browser, viewport: { width: 1366, height: 900 } } },
       { name: `s90-${browser}-tablet`, testMatch: /slides-090/, use: { browserName: browser, viewport: { width: 820, height: 1180 }, hasTouch: true, isMobile: browser !== "firefox" } },
       { name: `s90-${browser}-phone`, testMatch: /slides-090/, use: { browserName: browser, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: browser !== "firefox" } },
+      ...(["desk", "tablet", "phone"] as const).flatMap((size) => (process.env.CI && !A93_CI.has(`${browser}-${size}`) ? [] : [{
+        name: `a93-${browser}-${size}`,
+        testMatch: /slides-auditoria-093/,
+        use: size === "desk" ? { browserName: browser, actionTimeout: 8000, viewport: { width: 1366, height: 900 } } : size === "tablet" ? { browserName: browser, actionTimeout: 8000, viewport: { width: 820, height: 1180 }, hasTouch: true, isMobile: browser !== "firefox" } : { browserName: browser, actionTimeout: 8000, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: browser !== "firefox" },
+      }])),
       { name: `img84-${browser}-desk`, testMatch: /imgmenu-084/, use: { browserName: browser, viewport: { width: 1366, height: 900 } } },
       { name: `img84-${browser}-phone`, testMatch: /imgmenu-084/, use: { browserName: browser, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: browser !== "firefox" } },
       { name: `img86-${browser}-desk`, testMatch: /imgpaste-086|imgsoltar-0810/, use: { browserName: browser, viewport: { width: 1912, height: 904 } } },

@@ -49,7 +49,7 @@ export type TextStyle = {
   rich?: Para[];
 };
 
-type Base = { id: string; x: number; y: number; w: number; h: number; rot?: number; group?: string; anim?: SlideAnim; link?: string };
+type Base = { id: string; x: number; y: number; w: number; h: number; rot?: number; flipH?: boolean; flipV?: boolean; group?: string; anim?: SlideAnim; link?: string };
 
 export type TextItem = Base & TextStyle & { kind: "text"; fill?: string; stroke?: string; placeholder?: Placeholder };
 export type ShapeItem = Base & TextStyle & { kind: "shape"; shape: ShapeKind; fill: string; stroke?: string; strokeWidth?: number; dash?: Dash };
@@ -156,6 +156,8 @@ export function itemOf(value: unknown, scale = 1): SlideItem | null {
   const base: Base = {
     id, x, y, w, h,
     rot: typeof value.rot === "number" ? num(value.rot, -360, 360, 0) : undefined,
+    flipH: value.flipH === true ? true : undefined,
+    flipV: value.flipV === true ? true : undefined,
     group: typeof value.group === "string" ? value.group.slice(0, 40) : undefined,
     anim: typeof value.anim === "string" && ANIMS.has(value.anim) ? (value.anim as SlideAnim) : undefined,
     link: typeof value.link === "string" && /^(https?:\/\/|mailto:|#slide=\d+$)/i.test(value.link) ? value.link.slice(0, 500) : undefined,

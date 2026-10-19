@@ -249,7 +249,8 @@ async function drawItem(ctx: CanvasRenderingContext2D, item: SlideItem, theme: T
     laid = drawText(ctx, item, theme, item.color ?? (isTitle ? theme.title : theme.text), "left", "top");
   } else if (item.kind === "shape") {
     const path = new Path2D();
-    path.addPath(new Path2D(shapePath(item.shape)), new DOMMatrix().scale(item.w / 100, item.h / 100));
+    const m = new DOMMatrix().translate(item.flipH ? item.w : 0, item.flipV ? item.h : 0).scale((item.flipH ? -1 : 1) * item.w / 100, (item.flipV ? -1 : 1) * item.h / 100);
+    path.addPath(new Path2D(shapePath(item.shape)), m);
     if (item.fill !== "none") { ctx.fillStyle = item.fill; ctx.fill(path); }
     const sw = item.stroke === "none" ? 0 : item.strokeWidth ?? 2;
     if (sw > 0) { ctx.strokeStyle = item.stroke ?? "#102032"; ctx.lineWidth = sw; setDash(ctx, item.dash, sw); ctx.stroke(path); ctx.setLineDash([]); }
@@ -259,6 +260,7 @@ async function drawItem(ctx: CanvasRenderingContext2D, item: SlideItem, theme: T
     if (img) {
       const c = item.crop ?? { l: 0, t: 0, r: 0, b: 0 };
       ctx.globalAlpha = item.opacity ?? 1;
+      if (item.flipH || item.flipV) { ctx.translate(item.flipH ? item.w : 0, item.flipV ? item.h : 0); ctx.scale(item.flipH ? -1 : 1, item.flipV ? -1 : 1); }
       ctx.drawImage(img, img.naturalWidth * c.l, img.naturalHeight * c.t, img.naturalWidth * (1 - c.l - c.r), img.naturalHeight * (1 - c.t - c.b), 0, 0, item.w, item.h);
       ctx.globalAlpha = 1;
     }
