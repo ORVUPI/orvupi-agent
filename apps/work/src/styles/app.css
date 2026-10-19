@@ -1471,3 +1471,30 @@ body, .ow-shell, .ow-docs, .ow-docs-body, .ow-docs-scroll { background-color: va
 .ow-ai { width: 380px; }
 .ow-doc-aipanel { overflow: auto; }
 @media (max-width: 960px) { .ow-ai { max-height: 82dvh; border-top: 2px solid #102032; } }
+
+
+/* Plantillas: cada categoría separada de la anterior, con su título bien distinguido de las tarjetas */
+.ow-templates > h2 { margin-bottom: 8px; }
+.ow-template-cat { margin-top: 36px; }
+.ow-template-cat:first-of-type { margin-top: 16px; }
+.ow-template-cat-title { margin: 0 0 16px; padding-bottom: 8px; border-bottom: 2px solid rgba(16, 32, 50, 0.14); font-size: 1.15rem; letter-spacing: 0.01em; }
+.ow-template-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+@media (max-width: 900px) { .ow-template-cat { margin-top: 30px; } .ow-template-grid { gap: 16px; } }
+@media (max-width: 560px) { .ow-template-cat { margin-top: 26px; } .ow-template-cat-title { margin-bottom: 12px; } .ow-template-grid { grid-template-columns: 1fr; gap: 14px; } }
+
+/* ORVUPI AI: fases, opciones avanzadas y salida */
+.ow-ai-stages { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; padding: 0; font-size: 0.82rem; }
+.ow-ai-stages li { padding: 3px 9px; border-radius: 999px; border: 1.5px solid rgba(16, 32, 50, 0.25); color: #3b4a5c; background: #fff; }
+.ow-ai-stages li[data-state="now"] { border-color: #ff3070; color: #102032; font-weight: 700; background: #fff1f5; }
+.ow-ai-stages li[data-state="done"] { border-color: #0b5d36; color: #0b5d36; }
+.ow-ai-stages li[data-state="done"]::before { content: "✓ "; }
+.ow-ai-advanced { margin-top: 10px; font-size: 0.92rem; }
+.ow-ai-advanced summary { cursor: pointer; font-weight: 600; }
+.ow-ai-advanced p { margin: 6px 0; }
+.ow-ai-ready small { font-weight: 400; color: #3b4a5c; }
+.ow-ai-hint { flex-basis: 100%; margin: 4px 0 0; font-size: 0.85rem; color: #3b4a5c; }
+.ow-ai-output table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 0.9rem; }
+.ow-ai-output th, .ow-ai-output td { border: 1px solid rgba(16, 32, 50, 0.25); padding: 4px 8px; text-align: left; }
+.ow-ai-output h6 { margin: 8px 0 4px; font-size: 0.95rem; }
+.ow-ai-pagebreak { border: 0; border-top: 2px dashed rgba(16, 32, 50, 0.3); margin: 12px 0; }
+.ow-ai-actions-out { flex-wrap: wrap; gap: 8px; }

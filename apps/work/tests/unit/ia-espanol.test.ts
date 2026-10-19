@@ -59,7 +59,7 @@ describe("ORVUPI AI en español: modelo + comprobación con el original", () => 
     const bullets = bulletsOf(r.markdown);
     expect(bullets.length).toBe(3);
     for (const b of bullets) expect(checkFaithful(b, TEXT).novelRatio).toBeLessThan(0.1);
-    expect(r.markdown).toMatch(/\*\*Términos clave:\*\*/);
+    expect(r.markdown).toMatch(/## Términos clave/);
   });
 
   it("resumen: acepta la redacción del modelo cuando se apoya en el texto y sustituye la que no", async () => {
@@ -79,8 +79,8 @@ describe("ORVUPI AI en español: modelo + comprobación con el original", () => 
     const none = await hybridAsk(TEXT, "¿Quién ganó el mundial de fútbol?", silent);
     expect(none.answer).toMatch(/no parece tratar/);
     const o = await hybridOutline(TEXT, silent);
-    expect(o.markdown).toMatch(/^\*\*1\. /);
-    expect(o.markdown).toMatch(/- 1\.1\. /);
+    expect(o.markdown).toMatch(/^## 1\. /);
+    expect(o.markdown).toMatch(/### 1\.1\. /);
   });
 
   it("preguntar: acepta una respuesta fiel del modelo", async () => {

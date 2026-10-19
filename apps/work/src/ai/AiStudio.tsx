@@ -1,9 +1,9 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { FileRecord, StorageService } from "../storage/types";
 import { formatBytes } from "../security/names";
-import { AiLoadError, aiEngine, detectAiSupport, isModelCached, recommendedModel, usableModels, type AiModel, type AiSupport, type ChatMessage } from "./engine";
-import { buildMessages, CHUNK_CHARS, MAX_PARTS, type AiAction } from "./prompts";
-import { hybridAsk, hybridExplain, hybridOutline, hybridSummary, paragraphChunks, rewriteMessages, rewriteOk, translationOk, type Generate } from "./hybrid";
+import { aiEngine, detectAiSupport, isModelCached, modelChain, readDeviceMemory, rememberModel, usableModels, type AiModel, type AiSupport, type ChatMessage } from "./engine";
+import { buildMessages, CHUNK_CHARS, MAX_PARTS } from "./prompts";
+import { hybridAnalyze, hybridAsk, hybridExplain, hybridGenerate, hybridOutline, hybridQuestions, hybridSummary, paragraphChunks, parseRequest, rewriteMessages, rewriteOk, translationOk, type Generate, type HybridResult, type Intent } from "./hybrid";
 import { aiFiles, textOfFile } from "./sources";
 import { cleanInput, cleanOutput } from "./clean";
 import { markdownToDoc, markdownToPlain, parseMarkdown, type MdBlock, type Span } from "./markdown";
@@ -13,36 +13,40 @@ import { downloadBytes } from "../security/bytes";
 import { openEditorWindow, editorPath } from "../routing/paths";
 import { publishFilesChanged } from "../routing/sync";
 
+export type AiTask = Intent["action"];
+export type InsertMode = "insert" | "replace" | "below";
+
 const ES = {
   title: "ORVUPI AI",
   privacy: "Funciona dentro de tu navegador. Tus documentos no salen del dispositivo: solo se descarga el modelo la primera vez y queda guardado.",
-  model: "1. Modelo",
+  model: "1. Preparar la IA",
   checking: "Comprobando qué puede ejecutar este dispositivo…",
-  none: "Este navegador no puede ejecutar el modelo (no tiene WebAssembly con Web Workers). Prueba con Chrome, Edge, Firefox o Safari recientes.",
-  modelGpuSmall: "Qwen2.5 0.5B · rápido con la GPU (WebGPU)",
+  none: "Este navegador no puede ejecutar la IA local (le falta WebAssembly con Web Workers). Prueba con Chrome, Edge, Firefox o Safari recientes.",
+  modelGpuSmall: "Qwen2.5 0.5B · con la GPU (WebGPU)",
   modelGpuLarge: "Qwen2.5 1.5B · más preciso con la GPU (WebGPU)",
-  modelCpu: "Qwen2.5 0.5B · sin GPU (WASM, más lento)",
+  modelCpu: "Qwen2.5 0.5B · sin GPU (WASM)",
   modelCpuLarge: "Qwen2.5 1.5B · más preciso sin GPU (lento, ordenadores con 8 GB o más)",
-  modelTiny: "SmolLM2 135M · muy ligero (redacta mal en español: se usan sobre todo frases del texto)",
-  modelLfm: "LFM2 350M · ligero y multilingüe, bueno en español (móvil)",
+  modelTiny: "SmolLM2 135M · muy ligero",
+  modelLfm: "LFM2 350M · ligero y multilingüe, bueno en español",
   modelGemma: "Gemma 3 270M · ligero y multilingüe",
+  prepare: "Preparar ORVUPI AI ({size}, solo la primera vez)",
+  prepareCached: "Preparar ORVUPI AI",
+  ready: "IA lista en este dispositivo",
+  readyDetail: "Usando {model}",
+  loading: "Preparando IA: descargando {pct} % ({done} de {total}). Puedes seguir usando Work.",
+  compiling: "Preparando IA: comprobando que funciona en este dispositivo…",
+  trying: "Preparando IA: probando otra opción compatible con este dispositivo…",
+  allFailed: "No hemos podido poner en marcha la IA en este dispositivo ahora mismo. Comprueba la conexión (la primera vez se descarga el modelo) y vuelve a intentarlo en un rato; mientras tanto, «Analizar» funciona sin descargar nada.",
+  offline: "Sin conexión: la IA se descarga la primera vez. Lo descargado queda guardado y continuará donde se quedó al volver la conexión.",
+  quota: "No hay espacio en el navegador para guardar la IA. Libera espacio y vuelve a intentarlo.",
+  advanced: "Opciones avanzadas",
+  advancedHelp: "ORVUPI AI elige sola el mejor modo para este dispositivo y recuerda lo que funcionó. Aquí puedes elegir otro modelo a mano.",
+  pickModel: "Modelo",
+  useModel: "Usar este modelo",
   recommended: "recomendado",
   cached: "descargado",
-  download: "Descargar y activar ({size})",
-  activate: "Activar",
-  ready: "Listo: {model}",
-  loading: "Descargando el modelo… {pct} % ({done} de {total})",
-  compiling: "Preparando el modelo…",
-  noGpu: "Este dispositivo no ofrece WebGPU con f16: se usará el modo sin GPU (más lento pero funciona).",
-  mobileNote: "En el móvil la primera respuesta puede tardar; el modelo muy ligero es más rápido.",
-  loadError: "No se pudo cargar el modelo: {error}. Prueba con el modelo más ligero o revisa la conexión para la primera descarga.",
-  errOffline: "No hay conexión a internet. La descarga se ha guardado hasta donde llegó ({done} de {total}): conéctate y pulsa de nuevo para continuar.",
-  errNetwork: "La conexión se cortó varias veces mientras se descargaba el modelo ({done} de {total}). Lo descargado queda guardado: pulsa de nuevo para continuar donde se quedó, mejor con wifi.",
-  errHttp: "El servidor de modelos (Hugging Face) respondió con el error {status}. Inténtalo más tarde.",
-  errBlocked: "El navegador bloqueó la conexión con {host} (un bloqueador de anuncios, una VPN o la red del trabajo). Permite ese dominio y vuelve a intentarlo.",
-  errQuota: "No hay espacio suficiente en el navegador para guardar el modelo (necesita {need}, hay {free} libres). Libera espacio o elige el modelo muy ligero.",
-  errMemory: "El modelo no cabe en la memoria de este dispositivo. Elige «SmolLM2 135M · muy ligero».",
-  errGpu: "La GPU de este dispositivo no pudo ejecutar el modelo (WebGPU). Elige un modelo «sin GPU (WASM)».",
+  free: "Liberar memoria",
+  freed: "Memoria liberada (el modelo sigue descargado).",
   source: "2. Qué texto usar",
   srcOpen: "Documento abierto",
   srcSelection: "Texto seleccionado",
@@ -53,59 +57,74 @@ const ES = {
   pasteLabel: "Texto",
   emptySelection: "No hay texto seleccionado en el documento.",
   actions: "3. Qué hacer",
-  summarize: "Resumir", summarizeHelp: "Las ideas principales en viñetas, elegidas del propio texto y redactadas por el modelo. Funciona también con textos largos.",
-  explain: "Explicar", explainHelp: "Lo explica con palabras sencillas y ejemplos.",
-  ask: "Preguntar", askHelp: "Chatea sobre el texto: responde solo con lo que pone.",
+  summarize: "Resumir", summarizeHelp: "Las ideas principales en viñetas, elegidas del propio texto y redactadas por la IA. Funciona también con textos largos.",
+  explain: "Explicar", explainHelp: "Lo explica con palabras sencillas.",
   rewrite: "Reescribir", rewriteHelp: "Mejora la claridad y la redacción sin cambiar el sentido.",
-  translate: "Traducir", translateHelp: "Traduce al idioma que elijas.",
-  outline: "Esquema", outlineHelp: "Títulos y subtítulos para organizar el texto.",
+  translate: "Traducir", translateHelp: "Traduce al idioma que elijas, párrafo a párrafo.",
+  outline: "Esquema", outlineHelp: "Títulos, secciones y subsecciones.",
+  questions: "Generar preguntas", questionsHelp: "Preguntas de estudio con su respuesta en el texto.",
+  analyze: "Analizar", analyzeHelp: "Datos, legibilidad, temas y estructura (sin descargar nada).",
   language: "Traducir a",
-  question: "Tu pregunta",
+  request: "Pide lo que quieras",
+  requestHelp: "Pregunta sobre el documento o pide algo: «Resume este documento y créame un DOCX», «Escribe una introducción», «Haz 5 preguntas»…",
+  requestPlaceholder: "Tu pregunta o petición",
   send: "Enviar",
   result: "Resultado",
-  working: "Generando…",
-  part: "Resumiendo la parte {n} de {total}…",
+  stagePrepare: "Preparando IA",
+  stageAnalyze: "Analizando documento",
+  stageGenerate: "Generando respuesta",
+  stageFormat: "Aplicando formato",
+  stageCreate: "Creando documento (DOCX/PDF)",
+  stageDone: "Documento listo",
+  part: "Generando respuesta: parte {n} de {total}…",
   truncated: "El texto es largo: se usaron {used} de {total} caracteres.",
-  partRewrite: "Reescribiendo la parte {n} de {total}…",
-  partTranslate: "Traduciendo la parte {n} de {total}…",
-  originModel: "redactado por el modelo y comprobado con el texto original",
-  originMixed: "{model} de {total} puntos redactados por el modelo; el resto, frases literales del texto (lo que el modelo escribió no se apoyaba en el original)",
-  originText: "frases elegidas del propio texto (la redacción del modelo no era fiel al original y se descartó)",
-  keptRewrite: "{kept} de {total} partes se dejaron como estaban (la reescritura del modelo cambiaba el contenido)",
-  keptTranslate: "{kept} de {total} partes quedaron sin traducir (la traducción del modelo no era fiable)",
-  untranslated: "[Sin traducir: el modelo no dio una traducción fiable de esta parte]",
-  stop: "Detener",
+  cancel: "Cancelar",
+  cancelled: "Cancelado.",
   copy: "Copiar",
   copied: "Copiado",
   insert: "Insertar en el documento",
-  inserted: "Insertado en el documento",
-  needModel: "Primero activa un modelo (paso 1).",
+  replace: "Reemplazar selección",
+  below: "Añadir debajo",
+  inserted: "Hecho: añadido al documento.",
   needText: "No hay texto que usar.",
-  stats: "{tokens} fragmentos en {secs} s",
+  stats: "{secs} s",
   guide: "Cómo funciona",
-  guideBody: "Elige un modelo y descárgalo una vez (queda en la caché del navegador). Después elige el texto: el documento abierto, lo que tengas seleccionado, cualquier archivo de Work o un texto pegado. Pulsa una acción y verás la respuesta mientras se escribe. Puedes copiarla o insertarla en el documento. Es un modelo pequeño: revisa siempre el resultado.",
+  guideBody: "La IA corre dentro de tu navegador, en segundo plano: la página sigue respondiendo mientras trabaja. El contenido sale del propio texto (se eligen sus frases más representativas) y la IA solo lo redacta; todo lo que escribe se comprueba contra el original y lo que no se apoya en él se sustituye por la frase original. Revisa siempre el resultado.",
   clearCache: "Borrar modelos descargados",
-  garbage: "El modelo no ha dado un resultado válido para este texto (lo intentó dos veces). Prueba con un texto más corto o con otro modelo, como Qwen2.5 0.5B.",
-  garbageGpu: "El modelo no ha dado un resultado válido (lo intentó dos veces). Con la GPU de algunos equipos el modo WebGPU produce «!!!!»: elige «Qwen2.5 0.5B · sin GPU (WASM)» en el paso 1 y vuelve a intentarlo.",
-  openDoc: "Abrir como documento de ORVUPI Work",
+  failed: "No se pudo generar un resultado fiable para este texto. Prueba con un fragmento más corto o con «Resumir» o «Analizar», que siempre funcionan.",
+  openDoc: "Crear documento nuevo",
   openCreated: "Abrir el documento «{name}»",
   docCreated: "Documento creado en Mi unidad: «{name}».",
-  downloadPdf: "Descargar PDF",
-  downloadDocx: "Descargar Word (.docx)",
+  downloadPdf: "Exportar PDF",
+  downloadDocx: "Exportar DOCX",
   preview: "Vista previa",
   srcPasted: "texto pegado",
   srcSelected: "selección",
-  actionNames: "Resumen|Explicación|Respuesta|Reescritura|Traducción|Esquema",
+  partRewrite: "Generando respuesta: reescribiendo la parte {n} de {total}…",
+  partTranslate: "Generando respuesta: traduciendo la parte {n} de {total}…",
+  originModel: "redactado por la IA y comprobado con el texto original",
+  originMixed: "{model} de {total} puntos redactados por la IA; el resto, frases literales del texto (lo que escribió no se apoyaba en el original)",
+  originText: "frases elegidas del propio texto (la redacción de la IA no era fiel al original y se descartó)",
+  originCalc: "calculado del propio texto",
+  keptRewrite: "{kept} de {total} partes se dejaron como estaban (la reescritura cambiaba el contenido)",
+  keptTranslate: "{kept} de {total} partes quedaron sin traducir (la traducción no era fiable)",
+  untranslated: "[Sin traducir: no se obtuvo una traducción fiable de esta parte]",
+  exported: "Descargado: {name}",
+  actionNames: "Resumen|Explicación|Respuesta|Reescritura|Traducción|Esquema|Preguntas|Análisis|Contenido",
 };
 const EN: typeof ES = {
   ...ES,
   privacy: "Runs inside your browser. Your documents never leave the device: only the model is downloaded once and cached.",
-  model: "1. Model", source: "2. Text to use", actions: "3. What to do", srcOpen: "Open document", srcSelection: "Selected text", srcFile: "Another Work file", srcPaste: "Paste text",
-  summarize: "Summarize", explain: "Explain", ask: "Ask", rewrite: "Rewrite", translate: "Translate", outline: "Outline", insert: "Insert into document", copy: "Copy", stop: "Stop", send: "Send",
+  source: "2. Text to use", actions: "3. What to do", srcOpen: "Open document", srcSelection: "Selected text", srcFile: "Another Work file", srcPaste: "Paste text",
+  summarize: "Summarize", explain: "Explain", rewrite: "Rewrite", translate: "Translate", outline: "Outline", questions: "Questions", analyze: "Analyze",
+  insert: "Insert into document", replace: "Replace selection", below: "Add below", copy: "Copy", cancel: "Cancel", send: "Send",
 };
 
 const LANGS = ["inglés", "español", "francés", "alemán", "italiano", "portugués", "catalán", "chino", "árabe"];
+const TASKS: AiTask[] = ["summarize", "explain", "ask", "rewrite", "translate", "outline", "questions", "analyze", "generate"];
 type Source = "open" | "selection" | "file" | "paste";
+type Stage = "prepare" | "analyze" | "generate" | "format" | "create" | "done";
+const STAGES: Stage[] = ["prepare", "analyze", "generate", "format", "create", "done"];
 
 export function AiStudio({
   locale,
@@ -119,7 +138,7 @@ export function AiStudio({
   storage: StorageService | null;
   files: readonly FileRecord[];
   openDoc?: { name: string; text: () => string; selection: () => string };
-  onInsert?: (markdown: string) => void;
+  onInsert?: (markdown: string, mode?: InsertMode) => void;
   compact?: boolean;
 }) {
   const L = locale.startsWith("en") ? EN : ES;
@@ -127,43 +146,66 @@ export function AiStudio({
   const engine = aiEngine();
   const [support, setSupport] = useState<AiSupport | null>(null);
   const [modelId, setModelId] = useState<string>("");
+  const [manualId, setManualId] = useState<string>("");
   const [cached, setCached] = useState<Record<string, boolean>>({});
   const [phase, setPhase] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [progress, setProgress] = useState<{ loaded: number; total: number } | null>(null);
+  const [preparing, setPreparing] = useState<"download" | "check" | "retry">("download");
   const [loadError, setLoadError] = useState("");
   const [source, setSource] = useState<Source>(openDoc ? "open" : "file");
   const choices = useMemo(() => aiFiles(files), [files]);
   const [fileId, setFileId] = useState("");
   const [paste, setPaste] = useState("");
   const [language, setLanguage] = useState(LANGS[0]!);
-  const [question, setQuestion] = useState("");
+  const [request, setRequest] = useState("");
   const [history, setHistory] = useState<ChatMessage[]>([]);
-  const [output, setOutput] = useState("");
+  const [output, setOutputState] = useState("");
   const [status, setStatus] = useState("");
+  const [stage, setStage] = useState<Stage | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
   const [docTitle, setDocTitle] = useState("");
   const [created, setCreated] = useState<{ id: string; name: string } | null>(null);
   const stopRef = useRef(false);
-  const progressRef = useRef<{ loaded: number; total: number } | null>(null);
+  const preparingRef = useRef<Promise<AiModel | null> | null>(null);
   const uid = useId();
+
+  // La vista previa se actualiza como mucho ~8 veces por segundo: repintar en cada token hacía ir la web a tirones
+  const pendingOut = useRef<string | null>(null);
+  const outTimer = useRef<number | null>(null);
+  const setOutput = (text: string, now = false) => {
+    pendingOut.current = text;
+    if (now) {
+      if (outTimer.current !== null) { window.clearTimeout(outTimer.current); outTimer.current = null; }
+      setOutputState(text);
+      return;
+    }
+    if (outTimer.current !== null) return;
+    outTimer.current = window.setTimeout(() => {
+      outTimer.current = null;
+      if (pendingOut.current !== null) setOutputState(pendingOut.current);
+    }, 120);
+  };
+  useEffect(() => () => { if (outTimer.current !== null) window.clearTimeout(outTimer.current); }, []);
 
   useEffect(() => {
     let alive = true;
     void detectAiSupport().then(async (found) => {
       if (!alive) return;
       setSupport(found);
-      const best = recommendedModel(found);
       const list = usableModels(found);
       const flags: Record<string, boolean> = {};
       for (const model of list) flags[model.id] = await isModelCached(model);
       if (!alive) return;
       setCached(flags);
       const already = list.find((model) => engine.isLoaded(model));
-      setModelId(already?.id ?? list.find((model) => flags[model.id])?.id ?? best?.id ?? "");
-      if (already) setPhase("ready");
+      if (already) { setModelId(already.id); setPhase("ready"); return; }
+      // Precarga inteligente: si ya funcionó aquí y está descargado, se prepara sola (desde OPFS, sin descargar)
+      const mem = readDeviceMemory(found);
+      if (mem.good && flags[mem.good]) void prepare(found);
     });
     return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [engine]);
 
   useEffect(() => {
@@ -172,40 +214,51 @@ export function AiStudio({
 
   const models = support ? usableModels(support) : [];
   const model: AiModel | undefined = models.find((item) => item.id === modelId);
-  const best = support ? recommendedModel(support) : null;
+  const chain = support ? modelChain(support, readDeviceMemory(support)) : [];
+  const first = chain[0];
 
-  async function activate() {
-    if (!model) return;
-    setPhase("loading");
-    setLoadError("");
-    setProgress(null);
-    try {
-      progressRef.current = null;
-      await engine.load(model, (loaded, total) => { progressRef.current = { loaded, total }; setProgress({ loaded, total }); });
-      setCached((c) => ({ ...c, [model.id]: true }));
-      setPhase("ready");
-    } catch (error) {
+  /** Prepara la IA sola: prueba el mejor modo (GPU → CPU → modelos más ligeros) con una generación real corta y se
+   *  queda con el primero que funciona. Recuerda en este dispositivo qué funcionó y qué no. */
+  function prepare(found: AiSupport | null = support, only?: AiModel, skip: string[] = []): Promise<AiModel | null> {
+    if (!found) return Promise.resolve(null);
+    if (preparingRef.current && !only && skip.length === 0) return preparingRef.current;
+    const job = (async () => {
+      setPhase("loading");
+      setLoadError("");
+      let lastKind = "";
+      const list = only ? [only] : modelChain(found, readDeviceMemory(found)).filter((m) => !skip.includes(m.id));
+      for (let i = 0; i < list.length; i += 1) {
+        const candidate = list[i]!;
+        setModelId(candidate.id);
+        setProgress(null);
+        setPreparing(i === 0 ? "download" : "retry");
+        try {
+          await engine.load(candidate, (loaded, total) => { setPreparing(i === 0 ? "download" : "retry"); setProgress({ loaded, total }); }, () => setPreparing("check"));
+          rememberModel(found, candidate.id, true);
+          setCached((c) => ({ ...c, [candidate.id]: true }));
+          setPhase("ready");
+          return candidate;
+        } catch (error) {
+          const kind = (error as { kind?: string }).kind ?? "other";
+          lastKind = kind;
+          console.info("[ORVUPI AI] no funcionó", candidate.id, kind, error instanceof Error ? error.message.slice(0, 160) : "");
+          // Sin conexión o sin espacio no tiene sentido probar otro modelo: lo descargado queda guardado
+          if (kind === "offline" || kind === "quota") break;
+          rememberModel(found, candidate.id, false);
+        }
+      }
       setPhase("error");
-      setLoadError(explainLoadError(error));
-    }
+      setLoadError(lastKind === "offline" || lastKind === "network" ? L.offline : lastKind === "quota" ? L.quota : L.allFailed);
+      return null;
+    })();
+    preparingRef.current = job;
+    void job.finally(() => { if (preparingRef.current === job) preparingRef.current = null; });
+    return job;
   }
 
-  function explainLoadError(error: unknown): string {
-    const size = (n: number) => formatBytes(n, locale);
-    const p = progressRef.current;
-    const done = size(p?.loaded ?? 0);
-    const total = size(p?.total ?? (model?.sizeMb ?? 0) * 1_000_000);
-    if (error instanceof AiLoadError) {
-      const d = error.detail;
-      if (error.kind === "offline") return f(L.errOffline, { done, total });
-      if (error.kind === "network") return f(L.errNetwork, { done, total });
-      if (error.kind === "http") return f(L.errHttp, { status: d.status ?? "?" });
-      if (error.kind === "blocked") return f(L.errBlocked, { host: d.host ?? "huggingface.co" });
-      if (error.kind === "quota") return f(L.errQuota, { need: size(Number(d.need ?? (model?.sizeMb ?? 0) * 1_000_000)), free: size(Number(d.free ?? 0)) });
-      if (error.kind === "memory") return L.errMemory;
-      if (error.kind === "gpu") return L.errGpu;
-    }
-    return f(L.loadError, { error: error instanceof Error ? error.message : String(error) });
+  async function ensureModel(): Promise<AiModel | null> {
+    if (model && engine.isLoaded(model)) return model;
+    return prepare();
   }
 
   async function sourceText(): Promise<string> {
@@ -223,35 +276,46 @@ export function AiStudio({
     return choices.find((file) => file.id === fileId)?.name ?? "";
   }
 
-  function titleFor(action: AiAction): string {
+  function titleFor(task: AiTask, lang = language): string {
     const names = L.actionNames.split("|");
-    const index = ["summarize", "explain", "ask", "rewrite", "translate", "outline"].indexOf(action);
-    const label = names[index] ?? "ORVUPI AI";
+    const label = names[TASKS.indexOf(task)] ?? "ORVUPI AI";
     const name = sourceName();
-    return `${label}${action === "translate" ? ` al ${language}` : ""}${name ? ` · ${name}` : ""}`.slice(0, 120);
+    return `${label}${task === "translate" ? ` al ${lang}` : ""}${name ? ` · ${name}` : ""}`.slice(0, 120);
   }
 
-  /** Genera con control de calidad: si la salida degenera («![](!!!!…», bucles), reintenta una vez más estricto y,
-   *  si vuelve a fallar, avisa en lugar de mostrar basura. */
-  async function generateClean(action: AiAction, messages: ChatMessage[], maxTokens: number, show: boolean): Promise<{ text: string; tokens: number }> {
-    const copies = action === "rewrite" || action === "translate";
+  /** Genera con control de calidad. Si la salida degenera dos veces con la GPU, cambia sola a otro modo (CPU u otro
+   *  modelo), lo recuerda y repite; el usuario no tiene que elegir nada. */
+  async function generateClean(task: AiTask, messages: ChatMessage[], maxTokens: number): Promise<{ text: string; tokens: number } | null> {
+    const copies = task === "rewrite" || task === "translate";
     const attempts = [
       { repetitionPenalty: copies ? 1.05 : 1.15, noRepeatNgram: 0 },
       { repetitionPenalty: copies ? 1.1 : 1.2, noRepeatNgram: copies ? 0 : 12, sample: true },
     ];
-    let tokens = 0;
-    for (const options of attempts) {
-      if (stopRef.current) break;
-      let acc = "";
-      if (show) setOutput("");
-      const r = await engine.generate(messages, maxTokens, (chunk) => { acc += chunk; if (show) setOutput(cleanOutput(acc)); }, options);
-      tokens += r.tokens;
-      const text = cleanOutput(r.text);
-      if (!r.degenerate && text) return { text, tokens };
-      console.info("[ORVUPI AI] salida descartada por degenerada; reintento", r.text.slice(0, 160));
+    for (let round = 0; round < 2; round += 1) {
+      const current = await ensureModel();
+      if (!current) return null;
+      let tokens = 0;
+      for (const options of attempts) {
+        if (stopRef.current) return null;
+        let acc = "";
+        const r = await engine.generate(messages, maxTokens, (chunk) => { acc += chunk; setOutput(cleanOutput(acc)); }, options).catch(() => null);
+        if (!r) break;
+        tokens += r.tokens;
+        const text = cleanOutput(r.text);
+        if (!r.degenerate && text) return { text, tokens };
+        console.info("[ORVUPI AI] salida descartada por degenerada; reintento", r.text.slice(0, 120));
+      }
+      if (round === 0 && current.device === "webgpu" && support && !stopRef.current) {
+        rememberModel(support, current.id, false);
+        setStage("prepare");
+        const next = await prepare(support, undefined, [current.id]);
+        setStage("generate");
+        if (!next) return null;
+        continue;
+      }
+      return null;
     }
-    if (show) setOutput("");
-    throw new Error(model?.device === "webgpu" ? L.garbageGpu : L.garbage);
+    return null;
   }
 
   async function saveAsDocument(markdown: string, title: string, open: boolean): Promise<void> {
@@ -264,107 +328,141 @@ export function AiStudio({
     if (open) openEditorWindow("doc", id);
   }
 
-  async function exportAs(kind: "pdf" | "docx") {
-    const title = docTitle || "ORVUPI AI";
-    const doc = kind === "docx" ? markdownToDoc(output, title) : markdownToDoc(output);
+  async function exportAs(kind: "pdf" | "docx", markdown = output, titleIn = docTitle) {
+    const title = titleIn || "ORVUPI AI";
     const safe = title.replace(/[\\/:*?"<>|]+/g, "-").slice(0, 80);
     if (kind === "docx") {
       const { exportDocx } = await import("../docs/docx");
-      downloadBytes(await exportDocx(title, doc, "", ""), `${safe}.docx`, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+      downloadBytes(await exportDocx(title, markdownToDoc(markdown, title), title, "ORVUPI Work", true), `${safe}.docx`, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
     } else {
       const { exportPdf } = await import("../docs/pdf");
-      downloadBytes(await exportPdf(title, doc), `${safe}.pdf`, "application/pdf");
+      downloadBytes(await exportPdf(title, markdownToDoc(markdown)), `${safe}.pdf`, "application/pdf");
     }
+    setStatus(f(L.exported, { name: `${safe}.${kind}` }));
   }
 
-  async function run(action: AiAction) {
+  async function run(task: AiTask, opts: { request?: string; exportAs?: "docx" | "pdf"; language?: string } = {}) {
     setNote("");
-    if (phase !== "ready" || !model || !engine.isLoaded(model)) { setNote(L.needModel); return; }
     const raw = (await sourceText()).trim();
-    // Texto plano limpio: sin imágenes, data URLs, URLs larguísimas ni marcado (hacían degenerar al modelo)
     const full = cleanInput(raw);
-    if (!full) { setNote(source === "selection" ? L.emptySelection : L.needText); return; }
-    if (action === "ask" && !question.trim()) return;
+    if (!full && task !== "generate") { setNote(source === "selection" ? L.emptySelection : L.needText); return; }
     setBusy(true);
     stopRef.current = false;
-    setOutput("");
+    setOutput("", true);
     setCreated(null);
-    const title = titleFor(action);
+    const lang = opts.language ?? language;
+    const title = titleFor(task, lang);
     setDocTitle(title);
-    setStatus(L.working);
     const started = performance.now();
     let tokens = 0;
-    // El modelo solo redacta; si su salida es basura devuelve null y se usa el texto original
     const generate: Generate = async (messages, maxTokens) => {
       if (stopRef.current) return null;
-      try {
-        const r = await generateClean(action, messages, maxTokens, true);
-        tokens += r.tokens;
-        return r.text;
-      } catch {
-        return null;
-      }
+      setStage("generate");
+      const r = await generateClean(task, messages, maxTokens);
+      if (r) tokens += r.tokens;
+      return r?.text ?? null;
     };
     try {
+      if (task !== "analyze") {
+        setStage("prepare");
+        setStatus(L.stagePrepare);
+        await ensureModel();
+        if (stopRef.current) throw new Error(L.cancelled);
+      }
+      setStage("analyze");
+      setStatus(L.stageAnalyze);
+      await new Promise((r) => setTimeout(r, 0));
       const limit = CHUNK_CHARS * MAX_PARTS;
       const text = full.length > limit ? full.slice(0, limit) : full;
       const truncated = text.length < full.length;
       let result = "";
       let origin = "";
-      if (action === "summarize" || action === "explain" || action === "outline" || action === "ask") {
-        // Extracción determinista (TextRank) + redacción del modelo + comprobación contra el original
-        const r = action === "summarize"
-          ? await hybridSummary(text, generate, (n, total) => setStatus(total > 1 ? f(L.part, { n, total }) : L.working))
-          : action === "explain" ? await hybridExplain(text, generate)
-          : action === "outline" ? await hybridOutline(text, generate)
+      const originOf = (r: HybridResult) => (r.mode === "model" ? L.originModel : r.mode === "mixed" ? f(L.originMixed, { model: r.fromModel, total: r.fromModel + r.fromText }) : L.originText);
+      if (task === "analyze") {
+        result = (await hybridAnalyze(text)).markdown;
+        origin = L.originCalc;
+      } else if (task === "summarize" || task === "explain" || task === "outline" || task === "ask" || task === "questions") {
+        const question = opts.request ?? "";
+        const r = task === "summarize"
+          ? await hybridSummary(text, generate, (n, total) => setStatus(total > 1 ? f(L.part, { n, total }) : L.stageGenerate))
+          : task === "explain" ? await hybridExplain(text, generate)
+          : task === "outline" ? await hybridOutline(text, generate)
+          : task === "questions" ? await hybridQuestions(text, generate)
           : await hybridAsk(text, question, generate);
+        result = task === "ask" ? `**${question.trim()}**\n\n${r.markdown}` : r.markdown;
+        origin = originOf(r);
+        if (task === "ask") setHistory((h) => [...h, { role: "user" as const, content: question }, { role: "assistant" as const, content: "answer" in r ? String(r.answer) : r.markdown }].slice(-8));
+      } else if (task === "generate") {
+        const r = await hybridGenerate(opts.request ?? "", text, generate).catch(() => null);
+        if (!r) throw new Error(L.failed);
         result = r.markdown;
-        origin = r.mode === "model" ? L.originModel : r.mode === "mixed" ? f(L.originMixed, { model: r.fromModel, total: r.fromModel + r.fromText }) : L.originText;
-        if (action === "ask") {
-          const answer = "answer" in r ? String(r.answer) : r.markdown;
-          setHistory((h) => [...h, { role: "user" as const, content: question }, { role: "assistant" as const, content: answer }].slice(-8));
-          setQuestion("");
-        }
+        origin = L.originModel;
       } else {
-        // Reescribir y traducir: por trozos cortos, y cada trozo se comprueba (fiel, sin inventar, idioma correcto)
+        // Reescribir y traducir: por trozos cortos; cada trozo se comprueba (fiel, sin inventar, idioma correcto)
         const chunks = paragraphChunks(text);
-        const toSpanish = /español/i.test(language);
+        const toSpanish = /español/i.test(lang);
         let kept = 0;
         for (let i = 0; i < chunks.length && !stopRef.current; i += 1) {
-          if (chunks.length > 1) setStatus(f(action === "translate" ? L.partTranslate : L.partRewrite, { n: i + 1, total: chunks.length }));
+          if (chunks.length > 1) setStatus(f(task === "translate" ? L.partTranslate : L.partRewrite, { n: i + 1, total: chunks.length }));
           const chunk = chunks[i]!;
-          const messages = action === "rewrite" ? rewriteMessages(chunk) : buildMessages("translate", chunk, { language });
+          const messages = task === "rewrite" ? rewriteMessages(chunk) : buildMessages("translate", chunk, { language: lang });
           const out = await generate(messages, Math.min(900, Math.ceil(chunk.length / 2.2) + 80));
-          const ok = out !== null && (action === "rewrite" ? rewriteOk(out, chunk) : translationOk(out, chunk, toSpanish));
+          const ok = out !== null && (task === "rewrite" ? rewriteOk(out, chunk) : translationOk(out, chunk, toSpanish));
           if (!ok) kept += 1;
-          result += `${ok ? out : action === "translate" ? `*${L.untranslated}*\n\n${chunk}` : chunk}\n\n`;
+          result += `${ok ? out : task === "translate" ? `*${L.untranslated}*\n\n${chunk}` : chunk}\n\n`;
           setOutput(result.trim());
         }
-        if (kept === chunks.length) throw new Error(model?.device === "webgpu" ? L.garbageGpu : L.garbage);
-        origin = kept ? f(action === "translate" ? L.keptTranslate : L.keptRewrite, { kept, total: chunks.length }) : L.originModel;
+        if (kept === chunks.length) throw new Error(L.failed);
+        origin = kept ? f(task === "translate" ? L.keptTranslate : L.keptRewrite, { kept, total: chunks.length }) : L.originModel;
       }
+      if (stopRef.current) throw new Error(L.cancelled);
+      setStage("format");
+      setStatus(L.stageFormat);
       result = result.trim();
-      if (action === "ask") result = `**${question.trim()}**\n\n${result}`;
-      setOutput(result);
+      setOutput(result, true);
+      // El resultado principal es un documento: se crea en Mi unidad y se abre; y si se pidió, también el DOCX/PDF
+      setStage("create");
+      setStatus(L.stageCreate);
+      if (result) await saveAsDocument(result, title, !opts.exportAs);
+      if (opts.exportAs) await exportAs(opts.exportAs, result, title);
       const secs = ((performance.now() - started) / 1000).toFixed(1);
-      setStatus(`${f(L.stats, { tokens, secs })}${origin ? ` · ${origin}` : ""}${truncated ? ` · ${f(L.truncated, { used: text.length, total: full.length })}` : ""}`);
-      // El resultado principal es un documento: se crea en Mi unidad y se abre
-      if (result && !stopRef.current) await saveAsDocument(result, title, true);
+      setStage("done");
+      setStatus(`${L.stageDone} · ${f(L.stats, { secs })}${tokens ? ` · ${tokens} fragmentos` : ""}${origin ? ` · ${origin}` : ""}${truncated ? ` · ${f(L.truncated, { used: text.length, total: full.length })}` : ""}`);
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : String(error));
+      setStage(null);
+      setOutput(pendingOut.current ?? "", true);
+      setStatus(error instanceof Error && error.message ? error.message : L.failed);
     } finally {
       setBusy(false);
     }
   }
 
+  function sendRequest() {
+    const text = request.trim();
+    if (!text) return;
+    const intent = parseRequest(text);
+    if (intent.language) setLanguage(intent.language);
+    setRequest("");
+    void run(intent.action, { request: text, exportAs: intent.export, language: intent.language });
+  }
+
+  function cancel() {
+    stopRef.current = true;
+    engine.stop();
+  }
+
   const pct = progress && progress.total > 0 ? Math.min(100, Math.round((progress.loaded / progress.total) * 100)) : 0;
-  const actions: Array<[AiAction, string, string]> = [
+  const actions: Array<[AiTask, string, string]> = [
     ["summarize", L.summarize, L.summarizeHelp],
     ["explain", L.explain, L.explainHelp],
     ["rewrite", L.rewrite, L.rewriteHelp],
     ["translate", L.translate, L.translateHelp],
     ["outline", L.outline, L.outlineHelp],
+    ["questions", L.questions, L.questionsHelp],
+    ["analyze", L.analyze, L.analyzeHelp],
   ];
+  const stageLabel: Record<Stage, string> = { prepare: L.stagePrepare, analyze: L.stageAnalyze, generate: L.stageGenerate, format: L.stageFormat, create: L.stageCreate, done: L.stageDone };
+  const loadingText = preparing === "check" ? L.compiling : preparing === "retry" ? L.trying : progress && progress.total > 0 && progress.loaded < progress.total ? f(L.loading, { pct, done: formatBytes(progress.loaded, locale), total: formatBytes(progress.total, locale) }) : L.compiling;
 
   return (
     <div className={`ow-aistudio${compact ? " is-compact" : ""}`} data-ai-phase={phase}>
@@ -373,30 +471,38 @@ export function AiStudio({
         <h3 id={`ow-ai-model-${uid}`}>{L.model}</h3>
         {!support ? <p role="status">{L.checking}</p> : models.length === 0 ? <p role="alert">{L.none}</p> : (
           <>
-            {!support.f16 || !support.webgpu ? <p className="ow-ai-note">{L.noGpu}</p> : null}
-            {support.mobile ? <p className="ow-ai-note">{L.mobileNote}</p> : null}
-            <label className="ow-field">
-              <span>{L.model.replace(/^1\.\s*/, "")}</span>
-              <select value={modelId} disabled={phase === "loading" || busy} onChange={(event) => { setModelId(event.target.value); setPhase(models.find((m) => m.id === event.target.value && engine.isLoaded(m)) ? "ready" : "idle"); }}>
-                {models.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {L[item.label]} · {formatBytes(item.sizeMb * 1_000_000, locale)}{item.id === best?.id ? ` · ${L.recommended}` : ""}{cached[item.id] ? ` · ${L.cached}` : ""}
-                  </option>
-                ))}
-              </select>
-            </label>
-            {phase === "ready" && model ? <p className="ow-ai-ready" role="status">✅ {f(L.ready, { model: L[model.label] })}</p> : (
-              <button type="button" className="ow-button ow-button-primary" disabled={!model || phase === "loading"} onClick={() => void activate()}>
-                {model && cached[model.id] ? L.activate : f(L.download, { size: formatBytes((model?.sizeMb ?? 0) * 1_000_000, locale) })}
+            {phase === "ready" && model ? (
+              <p className="ow-ai-ready" role="status">✅ {L.ready} <small>· {f(L.readyDetail, { model: L[model.label] })}</small></p>
+            ) : phase === "loading" ? (
+              <div className="ow-ai-progress">
+                <div role="progressbar" aria-label={L.stagePrepare} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}><span style={{ width: `${preparing === "check" ? 100 : pct}%` }} /></div>
+                <p role="status">{loadingText}</p>
+                <button type="button" className="ow-button ow-button-ghost" onClick={() => { engine.reset(); setPhase("idle"); preparingRef.current = null; }}>{L.cancel}</button>
+              </div>
+            ) : (
+              <button type="button" className="ow-button ow-button-primary" data-ai-prepare onClick={() => void prepare()}>
+                {first && cached[first.id] ? L.prepareCached : f(L.prepare, { size: formatBytes((first?.sizeMb ?? 0) * 1_000_000, locale) })}
               </button>
             )}
-            {phase === "loading" ? (
-              <div className="ow-ai-progress">
-                <div role="progressbar" aria-label={L.model} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}><span style={{ width: `${pct}%` }} /></div>
-                <p role="status">{progress && progress.loaded >= progress.total ? L.compiling : f(L.loading, { pct, done: formatBytes(progress?.loaded ?? 0, locale), total: formatBytes(progress?.total ?? 0, locale) })}</p>
-              </div>
-            ) : null}
             {phase === "error" ? <p role="alert" className="ow-ai-error">{loadError}</p> : null}
+            <details className="ow-ai-advanced">
+              <summary>{L.advanced}</summary>
+              <p>{L.advancedHelp}</p>
+              <label className="ow-field">
+                <span>{L.pickModel}</span>
+                <select value={manualId || modelId || first?.id || ""} disabled={phase === "loading" || busy} onChange={(event) => setManualId(event.target.value)}>
+                  {models.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {L[item.label]} · {formatBytes(item.sizeMb * 1_000_000, locale)}{item.id === first?.id ? ` · ${L.recommended}` : ""}{cached[item.id] ? ` · ${L.cached}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="ow-row">
+                <button type="button" className="ow-button" disabled={phase === "loading" || busy} onClick={() => { const m = models.find((x) => x.id === (manualId || first?.id)); if (m) void prepare(support, m); }}>{L.useModel}</button>
+                <button type="button" className="ow-button ow-button-ghost" disabled={busy || phase !== "ready"} onClick={() => { engine.unload(); setPhase("idle"); setStatus(L.freed); }}>{L.free}</button>
+              </div>
+            </details>
           </>
         )}
       </section>
@@ -430,11 +536,11 @@ export function AiStudio({
       <section aria-labelledby={`ow-ai-actions-${uid}`}>
         <h3 id={`ow-ai-actions-${uid}`}>{L.actions}</h3>
         <ul className="ow-ai-grid">
-          {actions.map(([action, label, help]) => (
-            <li key={action}>
-              <button type="button" className="ow-button" disabled={busy} onClick={() => void run(action)}>{label}</button>
+          {actions.map(([task, label, help]) => (
+            <li key={task}>
+              <button type="button" className="ow-button" disabled={busy} onClick={() => void run(task)}>{label}</button>
               <p>{help}</p>
-              {action === "translate" ? (
+              {task === "translate" ? (
                 <label className="ow-field ow-ai-lang">
                   <span>{L.language}</span>
                   <select value={language} onChange={(event) => setLanguage(event.target.value)}>
@@ -445,15 +551,16 @@ export function AiStudio({
             </li>
           ))}
         </ul>
-        <form className="ow-ai-ask" onSubmit={(event) => { event.preventDefault(); void run("ask"); }}>
+        <form className="ow-ai-ask" onSubmit={(event) => { event.preventDefault(); sendRequest(); }}>
           <label className="ow-field">
-            <span>{L.ask} · {L.askHelp}</span>
-            <input value={question} placeholder={L.question} onChange={(event) => setQuestion(event.target.value)} />
+            <span>{L.request}</span>
+            <input value={request} placeholder={L.requestPlaceholder} onChange={(event) => setRequest(event.target.value)} />
           </label>
-          <button type="submit" className="ow-button" disabled={busy || !question.trim()}>{L.send}</button>
+          <button type="submit" className="ow-button" disabled={busy || !request.trim()}>{L.send}</button>
+          <p className="ow-ai-hint">{L.requestHelp}</p>
         </form>
         {history.length > 0 ? (
-          <ol className="ow-ai-chat" aria-label={L.ask}>
+          <ol className="ow-ai-chat" aria-label={L.request}>
             {history.map((message, i) => <li key={i} data-role={message.role}>{message.content}</li>)}
           </ol>
         ) : null}
@@ -463,20 +570,31 @@ export function AiStudio({
       {output || busy || status ? (
         <section aria-labelledby={`ow-ai-result-${uid}`} className="ow-ai-result">
           <h3 id={`ow-ai-result-${uid}`}>{L.result}</h3>
+          {stage ? (
+            <ol className="ow-ai-stages" aria-label={L.result}>
+              {STAGES.map((s) => {
+                const at = STAGES.indexOf(stage);
+                const me = STAGES.indexOf(s);
+                return <li key={s} data-state={me < at || stage === "done" ? "done" : me === at ? "now" : "todo"}>{stageLabel[s]}</li>;
+              })}
+            </ol>
+          ) : null}
           {output ? <p className="ow-ai-preview-label">{L.preview}{docTitle ? ` · ${docTitle}` : ""}</p> : null}
           <div className="ow-ai-output" aria-live="polite" aria-busy={busy}><Formatted markdown={output} /></div>
           <p role="status" className="ow-ai-status">{status}</p>
-          <div className="ow-row">
-            {busy ? <button type="button" className="ow-button" onClick={() => { stopRef.current = true; engine.stop(); }}>{L.stop}</button> : null}
+          <div className="ow-row ow-ai-actions-out">
+            {busy ? <button type="button" className="ow-button" data-ai-cancel onClick={cancel}>{L.cancel}</button> : null}
+            {output && !busy && onInsert ? <button type="button" className="ow-button" onClick={() => { onInsert(output, "insert"); setStatus(L.inserted); }}>{L.insert}</button> : null}
+            {output && !busy && onInsert && source === "selection" ? <button type="button" className="ow-button" onClick={() => { onInsert(output, "replace"); setStatus(L.inserted); }}>{L.replace}</button> : null}
+            {output && !busy && onInsert ? <button type="button" className="ow-button" onClick={() => { onInsert(output, "below"); setStatus(L.inserted); }}>{L.below}</button> : null}
             {output && !busy ? <button type="button" className="ow-button" onClick={() => { void navigator.clipboard?.writeText(markdownToPlain(output)).then(() => setNote(""), () => undefined); setStatus(L.copied); }}>{L.copy}</button> : null}
             {output && !busy && storage ? (
               created
                 ? <a className="ow-button ow-button-primary" href={editorPath("doc", created.id)} target="_blank" rel="noopener" data-ai-open-doc>{f(L.openCreated, { name: created.name })}</a>
                 : <button type="button" className="ow-button ow-button-primary" data-ai-open-doc onClick={() => void saveAsDocument(output, docTitle || "ORVUPI AI", true)}>{L.openDoc}</button>
             ) : null}
-            {output && !busy && onInsert ? <button type="button" className="ow-button" onClick={() => { onInsert(output); setStatus(L.inserted); }}>{L.insert}</button> : null}
-            {output && !busy ? <button type="button" className="ow-button" onClick={() => void exportAs("pdf")}>{L.downloadPdf}</button> : null}
             {output && !busy ? <button type="button" className="ow-button" onClick={() => void exportAs("docx")}>{L.downloadDocx}</button> : null}
+            {output && !busy ? <button type="button" className="ow-button" onClick={() => void exportAs("pdf")}>{L.downloadPdf}</button> : null}
           </div>
           {created && !busy ? <p className="ow-ai-created" role="status">{f(L.docCreated, { name: created.name })}</p> : null}
         </section>
@@ -495,15 +613,23 @@ function Spans({ spans }: { spans: Span[] }) {
   return <>{spans.map((s, i) => (s.bold && s.italic ? <strong key={i}><em>{s.text}</em></strong> : s.bold ? <strong key={i}>{s.text}</strong> : s.italic ? <em key={i}>{s.text}</em> : <span key={i}>{s.text}</span>))}</>;
 }
 
-/** Resultado con formato (títulos, listas, negrita), sin innerHTML. */
+/** Resultado con formato (títulos, listas, negrita, tablas), sin innerHTML. */
 function Formatted({ markdown }: { markdown: string }) {
-  const blocks: MdBlock[] = parseMarkdown(markdown);
+  const blocks: MdBlock[] = useMemo(() => parseMarkdown(markdown), [markdown]);
   return (
     <>
       {blocks.map((block, i) => {
-        if (block.type === "heading") return block.level === 1 ? <h4 key={i}><Spans spans={block.spans} /></h4> : <h5 key={i}><Spans spans={block.spans} /></h5>;
+        if (block.type === "heading") return block.level === 1 ? <h4 key={i}><Spans spans={block.spans} /></h4> : block.level === 2 ? <h5 key={i}><Spans spans={block.spans} /></h5> : <h6 key={i}><Spans spans={block.spans} /></h6>;
         if (block.type === "paragraph") return <p key={i}><Spans spans={block.spans} /></p>;
         if (block.type === "bullet") return <ul key={i}>{block.items.map((item, j) => <li key={j}><Spans spans={item} /></li>)}</ul>;
+        if (block.type === "pageBreak") return <hr key={i} className="ow-ai-pagebreak" />;
+        if (block.type === "table") {
+          return (
+            <table key={i}>
+              <tbody>{block.rows.map((row, r) => <tr key={r}>{row.map((cell, c) => (block.header && r === 0 ? <th key={c}><Spans spans={cell} /></th> : <td key={c}><Spans spans={cell} /></td>))}</tr>)}</tbody>
+            </table>
+          );
+        }
         return <ol key={i} start={block.start}>{block.items.map((item, j) => <li key={j}><Spans spans={item} /></li>)}</ol>;
       })}
     </>

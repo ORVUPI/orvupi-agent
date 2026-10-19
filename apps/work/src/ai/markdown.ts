@@ -7,7 +7,16 @@ export type MdBlock =
   | { type: "heading"; level: 1 | 2 | 3; spans: Span[] }
   | { type: "paragraph"; spans: Span[] }
   | { type: "bullet"; items: Span[][] }
-  | { type: "ordered"; items: Span[][]; start: number };
+  | { type: "ordered"; items: Span[][]; start: number }
+  | { type: "table"; rows: Span[][][]; header: boolean }
+  | { type: "pageBreak" };
+
+/** Marca de salto de página en el markdown de ORVUPI AI. */
+export const PAGE_BREAK = "<<<salto de página>>>";
+
+function tableCells(line: string): string[] {
+  return line.replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => c.trim());
+}
 
 export function parseInline(text: string): Span[] {
   const spans: Span[] = [];
@@ -32,6 +41,16 @@ export function parseMarkdown(md: string): MdBlock[] {
   };
   for (const raw of md.replace(/\r/g, "").split("\n")) {
     const line = raw.trim();
+    if (line === PAGE_BREAK || /^\\(newpage|pagebreak)$/.test(line)) { flush(); blocks.push({ type: "pageBreak" }); continue; }
+    if (/^\|.*\|$/.test(line)) {
+      flush();
+      const last = blocks.at(-1);
+      if (/^\|(\s*:?-{2,}:?\s*\|)+$/.test(line)) { if (last?.type === "table") last.header = true; continue; }
+      const cells = tableCells(line).map(parseInline);
+      if (last?.type === "table") last.rows.push(cells);
+      else blocks.push({ type: "table", rows: [cells], header: false });
+      continue;
+    }
     if (!line || /^(-{3,}|\*{3,}|_{3,})$/.test(line) || /^```/.test(line)) { flush(); continue; }
     const h = /^(#{1,6})\s+(.*)$/.exec(line);
     const b = /^[-*•+]\s+(.*)$/.exec(line);
@@ -70,6 +89,16 @@ export function markdownToNodes(md: string): JsonNode[] {
   return parseMarkdown(md).map((block): JsonNode => {
     if (block.type === "heading") return { type: "heading", attrs: { level: block.level }, content: textNodes(block.spans) };
     if (block.type === "paragraph") return { type: "paragraph", content: textNodes(block.spans) };
+    if (block.type === "pageBreak") return { type: "pageBreak" };
+    if (block.type === "table") {
+      return {
+        type: "table",
+        content: block.rows.map((row, r) => ({
+          type: "tableRow",
+          content: row.map((cell) => ({ type: block.header && r === 0 ? "tableHeader" : "tableCell", content: [{ type: "paragraph", content: textNodes(cell) }] })),
+        })),
+      };
+    }
     const items = block.items.map((item) => ({ type: "listItem", content: [{ type: "paragraph", content: textNodes(item) }] }));
     return block.type === "bullet" ? { type: "bulletList", content: items } : { type: "orderedList", attrs: { start: block.start }, content: items };
   });
@@ -87,6 +116,8 @@ export function markdownToPlain(md: string): string {
   return parseMarkdown(md).map((block) => {
     const t = (spans: Span[]) => spans.map((s) => s.text).join("");
     if (block.type === "heading" || block.type === "paragraph") return t(block.spans);
+    if (block.type === "pageBreak") return "";
+    if (block.type === "table") return block.rows.map((row) => row.map(t).join("\t")).join("\n");
     return block.items.map((item, i) => (block.type === "bullet" ? `• ${t(item)}` : `${block.start + i}. ${t(item)}`)).join("\n");
   }).join("\n\n");
 }

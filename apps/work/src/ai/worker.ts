@@ -16,14 +16,20 @@ env.fetch = (input: string | URL, init?: RequestInit) => {
   return nativeFetch(input, init);
 };
 // Motor ONNX en WebAssembly desde jsDelivr (gratuito, versión fijada al paquete instalado).
-const onnx = env.backends.onnx as { wasm?: { wasmPaths?: string } };
-if (onnx.wasm) onnx.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/dist/";
+const onnx = env.backends.onnx as { wasm?: { wasmPaths?: string; numThreads?: number } };
+if (onnx.wasm) {
+  onnx.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/dist/";
+  // Deja al menos un núcleo libre para la página: con todos los hilos ocupados la web iba a tirones
+  const cores = (self.navigator as Navigator | undefined)?.hardwareConcurrency ?? 4;
+  onnx.wasm.numThreads = Math.max(1, Math.min(4, cores - 1));
+}
 
 type Message = { role: "system" | "user" | "assistant"; content: string };
 type Incoming =
   | { type: "load"; model: string; device: "webgpu" | "wasm"; dtype: string }
   | { type: "generate"; id: number; messages: Message[]; maxTokens: number; options?: { repetitionPenalty?: number; noRepeatNgram?: number; sample?: boolean } }
-  | { type: "stop" };
+  | { type: "stop" }
+  | { type: "dispose" };
 
 let generator: TextGenerationPipeline | null = null;
 let loadedKey = "";
@@ -35,6 +41,14 @@ self.addEventListener("message", async (event: MessageEvent<Incoming>) => {
   try {
     if (msg.type === "stop") {
       stopper.interrupt();
+      return;
+    }
+    if (msg.type === "dispose") {
+      // Libera la memoria del modelo (pesos y sesión de ONNX)
+      await (generator as unknown as { dispose?: () => Promise<void> } | null)?.dispose?.();
+      generator = null;
+      loadedKey = "";
+      post({ type: "disposed" });
       return;
     }
     if (msg.type === "load") {
@@ -60,9 +74,13 @@ self.addEventListener("message", async (event: MessageEvent<Incoming>) => {
         dtype: msg.dtype as "q4f16",
       })) as TextGenerationPipeline;
       loadedKey = key;
-      // Calentamiento corto: compila el modelo para que la primera respuesta no tarde de más
-      await generator([{ role: "user", content: "Hola" }], { max_new_tokens: 1 });
-      post({ type: "ready", key });
+      post({ type: "preparing" });
+      // Prueba real y corta: compila el modelo y comprueba que genera texto (con algunas GPU y pesos fp16 los
+      // valores se desbordan, los logits salen NaN y el modelo solo escribe el token 0, que en Qwen es «!»)
+      const probe = (await generator([{ role: "user", content: "Escribe solo esta frase: El cielo es azul." }], { max_new_tokens: 8, do_sample: false })) as Array<{ generated_text: Message[] | string }>;
+      const g = probe[0]?.generated_text;
+      const probeText = Array.isArray(g) ? (g.at(-1)?.content ?? "") : String(g ?? "");
+      post({ type: "ready", key, probe: probeText });
       return;
     }
     if (msg.type === "generate") {

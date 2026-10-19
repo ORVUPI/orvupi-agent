@@ -4,7 +4,7 @@
  *  3) Cada resultado se comprueba contra el original (palabras inventadas, términos clave, idioma); lo que no se
  *     apoya en el texto se sustituye por la frase original. Así el contenido es fiel aunque el modelo sea pequeño. */
 import type { ChatMessage } from "./engine";
-import { checkFaithful, contentWords, faithfulSentences, extractSentences, keyTerms, looksSpanish, relevantSentences, splitSentences, stem, tidySentence, type Sentence } from "./extractive";
+import { checkFaithful, contentWords, faithfulSentences, fold, extractSentences, keyTerms, looksSpanish, relevantSentences, splitSentences, stem, tidySentence, type Sentence } from "./extractive";
 import { isDegenerate } from "./clean";
 
 /** Genera con el modelo; devuelve null si la salida era basura o falló. */
@@ -120,7 +120,7 @@ export async function hybridSummary(text: string, generate: Generate, onStep?: (
     fromModel += merged.fromModel;
   }
   const terms = keyTerms(text, 6);
-  const markdown = `${bullets.map((b) => `- ${b}`).join("\n")}${terms.length >= 3 ? `\n\n**Términos clave:** ${terms.join(", ")}.` : ""}`;
+  const markdown = `## Ideas principales\n${bullets.map((b) => `- ${b}`).join("\n")}${terms.length >= 3 ? `\n\n## Términos clave\n${terms.join(", ")}.` : ""}`;
   return { markdown, fromModel, fromText: bullets.length - fromModel, mode: mode(fromModel, bullets.length) };
 }
 
@@ -243,7 +243,7 @@ export async function hybridOutline(text: string, generate: Generate): Promise<H
     });
   }
   const markdown = sections
-    .map((_, i) => `**${i + 1}. ${titles[i]}**\n${points[i]!.map((p, j) => `- ${i + 1}.${j + 1}. ${p}`).join("\n")}`)
+    .map((_, i) => `## ${i + 1}. ${titles[i]}\n${points[i]!.map((p, j) => `### ${i + 1}.${j + 1}. ${p}`).join("\n")}`)
     .join("\n\n");
   return { markdown, fromModel, fromText: sections.length - fromModel, mode: mode(fromModel, sections.length) };
 }
@@ -289,4 +289,153 @@ export function rewriteMessages(text: string): ChatMessage[] {
     { role: "system", content: SYSTEM },
     { role: "user", content: `Reescribe este texto para que sea más claro y fluido, con el mismo significado y los mismos datos. No añadas información ni comentarios. Devuelve solo el texto reescrito.\n\nTexto:\n${text}` },
   ];
+}
+
+// ——— Generar preguntas ———
+
+export function questionMessages(sentences: string[]): ChatMessage[] {
+  return [
+    { role: "system", content: SYSTEM },
+    { role: "user", content: `Frases de un texto:\n${numbered(["El ciclo del agua es la circulación continua del agua entre la superficie terrestre y la atmósfera.", "El calor del sol evapora el agua de mares, ríos y lagos."])}\n\nEscribe una pregunta de estudio por frase, cuya respuesta sea esa frase. Una por línea, en el mismo orden, empezando por «¿» y terminando en «?».` },
+    { role: "assistant", content: "1. ¿Qué es el ciclo del agua?\n2. ¿Qué hace el calor del sol con el agua de mares, ríos y lagos?" },
+    { role: "user", content: `Frases de un texto:\n${numbered(sentences)}\n\nEscribe una pregunta de estudio por frase, cuya respuesta sea esa frase. Una por línea, en el mismo orden, empezando por «¿» y terminando en «?».` },
+  ];
+}
+
+/** Pregunta de reserva, construida a partir de la propia frase. */
+export function fallbackQuestion(sentence: string, terms: string[]): string {
+  const def = sentence.match(/^(?:(?:El|La|Los|Las|Un|Una)\s+)?([^,;:]{3,60}?)\s+(?:es|son|consiste en|se define como)\s/i);
+  if (def && contentWords(def[1]!).length >= 1 && contentWords(def[1]!).length <= 5) return `¿Qué ${/ son\s/i.test(sentence.slice(0, def[0].length + 1)) ? "son" : "es"} ${def[0].replace(/\s+(es|son|consiste en|se define como)\s$/i, "").replace(/^(El|La|Los|Las|Un|Una)\s/i, (m) => m.toLowerCase())}?`;
+  const year = sentence.match(/\b(1[5-9]\d\d|20\d\d)\b/);
+  if (year) return `¿Qué ocurrió en ${year[1]} según el texto?`;
+  const term = terms.find((t) => new Set(contentWords(sentence).map(stem)).has(stem(t))) ?? contentWords(sentence).sort((a, b) => b.length - a.length)[0] ?? "este punto";
+  return `¿Qué dice el texto sobre «${term}»?`;
+}
+
+export async function hybridQuestions(text: string, generate: Generate): Promise<HybridResult> {
+  const chosen = extractSentences(text, Math.min(6, summaryCount(text.length) + 1)).map((s) => tidySentence(s.text, 300));
+  const terms = keyTerms(text, 12);
+  const out = (await generate(questionMessages(chosen), 40 * chosen.length + 30)) ?? "";
+  const lines = out.split(/\n+/).map((l) => l.replace(/^\s*(\d+[.)]|[-*•])\s*/, "").replace(/\*\*/g, "").trim()).filter((l) => l.endsWith("?"));
+  let fromModel = 0;
+  const items = chosen.map((sentence, i) => {
+    const q = lines[i] ? (lines[i]!.startsWith("¿") ? lines[i]! : `¿${lines[i]!}`) : "";
+    const cw = contentWords(q).map(stem);
+    const sset = new Set(contentWords(sentence).map(stem));
+    const ok = q.length >= 8 && q.length <= 160 && cw.length >= 1 && cw.filter((w) => sset.has(w)).length / cw.length >= 0.5 && !isDegenerate(q) && checkFaithful(q, sentence, { maxNovel: 1, minCoverage: 0 }).spanish;
+    if (ok) fromModel += 1;
+    return `${i + 1}. **${ok ? q : fallbackQuestion(sentence, terms)}** *Respuesta:* ${sentence}`;
+  });
+  return { markdown: items.join("\n"), fromModel, fromText: chosen.length - fromModel, mode: mode(fromModel, chosen.length) };
+}
+
+// ——— Analizar (calculado del propio texto) ———
+
+function syllables(word: string): number {
+  return Math.max(1, (word.toLowerCase().normalize("NFD").replace(/\p{M}/gu, "").match(/[aeiouy]+/g) ?? []).length);
+}
+
+export function analyzeText(text: string): { words: number; sentences: number; paragraphs: number; minutes: number; avgSentence: number; readability: number; level: string } {
+  const all = splitSentences(text).filter((s) => !s.heading);
+  const w = text.match(/[\p{L}\p{N}]+/gu) ?? [];
+  const sylls = w.reduce((n, x) => n + syllables(x), 0);
+  const sentences = Math.max(1, all.length);
+  // Índice de Fernández Huerta (legibilidad en español): 206,84 − 0,60·sílabas/100 palabras − 1,02·palabras/frase
+  const readability = Math.round(206.84 - 0.6 * (sylls / Math.max(1, w.length)) * 100 - 1.02 * (w.length / sentences));
+  const level = readability >= 80 ? "fácil" : readability >= 60 ? "normal" : readability >= 40 ? "algo difícil" : "difícil (técnico)";
+  return { words: w.length, sentences, paragraphs: text.split(/\n\s*\n|\n/).filter((p) => p.trim()).length, minutes: Math.max(1, Math.round(w.length / 200)), avgSentence: Math.round(w.length / sentences), readability, level };
+}
+
+export async function hybridAnalyze(text: string): Promise<HybridResult> {
+  const a = analyzeText(text);
+  const terms = keyTerms(text, 8);
+  const main = extractSentences(text, 3).map((s) => tidySentence(s.text, 220));
+  const sections = sectionsOf(text);
+  const long = splitSentences(text).filter((s) => !s.heading && (s.text.match(/[\p{L}\p{N}]+/gu) ?? []).length > 40);
+  const lang = looksSpanish(text) ? "español" : "otro idioma (no parece español)";
+  const md = [
+    "## Datos del texto",
+    "| Medida | Valor |",
+    "|---|---|",
+    `| Palabras | ${a.words} |`,
+    `| Frases | ${a.sentences} |`,
+    `| Párrafos | ${a.paragraphs} |`,
+    `| Lectura | unos ${a.minutes} min |`,
+    `| Palabras por frase | ${a.avgSentence} |`,
+    `| Legibilidad (Fernández Huerta) | ${a.readability} · ${a.level} |`,
+    `| Idioma | ${lang} |`,
+    "",
+    "## Tema principal",
+    main[0] ?? "",
+    "",
+    "## Ideas principales",
+    ...main.map((s) => `- ${s}`),
+    "",
+    "## Términos clave",
+    terms.join(", ") + ".",
+    "",
+    "## Estructura",
+    ...(sections.some((s) => s.title) ? sections.map((s, i) => `${i + 1}. ${s.title || fallbackTitle(s.sentences.map((x) => x.text))}`) : [`El texto no tiene títulos: ${a.paragraphs} párrafos seguidos.`]),
+    "",
+    "## Sugerencias",
+    long.length ? `- Hay ${long.length} frase${long.length > 1 ? "s" : ""} de más de 40 palabras: dividirlas facilitaría la lectura.` : "- Las frases tienen una longitud cómoda.",
+    a.readability < 50 ? "- El texto es técnico: una explicación o un resumen ayudarán a quien no conozca el tema." : "- La dificultad del texto es adecuada para un público general.",
+    !sections.some((s) => s.title) && a.words > 600 ? "- Es largo y no tiene títulos: un esquema ayudaría a organizarlo." : "",
+  ].filter((l, i, arr) => l !== "" || arr[i - 1] !== "").join("\n");
+  return { markdown: md.trim(), fromModel: 0, fromText: 1, mode: "extractive" };
+}
+
+// ——— Generar contenido ———
+
+export function generateMessages(instruction: string, ideas: string[], terms: string[]): ChatMessage[] {
+  const base = ideas.length ? `\n\nBasa el contenido en estas ideas del documento (sin inventar datos ni cifras):\n${numbered(ideas)}\n\nTérminos: ${terms.join(", ")}.` : "";
+  return [
+    { role: "system", content: SYSTEM },
+    { role: "user", content: `${instruction.trim()}${base}\n\nEscribe en español, con frases completas. Usa títulos con «## » y listas con «- » si ayudan. Sin comentarios sobre lo que haces.` },
+  ];
+}
+
+/** Contenido nuevo pedido por el usuario. Se valida que no sea basura, ni repetitivo, ni incompleto; si se basa en
+ *  un documento, se quitan las frases con cifras que no están en él. */
+export async function hybridGenerate(instruction: string, text: string, generate: Generate): Promise<HybridResult> {
+  const ideas = text ? extractSentences(text, 5).map((s) => tidySentence(s.text, 260)) : [];
+  const terms = text ? keyTerms(text, 8) : [];
+  const out = (await generate(generateMessages(instruction, ideas, terms), 420)) ?? "";
+  if (!out || isDegenerate(out)) throw new Error("no-valid-output");
+  const srcNumbers = new Set((text.match(/\d+/g) ?? []));
+  const seen = new Set<string>();
+  const lines = out.split("\n").filter((line) => {
+    const key = fold(line.trim()).replace(/\s+/g, " ");
+    if (key.length > 20 && seen.has(key)) return false;
+    seen.add(key);
+    if (text && (line.match(/\d+/g) ?? []).some((n) => n.length > 1 && !srcNumbers.has(n))) return false;
+    return true;
+  });
+  let md = lines.join("\n").trim();
+  // Quita la última frase si quedó a medias (se acabó el límite de longitud)
+  if (!/[.!?…:»")\]|]$/.test(md)) md = md.replace(/[^.!?…\n]*$/, "").trim();
+  if (md.length < 40) throw new Error("no-valid-output");
+  return { markdown: md, fromModel: 1, fromText: 0, mode: "model" };
+}
+
+// ——— Peticiones en lenguaje natural («Resume este documento y créame un DOCX») ———
+
+export type Intent = { action: "summarize" | "explain" | "outline" | "rewrite" | "translate" | "questions" | "analyze" | "generate" | "ask"; language?: string; export?: "docx" | "pdf" };
+
+export function parseRequest(request: string): Intent {
+  const r = fold(request);
+  const exp: Intent["export"] = /\b(docx|word)\b/.test(r) ? "docx" : /\bpdf\b/.test(r) ? "pdf" : undefined;
+  const lang = r.match(/\btradu\w*\s+(?:(?:este|el)\s+(?:documento|texto)\s+)?(?:al|a)\s+(ingles|espanol|frances|aleman|italiano|portugues|catalan|chino|arabe)/);
+  const LANG: Record<string, string> = { ingles: "inglés", espanol: "español", frances: "francés", aleman: "alemán", italiano: "italiano", portugues: "portugués", catalan: "catalán", chino: "chino", arabe: "árabe" };
+  let action: Intent["action"] = "ask";
+  if (/\btradu/.test(r)) action = "translate";
+  else if (/\bresum|\bresumen|\bsintetiz/.test(r)) action = "summarize";
+  else if (/\besquema|\bindice\b|\bestructura en apartados/.test(r)) action = "outline";
+  else if (/\bpreguntas\b|\bcuestionario|\btipo test|\bexamen/.test(r)) action = "questions";
+  else if (/\banaliz|\banalisis|\blegibilidad|\bestadistic/.test(r)) action = "analyze";
+  else if (/\bexplic/.test(r)) action = "explain";
+  else if (/\breescrib|\bmejora (la )?redaccion|\bcorrige|\breformula/.test(r)) action = "rewrite";
+  else if (/^(escribe|redacta|genera|crea|elabora|haz|hazme|creame|escribeme|redactame)\b/.test(r.trim()) && !/^(crea|creame|haz|hazme)\s+(un|el)\s+(docx|word|pdf)\b/.test(r.trim())) action = "generate";
+  else if (exp && /\b(este|el) (documento|texto)\b/.test(r)) action = "summarize";
+  return { action, language: lang ? LANG[lang[1]!] : undefined, export: exp };
 }
