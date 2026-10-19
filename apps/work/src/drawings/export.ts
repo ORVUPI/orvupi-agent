@@ -1,4 +1,4 @@
-import type { SlideItem } from "../slides/model";
+import type { SlideItem } from "./items";
 
 function escapeXml(value: string): string {
   return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
