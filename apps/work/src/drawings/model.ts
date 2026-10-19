@@ -1,7 +1,7 @@
 import { decodeUtf8, encodeUtf8 } from "../security/bytes";
 import { WorkError } from "../security/errors";
 import { sanitizeName } from "../security/names";
-import { itemOf, type SlideItem } from "../slides/model";
+import { itemOf, type SlideItem } from "./items";
 
 export type DrawingFile = {
   format: "orvupi-drawing";
