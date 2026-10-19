@@ -2,6 +2,7 @@
 /** ORVUPI AI: el modelo corre aquí, en un Web Worker del propio navegador. El texto nunca sale del dispositivo;
  *  solo se descargan los pesos del modelo (Hugging Face) y el motor WASM la primera vez, y quedan en caché. */
 import { ModelDownloadError, robustFetch } from "./download";
+import { isDegenerate } from "./clean";
 import { env, InterruptableStoppingCriteria, pipeline, TextStreamer, type TextGenerationPipeline } from "@huggingface/transformers";
 
 env.allowLocalModels = false;
@@ -21,7 +22,7 @@ if (onnx.wasm) onnx.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-w
 type Message = { role: "system" | "user" | "assistant"; content: string };
 type Incoming =
   | { type: "load"; model: string; device: "webgpu" | "wasm"; dtype: string }
-  | { type: "generate"; id: number; messages: Message[]; maxTokens: number }
+  | { type: "generate"; id: number; messages: Message[]; maxTokens: number; options?: { repetitionPenalty?: number; noRepeatNgram?: number; sample?: boolean } }
   | { type: "stop" };
 
 let generator: TextGenerationPipeline | null = null;
@@ -69,24 +70,34 @@ self.addEventListener("message", async (event: MessageEvent<Incoming>) => {
       stopper.reset();
       const started = performance.now();
       let tokens = 0;
+      let acc = "";
+      let degenerate = false;
       const streamer = new TextStreamer(generator.tokenizer, {
         skip_prompt: true,
         skip_special_tokens: true,
         callback_function: (text: string) => {
           tokens += 1;
+          acc += text;
+          // Corta en cuanto la salida degenera («![](!!!!…», bucles): no tiene sentido seguir generando basura
+          if (!degenerate && acc.length > 24 && isDegenerate(acc.slice(-160)) && /!\[|([^\p{L}\p{N}\s])\1{7,}|(.{6,}?)\2{4,}/u.test(acc.slice(-160))) {
+            degenerate = true;
+            stopper.interrupt();
+          }
           post({ type: "token", id: msg.id, text });
         },
       });
       const output = (await generator(msg.messages, {
         max_new_tokens: msg.maxTokens,
-        do_sample: false,
-        repetition_penalty: 1.15,
+        do_sample: Boolean(msg.options?.sample),
+        ...(msg.options?.sample ? { temperature: 0.4, top_p: 0.9 } : {}),
+        repetition_penalty: msg.options?.repetitionPenalty ?? 1.2,
+        no_repeat_ngram_size: msg.options?.noRepeatNgram ?? 0,
         streamer,
         stopping_criteria: stopper,
       })) as Array<{ generated_text: Message[] | string }>;
       const last = output[0]?.generated_text;
       const text = Array.isArray(last) ? (last.at(-1)?.content ?? "") : String(last ?? "");
-      post({ type: "done", id: msg.id, text, tokens, ms: Math.round(performance.now() - started) });
+      post({ type: "done", id: msg.id, text, tokens, degenerate: degenerate || isDegenerate(text), ms: Math.round(performance.now() - started) });
     }
   } catch (error) {
     post({ type: "error", id: (msg as { id?: number }).id, ...describeError(error, msg.type === "load" ? msg.device : undefined) });

@@ -1,5 +1,13 @@
 # Registro de cambios
 
+## 0.8.8 — 2026-10-19
+
+ORVUPI AI: resultados limpios y entregados como documento.
+
+- Entrada limpia: antes de enviar el texto al modelo se quitan imágenes (markdown y HTML), data URLs, `blob:`, URLs largas (se quedan en el dominio), marcado HTML, bloques base64 y rachas de símbolos. Los textos largos siguen yendo por partes.
+- Salida controlada: se detecta la salida degenerada («![](![](!!!!…», rachas del mismo carácter, bucles de palabras, pocas letras) y se corta la generación en cuanto aparece; se reintenta una vez con más penalización de repetición y `no_repeat_ngram_size`, y si vuelve a fallar se muestra un mensaje claro (en WebGPU recomienda el modelo sin GPU, porque «!!!!» es el síntoma de NaN en fp16) en lugar de la basura.
+- El resultado se muestra con formato (títulos, listas, negrita, cursiva) como vista previa.
+- Cada función (resumir, explicar, preguntar, reescribir, traducir, esquema) entrega el resultado como documento: al terminar se crea en Mi unidad un documento de ORVUPI Work con formato, titulado con la función y el nombre del origen, y se abre. Botones: Copiar, Abrir el documento, Insertar en el documento (dentro de Docs, con formato), Descargar PDF y Descargar Word (.docx).
 ## 0.8.6 — 2026-10-19
 
 Imágenes en Docs (pegadas, insertadas o importadas), sin fallos al moverlas ni al cambiarles el tamaño.

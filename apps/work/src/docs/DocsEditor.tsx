@@ -13,6 +13,7 @@ import type { FileRecord, StorageService } from "../storage/types";
 import { Button, ErrorState, Input } from "../ui/kit";
 import { DocsSurface } from "./DocsSurface";
 import { AiStudio } from "../ai/AiStudio";
+import { markdownToNodes } from "../ai/markdown";
 import { combinedContent, tabsOf, type DocTab } from "./tabs";
 import { tabFromHash } from "./DocTabs";
 import { CommentsRail } from "./CommentsRail";
@@ -631,7 +632,7 @@ export function DocsEditor({
             }}
             onInsert={(text) => {
               if (!editor) return;
-              const paragraphs = text.split(/\n+/).map((line) => line.trim()).filter(Boolean).map((line) => ({ type: "paragraph", content: [{ type: "text", text: line }] }));
+              const paragraphs = markdownToNodes(text);
               const { to } = editor.state.selection;
               editor.chain().focus().insertContentAt(to, paragraphs).run();
             }}
