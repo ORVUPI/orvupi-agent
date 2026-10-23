@@ -203,6 +203,9 @@ def main():
     rewrites()
     (REPO / "i18n/web/missing.json").write_text(json.dumps(report, ensure_ascii=False, indent=1))
     print({k: len(v) for k, v in report.items()}, len(PAGES), "páginas")
+    # ?v=<hash> en /assets/*.js|css para que el navegador no use versiones viejas en caché
+    import subprocess
+    subprocess.run(["node", str(ROOT / "tools/asset-versions.mjs")], check=True)
 
 if __name__ == "__main__":
     main()
