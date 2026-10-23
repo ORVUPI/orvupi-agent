@@ -11,6 +11,7 @@ Docs: un DOCX importado se ve como el original, sin cortes ni desplazadores.
 - Imágenes a su tamaño real (EMU → px), limitadas al ancho útil sin deformarse; en una celda, al ancho de la celda.
 - Símbolos: w:sym y texto en Symbol/Wingdings (•, ▪, ✓, ➢, ≤, ±, →…) pasan al carácter Unicode real; «·» se conserva.
 - Las fuentes que el navegador no tiene (Aptos, Calibri, Play, Cambria…) se muestran con su equivalente (Arial, Georgia, Times New Roman…) en lugar de caer en una serif.
+- La hoja vuelve a quedar centrada al cambiar el zoom (p. ej. 75 %): se mide de nuevo al cambiar el zoom en lugar de esperar al ResizeObserver.
 - Prueba nueva docx-094 (Chromium, Firefox y WebKit, escritorio y móvil): nada más ancho que la hoja, ningún desplazador ni celda recortada, todas las viñetas y símbolos y el mismo texto que el original; con ORVUPI_DOCX se repite con un documento real.
 
 ## 0.9.2 — 2026-10-19

@@ -95,6 +95,10 @@ test("la hoja queda centrada (con y sin panel de pestañas y con zoom)", async (
       if (await zoom.isVisible().catch(() => false)) {
         await zoom.click();
         await doc.getByRole("menuitem", { name: "75%" }).or(doc.getByRole("option", { name: "75%" })).first().click().catch(() => undefined);
+        await doc.waitForTimeout(300);
+        const z = await center();
+        // Con zoom, la hoja (más estrecha) sigue centrada en todo el ancho.
+        if (!z.narrow) expect(Math.abs(z.left - z.right)).toBeLessThanOrEqual(40);
         await check();
       }
     }

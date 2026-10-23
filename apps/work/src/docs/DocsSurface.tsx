@@ -436,6 +436,11 @@ export function DocsSurface({
   }, []);
   const narrow = phone;
   const shownZoom = narrow ? 1 : zoom / 100;
+  // El zoom CSS no cambia el tamaño propio de la hoja (ResizeObserver no avisa): se vuelve a medir para centrarla.
+  useLayoutEffect(() => {
+    const node = sheetRef.current;
+    if (node) setSheetW(Math.round(node.getBoundingClientRect().width));
+  }, [shownZoom]);
   const point = currentPoint(editor);
   const font = plainFont(editor?.getAttributes("textStyle")?.fontFamily);
   const style = (["1", "2", "3", "4", "5", "6"] as const).find((level) => editor?.isActive("heading", { level: Number(level) })) ?? "0";
