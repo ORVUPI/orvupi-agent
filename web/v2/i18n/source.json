@@ -25,9 +25,11 @@
   "2026-10-11 · Risk footer and image label removed",
   "2026-10-11 · Seguridad de Ethereum y BNB Chain",
   "2026-10-11 · Signal wording on the empty card, the report, and the home page",
+  "23 October 2026",
   "2fS12s…miWvX",
   "4XRbnGgay2XpqJ1F5jGPQ9pRh1JSX12RPCPJASMJU5JW",
   "50,000,000 (5%) locked in the contract, reserved for the pool creator (",
+  "500 images organised in 15 collections.",
   "5vJmAfBjsS6wEHcgQGNm69P3fbyPmUU1dVfE5j1rraVZ",
   "77RKUq…wypD",
   ": the account was read. An inferred zero is not a missing fact. The 2026-10-16 cards (USDC, USDT, and three copies) are not Pump.fun curves: there, progress stays “not applicable”.",
@@ -42,6 +44,7 @@
   "A census would be the list of every account. These readings are not that: if a fact is missing, it is not filled in with a zero.",
   "A channel in the repository for a repeatable bug, confusing text, a translation, or an accessibility check. Any Solana token can be the example of the bug. The page does not ask for an account and does not store data. It is on /contribuir.",
   "A closed permission describes that permission. If the address is different, it is not the registry one.",
+  "A complete slide editor with the ORVUPI identity.",
   "A copy shows “possible impersonation”. Does that prove someone’s intent?",
   "A dated reading of an address. It does not update itself and it is not an audit.",
   "A derived account. If its program is the curve program, public fields are read. If there is no curve, those amounts are not filled in with zero.",
@@ -140,6 +143,7 @@
   "Choose a template, enter a name, title and body, select a background and octopus or your own logo, choose a format and download the PNG. Sharing opens the system menu; it does not post automatically.",
   "Choose the network. When the page opens, the network is Solana. On Base the reading is also read-only: no wallet and no signature. Each card stores the network and the address.",
   "Choose your corner.",
+  "Choose your language with the 🌐 selector at the top.",
   "Classic curve progress",
   "Classic curve progress is an inferred calculation: it starts from the documented initial real curve amount,",
   "Clear",
@@ -148,7 +152,9 @@
   "Closed permission = nobody can create more units or freeze accounts. Copies can have it too.",
   "Closed: that permission is not assigned in this reading. It does not show the project is legitimate.",
   "Collection",
+  "Collection filters and search, on mobile too.",
   "Collections",
+  "Coming soon",
   "Community",
   "Community rules",
   "Compare queries",
@@ -265,6 +271,7 @@
   "Extra data on a Token-2022 mint, after the base account. Classic SPL Token does not have them: the status stays not applicable.",
   "Fact",
   "Failed query",
+  "Faster responses.",
   "Fee",
   "Find your meme",
   "Find your tool",
@@ -420,6 +427,7 @@
   "Library and notebook.",
   "Library for any token",
   "Limits and risks",
+  "Live",
   "Live reading of public blockchain data. It is not an audit, a recommendation, or an endorsement. ORVUPI has no relationship with this token. No signals showing does not mean everything was checked.",
   "Local read-only notebook for any Solana token.",
   "Local resources, contrast, and named controls.",
@@ -434,6 +442,7 @@
   "Market cap is not the curve’s liquidity. This guide does not calculate market cap, fees, or a swap.",
   "Market cap is not the curve’s liquidity. This mission does not calculate market cap, fees, or a swap. A progress figure is not an instruction.",
   "Meet the community",
+  "Meme gallery: 500 images",
   "Memes",
   "Merged into main. The page is at /verify.",
   "Merged on 2026-10-09. English is still waiting for human review.",
@@ -468,6 +477,7 @@
   "No 2026-10-16 card has the account sample: the service returned HTTP 429. Even if it had, it would be at most 20 accounts: it is not a census.",
   "No account or mandatory wallet connection. Language, Lab progress, the Studio draft, and the notebook, if they are used, stay in this browser.",
   "No form. It links to GitHub.",
+  "No freezes on mobile when summarising text.",
   "No mint authority: nobody can mint more",
   "No network.",
   "No such signal",
@@ -500,6 +510,8 @@
   "ORVUPI Studio",
   "ORVUPI Verify",
   "ORVUPI Verify, read-only MVP",
+  "ORVUPI Work 0.9.4: faithful Word import",
+  "ORVUPI Work assistant 0.9.6",
   "ORVUPI assets are the default option. Your token logo stays in this browser and is not sent to any server.",
   "ORVUPI brings community, humour and creativity together with tools for exploring Web3. The study describes a future vision: we will grow from what people use and find valuable.",
   "ORVUPI distinguishes checked facts, points needing attention and missing data. Unknown does not mean zero. Check the date, network and address before comparing readings. Lab examples are educational exercises; their labels do not identify an ORVUPI contract.",
@@ -529,6 +541,7 @@
   "ORVUPI · Studio rules and provenance",
   "ORVUPI · Token",
   "ORVUPI · Wave",
+  "ORVUPI · What's new",
   "Official address (CA)",
   "Official channels",
   "Official contact: X",
@@ -572,6 +585,7 @@
   "Only under /lab/, network first, without the homepage or notice pages.",
   "Only use a logo you have the right to use.",
   "Only what appears on the official channels listed on the Security page is official.",
+  "Open ORVUPI Work",
   "Open a change proposal",
   "Open master avatar",
   "Open the notebook",
@@ -613,9 +627,11 @@
   "Pixel",
   "Possible impersonation",
   "Possible impersonation · risk",
+  "PowerPoint export with editable charts and video.",
   "Precisely because the name is the same, you need to check the address: that is the signal.",
   "Preparing the image…",
   "Preparing the preview.",
+  "Presentations 0.9.5",
   "Press and hold the image and choose Save to Photos.",
   "Privacy",
   "Privacy and contact",
@@ -660,6 +676,7 @@
   "Record review date",
   "Recorded as a proposal. Not started.",
   "Records",
+  "Released changes and what comes next. Update of 23 October 2026.",
   "Reload",
   "Remove logo",
   "Report",
@@ -702,6 +719,7 @@
   "Some words or data cannot be used. Change the text to download.",
   "Source of the steps and the explanations.",
   "Sources, dates, and limits of what this website claims.",
+  "Spanish, English, Brazilian Portuguese, Japanese and Korean.",
   "Square 1:1",
   "Stablecoin",
   "Stars",
@@ -729,8 +747,11 @@
   "Suggest an improvement",
   "Suggest an improvement or report a tool issue through GitHub.",
   "Supply is how many tokens exist. It is read from each address&#39;s mint, not from the name.",
+  "Symbols such as ●, margins, borders and images are preserved.",
   "THE ECOSYSTEM WE ALREADY HAVE",
   "THE PROJECT DIRECTION",
+  "Tables fit the page width, with no horizontal scroll bar.",
+  "Tablet-friendly layout.",
   "Task",
   "Tasks in this record",
   "Team (vesting)",
@@ -739,6 +760,7 @@
   "Template to copy",
   "Templates",
   "Terms used by the mission.",
+  "Tested in Chrome, Firefox and Safari, on desktop and mobile.",
   "Tests in the repository",
   "Text",
   "That button does not make a new query. It shows the reading-unavailable notice. The address you typed stays in the field and that button does not save it.",
@@ -829,6 +851,7 @@
   "The virtual curve amount is not the withdrawable balance. Adding it to the real curve amount does not create one available pool.",
   "The virtual field of the same account. It is used by the curve calculation and it is not the real amount.",
   "The virtual_token_reserves or virtual_quote_reserves field. The card keeps it apart from the real curve amount. On the classic curve, and with the default quote, the quote amount is in lamports.",
+  "The website and Work in 5 languages",
   "The website column becomes yes. Curve reading is on /pares since 2026-10-10.",
   "The website column becomes yes. The example is on /comparar since 2026-10-10.",
   "The website does not receive it.",
@@ -907,11 +930,13 @@
   "Version: the package.json number or the date of the page.",
   "Vertical 9:16",
   "View ORVUPI on Raydium",
+  "View the gallery",
   "Virtual amount of SOL",
   "Virtual amount of the token currency",
   "Virtual curve amount",
   "Vision",
   "Visual asset generated for ORVUPI. No CC0 or MIT image license or exclusivity is asserted.",
+  "WHAT'S NEW",
   "We are ORVUPI. A curious octopus, a community to build and tools to explore Web3. Come learn, create and share.",
   "We do not promise returns, a price, an exchange listing or a public sale.",
   "We never ask for money, funds, private keys or seed phrases by email or direct message.",
@@ -939,6 +964,8 @@
   "What the card names is missing. The rest, if it was read, still stands.",
   "What to include",
   "What you write is stored only in this browser. Do not write keys, seed phrases, or personal data. Clear deletes it. To read the chain, your browser queries a public Solana service (by default solana-rpc.publicnode.com, or the one you choose), which receives the address and your IP.",
+  "What's new",
+  "What's new at ORVUPI.",
   "When a fact is missing",
   "When the curve is complete, that step no longer fits. If there is no curve, there are no amounts to show. Here the amounts are round numbers, and they are an example.",
   "When you tap, your browser sends the addresses being checked (the marked ones, or all of them if none are marked) to the Solana public nodes solana-rpc.publicnode.com and api.mainnet-beta.solana.com, which also see your IP. Nothing new is saved until you tap \"Save\".",
@@ -1013,6 +1040,7 @@
   "ORVUPI · Comunidad",
   "ORVUPI · Galería de memes",
   "ORVUPI · Identidad y recursos",
+  "ORVUPI · Novedades",
   "ORVUPI · Ocho brazos. Mil ideas.",
   "ORVUPI · Reglas y procedencia de Studio",
   "ORVUPI · Token",
@@ -1023,87 +1051,91 @@
  ],
  "pages": {
   "404.html": {
-   "segments_en": 34,
+   "segments_en": 36,
    "title": "ORVUPI · Página no encontrada"
   },
   "aprender/index.html": {
-   "segments_en": 131,
+   "segments_en": 133,
    "title": "ORVUPI · Aprender"
   },
   "community/index.html": {
-   "segments_en": 39,
+   "segments_en": 41,
    "title": "ORVUPI · Comunidad"
   },
   "comparar/index.html": {
-   "segments_en": 44,
+   "segments_en": 46,
    "title": "ORVUPI · Ejemplo de una curva"
   },
   "contribuir/index.html": {
-   "segments_en": 68,
+   "segments_en": 70,
    "title": "ORVUPI · Contribuir"
   },
   "cuaderno/index.html": {
-   "segments_en": 63,
+   "segments_en": 65,
    "title": "ORVUPI · Cuaderno"
   },
   "index.html": {
-   "segments_en": 76,
+   "segments_en": 78,
    "title": "ORVUPI · Ocho brazos. Mil ideas."
   },
   "lab/index.html": {
-   "segments_en": 517,
+   "segments_en": 519,
    "title": "ORVUPI Lab"
   },
   "legal/index.html": {
-   "segments_en": 33,
+   "segments_en": 35,
    "title": "ORVUPI · Legal"
   },
   "marca/index.html": {
-   "segments_en": 50,
+   "segments_en": 52,
    "title": "ORVUPI · Identidad y recursos"
   },
   "memes/index.html": {
-   "segments_en": 35,
+   "segments_en": 37,
    "title": "ORVUPI · Galería de memes"
   },
   "methodology/index.html": {
-   "segments_en": 32,
+   "segments_en": 34,
    "title": "ORVUPI · Metodología"
   },
+  "novedades/index.html": {
+   "segments_en": 60,
+   "title": "ORVUPI · Novedades"
+  },
   "pares/index.html": {
-   "segments_en": 41,
+   "segments_en": 43,
    "title": "ORVUPI · Lectura de la curva"
   },
   "risks/index.html": {
-   "segments_en": 41,
+   "segments_en": 43,
    "title": "ORVUPI · Riesgos"
   },
   "security/index.html": {
-   "segments_en": 52,
+   "segments_en": 54,
    "title": "ORVUPI · Seguridad"
   },
   "studio/index.html": {
-   "segments_en": 74,
+   "segments_en": 76,
    "title": "ORVUPI · Studio"
   },
   "studio/reglas/index.html": {
-   "segments_en": 79,
+   "segments_en": 81,
    "title": "ORVUPI · Reglas y procedencia de Studio"
   },
   "tablero/index.html": {
-   "segments_en": 383,
+   "segments_en": 385,
    "title": "ORVUPI · Tablero"
   },
   "token/index.html": {
-   "segments_en": 64,
+   "segments_en": 66,
    "title": "ORVUPI · Token"
   },
   "verify/index.html": {
-   "segments_en": 136,
+   "segments_en": 138,
    "title": "ORVUPI Verify"
   },
   "vision/index.html": {
-   "segments_en": 49,
+   "segments_en": 51,
    "title": "ORVUPI · Visión del proyecto"
   }
  },
@@ -1135,7 +1167,6 @@
   "Delete local progress",
   "Delete the local progress of this lesson in this browser?",
   "Delete the local progress of this mission in this browser?",
-  "Download PNG ↓",
   "Earlier check",
   "English",
   "Extensions",
@@ -1191,7 +1222,6 @@
   "Result",
   "Retry",
   "Saved in this browser's Notebook ·",
-  "Selected collection",
   "Snapshot: it may have changed.",
   "Someone can close this token.",
   "Someone can move tokens out of other accounts.",
