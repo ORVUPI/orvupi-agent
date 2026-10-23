@@ -1,6 +1,6 @@
 {
  "pt-BR": {
-  "manual": 222,
+  "manual": 247,
   "auto": 1643,
   "fallback_en": [
    "Legal reviews this fixed educational example. Any version with real data will need a new review. Still absent from this website.",
@@ -16,6 +16,7 @@
    "ORVUPI · Curve example",
    "ORVUPI · Curve reading",
    "ORVUPI · Eight arms. Endless ideas.",
+   "ORVUPI · What's new",
    "On these cards, the Pump.fun curve is a derived account. If the owner is the curve program, Verify reads public fields: virtual and real curve amounts, the supply on that account, and whether",
    "Only the channels on this list are official. If an account, website or address is not listed here, treat it as unofficial until you check it on this website.",
    "SHA-256 of token.json: 6b21145b7482cc649bc687e1a7b7794a3b946fd83c995c1abd6c66ea556b5f0c. securityNotice is still the 2026-10-05 text.",
@@ -38,9 +39,10 @@
   ]
  },
  "ja": {
-  "manual": 222,
+  "manual": 247,
   "auto": 1671,
   "fallback_en": [
+   "ORVUPI · What's new",
    "On USDC, on 2026-10-16, the metadata account was queried. The query was answered and the link (URI) is empty: that fact is not there.",
    "Only the channels on this list are official. If an account, website or address is not listed here, treat it as unofficial until you check it on this website.",
    "SHA-256 of token.json: 6b21145b7482cc649bc687e1a7b7794a3b946fd83c995c1abd6c66ea556b5f0c. securityNotice is still the 2026-10-05 text.",
@@ -48,9 +50,10 @@
   ]
  },
  "ko": {
-  "manual": 222,
+  "manual": 247,
   "auto": 1670,
   "fallback_en": [
+   "ORVUPI · What's new",
    "Only the channels on this list are official. If an account, website or address is not listed here, treat it as unofficial until you check it on this website.",
    "SHA-256 of token.json: 6b21145b7482cc649bc687e1a7b7794a3b946fd83c995c1abd6c66ea556b5f0c. securityNotice is still the 2026-10-05 text.",
    "The only example that uses a real token is the USDC address on Solana:",
