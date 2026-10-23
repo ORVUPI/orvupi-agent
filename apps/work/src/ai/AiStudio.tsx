@@ -327,9 +327,13 @@ export function AiStudio({
     const id = createId();
     const file = createOrvdoc({ id, title, content: markdownToDoc(markdown) });
     await storage.saveFile({ id, name: title, kind: "doc", mime: "application/vnd.orvupi.doc+json", bytes: serializeOrvdoc(file), folderId: null });
-    publishFilesChanged();
+    // Cada paso en su propia tarea: guardar, avisar a la lista de archivos y abrir la ventana no se suman en una sola tarea larga
+    const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
+    await tick();
     setCreated({ id, name: title });
     if (open) openEditorWindow("doc", id);
+    await tick();
+    publishFilesChanged();
   }
 
   async function exportAs(kind: "pdf" | "docx", markdown = output, titleIn = docTitle) {

@@ -1,5 +1,11 @@
 # Registro de cambios
 
+## 0.9.6 — 2026-10-23
+
+Asistente: el final de «Resumir» ya no bloquea la página.
+
+- Al terminar de generar, guardar el documento, abrirlo y avisar al resto de la app se hacen en pasos separados, sin tareas largas en el hilo principal (medido en móvil con CPU ×4: 0 tareas largas).
+- El panel del asistente aísla su maquetación, de modo que los cambios en él no recalculan el resto de la pantalla.
 ## 0.9.5 — 2026-10-23
 
 Presentaciones: formato dentro del texto, PowerPoint con gráficos y vídeo reales, diseño propio para tableta y auditoría completa.

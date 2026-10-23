@@ -279,6 +279,8 @@ main { padding: 24px; }
   overflow: auto;
   position: sticky;
   top: 0;
+  /* Los cambios del panel (etapas, resultado) no obligan a recalcular el resto de la página */
+  contain: layout paint style;
 }
 .ow-ai header { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
 .ow-ai-actions { list-style: none; padding: 0; margin: 0 0 12px; display: grid; gap: 8px; }
