@@ -148,6 +148,7 @@
   "Closed permission = nobody can create more units or freeze accounts. Copies can have it too.": "닫된 권한 = 아무도 더 많은 단위 또는 동결 계정을 만들 수 없습니다. 경찰은 그것을 역시 가질 수 있습니다.",
   "Closed: that permission is not assigned in this reading. It does not show the project is legitimate.": "닫히는: 이 독서에서 할당되지 않는. 이 프로젝트는 합법적으로 표시되지 않습니다.",
   "Collection": "컬렉션",
+  "Collections": "컬렉션",
   "Community": "커뮤니티",
   "Community rules": "커뮤니티 규칙",
   "Compare queries": "queries 비교",
@@ -252,7 +253,7 @@
   "Explanation, translation, or accessibility.": "영어, 중국어, 한국어",
   "Explore AI assistance according to usefulness, scope and testing.": ", 범위 및 테스트를 통해 AI 도움을 얻고 있습니다.",
   "Explore a fixed educational example to understand how a curve is interpreted.": "곡선이 해석되는 방법을 이해할 수있는 고정 된 교육 예제를 탐색하십시오.",
-  "Explore all 250 images": "모든 250 이미지를 탐험",
+  "Explore all 500 images": "이미지 500개 모두 보기",
   "Explore everything": "전체 둘러보기",
   "Explore the construction record and distinguish ideas, code and releases.": "건설 기록 및 아이디어, 코드 및 출시",
   "Explore the images": "이미지 살펴보기",
@@ -317,6 +318,7 @@
   "I set it to zero.": "나는 그것을 0으로 설정한다.",
   "I throw out the whole card.": "나는 전체 카드를 던졌습니다.",
   "I treat it as a failed query.": "나는 실패한 쿼리로 그것을 대우한다.",
+  "IMAGES": "이미지",
   "Identify a token": "토큰 식별",
   "Identify the token": "토큰 식별",
   "If a fact is missing, it is not filled in with zero. No data is invented.": "사실이 누락되면 0으로 채워지지 않습니다. 데이터가 발명되지 않습니다.",
@@ -999,11 +1001,7 @@
   "‘Holder’ (industry term)": "‘Holder’ (industry term)",
   "‘Holder’ (industry term): an account that holds tokens. It implies no rights and no investor community.": "‘Holder’ (industry term): an account that holds tokens. It implies no rights and no investor community.",
   "≈ 200,000,000 (≈ 20%) when 30 SOL is reached, migration to Raydium CPMM": "≈ 200,000,000 (≈ 20 %) 30 SOL이 도달 할 때, Raydium CPMM로 이전",
-  "≈ 44.37 M ORVUPI (≈ 4.44%) from the initial buy, separate from the 5% vesting": "≈ 44.37 M ORVUPI (≈ 4.44%) 초기 구매시 5% vesting 별도",
-  "Collections": "컬렉션",
-  "Explore all 500 images": "이미지 500개 모두 보기",
-  "IMAGES": "이미지",
-  "Language": "언어"
+  "≈ 44.37 M ORVUPI (≈ 4.44%) from the initial buy, separate from the 5% vesting": "≈ 44.37 M ORVUPI (≈ 4.44%) 초기 구매시 5% vesting 별도"
  },
  "attrs": {
   "Avatar maestro ORVUPI": "ORVUPI 마스터 아바타",

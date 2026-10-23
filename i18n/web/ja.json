@@ -148,6 +148,7 @@
   "Closed permission = nobody can create more units or freeze accounts. Copies can have it too.": "クローズドパーミッション = 誰も複数のユニットを作成したり、アカウントを凍結したりすることはできません。 コピスも持たせます。",
   "Closed: that permission is not assigned in this reading. It does not show the project is legitimate.": "休館日:この読書に許可が割り当てられていないこと。 プロジェクトが正当であるわけではありません。",
   "Collection": "コレクション",
+  "Collections": "コレクション",
   "Community": "コミュニティ",
   "Community rules": "コミュニティルール",
   "Compare queries": "クエリの比較",
@@ -252,7 +253,7 @@
   "Explanation, translation, or accessibility.": "説明、翻訳、またはアクセシビリティ。",
   "Explore AI assistance according to usefulness, scope and testing.": "有用性、スコープ、テストに応じてAIのヘルプをご覧ください。",
   "Explore a fixed educational example to understand how a curve is interpreted.": "カーブがどのように解釈されるかを理解するために、固定された教育例をご覧ください。",
-  "Explore all 250 images": "250枚の画像をすべて見る",
+  "Explore all 500 images": "500枚すべての画像を見る",
   "Explore everything": "すべて見る",
   "Explore the construction record and distinguish ideas, code and releases.": "建設記録を探索し、アイデア、コード、リリースを区別します。",
   "Explore the images": "画像を探索する",
@@ -317,6 +318,7 @@
   "I set it to zero.": "ゼロに設定します。",
   "I throw out the whole card.": "カード全体を捨てる。",
   "I treat it as a failed query.": "失敗したクエリとして扱います。",
+  "IMAGES": "画像",
   "Identify a token": "トークンを識別する",
   "Identify the token": "トークンを識別する",
   "If a fact is missing, it is not filled in with zero. No data is invented.": "事実が見つからない場合、ゼロで満たされていない。 データが発明されていない。",
@@ -999,11 +1001,7 @@
   "‘Holder’ (industry term)": "「長老」(産業用語)",
   "‘Holder’ (industry term): an account that holds tokens. It implies no rights and no investor community.": "原単位は、その土地の土地の土地の土地の土地の土地の土地です。 権利や投資者コミュニティを一切使用しません。",
   "≈ 200,000,000 (≈ 20%) when 30 SOL is reached, migration to Raydium CPMM": "≈200,000,000 (≈ 20%) 30 SOLに達すると、Raydium CPMMへの移行",
-  "≈ 44.37 M ORVUPI (≈ 4.44%) from the initial buy, separate from the 5% vesting": "≈ 44.37 M ORVUPI (≈ 4.44%) 初期購入から、5% の vesting から分離",
-  "Collections": "コレクション",
-  "Explore all 500 images": "500枚すべての画像を見る",
-  "IMAGES": "画像",
-  "Language": "言語"
+  "≈ 44.37 M ORVUPI (≈ 4.44%) from the initial buy, separate from the 5% vesting": "≈ 44.37 M ORVUPI (≈ 4.44%) 初期購入から、5% の vesting から分離"
  },
  "attrs": {
   "Avatar maestro ORVUPI": "ORVUPI マスターアバター",

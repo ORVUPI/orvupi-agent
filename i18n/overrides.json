@@ -1,5 +1,9 @@
 {
 "_nota": "Traducciones escritas a mano para los términos más visibles. Prevalecen sobre el borrador automático. Formato: inglés -> [pt-BR, ja, ko]. Pendientes de revisión por hablante nativo.",
+"Collections": ["Coleções", "コレクション", "컬렉션"],
+"Collection": ["Coleção", "コレクション", "컬렉션"],
+"Explore all 500 images": ["Explore as 500 imagens", "500枚すべての画像を見る", "이미지 500개 모두 보기"],
+"IMAGES": ["IMAGENS", "画像", "이미지"],
 "Home": ["Início", "ホーム", "홈"],
 "Tools": ["Ferramentas", "ツール", "도구"],
 "Work": ["Work", "Work", "Work"],

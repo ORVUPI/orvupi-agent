@@ -148,6 +148,7 @@
   "Closed permission = nobody can create more units or freeze accounts. Copies can have it too.",
   "Closed: that permission is not assigned in this reading. It does not show the project is legitimate.",
   "Collection",
+  "Collections",
   "Community",
   "Community rules",
   "Compare queries",
@@ -252,7 +253,7 @@
   "Explanation, translation, or accessibility.",
   "Explore AI assistance according to usefulness, scope and testing.",
   "Explore a fixed educational example to understand how a curve is interpreted.",
-  "Explore all 250 images",
+  "Explore all 500 images",
   "Explore everything",
   "Explore the construction record and distinguish ideas, code and releases.",
   "Explore the images",
@@ -317,6 +318,7 @@
   "I set it to zero.",
   "I throw out the whole card.",
   "I treat it as a failed query.",
+  "IMAGES",
   "Identify a token",
   "Identify the token",
   "If a fact is missing, it is not filled in with zero. No data is invented.",
@@ -1061,7 +1063,7 @@
    "title": "ORVUPI · Identidad y recursos"
   },
   "memes/index.html": {
-   "segments_en": 34,
+   "segments_en": 35,
    "title": "ORVUPI · Galería de memes"
   },
   "methodology/index.html": {
