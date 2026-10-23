@@ -18,6 +18,8 @@ export type DocxImport = {
   pageSize: PageSize;
   pageOrientation: PageOrientation;
   pageMargin: PageMargin;
+  /** Margen izquierdo/derecho exacto en twips, si no coincide con un margen predefinido. */
+  pageMarginTw?: number;
   images: number;
   columns: 1 | 2 | 3;
   comments: DocComment[];
@@ -52,7 +54,7 @@ type ParaProps = {
   pageBreakBefore?: boolean;
 };
 
-type Style = { id: string; type: string; basedOn?: string; name: string; p?: Element; r?: Element };
+type Style = { id: string; type: string; basedOn?: string; name: string; p?: Element; r?: Element; t?: Element };
 
 const W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 const MAX_BLOCKS = 4000;
@@ -111,9 +113,33 @@ function toBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
-function safeFont(name: string | null): string | undefined {
+const EDITOR_FONTS = ["Arial", "Times New Roman", "Georgia", "Verdana", "Courier New", "Comic Sans MS", "Roboto", "Inter", "Lora", "Merriweather", "Montserrat"];
+
+/**
+ * Fuente del documento → fuente disponible en el editor. Una fuente que el navegador no tiene
+ * (Aptos, Calibri, Cambria…) caería en la serif por defecto: se usa la equivalente más cercana.
+ */
+export function editorFont(name: string | null | undefined): string | undefined {
   const cleaned = (name ?? "").replace(/[^\p{L}\p{N} .\-]/gu, "").trim().slice(0, 60);
-  return cleaned || undefined;
+  if (!cleaned) return undefined;
+  const lower = cleaned.toLowerCase();
+  const exact = EDITOR_FONTS.find((font) => font.toLowerCase() === lower);
+  if (exact) return exact;
+  if (/mono|courier|consolas|menlo|lucida console|source code/.test(lower)) return "Courier New";
+  if (/comic/.test(lower)) return "Comic Sans MS";
+  if (/georgia|cambria|garamond|book antiqua|palatino|constantia/.test(lower)) return "Georgia";
+  if (/merriweather/.test(lower)) return "Merriweather";
+  if (/lora/.test(lower)) return "Lora";
+  if (/times|serif$|^serif|minion|baskerville|didot|bodoni|noto serif|liberation serif|tinos|caladea/.test(lower) && !/sans/.test(lower)) return "Times New Roman";
+  if (/montserrat|gotham|century gothic|futura/.test(lower)) return "Montserrat";
+  if (/roboto/.test(lower)) return "Roboto";
+  if (/inter\b/.test(lower)) return "Inter";
+  if (/verdana|tahoma/.test(lower)) return "Verdana";
+  return "Arial"; // Aptos, Calibri, Helvetica, Segoe UI, Noto Sans, Open Sans, Play…
+}
+
+function safeFont(name: string | null): string | undefined {
+  return editorFont(name);
 }
 
 function readRunProps(rPr: Element | null, target: RunProps): RunProps {
@@ -212,6 +238,7 @@ class Styles {
         name: (attr(kid(node, "name"), "val") ?? id).toLowerCase(),
         p: kid(node, "pPr") ?? undefined,
         r: kid(node, "rPr") ?? undefined,
+        t: kid(node, "tblPr") ?? undefined,
       };
       this.map.set(id, style);
       if (attr(node, "default") === "1" || attr(node, "default") === "true") {
@@ -249,6 +276,16 @@ class Styles {
     let r = base;
     for (const style of this.chain(id ?? this.defaultChar)) r = readRunProps(style.r ?? null, r);
     return r;
+  }
+
+  /** tblPr de un estilo de tabla y de los estilos en que se basa (del más general al más concreto). */
+  tablePr(id: string | null): Element[] {
+    const chain = this.chain(id);
+    if (chain.length === 0) {
+      const fallback = [...this.map.values()].find((style) => style.type === "table" && style.id === "TableNormal");
+      if (fallback?.t) return [fallback.t];
+    }
+    return chain.flatMap((style) => (style.t ? [style.t] : []));
   }
 
   defaultRun(): RunProps {
@@ -586,11 +623,56 @@ function imageNode(drawing: Element, ctx: Ctx): JsonNode | null {
   } else src = `data:${mime};base64,${toBase64(bytes)}`;
   const attrs: Record<string, unknown> = { src, alt };
   if (cx > 0 && cy > 0) {
-    attrs.width = Math.round(cx / EMU_PER_PX);
-    attrs.height = Math.round(cy / EMU_PER_PX);
+    // Tamaño real (EMU → px a 96 ppp), limitado al ancho útil de la hoja manteniendo la proporción.
+    let w = cx / EMU_PER_PX;
+    let h = cy / EMU_PER_PX;
+    const max = ctx.contentWidthPx > 0 ? ctx.contentWidthPx : Infinity;
+    if (w > max) {
+      h = (h * max) / w;
+      w = max;
+    }
+    attrs.width = Math.max(1, Math.round(w));
+    attrs.height = Math.max(1, Math.round(h));
   }
   ctx.images += 1;
   return { type: "image", attrs };
+}
+
+// Fuentes de símbolos (Symbol, Wingdings): su código privado U+F0xx se traduce al carácter Unicode real.
+const SYMBOL_FONT: Record<number, string> = {
+  0x22: "∀", 0x24: "∃", 0x27: "∋", 0x2a: "∗", 0x2d: "−", 0x40: "≅", 0x44: "Δ", 0x46: "Φ", 0x47: "Γ", 0x4c: "Λ", 0x50: "Π", 0x51: "Θ", 0x53: "Σ", 0x57: "Ω", 0x58: "Ξ", 0x59: "Ψ",
+  0x61: "α", 0x62: "β", 0x63: "χ", 0x64: "δ", 0x65: "ε", 0x66: "φ", 0x67: "γ", 0x68: "η", 0x69: "ι", 0x6b: "κ", 0x6c: "λ", 0x6d: "μ", 0x6e: "ν", 0x70: "π", 0x71: "θ", 0x72: "ρ", 0x73: "σ", 0x74: "τ", 0x75: "υ", 0x77: "ω", 0x78: "ξ", 0x79: "ψ", 0x7a: "ζ",
+  0xa2: "′", 0xa3: "≤", 0xa5: "∞", 0xa7: "♣", 0xa8: "♦", 0xa9: "♥", 0xaa: "♠", 0xab: "↔", 0xac: "←", 0xad: "↑", 0xae: "→", 0xaf: "↓", 0xb0: "°", 0xb1: "±", 0xb2: "″", 0xb3: "≥", 0xb4: "×", 0xb5: "∝", 0xb6: "∂", 0xb7: "•", 0xb8: "÷", 0xb9: "≠", 0xba: "≡", 0xbb: "≈", 0xbc: "…",
+  0xc5: "⊕", 0xc6: "∅", 0xc7: "∩", 0xc8: "∪", 0xd1: "∇", 0xd6: "√", 0xd7: "⋅", 0xd8: "¬", 0xd9: "∧", 0xda: "∨", 0xdb: "⇔", 0xdc: "⇐", 0xdd: "⇑", 0xde: "⇒", 0xdf: "⇓", 0xe0: "◊", 0xe5: "∑", 0xf2: "∫",
+};
+const WINGDINGS: Record<number, string> = {
+  0x9f: "•", 0xa1: "○", 0xa7: "▪", 0xa8: "◻", 0xab: "★", 0x6c: "●", 0x6e: "■", 0x6f: "□", 0x71: "❑", 0x75: "◆", 0x76: "❖", 0x77: "◆", 0xd8: "➢", 0xe0: "➔", 0xe8: "➔", 0xf0: "⇨", 0xfb: "✗", 0xfc: "✓", 0xfd: "☒", 0xfe: "☑", 0x4a: "☺", 0x4c: "☹", 0x46: "☞", 0x21: "✏", 0x22: "✂", 0x28: "☎", 0x2a: "✉", 0x36: "⌛", 0x3a: "💻",
+};
+
+function rawFont(rPr: Element | null): string | null {
+  const fonts = kid(rPr, "rFonts");
+  return attr(fonts, "ascii") ?? attr(fonts, "hAnsi");
+}
+
+/** Carácter de un w:sym (o de un texto en fuente de símbolos) como Unicode. */
+export function symbolChar(font: string | null | undefined, hex: string | null | undefined): string {
+  let code = Number.parseInt(hex ?? "", 16);
+  if (!Number.isFinite(code) || code <= 31) return "";
+  if (code >= 0xf000 && code <= 0xf0ff) code -= 0xf000;
+  const name = (font ?? "").toLowerCase();
+  if (/wingdings/.test(name)) return WINGDINGS[code] ?? (code === 0x9f ? "•" : "•");
+  if (/symbol/.test(name) && !/noto sans symbols|segoe ui symbol/.test(name)) return SYMBOL_FONT[code] ?? String.fromCodePoint(code);
+  return code >= 0xe000 && code <= 0xf8ff ? "•" : String.fromCodePoint(code);
+}
+
+/** Texto de un w:t: en fuente Symbol/Wingdings, o con códigos privados U+F0xx, se traduce a Unicode. */
+function symbolText(raw: string, font: string | null): string {
+  const symbolFont = /^(symbol|wingdings)/i.test(font ?? "");
+  if (!symbolFont && !/[\uf020-\uf0ff]/.test(raw)) return raw;
+  return Array.from(raw).map((ch) => {
+    const cp = ch.codePointAt(0) ?? 0;
+    return symbolFont || (cp >= 0xf020 && cp <= 0xf0ff) ? symbolChar(font, cp.toString(16)) || ch : ch;
+  }).join("");
 }
 
 function runPieces(run: Element, inherited: RunProps, ctx: Ctx, href?: string): Piece[] {
@@ -608,13 +690,12 @@ function runPieces(run: Element, inherited: RunProps, ctx: Ctx, href?: string): 
   };
   for (const child of kids(run)) {
     const name = child.localName;
-    if (name === "t") buffer += child.textContent ?? "";
+    if (name === "t") buffer += symbolText(child.textContent ?? "", rawFont(rPr));
     else if (name === "tab" || name === "ptab") buffer += "\t";
     else if (name === "noBreakHyphen") buffer += "\u2011";
     else if (name === "softHyphen") continue;
     else if (name === "sym") {
-      const code = Number.parseInt(attr(child, "char") ?? "", 16);
-      if (Number.isFinite(code) && code > 31 && code < 0xf000) buffer += String.fromCodePoint(code);
+      buffer += symbolChar(attr(child, "font"), attr(child, "char"));
     } else if (name === "br" || name === "cr") {
       flush();
       const type = attr(child, "type");
@@ -741,20 +822,86 @@ function paragraphNodes(paragraph: Element, ctx: Ctx): Item[] {
 }
 
 function cellNodes(cell: Element, ctx: Ctx): JsonNode[] {
-  const nodes = blockItems(kids(cell), ctx).map((item) => item.node).filter((node) => node.type !== "pageBreak");
+  // Las listas dentro de una celda se agrupan igual que en el cuerpo: así no se pierden sus viñetas.
+  const items = blockItems(kids(cell), ctx).filter((item) => item.node.type !== "pageBreak");
+  const nodes = groupLists(items);
   return nodes.length > 0 ? nodes : [{ type: "paragraph" }];
 }
 
+type Side = "top" | "left" | "bottom" | "right" | "insideH" | "insideV";
+type BorderSpec = { width: number; color: string } | null; // null = sin borde
+
+/** Un borde de Word (w:top, w:left…) como ancho en px y color; null si es nil/none. */
+function borderOf(node: Element | null): BorderSpec | undefined {
+  if (!node) return undefined;
+  const val = attr(node, "val") ?? "single";
+  if (val === "nil" || val === "none") return null;
+  const eighths = Number(attr(node, "sz") ?? 4);
+  const width = Math.max(1, Math.min(6, Math.round(((Number.isFinite(eighths) ? eighths : 4) / 8) * (96 / 72))));
+  const color = attr(node, "color");
+  return { width: val === "double" ? Math.max(3, width) : width, color: color && /^[0-9a-f]{6}$/i.test(color) ? `#${color.toLowerCase()}` : "#000000" };
+}
+
+function bordersOf(container: Element | null, target: Partial<Record<Side, BorderSpec>>) {
+  if (!container) return target;
+  const next = { ...target };
+  for (const side of ["top", "left", "bottom", "right", "insideH", "insideV"] as const) {
+    const alias = side === "left" ? "start" : side === "right" ? "end" : side;
+    const value = borderOf(kid(container, side) ?? kid(container, alias));
+    if (value !== undefined) next[side] = value;
+  }
+  return next;
+}
+
+function cellMarginOf(container: Element | null, target: Partial<Record<"top" | "left" | "bottom" | "right", number>>) {
+  if (!container) return target;
+  const next = { ...target };
+  for (const side of ["top", "left", "bottom", "right"] as const) {
+    const alias = side === "left" ? "start" : side === "right" ? "end" : side;
+    const node = kid(container, side) ?? kid(container, alias);
+    const w = Number(attr(node, "w"));
+    if (node && Number.isFinite(w) && (attr(node, "type") ?? "dxa") === "dxa") next[side] = Math.max(0, Math.min(60, Math.round(w / 15)));
+  }
+  return next;
+}
+
+const cssBorder = (spec: BorderSpec | undefined) => (!spec ? "none" : `${spec.width}px solid ${spec.color}`);
+
 function tableNode(table: Element, ctx: Ctx): JsonNode {
   const rows = kids(table, "tr");
-  const grid = kids(kid(table, "tblGrid"), "gridCol").map((col) => Number(attr(col, "w") ?? 0) / 15);
+  const tblPr = kid(table, "tblPr");
+  const styleChain = ctx.styles.tablePr(attr(kid(tblPr, "tblStyle"), "val"));
+  // Bordes y márgenes de celda: estilo de tabla → propiedades de la tabla → propiedades de la celda.
+  let tableBorders: Partial<Record<Side, BorderSpec>> = {};
+  let tableMar: Partial<Record<"top" | "left" | "bottom" | "right", number>> = {};
+  for (const pr of [...styleChain, ...(tblPr ? [tblPr] : [])]) {
+    tableBorders = bordersOf(kid(pr, "tblBorders"), tableBorders);
+    tableMar = cellMarginOf(kid(pr, "tblCellMar"), tableMar);
+  }
+  // Anchos reales de la rejilla, ajustados al ancho útil de la hoja si lo superan (sin cortes ni desplazamiento).
+  let grid = kids(kid(table, "tblGrid"), "gridCol").map((col) => Number(attr(col, "w") ?? 0) / 15);
+  if (grid.length === 0 || grid.some((w) => !(w > 0))) {
+    const tblW = kid(tblPr, "tblW");
+    const total = (attr(tblW, "type") ?? "dxa") === "dxa" ? Number(attr(tblW, "w") ?? 0) / 15 : 0;
+    const count = Math.max(...rows.map((row) => kids(row, "tc").reduce((n, tc) => n + Math.max(1, Number(attr(kid(kid(tc, "tcPr"), "gridSpan"), "val") ?? 1) || 1), 0)), 1);
+    grid = total > 0 ? Array.from({ length: count }, () => total / count) : [];
+  }
+  const available = Math.max(120, ctx.contentWidthPx - 4); // margen para los bordes de la hoja y de la tabla
+  const sum = grid.reduce((a, b) => a + b, 0);
+  const scale = sum > available ? available / sum : 1;
+  const cols = grid.map((w) => Math.max(24, Math.floor(w * scale)));
   const starts = new Map<string, JsonNode>();
   const out: JsonNode[] = [];
   rows.forEach((row, rowIndex) => {
     let column = 0;
     const header = onOff(kid(kid(row, "trPr"), "tblHeader")) === true;
     const cells: JsonNode[] = [];
-    for (const cell of kids(row, "tc")) {
+    const tcs = kids(row, "tc");
+    const gridBefore = Number(attr(kid(kid(row, "trPr"), "gridBefore"), "val") ?? 0) || 0;
+    column += gridBefore;
+    let columnTotal = 0;
+    for (const tc of tcs) columnTotal += Math.max(1, Number(attr(kid(kid(tc, "tcPr"), "gridSpan"), "val") ?? 1) || 1);
+    for (const cell of tcs) {
       const tcPr = kid(cell, "tcPr");
       const span = Math.max(1, Number(attr(kid(tcPr, "gridSpan"), "val") ?? 1) || 1);
       const merge = kid(tcPr, "vMerge");
@@ -766,10 +913,25 @@ function tableNode(table: Element, ctx: Ctx): JsonNode {
         continue;
       }
       const fill = attr(kid(tcPr, "shd"), "fill");
-      const widths = grid.slice(column, column + span).map((w) => Math.round(w));
+      const widths = cols.slice(column, column + span);
       const attrs: Record<string, unknown> = { colspan: span, rowspan: 1 };
       if (widths.length === span && widths.every((w) => w > 0)) attrs.colwidth = widths;
       if (fill && /^[0-9a-f]{6}$/i.test(fill) && fill.toLowerCase() !== "ffffff") attrs.background = `#${fill.toLowerCase()}`;
+      // Bordes: los de la celda mandan; si no, los exteriores o interiores de la tabla según su posición.
+      const own = bordersOf(kid(tcPr, "tcBorders"), {});
+      const first = column - gridBefore === 0;
+      const last = column + span >= gridBefore + columnTotal;
+      const pick = (side: "top" | "left" | "bottom" | "right"): BorderSpec | undefined => {
+        if (own[side] !== undefined) return own[side];
+        const outer = side === "top" ? rowIndex === 0 : side === "bottom" ? rowIndex === rows.length - 1 : side === "left" ? first : last;
+        return outer ? tableBorders[side] : tableBorders[side === "top" || side === "bottom" ? "insideH" : "insideV"];
+      };
+      const sides = (["top", "right", "bottom", "left"] as const).map((side) => cssBorder(pick(side)));
+      attrs.borders = sides.every((side) => side === sides[0]) ? sides[0] : sides.join("|");
+      const mar = cellMarginOf(kid(tcPr, "tcMar"), tableMar);
+      attrs.padding = [mar.top ?? 0, mar.right ?? 7, mar.bottom ?? 0, mar.left ?? 7].join(" ");
+      const vAlign = attr(kid(tcPr, "vAlign"), "val");
+      if (vAlign === "center" || vAlign === "bottom") attrs.valign = vAlign === "center" ? "middle" : "bottom";
       const node: JsonNode = { type: header ? "tableHeader" : "tableCell", attrs, content: cellNodes(cell, ctx) };
       if (mergeVal === "restart") starts.set(`${column}`, node);
       else starts.delete(`${column}`);
@@ -777,9 +939,11 @@ function tableNode(table: Element, ctx: Ctx): JsonNode {
       column += span;
     }
     if (cells.length > 0) out.push({ type: "tableRow", content: cells });
-    void rowIndex;
   });
-  return { type: "table", content: out.length > 0 ? out : [{ type: "tableRow", content: [{ type: "tableCell", content: [{ type: "paragraph" }] }] }] };
+  return {
+    type: "table",
+    content: out.length > 0 ? out : [{ type: "tableRow", content: [{ type: "tableCell", content: [{ type: "paragraph" }] }] }],
+  };
 }
 
 function blockItems(elements: Element[], ctx: Ctx): Item[] {
@@ -918,7 +1082,7 @@ function commentsOf(doc: Document | null, extended: Document | null): RawComment
   });
 }
 
-type SectInfo = { columns: number; orientation: "portrait" | "landscape"; margin: PageMargin; breakType: "nextPage" | "continuous"; left: number; width: number; height: number };
+type SectInfo = { columns: number; orientation: "portrait" | "landscape"; margin: PageMargin; breakType: "nextPage" | "continuous"; left: number; right: number; width: number; height: number };
 
 function sectInfo(sect: Element | null): SectInfo {
   const pgSz = kid(sect, "pgSz");
@@ -926,6 +1090,7 @@ function sectInfo(sect: Element | null): SectInfo {
   const height = Number(attr(pgSz, "h") ?? 16838);
   const landscape = attr(pgSz, "orient") === "landscape" || width > height;
   const left = Number(attr(kid(sect, "pgMar"), "left") ?? 1440);
+  const right = Number(attr(kid(sect, "pgMar"), "right") ?? left);
   const columns = Math.max(1, Math.min(3, Number(attr(kid(sect, "cols"), "num") ?? 1) || 1));
   const type = attr(kid(sect, "type"), "val");
   return {
@@ -934,6 +1099,7 @@ function sectInfo(sect: Element | null): SectInfo {
     margin: left <= 900 ? "narrow" : left >= 2000 ? "wide" : "normal",
     breakType: type === "continuous" ? "continuous" : "nextPage",
     left,
+    right: Number.isFinite(right) ? right : left,
     width,
     height,
   };
@@ -971,7 +1137,7 @@ export async function importDocx(bytes: Uint8Array): Promise<DocxImport> {
     active: new Set(),
     quotes: new Map(),
     marginLeftPx: Math.round(first.left / 15),
-    contentWidthPx: Math.round(((first.orientation === "landscape" ? Math.max(first.width, first.height) : Math.min(first.width, first.height)) - first.left * 2) / 15),
+    contentWidthPx: Math.floor(((first.orientation === "landscape" ? Math.max(first.width, first.height) : Math.min(first.width, first.height)) - first.left - first.right) / 15),
     shapes: 0,
     notes: 0,
   };
@@ -992,7 +1158,7 @@ export async function importDocx(bytes: Uint8Array): Promise<DocxImport> {
   const sections = groups.map((group) => {
     const info = sectInfo(group.sect);
     ctx.marginLeftPx = Math.round(info.left / 15);
-    ctx.contentWidthPx = Math.round(((info.orientation === "landscape" ? Math.max(info.width, info.height) : Math.min(info.width, info.height)) - info.left * 2) / 15);
+    ctx.contentWidthPx = Math.floor(((info.orientation === "landscape" ? Math.max(info.width, info.height) : Math.min(info.width, info.height)) - info.left - info.right) / 15);
     const items = blockItems(group.elements, ctx);
     return { info, items };
   });
@@ -1058,6 +1224,7 @@ export async function importDocx(bytes: Uint8Array): Promise<DocxImport> {
     pageSize,
     pageOrientation: docInfo.orientation,
     pageMargin,
+    ...(sections.length === 1 && ![720, 1440, 2160].includes(Math.round(docInfo.left)) && docInfo.left >= 144 && docInfo.left <= 4320 ? { pageMarginTw: Math.round(docInfo.left) } : {}),
     images: ctx.images,
     columns,
     comments,

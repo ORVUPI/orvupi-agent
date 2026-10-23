@@ -7,7 +7,7 @@ type Shapes = typeof import("docx/shapes");
 type Child = InstanceType<Docx["Paragraph"]> | InstanceType<Docx["Table"]>;
 type Run = InstanceType<Docx["TextRun"]> | InstanceType<Docx["ImageRun"]> | InstanceType<Docx["ExternalHyperlink"]>;
 
-export type DocxLayout = { pageSize?: PageSize; pageOrientation?: PageOrientation; pageMargin?: PageMargin; columns?: number; comments?: DocComment[] };
+export type DocxLayout = { pageSize?: PageSize; pageOrientation?: PageOrientation; pageMargin?: PageMargin; pageMarginTw?: number; columns?: number; comments?: DocComment[] };
 type Note = { children: InstanceType<Docx["Paragraph"]>[] };
 const EMU = 9525;
 
@@ -362,13 +362,16 @@ async function buildDocx(title: string, doc: JsonNode, header: string, footer: s
   const size = PAGE_TWIPS[layout.pageSize ?? "a4"];
   const baseOrientation: PageOrientation = layout.pageOrientation === "landscape" ? "landscape" : "portrait";
   const baseMargin: PageMargin = layout.pageMargin ?? "normal";
-  const usableOf = (orientation: PageOrientation, margin: PageMargin, columns = 1) =>
-    Math.round((((orientation === "landscape" ? size.height : size.width) - MARGINS[margin] * 2) / PX_TO_TWIP) / Math.max(1, columns));
+  // Margen exacto del documento importado (twips) para el contenido suelto; las secciones usan el suyo.
+  const exactTw = layout.pageMarginTw && layout.pageMarginTw >= 144 && layout.pageMarginTw <= 4320 ? Math.round(layout.pageMarginTw) : undefined;
+  const twOf = (margin: PageMargin, exact?: boolean) => (exact && exactTw ? exactTw : MARGINS[margin]);
+  const usableOf = (orientation: PageOrientation, margin: PageMargin, columns = 1, exact = false) =>
+    Math.round((((orientation === "landscape" ? size.height : size.width) - twOf(margin, exact) * 2) / PX_TO_TWIP) / Math.max(1, columns));
   const comments = layout.comments ?? [];
-  const writer = new Writer(docx, shapes, usableOf(baseOrientation, baseMargin, layout.columns), comments);
+  const writer = new Writer(docx, shapes, usableOf(baseOrientation, baseMargin, layout.columns, true), comments);
 
   // Cada nodo de sección es una sección de Word; el contenido suelto va en secciones con el formato del documento.
-  type Part = { children: Child[]; orientation: PageOrientation; margin: PageMargin; columns: number; type: "nextPage" | "continuous" };
+  type Part = { children: Child[]; orientation: PageOrientation; margin: PageMargin; columns: number; type: "nextPage" | "continuous"; exact?: boolean };
   const parts: Part[] = [];
   let loose: Part | null = null;
   for (const node of doc.content ?? []) {
@@ -388,13 +391,13 @@ async function buildDocx(title: string, doc: JsonNode, header: string, footer: s
       continue;
     }
     if (!loose) {
-      loose = { children: [], orientation: baseOrientation, margin: baseMargin, columns: Math.max(1, Math.min(3, layout.columns ?? 1)), type: "nextPage" };
+      loose = { children: [], orientation: baseOrientation, margin: baseMargin, columns: Math.max(1, Math.min(3, layout.columns ?? 1)), type: "nextPage", exact: true };
       parts.push(loose);
     }
-    writer.maxWidth = usableOf(loose.orientation, loose.margin, loose.columns);
+    writer.maxWidth = usableOf(loose.orientation, loose.margin, loose.columns, true);
     writer.block(node, loose.children);
   }
-  if (parts.length === 0) parts.push({ children: [], orientation: baseOrientation, margin: baseMargin, columns: 1, type: "nextPage" });
+  if (parts.length === 0) parts.push({ children: [], orientation: baseOrientation, margin: baseMargin, columns: 1, type: "nextPage", exact: true });
 
   // Comentarios sin texto anclado: se cuelgan del principio del documento.
   const loose_ids = comments.filter((comment) => !writer.anchored.has(comment.id)).map((comment) => writer.commentIds.get(comment.id)!).filter((id) => id !== undefined);
@@ -445,7 +448,7 @@ async function buildDocx(title: string, doc: JsonNode, header: string, footer: s
         ...(index > 0 ? { type: part.type === "continuous" ? docx.SectionType.CONTINUOUS : docx.SectionType.NEXT_PAGE } : {}),
         page: {
           size: { width: size.width, height: size.height, orientation: part.orientation === "landscape" ? docx.PageOrientation.LANDSCAPE : docx.PageOrientation.PORTRAIT },
-          margin: { top: MARGINS[part.margin], bottom: MARGINS[part.margin], left: MARGINS[part.margin], right: MARGINS[part.margin] },
+          margin: { top: twOf(part.margin, part.exact), bottom: twOf(part.margin, part.exact), left: twOf(part.margin, part.exact), right: twOf(part.margin, part.exact) },
         },
         ...(part.columns > 1 ? { column: { count: part.columns, space: 708, equalWidth: true } } : {}),
       },

@@ -434,7 +434,8 @@ function paintRows(view: EditorView, article: HTMLElement, margin: number, head:
       holder.className = "ow-pgov-head";
       holder.style.height = `${headerH}px`;
       const tableRect = table.getBoundingClientRect();
-      holder.style.marginLeft = `${(tableRect.left - base.left) / scale - margin}px`;
+      // La capa empieza en el borde de la hoja: la cabecera repetida va justo encima de su tabla.
+      holder.style.marginLeft = `${(tableRect.left - layer.getBoundingClientRect().left) / scale}px`;
       holder.style.width = `${tableRect.width / scale}px`;
       const copy = document.createElement("table");
       const colgroup = table.querySelector("colgroup");
