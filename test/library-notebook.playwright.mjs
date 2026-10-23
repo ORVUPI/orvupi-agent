@@ -6,6 +6,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium, devices, webkit } from "playwright";
+import { switchLang } from "./ui/lang.mjs";
 import { METADATA_PROGRAM, PUMP_PROGRAM, TOKEN_PROGRAM } from "../web/v2/shared/solana-read.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../web/v2");
@@ -221,8 +222,7 @@ try {
     await learn.waitForFunction(() => location.hash === "#guia-identificar");
     await shot(learn, `biblioteca-${profile.id}.png`);
     if (profile.id === "escritorio") {
-      await learn.getByRole("button", { name: "EN", exact: true }).click();
-      await learn.waitForFunction(() => document.documentElement.lang === "en");
+      await switchLang(learn, "en");
       const englishGuide = await learn.locator("#guia-identificar").innerText();
       if (!englishGuide.includes("Identify a token")) failures.push("la guía en inglés no se muestra");
       await shot(learn, "biblioteca-escritorio-en.png");
@@ -321,9 +321,11 @@ try {
     if (!restored.includes("puede haber cambiado")) failures.push("la ficha importada parece actual");
     if (!restored.includes("Importada de un archivo, no leída por este navegador. Sus datos no se han comprobado: vuelve a consultarla.")) failures.push("la ficha importada no se marca");
   }
-  await wide.getByRole("button", { name: "EN", exact: true }).click();
+  await switchLang(wide, "en");
   await wide.waitForFunction(() => (document.querySelector("#lista-consultas")?.textContent || "").includes("this may have changed"));
   await shot(wide, "cuaderno-escritorio-en.png");
+  // La preferencia de idioma se guarda: se vuelve al español para que el resto de la prueba abra las URL en español.
+  await switchLang(wide, "es");
   if (wideNet.external !== 0) failures.push("el escritorio llamó a otro origen");
   await wide.close();
 

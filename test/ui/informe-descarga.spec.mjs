@@ -1,3 +1,4 @@
+import { switchLang } from "./lang.mjs";
 import { readFileSync } from "node:fs";
 import { test, expect } from "@playwright/test";
 import { decodeBase58, METADATA_PROGRAM, TOKEN_PROGRAM } from "../../web/v2/shared/solana-read.js";
@@ -150,12 +151,12 @@ test("el informe se descarga en Verify y en el Cuaderno", async ({ page }, testI
   expect(pdfBytes.subarray(0, 5).toString("utf8")).toBe("%PDF-");
   expect(pdfBytes.includes(Buffer.from("/Subtype /Image"))).toBe(true);
 
-  await page.locator('[data-set-lang="en"]').first().click();
+  await switchLang(page, "en");
   await expect(report).toContainText("Downloadable report");
   await expect(report.getByRole("button", { name: "Download PNG" })).toBeVisible();
   await expect(report.getByRole("button", { name: "Download PDF" })).toBeVisible();
   await expect(report).toContainText("not sent to any server");
-  await page.locator('[data-set-lang="es"]').first().click();
+  await switchLang(page, "es");
   await expect(report).toContainText("Informe descargable");
 
   await page.locator("#direccion-token").fill(CLONE);

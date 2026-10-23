@@ -1,3 +1,4 @@
+import { switchLang } from "./lang.mjs";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -273,13 +274,13 @@ test("el informe repite lo que se ve en pantalla", async ({ page }) => {
   expect(usdc.lines.join("\n")).toContain("Lectura de Verify · no es un certificado");
   expect(usdc.date).toMatch(/\d{2}:\d{2}:\d{2}/);
 
-  await page.locator('[data-set-lang="en"]').first().click();
+  await switchLang(page, "en");
   await expect(page.locator("#resultado .resumen-informe")).toContainText("It says it is called");
   const english = await readPair(page);
   expectSameReading(english);
   expect(english.lines.join("\n")).toContain("\u201CUSD Coin\u201D");
   expect(english.lines.join("\n").includes("«")).toBe(false);
-  await page.locator('[data-set-lang="es"]').first().click();
+  await switchLang(page, "es");
   await expect(page.locator("#resultado .resumen-informe")).toContainText("Qué se comprobó");
 
   await lookup(page, named.mint, "Dice llamarse «verificado»");
@@ -424,7 +425,7 @@ test("USDC y ERYyy dejan un PNG en español y en inglés", async ({ page }, test
     { mint: CLONE, lang: "en", stem: "informe-clon-en", ready: "It is named like ORVUPI, but it is not the official address" },
   ];
   for (const shot of shots) {
-    await page.locator(`[data-set-lang="${shot.lang}"]`).click();
+    await switchLang(page, `${shot.lang}`);
     await expect(page.locator("html")).toHaveAttribute("data-lang", shot.lang);
     await lookup(page, shot.mint, shot.ready);
     const result = await page.evaluate(async () => {
@@ -496,7 +497,7 @@ test("el cuaderno compara el informe con lo que se ve en pantalla", async ({ pag
   expect(usdc.lines.join("\n")).toContain("Lectura de Verify · no es un certificado");
   expect(usdc.reportNote).toBe("Curva de Pump.fun: no aplica");
 
-  await page.locator("[data-set-lang='en']").click();
+  await switchLang(page, "en");
   await expect(usdcCard.locator(".resumen-informe")).toContainText("It says it is called");
   const usdcEnglish = await readSaved(usdcCard);
   expectSameReading(usdcEnglish);
@@ -504,7 +505,7 @@ test("el cuaderno compara el informe con lo que se ve en pantalla", async ({ pag
   expect(usdcEnglish.lines.join("\n").includes("«")).toBe(false);
   expect(usdcEnglish.reportNote).toBe("Pump.fun curve: not applicable");
 
-  await page.locator("[data-set-lang='es']").click();
+  await switchLang(page, "es");
   await page.goto("/verify/");
   await lookup(page, CLONE, "Se llama como ORVUPI, pero no es la dirección oficial");
   await page.locator("#guardar-consulta").click();
@@ -520,7 +521,7 @@ test("el cuaderno compara el informe con lo que se ve en pantalla", async ({ pag
   expect(clone.reportBlocks.atencion.text.includes("Comprobación anterior")).toBe(false);
   expect(clone.lines.join("\n")).toContain("Dice llamarse");
 
-  await page.locator("[data-set-lang='en']").click();
+  await switchLang(page, "en");
   await expect(cloneCard.locator(".resumen-informe")).toContainText("It is named like ORVUPI");
   const cloneEnglish = await readSaved(cloneCard);
   expectSameReading(cloneEnglish);

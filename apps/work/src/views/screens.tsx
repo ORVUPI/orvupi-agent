@@ -9,7 +9,7 @@ import { visibleFiles } from "../files/query";
 import { useWorkspace } from "../app/workspace";
 import { downloadBytes } from "../security/bytes";
 import { isWorkError } from "../security/errors";
-import { errorMessageKey } from "../i18n";
+import { errorMessageKey, isLocale, LOCALES } from "../i18n";
 import { fileNameWithExtension } from "../security/names";
 import type { FileRecord } from "../storage/types";
 import { APP_VERSION } from "../version";
@@ -243,7 +243,9 @@ export function DocsScreen() {
     return () => {
       cancel = true;
     };
-  }, [workspace.openDocId, workspace.storage, workspace.t, workspace.locale]);
+    // Cambiar el idioma no vuelve a leer el archivo: así no se pierden cambios pendientes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workspace.openDocId, workspace.storage]);
 
   if (!workspace.openDocId) {
     return (
@@ -347,9 +349,10 @@ export function SettingsScreen() {
       />
       {tab === "general" ? (
         <TabPanel id="general">
-          <Select label={workspace.t("language")} value={workspace.locale} onChange={(event) => void workspace.setLocale(event.target.value === "en" ? "en" : "es")}>
-            <option value="es">{workspace.t("spanish")}</option>
-            <option value="en">{workspace.t("english")}</option>
+          <Select label={workspace.t("language")} value={workspace.locale} onChange={(event) => { if (isLocale(event.target.value)) void workspace.setLocale(event.target.value); }}>
+            {LOCALES.map((item) => (
+              <option key={item.id} value={item.id} lang={item.id}>{item.name}</option>
+            ))}
           </Select>
           <p>{workspace.t("privacy")}</p>
           <p>{workspace.t("offline")}</p>

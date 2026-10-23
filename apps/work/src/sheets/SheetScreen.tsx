@@ -177,7 +177,8 @@ export function SheetsScreen() {
     return () => {
       cancel = true;
     };
-  }, [workspace.openSheetId, workspace.storage, workspace.t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workspace.openSheetId, workspace.storage]);
 
   useEffect(() => {
     if (!file || !workspace.storage || status !== "pending") return;

@@ -1,3 +1,4 @@
+import { switchLang } from "./lang.mjs";
 import { expect, test } from "@playwright/test";
 import { decodeBase58, METADATA_PROGRAM, TOKEN_PROGRAM } from "../../web/v2/shared/solana-read.js";
 
@@ -160,7 +161,7 @@ test("una ficha vieja gana red y dirección y entra en la lista", async ({ page 
   expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1);
   expect(overflow).toBe(true);
-  await page.locator('[data-set-lang="en"]').click();
+  await switchLang(page, "en");
   await expect(page.locator("h2").filter({ hasText: "Recheck saved addresses" })).toBeVisible();
   await expect(page.locator("#aviso-pasada .lang.en")).toHaveText("When you tap, your browser sends the addresses being checked (the marked ones, or all of them if none are marked) to the Solana public nodes solana-rpc.publicnode.com and api.mainnet-beta.solana.com, which also see your IP. Nothing new is saved until you tap \"Save\".");
   await expect(page.locator("#seguir .lang.en")).toHaveText("Check the list");
@@ -306,7 +307,7 @@ test("si el servicio rechaza la consulta, queda en Qué falta con Reintentar y n
   await expect(result).toContainText("Se llama como ORVUPI, pero no es la dirección oficial.");
   await expect(result).not.toContainText("Sigue igual");
   await expect(result.locator('[data-estado="igual"]')).toHaveCount(0);
-  await page.locator('[data-set-lang="en"]').click();
+  await switchLang(page, "en");
   await expect(result).toContainText("What is missing");
   await expect(result).toContainText("Try again");
   await expect(result).toContainText("It says it is called «ORVUPI»");
@@ -373,9 +374,9 @@ test("una lectura estable dice Sigue igual y Detener deja solo lo ya leído", as
   const help = page.locator("#guardar-todas-ayuda");
   await expect(help).toBeVisible();
   await expect(help).toHaveText("No hay lecturas nuevas que guardar. Consulta la lista y, cuando salga un resultado, pulsa Guardar o Guardar todas.");
-  await page.locator('[data-set-lang="en"]').click();
+  await switchLang(page, "en");
   await expect(help).toHaveText("There are no new readings to save. Check the list and, when a result appears, tap Save or Save all.");
-  await page.locator('[data-set-lang="es"]').click();
+  await switchLang(page, "es");
   await expect(help).toHaveText("No hay lecturas nuevas que guardar. Consulta la lista y, cuando salga un resultado, pulsa Guardar o Guardar todas.");
   await page.locator("#seguir").click();
   const results = page.locator("#resultado-seguimiento article.seguimiento-estado");

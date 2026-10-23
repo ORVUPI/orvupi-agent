@@ -45,10 +45,12 @@ export type ImportFileInput = {
 };
 
 export type AppSettings = {
-  locale: "es" | "en";
+  locale: "en" | "es" | "pt-BR" | "ja" | "ko";
+  /** false cuando nadie ha elegido idioma todavía. */
+  explicit?: boolean;
 };
 
-export const defaultSettings: AppSettings = { locale: "es" };
+export const defaultSettings: AppSettings = { locale: "en", explicit: false };
 
 export type WorkspaceBackup = {
   format: "orvupi-workspace";

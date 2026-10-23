@@ -1,0 +1,61 @@
+{
+ "pt-BR": {
+  "manual": 222,
+  "auto": 1643,
+  "fallback_en": [
+   "Legal reviews this fixed educational example. Any version with real data will need a new review. Still absent from this website.",
+   "Library and notebook.",
+   "Library for any token",
+   "Limits and risks",
+   "MIT code. Flat color taken from the ORVUPI meme kit palette.",
+   "Meet the community",
+   "Merged into main. The page is at /verify.",
+   "Network selector on Verify and the Notebook, with Solana when the page opens. Read-only reading of a contract on Base through the public node mainnet.base.org. Ethereum and BNB Chain were switched on afterwards: see U11. It is not on this website yet.",
+   "ORVUPI · Brand and resources",
+   "ORVUPI · Community",
+   "ORVUPI · Curve example",
+   "ORVUPI · Curve reading",
+   "ORVUPI · Eight arms. Endless ideas.",
+   "On these cards, the Pump.fun curve is a derived account. If the owner is the curve program, Verify reads public fields: virtual and real curve amounts, the supply on that account, and whether",
+   "Only the channels on this list are official. If an account, website or address is not listed here, treat it as unofficial until you check it on this website.",
+   "SHA-256 of token.json: 6b21145b7482cc649bc687e1a7b7794a3b946fd83c995c1abd6c66ea556b5f0c. securityNotice is still the 2026-10-05 text.",
+   "The ORVUPI study proposes seven families for gradual growth. They are future directions, not seven finished applications or committed dates.",
+   "The Verify cards from 2026-10-16 include one mint in the curated registry, USDC&#39;s (",
+   "The copy has its permissions closed and USDC has them open. What is true?",
+   "The virtual_token_reserves or virtual_quote_reserves field. The card keeps it apart from the real curve amount. On the classic curve, and with the default quote, the quote amount is in lamports.",
+   "USDC, on 2026-10-16, asked for getTokenLargestAccounts and got HTTP 429. The sample stays unavailable.",
+   "We are ORVUPI. A curious octopus, a community to build and tools to explore Web3. Come learn, create and share.",
+   "‘Holder’ (industry term)",
+   "‘Holder’ (industry term): an account that holds tokens. It implies no rights and no investor community.",
+   "Likeness with the registry",
+   "work:aiBody",
+   "work:aiMemory",
+   "work:commentBody",
+   "work:formHint",
+   "work:mergeCells",
+   "work:sheetChartLine",
+   "work:pageMargin"
+  ]
+ },
+ "ja": {
+  "manual": 222,
+  "auto": 1671,
+  "fallback_en": [
+   "On USDC, on 2026-10-16, the metadata account was queried. The query was answered and the link (URI) is empty: that fact is not there.",
+   "Only the channels on this list are official. If an account, website or address is not listed here, treat it as unofficial until you check it on this website.",
+   "SHA-256 of token.json: 6b21145b7482cc649bc687e1a7b7794a3b946fd83c995c1abd6c66ea556b5f0c. securityNotice is still the 2026-10-05 text.",
+   "USDC, on 2026-10-16, asked for getTokenLargestAccounts and got HTTP 429. The sample stays unavailable."
+  ]
+ },
+ "ko": {
+  "manual": 222,
+  "auto": 1670,
+  "fallback_en": [
+   "Only the channels on this list are official. If an account, website or address is not listed here, treat it as unofficial until you check it on this website.",
+   "SHA-256 of token.json: 6b21145b7482cc649bc687e1a7b7794a3b946fd83c995c1abd6c66ea556b5f0c. securityNotice is still the 2026-10-05 text.",
+   "The only example that uses a real token is the USDC address on Solana:",
+   "‘Holder’ (industry term)",
+   "‘Holder’ (industry term): an account that holds tokens. It implies no rights and no investor community."
+  ]
+ }
+}

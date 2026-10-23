@@ -1,3 +1,4 @@
+import { switchLang } from "./lang.mjs";
 import { expect, test } from "@playwright/test";
 
 const USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
@@ -195,17 +196,17 @@ test("Verify en Base lee USDC, un token sin owner, un proxy, una cuenta, una dir
   if (shot) {
     await shotNotice(page, `aviso-base-es-${shot}`);
     await page.screenshot({ path: `test-results/artifacts/verify-base-es-${shot}.png`, fullPage: true });
-    await page.locator("[data-set-lang='en']").click();
+    await switchLang(page, "en");
     await expectNoticeBesideButton(page, "en");
     await expect(page.locator("#resultado")).toContainText(/The contract wrote/);
     await shotNotice(page, `aviso-base-en-${shot}`);
     await page.screenshot({ path: `test-results/artifacts/verify-base-en-${shot}.png`, fullPage: true });
-    await page.locator("[data-set-lang='es']").click();
+    await switchLang(page, "es");
     await expectNoticeBesideButton(page, "es");
   } else {
-    await page.locator("[data-set-lang='en']").click();
+    await switchLang(page, "en");
     await expectNoticeBesideButton(page, "en");
-    await page.locator("[data-set-lang='es']").click();
+    await switchLang(page, "es");
   }
   await page.locator(".leer-mercado").click();
   await expect(page.locator(".datos-mercado")).toContainText(/USDC/);
@@ -281,7 +282,7 @@ test("en Base la entradilla no habla de SPL y se ocultan Permiso de emisión y C
   await expect(page.locator('a[href="/aprender/#curva-pump"]')).toBeHidden();
   await expect(page.locator('a[href="/aprender/#direccion"]')).toBeVisible();
   await expect(page.locator('a[href="/aprender/#guia-identificar"]')).toBeVisible();
-  await page.locator("[data-set-lang='en']").click();
+  await switchLang(page, "en");
   await expect(page.locator("main .lede .lang.en")).toHaveText(LEDE_BASE_EN);
   await page.locator("#direccion-token").fill(ZERO);
   await page.locator("#consulta").locator("button[type=submit]").click();
@@ -295,7 +296,7 @@ test("en Base la entradilla no habla de SPL y se ocultan Permiso de emisión y C
   await expect(page.locator("#resultado")).toContainText("That address does not have this network's shape");
   await expect(page.locator("#resultado")).not.toContainText(ZERO_EN);
   await expect(page.locator("#resultado")).not.toContainText("do not match");
-  await page.locator("[data-set-lang='es']").click();
+  await switchLang(page, "es");
   await page.locator("#direccion-token").fill(ZERO);
   await page.locator("#consulta").locator("button[type=submit]").click();
   await expect(page.locator("#resultado")).toContainText(ZERO_ES);

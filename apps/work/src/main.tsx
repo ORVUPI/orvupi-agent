@@ -11,6 +11,7 @@ import "@fontsource/merriweather/400.css";
 import "@fontsource/montserrat/400.css";
 import "@fontsource/roboto/400.css";
 import "./styles/app.css";
+import "./styles/i18n.css";
 
 const viewport = document.querySelector('meta[name="viewport"]');
 if (viewport) viewport.setAttribute("content", "width=device-width, initial-scale=1, viewport-fit=cover");

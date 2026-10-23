@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { mkdirSync, readFileSync } from "node:fs";
+import { switchLang } from "./lang.mjs";
 
 // Cuentas reales capturadas de la cadena (test/fixtures/launchlab-real.json).
 const fixture = JSON.parse(readFileSync(new URL("../fixtures/launchlab-real.json", import.meta.url), "utf8"));
@@ -46,7 +47,7 @@ test("la lectura de la curva detecta Raydium LaunchLab en el mint de ORVUPI", as
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(1);
   await page.screenshot({ path: `${shots}/curva-launchlab-${info.project.name}.png`, fullPage: true });
-  await page.locator('[data-set-lang="en"]').first().click();
+  await switchLang(page, "en");
   await expect(out).toContainText("Platform: Raydium LaunchLab.");
   await expect(out).toContainText("Graduation target: 30 SOL.");
   await expect(out).toContainText("Progress: 1.64%.");

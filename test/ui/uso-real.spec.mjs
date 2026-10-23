@@ -1,3 +1,4 @@
+import { switchLang } from "./lang.mjs";
 import { test, expect } from "@playwright/test";
 
 // Antes de pulsar, el elemento se centra como haría una persona al desplazarse
@@ -124,11 +125,11 @@ test("lectura, guardado y comparación en el uso real", async ({ page }, testInf
   await expect(entender.getByRole("link", { name: "Metadatos" })).toHaveAttribute("href", "/aprender/#metadatos-mutables");
   await expect(entender.getByRole("link", { name: "Distribución" })).toHaveAttribute("href", "/aprender/#censo");
 
-  await tap(page.locator('[data-set-lang="en"]').first());
+  await switchLang(page, "en");
   await expect(page.locator("#resultado")).toContainText("There are 7,840,780,507.370947 tokens");
   await expect(page.locator("#resultado")).toContainText("Not applicable: there is no Pump.fun or Raydium LaunchLab curve for this token");
   await expect(page.locator("#entender-resultado")).toContainText("Understand this result");
-  await tap(page.locator('[data-set-lang="es"]').first());
+  await switchLang(page, "es");
   await expect(page.locator("#resultado")).toContainText("Hay 7.840.780.507,370947 tokens");
 
   await tap(page.locator("#reintentar"));
