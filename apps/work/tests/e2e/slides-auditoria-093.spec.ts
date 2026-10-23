@@ -235,7 +235,12 @@ async function prepare(page: Page, where: string) {
     await openTop(page, "Insertar"); await clickEntry(page, "Insertar", "Forma"); await clickEntry(page, "Forma", "Rectángulo");
     const items = page.locator(".sl-canvas .sl-item");
     const r = await items.last().boundingBox();
-    if (r) { await page.mouse.move(r.x + r.width / 2, r.y + r.height / 2); await page.mouse.down(); await page.mouse.move(r.x + r.width / 2 + 260, r.y + r.height / 2 + 40, { steps: 5 }); await page.mouse.up(); }
+    if (r) {
+      // sin salir de la pantalla (Firefox da coordenadas sin sentido fuera de la ventana)
+      const vw = page.viewportSize()?.width ?? 1366;
+      const dx = Math.min(260, vw - (r.x + r.width / 2) - 12);
+      await page.mouse.move(r.x + r.width / 2, r.y + r.height / 2); await page.mouse.down(); await page.mouse.move(r.x + r.width / 2 + dx, r.y + r.height / 2 + 40, { steps: 5 }); await page.mouse.up();
+    }
     const tri = items.nth((await items.count()) - 2);
     const b = await tri.boundingBox();
     if (b) await page.mouse.click(b.x + b.width / 2, b.y + b.height * 0.75);
