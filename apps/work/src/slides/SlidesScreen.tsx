@@ -880,6 +880,9 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
     if (event.button !== 0 && event.pointerType === "mouse") return;
     if (editingId === item.id) return;
     event.stopPropagation();
+    // En táctil tocar un objeto no quita el foco de un cuadro de texto abierto (p. ej. comentario): se suelta aquí
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && isTyping(active) && !active.closest(".sl-canvas")) active.blur();
     setFocusArea("canvas");
     setCtx(null);
     if (tool !== "select") { onCanvasDown(event); return; }
@@ -1291,7 +1294,7 @@ function SlidesEditor({ initial }: { initial: SlidesFile }) {
         { id: "fit", label: tx("Ajustar", "Fit"), onSelect: () => setZoom("fit") },
         ...ZOOMS.map((z) => ({ id: `z${z}`, label: `${Math.round(z * 100)} %`, onSelect: () => setZoom(z) })),
       ] },
-      { id: "full", label: tx("Pantalla completa", "Full screen"), onSelect: () => void document.documentElement.requestFullscreen?.().catch(() => undefined) },
+      { id: "full", label: tx("Pantalla completa", "Full screen"), onSelect: () => { if (document.documentElement.requestFullscreen) void document.documentElement.requestFullscreen().catch(() => workspace.pushToast(tx("Este navegador no permite la pantalla completa. Usa «Presentar».", "This browser does not allow full screen. Use «Present»."))); else workspace.pushToast(tx("Este navegador no permite la pantalla completa. Usa «Presentar».", "This browser does not allow full screen. Use «Present».")); } },
     ] },
     { id: "insert", label: tx("Insertar", "Insert"), items: [
       { id: "image", label: tx("Imagen", "Image"), children: [
