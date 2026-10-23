@@ -201,11 +201,12 @@
 "500 images organised in 15 collections.": ["500 imagens organizadas em 15 coleções.", "500枚の画像を15のコレクションに整理。", "이미지 500개를 15개 컬렉션으로 정리했습니다."],
 "Collection filters and search, on mobile too.": ["Filtros por coleção e busca, também no celular.", "コレクション別の絞り込みと検索。モバイルでも使えます。", "컬렉션 필터와 검색, 모바일에서도 가능합니다."],
 "View the gallery": ["Ver a galeria", "ギャラリーを見る", "갤러리 보기"],
-"Presentations 0.9.5": ["Apresentações 0.9.5", "プレゼンテーション 0.9.5", "프레젠테이션 0.9.5"],
-"A complete slide editor with the ORVUPI identity.": ["Um editor de slides completo com a identidade do ORVUPI.", "ORVUPIらしさを備えた本格的なスライドエディター。", "ORVUPI 정체성을 담은 완전한 슬라이드 편집기."],
-"PowerPoint export with editable charts and video.": ["Exportação para PowerPoint com gráficos editáveis e vídeo.", "編集可能なグラフと動画付きのPowerPoint書き出し。", "편집 가능한 차트와 동영상을 포함한 PowerPoint 내보내기."],
-"Tablet-friendly layout.": ["Layout adaptado para tablet.", "タブレット向けレイアウト。", "태블릿에 맞춘 화면 구성."],
 "ORVUPI Work assistant 0.9.6": ["Assistente do ORVUPI Work 0.9.6", "ORVUPI Workアシスタント 0.9.6", "ORVUPI Work 어시스턴트 0.9.6"],
 "Faster responses.": ["Respostas mais rápidas.", "より速い応答。", "더 빠른 응답."],
-"No freezes on mobile when summarising text.": ["Sem travamentos no celular ao resumir textos.", "モバイルで要約しても固まりません。", "모바일에서 요약할 때 멈추지 않습니다."]
+"No freezes on mobile when summarising text.": ["Sem travamentos no celular ao resumir textos.", "モバイルで要約しても固まりません。", "모바일에서 요약할 때 멈추지 않습니다."],
+"Presentations 0.9.5: new slide editor": ["Apresentações 0.9.5: novo editor de slides", "プレゼンテーション 0.9.5：新しいスライドエディター", "프레젠테이션 0.9.5: 새 슬라이드 편집기"],
+"Formatting applied to just the selected words.": ["Formatação aplicada só às palavras selecionadas.", "選択した語句だけに書式を適用。", "선택한 단어에만 서식을 적용합니다."],
+"PowerPoint export with editable charts and embedded video.": ["Exportação para PowerPoint com gráficos editáveis e vídeo incorporado.", "編集可能なグラフと埋め込み動画付きのPowerPoint書き出し。", "편집 가능한 차트와 삽입된 동영상을 포함한 PowerPoint 내보내기."],
+"A dedicated tablet view.": ["Visualização própria para tablet.", "タブレット専用の表示。", "태블릿 전용 화면."],
+"Try Presentations": ["Experimentar Apresentações", "プレゼンテーションを試す", "프레젠테이션 사용해 보기"]
 }
