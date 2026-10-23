@@ -30,3 +30,5 @@ b4ef7f7b956623f6f45f68e6071c6cf9a4cc554b:web/v2/tablero/index.html:generic-api-k
 
 # Mismo SHA-256 público de token.json (no es una clave) en el commit 02ddd4c8 de main; es y en en la línea 79.
 02ddd4c82a34628fef47b9b3a291811bc3690e14:web/v2/tablero/index.html:generic-api-key:79
+# Falso positivo: combinación de teclas «Control+d» en la auditoría de Presentaciones (no es un secreto).
+3d3d6cab59a0f3f8de286be4eb5fb943edf90c07:apps/work/tests/e2e/slides-auditoria-093.spec.ts:generic-api-key:406

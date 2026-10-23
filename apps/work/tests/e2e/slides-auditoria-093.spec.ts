@@ -401,38 +401,38 @@ test("barra de herramientas: cada botón en cada contexto", async ({ page }) => 
   assertClean(results);
 });
 
-const SHORTCUTS: Array<{ keys: string; label: string; setup?: "texto" | "nada" }> = [
-  { keys: "Control+m", label: "Nueva diapositiva" },
-  { keys: "Control+d", label: "Duplicar objeto", setup: "texto" },
-  { keys: "Control+z", label: "Deshacer" },
-  { keys: "Control+y", label: "Rehacer" },
-  { keys: "Control+a", label: "Seleccionar todo", setup: "nada" },
-  { keys: "Control+b", label: "Negrita", setup: "texto" },
-  { keys: "Control+i", label: "Cursiva", setup: "texto" },
-  { keys: "Control+u", label: "Subrayado", setup: "texto" },
-  { keys: "Control+Shift+Period", label: "Aumentar tamaño", setup: "texto" },
-  { keys: "Control+Shift+Comma", label: "Reducir tamaño", setup: "texto" },
-  { keys: "Control+Shift+l", label: "Alinear a la izquierda", setup: "texto" },
-  { keys: "Control+Shift+e", label: "Centrar", setup: "texto" },
-  { keys: "Control+Shift+r", label: "Alinear a la derecha", setup: "texto" },
-  { keys: "Control+Shift+j", label: "Justificar", setup: "texto" },
-  { keys: "Control+Shift+Digit8", label: "Viñetas", setup: "texto" },
-  { keys: "Control+Shift+Digit7", label: "Numeración", setup: "texto" },
-  { keys: "Control+k", label: "Enlace", setup: "texto" },
-  { keys: "Control+h", label: "Buscar y reemplazar" },
-  { keys: "Control+Slash", label: "Combinaciones de teclas" },
-  { keys: "Control+p", label: "Imprimir" },
-  { keys: "Control+Enter", label: "Presentar" },
-  { keys: "Control+Alt+Shift+p", label: "Vista del presentador" },
-  { keys: "Control+Alt+m", label: "Comentario" },
-  { keys: "ArrowRight", label: "Mover a la derecha", setup: "texto" },
-  { keys: "Shift+ArrowDown", label: "Mover 1 px", setup: "texto" },
-  { keys: "Control+ArrowUp", label: "Traer adelante", setup: "texto" },
-  { keys: "Control+g", label: "Agrupar", setup: "nada" },
-  { keys: "Delete", label: "Eliminar objeto", setup: "texto" },
-  { keys: "Enter", label: "Editar texto", setup: "texto" },
-  { keys: "PageDown", label: "Siguiente diapositiva", setup: "nada" },
-  { keys: "PageUp", label: "Diapositiva anterior", setup: "nada" },
+const SHORTCUTS: Array<{ combo: string; label: string; setup?: "texto" | "nada" }> = [
+  { combo: "Control+m", label: "Nueva diapositiva" },
+  { combo: "Control+d", label: "Duplicar objeto", setup: "texto" },
+  { combo: "Control+z", label: "Deshacer" },
+  { combo: "Control+y", label: "Rehacer" },
+  { combo: "Control+a", label: "Seleccionar todo", setup: "nada" },
+  { combo: "Control+b", label: "Negrita", setup: "texto" },
+  { combo: "Control+i", label: "Cursiva", setup: "texto" },
+  { combo: "Control+u", label: "Subrayado", setup: "texto" },
+  { combo: "Control+Shift+Period", label: "Aumentar tamaño", setup: "texto" },
+  { combo: "Control+Shift+Comma", label: "Reducir tamaño", setup: "texto" },
+  { combo: "Control+Shift+l", label: "Alinear a la izquierda", setup: "texto" },
+  { combo: "Control+Shift+e", label: "Centrar", setup: "texto" },
+  { combo: "Control+Shift+r", label: "Alinear a la derecha", setup: "texto" },
+  { combo: "Control+Shift+j", label: "Justificar", setup: "texto" },
+  { combo: "Control+Shift+Digit8", label: "Viñetas", setup: "texto" },
+  { combo: "Control+Shift+Digit7", label: "Numeración", setup: "texto" },
+  { combo: "Control+k", label: "Enlace", setup: "texto" },
+  { combo: "Control+h", label: "Buscar y reemplazar" },
+  { combo: "Control+Slash", label: "Combinaciones de teclas" },
+  { combo: "Control+p", label: "Imprimir" },
+  { combo: "Control+Enter", label: "Presentar" },
+  { combo: "Control+Alt+Shift+p", label: "Vista del presentador" },
+  { combo: "Control+Alt+m", label: "Comentario" },
+  { combo: "ArrowRight", label: "Mover a la derecha", setup: "texto" },
+  { combo: "Shift+ArrowDown", label: "Mover 1 px", setup: "texto" },
+  { combo: "Control+ArrowUp", label: "Traer adelante", setup: "texto" },
+  { combo: "Control+g", label: "Agrupar", setup: "nada" },
+  { combo: "Delete", label: "Eliminar objeto", setup: "texto" },
+  { combo: "Enter", label: "Editar texto", setup: "texto" },
+  { combo: "PageDown", label: "Siguiente diapositiva", setup: "nada" },
+  { combo: "PageUp", label: "Diapositiva anterior", setup: "nada" },
 ];
 
 test("combinaciones de teclas", async ({ page }) => {
@@ -447,10 +447,10 @@ test("combinaciones de teclas", async ({ page }) => {
     if (fresh !== slides) { slides = fresh; trackErrors(slides, errors); await threeSlides(slides); }
     if (s.setup === "nada") await slides.keyboard.press("Escape");
     // Mover con flechas: objeto seleccionado sin editar (un clic sobre un cuadro ya seleccionado entra a editar, como en Slides)
-    if (s.setup === "texto" && /Arrow/.test(s.keys)) { await slides.evaluate(() => (document.activeElement as HTMLElement | null)?.blur()); await slides.keyboard.press("Escape"); await slides.keyboard.press("Escape"); await selectTitle(slides); }
+    if (s.setup === "texto" && /Arrow/.test(s.combo)) { await slides.evaluate(() => (document.activeElement as HTMLElement | null)?.blur()); await slides.keyboard.press("Escape"); await slides.keyboard.press("Escape"); await selectTitle(slides); }
     if (s.label === "Agrupar") await prepare(slides, "Organizar › Agrupar");
     if (s.label === "Rehacer") { await slides.keyboard.press("Control+b"); await slides.keyboard.press("Control+z"); }
-    results.push(await probe(slides, `${s.keys} (${s.label})`, async () => { await slides.keyboard.press(s.keys); }, errors));
+    results.push(await probe(slides, `${s.combo} (${s.label})`, async () => { await slides.keyboard.press(s.combo); }, errors));
   }
   await report("teclas", results);
   assertClean(results);
