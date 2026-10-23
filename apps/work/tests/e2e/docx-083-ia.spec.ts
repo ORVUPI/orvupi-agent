@@ -30,17 +30,27 @@ test("ORVUPI AI: guía, elección de modelo, origen y acciones (Drive y Docs)", 
   await expect(panel).toBeVisible();
   await expect(panel.getByText("Tus documentos no salen del dispositivo")).toBeVisible();
   await expect(panel.getByText("El modelo local no se descarga")).toHaveCount(0);
-  // Modelo: hay al menos un modelo utilizable y botón de descarga con tamaño
-  const select = panel.locator("select").first();
-  await expect(select).toBeVisible({ timeout: 20_000 });
+  // IA: se prepara sola con un botón (elige el modo del dispositivo); los modelos, en opciones avanzadas
+  await expect(panel.getByRole("button", { name: /Preparar ORVUPI AI/ })).toBeVisible({ timeout: 20_000 });
+  await panel.getByText("Opciones avanzadas").click();
+  const select = panel.locator(".ow-ai-advanced select");
   expect(await select.locator("option").count()).toBeGreaterThan(0);
-  await expect(panel.getByRole("button", { name: /Descargar y activar \(|Activar/ })).toBeVisible();
-  for (const label of ["Resumir", "Explicar", "Reescribir", "Traducir", "Esquema"]) await expect(panel.getByRole("button", { name: label, exact: true })).toBeVisible();
+  for (const label of ["Resumir", "Explicar", "Reescribir", "Traducir", "Esquema", "Generar preguntas", "Analizar"]) await expect(panel.getByRole("button", { name: label, exact: true })).toBeVisible();
   await expect(panel.getByText("Las ideas principales en viñetas")).toBeVisible();
   await expect(panel.getByRole("radio", { name: "Otro archivo de Work" })).toBeVisible();
-  // Sin modelo activado no se simula nada: lo dice claramente
-  await panel.getByRole("button", { name: "Resumir", exact: true }).click();
-  await expect(panel.getByRole("alert")).toContainText("Primero activa un modelo");
+  // Nunca se pide al usuario que cambie de modelo o de GPU
+  await expect(panel.getByText(/elige «Qwen|sin GPU \(WASM\)» en el paso/)).toHaveCount(0);
+  // «Analizar» funciona sin descargar nada: datos calculados del propio texto, entregados como documento
+  await panel.getByRole("radio", { name: "Pegar texto" }).check();
+  await panel.locator("textarea").fill(TEXT);
+  const popup = page.waitForEvent("popup");
+  await panel.getByRole("button", { name: "Analizar", exact: true }).click();
+  await expect(panel.locator(".ow-ai-status")).toContainText("Documento listo", { timeout: 30_000 });
+  await expect(panel.locator(".ow-ai-output table")).toBeVisible();
+  await expect(panel.locator(".ow-ai-output")).toContainText("Legibilidad");
+  const created = await popup;
+  await expect(created.locator(".ProseMirror")).toContainText("Datos del texto", { timeout: 30_000 });
+  await created.close();
   await shot(page, "panel");
 
   const doc = await newDocWithText(page);
@@ -65,18 +75,18 @@ test("ORVUPI AI: resumen real con el modelo pequeño, sin enviar el documento", 
   });
   await doc.getByRole("button", { name: "ORVUPI AI" }).filter({ visible: true }).first().click();
   const drawer = doc.locator(".ow-doc-aipanel");
-  const select = drawer.locator("select").first();
-  await expect(select).toBeVisible({ timeout: 20_000 });
-  await select.selectOption(modelId);
+  await expect(drawer.getByRole("button", { name: /Preparar ORVUPI AI/ })).toBeVisible({ timeout: 20_000 });
+  await drawer.getByText("Opciones avanzadas").click();
+  await drawer.locator(".ow-ai-advanced select").selectOption(modelId);
   const t0 = Date.now();
-  await drawer.getByRole("button", { name: /Descargar y activar|Activar/ }).click();
+  await drawer.getByRole("button", { name: "Usar este modelo" }).click();
   await expect(drawer.getByRole("progressbar")).toBeVisible({ timeout: 60_000 }).catch(() => undefined);
   await shot(doc, "descarga");
   await expect(drawer.locator(".ow-ai-ready")).toBeVisible({ timeout: 1_500_000 });
   const loadMs = Date.now() - t0;
   const t1 = Date.now();
   await drawer.getByRole("button", { name: "Resumir", exact: true }).click();
-  await expect(drawer.locator(".ow-ai-status")).toContainText("fragmentos", { timeout: 900_000 });
+  await expect(drawer.locator(".ow-ai-status")).toContainText("Documento listo", { timeout: 900_000 });
   const summaryMs = Date.now() - t1;
   const summary = (await drawer.locator(".ow-ai-output").innerText()).trim();
   expect(summary.length).toBeGreaterThan(40);

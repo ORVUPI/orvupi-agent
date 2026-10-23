@@ -31,8 +31,9 @@ export function storageKey(url: string): string {
 }
 
 /** Clave del archivo principal de pesos de un modelo, para saber si ya está descargado. */
-export function modelWeightsKey(repo: string, dtype: string): string {
-  const file = dtype === "q8" ? "model_quantized.onnx" : `model_${dtype}.onnx`;
+export function modelWeightsKey(repo: string, dtype: string, externalData = false): string {
+  // Los modelos con los pesos aparte (LFM2, Gemma 3) guardan casi todo en «.onnx_data»
+  const file = `${dtype === "q8" ? "model_quantized" : `model_${dtype}`}.onnx${externalData ? "_data" : ""}`;
   return storageKey(`https://huggingface.co/${repo}/resolve/main/onnx/${file}`);
 }
 

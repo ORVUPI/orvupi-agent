@@ -140,12 +140,12 @@ export function HomeScreen() {
 export function TemplateLibrary() {
   const { t, createDocument, locale } = useWorkspace();
   return (
-    <section>
-      <h2>{t("templates")}</h2>
+    <section className="ow-templates" aria-labelledby="ow-templates-title">
+      <h2 id="ow-templates-title">{t("templates")}</h2>
       {templateCategories.map((category) => (
-        <div key={category.id}>
-          <h3>{t(category.label)}</h3>
-          <div className="ow-grid">
+        <section key={category.id} className="ow-template-cat" aria-labelledby={`ow-template-cat-${category.id}`}>
+          <h3 id={`ow-template-cat-${category.id}`} className="ow-template-cat-title">{t(category.label)}</h3>
+          <div className="ow-grid ow-template-grid">
             {templates
               .filter((template) => template.category === category.id)
               .map((template) => (
@@ -165,7 +165,7 @@ export function TemplateLibrary() {
                 />
               ))}
           </div>
-        </div>
+        </section>
       ))}
     </section>
   );

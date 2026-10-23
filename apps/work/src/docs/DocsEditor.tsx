@@ -630,11 +630,14 @@ export function DocsEditor({
                 return editor.state.doc.textBetween(from, to, "\n");
               },
             }}
-            onInsert={(text) => {
+            onInsert={(text, mode = "insert") => {
               if (!editor) return;
               const paragraphs = markdownToNodes(text);
-              const { to } = editor.state.selection;
-              editor.chain().focus().insertContentAt(to, paragraphs).run();
+              const { from, to } = editor.state.selection;
+              // Insertar: tras la selección · Reemplazar: en lugar de la selección · Añadir debajo: al final del documento
+              if (mode === "replace" && from !== to) editor.chain().focus().insertContentAt({ from, to }, paragraphs).run();
+              else if (mode === "below") editor.chain().focus().insertContentAt(editor.state.doc.content.size, paragraphs).run();
+              else editor.chain().focus().insertContentAt(to, paragraphs).run();
             }}
           />
         </aside>
