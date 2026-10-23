@@ -146,7 +146,7 @@ async function menuEntries(page: Page, label: string) {
 }
 
 async function clickEntry(page: Page, parent: string, label: string) {
-  const menus = page.locator(`.sl-menus [role="menu"][aria-label="${parent.replace(/"/g, '\\"')}"]`);
+  const menus = page.locator(`.sl-menus [role="menu"][aria-label="${parent.replace(/[\\"]/g, "\\$&")}"]`);
   const row = menus.last().locator(":scope > .ow-menu-row > button[role=menuitem]").filter({ has: page.locator("span", { hasText: new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`) }) }).first();
   await row.click();
 }
