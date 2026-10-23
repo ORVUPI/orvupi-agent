@@ -1,5 +1,17 @@
 # Registro de cambios
 
+## 0.9.5 — 2026-10-23
+
+Presentaciones: formato dentro del texto, PowerPoint con gráficos y vídeo reales, diseño propio para tableta y auditoría completa.
+
+- Formato en la selección, como Slides y Docs: negrita, cursiva, subrayado, tachado, color, resaltado, fuente, tamaño (− / + de 1 en 1 y lista 1–96) y enlaces se aplican solo a las palabras seleccionadas dentro del cuadro; con el cursor en una palabra se aplica a esa palabra. La barra muestra el formato real de la selección. Sin texto en edición se aplica a todo el cuadro. Se conserva al guardar, deshacer, buscar y reemplazar, presentar, exportar a PDF/PNG y a PowerPoint.
+- PowerPoint: los gráficos se exportan como gráficos nativos editables de PowerPoint (barras, columnas, líneas y circular, con su hoja de datos) y el vídeo va dentro del .pptx (YouTube como vídeo en línea; los archivos de vídeo incrustados). El texto lleva su formato por palabra. Al volver a importar el .pptx se recuperan los gráficos, los vídeos, el formato por palabra y el volteo.
+- Tableta (768–1199 px): diseño propio como Slides en tableta, con la tira de miniaturas, barra de herramientas compacta que se desplaza, menús y botones de 44 px, paneles como hoja inferior y tiradores más grandes para el dedo. El móvil no cambia.
+- Voltear horizontal y verticalmente refleja de verdad formas e imágenes (también en PDF, PNG y PowerPoint).
+- Opciones de imagen sin una imagen seleccionada avisan «Selecciona antes una imagen.»; «Cambiar nombre» lleva al título y lo selecciona.
+- Auditoría automática (Playwright) de cada menú, cada botón de la barra en cada contexto y cada combinación de teclas, en escritorio, tableta y móvil con Chromium, Firefox y WebKit.
+- Miniaturas sin franja blanca en tableta y móvil.
+
 ## 0.9.4 — 2026-10-19
 
 Docs: un DOCX importado se ve como el original, sin cortes ni desplazadores.

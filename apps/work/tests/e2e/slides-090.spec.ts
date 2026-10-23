@@ -133,9 +133,11 @@ test("cuadro de texto con formato y tamaño de fuente 1–96", async ({ page }) 
   await expect(list.getByRole("option").last()).toHaveText("96");
   await list.getByRole("option", { name: "40", exact: true }).click();
   await expect(size).toHaveValue("40");
-  await expect.poll(() => box.locator(".sl-text").evaluate((n) => Math.round(Number.parseFloat(getComputedStyle(n).fontSize)))).toBe(53);
+  // 0.9.3: con el cursor en el texto el formato va a la palabra (como Slides): se mira el texto más grande / más grueso del cuadro
+  const most = (prop: "fontSize" | "fontWeight") => box.locator(".sl-text").evaluate((n, p) => Math.max(...[n, ...n.querySelectorAll("*")].map((e) => Math.round(Number.parseFloat(getComputedStyle(e)[p as "fontSize"]) || 0))), prop);
+  await expect.poll(() => most("fontSize")).toBe(53);
   await slides.getByRole("button", { name: "Negrita" }).click();
-  await expect(box.locator(".sl-text")).toHaveCSS("font-weight", "700");
+  await expect.poll(() => most("fontWeight")).toBe(700);
   await slides.getByRole("button", { name: "Lista con viñetas" }).click();
   await expect(box.locator(".sl-lines.is-bullet")).toBeAttached();
   await shot(slides, "texto");

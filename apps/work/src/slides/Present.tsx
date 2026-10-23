@@ -102,15 +102,21 @@ export function Presenter({ file, start, presenter, tx, onExit }: { file: Slides
   /* vista del presentador: ventana aparte (o en la misma si el navegador la bloquea) */
   useEffect(() => {
     if (!presenter) return;
-    const win = window.open("", `orvupi-presenter-${file.id}`, "popup=yes,width=1100,height=720");
-    if (!win) { setInline(true); return; }
-    win.document.title = `${tx("Vista del presentador", "Presenter view")} · ${file.title}`;
-    win.document.documentElement.lang = document.documentElement.lang;
-    for (const node of [...document.querySelectorAll('link[rel="stylesheet"], style')]) win.document.head.appendChild(node.cloneNode(true));
-    win.document.body.className = "sl-pv-body";
-    setPopup(win);
-    const closed = window.setInterval(() => { if (win.closed) { window.clearInterval(closed); setPopup(null); } }, 800);
-    return () => { window.clearInterval(closed); win.close(); };
+    // Se abre fuera del ciclo de React: Firefox dispara eventos síncronos al abrir la ventana (error #327)
+    let win: Window | null = null;
+    let closed = 0;
+    const opener = window.setTimeout(() => {
+      win = window.open("", `orvupi-presenter-${file.id}`, "popup=yes,width=1100,height=720");
+      if (!win) { setInline(true); return; }
+      const w = win;
+      w.document.title = `${tx("Vista del presentador", "Presenter view")} · ${file.title}`;
+      w.document.documentElement.lang = document.documentElement.lang;
+      for (const node of [...document.querySelectorAll('link[rel="stylesheet"], style')]) w.document.head.appendChild(node.cloneNode(true));
+      w.document.body.className = "sl-pv-body";
+      setPopup(w);
+      closed = window.setInterval(() => { if (w.closed) { window.clearInterval(closed); setPopup(null); } }, 800);
+    }, 0);
+    return () => { window.clearTimeout(opener); window.clearInterval(closed); (win as Window | null)?.close(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [presenter]);
 

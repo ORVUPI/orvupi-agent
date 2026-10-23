@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { usePhone } from "./phone";
 import { TableGrid, openTableDialog } from "./TablePicker";
 
@@ -23,8 +23,26 @@ function Items({
   onDone: () => void;
 }) {
   const [sub, setSub] = useState<string | null>(null);
+  const box = useRef<HTMLDivElement>(null);
+  // Un menú largo (p. ej. Insertar › Forma) no se sale por abajo: sube lo necesario y, si aun así no cabe, se desplaza
+  useLayoutEffect(() => {
+    const el = box.current;
+    if (!el || getComputedStyle(el).position === "static") return;
+    el.style.marginTop = "";
+    el.style.maxHeight = "";
+    el.style.overflowY = "";
+    const margin = 8;
+    const vh = window.innerHeight;
+    const r = el.getBoundingClientRect();
+    if (r.bottom <= vh - margin) return;
+    const nested = Boolean(el.parentElement?.closest('[role="menu"]'));
+    const up = nested ? Math.min(r.bottom - (vh - margin), r.top - margin) : 0;
+    if (up > 0) el.style.marginTop = `${-up}px`;
+    const top = r.top - up;
+    if (top + r.height > vh - margin) { el.style.maxHeight = `${Math.max(120, vh - margin - top)}px`; el.style.overflowY = "auto"; }
+  }, [items]);
   return (
-    <div role="menu" aria-label={label}>
+    <div role="menu" aria-label={label} ref={box}>
       {items.map((item) =>
         item.static ? (
           <p key={item.id} className="ow-menu-note" role="note">{item.label}</p>
@@ -76,12 +94,16 @@ export function MenuBar({
   label,
   menus,
   className = "",
+  compact,
 }: {
   label: string;
   menus: Array<{ id: string; label: string; items: BarItem[] }>;
   className?: string;
+  /** Fuerza (o evita) la barra compacta de móvil; por defecto, según el dispositivo. */
+  compact?: boolean;
 }) {
-  const phone = usePhone();
+  const auto = usePhone();
+  const phone = compact ?? auto;
   const [open, setOpen] = useState<string | null>(null);
   const [hub, setHub] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
