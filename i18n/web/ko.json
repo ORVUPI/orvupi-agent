@@ -147,7 +147,7 @@
   "Closed describes that permission. It does not say the token is safe or what to do with it.": "닫힌 접근법. 토큰은 안전하지 않거나 그와 함께 할 것.",
   "Closed permission = nobody can create more units or freeze accounts. Copies can have it too.": "닫된 권한 = 아무도 더 많은 단위 또는 동결 계정을 만들 수 없습니다. 경찰은 그것을 역시 가질 수 있습니다.",
   "Closed: that permission is not assigned in this reading. It does not show the project is legitimate.": "닫히는: 이 독서에서 할당되지 않는. 이 프로젝트는 합법적으로 표시되지 않습니다.",
-  "Collection": "....",
+  "Collection": "컬렉션",
   "Community": "커뮤니티",
   "Community rules": "커뮤니티 규칙",
   "Compare queries": "queries 비교",
@@ -999,7 +999,11 @@
   "‘Holder’ (industry term)": "‘Holder’ (industry term)",
   "‘Holder’ (industry term): an account that holds tokens. It implies no rights and no investor community.": "‘Holder’ (industry term): an account that holds tokens. It implies no rights and no investor community.",
   "≈ 200,000,000 (≈ 20%) when 30 SOL is reached, migration to Raydium CPMM": "≈ 200,000,000 (≈ 20 %) 30 SOL이 도달 할 때, Raydium CPMM로 이전",
-  "≈ 44.37 M ORVUPI (≈ 4.44%) from the initial buy, separate from the 5% vesting": "≈ 44.37 M ORVUPI (≈ 4.44%) 초기 구매시 5% vesting 별도"
+  "≈ 44.37 M ORVUPI (≈ 4.44%) from the initial buy, separate from the 5% vesting": "≈ 44.37 M ORVUPI (≈ 4.44%) 초기 구매시 5% vesting 별도",
+  "Collections": "컬렉션",
+  "Explore all 500 images": "이미지 500개 모두 보기",
+  "IMAGES": "이미지",
+  "Language": "언어"
  },
  "attrs": {
   "Avatar maestro ORVUPI": "ORVUPI 마스터 아바타",

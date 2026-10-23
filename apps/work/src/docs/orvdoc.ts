@@ -111,8 +111,15 @@ export function parseOrvdoc(bytes: Uint8Array | string): OrvdocFile {
     pageSize: parsed.pageSize === "letter" ? "letter" : "a4",
     pageOrientation: parsed.pageOrientation === "landscape" ? "landscape" : "portrait",
     pageMargin: parsed.pageMargin === "narrow" || parsed.pageMargin === "wide" ? parsed.pageMargin : "normal",
+    ...(marginTw(parsed.pageMarginTw) ? { pageMarginTw: marginTw(parsed.pageMarginTw) } : {}),
     ...(Array.isArray(parsed.tabs) && parsed.tabs.length > 0 ? { tabs: tabsOf(parsed.tabs, parsed.content, "Pestaña 1").map((tab, i) => (i === 0 ? { ...tab, content: undefined } : tab)) } : {}),
   };
+}
+
+/** Margen exacto en twips: entre 0,1" y 3" (144–4320). */
+export function marginTw(value: unknown): number | undefined {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 144 && n <= 4320 ? Math.round(n) : undefined;
 }
 
 export function withContent(file: OrvdocFile, content: JsonNode, title: string, updatedAt: string): OrvdocFile {

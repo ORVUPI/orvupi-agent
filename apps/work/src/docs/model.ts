@@ -90,6 +90,8 @@ export type OrvdocFile = {
   pageSize?: PageSize;
   pageOrientation?: PageOrientation;
   pageMargin?: PageMargin;
+  /** Margen exacto del documento importado, en twips (0.9.4). Sin él se usa el de `pageMargin`. */
+  pageMarginTw?: number;
   /** Pestañas (0.8.3). La primera usa `content`; las demás llevan el suyo. */
   tabs?: import("./tabs").DocTab[];
 };
