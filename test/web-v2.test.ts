@@ -34,6 +34,7 @@ const ROUTES = [
   "marca/index.html",
   "memes/index.html",
   "vision/index.html",
+  "novedades/index.html",
   "aprender/index.html",
   "studio/index.html",
   "studio/reglas/index.html",
