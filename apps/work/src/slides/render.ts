@@ -1,3 +1,4 @@
+import { parasOf, type Run } from "./rich";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import { PT, SLIDE_H, SLIDE_W, type ChartItem, type LineItem, type Slide, type SlideItem, type SlidesFile, type TableItem, type TextStyle } from "./model";
 import { shapePath } from "./shapes";
@@ -33,65 +34,80 @@ function defaultSize(item: SlideItem & TextStyle): number {
   return 18;
 }
 
-function fontOf(item: SlideItem & TextStyle, theme: ThemeSpec, px: number): string {
-  const isTitle = item.kind === "text" && (item.placeholder === "title" || item.placeholder === "number");
-  return `${item.italic ? "italic " : ""}${item.bold ? 700 : 400} ${px}px ${fontStack(item.font, isTitle ? theme.titleFont : theme.bodyFont)}`;
-}
-
-function wrap(ctx: CanvasRenderingContext2D, text: string, width: number): string[] {
-  const out: string[] = [];
-  let line = "";
-  const fits = (t: string) => ctx.measureText(t).width <= width;
-  for (const word of text.split(" ")) {
-    const test = line ? `${line} ${word}` : word;
-    if (fits(test)) { line = test; continue; }
-    if (line) out.push(line);
-    line = "";
-    // palabra más larga que la caja: se corta por letras, como en Slides
-    for (const ch of word) {
-      if (line && !fits(line + ch)) { out.push(line); line = ""; }
-      line += ch;
-    }
-  }
-  out.push(line);
-  return out;
-}
-
 type Laid = { text: string; x: number; y: number; size: number; bold: boolean };
 
-/** Dibuja el texto de un cuadro o forma y devuelve las líneas colocadas (para la capa de texto del PDF). */
+type Piece = { t: string; font: string; size: number; color: string; hl?: string; u: boolean; s: boolean; bold: boolean; w: number };
+
+/** Dibuja el texto de un cuadro o forma (con formato por palabras) y devuelve las líneas colocadas (para la capa de texto del PDF). */
 function drawText(ctx: CanvasRenderingContext2D, item: SlideItem & TextStyle, theme: ThemeSpec, color: string, defAlign: CanvasTextAlign, defV: "top" | "middle" | "bottom"): Laid[] {
   if (!item.text) return [];
-  const size = (item.size ?? defaultSize(item)) * PT;
-  const lh = size * (item.lineHeight ?? 1.15);
-  ctx.font = fontOf(item, theme, size);
-  const indent = item.list === "bullet" || item.list === "number" ? size * 1.2 : 0;
+  const baseSize = item.size ?? defaultSize(item);
+  const factor = item.lineHeight ?? 1.15;
+  const isTitle = item.kind === "text" && (item.placeholder === "title" || item.placeholder === "number");
+  const indent = item.list === "bullet" || item.list === "number" ? baseSize * PT * 1.2 : 0;
   const inner = Math.max(4, item.w - TEXT_PAD * 2 - indent);
-  const rows: Array<{ text: string; marker?: string }> = [];
-  item.text.split("\n").forEach((para, i) => {
-    const parts = wrap(ctx, para, inner);
-    parts.forEach((t, k) => rows.push({ text: t, marker: k === 0 ? (item.list === "bullet" ? "•" : item.list === "number" ? `${i + 1}.` : undefined) : undefined }));
+  const style = (r: Run) => {
+    const size = (r.size ?? baseSize) * PT;
+    const bold = r.b ?? Boolean(item.bold);
+    const font = `${(r.i ?? item.italic) ? "italic " : ""}${bold ? 700 : 400} ${size}px ${r.font ? `"${r.font}", ` : ""}${fontStack(item.font, isTitle ? theme.titleFont : theme.bodyFont)}`;
+    return { font, size, bold, color: r.color ?? (r.link ? "#1a73e8" : color), hl: r.hl ?? item.highlight, u: r.u ?? (Boolean(item.underline) || Boolean(r.link)), s: r.s ?? Boolean(item.strike) };
+  };
+  const measure = (p: Omit<Piece, "w">): Piece => { ctx.font = p.font; return { ...p, w: ctx.measureText(p.t).width }; };
+  type Row = { pieces: Piece[]; marker?: string; size: number };
+  const rows: Row[] = [];
+  parasOf(item).forEach((para, i) => {
+    const marker = item.list === "bullet" ? "•" : item.list === "number" ? `${i + 1}.` : undefined;
+    // Trozos: palabras y espacios, cada uno con su formato.
+    const tokens: Piece[] = [];
+    for (const r of para) for (const t of r.t.split(/(\s+)/)) if (t) tokens.push(measure({ t, ...style(r) }));
+    let row: Row = { pieces: [], marker, size: baseSize * PT };
+    let width = 0;
+    const push = () => { rows.push(row); row = { pieces: [], size: baseSize * PT }; width = 0; };
+    for (const tok of tokens) {
+      const space = /^\s+$/.test(tok.t);
+      if (width + tok.w <= inner || (space && row.pieces.length > 0)) { row.pieces.push(tok); width += tok.w; row.size = Math.max(row.size, tok.size); continue; }
+      if (space) continue;
+      if (row.pieces.length > 0) push();
+      if (tok.w <= inner) { row.pieces.push(tok); width = tok.w; row.size = Math.max(row.size, tok.size); continue; }
+      // palabra más larga que la caja: se corta por letras, como en Slides
+      let part = "";
+      for (const ch of tok.t) {
+        const m = measure({ ...tok, t: part + ch });
+        if (part && m.w > inner) { row.pieces.push(measure({ ...tok, t: part })); row.size = Math.max(row.size, tok.size); push(); part = ""; }
+        part += ch;
+      }
+      if (part) { const m = measure({ ...tok, t: part }); row.pieces.push(m); width = m.w; row.size = Math.max(row.size, tok.size); }
+    }
+    rows.push(row);
   });
-  const total = rows.length * lh;
+  // Los espacios al final de línea no cuentan para alinear.
+  for (const row of rows) while (row.pieces.length > 0 && /^\s+$/.test(row.pieces[row.pieces.length - 1]!.t)) row.pieces.pop();
+  const total = rows.reduce((n, r) => n + r.size * factor, 0);
   const v = item.valign ?? defV;
   let y = v === "middle" ? (item.h - total) / 2 : v === "bottom" ? item.h - TEXT_PAD - total : TEXT_PAD;
   const align = item.align === "center" ? "center" : item.align === "right" ? "right" : item.align === "justify" || item.align === "left" ? "left" : defAlign;
   const laid: Laid[] = [];
   ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "left";
   for (const row of rows) {
-    const base = y + (lh - size) / 2 + size * 0.86;
-    const w = ctx.measureText(row.text).width;
-    const x = align === "center" ? TEXT_PAD + indent + (inner - w) / 2 : align === "right" ? item.w - TEXT_PAD - w : TEXT_PAD + indent;
-    if (item.highlight) { ctx.fillStyle = item.highlight; ctx.fillRect(x, y, w, lh); }
-    ctx.fillStyle = color;
-    if (row.marker) { ctx.textAlign = "left"; ctx.fillText(row.marker, TEXT_PAD, base); }
-    ctx.textAlign = "left";
-    ctx.fillText(row.text, x, base);
-    if (item.underline || item.strike) {
-      ctx.fillRect(x, item.underline ? base + size * 0.1 : base - size * 0.3, w, Math.max(1, size / 16));
-      if (item.underline && item.strike) ctx.fillRect(x, base - size * 0.3, w, Math.max(1, size / 16));
+    const lh = row.size * factor;
+    const base = y + (lh - row.size) / 2 + row.size * 0.86;
+    const w = row.pieces.reduce((n, p) => n + p.w, 0);
+    let x = align === "center" ? TEXT_PAD + indent + (inner - w) / 2 : align === "right" ? item.w - TEXT_PAD - w : TEXT_PAD + indent;
+    const x0 = x;
+    if (row.marker) { ctx.font = style({ t: "" }).font; ctx.fillStyle = color; ctx.fillText(row.marker, TEXT_PAD, base); }
+    for (const p of row.pieces) {
+      if (p.hl) { ctx.fillStyle = p.hl; ctx.fillRect(x, y, p.w, lh); }
+      ctx.font = p.font;
+      ctx.fillStyle = p.color;
+      ctx.fillText(p.t, x, base);
+      const thick = Math.max(1, p.size / 16);
+      if (p.u) ctx.fillRect(x, base + p.size * 0.1, p.w, thick);
+      if (p.s) ctx.fillRect(x, base - p.size * 0.3, p.w, thick);
+      x += p.w;
     }
-    laid.push({ text: (row.marker ? `${row.marker} ` : "") + row.text, x: item.x + x, y: item.y + base, size, bold: !!item.bold });
+    const text = row.pieces.map((p) => p.t).join("");
+    laid.push({ text: (row.marker ? `${row.marker} ` : "") + text, x: item.x + x0, y: item.y + base, size: row.size, bold: row.pieces.length > 0 && row.pieces.every((p) => p.bold) });
     y += lh;
   }
   return laid;
@@ -233,7 +249,8 @@ async function drawItem(ctx: CanvasRenderingContext2D, item: SlideItem, theme: T
     laid = drawText(ctx, item, theme, item.color ?? (isTitle ? theme.title : theme.text), "left", "top");
   } else if (item.kind === "shape") {
     const path = new Path2D();
-    path.addPath(new Path2D(shapePath(item.shape)), new DOMMatrix().scale(item.w / 100, item.h / 100));
+    const m = new DOMMatrix().translate(item.flipH ? item.w : 0, item.flipV ? item.h : 0).scale((item.flipH ? -1 : 1) * item.w / 100, (item.flipV ? -1 : 1) * item.h / 100);
+    path.addPath(new Path2D(shapePath(item.shape)), m);
     if (item.fill !== "none") { ctx.fillStyle = item.fill; ctx.fill(path); }
     const sw = item.stroke === "none" ? 0 : item.strokeWidth ?? 2;
     if (sw > 0) { ctx.strokeStyle = item.stroke ?? "#102032"; ctx.lineWidth = sw; setDash(ctx, item.dash, sw); ctx.stroke(path); ctx.setLineDash([]); }
@@ -243,6 +260,7 @@ async function drawItem(ctx: CanvasRenderingContext2D, item: SlideItem, theme: T
     if (img) {
       const c = item.crop ?? { l: 0, t: 0, r: 0, b: 0 };
       ctx.globalAlpha = item.opacity ?? 1;
+      if (item.flipH || item.flipV) { ctx.translate(item.flipH ? item.w : 0, item.flipV ? item.h : 0); ctx.scale(item.flipH ? -1 : 1, item.flipV ? -1 : 1); }
       ctx.drawImage(img, img.naturalWidth * c.l, img.naturalHeight * c.t, img.naturalWidth * (1 - c.l - c.r), img.naturalHeight * (1 - c.t - c.b), 0, 0, item.w, item.h);
       ctx.globalAlpha = 1;
     }

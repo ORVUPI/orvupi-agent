@@ -151,7 +151,17 @@ jobs:
         run: npm ci
 
       - name: Install browsers
-        run: npx playwright install --with-deps chromium webkit
+        # El espejo apt del runner a veces se queda parado: apt con reintentos y tiempo límite, y 3 intentos de 6 min
+        # (si un intento se corta, se mata su apt-get para liberar el bloqueo de dpkg).
+        run: |
+          printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' | sudo tee /etc/apt/apt.conf.d/99red >/dev/null
+          for i in 1 2 3; do
+            timeout 360 npx playwright install --with-deps chromium webkit && exit 0
+            echo "intento $i fallido"; sudo pkill -9 -x apt-get || true; sudo pkill -9 -x dpkg || true; sleep 3; sudo dpkg --configure -a || true
+            # El espejo de Azure es el que se atasca: los siguientes intentos usan el de Ubuntu.
+            printf 'http://archive.ubuntu.com/ubuntu/\tpriority:1\nhttp://azure.archive.ubuntu.com/ubuntu/\tpriority:2\n' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+          done
+          exit 1
 
       - name: Browser tests
         run: npm run test:browser
@@ -176,7 +186,17 @@ jobs:
         run: npm ci
 
       - name: Install browsers
-        run: npx playwright install --with-deps chromium webkit
+        # El espejo apt del runner a veces se queda parado: apt con reintentos y tiempo límite, y 3 intentos de 6 min
+        # (si un intento se corta, se mata su apt-get para liberar el bloqueo de dpkg).
+        run: |
+          printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' | sudo tee /etc/apt/apt.conf.d/99red >/dev/null
+          for i in 1 2 3; do
+            timeout 360 npx playwright install --with-deps chromium webkit && exit 0
+            echo "intento $i fallido"; sudo pkill -9 -x apt-get || true; sudo pkill -9 -x dpkg || true; sleep 3; sudo dpkg --configure -a || true
+            # El espejo de Azure es el que se atasca: los siguientes intentos usan el de Ubuntu.
+            printf 'http://archive.ubuntu.com/ubuntu/\tpriority:1\nhttp://azure.archive.ubuntu.com/ubuntu/\tpriority:2\n' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+          done
+          exit 1
 
       - name: Playwright
         run: npx playwright test
@@ -216,7 +236,17 @@ jobs:
           npx vite build --base /work/ --outDir ../../web/v2/work --emptyOutDir
 
       - name: Install browsers
-        run: npx playwright install --with-deps chromium firefox webkit
+        # El espejo apt del runner a veces se queda parado: apt con reintentos y tiempo límite, y 3 intentos de 6 min
+        # (si un intento se corta, se mata su apt-get para liberar el bloqueo de dpkg).
+        run: |
+          printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' | sudo tee /etc/apt/apt.conf.d/99red >/dev/null
+          for i in 1 2 3; do
+            timeout 360 npx playwright install --with-deps chromium firefox webkit && exit 0
+            echo "intento $i fallido"; sudo pkill -9 -x apt-get || true; sudo pkill -9 -x dpkg || true; sleep 3; sudo dpkg --configure -a || true
+            # El espejo de Azure es el que se atasca: los siguientes intentos usan el de Ubuntu.
+            printf 'http://archive.ubuntu.com/ubuntu/\tpriority:1\nhttp://azure.archive.ubuntu.com/ubuntu/\tpriority:2\n' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+          done
+          exit 1
 
       - name: Playwright en los cinco idiomas
         run: npx playwright test -c playwright.i18n.config.mjs --project=chromium-desktop --project=firefox-tablet --project=webkit-mobile
@@ -251,7 +281,17 @@ jobs:
         run: npm test
 
       - name: Install browser
-        run: npx playwright install --with-deps chromium webkit firefox
+        # El espejo apt del runner a veces se queda parado: apt con reintentos y tiempo límite, y 3 intentos de 6 min
+        # (si un intento se corta, se mata su apt-get para liberar el bloqueo de dpkg).
+        run: |
+          printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' | sudo tee /etc/apt/apt.conf.d/99red >/dev/null
+          for i in 1 2 3; do
+            timeout 360 npx playwright install --with-deps chromium webkit firefox && exit 0
+            echo "intento $i fallido"; sudo pkill -9 -x apt-get || true; sudo pkill -9 -x dpkg || true; sleep 3; sudo dpkg --configure -a || true
+            # El espejo de Azure es el que se atasca: los siguientes intentos usan el de Ubuntu.
+            printf 'http://archive.ubuntu.com/ubuntu/\tpriority:1\nhttp://azure.archive.ubuntu.com/ubuntu/\tpriority:2\n' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+          done
+          exit 1
 
       - name: End to end
         run: npm run test:e2e

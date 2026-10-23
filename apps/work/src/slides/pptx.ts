@@ -3,6 +3,9 @@ import { encodeUtf8, decodeUtf8 } from "../security/bytes";
 import { PT, SLIDE_H, SLIDE_W, LIMITS, lineBox, newId, type ShapeKind, type Slide, type SlideItem, type SlidesFile, type TextStyle, type SlideTransition, type ListKind, type Placeholder } from "./model";
 import { themeOf } from "./SlideView";
 import { THEMES } from "./themes";
+import { againstBase, hasRunStyle, normalize, parasOf, plainOf, type Para, type Run } from "./rich";
+import { youtubeId } from "./ops";
+import { sheetsToXlsx } from "../sheets/xlsx";
 
 /** 1 px lógico (96 ppp) = 9525 EMU, así 960 × 540 son exactamente 10 × 5,625 pulgadas. */
 const EMU = 9525;
@@ -34,7 +37,8 @@ function dataUrlBytes(src: string): { bytes: Uint8Array; ext: string } | null {
   return { bytes, ext };
 }
 
-type Ctx = { rels: string[]; media: Array<{ name: string; data: Uint8Array }>; nextRel: number; nextId: number; slideIndex: number; slideCount: number };
+type Pkg = { charts: number; overrides: string[]; files: Array<{ name: string; data: Uint8Array }>; exts: Set<string> };
+type Ctx = { rels: string[]; media: Array<{ name: string; data: Uint8Array }>; nextRel: number; nextId: number; slideIndex: number; slideCount: number; pkg: Pkg };
 
 function rel(ctx: Ctx, type: string, target: string, external = false): string {
   const id = `rId${ctx.nextRel++}`;
@@ -55,6 +59,7 @@ function linkXml(ctx: Ctx, link: string | undefined): string {
 
 function xfrm(item: SlideItem, extra = ""): string {
   const rot = item.rot ? ` rot="${Math.round((((item.rot % 360) + 360) % 360) * 60000)}"` : "";
+  if (item.kind !== "line" && item.kind !== "text" && !extra) extra = `${item.flipH ? ' flipH="1"' : ""}${item.flipV ? ' flipV="1"' : ""}`;
   return `<a:xfrm${rot}${extra}><a:off x="${e(item.x)}" y="${e(item.y)}"/><a:ext cx="${e(Math.max(1, item.w))}" cy="${e(Math.max(1, item.h))}"/></a:xfrm>`;
 }
 
@@ -67,7 +72,7 @@ function defaultSize(item: SlideItem & TextStyle): number {
   return 18;
 }
 
-function txBody(item: SlideItem & TextStyle, slide: Slide, defaults: { align: string; anchor: string }): string {
+function txBody(item: SlideItem & TextStyle, slide: Slide, defaults: { align: string; anchor: string }, ctx?: Ctx): string {
   const theme = themeOf(slide);
   const isTitle = item.kind === "text" && (item.placeholder === "title" || item.placeholder === "number");
   const color = item.kind === "shape" ? hex(item.color, "#" + (inkHex(item.fill))) : hex(item.color, isTitle ? theme.title : theme.text);
@@ -79,7 +84,18 @@ function txBody(item: SlideItem & TextStyle, slide: Slide, defaults: { align: st
   const bullet = item.list === "bullet" ? '<a:buFont typeface="Arial"/><a:buChar char="•"/>' : item.list === "number" ? '<a:buFont typeface="+mj-lt"/><a:buAutoNum type="arabicPeriod"/>' : "<a:buNone/>";
   const mar = item.list === "bullet" || item.list === "number" ? ` marL="${e(item.size ? item.size * PT * 1.2 : 28)}" indent="-${e(item.size ? item.size * PT * 1.2 : 28)}"` : ' marL="0" indent="0"';
   const rPr = (tag: "a:rPr" | "a:endParaRPr") => `<${tag} lang="es-ES" sz="${sz}"${item.bold ? ' b="1"' : ' b="0"'}${item.italic ? ' i="1"' : ""}${item.underline ? ' u="sng"' : ""}${item.strike ? ' strike="sngStrike"' : ""} dirty="0">${solid(color)}${item.highlight && tag === "a:rPr" ? `<a:highlight><a:srgbClr val="${hex(item.highlight, "#ffff00")}"/></a:highlight>` : ""}<a:latin typeface="${esc(font)}"/><a:cs typeface="${esc(font)}"/></${tag}>`;
-  const paras = (item.text || "").split("\n").map((line) => `<a:p><a:pPr algn="${algn}"${mar}>${lnSpc}${bullet}</a:pPr>${line ? `<a:r>${rPr("a:rPr")}<a:t>${esc(line)}</a:t></a:r>` : ""}${rPr("a:endParaRPr")}</a:p>`);
+  // Formato por palabras: cada tramo es un <a:r> con su propio <a:rPr>.
+  const runPr = (r: Run) => {
+    const b = r.b ?? Boolean(item.bold);
+    const i = r.i ?? Boolean(item.italic);
+    const u = r.u ?? (Boolean(item.underline) || Boolean(r.link));
+    const st = r.s ?? Boolean(item.strike);
+    const rf = r.font ?? font;
+    const hlc = r.hl ?? item.highlight;
+    const link = r.link && ctx ? linkXml(ctx, r.link) : "";
+    return `<a:rPr lang="es-ES" sz="${Math.round((r.size ?? item.size ?? defaultSize(item)) * 100)}"${b ? ' b="1"' : ' b="0"'}${i ? ' i="1"' : ""}${u ? ' u="sng"' : ""}${st ? ' strike="sngStrike"' : ""} dirty="0">${solid(r.color ? hex(r.color, "#" + color) : color)}${hlc ? `<a:highlight><a:srgbClr val="${hex(hlc, "#ffff00")}"/></a:highlight>` : ""}<a:latin typeface="${esc(rf)}"/><a:cs typeface="${esc(rf)}"/>${link}</a:rPr>`;
+  };
+  const paras = parasOf(item).map((para) => `<a:p><a:pPr algn="${algn}"${mar}>${lnSpc}${bullet}</a:pPr>${para.filter((r) => r.t).map((r) => `<a:r>${runPr(r)}<a:t>${esc(r.t)}</a:t></a:r>`).join("")}${rPr("a:endParaRPr")}</a:p>`);
   const ins = e(8);
   return `<p:txBody><a:bodyPr wrap="square" lIns="${ins}" tIns="${ins}" rIns="${ins}" bIns="${ins}" anchor="${anchor}" rtlCol="0"><a:noAutofit/></a:bodyPr><a:lstStyle/>${paras.join("")}</p:txBody>`;
 }
@@ -98,13 +114,13 @@ async function itemXml(ctx: Ctx, item: SlideItem, slide: Slide, chartPng: (item:
     const ph = item.placeholder === "title" ? '<p:ph type="title"/>' : "";
     const fill = item.fill ? solid(hex(item.fill, "#ffffff")) : "<a:noFill/>";
     const ln = item.stroke ? `<a:ln w="${e(2)}">${solid(hex(item.stroke, "#102032"))}</a:ln>` : "<a:ln><a:noFill/></a:ln>";
-    return `<p:sp><p:nvSpPr><p:cNvPr id="${id}" name="${name(item.placeholder === "title" ? "Title" : "TextBox")}">${hl}</p:cNvPr><p:cNvSpPr txBox="1"/><p:nvPr>${ph}</p:nvPr></p:nvSpPr><p:spPr>${xfrm(item)}<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>${fill}${ln}</p:spPr>${txBody(item, slide, { align: "l", anchor: "t" })}</p:sp>`;
+    return `<p:sp><p:nvSpPr><p:cNvPr id="${id}" name="${name(item.placeholder === "title" ? "Title" : "TextBox")}">${hl}</p:cNvPr><p:cNvSpPr txBox="1"/><p:nvPr>${ph}</p:nvPr></p:nvSpPr><p:spPr>${xfrm(item)}<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>${fill}${ln}</p:spPr>${txBody(item, slide, { align: "l", anchor: "t" }, ctx)}</p:sp>`;
   }
   if (item.kind === "shape") {
     const sw = item.stroke === "none" ? 0 : item.strokeWidth ?? 2;
     const fill = item.fill === "none" ? "<a:noFill/>" : solid(hex(item.fill, "#ff3070"));
     const ln = sw > 0 ? `<a:ln w="${e(sw)}">${solid(hex(item.stroke, "#102032"))}${dashOf(item.dash)}</a:ln>` : "<a:ln><a:noFill/></a:ln>";
-    return `<p:sp><p:nvSpPr><p:cNvPr id="${id}" name="${name("Shape")}">${hl}</p:cNvPr><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr>${xfrm(item)}<a:prstGeom prst="${PRESET[item.shape] ?? "rect"}"><a:avLst/></a:prstGeom>${fill}${ln}</p:spPr>${txBody(item, slide, { align: "ctr", anchor: "ctr" })}</p:sp>`;
+    return `<p:sp><p:nvSpPr><p:cNvPr id="${id}" name="${name("Shape")}">${hl}</p:cNvPr><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr>${xfrm(item)}<a:prstGeom prst="${PRESET[item.shape] ?? "rect"}"><a:avLst/></a:prstGeom>${fill}${ln}</p:spPr>${txBody(item, slide, { align: "ctr", anchor: "ctr" }, ctx)}</p:sp>`;
   }
   if (item.kind === "line") {
     const theme = themeOf(slide);
@@ -128,7 +144,8 @@ async function itemXml(ctx: Ctx, item: SlideItem, slide: Slide, chartPng: (item:
     }).join("");
     return `<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="${id}" name="${name("Table")}"/><p:cNvGraphicFramePr><a:graphicFrameLocks noGrp="1"/></p:cNvGraphicFramePr><p:nvPr/></p:nvGraphicFramePr><p:xfrm><a:off x="${e(item.x)}" y="${e(item.y)}"/><a:ext cx="${e(item.w)}" cy="${e(item.h)}"/></p:xfrm><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table"><a:tbl><a:tblPr firstRow="${item.header !== false ? 1 : 0}" bandRow="0"/><a:tblGrid>${Array.from({ length: cols }, () => `<a:gridCol w="${cw}"/>`).join("")}</a:tblGrid>${rows}</a:tbl></a:graphicData></a:graphic></p:graphicFrame>`;
   }
-  // imagen, gráfico (como imagen) o vídeo (póster con enlace)
+  if (item.kind === "chart") return chartXml(ctx, item, slide, id, name("Chart"));
+  // imagen o vídeo (póster + vídeo incrustado o en línea)
   let bytes: { bytes: Uint8Array; ext: string } | null = null;
   let crop = "";
   let alpha = "";
@@ -141,13 +158,83 @@ async function itemXml(ctx: Ctx, item: SlideItem, slide: Slide, chartPng: (item:
   } else {
     const png = await chartPng(item);
     if (png) bytes = { bytes: png, ext: "png" };
-    if (item.kind === "video" && item.youtube && !item.link) link = linkXml(ctx, `https://www.youtube.com/watch?v=${item.youtube}`);
   }
   if (!bytes) return "";
   const media = `image${ctx.slideIndex}_${id}.${bytes.ext}`;
   ctx.media.push({ name: `ppt/media/${media}`, data: bytes.bytes });
   const rid = rel(ctx, "image", `../media/${media}`);
-  return `<p:pic><p:nvPicPr><p:cNvPr id="${id}" name="${name(item.kind === "chart" ? "Chart" : item.kind === "video" ? "Video" : "Picture")}">${link}</p:cNvPr><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr><p:blipFill><a:blip r:embed="${rid}">${alpha}</a:blip>${crop}<a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr>${xfrm(item)}<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>`;
+  let nvPr = "<p:nvPr/>";
+  if (item.kind === "video") {
+    const clip = videoBytes(item.src);
+    if (item.youtube) {
+      // Vídeo en línea, como «Insertar › Vídeo › Vídeos en línea» de PowerPoint.
+      const vid = rel(ctx, "video", `https://www.youtube.com/embed/${encodeURIComponent(item.youtube)}?feature=oembed`, true);
+      nvPr = `<p:nvPr><a:videoFile r:link="${vid}"/></p:nvPr>`;
+      link = `<a:hlinkClick r:id="" action="ppaction://media"/>`;
+    } else if (clip) {
+      const file = `media${ctx.slideIndex}_${id}.${clip.ext}`;
+      ctx.media.push({ name: `ppt/media/${file}`, data: clip.bytes });
+      const vid = rel(ctx, "video", `../media/${file}`);
+      const med = `rId${ctx.nextRel++}`;
+      ctx.rels.push(`<Relationship Id="${med}" Type="http://schemas.microsoft.com/office/2007/relationships/media" Target="../media/${file}"/>`);
+      nvPr = `<p:nvPr><a:videoFile r:link="${vid}"/><p:extLst><p:ext uri="{DAA4B4D4-6D71-4841-9C94-3DA7FCB6C9D4}"><p14:media xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" r:embed="${med}"/></p:ext></p:extLst></p:nvPr>`;
+      link = `<a:hlinkClick r:id="" action="ppaction://media"/>`;
+    }
+  }
+  return `<p:pic><p:nvPicPr><p:cNvPr id="${id}" name="${name(item.kind === "video" ? "Video" : "Picture")}">${link}</p:cNvPr><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr>${nvPr}</p:nvPicPr><p:blipFill><a:blip r:embed="${rid}">${alpha}</a:blip>${crop}<a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr>${xfrm(item)}<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>`;
+}
+
+function videoBytes(src: string): { bytes: Uint8Array; ext: string } | null {
+  const m = /^data:video\/(mp4|webm);base64,(.+)$/i.exec(src);
+  if (!m) return null;
+  const bin = atob(m[2]!);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i += 1) bytes[i] = bin.charCodeAt(i);
+  return { bytes, ext: m[1]!.toLowerCase() };
+}
+
+const C_NS = "http://schemas.openxmlformats.org/drawingml/2006/chart";
+const CHART_COLORS = ["FF3070", "102032", "007960", "1D4E89", "FFB000", "9C1446", "6B4EFF", "00A3BF"];
+
+/** Gráfico nativo de PowerPoint (editable) con su hoja de datos incrustada. */
+function chartXml(ctx: Ctx, item: Extract<SlideItem, { kind: "chart" }>, slide: Slide, id: number, label: string): string {
+  const k = ++ctx.pkg.charts;
+  const theme = themeOf(slide);
+  const ink = hex(theme.text, "#102032");
+  const n = Math.max(1, Math.min(item.labels.length, item.values.length));
+  const labels = item.labels.slice(0, n);
+  const values = item.values.slice(0, n);
+  const sheet = "Hoja1";
+  const color = hex(item.color, "#ff3070");
+  const strCache = (vals: string[]) => `<c:strCache><c:ptCount val="${vals.length}"/>${vals.map((v, i) => `<c:pt idx="${i}"><c:v>${esc(v)}</c:v></c:pt>`).join("")}</c:strCache>`;
+  const numCache = (vals: number[]) => `<c:numCache><c:formatCode>General</c:formatCode><c:ptCount val="${vals.length}"/>${vals.map((v, i) => `<c:pt idx="${i}"><c:v>${Number.isFinite(v) ? v : 0}</c:v></c:pt>`).join("")}</c:numCache>`;
+  const name = item.title || "Serie 1";
+  const tx = `<c:tx><c:strRef><c:f>${sheet}!$B$1</c:f>${strCache([name])}</c:strRef></c:tx>`;
+  const cat = `<c:cat><c:strRef><c:f>${sheet}!$A$2:$A$${n + 1}</c:f>${strCache(labels)}</c:strRef></c:cat>`;
+  const val = `<c:val><c:numRef><c:f>${sheet}!$B$2:$B$${n + 1}</c:f>${numCache(values)}</c:numRef></c:val>`;
+  const txPr = `<c:txPr><a:bodyPr/><a:lstStyle/><a:p><a:pPr><a:defRPr sz="1200">${solid(ink)}</a:defRPr></a:pPr><a:endParaRPr lang="es-ES"/></a:p></c:txPr>`;
+  const axes = `<c:catAx><c:axId val="5001"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="${item.chart === "bar" ? "l" : "b"}"/><c:numFmt formatCode="General" sourceLinked="1"/><c:majorTickMark val="none"/><c:minorTickMark val="none"/><c:tickLblPos val="nextTo"/>${txPr}<c:crossAx val="5002"/><c:crosses val="autoZero"/><c:auto val="1"/><c:lblAlgn val="ctr"/><c:lblOffset val="100"/><c:noMultiLvlLbl val="0"/></c:catAx><c:valAx><c:axId val="5002"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="${item.chart === "bar" ? "b" : "l"}"/><c:majorGridlines><c:spPr><a:ln w="6350">${solid("E2D6C6")}</a:ln></c:spPr></c:majorGridlines><c:numFmt formatCode="General" sourceLinked="1"/><c:majorTickMark val="none"/><c:minorTickMark val="none"/><c:tickLblPos val="nextTo"/>${txPr}<c:crossAx val="5001"/><c:crosses val="autoZero"/><c:crossBetween val="between"/></c:valAx>`;
+  let plot: string;
+  if (item.chart === "pie") {
+    const dpts = values.map((_, i) => `<c:dPt><c:idx val="${i}"/><c:bubble3D val="0"/><c:spPr>${solid(i === 0 ? color : CHART_COLORS[i % CHART_COLORS.length]!)}</c:spPr></c:dPt>`).join("");
+    plot = `<c:pieChart><c:varyColors val="1"/><c:ser><c:idx val="0"/><c:order val="0"/>${tx}${dpts}${cat}${val}</c:ser><c:firstSliceAng val="0"/></c:pieChart>`;
+  } else if (item.chart === "line") {
+    plot = `<c:lineChart><c:grouping val="standard"/><c:varyColors val="0"/><c:ser><c:idx val="0"/><c:order val="0"/>${tx}<c:spPr><a:ln w="38100" cap="rnd">${solid(color)}<a:round/></a:ln></c:spPr><c:marker><c:symbol val="circle"/><c:size val="6"/><c:spPr>${solid(color)}</c:spPr></c:marker>${cat}${val}<c:smooth val="0"/></c:ser><c:marker val="1"/><c:axId val="5001"/><c:axId val="5002"/></c:lineChart>${axes}`;
+  } else {
+    plot = `<c:barChart><c:barDir val="${item.chart === "bar" ? "bar" : "col"}"/><c:grouping val="clustered"/><c:varyColors val="0"/><c:ser><c:idx val="0"/><c:order val="0"/>${tx}<c:spPr>${solid(color)}</c:spPr><c:invertIfNegative val="0"/>${cat}${val}</c:ser><c:gapWidth val="80"/><c:axId val="5001"/><c:axId val="5002"/></c:barChart>${axes}`;
+  }
+  const title = item.title ? `<c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:pPr><a:defRPr sz="1800" b="1">${solid(ink)}</a:defRPr></a:pPr><a:r><a:rPr lang="es-ES" sz="1800" b="1">${solid(ink)}</a:rPr><a:t>${esc(item.title)}</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title><c:autoTitleDeleted val="0"/>` : `<c:autoTitleDeleted val="1"/>`;
+  const legend = item.chart === "pie" ? `<c:legend><c:legendPos val="r"/><c:overlay val="0"/>${txPr}</c:legend>` : "";
+  const xml = `${XML}<c:chartSpace xmlns:c="${C_NS}" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><c:date1904 val="0"/><c:lang val="es-ES"/><c:roundedCorners val="0"/><c:chart>${title}<c:plotArea><c:layout/>${plot}</c:plotArea>${legend}<c:plotVisOnly val="1"/><c:dispBlanksAs val="gap"/></c:chart><c:spPr><a:noFill/><a:ln><a:noFill/></a:ln></c:spPr><c:externalData r:id="rId1"><c:autoUpdate val="0"/></c:externalData></c:chartSpace>`;
+  const cells: string[][] = [["", name], ...labels.map((l, i) => [l, String(values[i] ?? 0)])];
+  const xlsx = sheetsToXlsx([{ name: sheet, cells, freezeHeader: false }]);
+  ctx.pkg.files.push({ name: `ppt/charts/chart${k}.xml`, data: encodeUtf8(xml) });
+  ctx.pkg.files.push({ name: `ppt/charts/_rels/chart${k}.xml.rels`, data: encodeUtf8(`${XML}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${REL}/package" Target="../embeddings/Hoja_de_datos${k}.xlsx"/></Relationships>`) });
+  ctx.pkg.files.push({ name: `ppt/embeddings/Hoja_de_datos${k}.xlsx`, data: xlsx });
+  ctx.pkg.exts.add("xlsx");
+  ctx.pkg.overrides.push(`<Override PartName="/ppt/charts/chart${k}.xml" ContentType="application/vnd.openxmlformats-officedocument.drawingml.chart+xml"/>`);
+  const rid = rel(ctx, "chart", `../charts/chart${k}.xml`);
+  return `<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="${id}" name="${esc(label)}"/><p:cNvGraphicFramePr/><p:nvPr/></p:nvGraphicFramePr><p:xfrm><a:off x="${e(item.x)}" y="${e(item.y)}"/><a:ext cx="${e(Math.max(1, item.w))}" cy="${e(Math.max(1, item.h))}"/></p:xfrm><a:graphic><a:graphicData uri="${C_NS}"><c:chart xmlns:c="${C_NS}" r:id="${rid}"/></a:graphicData></a:graphic></p:graphicFrame>`;
 }
 
 function transitionXml(t: SlideTransition | undefined, duration: number | undefined): string {
@@ -186,10 +273,11 @@ export async function exportPptx(file: SlidesFile, options: { chartPng?: (item: 
     }
   });
   const exts = new Set<string>();
+  const pkg: Pkg = { charts: 0, overrides: [], files, exts };
   const slideXml: string[] = [];
   for (let i = 0; i < n; i += 1) {
     const slide = file.slides[i]!;
-    const ctx: Ctx = { rels: [], media: [], nextRel: 1, nextId: 2, slideIndex: i + 1, slideCount: n };
+    const ctx: Ctx = { rels: [], media: [], nextRel: 1, nextId: 2, slideIndex: i + 1, slideCount: n, pkg };
     rel(ctx, "slideLayout", "../slideLayouts/slideLayout1.xml");
     const theme = themeOf(slide);
     let bg = `<p:bg><p:bgPr>${solid(hex(slide.background, theme.bg))}<a:effectLst/></p:bgPr></p:bg>`;
@@ -213,8 +301,8 @@ export async function exportPptx(file: SlidesFile, options: { chartPng?: (item: 
     slideXml.push(`<p:sldId id="${256 + i}" r:id="rId${10 + i}"/>`);
   }
   const ct = (part: string, type: string) => `<Override PartName="${part}" ContentType="application/vnd.openxmlformats-officedocument.${type}"/>`;
-  const mime: Record<string, string> = { png: "image/png", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp" };
-  put("[Content_Types].xml", `${XML}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>${[...exts].map((x) => `<Default Extension="${x}" ContentType="${mime[x] ?? "image/png"}"/>`).join("")}${ct("/ppt/presentation.xml", "presentationml.presentation.main+xml")}${ct("/ppt/slideMasters/slideMaster1.xml", "presentationml.slideMaster+xml")}${ct("/ppt/slideLayouts/slideLayout1.xml", "presentationml.slideLayout+xml")}${ct("/ppt/notesMasters/notesMaster1.xml", "presentationml.notesMaster+xml")}${ct("/ppt/theme/theme1.xml", "theme+xml")}${ct("/ppt/theme/theme2.xml", "theme+xml")}${ct("/ppt/presProps.xml", "presentationml.presProps+xml")}${ct("/ppt/viewProps.xml", "presentationml.viewProps+xml")}${ct("/ppt/tableStyles.xml", "presentationml.tableStyles+xml")}${file.slides.map((_, i) => ct(`/ppt/slides/slide${i + 1}.xml`, "presentationml.slide+xml") + ct(`/ppt/notesSlides/notesSlide${i + 1}.xml`, "presentationml.notesSlide+xml")).join("")}<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>${ct("/docProps/app.xml", "extended-properties+xml")}</Types>`);
+  const mime: Record<string, string> = { png: "image/png", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp", mp4: "video/mp4", webm: "video/webm", xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" };
+  put("[Content_Types].xml", `${XML}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>${[...exts].map((x) => `<Default Extension="${x}" ContentType="${mime[x] ?? "image/png"}"/>`).join("")}${ct("/ppt/presentation.xml", "presentationml.presentation.main+xml")}${ct("/ppt/slideMasters/slideMaster1.xml", "presentationml.slideMaster+xml")}${ct("/ppt/slideLayouts/slideLayout1.xml", "presentationml.slideLayout+xml")}${ct("/ppt/notesMasters/notesMaster1.xml", "presentationml.notesMaster+xml")}${ct("/ppt/theme/theme1.xml", "theme+xml")}${ct("/ppt/theme/theme2.xml", "theme+xml")}${ct("/ppt/presProps.xml", "presentationml.presProps+xml")}${ct("/ppt/viewProps.xml", "presentationml.viewProps+xml")}${ct("/ppt/tableStyles.xml", "presentationml.tableStyles+xml")}${file.slides.map((_, i) => ct(`/ppt/slides/slide${i + 1}.xml`, "presentationml.slide+xml") + ct(`/ppt/notesSlides/notesSlide${i + 1}.xml`, "presentationml.notesSlide+xml")).join("")}${pkg.overrides.join("")}<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>${ct("/docProps/app.xml", "extended-properties+xml")}</Types>`);
   put("_rels/.rels", `${XML}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${REL}/officeDocument" Target="ppt/presentation.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/><Relationship Id="rId3" Type="${REL}/extended-properties" Target="docProps/app.xml"/></Relationships>`);
   const now = new Date().toISOString().replace(/\.\d+Z$/, "Z");
   put("docProps/core.xml", `${XML}<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${esc(file.title)}</dc:title><dc:creator>ORVUPI Work</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">${now}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${now}</dcterms:modified></cp:coreProperties>`);
@@ -345,10 +433,26 @@ function findPh(doc: Document | null, key: { type: string; idx: string }): Eleme
     ?? all.find((sp) => { const k = phKey(sp); return k && norm(k.type) === norm(key.type); });
 }
 
-function textOf(txBody: Element | undefined, scheme: Colors, ptK: number): (TextStyle & { any: boolean }) | null {
+function textOf(txBody: Element | undefined, scheme: Colors, ptK: number, linkAt?: (h: Element | undefined) => string | undefined): (TextStyle & { any: boolean }) | null {
   if (!txBody) return null;
   const paras = kids(txBody, A, "p");
   const linesOut: string[] = [];
+  const richOut: Para[] = [];
+  const runOf = (rPr: Element | undefined, t: string): Run => {
+    const r: Run = { t };
+    if (!rPr) return r;
+    const sz = rPr.getAttribute("sz");
+    if (sz) r.size = Math.max(1, Math.round((Number(sz) / 100) * ptK * 2) / 2);
+    const b = rPr.getAttribute("b"); if (b !== null) r.b = b === "1" || b === "true";
+    const i = rPr.getAttribute("i"); if (i !== null) r.i = i === "1" || i === "true";
+    const u = rPr.getAttribute("u"); if (u !== null) r.u = u !== "none";
+    const st = rPr.getAttribute("strike"); if (st !== null) r.s = st !== "noStrike";
+    const c = colorOf(kid(rPr, A, "solidFill"), scheme); if (c) r.color = c.toLowerCase();
+    const h = colorOf(kid(rPr, A, "highlight"), scheme); if (h) r.hl = h.toLowerCase();
+    const f = cleanFont(kid(rPr, A, "latin")?.getAttribute("typeface") ?? undefined); if (f) r.font = f;
+    const l = linkAt?.(kid(rPr, A, "hlinkClick")); if (l) r.link = l;
+    return r;
+  };
   let style: Partial<TextStyle> = {};
   let found = false;
   let list: ListKind | undefined;
@@ -361,12 +465,14 @@ function textOf(txBody: Element | undefined, scheme: Colors, ptK: number): (Text
     }
     if (pPr && list === undefined) list = kid(pPr, A, "buChar") ? "bullet" : kid(pPr, A, "buAutoNum") ? "number" : undefined;
     let line = "";
+    let para: Run[] = [];
     for (const node of [...p.children]) {
-      if (node.localName === "br") { line += "\n"; continue; }
+      if (node.localName === "br") { line += "\n"; richOut.push(para); para = []; continue; }
       if (node.localName !== "r" && node.localName !== "fld") continue;
       const t = kid(node, A, "t")?.textContent ?? "";
       line += t;
       const rPr = kid(node, A, "rPr");
+      if (t) para.push(runOf(rPr, t));
       if (!found && rPr && t.trim()) {
         found = true;
         const sz = rPr.getAttribute("sz");
@@ -383,12 +489,17 @@ function textOf(txBody: Element | undefined, scheme: Colors, ptK: number): (Text
       }
     }
     linesOut.push(line);
+    richOut.push(para);
   }
-  while (linesOut.length > 1 && !linesOut[linesOut.length - 1]) linesOut.pop();
+  while (linesOut.length > 1 && !linesOut[linesOut.length - 1]) { linesOut.pop(); }
   const bodyPr = kid(txBody, A, "bodyPr");
   const anchor = bodyPr?.getAttribute("anchor");
   const text = linesOut.join("\n").slice(0, 4000);
-  return { ...style, text, align, list, valign: anchor === "ctr" ? "middle" : anchor === "b" ? "bottom" : anchor === "t" ? "top" : undefined, any: text.trim().length > 0 };
+  const parts = text.split("\n").length;
+  const trimmed = normalize(richOut.slice(0, parts));
+  const rel = againstBase(trimmed, { bold: style.bold, italic: style.italic, underline: style.underline, strike: style.strike, color: style.color, font: cleanFont(style.font), size: style.size, baseSize: style.size ?? 18 });
+  const rich = plainOf(rel) === text && hasRunStyle(rel) ? rel : undefined;
+  return { ...style, text, rich, align, list, valign: anchor === "ctr" ? "middle" : anchor === "b" ? "bottom" : anchor === "t" ? "top" : undefined, any: text.trim().length > 0 };
 }
 
 const FONTS = ["Inter", "Arial", "Roboto", "Montserrat", "Lora", "Merriweather", "Georgia", "Courier New"];
@@ -399,6 +510,35 @@ function cleanFont(f: string | undefined): string | undefined {
   if (/times|cambria|garamond/i.test(f)) return "Georgia";
   if (/courier|consolas|mono/i.test(f)) return "Courier New";
   return undefined;
+}
+
+/** Lee un gráfico nativo (c:chartSpace): tipo, categorías, valores, título y color de la serie. */
+function chartOf(doc: Document | null, scheme: Colors): { chart: "bar" | "column" | "line" | "pie"; labels: string[]; values: number[]; title?: string; color?: string } | null {
+  if (!doc) return null;
+  const C = "http://schemas.openxmlformats.org/drawingml/2006/chart";
+  const plot = doc.getElementsByTagNameNS(C, "plotArea")[0];
+  if (!plot) return null;
+  const kind = [...plot.children].find((c) => /Chart$/.test(c.localName));
+  if (!kind) return null;
+  const ln = kind.localName;
+  const barDir = deep(kind, C, "barDir")?.getAttribute("val");
+  const chart = /pie|doughnut/i.test(ln) ? "pie" as const : /line|area|scatter|radar/i.test(ln) ? "line" as const : barDir === "bar" ? "bar" as const : "column" as const;
+  const ser = kids(kind, C, "ser")[0];
+  if (!ser) return null;
+  const pts = (el: Element | undefined) => {
+    const cache = el ? (deep(el, C, "strCache") ?? deep(el, C, "numCache") ?? deep(el, C, "strLit") ?? deep(el, C, "numLit")) : undefined;
+    const out: string[] = [];
+    for (const pt of kids(cache, C, "pt")) out[Number(pt.getAttribute("idx") ?? out.length)] = kid(pt, C, "v")?.textContent ?? "";
+    return out.map((v) => v ?? "");
+  };
+  const labels = pts(kid(ser, C, "cat")).slice(0, 24).map((l) => l.slice(0, 40));
+  const values = pts(kid(ser, C, "val")).slice(0, 24).map((v) => (Number.isFinite(Number(v)) ? Number(v) : 0));
+  if (values.length === 0) return null;
+  while (labels.length < values.length) labels.push(String(labels.length + 1));
+  const titleEl = [...doc.getElementsByTagNameNS(C, "title")].find((t) => t.parentElement?.localName === "chart");
+  const title = titleEl ? [...titleEl.getElementsByTagNameNS(A, "t")].map((t) => t.textContent ?? "").join("").slice(0, 120) || undefined : undefined;
+  const color = colorOf(deep(kid(ser, C, "spPr"), A, "solidFill"), scheme) ?? colorOf(deep(kid(ser, C, "dPt"), A, "solidFill"), scheme);
+  return { chart, labels: labels.slice(0, values.length), values, title, color: color?.toLowerCase() };
 }
 
 /** Importa un .pptx real: texto con formato, formas, líneas, imágenes (con recorte), tablas, fondos, notas, ocultas y transiciones. */
@@ -435,7 +575,11 @@ export async function importPptx(bytes: Uint8Array): Promise<{ slides: Slide[]; 
     const items: SlideItem[] = [];
     const ident: Map2 = (g) => ({ ...g, x: g.x + ox, y: g.y + oy });
     const linkOf = (el: Element): string | undefined => {
-      const h = deep(el, A, "hlinkClick");
+      // Solo el enlace del objeto (en cNvPr), no los de palabras sueltas del texto.
+      const h = [...el.getElementsByTagNameNS(A, "hlinkClick")].find((x) => x.parentElement?.localName === "cNvPr");
+      return hlinkTarget(h);
+    };
+    const hlinkTarget = (h: Element | undefined): string | undefined => {
       const id = h?.getAttributeNS(R, "id");
       const r = id ? rels.get(id) : undefined;
       if (!r) return undefined;
@@ -488,22 +632,43 @@ export async function importPptx(bytes: Uint8Array): Promise<{ slides: Slide[]; 
             items.push(lineBox({ id: newId(), kind: "line", x: 0, y: 0, w: 0, h: 0, x1, y1, x2, y2, color: lineColor, width: lineW, dash, start: end(kid(ln, A, "headEnd")?.getAttribute("type")), end: end(kid(ln, A, "tailEnd")?.getAttribute("type")), link: linkOf(el) }));
             continue;
           }
-          const text = textOf(kid(el, P, "txBody"), scheme, ptK);
+          const text = textOf(kid(el, P, "txBody"), scheme, ptK, hlinkTarget);
           const fill = fillOf(spPr, scheme);
           const base = { id: newId(), x: g.x, y: g.y, w: Math.max(4, g.w), h: Math.max(4, g.h), rot: g.rot ? Math.round(g.rot) : undefined, link: linkOf(el) };
-          const style: TextStyle = { text: text?.text ?? "", font: cleanFont(text?.font), size: text?.size, color: text?.color, highlight: text?.highlight, bold: text?.bold, italic: text?.italic, underline: text?.underline, strike: text?.strike, align: text?.align, valign: text?.valign, list: text?.list };
+          const style: TextStyle = { text: text?.text ?? "", rich: text?.rich, font: cleanFont(text?.font), size: text?.size, color: text?.color, highlight: text?.highlight, bold: text?.bold, italic: text?.italic, underline: text?.underline, strike: text?.strike, align: text?.align, valign: text?.valign, list: text?.list };
           const isBox = prst === "rect" && (fill === undefined || fill === "none") && !lineColor;
           if (isBox || key) {
             if (!text?.any && key) continue; // marcador vacío: en Slides no se ve al presentar
             const placeholder: Placeholder | undefined = key?.type === "title" || key?.type === "ctrTitle" ? "title" : key?.type === "subTitle" ? "subtitle" : key ? "body" : undefined;
             items.push({ ...base, kind: "text", ...style, fill: fill && fill !== "none" ? fill : undefined, stroke: lineColor, placeholder: placeholder === "title" ? "title" : undefined });
           } else {
-            items.push({ ...base, kind: "shape", shape: FROM_PRESET[prst] ?? "rect", ...style, fill: fill ?? scheme.accent1 ?? "#ff3070", stroke: lineColor ?? (ln ? "none" : undefined), strokeWidth: lineW, dash });
+            items.push({ ...base, flipH: g.flipH || undefined, flipV: g.flipV || undefined, kind: "shape", shape: FROM_PRESET[prst] ?? "rect", ...style, fill: fill ?? scheme.accent1 ?? "#ff3070", stroke: lineColor ?? (ln ? "none" : undefined), strokeWidth: lineW, dash });
           }
           continue;
         }
         if (name === "pic") {
           const g = geoOf(deep(kid(el, P, "spPr"), A, "xfrm"), k, map);
+          const vf = deep(el, A, "videoFile");
+          if (g && vf) {
+            // Vídeo: en línea (YouTube) o incrustado (mp4/webm).
+            const r = rels.get(vf.getAttributeNS(R, "link") ?? "");
+            const media = [...el.getElementsByTagNameNS("http://schemas.microsoft.com/office/powerpoint/2010/main", "media")][0];
+            const embedded = media ? rels.get(media.getAttributeNS(R, "embed") ?? "") : undefined;
+            const yt = r?.external ? youtubeId(r.target) : null;
+            const target = embedded && !embedded.external ? embedded.target : r && !r.external ? r.target : undefined;
+            const data = target ? files.get(target) : undefined;
+            const ext = target?.split(".").pop()?.toLowerCase();
+            let src = "";
+            if (data && (ext === "mp4" || ext === "webm" || ext === "m4v") && data.byteLength <= 25 * 1024 * 1024) {
+              let bin = "";
+              for (let i = 0; i < data.length; i += 0x8000) bin += String.fromCharCode(...data.subarray(i, i + 0x8000));
+              src = `data:video/${ext === "webm" ? "webm" : "mp4"};base64,${btoa(bin)}`;
+            }
+            if (yt || src) {
+              items.push({ id: newId(), kind: "video", src, youtube: yt ?? undefined, x: g.x, y: g.y, w: Math.max(4, g.w), h: Math.max(4, g.h), rot: g.rot ? Math.round(g.rot) : undefined });
+              continue;
+            }
+          }
           const blip = deep(kid(el, P, "blipFill"), A, "blip");
           const target = blip ? rels.get(blip.getAttributeNS(R, "embed") ?? "")?.target : undefined;
           const data = target ? files.get(target) : undefined;
@@ -512,13 +677,20 @@ export async function importPptx(bytes: Uint8Array): Promise<{ slides: Slide[]; 
           const sr = deep(kid(el, P, "blipFill"), A, "srcRect");
           const c = sr ? { l: Number(sr.getAttribute("l") ?? 0) / 100000, t: Number(sr.getAttribute("t") ?? 0) / 100000, r: Number(sr.getAttribute("r") ?? 0) / 100000, b: Number(sr.getAttribute("b") ?? 0) / 100000 } : undefined;
           const alpha = blip ? deep(blip, A, "alphaModFix")?.getAttribute("amt") : undefined;
-          items.push({ id: newId(), kind: "image", src, x: g.x, y: g.y, w: Math.max(4, g.w), h: Math.max(4, g.h), rot: g.rot ? Math.round(g.rot) : undefined, crop: c && c.l + c.t + c.r + c.b > 0 ? { l: Math.min(0.45, c.l), t: Math.min(0.45, c.t), r: Math.min(0.45, c.r), b: Math.min(0.45, c.b) } : undefined, opacity: alpha ? Number(alpha) / 100000 : undefined, link: linkOf(el) });
+          items.push({ id: newId(), kind: "image", src, flipH: g.flipH || undefined, flipV: g.flipV || undefined, x: g.x, y: g.y, w: Math.max(4, g.w), h: Math.max(4, g.h), rot: g.rot ? Math.round(g.rot) : undefined, crop: c && c.l + c.t + c.r + c.b > 0 ? { l: Math.min(0.45, c.l), t: Math.min(0.45, c.t), r: Math.min(0.45, c.r), b: Math.min(0.45, c.b) } : undefined, opacity: alpha ? Number(alpha) / 100000 : undefined, link: linkOf(el) });
           continue;
         }
         if (name === "graphicFrame") {
           const tbl = deep(el, A, "tbl");
           const x = kid(el, P, "xfrm");
           const g = geoOf(x, k, map);
+          const chartRef = deep(el, "http://schemas.openxmlformats.org/drawingml/2006/chart", "chart");
+          if (g && chartRef) {
+            const r = rels.get(chartRef.getAttributeNS(R, "id") ?? "");
+            const chart = r && !r.external ? chartOf(parseXml(files.get(r.target)), scheme) : null;
+            if (chart) items.push({ id: newId(), kind: "chart", x: g.x, y: g.y, w: Math.max(40, g.w), h: Math.max(40, g.h), ...chart });
+            continue;
+          }
           if (!tbl || !g) continue;
           const rows = kids(tbl, A, "tr").slice(0, 20).map((tr) => kids(tr, A, "tc").slice(0, 20).map((tc) => [...tc.getElementsByTagNameNS(A, "t")].map((t) => t.textContent ?? "").join("").slice(0, 500)));
           if (!rows.length) continue;
