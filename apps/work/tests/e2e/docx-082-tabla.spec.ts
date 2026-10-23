@@ -42,6 +42,8 @@ async function openGrid(doc: Page) {
 async function reach(doc: Page, grid: ReturnType<Page["getByRole"]>, rows: number, cols: number, keyboard: boolean) {
   const cell = (r: number, c: number) => grid.locator(`[data-r="${r}"][data-c="${c}"]`);
   if (keyboard) {
+    // El puntero se aparta: en WebKit, una cuadrícula que se abre bajo el ratón recibe «hover» y pisa al teclado.
+    await doc.mouse.move(0, 0);
     await cell(1, 1).focus();
     for (let c = 1; c < cols; c += 1) await doc.keyboard.press("ArrowRight");
     for (let r = 1; r < rows; r += 1) await doc.keyboard.press("ArrowDown");
