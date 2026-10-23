@@ -441,8 +441,8 @@ test("combinaciones de teclas", async ({ page }) => {
     const fresh = await ensureState(slides);
     if (fresh !== slides) { slides = fresh; trackErrors(slides, errors); await threeSlides(slides); }
     if (s.setup === "nada") await slides.keyboard.press("Escape");
-    // Tras «Comentario» el foco queda (bien) en el cuadro del comentario: como haría una persona, se vuelve al título antes de mover
-    if (s.setup === "texto" && /Arrow/.test(s.keys)) { await slides.evaluate(() => (document.activeElement as HTMLElement | null)?.blur()); await selectTitle(slides); }
+    // Mover con flechas: objeto seleccionado sin editar (un clic sobre un cuadro ya seleccionado entra a editar, como en Slides)
+    if (s.setup === "texto" && /Arrow/.test(s.keys)) { await slides.evaluate(() => (document.activeElement as HTMLElement | null)?.blur()); await slides.keyboard.press("Escape"); await slides.keyboard.press("Escape"); await selectTitle(slides); }
     if (s.label === "Agrupar") await prepare(slides, "Organizar › Agrupar");
     if (s.label === "Rehacer") { await slides.keyboard.press("Control+b"); await slides.keyboard.press("Control+z"); }
     results.push(await probe(slides, `${s.keys} (${s.label})`, async () => { await slides.keyboard.press(s.keys); }, errors));
