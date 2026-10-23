@@ -392,8 +392,8 @@ export function FilesScreen() {
                       </button>
                     </div>
                   </td>
-                  <td className="ow-col-extra">{formatWhen(file.updatedAt, workspace.locale === "es" ? "es" : "en")}</td>
-                  <td className="ow-col-extra">{file.kind === "folder" ? "" : formatBytes(file.size, workspace.locale === "es" ? "es" : "en")}</td>
+                  <td className="ow-col-extra">{formatWhen(file.updatedAt, workspace.locale)}</td>
+                  <td className="ow-col-extra">{file.kind === "folder" ? "" : formatBytes(file.size, workspace.locale)}</td>
                   <td>
                     <IconButton
                       label={workspace.t("fileMenu")}
@@ -492,7 +492,7 @@ export function FilesScreen() {
               }}>{workspace.t("restoreVersion")}</Button>
             </p>
           ))}
-          <p>{workspace.t("colSize")}: {formatBytes(details.size, workspace.locale === "es" ? "es" : "en")}</p>
+          <p>{workspace.t("colSize")}: {formatBytes(details.size, workspace.locale)}</p>
           {details.tags.length > 0 ? <p>{details.tags.join(" · ")}</p> : null}
           <div className="ow-swatches" role="group" aria-label={workspace.t("labelColor")}>
             {COLORS.map((color) => (

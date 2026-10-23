@@ -30,3 +30,23 @@ b4ef7f7b956623f6f45f68e6071c6cf9a4cc554b:web/v2/tablero/index.html:generic-api-k
 
 # Mismo SHA-256 público de token.json (no es una clave) en el commit 02ddd4c8 de main; es y en en la línea 79.
 02ddd4c82a34628fef47b9b3a291811bc3690e14:web/v2/tablero/index.html:generic-api-key:79
+
+# SHA-256 público de web/v2/token.json en las páginas y catálogos de idiomas (i18n, PR #88). No es un secreto.
+4caf53967cf54d8b6ac2707e3dc5a6cd8c31cf17:web/v2/en/tablero/index.html:generic-api-key:88
+5e20ea1240f223df31ce185e6b701505b1ea50e3:docs/i18n/PENDIENTE-REVISION.md:generic-api-key:100
+5e20ea1240f223df31ce185e6b701505b1ea50e3:docs/i18n/PENDIENTE-REVISION.md:generic-api-key:108
+5e20ea1240f223df31ce185e6b701505b1ea50e3:docs/i18n/PENDIENTE-REVISION.md:generic-api-key:74
+5e20ea1240f223df31ce185e6b701505b1ea50e3:i18n/mt/ja.json:generic-api-key:1172
+5e20ea1240f223df31ce185e6b701505b1ea50e3:i18n/mt/ko.json:generic-api-key:1172
+5e20ea1240f223df31ce185e6b701505b1ea50e3:i18n/mt/pt-BR.json:generic-api-key:1172
+5e20ea1240f223df31ce185e6b701505b1ea50e3:i18n/review-status.json:generic-api-key:43
+5e20ea1240f223df31ce185e6b701505b1ea50e3:i18n/review-status.json:generic-api-key:72
+5e20ea1240f223df31ce185e6b701505b1ea50e3:i18n/review-status.json:generic-api-key:83
+5e20ea1240f223df31ce185e6b701505b1ea50e3:i18n/web/ja.json:generic-api-key:677
+5e20ea1240f223df31ce185e6b701505b1ea50e3:i18n/web/ko.json:generic-api-key:677
+5e20ea1240f223df31ce185e6b701505b1ea50e3:i18n/web/pt-BR.json:generic-api-key:677
+5e20ea1240f223df31ce185e6b701505b1ea50e3:web/v2/en/tablero/index.html:generic-api-key:88
+5e20ea1240f223df31ce185e6b701505b1ea50e3:web/v2/i18n/source.json:generic-api-key:677
+5e20ea1240f223df31ce185e6b701505b1ea50e3:web/v2/ja/tablero/index.html:generic-api-key:89
+5e20ea1240f223df31ce185e6b701505b1ea50e3:web/v2/ko/tablero/index.html:generic-api-key:89
+5e20ea1240f223df31ce185e6b701505b1ea50e3:web/v2/pt-br/tablero/index.html:generic-api-key:88

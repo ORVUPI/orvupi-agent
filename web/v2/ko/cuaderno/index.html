@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko" data-lang="en" data-locale="ko" data-fixed-lang>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="어떤 Solana 토큰을 위한 Local read-only 노트북.">
+<link rel="canonical" href="https://orvupi.com/ko/cuaderno/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ORVUPI">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:url" content="https://orvupi.com/ko/cuaderno/">
+<meta property="og:title" content="ORVUPI · 노트북">
+<meta property="og:description" content="어떤 Solana 토큰을 위한 Local read-only 노트북.">
+<meta property="og:image" content="https://orvupi.com/assets/orvupi/social.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1254">
+<meta property="og:image:height" content="1254">
+<meta property="og:image:alt" content="ORVUPI: 호기심 많은 분홍 문어, 커뮤니티, Web3 도구.">
+<meta name="twitter:card" content="summary_large_image">
+
+<meta name="twitter:title" content="ORVUPI · 노트북">
+<meta name="twitter:description" content="어떤 Solana 토큰을 위한 Local read-only 노트북.">
+<meta name="twitter:image" content="https://orvupi.com/assets/orvupi/social.png">
+<meta property="og:image:alt" content="ORVUPI: 호기심 많은 분홍 문어, 커뮤니티, Web3 도구.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self' https://solana-rpc.publicnode.com https://api.mainnet-beta.solana.com https://mainnet.base.org https://ethereum-rpc.publicnode.com https://bsc-rpc.publicnode.com https://api.dexscreener.com; manifest-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<title>ORVUPI · 노트북</title>
+<meta name="theme-color" content="#071422">
+
+
+
+<link rel="manifest" href="/site.webmanifest">
+<link rel="stylesheet" href="/assets/site.css">
+<script src="/assets/shell.js"></script>
+
+<link rel="stylesheet" href="/assets/orvupi.css">
+
+
+
+
+
+
+<link rel="icon" href="/assets/orvupi/avatar.png" type="image/png"><!-- i18n:alternates -->
+<link rel="alternate" hreflang="es" href="https://orvupi.com/cuaderno/">
+<link rel="alternate" hreflang="en" href="https://orvupi.com/en/cuaderno/">
+<link rel="alternate" hreflang="pt-BR" href="https://orvupi.com/pt-br/cuaderno/">
+<link rel="alternate" hreflang="ja" href="https://orvupi.com/ja/cuaderno/">
+<link rel="alternate" hreflang="ko" href="https://orvupi.com/ko/cuaderno/">
+<link rel="alternate" hreflang="x-default" href="https://orvupi.com/en/cuaderno/">
+<link rel="stylesheet" href="/assets/i18n.css">
+<script src="/assets/i18n.js" defer></script>
+<link rel="stylesheet" href="/fonts/noto/noto-sans-kr.css">
+<!-- /i18n:alternates -->
+</head>
+<body>
+
+<a class="skip lang en" href="#contenido">본문으로 건너뛰기</a>
+<header class="site"><div class="wrap"><div class="topbar"><a class="brand" href="/ko/"><img src="/assets/orvupi/avatar.png" alt="" width="46" height="46"><strong>ORVUPI</strong></a><nav class="langpick" aria-label="Language · Idioma · 言語 · 언어"><details><summary><span class="langpick-icon" aria-hidden="true">🌐</span> <span lang="ko">한국어</span></summary><ul><li><a href="/cuaderno/" hreflang="es" lang="es" data-lang-link="es">Español</a></li><li><a href="/en/cuaderno/" hreflang="en" lang="en" data-lang-link="en">English</a></li><li><a href="/pt-br/cuaderno/" hreflang="pt-BR" lang="pt-BR" data-lang-link="pt-BR">Português (Brasil)</a></li><li><a href="/ja/cuaderno/" hreflang="ja" lang="ja" data-lang-link="ja">日本語</a></li><li><a href="/ko/cuaderno/" hreflang="ko" lang="ko" data-lang-link="ko" aria-current="true">한국어</a></li></ul></details></nav></div><nav class="site" aria-label="주요 특징"><ul><li><a href="/ko/"><span class="lang en" lang="ko">홈</span></a></li><li><a href="/ko/#herramientas"><span class="lang en" lang="ko">도구</span></a></li><li><a href="/work/"><span class="lang en" lang="ko">Work</span></a></li><li><a href="/ko/memes/"><span class="lang en" lang="ko">밈</span></a></li><li><a href="/ko/community/"><span class="lang en" lang="ko">커뮤니티</span></a></li><li><a href="/ko/vision/"><span class="lang en" lang="ko">비전</span></a></li><li><a href="/ko/token/"><span class="lang en" lang="ko">ORVUPI 토큰</span></a></li></ul></nav><details class="mapa"><summary><span class="lang en" lang="ko">전체 둘러보기</span></summary><nav aria-label="사이트 맵"><ul><li><a href="/ko/verify/"><span class="lang en" lang="ko">Verify</span></a></li><li><a href="/ko/lab/"><span class="lang en" lang="ko">Lab</span></a></li><li><a href="/ko/studio/"><span class="lang en" lang="ko">Studio</span></a></li><li><a href="/ko/cuaderno/"><span class="lang en" lang="ko">노트</span></a></li><li><a href="/ko/tablero/"><span class="lang en" lang="ko">보드</span></a></li><li><a href="/ko/pares/"><span class="lang en" lang="ko">커브</span></a></li><li><a href="/ko/comparar/"><span class="lang en" lang="ko">커브 예시</span></a></li><li><a href="/ko/contribuir/"><span class="lang en" lang="ko">기여하기</span></a></li><li><a href="/ko/aprender/"><span class="lang en" lang="ko">배우기</span></a></li><li><a href="/ko/methodology/"><span class="lang en" lang="ko">방법론</span></a></li><li><a href="/ko/marca/"><span class="lang en" lang="ko">브랜드</span></a></li><li><a href="/ko/security/"><span class="lang en" lang="ko">보안</span></a></li><li><a href="/ko/risks/"><span class="lang en" lang="ko">위험</span></a></li><li><a href="/ko/legal/"><span class="lang en" lang="ko">법적 고지</span></a></li></ul></nav></details></div></header>
+<main id="contenido" class="wrap">
+
+<h1><span class="lang en" lang="ko">노트</span></h1>
+<p class="lede"><span class="lang en" lang="ko">Solana 토큰을 읽고이 브라우저에서 카드를 저장하십시오. 지갑을 연결하지 않으며 로그인하지 않으며, 전송하지 않습니다.</span></p>
+<p><span class="lang en" lang="ko">네트워크를 선택하십시오. 페이지가 열릴 때, 네트워크는 Solana입니다. Base에서 독서는 또한 읽기 전용입니다: 지갑 없음 및 서명 없음. 각 카드는 네트워크와 주소를 저장합니다.</span></p>
+<p><span class="lang en" lang="ko">이 브라우저에서만 쓸 수 있는 것. 키, 종자 구문, 또는 개인 데이터를 작성하지 마십시오. 삭제 취소. 체인을 읽으려면 브라우저가 공용 Solana 서비스를 쿼리합니다 (기본 solana-rpc.publicnode.com, 또는 하나를 선택). 주소와 IP를 수신합니다.</span></p>
+<p><span class="lang en" lang="ko">이 사이트는 당신이 어떤 서버에서 볼 주소를 저장하지 않습니다. 라이브를 읽으려면 Solana 공개 노드 solana-rpc.publicnode.com 및 api.mainnet-beta.solana.com으로 보내져 IP를 볼 수 있습니다. "Read Market data now"를 누르면 브라우저가 DEX Screener에 연결되며 IP와 주소를 볼 수 있습니다. "Save this lookup"를 누르면 해당 브라우저의 노트북에 저장되어 장치에서, 당신은 언제든지 그것을 삭제할 수 있습니다. 시장 데이터는 저장되지 않습니다.</span></p>
+<p class="sello"><span class="lang en" lang="ko">감사 또는 권고가 아닙니다. 그것은 명시된 시간에 공개 체인 데이터를 보여줍니다; 토큰이 좋을지 여부, 안전, 또는 좋은 구입하지 않습니다.</span></p>
+<p><span class="lang en" lang="ko">각 저장된 카드는 시간이 지남에 따라 변경 될 수 있습니다. 새로운 쿼리는 현재 읽기로 이전을 설정하지 않습니다.</span></p>
+<noscript><p><span class="lang en" lang="ko">JavaScript 없이는 네트워크가 queried 카드가 저장될 수 없습니다. 도서관은 여전히 학습에 있습니다.</span></p></noscript>
+<p><a href="/ko/aprender/"><span class="lang en" lang="ko">쿼리하기 전에 라이브러리를 읽으십시오.</span></a></p>
+
+<form id="consulta" class="consulta" action="#">
+<div class="selector-red">
+<label for="red-cuaderno"><span class="lang en" lang="ko">네트워크</span></label>
+<select id="red-cuaderno" name="red" data-red="si">
+<option value="solana" selected>Solana</option>
+</select>
+</div>
+<label for="direccion-cuaderno"><span class="lang en" lang="ko">토큰 주소</span></label>
+<input id="direccion-cuaderno" name="direccion" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
+<button id="consultar" type="submit"><span class="lang en" lang="ko">확인</span></button>
+<p id="aviso-rpc-base" class="aviso-rpc" hidden><span class="lang en" lang="ko"></span></p>
+<p id="consulta-error" class="campo-error" role="status" aria-live="polite" hidden></p>
+</form>
+<section id="comprobaciones-red" class="comprobaciones-red" aria-live="polite"></section>
+
+<details>
+<summary><span class="lang en" lang="ko">대중적인 독자를 바꾸십시오</span></summary>
+<label for="rpc-url"><span class="lang en" lang="ko">공공 리더</span></label>
+<select id="rpc-url" name="rpc">
+<option value="https://solana-rpc.publicnode.com" selected>solana-rpc.publicnode.com</option>
+<option value="https://api.mainnet-beta.solana.com">api.mainnet-beta.solana.com</option>
+</select>
+<p class="muted"><span class="lang en" lang="ko">api.mainnet-beta.solana.com 및 solana-rpc.publicnode.com에는 두 개의 리더가 있습니다. 또 다른 독자를 선택하면, 그 서비스는 쿼리와 IP를받습니다. ORVUPI는 그것을 검토하지 않습니다.</span></p>
+</details>
+
+<section id="resultado" tabindex="-1" aria-live="polite"></section>
+
+<h2><span class="lang en" lang="ko">저장 된 쿼리</span></h2>
+<p><span class="lang en" lang="ko">이 브라우저는 대부분의 200 카드에 저장됩니다. 그것이 가득 차있을 때, 다른 것을 저장하는 것을 삭제하십시오.</span></p>
+<div id="lista-consultas"></div>
+
+<h2><span class="lang en" lang="ko">Recheck 저장된 주소</span></h2>
+<p><span class="lang en" lang="ko">저장 된 주소를 다시 읽으십시오, 그들 중 하나 또는 마크 만 표시하고, 마지막 읽기 이후 변경되는지 확인하십시오. 그들은 하나씩 읽습니다.</span></p>
+<div id="lista-seguimiento"></div>
+<p id="seguir-alcance" class="muted"></p>
+<p id="aviso-pasada" class="aviso-pasada"><span class="lang en" lang="ko">브라우저가 체크된 주소(표시된 항목 또는 그 중 모두는 Solana 공개 노드 solana-rpc.publicnode.com 및 api.mainnet-beta.solana.com에 표시된 경우, IP를 볼 수 있습니다. "Save"를 탭 할 때까지 새로운 것은 저장되지 않습니다.</span></p>
+<p class="pasada-acciones"><button id="seguir" type="button"><span class="lang en" lang="ko">자주 묻는 질문</span></button> <button id="detener" type="button" hidden><span class="lang en" lang="ko">중지</span></button> <button id="guardar-todas" type="button" aria-disabled="true"><span class="lang en" lang="ko">모두 저장</span></button></p>
+<p id="guardar-todas-ayuda" class="muted" hidden></p>
+<div id="resultado-seguimiento" tabindex="-1" aria-live="polite"></div>
+
+<h2><span class="lang en" lang="ko">동일한 주소의 쿼리 비교</span></h2>
+<div class="comparacion">
+<p><label for="comparar-izquierda"><span class="lang en" lang="ko">이전</span></label>
+<select id="comparar-izquierda"></select></p>
+<p><label for="comparar-derecha"><span class="lang en" lang="ko">현재</span></label>
+<select id="comparar-derecha"></select></p>
+</div>
+<p><button id="comparar" type="button"><span class="lang en" lang="ko">queries 비교</span></button></p>
+<div id="comparacion"></div>
+
+<h2><span class="lang en" lang="ko">복사, 수입 및 삭제</span></h2>
+<div class="cuaderno-acciones">
+<button id="exportar" type="button"><span class="lang en" lang="ko">JSON 내보내기</span></button>
+<label class="file" for="importar-archivo"><span class="lang en" lang="ko">JSON 복사를 선택하십시오.</span></label>
+<input id="importar-archivo" type="file" accept="application/json,.json">
+<button id="borrar" type="button"><span class="lang en" lang="ko">모든 쿼리 삭제</span></button>
+</div>
+<p id="confirmar-borrado" hidden>
+
+<span class="lang en" lang="ko">이 브라우저에서 카드와 노트를 삭제합니다. 여기에 undone이 될 수 없습니다.</span>
+<button id="borrar-confirmar" type="button"><span class="lang en" lang="ko">예, 삭제합니다</span></button>
+<button id="borrar-cancelar" type="button"><span class="lang en" lang="ko">취소</span></button>
+</p>
+
+</main>
+
+<footer class="or-footer"><div class="wrap"><h2>ORVUPI.</h2><p><span class="lang en" lang="ko">1개의 호기심. 8개의 tentacles. 많은 아이디어.</span></p><div class="or-footer-links"><a href="/ko/marca/"><span class="lang en" lang="ko">브랜드 자료</span></a><a href="/ko/legal/"><span class="lang en" lang="ko">개인정보 및 연락처</span></a><!--email_off--><a href="mailto:orvupi.hq@gmail.com">orvupi.hq@gmail.com</a><!--/email_off--><a href="/ko/risks/"><span class="lang en" lang="ko">위험</span></a><a href="https://github.com/ORVUPI/orvupi-agent">GitHub ↗</a></div><p><span class="lang en" lang="ko">계정 또는 필수 지갑 연결이 없습니다. 언어, Lab 진행, Studio 초안, 그리고 노트북, 사용중인 경우,이 브라우저에 머물.</span></p><p>ORVUPI · 2026 · <span class="lang en" lang="ko">Original MIT 코드; 시각적 리소스는 자신의 검증 및 용어를 가지고 있습니다.</span></p></div></footer>
+
+<script type="module" src="/assets/redes.mjs"></script>
+<script type="module" src="/assets/cuaderno.js"></script>
+</body>
+</html>

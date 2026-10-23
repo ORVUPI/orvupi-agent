@@ -1,4 +1,4 @@
-import type { Locale } from "../i18n";
+import { templateText, type Locale } from "../i18n";
 import type { MessageKey } from "../i18n";
 import { bulletList, documentNode, heading, paragraph, type JsonNode } from "./model";
 
@@ -42,7 +42,8 @@ const copy = {
 } as const;
 
 function pack(locale: Locale, id: keyof typeof copy.es): JsonNode {
-  return documentNode([...copy[locale][id]]);
+  if (locale === "es" || locale === "en") return documentNode([...copy[locale][id]]);
+  return documentNode(JSON.parse(JSON.stringify(copy.en[id]), (key, value) => (key === "text" && typeof value === "string" ? templateText(locale, value) : value)));
 }
 
 export const templates: WorkTemplate[] = [

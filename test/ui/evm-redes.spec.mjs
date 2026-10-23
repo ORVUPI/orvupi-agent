@@ -1,3 +1,4 @@
+import { switchLang } from "./lang.mjs";
 import { expect, test } from "@playwright/test";
 
 const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
@@ -215,7 +216,7 @@ test("Ethereum lee USDC y WETH, y un checksum mal no comparte caché", async ({ 
   if (shot) {
     await page.locator("main .lede").screenshot({ path: `test-results/artifacts/lede-ethereum-es-${shot}.png` });
     await shotNotice(page, `aviso-ethereum-es-${shot}`);
-    await page.locator("[data-set-lang='en']").click();
+    await switchLang(page, "en");
     await expectNotice(page, "ethereum", "en");
     await expect(page.locator("main .lede .lang.en")).toHaveText(LEDE.ethereum.en);
     await page.locator("main .lede").screenshot({ path: `test-results/artifacts/lede-ethereum-en-${shot}.png` });
@@ -259,7 +260,7 @@ test("BNB Chain lee USDT y WBNB, y un checksum mal no comparte caché", async ({
   if (shot) {
     await page.locator("main .lede").screenshot({ path: `test-results/artifacts/lede-bnb-es-${shot}.png` });
     await shotNotice(page, `aviso-bnb-es-${shot}`);
-    await page.locator("[data-set-lang='en']").click();
+    await switchLang(page, "en");
     await expectNotice(page, "bnb", "en");
     await expect(page.locator("main .lede .lang.en")).toHaveText(LEDE.bnb.en);
     await page.locator("main .lede").screenshot({ path: `test-results/artifacts/lede-bnb-en-${shot}.png` });

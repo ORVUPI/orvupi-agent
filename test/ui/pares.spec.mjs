@@ -1,3 +1,4 @@
+import { switchLang } from "./lang.mjs";
 import { expect, test } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import {
@@ -120,7 +121,7 @@ test("el informe lee un paso y cambia de idioma", async ({ page }, info) => {
   expect(downloads.some((name) => name.endsWith(".json"))).toBe(true);
   await page.screenshot({ path: `${shots}/u09-pares-${project}-es.png`, fullPage: project === "desktop" });
 
-  await page.locator('[data-set-lang="en"]').first().click();
+  await switchLang(page, "en");
   await expect(page.locator("html")).toHaveAttribute("data-lang", "en");
   await expect(page.locator("h1")).toContainText("Curve reading");
   await expect(page.locator("main")).toContainText(

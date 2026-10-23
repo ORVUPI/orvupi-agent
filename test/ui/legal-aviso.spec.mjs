@@ -1,3 +1,4 @@
+import { switchLang } from "./lang.mjs";
 import { expect, test } from "@playwright/test";
 
 const FOOTER_ES = "Cripto de alto riesgo · Puedes perderlo todo · No es consejo de inversión.";
@@ -69,9 +70,8 @@ function contrast(fg, bg) {
 }
 
 async function showSpanish(page) {
-  const button = page.locator('[data-set-lang="es"]').first();
-  if ((await button.count()) === 0) return;
-  if ((await button.getAttribute("aria-pressed")) !== "true") await button.click();
+  // Con una elección guardada, la web abre la versión elegida; se vuelve al español con el selector.
+  if ((await page.locator("html").getAttribute("data-lang")) !== "es") await switchLang(page, "es");
 }
 
 test("el pie de riesgo y la etiqueta de imagen no están en ninguna vista", async ({ page }) => {
@@ -156,7 +156,7 @@ test("el plegable es details en el HTML y se abre con el teclado", async ({ page
     await expect(details).toHaveJSProperty("open", true);
     await expect(page.locator('.aviso[data-disclaimer="si"]')).toContainText("Solo lectura: no conecta carteras ni firma nada.");
     await expect(details).toContainText("Lo desconocido no es lo mismo que lo comprobado.");
-    await page.locator('[data-set-lang="en"]').first().click();
+    await switchLang(page, "en");
     await expect(summary).toHaveAccessibleName(SUMMARY_EN);
   }
 });

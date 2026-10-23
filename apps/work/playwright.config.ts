@@ -13,6 +13,8 @@ export default defineConfig({
   reporter: process.env.CI ? "line" : "list",
   use: {
     baseURL: "http://127.0.0.1:4174",
+    // Las pruebas existentes están escritas con la interfaz en español; sin preferencia, Work sigue el idioma del navegador.
+    locale: "es-ES",
     trace: "retain-on-failure",
     viewport: { width: 1360, height: 900 },
   },

@@ -1,3 +1,4 @@
+import { isLocale, LOCALES } from "../i18n";
 import { useEffect, useMemo, useState } from "react";
 import type { ExportKind } from "../docs/DocsEditor";
 import { ProgressBar } from "../ui/kit";
@@ -245,6 +246,14 @@ export function App() {
           exportItems={exportItems}
           settingsLabel={workspace.t("settings")}
           onSettings={() => void workspace.navigate("settings")}
+          language={{
+            label: workspace.t("language"),
+            value: workspace.locale,
+            options: LOCALES,
+            onChange: (value) => {
+              if (isLocale(value)) void workspace.setLocale(value);
+            },
+          }}
           aiLabel={workspace.t("openAi")}
           aiPressed={workspace.aiOpen}
           onAi={() => workspace.setAiOpen(!workspace.aiOpen)}

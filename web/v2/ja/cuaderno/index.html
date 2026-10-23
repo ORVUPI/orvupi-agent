@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ja" data-lang="en" data-locale="ja" data-fixed-lang>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="Solanaトークンのローカル読み取り専用ノート。">
+<link rel="canonical" href="https://orvupi.com/ja/cuaderno/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ORVUPI">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:url" content="https://orvupi.com/ja/cuaderno/">
+<meta property="og:title" content="ORVUPI・ノートブック">
+<meta property="og:description" content="Solanaトークンのローカル読み取り専用ノート。">
+<meta property="og:image" content="https://orvupi.com/assets/orvupi/social.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1254">
+<meta property="og:image:height" content="1254">
+<meta property="og:image:alt" content="ORVUPI：好奇心旺盛なピンクのタコ、コミュニティ、Web3 ツール。">
+<meta name="twitter:card" content="summary_large_image">
+
+<meta name="twitter:title" content="ORVUPI・ノートブック">
+<meta name="twitter:description" content="Solanaトークンのローカル読み取り専用ノート。">
+<meta name="twitter:image" content="https://orvupi.com/assets/orvupi/social.png">
+<meta property="og:image:alt" content="ORVUPI：好奇心旺盛なピンクのタコ、コミュニティ、Web3 ツール。">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self' https://solana-rpc.publicnode.com https://api.mainnet-beta.solana.com https://mainnet.base.org https://ethereum-rpc.publicnode.com https://bsc-rpc.publicnode.com https://api.dexscreener.com; manifest-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<title>ORVUPI・ノートブック</title>
+<meta name="theme-color" content="#071422">
+
+
+
+<link rel="manifest" href="/site.webmanifest">
+<link rel="stylesheet" href="/assets/site.css">
+<script src="/assets/shell.js"></script>
+
+<link rel="stylesheet" href="/assets/orvupi.css">
+
+
+
+
+
+
+<link rel="icon" href="/assets/orvupi/avatar.png" type="image/png"><!-- i18n:alternates -->
+<link rel="alternate" hreflang="es" href="https://orvupi.com/cuaderno/">
+<link rel="alternate" hreflang="en" href="https://orvupi.com/en/cuaderno/">
+<link rel="alternate" hreflang="pt-BR" href="https://orvupi.com/pt-br/cuaderno/">
+<link rel="alternate" hreflang="ja" href="https://orvupi.com/ja/cuaderno/">
+<link rel="alternate" hreflang="ko" href="https://orvupi.com/ko/cuaderno/">
+<link rel="alternate" hreflang="x-default" href="https://orvupi.com/en/cuaderno/">
+<link rel="stylesheet" href="/assets/i18n.css">
+<script src="/assets/i18n.js" defer></script>
+<link rel="stylesheet" href="/fonts/noto/noto-sans-jp.css">
+<!-- /i18n:alternates -->
+</head>
+<body>
+
+<a class="skip lang en" href="#contenido">本文へスキップ</a>
+<header class="site"><div class="wrap"><div class="topbar"><a class="brand" href="/ja/"><img src="/assets/orvupi/avatar.png" alt="" width="46" height="46"><strong>ORVUPI</strong></a><nav class="langpick" aria-label="Language · Idioma · 言語 · 언어"><details><summary><span class="langpick-icon" aria-hidden="true">🌐</span> <span lang="ja">日本語</span></summary><ul><li><a href="/cuaderno/" hreflang="es" lang="es" data-lang-link="es">Español</a></li><li><a href="/en/cuaderno/" hreflang="en" lang="en" data-lang-link="en">English</a></li><li><a href="/pt-br/cuaderno/" hreflang="pt-BR" lang="pt-BR" data-lang-link="pt-BR">Português (Brasil)</a></li><li><a href="/ja/cuaderno/" hreflang="ja" lang="ja" data-lang-link="ja" aria-current="true">日本語</a></li><li><a href="/ko/cuaderno/" hreflang="ko" lang="ko" data-lang-link="ko">한국어</a></li></ul></details></nav></div><nav class="site" aria-label="スタッフ"><ul><li><a href="/ja/"><span class="lang en" lang="ja">ホーム</span></a></li><li><a href="/ja/#herramientas"><span class="lang en" lang="ja">ツール</span></a></li><li><a href="/work/"><span class="lang en" lang="ja">Work</span></a></li><li><a href="/ja/memes/"><span class="lang en" lang="ja">ミーム</span></a></li><li><a href="/ja/community/"><span class="lang en" lang="ja">コミュニティ</span></a></li><li><a href="/ja/vision/"><span class="lang en" lang="ja">ビジョン</span></a></li><li><a href="/ja/token/"><span class="lang en" lang="ja">ORVUPI トークン</span></a></li></ul></nav><details class="mapa"><summary><span class="lang en" lang="ja">すべて見る</span></summary><nav aria-label="サイトマップ"><ul><li><a href="/ja/verify/"><span class="lang en" lang="ja">Verify</span></a></li><li><a href="/ja/lab/"><span class="lang en" lang="ja">Lab</span></a></li><li><a href="/ja/studio/"><span class="lang en" lang="ja">Studio</span></a></li><li><a href="/ja/cuaderno/"><span class="lang en" lang="ja">ノート</span></a></li><li><a href="/ja/tablero/"><span class="lang en" lang="ja">ボード</span></a></li><li><a href="/ja/pares/"><span class="lang en" lang="ja">カーブ</span></a></li><li><a href="/ja/comparar/"><span class="lang en" lang="ja">カーブの例</span></a></li><li><a href="/ja/contribuir/"><span class="lang en" lang="ja">貢献する</span></a></li><li><a href="/ja/aprender/"><span class="lang en" lang="ja">学ぶ</span></a></li><li><a href="/ja/methodology/"><span class="lang en" lang="ja">方法論</span></a></li><li><a href="/ja/marca/"><span class="lang en" lang="ja">ブランド</span></a></li><li><a href="/ja/security/"><span class="lang en" lang="ja">セキュリティ</span></a></li><li><a href="/ja/risks/"><span class="lang en" lang="ja">リスク</span></a></li><li><a href="/ja/legal/"><span class="lang en" lang="ja">法的情報</span></a></li></ul></nav></details></div></header>
+<main id="contenido" class="wrap">
+
+<h1><span class="lang en" lang="ja">ノート</span></h1>
+<p class="lede"><span class="lang en" lang="ja">Solanaトークンを読んで、このブラウザでカードを保存します。 ウォレットを接続しない、署名しない、送信しない。</span></p>
+<p><span class="lang en" lang="ja">ネットワークを選択します。 このページが開くと、ネットワークはSolanaになります。 Baseでは、読み込みも読み取り専用です。ウォレットや署名はありません。 各カードは、ネットワークとアドレスを格納します。</span></p>
+<p><span class="lang en" lang="ja">このブラウザでのみ書き込みが保存されます。 キー、シード phrases、または個人データを記述しないでください。 削除を解除します。 チェーンを 読むには、ブラウザは パブリック Solana サービス (デフォルトでは solana-rpc.publicnode.com 、または選択したもの) を問い合わせ、アドレスと IP を受信します。</span></p>
+<p><span class="lang en" lang="ja">当サイトでは、サーバー上で閲覧したアドレスは保存されません。 ライブを閲覧するには、Solana パブリックノード solana-rpc.publicnode.com と api.mainnet-beta.solana.com に送信され、IP も表示されます。 「今すぐ市場データを読み込み」を押すと、お使いのブラウザはDEX Screenerに接続し、IPアドレスと表示アドレスも確認できます。 「このルックアップを保存」を押すと、このブラウザのノートブックに保存され、デバイスに保存され、いつでも削除できます。 市場データは保存されません。</span></p>
+<p class="sello"><span class="lang en" lang="ja">オーディションや勧告ではありません。 記載された時点では、パブリックチェーンデータが表示されます。トークンが良い、安全、または良い購入かどうかは言うまでもありません。</span></p>
+<p><span class="lang en" lang="ja">保存したカードは、時間の状態を把握し、これを変更することがあります。 新しいクエリは、以前のクエリを現在の読み込みに変えません。</span></p>
+<noscript><p><span class="lang en" lang="ja">JavaScript がなければ、ネットワークはクライドできず、カードは保存できません。 ライブラリはまだ学習中です。</span></p></noscript>
+<p><a href="/ja/aprender/"><span class="lang en" lang="ja">クエリの前にライブラリを読みます クエリ</span></a></p>
+
+<form id="consulta" class="consulta" action="#">
+<div class="selector-red">
+<label for="red-cuaderno"><span class="lang en" lang="ja">ネットワーク</span></label>
+<select id="red-cuaderno" name="red" data-red="si">
+<option value="solana" selected>Solana</option>
+</select>
+</div>
+<label for="direccion-cuaderno"><span class="lang en" lang="ja">トークンアドレス</span></label>
+<input id="direccion-cuaderno" name="direccion" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
+<button id="consultar" type="submit"><span class="lang en" lang="ja">確認する</span></button>
+<p id="aviso-rpc-base" class="aviso-rpc" hidden><span class="lang en" lang="ja"></span></p>
+<p id="consulta-error" class="campo-error" role="status" aria-live="polite" hidden></p>
+</form>
+<section id="comprobaciones-red" class="comprobaciones-red" aria-live="polite"></section>
+
+<details>
+<summary><span class="lang en" lang="ja">公開リーダーの変更</span></summary>
+<label for="rpc-url"><span class="lang en" lang="ja">パブリックリーダー</span></label>
+<select id="rpc-url" name="rpc">
+<option value="https://solana-rpc.publicnode.com" selected>solana-rpc.publicnode.com</option>
+<option value="https://api.mainnet-beta.solana.com">api.mainnet-beta.solana.com</option>
+</select>
+<p class="muted"><span class="lang en" lang="ja">api.mainnet-beta.solana.com と solana-rpc.publicnode.com の2つのリーダーのみがあります。 別の読者を選択した場合、そのサービスは、あなたの質問とあなたのIPを受信します。 ORVUPI はレビューしません。</span></p>
+</details>
+
+<section id="resultado" tabindex="-1" aria-live="polite"></section>
+
+<h2><span class="lang en" lang="ja">保存されたクエリ</span></h2>
+<p><span class="lang en" lang="ja">ほとんどの200枚のカードに、このブラウザが保存されます。 それがいっぱいになると、別の保存に1つを削除してください。</span></p>
+<div id="lista-consultas"></div>
+
+<h2><span class="lang en" lang="ja">保存されたアドレスのチェック 再チェック</span></h2>
+<p><span class="lang en" lang="ja">保存したアドレスを再び 、 または  マークするものだけ、 最後の読み込みから変更されたものを参照してください。 ひとつひとつひとつひとつずつ ひとつずつ ひとつずつ。</span></p>
+<div id="lista-seguimiento"></div>
+<p id="seguir-alcance" class="muted"></p>
+<p id="aviso-pasada" class="aviso-pasada"><span class="lang en" lang="ja">タップすると、ブラウザは、アドレスがチェックされている(マークされたもの、またはマークされていない場合、それらのすべて)をSolanaパブリックノードに送信します。 solana-rpc.nodepublic.com と api.mainnet-beta.solana.com 、また、あなたのIPを参照してください。 「Save」をタップすると、新しい保存ができません。</span></p>
+<p class="pasada-acciones"><button id="seguir" type="button"><span class="lang en" lang="ja">リストをチェックする</span></button> <button id="detener" type="button" hidden><span class="lang en" lang="ja">停止</span></button> <button id="guardar-todas" type="button" aria-disabled="true"><span class="lang en" lang="ja">すべて保存</span></button></p>
+<p id="guardar-todas-ayuda" class="muted" hidden></p>
+<div id="resultado-seguimiento" tabindex="-1" aria-live="polite"></div>
+
+<h2><span class="lang en" lang="ja">同じアドレスのクエリを比較する</span></h2>
+<div class="comparacion">
+<p><label for="comparar-izquierda"><span class="lang en" lang="ja">変更前</span></label>
+<select id="comparar-izquierda"></select></p>
+<p><label for="comparar-derecha"><span class="lang en" lang="ja">現在</span></label>
+<select id="comparar-derecha"></select></p>
+</div>
+<p><button id="comparar" type="button"><span class="lang en" lang="ja">クエリの比較</span></button></p>
+<div id="comparacion"></div>
+
+<h2><span class="lang en" lang="ja">コピー、インポート、削除</span></h2>
+<div class="cuaderno-acciones">
+<button id="exportar" type="button"><span class="lang en" lang="ja">JSON を書き出す</span></button>
+<label class="file" for="importar-archivo"><span class="lang en" lang="ja">JSON コピーを選択</span></label>
+<input id="importar-archivo" type="file" accept="application/json,.json">
+<button id="borrar" type="button"><span class="lang en" lang="ja">すべてのクエリを削除</span></button>
+</div>
+<p id="confirmar-borrado" hidden>
+
+<span class="lang en" lang="ja">これにより、このブラウザでカードとメモが削除されます。 ここまでは、元に戻すことはできません。</span>
+<button id="borrar-confirmar" type="button"><span class="lang en" lang="ja">はい、削除します</span></button>
+<button id="borrar-cancelar" type="button"><span class="lang en" lang="ja">キャンセル</span></button>
+</p>
+
+</main>
+
+<footer class="or-footer"><div class="wrap"><h2>ORVUPI.</h2><p><span class="lang en" lang="ja">1つの好奇心。 8つの触手。 多くのアイデア。</span></p><div class="or-footer-links"><a href="/ja/marca/"><span class="lang en" lang="ja">ブランド素材</span></a><a href="/ja/legal/"><span class="lang en" lang="ja">プライバシーとお問い合わせ</span></a><!--email_off--><a href="mailto:orvupi.hq@gmail.com">orvupi.hq@gmail.com</a><!--/email_off--><a href="/ja/risks/"><span class="lang en" lang="ja">リスク</span></a><a href="https://github.com/ORVUPI/orvupi-agent">GitHub ↗</a></div><p><span class="lang en" lang="ja">・アカウントkyotoまたは必須ウォレットの接続はありません。 必要となるのペースは、Labの進捗、Studioのドラフト、ノートブック、もし彼らが使用している場合は、このブラウザに滞在してください。</span></p><p>ORVUPI · 2026 · <span class="lang en" lang="ja">オリジナルのMITコード。ビジュアルリソース:独自の実績と、身に な い れ り り り 。  。</span></p></div></footer>
+
+<script type="module" src="/assets/redes.mjs"></script>
+<script type="module" src="/assets/cuaderno.js"></script>
+</body>
+</html>

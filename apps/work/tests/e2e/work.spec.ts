@@ -97,7 +97,7 @@ test("una ruta de editor desconocida carga la aplicación", async ({ page }) => 
 test("el idioma persiste entre cargas", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("navigation", { name: "Secciones" }).getByRole("button", { name: "Ajustes" }).click();
-  await page.getByLabel("Idioma").selectOption("en");
+  await page.locator("main").getByLabel("Idioma").selectOption("en");
   await expect(page.getByRole("button", { name: "Home" })).toBeVisible();
   await page.reload();
   await expect(page.getByRole("button", { name: "New document" })).toBeVisible();

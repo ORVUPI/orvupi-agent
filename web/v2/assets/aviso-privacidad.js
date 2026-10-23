@@ -10,7 +10,7 @@
     document.querySelectorAll(".privacidad-abrir").forEach(function (n) { n.hidden = !closed; });
   }
   function labels() {
-    var en = (document.documentElement.lang || "").toLowerCase().indexOf("en") === 0;
+    var en = document.documentElement.getAttribute("data-lang") === "en";
     document.querySelectorAll(".aviso-cerrar").forEach(function (b) {
       b.setAttribute("aria-label", en ? "Close the privacy notice" : "Cerrar el aviso de privacidad");
     });

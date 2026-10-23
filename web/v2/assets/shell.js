@@ -67,6 +67,8 @@
   }
 
   function apply(lang) {
+    // Con data-fixed-lang la URL manda el idioma (/, /en/, /pt-br/, /ja/, /ko/): no se cambia en la página.
+    if (document.documentElement.hasAttribute("data-fixed-lang")) return;
     var next = lang === "en" ? "en" : "es";
     document.documentElement.lang = next;
     document.documentElement.setAttribute("data-lang", next);
@@ -137,14 +139,14 @@
       btn.addEventListener("click", function () {
         var value = (btn.getAttribute("data-copy") || "").trim();
         var done = function () {
-          say(document.documentElement.lang === "en" ? "Copied" : "Copiada", "ok");
+          say(document.documentElement.getAttribute("data-lang") === "en" ? "Copied" : "Copiada", "ok");
         };
         var fail = function () {
-          say(document.documentElement.lang === "en" ? "Could not copy" : "No se pudo copiar", "error");
+          say(document.documentElement.getAttribute("data-lang") === "en" ? "Could not copy" : "No se pudo copiar", "error");
         };
         import("/shared/orvupi-contract.js").then(function (contract) {
           if (!contract.isOfficialAddress(value)) {
-            var en = document.documentElement.lang === "en";
+            var en = document.documentElement.getAttribute("data-lang") === "en";
             say(value ? (en ? "Copy blocked" : "Copia bloqueada") : (en ? "Empty" : "Vacío"), "error");
             return;
           }
@@ -154,7 +156,7 @@
             fail();
           }
         }).catch(function () {
-          say(document.documentElement.lang === "en" ? "Copy blocked" : "Copia bloqueada", "error");
+          say(document.documentElement.getAttribute("data-lang") === "en" ? "Copy blocked" : "Copia bloqueada", "error");
         });
       });
     });

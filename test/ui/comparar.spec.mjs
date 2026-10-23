@@ -1,3 +1,4 @@
+import { switchLang } from "./lang.mjs";
 import { expect, test } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 
@@ -37,7 +38,7 @@ test("el ejemplo de la curva no lee una dirección", async ({ page }, info) => {
   expect(reads).toEqual([]);
   await page.screenshot({ path: `${shots}/u07-comparar-${project}-es.png`, fullPage: project === "desktop" });
 
-  await page.locator('[data-set-lang="en"]').first().click();
+  await switchLang(page, "en");
   await expect(page.locator("html")).toHaveAttribute("data-lang", "en");
   await expect(page.locator("h1")).toContainText("Curve example");
   await expect(page.locator("main")).toContainText("Hypothetical example, not read from the chain");
