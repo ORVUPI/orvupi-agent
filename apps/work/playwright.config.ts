@@ -2,7 +2,6 @@ import { defineConfig, devices } from "@playwright/test";
 
 // En CI la matriz 0.8.3 completa no cabe en el tiempo del trabajo: una combinación por navegador. En local, todas.
 const D83_CI = new Set(["chromium-desk", "firefox-phone", "webkit-tablet"]);
-// Auditoría 0.9.3 de Presentaciones: en CI escritorio, tableta y móvil con Chromium y WebKit; en local, los tres navegadores.
 // En la CI solo escritorio Chromium (la matriz completa, 3 navegadores × 3 tamaños, se pasa en local antes de cada versión): con más se pasa de los 40 min del trabajo
 const A93_CI = new Set(["chromium-desk"]);
 
