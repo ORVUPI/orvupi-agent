@@ -158,6 +158,8 @@ jobs:
           for i in 1 2 3; do
             timeout 360 npx playwright install --with-deps chromium webkit && exit 0
             echo "intento $i fallido"; sudo pkill -9 -x apt-get || true; sudo pkill -9 -x dpkg || true; sleep 3; sudo dpkg --configure -a || true
+            # El espejo de Azure es el que se atasca: los siguientes intentos usan el de Ubuntu.
+            printf 'http://archive.ubuntu.com/ubuntu/\tpriority:1\nhttp://azure.archive.ubuntu.com/ubuntu/\tpriority:2\n' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
           done
           exit 1
 
@@ -191,6 +193,8 @@ jobs:
           for i in 1 2 3; do
             timeout 360 npx playwright install --with-deps chromium webkit && exit 0
             echo "intento $i fallido"; sudo pkill -9 -x apt-get || true; sudo pkill -9 -x dpkg || true; sleep 3; sudo dpkg --configure -a || true
+            # El espejo de Azure es el que se atasca: los siguientes intentos usan el de Ubuntu.
+            printf 'http://archive.ubuntu.com/ubuntu/\tpriority:1\nhttp://azure.archive.ubuntu.com/ubuntu/\tpriority:2\n' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
           done
           exit 1
 
@@ -239,6 +243,8 @@ jobs:
           for i in 1 2 3; do
             timeout 360 npx playwright install --with-deps chromium firefox webkit && exit 0
             echo "intento $i fallido"; sudo pkill -9 -x apt-get || true; sudo pkill -9 -x dpkg || true; sleep 3; sudo dpkg --configure -a || true
+            # El espejo de Azure es el que se atasca: los siguientes intentos usan el de Ubuntu.
+            printf 'http://archive.ubuntu.com/ubuntu/\tpriority:1\nhttp://azure.archive.ubuntu.com/ubuntu/\tpriority:2\n' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
           done
           exit 1
 
@@ -282,6 +288,8 @@ jobs:
           for i in 1 2 3; do
             timeout 360 npx playwright install --with-deps chromium webkit firefox && exit 0
             echo "intento $i fallido"; sudo pkill -9 -x apt-get || true; sudo pkill -9 -x dpkg || true; sleep 3; sudo dpkg --configure -a || true
+            # El espejo de Azure es el que se atasca: los siguientes intentos usan el de Ubuntu.
+            printf 'http://archive.ubuntu.com/ubuntu/\tpriority:1\nhttp://azure.archive.ubuntu.com/ubuntu/\tpriority:2\n' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
           done
           exit 1
 
