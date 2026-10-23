@@ -427,3 +427,5 @@
 /* 0.9.3: enlaces dentro del texto mientras se edita */
 .sl-root .sl-editable a { color: #1a73e8; text-decoration: underline; }
 .sl-root .sl-film-thumb.ow-thumb { min-width: 0; flex: none; width: max-content; }
+/* 0.9.3: botón «+» bajo la tira de miniaturas en tableta, como Slides en tableta */
+.sl-root.is-tablet .sl-film-add { width: auto; height: 44px; margin: 8px 10px 10px; flex: none; }
