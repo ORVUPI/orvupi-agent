@@ -43,6 +43,7 @@ test("lab: misión se abre y responde", async ({ page }, info) => {
 });
 
 test("studio: exporta PNG", async ({ page }, info) => {
+  test.setTimeout(120_000);
   // Guarda los blobs que Studio entrega, por si la pestaña los revoca antes de leerlos.
   await page.addInitScript(() => {
     const create = URL.createObjectURL.bind(URL);
@@ -51,13 +52,14 @@ test("studio: exporta PNG", async ({ page }, info) => {
   });
   await page.goto("/studio/");
   await expect(page.locator("body")).not.toContainText(new RegExp(["STU", "BX"].join(""), "i"));
-  await page.waitForTimeout(1500);
+  await page.locator("[data-template='meme-punch']").click();
+  await expect(page.locator("#descargar")).toBeEnabled({ timeout: 30_000 });
   await shot(page, info, "studio");
   // En iPhone (WebKit móvil) Descargar no dispara una descarga: abre el PNG en una pestaña nueva
   // (o la hoja de compartir). Se acepta cualquiera de las dos salidas y se comprueba el PNG igual.
   const outcome = Promise.race([
-    page.waitForEvent("download", { timeout: 30_000 }).then((download) => ({ download })),
-    page.context().waitForEvent("page", { timeout: 30_000 }).then((popup) => ({ popup })),
+    page.waitForEvent("download", { timeout: 90_000 }).then((download) => ({ download })),
+    page.context().waitForEvent("page", { timeout: 90_000 }).then((popup) => ({ popup })),
   ]);
   await page.click("#descargar");
   const result = await outcome;

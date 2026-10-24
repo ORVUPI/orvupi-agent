@@ -63,6 +63,14 @@ https://superb-horse-9036f5.netlify.app/*  https://stubxai.com/:splat  301!
 /pt-br/lab/sw.js                                 /lab/sw.js 200
 /ja/lab/sw.js                                    /lab/sw.js 200
 /ko/lab/sw.js                                    /lab/sw.js 200
+/en/studio/CONTINUIDAD.md                        /studio/CONTINUIDAD.md 200
+/pt-br/studio/CONTINUIDAD.md                     /studio/CONTINUIDAD.md 200
+/ja/studio/CONTINUIDAD.md                        /studio/CONTINUIDAD.md 200
+/ko/studio/CONTINUIDAD.md                        /studio/CONTINUIDAD.md 200
+/en/studio/app.mjs                               /studio/app.mjs 200
+/pt-br/studio/app.mjs                            /studio/app.mjs 200
+/ja/studio/app.mjs                               /studio/app.mjs 200
+/ko/studio/app.mjs                               /studio/app.mjs 200
 /en/studio/assets/*                              /studio/assets/:splat 200
 /pt-br/studio/assets/*                           /studio/assets/:splat 200
 /ja/studio/assets/*                              /studio/assets/:splat 200
@@ -79,10 +87,6 @@ https://superb-horse-9036f5.netlify.app/*  https://stubxai.com/:splat  301!
 /pt-br/studio/lib/*                              /studio/lib/:splat 200
 /ja/studio/lib/*                                 /studio/lib/:splat 200
 /ko/studio/lib/*                                 /studio/lib/:splat 200
-/en/studio/render.worker.mjs                     /studio/render.worker.mjs 200
-/pt-br/studio/render.worker.mjs                  /studio/render.worker.mjs 200
-/ja/studio/render.worker.mjs                     /studio/render.worker.mjs 200
-/ko/studio/render.worker.mjs                     /studio/render.worker.mjs 200
 /en/studio/studio-boot.js                        /studio/studio-boot.js 200
 /pt-br/studio/studio-boot.js                     /studio/studio-boot.js 200
 /ja/studio/studio-boot.js                        /studio/studio-boot.js 200
@@ -95,10 +99,6 @@ https://superb-horse-9036f5.netlify.app/*  https://stubxai.com/:splat  301!
 /pt-br/studio/studio.css                         /studio/studio.css 200
 /ja/studio/studio.css                            /studio/studio.css 200
 /ko/studio/studio.css                            /studio/studio.css 200
-/en/studio/studio.js                             /studio/studio.js 200
-/pt-br/studio/studio.js                          /studio/studio.js 200
-/ja/studio/studio.js                             /studio/studio.js 200
-/ko/studio/studio.js                             /studio/studio.js 200
 /en/studio/templates.json                        /studio/templates.json 200
 /pt-br/studio/templates.json                     /studio/templates.json 200
 /ja/studio/templates.json                        /studio/templates.json 200

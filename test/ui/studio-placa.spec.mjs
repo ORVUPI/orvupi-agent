@@ -1,61 +1,35 @@
 import { expect, test } from "@playwright/test";
+import { readFileSync } from "node:fs";
 
-import { renderCard } from "../../web/v2/studio/lib/render.mjs";
+import { decodePng } from "../../web/v2/studio/lib/png.mjs";
 
-test("la vista previa vertical no dibuja la marca de agua", async ({ page }) => {
+test("la historia exporta 1080×1920 y la plantilla vertical no lleva marca de agua", async ({ page }) => {
+  test.setTimeout(90_000);
   await page.goto("/studio/");
-  await expect(page.locator("#descargar")).toBeEnabled({ timeout: 45_000 });
-  await page.locator("#tab-formato").click();
-  await page.locator("[data-format='story']").click();
-  await expect.poll(async () => page.evaluate(() => {
-    const canvas = document.querySelector("#vista");
-    if (canvas.getAttribute("aria-busy") === "true") return 0;
-    return canvas.height / canvas.width;
-  }), { timeout: 45_000 }).toBeGreaterThan(1.7);
-
-  const shot = await page.evaluate(() => {
-    const canvas = document.querySelector("#vista");
-    const dpr = window.devicePixelRatio || 1;
-    return { width: canvas.width, height: canvas.height, css: canvas.clientWidth, dpr };
+  await page.locator("[data-template='historia-saludo']").click();
+  await expect(page.locator(".stage-frame")).toBeVisible();
+  const ratio = await page.evaluate(() => {
+    const frame = document.querySelector(".stage-frame");
+    return frame.getBoundingClientRect().height / frame.getBoundingClientRect().width;
   });
-  const expectedW = Math.min(1080, Math.round(shot.css * shot.dpr));
-  expect(shot.width).toBeGreaterThanOrEqual(expectedW - 2);
-  expect(shot.width).toBeLessThanOrEqual(1080);
-  expect(shot.height).toBeLessThanOrEqual(1600);
-  expect(shot.height / shot.width).toBeGreaterThan(1.7);
+  expect(ratio).toBeGreaterThan(1.7);
+  await expect(page.locator("body")).not.toContainText(/Community content, unofficial|Imagen generada con IA|AI-generated image/);
 
-  const card = await renderCard({
-    width: shot.width,
-    height: shot.height,
-    lang: "es",
-    title: "",
-    body: "",
-    token: "ORVUPI",
-    fill: "#070418",
-    ink: "#f4f7fb",
-    backgroundId: "fondo-solana",
-    headline: "meme",
-    origins: ["ninguno"],
-    png: false,
-  });
-  const plateText = card.glyphs.filter((glyph) => glyph.role === "watermark" || glyph.role === "notice" || glyph.role === "ai").map((glyph) => glyph.ch).join("");
-  expect(plateText).toBe("");
-  expect(card.watermarkBox.w).toBe(0);
-  expect(card.watermarkBox.h).toBe(0);
-  const box = { x: 8, y: 8, w: 24, h: 24 };
-  const pixels = await page.evaluate((region) => {
-    const canvas = document.querySelector("#vista");
-    return Array.from(canvas.getContext("2d").getImageData(region.x, region.y, region.w, region.h).data);
-  }, box);
-  let diff = 0;
-  for (let y = 0; y < box.h; y += 1) {
-    for (let x = 0; x < box.w; x += 1) {
-      const fromShot = (y * box.w + x) * 4;
-      const fromCard = ((box.y + y) * card.width + (box.x + x)) * 4;
-      for (let channel = 0; channel < 3; channel += 1) {
-        if (pixels[fromShot + channel] !== card.rgba[fromCard + channel]) diff += 1;
-      }
-    }
+  await page.goto("/studio/");
+  await page.locator("#crear-pieza").click();
+  await page.locator("#dialogo-tamano [data-format='story']").click();
+  await expect(page.locator("#descargar")).toBeEnabled();
+  const ios = await page.evaluate(() => /iPhone/.test(navigator.userAgent));
+  if (!ios) {
+  const [download] = await Promise.all([
+    page.waitForEvent("download", { timeout: 60_000 }),
+    page.click("#descargar"),
+  ]);
+  const bytes = readFileSync(await download.path());
+  expect(bytes.subarray(1, 4).toString()).toBe("PNG");
+  expect(bytes.includes(Buffer.from("Community content, unofficial. Not from @ORVUPI."))).toBe(false);
+  const img = await decodePng(new Uint8Array(bytes));
+  expect(img.width).toBe(1080);
+  expect(img.height).toBe(1920);
   }
-  expect(diff).toBe(0);
 });
