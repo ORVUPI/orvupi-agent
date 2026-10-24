@@ -1,12 +1,12 @@
 # Borradores de páginas
 
-Estas páginas no están publicadas. Cuando haya autorización se pueden copiar `/verify`, `/lab` y `/tablero` a stubxai.com sin sustituir las páginas que ya existen.
+Estas páginas no están publicadas. Cuando haya autorización se pueden copiar `/verify`, `/lab` y `/tablero` a orvupi.com sin sustituir las páginas que ya existen.
 
 `indice-borrador.html` es solo el índice local. No se llama `index.html` y no se copia a la raíz: sustituiría la portada oficial.
 
 El service worker vive en `lab/sw.js`, con alcance `/lab/`. No se publica un `sw.js` en la raíz. No guarda `/`, `/index.html` ni páginas de avisos. Las navegaciones dentro de `/lab/` van primero a la red y, si falla, a la caché de esa misma ruta. `assets/site.js` solo lo registra cuando la ruta es `/lab/`.
 
-`_headers` aplica la CSP y el resto de cabeceras solo a `/verify`, `/lab`, `/tablero` y a `indice-borrador.html`. No hay una regla `/*`: no debe imponerse a las páginas que ya están en stubxai.com. Antes de activarla en el hosting, el creador tiene que comprobar que no rompe esas páginas.
+`_headers` aplica la CSP y el resto de cabeceras solo a `/verify`, `/lab`, `/tablero` y a `indice-borrador.html`. No hay una regla `/*`: no debe imponerse a las páginas que ya están en orvupi.com. Antes de activarla en el hosting, el creador tiene que comprobar que no rompe esas páginas.
 
 No usan CDN ni fuentes externas. No hay analítica, cuentas ni firma.
 

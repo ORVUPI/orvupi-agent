@@ -1,5 +1,5 @@
-# www.stubxai.com lo sirve Cloudflare Pages (comprobado 2026-10-09). El apex pasa por el proxy de Cloudflare.
-# Netlify ya no sirve el dominio: solo superb-horse-9036f5.netlify.app, con la redirección 301 de _redirects.
+# orvupi.com lo sirve Cloudflare Pages. El apex pasa por el proxy de Cloudflare.
+# No se recrea el sitio de Netlify: superb-horse-9036f5.netlify.app responde 301 a https://orvupi.com (regla de _redirects).
 # HSTS va aquí porque Pages no lo envía solo. Sin preload.
 # worker-src 'self' deja registrar el service worker de Lab. Las páginas que no son Lab
 # repiten worker-src 'none' en la meta, y las dos políticas se cruzan.

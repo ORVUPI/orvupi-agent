@@ -208,5 +208,21 @@
 "Formatting applied to just the selected words.": ["Formatação aplicada só às palavras selecionadas.", "選択した語句だけに書式を適用。", "선택한 단어에만 서식을 적용합니다."],
 "PowerPoint export with editable charts and embedded video.": ["Exportação para PowerPoint com gráficos editáveis e vídeo incorporado.", "編集可能なグラフと埋め込み動画付きのPowerPoint書き出し。", "편집 가능한 차트와 삽입된 동영상을 포함한 PowerPoint 내보내기."],
 "A dedicated tablet view.": ["Visualização própria para tablet.", "タブレット専用の表示。", "태블릿 전용 화면."],
-"Try Presentations": ["Experimentar Apresentações", "プレゼンテーションを試す", "프레젠테이션 사용해 보기"]
+"Try Presentations": ["Experimentar Apresentações", "プレゼンテーションを試す", "프레젠테이션 사용해 보기"],
+"© 2026 ORVUPI. Name, octopus and visual resources: all rights reserved. Original code: MIT license. Official channels:": ["© 2026 ORVUPI. Nome, polvo e recursos visuais: todos os direitos reservados. Código original: licença MIT. Canais oficiais:", "© 2026 ORVUPI. 名称、タコおよびビジュアル素材：無断転載を禁じます。オリジナルのコード：MIT ライセンス。公式チャンネル：", "© 2026 ORVUPI. 이름, 문어 및 시각 자료: 모든 권리 보유. 원본 코드: MIT 라이선스. 공식 채널:"],
+"Web:": ["Web:", "Web:", "웹:"],
+"The only official token address is on": ["O único endereço oficial do token está em", "トークンの唯一の公式アドレスは次のページにあります", "토큰의 유일한 공식 주소는 다음 페이지에 있습니다"],
+"the token page": ["a página do token", "トークンのページ", "토큰 페이지"],
+". Warnings for checking channels are on": [". Os avisos para conferir canais estão em", "。チャンネルを確認する注意は次のページにあります", ". 채널을 확인하는 안내는 다음 페이지에 있습니다"],
+"Community license": ["Licença da comunidade", "コミュニティ・ライセンス", "커뮤니티 라이선스"],
+"The ORVUPI name, the octopus and the visual resources belong to ORVUPI. All rights reserved. Not CC0, MIT or CC-BY.": ["O nome ORVUPI, o polvo e os recursos visuais pertencem à ORVUPI. Todos os direitos reservados. Não é CC0, nem MIT, nem CC-BY.", "ORVUPI の名称、タコおよびビジュアル素材は ORVUPI のものです。無断転載を禁じます。CC0、MIT、CC-BY のいずれでもありません。", "ORVUPI 이름, 문어 및 시각 자료는 ORVUPI의 것입니다. 모든 권리를 보유합니다. CC0, MIT 또는 CC-BY가 아닙니다."],
+"You may use the octopus and the visual resources in community pieces only if you meet every condition below.": ["Você pode usar o polvo e os recursos visuais em peças da comunidade somente se cumprir todas as condições abaixo.", "次の条件をすべて守る場合に限り、コミュニティの作品でタコとビジュアル素材を使えます。", "아래 조건을 모두 지킬 때만 커뮤니티 작품에서 문어와 시각 자료를 쓸 수 있습니다."],
+"Credit the piece to ORVUPI and link to orvupi.com.": ["Atribua a peça à ORVUPI e enlace orvupi.com.", "作品に ORVUPI と表示し、orvupi.com へリンクしてください。", "작품에 ORVUPI를 표기하고 orvupi.com으로 링크하세요."],
+"Do not impersonate ORVUPI or an official channel.": ["Não se passe por ORVUPI nem por um canal oficial.", "ORVUPI や公式チャンネルになりすまさないでください。", "ORVUPI나 공식 채널인 척하지 마세요."],
+"Do not use the octopus or the name as another token's mark.": ["Não use o polvo nem o nome como marca de outro token.", "タコや名称を別のトークンの標章として使わないでください。", "문어나 이름을 다른 토큰의 상표로 쓰지 마세요."],
+"Do not make deceptive edits.": ["Não faça edições enganosas.", "誤解を招く改変をしないでください。", "속이는 편집을 하지 마세요."],
+"Nothing illegal or hateful.": ["Nada ilegal nem discurso de ódio.", "違法な内容やヘイトは禁止です。", "불법이거나 혐오에 해당하는 내용은 금지입니다."],
+"Tool code is separate and stays under the MIT license. This community license does not cover that code.": ["O código das ferramentas é separado e continua sob a licença MIT. Esta licença da comunidade não cobre esse código.", "ツールのコードは別で、MIT ライセンスのままです。このコミュニティ・ライセンスはそのコードを含みません。", "도구 코드는 별도이며 MIT 라이선스를 유지합니다. 이 커뮤니티 라이선스는 그 코드를 포함하지 않습니다."],
+"Contact:": ["Contato:", "連絡先:", "연락처:"],
+"orvupi.com": ["orvupi.com", "orvupi.com", "orvupi.com"]
 }

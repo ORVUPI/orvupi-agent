@@ -1,6 +1,6 @@
 # Informe i18n · 5 idiomas (2026-10-18)
 
-Vista previa (no producción): https://i18n-preview.stubxai.pages.dev · producción (orvupi.com, rama main de Pages) sin tocar.
+Producción: orvupi.com (rama main de Pages). Una vista previa de i18n no es la web pública.
 
 ## URLs
 - `/` español (URLs de siempre), `/en/` inglés (x-default), `/pt-br/`, `/ja/`, `/ko/`. Sin redirecciones 301 nuevas.
