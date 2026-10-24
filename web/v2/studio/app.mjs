@@ -99,7 +99,9 @@ const COPY = {
     azul: "Azul",
     limpiar: "Limpiar filtros",
     vacio: "Ninguna plantilla con ese filtro.",
-    tamano: "Tamaño de la pieza",
+    tamano: "Crear un diseño",
+    verTodo: "Ver todo",
+    buscarCrear: "Qué pieza quieres",
     personalizado: "Personalizado",
     ancho: "Ancho",
     alto: "Alto",
@@ -225,7 +227,9 @@ const COPY = {
     azul: "Navy",
     limpiar: "Clear filters",
     vacio: "No template matches that filter.",
-    tamano: "Piece size",
+    tamano: "Create a design",
+    verTodo: "See all",
+    buscarCrear: "What piece do you want",
     personalizado: "Custom",
     ancho: "Width",
     alto: "Height",
@@ -1113,6 +1117,15 @@ function bindInputs() {
         field.setSelectionRange(end, end);
       }
       return;
+    }
+    if (target.id === "buscar-tamano") {
+      const q = target.value.trim().toLowerCase();
+      const dialog = document.getElementById("dialogo-tamano");
+      dialog?.querySelectorAll("[data-format]").forEach((node) => {
+        if (!(node instanceof HTMLElement)) return;
+        const label = (node.textContent || "").toLowerCase();
+        node.hidden = q.length > 0 && !label.includes(q);
+      });
     }
     if (!state.doc) return;
     if (target.id === "notas-pizarra" && state.doc) {

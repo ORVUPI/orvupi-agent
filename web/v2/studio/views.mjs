@@ -1,16 +1,17 @@
 /** Cromo de ORVUPI Studio. La pieza se queda en este navegador. */
 
 import catalog from "./catalog.json" with { type: "json" };
-import { BRAND, FONTS, PRESETS, fontById, orderedLayers, overlappingIds } from "./lib/document.mjs";
-import { IDEAS, filterPlantillas } from "./lib/plantillas.mjs";
+import { BRAND, FONTS, PRESETS, fontById, importProject, orderedLayers, overlappingIds } from "./lib/document.mjs";
+import { IDEAS, PLANTILLAS, filterPlantillas, instantiate } from "./lib/plantillas.mjs";
 import { listProjects } from "./lib/projects.mjs";
 
 const GROUPS = {
-  "para-ti": ["square", "story", "x", "tiktok", "deck", "doc", "cv", "video", "flyer"],
-  redes: ["square", "ig", "story", "fb", "li", "thumb", "bio", "tiktok"],
+  "para-ti": ["square", "story", "x", "tiktok", "ig", "deck", "doc", "cv", "video", "flyer", "logo", "poster", "web", "board"],
+  redes: ["square", "ig", "story", "fb", "li", "thumb", "bio", "tiktok", "x"],
   videos: ["video", "story", "tiktok", "thumb"],
   impresion: ["flyer", "poster", "invite", "trifold", "card", "info", "cv", "logo"],
   documentos: ["doc", "email", "sheet", "cv"],
+  presentacion: ["deck", "doc", "video"],
   pizarra: ["board"],
   web: ["web", "deck"],
 };
@@ -78,6 +79,10 @@ function catalogItem(id) {
   return catalog.items.find((item) => item.id === id) || null;
 }
 
+function studioAsset(path) {
+  return new URL(path, import.meta.url).href;
+}
+
 function ink(hex) {
   return String(hex).toLowerCase() === "#102032" ? "#FFF8EC" : "#102032";
 }
@@ -109,7 +114,7 @@ function frame(side, main) {
   return el("div", { class: "orv-frame" }, [
     el("aside", { class: "orv-side", "aria-label": "ORVUPI Studio" }, [
       el("p", { class: "side-brand" }, [
-        el("img", { src: "assets/orvupi-avatar.png", alt: "", width: "36", height: "36" }),
+        el("img", { src: studioAsset("assets/orvupi-avatar.png"), alt: "", width: "36", height: "36" }),
         el("strong", { text: "ORVUPI" }),
       ]),
       side,
@@ -125,7 +130,10 @@ function chip(label, pressed, attrs) {
 export function catalogBody(ctx) {
   const { state, t, lang } = ctx;
   const items = filterPlantillas(state.filters);
-  const usos = ["", "meme", "publicacion", "historia", "anuncio", "marca", "redes", "curriculum", "presentacion", "documento", "video", "flyer", "cartel", "folleto", "logo", "invitacion", "pizarra", "web"];
+  const home = ctx.viewName() === "inicio";
+  const active = Boolean(state.filters.text || state.filters.uso || state.filters.estilo || state.filters.color || state.filters.precio || state.filters.formato);
+  const gridMode = !home || active;
+  const en = lang === "en";
   const usoLabel = {
     "": t("todas"),
     meme: t("meme"),
@@ -133,19 +141,22 @@ export function catalogBody(ctx) {
     historia: t("historia"),
     anuncio: t("anuncio"),
     marca: t("marca"),
-    redes: "Redes",
-    curriculum: "Currículum",
-    presentacion: "Presentación",
-    documento: "Documento",
-    video: "Vídeo",
+    redes: en ? "Social" : "Redes",
+    curriculum: en ? "Resume" : "Currículum",
+    presentacion: en ? "Presentation" : "Presentación",
+    proyecto: en ? "Project" : "Proyecto",
+    documento: en ? "Doc" : "Documento",
+    video: en ? "Video" : "Vídeo",
     flyer: "Flyer",
-    cartel: "Cartel",
-    folleto: "Folleto",
+    cartel: en ? "Poster" : "Cartel",
+    folleto: en ? "Leaflet" : "Folleto",
     logo: "Logo",
-    invitacion: "Invitación",
-    pizarra: "Pizarra",
-    web: "Sitio",
+    invitacion: en ? "Invitation" : "Invitación",
+    pizarra: en ? "Whiteboard" : "Pizarra",
+    web: en ? "Website" : "Sitio",
+    infografia: en ? "Infographic" : "Infografía",
   };
+  const usos = ["", "curriculum", "presentacion", "proyecto", "redes", "documento", "flyer", "cartel", "logo", "invitacion", "video", "pizarra", "web", "meme", "publicacion", "historia", "anuncio", "marca", "folleto", "infografia"];
   const formatos = [
     ["", t("todas")],
     ["square", "1:1"],
@@ -155,43 +166,150 @@ export function catalogBody(ctx) {
     ["ig", "4:5"],
     ["deck", "16:9"],
     ["cv", "A4"],
-    ["video", "Vídeo"],
-    ["poster", "Cartel"],
-    ["trifold", "Folleto"],
-    ["web", "Sitio"],
-    ["board", "Pizarra"],
+    ["video", en ? "Video" : "Vídeo"],
+    ["poster", en ? "Poster" : "Cartel"],
+    ["trifold", en ? "Leaflet" : "Folleto"],
+    ["web", en ? "Website" : "Sitio"],
+    ["board", en ? "Whiteboard" : "Pizarra"],
   ];
   const estilos = [["", t("todas")], ["humor", t("humor")], ["claro", t("claro")], ["comic", t("comic")], ["informativo", t("informativo")], ["marca", t("marca")]];
   const colores = [["", t("todas")], ["rosa", t("rosa")], ["crema", t("crema")], ["azul", t("azul")]];
-  const group = (name, pairs, current) => el("div", { class: "chips", role: "group", "aria-label": t(name === "tema" ? "tema" : name) }, pairs.map(([id, label]) => chip(label, current === id, { "data-filter": name === "tema" ? "uso" : name, "data-value": id })));
-  const cards = items.map((item) => {
-    const preset = PRESETS.find((p) => p.id === item.formato);
-    const ratio = preset ? `${preset.width} / ${preset.height}` : "1 / 1";
-    const node = button("", { "data-template": item.id, class: "plantilla" });
-    const preview = el("span", { class: `preview tono-${item.color || "azul"}`, style: `aspect-ratio:${ratio}` });
-    const avatar = catalogItem("orvupi-avatar");
-    if (avatar) preview.append(el("img", { src: avatar.archivo, alt: "" }));
-    node.append(preview, el("span", { class: "plantilla-nombre", text: item.nombre[lang] || item.nombre.es }), el("span", { class: "plantilla-meta", text: preset ? `${preset.width}×${preset.height}` : item.formato }));
-    return node;
-  });
-  return el("div", { id: "catalogo" }, [
+  const row = (label, pairs, name, current) => el("div", { class: "chips linea", role: "group", "aria-label": label }, pairs.map(([id, text]) => chip(text, current === id, { "data-filter": name, "data-value": id })));
+  const cards = items.map((item) => templateCard(item, lang));
+  const kids = [
     el("label", { class: "buscar-wrap", for: "buscar" }, [
       el("span", { class: "sr", text: t("buscar") }),
       el("input", { id: "buscar", type: "search", value: state.filters.text, placeholder: t("buscar"), autocomplete: "off" }),
     ]),
-    el("p", { class: "filtro-nombre", text: t("tema") }),
-    group("tema", usos.map((id) => [id, usoLabel[id] || id]), state.filters.uso),
-    el("p", { class: "filtro-nombre", text: t("estilo") }),
-    group("estilo", estilos, state.filters.estilo),
-    el("p", { class: "filtro-nombre", text: t("color") }),
-    group("color", colores, state.filters.color),
-    el("p", { class: "filtro-nombre", text: t("precio") }),
-    chip(t("gratis"), state.filters.precio === "gratis", { "data-filter": "precio", "data-value": state.filters.precio === "gratis" ? "" : "gratis" }),
-    el("p", { class: "filtro-nombre", text: t("formato") }),
-    group("formato", formatos, state.filters.formato),
-    button(t("limpiar"), { id: "limpiar-filtros", class: "chip" }),
-    items.length ? el("div", { class: "rejilla-plantillas" }, cards) : el("p", { id: "vacio-plantillas", text: t("vacio") }),
-  ]);
+  ];
+  if (home) kids.push(quickRow(ctx));
+  kids.push(
+    row(t("tema"), usos.map((id) => [id, usoLabel[id] || id]), "uso", state.filters.uso),
+    row(t("formato"), formatos, "formato", state.filters.formato),
+    el("div", { class: "chips linea", role: "group", "aria-label": t("estilo") }, [
+      ...estilos.map(([id, text]) => chip(text, state.filters.estilo === id, { "data-filter": "estilo", "data-value": id })),
+      ...colores.map(([id, text]) => chip(text, state.filters.color === id, { "data-filter": "color", "data-value": id })),
+      chip(t("gratis"), state.filters.precio === "gratis", { "data-filter": "precio", "data-value": state.filters.precio === "gratis" ? "" : "gratis" }),
+      button(t("limpiar"), { id: "limpiar-filtros", class: "chip" }),
+    ]),
+  );
+  if (home) {
+    kids.push(el("div", { class: "chips linea ideas", role: "group", "aria-label": t("ideas") }, IDEAS.map((item) => button(item[lang] || item.es, { "data-idea": item.id, class: "chip" }))));
+  }
+  if (state.filters.uso === "curriculum") {
+    kids.push(button(en ? "Start a blank resume" : "Crear un currículum en blanco", { "data-format": "cv", class: "primary lienzo-vacio" }));
+  }
+  if (!gridMode) kids.push(homeRails(ctx));
+  else if (items.length) kids.push(el("div", { class: "rejilla-densa" }, cards));
+  else kids.push(el("p", { id: "vacio-plantillas", text: t("vacio") }));
+  return el("div", { id: "catalogo" }, kids);
+}
+
+function byUso(uso) {
+  const list = PLANTILLAS.filter((item) => item.uso === uso);
+  return uso === "meme" ? list : list.slice().reverse();
+}
+
+function homeRails(ctx) {
+  const { lang, t } = ctx;
+  const en = lang === "en";
+  const rails = [
+    { es: "Para ti", en: "For you", uso: "", ids: ["publi-feed", "cv-partido", "deck-portada", "red-ig-bloque", "fly-encuentro", "car-noche", "logo-sello", "inv-marco", "vid-tercio", "piz-notas", "web-fichas", "doc-portada"] },
+    { es: "Currículum", en: "Resume", uso: "curriculum" },
+    { es: "Presentaciones", en: "Presentations", uso: "presentacion" },
+    { es: "Proyectos", en: "Projects", uso: "proyecto" },
+    { es: "Redes", en: "Social", uso: "redes" },
+    { es: "Documentos", en: "Docs", uso: "documento" },
+    { es: "Flyers", en: "Flyers", uso: "flyer" },
+    { es: "Carteles", en: "Posters", uso: "cartel" },
+    { es: "Logos", en: "Logos", uso: "logo" },
+    { es: "Invitaciones", en: "Invitations", uso: "invitacion" },
+    { es: "Vídeo", en: "Video", uso: "video" },
+    { es: "Pizarra", en: "Whiteboard", uso: "pizarra" },
+    { es: "Sitio", en: "Website", uso: "web" },
+    { es: "Memes", en: "Memes", uso: "meme" },
+  ];
+  return el("div", { class: "carriles" }, rails.map((rail) => {
+    const items = rail.ids
+      ? rail.ids.map((id) => PLANTILLAS.find((item) => item.id === id)).filter(Boolean)
+      : byUso(rail.uso).slice(0, 14);
+    if (!items.length) return null;
+    const more = rail.uso
+      ? button(t("verTodo"), { class: "ver-todo", "data-filter": "uso", "data-value": rail.uso })
+      : button(t("verTodo"), { class: "ver-todo", "data-go": "plantillas" });
+    return el("section", { class: "carril-bloque" }, [
+      el("div", { class: "carril-head" }, [
+        el("h2", { text: en ? rail.en : rail.es }),
+        more,
+      ]),
+      el("div", { class: "carril" }, items.map((item) => templateCard(item, lang))),
+    ]);
+  }));
+}
+
+function templateCard(item, lang) {
+  const doc = instantiate(item.id);
+  const node = button("", { "data-template": item.id, class: "plantilla" });
+  if (doc) node.append(miniStage(doc));
+  node.append(el("span", { class: "plantilla-nombre", text: item.nombre[lang] || item.nombre.es }));
+  return node;
+}
+
+function miniStage(doc) {
+  const w = doc.format.width;
+  const h = doc.format.height;
+  const slot = el("span", { class: "mini-slot", style: `aspect-ratio:${w} / ${h}` });
+  let bg = `background-color:${doc.background?.fill || BRAND.cream}`;
+  if (doc.background?.type === "catalog" && doc.background.catalogId) {
+    const item = catalogItem(doc.background.catalogId);
+    if (item) bg += `;background-image:url("${studioAsset(item.archivo)}")`;
+  }
+  const art = el("span", { class: "mini-art", style: `width:${w}px;height:${h}px;--doc-w:${w}px;${bg}` });
+  for (const layer of orderedLayers(doc)) {
+    if (layer.visible === false) continue;
+    const node = el("span", { class: "mini-capa", style: layerStyle(layer) });
+    if (layer.type === "text") {
+      const text = el("span", { class: "mini-texto", text: layer.props.text });
+      text.style.fontFamily = fontById(layer.props.fontId).css;
+      text.style.fontSize = `${layer.props.size}px`;
+      text.style.color = layer.props.color;
+      text.style.textAlign = layer.props.align || "left";
+      text.style.lineHeight = String(layer.props.lineHeight || 1.15);
+      node.append(text);
+    } else if (layer.type === "image") {
+      const frameNode = el("span", { class: "mini-img" });
+      const item = layer.src?.kind === "catalog" ? catalogItem(layer.src.id) : null;
+      if (item) frameNode.append(el("img", { src: studioAsset(item.archivo), alt: "", draggable: "false", loading: "lazy", decoding: "async" }));
+      node.append(frameNode);
+    } else if (layer.type === "line") {
+      node.append(el("span", { class: "mini-forma", style: `background:${layer.props.color || BRAND.navy}` }));
+    } else {
+      const shape = el("span", { class: "mini-forma" });
+      if (layer.props?.fill) shape.style.background = layer.props.fill;
+      if (layer.props?.stroke && layer.props.strokeWidth) shape.style.border = `${layer.props.strokeWidth}px solid ${layer.props.stroke}`;
+      node.append(shape);
+    }
+    art.append(node);
+  }
+  slot.append(art);
+  return slot;
+}
+
+function catButton(id, label, pressed, tone) {
+  const node = el("button", { type: "button", class: "cat-btn", "data-cat": id, "aria-pressed": pressed ? "true" : "false" });
+  node.append(el("span", { class: `cat-dot tono-${tone}`, "aria-hidden": "true" }), el("span", { text: label }));
+  return node;
+}
+
+function presetCard(item, lang, index) {
+  const tone = ["cream", "navy", "pink"][index % 3];
+  const node = button("", { "data-format": item.id, class: "preset" });
+  node.append(
+    el("span", { class: `preset-face tono-${tone}`, style: `aspect-ratio:${item.width} / ${item.height}` }),
+    el("strong", { text: item[lang] || item.es }),
+    el("span", { class: "plantilla-meta", text: `${item.width}×${item.height}` }),
+  );
+  return node;
 }
 
 function sizeDialog(ctx) {
@@ -200,59 +318,89 @@ function sizeDialog(ctx) {
   const ids = GROUPS[cat] || GROUPS["para-ti"];
   const presets = ids.map((id) => PRESETS.find((item) => item.id === id)).filter(Boolean);
   const cats = lang === "en"
-    ? [["para-ti", "For you"], ["redes", "Social"], ["videos", "Video"], ["impresion", "Print"], ["documentos", "Documents"], ["pizarra", "Whiteboard"], ["web", "Website"]]
-    : [["para-ti", "Para ti"], ["redes", "Redes"], ["videos", "Vídeo"], ["impresion", "Impresión"], ["documentos", "Documentos"], ["pizarra", "Pizarra"], ["web", "Sitio"]];
+    ? [["para-ti", "For you", "pink"], ["redes", "Social", "navy"], ["videos", "Video", "pink"], ["impresion", "Print", "cream"], ["documentos", "Docs", "navy"], ["presentacion", "Presentation", "pink"], ["pizarra", "Whiteboard", "cream"], ["web", "Website", "navy"]]
+    : [["para-ti", "Para ti", "pink"], ["redes", "Redes", "navy"], ["videos", "Vídeo", "pink"], ["impresion", "Impresión", "cream"], ["documentos", "Documentos", "navy"], ["presentacion", "Presentación", "pink"], ["pizarra", "Pizarra", "cream"], ["web", "Sitio", "navy"]];
   return el("dialog", { id: "dialogo-tamano" }, [
     el("div", { class: "crear" }, [
-      el("div", { class: "crear-side" }, cats.map(([id, label]) => button(label, { "data-cat": id, "aria-pressed": cat === id ? "true" : "false" }))),
+      el("div", { class: "crear-side" }, cats.map(([id, label, tone]) => catButton(id, label, cat === id, tone))),
       el("div", { class: "crear-main" }, [
-        el("h2", { text: t("tamano") }),
-        el("div", { class: "crear-grid" }, presets.map((item) => button(`${item[lang] || item.es} ${item.width}×${item.height}`, { "data-format": item.id, class: "preset" }))),
+        el("div", { class: "crear-top" }, [
+          el("h2", { text: t("tamano") }),
+          button(t("cerrar"), { id: "cerrar-tamano" }),
+        ]),
+        el("label", { class: "buscar-wrap", for: "buscar-tamano" }, [
+          el("span", { class: "sr", text: t("buscarCrear") }),
+          el("input", { id: "buscar-tamano", type: "search", placeholder: t("buscarCrear"), autocomplete: "off" }),
+        ]),
+        el("div", { class: "crear-grid" }, presets.map((item, index) => presetCard(item, lang, index))),
         el("h3", { text: t("personalizado") }),
         el("div", { class: "medidas" }, [
           el("label", { text: t("ancho") }, [el("input", { id: "ancho-custom", type: "number", min: "64", max: "2048", value: "1080" })]),
           el("label", { text: t("alto") }, [el("input", { id: "alto-custom", type: "number", min: "64", max: "2048", value: "1080" })]),
         ]),
         el("p", { class: "nota", text: t("unidadNota") }),
-        el("div", { class: "fila" }, [
-          button(t("usar"), { id: "crear-custom", class: "primary" }),
-          button(t("cerrar"), { id: "cerrar-tamano" }),
-        ]),
+        button(t("usar"), { id: "crear-custom", class: "primary" }),
       ]),
     ]),
   ]);
 }
 
+function recentCard(item, t) {
+  let doc = null;
+  try {
+    doc = importProject(item);
+  } catch {
+    doc = null;
+  }
+  const node = button("", { "data-open": item.id, class: "reciente" });
+  if (doc?.format?.width) node.append(miniStage(doc));
+  node.append(el("span", { class: "plantilla-nombre", text: item.name || t("abrir") }));
+  return node;
+}
+
 function recents(ctx) {
   const { t } = ctx;
-  const items = listProjects(ctx.storage);
+  const items = listProjects(ctx.storage).slice(0, 8);
   const list = items.length
-    ? el("div", { class: "recientes", id: "recientes" }, items.slice(0, 8).map((item) => button(item.name || t("abrir"), { "data-open": item.id, class: "reciente" })))
-    : el("p", { text: t("vacioReciente") });
-  return el("section", { class: "bloque" }, [el("h2", { text: t("reciente") }), list]);
+    ? el("div", { class: "carril", id: "recientes" }, items.map((item) => recentCard(item, t)))
+    : el("p", { class: "nota", text: t("vacioReciente") });
+  return el("section", { class: "bloque" }, [
+    el("div", { class: "carril-head" }, [el("h2", { text: t("reciente") })]),
+    list,
+  ]);
 }
 
 function quickRow(ctx) {
   const { t, lang } = ctx;
-  const items = lang === "en"
-    ? [["deck", "Deck"], ["ig", "Social"], ["video", "Video"], ["flyer", "Print"], ["doc", "Doc"], ["board", "Board"], ["sheet", "Sheet"], ["web", "Site"], ["email", "Email"], ["collage", "Photo"]]
-    : [["deck", "Presentación"], ["ig", "Redes"], ["video", "Vídeo"], ["flyer", "Impresión"], ["doc", "Doc"], ["board", "Pizarra"], ["sheet", "Hoja"], ["web", "Sitio"], ["email", "Correo"], ["collage", "Foto"]];
-  return el("div", { class: "rapidos", "aria-label": t("crear") }, items.map(([id, label]) => button(label, { "data-format": id, class: "rapido" })));
+  const en = lang === "en";
+  const items = [
+    ["deck", en ? "Deck" : "Presentación", "navy", "q-deck"],
+    ["ig", en ? "Social" : "Redes", "pink", "q-ig"],
+    ["video", en ? "Video" : "Vídeo", "navy", "q-video"],
+    ["flyer", en ? "Print" : "Impresión", "cream", "q-flyer"],
+    ["doc", "Doc", "pink", "q-doc"],
+    ["cv", en ? "Resume" : "Currículum", "navy", "q-cv"],
+    ["board", en ? "Board" : "Pizarra", "cream", "q-board"],
+    ["web", en ? "Site" : "Sitio", "pink", "q-web"],
+    ["logo", "Logo", "navy", "q-logo"],
+    ["poster", en ? "Poster" : "Cartel", "cream", "q-poster"],
+  ];
+  return el("div", { class: "rapidos", "aria-label": t("crear") }, items.map(([id, label, tone, shape]) => {
+    const node = button("", { "data-format": id, class: `rapido ${shape}` });
+    node.append(
+      el("span", { class: `rapido-cara tono-${tone}`, "aria-hidden": "true" }, [el("span", { class: "q-shape" })]),
+      el("span", { class: "q-label", text: label }),
+    );
+    return node;
+  }));
 }
 
 export function renderHome(ctx) {
-  const { root, t, lang } = ctx;
-  const ideas = el("div", { class: "chips", role: "group", "aria-label": t("ideas") }, IDEAS.map((item) => button(item[lang] || item.es, { "data-idea": item.id, class: "chip" })));
+  const { root, t } = ctx;
   root.replaceChildren(
     frame(sideNav(ctx), el("div", { class: "orv-main" }, [
-      el("section", { class: "hero" }, [
-        el("h1", { class: "hero-titulo", text: t("hero") }),
-        el("p", { class: "nota", text: t("local") }),
-        quickRow(ctx),
-        el("h2", { text: t("ideas") }),
-        ideas,
-        el("p", { text: t("ideaNota") }),
-      ]),
+      el("h1", { class: "hero-titulo", text: t("hero") }),
+      el("p", { class: "nota nota-local", text: t("local") }),
       catalogBody(ctx),
       recents(ctx),
     ])),
@@ -301,7 +449,7 @@ export function renderMarca(ctx) {
       el("div", { class: "rejilla-plantillas" }, ["orvupi-avatar", "orvupi-saludo", "orvupi-buen-humor"].map((id) => {
         const item = catalogItem(id);
         const node = el("figure", { class: "marca-card" });
-        node.append(el("img", { src: item.archivo, alt: item.nombre[lang] || item.nombre.es }), el("figcaption", { text: item.nombre[lang] || item.nombre.es }));
+        node.append(el("img", { src: studioAsset(item.archivo), alt: item.nombre[lang] || item.nombre.es }), el("figcaption", { text: item.nombre[lang] || item.nombre.es }));
         return node;
       })),
       el("div", { class: "chips" }, colors.map(([hex, label]) => el("span", { class: "muestra", style: swatchStyle(hex), text: label }))),
@@ -337,7 +485,7 @@ function imageNode(ctx, layer) {
   if (layer.src?.kind === "catalog") {
     const item = catalogItem(layer.src.id);
     if (item) {
-      img.src = item.archivo;
+      img.src = studioAsset(item.archivo);
       natural = item.width && item.height ? { w: item.width, h: item.height } : null;
     }
   } else if (layer.src?.kind === "user") {
@@ -477,7 +625,7 @@ function panel(ctx) {
       el("div", { class: "rejilla" }, ["orvupi-avatar", "orvupi-saludo", "orvupi-buen-humor"].map((id) => {
         const item = catalogItem(id);
         const control = button("", { "data-avatar": id, class: "marca-pulpo" });
-        control.append(el("img", { src: item.archivo, alt: item.nombre[lang] || item.nombre.es, width: "96", height: "96" }), el("span", { text: item.nombre[lang] || item.nombre.es }));
+        control.append(el("img", { src: studioAsset(item.archivo), alt: item.nombre[lang] || item.nombre.es, width: "96", height: "96" }), el("span", { text: item.nombre[lang] || item.nombre.es }));
         return control;
       })),
       el("div", { class: "chips" }, colors.map(([hex, key]) => button(key, { "data-color": hex, style: swatchStyle(hex) }))),

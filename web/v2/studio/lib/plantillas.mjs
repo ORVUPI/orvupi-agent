@@ -1,6 +1,7 @@
 /** Seis plantillas de meme y comunidad. El texto vive en el documento y se puede editar. */
 
 import { BRAND, createDocument, imageLayer, rectLayer, textLayer } from "./document.mjs";
+import { masPlantillas } from "./mas-plantillas.mjs";
 
 const CREAM = BRAND.cream;
 const NAVY = BRAND.navy;
@@ -469,6 +470,7 @@ export const PLANTILLAS = [
   entry({ id: "pizarra-ideas", nombre: { es: "Pizarra de ideas", en: "Ideas board" }, formato: "board", uso: "pizarra", estilo: "claro", color: "crema", etiquetas: ["pizarra"], shell: "whiteboard", build: pizarra }),
   entry({ id: "sitio-comunidad", nombre: { es: "Página de comunidad", en: "Community page" }, formato: "web", uso: "web", estilo: "claro", color: "crema", etiquetas: ["web", "seccion"], shell: "web", build: sitio }),
   entry({ id: "ficha-aprender", nombre: { es: "Ficha para aprender", en: "Learning card" }, formato: "doc", uso: "educacion", estilo: "informativo", color: "rosa", etiquetas: ["educacion", "ficha"], shell: "doc", build: ficha }),
+  ...masPlantillas(),
 ];
 
 export const IDEAS = [

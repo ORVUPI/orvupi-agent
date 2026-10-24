@@ -439,3 +439,207 @@ body.studio-standalone footer.or-footer a[href$="risks/"] {
   body.studio-standalone .stage-scroll { overflow: visible; max-height: none; }
   body.studio-standalone .stage-frame { margin: 0 auto; }
 }
+
+#catalogo, .carriles, .carril-bloque, .bloque { min-width: 0; max-width: 100%; }
+.orv-main > .hero-titulo { font-size: clamp(1.8rem, 3vw, 2.4rem); letter-spacing: -0.03em; }
+.nota-local { margin-top: 0; }
+.buscar-wrap { display: block; margin: 0.1rem 0 0.65rem; min-width: 0; }
+#buscar, #buscar-tamano {
+  width: 100%;
+  min-height: 52px;
+  border-radius: 999px;
+  padding: 0 1.2rem;
+  font-size: 1.05rem;
+  box-shadow: 0 10px 28px rgba(16, 32, 50, 0.08);
+}
+.chips.linea {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  max-width: 100%;
+  min-width: 0;
+  padding-bottom: 0.15rem;
+}
+.chips.linea .chip, .chips.linea #limpiar-filtros { flex: 0 0 auto; }
+.rapidos {
+  display: flex;
+  gap: 0.85rem;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0.15rem 0 0.7rem;
+}
+#studio-root button.rapido {
+  flex: 0 0 4.8rem;
+  width: 4.8rem;
+  min-height: 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+.rapido-cara {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+.tono-pink { background: #ff3070; color: #102032; }
+.tono-navy { background: #102032; color: #fff8ec; }
+.tono-cream { background: #fff8ec; color: #102032; box-shadow: inset 0 0 0 1px #102032; }
+.q-shape { background: currentColor; border-radius: 3px; }
+.q-deck .q-shape, .q-video .q-shape, .q-board .q-shape { width: 30px; height: 18px; }
+.q-ig .q-shape, .q-flyer .q-shape, .q-doc .q-shape, .q-cv .q-shape, .q-poster .q-shape, .q-web .q-shape { width: 18px; height: 26px; }
+.q-logo .q-shape { width: 22px; height: 22px; }
+.q-label { font-size: 0.72rem; line-height: 1.15; text-align: center; color: #102032; }
+.carril-bloque { margin: 0.85rem 0 0.15rem; }
+.carril-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; min-width: 0; }
+.carril-head h2 { margin: 0; font-size: 1.2rem; }
+#studio-root button.ver-todo {
+  background: transparent;
+  border: 0;
+  min-height: 44px;
+  padding: 0 0.15rem;
+  text-decoration: underline;
+  font-weight: 700;
+}
+.carril {
+  display: flex;
+  gap: 0.9rem;
+  overflow-x: auto;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0.55rem 0.1rem 0.85rem;
+}
+.carril .plantilla, .carril .reciente { flex: 0 0 240px; width: 240px; max-width: 70vw; }
+.rejilla-densa {
+  columns: 220px 4;
+  column-gap: 1rem;
+  margin-top: 0.75rem;
+  min-width: 0;
+  max-width: 100%;
+}
+.rejilla-densa .plantilla { width: 100%; break-inside: avoid; margin: 0 0 1rem; }
+#studio-root button.plantilla, #studio-root button.reciente {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.4rem;
+  background: transparent;
+  border: 0;
+  min-height: 0;
+  padding: 0;
+  text-align: left;
+}
+.plantilla-nombre { font-size: 0.92rem; font-weight: 650; line-height: 1.25; }
+.plantilla-meta { font-size: 0.75rem; opacity: 0.72; }
+.mini-slot {
+  display: block;
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  contain: paint;
+  container-type: inline-size;
+  border-radius: 12px;
+  background: #e7eef3;
+  box-shadow: 0 12px 28px rgba(16, 32, 50, 0.14);
+}
+.mini-art {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+  transform: scale(calc(100cqi / var(--doc-w)));
+  background-size: cover;
+  background-position: center;
+}
+.mini-capa { position: absolute; box-sizing: border-box; overflow: hidden; }
+.mini-texto { display: block; margin: 0; width: 100%; height: 100%; overflow: hidden; white-space: pre-wrap; }
+.mini-img, .mini-forma { display: block; width: 100%; height: 100%; }
+.mini-img { overflow: hidden; }
+.mini-img img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.lienzo-vacio { margin: 0.35rem 0; }
+#dialogo-tamano {
+  width: min(1080px, calc(100vw - 1.5rem));
+  max-width: min(1080px, calc(100vw - 1.5rem));
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  background: #fff;
+}
+#dialogo-tamano .crear {
+  grid-template-columns: 220px minmax(0, 1fr);
+  min-height: min(72vh, 760px);
+  gap: 0;
+}
+#dialogo-tamano .crear-side { background: #f3efe8; padding: 0.75rem 0.5rem; gap: 0.15rem; }
+#dialogo-tamano .crear-main { padding: 0.9rem 1rem 1.1rem; overflow: auto; max-height: min(78vh, 820px); }
+.crear-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.crear-top h2 { margin: 0; }
+#dialogo-tamano .cat-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.55rem;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  border-radius: 0.65rem;
+}
+#dialogo-tamano .cat-btn[aria-pressed="true"] {
+  background: #fff;
+  box-shadow: inset 3px 0 0 #ff3070;
+}
+.cat-dot { width: 18px; height: 18px; border-radius: 5px; flex: 0 0 auto; }
+#dialogo-tamano .crear-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 0.9rem 0.7rem;
+  margin: 0.4rem 0 1rem;
+}
+#studio-root button.preset {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  background: transparent;
+  border: 0;
+  min-height: 0;
+  padding: 0.3rem;
+  text-align: center;
+}
+.preset-face {
+  width: min(100%, 128px);
+  max-height: 150px;
+  border-radius: 10px;
+  position: relative;
+  box-shadow: 0 8px 18px rgba(16, 32, 50, 0.1);
+}
+.preset-face::before, .preset-face::after { content: ""; position: absolute; }
+.preset-face::before { left: 14%; top: 18%; width: 46%; height: 12%; border-radius: 99px; background: #ff3070; }
+.preset-face::after { right: 12%; bottom: 14%; width: 28%; aspect-ratio: 1; border-radius: 50%; background: #102032; }
+.preset-face.tono-navy { background: #102032; }
+.preset-face.tono-navy::after { background: #fff8ec; }
+.preset-face.tono-pink { background: #ff3070; }
+.preset-face.tono-pink::before { background: #102032; }
+.preset-face.tono-pink::after { background: #fff8ec; }
+.preset-face.tono-cream { background: #fff8ec; box-shadow: inset 0 0 0 1px rgba(16, 32, 50, 0.16), 0 8px 18px rgba(16, 32, 50, 0.08); }
+.panel, .lado {
+  background: #fff8ec;
+  border-radius: 0.9rem;
+  padding: 0.45rem;
+}
+.panel { max-height: 74vh; overflow: auto; }
+.riel button { border-color: transparent; background: #fff; border-radius: 0.75rem; }
+.stage-frame { box-shadow: 0 16px 44px rgba(16, 32, 50, 0.16); }
+.escenario { background: #e7eef3; border-radius: 0.9rem; padding: 0.45rem; }
+@media (max-width: 800px) {
+  #dialogo-tamano .crear-side { flex-direction: row; overflow-x: auto; }
+  #dialogo-tamano .cat-btn { width: auto; flex: 0 0 auto; }
+}
