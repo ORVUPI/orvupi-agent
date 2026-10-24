@@ -3,6 +3,7 @@
  *  solo se descargan los pesos del modelo (Hugging Face) y el motor WASM la primera vez, y quedan en caché. */
 import { ModelDownloadError, robustFetch } from "./download";
 import { isDegenerate } from "./clean";
+import { wasmThreadCount } from "./runtime";
 import { env, InterruptableStoppingCriteria, pipeline, TextStreamer, type TextGenerationPipeline } from "@huggingface/transformers";
 
 env.allowLocalModels = false;
@@ -19,9 +20,10 @@ env.fetch = (input: string | URL, init?: RequestInit) => {
 const onnx = env.backends.onnx as { wasm?: { wasmPaths?: string; numThreads?: number } };
 if (onnx.wasm) {
   onnx.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/dist/";
-  // Deja al menos un núcleo libre para la página: con todos los hilos ocupados la web iba a tirones
-  const cores = (self.navigator as Navigator | undefined)?.hardwareConcurrency ?? 4;
-  onnx.wasm.numThreads = Math.max(1, Math.min(4, cores - 1));
+  // Sin Cross-Origin Isolation no hay SharedArrayBuffer: varios hilos impiden arrancar WASM.
+  const cores = (self.navigator as Navigator | undefined)?.hardwareConcurrency;
+  const isolated = typeof crossOriginIsolated === "boolean" ? crossOriginIsolated : false;
+  onnx.wasm.numThreads = wasmThreadCount(cores, isolated);
 }
 
 type Message = { role: "system" | "user" | "assistant"; content: string };
