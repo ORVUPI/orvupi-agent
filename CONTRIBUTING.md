@@ -1,6 +1,6 @@
 # Contribuir a ORVUPI
 
-El correo público es orvupi.hq@gmail.com. La cuenta de GitHub es [github.com/orvupi](https://github.com/orvupi). El canal en X es [x.com/ORVUPI](https://x.com/ORVUPI), Telegram es https://t.me/orvupi y la web oficial es https://stubxai.com/. La URL real de GitHub se conserva para mantener el repositorio existente; no se ha creado otro repositorio.
+El correo público es orvupi.hq@gmail.com. La cuenta de GitHub es [github.com/orvupi](https://github.com/orvupi). El canal en X es [x.com/ORVUPI](https://x.com/ORVUPI), Telegram es https://t.me/orvupi y la web oficial es https://orvupi.com/. La URL real de GitHub se conserva para mantener el repositorio existente; no se ha creado otro repositorio.
 
 1. No añadas wallets, claves, firmas, custodia ni escritura en la red.
 2. No añadas dependencias de ejecución. Si hace falta una herramienta de desarrollo, dilo en el PR y actualiza el test que fija la lista.

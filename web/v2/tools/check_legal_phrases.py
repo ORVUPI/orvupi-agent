@@ -555,7 +555,7 @@ def retired_sentences() -> set[str]:
     illustration = "".join(
         [
             "Es el mismo personaje, ilustración con elementos ",
-            "generados con IA, servido desde stubxai.com para las webs que no cargan IPFS.",
+            "generados con IA para las webs que no cargan IPFS.",
         ]
     )
     return {normalize(footer), normalize(illustration)}
