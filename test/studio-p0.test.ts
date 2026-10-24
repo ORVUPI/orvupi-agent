@@ -125,20 +125,60 @@ describe("studio p0", () => {
     const { filterPlantillas, instantiate, PLANTILLAS } = await load<{
       PLANTILLAS: { id: string; precio: string }[];
       filterPlantillas: (query: { formato?: string; precio?: string; uso?: string; text?: string }) => { id: string }[];
-      instantiate: (id: string) => { templateId: string; format: { width: number; height: number } } | null;
+      instantiate: (id: string) => { templateId: string; format: { id: string; width: number; height: number }; meta: { shell: string } } | null;
     }>("lib/plantillas.mjs");
-    assert.equal(PLANTILLAS.length, 6);
+    const { shellForFormat, blankDocument } = await load<{
+      shellForFormat: (id: string) => string;
+      blankDocument: (id: string) => { meta: { shell: string }; format: { id: string; width: number; height: number } };
+    }>("lib/document.mjs");
+    const { RAILS } = await load<{ RAILS: { web: string[]; print: string[]; whiteboard: string[]; doc: string[] } }>("views.mjs");
+    const originals = ["meme-punch", "publi-feed", "historia-saludo", "anuncio-avance", "meme-vineta", "historia-marca"];
+    assert.ok(PLANTILLAS.length >= 24);
     assert.equal(PLANTILLAS.every((item) => item.precio === "gratis"), true);
-    assert.equal(filterPlantillas({ precio: "gratis" }).length, 6);
+    assert.equal(filterPlantillas({ precio: "gratis" }).length, PLANTILLAS.length);
     assert.equal(filterPlantillas({ formato: "x" }).length, 0);
     assert.equal(filterPlantillas({ uso: "meme" }).length, 2);
     assert.equal(filterPlantillas({ text: "viñeta" }).length, 1);
+    for (const id of originals) assert.ok(PLANTILLAS.some((item) => item.id === id));
+    const shells: Record<string, string> = {
+      "curriculum-claro": "print",
+      "presentacion-ideas": "deck",
+      "doc-notas": "doc",
+      "video-horizontal": "video",
+      "flyer-comunidad": "print",
+      "cartel-vertical": "print",
+      "folleto-tres": "print",
+      "logo-cuadrado": "print",
+      "invitacion-vertical": "print",
+      "pizarra-ideas": "whiteboard",
+      "sitio-comunidad": "web",
+    };
     for (const item of PLANTILLAS) {
       const doc = instantiate(item.id);
       assert.equal(doc?.templateId, item.id);
-      assert.ok(doc && doc.format.width >= 1080 && doc.format.height >= 1080);
       assert.equal(canExport(doc), true, item.id);
+      if (originals.includes(item.id)) assert.ok(doc && doc.format.width >= 1080 && doc.format.height >= 1080);
+      if (shells[item.id]) assert.equal(doc?.meta.shell, shells[item.id], item.id);
     }
+    const poster = instantiate("cartel-vertical");
+    const leaflet = instantiate("folleto-tres");
+    assert.equal(poster?.format.id, "poster");
+    assert.equal(leaflet?.format.id, "trifold");
+    assert.equal(shellForFormat("poster"), "print");
+    assert.equal(shellForFormat("trifold"), "print");
+    assert.equal(shellForFormat("board"), "whiteboard");
+    assert.equal(shellForFormat("web"), "web");
+    assert.equal(blankDocument("poster").meta.shell, "print");
+    assert.equal(blankDocument("board").meta.shell, "whiteboard");
+    assert.equal(blankDocument("web").meta.shell, "web");
+    assert.equal(RAILS.web.length, 12);
+    assert.equal(RAILS.print.length, 12);
+    assert.equal(RAILS.whiteboard.length, 11);
+    assert.equal(RAILS.whiteboard.includes("fondo"), false);
+    assert.equal(RAILS.web.includes("fondo"), true);
+    assert.equal(RAILS.doc.length, 9);
+    assert.equal(RAILS.doc.includes("texto"), false);
+    assert.equal(RAILS.doc.includes("fondo"), false);
     const a = docApi.rectLayer({ id: "a", x: 0, y: 0, w: 100, h: 100, z: 1 });
     const b = docApi.rectLayer({ id: "b", x: 40, y: 40, w: 100, h: 100, z: 2 });
     const c = docApi.rectLayer({ id: "c", x: 800, y: 800, w: 40, h: 40, z: 3 });

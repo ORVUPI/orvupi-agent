@@ -1,0 +1,706 @@
+/** Cromo de ORVUPI Studio. La pieza se queda en este navegador. */
+
+import catalog from "./catalog.json" with { type: "json" };
+import { BRAND, FONTS, PRESETS, fontById, orderedLayers, overlappingIds } from "./lib/document.mjs";
+import { IDEAS, filterPlantillas } from "./lib/plantillas.mjs";
+import { listProjects } from "./lib/projects.mjs";
+
+const GROUPS = {
+  "para-ti": ["square", "story", "x", "tiktok", "deck", "doc", "cv", "video", "flyer"],
+  redes: ["square", "ig", "story", "fb", "li", "thumb", "bio", "tiktok"],
+  videos: ["video", "story", "tiktok", "thumb"],
+  impresion: ["flyer", "poster", "invite", "trifold", "card", "info", "cv", "logo"],
+  documentos: ["doc", "email", "sheet", "cv"],
+  pizarra: ["board"],
+  web: ["web", "deck"],
+};
+
+const STANDARD = ["plantillas", "elementos", "texto", "marca", "subidos", "herramientas", "proyectos", "fotos", "formas", "graficos", "fondo", "capas"];
+
+export const RAILS = {
+  design: STANDARD,
+  deck: STANDARD,
+  video: STANDARD,
+  print: STANDARD,
+  web: STANDARD,
+  doc: ["plantillas", "elementos", "marca", "subidos", "proyectos", "fotos", "formas", "graficos", "capas"],
+  whiteboard: STANDARD.filter((id) => id !== "fondo"),
+};
+
+function el(tag, attrs = {}, children = []) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(attrs)) {
+    if (value == null || value === false) continue;
+    if (key === "class") node.className = String(value);
+    else if (key === "text") node.textContent = String(value);
+    else if (key === "hidden") node.hidden = Boolean(value);
+    else if (key === "style") node.style.cssText = String(value);
+    else node.setAttribute(key, value === true ? "" : String(value));
+  }
+  for (const child of children) if (child) node.append(child);
+  return node;
+}
+
+function button(text, attrs = {}) {
+  return el("button", { type: "button", ...attrs, text });
+}
+
+const SVG_NS = "http:" + "//www.w3.org/2000/svg";
+
+function icon(d) {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  const path = document.createElementNS(SVG_NS, "path");
+  path.setAttribute("d", d);
+  path.setAttribute("fill", "none");
+  path.setAttribute("stroke", "currentColor");
+  path.setAttribute("stroke-width", "1.8");
+  path.setAttribute("stroke-linecap", "round");
+  path.setAttribute("stroke-linejoin", "round");
+  svg.append(path);
+  return svg;
+}
+
+function iconButton(label, attrs, d) {
+  const node = button("", { ...attrs, class: `nav-btn ${attrs.class || ""}`.trim() });
+  node.append(icon(d), el("span", { text: label }));
+  return node;
+}
+
+function shellOf(doc) {
+  const shell = doc?.meta?.shell;
+  if (RAILS[shell]) return shell;
+  return "design";
+}
+
+function catalogItem(id) {
+  return catalog.items.find((item) => item.id === id) || null;
+}
+
+function ink(hex) {
+  return String(hex).toLowerCase() === "#102032" ? "#FFF8EC" : "#102032";
+}
+
+function swatchStyle(hex) {
+  return `background:${hex};color:${ink(hex)}`;
+}
+
+function primary(state) {
+  const id = state.selected[state.selected.length - 1];
+  return state.doc?.layers.find((layer) => layer.id === id) || null;
+}
+
+function sideNav(ctx) {
+  const view = ctx.viewName();
+  const mark = (id) => (view === id ? "page" : null);
+  return el("div", { class: "side-stack" }, [
+    iconButton(ctx.t("crear"), { id: "crear-pieza", class: "crear-btn" }, "M12 5v14M5 12h14"),
+    iconButton(ctx.t("inicio"), { "data-go": "inicio", "aria-current": mark("inicio") }, "M4 11 L12 4 L20 11 V20 H4 Z"),
+    iconButton(ctx.t("plantillas"), { "data-go": "plantillas", "aria-current": mark("plantillas") }, "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"),
+    iconButton(ctx.t("disenos"), { "data-go": "disenos", "aria-current": mark("disenos") }, "M4 7h6l2 2h8v9H4z"),
+    iconButton(ctx.t("marca"), { "data-go": "marca", "aria-current": mark("marca") }, "M12 3l2.5 6H21l-5 4 2 7-6-4-6 4 2-7-5-4h6.5z"),
+    iconButton(ctx.t("recursos"), { "data-go": "recursos", "aria-current": mark("recursos") }, "M5 4h14v4H5zM5 10h14v10H5z"),
+    el("a", { class: "nav-btn marca-link", href: "/marca/" }, [icon("M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"), el("span", { text: ctx.t("verMarca") })]),
+  ]);
+}
+
+function frame(side, main) {
+  return el("div", { class: "orv-frame" }, [
+    el("aside", { class: "orv-side", "aria-label": "ORVUPI Studio" }, [
+      el("p", { class: "side-brand" }, [
+        el("img", { src: "assets/orvupi-avatar.png", alt: "", width: "36", height: "36" }),
+        el("strong", { text: "ORVUPI" }),
+      ]),
+      side,
+    ]),
+    main,
+  ]);
+}
+
+function chip(label, pressed, attrs) {
+  return button(label, { ...attrs, class: "chip", "aria-pressed": pressed ? "true" : "false" });
+}
+
+export function catalogBody(ctx) {
+  const { state, t, lang } = ctx;
+  const items = filterPlantillas(state.filters);
+  const usos = ["", "meme", "publicacion", "historia", "anuncio", "marca", "redes", "curriculum", "presentacion", "documento", "video", "flyer", "cartel", "folleto", "logo", "invitacion", "pizarra", "web"];
+  const usoLabel = {
+    "": t("todas"),
+    meme: t("meme"),
+    publicacion: t("publicacion"),
+    historia: t("historia"),
+    anuncio: t("anuncio"),
+    marca: t("marca"),
+    redes: "Redes",
+    curriculum: "Currículum",
+    presentacion: "Presentación",
+    documento: "Documento",
+    video: "Vídeo",
+    flyer: "Flyer",
+    cartel: "Cartel",
+    folleto: "Folleto",
+    logo: "Logo",
+    invitacion: "Invitación",
+    pizarra: "Pizarra",
+    web: "Sitio",
+  };
+  const formatos = [
+    ["", t("todas")],
+    ["square", "1:1"],
+    ["story", "9:16"],
+    ["x", "X"],
+    ["tiktok", "TikTok"],
+    ["ig", "4:5"],
+    ["deck", "16:9"],
+    ["cv", "A4"],
+    ["video", "Vídeo"],
+    ["poster", "Cartel"],
+    ["trifold", "Folleto"],
+    ["web", "Sitio"],
+    ["board", "Pizarra"],
+  ];
+  const estilos = [["", t("todas")], ["humor", t("humor")], ["claro", t("claro")], ["comic", t("comic")], ["informativo", t("informativo")], ["marca", t("marca")]];
+  const colores = [["", t("todas")], ["rosa", t("rosa")], ["crema", t("crema")], ["azul", t("azul")]];
+  const group = (name, pairs, current) => el("div", { class: "chips", role: "group", "aria-label": t(name === "tema" ? "tema" : name) }, pairs.map(([id, label]) => chip(label, current === id, { "data-filter": name === "tema" ? "uso" : name, "data-value": id })));
+  const cards = items.map((item) => {
+    const preset = PRESETS.find((p) => p.id === item.formato);
+    const ratio = preset ? `${preset.width} / ${preset.height}` : "1 / 1";
+    const node = button("", { "data-template": item.id, class: "plantilla" });
+    const preview = el("span", { class: `preview tono-${item.color || "azul"}`, style: `aspect-ratio:${ratio}` });
+    const avatar = catalogItem("orvupi-avatar");
+    if (avatar) preview.append(el("img", { src: avatar.archivo, alt: "" }));
+    node.append(preview, el("span", { class: "plantilla-nombre", text: item.nombre[lang] || item.nombre.es }), el("span", { class: "plantilla-meta", text: preset ? `${preset.width}×${preset.height}` : item.formato }));
+    return node;
+  });
+  return el("div", { id: "catalogo" }, [
+    el("label", { class: "buscar-wrap", for: "buscar" }, [
+      el("span", { class: "sr", text: t("buscar") }),
+      el("input", { id: "buscar", type: "search", value: state.filters.text, placeholder: t("buscar"), autocomplete: "off" }),
+    ]),
+    el("p", { class: "filtro-nombre", text: t("tema") }),
+    group("tema", usos.map((id) => [id, usoLabel[id] || id]), state.filters.uso),
+    el("p", { class: "filtro-nombre", text: t("estilo") }),
+    group("estilo", estilos, state.filters.estilo),
+    el("p", { class: "filtro-nombre", text: t("color") }),
+    group("color", colores, state.filters.color),
+    el("p", { class: "filtro-nombre", text: t("precio") }),
+    chip(t("gratis"), state.filters.precio === "gratis", { "data-filter": "precio", "data-value": state.filters.precio === "gratis" ? "" : "gratis" }),
+    el("p", { class: "filtro-nombre", text: t("formato") }),
+    group("formato", formatos, state.filters.formato),
+    button(t("limpiar"), { id: "limpiar-filtros", class: "chip" }),
+    items.length ? el("div", { class: "rejilla-plantillas" }, cards) : el("p", { id: "vacio-plantillas", text: t("vacio") }),
+  ]);
+}
+
+function sizeDialog(ctx) {
+  const { state, t, lang } = ctx;
+  const cat = state.createCat || "para-ti";
+  const ids = GROUPS[cat] || GROUPS["para-ti"];
+  const presets = ids.map((id) => PRESETS.find((item) => item.id === id)).filter(Boolean);
+  const cats = lang === "en"
+    ? [["para-ti", "For you"], ["redes", "Social"], ["videos", "Video"], ["impresion", "Print"], ["documentos", "Documents"], ["pizarra", "Whiteboard"], ["web", "Website"]]
+    : [["para-ti", "Para ti"], ["redes", "Redes"], ["videos", "Vídeo"], ["impresion", "Impresión"], ["documentos", "Documentos"], ["pizarra", "Pizarra"], ["web", "Sitio"]];
+  return el("dialog", { id: "dialogo-tamano" }, [
+    el("div", { class: "crear" }, [
+      el("div", { class: "crear-side" }, cats.map(([id, label]) => button(label, { "data-cat": id, "aria-pressed": cat === id ? "true" : "false" }))),
+      el("div", { class: "crear-main" }, [
+        el("h2", { text: t("tamano") }),
+        el("div", { class: "crear-grid" }, presets.map((item) => button(`${item[lang] || item.es} ${item.width}×${item.height}`, { "data-format": item.id, class: "preset" }))),
+        el("h3", { text: t("personalizado") }),
+        el("div", { class: "medidas" }, [
+          el("label", { text: t("ancho") }, [el("input", { id: "ancho-custom", type: "number", min: "64", max: "2048", value: "1080" })]),
+          el("label", { text: t("alto") }, [el("input", { id: "alto-custom", type: "number", min: "64", max: "2048", value: "1080" })]),
+        ]),
+        el("p", { class: "nota", text: t("unidadNota") }),
+        el("div", { class: "fila" }, [
+          button(t("usar"), { id: "crear-custom", class: "primary" }),
+          button(t("cerrar"), { id: "cerrar-tamano" }),
+        ]),
+      ]),
+    ]),
+  ]);
+}
+
+function recents(ctx) {
+  const { t } = ctx;
+  const items = listProjects(ctx.storage);
+  const list = items.length
+    ? el("div", { class: "recientes", id: "recientes" }, items.slice(0, 8).map((item) => button(item.name || t("abrir"), { "data-open": item.id, class: "reciente" })))
+    : el("p", { text: t("vacioReciente") });
+  return el("section", { class: "bloque" }, [el("h2", { text: t("reciente") }), list]);
+}
+
+function quickRow(ctx) {
+  const { t, lang } = ctx;
+  const items = lang === "en"
+    ? [["deck", "Deck"], ["ig", "Social"], ["video", "Video"], ["flyer", "Print"], ["doc", "Doc"], ["board", "Board"], ["sheet", "Sheet"], ["web", "Site"], ["email", "Email"], ["collage", "Photo"]]
+    : [["deck", "Presentación"], ["ig", "Redes"], ["video", "Vídeo"], ["flyer", "Impresión"], ["doc", "Doc"], ["board", "Pizarra"], ["sheet", "Hoja"], ["web", "Sitio"], ["email", "Correo"], ["collage", "Foto"]];
+  return el("div", { class: "rapidos", "aria-label": t("crear") }, items.map(([id, label]) => button(label, { "data-format": id, class: "rapido" })));
+}
+
+export function renderHome(ctx) {
+  const { root, t, lang } = ctx;
+  const ideas = el("div", { class: "chips", role: "group", "aria-label": t("ideas") }, IDEAS.map((item) => button(item[lang] || item.es, { "data-idea": item.id, class: "chip" })));
+  root.replaceChildren(
+    frame(sideNav(ctx), el("div", { class: "orv-main" }, [
+      el("section", { class: "hero" }, [
+        el("h1", { class: "hero-titulo", text: t("hero") }),
+        el("p", { class: "nota", text: t("local") }),
+        quickRow(ctx),
+        el("h2", { text: t("ideas") }),
+        ideas,
+        el("p", { text: t("ideaNota") }),
+      ]),
+      catalogBody(ctx),
+      recents(ctx),
+    ])),
+    sizeDialog(ctx),
+  );
+}
+
+export function renderPlantillas(ctx) {
+  ctx.root.replaceChildren(
+    frame(sideNav(ctx), el("div", { class: "orv-main" }, [
+      el("h1", { class: "hero-titulo", text: ctx.t("plantillas") }),
+      catalogBody(ctx),
+    ])),
+    sizeDialog(ctx),
+  );
+}
+
+export function renderDesigns(ctx) {
+  const { root, t } = ctx;
+  const items = listProjects(ctx.storage);
+  const list = el("ul", { class: "disenos" }, items.map((item) => el("li", {}, [
+    el("span", { text: item.name || t("abrir") }),
+    button(t("abrir"), { "data-open": item.id }),
+    button(t("duplicar"), { "data-duplicate": item.id }),
+    button(t("eliminar"), { "data-delete": item.id }),
+    button(t("exportar"), { "data-export": item.id }),
+  ])));
+  root.replaceChildren(
+    frame(sideNav(ctx), el("div", { class: "orv-main" }, [
+      el("h1", { class: "hero-titulo", text: t("disenos") }),
+      el("p", { text: t("soloAqui") }),
+      button(t("importar"), { id: "importar-json" }),
+      items.length ? list : el("p", { text: t("vacioReciente") }),
+      el("p", { id: "estado-guardado", "aria-live": "polite", text: ctx.statusText() }),
+    ])),
+  );
+}
+
+export function renderMarca(ctx) {
+  const { root, t, lang } = ctx;
+  const colors = [["#FF3070", t("rosa")], ["#FFF8EC", t("crema")], ["#102032", t("azul")]];
+  root.replaceChildren(
+    frame(sideNav(ctx), el("div", { class: "orv-main" }, [
+      el("h1", { class: "hero-titulo", text: t("marca") }),
+      el("p", { text: t("kit") }),
+      el("div", { class: "rejilla-plantillas" }, ["orvupi-avatar", "orvupi-saludo", "orvupi-buen-humor"].map((id) => {
+        const item = catalogItem(id);
+        const node = el("figure", { class: "marca-card" });
+        node.append(el("img", { src: item.archivo, alt: item.nombre[lang] || item.nombre.es }), el("figcaption", { text: item.nombre[lang] || item.nombre.es }));
+        return node;
+      })),
+      el("div", { class: "chips" }, colors.map(([hex, label]) => el("span", { class: "muestra", style: swatchStyle(hex), text: label }))),
+      el("p", {}, [el("a", { href: "/marca/", text: t("verMarca") })]),
+    ])),
+  );
+}
+
+export function renderRecursos(ctx) {
+  const { root, t, lang } = ctx;
+  root.replaceChildren(
+    frame(sideNav(ctx), el("div", { class: "orv-main" }, [
+      el("h1", { class: "hero-titulo", text: t("recursos") }),
+      el("p", { class: "nota", text: t("tamanosNota") }),
+      el("div", { class: "crear-grid" }, PRESETS.map((item) => button(`${item[lang] || item.es} ${item.width}×${item.height}`, { "data-format": item.id, class: "preset" }))),
+      el("p", {}, [el("a", { href: "/studio/reglas/", text: "Reglas y recursos" })]),
+    ])),
+  );
+}
+
+export function layerStyle(layer) {
+  return `left:${layer.x}px;top:${layer.y}px;width:${layer.w}px;height:${layer.h}px;transform:rotate(${layer.rotation || 0}deg);opacity:${layer.opacity ?? 1};z-index:${layer.z};`;
+}
+
+function imageNode(ctx, layer) {
+  const frameNode = el("div", { class: "capa-img" });
+  if (layer.src?.kind === "user" && !ctx.state.userImages.has(layer.src.id)) {
+    frameNode.append(el("p", { class: "pendiente", text: ctx.t("pendiente") }));
+    return frameNode;
+  }
+  const img = el("img", { alt: "", draggable: "false" });
+  let natural = null;
+  if (layer.src?.kind === "catalog") {
+    const item = catalogItem(layer.src.id);
+    if (item) {
+      img.src = item.archivo;
+      natural = item.width && item.height ? { w: item.width, h: item.height } : null;
+    }
+  } else if (layer.src?.kind === "user") {
+    const image = ctx.state.userImages.get(layer.src.id);
+    if (image) {
+      img.src = ctx.userUrl(layer.src.id, image);
+      natural = { w: image.width, h: image.height };
+    }
+  }
+  if (layer.crop && natural) {
+    const scale = Math.max(layer.w / layer.crop.w, layer.h / layer.crop.h);
+    img.style.width = `${natural.w * scale}px`;
+    img.style.height = `${natural.h * scale}px`;
+    img.style.marginLeft = `${-layer.crop.x * scale}px`;
+    img.style.marginTop = `${-layer.crop.y * scale}px`;
+  } else {
+    img.style.width = "100%";
+    img.style.height = "100%";
+    img.style.objectFit = "cover";
+  }
+  frameNode.append(img);
+  return frameNode;
+}
+
+function stageNode(ctx) {
+  const { state } = ctx;
+  const doc = state.doc;
+  const shell = shellOf(doc);
+  const scroll = el("div", { class: `stage-scroll${shell === "whiteboard" ? " lienzo-pizarra" : ""}`, id: shell === "whiteboard" ? "lienzo-pizarra" : "lienzo" });
+  const frameNode = el("div", { class: "stage-frame" });
+  const art = el("div", { class: `stage-art${state.grid ? " cuadricula" : ""}` });
+  art.style.width = `${doc.format.width}px`;
+  art.style.height = `${doc.format.height}px`;
+  art.style.background = doc.background.fill || BRAND.cream;
+  const maxW = window.innerWidth < 900 ? Math.max(240, window.innerWidth - 36) : Math.max(280, window.innerWidth - 760);
+  const maxH = Math.max(220, window.innerHeight - 300);
+  const fit = Math.min(maxW / doc.format.width, maxH / doc.format.height, 1);
+  state.scale = state.zoom === "100" ? 1 : fit;
+  frameNode.style.width = `${Math.round(doc.format.width * state.scale)}px`;
+  frameNode.style.height = `${Math.round(doc.format.height * state.scale)}px`;
+  art.style.transform = `scale(${state.scale})`;
+  for (const layer of orderedLayers(doc)) {
+    const node = el("div", {
+      class: `capa${state.selected.includes(layer.id) ? " seleccionada" : ""}${layer.locked ? " bloqueada" : ""}`,
+      "data-id": layer.id,
+      style: layerStyle(layer),
+    });
+    if (layer.visible === false) node.style.visibility = "hidden";
+    if (layer.type === "text") {
+      const text = el("p", { class: "capa-texto", text: layer.props.text });
+      text.style.fontFamily = fontById(layer.props.fontId).css;
+      text.style.fontSize = `${layer.props.size}px`;
+      text.style.color = layer.props.color;
+      text.style.textAlign = layer.props.align;
+      text.style.lineHeight = String(layer.props.lineHeight);
+      node.append(text);
+    } else if (layer.type === "image") node.append(imageNode(ctx, layer));
+    else if (layer.type === "line") {
+      const bar = el("div", { class: "capa-linea" });
+      bar.style.background = layer.props.color;
+      bar.style.height = `${Math.max(2, layer.props.strokeWidth || layer.h)}px`;
+      node.append(bar);
+    } else {
+      const shape = el("div", { class: "capa-forma" });
+      if (layer.props.fill) shape.style.background = layer.props.fill;
+      if (layer.props.stroke && layer.props.strokeWidth) shape.style.border = `${layer.props.strokeWidth}px solid ${layer.props.stroke}`;
+      node.append(shape);
+    }
+    if (state.selected.includes(layer.id) && !layer.locked) node.append(el("span", { class: "asa", "data-resize": layer.id }));
+    art.append(node);
+  }
+  frameNode.append(art);
+  if (doc.format.id === "trifold") {
+    frameNode.append(el("div", { class: "guias-pliegue", "aria-hidden": "true" }, [
+      el("span", { class: "guia", style: "left:33.33%" }),
+      el("span", { class: "guia", style: "left:66.66%" }),
+    ]));
+  }
+  if (shell === "whiteboard") {
+    const field = el("div", { class: "campo-pizarra" });
+    field.append(frameNode);
+    scroll.append(field);
+  } else scroll.append(frameNode);
+  return scroll;
+}
+
+function rail(ctx) {
+  const { state, t } = ctx;
+  const shell = shellOf(state.doc);
+  const tabs = RAILS[shell] || RAILS.design;
+  const labels = {
+    plantillas: t("plantillas"),
+    elementos: t("elementos"),
+    texto: t("texto"),
+    marca: t("marca"),
+    subidos: t("subidos"),
+    herramientas: t("herramientas"),
+    fondo: t("fondo"),
+    proyectos: t("disenos"),
+    fotos: t("fotos"),
+    graficos: t("graficos"),
+    formas: t("forma"),
+    datos: t("datos"),
+    notas: t("notas"),
+    capas: t("capas"),
+  };
+  return el("div", { class: "riel", role: "tablist", "aria-label": t("herramientas") }, tabs.map((id) => button(labels[id] || id, {
+    "data-rail": id,
+    role: "tab",
+    "aria-selected": state.rail === id ? "true" : "false",
+  })));
+}
+
+function panel(ctx) {
+  const { state, t, lang } = ctx;
+  const doc = state.doc;
+  if (state.rail === "plantillas" || state.rail === "proyectos") return state.rail === "proyectos" ? el("div", {}, [el("p", { text: t("soloAqui") }), button(t("disenos"), { "data-go": "disenos" })]) : catalogBody(ctx);
+  if (state.rail === "elementos" || state.rail === "formas") {
+    return el("div", { class: "rejilla" }, [
+      button(t("forma"), { "data-add": "rect" }),
+      button(t("linea"), { "data-add": "line" }),
+      ...["orvupi-avatar", "orvupi-saludo", "orvupi-buen-humor"].map((id) => button(catalogItem(id)?.nombre?.[lang] || id, { "data-avatar": id })),
+    ]);
+  }
+  if (state.rail === "texto") {
+    return el("div", { class: "rejilla" }, [
+      button(t("titulo"), { "data-add": "titulo" }),
+      button(t("cuerpo"), { "data-add": "cuerpo" }),
+      button(t("anadirTexto"), { "data-add": "texto" }),
+    ]);
+  }
+  if (state.rail === "marca") {
+    const colors = [["#FF3070", t("rosa")], ["#FFF8EC", t("crema")], ["#102032", t("azul")]];
+    return el("div", {}, [
+      el("p", { text: t("kit") }),
+      el("p", {}, [el("a", { href: "/marca/", text: t("verMarca") })]),
+      el("div", { class: "rejilla" }, ["orvupi-avatar", "orvupi-saludo", "orvupi-buen-humor"].map((id) => {
+        const item = catalogItem(id);
+        const control = button("", { "data-avatar": id, class: "marca-pulpo" });
+        control.append(el("img", { src: item.archivo, alt: item.nombre[lang] || item.nombre.es, width: "96", height: "96" }), el("span", { text: item.nombre[lang] || item.nombre.es }));
+        return control;
+      })),
+      el("div", { class: "chips" }, colors.map(([hex, key]) => button(key, { "data-color": hex, style: swatchStyle(hex) }))),
+      el("div", { class: "rejilla" }, FONTS.map((font) => button(font[lang] || font.es, { "data-font": font.id, style: `font-family:${font.css}` }))),
+    ]);
+  }
+  if (state.rail === "subidos" || state.rail === "fotos") {
+    const uploaded = doc.layers.filter((layer) => layer.src?.kind === "user");
+    return el("div", {}, [
+      el("div", { id: "hueco-subida" }),
+      button(t("subir"), { id: "subir-imagen" }),
+      uploaded.length ? el("ul", {}, uploaded.map((layer) => el("li", {}, [button(layer.name, { "data-pick": layer.id })]))) : el("p", { text: t("sinSubidas") }),
+    ]);
+  }
+  if (state.rail === "graficos" || state.rail === "datos") {
+    return el("div", { class: "rejilla" }, [
+      button(t("barra"), { "data-add": "barra" }),
+      button(t("punto"), { "data-add": "punto" }),
+      button(t("forma"), { "data-add": "rect" }),
+    ]);
+  }
+  if (state.rail === "notas") {
+    return el("label", { text: t("notasPizarra") }, [
+      el("textarea", { id: "notas-pizarra", text: doc.meta?.note || "" }),
+    ]);
+  }
+  if (state.rail === "capas") {
+    return el("div", {}, [
+      el("p", { text: t("capas") }),
+      el("p", { class: "nota", text: t("capasNota") }),
+    ]);
+  }
+  if (state.rail === "herramientas") {
+    const tools = [["select", t("seleccionar")], ["draw", t("dibujar")], ["rect", t("forma")], ["line", t("linea")], ["text", t("anadirTexto")]];
+    return el("div", { class: "chips" }, tools.map(([id, label]) => button(label, { "data-tool": id, "aria-pressed": state.tool === id ? "true" : "false" })));
+  }
+  const fondos = catalog.items.filter((item) => item.tipo === "fondo");
+  return el("div", {}, [
+    el("div", { class: "chips" }, [["#FF3070", t("rosa")], ["#FFF8EC", t("crema")], ["#102032", t("azul")]].map(([hex, key]) => button(key, { "data-fondo": hex, style: swatchStyle(hex) }))),
+    el("div", { class: "rejilla" }, fondos.map((item) => button(item.nombre[lang] || item.nombre.es, { "data-fondo-id": item.id }))),
+  ]);
+}
+
+function positionPanel(ctx) {
+  const { state, t } = ctx;
+  const layer = primary(state);
+  const align = ["left", "center", "right", "top", "middle", "bottom"];
+  const alignKey = { left: "izquierda", center: "centro", right: "derecha", top: "arriba", middle: "medio", bottom: "abajo" };
+  const fields = layer ? el("div", { class: "medidas" }, ["x", "y", "w", "h"].map((key) => {
+    const input = el("input", { id: `medida-${key}`, type: "number", "data-medida": key, value: String(Math.round(layer[key])) });
+    return el("label", { text: key.toUpperCase() }, [input]);
+  }).concat([
+    el("label", { text: t("rotacion") }, [el("input", { id: "medida-rot", type: "number", "data-medida": "rotation", value: String(layer.rotation || 0) })]),
+  ])) : el("p", { text: t("posicion") });
+  const crop = layer?.type === "image" ? el("div", {}, [
+    button(t("cambiar"), { id: "cambiar-imagen" }),
+    el("p", { text: t("recorte") }),
+    ...["x", "y", "w", "h"].map((key) => el("label", { text: key }, [el("input", { type: "number", "data-crop": key, value: layer.crop ? String(layer.crop[key]) : "" })])),
+  ]) : null;
+  const multi = state.selected.length > 1 ? el("div", { class: "chips" }, [
+    button(t("agrupar"), { "data-action": "group" }),
+    button(t("desagrupar"), { "data-action": "ungroup" }),
+    button(t("bloquear"), { "data-action": "lock" }),
+    button(t("duplicar"), { "data-action": "duplicate" }),
+  ]) : null;
+  return el("section", { class: "posicion" }, [
+    el("h2", { text: t("posicion") }),
+    el("div", { class: "chips" }, [
+      button(t("alFrente"), { "data-action": "front" }),
+      button(t("adelante"), { "data-action": "forward" }),
+      button(t("atras"), { "data-action": "backward" }),
+      button(t("alFondo"), { "data-action": "back" }),
+    ]),
+    el("div", { class: "chips" }, align.map((mode) => button(t(alignKey[mode]), { "data-align": mode }))),
+    fields,
+    crop,
+    multi,
+  ]);
+}
+
+function layersPanel(ctx) {
+  const { state, t } = ctx;
+  const doc = state.doc;
+  const focus = state.selected[0];
+  const overlap = state.layerFilter === "overlap" ? new Set([...(focus ? [focus] : []), ...overlappingIds(doc, focus)]) : null;
+  const rows = orderedLayers(doc).slice().reverse().filter((layer) => !overlap || overlap.has(layer.id));
+  const list = el("ul", { id: "capas" }, rows.map((layer) => el("li", { draggable: "true", "data-layer": layer.id, class: state.selected.includes(layer.id) ? "activa" : "" }, [
+    button(layer.visible === false ? t("mostrar") : t("ocultar"), { "data-action": "toggle", "data-id": layer.id }),
+    button(layer.name, { "data-pick": layer.id }),
+    button(t("bloquear"), { "data-action": "lock-one", "data-id": layer.id, "aria-pressed": layer.locked ? "true" : "false" }),
+  ])));
+  return el("section", {}, [
+    el("h2", { text: t("capas") }),
+    el("div", { class: "chips" }, [
+      chip(t("todas"), state.layerFilter === "all", { "data-layers": "all" }),
+      chip(t("solapadas"), state.layerFilter === "overlap", { "data-layers": "overlap" }),
+    ]),
+    list,
+  ]);
+}
+
+function textBar(ctx) {
+  const { state, t, lang } = ctx;
+  const shell = shellOf(state.doc);
+  const layer = primary(state);
+  const show = shell === "doc" || layer?.type === "text";
+  if (!show) return null;
+  const target = layer?.type === "text" ? layer : state.doc.layers.find((item) => item.type === "text");
+  return el("div", { id: "barra-texto", class: "barra-texto" }, [
+    el("label", { class: "sr", text: t("texto") }),
+    target ? el("textarea", { id: shell === "doc" ? "texto-capa" : undefined, class: shell === "doc" ? "" : "sr", text: target.props.text }) : el("p", { text: "Empieza a escribir." }),
+    ...FONTS.map((font) => button(font[lang] || font.es, { "data-font": font.id, class: "chip", style: `font-family:${font.css}` })),
+    button("−", { "data-size": "down" }),
+    button("+", { "data-size": "up" }),
+    button(t("izquierda"), { "data-align": "left" }),
+    button(t("centro"), { "data-align": "center" }),
+    button(t("derecha"), { "data-align": "right" }),
+  ]);
+}
+
+function pageStrip(ctx) {
+  const { state, t } = ctx;
+  const shell = shellOf(state.doc);
+  const pages = state.doc.meta?.pages?.length || 1;
+  const withStrip = shell === "deck" || shell === "web" || shell === "design" || shell === "print";
+  if (!withStrip) return null;
+  const buttons = [];
+  for (let index = 0; index < pages; index += 1) {
+    buttons.push(button(String(index + 1), { "data-page": String(index), "aria-pressed": state.page === index ? "true" : "false" }));
+  }
+  const canAdd = shell !== "doc" && shell !== "whiteboard" && shell !== "video" && shell !== "web";
+  return el("div", { id: "tira-paginas", class: "tira" }, [
+    ...buttons,
+    canAdd ? button("+", { id: "anadir-pagina", "aria-label": t("anadirPagina") }) : null,
+  ]);
+}
+
+function bottomBar(ctx) {
+  const { state, t } = ctx;
+  const shell = shellOf(state.doc);
+  const pages = state.doc.meta?.pages?.length || 1;
+  const here = (state.page || 0) + 1;
+  const pageLabel = ctx.lang === "en" ? `${here} of ${pages}` : `${here} de ${pages}`;
+  const seconds = Math.max(0, Math.floor(Number(state.timerSeconds) || 0));
+  const clock = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+  const bits = [
+    shell === "whiteboard" ? button(t("notas"), { id: "abrir-notas", "aria-pressed": state.notesOpen ? "true" : "false" }) : null,
+    shell === "whiteboard" ? button(state.timerOn ? t("parar") : t("temporizador"), { id: "temporizador" }) : null,
+    shell === "whiteboard" && state.timerOn ? el("span", { id: "reloj", text: clock }) : null,
+    button(t("ajustar"), { "data-zoom": "fit", "aria-pressed": state.zoom === "fit" ? "true" : "false" }),
+    button(t("cien"), { "data-zoom": "100", "aria-pressed": state.zoom === "100" ? "true" : "false" }),
+    el("span", { id: "paginas-indicador", text: pageLabel }),
+    button(t("cuadricula"), { id: "cuadricula", "aria-pressed": state.grid ? "true" : "false" }),
+    button(t("pantalla"), { id: "pantalla" }),
+  ];
+  return el("div", { class: "barra-inferior" }, bits);
+}
+
+export function renderEditor(ctx) {
+  const { root, state, t } = ctx;
+  const doc = state.doc;
+  const shell = shellOf(doc);
+  const name = el("input", { id: "nombre-diseno", type: "text", value: doc.name, maxlength: "80", "aria-label": t("nombre") });
+  const layer = primary(state);
+  const textPanel = layer?.type === "text" && shell !== "doc"
+    ? el("label", { text: t("texto") }, [el("textarea", { id: "texto-capa", text: layer.props.text })])
+    : null;
+  const fileMenu = state.fileMenu ? el("div", { class: "menu-archivo", id: "menu-archivo" }, [
+    el("p", { text: `${doc.format.width}×${doc.format.height} px` }),
+    button("Hacer una copia", { "data-duplicate": doc.id }),
+    button(t("exportar"), { "data-export": doc.id }),
+    button(t("importar"), { id: "importar-json" }),
+  ]) : null;
+  root.replaceChildren(
+    frame(sideNav(ctx), el("div", { class: "orv-main orv-editor", id: "editor-app", "data-shell": shell }, [
+      el("div", { class: "editor-bar" }, [
+        button("Archivo", { id: "abrir-archivo" }),
+        fileMenu,
+        button("Redimensionar", { id: "redimensionar" }),
+        name,
+        el("span", { class: "medidas-titulo", text: `${doc.format.width}×${doc.format.height}` }),
+        button(t("deshacer"), { "data-action": "undo" }),
+        button(t("rehacer"), { "data-action": "redo" }),
+        shell === "print" ? button(t("imprimir"), { id: "imprimir" }) : null,
+        shell === "deck" ? button(t("presentar"), { id: "presentar" }) : null,
+        shell === "web" || shell === "video" ? button(t("vistaPrevia"), { id: "vista-previa" }) : null,
+        shell === "web" ? button(t("exportarSitio"), { id: "exportar-sitio" }) : null,
+        el("span", { id: "estado-guardado", "aria-live": "polite", text: ctx.statusText() }),
+      ]),
+      textBar(ctx),
+      shell === "video" ? el("p", { class: "nota", text: t("videoNota") }) : null,
+      el("div", { class: "editor" }, [
+        rail(ctx),
+        el("div", { class: "panel", id: "panel-riel" }, [panel(ctx), textPanel]),
+        el("div", { class: "escenario" }, [
+          stageNode(ctx),
+          shell === "web" ? button(t("anadirSeccion"), { id: "anadir-seccion", class: "anadir-seccion" }) : null,
+          pageStrip(ctx),
+          shell === "video" ? el("div", { id: "linea-tiempo" }, [
+            button("▶", { id: "reproducir", "aria-label": "Vista previa" }),
+            el("span", { text: "0:00" }),
+            el("span", { class: "pista", text: "Fotograma" }),
+            el("span", { text: "0:05" }),
+          ]) : null,
+          state.notesOpen ? el("label", { text: t("notas") }, [el("textarea", { id: "notas-pizarra", text: doc.meta?.note || "" })]) : null,
+        ]),
+        el("div", { class: "lado" }, [positionPanel(ctx), layersPanel(ctx)]),
+      ]),
+      bottomBar(ctx),
+    ])),
+    sizeDialog(ctx),
+    state.preview ? el("dialog", { id: "dialogo-previa", open: "open" }, [
+      el("h2", { text: t("vistaPrevia") }),
+      el("p", { text: `${doc.name} · ${doc.format.width}×${doc.format.height} px` }),
+      el("p", { text: t("previewNota") }),
+      button(t("cerrar"), { id: "cerrar-previa" }),
+    ]) : null,
+  );
+  const bar = root.querySelector(".editor-bar");
+  if (ctx.acciones && bar) bar.append(ctx.acciones);
+  ctx.ensureQuality();
+  void ctx.paintBackdrop();
+  const slot = root.querySelector("#hueco-subida");
+  const details = ctx.uploads;
+  if (slot && details) slot.append(details);
+}

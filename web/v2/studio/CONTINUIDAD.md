@@ -1,24 +1,24 @@
-# Continuidad de Studio P0
+# Continuidad de Studio
 
 24 de octubre de 2026.
 
 ## Qué se hizo
 
-La superficie anterior de Studio se sustituyó por una aplicación nueva. El paquete de trabajo pedía ampliar la placa antigua; el encargo directo fue crear Studio de cero. Se siguió el encargo directo. La interfaz es propia, en español, con la marca ORVUPI (pulpo, `#FF3070`, `#FFF8EC`, `#102032` y tipografías OFL ya usadas en el sitio). No se copió cromo, nombres ni recursos de otras herramientas.
+Studio es una aplicación propia en `/studio/`, con la marca ORVUPI (pulpo, `#FF3070`, `#FFF8EC`, `#102032` y tipografías OFL). El cromo de la página (cabecera de navegación y pie) se oculta; el idioma sigue visible. No se copian nombres, colores ni recursos de otras herramientas, y la interfaz no las nombra.
 
-Los patrones de inicio, catálogo, riel, posición, capas, marca y exportación salen del estudio de Canva con sesión iniciada, con una cobertura de alrededor del 85%. Ese estudio es la fuente de los patrones. El archivo del estudio no está en este repositorio: se aplicó la lista del encargo. La interfaz no nombra esa herramienta.
+El catálogo cubre meme, redes, currículum, presentación, documento, vídeo (fotograma), flyer, cartel, folleto, logo, invitación, infografía, pizarra y sitio. Cada pieza se edita en este navegador y se descarga en PNG o JPG.
 
-Entra en este P0:
+Carcasas:
 
-- Inicio con un botón claro de crear, un diálogo de tamaño (publicación 1080×1080, historia 9:16, X 1600×900, TikTok 1080×1920 y tamaño propio) y los diseños recientes.
-- Catálogo con búsqueda y filtros de estilo, tema, color, gratis y formato. Seis plantillas de meme y comunidad. Si un filtro no encaja, se ve el vacío (el formato X no tiene plantilla).
-- Editor con riel: Plantillas, Elementos, Texto, Marca, Subidos, Herramientas (seleccionar, dibujar, forma, línea, texto) y Fondo.
-- Imagen: cambiar y recorte rectangular.
-- Posición: al frente, adelante, atrás, al fondo, seis alineaciones y números de x, y, ancho, alto y rotación.
-- Capas: reordenar, todas o solapadas, agrupar, bloquear y duplicar con varias seleccionadas, y mostrar u ocultar.
-- Marca siempre incluida: tres pulpos, los tres colores y las tipografías OFL. No hay muro de pago.
-- Exportación PNG y JPG. La calidad JPG es libre. Publicación 1080×1080 e historia 1080×1920. No hay SVG.
-- Ideas que abren una plantilla editable. No hay generación automática. Lienzo en blanco. Guardar, abrir, duplicar y borrar en este navegador.
+- Diseño, presentación, vídeo e impresión: riel de 12 pestañas, con Fondo.
+- Documento: riel de 9, sin Texto, Herramientas ni Fondo, y barra de texto.
+- Pizarra: riel de 11, sin Fondo. Lienzo de puntos más ancho que la vista, sin «Añadir una página». Abajo: notas, temporizador, zoom, «1 de 1», cuadrícula y pantalla completa.
+- Sitio: el mismo riel de 12. Cabecera con Vista previa y Exportar. Exportar descarga el PNG de esta página; no hay publicación ni alojamiento. En el lienzo, «+ Añadir una sección» y la tira de páginas.
+- Cartel, flyer, logo, invitación y folleto comparten la carcasa de impresión, con Imprimir (diálogo del navegador). El folleto muestra dos guías de pliegue discontinuas, solo en pantalla.
+
+## Qué queda para otra pasada
+
+Medidas exactas en pulgadas o milímetros, línea de tiempo con audio, exportar todas las páginas en un solo archivo, coordenadas infinitas de pizarra, alojar un sitio, barras de herramientas de cada forma y ficha de detalle de plantilla. Los tamaños del diálogo están en px y son aproximaciones útiles.
 
 ## Qué se borró y qué se conservó
 
@@ -40,11 +40,11 @@ Abrir `http://127.0.0.1:4173/studio/`. Crear una pieza o elegir una plantilla, e
 ## Pruebas
 
 - `npm test` (TypeScript y la suite de Node, incluida `test/studio-p0.test.ts`).
-- Playwright: `studio-vista`, `studio-rapido`, `studio-guardar`, `studio-placa` y el tramo de Studio en `orvupi-recorrido`.
+- Playwright: `studio-vista`, `studio-rapido`, `studio-guardar`, `studio-placa`, `studio-categorias` y el tramo de Studio en `orvupi-recorrido`.
 
-## Fuera de este P0
+## Fuera de esta pasada
 
-Sin modelos generativos, sin quitar el fondo, sin animaciones, sin varias páginas, sin impresión, sin modo documento, sin SVG, sin APIs de pago y sin sincronizar diseños entre dispositivos. El JPG se codifica en el navegador. El cuerpo de las piezas usa Barlow Condensed porque Inter está solo en woff2 y no entra en el raster. Historia y TikTok comparten los mismos píxeles y se distinguen por el identificador. El cromo de la aplicación en japonés, coreano y portugués de Brasil sigue en español; el HTML de esas rutas sí se traduce. No se inspeccionó en esta pasada la sesión pública de Adobe Express ni de Microsoft Designer. No hay fusión ni despliegue.
+Sin modelos generativos, sin quitar el fondo, sin SVG, sin APIs de pago y sin sincronizar diseños entre dispositivos. El JPG se codifica en el navegador. El cuerpo de las piezas usa Barlow Condensed porque Inter está solo en woff2 y no entra en el raster. Historia y TikTok comparten los mismos píxeles y se distinguen por el identificador. El cromo de la aplicación en japonés, coreano y portugués de Brasil sigue en español; el HTML de esas rutas sí se traduce. No hay despliegue en esta rama.
 
 ## Siguiente
 
