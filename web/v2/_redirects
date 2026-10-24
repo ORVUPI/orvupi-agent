@@ -134,6 +134,10 @@ https://superb-horse-9036f5.netlify.app/*  https://orvupi.com/:splat  301!
 /pt-br/studio/templates.json                     /studio/templates.json 200
 /ja/studio/templates.json                        /studio/templates.json 200
 /ko/studio/templates.json                        /studio/templates.json 200
+/en/studio/thumbs/*                              /studio/thumbs/:splat 200
+/pt-br/studio/thumbs/*                           /studio/thumbs/:splat 200
+/ja/studio/thumbs/*                              /studio/thumbs/:splat 200
+/ko/studio/thumbs/*                              /studio/thumbs/:splat 200
 /en/studio/views.mjs                             /studio/views.mjs 200
 /pt-br/studio/views.mjs                          /studio/views.mjs 200
 /ja/studio/views.mjs                             /studio/views.mjs 200
