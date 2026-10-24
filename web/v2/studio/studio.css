@@ -228,7 +228,6 @@ body.studio-standalone header.site {
 body.studio-standalone header.site nav.site,
 body.studio-standalone header.site details.mapa,
 body.studio-standalone header.site .brand,
-body.studio-standalone footer.or-footer,
 body.studio-standalone main.studio-app > h1,
 body.studio-standalone main.studio-app > p.lede,
 body.studio-standalone main.studio-app > p:not(.aviso),
@@ -242,10 +241,39 @@ body.studio-standalone main.studio-app {
   margin: 0;
   padding: 0.4rem 0.75rem 1rem;
 }
+body.studio-standalone header.site .topbar {
+  justify-content: flex-end;
+  width: 100%;
+}
+body.studio-standalone header.site .langpick {
+  margin-left: auto;
+}
 body.studio-standalone .langpick summary {
   background: #fff;
   color: #102032;
   border-radius: 999px;
+}
+body.studio-standalone .langpick ul {
+  right: 0;
+  left: auto;
+}
+body.studio-standalone footer.or-footer {
+  margin: 0.75rem;
+  padding: 0.35rem 0.9rem;
+}
+body.studio-standalone footer.or-footer h2,
+body.studio-standalone footer.or-footer > .wrap > p,
+body.studio-standalone footer.or-footer .or-footer-links a:not([href$="risks/"]) {
+  display: none;
+}
+body.studio-standalone footer.or-footer .or-footer-links {
+  margin: 0;
+}
+body.studio-standalone footer.or-footer a[href$="risks/"] {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 700;
 }
 .orv-frame {
   display: grid;
