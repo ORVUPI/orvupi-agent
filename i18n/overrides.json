@@ -224,5 +224,9 @@
 "Nothing illegal or hateful.": ["Nada ilegal nem discurso de ódio.", "違法な内容やヘイトは禁止です。", "불법이거나 혐오에 해당하는 내용은 금지입니다."],
 "Tool code is separate and stays under the MIT license. This community license does not cover that code.": ["O código das ferramentas é separado e continua sob a licença MIT. Esta licença da comunidade não cobre esse código.", "ツールのコードは別で、MIT ライセンスのままです。このコミュニティ・ライセンスはそのコードを含みません。", "도구 코드는 별도이며 MIT 라이선스를 유지합니다. 이 커뮤니티 라이선스는 그 코드를 포함하지 않습니다."],
 "Contact:": ["Contato:", "連絡先:", "연락처:"],
-"orvupi.com": ["orvupi.com", "orvupi.com", "orvupi.com"]
+"orvupi.com": ["orvupi.com", "orvupi.com", "orvupi.com"],
+"Create community memes and posts, without an account. ORVUPI assets are included.": ["Crie memes e publicações da comunidade, sem conta. Os recursos da ORVUPI vêm incluídos.", "アカウントなしで、コミュニティのミームや投稿を作れます。ORVUPIの素材が含まれています。", "계정 없이 커뮤니티 밈과 게시물을 만드세요. ORVUPI 자료가 포함되어 있습니다."],
+"Create a meme, a post, or a story with the ORVUPI brand. No account and no wallet. The design stays in this browser.": ["Crie um meme, uma publicação ou uma história com a marca ORVUPI. Sem conta e sem carteira. O desenho fica neste navegador.", "ORVUPIのブランドでミーム、投稿、ストーリーを作れます。アカウントもウォレットも不要です。デザインはこのブラウザに残ります。", "ORVUPI 브랜드로 밈, 게시물, 스토리를 만드세요. 계정과 지갑이 필요 없습니다. 디자인은 이 브라우저에 남습니다."],
+"Download JPG": ["Baixar JPG", "JPGをダウンロード", "JPG 다운로드"],
+"About images you add": ["Sobre as imagens que você adiciona", "追加する画像について", "추가하는 이미지에 대해"]
 }
