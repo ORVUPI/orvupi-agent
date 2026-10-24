@@ -6,7 +6,7 @@ ORVUPI combina la personalidad de un pulpo rosa con herramientas para aprender, 
 
 ## Canales y contacto
 
-- [Web](https://stubxai.com/)
+- [Web](https://orvupi.com/)
 - [X · @ORVUPI](https://x.com/ORVUPI)
 - [Telegram · @orvupi](https://t.me/orvupi)
 - [TikTok · @orvupi](https://www.tiktok.com/@orvupi)
@@ -18,12 +18,12 @@ El dominio y la dirección de este repositorio siguen siendo los operativos mien
 
 | Herramienta | Función |
 | --- | --- |
-| [Verify](https://stubxai.com/verify/) | Consulta de datos públicos de tokens. |
-| [Lab](https://stubxai.com/lab/) y [Aprender](https://stubxai.com/aprender/) | Misiones, glosario y guías educativas. |
-| [Cuaderno](https://stubxai.com/cuaderno/) | Fichas y notas guardadas en el navegador. |
-| [Studio](https://stubxai.com/studio/) | Creación de contenido visual. |
-| [Comparar](https://stubxai.com/comparar/) y [Pares](https://stubxai.com/pares/) | Ejemplos educativos y lectura de datos públicos. |
-| [Tablero](https://stubxai.com/tablero/) | Estado de funcionalidades y evidencias. |
+| [Verify](https://orvupi.com/verify/) | Consulta de datos públicos de tokens. |
+| [Lab](https://orvupi.com/lab/) y [Aprender](https://orvupi.com/aprender/) | Misiones, glosario y guías educativas. |
+| [Cuaderno](https://orvupi.com/cuaderno/) | Fichas y notas guardadas en el navegador. |
+| [Studio](https://orvupi.com/studio/) | Creación de contenido visual. |
+| [Comparar](https://orvupi.com/comparar/) y [Pares](https://orvupi.com/pares/) | Ejemplos educativos y lectura de datos públicos. |
+| [Tablero](https://orvupi.com/tablero/) | Estado de funcionalidades y evidencias. |
 
 Una consulta puede fallar o quedar incompleta. Los datos ausentes no se sustituyen por ceros ni por resultados inventados. Estas herramientas no garantizan la seguridad de un token ni recomiendan inversiones.
 

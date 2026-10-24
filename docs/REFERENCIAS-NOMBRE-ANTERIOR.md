@@ -6,7 +6,7 @@ en el código, la web ni la documentación, con estas excepciones deliberadas:
 
 | Dónde | Por qué se queda |
 | --- | --- |
-| Dominio `stubxai.com` | Es el dominio publicado; no se cambia. |
+| Dominio `stubxai.com` | Dominio anterior; redirige a `orvupi.com`, que es el dominio oficial. |
 | `web/v2/shared/legacy-names.js` | Constantes de migración: nombre de la base de datos, prefijo de esquema y campo antiguos del cuaderno. |
 | `web/v2/assets/shell.js` | Prefijo antiguo de las claves de `localStorage`/`sessionStorage`, que se migran solas a `orvupi-*` (se copian solo si la clave nueva no existe, se verifican y después se borra la antigua). |
 | `logs/` y la etiqueta `pre-orvupi-2026-10-16` | Historial firmado: la cadena anterior se conserva intacta en esa etiqueta (ver `LOGS.md`, «Cambio de cadena del 16-10-2026»). |
