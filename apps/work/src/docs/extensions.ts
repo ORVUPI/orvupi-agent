@@ -35,16 +35,16 @@ const reserveFloating = new Plugin({
       frame = 0;
       const dom = view.dom as HTMLElement;
       if (!dom.isConnected || dom.closest(".is-paged")) {
-        dom.style.removeProperty("--ow-reserve");
+        dom.style.removeProperty("--ow-page-offset");
         return;
       }
       const top = dom.getBoundingClientRect().top;
       let need = 0;
       for (const img of Array.from(dom.querySelectorAll<HTMLElement>('img[data-wrap="behind"], img[data-wrap="front"]'))) need = Math.max(need, img.getBoundingClientRect().bottom - top);
       const next = need > 0 ? `${Math.ceil(need + (parseFloat(getComputedStyle(dom).paddingBottom) || 0))}px` : "";
-      if (dom.style.getPropertyValue("--ow-reserve") !== next) {
-        if (next) dom.style.setProperty("--ow-reserve", next);
-        else dom.style.removeProperty("--ow-reserve");
+      if (dom.style.getPropertyValue("--ow-page-offset") !== next) {
+        if (next) dom.style.setProperty("--ow-page-offset", next);
+        else dom.style.removeProperty("--ow-page-offset");
       }
     };
     const schedule = () => {
