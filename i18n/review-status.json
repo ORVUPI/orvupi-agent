@@ -1,7 +1,7 @@
 {
  "pt-BR": {
-  "manual": 240,
-  "auto": 1625,
+  "manual": 256,
+  "auto": 1624,
   "fallback_en": [
    "Legal reviews this fixed educational example. Any version with real data will need a new review. Still absent from this website.",
    "Library and notebook.",
@@ -39,8 +39,8 @@
   ]
  },
  "ja": {
-  "manual": 240,
-  "auto": 1653,
+  "manual": 256,
+  "auto": 1652,
   "fallback_en": [
    "ORVUPI · What's new",
    "On USDC, on 2026-10-16, the metadata account was queried. The query was answered and the link (URI) is empty: that fact is not there.",
@@ -50,8 +50,8 @@
   ]
  },
  "ko": {
-  "manual": 240,
-  "auto": 1652,
+  "manual": 256,
+  "auto": 1651,
   "fallback_en": [
    "ORVUPI · What's new",
    "Only the channels on this list are official. If an account, website or address is not listed here, treat it as unofficial until you check it on this website.",

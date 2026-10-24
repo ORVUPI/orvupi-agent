@@ -74,8 +74,8 @@ async function check(page, name) {
   must((await page.locator('[data-web="si"]').count()) === 6, "publicado");
   must((await page.locator('[data-web="no"]').count()) > 0, "sin publicar");
   const boardText = await page.locator("main").innerText();
-  must(boardText.includes("La columna stubxai.com dice sí solo si la función se puede abrir hoy en la web."), "columna");
-  must(boardText.includes("Publicada en stubxai.com/contribuir el 2026-10-10."), "u04");
+  must(boardText.includes("La columna «En esta web» dice sí solo si la función se puede abrir hoy en la web."), "columna");
+  must(boardText.includes("Publicada en /contribuir el 2026-10-10."), "u04");
   must(boardText.includes("Ejemplo educativo fijo, revisado por Legal."), "legal");
   must(boardText.includes("2026-10-09 · Medición de uso: ninguna en el cliente"), "medicion");
   must(!boardText.includes("Nada de esta página está publicado"), "frase falsa");
@@ -88,7 +88,7 @@ async function check(page, name) {
   must(await page.locator("html").getAttribute("data-lang") === "en", "idioma");
   must((await page.locator("h1").innerText()).includes("Construction board"), "título en");
   must((await page.locator("#como-leerlo").innerText()).includes("It is not a deadline"), "plazo en");
-  must((await page.locator("#como-leerlo").innerText()).includes("The stubxai.com column says yes only if the function can be opened on the website today."), "columna en");
+  must((await page.locator("#como-leerlo").innerText()).includes("The “On this website” column says yes only if the function can be opened on the website today."), "columna en");
   must(!(await page.locator("footer").innerText()).includes(FOOTER_EN), "pie en");
   await page.locator('a[href="#grupo-propuesta"]').click();
   const box = await page.locator("#grupo-propuesta").boundingBox();

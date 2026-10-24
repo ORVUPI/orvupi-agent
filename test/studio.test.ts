@@ -1220,7 +1220,7 @@ describe("studio", () => {
   });
 
   test("no hay hosts externos en el editor y la navegación y el CSP de Studio están puestos", () => {
-    const allowed = new Set(["stubxai.com", "www.stubxai.com", "github.com", "orvupi.com", "www.orvupi.com"]);
+    const allowed = new Set(["github.com", "orvupi.com", "www.orvupi.com", "x.com", "t.me", "www.tiktok.com"]);
     const oflHosts = new Set(["github.com", "scripts.sil.org"]);
     const walk = (dir: string, out: string[] = []): string[] => {
       for (const name of readdirSync(dir)) {

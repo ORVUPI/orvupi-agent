@@ -1355,7 +1355,7 @@ describe("lector y cuaderno", () => {
       };
     };
 
-    const filled = run(`https://stubxai.com/verify/#a=${CA}`, { value: "", links: ["/aprender/#direccion"] });
+    const filled = run(`https://orvupi.com/verify/#a=${CA}`, { value: "", links: ["/aprender/#direccion"] });
     assert.equal(filled.input?.value, CA);
     assert.equal(filled.url(), "/verify/");
     assert.deepEqual(filled.replacements, ["/verify/"]);
@@ -1363,21 +1363,21 @@ describe("lector y cuaderno", () => {
     assert.equal(filled.links[0]?.href, `/aprender/#a=${CA}`);
     assert.equal(filled.links[0]?.href.includes("?"), false);
 
-    const typed = run("https://stubxai.com/verify/#direccion", { value: CA, links: ["/aprender/?from=lab#direccion"] });
+    const typed = run("https://orvupi.com/verify/#direccion", { value: CA, links: ["/aprender/?from=lab#direccion"] });
     assert.equal(typed.input?.value, CA);
     assert.deepEqual(typed.replacements, []);
     typed.links[0]?.click();
     assert.equal(typed.links[0]?.href, `/aprender/?from=lab#a=${CA}`);
 
-    const ignoredQuery = run(`https://stubxai.com/verify/?a=${CA}#direccion`, { value: "", links: [] });
+    const ignoredQuery = run(`https://orvupi.com/verify/?a=${CA}#direccion`, { value: "", links: [] });
     assert.equal(ignoredQuery.input?.value, "");
     assert.equal(ignoredQuery.url(), "/verify/#direccion");
 
-    const invalid = run("https://stubxai.com/verify/#a=no-es-direccion", { value: "", links: [] });
+    const invalid = run("https://orvupi.com/verify/#a=no-es-direccion", { value: "", links: [] });
     assert.equal(invalid.input?.value, "");
     assert.equal(invalid.url(), "/verify/");
 
-    const library = run(`https://stubxai.com/aprender/#direccion&a=${CA}`, { links: ["/verify/", "/verify/?lang=es"] });
+    const library = run(`https://orvupi.com/aprender/#direccion&a=${CA}`, { links: ["/verify/", "/verify/?lang=es"] });
     assert.equal(library.url(), "/aprender/#direccion");
     assert.equal(library.replacements.some((item) => item.includes(CA)), false);
     library.links[0]?.click();
@@ -1385,12 +1385,12 @@ describe("lector y cuaderno", () => {
     assert.equal(library.links[0]?.href, `/verify/#a=${CA}`);
     assert.equal(library.links[1]?.href, `/verify/?lang=es#a=${CA}`);
 
-    const section = run("https://stubxai.com/aprender/#direccion", { links: ["/verify/"] });
+    const section = run("https://orvupi.com/aprender/#direccion", { links: ["/verify/"] });
     assert.deepEqual(section.replacements, []);
     section.links[0]?.click();
     assert.equal(section.links[0]?.href, "/verify/");
 
-    const leaked = run(`https://stubxai.com/aprender/?a=${CA}#direccion`, { links: ["/verify/"] });
+    const leaked = run(`https://orvupi.com/aprender/?a=${CA}#direccion`, { links: ["/verify/"] });
     assert.equal(leaked.url(), "/aprender/#direccion");
     leaked.links[0]?.click();
     assert.equal(leaked.links[0]?.href, "/verify/");

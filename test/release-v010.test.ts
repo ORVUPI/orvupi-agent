@@ -33,20 +33,20 @@ describe("v0.1.0 notes, without a tag", () => {
     }
     assert.match(es, /Fecha de estas notas: 2026-10-10\./);
     assert.match(en, /These notes are dated 2026-10-10\./);
-    assert.match(es, /La web v2 se desplegó en stubxai.com el 2026-10-09, fuera de estas notas\. Estas notas no la despliegan ni la cambian\./);
-    assert.match(en, /Web v2 was deployed to stubxai.com on 2026-10-09, outside these notes\. These notes do not deploy or change it\./);
+    assert.match(es, /La web v2 se desplegó en orvupi.com el 2026-10-09, fuera de estas notas\. Estas notas no la despliegan ni la cambian\./);
+    assert.match(en, /Web v2 was deployed to orvupi.com on 2026-10-09, outside these notes\. These notes do not deploy or change it\./);
     assert.match(es, /Este repositorio no inserta medición de visitas ni cookies\. Cloudflare Web Analytics debe estar apagado en el panel de la zona \(sin baliza en el HTML servido el 2026-10-10\)\./);
     assert.match(en, /This repository inserts no visit measurement or cookies\. Cloudflare Web Analytics must be off in the zone dashboard \(no beacon in the HTML served on 2026-10-10\)\./);
     assert.equal(es.includes("vista previa"), false);
     assert.equal(en.toLowerCase().includes("preview"), false);
-    assert.match(es, /`web\/v2\/` es la web publicada en stubxai.com desde el 2026-10-09 \(merge `ed1c7759`\)\. `web\/current\/` es la copia anterior, para volver atrás\./);
-    assert.match(en, /`web\/v2\/` is the website published on stubxai.com since 2026-10-09 \(merge `ed1c7759`\)\. `web\/current\/` is the earlier copy, kept so it can be put back\./);
-    assert.match(es, /Studio está desplegado \(PR #20 y #26\) y se indexa\. Verify universal está desplegado \(merge `2434636`\)\. El cuaderno está en stubxai\.com\/cuaderno desde el 2026-10-10 \(PR #24\)\./);
-    assert.match(en, /Studio is deployed \(pull requests #20 and #26\) and it is indexable\. Verify universal is deployed \(merge `2434636`\)\. The notebook is at stubxai\.com\/cuaderno since 2026-10-10 \(pull request #24\)\./);
+    assert.match(es, /`web\/v2\/` es la web publicada en orvupi.com desde el 2026-10-09 \(merge `ed1c7759`\)\. `web\/current\/` es la copia anterior, para volver atrás\./);
+    assert.match(en, /`web\/v2\/` is the website published on orvupi.com since 2026-10-09 \(merge `ed1c7759`\)\. `web\/current\/` is the earlier copy, kept so it can be put back\./);
+    assert.match(es, /Studio está desplegado \(PR #20 y #26\) y se indexa\. Verify universal está desplegado \(merge `2434636`\)\. El cuaderno está en orvupi\.com\/cuaderno desde el 2026-10-10 \(PR #24\)\./);
+    assert.match(en, /Studio is deployed \(pull requests #20 and #26\) and it is indexable\. Verify universal is deployed \(merge `2434636`\)\. The notebook is at orvupi\.com\/cuaderno since 2026-10-10 \(pull request #24\)\./);
     assert.match(es, /el tablero en \/tablero \(PR #27\)/);
     assert.match(en, /the board at \/tablero \(pull request #27\)/);
-    assert.match(es, /stubxai\.com\/pares desde el 2026-10-10 \(PR #31\) y el tablero la da por publicada/);
-    assert.match(en, /stubxai\.com\/pares since 2026-10-10 \(pull request #31\), and the board marks it published/);
+    assert.match(es, /orvupi\.com\/pares desde el 2026-10-10 \(PR #31\) y el tablero la da por publicada/);
+    assert.match(en, /orvupi\.com\/pares since 2026-10-10 \(pull request #31\), and the board marks it published/);
     assert.match(es, /cualquier mint SPL o Token-2022/);
     assert.match(en, /any SPL or Token-2022 mint/);
     assert.equal(es.includes("hay que reescribir"), false);

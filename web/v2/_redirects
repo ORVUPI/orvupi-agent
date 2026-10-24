@@ -1,7 +1,7 @@
-# www.stubxai.com lo sirve Cloudflare Pages. Esta primera regla solo la aplica Netlify,
+# www.orvupi.com lo sirve Cloudflare Pages. Esta primera regla solo la aplica Netlify,
 # en superb-horse-9036f5.netlify.app. Cloudflare Pages ignora reglas con dominio.
 # La dirección está grabada en los metadatos on-chain. El «!» fuerza el 301 aunque el archivo exista.
-https://superb-horse-9036f5.netlify.app/*  https://stubxai.com/:splat  301!
+https://superb-horse-9036f5.netlify.app/*  https://orvupi.com/:splat  301!
 
 # Cloudflare Pages quita la extensión de un HTML suelto y lo sirve sin ella.
 # Si el archivo es index.html, la URL lleva barra final. No redirigir /archivo

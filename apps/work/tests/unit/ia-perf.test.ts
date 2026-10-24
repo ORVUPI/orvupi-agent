@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { modelChain, probeOk, AI_MODELS, type AiSupport } from "../../src/ai/engine";
+import { bootCandidates, modelChain, probeOk, AI_MODELS, type AiSupport } from "../../src/ai/engine";
+import { wasmThreadCount } from "../../src/ai/runtime";
 import { analyzeText, fallbackQuestion, hybridAnalyze, hybridGenerate, hybridQuestions, parseRequest, type Generate } from "../../src/ai/hybrid";
 import { markdownToNodes, parseMarkdown, PAGE_BREAK } from "../../src/ai/markdown";
 
@@ -13,18 +14,39 @@ const desk: AiSupport = { webgpu: true, f16: true, wasm: true, memoryGb: 8, mobi
 const phone: AiSupport = { webgpu: false, f16: false, wasm: true, memoryGb: 4, mobile: true };
 
 describe("ORVUPI AI: elección automática del modo", () => {
-  it("prueba GPU → CPU → modelos ligeros, y deja al final lo que falló en este dispositivo", () => {
-    expect(modelChain(desk).map((m) => m.id)).toEqual(["qwen05-gpu", "lfm350-gpu32", "qwen05-cpu", "smol135-cpu"]);
-    expect(modelChain(desk, { device: "", bad: { "qwen05-gpu": Date.now() } }).map((m) => m.id)).toEqual(["lfm350-gpu32", "qwen05-cpu", "smol135-cpu", "qwen05-gpu"]);
+  it("prueba WebGPU, luego WASM y después otro modelo, y deja al final lo que falló", () => {
+    expect(modelChain(desk).map((m) => m.id)).toEqual(["qwen05-gpu", "qwen05-cpu", "smol135-cpu", "lfm350-gpu32"]);
+    expect(modelChain(desk, { device: "", bad: { "qwen05-gpu": Date.now() } }).map((m) => m.id)).toEqual(["qwen05-cpu", "smol135-cpu", "lfm350-gpu32", "qwen05-gpu"]);
     expect(modelChain(desk, { device: "", good: "qwen05-cpu", bad: {} })[0]!.id).toBe("qwen05-cpu");
     expect(modelChain({ ...desk, webgpu: false, f16: false }).map((m) => m.id)).toEqual(["qwen05-cpu", "smol135-cpu"]);
+    // Sin fp16 el WebGPU que sí puede correr va antes que WASM
+    expect(modelChain({ ...desk, f16: false }).map((m) => m.id)).toEqual(["lfm350-gpu32", "qwen05-cpu", "smol135-cpu"]);
     // Móvil: LFM2 solo con WebGPU (el motor WASM no tiene GatherBlockQuantized); sin GPU, SmolLM2 por WASM
     expect(modelChain(phone).map((m) => m.id)).toEqual(["smol135-cpu"]);
-    expect(modelChain({ ...phone, webgpu: true, f16: true }).map((m) => m.id)).toEqual(["lfm350-gpu", "lfm350-gpu32", "smol135-cpu"]);
+    expect(modelChain({ ...phone, webgpu: true, f16: true }).map((m) => m.id)).toEqual(["lfm350-gpu", "smol135-cpu", "lfm350-gpu32"]);
     expect(modelChain({ ...phone, memoryGb: 2 })[0]!.id).toBe("smol135-cpu");
     // Los modelos grandes nunca se eligen solos
     expect(modelChain(desk).some((m) => m.id.startsWith("qwen15"))).toBe(false);
     expect(AI_MODELS.some((m) => m.id === "qwen15-gpu")).toBe(true);
+  });
+
+  it("si WebGPU ya está descargado y falla, el siguiente es WASM u otro modelo ya descargado", () => {
+    const onlyGpu = bootCandidates(desk, { device: "", bad: {} }, ["qwen05-gpu"]).map((m) => m.id);
+    expect(onlyGpu[0]).toBe("qwen05-gpu");
+    expect(onlyGpu[1]).toBe("qwen05-cpu");
+    const gpuAndSmol = bootCandidates(desk, { device: "", bad: {} }, ["qwen05-gpu", "smol135-cpu"]).map((m) => m.id);
+    expect(gpuAndSmol.slice(0, 2)).toEqual(["qwen05-gpu", "smol135-cpu"]);
+    // «Usar este modelo» arranca por el elegido y, si no genera, sigue con el resto
+    const picked = bootCandidates(desk, { device: "", bad: {} }, ["qwen05-gpu"], "qwen05-gpu").map((m) => m.id);
+    expect(picked[0]).toBe("qwen05-gpu");
+    expect(picked).toContain("qwen05-cpu");
+    expect(bootCandidates(desk, { device: "", bad: {} }, [], "qwen15-gpu")[0]!.id).toBe("qwen15-gpu");
+  });
+
+  it("sin aislamiento de origen WASM usa un solo hilo, para poder arrancar", () => {
+    expect(wasmThreadCount(8, false)).toBe(1);
+    expect(wasmThreadCount(8, true)).toBe(4);
+    expect(wasmThreadCount(2, true)).toBe(1);
   });
 
   it("la prueba corta detecta «!!!!» (logits NaN en fp16 → token 0, que en Qwen es «!»)", () => {

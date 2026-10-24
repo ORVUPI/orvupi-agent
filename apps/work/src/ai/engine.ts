@@ -81,7 +81,7 @@ export function rememberModel(support: AiSupport, id: string, ok: boolean): void
   }
 }
 
-/** Orden automático de prueba: el que ya funcionó; si no, GPU (WebGPU) → CPU (WASM) → modelos más ligeros.
+/** Orden automático: el que ya funcionó; si no, un WebGPU, luego WASM, luego otro modelo compatible.
  *  Los que fallaron en este dispositivo se dejan para el final. Los grandes (1.5B) solo se eligen a mano. */
 export function modelChain(support: AiSupport, mem: DeviceMemory = { device: "", bad: {} }): AiModel[] {
   const list = usableModels(support);
@@ -89,11 +89,39 @@ export function modelChain(support: AiSupport, mem: DeviceMemory = { device: "",
   const ids = support.mobile
     ? (small ? ["smol135-cpu"] : ["lfm350-gpu", "lfm350-gpu32", "smol135-cpu"])
     : ["qwen05-gpu", "lfm350-gpu32", "qwen05-cpu", "smol135-cpu"];
-  const chain = ids.map((id) => list.find((m) => m.id === id)).filter((m): m is AiModel => Boolean(m));
+  const available = ids.map((id) => list.find((m) => m.id === id)).filter((m): m is AiModel => Boolean(m));
+  const gpu = available.filter((m) => m.device === "webgpu");
+  const wasm = available.filter((m) => m.device === "wasm");
+  // Un WebGPU primero. Si falla, WASM. El resto de GPU queda como otra opción compatible.
+  const chain = [...gpu.slice(0, 1), ...wasm, ...gpu.slice(1)];
   const good = chain.find((m) => m.id === mem.good);
   const ok = chain.filter((m) => m !== good && !mem.bad[m.id]);
   const bad = chain.filter((m) => m !== good && mem.bad[m.id]);
   return [...(good ? [good] : []), ...ok, ...bad];
+}
+
+/** Dentro de una cadena, el modelo pedido (o el primero) va delante y los ya descargados antes que una descarga nueva. */
+export function attemptOrder(chain: readonly AiModel[], preferredId?: string, cachedIds: ReadonlySet<string> = new Set()): AiModel[] {
+  const head = (preferredId ? chain.find((m) => m.id === preferredId) : undefined) ?? chain[0];
+  const rest = chain.filter((m) => m !== head);
+  const cached = rest.filter((m) => cachedIds.has(m.id));
+  const fresh = rest.filter((m) => !cachedIds.has(m.id));
+  return [...(head ? [head] : []), ...cached, ...fresh];
+}
+
+/** Lista real de arranque. El modelo elegido a mano se prueba primero (también si es de los grandes) y, si no
+ *  genera, se sigue con el resto: WASM y cualquier otro que ya esté descargado, antes de bajar uno nuevo. */
+export function bootCandidates(support: AiSupport, mem: DeviceMemory = { device: "", bad: {} }, cachedIds: Iterable<string> = [], preferredId?: string, skip: readonly string[] = []): AiModel[] {
+  const cached = new Set(cachedIds);
+  const chain = modelChain(support, mem);
+  const preferred = preferredId ? usableModels(support).find((m) => m.id === preferredId) : undefined;
+  const base = preferred && !chain.some((m) => m.id === preferred.id) ? [preferred, ...chain] : chain;
+  return attemptOrder(base, preferred?.id, cached).filter((m) => !skip.includes(m.id));
+}
+
+/** Un corte de red no debe impedir probar un modelo que ya está en el dispositivo. */
+export function blocksFurtherDownloads(kind: string): boolean {
+  return kind === "offline" || kind === "quota" || kind === "network" || kind === "blocked";
 }
 
 /** ¿La prueba corta del modelo dio texto de verdad? (no «!!!!», no vacío) */
@@ -203,11 +231,13 @@ export class AiEngine {
       }
     });
     worker.addEventListener("error", (event) => {
-      const error = new Error(event.message || "worker");
-      this.loading?.reject(error);
+      // Un worker ya sustituido no puede tumbar el intento nuevo.
+      if (this.worker !== worker) return;
+      const error = new AiLoadError(event.message || "worker", "worker", {});
+      const pendingLoad = this.loading;
       this.loading = null;
-      for (const p of this.pending.values()) p.reject(error);
-      this.pending.clear();
+      this.reset();
+      pendingLoad?.reject(error);
     });
     this.worker = worker;
     return worker;
@@ -219,7 +249,8 @@ export class AiEngine {
 
   load(model: AiModel, onProgress: (loaded: number, total: number) => void, onPreparing?: () => void): Promise<void> {
     if (this.isLoaded(model)) return Promise.resolve();
-    if (this.loadedKey || this.loading) this.reset();
+    // Cada intento abre un worker nuevo. Si WebGPU dejó el anterior muerto, WASM no hereda ese fallo.
+    this.reset();
     const worker = this.ensureWorker();
     return new Promise((resolve, reject) => {
       this.loading = { resolve, reject, onProgress, onPreparing };
