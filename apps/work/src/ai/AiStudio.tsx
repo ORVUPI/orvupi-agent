@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { FileRecord, StorageService } from "../storage/types";
 import { formatBytes } from "../security/names";
-import { aiEngine, detectAiSupport, isModelCached, modelChain, readDeviceMemory, rememberModel, usableModels, type AiModel, type AiSupport, type ChatMessage } from "./engine";
+import { aiEngine, blocksFurtherDownloads, bootCandidates, detectAiSupport, isModelCached, modelChain, readDeviceMemory, rememberModel, usableModels, type AiModel, type AiSupport, type ChatMessage } from "./engine";
 import { buildMessages, CHUNK_CHARS, MAX_PARTS } from "./prompts";
 import { hybridAnalyze, hybridAsk, hybridExplain, hybridGenerate, hybridOutline, hybridQuestions, hybridSummary, paragraphChunks, parseRequest, rewriteMessages, rewriteOk, translationOk, type Generate, type HybridResult, type Intent } from "./hybrid";
 import { aiFiles, textOfFile } from "./sources";
@@ -21,17 +21,17 @@ const ES = {
   privacy: "Funciona dentro de tu navegador. Tus documentos no salen del dispositivo: solo se descarga el modelo la primera vez y queda guardado.",
   model: "1. Preparar la IA",
   checking: "Comprobando qué puede ejecutar este dispositivo…",
-  none: "Este navegador no puede ejecutar la IA local (le falta WebAssembly con Web Workers). Prueba con Chrome, Edge, Firefox o Safari recientes.",
-  modelGpuSmall: "Qwen2.5 0.5B · con la GPU (WebGPU)",
-  modelGpuLarge: "Qwen2.5 1.5B · más preciso con la GPU (WebGPU)",
-  modelCpu: "Qwen2.5 0.5B · sin GPU (WASM)",
-  modelCpuLarge: "Qwen2.5 1.5B · más preciso sin GPU (lento, ordenadores con 8 GB o más)",
-  modelTiny: "SmolLM2 135M · muy ligero",
-  modelLfm: "LFM2 350M · ligero y multilingüe, bueno en español (GPU)",
+  none: "Este navegador no puede ejecutar la IA local. Prueba con Chrome, Edge, Firefox o Safari recientes.",
+  modelGpuSmall: "Qwen2.5 0.5B",
+  modelGpuLarge: "Qwen2.5 1.5B · más preciso",
+  modelCpu: "Qwen2.5 0.5B · compatible",
+  modelCpuLarge: "Qwen2.5 1.5B · más preciso, en equipos con 8 GB o más",
+  modelTiny: "Modelo muy ligero",
+  modelLfm: "Modelo ligero, bueno en español",
   prepare: "Preparar ORVUPI AI ({size}, solo la primera vez)",
   prepareCached: "Preparar ORVUPI AI",
   ready: "IA lista en este dispositivo",
-  readyDetail: "Usando {model}",
+  readyDetail: "Ya puedes resumir, explicar o crear un documento.",
   loading: "Preparando IA: descargando {pct} % ({done} de {total}). Puedes seguir usando Work.",
   compiling: "Preparando IA: comprobando que funciona en este dispositivo…",
   trying: "Preparando IA: probando otra opción compatible con este dispositivo…",
@@ -39,7 +39,7 @@ const ES = {
   offline: "Sin conexión: la IA se descarga la primera vez. Lo descargado queda guardado y continuará donde se quedó al volver la conexión.",
   quota: "No hay espacio en el navegador para guardar la IA. Libera espacio y vuelve a intentarlo.",
   advanced: "Opciones avanzadas",
-  advancedHelp: "ORVUPI AI elige sola el mejor modo para este dispositivo y recuerda lo que funcionó. Aquí puedes elegir otro modelo a mano.",
+  advancedHelp: "ORVUPI AI elige sola el modo que funciona en este dispositivo y recuerda lo que funcionó. No hace falta cambiar nada.",
   pickModel: "Modelo",
   useModel: "Usar este modelo",
   recommended: "recomendado",
@@ -114,6 +114,19 @@ const ES = {
 const EN: typeof ES = {
   ...ES,
   privacy: "Runs inside your browser. Your documents never leave the device: only the model is downloaded once and cached.",
+  none: "This browser cannot run local AI. Try a recent Chrome, Edge, Firefox, or Safari.",
+  modelGpuSmall: "Qwen2.5 0.5B",
+  modelGpuLarge: "Qwen2.5 1.5B · more precise",
+  modelCpu: "Qwen2.5 0.5B · compatible",
+  modelCpuLarge: "Qwen2.5 1.5B · more precise, on devices with 8 GB or more",
+  modelTiny: "Very small model",
+  modelLfm: "Small model, strong in Spanish",
+  ready: "AI is ready on this device",
+  readyDetail: "You can summarize, explain, or create a document.",
+  advanced: "Advanced options",
+  advancedHelp: "ORVUPI AI picks a mode that works on this device and remembers what worked. You don't need to change anything.",
+  useModel: "Use this model",
+  allFailed: "We could not start AI on this device right now. Check the connection (the model downloads the first time) and try again in a while. Meanwhile, Analyze works without a download.",
   source: "2. Text to use", actions: "3. What to do", srcOpen: "Open document", srcSelection: "Selected text", srcFile: "Another Work file", srcPaste: "Paste text",
   summarize: "Summarize", explain: "Explain", rewrite: "Rewrite", translate: "Translate", outline: "Outline", questions: "Questions", analyze: "Analyze",
   insert: "Insert into document", replace: "Replace selection", below: "Add below", copy: "Copy", cancel: "Cancel", send: "Send",
@@ -167,6 +180,7 @@ export function AiStudio({
   const [created, setCreated] = useState<{ id: string; name: string } | null>(null);
   const stopRef = useRef(false);
   const preparingRef = useRef<Promise<AiModel | null> | null>(null);
+  const cachedRef = useRef<Record<string, boolean>>({});
   // Si ninguna opción funcionó, no se reintenta en cada acción (se vuelve a probar al pulsar «Preparar»)
   const allFailedRef = useRef(false);
   const uid = useId();
@@ -198,6 +212,7 @@ export function AiStudio({
       const flags: Record<string, boolean> = {};
       for (const model of list) flags[model.id] = await isModelCached(model);
       if (!alive) return;
+      cachedRef.current = flags;
       setCached(flags);
       const already = list.find((model) => engine.isLoaded(model));
       if (already) { setModelId(already.id); setPhase("ready"); return; }
@@ -218,18 +233,24 @@ export function AiStudio({
   const chain = support ? modelChain(support, readDeviceMemory(support)) : [];
   const first = chain[0];
 
-  /** Prepara la IA sola: prueba el mejor modo (GPU → CPU → modelos más ligeros) con una generación real corta y se
-   *  queda con el primero que funciona. Recuerda en este dispositivo qué funcionó y qué no. */
-  function prepare(found: AiSupport | null = support, only?: AiModel, skip: string[] = []): Promise<AiModel | null> {
+  /** Prepara la IA sola. Prueba WebGPU y, con una generación corta, comprueba que el texto es válido.
+   *  Si falla, pasa a WASM y después a otro modelo compatible. Los que ya están descargados se prueban
+   *  antes de empezar una descarga nueva. El usuario no elige el modo. */
+  function prepare(found: AiSupport | null = support, preferredId?: string, skip: string[] = []): Promise<AiModel | null> {
     if (!found) return Promise.resolve(null);
-    if (preparingRef.current && !only && skip.length === 0) return preparingRef.current;
+    if (preparingRef.current && !preferredId && skip.length === 0) return preparingRef.current;
     const job = (async () => {
+      allFailedRef.current = false;
       setPhase("loading");
       setLoadError("");
       let lastKind = "";
-      const list = only ? [only] : modelChain(found, readDeviceMemory(found)).filter((m) => !skip.includes(m.id));
+      let downloadsBlocked = false;
+      const cachedIds = Object.entries(cachedRef.current).filter(([, on]) => on).map(([id]) => id);
+      const list = bootCandidates(found, readDeviceMemory(found), cachedIds, preferredId, skip);
       for (let i = 0; i < list.length; i += 1) {
         const candidate = list[i]!;
+        const have = Boolean(cachedRef.current[candidate.id]);
+        if (downloadsBlocked && !have) continue;
         setModelId(candidate.id);
         setProgress(null);
         setPreparing(i === 0 ? "download" : "retry");
@@ -237,21 +258,22 @@ export function AiStudio({
           await engine.load(candidate, (loaded, total) => { setPreparing(i === 0 ? "download" : "retry"); setProgress({ loaded, total }); }, () => setPreparing("check"));
           rememberModel(found, candidate.id, true);
           allFailedRef.current = false;
-          setCached((c) => ({ ...c, [candidate.id]: true }));
+          cachedRef.current = { ...cachedRef.current, [candidate.id]: true };
+          setCached(cachedRef.current);
           setPhase("ready");
           return candidate;
         } catch (error) {
           const kind = (error as { kind?: string }).kind ?? "other";
           lastKind = kind;
           console.info("[ORVUPI AI] no funcionó", candidate.id, kind, error instanceof Error ? error.message.slice(0, 160) : "");
-          // Sin conexión o sin espacio no tiene sentido probar otro modelo: lo descargado queda guardado
-          if (kind === "offline" || kind === "quota") break;
-          rememberModel(found, candidate.id, false);
+          // Sin red se pueden seguir probando los modelos ya descargados. Un fallo de ejecución sí se recuerda.
+          if (blocksFurtherDownloads(kind)) downloadsBlocked = true;
+          else rememberModel(found, candidate.id, false);
         }
       }
       allFailedRef.current = true;
       setPhase("error");
-      setLoadError(lastKind === "offline" || lastKind === "network" ? L.offline : lastKind === "quota" ? L.quota : L.allFailed);
+      setLoadError(lastKind === "offline" || lastKind === "network" || lastKind === "blocked" ? L.offline : lastKind === "quota" ? L.quota : L.allFailed);
       return null;
     })();
     preparingRef.current = job;
@@ -485,7 +507,7 @@ export function AiStudio({
         {!support ? <p role="status">{L.checking}</p> : models.length === 0 ? <p role="alert">{L.none}</p> : (
           <>
             {phase === "ready" && model ? (
-              <p className="ow-ai-ready" role="status">✅ {L.ready} <small>· {f(L.readyDetail, { model: L[model.label] })}</small></p>
+              <p className="ow-ai-ready" role="status">✅ {L.ready} <small>· {L.readyDetail}</small></p>
             ) : phase === "loading" ? (
               <div className="ow-ai-progress">
                 <div role="progressbar" aria-label={L.stagePrepare} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}><span style={{ width: `${preparing === "check" ? 100 : pct}%` }} /></div>
@@ -512,7 +534,7 @@ export function AiStudio({
                 </select>
               </label>
               <div className="ow-row">
-                <button type="button" className="ow-button" disabled={phase === "loading" || busy} onClick={() => { const m = models.find((x) => x.id === (manualId || first?.id)); if (m) void prepare(support, m); }}>{L.useModel}</button>
+                <button type="button" className="ow-button" disabled={phase === "loading" || busy} onClick={() => { const id = manualId || modelId || first?.id; if (id) void prepare(support, id); }}>{L.useModel}</button>
                 <button type="button" className="ow-button ow-button-ghost" disabled={busy || phase !== "ready"} onClick={() => { engine.unload(); setPhase("idle"); setStatus(L.freed); }}>{L.free}</button>
               </div>
             </details>
@@ -616,7 +638,7 @@ export function AiStudio({
       <details className="ow-ai-guide">
         <summary>{L.guide}</summary>
         <p>{L.guideBody}</p>
-        <button type="button" className="ow-button ow-button-ghost" onClick={() => { engine.reset(); void import("./engine").then((m) => m.removeCachedModels()).then(() => { setCached({}); setPhase("idle"); }); }}>{L.clearCache}</button>
+        <button type="button" className="ow-button ow-button-ghost" onClick={() => { engine.reset(); void import("./engine").then((m) => m.removeCachedModels()).then(() => { cachedRef.current = {}; setCached({}); setPhase("idle"); }); }}>{L.clearCache}</button>
       </details>
     </div>
   );

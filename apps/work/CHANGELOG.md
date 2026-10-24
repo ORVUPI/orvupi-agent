@@ -1,5 +1,15 @@
 # Registro de cambios
 
+## 0.9.7 — 2026-10-24
+
+ORVUPI AI arranca sola aunque el primer modo falle.
+
+- «Preparar ORVUPI AI» prueba WebGPU y, con una generación corta, comprueba que la respuesta no esté vacía ni sea basura («!!!!»). Si ese modo falla, pasa a WASM y después a otro modelo compatible. Un modelo ya descargado se prueba antes de empezar otra descarga, también si no hay red.
+- «Usar este modelo» carga ese modelo y hace la misma prueba. Si no genera, sigue con las alternativas: no se queda en el aviso de que no se pudo poner en marcha.
+- Cada intento abre un worker nuevo. Un fallo de WebGPU ya no deja el proceso inservible para WASM.
+- Sin aislamiento de origen, WASM usa un solo hilo. Varios hilos necesitan SharedArrayBuffer y tumbaban la sesión en el dispositivo aunque el modelo ya estuviera descargado.
+- La pantalla no pide cambiar de modelo ni nombra el modo de ejecución. El aviso solo aparece si ninguna alternativa funciona.
+
 ## 0.9.6 — 2026-10-23
 
 Asistente: el final de «Resumir» ya no bloquea la página.
