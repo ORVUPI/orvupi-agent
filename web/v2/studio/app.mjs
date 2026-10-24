@@ -10,6 +10,7 @@ import {
   alignLayers,
   blankDocument,
   bringForward,
+  makeFormat,
   bringToFront,
   duplicateLayer,
   duplicateLayers,
@@ -28,6 +29,7 @@ import {
   reorderLayers,
   sendBackward,
   sendToBack,
+  shellForFormat,
   textLayer,
   uid,
   ungroupLayers,
@@ -36,6 +38,7 @@ import { exportAllowed } from "./lib/filter.mjs";
 import { createImageStore } from "./lib/images.mjs";
 import { LOGO_MAX_BYTES, readLogoPng } from "./lib/logo.mjs";
 import { IDEAS, filterPlantillas, instantiate } from "./lib/plantillas.mjs";
+import { thumbById, thumbCat } from "./lib/thumbs.mjs";
 import {
   adoptLegacyDraft,
   deleteProject,
@@ -45,6 +48,7 @@ import {
   saveProject,
 } from "./lib/projects.mjs";
 import { FILE_NAME, REVOKE_MS, canShareFiles, isIOS, saveMode } from "./lib/save.mjs";
+import { catalogBody, layerStyle, renderDesigns, renderEditor, renderHome, renderMarca, renderPlantillas, renderRecursos } from "./views.mjs";
 
 const root = document.getElementById("studio-root");
 const lang = (document.documentElement.lang || "es").toLowerCase().startsWith("en") ? "en" : "es";
@@ -71,6 +75,7 @@ const COPY = {
     reciente: "Recientes",
     vacioReciente: "Todavía no hay diseños en este navegador.",
     buscar: "Buscar",
+    buscarPh: "Busca un diseño de la comunidad",
     ideas: "Ideas",
     ideaNota: "Elige una idea y se abre una plantilla editable. No hay generación automática.",
     local: "El diseño se queda en este navegador.",
@@ -80,6 +85,7 @@ const COPY = {
     historia: "Historia",
     anuncio: "Anuncio",
     marca: "Marca",
+    recursos: "Recursos",
     estilo: "Estilo",
     tema: "Tema",
     color: "Color",
@@ -95,7 +101,17 @@ const COPY = {
     azul: "Azul",
     limpiar: "Limpiar filtros",
     vacio: "Ninguna plantilla con ese filtro.",
-    tamano: "Tamaño de la pieza",
+    tamano: "Crear un diseño",
+    verTodo: "Ver todo",
+    seguir: "Seguir diseñando",
+    paraTi: "Plantillas para ti",
+    explora: "Explora las categorías",
+    mostrarMas: "Mostrar más",
+    mostrarMenos: "Mostrar menos",
+    crearBlanco: "Crear en blanco",
+    piezas: "Piezas editables",
+    grupoTodo: "Todo",
+    buscarCrear: "Qué pieza quieres",
     personalizado: "Personalizado",
     ancho: "Ancho",
     alto: "Alto",
@@ -163,6 +179,29 @@ const COPY = {
     imagenLista: "Imagen lista",
     calidad: "Calidad JPG",
     bloqueo: "Hay palabras o datos que no se pueden usar. Cambia el texto para descargar.",
+    hero: "¿Qué diseñamos hoy?",
+    fotos: "Fotos",
+    graficos: "Gráficos",
+    datos: "Datos",
+    notas: "Notas",
+    notasPizarra: "Notas de la pizarra",
+    capasNota: "La lista de capas está en el lateral.",
+    imprimir: "Imprimir",
+    presentar: "Presentar",
+    vistaPrevia: "Vista previa",
+    exportarSitio: "Exportar",
+    anadirSeccion: "+ Añadir una sección",
+    anadirPagina: "Añadir una página",
+    temporizador: "Temporizador",
+    parar: "Parar",
+    cuadricula: "Cuadrícula",
+    pantalla: "Pantalla completa",
+    barra: "Barra",
+    punto: "Punto",
+    unidadNota: "Unidad: px. Las medidas en pulgadas y milímetros quedan para una pasada posterior.",
+    previewNota: "Esto no publica la pieza. La descarga se queda en este dispositivo.",
+    videoNota: "La descarga de este formato es un fotograma PNG.",
+    tamanosNota: "Tamaños listos. El lienzo nuevo se abre en este navegador.",
   },
   en: {
     inicio: "Home",
@@ -173,6 +212,7 @@ const COPY = {
     reciente: "Recent",
     vacioReciente: "There are no designs in this browser yet.",
     buscar: "Search",
+    buscarPh: "Search a community design",
     ideas: "Ideas",
     ideaNota: "Pick an idea and an editable template opens. Nothing is generated for you.",
     local: "The design stays in this browser.",
@@ -182,6 +222,7 @@ const COPY = {
     historia: "Story",
     anuncio: "Update",
     marca: "Brand",
+    recursos: "Assets",
     estilo: "Style",
     tema: "Theme",
     color: "Color",
@@ -197,7 +238,17 @@ const COPY = {
     azul: "Navy",
     limpiar: "Clear filters",
     vacio: "No template matches that filter.",
-    tamano: "Piece size",
+    tamano: "Create a design",
+    verTodo: "See all",
+    seguir: "Keep designing",
+    paraTi: "Templates for you",
+    explora: "Explore categories",
+    mostrarMas: "Show more",
+    mostrarMenos: "Show less",
+    crearBlanco: "Blank design",
+    piezas: "Editable pieces",
+    grupoTodo: "All",
+    buscarCrear: "What piece do you want",
     personalizado: "Custom",
     ancho: "Width",
     alto: "Height",
@@ -265,6 +316,29 @@ const COPY = {
     imagenLista: "Image ready",
     calidad: "JPG quality",
     bloqueo: "Some words or data cannot be used. Change the text to download.",
+    hero: "What should we design?",
+    fotos: "Photos",
+    graficos: "Charts",
+    datos: "Data",
+    notas: "Notes",
+    notasPizarra: "Board notes",
+    capasNota: "The layer list is on the side.",
+    imprimir: "Print",
+    presentar: "Present",
+    vistaPrevia: "Preview",
+    exportarSitio: "Export",
+    anadirSeccion: "+ Add a section",
+    anadirPagina: "Add a page",
+    temporizador: "Timer",
+    parar: "Stop",
+    cuadricula: "Grid",
+    pantalla: "Full screen",
+    barra: "Bar",
+    punto: "Dot",
+    unidadNota: "Unit: px. Inch and millimetre sizes come in a later pass.",
+    previewNota: "This does not publish the piece. The download stays on this device.",
+    videoNota: "The download for this format is a PNG frame.",
+    tamanosNota: "Ready-made sizes. A new canvas opens in this browser.",
   },
 };
 
@@ -274,6 +348,9 @@ function t(key) {
 
 const state = {
   filters: { text: "", uso: "", estilo: "", color: "", precio: "", formato: "" },
+  grupo: "",
+  masCats: false,
+  thumbCat: "",
   rail: "plantillas",
   tool: "select",
   doc: null,
@@ -287,11 +364,22 @@ const state = {
   userImages: new Map(),
   scale: 1,
   drawing: null,
+  createCat: "para-ti",
+  fileMenu: false,
+  preview: false,
+  page: 0,
+  grid: false,
+  notesOpen: false,
+  timerOn: false,
+  dialog: false,
+  resizing: false,
+  timerSeconds: 0,
 };
 
 let fileMode = "image";
 let saveTimer = 0;
 let logoTicket = 0;
+let clockTimer = 0;
 const urlCache = new Map();
 
 function el(tag, attrs = {}, children = []) {
@@ -301,6 +389,7 @@ function el(tag, attrs = {}, children = []) {
     if (key === "class") node.className = String(value);
     else if (key === "text") node.textContent = String(value);
     else if (key === "hidden") node.hidden = Boolean(value);
+    else if (key === "style") node.style.cssText = String(value);
     else node.setAttribute(key, value === true ? "" : String(value));
   }
   for (const child of children) if (child) node.append(child);
@@ -321,9 +410,32 @@ function statusText() {
 }
 
 function viewName() {
-  const name = location.hash.replace(/^#\/?/, "");
-  if (name === "plantillas" || name === "disenos" || name === "editor") return name;
-  return "inicio";
+  const hash = location.hash.replace(/^#\/?/, "");
+  const known = ["plantillas", "disenos", "editor", "recursos", "marca"];
+  if (location.hash) return known.includes(hash) ? hash : "inicio";
+  const path = location.pathname.replace(/\/+$/, "");
+  const hit = known.find((name) => path.endsWith(`/${name}`));
+  return hit || "inicio";
+}
+
+function syncPages() {
+  if (!state.doc) return;
+  if (!Array.isArray(state.doc.meta.pages) || !state.doc.meta.pages.length) state.doc.meta.pages = [state.doc.layers];
+  state.doc.meta.pages[state.page] = state.doc.layers;
+  state.doc.meta.page = state.page;
+}
+
+function bindPages(doc) {
+  if (!doc.meta) return 0;
+  if (!Array.isArray(doc.meta.pages) || !doc.meta.pages.length) {
+    doc.meta.pages = [doc.layers];
+    doc.meta.page = 0;
+    return 0;
+  }
+  const index = Math.min(doc.meta.pages.length - 1, Math.max(0, doc.meta.page || 0));
+  doc.meta.page = index;
+  doc.layers = doc.meta.pages[index];
+  return index;
 }
 
 function go(view) {
@@ -334,6 +446,7 @@ function go(view) {
 
 function snapshot() {
   if (!state.doc) return;
+  syncPages();
   state.past.push(JSON.stringify(exportProject(state.doc)));
   if (state.past.length > 30) state.past.shift();
   state.future = [];
@@ -343,6 +456,7 @@ function scheduleSave() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     if (!state.doc) return;
+    syncPages();
     const result = saveProject(storage, state.doc);
     state.status = result.ok ? "saved" : "quota";
     const node = document.getElementById("estado-guardado");
@@ -352,10 +466,18 @@ function scheduleSave() {
 
 function openDoc(doc) {
   state.doc = doc;
+  state.page = bindPages(doc);
   state.selected = [];
   state.past = [];
   state.future = [];
-  state.rail = "plantillas";
+  state.rail = shellRail(doc);
+  state.dialog = false;
+  state.resizing = false;
+  state.preview = false;
+  state.notesOpen = false;
+  state.timerOn = false;
+  state.timerSeconds = 0;
+  clearInterval(clockTimer);
   const saved = saveProject(storage, doc);
   state.status = saved.ok ? "saved" : "quota";
   if (location.hash !== "#/editor") location.hash = "#/editor";
@@ -404,153 +526,6 @@ function showLogoError(message) {
   if (logoEstado) logoEstado.textContent = "";
 }
 
-function nav() {
-  return el("nav", { class: "studio-nav", "aria-label": t("inicio") }, [
-    button(t("inicio"), { "data-go": "inicio", "aria-current": viewName() === "inicio" ? "page" : null }),
-    button(t("plantillas"), { "data-go": "plantillas", "aria-current": viewName() === "plantillas" ? "page" : null }),
-    button(t("disenos"), { "data-go": "disenos", "aria-current": viewName() === "disenos" ? "page" : null }),
-  ]);
-}
-
-function chip(label, pressed, attrs) {
-  return button(label, { ...attrs, "aria-pressed": pressed ? "true" : "false", class: "chip" });
-}
-
-function filtersBlock() {
-  const usos = [["", "todas"], ["meme", "meme"], ["publicacion", "publicacion"], ["historia", "historia"], ["anuncio", "anuncio"], ["marca", "marca"]];
-  const estilos = [["", "todas"], ["humor", "humor"], ["claro", "claro"], ["comic", "comic"], ["informativo", "informativo"], ["marca", "marca"]];
-  const colores = [["", "todas"], ["rosa", "rosa"], ["crema", "crema"], ["azul", "azul"]];
-  const formatos = [["", "todas"], ["square", "formato"], ["story", "historia"], ["x", "formato"], ["tiktok", "formato"]];
-  const formatLabel = (id) => (id === "square" ? "1:1" : id === "story" ? "9:16" : id === "x" ? "X" : id === "tiktok" ? "TikTok" : t("todas"));
-  const group = (name, pairs, current, labelOf) => el("div", { class: "chips", role: "group", "aria-label": t(name) }, pairs.map(([id, key]) => chip(labelOf ? labelOf(id, key) : t(key), current === id, { "data-filter": name === "tema" ? "uso" : name, "data-value": id })));
-  return el("div", { class: "filtros" }, [
-    el("label", { for: "buscar", text: t("buscar") }),
-    el("input", { id: "buscar", type: "search", value: state.filters.text, autocomplete: "off" }),
-    el("p", { class: "filtro-nombre", text: t("tema") }),
-    group("tema", usos, state.filters.uso),
-    el("p", { class: "filtro-nombre", text: t("estilo") }),
-    group("estilo", estilos, state.filters.estilo),
-    el("p", { class: "filtro-nombre", text: t("color") }),
-    group("color", colores, state.filters.color),
-    el("p", { class: "filtro-nombre", text: t("precio") }),
-    chip(t("gratis"), state.filters.precio === "gratis", { "data-filter": "precio", "data-value": state.filters.precio === "gratis" ? "" : "gratis" }),
-    el("p", { class: "filtro-nombre", text: t("formato") }),
-    group("formato", formatos, state.filters.formato, (id) => formatLabel(id)),
-    button(t("limpiar"), { id: "limpiar-filtros" }),
-  ]);
-}
-
-function templateCard(item) {
-  return button(item.nombre[lang] || item.nombre.es, { "data-template": item.id, class: "plantilla" });
-}
-
-function catalogBody() {
-  const items = filterPlantillas(state.filters);
-  const list = el("div", { class: "rejilla" }, items.map(templateCard));
-  return el("div", { id: "catalogo" }, [
-    filtersBlock(),
-    items.length ? list : el("p", { id: "vacio-plantillas", text: t("vacio") }),
-  ]);
-}
-
-function sizeDialog() {
-  const presets = el("div", { class: "rejilla" }, PRESETS.map((item) => button(`${item[lang] || item.es} ${item.width}×${item.height}`, { "data-format": item.id })));
-  return el("dialog", { id: "dialogo-tamano" }, [
-    el("h2", { text: t("tamano") }),
-    presets,
-    el("h3", { text: t("personalizado") }),
-    el("label", { for: "ancho-custom", text: t("ancho") }),
-    el("input", { id: "ancho-custom", type: "number", min: "64", max: "2048", value: "1080" }),
-    el("label", { for: "alto-custom", text: t("alto") }),
-    el("input", { id: "alto-custom", type: "number", min: "64", max: "2048", value: "1080" }),
-    button(t("usar"), { id: "crear-custom" }),
-    button(t("cerrar"), { id: "cerrar-tamano" }),
-  ]);
-}
-
-function recents() {
-  const items = listProjects(storage);
-  const list = items.length
-    ? el("ul", { class: "recientes", id: "recientes" }, items.slice(0, 8).map((item) => el("li", {}, [
-      button(item.name || t("abrir"), { "data-open": item.id }),
-    ])))
-    : el("p", { text: t("vacioReciente") });
-  return el("section", {}, [el("h2", { text: t("reciente") }), list]);
-}
-
-function renderHome() {
-  const ideas = el("div", { class: "chips", role: "group", "aria-label": t("ideas") }, IDEAS.map((item) => button(item[lang] || item.es, { "data-idea": item.id, class: "chip" })));
-  root.replaceChildren(
-    nav(),
-    el("p", { class: "nota", text: t("local") }),
-    button(t("crearPieza"), { id: "crear-pieza", class: "primary" }),
-    el("h2", { text: t("ideas") }),
-    ideas,
-    el("p", { text: t("ideaNota") }),
-    catalogBody(),
-    recents(),
-    sizeDialog(),
-  );
-}
-
-function renderDesigns() {
-  const items = listProjects(storage);
-  const list = el("ul", { class: "disenos" }, items.map((item) => el("li", {}, [
-    el("span", { text: item.name || t("abrir") }),
-    button(t("abrir"), { "data-open": item.id }),
-    button(t("duplicar"), { "data-duplicate": item.id }),
-    button(t("eliminar"), { "data-delete": item.id }),
-    button(t("exportar"), { "data-export": item.id }),
-  ])));
-  root.replaceChildren(
-    nav(),
-    el("p", { text: t("soloAqui") }),
-    button(t("importar"), { id: "importar-json" }),
-    items.length ? list : el("p", { text: t("vacioReciente") }),
-    el("p", { id: "estado-guardado", "aria-live": "polite", text: statusText() }),
-  );
-}
-
-function layerStyle(layer) {
-  return `left:${layer.x}px;top:${layer.y}px;width:${layer.w}px;height:${layer.h}px;transform:rotate(${layer.rotation || 0}deg);opacity:${layer.opacity ?? 1};z-index:${layer.z};`;
-}
-
-function imageNode(layer) {
-  const frame = el("div", { class: "capa-img" });
-  if (layer.src?.kind === "user" && !state.userImages.has(layer.src.id)) {
-    frame.append(el("p", { class: "pendiente", text: t("pendiente") }));
-    return frame;
-  }
-  const img = el("img", { alt: "", draggable: "false" });
-  let natural = null;
-  if (layer.src?.kind === "catalog") {
-    const item = catalogItem(layer.src.id);
-    if (item) {
-      img.src = item.archivo;
-      natural = item.width && item.height ? { w: item.width, h: item.height } : null;
-    }
-  } else if (layer.src?.kind === "user") {
-    const image = state.userImages.get(layer.src.id);
-    if (image) {
-      img.src = userUrl(layer.src.id, image);
-      natural = { w: image.width, h: image.height };
-    }
-  }
-  if (layer.crop && natural) {
-    const scale = Math.max(layer.w / layer.crop.w, layer.h / layer.crop.h);
-    img.style.width = `${natural.w * scale}px`;
-    img.style.height = `${natural.h * scale}px`;
-    img.style.marginLeft = `${-layer.crop.x * scale}px`;
-    img.style.marginTop = `${-layer.crop.y * scale}px`;
-  } else {
-    img.style.width = "100%";
-    img.style.height = "100%";
-    img.style.objectFit = "cover";
-  }
-  frame.append(img);
-  return frame;
-}
-
 function userUrl(id, image) {
   if (urlCache.has(id)) return urlCache.get(id);
   const canvas = document.createElement("canvas");
@@ -563,219 +538,179 @@ function userUrl(id, image) {
   return url;
 }
 
-function stageNode() {
+
+function shellRail(doc) {
+  const shell = doc?.meta?.shell;
+  if (shell === "whiteboard") return "elementos";
+  return "plantillas";
+}
+
+function openThumb(id) {
+  const item = thumbById(id);
+  const meta = item ? thumbCat(item.category) : null;
+  const doc = meta ? instantiate(meta.open) : null;
+  if (!doc) return;
+  doc.name = item.title.slice(0, 80);
+  openDoc(doc);
+}
+
+function applyFormat(id) {
+  const preset = PRESETS.find((item) => item.id === id);
+  if (state.resizing && state.doc && preset) {
+    snapshot();
+    state.doc.format = { id: preset.id, width: preset.width, height: preset.height };
+    state.doc.meta.shell = shellForFormat(preset.id);
+    state.rail = shellRail(state.doc);
+    state.dialog = false;
+    state.resizing = false;
+    scheduleSave();
+    render();
+    return;
+  }
+  openDoc(blankDocument(id));
+}
+
+function applyCustomSize(width, height) {
+  if (state.resizing && state.doc) {
+    snapshot();
+    state.doc.format = makeFormat({ id: "custom", width, height });
+    state.doc.meta.shell = shellForFormat("custom");
+    state.rail = shellRail(state.doc);
+    state.dialog = false;
+    state.resizing = false;
+    scheduleSave();
+    render();
+    return;
+  }
+  openDoc(blankDocument("custom", { width, height }));
+}
+
+function showPage(index) {
+  if (!state.doc) return;
+  syncPages();
+  const pages = state.doc.meta.pages;
+  if (!pages[index]) return;
+  state.page = index;
+  state.doc.layers = pages[index];
+  state.doc.meta.page = index;
+  state.selected = [];
+  render();
+}
+
+function addPage() {
+  if (!state.doc) return;
+  const shell = state.doc.meta.shell;
+  if (shell === "whiteboard" || shell === "doc" || shell === "video" || shell === "web") return;
+  syncPages();
+  if (state.doc.meta.pages.length >= 8) return;
+  snapshot();
+  state.doc.meta.pages.push([]);
+  state.page = state.doc.meta.pages.length - 1;
+  state.doc.layers = state.doc.meta.pages[state.page];
+  state.doc.meta.page = state.page;
+  state.selected = [];
+  scheduleSave();
+  render();
+}
+
+function addSection() {
+  if (!state.doc || state.doc.meta.shell !== "web") return;
+  snapshot();
   const doc = state.doc;
-  const scroll = el("div", { class: "stage-scroll" });
-  const frame = el("div", { class: "stage-frame" });
-  const art = el("div", { class: "stage-art" });
-  art.style.width = `${doc.format.width}px`;
-  art.style.height = `${doc.format.height}px`;
-  art.style.background = doc.background.fill || BRAND.cream;
-  const maxW = Math.max(280, scrollWidth());
-  const maxH = Math.max(280, Math.round(window.innerHeight * 0.62));
-  const fit = Math.min(maxW / doc.format.width, maxH / doc.format.height, 1);
-  state.scale = state.zoom === "100" ? 1 : fit;
-  frame.style.width = `${Math.round(doc.format.width * state.scale)}px`;
-  frame.style.height = `${Math.round(doc.format.height * state.scale)}px`;
-  art.style.transform = `scale(${state.scale})`;
-  for (const layer of orderedLayers(doc)) {
-    const node = el("div", {
-      class: `capa${state.selected.includes(layer.id) ? " seleccionada" : ""}${layer.locked ? " bloqueada" : ""}`,
-      "data-id": layer.id,
-      style: layerStyle(layer),
-    });
-    if (layer.visible === false) node.style.visibility = "hidden";
-    if (layer.type === "text") {
-      const text = el("p", { class: "capa-texto", text: layer.props.text });
-      text.style.fontFamily = fontById(layer.props.fontId).css;
-      text.style.fontSize = `${layer.props.size}px`;
-      text.style.color = layer.props.color;
-      text.style.textAlign = layer.props.align;
-      text.style.lineHeight = String(layer.props.lineHeight);
-      node.append(text);
-    } else if (layer.type === "image") node.append(imageNode(layer));
-    else if (layer.type === "line") {
-      const bar = el("div", { class: "capa-linea" });
-      bar.style.background = layer.props.color;
-      bar.style.height = `${Math.max(2, layer.props.strokeWidth || layer.h)}px`;
-      node.append(bar);
-    } else {
-      const shape = el("div", { class: "capa-forma" });
-      if (layer.props.fill) shape.style.background = layer.props.fill;
-      if (layer.props.stroke && layer.props.strokeWidth) {
-        shape.style.border = `${layer.props.strokeWidth}px solid ${layer.props.stroke}`;
-      }
-      node.append(shape);
-    }
-    if (state.selected.includes(layer.id) && !layer.locked) node.append(el("span", { class: "asa", "data-resize": layer.id }));
-    art.append(node);
+  const room = 2048 - doc.format.height;
+  const grow = Math.min(420, Math.max(0, room));
+  const y = Math.max(0, doc.format.height - (grow > 0 ? 24 : 320));
+  if (grow >= 64) doc.format.height += grow;
+  const z = Math.max(0, ...doc.layers.map((item) => item.z), 0) + 1;
+  const width = doc.format.width;
+  doc.layers.push(rectLayer({
+    name: "Sección",
+    x: 40,
+    y,
+    w: Math.max(120, width - 80),
+    h: Math.min(320, Math.max(120, grow || 240)),
+    z,
+    fill: "#ffffff",
+    stroke: BRAND.navy,
+    strokeWidth: 2,
+  }));
+  const text = textLayer({
+    name: "Sección",
+    x: 64,
+    y: y + 28,
+    w: Math.max(80, width - 128),
+    h: 100,
+    z: z + 1,
+    text: "Sección",
+    fontId: "barlow",
+    size: 36,
+    color: BRAND.navy,
+  });
+  doc.layers.push(text);
+  state.selected = [text.id];
+  scheduleSave();
+  render();
+}
+
+function toggleTimer() {
+  state.timerOn = !state.timerOn;
+  clearInterval(clockTimer);
+  if (!state.timerOn) {
+    state.timerSeconds = 0;
+    render();
+    return;
   }
-  frame.append(art);
-  scroll.append(frame);
-  return scroll;
+  clockTimer = setInterval(() => {
+    state.timerSeconds = (state.timerSeconds || 0) + 1;
+    const node = document.getElementById("reloj");
+    const n = state.timerSeconds;
+    if (node) node.textContent = `${String(Math.floor(n / 60)).padStart(2, "0")}:${String(n % 60).padStart(2, "0")}`;
+  }, 1000);
+  render();
 }
 
-function scrollWidth() {
-  const main = document.getElementById("contenido");
-  return Math.min(720, (main?.clientWidth || 640) - 32);
+function toggleFullscreen() {
+  const node = document.getElementById("lienzo-pizarra") || document.getElementById("lienzo") || document.querySelector(".stage-frame");
+  if (!node) return;
+  if (document.fullscreenElement) void document.exitFullscreen?.();
+  else void node.requestFullscreen?.();
 }
 
-function rail() {
-  const tabs = [
-    ["plantillas", "plantillas"],
-    ["elementos", "elementos"],
-    ["texto", "texto"],
-    ["marca", "marca"],
-    ["subidos", "subidos"],
-    ["herramientas", "herramientas"],
-    ["fondo", "fondo"],
-  ];
-  return el("div", { class: "riel", role: "tablist", "aria-label": t("herramientas") }, tabs.map(([id, key]) => button(t(key), {
-    "data-rail": id,
-    role: "tab",
-    "aria-selected": state.rail === id ? "true" : "false",
-  })));
+function makeCtx() {
+  return {
+    root,
+    state,
+    t,
+    lang,
+    storage,
+    acciones,
+    statusText,
+    viewName,
+    ensureQuality,
+    paintBackdrop,
+    userUrl,
+    uploads: document.getElementById("logo")?.closest("details") || null,
+  };
 }
 
-function toolButtons() {
-  const tools = [["select", "seleccionar"], ["draw", "dibujar"], ["rect", "forma"], ["line", "linea"], ["text", "anadirTexto"]];
-  return el("div", { class: "chips" }, tools.map(([id, key]) => button(t(key), { "data-tool": id, "aria-pressed": state.tool === id ? "true" : "false" })));
-}
-
-function panel() {
-  const doc = state.doc;
-  if (state.rail === "plantillas") return catalogBody();
-  if (state.rail === "elementos") {
-    return el("div", { class: "rejilla" }, [
-      button(t("forma"), { "data-add": "rect" }),
-      button(t("linea"), { "data-add": "line" }),
-      ...["orvupi-avatar", "orvupi-saludo", "orvupi-buen-humor"].map((id) => button(catalogItem(id)?.nombre?.[lang] || id, { "data-avatar": id })),
-    ]);
+function render() {
+  if (viewName() === "editor" && !state.doc) {
+    go("inicio");
+    return;
   }
-  if (state.rail === "texto") {
-    return el("div", { class: "rejilla" }, [
-      button(t("titulo"), { "data-add": "titulo" }),
-      button(t("cuerpo"), { "data-add": "cuerpo" }),
-      button(t("anadirTexto"), { "data-add": "texto" }),
-    ]);
+  const view = viewName();
+  const ctx = makeCtx();
+  if (view === "inicio") renderHome(ctx);
+  else if (view === "plantillas") renderPlantillas(ctx);
+  else if (view === "disenos") renderDesigns(ctx);
+  else if (view === "marca") renderMarca(ctx);
+  else if (view === "recursos") renderRecursos(ctx);
+  else renderEditor(ctx);
+  if (state.dialog) {
+    const dialog = document.getElementById("dialogo-tamano");
+    if (dialog && !dialog.open) dialog.showModal();
   }
-  if (state.rail === "marca") {
-    const colors = [["#FF3070", "rosa"], ["#FFF8EC", "crema"], ["#102032", "azul"]];
-    return el("div", {}, [
-      el("p", { text: t("kit") }),
-      el("p", {}, [el("a", { href: "/marca/", text: t("verMarca") })]),
-      el("h3", { text: t("personaje") }),
-      el("div", { class: "rejilla" }, ["orvupi-avatar", "orvupi-saludo", "orvupi-buen-humor"].map((id) => {
-        const item = catalogItem(id);
-        const img = el("img", { src: item.archivo, alt: item.nombre[lang] || item.nombre.es, width: "96", height: "96" });
-        const control = button("", { "data-avatar": id, class: "marca-pulpo" });
-        control.append(img, el("span", { text: item.nombre[lang] || item.nombre.es }));
-        return control;
-      })),
-      el("h3", { text: t("colores") }),
-      el("div", { class: "chips" }, colors.map(([hex, key]) => button(t(key), { "data-color": hex, style: `background:${hex}` }))),
-      el("h3", { text: t("tipos") }),
-      el("div", { class: "rejilla" }, FONTS.map((font) => button(font[lang] || font.es, { "data-font": font.id, style: `font-family:${font.css}` }))),
-    ]);
-  }
-  if (state.rail === "subidos") {
-    const uploaded = doc.layers.filter((layer) => layer.src?.kind === "user");
-    return el("div", {}, [
-      button(t("subir"), { id: "subir-imagen" }),
-      uploaded.length ? el("ul", {}, uploaded.map((layer) => el("li", {}, [button(layer.name, { "data-pick": layer.id })]))) : el("p", { text: t("sinSubidas") }),
-    ]);
-  }
-  if (state.rail === "herramientas") return toolButtons();
-  const fondos = catalog.items.filter((item) => item.tipo === "fondo");
-  return el("div", {}, [
-    el("div", { class: "chips" }, [["#FF3070", "rosa"], ["#FFF8EC", "crema"], ["#102032", "azul"]].map(([hex, key]) => button(t(key), { "data-fondo": hex }))),
-    el("div", { class: "rejilla" }, fondos.map((item) => button(item.nombre[lang] || item.nombre.es, { "data-fondo-id": item.id }))),
-  ]);
-}
-
-function positionPanel() {
-  const layer = primary();
-  const align = ["left", "center", "right", "top", "middle", "bottom"];
-  const alignKey = { left: "izquierda", center: "centro", right: "derecha", top: "arriba", middle: "medio", bottom: "abajo" };
-  const fields = layer ? el("div", { class: "medidas" }, ["x", "y", "w", "h"].map((key) => {
-    const input = el("input", { id: `medida-${key}`, type: "number", "data-medida": key, value: String(Math.round(layer[key])) });
-    return el("label", { text: key }, [input]);
-  }).concat([
-    el("label", { text: t("rotacion") }, [el("input", { id: "medida-rot", type: "number", "data-medida": "rotation", value: String(layer.rotation || 0) })]),
-  ])) : el("p", { text: t("posicion") });
-  const crop = layer?.type === "image" ? el("div", {}, [
-    button(t("cambiar"), { id: "cambiar-imagen" }),
-    el("p", { text: t("recorte") }),
-    ...["x", "y", "w", "h"].map((key) => el("label", { text: key }, [el("input", { type: "number", "data-crop": key, value: layer.crop ? String(layer.crop[key]) : "" })])),
-  ]) : null;
-  const multi = state.selected.length > 1 ? el("div", { class: "chips" }, [
-    button(t("agrupar"), { "data-action": "group" }),
-    button(t("desagrupar"), { "data-action": "ungroup" }),
-    button(t("bloquear"), { "data-action": "lock" }),
-    button(t("duplicar"), { "data-action": "duplicate" }),
-  ]) : null;
-  return el("section", { class: "posicion" }, [
-    el("h2", { text: t("posicion") }),
-    el("div", { class: "chips" }, [
-      button(t("alFrente"), { "data-action": "front" }),
-      button(t("adelante"), { "data-action": "forward" }),
-      button(t("atras"), { "data-action": "backward" }),
-      button(t("alFondo"), { "data-action": "back" }),
-    ]),
-    el("div", { class: "chips" }, align.map((mode) => button(t(alignKey[mode]), { "data-align": mode }))),
-    fields,
-    crop,
-    multi,
-  ]);
-}
-
-function layersPanel() {
-  const doc = state.doc;
-  const focus = state.selected[0];
-  const overlap = state.layerFilter === "overlap" ? new Set([...(focus ? [focus] : []), ...overlappingIds(doc, focus)]) : null;
-  const rows = orderedLayers(doc).slice().reverse().filter((layer) => !overlap || overlap.has(layer.id) || (!focus && overlap.has(layer.id)));
-  const list = el("ul", { id: "capas" }, rows.map((layer) => el("li", { draggable: "true", "data-layer": layer.id, class: state.selected.includes(layer.id) ? "activa" : "" }, [
-    button(layer.visible === false ? t("mostrar") : t("ocultar"), { "data-action": "toggle", "data-id": layer.id }),
-    button(layer.name, { "data-pick": layer.id }),
-    button(layer.locked ? t("bloquear") : t("bloquear"), { "data-action": "lock-one", "data-id": layer.id, "aria-pressed": layer.locked ? "true" : "false" }),
-  ])));
-  return el("section", {}, [
-    el("h2", { text: t("capas") }),
-    el("div", { class: "chips" }, [
-      chip(t("todas"), state.layerFilter === "all", { "data-layers": "all" }),
-      chip(t("solapadas"), state.layerFilter === "overlap", { "data-layers": "overlap" }),
-    ]),
-    list,
-  ]);
-}
-
-function renderEditor() {
-  const doc = state.doc;
-  const name = el("input", { id: "nombre-diseno", type: "text", value: doc.name, maxlength: "80", "aria-label": t("nombre") });
-  const textPanel = primary()?.type === "text" ? el("label", { text: t("texto") }, [
-    el("textarea", { id: "texto-capa", text: primary().props.text }),
-  ]) : null;
-  root.replaceChildren(
-    nav(),
-    el("div", { class: "editor-bar" }, [
-      name,
-      button(t("deshacer"), { "data-action": "undo" }),
-      button(t("rehacer"), { "data-action": "redo" }),
-      button(t("ajustar"), { "data-zoom": "fit", "aria-pressed": state.zoom === "fit" ? "true" : "false" }),
-      button(t("cien"), { "data-zoom": "100", "aria-pressed": state.zoom === "100" ? "true" : "false" }),
-    ]),
-    el("p", { id: "estado-guardado", "aria-live": "polite", text: statusText() }),
-    el("div", { class: "editor" }, [
-      rail(),
-      el("div", { class: "panel", id: "panel-riel" }, [panel(), textPanel]),
-      stageNode(),
-      el("div", { class: "lado" }, [positionPanel(), layersPanel()]),
-    ]),
-  );
-  const bar = root.querySelector(".editor-bar");
-  if (acciones && bar) bar.append(acciones);
-  ensureQuality();
-  void paintBackdrop();
+  syncChrome();
 }
 
 function ensureQuality() {
@@ -812,18 +747,6 @@ async function paintBackdrop() {
   canvas.height = h;
   canvas.getContext("2d", { willReadFrequently: true }).putImageData(new ImageData(rgba, w, h), 0, 0);
   if (root.querySelector(".stage-art") === art) art.style.backgroundImage = `url(${canvas.toDataURL("image/png")})`;
-}
-
-function render() {
-  if (viewName() === "editor" && !state.doc) {
-    go("inicio");
-    return;
-  }
-  if (viewName() === "inicio") renderHome();
-  else if (viewName() === "plantillas") root.replaceChildren(nav(), catalogBody());
-  else if (viewName() === "disenos") renderDesigns();
-  else renderEditor();
-  syncChrome();
 }
 
 function syncChrome() {
@@ -868,14 +791,74 @@ function applyColor(hex) {
 function onRootClick(event) {
   const buttonNode = event.target.closest("button");
   if (!buttonNode || !root.contains(buttonNode)) return;
+  if ("thumbCat" in buttonNode.dataset) {
+    state.thumbCat = buttonNode.dataset.thumbCat || "";
+    state.filters.uso = "";
+    state.filters.text = "";
+    state.filters.formato = "";
+  }
+  if (buttonNode.dataset.thumb) openThumb(buttonNode.dataset.thumb);
   if (buttonNode.dataset.go) go(buttonNode.dataset.go);
-  if (buttonNode.id === "crear-pieza") document.getElementById("dialogo-tamano")?.showModal();
-  if (buttonNode.id === "cerrar-tamano") document.getElementById("dialogo-tamano")?.close();
-  if (buttonNode.dataset.format) openDoc(blankDocument(buttonNode.dataset.format));
+  if (buttonNode.id === "crear-pieza") {
+    state.resizing = false;
+    state.dialog = true;
+    render();
+  }
+  if (buttonNode.id === "cerrar-tamano" || buttonNode.id === "cerrar-previa") {
+    state.dialog = false;
+    state.resizing = false;
+    state.preview = false;
+    render();
+  }
+  if (buttonNode.dataset.cat) {
+    state.createCat = buttonNode.dataset.cat;
+    state.dialog = true;
+    render();
+  }
+  if (buttonNode.dataset.format) applyFormat(buttonNode.dataset.format);
   if (buttonNode.id === "crear-custom") {
     const width = Number(document.getElementById("ancho-custom")?.value);
     const height = Number(document.getElementById("alto-custom")?.value);
-    openDoc(blankDocument("custom", { width, height }));
+    applyCustomSize(width, height);
+  }
+  if (buttonNode.dataset.page) showPage(Number(buttonNode.dataset.page));
+  if (buttonNode.id === "anadir-pagina") addPage();
+  if (buttonNode.id === "anadir-seccion") addSection();
+  if (buttonNode.id === "imprimir") window.print();
+  if (buttonNode.id === "vista-previa") {
+    state.preview = true;
+    render();
+  }
+  if (buttonNode.id === "exportar-sitio") void deliver("png");
+  if (buttonNode.id === "presentar" || buttonNode.id === "pantalla") toggleFullscreen();
+  if (buttonNode.id === "cuadricula") {
+    state.grid = !state.grid;
+    render();
+  }
+  if (buttonNode.id === "temporizador") toggleTimer();
+  if (buttonNode.id === "abrir-notas") {
+    state.notesOpen = !state.notesOpen;
+    render();
+  }
+  if (buttonNode.id === "abrir-archivo") {
+    state.fileMenu = !state.fileMenu;
+    render();
+  }
+  if (buttonNode.id === "redimensionar") {
+    state.resizing = true;
+    state.dialog = true;
+    render();
+  }
+  if (buttonNode.dataset.size && state.doc) {
+    const current = primary();
+    const layer = current?.type === "text" ? current : state.doc.layers.find((item) => item.type === "text");
+    if (layer) {
+      snapshot();
+      const delta = buttonNode.dataset.size === "up" ? 2 : -2;
+      layer.props.size = Math.min(400, Math.max(8, (layer.props.size || 32) + delta));
+      scheduleSave();
+      render();
+    }
   }
   if (buttonNode.dataset.template) {
     const doc = instantiate(buttonNode.dataset.template);
@@ -886,6 +869,15 @@ function onRootClick(event) {
     const doc = idea ? instantiate(idea.plantilla) : null;
     if (doc) openDoc(doc);
   }
+  if ("grupo" in buttonNode.dataset) {
+    state.grupo = buttonNode.dataset.grupo || "";
+    state.masCats = false;
+    render();
+  }
+  if (buttonNode.id === "mostrar-mas") {
+    state.masCats = !state.masCats;
+    render();
+  }
   if (buttonNode.dataset.filter) {
     const key = buttonNode.dataset.filter;
     state.filters[key] = buttonNode.dataset.value || "";
@@ -893,6 +885,7 @@ function onRootClick(event) {
   }
   if (buttonNode.id === "limpiar-filtros") {
     state.filters = { text: "", uso: "", estilo: "", color: "", precio: "", formato: "" };
+    state.thumbCat = "";
     render();
   }
   if (buttonNode.dataset.open) {
@@ -932,11 +925,12 @@ function onRootClick(event) {
     addLayer(imageLayer({ name: catalogItem(buttonNode.dataset.avatar)?.nombre?.es || "Personaje", x: 180, y: 180, w: 480, h: 480, src: { kind: "catalog", id: buttonNode.dataset.avatar } }));
   }
   if (buttonNode.dataset.color) applyColor(buttonNode.dataset.color);
-  if (buttonNode.dataset.font) {
+  if (buttonNode.dataset.font && state.doc) {
     const chosen = state.doc.layers.filter((layer) => state.selected.includes(layer.id) && layer.type === "text");
-    if (chosen.length) {
+    const targets = chosen.length ? chosen : state.doc.layers.filter((layer) => layer.type === "text").slice(0, 1);
+    if (targets.length) {
       snapshot();
-      for (const layer of chosen) layer.props.fontId = buttonNode.dataset.font;
+      for (const layer of targets) layer.props.fontId = buttonNode.dataset.font;
       scheduleSave();
       render();
     }
@@ -980,6 +974,8 @@ function onRootClick(event) {
 
 function addFromTool(kind) {
   if (kind === "rect") addLayer(rectLayer({ name: t("forma"), x: 120, y: 120, w: 280, h: 180, fill: BRAND.pink }));
+  if (kind === "barra") addLayer(rectLayer({ name: t("barra"), x: 80, y: 80, w: 360, h: 48, fill: BRAND.pink }));
+  if (kind === "punto") addLayer(rectLayer({ name: t("punto"), x: 80, y: 160, w: 36, h: 36, fill: BRAND.navy }));
   if (kind === "line") addLayer(lineLayer({ name: t("linea"), x: 120, y: 200, w: 420, h: 16, color: BRAND.navy, strokeWidth: 8 }));
   if (kind === "titulo") addLayer(textLayer({ name: t("titulo"), x: 80, y: 80, w: 640, h: 140, text: t("titulo"), fontId: "anton", size: 72, color: BRAND.navy }));
   if (kind === "cuerpo" || kind === "texto") addLayer(textLayer({ name: t("cuerpo"), x: 80, y: 240, w: 640, h: 160, text: t("cuerpo"), fontId: "barlow", size: 40, color: BRAND.navy }));
@@ -988,17 +984,21 @@ function addFromTool(kind) {
 function runAction(action, id) {
   const layer = id ? state.doc.layers.find((item) => item.id === id) : primary();
   if (action === "undo") {
-    if (!state.past.length) return;
+    if (!state.past.length || !state.doc) return;
+    syncPages();
     state.future.push(JSON.stringify(exportProject(state.doc)));
     state.doc = importProject(state.past.pop());
+    state.page = bindPages(state.doc);
     scheduleSave();
     render();
     return;
   }
   if (action === "redo") {
-    if (!state.future.length) return;
+    if (!state.future.length || !state.doc) return;
+    syncPages();
     state.past.push(JSON.stringify(exportProject(state.doc)));
     state.doc = importProject(state.future.pop());
+    state.page = bindPages(state.doc);
     scheduleSave();
     render();
     return;
@@ -1157,7 +1157,7 @@ function bindInputs() {
       state.filters.text = target.value;
       const parent = target.closest("#catalogo");
       if (!parent) return;
-      parent.replaceWith(catalogBody());
+      parent.replaceWith(catalogBody(makeCtx()));
       const field = document.getElementById("buscar");
       if (field instanceof HTMLInputElement) {
         field.focus();
@@ -1166,7 +1166,20 @@ function bindInputs() {
       }
       return;
     }
+    if (target.id === "buscar-tamano") {
+      const q = target.value.trim().toLowerCase();
+      const dialog = document.getElementById("dialogo-tamano");
+      dialog?.querySelectorAll("[data-format]").forEach((node) => {
+        if (!(node instanceof HTMLElement)) return;
+        const label = (node.textContent || "").toLowerCase();
+        node.hidden = q.length > 0 && !label.includes(q);
+      });
+    }
     if (!state.doc) return;
+    if (target.id === "notas-pizarra" && state.doc) {
+      state.doc.meta.note = target.value.slice(0, 2000);
+      scheduleSave();
+    }
     if (target.id === "nombre-diseno") {
       state.doc.name = target.value.slice(0, 80);
       scheduleSave();
@@ -1188,7 +1201,7 @@ function bindInputs() {
       if (key === "rotation") layer.rotation = value;
       else layer[key] = key === "w" || key === "h" ? Math.max(8, value) : value;
       const node = root.querySelector(`.capa[data-id="${layer.id}"]`);
-      if (node) node.setAttribute("style", layerStyle(layer) + (layer.visible === false ? "visibility:hidden;" : ""));
+      if (node) node.style.cssText = layerStyle(layer) + (layer.visible === false ? "visibility:hidden;" : "");
       scheduleSave();
     }
     if (target.dataset.crop) {

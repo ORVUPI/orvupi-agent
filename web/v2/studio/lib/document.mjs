@@ -18,7 +18,51 @@ export const PRESETS = [
   { id: "story", es: "Historia", en: "Story", width: 1080, height: 1920, ratio: "9:16" },
   { id: "x", es: "X", en: "X", width: 1600, height: 900, ratio: "16:9" },
   { id: "tiktok", es: "TikTok", en: "TikTok", width: 1080, height: 1920, ratio: "9:16" },
+  { id: "ig", es: "Post vertical", en: "Vertical post", width: 1080, height: 1350, ratio: "4:5" },
+  { id: "fb", es: "Post horizontal", en: "Landscape post", width: 1200, height: 630, ratio: "1.91:1" },
+  { id: "li", es: "Post profesional", en: "Professional post", width: 1200, height: 627, ratio: "1.91:1" },
+  { id: "thumb", es: "Miniatura", en: "Thumbnail", width: 1280, height: 720, ratio: "16:9" },
+  { id: "bio", es: "Enlace en la bio", en: "Bio link", width: 1080, height: 1920, ratio: "9:16" },
+  { id: "deck", es: "Presentación", en: "Presentation", width: 1920, height: 1080, ratio: "16:9" },
+  { id: "video", es: "Vídeo horizontal", en: "Landscape video", width: 1920, height: 1080, ratio: "16:9" },
+  { id: "doc", es: "Documento", en: "Document", width: 794, height: 1123, ratio: "A4" },
+  { id: "cv", es: "Currículum", en: "Resume", width: 794, height: 1123, ratio: "A4" },
+  { id: "email", es: "Correo", en: "Email", width: 640, height: 960, ratio: "2:3" },
+  { id: "sheet", es: "Hoja", en: "Sheet", width: 1080, height: 1080, ratio: "1:1" },
+  { id: "flyer", es: "Flyer", en: "Flyer", width: 816, height: 1056, ratio: "carta" },
+  { id: "poster", es: "Cartel", en: "Poster", width: 1080, height: 1440, ratio: "3:4" },
+  { id: "invite", es: "Invitación", en: "Invitation", width: 750, height: 1050, ratio: "5:7" },
+  { id: "trifold", es: "Folleto", en: "Trifold", width: 1080, height: 630, ratio: "tríptico" },
+  { id: "card", es: "Tarjeta", en: "Card", width: 1050, height: 600, ratio: "1.75:1" },
+  { id: "info", es: "Infografía", en: "Infographic", width: 800, height: 2000, ratio: "1:2.5" },
+  { id: "logo", es: "Logo", en: "Logo", width: 1080, height: 1080, ratio: "1:1" },
+  { id: "board", es: "Pizarra", en: "Whiteboard", width: 1920, height: 1080, ratio: "16:9" },
+  { id: "web", es: "Sitio", en: "Website", width: 1280, height: 1800, ratio: "página" },
+  { id: "collage", es: "Collage", en: "Collage", width: 1080, height: 1080, ratio: "1:1" },
+  { id: "code", es: "Pieza de código", en: "Code piece", width: 1080, height: 1080, ratio: "1:1" },
 ];
+
+export const SHELLS = ["design", "doc", "deck", "video", "print", "whiteboard", "web"];
+
+export function shellForFormat(id) {
+  const map = {
+    doc: "doc",
+    email: "doc",
+    deck: "deck",
+    video: "video",
+    board: "whiteboard",
+    web: "web",
+    cv: "print",
+    poster: "print",
+    flyer: "print",
+    invite: "print",
+    info: "print",
+    trifold: "print",
+    card: "print",
+    logo: "print",
+  };
+  return map[id] || "design";
+}
 
 export function makeFormat(source) {
   const id = String(source?.id || "custom");
@@ -75,11 +119,30 @@ export function createDocument(spec = {}) {
     templateId: String(spec.templateId || ""),
     background: normalizeBackground(spec.background),
     layers: Array.isArray(spec.layers) ? spec.layers.map(normalizeLayer) : [],
-    meta: {
-      locale: spec.meta?.locale === "en" ? "en" : "es",
-      useTags: Array.isArray(spec.meta?.useTags) ? spec.meta.useTags.map(String).slice(0, 8) : [],
-      optionalLabel: String(spec.meta?.optionalLabel || "").slice(0, 40),
-    },
+    meta: normalizeMeta(spec.meta, format.id),
+  };
+}
+
+function normalizeShell(value) {
+  return SHELLS.includes(value) ? value : "";
+}
+
+function normalizePages(pages) {
+  if (!Array.isArray(pages)) return [];
+  return pages.slice(0, 8).map((page) => (Array.isArray(page) ? page.slice(0, 48).map(normalizeLayer) : []));
+}
+
+function normalizeMeta(meta, formatId) {
+  const shell = normalizeShell(meta?.shell) || shellForFormat(formatId);
+  const page = Math.max(0, Math.round(num(meta?.page, 0)));
+  return {
+    locale: meta?.locale === "en" ? "en" : "es",
+    useTags: Array.isArray(meta?.useTags) ? meta.useTags.map(String).slice(0, 8) : [],
+    optionalLabel: String(meta?.optionalLabel || "").slice(0, 40),
+    shell,
+    page,
+    note: String(meta?.note || "").slice(0, 2000),
+    pages: normalizePages(meta?.pages),
   };
 }
 
@@ -96,11 +159,11 @@ export function blankDocument(formatId, custom) {
     custom: "Lienzo en blanco",
   };
   return createDocument({
-    name: names[format.id] || names.custom,
+    name: names[format.id] || `${known?.es || "Lienzo"} en blanco`,
     format,
-    background: { type: "solid", fill: BRAND.cream },
+    background: { type: "solid", fill: format.id === "board" ? "#f4f7fb" : BRAND.cream },
     layers: [],
-    meta: { locale: "es", useTags: [], optionalLabel: "" },
+    meta: { locale: "es", useTags: [], optionalLabel: "", shell: shellForFormat(format.id) },
   });
 }
 
@@ -362,18 +425,24 @@ export function importProject(input) {
     templateId: String(data.templateId || ""),
     background: normalizeBackground(data.background),
     layers: data.layers.slice(0, 48).map(normalizeLayer),
-    meta: {
-      locale: data.meta?.locale === "en" ? "en" : "es",
-      useTags: Array.isArray(data.meta?.useTags) ? data.meta.useTags.map(String).slice(0, 8) : [],
-      optionalLabel: String(data.meta?.optionalLabel || "").slice(0, 40),
-    },
+    meta: normalizeMeta(data.meta, makeFormat(data.format).id),
   };
 }
 
 export function projectTexts(doc) {
-  const texts = orderedLayers(doc)
-    .filter((layer) => layer.type === "text" && layer.visible !== false)
-    .map((layer) => String(layer.props?.text || ""));
+  const bags = [doc?.layers || []];
+  if (Array.isArray(doc?.meta?.pages)) {
+    for (const page of doc.meta.pages) {
+      if (Array.isArray(page) && page !== doc.layers) bags.push(page);
+    }
+  }
+  const texts = [];
+  for (const layers of bags) {
+    for (const layer of layers) {
+      if (layer?.type === "text" && layer.visible !== false) texts.push(String(layer.props?.text || ""));
+    }
+  }
+  if (doc?.meta?.note) texts.push(String(doc.meta.note));
   return {
     title: texts[0] || "",
     body: texts.slice(1).join("\n"),

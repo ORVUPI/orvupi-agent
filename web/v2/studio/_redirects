@@ -1,0 +1,3 @@
+# La aplicación vive en index.html. Las vistas (/studio/plantillas, etc.)
+# las resuelve también el _redirects de la raíz.
+/* /index.html 200

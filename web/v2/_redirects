@@ -50,6 +50,33 @@ https://superb-horse-9036f5.netlify.app/*  https://orvupi.com/:splat  301!
 /work/forms/*         /work/              200
 /work/drawings/*      /work/              200
 /work/notes/*         /work/              200
+# Studio abre en /studio/ y estas rutas vuelven al mismo HTML (el hash elige la vista).
+/studio/plantillas          /studio/            200
+/studio/disenos             /studio/            200
+/studio/editor              /studio/            200
+/studio/recursos            /studio/            200
+/studio/marca               /studio/            200
+/en/studio/plantillas       /en/studio/         200
+/en/studio/disenos          /en/studio/         200
+/en/studio/editor           /en/studio/         200
+/en/studio/recursos         /en/studio/         200
+/en/studio/marca            /en/studio/         200
+/pt-br/studio/plantillas    /pt-br/studio/      200
+/pt-br/studio/disenos       /pt-br/studio/      200
+/pt-br/studio/editor        /pt-br/studio/      200
+/pt-br/studio/recursos      /pt-br/studio/      200
+/pt-br/studio/marca         /pt-br/studio/      200
+/ja/studio/plantillas       /ja/studio/         200
+/ja/studio/disenos          /ja/studio/         200
+/ja/studio/editor           /ja/studio/         200
+/ja/studio/recursos         /ja/studio/         200
+/ja/studio/marca            /ja/studio/         200
+/ko/studio/plantillas       /ko/studio/         200
+/ko/studio/disenos          /ko/studio/         200
+/ko/studio/editor           /ko/studio/         200
+/ko/studio/recursos         /ko/studio/         200
+/ko/studio/marca            /ko/studio/         200
+
 # El motor WASM de onnxruntime de Work (26,8 MB) supera el límite de 25 MiB por archivo de
 # Pages, así que no se sube; se redirige a la copia fijada en jsDelivr (misma versión que worker.ts).
 /work/assets/ort-wasm-simd-threaded.asyncify-*  https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/dist/ort-wasm-simd-threaded.asyncify.wasm  302
@@ -67,6 +94,10 @@ https://superb-horse-9036f5.netlify.app/*  https://orvupi.com/:splat  301!
 /pt-br/studio/CONTINUIDAD.md                     /studio/CONTINUIDAD.md 200
 /ja/studio/CONTINUIDAD.md                        /studio/CONTINUIDAD.md 200
 /ko/studio/CONTINUIDAD.md                        /studio/CONTINUIDAD.md 200
+/en/studio/_redirects                            /studio/_redirects 200
+/pt-br/studio/_redirects                         /studio/_redirects 200
+/ja/studio/_redirects                            /studio/_redirects 200
+/ko/studio/_redirects                            /studio/_redirects 200
 /en/studio/app.mjs                               /studio/app.mjs 200
 /pt-br/studio/app.mjs                            /studio/app.mjs 200
 /ja/studio/app.mjs                               /studio/app.mjs 200
@@ -103,6 +134,14 @@ https://superb-horse-9036f5.netlify.app/*  https://orvupi.com/:splat  301!
 /pt-br/studio/templates.json                     /studio/templates.json 200
 /ja/studio/templates.json                        /studio/templates.json 200
 /ko/studio/templates.json                        /studio/templates.json 200
+/en/studio/thumbs/*                              /studio/thumbs/:splat 200
+/pt-br/studio/thumbs/*                           /studio/thumbs/:splat 200
+/ja/studio/thumbs/*                              /studio/thumbs/:splat 200
+/ko/studio/thumbs/*                              /studio/thumbs/:splat 200
+/en/studio/views.mjs                             /studio/views.mjs 200
+/pt-br/studio/views.mjs                          /studio/views.mjs 200
+/ja/studio/views.mjs                             /studio/views.mjs 200
+/ko/studio/views.mjs                             /studio/views.mjs 200
 /en/token/metadata.json                          /token/metadata.json 200
 /pt-br/token/metadata.json                       /token/metadata.json 200
 /ja/token/metadata.json                          /token/metadata.json 200
