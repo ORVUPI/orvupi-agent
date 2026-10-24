@@ -879,5 +879,377 @@ export function masPlantillas() {
       t("Barra", 64, 54, 400, 46, "pieza", "silkscreen", 28, N),
       t("Linea", 64, 180, 940, 500, "tema: comunidad\npieza: cartel\nequipo: ocho\nnota: clara", "silkscreen", 36, C),
     ]),
+
+    cv("cv-vera", "Currículum de Vera", "Vera resume", C, [
+      r("Tope", 0, 0, 794, 200, N, 1),
+      t("Nombre", 36, 36, 500, 70, "Vera Lago", "archivo", 44, C),
+      t("Oficio", 36, 112, 480, 40, "Marca visual", "barlow", 26, P),
+      im(600, 28, 150, 150, o(0)),
+      t("A", 36, 240, 720, 160, "Piezas\nCartel, ficha y nota de comunidad.", "barlow", 28, N),
+      r("Banda", 36, 430, 722, 8, P, 4),
+      t("B", 36, 470, 720, 280, "Taller\nUn encuentro corto.\n\nAprender\nMirar, probar y contar.", "barlow", 28, N),
+    ], "claro", "azul"),
+
+    cv("cv-omar", "Currículum de Omar", "Omar resume", P, [
+      r("Hoja", 28, 28, 738, 1067, C, 1),
+      t("Nombre", 56, 56, 680, 80, "Omar Brisa", "archivo", 48, N),
+      t("Oficio", 56, 140, 680, 40, "Relatos y cartel", "barlow", 26, P),
+      im(56, 220, 200, 200, o(1)),
+      t("Cuerpo", 280, 230, 450, 400, "Proyectos\nUna pieza clara.\nUn equipo curioso.\nUna nota corta.", "barlow", 28, N),
+      r("Pie", 56, 900, 680, 120, N, 3),
+      t("Pie", 80, 930, 640, 60, "ORVUPI", "anton", 32, C),
+    ], "marca", "rosa"),
+
+    cv("cv-lia", "Currículum de Lía", "Lia resume", C, [
+      r("Izq", 0, 0, 280, 1123, P, 1),
+      t("Marca", 24, 36, 230, 40, "ORVUPI", "anton", 26, N),
+      im(50, 110, 180, 180, o(2)),
+      t("Nombre", 310, 48, 450, 80, "Lía Pinar", "archivo", 42, N),
+      t("Oficio", 310, 140, 450, 40, "Piezas y talleres", "barlow", 26, P),
+      t("Lista", 310, 220, 450, 500, "Cartel\nFicha\nInvitación\nLogo\nNota", "barlow", 32, N),
+    ], "claro", "rosa"),
+
+    cv("cv-ema", "Currículum de Ema", "Ema resume", N, [
+      t("Nombre", 48, 48, 700, 80, "Ema Roca", "archivo", 52, C),
+      t("Oficio", 48, 140, 500, 40, "Comunidad y marca", "barlow", 26, P),
+      r("A", 48, 220, 330, 400, C, 2),
+      r("B", 410, 220, 336, 400, P, 2),
+      t("A", 68, 250, 290, 300, "Mirar\nUna idea.", "anton", 32, N),
+      t("B", 430, 250, 290, 300, "Contar\nUna pieza.", "anton", 32, N),
+      im(280, 680, 240, 240, o(0)),
+    ], "humor", "azul"),
+
+    cv("cv-ivo", "Currículum de Ivo", "Ivo resume", C, [
+      r("Linea", 0, 0, 16, 1123, N, 1),
+      t("Nombre", 48, 40, 700, 90, "Ivo Duna", "archivo", 56, N),
+      t("Oficio", 48, 140, 500, 40, "Mapas y notas", "barlow", 28, P),
+      r("F1", 48, 220, 698, 200, N, 2),
+      r("F2", 48, 440, 698, 200, P, 2),
+      r("F3", 48, 660, 698, 200, N, 2),
+      t("F1", 72, 270, 650, 100, "Taller de pieza", "anton", 36, C),
+      t("F2", 72, 490, 650, 100, "Cartel de encuentro", "anton", 36, N),
+      t("F3", 72, 710, 650, 100, "Ficha para aprender", "anton", 36, C),
+    ], "informativo", "crema"),
+
+    cv("cv-nara", "Currículum de Nara", "Nara resume", C, [
+      im(0, 0, 794, 360, o(1), 1),
+      r("Velo", 0, 280, 794, 120, N, 3),
+      t("Nombre", 36, 300, 720, 70, "Nara Viento", "archivo", 40, C),
+      t("Oficio", 36, 430, 720, 40, "Curiosidad aplicada", "barlow", 26, P),
+      t("Cuerpo", 36, 500, 720, 360, "Proyectos de la comunidad.\nCartel, ficha y presentación.", "barlow", 32, N),
+    ], "humor", "crema"),
+
+    cv("cv-ciro", "Currículum de Ciro", "Ciro resume", C, [
+      r("Der", 520, 0, 274, 1123, N, 1),
+      t("Nombre", 36, 48, 460, 100, "Ciro Marea", "archivo", 44, N),
+      t("Oficio", 36, 160, 460, 50, "Diseño de comunidad", "barlow", 26, P),
+      t("Cuerpo", 36, 250, 460, 400, "Una idea clara.\nOcho caminos.\nUn taller.", "barlow", 30, N),
+      im(560, 80, 200, 200, o(2)),
+      t("Marca", 548, 980, 220, 50, "ORVUPI", "anton", 28, C),
+    ], "marca", "azul"),
+
+    cv("cv-elsa", "Currículum de Elsa", "Elsa resume", P, [
+      t("Marca", 40, 36, 400, 36, "ORVUPI", "anton", 24, N),
+      t("Nombre", 40, 160, 714, 120, "Elsa Nube", "archivo", 64, N),
+      t("Oficio", 40, 300, 700, 50, "Piezas claras", "barlow", 32, N),
+      r("Caja", 40, 400, 714, 280, N, 2),
+      t("Caja", 64, 440, 660, 200, "Cartel, logo e invitación para la comunidad.", "barlow", 32, C),
+      im(250, 740, 280, 280, o(0)),
+    ], "marca", "rosa"),
+
+    deck("deck-empresa", "Portada de empresa", "Company cover", N, [
+      r("Barra", 0, 0, 24, 1080, P, 1),
+      t("Kicker", 80, 80, 500, 40, "EMPRESA", "anton", 28, P),
+      t("Titulo", 80, 200, 1000, 220, "La comunidad", "archivo", 80, C),
+      t("Sub", 80, 460, 900, 100, "Una pieza. Un relato. Un taller.", "barlow", 36, C),
+      im(1280, 240, 520, 520, o(1)),
+    ], "informativo", "azul", "empresa"),
+
+    pack({
+      id: "emp-brief", nombre: { es: "Brief de empresa", en: "Company brief" }, formato: "doc", uso: "empresa", shell: "doc", w: 794, h: 1123, fill: C, estilo: "informativo", color: "crema", etiquetas: ["empresa", "brief"],
+    }, [
+      r("Tope", 0, 0, 794, 160, N, 1),
+      t("Kicker", 40, 36, 400, 36, "EMPRESA", "anton", 24, P),
+      t("Titulo", 40, 80, 700, 60, "Brief claro", "archivo", 40, C),
+      t("A", 40, 210, 714, 180, "Qué contamos\nUna idea de la comunidad.", "barlow", 30, N),
+      t("B", 40, 420, 714, 180, "Para quién\nEl equipo del taller.", "barlow", 30, N),
+      im(220, 680, 360, 360, o(2)),
+    ]),
+
+    pack({
+      id: "emp-redes", nombre: { es: "Plan de redes", en: "Social plan" }, formato: "doc", uso: "empresa", shell: "doc", w: 794, h: 1123, fill: C, estilo: "claro", color: "rosa", etiquetas: ["empresa", "redes"],
+    }, [
+      t("Titulo", 40, 40, 700, 80, "Plan de redes", "archivo", 48, N),
+      r("A", 40, 160, 714, 220, N, 2),
+      r("B", 40, 410, 714, 220, P, 2),
+      r("C", 40, 660, 714, 220, N, 2),
+      t("A", 64, 210, 660, 120, "Mirar la comunidad", "anton", 36, C),
+      t("B", 64, 460, 660, 120, "Probar una pieza", "anton", 36, N),
+      t("C", 64, 710, 660, 120, "Contar el taller", "anton", 36, C),
+    ]),
+
+    pack({
+      id: "red-ig-cita", nombre: { es: "Post cita rosa", en: "Pink quote post" }, formato: "ig", uso: "redes", shell: "design", w: 1080, h: 1350, fill: P, estilo: "marca", color: "rosa", etiquetas: ["redes", "cita"],
+    }, [
+      t("Cita", 56, 120, 960, 280, "Hay sitio para tu idea", "archivo", 72, N),
+      im(200, 480, 680, 680, o(0)),
+      t("Pie", 56, 1200, 800, 70, "ORVUPI", "anton", 36, N),
+    ]),
+
+    pack({
+      id: "red-story-bloques", nombre: { es: "Historia en bloques", en: "Block story" }, formato: "story", uso: "redes", shell: "design", w: 1080, h: 1920, fill: N, estilo: "humor", color: "azul", etiquetas: ["redes", "historia"],
+    }, [
+      t("Hola", 56, 80, 900, 120, "Hoy", "archivo", 84, C),
+      r("A", 56, 260, 968, 420, P, 2),
+      r("B", 56, 720, 968, 420, C, 2),
+      t("A", 90, 360, 880, 160, "Mirar", "anton", 72, N),
+      t("B", 90, 820, 880, 160, "Crear", "anton", 72, N),
+      im(300, 1240, 480, 480, o(2)),
+    ]),
+
+    deck("deck-seccion", "Sección de presentación", "Section slide", C, [
+      r("Num", 80, 80, 200, 200, P, 2),
+      t("Num", 80, 120, 200, 120, "A", "archivo", 96, N, 30, "center"),
+      t("Titulo", 340, 280, 1400, 200, "El relato", "archivo", 84, N),
+      t("Sub", 340, 520, 1200, 120, "Una sección para la comunidad.", "barlow", 40, N),
+      im(1400, 680, 360, 360, o(0)),
+    ], "claro", "rosa"),
+
+    pack({
+      id: "fly-noche", nombre: { es: "Flyer nocturno", en: "Night flyer" }, formato: "flyer", uso: "flyer", shell: "print", w: 816, h: 1056, fill: N, estilo: "humor", color: "azul", etiquetas: ["flyer"],
+    }, [
+      t("Titulo", 40, 60, 736, 180, "Ven", "archivo", 120, C),
+      t("Sub", 40, 260, 700, 100, "Taller de comunidad", "barlow", 40, P),
+      r("Caja", 40, 420, 736, 200, P, 2),
+      t("Caja", 64, 470, 680, 100, "Lunes en la plaza", "anton", 40, N),
+      im(250, 680, 320, 320, o(1)),
+    ]),
+
+    pack({
+      id: "car-banda", nombre: { es: "Cartel con banda", en: "Band poster" }, formato: "poster", uso: "cartel", shell: "print", w: 1080, h: 1440, fill: C, estilo: "claro", color: "rosa", etiquetas: ["cartel"],
+    }, [
+      r("Banda", 0, 180, 1080, 280, P, 1),
+      t("Titulo", 48, 220, 980, 180, "Una idea clara", "archivo", 72, N),
+      im(180, 540, 720, 720, o(2)),
+      t("Pie", 48, 1300, 900, 70, "Comunidad ORVUPI", "barlow", 36, N),
+    ]),
+
+    deck("deck-cierre", "Cierre de presentación", "Closing slide", P, [
+      t("Titulo", 80, 180, 1100, 200, "Hasta la pieza", "archivo", 78, N),
+      t("Sub", 80, 420, 900, 120, "Mirar, probar y contar.", "barlow", 40, N),
+      im(1280, 280, 480, 480, o(2)),
+    ], "marca", "rosa"),
+
+    deck("deck-cita", "Cita de presentación", "Quote slide", C, [
+      r("Barra", 0, 0, 1920, 18, P, 1),
+      t("Cita", 120, 260, 1400, 280, "Hay sitio para tu idea", "archivo", 76, N),
+      t("Pie", 120, 620, 600, 60, "ORVUPI", "anton", 32, P),
+      im(1500, 620, 280, 280, o(0)),
+    ], "claro", "crema"),
+
+    deck("deck-tres", "Tres ideas", "Three ideas", N, [
+      r("A", 70, 180, 540, 720, C, 2),
+      r("B", 690, 180, 540, 720, P, 2),
+      r("C", 1310, 180, 540, 720, C, 2),
+      t("A", 100, 240, 480, 200, "Mirar", "anton", 56, N),
+      t("B", 720, 240, 480, 200, "Probar", "anton", 56, N),
+      t("C", 1340, 240, 480, 200, "Contar", "anton", 56, N),
+      t("Kicker", 70, 60, 500, 50, "PRESENTACIÓN", "anton", 28, P),
+    ], "informativo", "azul"),
+
+    deck("deck-nota", "Nota de presentación", "Note slide", C, [
+      r("Caja", 80, 160, 1100, 760, N, 2),
+      t("Titulo", 120, 220, 1000, 180, "Una nota clara", "archivo", 68, C),
+      t("Cuerpo", 120, 460, 960, 280, "El taller cuenta una idea en una pieza.", "barlow", 36, C),
+      im(1280, 280, 500, 500, o(1)),
+    ], "claro", "azul"),
+
+    pack({
+      id: "emp-valores", nombre: { es: "Valores de empresa", en: "Company values" }, formato: "doc", uso: "empresa", shell: "doc", w: 794, h: 1123, fill: C, estilo: "marca", color: "rosa", etiquetas: ["empresa"],
+    }, [
+      t("Titulo", 40, 48, 700, 80, "Valores", "archivo", 64, N),
+      r("A", 40, 180, 714, 240, P, 2),
+      r("B", 40, 450, 714, 240, N, 2),
+      t("A", 64, 240, 660, 120, "Claridad", "anton", 48, N),
+      t("B", 64, 510, 660, 120, "Curiosidad", "anton", 48, C),
+      im(250, 760, 300, 300, o(0)),
+    ]),
+
+    pack({
+      id: "emp-nota", nombre: { es: "Nota de empresa", en: "Company note" }, formato: "doc", uso: "empresa", shell: "doc", w: 794, h: 1123, fill: N, estilo: "claro", color: "azul", etiquetas: ["empresa", "nota"],
+    }, [
+      t("Kicker", 48, 48, 400, 36, "EMPRESA", "anton", 24, P),
+      t("Titulo", 48, 120, 700, 140, "Una nota para el equipo", "archivo", 52, C),
+      r("Caja", 48, 320, 698, 360, C, 2),
+      t("Caja", 72, 360, 650, 260, "El relato cabe en una pieza corta.", "barlow", 36, N),
+      im(220, 740, 340, 340, o(2)),
+    ]),
+
+    pack({
+      id: "emp-ficha", nombre: { es: "Ficha de empresa", en: "Company card" }, formato: "deck", uso: "empresa", shell: "deck", w: 1920, h: 1080, fill: C, estilo: "informativo", color: "crema", etiquetas: ["empresa"],
+    }, [
+      r("Lado", 0, 0, 640, 1080, N, 1),
+      t("Marca", 48, 60, 540, 50, "ORVUPI", "anton", 36, C),
+      im(120, 220, 400, 400, o(1)),
+      t("Titulo", 720, 180, 1100, 160, "La ficha", "archivo", 80, N),
+      t("Cuerpo", 720, 400, 1000, 200, "Qué hacemos y para quién.", "barlow", 40, N),
+    ]),
+
+    pack({
+      id: "doc-propuesta", nombre: { es: "Propuesta breve", en: "Short proposal" }, formato: "doc", uso: "documento", shell: "doc", w: 794, h: 1123, fill: C, estilo: "informativo", color: "crema", etiquetas: ["documento"],
+    }, [
+      r("Tope", 0, 0, 794, 220, P, 1),
+      t("Titulo", 40, 48, 700, 120, "Propuesta", "archivo", 64, N),
+      t("A", 40, 280, 714, 180, "La idea\nUna pieza para el taller.", "barlow", 32, N),
+      t("B", 40, 500, 714, 180, "El plan\nMirar, probar, contar.", "barlow", 32, N),
+      im(200, 740, 380, 380, o(0)),
+    ]),
+
+    pack({
+      id: "doc-notas", nombre: { es: "Notas del día", en: "Day notes" }, formato: "doc", uso: "documento", shell: "doc", w: 794, h: 1123, fill: C, estilo: "claro", color: "rosa", etiquetas: ["documento", "notas"],
+    }, [
+      t("Titulo", 40, 40, 700, 80, "Notas", "archivo", 60, N),
+      r("A", 40, 160, 714, 200, N, 2),
+      r("B", 40, 390, 714, 200, P, 2),
+      r("C", 40, 620, 714, 200, N, 2),
+      t("A", 64, 210, 660, 90, "Qué vimos", "anton", 36, C),
+      t("B", 64, 440, 660, 90, "Qué probamos", "anton", 36, N),
+      t("C", 64, 670, 660, 90, "Qué contamos", "anton", 36, C),
+    ]),
+
+    pack({
+      id: "doc-taller", nombre: { es: "Guía del taller", en: "Workshop guide" }, formato: "doc", uso: "documento", shell: "doc", w: 794, h: 1123, fill: N, estilo: "humor", color: "azul", etiquetas: ["documento", "taller"],
+    }, [
+      t("Titulo", 40, 48, 700, 100, "El taller", "archivo", 64, C),
+      t("Sub", 40, 160, 600, 50, "Una hora, una pieza", "barlow", 28, P),
+      im(40, 260, 320, 320, o(2)),
+      t("Lista", 400, 280, 350, 300, "Llegar\nMirar\nProbar\nContar", "barlow", 36, C),
+      r("Pie", 40, 900, 714, 140, P, 2),
+      t("Pie", 64, 940, 660, 70, "Comunidad", "anton", 40, N),
+    ]),
+
+    deck("proy-mapa", "Mapa de proyecto", "Project map", C, [
+      t("Titulo", 70, 50, 800, 80, "El mapa", "archivo", 64, N),
+      r("A", 70, 200, 540, 700, N, 2),
+      r("B", 690, 200, 540, 700, P, 2),
+      r("C", 1310, 200, 540, 700, N, 2),
+      t("A", 100, 280, 480, 120, "Inicio", "anton", 48, C),
+      t("B", 720, 280, 480, 120, "Pieza", "anton", 48, N),
+      t("C", 1340, 280, 480, 120, "Cierre", "anton", 48, C),
+    ], "informativo", "crema", "proyecto"),
+
+    deck("proy-hitos", "Hitos del proyecto", "Project milestones", N, [
+      t("Titulo", 80, 70, 1000, 90, "Hitos", "archivo", 72, C),
+      r("Linea", 80, 540, 1760, 8, P, 3),
+      r("P1", 180, 480, 120, 120, C, 4),
+      r("P2", 860, 480, 120, 120, P, 4),
+      r("P3", 1540, 480, 120, 120, C, 4),
+      t("A", 140, 680, 280, 80, "Mirar", "barlow", 32, C),
+      t("B", 820, 680, 280, 80, "Probar", "barlow", 32, C),
+      t("C", 1500, 680, 280, 80, "Contar", "barlow", 32, C),
+    ], "claro", "azul", "proyecto"),
+
+    pack({
+      id: "proy-ficha", nombre: { es: "Ficha de proyecto", en: "Project sheet" }, formato: "doc", uso: "proyecto", shell: "doc", w: 794, h: 1123, fill: C, estilo: "marca", color: "rosa", etiquetas: ["proyecto"],
+    }, [
+      r("Lado", 0, 0, 220, 1123, N, 1),
+      t("Marca", 24, 40, 170, 40, "ORVUPI", "anton", 22, C),
+      im(20, 160, 180, 180, o(1)),
+      t("Titulo", 260, 48, 490, 100, "El proyecto", "archivo", 44, N),
+      t("Cuerpo", 260, 180, 490, 400, "Una idea.\nUna pieza.\nUn taller.", "barlow", 36, N),
+    ]),
+
+    pack({
+      id: "red-ig-lista", nombre: { es: "Post con lista", en: "List post" }, formato: "ig", uso: "redes", shell: "design", w: 1080, h: 1350, fill: C, estilo: "informativo", color: "crema", etiquetas: ["redes", "lista"],
+    }, [
+      t("Titulo", 56, 60, 900, 120, "Tres pasos", "archivo", 72, N),
+      r("A", 56, 240, 968, 240, N, 2),
+      r("B", 56, 520, 968, 240, P, 2),
+      r("C", 56, 800, 968, 240, N, 2),
+      t("A", 90, 300, 800, 100, "Mirar", "anton", 48, C),
+      t("B", 90, 580, 800, 100, "Probar", "anton", 48, N),
+      t("C", 90, 860, 800, 100, "Contar", "anton", 48, C),
+    ]),
+
+    pack({
+      id: "red-sq-saludo", nombre: { es: "Saludo cuadrado", en: "Square hello" }, formato: "square", uso: "redes", shell: "design", w: 1080, h: 1080, fill: N, estilo: "humor", color: "azul", etiquetas: ["redes"],
+    }, [
+      t("Hola", 56, 60, 900, 140, "Hola", "archivo", 110, C),
+      im(180, 280, 720, 720, o(1)),
+    ]),
+
+    pack({
+      id: "red-story-cita", nombre: { es: "Historia cita", en: "Quote story" }, formato: "story", uso: "redes", shell: "design", w: 1080, h: 1920, fill: P, estilo: "marca", color: "rosa", etiquetas: ["redes", "cita"],
+    }, [
+      t("Cita", 56, 160, 960, 360, "Tu idea tiene sitio", "archivo", 80, N),
+      im(160, 620, 760, 760, o(0)),
+      t("Pie", 56, 1600, 700, 80, "ORVUPI", "anton", 40, N),
+    ]),
+
+    pack({
+      id: "fly-cita", nombre: { es: "Flyer con cita", en: "Quote flyer" }, formato: "flyer", uso: "flyer", shell: "print", w: 816, h: 1056, fill: C, estilo: "marca", color: "rosa", etiquetas: ["flyer"],
+    }, [
+      r("Tope", 0, 0, 816, 280, P, 1),
+      t("Titulo", 36, 48, 740, 180, "Ven a crear", "archivo", 64, N),
+      t("Cuerpo", 36, 340, 740, 180, "Un taller corto para la comunidad.", "barlow", 36, N),
+      im(200, 560, 420, 420, o(2)),
+    ]),
+
+    pack({
+      id: "fly-banda", nombre: { es: "Flyer con banda", en: "Band flyer" }, formato: "flyer", uso: "flyer", shell: "print", w: 816, h: 1056, fill: C, estilo: "claro", color: "crema", etiquetas: ["flyer"],
+    }, [
+      t("Titulo", 36, 40, 740, 140, "Encuentro", "archivo", 72, N),
+      r("Banda", 0, 220, 816, 160, N, 2),
+      t("Banda", 36, 250, 740, 90, "Plaza y taller", "anton", 40, C),
+      im(180, 440, 460, 460, o(0)),
+      t("Pie", 36, 940, 700, 50, "ORVUPI", "anton", 28, P),
+    ]),
+
+    pack({
+      id: "car-sello", nombre: { es: "Cartel con sello", en: "Seal poster" }, formato: "poster", uso: "cartel", shell: "print", w: 1080, h: 1440, fill: N, estilo: "marca", color: "azul", etiquetas: ["cartel"],
+    }, [
+      t("Titulo", 48, 60, 980, 200, "Hoy se crea", "archivo", 84, C),
+      r("Sello", 340, 340, 400, 400, P, 2),
+      t("Sello", 360, 470, 360, 140, "ORVUPI", "anton", 48, N, 20, "center"),
+      im(180, 820, 720, 520, o(1)),
+    ]),
+
+    pack({
+      id: "car-lista", nombre: { es: "Cartel con lista", en: "List poster" }, formato: "poster", uso: "cartel", shell: "print", w: 1080, h: 1440, fill: C, estilo: "informativo", color: "crema", etiquetas: ["cartel"],
+    }, [
+      r("Lado", 0, 0, 80, 1440, P, 1),
+      t("Titulo", 120, 60, 900, 140, "El cartel", "archivo", 72, N),
+      t("Lista", 120, 260, 800, 500, "Mirar la idea\nProbar la pieza\nContar el taller", "barlow", 48, N),
+      im(280, 860, 520, 520, o(2)),
+    ]),
+
+    pack({
+      id: "inv-sello", nombre: { es: "Invitación con sello", en: "Seal invitation" }, formato: "invite", uso: "invitacion", shell: "print", w: 750, h: 1050, fill: C, estilo: "marca", color: "rosa", etiquetas: ["invitacion"],
+    }, [
+      r("Marco", 28, 28, 694, 994, N, 1),
+      r("Hoja", 48, 48, 654, 954, C, 2),
+      t("Titulo", 80, 90, 590, 140, "Estás invitado", "archivo", 48, N),
+      im(180, 280, 390, 390, o(0)),
+      t("Pie", 80, 760, 590, 80, "Taller ORVUPI", "barlow", 32, P),
+    ]),
+
+    pack({
+      id: "logo-circulo", nombre: { es: "Logo en círculo", en: "Circle logo" }, formato: "logo", uso: "logo", shell: "print", w: 1080, h: 1080, fill: C, estilo: "marca", color: "rosa", etiquetas: ["logo"],
+    }, [
+      r("Circulo", 180, 120, 720, 720, P, 1),
+      im(280, 180, 520, 520, o(1)),
+      t("Marca", 180, 880, 720, 80, "ORVUPI", "anton", 48, N, 20, "center"),
+    ]),
+
+    pack({
+      id: "fol-cita", nombre: { es: "Folleto con cita", en: "Quote leaflet" }, formato: "trifold", uso: "folleto", shell: "print", w: 1080, h: 630, fill: C, estilo: "claro", color: "crema", etiquetas: ["folleto"],
+    }, [
+      r("A", 0, 0, 360, 630, N, 1),
+      r("C", 720, 0, 360, 630, P, 1),
+      t("A", 24, 40, 310, 200, "Mirar", "anton", 48, C),
+      t("B", 384, 80, 310, 300, "Probar la pieza", "archivo", 40, N),
+      t("C", 744, 40, 310, 200, "Contar", "anton", 48, N),
+      im(400, 340, 240, 240, o(2)),
+    ]),
   ];
 }
