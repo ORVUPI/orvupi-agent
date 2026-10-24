@@ -5,7 +5,7 @@
   "description": "Public skeleton of the ORVUPI agent. No wallet, no signing, no custody, no network writes.",
   "license": "MIT",
   "author": "ORVUPI <orvupi.hq@gmail.com>",
-  "homepage": "https://stubxai.com",
+  "homepage": "https://orvupi.com",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ORVUPI/orvupi-agent.git"

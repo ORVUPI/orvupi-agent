@@ -11,7 +11,7 @@ Actualizado: 2026-10-15.
 - X: [@ORVUPI](https://x.com/ORVUPI).
 - Telegram: [@orvupi](https://t.me/orvupi).
 - TikTok: [@orvupi](https://www.tiktok.com/@orvupi).
-- Web operativa: [ORVUPI](https://stubxai.com/).
+- Web operativa: [ORVUPI](https://orvupi.com/).
 
 El dominio, el usuario de GitHub y otros identificadores de servicios necesitan cambios independientes. No se presentan direcciones pendientes como si ya estuvieran activas.
 
