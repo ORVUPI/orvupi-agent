@@ -156,6 +156,7 @@ export function catalogBody(ctx) {
     pizarra: en ? "Whiteboard" : "Pizarra",
     web: en ? "Website" : "Sitio",
     infografia: en ? "Infographic" : "Infografía",
+    educacion: en ? "Learning" : "Aprender",
   };
   const usos = ["", "curriculum", "presentacion", "proyecto", "empresa", "redes", "documento", "flyer", "cartel", "logo", "invitacion", "video", "pizarra", "web", "meme", "publicacion", "historia", "anuncio", "marca", "folleto", "infografia"];
   const formatos = [
@@ -194,15 +195,25 @@ export function catalogBody(ctx) {
       el("input", { id: "buscar", type: "search", value: state.filters.text, placeholder: t("buscarPh"), autocomplete: "off" }),
     ]),
   ];
+  const hub = ctx.viewName() === "plantillas" && !active;
   if (home && !gridMode) {
-    kids.push(quickRow(ctx), recents(ctx), homeRails(ctx), ideas, filters);
+    const shown = new Set();
+    kids.push(seguirSection(ctx, shown), paraTiSection(ctx, shown), exploraSection(ctx, usoLabel, false), homeRails(ctx, shown), ideas, filters);
+  } else if (hub) {
+    kids.push(groupChips(ctx), exploraSection(ctx, usoLabel, true), hubRails(ctx), ideas, filters);
   } else {
-    if (ctx.viewName() === "plantillas" && !state.filters.uso && !state.filters.text) kids.push(categoryTiles(ctx, usoLabel));
-    kids.push(filters);
-    if (home) kids.push(ideas);
     const blank = blankCardFor(state.filters.uso, en);
-    if (items.length) kids.push(el("div", { class: "rejilla-densa" }, blank ? [blank, ...cards] : cards));
-    else kids.push(blank || null, el("p", { id: "vacio-plantillas", text: t("vacio") }));
+    const grid = items.length ? el("div", { class: "rejilla-cinco" }, blank ? [blank, ...cards] : cards) : null;
+    const empty = el("p", { id: "vacio-plantillas", text: t("vacio") });
+    if (state.filters.uso && !state.filters.text && !state.filters.formato) {
+      kids.push(grid || empty);
+      kids.push(filters);
+      if (home) kids.push(ideas);
+    } else {
+      kids.push(filters);
+      if (home) kids.push(ideas);
+      kids.push(grid || empty);
+    }
   }
   return el("div", { id: "catalogo" }, kids);
 }
@@ -227,24 +238,43 @@ const BLANK = {
 const TILES = [
   ["curriculum", "cv-partido"],
   ["presentacion", "deck-portada"],
-  ["proyecto", "proy-portada"],
-  ["empresa", "deck-empresa"],
   ["redes", "red-ig-bloque"],
+  ["video", "vid-tercio"],
   ["documento", "doc-portada"],
   ["flyer", "fly-encuentro"],
   ["cartel", "car-noche"],
   ["logo", "logo-sello"],
   ["invitacion", "inv-marco"],
-  ["video", "vid-tercio"],
+  ["proyecto", "proy-portada"],
+  ["empresa", "deck-empresa"],
   ["pizarra", "piz-notas"],
   ["web", "web-fichas"],
+  ["infografia", "info-tres"],
   ["folleto", "fol-pasos"],
   ["publicacion", "publi-feed"],
   ["historia", "historia-saludo"],
   ["anuncio", "anun-sello"],
-  ["infografia", "info-tres"],
+  ["educacion", "ficha-aprender"],
   ["meme", "meme-punch"],
 ];
+
+const PASTEL = ["#FFE4EE", "#FFF8EC", "#E7EEF3", "#FFD6E4", "#F6EFE4", "#F8D5E2", "#E4EAF2"];
+
+const GRUPO_USOS = {
+  negocios: ["curriculum", "presentacion", "proyecto", "empresa", "documento", "flyer", "cartel", "logo", "invitacion"],
+  redes: ["redes", "historia", "publicacion", "anuncio", "meme", "marca"],
+  video: ["video"],
+  educacion: ["educacion", "infografia", "pizarra", "web", "folleto"],
+};
+
+const PARA_TI = [
+  "publi-feed", "historia-saludo", "cv-partido", "deck-portada", "red-ig-bloque",
+  "fly-encuentro", "flyer-comunidad", "car-noche", "cartel-vertical", "logo-sello",
+  "logo-cuadrado", "inv-marco", "invitacion-vertical", "meme-punch", "pizarra-ideas",
+  "sitio-comunidad", "folleto-tres", "web-fichas",
+];
+
+const SEGUIR = ["deck-cierre", "deck-cita", "deck-tres", "red-fb-partido"];
 
 const SAMPLE = {
   square: "publi-feed",
@@ -290,9 +320,17 @@ function blankCardFor(uso, en) {
   return spec ? blankCard(spec[0], en ? spec[2] : spec[1]) : null;
 }
 
-function categoryTiles(ctx, usoLabel) {
-  const { lang, state } = ctx;
-  return el("div", { class: "mosaico-cats", role: "group", "aria-label": ctx.t("tema") }, TILES.map(([uso, id]) => {
+function tileList(ctx, respetoGrupo) {
+  let list = TILES;
+  if (respetoGrupo && GRUPO_USOS[ctx.state.grupo]) list = TILES.filter(([uso]) => GRUPO_USOS[ctx.state.grupo].includes(uso));
+  return list;
+}
+
+function categoryTiles(ctx, usoLabel, respetoGrupo) {
+  const { state } = ctx;
+  const list = tileList(ctx, respetoGrupo);
+  const shown = state.masCats ? list : list.slice(0, 14);
+  return el("div", { class: "mosaico-cats", role: "group", "aria-label": ctx.t("tema") }, shown.map(([uso, id], index) => {
     const doc = instantiate(id);
     const node = button("", {
       class: "cat-tile",
@@ -300,10 +338,72 @@ function categoryTiles(ctx, usoLabel) {
       "data-value": uso,
       "aria-pressed": state.filters.uso === uso ? "true" : "false",
     });
-    if (doc) node.append(miniStage(doc));
-    node.append(el("span", { class: "plantilla-nombre", text: usoLabel[uso] || uso }));
+    const fondo = el("span", { class: "cat-fondo", style: `background:${PASTEL[index % PASTEL.length]}` });
+    if (doc) fondo.append(miniStage(doc));
+    node.append(fondo, el("span", { class: "plantilla-nombre", text: usoLabel[uso] || uso }));
     return node;
   }));
+}
+
+function exploraSection(ctx, usoLabel, respetoGrupo) {
+  const { state, t } = ctx;
+  const list = tileList(ctx, respetoGrupo);
+  const more = list.length > 14
+    ? el("div", { class: "mas-fila" }, [button(state.masCats ? t("mostrarMenos") : t("mostrarMas"), { id: "mostrar-mas", class: "mostrar-mas" })])
+    : null;
+  const ver = button(t("verTodo"), { class: "ver-todo", "data-go": "plantillas", "data-filter": "uso", "data-value": "" });
+  return el("section", { class: "carril-bloque" }, [
+    el("div", { class: "carril-head" }, [el("h2", { text: t("explora") }), ver]),
+    categoryTiles(ctx, usoLabel, respetoGrupo),
+    more,
+  ]);
+}
+
+function groupChips(ctx) {
+  const { state, t, lang } = ctx;
+  const en = lang === "en";
+  const groups = [
+    ["", t("grupoTodo")],
+    ["negocios", en ? "Business" : "Negocios"],
+    ["redes", en ? "Social" : "Redes"],
+    ["video", en ? "Video" : "Vídeo"],
+    ["educacion", en ? "Education" : "Educación"],
+  ];
+  return el("div", { class: "grupos", role: "group", "aria-label": t("tema") }, groups.map(([id, label]) => button(label, {
+    class: "grupo",
+    "data-grupo": id,
+    "aria-pressed": (state.grupo || "") === id ? "true" : "false",
+  })));
+}
+
+function seguirSection(ctx, shown) {
+  const { t, lang } = ctx;
+  const projects = listProjects(ctx.storage).slice(0, 4);
+  const cards = projects.length
+    ? projects.map((item) => recentCard(item, t))
+    : SEGUIR.map((id) => {
+      const item = PLANTILLAS.find((entry) => entry.id === id);
+      if (!item) return null;
+      shown.add(id);
+      return templateCard(item, lang);
+    }).filter(Boolean);
+  const more = button(t("verTodo"), { class: "ver-todo", "data-go": projects.length ? "disenos" : "plantillas" });
+  return el("section", { class: "carril-bloque" }, [
+    el("div", { class: "carril-head" }, [el("h2", { text: t("seguir") }), more]),
+    el("div", { class: "seguir-grid" }, cards),
+  ]);
+}
+
+function paraTiSection(ctx, shown) {
+  const { lang, t } = ctx;
+  const items = [];
+  for (const id of PARA_TI) {
+    const item = PLANTILLAS.find((entry) => entry.id === id);
+    if (!item || shown.has(id)) continue;
+    shown.add(id);
+    items.push(item);
+  }
+  return railBlock(ctx, t("paraTi"), "", items, true);
 }
 
 function byUso(uso) {
@@ -311,48 +411,65 @@ function byUso(uso) {
   return uso === "meme" ? list : list.slice().reverse();
 }
 
-function homeRails(ctx) {
+const THEME_RAILS = [
+  { es: "Currículum", en: "Resume", uso: "curriculum" },
+  { es: "Presentaciones", en: "Presentations", uso: "presentacion" },
+  { es: "Proyectos", en: "Projects", uso: "proyecto" },
+  { es: "Empresa", en: "Business", uso: "empresa" },
+  { es: "Redes", en: "Social", uso: "redes" },
+  { es: "Historias", en: "Stories", uso: "historia" },
+  { es: "Documentos", en: "Docs", uso: "documento" },
+  { es: "Flyers", en: "Flyers", uso: "flyer" },
+  { es: "Carteles", en: "Posters", uso: "cartel" },
+  { es: "Logos", en: "Logos", uso: "logo" },
+  { es: "Invitaciones", en: "Invitations", uso: "invitacion" },
+  { es: "Vídeo", en: "Video", uso: "video" },
+  { es: "Pizarra", en: "Whiteboard", uso: "pizarra" },
+  { es: "Sitio", en: "Website", uso: "web" },
+  { es: "Folletos", en: "Leaflets", uso: "folleto" },
+  { es: "Infografías", en: "Infographics", uso: "infografia" },
+  { es: "Aprender", en: "Learning", uso: "educacion" },
+  { es: "Memes", en: "Memes", uso: "meme" },
+];
+
+function railBlock(ctx, title, uso, items, grande) {
   const { lang, t } = ctx;
+  if (!items.length) return null;
+  const more = button(t("verTodo"), {
+    class: "ver-todo",
+    "data-go": "plantillas",
+    "data-filter": "uso",
+    "data-value": uso || "",
+  });
+  return el("section", { class: "carril-bloque" }, [
+    el("div", { class: "carril-head" }, [el("h2", { text: title }), more]),
+    el("div", { class: grande ? "carril grande" : "carril" }, items.map((item) => templateCard(item, lang))),
+  ]);
+}
+
+function themedRails(ctx, limit, shown) {
+  const { lang } = ctx;
   const en = lang === "en";
-  const rails = [
-    { es: "Para ti", en: "For you", uso: "", ids: ["publi-feed", "cv-partido", "deck-portada", "red-ig-bloque", "fly-encuentro", "car-noche", "logo-sello", "inv-marco", "vid-tercio", "piz-notas", "web-fichas", "doc-portada"] },
-    { es: "Currículum", en: "Resume", uso: "curriculum" },
-    { es: "Presentaciones", en: "Presentations", uso: "presentacion" },
-    { es: "Proyectos", en: "Projects", uso: "proyecto" },
-    { es: "Empresa", en: "Business", uso: "empresa" },
-    { es: "Redes", en: "Social", uso: "redes" },
-    { es: "Historias", en: "Stories", uso: "historia" },
-    { es: "Documentos", en: "Docs", uso: "documento" },
-    { es: "Flyers", en: "Flyers", uso: "flyer" },
-    { es: "Carteles", en: "Posters", uso: "cartel" },
-    { es: "Logos", en: "Logos", uso: "logo" },
-    { es: "Invitaciones", en: "Invitations", uso: "invitacion" },
-    { es: "Vídeo", en: "Video", uso: "video" },
-    { es: "Pizarra", en: "Whiteboard", uso: "pizarra" },
-    { es: "Sitio", en: "Website", uso: "web" },
-    { es: "Folletos", en: "Leaflets", uso: "folleto" },
-    { es: "Infografías", en: "Infographics", uso: "infografia" },
-    { es: "Memes", en: "Memes", uso: "meme" },
-  ];
+  const allow = GRUPO_USOS[ctx.state.grupo];
+  const rails = allow ? THEME_RAILS.filter((rail) => allow.includes(rail.uso)) : THEME_RAILS;
   return el("div", { class: "carriles" }, rails.map((rail) => {
-    const items = rail.ids
-      ? rail.ids.map((id) => PLANTILLAS.find((item) => item.id === id)).filter(Boolean)
-      : byUso(rail.uso).slice(0, 14);
-    if (!items.length) return null;
-    const more = button(t("verTodo"), {
-      class: "ver-todo",
-      "data-go": "plantillas",
-      "data-filter": "uso",
-      "data-value": rail.uso || "",
-    });
-    return el("section", { class: "carril-bloque" }, [
-      el("div", { class: "carril-head" }, [
-        el("h2", { text: en ? rail.en : rail.es }),
-        more,
-      ]),
-      el("div", { class: "carril" }, items.map((item) => templateCard(item, lang))),
-    ]);
+    const items = [];
+    for (const item of byUso(rail.uso)) {
+      if (shown?.has(item.id)) continue;
+      shown?.add(item.id);
+      items.push(item);
+      if (items.length >= limit) break;
+    }
+    return railBlock(ctx, en ? rail.en : rail.es, rail.uso, items, false);
   }));
+}
+
+function homeRails(ctx, shown) {
+  return themedRails({ ...ctx, state: { ...ctx.state, grupo: "" } }, 10, shown);
+}
+
+function hubRails(ctx) {
+  return themedRails(ctx, 12, null);
 }
 
 function templateCard(item, lang) {

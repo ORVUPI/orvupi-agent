@@ -525,11 +525,76 @@ body.studio-standalone footer.or-footer a[href$="risks/"] {
 }
 .mosaico-cats {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
-  gap: 0.85rem 0.75rem;
-  margin: 0.15rem 0 0.85rem;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.85rem 0.65rem;
+  margin: 0.2rem 0 0.35rem;
   min-width: 0;
   max-width: 100%;
+}
+.seguir-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.9rem;
+  min-width: 0;
+  max-width: 100%;
+}
+.seguir-grid .mini-slot { height: 148px; aspect-ratio: auto; }
+.carril.grande .mini-slot { height: 158px; aspect-ratio: auto; }
+.carril-bloque { margin: 0.4rem 0 0.05rem; }
+.carril.grande .plantilla { flex-basis: 280px; width: 280px; }
+.rejilla-cinco {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1.05rem 0.85rem;
+  margin-top: 0.35rem;
+  min-width: 0;
+  max-width: 100%;
+}
+.orv-main .rejilla-cinco { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.grupos {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0 0 0.85rem;
+}
+#studio-root button.grupo {
+  border-radius: 999px;
+  background: #fff;
+  flex: 0 0 auto;
+}
+#studio-root button.grupo[aria-pressed="true"] {
+  background: #102032;
+  color: #fff8ec;
+  border-color: #102032;
+}
+.mas-fila { display: flex; justify-content: center; }
+#studio-root button.mostrar-mas {
+  background: transparent;
+  border: 0;
+  text-decoration: underline;
+  font-weight: 700;
+}
+.cat-fondo {
+  display: grid;
+  place-items: center;
+  height: 118px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.cat-fondo .mini-slot {
+  width: 68%;
+  height: 86px;
+  aspect-ratio: auto;
+  box-shadow: 0 8px 16px rgba(16, 32, 50, 0.16);
+}
+@media (max-width: 1100px) {
+  .mosaico-cats, .orv-main .rejilla-cinco { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .seguir-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .mosaico-cats, .orv-main .rejilla-cinco, .seguir-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 #studio-root button.cat-tile {
   display: flex;
@@ -551,7 +616,8 @@ body.studio-standalone footer.or-footer a[href$="risks/"] {
   box-shadow: 0 0 0 3px #ff3070, 0 14px 30px rgba(16, 32, 50, 0.16);
 }
 #studio-root button.cat-tile .mini-slot {
-  height: 128px;
+  width: 68%;
+  height: 86px;
   aspect-ratio: auto;
 }
 .mini-slot.blanco {

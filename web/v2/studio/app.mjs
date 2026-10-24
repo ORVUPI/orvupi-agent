@@ -102,6 +102,12 @@ const COPY = {
     vacio: "Ninguna plantilla con ese filtro.",
     tamano: "Crear un diseño",
     verTodo: "Ver todo",
+    seguir: "Seguir diseñando",
+    paraTi: "Plantillas para ti",
+    explora: "Explora las categorías",
+    mostrarMas: "Mostrar más",
+    mostrarMenos: "Mostrar menos",
+    grupoTodo: "Todo",
     buscarCrear: "Qué pieza quieres",
     personalizado: "Personalizado",
     ancho: "Ancho",
@@ -231,6 +237,12 @@ const COPY = {
     vacio: "No template matches that filter.",
     tamano: "Create a design",
     verTodo: "See all",
+    seguir: "Keep designing",
+    paraTi: "Templates for you",
+    explora: "Explore categories",
+    mostrarMas: "Show more",
+    mostrarMenos: "Show less",
+    grupoTodo: "All",
     buscarCrear: "What piece do you want",
     personalizado: "Custom",
     ancho: "Width",
@@ -331,6 +343,8 @@ function t(key) {
 
 const state = {
   filters: { text: "", uso: "", estilo: "", color: "", precio: "", formato: "" },
+  grupo: "",
+  masCats: false,
   rail: "plantillas",
   tool: "select",
   doc: null,
@@ -832,6 +846,15 @@ function onRootClick(event) {
     const idea = IDEAS.find((item) => item.id === buttonNode.dataset.idea);
     const doc = idea ? instantiate(idea.plantilla) : null;
     if (doc) openDoc(doc);
+  }
+  if ("grupo" in buttonNode.dataset) {
+    state.grupo = buttonNode.dataset.grupo || "";
+    state.masCats = false;
+    render();
+  }
+  if (buttonNode.id === "mostrar-mas") {
+    state.masCats = !state.masCats;
+    render();
   }
   if (buttonNode.dataset.filter) {
     const key = buttonNode.dataset.filter;

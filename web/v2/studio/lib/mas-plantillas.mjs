@@ -1040,14 +1040,14 @@ export function masPlantillas() {
       im(1280, 280, 480, 480, o(2)),
     ], "marca", "rosa"),
 
-    deck("deck-cita", "Cita de presentación", "Quote slide", C, [
+    deck("deck-cita-b", "Cita de presentación", "Quote slide", C, [
       r("Barra", 0, 0, 1920, 18, P, 1),
       t("Cita", 120, 260, 1400, 280, "Hay sitio para tu idea", "archivo", 76, N),
       t("Pie", 120, 620, 600, 60, "ORVUPI", "anton", 32, P),
       im(1500, 620, 280, 280, o(0)),
     ], "claro", "crema"),
 
-    deck("deck-tres", "Tres ideas", "Three ideas", N, [
+    deck("deck-tres-b", "Tres columnas", "Three columns", N, [
       r("A", 70, 180, 540, 720, C, 2),
       r("B", 690, 180, 540, 720, P, 2),
       r("C", 1310, 180, 540, 720, C, 2),
@@ -1106,7 +1106,7 @@ export function masPlantillas() {
     ]),
 
     pack({
-      id: "doc-notas", nombre: { es: "Notas del día", en: "Day notes" }, formato: "doc", uso: "documento", shell: "doc", w: 794, h: 1123, fill: C, estilo: "claro", color: "rosa", etiquetas: ["documento", "notas"],
+      id: "doc-dia", nombre: { es: "Notas del día", en: "Day notes" }, formato: "doc", uso: "documento", shell: "doc", w: 794, h: 1123, fill: C, estilo: "claro", color: "rosa", etiquetas: ["documento", "notas"],
     }, [
       t("Titulo", 40, 40, 700, 80, "Notas", "archivo", 60, N),
       r("A", 40, 160, 714, 200, N, 2),
