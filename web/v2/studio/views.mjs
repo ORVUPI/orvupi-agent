@@ -4,6 +4,7 @@ import catalog from "./catalog.json" with { type: "json" };
 import { BRAND, FONTS, PRESETS, fontById, importProject, orderedLayers, overlappingIds } from "./lib/document.mjs";
 import { IDEAS, PLANTILLAS, filterPlantillas, instantiate } from "./lib/plantillas.mjs";
 import { listProjects } from "./lib/projects.mjs";
+import { THUMB_CATS, thumbCatsFor, thumbsForGrupo, thumbsIn } from "./lib/thumbs.mjs";
 
 const GROUPS = {
   "para-ti": ["square", "story", "x", "tiktok", "ig", "deck", "doc", "cv", "video", "flyer", "logo", "poster", "web", "board"],
@@ -195,12 +196,16 @@ export function catalogBody(ctx) {
       el("input", { id: "buscar", type: "search", value: state.filters.text, placeholder: t("buscarPh"), autocomplete: "off" }),
     ]),
   ];
-  const hub = ctx.viewName() === "plantillas" && !active;
+  const hub = ctx.viewName() === "plantillas" && !active && !state.thumbCat;
+  const thumbPage = ctx.viewName() === "plantillas" && !active && Boolean(state.thumbCat);
   if (home && !gridMode) {
-    const shown = new Set();
-    kids.push(seguirSection(ctx, shown), paraTiSection(ctx, shown), exploraSection(ctx, usoLabel, false), homeRails(ctx, shown), ideas, filters);
+    const pinned = new Set(["publi-feed", "historia-saludo", "meme-punch", "pizarra-ideas", "sitio-comunidad", "flyer-comunidad", "cartel-vertical", "logo-cuadrado", "invitacion-vertical", "folleto-tres"]);
+    kids.push(thumbSeguir(ctx), thumbParaTi(ctx), thumbExplora(ctx, false), thumbRails(ctx), homeRails(ctx, pinned), pinnedTemplates(ctx, pinned), ideas, filters);
+  } else if (thumbPage) {
+    kids.push(thumbCategory(ctx));
+    kids.push(filters);
   } else if (hub) {
-    kids.push(groupChips(ctx), exploraSection(ctx, usoLabel, true), hubRails(ctx), ideas, filters);
+    kids.push(groupChips(ctx), thumbExplora(ctx, true), thumbDense(ctx), ideas, filters);
   } else {
     const blank = blankCardFor(state.filters.uso, en);
     const grid = items.length ? el("div", { class: "rejilla-cinco" }, blank ? [blank, ...cards] : cards) : null;
@@ -318,6 +323,126 @@ function blankCard(formatId, label) {
 function blankCardFor(uso, en) {
   const spec = BLANK[uso];
   return spec ? blankCard(spec[0], en ? spec[2] : spec[1]) : null;
+}
+
+const THUMB_PARA = [
+  "tpl-presentacion-01", "tpl-post-instagram-01", "tpl-curriculum-01", "tpl-logo-01",
+  "tpl-flyer-01", "tpl-youtube-thumb-01", "tpl-cartel-03", "tpl-story-03",
+  "tpl-invitacion-02", "tpl-video-cover-01", "tpl-negocio-01", "tpl-doc-01",
+];
+const THUMB_SEGUIR = ["tpl-presentacion-02", "tpl-youtube-thumb-03", "tpl-video-cover-04", "tpl-negocio-03"];
+
+function thumbCard(item) {
+  const node = button("", { class: "plantilla thumb-card", "data-thumb": item.id });
+  const slot = el("span", { class: "mini-slot thumb-slot", style: `aspect-ratio:${item.width} / ${item.height}` });
+  slot.append(el("img", { src: studioAsset(item.file), alt: "", draggable: "false", loading: "lazy", decoding: "async" }));
+  node.append(slot, el("span", { class: "plantilla-nombre", text: item.title }));
+  return node;
+}
+
+function thumbBlank(ctx, formatId) {
+  return blankCard(formatId, ctx.t("crearBlanco"));
+}
+
+function thumbSeguir(ctx) {
+  const { t } = ctx;
+  const projects = listProjects(ctx.storage).slice(0, 4);
+  const cards = projects.length
+    ? projects.map((item) => recentCard(item, t))
+    : THUMB_SEGUIR.map((id) => THUMBS_BY_ID(id)).filter(Boolean).map(thumbCard);
+  const more = button(t("verTodo"), { class: "ver-todo", "data-go": projects.length ? "disenos" : "plantillas", "data-thumb-cat": "" });
+  return el("section", { class: "carril-bloque" }, [
+    el("div", { class: "carril-head" }, [el("h2", { text: t("seguir") }), more]),
+    el("div", { class: "seguir-grid" }, cards),
+  ]);
+}
+
+function THUMBS_BY_ID(id) {
+  for (const cat of THUMB_CATS) {
+    const hit = thumbsIn(cat.id).find((item) => item.id === id);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+function thumbParaTi(ctx) {
+  const items = THUMB_PARA.map(THUMBS_BY_ID).filter(Boolean);
+  return el("section", { class: "carril-bloque" }, [
+    el("div", { class: "carril-head" }, [
+      el("h2", { text: ctx.t("paraTi") }),
+      button(ctx.t("verTodo"), { class: "ver-todo", "data-go": "plantillas", "data-thumb-cat": "" }),
+    ]),
+    el("div", { class: "carril grande" }, items.map(thumbCard)),
+  ]);
+}
+
+function thumbExplora(ctx, respetoGrupo) {
+  const { state, t, lang } = ctx;
+  const en = lang === "en";
+  let list = thumbCatsFor(respetoGrupo ? state.grupo : "");
+  const needsMore = list.length > 14;
+  if (!state.masCats) list = list.slice(0, 14);
+  const tiles = el("div", { class: "mosaico-cats", role: "group", "aria-label": t("explora") }, list.map((cat, index) => {
+    const sample = thumbsIn(cat.id)[0];
+    const node = button("", {
+      class: "cat-tile",
+      "data-thumb-cat": cat.id,
+      "data-go": "plantillas",
+      "aria-pressed": state.thumbCat === cat.id ? "true" : "false",
+    });
+    const fondo = el("span", { class: "cat-fondo", style: `background:${PASTEL[index % PASTEL.length]}` });
+    if (sample) {
+      const slot = el("span", { class: "mini-slot thumb-slot", style: `aspect-ratio:${sample.width} / ${sample.height}` });
+      slot.append(el("img", { src: studioAsset(sample.file), alt: "", draggable: "false", loading: "lazy", decoding: "async" }));
+      fondo.append(slot);
+    }
+    node.append(fondo, el("span", { class: "plantilla-nombre", text: en ? cat.en : cat.es }));
+    return node;
+  }));
+  const more = needsMore
+    ? el("div", { class: "mas-fila" }, [button(state.masCats ? t("mostrarMenos") : t("mostrarMas"), { id: "mostrar-mas", class: "mostrar-mas" })])
+    : null;
+  return el("section", { class: "carril-bloque" }, [
+    el("div", { class: "carril-head" }, [
+      el("h2", { text: t("explora") }),
+      button(t("verTodo"), { class: "ver-todo", "data-go": "plantillas", "data-thumb-cat": "" }),
+    ]),
+    tiles,
+    more,
+  ]);
+}
+
+function thumbRails(ctx) {
+  const { lang, t } = ctx;
+  const en = lang === "en";
+  return el("div", { class: "carriles" }, THUMB_CATS.map((cat) => {
+    const items = thumbsIn(cat.id);
+    if (!items.length) return null;
+    return el("section", { class: "carril-bloque" }, [
+      el("div", { class: "carril-head" }, [
+        el("h2", { text: en ? cat.en : cat.es }),
+        button(t("verTodo"), { class: "ver-todo", "data-go": "plantillas", "data-thumb-cat": cat.id }),
+      ]),
+      el("div", { class: "carril" }, items.map(thumbCard)),
+    ]);
+  }));
+}
+
+function thumbDense(ctx) {
+  const items = thumbsForGrupo(ctx.state.grupo);
+  return el("div", { class: "rejilla-cinco thumbs" }, items.map(thumbCard));
+}
+
+function thumbCategory(ctx) {
+  const { lang, t, state } = ctx;
+  const cat = THUMB_CATS.find((item) => item.id === state.thumbCat);
+  if (!cat) return thumbDense(ctx);
+  const en = lang === "en";
+  const cards = thumbsIn(cat.id).map(thumbCard);
+  return el("section", { class: "carril-bloque" }, [
+    el("div", { class: "carril-head" }, [el("h2", { text: en ? cat.en : cat.es })]),
+    el("div", { class: "rejilla-cinco thumbs" }, [thumbBlank(ctx, cat.format), ...cards]),
+  ]);
 }
 
 function tileList(ctx, respetoGrupo) {
@@ -465,7 +590,12 @@ function themedRails(ctx, limit, shown) {
 }
 
 function homeRails(ctx, shown) {
-  return themedRails({ ...ctx, state: { ...ctx.state, grupo: "" } }, 10, shown);
+  return themedRails({ ...ctx, state: { ...ctx.state, grupo: "" } }, 8, shown);
+}
+
+function pinnedTemplates(ctx, ids) {
+  const items = [...ids].map((id) => PLANTILLAS.find((item) => item.id === id)).filter(Boolean);
+  return railBlock(ctx, ctx.t("piezas"), "", items, false);
 }
 
 function hubRails(ctx) {

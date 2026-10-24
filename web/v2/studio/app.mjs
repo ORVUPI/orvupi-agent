@@ -38,6 +38,7 @@ import { exportAllowed } from "./lib/filter.mjs";
 import { createImageStore } from "./lib/images.mjs";
 import { LOGO_MAX_BYTES, readLogoPng } from "./lib/logo.mjs";
 import { IDEAS, filterPlantillas, instantiate } from "./lib/plantillas.mjs";
+import { thumbById, thumbCat } from "./lib/thumbs.mjs";
 import {
   adoptLegacyDraft,
   deleteProject,
@@ -107,6 +108,8 @@ const COPY = {
     explora: "Explora las categorías",
     mostrarMas: "Mostrar más",
     mostrarMenos: "Mostrar menos",
+    crearBlanco: "Crear en blanco",
+    piezas: "Piezas editables",
     grupoTodo: "Todo",
     buscarCrear: "Qué pieza quieres",
     personalizado: "Personalizado",
@@ -242,6 +245,8 @@ const COPY = {
     explora: "Explore categories",
     mostrarMas: "Show more",
     mostrarMenos: "Show less",
+    crearBlanco: "Blank design",
+    piezas: "Editable pieces",
     grupoTodo: "All",
     buscarCrear: "What piece do you want",
     personalizado: "Custom",
@@ -345,6 +350,7 @@ const state = {
   filters: { text: "", uso: "", estilo: "", color: "", precio: "", formato: "" },
   grupo: "",
   masCats: false,
+  thumbCat: "",
   rail: "plantillas",
   tool: "select",
   doc: null,
@@ -537,6 +543,15 @@ function shellRail(doc) {
   const shell = doc?.meta?.shell;
   if (shell === "whiteboard") return "elementos";
   return "plantillas";
+}
+
+function openThumb(id) {
+  const item = thumbById(id);
+  const meta = item ? thumbCat(item.category) : null;
+  const doc = meta ? instantiate(meta.open) : null;
+  if (!doc) return;
+  doc.name = item.title.slice(0, 80);
+  openDoc(doc);
 }
 
 function applyFormat(id) {
@@ -776,6 +791,13 @@ function applyColor(hex) {
 function onRootClick(event) {
   const buttonNode = event.target.closest("button");
   if (!buttonNode || !root.contains(buttonNode)) return;
+  if ("thumbCat" in buttonNode.dataset) {
+    state.thumbCat = buttonNode.dataset.thumbCat || "";
+    state.filters.uso = "";
+    state.filters.text = "";
+    state.filters.formato = "";
+  }
+  if (buttonNode.dataset.thumb) openThumb(buttonNode.dataset.thumb);
   if (buttonNode.dataset.go) go(buttonNode.dataset.go);
   if (buttonNode.id === "crear-pieza") {
     state.resizing = false;
@@ -863,6 +885,7 @@ function onRootClick(event) {
   }
   if (buttonNode.id === "limpiar-filtros") {
     state.filters = { text: "", uso: "", estilo: "", color: "", precio: "", formato: "" };
+    state.thumbCat = "";
     render();
   }
   if (buttonNode.dataset.open) {

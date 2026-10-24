@@ -538,8 +538,18 @@ body.studio-standalone footer.or-footer a[href$="risks/"] {
   min-width: 0;
   max-width: 100%;
 }
-.seguir-grid .mini-slot { height: 148px; aspect-ratio: auto; }
+.seguir-grid .mini-slot,
+.seguir-grid .thumb-slot,
+.carril.grande .thumb-slot { height: 168px; aspect-ratio: auto !important; }
 .carril.grande .mini-slot { height: 158px; aspect-ratio: auto; }
+.thumb-slot img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
 .carril-bloque { margin: 0.4rem 0 0.05rem; }
 .carril.grande .plantilla { flex-basis: 280px; width: 280px; }
 .rejilla-cinco {
@@ -615,10 +625,11 @@ body.studio-standalone footer.or-footer a[href$="risks/"] {
 #studio-root button.cat-tile[aria-pressed="true"] .mini-slot {
   box-shadow: 0 0 0 3px #ff3070, 0 14px 30px rgba(16, 32, 50, 0.16);
 }
-#studio-root button.cat-tile .mini-slot {
+#studio-root button.cat-tile .mini-slot,
+#studio-root button.cat-tile .thumb-slot {
   width: 68%;
-  height: 86px;
-  aspect-ratio: auto;
+  height: 86px !important;
+  aspect-ratio: auto !important;
 }
 .mini-slot.blanco {
   display: grid;
