@@ -1583,3 +1583,325 @@ body.studio-standalone:has(.canva-home) main.studio-app {
   padding: 0 18px;
   font-weight: 650;
 }
+
+/* Plantillas móvil: mismo shell que Inicio, feed al estilo de la referencia. */
+body.studio-standalone:has(.canva-plantillas) { background: #fff; }
+.canva-home.canva-plantillas {
+  background-color: #fff;
+  background-image: linear-gradient(180deg, #E8D9FE 0px, #f6f0ff 150px, #ffffff 250px);
+  background-repeat: no-repeat;
+}
+.tpl-top {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding: calc(10px + env(safe-area-inset-top)) 8px 2px 16px;
+  background: transparent;
+}
+.canva-plantillas.is-scrolled .tpl-top {
+  background: #fff;
+  box-shadow: 0 1px 0 rgba(16, 32, 50, 0.06);
+}
+.tpl-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  gap: 8px;
+}
+.tpl-drop { position: relative; }
+.tpl-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  list-style: none;
+  cursor: pointer;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  color: #1a1a1e;
+}
+.tpl-title::-webkit-details-marker { display: none; }
+.tpl-title::marker { content: ""; }
+.tpl-title svg { width: 22px; height: 22px; }
+#studio-root button.tpl-search-btn {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #1c1c1f;
+  display: grid;
+  place-items: center;
+}
+.canva-plantillas:not(.is-scrolled) #studio-root button.tpl-search-btn,
+#studio-root .canva-plantillas:not(.is-scrolled) button.tpl-search-btn {
+  visibility: hidden;
+}
+#studio-root button.tpl-search-btn svg { width: 22px; height: 22px; }
+.tpl-menu {
+  position: absolute;
+  z-index: 36;
+  left: 0;
+  top: calc(100% + 6px);
+  min-width: 220px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(16, 32, 50, 0.16);
+  padding: 6px;
+}
+#studio-root .tpl-menu button {
+  display: flex;
+  width: 100%;
+  min-height: 40px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  text-align: left;
+  font-weight: 650;
+  color: #1c1c1f;
+}
+#studio-root .tpl-menu button[aria-pressed="true"] {
+  background: #f3e8ff;
+  color: #8B3DFF;
+}
+.tpl-search-wrap { padding: 8px 16px 0; }
+.canva-plantillas #buscar {
+  min-height: 48px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(80, 40, 140, 0.08);
+}
+.tpl-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 14px 16px 2px;
+  scrollbar-width: none;
+}
+.tpl-chips::-webkit-scrollbar { display: none; }
+#studio-root button.tpl-chip {
+  flex: 0 0 auto;
+  min-height: 38px;
+  height: 38px;
+  min-width: 0;
+  margin: 0;
+  padding: 0 14px;
+  border: 1px solid #e7e7ec;
+  border-radius: 999px;
+  background: #fff;
+  color: #1c1c1f;
+  font-size: 14px;
+  font-weight: 650;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 1px 2px rgba(16, 32, 50, 0.04);
+}
+#studio-root button.tpl-chip svg { width: 16px; height: 16px; }
+#studio-root button.tpl-chip[data-grupo="negocios"] svg { color: #0f766e; }
+#studio-root button.tpl-chip[data-grupo="redes"] svg { color: #ff3b5c; }
+#studio-root button.tpl-chip[data-grupo="video"] svg { color: #7c3aed; }
+#studio-root button.tpl-chip[data-grupo="educacion"] svg { color: #2563eb; }
+#studio-root button.tpl-chip[data-grupo="documentos"] svg { color: #d97706; }
+#studio-root button.tpl-chip[data-grupo="marketing"] svg { color: #db2777; }
+#studio-root button.tpl-chip[aria-pressed="true"] {
+  background: #ff3b5c;
+  border-color: #ff3b5c;
+  color: #fff;
+}
+#studio-root button.tpl-chip[aria-pressed="true"] svg { color: #fff; }
+.canva-plantillas .canva-feed { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+.canva-plantillas .canva-head { padding: 28px 16px 10px; }
+.canva-plantillas .canva-head h2 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+.tpl-glance-wrap,
+.tpl-rail-wrap { position: relative; }
+.tpl-glance {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: auto auto;
+  grid-auto-columns: 108px;
+  column-gap: 6px;
+  row-gap: 14px;
+  overflow-x: auto;
+  padding: 2px 16px 8px;
+  scrollbar-width: none;
+}
+.tpl-glance::-webkit-scrollbar,
+.tpl-rail-row::-webkit-scrollbar { display: none; }
+#studio-root button.tpl-tile,
+#studio-root button.tpl-tile[aria-pressed="true"] {
+  width: 108px;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #1c1c1f;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+.tpl-tile-face {
+  width: 96px;
+  height: 96px;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+.tpl-tile-face img {
+  width: 68%;
+  height: 74%;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 8px 16px rgba(16, 32, 50, 0.14);
+}
+.tpl-tile-label {
+  display: block;
+  max-width: 104px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.25;
+  color: #1c1c1f;
+}
+#studio-root button.tpl-arrow {
+  position: absolute;
+  z-index: 3;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  color: #1c1c1f;
+  box-shadow: 0 4px 16px rgba(16, 32, 50, 0.16);
+  display: grid;
+  place-items: center;
+}
+#studio-root button.tpl-arrow svg { width: 18px; height: 18px; }
+.tpl-glance-wrap .tpl-arrow.is-next { right: 6px; top: 30px; }
+.tpl-rail-wrap .tpl-arrow { top: 50%; margin-top: -20px; }
+.tpl-rail-wrap .tpl-arrow.is-prev { left: 8px; }
+.tpl-rail-wrap .tpl-arrow.is-next { right: 8px; }
+.tpl-rail-row {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 0 16px 8px;
+  scrollbar-width: none;
+}
+.tpl-rail-card {
+  position: relative;
+  flex: 0 0 78%;
+  scroll-snap-align: start;
+}
+.tpl-rail-row.is-pair .tpl-rail-card { flex-basis: 46%; }
+.tpl-rail-row.is-feature .tpl-rail-card { flex-basis: 72%; }
+.tpl-rail-row.is-hero .tpl-rail-card { flex-basis: 88%; }
+.tpl-masonry {
+  column-count: 2;
+  column-gap: 10px;
+  padding: 0 16px 8px;
+}
+.tpl-masonry .tpl-card {
+  break-inside: avoid;
+  margin: 0 0 10px;
+  border-radius: 8px;
+}
+.tpl-card { position: relative; }
+.tpl-masonry .tpl-card,
+.tpl-masonry .canva-thumb,
+.tpl-masonry .canva-thumb img { border-radius: 8px; }
+.tpl-rail-card,
+.tpl-rail-card .canva-thumb,
+.tpl-rail-card .canva-thumb img { border-radius: 16px; }
+#studio-root button.tpl-open {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: inherit;
+}
+.tpl-card .canva-thumb {
+  height: auto;
+  border-radius: inherit;
+  background: #eceff3;
+}
+.tpl-card .canva-thumb img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: inherit;
+}
+.tpl-card .canva-more { top: 8px; right: 8px; }
+.tpl-media,
+.tpl-pages {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+.tpl-play,
+.tpl-mute {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  color: #1c1c1f;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 2px 8px rgba(16, 32, 50, 0.16);
+}
+.tpl-play svg,
+.tpl-mute svg,
+.tpl-pages svg { width: 14px; height: 14px; }
+.tpl-pages {
+  min-height: 24px;
+  padding: 2px 8px 2px 6px;
+  border-radius: 999px;
+  background: rgba(32, 32, 36, 0.55);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1;
+}
+#studio-root button.tpl-blank {
+  display: flex;
+  width: calc(100% - 32px);
+  margin: 8px 16px 0;
+  min-height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: #f4f0fb;
+  color: #3a1d6e;
+  font-weight: 650;
+  justify-content: center;
+}
+#studio-root .canva-nav button.canva-tab[aria-current="page"],
+.canva-tab-menu[open] > summary { color: #8B3DFF; }
