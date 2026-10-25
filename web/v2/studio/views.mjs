@@ -4,7 +4,7 @@ import catalog from "./catalog.json" with { type: "json" };
 import { BRAND, FONTS, PRESETS, fontById, importProject, orderedLayers, overlappingIds } from "./lib/document.mjs";
 import { IDEAS, PLANTILLAS, filterPlantillas, instantiate } from "./lib/plantillas.mjs";
 import { listProjects } from "./lib/projects.mjs";
-import { THUMB_CATS, thumbCatsFor, thumbsForGrupo, thumbsIn } from "./lib/thumbs.mjs";
+import { THUMB_CATS, THUMB_GROUPS, thumbCatsFor, thumbsForGrupo, thumbsIn } from "./lib/thumbs.mjs";
 
 const GROUPS = {
   "para-ti": ["square", "story", "x", "tiktok", "ig", "deck", "doc", "cv", "video", "flyer", "logo", "poster", "web", "board"],
@@ -200,12 +200,12 @@ export function catalogBody(ctx) {
   const thumbPage = ctx.viewName() === "plantillas" && !active && Boolean(state.thumbCat);
   if (home && !gridMode) {
     const pinned = new Set(["publi-feed", "historia-saludo", "meme-punch", "pizarra-ideas", "sitio-comunidad", "flyer-comunidad", "cartel-vertical", "logo-cuadrado", "invitacion-vertical", "folleto-tres"]);
-    kids.push(thumbSeguir(ctx), thumbParaTi(ctx), thumbExplora(ctx, false), thumbRails(ctx), homeRails(ctx, pinned), pinnedTemplates(ctx, pinned), ideas, filters);
+    kids.push(groupChips(ctx), thumbSeguir(ctx), thumbParaTi(ctx), categoryGroups(ctx), thumbRails(ctx), homeRails(ctx, pinned), pinnedTemplates(ctx, pinned), ideas, filters);
   } else if (thumbPage) {
     kids.push(thumbCategory(ctx));
     kids.push(filters);
   } else if (hub) {
-    kids.push(groupChips(ctx), thumbExplora(ctx, true), thumbDense(ctx), ideas, filters);
+    kids.push(groupChips(ctx), categoryGroups(ctx), ctx.state.grupo ? thumbRails(ctx) : null, ideas, filters);
   } else {
     const blank = blankCardFor(state.filters.uso, en);
     const grid = items.length ? el("div", { class: "rejilla-cinco" }, blank ? [blank, ...cards] : cards) : null;
@@ -266,10 +266,12 @@ const TILES = [
 const PASTEL = ["#FFE4EE", "#FFF8EC", "#E7EEF3", "#FFD6E4", "#F6EFE4", "#F8D5E2", "#E4EAF2"];
 
 const GRUPO_USOS = {
-  negocios: ["curriculum", "presentacion", "proyecto", "empresa", "documento", "flyer", "cartel", "logo", "invitacion"],
+  negocios: ["curriculum", "presentacion", "proyecto", "empresa", "logo"],
   redes: ["redes", "historia", "publicacion", "anuncio", "meme", "marca"],
   video: ["video"],
-  educacion: ["educacion", "infografia", "pizarra", "web", "folleto"],
+  educacion: ["educacion", "pizarra"],
+  documentos: ["documento"],
+  marketing: ["flyer", "cartel", "invitacion", "infografia", "web", "folleto"],
 };
 
 const PARA_TI = [
@@ -332,11 +334,15 @@ const THUMB_PARA = [
 ];
 const THUMB_SEGUIR = ["tpl-presentacion-02", "tpl-youtube-thumb-03", "tpl-video-cover-04", "tpl-negocio-03"];
 
-function thumbCard(item) {
+function thumbLabel(item, lang) {
+  return lang === "en" && item.titleEn ? item.titleEn : item.title;
+}
+
+function thumbCard(item, lang) {
   const node = button("", { class: "plantilla thumb-card", "data-thumb": item.id });
   const slot = el("span", { class: "mini-slot thumb-slot", style: `aspect-ratio:${item.width} / ${item.height}` });
   slot.append(el("img", { src: studioAsset(item.file), alt: "", draggable: "false", loading: "lazy", decoding: "async" }));
-  node.append(slot, el("span", { class: "plantilla-nombre", text: item.title }));
+  node.append(slot, el("span", { class: "plantilla-nombre", text: thumbLabel(item, lang) }));
   return node;
 }
 
@@ -349,7 +355,7 @@ function thumbSeguir(ctx) {
   const projects = listProjects(ctx.storage).slice(0, 4);
   const cards = projects.length
     ? projects.map((item) => recentCard(item, t))
-    : THUMB_SEGUIR.map((id) => THUMBS_BY_ID(id)).filter(Boolean).map(thumbCard);
+    : THUMB_SEGUIR.map((id) => THUMBS_BY_ID(id)).filter(Boolean).map((item) => thumbCard(item, ctx.lang));
   const more = button(t("verTodo"), { class: "ver-todo", "data-go": projects.length ? "disenos" : "plantillas", "data-thumb-cat": "" });
   return el("section", { class: "carril-bloque" }, [
     el("div", { class: "carril-head" }, [el("h2", { text: t("seguir") }), more]),
@@ -372,50 +378,49 @@ function thumbParaTi(ctx) {
       el("h2", { text: ctx.t("paraTi") }),
       button(ctx.t("verTodo"), { class: "ver-todo", "data-go": "plantillas", "data-thumb-cat": "" }),
     ]),
-    el("div", { class: "carril grande" }, items.map(thumbCard)),
+    el("div", { class: "carril grande" }, items.map((item) => thumbCard(item, ctx.lang))),
   ]);
 }
 
-function thumbExplora(ctx, respetoGrupo) {
-  const { state, t, lang } = ctx;
+function catTile(ctx, cat, index) {
+  const { state, lang } = ctx;
   const en = lang === "en";
-  let list = thumbCatsFor(respetoGrupo ? state.grupo : "");
-  const needsMore = list.length > 14;
-  if (!state.masCats) list = list.slice(0, 14);
-  const tiles = el("div", { class: "mosaico-cats", role: "group", "aria-label": t("explora") }, list.map((cat, index) => {
-    const sample = thumbsIn(cat.id)[0];
-    const node = button("", {
-      class: "cat-tile",
-      "data-thumb-cat": cat.id,
-      "data-go": "plantillas",
-      "aria-pressed": state.thumbCat === cat.id ? "true" : "false",
-    });
-    const fondo = el("span", { class: "cat-fondo", style: `background:${PASTEL[index % PASTEL.length]}` });
-    if (sample) {
-      const slot = el("span", { class: "mini-slot thumb-slot", style: `aspect-ratio:${sample.width} / ${sample.height}` });
-      slot.append(el("img", { src: studioAsset(sample.file), alt: "", draggable: "false", loading: "lazy", decoding: "async" }));
-      fondo.append(slot);
-    }
-    node.append(fondo, el("span", { class: "plantilla-nombre", text: en ? cat.en : cat.es }));
-    return node;
+  const sample = thumbsIn(cat.id)[0];
+  const node = button("", {
+    class: "cat-tile",
+    "data-thumb-cat": cat.id,
+    "data-go": "plantillas",
+    "aria-pressed": state.thumbCat === cat.id ? "true" : "false",
+  });
+  const fondo = el("span", { class: "cat-fondo", style: `background:${PASTEL[index % PASTEL.length]}` });
+  if (sample) {
+    const slot = el("span", { class: "mini-slot thumb-slot", style: `aspect-ratio:${sample.width} / ${sample.height}` });
+    slot.append(el("img", { src: studioAsset(sample.file), alt: "", draggable: "false", loading: "lazy", decoding: "async" }));
+    fondo.append(slot);
+  }
+  node.append(fondo, el("span", { class: "plantilla-nombre", text: en ? cat.en : cat.es }));
+  return node;
+}
+
+function categoryGroups(ctx) {
+  const { state, lang } = ctx;
+  const en = lang === "en";
+  const groups = state.grupo ? THUMB_GROUPS.filter((group) => group.id === state.grupo) : THUMB_GROUPS;
+  return el("div", { class: "bloques-grupo" }, groups.map((group) => {
+    const cats = group.cats.map((id) => THUMB_CATS.find((item) => item.id === id)).filter(Boolean);
+    if (!cats.length) return null;
+    const label = en ? group.en : group.es;
+    return el("section", { class: "bloque-grupo", "aria-label": label }, [
+      el("h3", { class: "grupo-titulo", text: label }),
+      el("div", { class: "mosaico-cats" }, cats.map((cat, index) => catTile(ctx, cat, index))),
+    ]);
   }));
-  const more = needsMore
-    ? el("div", { class: "mas-fila" }, [button(state.masCats ? t("mostrarMenos") : t("mostrarMas"), { id: "mostrar-mas", class: "mostrar-mas" })])
-    : null;
-  return el("section", { class: "carril-bloque" }, [
-    el("div", { class: "carril-head" }, [
-      el("h2", { text: t("explora") }),
-      button(t("verTodo"), { class: "ver-todo", "data-go": "plantillas", "data-thumb-cat": "" }),
-    ]),
-    tiles,
-    more,
-  ]);
 }
 
 function thumbRails(ctx) {
-  const { lang, t } = ctx;
+  const { lang, t, state } = ctx;
   const en = lang === "en";
-  return el("div", { class: "carriles" }, THUMB_CATS.map((cat) => {
+  return el("div", { class: "carriles" }, thumbCatsFor(state.grupo).map((cat) => {
     const items = thumbsIn(cat.id);
     if (!items.length) return null;
     return el("section", { class: "carril-bloque" }, [
@@ -423,22 +428,22 @@ function thumbRails(ctx) {
         el("h2", { text: en ? cat.en : cat.es }),
         button(t("verTodo"), { class: "ver-todo", "data-go": "plantillas", "data-thumb-cat": cat.id }),
       ]),
-      el("div", { class: "carril" }, items.map(thumbCard)),
+      el("div", { class: "carril" }, items.map((item) => thumbCard(item, lang))),
     ]);
   }));
 }
 
 function thumbDense(ctx) {
   const items = thumbsForGrupo(ctx.state.grupo);
-  return el("div", { class: "rejilla-cinco thumbs" }, items.map(thumbCard));
+  return el("div", { class: "rejilla-cinco thumbs" }, items.map((item) => thumbCard(item, ctx.lang)));
 }
 
 function thumbCategory(ctx) {
-  const { lang, t, state } = ctx;
+  const { lang, state } = ctx;
   const cat = THUMB_CATS.find((item) => item.id === state.thumbCat);
   if (!cat) return thumbDense(ctx);
   const en = lang === "en";
-  const cards = thumbsIn(cat.id).map(thumbCard);
+  const cards = thumbsIn(cat.id).map((item) => thumbCard(item, lang));
   return el("section", { class: "carril-bloque" }, [
     el("div", { class: "carril-head" }, [el("h2", { text: en ? cat.en : cat.es })]),
     el("div", { class: "rejilla-cinco thumbs" }, [thumbBlank(ctx, cat.format), ...cards]),
@@ -489,10 +494,7 @@ function groupChips(ctx) {
   const en = lang === "en";
   const groups = [
     ["", t("grupoTodo")],
-    ["negocios", en ? "Business" : "Negocios"],
-    ["redes", en ? "Social" : "Redes"],
-    ["video", en ? "Video" : "Vídeo"],
-    ["educacion", en ? "Education" : "Educación"],
+    ...THUMB_GROUPS.map((group) => [group.id, en ? group.en : group.es]),
   ];
   return el("div", { class: "grupos", role: "group", "aria-label": t("tema") }, groups.map(([id, label]) => button(label, {
     class: "grupo",
@@ -590,7 +592,7 @@ function themedRails(ctx, limit, shown) {
 }
 
 function homeRails(ctx, shown) {
-  return themedRails({ ...ctx, state: { ...ctx.state, grupo: "" } }, 8, shown);
+  return themedRails(ctx, 8, shown);
 }
 
 function pinnedTemplates(ctx, ids) {

@@ -2,969 +2,1090 @@
   {
     "id": "tpl-curriculum-01",
     "category": "curriculum",
-    "title": "CV Tech Rosa",
+    "title": "CV dirección de producto",
+    "titleEn": "Product resume",
     "width": 420,
     "height": 560,
-    "file": "thumbs/curriculum-01-cv-tech-rosa.png"
+    "file": "thumbs/curriculum-01-cv-01.png"
   },
   {
     "id": "tpl-curriculum-02",
     "category": "curriculum",
-    "title": "CV Octopus Pro",
+    "title": "CV consultoría",
+    "titleEn": "Consulting resume",
     "width": 420,
     "height": 560,
-    "file": "thumbs/curriculum-02-cv-octopus-pro.png"
+    "file": "thumbs/curriculum-02-cv-02.png"
   },
   {
     "id": "tpl-curriculum-03",
     "category": "curriculum",
-    "title": "Currículum Creativo",
+    "title": "CV marca",
+    "titleEn": "Brand resume",
     "width": 420,
     "height": 560,
-    "file": "thumbs/curriculum-03-curriculum-creativo.png"
+    "file": "thumbs/curriculum-03-cv-03.png"
   },
   {
     "id": "tpl-curriculum-04",
     "category": "curriculum",
-    "title": "CV Minimal Navy",
+    "title": "CV minimal",
+    "titleEn": "Minimal resume",
     "width": 420,
     "height": 560,
-    "file": "thumbs/curriculum-04-cv-minimal-navy.png"
+    "file": "thumbs/curriculum-04-cv-04.png"
   },
   {
     "id": "tpl-curriculum-05",
     "category": "curriculum",
-    "title": "CV Marketing Pink",
+    "title": "CV marketing",
+    "titleEn": "Marketing resume",
     "width": 420,
     "height": 560,
-    "file": "thumbs/curriculum-05-cv-marketing-pink.png"
+    "file": "thumbs/curriculum-05-cv-05.png"
   },
   {
     "id": "tpl-curriculum-06",
     "category": "curriculum",
-    "title": "Perfil Diseñador ORVUPI",
+    "title": "CV ejecutivo",
+    "titleEn": "Executive resume",
     "width": 420,
     "height": 560,
-    "file": "thumbs/curriculum-06-perfil-disenador-orvupi.png"
-  },
-  {
-    "id": "tpl-presentacion-01",
-    "category": "presentacion",
-    "title": "Pitch Deck Octopus",
-    "width": 640,
-    "height": 360,
-    "file": "thumbs/presentacion-01-pitch-deck-octopus.png"
-  },
-  {
-    "id": "tpl-presentacion-02",
-    "category": "presentacion",
-    "title": "Deck Startup Rosa",
-    "width": 640,
-    "height": 360,
-    "file": "thumbs/presentacion-02-deck-startup-rosa.png"
-  },
-  {
-    "id": "tpl-presentacion-03",
-    "category": "presentacion",
-    "title": "Presentación Navy",
-    "width": 640,
-    "height": 360,
-    "file": "thumbs/presentacion-03-presentacion-navy.png"
-  },
-  {
-    "id": "tpl-presentacion-04",
-    "category": "presentacion",
-    "title": "Slides Academia",
-    "width": 640,
-    "height": 360,
-    "file": "thumbs/presentacion-04-slides-academia.png"
-  },
-  {
-    "id": "tpl-presentacion-05",
-    "category": "presentacion",
-    "title": "Pitch Inversores",
-    "width": 640,
-    "height": 360,
-    "file": "thumbs/presentacion-05-pitch-inversores.png"
-  },
-  {
-    "id": "tpl-presentacion-06",
-    "category": "presentacion",
-    "title": "Keynote Comunidad",
-    "width": 640,
-    "height": 360,
-    "file": "thumbs/presentacion-06-keynote-comunidad.png"
-  },
-  {
-    "id": "tpl-presentacion-07",
-    "category": "presentacion",
-    "title": "Deck Producto ORVUPI",
-    "width": 640,
-    "height": 360,
-    "file": "thumbs/presentacion-07-deck-producto-orvupi.png"
-  },
-  {
-    "id": "tpl-post-instagram-01",
-    "category": "post-instagram",
-    "title": "Post Quote Rosa",
-    "width": 480,
-    "height": 480,
-    "file": "thumbs/post-instagram-01-post-quote-rosa.png"
-  },
-  {
-    "id": "tpl-post-instagram-02",
-    "category": "post-instagram",
-    "title": "Carrusel Tips",
-    "width": 480,
-    "height": 480,
-    "file": "thumbs/post-instagram-02-carrusel-tips.png"
-  },
-  {
-    "id": "tpl-post-instagram-03",
-    "category": "post-instagram",
-    "title": "Anuncio Comunidad",
-    "width": 480,
-    "height": 480,
-    "file": "thumbs/post-instagram-03-anuncio-comunidad.png"
-  },
-  {
-    "id": "tpl-post-instagram-04",
-    "category": "post-instagram",
-    "title": "Post Lanzamiento",
-    "width": 480,
-    "height": 480,
-    "file": "thumbs/post-instagram-04-post-lanzamiento.png"
-  },
-  {
-    "id": "tpl-post-instagram-05",
-    "category": "post-instagram",
-    "title": "Moodboard ORVUPI",
-    "width": 480,
-    "height": 480,
-    "file": "thumbs/post-instagram-05-moodboard-orvupi.png"
-  },
-  {
-    "id": "tpl-post-instagram-06",
-    "category": "post-instagram",
-    "title": "Post Tip Creativo",
-    "width": 480,
-    "height": 480,
-    "file": "thumbs/post-instagram-06-post-tip-creativo.png"
-  },
-  {
-    "id": "tpl-post-instagram-07",
-    "category": "post-instagram",
-    "title": "Feed Brand Kit",
-    "width": 480,
-    "height": 480,
-    "file": "thumbs/post-instagram-07-feed-brand-kit.png"
-  },
-  {
-    "id": "tpl-story-01",
-    "category": "story",
-    "title": "Story Countdown",
-    "width": 360,
-    "height": 640,
-    "file": "thumbs/story-01-story-countdown.png"
-  },
-  {
-    "id": "tpl-story-02",
-    "category": "story",
-    "title": "Story Behind Scenes",
-    "width": 360,
-    "height": 640,
-    "file": "thumbs/story-02-story-behind-scenes.png"
-  },
-  {
-    "id": "tpl-story-03",
-    "category": "story",
-    "title": "Story Promo Rosa",
-    "width": 360,
-    "height": 640,
-    "file": "thumbs/story-03-story-promo-rosa.png"
-  },
-  {
-    "id": "tpl-story-04",
-    "category": "story",
-    "title": "Story Encuesta",
-    "width": 360,
-    "height": 640,
-    "file": "thumbs/story-04-story-encuesta.png"
-  },
-  {
-    "id": "tpl-story-05",
-    "category": "story",
-    "title": "Story Nuevo Drop",
-    "width": 360,
-    "height": 640,
-    "file": "thumbs/story-05-story-nuevo-drop.png"
-  },
-  {
-    "id": "tpl-story-06",
-    "category": "story",
-    "title": "Story Q&A Octopus",
-    "width": 360,
-    "height": 640,
-    "file": "thumbs/story-06-story-q-a-octopus.png"
-  },
-  {
-    "id": "tpl-youtube-thumb-01",
-    "category": "youtube-thumb",
-    "title": "Thumb Tutorial Pro",
-    "width": 640,
-    "height": 360,
-    "file": "thumbs/youtube-thumb-01-thumb-tutorial-pro.png"
-  },
-  {
-    "id": "tpl-youtube-thumb-02",
-    "category": "youtube-thumb",
-    "title": "Thumb Review Rosa",
-    "width": 640,
-    "height": 360,
-    "file": "thumbs/youtube-thumb-02-thumb-review-rosa.png"
-  },
-  {
-    "id": "tpl-youtube-thumb-03",
-    "category": "youtube-thumb",
-    "title": "Thumb Live ORVUPI",
-    "width": 640,
-    "height": 360,
-    "file": "thumbs/youtube-thumb-03-thumb-live-orvupi.png"
-  },
-  {
-    "id": "tpl-youtube-thumb-04",
-    "category": "youtube-thumb",
-    "title": "Thumb Clickbait Soft",
-    "width": 640,
-    "height": 360,
-    "file": "thumbs/youtube-thumb-04-thumb-clickbait-soft.png"
-  },
-  {
-    "id": "tpl-youtube-thumb-05",
-    "category": "youtube-thumb",
-    "title": "Thumb Curso Intensivo",
-    "width": 640,
-    "height": 360,
-    "file": "thumbs/youtube-thumb-05-thumb-curso-intensivo.png"
-  },
-  {
-    "id": "tpl-flyer-01",
-    "category": "flyer",
-    "title": "Flyer Evento Rosa",
-    "width": 420,
-    "height": 560,
-    "file": "thumbs/flyer-01-flyer-evento-rosa.png"
-  },
-  {
-    "id": "tpl-flyer-02",
-    "category": "flyer",
-    "title": "Flyer Meetup Octopus",
-    "width": 420,
-    "height": 560,
-    "file": "thumbs/flyer-02-flyer-meetup-octopus.png"
-  },
-  {
-    "id": "tpl-flyer-03",
-    "category": "flyer",
-    "title": "Flyer Workshop",
-    "width": 420,
-    "height": 560,
-    "file": "thumbs/flyer-03-flyer-workshop.png"
-  },
-  {
-    "id": "tpl-flyer-04",
-    "category": "flyer",
-    "title": "Flyer Open Day",
-    "width": 420,
-    "height": 560,
-    "file": "thumbs/flyer-04-flyer-open-day.png"
-  },
-  {
-    "id": "tpl-flyer-05",
-    "category": "flyer",
-    "title": "Flyer Fiesta Comunidad",
-    "width": 420,
-    "height": 560,
-    "file": "thumbs/flyer-05-flyer-fiesta-comunidad.png"
-  },
-  {
-    "id": "tpl-cartel-01",
-    "category": "cartel",
-    "title": "Cartel Concierto",
-    "width": 400,
-    "height": 560,
-    "file": "thumbs/cartel-01-cartel-concierto.png"
-  },
-  {
-    "id": "tpl-cartel-02",
-    "category": "cartel",
-    "title": "Cartel Festival Rosa",
-    "width": 400,
-    "height": 560,
-    "file": "thumbs/cartel-02-cartel-festival-rosa.png"
-  },
-  {
-    "id": "tpl-cartel-03",
-    "category": "cartel",
-    "title": "Cartel Expo ORVUPI",
-    "width": 400,
-    "height": 560,
-    "file": "thumbs/cartel-03-cartel-expo-orvupi.png"
-  },
-  {
-    "id": "tpl-cartel-04",
-    "category": "cartel",
-    "title": "Cartel Charla Tech",
-    "width": 400,
-    "height": 560,
-    "file": "thumbs/cartel-04-cartel-charla-tech.png"
-  },
-  {
-    "id": "tpl-logo-01",
-    "category": "logo",
-    "title": "Logo Badge Octopus",
-    "width": 480,
-    "height": 480,
-    "file": "thumbs/logo-01-logo-badge-octopus.png"
-  },
-  {
-    "id": "tpl-logo-02",
-    "category": "logo",
-    "title": "Logo Wordmark Rosa",
-    "width": 480,
-    "height": 480,
-    "file": "thumbs/logo-02-logo-wordmark-rosa.png"
-  },
-  {
-    "id": "tpl-logo-03",
-    "category": "logo",
-    "title": "Logo Sello Navy",
-    "width": 480,
-    "height": 480,
-    "file": "thumbs/logo-03-logo-sello-navy.png"
-  },
-  {
-    "id": "tpl-logo-04",
-    "category": "logo",
-    "title": "Logo Icon Circle",
-    "width": 480,
-    "height": 480,
-    "file": "thumbs/logo-04-logo-icon-circle.png"
-  },
-  {
-    "id": "tpl-logo-05",
-    "category": "logo",
-    "title": "Logo Monograma O",
-    "width": 480,
-    "height": 480,
-    "file": "thumbs/logo-05-logo-monograma-o.png"
-  },
-  {
-    "id": "tpl-logo-06",
-    "category": "logo",
-    "title": "Logo Splash Brand",
-    "width": 480,
-    "height": 480,
-    "file": "thumbs/logo-06-logo-splash-brand.png"
-  },
-  {
-    "id": "tpl-invitacion-01",
-    "category": "invitacion",
-    "title": "Invitación Boda Soft",
-    "width": 480,
-    "height": 360,
-    "file": "thumbs/invitacion-01-invitacion-boda-soft.png"
-  },
-  {
-    "id": "tpl-invitacion-02",
-    "category": "invitacion",
-    "title": "Invitación Cumple Rosa",
-    "width": 480,
-    "height": 360,
-    "file": "thumbs/invitacion-02-invitacion-cumple-rosa.png"
-  },
-  {
-    "id": "tpl-invitacion-03",
-    "category": "invitacion",
-    "title": "Invitación Gala ORVUPI",
-    "width": 480,
-    "height": 360,
-    "file": "thumbs/invitacion-03-invitacion-gala-orvupi.png"
-  },
-  {
-    "id": "tpl-invitacion-04",
-    "category": "invitacion",
-    "title": "Invitación Baby Shower",
-    "width": 480,
-    "height": 360,
-    "file": "thumbs/invitacion-04-invitacion-baby-shower.png"
-  },
-  {
-    "id": "tpl-invitacion-05",
-    "category": "invitacion",
-    "title": "Invitación Corporate",
-    "width": 480,
-    "height": 360,
-    "file": "thumbs/invitacion-05-invitacion-corporate.png"
-  },
-  {
-    "id": "tpl-doc-01",
-    "category": "doc",
-    "title": "Informe Mensual",
-    "width": 420,
-    "height": 560,
-    "file": "thumbs/doc-01-informe-mensual.png"
-  },
-  {
-    "id": "tpl-doc-02",
-    "category": "doc",
-    "title": "Propuesta Cliente",
-    "width": 420,
-    "height": 560,
-    "file": "thumbs/doc-02-propuesta-cliente.png"
-  },
-  {
-    "id": "tpl-doc-03",
-    "category": "doc",
-    "title": "Brief Creativo",
-    "width": 420,
-    "height": 560,
-    "file": "thumbs/doc-03-brief-creativo.png"
-  },
-  {
-    "id": "tpl-doc-04",
-    "category": "doc",
-    "title": "Acta Reunión",
-    "width": 420,
-    "height": 560,
-    "file": "thumbs/doc-04-acta-reunion.png"
-  },
-  {
-    "id": "tpl-doc-05",
-    "category": "doc",
-    "title": "Guía de Marca",
-    "width": 420,
-    "height": 560,
-    "file": "thumbs/doc-05-guia-de-marca.png"
-  },
-  {
-    "id": "tpl-doc-06",
-    "category": "doc",
-    "title": "Contrato Simple",
-    "width": 420,
-    "height": 560,
-    "file": "thumbs/doc-06-contrato-simple.png"
-  },
-  {
-    "id": "tpl-infografia-01",
-    "category": "infografia",
-    "title": "Info Pasos Rosa",
-    "width": 420,
-    "height": 640,
-    "file": "thumbs/infografia-01-info-pasos-rosa.png"
-  },
-  {
-    "id": "tpl-infografia-02",
-    "category": "infografia",
-    "title": "Info Datos Octopus",
-    "width": 420,
-    "height": 640,
-    "file": "thumbs/infografia-02-info-datos-octopus.png"
-  },
-  {
-    "id": "tpl-infografia-03",
-    "category": "infografia",
-    "title": "Info Timeline",
-    "width": 420,
-    "height": 640,
-    "file": "thumbs/infografia-03-info-timeline.png"
-  },
-  {
-    "id": "tpl-infografia-04",
-    "category": "infografia",
-    "title": "Info Comparativa",
-    "width": 420,
-    "height": 640,
-    "file": "thumbs/infografia-04-info-comparativa.png"
-  },
-  {
-    "id": "tpl-infografia-05",
-    "category": "infografia",
-    "title": "Info Checklist Pro",
-    "width": 420,
-    "height": 640,
-    "file": "thumbs/infografia-05-info-checklist-pro.png"
-  },
-  {
-    "id": "tpl-tarjeta-visita-01",
-    "category": "tarjeta-visita",
-    "title": "Tarjeta Classic Navy",
-    "width": 560,
-    "height": 320,
-    "file": "thumbs/tarjeta-visita-01-tarjeta-classic-navy.png"
-  },
-  {
-    "id": "tpl-tarjeta-visita-02",
-    "category": "tarjeta-visita",
-    "title": "Tarjeta Rosa Bold",
-    "width": 560,
-    "height": 320,
-    "file": "thumbs/tarjeta-visita-02-tarjeta-rosa-bold.png"
-  },
-  {
-    "id": "tpl-tarjeta-visita-03",
-    "category": "tarjeta-visita",
-    "title": "Tarjeta Minimal",
-    "width": 560,
-    "height": 320,
-    "file": "thumbs/tarjeta-visita-03-tarjeta-minimal.png"
-  },
-  {
-    "id": "tpl-tarjeta-visita-04",
-    "category": "tarjeta-visita",
-    "title": "Tarjeta Fundador",
-    "width": 560,
-    "height": 320,
-    "file": "thumbs/tarjeta-visita-04-tarjeta-fundador.png"
-  },
-  {
-    "id": "tpl-tarjeta-visita-05",
-    "category": "tarjeta-visita",
-    "title": "Tarjeta Studio Pro",
-    "width": 560,
-    "height": 320,
-    "file": "thumbs/tarjeta-visita-05-tarjeta-studio-pro.png"
-  },
-  {
-    "id": "tpl-video-cover-01",
-    "category": "video-cover",
-    "title": "Cover Serie Rosa",
-    "width": 640,
-    "height": 360,
-    "file": "thumbs/video-cover-01-cover-serie-rosa.png"
-  },
-  {
-    "id": "tpl-video-cover-02",
-    "category": "video-cover",
-    "title": "Cover Podcast",
-    "width": 640,
-    "height": 360,
-    "file": "thumbs/video-cover-02-cover-podcast.png"
-  },
-  {
-    "id": "tpl-video-cover-03",
-    "category": "video-cover",
-    "title": "Cover Curso Video",
-    "width": 640,
-    "height": 360,
-    "file": "thumbs/video-cover-03-cover-curso-video.png"
-  },
-  {
-    "id": "tpl-video-cover-04",
-    "category": "video-cover",
-    "title": "Cover Trailer ORVUPI",
-    "width": 640,
-    "height": 360,
-    "file": "thumbs/video-cover-04-cover-trailer-orvupi.png"
-  },
-  {
-    "id": "tpl-pizarra-01",
-    "category": "pizarra",
-    "title": "Pizarra Brainstorm",
-    "width": 640,
-    "height": 400,
-    "file": "thumbs/pizarra-01-pizarra-brainstorm.png"
-  },
-  {
-    "id": "tpl-pizarra-02",
-    "category": "pizarra",
-    "title": "Pizarra Roadmap",
-    "width": 640,
-    "height": 400,
-    "file": "thumbs/pizarra-02-pizarra-roadmap.png"
-  },
-  {
-    "id": "tpl-pizarra-03",
-    "category": "pizarra",
-    "title": "Pizarra Sprint",
-    "width": 640,
-    "height": 400,
-    "file": "thumbs/pizarra-03-pizarra-sprint.png"
-  },
-  {
-    "id": "tpl-pizarra-04",
-    "category": "pizarra",
-    "title": "Pizarra Moodboard",
-    "width": 640,
-    "height": 400,
-    "file": "thumbs/pizarra-04-pizarra-moodboard.png"
-  },
-  {
-    "id": "tpl-pizarra-05",
-    "category": "pizarra",
-    "title": "Pizarra Equipo",
-    "width": 640,
-    "height": 400,
-    "file": "thumbs/pizarra-05-pizarra-equipo.png"
-  },
-  {
-    "id": "tpl-sitio-web-01",
-    "category": "sitio-web",
-    "title": "Landing Startup",
-    "width": 640,
-    "height": 400,
-    "file": "thumbs/sitio-web-01-landing-startup.png"
-  },
-  {
-    "id": "tpl-sitio-web-02",
-    "category": "sitio-web",
-    "title": "Web Portfolio Rosa",
-    "width": 640,
-    "height": 400,
-    "file": "thumbs/sitio-web-02-web-portfolio-rosa.png"
-  },
-  {
-    "id": "tpl-sitio-web-03",
-    "category": "sitio-web",
-    "title": "Web Academia",
-    "width": 640,
-    "height": 400,
-    "file": "thumbs/sitio-web-03-web-academia.png"
-  },
-  {
-    "id": "tpl-sitio-web-04",
-    "category": "sitio-web",
-    "title": "Web Tienda Soft",
-    "width": 640,
-    "height": 400,
-    "file": "thumbs/sitio-web-04-web-tienda-soft.png"
-  },
-  {
-    "id": "tpl-sitio-web-05",
-    "category": "sitio-web",
-    "title": "Web Agencia ORVUPI",
-    "width": 640,
-    "height": 400,
-    "file": "thumbs/sitio-web-05-web-agencia-orvupi.png"
-  },
-  {
-    "id": "tpl-meme-01",
-    "category": "meme",
-    "title": "Meme Lunes Rosa",
-    "width": 480,
-    "height": 480,
-    "file": "thumbs/meme-01-meme-lunes-rosa.png"
-  },
-  {
-    "id": "tpl-meme-02",
-    "category": "meme",
-    "title": "Meme Deploy Friday",
-    "width": 480,
-    "height": 480,
-    "file": "thumbs/meme-02-meme-deploy-friday.png"
-  },
-  {
-    "id": "tpl-meme-03",
-    "category": "meme",
-    "title": "Meme Octopus Mood",
-    "width": 480,
-    "height": 480,
-    "file": "thumbs/meme-03-meme-octopus-mood.png"
-  },
-  {
-    "id": "tpl-meme-04",
-    "category": "meme",
-    "title": "Meme Reunión Eterna",
-    "width": 480,
-    "height": 480,
-    "file": "thumbs/meme-04-meme-reunion-eterna.png"
-  },
-  {
-    "id": "tpl-negocio-01",
-    "category": "negocio",
-    "title": "Dashboard Ventas",
-    "width": 640,
-    "height": 400,
-    "file": "thumbs/negocio-01-dashboard-ventas.png"
-  },
-  {
-    "id": "tpl-negocio-02",
-    "category": "negocio",
-    "title": "Kit Factura Rosa",
-    "width": 640,
-    "height": 400,
-    "file": "thumbs/negocio-02-kit-factura-rosa.png"
-  },
-  {
-    "id": "tpl-negocio-03",
-    "category": "negocio",
-    "title": "Plan Negocio",
-    "width": 640,
-    "height": 400,
-    "file": "thumbs/negocio-03-plan-negocio.png"
-  },
-  {
-    "id": "tpl-negocio-04",
-    "category": "negocio",
-    "title": "Menú Digital",
-    "width": 640,
-    "height": 400,
-    "file": "thumbs/negocio-04-menu-digital.png"
-  },
-  {
-    "id": "tpl-negocio-05",
-    "category": "negocio",
-    "title": "Catálogo Producto",
-    "width": 640,
-    "height": 400,
-    "file": "thumbs/negocio-05-catalogo-producto.png"
-  },
-  {
-    "id": "tpl-negocio-06",
-    "category": "negocio",
-    "title": "Propuesta Comercial",
-    "width": 640,
-    "height": 400,
-    "file": "thumbs/negocio-06-propuesta-comercial.png"
-  },
-  {
-    "id": "tpl-educacion-01",
-    "category": "educacion",
-    "title": "Curso Diseño Base",
-    "width": 560,
-    "height": 400,
-    "file": "thumbs/educacion-01-curso-diseno-base.png"
-  },
-  {
-    "id": "tpl-educacion-02",
-    "category": "educacion",
-    "title": "Ficha Lección",
-    "width": 560,
-    "height": 400,
-    "file": "thumbs/educacion-02-ficha-leccion.png"
-  },
-  {
-    "id": "tpl-educacion-03",
-    "category": "educacion",
-    "title": "Certificado ORVUPI",
-    "width": 560,
-    "height": 400,
-    "file": "thumbs/educacion-03-certificado-orvupi.png"
-  },
-  {
-    "id": "tpl-educacion-04",
-    "category": "educacion",
-    "title": "Flashcards Rosa",
-    "width": 560,
-    "height": 400,
-    "file": "thumbs/educacion-04-flashcards-rosa.png"
-  },
-  {
-    "id": "tpl-educacion-05",
-    "category": "educacion",
-    "title": "Horario Clase",
-    "width": 560,
-    "height": 400,
-    "file": "thumbs/educacion-05-horario-clase.png"
-  },
-  {
-    "id": "tpl-educacion-06",
-    "category": "educacion",
-    "title": "Rúbrica Evaluación",
-    "width": 560,
-    "height": 400,
-    "file": "thumbs/educacion-06-rubrica-evaluacion.png"
-  },
-  {
-    "id": "tpl-presentacion-08",
-    "category": "presentacion",
-    "title": "Deck Rosa Inversores II",
-    "width": 640,
-    "height": 360,
-    "file": "thumbs/presentacion-08-deck-rosa-inversores-ii.png"
-  },
-  {
-    "id": "tpl-presentacion-09",
-    "category": "presentacion",
-    "title": "Slides Informe Anual",
-    "width": 640,
-    "height": 360,
-    "file": "thumbs/presentacion-09-slides-informe-anual.png"
-  },
-  {
-    "id": "tpl-post-instagram-08",
-    "category": "post-instagram",
-    "title": "Post Encuesta Comunidad",
-    "width": 480,
-    "height": 480,
-    "file": "thumbs/post-instagram-08-post-encuesta-comunidad.png"
-  },
-  {
-    "id": "tpl-post-instagram-09",
-    "category": "post-instagram",
-    "title": "Post Before After",
-    "width": 480,
-    "height": 480,
-    "file": "thumbs/post-instagram-09-post-before-after.png"
-  },
-  {
-    "id": "tpl-story-07",
-    "category": "story",
-    "title": "Story Oferta Flash",
-    "width": 360,
-    "height": 640,
-    "file": "thumbs/story-07-story-oferta-flash.png"
-  },
-  {
-    "id": "tpl-story-08",
-    "category": "story",
-    "title": "Story Recap Semanal",
-    "width": 360,
-    "height": 640,
-    "file": "thumbs/story-08-story-recap-semanal.png"
-  },
-  {
-    "id": "tpl-flyer-06",
-    "category": "flyer",
-    "title": "Flyer Masterclass",
-    "width": 420,
-    "height": 560,
-    "file": "thumbs/flyer-06-flyer-masterclass.png"
+    "file": "thumbs/curriculum-06-cv-06.png"
   },
   {
     "id": "tpl-curriculum-07",
     "category": "curriculum",
-    "title": "CV Junior Creativo",
+    "title": "CV junior",
+    "titleEn": "Junior resume",
     "width": 420,
     "height": 560,
-    "file": "thumbs/curriculum-07-cv-junior-creativo.png"
+    "file": "thumbs/curriculum-07-cv-07.png"
   },
   {
     "id": "tpl-curriculum-08",
     "category": "curriculum",
-    "title": "CV Ejecutivo Navy",
+    "title": "CV dirección general",
+    "titleEn": "General management resume",
     "width": 420,
     "height": 560,
-    "file": "thumbs/curriculum-08-cv-ejecutivo-navy.png"
+    "file": "thumbs/curriculum-08-cv-08.png"
   },
   {
-    "id": "tpl-logo-07",
-    "category": "logo",
-    "title": "Logo Horizont Wordmark",
+    "id": "tpl-presentacion-01",
+    "category": "presentacion",
+    "title": "Informe de apertura",
+    "titleEn": "Opening report",
+    "width": 640,
+    "height": 360,
+    "file": "thumbs/presentacion-01-presentacion-01.png"
+  },
+  {
+    "id": "tpl-presentacion-02",
+    "category": "presentacion",
+    "title": "Agenda de cuatro puntos",
+    "titleEn": "Four-point agenda",
+    "width": 640,
+    "height": 360,
+    "file": "thumbs/presentacion-02-presentacion-02.png"
+  },
+  {
+    "id": "tpl-presentacion-03",
+    "category": "presentacion",
+    "title": "Cifras del trimestre",
+    "titleEn": "Quarterly figures",
+    "width": 640,
+    "height": 360,
+    "file": "thumbs/presentacion-03-presentacion-03.png"
+  },
+  {
+    "id": "tpl-presentacion-04",
+    "category": "presentacion",
+    "title": "Serie de resultados",
+    "titleEn": "Results series",
+    "width": 640,
+    "height": 360,
+    "file": "thumbs/presentacion-04-presentacion-04.png"
+  },
+  {
+    "id": "tpl-presentacion-05",
+    "category": "presentacion",
+    "title": "Propuesta a inversores",
+    "titleEn": "Investor proposal",
+    "width": 640,
+    "height": 360,
+    "file": "thumbs/presentacion-05-presentacion-05.png"
+  },
+  {
+    "id": "tpl-presentacion-06",
+    "category": "presentacion",
+    "title": "Cierre de proyecto",
+    "titleEn": "Project close",
+    "width": 640,
+    "height": 360,
+    "file": "thumbs/presentacion-06-presentacion-06.png"
+  },
+  {
+    "id": "tpl-presentacion-07",
+    "category": "presentacion",
+    "title": "Plan de producto",
+    "titleEn": "Product plan",
+    "width": 640,
+    "height": 360,
+    "file": "thumbs/presentacion-07-presentacion-07.png"
+  },
+  {
+    "id": "tpl-presentacion-08",
+    "category": "presentacion",
+    "title": "Informe anual",
+    "titleEn": "Annual report",
+    "width": 640,
+    "height": 360,
+    "file": "thumbs/presentacion-08-presentacion-08.png"
+  },
+  {
+    "id": "tpl-presentacion-09",
+    "category": "presentacion",
+    "title": "Revisión de equipo",
+    "titleEn": "Team review",
+    "width": 640,
+    "height": 360,
+    "file": "thumbs/presentacion-09-presentacion-09.png"
+  },
+  {
+    "id": "tpl-post-instagram-01",
+    "category": "post-instagram",
+    "title": "Cita de criterio",
+    "titleEn": "Point of view",
     "width": 480,
     "height": 480,
-    "file": "thumbs/logo-07-logo-horizont-wordmark.png"
+    "file": "thumbs/post-instagram-01-publicacion-01.png"
   },
   {
-    "id": "tpl-doc-07",
-    "category": "doc",
-    "title": "Manual de Onboarding",
-    "width": 420,
-    "height": 560,
-    "file": "thumbs/doc-07-manual-de-onboarding.png"
+    "id": "tpl-post-instagram-02",
+    "category": "post-instagram",
+    "title": "Carrusel de pasos",
+    "titleEn": "Step carousel",
+    "width": 480,
+    "height": 480,
+    "file": "thumbs/post-instagram-02-publicacion-02.png"
   },
   {
-    "id": "tpl-infografia-06",
-    "category": "infografia",
-    "title": "Info Funnel Ventas",
-    "width": 420,
+    "id": "tpl-post-instagram-03",
+    "category": "post-instagram",
+    "title": "Cifra del mes",
+    "titleEn": "Figure of the month",
+    "width": 480,
+    "height": 480,
+    "file": "thumbs/post-instagram-03-publicacion-03.png"
+  },
+  {
+    "id": "tpl-post-instagram-04",
+    "category": "post-instagram",
+    "title": "Anuncio sobrio",
+    "titleEn": "Quiet announcement",
+    "width": 480,
+    "height": 480,
+    "file": "thumbs/post-instagram-04-publicacion-04.png"
+  },
+  {
+    "id": "tpl-post-instagram-05",
+    "category": "post-instagram",
+    "title": "Cuadrícula de marca",
+    "titleEn": "Brand grid",
+    "width": 480,
+    "height": 480,
+    "file": "thumbs/post-instagram-05-publicacion-05.png"
+  },
+  {
+    "id": "tpl-post-instagram-06",
+    "category": "post-instagram",
+    "title": "Nota breve",
+    "titleEn": "Short note",
+    "width": 480,
+    "height": 480,
+    "file": "thumbs/post-instagram-06-publicacion-06.png"
+  },
+  {
+    "id": "tpl-post-instagram-07",
+    "category": "post-instagram",
+    "title": "Antes y después",
+    "titleEn": "Before and after",
+    "width": 480,
+    "height": 480,
+    "file": "thumbs/post-instagram-07-publicacion-07.png"
+  },
+  {
+    "id": "tpl-post-instagram-08",
+    "category": "post-instagram",
+    "title": "Pregunta al equipo",
+    "titleEn": "Question for the team",
+    "width": 480,
+    "height": 480,
+    "file": "thumbs/post-instagram-08-publicacion-08.png"
+  },
+  {
+    "id": "tpl-post-instagram-09",
+    "category": "post-instagram",
+    "title": "Tablero visual",
+    "titleEn": "Visual board",
+    "width": 480,
+    "height": 480,
+    "file": "thumbs/post-instagram-09-publicacion-09.png"
+  },
+  {
+    "id": "tpl-story-01",
+    "category": "story",
+    "title": "Cuenta atrás",
+    "titleEn": "Countdown",
+    "width": 360,
     "height": 640,
-    "file": "thumbs/infografia-06-info-funnel-ventas.png"
+    "file": "thumbs/story-01-historia-01.png"
   },
   {
-    "id": "tpl-negocio-07",
-    "category": "negocio",
-    "title": "OKR Trimestral",
+    "id": "tpl-story-02",
+    "category": "story",
+    "title": "Detrás del trabajo",
+    "titleEn": "Behind the work",
+    "width": 360,
+    "height": 640,
+    "file": "thumbs/story-02-historia-02.png"
+  },
+  {
+    "id": "tpl-story-03",
+    "category": "story",
+    "title": "Aviso de sesión",
+    "titleEn": "Session notice",
+    "width": 360,
+    "height": 640,
+    "file": "thumbs/story-03-historia-03.png"
+  },
+  {
+    "id": "tpl-story-04",
+    "category": "story",
+    "title": "Encuesta breve",
+    "titleEn": "Short poll",
+    "width": 360,
+    "height": 640,
+    "file": "thumbs/story-04-historia-04.png"
+  },
+  {
+    "id": "tpl-story-05",
+    "category": "story",
+    "title": "Novedad",
+    "titleEn": "New drop",
+    "width": 360,
+    "height": 640,
+    "file": "thumbs/story-05-historia-05.png"
+  },
+  {
+    "id": "tpl-story-06",
+    "category": "story",
+    "title": "Preguntas",
+    "titleEn": "Questions",
+    "width": 360,
+    "height": 640,
+    "file": "thumbs/story-06-historia-06.png"
+  },
+  {
+    "id": "tpl-story-07",
+    "category": "story",
+    "title": "Oferta de plazo",
+    "titleEn": "Limited offer",
+    "width": 360,
+    "height": 640,
+    "file": "thumbs/story-07-historia-07.png"
+  },
+  {
+    "id": "tpl-story-08",
+    "category": "story",
+    "title": "Resumen semanal",
+    "titleEn": "Weekly recap",
+    "width": 360,
+    "height": 640,
+    "file": "thumbs/story-08-historia-08.png"
+  },
+  {
+    "id": "tpl-youtube-thumb-01",
+    "category": "youtube-thumb",
+    "title": "Guía clara",
+    "titleEn": "Clear guide",
     "width": 640,
-    "height": 400,
-    "file": "thumbs/negocio-07-okr-trimestral.png"
+    "height": 360,
+    "file": "thumbs/youtube-thumb-01-miniatura-01.png"
   },
   {
-    "id": "tpl-educacion-07",
-    "category": "educacion",
-    "title": "Syllabus Intensivo",
-    "width": 560,
-    "height": 400,
-    "file": "thumbs/educacion-07-syllabus-intensivo.png"
+    "id": "tpl-youtube-thumb-02",
+    "category": "youtube-thumb",
+    "title": "Reseña sobria",
+    "titleEn": "Quiet review",
+    "width": 640,
+    "height": 360,
+    "file": "thumbs/youtube-thumb-02-miniatura-02.png"
+  },
+  {
+    "id": "tpl-youtube-thumb-03",
+    "category": "youtube-thumb",
+    "title": "Sesión en directo",
+    "titleEn": "Live session",
+    "width": 640,
+    "height": 360,
+    "file": "thumbs/youtube-thumb-03-miniatura-03.png"
+  },
+  {
+    "id": "tpl-youtube-thumb-04",
+    "category": "youtube-thumb",
+    "title": "Título directo",
+    "titleEn": "Direct title",
+    "width": 640,
+    "height": 360,
+    "file": "thumbs/youtube-thumb-04-miniatura-04.png"
+  },
+  {
+    "id": "tpl-youtube-thumb-05",
+    "category": "youtube-thumb",
+    "title": "Curso breve",
+    "titleEn": "Short course",
+    "width": 640,
+    "height": 360,
+    "file": "thumbs/youtube-thumb-05-miniatura-05.png"
   },
   {
     "id": "tpl-youtube-thumb-06",
     "category": "youtube-thumb",
-    "title": "Thumb Shorts Hook",
+    "title": "Pieza corta",
+    "titleEn": "Short clip",
     "width": 640,
     "height": 360,
-    "file": "thumbs/youtube-thumb-06-thumb-shorts-hook.png"
+    "file": "thumbs/youtube-thumb-06-miniatura-06.png"
   },
   {
     "id": "tpl-youtube-thumb-07",
     "category": "youtube-thumb",
-    "title": "Thumb Podcast Clip",
+    "title": "Conversación",
+    "titleEn": "Conversation",
     "width": 640,
     "height": 360,
-    "file": "thumbs/youtube-thumb-07-thumb-podcast-clip.png"
+    "file": "thumbs/youtube-thumb-07-miniatura-07.png"
+  },
+  {
+    "id": "tpl-flyer-01",
+    "category": "flyer",
+    "title": "Encuentro",
+    "titleEn": "Gathering",
+    "width": 420,
+    "height": 560,
+    "file": "thumbs/flyer-01-folleto-01.png"
+  },
+  {
+    "id": "tpl-flyer-02",
+    "category": "flyer",
+    "title": "Jornada de trabajo",
+    "titleEn": "Work day",
+    "width": 420,
+    "height": 560,
+    "file": "thumbs/flyer-02-folleto-02.png"
+  },
+  {
+    "id": "tpl-flyer-03",
+    "category": "flyer",
+    "title": "Taller",
+    "titleEn": "Workshop",
+    "width": 420,
+    "height": 560,
+    "file": "thumbs/flyer-03-folleto-03.png"
+  },
+  {
+    "id": "tpl-flyer-04",
+    "category": "flyer",
+    "title": "Jornada de puertas",
+    "titleEn": "Open day",
+    "width": 420,
+    "height": 560,
+    "file": "thumbs/flyer-04-folleto-04.png"
+  },
+  {
+    "id": "tpl-flyer-05",
+    "category": "flyer",
+    "title": "Programa",
+    "titleEn": "Programme",
+    "width": 420,
+    "height": 560,
+    "file": "thumbs/flyer-05-folleto-05.png"
+  },
+  {
+    "id": "tpl-flyer-06",
+    "category": "flyer",
+    "title": "Clase magistral",
+    "titleEn": "Masterclass",
+    "width": 420,
+    "height": 560,
+    "file": "thumbs/flyer-06-folleto-06.png"
+  },
+  {
+    "id": "tpl-cartel-01",
+    "category": "cartel",
+    "title": "Ciclo de charlas",
+    "titleEn": "Talk series",
+    "width": 400,
+    "height": 560,
+    "file": "thumbs/cartel-01-cartel-01.png"
+  },
+  {
+    "id": "tpl-cartel-02",
+    "category": "cartel",
+    "title": "Programa de temporada",
+    "titleEn": "Season programme",
+    "width": 400,
+    "height": 560,
+    "file": "thumbs/cartel-02-cartel-02.png"
+  },
+  {
+    "id": "tpl-cartel-03",
+    "category": "cartel",
+    "title": "Exposición",
+    "titleEn": "Exhibition",
+    "width": 400,
+    "height": 560,
+    "file": "thumbs/cartel-03-cartel-03.png"
+  },
+  {
+    "id": "tpl-cartel-04",
+    "category": "cartel",
+    "title": "Charla técnica",
+    "titleEn": "Technical talk",
+    "width": 400,
+    "height": 560,
+    "file": "thumbs/cartel-04-cartel-04.png"
   },
   {
     "id": "tpl-cartel-05",
     "category": "cartel",
-    "title": "Cartel Semana Creativa",
+    "title": "Semana de oficio",
+    "titleEn": "Week of craft",
     "width": 400,
     "height": 560,
-    "file": "thumbs/cartel-05-cartel-semana-creativa.png"
+    "file": "thumbs/cartel-05-cartel-05.png"
+  },
+  {
+    "id": "tpl-logo-01",
+    "category": "logo",
+    "title": "Sello circular",
+    "titleEn": "Round mark",
+    "width": 480,
+    "height": 480,
+    "file": "thumbs/logo-01-logo-01.png"
+  },
+  {
+    "id": "tpl-logo-02",
+    "category": "logo",
+    "title": "Nombre solo",
+    "titleEn": "Wordmark",
+    "width": 480,
+    "height": 480,
+    "file": "thumbs/logo-02-logo-02.png"
+  },
+  {
+    "id": "tpl-logo-03",
+    "category": "logo",
+    "title": "Marca partida",
+    "titleEn": "Split mark",
+    "width": 480,
+    "height": 480,
+    "file": "thumbs/logo-03-logo-03.png"
+  },
+  {
+    "id": "tpl-logo-04",
+    "category": "logo",
+    "title": "Inicial en círculo",
+    "titleEn": "Initial in a circle",
+    "width": 480,
+    "height": 480,
+    "file": "thumbs/logo-04-logo-04.png"
+  },
+  {
+    "id": "tpl-logo-05",
+    "category": "logo",
+    "title": "Monograma",
+    "titleEn": "Monogram",
+    "width": 480,
+    "height": 480,
+    "file": "thumbs/logo-05-logo-05.png"
+  },
+  {
+    "id": "tpl-logo-06",
+    "category": "logo",
+    "title": "Bloque de marca",
+    "titleEn": "Brand block",
+    "width": 480,
+    "height": 480,
+    "file": "thumbs/logo-06-logo-06.png"
+  },
+  {
+    "id": "tpl-logo-07",
+    "category": "logo",
+    "title": "Nombre horizontal",
+    "titleEn": "Horizontal name",
+    "width": 480,
+    "height": 480,
+    "file": "thumbs/logo-07-logo-07.png"
+  },
+  {
+    "id": "tpl-invitacion-01",
+    "category": "invitacion",
+    "title": "Ceremonia",
+    "titleEn": "Ceremony",
+    "width": 480,
+    "height": 360,
+    "file": "thumbs/invitacion-01-invitacion-01.png"
+  },
+  {
+    "id": "tpl-invitacion-02",
+    "category": "invitacion",
+    "title": "Celebración",
+    "titleEn": "Celebration",
+    "width": 480,
+    "height": 360,
+    "file": "thumbs/invitacion-02-invitacion-02.png"
+  },
+  {
+    "id": "tpl-invitacion-03",
+    "category": "invitacion",
+    "title": "Cena",
+    "titleEn": "Dinner",
+    "width": 480,
+    "height": 360,
+    "file": "thumbs/invitacion-03-invitacion-03.png"
+  },
+  {
+    "id": "tpl-invitacion-04",
+    "category": "invitacion",
+    "title": "Encuentro familiar",
+    "titleEn": "Family gathering",
+    "width": 480,
+    "height": 360,
+    "file": "thumbs/invitacion-04-invitacion-04.png"
+  },
+  {
+    "id": "tpl-invitacion-05",
+    "category": "invitacion",
+    "title": "Cita de empresa",
+    "titleEn": "Company reception",
+    "width": 480,
+    "height": 360,
+    "file": "thumbs/invitacion-05-invitacion-05.png"
   },
   {
     "id": "tpl-invitacion-06",
     "category": "invitacion",
-    "title": "Invitación Networking",
+    "title": "Networking",
+    "titleEn": "Networking",
     "width": 480,
     "height": 360,
-    "file": "thumbs/invitacion-06-invitacion-networking.png"
+    "file": "thumbs/invitacion-06-invitacion-06.png"
   },
   {
-    "id": "tpl-pizarra-06",
-    "category": "pizarra",
-    "title": "Pizarra Customer Journey",
-    "width": 640,
-    "height": 400,
-    "file": "thumbs/pizarra-06-pizarra-customer-journey.png"
+    "id": "tpl-doc-01",
+    "category": "doc",
+    "title": "Informe mensual",
+    "titleEn": "Monthly report",
+    "width": 420,
+    "height": 560,
+    "file": "thumbs/doc-01-documento-01.png"
   },
   {
-    "id": "tpl-sitio-web-06",
-    "category": "sitio-web",
-    "title": "Web SaaS Pricing",
-    "width": 640,
-    "height": 400,
-    "file": "thumbs/sitio-web-06-web-saas-pricing.png"
+    "id": "tpl-doc-02",
+    "category": "doc",
+    "title": "Propuesta",
+    "titleEn": "Proposal",
+    "width": 420,
+    "height": 560,
+    "file": "thumbs/doc-02-documento-02.png"
   },
   {
-    "id": "tpl-meme-05",
-    "category": "meme",
-    "title": "Meme Merge Conflict",
-    "width": 480,
-    "height": 480,
-    "file": "thumbs/meme-05-meme-merge-conflict.png"
+    "id": "tpl-doc-03",
+    "category": "doc",
+    "title": "Brief",
+    "titleEn": "Brief",
+    "width": 420,
+    "height": 560,
+    "file": "thumbs/doc-03-documento-03.png"
   },
   {
-    "id": "tpl-video-cover-05",
-    "category": "video-cover",
-    "title": "Cover Webinar Live",
-    "width": 640,
-    "height": 360,
-    "file": "thumbs/video-cover-05-cover-webinar-live.png"
+    "id": "tpl-doc-04",
+    "category": "doc",
+    "title": "Acta",
+    "titleEn": "Minutes",
+    "width": 420,
+    "height": 560,
+    "file": "thumbs/doc-04-documento-04.png"
+  },
+  {
+    "id": "tpl-doc-05",
+    "category": "doc",
+    "title": "Guía interna",
+    "titleEn": "Internal guide",
+    "width": 420,
+    "height": 560,
+    "file": "thumbs/doc-05-documento-05.png"
+  },
+  {
+    "id": "tpl-doc-06",
+    "category": "doc",
+    "title": "Acuerdo breve",
+    "titleEn": "Short agreement",
+    "width": 420,
+    "height": 560,
+    "file": "thumbs/doc-06-documento-06.png"
+  },
+  {
+    "id": "tpl-doc-07",
+    "category": "doc",
+    "title": "Bienvenida al equipo",
+    "titleEn": "Team welcome",
+    "width": 420,
+    "height": 560,
+    "file": "thumbs/doc-07-documento-07.png"
+  },
+  {
+    "id": "tpl-infografia-01",
+    "category": "infografia",
+    "title": "Cuatro pasos",
+    "titleEn": "Four steps",
+    "width": 420,
+    "height": 640,
+    "file": "thumbs/infografia-01-infografia-01.png"
+  },
+  {
+    "id": "tpl-infografia-02",
+    "category": "infografia",
+    "title": "Comparativa",
+    "titleEn": "Comparison",
+    "width": 420,
+    "height": 640,
+    "file": "thumbs/infografia-02-infografia-02.png"
+  },
+  {
+    "id": "tpl-infografia-03",
+    "category": "infografia",
+    "title": "Línea de tiempo",
+    "titleEn": "Timeline",
+    "width": 420,
+    "height": 640,
+    "file": "thumbs/infografia-03-infografia-03.png"
+  },
+  {
+    "id": "tpl-infografia-04",
+    "category": "infografia",
+    "title": "Dos columnas",
+    "titleEn": "Two columns",
+    "width": 420,
+    "height": 640,
+    "file": "thumbs/infografia-04-infografia-04.png"
+  },
+  {
+    "id": "tpl-infografia-05",
+    "category": "infografia",
+    "title": "Lista de control",
+    "titleEn": "Checklist",
+    "width": 420,
+    "height": 640,
+    "file": "thumbs/infografia-05-infografia-05.png"
+  },
+  {
+    "id": "tpl-infografia-06",
+    "category": "infografia",
+    "title": "Embudo",
+    "titleEn": "Funnel",
+    "width": 420,
+    "height": 640,
+    "file": "thumbs/infografia-06-infografia-06.png"
+  },
+  {
+    "id": "tpl-tarjeta-visita-01",
+    "category": "tarjeta-visita",
+    "title": "Tarjeta marina",
+    "titleEn": "Navy card",
+    "width": 560,
+    "height": 320,
+    "file": "thumbs/tarjeta-visita-01-tarjeta-01.png"
+  },
+  {
+    "id": "tpl-tarjeta-visita-02",
+    "category": "tarjeta-visita",
+    "title": "Tarjeta clara",
+    "titleEn": "Light card",
+    "width": 560,
+    "height": 320,
+    "file": "thumbs/tarjeta-visita-02-tarjeta-02.png"
+  },
+  {
+    "id": "tpl-tarjeta-visita-03",
+    "category": "tarjeta-visita",
+    "title": "Tarjeta con inicial",
+    "titleEn": "Initial card",
+    "width": 560,
+    "height": 320,
+    "file": "thumbs/tarjeta-visita-03-tarjeta-03.png"
+  },
+  {
+    "id": "tpl-tarjeta-visita-04",
+    "category": "tarjeta-visita",
+    "title": "Tarjeta de fundador",
+    "titleEn": "Founder card",
+    "width": 560,
+    "height": 320,
+    "file": "thumbs/tarjeta-visita-04-tarjeta-04.png"
+  },
+  {
+    "id": "tpl-tarjeta-visita-05",
+    "category": "tarjeta-visita",
+    "title": "Tarjeta de estudio",
+    "titleEn": "Studio card",
+    "width": 560,
+    "height": 320,
+    "file": "thumbs/tarjeta-visita-05-tarjeta-05.png"
   },
   {
     "id": "tpl-tarjeta-visita-06",
     "category": "tarjeta-visita",
-    "title": "Tarjeta QR Rosa",
+    "title": "Tarjeta con contacto",
+    "titleEn": "Contact card",
     "width": 560,
     "height": 320,
-    "file": "thumbs/tarjeta-visita-06-tarjeta-qr-rosa.png"
+    "file": "thumbs/tarjeta-visita-06-tarjeta-06.png"
   },
   {
     "id": "tpl-tarjeta-visita-07",
     "category": "tarjeta-visita",
-    "title": "Tarjeta Duo Face",
+    "title": "Tarjeta doble",
+    "titleEn": "Two-sided card",
     "width": 560,
     "height": 320,
-    "file": "thumbs/tarjeta-visita-07-tarjeta-duo-face.png"
+    "file": "thumbs/tarjeta-visita-07-tarjeta-07.png"
+  },
+  {
+    "id": "tpl-video-cover-01",
+    "category": "video-cover",
+    "title": "Portada de serie",
+    "titleEn": "Series cover",
+    "width": 640,
+    "height": 360,
+    "file": "thumbs/video-cover-01-portada-01.png"
+  },
+  {
+    "id": "tpl-video-cover-02",
+    "category": "video-cover",
+    "title": "Portada de podcast",
+    "titleEn": "Podcast cover",
+    "width": 640,
+    "height": 360,
+    "file": "thumbs/video-cover-02-portada-02.png"
+  },
+  {
+    "id": "tpl-video-cover-03",
+    "category": "video-cover",
+    "title": "Portada de curso",
+    "titleEn": "Course cover",
+    "width": 640,
+    "height": 360,
+    "file": "thumbs/video-cover-03-portada-03.png"
+  },
+  {
+    "id": "tpl-video-cover-04",
+    "category": "video-cover",
+    "title": "Portada de avance",
+    "titleEn": "Trailer cover",
+    "width": 640,
+    "height": 360,
+    "file": "thumbs/video-cover-04-portada-04.png"
+  },
+  {
+    "id": "tpl-video-cover-05",
+    "category": "video-cover",
+    "title": "Portada de directo",
+    "titleEn": "Live cover",
+    "width": 640,
+    "height": 360,
+    "file": "thumbs/video-cover-05-portada-05.png"
+  },
+  {
+    "id": "tpl-pizarra-01",
+    "category": "pizarra",
+    "title": "Lluvia de ideas",
+    "titleEn": "Brainstorm",
+    "width": 640,
+    "height": 400,
+    "file": "thumbs/pizarra-01-pizarra-01.png"
+  },
+  {
+    "id": "tpl-pizarra-02",
+    "category": "pizarra",
+    "title": "Hoja de ruta",
+    "titleEn": "Roadmap",
+    "width": 640,
+    "height": 400,
+    "file": "thumbs/pizarra-02-pizarra-02.png"
+  },
+  {
+    "id": "tpl-pizarra-03",
+    "category": "pizarra",
+    "title": "Sprint",
+    "titleEn": "Sprint",
+    "width": 640,
+    "height": 400,
+    "file": "thumbs/pizarra-03-pizarra-03.png"
+  },
+  {
+    "id": "tpl-pizarra-04",
+    "category": "pizarra",
+    "title": "Referencias",
+    "titleEn": "References",
+    "width": 640,
+    "height": 400,
+    "file": "thumbs/pizarra-04-pizarra-04.png"
+  },
+  {
+    "id": "tpl-pizarra-05",
+    "category": "pizarra",
+    "title": "Equipo",
+    "titleEn": "Team",
+    "width": 640,
+    "height": 400,
+    "file": "thumbs/pizarra-05-pizarra-05.png"
+  },
+  {
+    "id": "tpl-pizarra-06",
+    "category": "pizarra",
+    "title": "Recorrido de cliente",
+    "titleEn": "Customer journey",
+    "width": 640,
+    "height": 400,
+    "file": "thumbs/pizarra-06-pizarra-06.png"
+  },
+  {
+    "id": "tpl-sitio-web-01",
+    "category": "sitio-web",
+    "title": "Página de arranque",
+    "titleEn": "Launch page",
+    "width": 640,
+    "height": 400,
+    "file": "thumbs/sitio-web-01-sitio-01.png"
+  },
+  {
+    "id": "tpl-sitio-web-02",
+    "category": "sitio-web",
+    "title": "Portafolio",
+    "titleEn": "Portfolio",
+    "width": 640,
+    "height": 400,
+    "file": "thumbs/sitio-web-02-sitio-02.png"
+  },
+  {
+    "id": "tpl-sitio-web-03",
+    "category": "sitio-web",
+    "title": "Academia",
+    "titleEn": "Academy",
+    "width": 640,
+    "height": 400,
+    "file": "thumbs/sitio-web-03-sitio-03.png"
+  },
+  {
+    "id": "tpl-sitio-web-04",
+    "category": "sitio-web",
+    "title": "Tienda sobria",
+    "titleEn": "Quiet shop",
+    "width": 640,
+    "height": 400,
+    "file": "thumbs/sitio-web-04-sitio-04.png"
+  },
+  {
+    "id": "tpl-sitio-web-05",
+    "category": "sitio-web",
+    "title": "Estudio",
+    "titleEn": "Studio site",
+    "width": 640,
+    "height": 400,
+    "file": "thumbs/sitio-web-05-sitio-05.png"
+  },
+  {
+    "id": "tpl-sitio-web-06",
+    "category": "sitio-web",
+    "title": "Precios",
+    "titleEn": "Pricing",
+    "width": 640,
+    "height": 400,
+    "file": "thumbs/sitio-web-06-sitio-06.png"
+  },
+  {
+    "id": "tpl-meme-01",
+    "category": "meme",
+    "title": "Pie de foto, arriba",
+    "titleEn": "Top caption",
+    "width": 480,
+    "height": 480,
+    "file": "thumbs/meme-01-meme-01.png"
+  },
+  {
+    "id": "tpl-meme-02",
+    "category": "meme",
+    "title": "Dos bandas",
+    "titleEn": "Two bands",
+    "width": 480,
+    "height": 480,
+    "file": "thumbs/meme-02-meme-02.png"
+  },
+  {
+    "id": "tpl-meme-03",
+    "category": "meme",
+    "title": "Frase corta",
+    "titleEn": "Short line",
+    "width": 480,
+    "height": 480,
+    "file": "thumbs/meme-03-meme-03.png"
+  },
+  {
+    "id": "tpl-meme-04",
+    "category": "meme",
+    "title": "Reunión",
+    "titleEn": "The meeting",
+    "width": 480,
+    "height": 480,
+    "file": "thumbs/meme-04-meme-04.png"
+  },
+  {
+    "id": "tpl-meme-05",
+    "category": "meme",
+    "title": "Plazo",
+    "titleEn": "The deadline",
+    "width": 480,
+    "height": 480,
+    "file": "thumbs/meme-05-meme-05.png"
+  },
+  {
+    "id": "tpl-negocio-01",
+    "category": "negocio",
+    "title": "Panel de ventas",
+    "titleEn": "Sales panel",
+    "width": 640,
+    "height": 400,
+    "file": "thumbs/negocio-01-empresa-01.png"
+  },
+  {
+    "id": "tpl-negocio-02",
+    "category": "negocio",
+    "title": "Factura",
+    "titleEn": "Invoice",
+    "width": 640,
+    "height": 400,
+    "file": "thumbs/negocio-02-empresa-02.png"
+  },
+  {
+    "id": "tpl-negocio-03",
+    "category": "negocio",
+    "title": "Plan de negocio",
+    "titleEn": "Business plan",
+    "width": 640,
+    "height": 400,
+    "file": "thumbs/negocio-03-empresa-03.png"
+  },
+  {
+    "id": "tpl-negocio-04",
+    "category": "negocio",
+    "title": "Carta",
+    "titleEn": "Menu",
+    "width": 640,
+    "height": 400,
+    "file": "thumbs/negocio-04-empresa-04.png"
+  },
+  {
+    "id": "tpl-negocio-05",
+    "category": "negocio",
+    "title": "Catálogo",
+    "titleEn": "Catalogue",
+    "width": 640,
+    "height": 400,
+    "file": "thumbs/negocio-05-empresa-05.png"
+  },
+  {
+    "id": "tpl-negocio-06",
+    "category": "negocio",
+    "title": "Propuesta comercial",
+    "titleEn": "Commercial proposal",
+    "width": 640,
+    "height": 400,
+    "file": "thumbs/negocio-06-empresa-06.png"
+  },
+  {
+    "id": "tpl-negocio-07",
+    "category": "negocio",
+    "title": "Objetivos del trimestre",
+    "titleEn": "Quarterly goals",
+    "width": 640,
+    "height": 400,
+    "file": "thumbs/negocio-07-empresa-07.png"
+  },
+  {
+    "id": "tpl-educacion-01",
+    "category": "educacion",
+    "title": "Ficha de curso",
+    "titleEn": "Course sheet",
+    "width": 560,
+    "height": 400,
+    "file": "thumbs/educacion-01-clase-01.png"
+  },
+  {
+    "id": "tpl-educacion-02",
+    "category": "educacion",
+    "title": "Lección",
+    "titleEn": "Lesson",
+    "width": 560,
+    "height": 400,
+    "file": "thumbs/educacion-02-clase-02.png"
+  },
+  {
+    "id": "tpl-educacion-03",
+    "category": "educacion",
+    "title": "Certificado",
+    "titleEn": "Certificate",
+    "width": 560,
+    "height": 400,
+    "file": "thumbs/educacion-03-clase-03.png"
+  },
+  {
+    "id": "tpl-educacion-04",
+    "category": "educacion",
+    "title": "Tarjetas de repaso",
+    "titleEn": "Review cards",
+    "width": 560,
+    "height": 400,
+    "file": "thumbs/educacion-04-clase-04.png"
+  },
+  {
+    "id": "tpl-educacion-05",
+    "category": "educacion",
+    "title": "Horario",
+    "titleEn": "Schedule",
+    "width": 560,
+    "height": 400,
+    "file": "thumbs/educacion-05-clase-05.png"
+  },
+  {
+    "id": "tpl-educacion-06",
+    "category": "educacion",
+    "title": "Rúbrica",
+    "titleEn": "Rubric",
+    "width": 560,
+    "height": 400,
+    "file": "thumbs/educacion-06-clase-06.png"
+  },
+  {
+    "id": "tpl-educacion-07",
+    "category": "educacion",
+    "title": "Programa intensivo",
+    "titleEn": "Intensive syllabus",
+    "width": 560,
+    "height": 400,
+    "file": "thumbs/educacion-07-clase-07.png"
   }
 ]

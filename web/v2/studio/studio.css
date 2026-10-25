@@ -277,7 +277,7 @@ body.studio-standalone footer.or-footer a[href$="risks/"] {
 }
 .orv-frame {
   display: grid;
-  grid-template-columns: 92px minmax(0, 1fr);
+  grid-template-columns: 112px minmax(0, 1fr);
   gap: 0.75rem;
   align-items: start;
   min-width: 0;
@@ -313,14 +313,26 @@ body.studio-standalone footer.or-footer a[href$="risks/"] {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.1rem;
+  gap: 0.15rem;
   width: 100%;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   line-height: 1.15;
   text-decoration: none;
   text-align: center;
 }
-.nav-btn svg { width: 22px; height: 22px; }
+#studio-root button.nav-btn,
+#studio-root a.nav-btn {
+  padding: 0.35rem 0.2rem;
+}
+.side-brand strong,
+#studio-root button.nav-btn,
+#studio-root a.nav-btn,
+#studio-root button.nav-btn span,
+#studio-root a.nav-btn span {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.nav-btn svg { width: 22px; height: 22px; flex: 0 0 auto; }
 .orv-main {
   background: #fff;
   color: #102032;
@@ -410,11 +422,51 @@ body.studio-standalone footer.or-footer a[href$="risks/"] {
 .crear-side, .crear-main { min-width: 0; display: flex; flex-direction: column; gap: 0.35rem; }
 #reloj { color: #102032; font-variant-numeric: tabular-nums; }
 @media (max-width: 800px) {
-  .orv-frame { grid-template-columns: minmax(0, 1fr); }
-  .orv-side { flex-direction: row; overflow-x: auto; align-items: center; width: 100%; }
-  .side-brand { flex-direction: row; margin: 0 0.4rem 0 0; }
-  .side-stack { flex-direction: row; width: auto; }
-  .nav-btn { width: auto; min-width: 44px; }
+  html:has(body.studio-standalone),
+  body.studio-standalone { overflow-x: clip; }
+  body.studio-standalone { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
+  #studio-root, .orv-main, #catalogo { overflow-x: clip; }
+  .orv-frame { display: block; }
+  .orv-side {
+    position: fixed;
+    z-index: 40;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0.15rem;
+    overflow-x: auto;
+    border-radius: 1rem 1rem 0 0;
+    padding: 0.3rem 0.45rem calc(0.3rem + env(safe-area-inset-bottom));
+    box-shadow: 0 -8px 24px rgba(16, 32, 50, 0.12);
+  }
+  .side-brand { flex: 0 0 auto; flex-direction: row; margin: 0 0.15rem 0 0; align-self: center; }
+  .side-brand strong { display: none; }
+  .side-stack { flex-direction: row; width: max-content; flex: 0 0 auto; gap: 0.1rem; }
+  #studio-root button.nav-btn,
+  #studio-root a.nav-btn {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 4.6rem;
+    max-width: none;
+    white-space: nowrap;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    padding: 0.28rem 0.55rem;
+    min-height: 52px;
+  }
+  #studio-root button.nav-btn[aria-current="page"] {
+    background: #ff3070;
+    border-radius: 0.85rem;
+  }
   .crear { grid-template-columns: minmax(0, 1fr); }
   .lienzo-pizarra { max-height: 58vh; }
   .campo-pizarra { min-width: 1400px; min-height: 900px; padding: 24px; }
@@ -452,14 +504,32 @@ body.studio-standalone footer.or-footer a[href$="risks/"] {
   font-size: 1.05rem;
   box-shadow: 0 10px 28px rgba(16, 32, 50, 0.08);
 }
-.chips.linea {
+.chips,
+.chips.linea,
+.grupos,
+.filtros {
+  min-width: 0;
+  max-width: 100%;
+}
+.chips.linea,
+.grupos {
   flex-wrap: nowrap;
   overflow-x: auto;
-  max-width: 100%;
-  min-width: 0;
-  padding-bottom: 0.15rem;
+  width: 100%;
+  padding-bottom: 0.35rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
-.chips.linea .chip, .chips.linea #limpiar-filtros { flex: 0 0 auto; }
+.chips.linea .chip,
+.chips.linea #limpiar-filtros,
+#studio-root button.grupo,
+#studio-root button.chip {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
+  min-height: 44px;
+}
 .rapidos {
   display: flex;
   gap: 0.85rem;
@@ -564,11 +634,10 @@ body.studio-standalone footer.or-footer a[href$="risks/"] {
 .grupos {
   display: flex;
   gap: 0.5rem;
-  overflow-x: auto;
-  min-width: 0;
-  max-width: 100%;
   margin: 0 0 0.85rem;
 }
+.bloque-grupo { margin: 0.15rem 0 0.85rem; min-width: 0; }
+.grupo-titulo { margin: 0 0 0.45rem; font-size: 1.05rem; letter-spacing: -0.02em; }
 #studio-root button.grupo {
   border-radius: 999px;
   background: #fff;

@@ -33,6 +33,8 @@ drill-SHA256SUMS
 verify-report.json
 verify-report.md
 web/v2/assets/orvupi/album/**
+!web/v2/assets/orvupi/album/**/
+!web/v2/assets/orvupi/album/**/*.webp
 !web/v2/assets/orvupi/album/05_humor/
 !web/v2/assets/orvupi/album/05_humor/101-ocho-manos-y-el-cafe.png
 !web/v2/assets/orvupi/album/07_verify/
