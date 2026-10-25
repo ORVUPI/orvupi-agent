@@ -1,4 +1,8 @@
-/** Miniaturas reales de ORVUPI. El índice vive junto a los PNG. */
+/**
+ * Índice de miniaturas. Cada entrada se abre por su id.
+ * No hay plantilla genérica de categoría: el campo `open` se retiró
+ * porque sustituía el documento anunciado (cv-partido, deck-portada, …).
+ */
 
 import thumbs from "../thumbs/catalog.json" with { type: "json" };
 
@@ -15,26 +19,26 @@ export const THUMB_GROUPS = [
 ];
 
 export const THUMB_CATS = [
-  { id: "curriculum", es: "Currículum", en: "Resume", format: "cv", open: "cv-partido" },
-  { id: "presentacion", es: "Presentación", en: "Presentation", format: "deck", open: "deck-portada" },
-  { id: "documento", es: "Documento", en: "Document", format: "doc", open: "doc-portada" },
-  { id: "informe", es: "Informe", en: "Report", format: "doc", open: "doc-portada" },
-  { id: "propuesta", es: "Propuesta", en: "Proposal", format: "doc", open: "emp-brief" },
-  { id: "tarjeta-visita", es: "Tarjeta de visita", en: "Business card", format: "card", open: "tar-clara" },
-  { id: "logo", es: "Logo", en: "Logo", format: "logo", open: "logo-sello" },
-  { id: "flyer", es: "Flyer", en: "Flyer", format: "flyer", open: "fly-encuentro" },
-  { id: "cartel", es: "Cartel", en: "Poster", format: "poster", open: "car-noche" },
-  { id: "infografia", es: "Infografía", en: "Infographic", format: "info", open: "info-tres" },
-  { id: "invitacion", es: "Invitación", en: "Invitation", format: "invite", open: "inv-marco" },
-  { id: "post-instagram", es: "Post Instagram", en: "Instagram post", format: "ig", open: "red-ig-bloque" },
-  { id: "story", es: "Story", en: "Story", format: "story", open: "historia-saludo" },
-  { id: "miniatura-youtube", es: "Miniatura YouTube", en: "YouTube thumbnail", format: "thumb", open: "red-thumb-golpe" },
-  { id: "portada", es: "Portada", en: "Cover", format: "doc", open: "doc-portada" },
-  { id: "video", es: "Vídeo", en: "Video", format: "video", open: "vid-tercio" },
-  { id: "pizarra", es: "Pizarra", en: "Whiteboard", format: "board", open: "pizarra-ideas" },
-  { id: "sitio-web", es: "Sitio web", en: "Website", format: "web", open: "sitio-comunidad" },
-  { id: "meme", es: "Meme", en: "Meme", format: "square", open: "meme-punch" },
-  { id: "negocio", es: "Negocio", en: "Business", format: "doc", open: "emp-brief" },
+  { id: "curriculum", es: "Currículum", en: "Resume", format: "cv" },
+  { id: "presentacion", es: "Presentación", en: "Presentation", format: "deck" },
+  { id: "documento", es: "Documento", en: "Document", format: "doc" },
+  { id: "informe", es: "Informe", en: "Report", format: "doc" },
+  { id: "propuesta", es: "Propuesta", en: "Proposal", format: "doc" },
+  { id: "tarjeta-visita", es: "Tarjeta de visita", en: "Business card", format: "card" },
+  { id: "logo", es: "Logo", en: "Logo", format: "logo" },
+  { id: "flyer", es: "Flyer", en: "Flyer", format: "flyer" },
+  { id: "cartel", es: "Cartel", en: "Poster", format: "poster" },
+  { id: "infografia", es: "Infografía", en: "Infographic", format: "info" },
+  { id: "invitacion", es: "Invitación", en: "Invitation", format: "invite" },
+  { id: "post-instagram", es: "Post Instagram", en: "Instagram post", format: "ig" },
+  { id: "story", es: "Story", en: "Story", format: "story" },
+  { id: "miniatura-youtube", es: "Miniatura YouTube", en: "YouTube thumbnail", format: "thumb" },
+  { id: "portada", es: "Portada", en: "Cover", format: "video" },
+  { id: "video", es: "Vídeo", en: "Video", format: "video" },
+  { id: "pizarra", es: "Pizarra", en: "Whiteboard", format: "board" },
+  { id: "sitio-web", es: "Sitio web", en: "Website", format: "web" },
+  { id: "meme", es: "Meme", en: "Meme", format: "square" },
+  { id: "negocio", es: "Negocio", en: "Business", format: "doc" },
 ];
 
 const GROUP_CATS = Object.fromEntries(THUMB_GROUPS.map((group) => [group.id, group.cats]));

@@ -1,6 +1,7 @@
 /** Documento de diseño ORVUPI Studio, versión 2. Código MIT. */
 
 import { exportAllowed } from "./filter.mjs";
+import { cleanRuns } from "./text-style.mjs";
 
 export const DOC_VERSION = 2;
 
@@ -127,9 +128,15 @@ function normalizeShell(value) {
   return SHELLS.includes(value) ? value : "";
 }
 
+export const LIMITS = { pages: 8, layers: 48, text: 2000 };
+
 function normalizePages(pages) {
   if (!Array.isArray(pages)) return [];
-  return pages.slice(0, 8).map((page) => (Array.isArray(page) ? page.slice(0, 48).map(normalizeLayer) : []));
+  return pages.slice(0, LIMITS.pages).map((page) => (Array.isArray(page) ? page.slice(0, LIMITS.layers).map(normalizeLayer) : []));
+}
+
+function workFileIdOf(value) {
+  return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value) ? value : "";
 }
 
 function normalizeMeta(meta, formatId) {
@@ -143,7 +150,33 @@ function normalizeMeta(meta, formatId) {
     page,
     note: String(meta?.note || "").slice(0, 2000),
     pages: normalizePages(meta?.pages),
+    revision: Math.max(0, Math.round(num(meta?.revision, 0))),
+    workFileId: workFileIdOf(meta?.workFileId),
   };
+}
+
+/** Rechaza un archivo que se pasa de los topes. No recorta. */
+export function assertImportLimits(data) {
+  const width = Number(data?.format?.width);
+  const height = Number(data?.format?.height);
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width < EDGE.min || width > EDGE.max || height < EDGE.min || height > EDGE.max) {
+    throw new Error("limite-medida");
+  }
+  const pages = Array.isArray(data?.meta?.pages) ? data.meta.pages : [];
+  if (pages.length > LIMITS.pages) throw new Error("limite-paginas");
+  const bags = [data?.layers, ...pages];
+  for (const bag of bags) {
+    if (!Array.isArray(bag)) continue;
+    if (bag.length > LIMITS.layers) throw new Error("limite-capas");
+    for (const layer of bag) {
+      const text = layer?.props?.text;
+      if (typeof text === "string" && text.length > LIMITS.text) throw new Error("limite-texto");
+      const note = layer?.props?.note;
+      if (typeof note === "string" && note.length > LIMITS.text) throw new Error("limite-texto");
+    }
+  }
+  const note = data?.meta?.note;
+  if (typeof note === "string" && note.length > LIMITS.text) throw new Error("limite-texto");
 }
 
 export function blankDocument(formatId, custom) {
@@ -188,6 +221,10 @@ export function textLayer(spec = {}) {
       color: spec.color || spec.props?.color || BRAND.navy,
       align: spec.align || spec.props?.align || "left",
       lineHeight: spec.lineHeight ?? spec.props?.lineHeight ?? 1.15,
+      bold: Boolean(spec.bold ?? spec.props?.bold),
+      italic: Boolean(spec.italic ?? spec.props?.italic),
+      underline: Boolean(spec.underline ?? spec.props?.underline),
+      runs: spec.runs || spec.props?.runs || [],
     },
   });
 }
@@ -206,8 +243,10 @@ export function imageLayer(spec = {}) {
     locked: spec.locked,
     visible: spec.visible,
     z: spec.z,
-    src: spec.src || { kind: "catalog", id: "orvupi-avatar" },
+    src: spec.src || { kind: "catalog", id: "" },
     crop: spec.crop || null,
+    flipX: spec.flipX,
+    flipY: spec.flipY,
   });
 }
 
@@ -230,6 +269,7 @@ export function rectLayer(spec = {}) {
       fill: spec.fill ?? spec.props?.fill ?? BRAND.pink,
       stroke: spec.stroke ?? spec.props?.stroke ?? "",
       strokeWidth: spec.strokeWidth ?? spec.props?.strokeWidth ?? 0,
+      shape: spec.shape === "ellipse" || spec.props?.shape === "ellipse" ? "ellipse" : "rect",
     },
   });
 }
@@ -293,6 +333,10 @@ function normalizeLayer(layer) {
       color: typeof props.color === "string" ? props.color : BRAND.navy,
       align: props.align === "center" || props.align === "right" ? props.align : "left",
       lineHeight: clamp(num(props.lineHeight, 1.15), 0.8, 3),
+      bold: Boolean(props.bold),
+      italic: Boolean(props.italic),
+      underline: Boolean(props.underline),
+      runs: cleanRuns(String(props.text ?? "").slice(0, 2000), props.runs),
     };
   } else if (type === "image") {
     const src = layer?.src || {};
@@ -304,6 +348,8 @@ function normalizeLayer(layer) {
     base.crop = crop && Number.isFinite(Number(crop.w)) && Number.isFinite(Number(crop.h))
       ? { x: num(crop.x, 0), y: num(crop.y, 0), w: Math.max(1, num(crop.w, 1)), h: Math.max(1, num(crop.h, 1)) }
       : null;
+    base.flipX = Boolean(layer?.flipX);
+    base.flipY = Boolean(layer?.flipY);
   } else if (type === "line") {
     const props = layer?.props || {};
     base.props = {
@@ -316,6 +362,7 @@ function normalizeLayer(layer) {
       fill: typeof props.fill === "string" ? props.fill : BRAND.pink,
       stroke: typeof props.stroke === "string" ? props.stroke : "",
       strokeWidth: Math.max(0, num(props.strokeWidth, 0)),
+      shape: props.shape === "ellipse" ? "ellipse" : "rect",
     };
   }
   return base;
@@ -415,6 +462,7 @@ export function importProject(input) {
     throw new Error("proyecto-invalido");
   }
   if (!Array.isArray(data.layers)) throw new Error("proyecto-invalido");
+  assertImportLimits(data);
   return {
     v: DOC_VERSION,
     id: typeof data.id === "string" && data.id ? data.id.slice(0, 80) : uid("proj"),

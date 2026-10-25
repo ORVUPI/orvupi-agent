@@ -332,7 +332,7 @@ export async function drawFace(rgba, width, height, font, lines, x, baseline, si
       });
     }
     if (!Number.isFinite(minX)) continue;
-    const pad = Math.ceil(size * Math.max(style.strokeWidth ?? 0, style.glowRadius ?? 0, style.shadow ?? 0) + 3);
+    const pad = Math.ceil(size * Math.max(style.strokeWidth ?? 0, style.glowRadius ?? 0, style.shadow ?? 0, style.italic ? 0.35 : 0) + 3);
     const ox = Math.floor(minX) - pad;
     const oyTop = Math.floor(y - maxY) - pad;
     const mw = Math.max(1, Math.ceil((maxX - minX) + pad * 2)) * sample;
@@ -340,8 +340,9 @@ export async function drawFace(rgba, width, height, font, lines, x, baseline, si
     const shifted = [];
     for (const item of placed) {
       for (const contour of item.poly.lines) {
+        const shear = style.italic ? 0.22 : 0;
         shifted.push(contour.map((point) => ({
-          x: (item.pen + point.x - ox) * sample,
+          x: (item.pen + point.x - ox + point.y * shear) * sample,
           y: (y - point.y - oyTop) * sample,
         })));
       }
@@ -364,6 +365,10 @@ export async function drawFace(rgba, width, height, font, lines, x, baseline, si
       await taken(blit(rgba, width, height, thick, mw, mh, ox, oyTop, stroke, style.alpha ?? 1, sample, pace));
     }
     await taken(blit(rgba, width, height, mask, mw, mh, ox, oyTop, fill, style.alpha ?? 1, sample, pace));
+    if (style.bold) {
+      const shift = Math.max(1, Math.round(size * 0.045));
+      await taken(blit(rgba, width, height, mask, mw, mh, ox + shift, oyTop, fill, style.alpha ?? 1, sample, pace));
+    }
   }
 }
 

@@ -1,6 +1,7 @@
 /** ORVUPI Studio. El diseño se edita y se guarda en este navegador. */
 
 import catalog from "./catalog.json" with { type: "json" };
+import { cloneForPaste, distributeLayers, duplicatePageAt, fitScale, movePageAt, proportionalSize, removePageAt, shiftCrop, snapBox } from "./lib/arrange.mjs";
 import { paintBackground } from "./lib/backgrounds.mjs";
 import { encodeJpeg, jpegQuality, renderDocument } from "./lib/compose.mjs";
 import {
@@ -37,17 +38,25 @@ import {
 import { exportAllowed } from "./lib/filter.mjs";
 import { createImageStore } from "./lib/images.mjs";
 import { LOGO_MAX_BYTES, readLogoPng } from "./lib/logo.mjs";
+import { packDesign, unpackDesign, userImageIds } from "./lib/package.mjs";
+import { pdfFromPages } from "./lib/pdf-raster.mjs";
 import { IDEAS, filterPlantillas, instantiate } from "./lib/plantillas.mjs";
-import { thumbById, thumbCat } from "./lib/thumbs.mjs";
+import { documentForThumb } from "./lib/thumb-docs.mjs";
 import {
   adoptLegacyDraft,
   deleteProject,
+  dropRecovery,
   duplicateProject,
   listProjects,
+  listRecovery,
   loadProject,
+  recoverWrite,
   saveProject,
 } from "./lib/projects.mjs";
 import { FILE_NAME, REVOKE_MS, canShareFiles, isIOS, saveMode } from "./lib/save.mjs";
+import { applySpan, spanIs } from "./lib/text-style.mjs";
+import { conversionPreview, toOrvdoc, toSlides } from "./lib/work-convert.mjs";
+import { DESIGN_MIME, DOC_MIME, SLIDE_MIME, loadWorkBytes, saveWorkBytes, workIdFromHash } from "./lib/work-store.mjs";
 import { catalogBody, layerStyle, renderDesigns, renderEditor, renderHome, renderMarca, renderPlantillas, renderRecursos } from "./views.mjs";
 
 const root = document.getElementById("studio-root");
@@ -199,6 +208,66 @@ const COPY = {
     barra: "Barra",
     punto: "Punto",
     unidadNota: "Unidad: px. Las medidas en pulgadas y milímetros quedan para una pasada posterior.",
+    menu: "Menú",
+    abrirWork: "Abrir en Work",
+    workNota: "Se crea una copia en la biblioteca local de Work. Esa biblioteca no es una sincronización en la nube. El diseño original sigue en este navegador.",
+    workNativo: "Guardar el diseño en Work",
+    workDoc: "Convertir a documento",
+    workSlides: "Convertir a presentación",
+    workConfirmar: "Crear la copia",
+    workHecho: "La copia está en Work. El diseño original sigue aquí.",
+    workCopia: "Work ya tenía una revisión más nueva. Se guardó otra copia, sin pisar la anterior.",
+    workFallo: "La copia en Work no se escribió. El diseño sigue en este navegador.",
+    paquete: "Exportar paquete",
+    importarPaquete: "Importar paquete",
+    pdf: "PDF",
+    pdfNota: "El PDF aplana cada página a 96 ppp. No anuncia cuatricromía ni sangrado. El texto deja de ser editable. El diseño original sigue en este navegador.",
+    pdfA4: "794×1123 px es un A4 a 96 ppp.",
+    pdfPaginas: "Páginas del PDF",
+    pdfListo: "El PDF se descargó. El diseño editable sigue aquí.",
+    pdfVacio: "Elige al menos una página.",
+    capaTope: "Esta versión guarda hasta 48 capas. No se añadió otra.",
+    topeProyectos: "Hay 40 diseños. Este no sustituye a ninguno y quedó aparte.",
+    conflicto: "Otra pestaña guardó este diseño. No se ha pisado.",
+    guardarCopia: "Guardar como copia",
+    abrirRecuperado: "Abrir el diseño recuperado",
+    limitePaginas: "Este archivo trae más de 8 páginas. No se recorta.",
+    limiteCapas: "Este archivo trae más de 48 capas. No se recorta.",
+    limiteTexto: "Un texto pasa de 2000 caracteres. No se recorta.",
+    limiteMedida: "El lienzo tiene que medir entre 64 y 2048 px. No se recorta.",
+    imagenNo: "La imagen no se pudo guardar. No queda marcado como guardado.",
+    guardadoCorto: "Guardado",
+    topeCorto: "Tope de 40. No se borró ninguno.",
+    conflictoCorto: "Conflicto. No se pisó.",
+    negrita: "Negrita",
+    cursiva: "Cursiva",
+    subrayado: "Subrayado",
+    interlineado: "Interlineado",
+    tamanoTexto: "Tamaño",
+    medidaLienzo: "Tamaño",
+    menos: "Reducir tamaño",
+    mas: "Aumentar tamaño",
+    opacidad: "Opacidad",
+    contorno: "Contorno",
+    grosor: "Grosor",
+    circulo: "Círculo",
+    voltearH: "Voltear horizontal",
+    voltearV: "Voltear vertical",
+    distribuirH: "Distribuir horizontal",
+    distribuirV: "Distribuir vertical",
+    guias: "Guías",
+    duplicarPagina: "Duplicar página",
+    borrarPagina: "Borrar página",
+    anterior: "Anterior",
+    siguiente: "Siguiente",
+    paginas: "Páginas",
+    cerrarInspector: "Cerrar inspector",
+    cerrarPanel: "Cerrar panel",
+    colorFondo: "Color de fondo",
+    fotosNota: "Imágenes de esta pieza. No hay una fototeca aparte.",
+    graficosNota: "Estas piezas son formas. No calculan datos.",
+    paginaTope: "Esta versión guarda hasta 8 páginas.",
+    ultimaPagina: "La última página no se borra.",
     previewNota: "Esto no publica la pieza. La descarga se queda en este dispositivo.",
     videoNota: "La descarga de este formato es un fotograma PNG.",
     tamanosNota: "Tamaños listos. El lienzo nuevo se abre en este navegador.",
@@ -336,6 +405,66 @@ const COPY = {
     barra: "Bar",
     punto: "Dot",
     unidadNota: "Unit: px. Inch and millimetre sizes come in a later pass.",
+    menu: "Menu",
+    abrirWork: "Open in Work",
+    workNota: "A copy is created in Work's local library. That library is not cloud sync. The original design stays in this browser.",
+    workNativo: "Save the design in Work",
+    workDoc: "Convert to document",
+    workSlides: "Convert to presentation",
+    workConfirmar: "Create the copy",
+    workHecho: "The copy is in Work. The original design stays here.",
+    workCopia: "Work already had a newer revision. Another copy was saved, and the previous file was left as it was.",
+    workFallo: "The Work copy was not written. The design stays in this browser.",
+    paquete: "Export package",
+    importarPaquete: "Import package",
+    pdf: "PDF",
+    pdfNota: "The PDF flattens each page at 96 ppi. It does not claim process color or bleed. Text is no longer editable. The original design stays in this browser.",
+    pdfA4: "794×1123 px is an A4 page at 96 ppi.",
+    pdfPaginas: "PDF pages",
+    pdfListo: "The PDF downloaded. The editable design stays here.",
+    pdfVacio: "Choose at least one page.",
+    capaTope: "This version keeps up to 48 layers. Another one was not added.",
+    topeProyectos: "There are 40 designs. This one does not replace any of them and was kept aside.",
+    conflicto: "Another tab saved this design. It was not overwritten.",
+    guardarCopia: "Save as a copy",
+    abrirRecuperado: "Open the recovered design",
+    limitePaginas: "This file has more than 8 pages. It is not trimmed.",
+    limiteCapas: "This file has more than 48 layers. It is not trimmed.",
+    limiteTexto: "A text is over 2000 characters. It is not trimmed.",
+    limiteMedida: "The canvas must be between 64 and 2048 px. It is not trimmed.",
+    imagenNo: "The image could not be stored. It is not marked as saved.",
+    guardadoCorto: "Saved",
+    topeCorto: "40 design limit. None were deleted.",
+    conflictoCorto: "Conflict. Nothing was overwritten.",
+    negrita: "Bold",
+    cursiva: "Italic",
+    subrayado: "Underline",
+    interlineado: "Line spacing",
+    tamanoTexto: "Size",
+    medidaLienzo: "Size",
+    menos: "Decrease size",
+    mas: "Increase size",
+    opacidad: "Opacity",
+    contorno: "Stroke",
+    grosor: "Weight",
+    circulo: "Circle",
+    voltearH: "Flip horizontal",
+    voltearV: "Flip vertical",
+    distribuirH: "Distribute horizontal",
+    distribuirV: "Distribute vertical",
+    guias: "Guides",
+    duplicarPagina: "Duplicate page",
+    borrarPagina: "Delete page",
+    anterior: "Previous",
+    siguiente: "Next",
+    paginas: "Pages",
+    cerrarInspector: "Close inspector",
+    cerrarPanel: "Close panel",
+    colorFondo: "Background color",
+    fotosNota: "Images in this piece. There is no separate photo library.",
+    graficosNota: "These pieces are shapes. They do not calculate data.",
+    paginaTope: "This version keeps up to 8 pages.",
+    ultimaPagina: "The last page stays.",
     previewNota: "This does not publish the piece. The download stays on this device.",
     videoNota: "The download for this format is a PNG frame.",
     tamanosNota: "Ready-made sizes. A new canvas opens in this browser.",
@@ -374,10 +503,24 @@ const state = {
   dialog: false,
   resizing: false,
   timerSeconds: 0,
+  inspectorOpen: true,
+  panelOpen: true,
+  navOpen: false,
+  guides: false,
+  editingId: "",
+  workNote: false,
+  workRoute: "",
+  workPreview: null,
+  pdfOpen: false,
+  imageFailed: false,
+  pageNote: "",
+  cropping: false,
+  clip: null,
 };
 
 let fileMode = "image";
 let saveTimer = 0;
+let saveChain = Promise.resolve();
 let logoTicket = 0;
 let clockTimer = 0;
 const urlCache = new Map();
@@ -405,11 +548,26 @@ function statusText() {
   if (state.status === "missing-image") return t("faltaImagen");
   if (state.status === "version") return t("version");
   if (state.status === "invalid") return t("invalido");
-  if (state.status === "saved") return t("guardado");
+  if (state.status === "cap") return t("topeCorto");
+  if (state.status === "conflict") return t("conflictoCorto");
+  if (state.status === "image-fail") return t("imagenNo");
+  if (state.status === "limite-paginas") return t("limitePaginas");
+  if (state.status === "limite-capas") return t("limiteCapas");
+  if (state.status === "limite-texto") return t("limiteTexto");
+  if (state.status === "limite-medida") return t("limiteMedida");
+  if (state.status === "saved") return t("guardadoCorto");
   return "";
 }
 
+function statusFromError(error) {
+  const message = error?.message || "";
+  if (message === "version-desconocida") return "version";
+  if (message === "limite-paginas" || message === "limite-capas" || message === "limite-texto" || message === "limite-medida") return message;
+  return "invalid";
+}
+
 function viewName() {
+  if (workIdFromHash(location.hash) && state.doc) return "editor";
   const hash = location.hash.replace(/^#\/?/, "");
   const known = ["plantillas", "disenos", "editor", "recursos", "marca"];
   if (location.hash) return known.includes(hash) ? hash : "inicio";
@@ -452,19 +610,46 @@ function snapshot() {
   state.future = [];
 }
 
+function applySaveResult(result) {
+  if (!result?.ok) {
+    if (result?.reason === "cap") {
+      state.status = "cap";
+      state.pageNote = t("topeProyectos");
+    } else if (result?.reason === "conflict") {
+      state.status = "conflict";
+      state.pageNote = t("conflicto");
+    } else state.status = "quota";
+    return result;
+  }
+  if (state.doc) state.doc.meta.revision = result.revision;
+  if (state.doc) dropRecovery(storage, state.doc.id);
+  if (state.status === "cap" || state.status === "conflict" || state.status === "image-fail") state.pageNote = "";
+  state.status = state.imageFailed ? "image-fail" : "saved";
+  if (state.imageFailed) state.pageNote = t("imagenNo");
+  return result;
+}
+
 function scheduleSave() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
-    if (!state.doc) return;
-    syncPages();
-    const result = saveProject(storage, state.doc);
-    state.status = result.ok ? "saved" : "quota";
-    const node = document.getElementById("estado-guardado");
-    if (node) node.textContent = statusText();
+    saveChain = saveChain.then(() => commitSave()).catch(() => {});
   }, 400);
 }
 
-function openDoc(doc) {
+async function commitSave() {
+  if (!state.doc) return;
+  syncPages();
+  const result = saveProject(storage, state.doc);
+  applySaveResult(result);
+  if (!result.ok) render();
+  else {
+    const node = document.getElementById("estado-guardado");
+    if (node) node.textContent = statusText();
+  }
+  if (result.ok && state.doc?.meta?.workFileId) await syncWorkFile();
+}
+
+function openDoc(doc, options = {}) {
   state.doc = doc;
   state.page = bindPages(doc);
   state.selected = [];
@@ -475,12 +660,28 @@ function openDoc(doc) {
   state.resizing = false;
   state.preview = false;
   state.notesOpen = false;
+  state.editingId = "";
+  state.cropping = false;
+  state.pageNote = "";
+  state.workNote = false;
+  state.workRoute = "";
+  state.workPreview = null;
+  state.pdfOpen = false;
+  state.imageFailed = Boolean(options.imageFailed);
+  state.navOpen = false;
+  const narrow = window.innerWidth < 800;
+  state.panelOpen = !narrow;
+  state.inspectorOpen = !narrow;
   state.timerOn = false;
   state.timerSeconds = 0;
   clearInterval(clockTimer);
-  const saved = saveProject(storage, doc);
-  state.status = saved.ok ? "saved" : "quota";
-  if (location.hash !== "#/editor") location.hash = "#/editor";
+  const workId = options.workFileId || doc.meta?.workFileId || "";
+  if (workId) doc.meta.workFileId = workId;
+  else if (doc.meta) doc.meta.workFileId = "";
+  if (!options.skipSave) applySaveResult(saveProject(storage, doc));
+  else state.status = state.imageFailed ? "image-fail" : "saved";
+  const next = workId ? `#/work/${workId}` : "#/editor";
+  if (location.hash !== next) location.hash = next;
   else render();
   void hydrateUsers();
 }
@@ -546,11 +747,8 @@ function shellRail(doc) {
 }
 
 function openThumb(id) {
-  const item = thumbById(id);
-  const meta = item ? thumbCat(item.category) : null;
-  const doc = meta ? instantiate(meta.open) : null;
+  const doc = documentForThumb(id);
   if (!doc) return;
-  doc.name = item.title.slice(0, 80);
   openDoc(doc);
 }
 
@@ -571,6 +769,12 @@ function applyFormat(id) {
 }
 
 function applyCustomSize(width, height) {
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width < 64 || height < 64 || width > 2048 || height > 2048) {
+    state.pageNote = t("limiteMedida");
+    state.dialog = true;
+    render();
+    return;
+  }
   if (state.resizing && state.doc) {
     snapshot();
     state.doc.format = makeFormat({ id: "custom", width, height });
@@ -602,13 +806,75 @@ function addPage() {
   const shell = state.doc.meta.shell;
   if (shell === "whiteboard" || shell === "doc" || shell === "video" || shell === "web") return;
   syncPages();
-  if (state.doc.meta.pages.length >= 8) return;
+  if (state.doc.meta.pages.length >= 8) {
+    state.pageNote = t("paginaTope");
+    render();
+    return;
+  }
+  state.pageNote = "";
   snapshot();
   state.doc.meta.pages.push([]);
   state.page = state.doc.meta.pages.length - 1;
   state.doc.layers = state.doc.meta.pages[state.page];
   state.doc.meta.page = state.page;
   state.selected = [];
+  scheduleSave();
+  render();
+}
+
+function duplicateCurrentPage() {
+  if (!state.doc) return;
+  const shell = state.doc.meta.shell;
+  if (shell === "whiteboard" || shell === "doc" || shell === "video" || shell === "web") return;
+  syncPages();
+  if (state.doc.meta.pages.length >= 8) {
+    state.pageNote = t("paginaTope");
+    render();
+    return;
+  }
+  snapshot();
+  const at = duplicatePageAt(state.doc.meta.pages, state.page, () => uid("ly"));
+  if (at == null) return;
+  state.pageNote = "";
+  state.page = at;
+  state.doc.layers = state.doc.meta.pages[at];
+  state.doc.meta.page = at;
+  state.selected = [];
+  scheduleSave();
+  render();
+}
+
+function deleteCurrentPage() {
+  if (!state.doc) return;
+  const shell = state.doc.meta.shell;
+  if (shell === "whiteboard" || shell === "doc" || shell === "video" || shell === "web") return;
+  syncPages();
+  if (state.doc.meta.pages.length < 2) {
+    state.pageNote = t("ultimaPagina");
+    render();
+    return;
+  }
+  snapshot();
+  removePageAt(state.doc.meta.pages, state.page);
+  state.page = Math.min(state.page, state.doc.meta.pages.length - 1);
+  state.doc.layers = state.doc.meta.pages[state.page];
+  state.doc.meta.page = state.page;
+  state.pageNote = "";
+  state.selected = [];
+  scheduleSave();
+  render();
+}
+
+function shiftPage(delta) {
+  if (!state.doc) return;
+  syncPages();
+  const to = state.page + delta;
+  if (to < 0 || to >= state.doc.meta.pages.length) return;
+  snapshot();
+  movePageAt(state.doc.meta.pages, state.page, to);
+  state.page = to;
+  state.doc.layers = state.doc.meta.pages[to];
+  state.doc.meta.page = to;
   scheduleSave();
   render();
 }
@@ -693,8 +959,12 @@ function makeCtx() {
   };
 }
 
+let rendering = false;
+
 function render() {
+  rendering = true;
   if (viewName() === "editor" && !state.doc) {
+    rendering = false;
     go("inicio");
     return;
   }
@@ -706,11 +976,14 @@ function render() {
   else if (view === "marca") renderMarca(ctx);
   else if (view === "recursos") renderRecursos(ctx);
   else renderEditor(ctx);
+  applyStageFit();
+  focusEditing();
   if (state.dialog) {
     const dialog = document.getElementById("dialogo-tamano");
     if (dialog && !dialog.open) dialog.showModal();
   }
   syncChrome();
+  rendering = false;
 }
 
 function ensureQuality() {
@@ -749,6 +1022,79 @@ async function paintBackdrop() {
   if (root.querySelector(".stage-art") === art) art.style.backgroundImage = `url(${canvas.toDataURL("image/png")})`;
 }
 
+function stageRoom() {
+  const host = root.querySelector(".escenario");
+  if (!host || host.clientWidth < 80 || host.clientHeight < 80) return null;
+  const scroll = host.querySelector(".stage-scroll");
+  let extra = 0;
+  for (const child of host.children) {
+    if (child === scroll) continue;
+    extra += child.getBoundingClientRect().height;
+  }
+  return {
+    w: Math.max(120, host.clientWidth - 8),
+    h: Math.max(120, host.clientHeight - extra - 8),
+  };
+}
+
+function applyStageFit() {
+  if (!state.doc || viewName() !== "editor") return;
+  const art = root.querySelector(".stage-art");
+  const frame = root.querySelector(".stage-frame");
+  const shell = root.querySelector(".orv-frame");
+  if (shell) {
+    const top = shell.getBoundingClientRect().top + window.scrollY;
+    shell.style.height = `${Math.max(320, Math.round(window.innerHeight - top - 8))}px`;
+  }
+  if (!art || !frame) return;
+  if (state.zoom === "100") state.scale = 1;
+  else if (state.zoom === "fit") {
+    const room = stageRoom();
+    if (!room) {
+      if (!applyStageFit.waiting) {
+        applyStageFit.waiting = true;
+        requestAnimationFrame(() => {
+          applyStageFit.waiting = false;
+          applyStageFit();
+        });
+      }
+      return;
+    }
+    state.scale = fitScale(state.doc.format.width, state.doc.format.height, room.w, room.h);
+  } else {
+    const numeric = Number(state.zoom);
+    if (Number.isFinite(numeric)) state.scale = Math.min(2, Math.max(0.1, numeric));
+  }
+  frame.style.width = `${Math.round(state.doc.format.width * state.scale)}px`;
+  frame.style.height = `${Math.round(state.doc.format.height * state.scale)}px`;
+  art.style.transform = `scale(${state.scale})`;
+}
+
+function focusEditing() {
+  const node = state.editingId ? root.querySelector(`[data-edit="${state.editingId}"]`) : null;
+  if (node instanceof HTMLElement && document.activeElement !== node) {
+    rendering = true;
+    node.focus();
+    rendering = false;
+  }
+}
+
+function textRange(layer) {
+  const node = root.querySelector("[data-edit]");
+  if (!(node instanceof HTMLElement)) return [0, layer.props.text.length];
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount || !node.contains(sel.anchorNode)) return [0, layer.props.text.length];
+  const measure = (container, offset) => {
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    range.setEnd(container, offset);
+    return range.toString().length;
+  };
+  const a = measure(sel.anchorNode, sel.anchorOffset);
+  const b = measure(sel.focusNode, sel.focusOffset);
+  return [Math.min(a, b), Math.max(a, b)];
+}
+
 function syncChrome() {
   const editing = viewName() === "editor" && Boolean(state.doc);
   if (descargar) {
@@ -764,6 +1110,13 @@ function syncChrome() {
 }
 
 function addLayer(layer) {
+  if (!state.doc) return;
+  if (state.doc.layers.length >= 48) {
+    state.pageNote = t("capaTope");
+    render();
+    return;
+  }
+  state.pageNote = "";
   snapshot();
   layer.z = Math.max(0, ...state.doc.layers.map((item) => item.z)) + 1;
   state.doc.layers.push(layer);
@@ -823,6 +1176,64 @@ function onRootClick(event) {
   }
   if (buttonNode.dataset.page) showPage(Number(buttonNode.dataset.page));
   if (buttonNode.id === "anadir-pagina") addPage();
+  if (buttonNode.id === "duplicar-pagina") duplicateCurrentPage();
+  if (buttonNode.id === "borrar-pagina") deleteCurrentPage();
+  if (buttonNode.id === "pagina-anterior") shiftPage(-1);
+  if (buttonNode.id === "pagina-siguiente") shiftPage(1);
+  if (buttonNode.id === "menu-estudio") {
+    state.navOpen = !state.navOpen;
+    render();
+  }
+  if (buttonNode.id === "abrir-work") {
+    state.workNote = true;
+    state.workRoute = "";
+    state.workPreview = null;
+    state.pdfOpen = false;
+    render();
+  }
+  if (buttonNode.id === "cerrar-work") {
+    state.workNote = false;
+    state.workRoute = "";
+    state.workPreview = null;
+    render();
+  }
+  if (buttonNode.id === "work-nativo" || buttonNode.id === "work-doc" || buttonNode.id === "work-diapositivas") {
+    const route = buttonNode.id === "work-nativo" ? "native" : buttonNode.id === "work-doc" ? "doc" : "slide";
+    state.workRoute = route;
+    state.workPreview = state.doc ? conversionPreview(state.doc, route) : null;
+    render();
+  }
+  if (buttonNode.id === "work-confirmar") void confirmWork();
+  if (buttonNode.id === "abrir-pdf") {
+    state.pdfOpen = true;
+    state.workNote = false;
+    state.fileMenu = false;
+    render();
+  }
+  if (buttonNode.id === "cerrar-pdf") {
+    state.pdfOpen = false;
+    render();
+  }
+  if (buttonNode.id === "exportar-pdf") void exportPdf();
+  if (buttonNode.id === "exportar-paquete" && state.doc) void exportPackage(state.doc.id);
+  if (buttonNode.id === "guardar-copia") void saveAsCopy();
+  if (buttonNode.id === "abrir-recuperado") openRecovered();
+  if (buttonNode.id === "alternar-panel") {
+    state.panelOpen = !state.panelOpen;
+    render();
+  }
+  if (buttonNode.id === "alternar-inspector" || buttonNode.id === "cerrar-inspector") {
+    state.inspectorOpen = buttonNode.id === "cerrar-inspector" ? false : !state.inspectorOpen;
+    render();
+  }
+  if (buttonNode.id === "guias") {
+    state.guides = !state.guides;
+    render();
+  }
+  if (buttonNode.id === "modo-recorte") {
+    state.cropping = !state.cropping;
+    render();
+  }
   if (buttonNode.id === "anadir-seccion") addSection();
   if (buttonNode.id === "imprimir") window.print();
   if (buttonNode.id === "vista-previa") {
@@ -854,8 +1265,11 @@ function onRootClick(event) {
     const layer = current?.type === "text" ? current : state.doc.layers.find((item) => item.type === "text");
     if (layer) {
       snapshot();
-      const delta = buttonNode.dataset.size === "up" ? 2 : -2;
-      layer.props.size = Math.min(400, Math.max(8, (layer.props.size || 32) + delta));
+      const delta = buttonNode.dataset.size === "up" ? 1 : -1;
+      const next = Math.min(400, Math.max(8, Math.round(layer.props.size || 32) + delta));
+      const [from, to] = textRange(layer);
+      if (state.editingId === layer.id && to > from) layer.props.runs = applySpan(layer.props.text, layer.props.runs, from, to, { size: next }, layer.props);
+      else layer.props.size = next;
       scheduleSave();
       render();
     }
@@ -892,11 +1306,7 @@ function onRootClick(event) {
     const doc = loadProject(storage, buttonNode.dataset.open);
     if (doc) openDoc(doc);
   }
-  if (buttonNode.dataset.duplicate) {
-    const copy = duplicateProject(storage, buttonNode.dataset.duplicate);
-    state.status = copy ? "saved" : "quota";
-    render();
-  }
+  if (buttonNode.dataset.duplicate) void duplicateWithImages(buttonNode.dataset.duplicate);
   if (buttonNode.dataset.delete) {
     if (window.confirm(t("confirmarBorrar"))) {
       deleteProject(storage, buttonNode.dataset.delete);
@@ -905,10 +1315,10 @@ function onRootClick(event) {
     }
   }
   if (buttonNode.dataset.export) exportJson(buttonNode.dataset.export);
-  if (buttonNode.id === "importar-json" || buttonNode.id === "subir-imagen" || buttonNode.id === "cambiar-imagen") {
-    fileMode = buttonNode.id === "importar-json" ? "project" : "image";
+  if (buttonNode.id === "importar-json" || buttonNode.id === "importar-paquete" || buttonNode.id === "subir-imagen" || buttonNode.id === "cambiar-imagen") {
+    fileMode = buttonNode.id === "importar-json" || buttonNode.id === "importar-paquete" ? "project" : "image";
     if (logoInput) {
-      logoInput.accept = fileMode === "project" ? "application/json" : "image/png,image/jpeg,image/webp";
+      logoInput.accept = fileMode === "project" ? "application/json,.json" : "image/png,image/jpeg,image/webp";
       logoInput.click();
     }
   }
@@ -948,6 +1358,45 @@ function onRootClick(event) {
     scheduleSave();
     render();
   }
+  if (buttonNode.dataset.style && state.doc) {
+    const layer = primary();
+    if (layer?.type === "text") {
+      const key = buttonNode.dataset.style;
+      const [from, to] = textRange(layer);
+      const on = !spanIs(layer.props.text, layer.props.runs, from, to, key, layer.props);
+      snapshot();
+      const whole = to <= from || (from === 0 && to === layer.props.text.length);
+      if (whole) layer.props[key] = on;
+      layer.props.runs = applySpan(layer.props.text, layer.props.runs, from, to, { [key]: on }, layer.props);
+      scheduleSave();
+      render();
+    }
+  }
+  if (buttonNode.dataset.textAlign && state.doc) {
+    const layer = primary();
+    if (layer?.type === "text") {
+      snapshot();
+      layer.props.align = buttonNode.dataset.textAlign;
+      scheduleSave();
+      render();
+    }
+  }
+  if (buttonNode.dataset.flip && state.doc) {
+    const layer = primary();
+    if (layer?.type === "image") {
+      snapshot();
+      if (buttonNode.dataset.flip === "x") layer.flipX = !layer.flipX;
+      else layer.flipY = !layer.flipY;
+      scheduleSave();
+      render();
+    }
+  }
+  if (buttonNode.dataset.distribute && state.doc) {
+    snapshot();
+    distributeLayers(state.doc, state.selected, buttonNode.dataset.distribute);
+    scheduleSave();
+    render();
+  }
   if (buttonNode.dataset.align) {
     snapshot();
     alignLayers(state.doc, state.selected.length ? state.selected : [primary()?.id].filter(Boolean), buttonNode.dataset.align);
@@ -963,7 +1412,11 @@ function onRootClick(event) {
     render();
   }
   if (buttonNode.dataset.zoom) {
-    state.zoom = buttonNode.dataset.zoom;
+    if (buttonNode.dataset.zoom === "in" || buttonNode.dataset.zoom === "out") {
+      const current = state.zoom === "fit" || state.zoom === "100" ? state.scale : Number(state.zoom) || state.scale;
+      const next = buttonNode.dataset.zoom === "in" ? Math.min(2, current + 0.1) : Math.max(0.1, current - 0.1);
+      state.zoom = String(Math.round(next * 100) / 100);
+    } else state.zoom = buttonNode.dataset.zoom;
     render();
   }
   if (buttonNode.dataset.layers) {
@@ -974,6 +1427,7 @@ function onRootClick(event) {
 
 function addFromTool(kind) {
   if (kind === "rect") addLayer(rectLayer({ name: t("forma"), x: 120, y: 120, w: 280, h: 180, fill: BRAND.pink }));
+  if (kind === "ellipse") addLayer(rectLayer({ name: t("circulo"), x: 160, y: 160, w: 220, h: 220, fill: BRAND.pink, shape: "ellipse" }));
   if (kind === "barra") addLayer(rectLayer({ name: t("barra"), x: 80, y: 80, w: 360, h: 48, fill: BRAND.pink }));
   if (kind === "punto") addLayer(rectLayer({ name: t("punto"), x: 80, y: 160, w: 36, h: 36, fill: BRAND.navy }));
   if (kind === "line") addLayer(lineLayer({ name: t("linea"), x: 120, y: 200, w: 420, h: 16, color: BRAND.navy, strokeWidth: 8 }));
@@ -986,8 +1440,12 @@ function runAction(action, id) {
   if (action === "undo") {
     if (!state.past.length || !state.doc) return;
     syncPages();
+    const revision = state.doc.meta.revision;
+    const workFileId = state.doc.meta.workFileId;
     state.future.push(JSON.stringify(exportProject(state.doc)));
     state.doc = importProject(state.past.pop());
+    state.doc.meta.revision = revision;
+    state.doc.meta.workFileId = workFileId;
     state.page = bindPages(state.doc);
     scheduleSave();
     render();
@@ -996,14 +1454,18 @@ function runAction(action, id) {
   if (action === "redo") {
     if (!state.future.length || !state.doc) return;
     syncPages();
+    const revision = state.doc.meta.revision;
+    const workFileId = state.doc.meta.workFileId;
     state.past.push(JSON.stringify(exportProject(state.doc)));
     state.doc = importProject(state.future.pop());
+    state.doc.meta.revision = revision;
+    state.doc.meta.workFileId = workFileId;
     state.page = bindPages(state.doc);
     scheduleSave();
     render();
     return;
   }
-  if (!layer && !["group", "ungroup", "lock", "duplicate"].includes(action)) return;
+  if (!layer && !["group", "ungroup", "lock", "duplicate", "remove"].includes(action)) return;
   snapshot();
   if (action === "front" && layer) bringToFront(state.doc, layer.id);
   if (action === "forward" && layer) bringForward(state.doc, layer.id);
@@ -1014,7 +1476,19 @@ function runAction(action, id) {
   if (action === "group") groupLayers(state.doc, state.selected);
   if (action === "ungroup") ungroupLayers(state.doc, state.selected);
   if (action === "lock") lockLayers(state.doc, state.selected, true);
+  if (action === "remove") {
+    const ids = new Set(state.selected);
+    state.doc.layers = state.doc.layers.filter((item) => !ids.has(item.id) || item.locked);
+    state.selected = state.selected.filter((id) => state.doc.layers.some((item) => item.id === id));
+  }
   if (action === "duplicate") {
+    const count = Math.max(1, state.selected.length);
+    if (state.doc.layers.length + count > 48) {
+      state.past.pop();
+      state.pageNote = t("capaTope");
+      render();
+      return;
+    }
     const copies = state.selected.length > 1 ? duplicateLayers(state.doc, state.selected) : [duplicateLayer(state.doc, state.selected[0])].filter(Boolean);
     retargetCopies(copies);
     state.selected = copies.map((item) => item.id);
@@ -1035,11 +1509,20 @@ function retargetCopies(copies) {
 }
 
 function bindStage() {
+  const lastTap = { id: "", at: 0 };
   root.addEventListener("pointerdown", (event) => {
     const resize = event.target.closest?.("[data-resize]");
+    const cropEdge = event.target.closest?.("[data-crop-edge]");
     const capa = event.target.closest?.(".capa");
     const art = event.target.closest?.(".stage-art");
     if (!state.doc || !art) return;
+    if (event.target.closest?.("[data-edit]")) return;
+    if (cropEdge) {
+      event.preventDefault();
+      event.stopPropagation();
+      startCrop(cropEdge.dataset.cropEdge, event);
+      return;
+    }
     if (resize) {
       event.preventDefault();
       event.stopPropagation();
@@ -1056,6 +1539,16 @@ function bindStage() {
       }
       state.selected = [id];
       const layer = state.doc.layers.find((item) => item.id === id);
+      const now = performance.now();
+      const again = id === lastTap.id && now - lastTap.at < 450;
+      lastTap.id = id;
+      lastTap.at = now;
+      if (layer?.type === "text" && (event.detail >= 2 || again)) {
+        state.editingId = id;
+        snapshot();
+        render();
+        return;
+      }
       if (!layer || layer.locked || state.tool === "text") {
         render();
         return;
@@ -1088,8 +1581,14 @@ function startDrag(id, event) {
   const members = layer.groupId ? state.doc.layers.filter((item) => item.groupId === layer.groupId) : [layer];
   const origins = members.map((item) => ({ id: item.id, x: item.x, y: item.y }));
   const move = (ev) => {
-    const dx = Math.round((ev.clientX - startX) / state.scale);
-    const dy = Math.round((ev.clientY - startY) / state.scale);
+    let dx = Math.round((ev.clientX - startX) / state.scale);
+    let dy = Math.round((ev.clientY - startY) / state.scale);
+    if (state.guides && layer) {
+      const others = state.doc.layers.filter((item) => !origins.some((origin) => origin.id === item.id));
+      const snapped = snapBox({ x: origins[0].x + dx, y: origins[0].y + dy, w: layer.w, h: layer.h }, others, state.doc.format);
+      dx = snapped.x - origins[0].x;
+      dy = snapped.y - origins[0].y;
+    }
     for (const origin of origins) {
       const item = state.doc.layers.find((layerItem) => layerItem.id === origin.id);
       if (!item) continue;
@@ -1116,8 +1615,9 @@ function startResize(id, event) {
   const startY = event.clientY;
   const origin = { w: layer.w, h: layer.h };
   const move = (ev) => {
-    layer.w = Math.max(8, Math.round(origin.w + (ev.clientX - startX) / state.scale));
-    layer.h = Math.max(8, Math.round(origin.h + (ev.clientY - startY) / state.scale));
+    const next = proportionalSize(origin, (ev.clientX - startX) / state.scale, (ev.clientY - startY) / state.scale, layer.type === "image" || ev.shiftKey);
+    layer.w = next.w;
+    layer.h = next.h;
     const node = root.querySelector(`.capa[data-id="${id}"]`);
     if (node) node.style.width = `${layer.w}px`, node.style.height = `${layer.h}px`;
   };
@@ -1177,6 +1677,12 @@ function bindInputs() {
     }
     if (!state.doc) return;
     if (target.id === "notas-pizarra" && state.doc) {
+      if (target.value.length > 2000) {
+        state.status = "limite-texto";
+        state.pageNote = t("limiteTexto");
+        const node = document.getElementById("estado-guardado");
+        if (node) node.textContent = statusText();
+      }
       state.doc.meta.note = target.value.slice(0, 2000);
       scheduleSave();
     }
@@ -1184,10 +1690,78 @@ function bindInputs() {
       state.doc.name = target.value.slice(0, 80);
       scheduleSave();
     }
+    if (target.dataset.edit) {
+      const layer = state.doc.layers.find((item) => item.id === target.dataset.edit);
+      if (layer?.type === "text") {
+        const raw = target.textContent || "";
+        if (raw.length > 2000) {
+          state.status = "limite-texto";
+        state.pageNote = t("limiteTexto");
+          const node = document.getElementById("estado-guardado");
+          if (node) node.textContent = statusText();
+        }
+        layer.props.text = raw.slice(0, 2000);
+        scheduleSave();
+      }
+    }
+    if (target.id === "fondo-color") {
+      state.doc.background = { type: "solid", catalogId: "", fill: target.value };
+      const art = root.querySelector(".stage-art");
+      if (art) {
+        art.style.background = target.value;
+        art.style.backgroundImage = "";
+      }
+      scheduleSave();
+    }
+    if (target.id === "color-texto" || target.id === "tamano-texto" || target.id === "interlineado") {
+      const layer = primary();
+      if (layer?.type === "text") {
+        if (target.id === "color-texto") {
+          const [from, to] = textRange(layer);
+          if (state.editingId === layer.id && to > from) layer.props.runs = applySpan(layer.props.text, layer.props.runs, from, to, { color: target.value }, layer.props);
+          else layer.props.color = target.value;
+        }
+        if (target.id === "tamano-texto") layer.props.size = Math.min(400, Math.max(8, Math.round(Number(target.value) || layer.props.size)));
+        if (target.id === "interlineado") layer.props.lineHeight = Math.min(3, Math.max(0.8, Number(target.value) || layer.props.lineHeight));
+        const node = root.querySelector(`.capa[data-id="${layer.id}"] .capa-texto`);
+        if (node instanceof HTMLElement) {
+          node.style.color = layer.props.color;
+          node.style.fontSize = `${layer.props.size}px`;
+          node.style.lineHeight = String(layer.props.lineHeight);
+        }
+        scheduleSave();
+      }
+    }
+    if (target.dataset.opacidad) {
+      const layer = primary();
+      if (layer) {
+        layer.opacity = Math.min(1, Math.max(0, Number(target.value)));
+        const node = root.querySelector(`.capa[data-id="${layer.id}"]`);
+        if (node instanceof HTMLElement) node.style.opacity = String(layer.opacity);
+        scheduleSave();
+      }
+    }
+    if (target.dataset.stroke || target.id === "contorno-color") {
+      const layer = primary();
+      if (layer && (layer.type === "rect" || layer.type === "line")) {
+        if (target.id === "contorno-color") {
+          if (layer.type === "line") layer.props.color = target.value;
+          else layer.props.stroke = target.value;
+        } else layer.props.strokeWidth = Math.max(0, Math.round(Number(target.value) || 0));
+        scheduleSave();
+      }
+    }
     if (target.id === "texto-capa") {
       const layer = primary();
       if (!layer || layer.type !== "text") return;
-      layer.props.text = target.value.slice(0, 2000);
+      const raw = target.value || "";
+      if (raw.length > 2000) {
+        state.status = "limite-texto";
+        state.pageNote = t("limiteTexto");
+        const node = document.getElementById("estado-guardado");
+        if (node) node.textContent = statusText();
+      }
+      layer.props.text = raw.slice(0, 2000);
       const node = root.querySelector(`.capa[data-id="${layer.id}"] .capa-texto`);
       if (node) node.textContent = layer.props.text;
       scheduleSave();
@@ -1214,7 +1788,24 @@ function bindInputs() {
     }
   });
   root.addEventListener("change", (event) => {
-    if (event.target?.dataset?.crop) render();
+    if (event.target?.dataset?.crop || event.target?.id === "contorno-color" || event.target?.dataset?.stroke || event.target?.id === "tamano-texto" || event.target?.id === "interlineado" || event.target?.id === "color-texto" || event.target?.id === "fondo-color") render();
+  });
+  root.addEventListener("focusin", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement) || !state.doc) return;
+    if (target.matches("#tamano-texto, #interlineado, #fondo-color, #color-texto, #contorno-color, [data-opacidad], [data-stroke], #texto-capa")) snapshot();
+  });
+  root.addEventListener("mousedown", (event) => {
+    const keep = event.target.closest?.("[data-style], [data-size], [data-font], [data-text-align], #color-texto, [data-action], .editor-bar, #barra-texto, .tira");
+    if (keep && state.editingId) event.preventDefault();
+  });
+  root.addEventListener("focusout", (event) => {
+    const target = event.target;
+    if (rendering || !(target instanceof HTMLElement) || !target.dataset.edit) return;
+    const next = event.relatedTarget;
+    if (next instanceof Element && next.closest("#barra-texto")) return;
+    state.editingId = "";
+    render();
   });
 }
 
@@ -1244,12 +1835,83 @@ function bindLayersDrag() {
   });
 }
 
+function naturalOf(layer) {
+  if (layer.src?.kind === "user") {
+    const image = state.userImages.get(layer.src.id);
+    if (image?.width && image?.height) return { w: image.width, h: image.height };
+  }
+  const item = layer.src?.kind === "catalog" ? catalogItem(layer.src.id) : null;
+  if (item?.width && item?.height) return { w: item.width, h: item.height };
+  return { w: Math.max(1, layer.w), h: Math.max(1, layer.h) };
+}
+
+function startCrop(edge, event) {
+  const layer = primary();
+  if (!layer || layer.type !== "image") return;
+  snapshot();
+  const natural = naturalOf(layer);
+  if (!layer.crop) layer.crop = { x: 0, y: 0, w: natural.w, h: natural.h };
+  const origin = { ...layer.crop };
+  const startX = event.clientX;
+  const startY = event.clientY;
+  const move = (ev) => {
+    const dx = ((ev.clientX - startX) / state.scale) * (origin.w / Math.max(1, layer.w));
+    const dy = ((ev.clientY - startY) / state.scale) * (origin.h / Math.max(1, layer.h));
+    layer.crop = shiftCrop(origin, edge, dx, dy);
+  };
+  window.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", () => {
+    window.removeEventListener("pointermove", move);
+    scheduleSave();
+    render();
+  }, { once: true });
+}
+
 function onKey(event) {
   const tag = document.activeElement?.tagName;
-  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || document.activeElement?.isContentEditable) return;
   if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z") {
     event.preventDefault();
     runAction(event.shiftKey ? "redo" : "undo");
+    return;
+  }
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "a" && state.doc) {
+    event.preventDefault();
+    state.selected = state.doc.layers.map((layer) => layer.id);
+    render();
+    return;
+  }
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "c" && state.doc) {
+    state.clip = state.doc.layers.filter((layer) => state.selected.includes(layer.id)).map((layer) => JSON.parse(JSON.stringify(layer)));
+    return;
+  }
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "v" && state.doc && state.clip?.length) {
+    event.preventDefault();
+    if (state.doc.layers.length + state.clip.length > 48) {
+      state.pageNote = t("capaTope");
+      render();
+      return;
+    }
+    snapshot();
+    const copies = cloneForPaste(state.clip, () => uid("ly"));
+    for (const copy of copies) {
+      copy.z = Math.max(0, ...state.doc.layers.map((item) => item.z)) + 1;
+      state.doc.layers.push(copy);
+    }
+    retargetCopies(copies);
+    state.selected = copies.map((item) => item.id);
+    scheduleSave();
+    render();
+    return;
+  }
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "d" && state.doc && state.selected.length) {
+    event.preventDefault();
+    runAction("duplicate");
+    return;
+  }
+  if ((event.key === "Delete" || event.key === "Backspace") && state.doc && state.selected.length) {
+    event.preventDefault();
+    runAction("remove");
     return;
   }
   if (!state.doc || !state.selected.length) return;
@@ -1313,7 +1975,12 @@ async function onLogo() {
     layer.src = { kind: "user", id: layer.id };
     state.userImages.set(layer.id, image);
     urlCache.delete(layer.id);
-    await images.put(state.doc.id, layer.id, image);
+    const stored = await images.put(state.doc.id, layer.id, image);
+    state.imageFailed = stored === false;
+    if (state.imageFailed) {
+      state.status = "image-fail";
+      state.pageNote = t("imagenNo");
+    }
     if (logoEstado) logoEstado.textContent = t("imagenLista");
     scheduleSave();
     render();
@@ -1323,14 +1990,295 @@ async function onLogo() {
 }
 
 async function importJson(file) {
+  let text = "";
   try {
-    const doc = importProject(await file.text());
+    text = await file.text();
+  } catch {
+    state.status = "invalid";
+    render();
+    return;
+  }
+  let data = null;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    state.status = "invalid";
+    render();
+    return;
+  }
+  if (data?.format === "orvupi-design") {
+    await importPackage(data);
+    return;
+  }
+  try {
+    const doc = importProject(data);
     doc.id = uid("proj");
-    const missing = doc.layers.some((layer) => layer.src?.kind === "user");
-    if (missing) state.status = "missing-image";
+    doc.meta.revision = 0;
+    doc.meta.workFileId = "";
+    const missing = userImageIds(doc).length > 0;
+    openDoc(doc, { imageFailed: false });
+    if (missing) {
+      state.status = "missing-image";
+      render();
+    }
+  } catch (error) {
+    state.status = statusFromError(error);
+    state.pageNote = statusText();
+    render();
+  }
+}
+
+async function importPackage(data) {
+  try {
+    const opened = unpackDesign(data);
+    let imageFailed = false;
+    for (const [id, image] of opened.images) {
+      const stored = await images.put(opened.doc.id, id, image);
+      if (!stored) imageFailed = true;
+      state.userImages.set(id, image);
+    }
+    openDoc(opened.doc, { imageFailed });
+    if (opened.missing.length) {
+      state.status = "missing-image";
+      state.pageNote = t("faltaImagen");
+      render();
+    }
+  } catch (error) {
+    state.status = statusFromError(error);
+    state.pageNote = statusText();
+    render();
+  }
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), REVOKE_MS);
+}
+
+async function collectImages(doc) {
+  const list = [];
+  for (const id of userImageIds(doc)) {
+    let image = state.userImages.get(id);
+    if (!image) image = await images.get(doc.id, id);
+    if (!image) continue;
+    list.push({ id, width: image.width, height: image.height, rgba: image.rgba });
+  }
+  return list;
+}
+
+async function exportPackage(id) {
+  const doc = id === state.doc?.id ? state.doc : loadProject(storage, id);
+  if (!doc) return;
+  const packed = packDesign(doc, await collectImages(doc));
+  downloadBlob(new Blob([JSON.stringify(packed)], { type: "application/json" }), "diseno.orvdesign.json");
+  if (packed.missing.length) {
+    state.status = "missing-image";
+    state.pageNote = t("faltaImagen");
+    render();
+  }
+}
+
+async function exportPdf() {
+  if (!state.doc || state.busy) return;
+  const texts = projectTexts(state.doc);
+  if (!exportAllowed(texts.title, texts.body, undefined, texts.label)) {
+    if (avisoBloqueo) avisoBloqueo.hidden = false;
+    return;
+  }
+  const boxes = [...document.querySelectorAll("[data-pdf-page]")].filter((node) => node.checked).map((node) => Number(node.dataset.pdfPage));
+  if (!boxes.length) {
+    state.pageNote = t("pdfVacio");
+    render();
+    return;
+  }
+  state.busy = true;
+  syncChrome();
+  try {
+    syncPages();
+    const pages = [];
+    for (const index of boxes) {
+      const layers = state.doc.meta.pages?.[index] || state.doc.layers;
+      const rendered = await renderDocument({ ...state.doc, layers }, { userImages: state.userImages });
+      pages.push({ width: rendered.width, height: rendered.height, rgba: rendered.rgba });
+    }
+    const pdf = pdfFromPages(pages);
+    downloadBlob(new Blob([pdf], { type: "application/pdf" }), "studio.pdf");
+    state.pdfOpen = false;
+    state.pageNote = t("pdfListo");
+    render();
+  } catch {
+    state.status = "invalid";
+    render();
+  } finally {
+    state.busy = false;
+    syncChrome();
+  }
+}
+
+async function duplicateWithImages(id) {
+  const copy = duplicateProject(storage, id);
+  if (!copy) {
+    const full = listProjects(storage).length >= 40;
+    state.status = full ? "cap" : "quota";
+    state.pageNote = full ? t("topeProyectos") : "";
+    render();
+    return;
+  }
+  const ok = await images.copyProject(id, copy.id, userImageIds(copy));
+  state.imageFailed = !ok;
+  state.status = ok ? "saved" : "image-fail";
+  if (!ok) state.pageNote = t("imagenNo");
+  render();
+}
+
+function openRecovered() {
+  const raw = listRecovery(storage)[0];
+  if (!raw) return;
+  try {
+    const doc = importProject(raw);
     openDoc(doc);
   } catch (error) {
-    state.status = error?.message === "version-desconocida" ? "version" : "invalid";
+    state.status = statusFromError(error);
+    state.pageNote = statusText();
+    render();
+  }
+}
+
+async function saveAsCopy() {
+  if (!state.doc) return;
+  const previous = state.doc.id;
+  syncPages();
+  const raw = exportProject(state.doc);
+  raw.id = uid("proj");
+  raw.name = `${state.doc.name} copia`.slice(0, 80);
+  raw.meta.revision = 0;
+  raw.meta.workFileId = "";
+  const doc = importProject(raw);
+  const imagesOk = await images.copyProject(previous, doc.id, userImageIds(doc));
+  openDoc(doc, { imageFailed: !imagesOk });
+}
+
+async function syncWorkFile() {
+  if (!state.doc?.meta?.workFileId) return;
+  try {
+    const packed = packDesign(state.doc, await collectImages(state.doc));
+    const bytes = new TextEncoder().encode(JSON.stringify(packed));
+    const saved = await saveWorkBytes({
+      id: state.doc.meta.workFileId,
+      name: state.doc.name,
+      kind: "other",
+      mime: DESIGN_MIME,
+      bytes,
+      revision: state.doc.meta.revision || 0,
+      snippet: projectTexts(state.doc).title,
+    });
+    if (!saved.ok) {
+      state.pageNote = t("workFallo");
+    } else if (saved.copied) {
+      state.doc.meta.workFileId = saved.id;
+      state.pageNote = t("workCopia");
+      applySaveResult(saveProject(storage, state.doc));
+      const next = `#/work/${saved.id}`;
+      if (location.hash !== next) location.hash = next;
+    }
+    const node = document.getElementById("estado-guardado");
+    if (node) node.textContent = statusText();
+  } catch {
+    state.pageNote = t("workFallo");
+  }
+}
+
+async function confirmWork() {
+  if (!state.doc || !state.workRoute) return;
+  syncPages();
+  const route = state.workRoute;
+  const collected = await collectImages(state.doc);
+  const imageMap = new Map(collected.map((image) => [image.id, image]));
+  try {
+    if (route === "native") {
+      const packed = packDesign(state.doc, collected);
+      const bytes = new TextEncoder().encode(JSON.stringify(packed));
+      const saved = await saveWorkBytes({
+        id: state.doc.meta.workFileId || "",
+        name: state.doc.name,
+        kind: "other",
+        mime: DESIGN_MIME,
+        bytes,
+        revision: state.doc.meta.revision || 0,
+        snippet: projectTexts(state.doc).title,
+      });
+      if (!saved.ok) {
+        state.pageNote = t("workFallo");
+        render();
+        return;
+      }
+      state.doc.meta.workFileId = saved.id;
+      state.workNote = false;
+      state.pageNote = saved.copied ? t("workCopia") : t("workHecho");
+      applySaveResult(saveProject(storage, state.doc));
+      const next = `#/work/${saved.id}`;
+      if (location.hash !== next) location.hash = next;
+      else render();
+      return;
+    }
+    const file = route === "doc" ? await toOrvdoc(state.doc, { images: imageMap }) : await toSlides(state.doc, { images: imageMap });
+    const bytes = new TextEncoder().encode(JSON.stringify(file));
+    const saved = await saveWorkBytes({
+      name: file.title,
+      kind: route === "doc" ? "doc" : "slide",
+      mime: route === "doc" ? DOC_MIME : SLIDE_MIME,
+      bytes,
+      snippet: projectTexts(state.doc).title,
+    });
+    if (!saved.ok) {
+      state.pageNote = t("workFallo");
+      render();
+      return;
+    }
+    state.workNote = false;
+    state.pageNote = t("workHecho");
+    render();
+    const path = route === "doc" ? `/work/document/d/${saved.id}/edit` : `/work/presentation/d/${saved.id}/edit`;
+    window.location.assign(path);
+  } catch {
+    state.pageNote = t("workFallo");
+    render();
+  }
+}
+
+async function openFromWork(id) {
+  const loaded = await loadWorkBytes(id);
+  if (!loaded) {
+    state.status = "invalid";
+    state.pageNote = t("invalido");
+    render();
+    return;
+  }
+  let data = null;
+  try {
+    data = JSON.parse(new TextDecoder().decode(loaded.bytes));
+  } catch {
+    state.status = "invalid";
+    render();
+    return;
+  }
+  try {
+    const opened = unpackDesign(data, { keepId: true });
+    opened.doc.meta.workFileId = id;
+    let imageFailed = false;
+    for (const [imageId, image] of opened.images) {
+      const stored = await images.put(opened.doc.id, imageId, image);
+      if (!stored) imageFailed = true;
+      state.userImages.set(imageId, image);
+    }
+    openDoc(opened.doc, { workFileId: id, imageFailed });
+  } catch (error) {
+    state.status = statusFromError(error);
+    state.pageNote = statusText();
     render();
   }
 }
@@ -1408,6 +2356,7 @@ async function deliver(kind, forceShare = false) {
 
 function boot() {
   try {
+    recoverWrite(storage);
     adoptLegacyDraft(storage);
   } catch {
     /* el navegador puede negar el almacén; la página sigue */
@@ -1418,7 +2367,28 @@ function boot() {
   bindInputs();
   bindLayersDrag();
   document.addEventListener("keydown", onKey);
-  window.addEventListener("hashchange", render);
+  window.addEventListener("hashchange", () => {
+    const id = workIdFromHash(location.hash);
+    if (id && state.doc?.meta?.workFileId !== id) {
+      void openFromWork(id);
+      return;
+    }
+    render();
+  });
+  let wasNarrow = window.innerWidth < 800;
+  window.addEventListener("resize", () => {
+    if (viewName() !== "editor") return;
+    const narrow = window.innerWidth < 800;
+    if (narrow && !wasNarrow) {
+      state.panelOpen = false;
+      state.inspectorOpen = false;
+      wasNarrow = true;
+      render();
+      return;
+    }
+    wasNarrow = narrow;
+    applyStageFit();
+  });
   logoInput?.addEventListener("change", () => { void onLogo(); });
   logoInput?.addEventListener("cancel", () => {
     fileMode = "image";
@@ -1435,6 +2405,8 @@ function boot() {
     go("inicio");
   });
   render();
+  const pendingWork = workIdFromHash(location.hash);
+  if (pendingWork) void openFromWork(pendingWork);
 }
 
 if (root) boot();

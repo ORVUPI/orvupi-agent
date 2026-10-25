@@ -6,6 +6,7 @@ import { PNG_COMMENT } from "./copy.mjs";
 import { fontById, orderedLayers } from "./document.mjs";
 import { drawFace, lineBox, loadFace, wrapFace } from "./draw.mjs";
 import { decodePng, encodePng } from "./png.mjs";
+import { piecesOf } from "./text-style.mjs";
 import { measureFont } from "./ttf.mjs";
 
 const catalogCache = new Map();
@@ -119,12 +120,43 @@ function paintImage(local, w, h, image, crop) {
   }
 }
 
+function paintEllipse(local, w, h, layer) {
+  const fill = layer.props?.fill ? hexColor(layer.props.fill) : null;
+  const sw = Math.max(0, Math.round(layer.props?.strokeWidth || 0));
+  const stroke = layer.props?.stroke && sw > 0 ? hexColor(layer.props.stroke) : null;
+  const rx = w / 2;
+  const ry = h / 2;
+  for (let y = 0; y < h; y += 1) {
+    for (let x = 0; x < w; x += 1) {
+      const nx = rx ? (x + 0.5 - rx) / rx : 0;
+      const ny = ry ? (y + 0.5 - ry) / ry : 0;
+      if (nx * nx + ny * ny > 1) continue;
+      const innerRx = Math.max(0.001, rx - sw);
+      const innerRy = Math.max(0.001, ry - sw);
+      const ix = (x + 0.5 - rx) / innerRx;
+      const iy = (y + 0.5 - ry) / innerRy;
+      const inside = sw > 0 && ix * ix + iy * iy <= 1;
+      const color = !inside && stroke ? stroke : fill;
+      if (!color) continue;
+      const i = (y * w + x) * 4;
+      local[i] = color[0];
+      local[i + 1] = color[1];
+      local[i + 2] = color[2];
+      local[i + 3] = 255;
+    }
+  }
+}
+
 function paintShape(local, w, h, layer) {
   if (layer.type === "line") {
     const color = hexColor(layer.props?.color);
     const sw = Math.max(2, Math.round(layer.props?.strokeWidth || h));
     const y0 = Math.max(0, Math.round((h - sw) / 2));
     fillRect(local, w, h, 0, y0, w, sw, color, 255);
+    return;
+  }
+  if (layer.props?.shape === "ellipse") {
+    paintEllipse(local, w, h, layer);
     return;
   }
   const fill = layer.props?.fill ? hexColor(layer.props.fill) : null;
@@ -139,12 +171,19 @@ function paintShape(local, w, h, layer) {
   }
 }
 
-async function paintText(target, tw, th, originX, originY, layer) {
-  const font = await loadFace(fontById(layer.props.fontId).file);
+function textAdvance(font, size, lineHeight) {
+  const metrics = lineBox(font, size);
+  const leading = Number(lineHeight) || 1.15;
+  if (Math.abs(leading - 1.15) < 0.001) return metrics.step;
+  return size * leading;
+}
+
+async function paintPlainText(target, tw, th, originX, originY, layer, font) {
   const size = layer.props.size;
   const lines = wrapFace(font, layer.props.text, layer.w, size, true).slice(0, 24);
   if (!lines.length) return;
   const metrics = lineBox(font, size);
+  const advance = textAdvance(font, size, layer.props.lineHeight);
   const style = { fill: hexColor(layer.props.color).slice(0, 3), alpha: layer.opacity ?? 1, crisp: true };
   let baseline = originY + metrics.ascent;
   for (const line of lines) {
@@ -153,14 +192,104 @@ async function paintText(target, tw, th, originX, originY, layer) {
     if (layer.props.align === "center") x = originX + Math.max(0, (layer.w - measured) / 2);
     if (layer.props.align === "right") x = originX + Math.max(0, layer.w - measured);
     await drawFace(target, tw, th, font, [line], x, baseline, size, "text", [], style, null);
-    baseline += metrics.step;
+    baseline += advance;
     if (baseline > originY + layer.h) break;
   }
+}
+
+async function paintStyledText(target, tw, th, originX, originY, layer, font) {
+  const parts = piecesOf(layer.props.text, layer.props.runs, layer.props);
+  const lines = [];
+  let line = [];
+  let width = 0;
+  const push = () => {
+    if (line.length) lines.push(line);
+    line = [];
+    width = 0;
+  };
+  for (const part of parts) {
+    for (const ch of part.text) {
+      if (ch === "\n") {
+        push();
+        continue;
+      }
+      const glyph = measureFont(font, ch, part.size);
+      if (width + glyph > layer.w && line.length) push();
+      line.push({ ch, ...part });
+      width += glyph;
+    }
+  }
+  push();
+  const size = layer.props.size;
+  const metrics = lineBox(font, size);
+  const advance = textAdvance(font, size, layer.props.lineHeight);
+  let baseline = originY + metrics.ascent;
+  for (const row of lines.slice(0, 24)) {
+    const groups = [];
+    for (const item of row) {
+      const prev = groups[groups.length - 1];
+      if (prev && prev.bold === item.bold && prev.italic === item.italic && prev.underline === item.underline && prev.color === item.color && prev.size === item.size) prev.text += item.ch;
+      else groups.push({ text: item.ch, bold: item.bold, italic: item.italic, underline: item.underline, color: item.color, size: item.size });
+    }
+    const measured = groups.reduce((sum, group) => sum + measureFont(font, group.text, group.size), 0);
+    let x = originX;
+    if (layer.props.align === "center") x = originX + Math.max(0, (layer.w - measured) / 2);
+    if (layer.props.align === "right") x = originX + Math.max(0, layer.w - measured);
+    const lineStart = x;
+    for (const group of groups) {
+      const style = {
+        fill: hexColor(group.color).slice(0, 3),
+        alpha: layer.opacity ?? 1,
+        crisp: true,
+        bold: group.bold,
+        italic: group.italic,
+      };
+      await drawFace(target, tw, th, font, [group.text], x, baseline, group.size, "text", [], style, null);
+      const groupWidth = measureFont(font, group.text, group.size);
+      if (group.underline) {
+        const bar = Math.max(1, Math.round(group.size * 0.06));
+        fillRect(target, tw, th, x, baseline + bar, groupWidth, bar, hexColor(group.color), Math.round(255 * (layer.opacity ?? 1)));
+      }
+      x += groupWidth;
+    }
+    if (groups.some((group) => group.underline) && measured === 0) fillRect(target, tw, th, lineStart, baseline + 2, 8, 1, hexColor(layer.props.color), 255);
+    baseline += advance;
+    if (baseline > originY + layer.h) break;
+  }
+}
+
+async function paintText(target, tw, th, originX, originY, layer) {
+  const font = await loadFace(fontById(layer.props.fontId).file);
+  const styled = layer.props.bold || layer.props.italic || layer.props.underline || (layer.props.runs || []).length;
+  if (!styled) {
+    await paintPlainText(target, tw, th, originX, originY, layer, font);
+    return;
+  }
+  await paintStyledText(target, tw, th, originX, originY, layer, font);
+}
+
+function mirrorBuffer(local, w, h, flipX, flipY) {
+  if (!flipX && !flipY) return local;
+  const out = new Uint8ClampedArray(local.length);
+  for (let y = 0; y < h; y += 1) {
+    for (let x = 0; x < w; x += 1) {
+      const sx = flipX ? w - 1 - x : x;
+      const sy = flipY ? h - 1 - y : y;
+      const from = (sy * w + sx) * 4;
+      const to = (y * w + x) * 4;
+      out[to] = local[from];
+      out[to + 1] = local[from + 1];
+      out[to + 2] = local[from + 2];
+      out[to + 3] = local[from + 3];
+    }
+  }
+  return out;
 }
 
 function stamp(dest, dw, dh, layer, local) {
   const w = Math.max(1, Math.round(layer.w));
   const h = Math.max(1, Math.round(layer.h));
+  local = mirrorBuffer(local, w, h, layer.flipX, layer.flipY);
   const rad = (Number(layer.rotation) || 0) * Math.PI / 180;
   const opacity = layer.opacity ?? 1;
   if (Math.abs(rad) < 0.001) {
@@ -224,7 +353,8 @@ export async function renderDocument(doc, options = {}) {
     const w = Math.max(1, Math.round(layer.w));
     const h = Math.max(1, Math.round(layer.h));
     if (layer.type === "text") {
-      if (Math.abs(Number(layer.rotation) || 0) < 0.001) {
+      const turned = Math.abs(Number(layer.rotation) || 0) >= 0.001 || layer.flipX || layer.flipY;
+      if (!turned) {
         await paintText(rgba, width, height, layer.x, layer.y, layer);
       } else {
         const local = new Uint8ClampedArray(w * h * 4);
