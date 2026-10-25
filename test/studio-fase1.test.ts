@@ -87,9 +87,12 @@ describe("studio fase 1 catálogo", () => {
     assert.ok(side.h >= 1000);
     const text = textsOf(first);
     assert.match(text, /Nombre y apellidos/);
-    assert.match(text, /Español/);
-    assert.match(text, /más señal/);
-    assert.doesNotMatch(text, /Nico Olas|ORVUPI|Comunidad|pulpo|Una idea clara/i);
+    assert.match(text, /HABILIDADES/);
+    assert.match(text, /NovaTech/);
+    assert.match(text, /MBA IE/);
+    assert.doesNotMatch(text, /Nico Olas|Curiosidad aplicada|Cartel|Invitación|ORVUPI|Comunidad|pulpo|Una idea clara/i);
+    assert.equal(first.layers.some((layer) => layer.type === "image"), false);
+    assert.equal(first.layers.some((layer) => layer.name === "Pulpo" || layer.name === "Oficio" || layer.name === "Mitad"), false);
     assert.equal(JSON.stringify(first).includes("orvupi-avatar"), false);
     assert.equal(first.layers.every((layer) => layer.locked !== true), true);
     const edited = textsOf(first).replace("Nombre y apellidos", "CAMBIADO");
@@ -102,26 +105,39 @@ describe("studio fase 1 catálogo", () => {
     assert.equal(textsOf(fresh).includes("Nombre y apellidos"), true);
     assert.notEqual(edited, textsOf(fresh));
     const round = importProject(JSON.stringify(exportProject(fresh)));
-    assert.match(textsOf(round), /Español/);
-    assert.match(textsOf(round), /más señal/);
+    assert.match(textsOf(round), /HABILIDADES/);
+    assert.match(textsOf(round), /NovaTech/);
+    assert.match(textsOf(round), /MBA IE/);
   });
 
   test("Portada Estrategia abre su portada, no la de ideas", async () => {
     const { documentForThumb } = await load<{ documentForThumb: (id: string) => Doc | null }>("lib/thumb-docs.mjs");
+    const { importProject, exportProject } = await load<{
+      exportProject: (doc: Doc) => Doc;
+      importProject: (input: string) => Doc;
+    }>("lib/document.mjs");
     const doc = documentForThumb("tpl-presentacion-01");
     assert.ok(doc);
     assert.equal(doc.name, "Portada Estrategia");
     assert.equal(doc.templateId, "tpl-presentacion-01");
     assert.notEqual(doc.templateId, "deck-portada");
     assert.equal(doc.format.id, "deck");
+    assert.equal(doc.format.width, 1920);
+    assert.equal(doc.format.height, 1080);
     assert.equal(doc.background.fill, "#102032");
     const text = textsOf(doc);
-    assert.match(text, /Portada Estrategia/);
-    assert.match(text, /Tu empresa/);
-    assert.match(text, /¿Qué decisión abre el año\?/);
-    assert.doesNotMatch(text, /Una idea clara|Presentación para la comunidad|ORVUPI|pulpo|Nico Olas/i);
-    assert.ok(doc.layers.some((layer) => layer.type === "rect" && layer.props?.fill === "#FF3070"));
+    assert.match(text, /Estrategia 2026/);
+    assert.match(text, /Informe ejecutivo/);
+    assert.doesNotMatch(text, /Portada Estrategia|Una idea clara|Presentación para la comunidad|Creamos juntos|ORVUPI|pulpo|Nico Olas/i);
+    const pink = doc.layers.filter((layer) => layer.type === "rect" && layer.props?.fill === "#FF3070");
+    assert.equal(pink.length, 1);
+    assert.ok(pink[0] && pink[0].w < 400);
+    assert.equal(doc.layers.some((layer) => layer.type === "image"), false);
+    assert.equal(doc.layers.some((layer) => layer.name === "Pulpo" || layer.name === "Marca" || layer.name === "Pie" || layer.name === "Sub"), false);
     assert.equal(JSON.stringify(doc).includes("orvupi-"), false);
+    const round = importProject(JSON.stringify(exportProject(doc)));
+    assert.match(textsOf(round), /Estrategia 2026/);
+    assert.match(textsOf(round), /Informe ejecutivo/);
   });
 
   test("las 106 miniaturas tienen documento propio, neutro y exportable", async () => {

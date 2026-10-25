@@ -47,6 +47,12 @@ const SAFE_HEADLINE = {
   "tpl-negocio-05": "Alianza",
 };
 
+/** Frases leídas en la miniatura de producción, distintas del título del catálogo. */
+const THUMB_COPY = {
+  "tpl-presentacion-01": "Estrategia 2026",
+  "tpl-curriculum-01": "HABILIDADES",
+};
+
 const FORMAT_OVERRIDE = {
   "tpl-propuesta-02": "deck",
   "tpl-propuesta-05": "deck",
@@ -90,7 +96,7 @@ function serial(id) {
 
 export function canvasHeadline(item) {
   if (!item) return "Título";
-  return SAFE_HEADLINE[item.id] || item.title || "Título";
+  return THUMB_COPY[item.id] || SAFE_HEADLINE[item.id] || item.title || "Título";
 }
 
 function formatIdFor(item) {
@@ -99,30 +105,33 @@ function formatIdFor(item) {
 
 function cvDoc(w, h, n) {
   if (n === 1) {
+    // tpl-curriculum-01. La miniatura de producción es un CV navy con estas frases.
+    // No es cv-partido (Nico Olas, pulpo, lista Cartel/Invitación).
+    const col = 270;
     return {
       fill: W,
       layers: [
-        bx("Columna", 0, 0, 280, h, N, 1),
-        bx("Inicial", 90, 56, 100, 100, SLATE, 3),
-        tx("Inicial", 90, 78, 100, 56, "N", "archivo", 40, C, 4, "center"),
-        tx("Nombre", 24, 180, 232, 120, "Nombre y apellidos", "archivo", 28, C, 20),
-        tx("Cargo", 24, 310, 232, 48, "Cargo", "barlow", 22, P, 21),
-        bx("Regla", 24, 372, 48, 6, P, 5),
-        tx("Ciudad", 24, 392, 232, 32, "Ciudad", "barlow", 18, C, 22),
-        tx("Sitio", 24, 428, 232, 32, "tu sitio", "barlow", 16, "#BAC6D2", 23),
-        tx("Perfil", 24, 490, 232, 28, "PERFIL", "anton", 16, "#BAC6D2", 24),
-        tx("Perfil texto", 24, 528, 232, 150, "Una frase breve con más señal.", "barlow", 18, C, 25),
-        tx("Idiomas", 24, 700, 232, 70, "Idiomas: Español, inglés", "barlow", 16, C, 26),
-        tx("Experiencia", 320, 56, w - 360, 48, "Experiencia", "archivo", 32, N, 30),
-        bx("Regla exp", 320, 112, 48, 6, P, 6),
-        tx("Puesto 1", 320, 140, w - 360, 36, "Dirección de producto", "barlow", 24, N, 31),
-        tx("Lugar 1", 320, 180, w - 360, 32, "Tu empresa (2022)", "barlow", 18, MUTED, 32),
-        tx("Detalle 1", 320, 216, w - 360, 64, "Logro concreto que quieras destacar.", "barlow", 18, N, 33),
-        tx("Puesto 2", 320, 300, w - 360, 36, "Consultoría", "barlow", 24, N, 34),
-        tx("Lugar 2", 320, 340, w - 360, 32, "Tu empresa (2019)", "barlow", 18, MUTED, 35),
-        tx("Detalle 2", 320, 376, w - 360, 64, "Otro resultado medible.", "barlow", 18, N, 36),
-        tx("Formación", 320, 470, w - 360, 40, "Formación", "archivo", 28, N, 37),
-        tx("Estudio", 320, 516, w - 360, 36, "Grado, Tu universidad", "barlow", 20, MUTED, 38),
+        bx("Columna", 0, 0, col, h, N, 1),
+        tx("Perfil", 40, 284, 200, 28, "PERFIL", "anton", 16, P, 20),
+        tx("Perfil texto", 40, 324, 200, 110, "Una frase breve sobre tu trabajo.", "barlow", 18, C, 21),
+        tx("Habilidades", 40, 478, 200, 32, "HABILIDADES", "anton", 16, P, 22),
+        tx("Hab 1", 40, 528, 200, 24, "Estrategia", "barlow", 16, C, 23),
+        bx("Barra 1", 40, 556, 160, 8, P, 4),
+        tx("Hab 2", 40, 584, 200, 24, "Producto", "barlow", 16, C, 24),
+        bx("Barra 2", 40, 612, 128, 8, P, 4),
+        tx("Hab 3", 40, 640, 200, 24, "Equipos", "barlow", 16, C, 25),
+        bx("Barra 3", 40, 668, 144, 8, P, 4),
+        tx("Hab 4", 40, 696, 200, 24, "Análisis", "barlow", 16, C, 26),
+        bx("Barra 4", 40, 724, 104, 8, P, 4),
+        tx("Nombre", col + 36, 90, w - col - 72, 80, "Nombre y apellidos", "archivo", 36, N, 30),
+        tx("Cargo", col + 36, 176, w - col - 72, 36, "Cargo", "barlow", 22, P, 31),
+        bx("Regla", col + 36, 224, 88, 8, P, 5),
+        tx("Experiencia", col + 36, 256, w - col - 72, 40, "Experiencia", "archivo", 26, N, 32),
+        tx("Puesto", col + 36, 308, w - col - 72, 32, "Dirección de producto", "barlow", 20, N, 33),
+        tx("Empresa", col + 36, 344, w - col - 72, 28, "NovaTech", "barlow", 18, MUTED, 34),
+        tx("Detalle", col + 36, 380, w - col - 72, 56, "Logro concreto que quieras destacar.", "barlow", 18, N, 35),
+        tx("Formacion", col + 36, 460, w - col - 72, 36, "Formación", "archivo", 26, N, 36),
+        tx("Estudio", col + 36, 508, w - col - 72, 36, "MBA IE", "barlow", 22, N, 37),
       ],
     };
   }
@@ -692,6 +701,20 @@ function memeDoc(w, h, title, n) {
   };
 }
 
+function portadaEstrategia(w, h) {
+  // tpl-presentacion-01. La miniatura dice estas dos frases sobre fondo navy.
+  // No es deck-portada (Una idea clara, franja «Creamos juntos», pulpo).
+  const x = Math.round(w * 0.075);
+  return {
+    fill: N,
+    layers: [
+      bx("Acento", x, Math.round(h * 0.378), Math.round(w * 0.088), 12, P, 2),
+      tx("Titular", x, Math.round(h * 0.417), Math.round(w * 0.72), 150, "Estrategia 2026", "archivo", 72, C, 20),
+      tx("Antetitulo", x, Math.round(h * 0.574), Math.round(w * 0.47), 72, "Informe ejecutivo", "barlow", 36, C, 21),
+    ],
+  };
+}
+
 function businessDoc(w, h, title, format) {
   if (format === "deck") {
     return deckDoc(w, h, title, 1);
@@ -711,7 +734,8 @@ function build(item) {
   const title = canvasHeadline(item);
   const cat = item.category;
   let spec;
-  if (cat === "curriculum") spec = cvDoc(w, h, n);
+  if (item.id === "tpl-presentacion-01") spec = portadaEstrategia(w, h);
+  else if (cat === "curriculum") spec = cvDoc(w, h, n);
   else if (cat === "presentacion") spec = deckDoc(w, h, title, n);
   else if (cat === "documento" || cat === "informe" || cat === "propuesta") spec = format === "deck" ? deckDoc(w, h, title, n === 2 ? 1 : 8) : docPage(w, h, title, n);
   else if (cat === "tarjeta-visita") spec = cardDoc(w, h, title, n);

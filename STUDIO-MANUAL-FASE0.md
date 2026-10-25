@@ -51,6 +51,16 @@ function openThumb(id) {
 
 El nombre del proyecto cambiaba. El documento, no.
 
+### 2.1 Evidencia reproducida en el navegador
+
+Inspección de https://orvupi.com/studio/ el 25 de octubre de 2026, sobre el sitio publicado. El `openThumb` de esa página es el de la sección 1. Lo que sigue es lo que muestra la interfaz, no una deducción solo del código.
+
+Caso 1, CV Ejecutivo Navy. La miniatura es un currículum navy con las frases HABILIDADES, NovaTech y MBA IE. El editor abre un lienzo de 794×1123 con «Nico Olas», «Curiosidad aplicada» y la lista Cartel / Invitación / …. Las capas se llaman Título, Nombre, Cuerpo, Oficio, Marca, Pulpo y Mitad, y hay una imagen del pulpo. Es `cv-partido`, la base de la categoría curriculum, con el nombre del proyecto cambiado.
+
+Caso 2, Portada Estrategia. La miniatura dice «Estrategia 2026» e «Informe ejecutivo». El editor abre un lienzo de 1920×1080 cuyo proyecto se llama «Portada Estrategia», pero el contenido es «Una idea clara», «Presentación para la comunidad» y una franja «Creamos juntos». Las capas se llaman Sub, Título, Pie, Marca y Pulpo. Es `deck-portada`, la base de la categoría presentacion.
+
+El sitio publicado sigue mostrando ese fallo. Esta rama no se despliega.
+
 ## 3. Inventario de `thumbs/catalog.json` (106)
 
 En el commit de partida el índice tenía 106 entradas, 106 PNG presentes, 0 ausentes, 0 campos `templateId`. Claves: `id`, `category`, `title`, `width`, `height`, `file`. Las medidas son de la miniatura, no del documento.
@@ -71,6 +81,8 @@ La lista completa, ya con el documento de esta rama, está en la sección 7.
 Decisión de Fase 1: no se retira ninguna entrada del catálogo. Cada PNG se sustituye, como oferta editable, por un documento de objetos neutro con el mismo `templateId`. El PNG histórico permanece en `web/v2/studio/thumbs/` y deja de ser la ficha que se abre. La ficha pinta el documento (`miniStage`), así que la miniatura visible y el lienzo son el mismo árbol de capas.
 
 Esa reconstrucción no es un calco píxel a píxel del PNG anterior. Conserva categoría, título anunciado, proporción del formato de trabajo y una composición de objetos (texto y rectángulos). No hay fotografía incrustada ni texto dentro de un bitmap.
+
+Las dos miniaturas de la sección 2.1 sí llevan en el documento las frases leídas en su miniatura: HABILIDADES, NovaTech y MBA IE; Estrategia 2026 e Informe ejecutivo. El nombre del proyecto sigue siendo el título del catálogo. NovaTech y MBA IE son el contenido de esa miniatura, no la marca del cromo. El resto del catálogo usa huecos neutros.
 
 ## 4. Matriz de estado
 
@@ -101,6 +113,7 @@ Estado que deja esta rama (Fase 1, sin publicar):
 | Base genérica por categoría | retirada (`open` ya no existe) |
 | Contenido genérico sin pulpo ni «ORVUPI» / «Comunidad ORVUPI» | implementada al instanciar; los memes siguen con la mascota |
 | Ficha del catálogo = documento que se abre | implementada vía `miniStage` |
+| Copy de CV Ejecutivo Navy y Portada Estrategia | implementada: el lienzo lleva las frases de la miniatura inspeccionada, no las de `cv-partido` ni `deck-portada` |
 | Calco del PNG histórico | ausente; el PNG queda de archivo |
 | «Seguir diseñando» solo con proyectos reales | implementada; vacío honesto si no hay ninguno |
 | Copias independientes | implementada: cada apertura tiene `id` de proyecto y de capas nuevos |
@@ -165,7 +178,7 @@ Sigue valiendo el manual: paquete con manifiesto y recursos, id de archivo en ve
 ## 6. Qué corrige la Fase 1
 
 1. Relación individual `templateId` → documento de capas → ficha pintada desde ese documento.
-2. Las 106 entradas se reconstruyen como objetos editables neutros. No se retira ninguna. El PNG histórico se conserva y se deja de usar como cara del catálogo.
+2. Las 106 entradas se reconstruyen como objetos editables. No se retira ninguna. El PNG histórico se conserva y se deja de usar como cara del catálogo. CV Ejecutivo Navy y Portada Estrategia abren las frases de su miniatura (sección 2.1). El resto usa huecos neutros, sin pulpo y sin marca promocional.
 3. Pulpo y marca promocional fuera del contenido genérico, incluidas las páginas extra de esas plantillas. Placeholders: «Tu empresa», «Nombre y apellidos», «Cargo», «Tu logotipo», «Tu foto».
 4. Cada apertura es un proyecto nuevo. Editar una copia no cambia la plantilla ni otra copia.
 5. «Seguir diseñando» ya no presenta miniaturas como si estuvieran guardadas.
@@ -184,8 +197,8 @@ Casos de aceptación de esta fase:
 
 | Caso | Resultado en esta rama |
 |---|---|
-| CV Ejecutivo Navy | proyecto con ese nombre, `templateId` `tpl-curriculum-01`, columna `#102032`, «Nombre y apellidos», «Español», «más señal». Sin Nico Olas, sin ORVUPI, sin pulpo |
-| Portada Estrategia | fondo `#102032`, título en el lienzo, «Tu empresa», franja `#FF3070`, pregunta «¿Qué decisión abre el año?». Sin «Una idea clara» |
+| CV Ejecutivo Navy | proyecto con ese nombre, `templateId` `tpl-curriculum-01`, 794×1123, columna `#102032`, «HABILIDADES», «NovaTech», «MBA IE», «Nombre y apellidos». Sin Nico Olas, sin «Curiosidad aplicada», sin Cartel/Invitación, sin capa Pulpo, sin imagen |
+| Portada Estrategia | proyecto con ese nombre, 1920×1080, fondo `#102032`, lienzo «Estrategia 2026» e «Informe ejecutivo», acento `#FF3070` corto. Sin «Una idea clara», sin «Presentación para la comunidad», sin franja «Creamos juntos», sin capa Pulpo |
 | Dos aperturas | ids de proyecto y de capas distintos; editar una no altera la siguiente instancia |
 | Resto del catálogo | 106 documentos, firmas de texto distintas dentro de cada categoría, exportables, sin mascota |
 | meme-punch / meme-vineta | siguen con la mascota |
@@ -193,15 +206,15 @@ Casos de aceptación de esta fase:
 Evidencia raster (mismo motor `compose.mjs`, sin marca de agua):
 
 - Antes, PNG histórico: `antes-cv-ejecutivo-navy.png`, `antes-portada-estrategia.png`
-- Después, documento abierto: `tpl-curriculum-01.png` (794×1123, columna marina muestreada en `#102032`), `tpl-presentacion-01.png` (1920×1080, franja inferior `#FF3070`)
+- Después, documento abierto: `tpl-curriculum-01.png` (794×1123, columna marina `#102032`, frases HABILIDADES, NovaTech y MBA IE), `tpl-presentacion-01.png` (1920×1080, fondo `#102032`, «Estrategia 2026» e «Informe ejecutivo»)
 
 ## 7. Lista de plantillas de esta rama
 
-Leyenda: «título» significa que el lienzo repite el título del catálogo. Otra frase es el titular exportable de la tabla anterior. El PNG es el archivo histórico, no el documento.
+Leyenda: «título» significa que el lienzo repite el título del catálogo. Otra frase es el titular del lienzo: o la sustitución exportable de la tabla anterior, o la frase leída en la miniatura (HABILIDADES, Estrategia 2026). El PNG es el archivo histórico, no el documento.
 
 | templateId | categoría | título | PNG histórico | documento | páginas | capas | titular | estado |
 |---|---|---|---|---|---|---|---|---|
-| tpl-curriculum-01 | curriculum | CV Ejecutivo Navy | thumbs/curriculum-01-cv-ejecutivo-navy.png | cv 794×1123 | 1 | 21 | título | editable neutro |
+| tpl-curriculum-01 | curriculum | CV Ejecutivo Navy | thumbs/curriculum-01-cv-ejecutivo-navy.png | cv 794×1123 | 1 | 21 | HABILIDADES | editable neutro |
 | tpl-curriculum-02 | curriculum | CV Consultor Cream | thumbs/curriculum-02-cv-consultor-cream.png | cv 794×1123 | 1 | 12 | título | editable neutro |
 | tpl-curriculum-03 | curriculum | CV UX Bold | thumbs/curriculum-03-cv-ux-bold.png | cv 794×1123 | 1 | 8 | título | editable neutro |
 | tpl-curriculum-04 | curriculum | CV Tech con Foto | thumbs/curriculum-04-cv-tech-con-foto.png | cv 794×1123 | 1 | 7 | título | editable neutro |
@@ -209,7 +222,7 @@ Leyenda: «título» significa que el lienzo repite el título del catálogo. Ot
 | tpl-curriculum-06 | curriculum | CV Timeline Marketing | thumbs/curriculum-06-cv-timeline-marketing.png | cv 794×1123 | 1 | 9 | título | editable neutro |
 | tpl-curriculum-07 | curriculum | CV Data Grid | thumbs/curriculum-07-cv-data-grid.png | cv 794×1123 | 1 | 9 | título | editable neutro |
 | tpl-curriculum-08 | curriculum | CV Clásico Serif | thumbs/curriculum-08-cv-clasico-serif.png | cv 794×1123 | 1 | 5 | título | editable neutro |
-| tpl-presentacion-01 | presentacion | Portada Estrategia | thumbs/presentacion-01-portada-estrategia.png | deck 1920×1080 | 1 | 7 | título | editable neutro |
+| tpl-presentacion-01 | presentacion | Portada Estrategia | thumbs/presentacion-01-portada-estrategia.png | deck 1920×1080 | 1 | 3 | Estrategia 2026 | editable neutro |
 | tpl-presentacion-02 | presentacion | Agenda Ejecutiva | thumbs/presentacion-02-agenda-ejecutiva.png | deck 1920×1080 | 1 | 13 | título | editable neutro |
 | tpl-presentacion-03 | presentacion | KPIs del Trimestre | thumbs/presentacion-03-kpis-del-trimestre.png | deck 1920×1080 | 1 | 10 | título | editable neutro |
 | tpl-presentacion-04 | presentacion | Reto y Solución | thumbs/presentacion-04-reto-y-solucion.png | deck 1920×1080 | 1 | 7 | título | editable neutro |
