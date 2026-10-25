@@ -13,7 +13,7 @@ import { browserLocale, errorMessageKey, loadLocale, readSharedLocale, translate
 import { downloadBytes } from "../security/bytes";
 import { isWorkError, WorkError } from "../security/errors";
 import { fileNameWithExtension, formatBytes, createId } from "../security/names";
-import { applyDocumentChrome, withBase, editorKind, editorPath, openEditorWindow, parseEditorPath, tabTitle, toolFavicon, viewForKind, type EditorKind } from "../routing/paths";
+import { applyDocumentChrome, withBase, editorKind, editorPath, openEditorWindow, parseEditorPath, studioDesignPath, tabTitle, toolFavicon, viewForKind, type EditorKind } from "../routing/paths";
 import { subscribeFilesChanged } from "../routing/sync";
 import { createBrowserStorage } from "../storage/browser";
 import type { FileBrowseMode, DateFilter } from "../files/query";
@@ -570,6 +570,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     openNote: (id) => reveal("note", id),
     openRecord: (file) => {
       const target = file.shortcutOf ? files.find((item) => item.id === file.shortcutOf) ?? file : file;
+      const studio = studioDesignPath(target);
+      if (studio) {
+        window.location.assign(studio);
+        return;
+      }
       const kind = editorKind(target.kind);
       if (kind) {
         reveal(kind, target.id);

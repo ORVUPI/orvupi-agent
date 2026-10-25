@@ -20,9 +20,17 @@ const TOOLS: Record<EditorKind, { segment: string; product: string; favicon: str
 
 const SEGMENT = Object.fromEntries(Object.entries(TOOLS).map(([kind, tool]) => [tool.segment, kind])) as Record<string, EditorKind>;
 
+export const STUDIO_DESIGN_MIME = "application/vnd.orvupi.design+json";
+
 export function editorKind(kind: FileKind): EditorKind | null {
   if (kind === "doc" || kind === "sheet" || kind === "slide" || kind === "form" || kind === "drawing" || kind === "note") return kind;
   return null;
+}
+
+/** El diseño nativo vuelve a Studio con el id en la URL. El documento no viaja en la dirección. */
+export function studioDesignPath(file: { id: string; mime?: string; kind?: FileKind }): string | null {
+  if (file.mime !== STUDIO_DESIGN_MIME || !file.id || file.id.includes("/") || file.id.includes("..")) return null;
+  return `/studio/#/work/${encodeURIComponent(file.id)}`;
 }
 
 export function editorPath(kind: EditorKind, id: string): string {

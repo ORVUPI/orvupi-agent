@@ -7,6 +7,7 @@ import { zipStore } from "../sheets/zip";
 import { downloadBytes } from "../security/bytes";
 import { isWorkError } from "../security/errors";
 import { formatBytes } from "../security/names";
+import { STUDIO_DESIGN_MIME } from "../routing/paths";
 import type { FileKind, FileRecord } from "../storage/types";
 import { Icon, type IconName } from "../ui/icons";
 import { Button, EmptyState, IconButton, Input, Select } from "../ui/kit";
@@ -43,6 +44,11 @@ function kindKey(kind: FileKind): "kindFolder" | "kindDoc" | "kindSheet" | "kind
   if (kind === "note") return "kindNote";
   if (kind === "pdf") return "kindPdf";
   return "kindOther";
+}
+
+function kindLabel(file: { kind: FileKind; mime: string }, t: (key: ReturnType<typeof kindKey>) => string): string {
+  if (file.mime === STUDIO_DESIGN_MIME) return "Diseño de Studio";
+  return t(kindKey(file.kind));
 }
 
 function formatWhen(iso: string, locale: string): string {
@@ -388,7 +394,7 @@ export function FilesScreen() {
                         onClick={() => openName(file)}
                       >
                         <strong>{file.favorite ? "★ " : ""}{file.name}</strong>
-                        <span className="ow-sr">{workspace.t(kindKey(file.kind))}</span>
+                        <span className="ow-sr">{kindLabel(file, (key) => workspace.t(key))}</span>
                       </button>
                     </div>
                   </td>
@@ -451,7 +457,7 @@ export function FilesScreen() {
                   onClick={() => openName(file)}
                 >
                   <strong>{file.favorite ? "★ " : ""}{file.name}</strong>
-                  <span className="ow-sr">{workspace.t(kindKey(file.kind))}</span>
+                  <span className="ow-sr">{kindLabel(file, (key) => workspace.t(key))}</span>
                 </button>
                 <p className="ow-muted">{formatWhen(file.updatedAt, workspace.locale)}</p>
               </article>

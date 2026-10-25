@@ -187,11 +187,13 @@ html[data-lang="es"] #compartir.preparando .espera.lang.es,
 html[data-lang="en"] #descargar.preparando .espera.lang.en,
 html[data-lang="en"] #compartir.preparando .espera.lang.en { display: inline; }
 dialog {
-  color: #102032;
-  background: #fff8ec;
   border: 2px solid #102032;
   border-radius: 1rem;
-  max-width: min(40rem, calc(100% - 2rem));
+  background: #fff8ec;
+  color: #102032;
+  max-width: min(40rem, calc(100vw - 2rem));
+  max-height: min(80vh, 40rem);
+  overflow: auto;
 }
 dialog::backdrop { background: rgba(16, 32, 50, 0.55); }
 @media (max-width: 980px) {

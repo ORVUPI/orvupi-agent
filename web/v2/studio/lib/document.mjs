@@ -128,9 +128,15 @@ function normalizeShell(value) {
   return SHELLS.includes(value) ? value : "";
 }
 
+export const LIMITS = { pages: 8, layers: 48, text: 2000 };
+
 function normalizePages(pages) {
   if (!Array.isArray(pages)) return [];
-  return pages.slice(0, 8).map((page) => (Array.isArray(page) ? page.slice(0, 48).map(normalizeLayer) : []));
+  return pages.slice(0, LIMITS.pages).map((page) => (Array.isArray(page) ? page.slice(0, LIMITS.layers).map(normalizeLayer) : []));
+}
+
+function workFileIdOf(value) {
+  return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value) ? value : "";
 }
 
 function normalizeMeta(meta, formatId) {
@@ -144,7 +150,33 @@ function normalizeMeta(meta, formatId) {
     page,
     note: String(meta?.note || "").slice(0, 2000),
     pages: normalizePages(meta?.pages),
+    revision: Math.max(0, Math.round(num(meta?.revision, 0))),
+    workFileId: workFileIdOf(meta?.workFileId),
   };
+}
+
+/** Rechaza un archivo que se pasa de los topes. No recorta. */
+export function assertImportLimits(data) {
+  const width = Number(data?.format?.width);
+  const height = Number(data?.format?.height);
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width < EDGE.min || width > EDGE.max || height < EDGE.min || height > EDGE.max) {
+    throw new Error("limite-medida");
+  }
+  const pages = Array.isArray(data?.meta?.pages) ? data.meta.pages : [];
+  if (pages.length > LIMITS.pages) throw new Error("limite-paginas");
+  const bags = [data?.layers, ...pages];
+  for (const bag of bags) {
+    if (!Array.isArray(bag)) continue;
+    if (bag.length > LIMITS.layers) throw new Error("limite-capas");
+    for (const layer of bag) {
+      const text = layer?.props?.text;
+      if (typeof text === "string" && text.length > LIMITS.text) throw new Error("limite-texto");
+      const note = layer?.props?.note;
+      if (typeof note === "string" && note.length > LIMITS.text) throw new Error("limite-texto");
+    }
+  }
+  const note = data?.meta?.note;
+  if (typeof note === "string" && note.length > LIMITS.text) throw new Error("limite-texto");
 }
 
 export function blankDocument(formatId, custom) {
@@ -430,6 +462,7 @@ export function importProject(input) {
     throw new Error("proyecto-invalido");
   }
   if (!Array.isArray(data.layers)) throw new Error("proyecto-invalido");
+  assertImportLimits(data);
   return {
     v: DOC_VERSION,
     id: typeof data.id === "string" && data.id ? data.id.slice(0, 80) : uid("proj"),

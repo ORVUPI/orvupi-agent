@@ -25,14 +25,30 @@ export function createImageStore() {
     async put(projectId, layerId, image) {
       const key = keyOf(projectId, layerId);
       memory.set(key, image);
+      if (typeof indexedDB === "undefined") return true;
       const database = await openDb();
-      if (!database) return;
-      await new Promise((resolve) => {
-        const tx = database.transaction(STORE, "readwrite");
-        tx.objectStore(STORE).put({ width: image.width, height: image.height, rgba: image.rgba }, key);
-        tx.oncomplete = () => resolve();
-        tx.onerror = () => resolve();
+      if (!database) return false;
+      return new Promise((resolve) => {
+        try {
+          const tx = database.transaction(STORE, "readwrite");
+          tx.objectStore(STORE).put({ width: image.width, height: image.height, rgba: image.rgba }, key);
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => resolve(false);
+          tx.onabort = () => resolve(false);
+        } catch {
+          resolve(false);
+        }
       });
+    },
+    async copyProject(fromId, toId, layerIds) {
+      let ok = true;
+      for (const layerId of layerIds) {
+        const image = await this.get(fromId, layerId);
+        if (!image) continue;
+        const saved = await this.put(toId, layerId, image);
+        if (!saved) ok = false;
+      }
+      return ok;
     },
     async get(projectId, layerId) {
       const key = keyOf(projectId, layerId);

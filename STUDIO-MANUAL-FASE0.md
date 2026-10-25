@@ -1,4 +1,4 @@
-# Studio ORVUPI — Fase 0, corrección P0 (Fase 1) y editor (Fase 2)
+# Studio ORVUPI — Fase 0 a Fase 4
 
 Fecha: 25 de octubre de 2026. Entorno aislado. Esta rama no se publica y no se fusiona.
 
@@ -171,9 +171,13 @@ Formatos de trabajo (no los píxeles del PNG):
 
 Una página por documento. No se anuncia un folleto ni un deck multipágina.
 
-### Puente con Work (propuesta, no implementada)
+### Puente con Work (Fase 4, en esta rama)
 
-Sigue valiendo el manual: paquete con manifiesto y recursos, id de archivo en vez del documento en la URL, abrir el mismo motor como ruta preferida, y conversiones a Docs/Slides como derivados con pérdidas dichas antes. El módulo Dibujos de Work (40 elementos) no es destino universal. Esta rama no crea ese puente.
+La ruta preferida guarda el paquete `orvupi-design` en la biblioteca local de Work (`orvupi-work`: OPFS si el navegador lo ofrece, si no IndexedDB) y abre el mismo editor en `#/work/<uuid>`. La URL lleva el id, no el documento. Work, al abrir un archivo `application/vnd.orvupi.design+json`, asigna `/studio/#/work/<uuid>`.
+
+«Convertir a documento» escribe un `orvupi-doc` real (títulos, párrafos e imágenes) y «Convertir a presentación» un `orvupi-slides` v2 con objetos a escala sobre 960×540. Las dos piden confirmación y listan lo que se pierde. El diseño de Studio no se borra. El pie del derivado nombra el id de origen y no promete una vuelta automática.
+
+El módulo Dibujos de Work no es el destino. Compartir esa biblioteca no es sincronizar en la nube.
 
 ## 6. Qué corrige la Fase 1
 
@@ -335,7 +339,7 @@ Qué hace el editor:
 6. Objetos: selección múltiple, duplicar, copiar y pegar, borrar con deshacer, agrupar, bloquear, orden, alinear, distribuir y guías opcionales.
 7. Fondo de color libre. Los fondos de catálogo se quedan porque su pintura ya estaba completa.
 8. Páginas: añadir, duplicar, borrar, reordenar y navegar, con deshacer, en las piezas que ya podían crecer. Documento, pizarra, vídeo y sitio no ganan un botón de página nueva. El tope sigue siendo 8, con el aviso «Esta versión guarda hasta 8 páginas.» La última página no se borra.
-9. Cada cambio de documento pasa por la pila de deshacer y por el guardado del navegador. «Abrir en Work» abre un aviso: el diseño no se abre en Work, no se crea copia ni conversión, y el archivo sigue en este navegador.
+9. Cada cambio de documento pasa por la pila de deshacer y por el guardado del navegador. «Abrir en Work» deja de ser solo un aviso: la Fase 4 crea la copia o la conversión.
 
 Móvil (ancho menor de 800 px): el lienzo queda en el centro, el riel se fija abajo y el panel y el inspector son capas por encima. Al estrechar la ventana se cierran para no tapar la pieza.
 
@@ -349,32 +353,58 @@ En el escritorio, cerrar panel e inspector pasa el ancho útil de la portada de 
 
 ### Qué no hace la Fase 2
 
-- No abre el diseño en Work. El botón no copia ni convierte.
 - No hay fototeca ni gráficos calculados con datos. «Fotos» sigue siendo la subida de esta pieza. «Gráficos» inserta formas, no series.
 - Vídeo sigue siendo un fotograma. El sitio no se publica. La pizarra sigue siendo finita.
-- El tope de 8 páginas, 48 capas, 2048 px y 2000 caracteres no sube. Un proyecto 41.º guardado sigue sujeto al tope de 40 del navegador.
-- Los proyectos ya guardados no se reescriben. No hay migración de `localStorage`.
+- El tope de 8 páginas, 48 capas, 2048 px y 2000 caracteres no sube.
 - Las plantillas no son un calco píxel a píxel de los PNG históricos.
-- PDF multipágina, paquete con imágenes y el aviso antes de truncar quedan para la Fase 3. El puente real con Work queda para la Fase 4.
+- El guardado fiable, el paquete y el PDF llegan en la Fase 3. El puente con Work llega en la Fase 4. Las dos están más abajo, en esta misma rama.
 
-## 9. Qué queda para las Fases 3–5
+## 9. Fase 3 — guardado, paquete y PDF
 
-- Fase 3. El proyecto 41 no debe descartar el primero en silencio. Aviso antes de truncar capas, páginas o caracteres. Paquete con imágenes y fuentes. PDF multipágina. No llamar «300 ppp» a un A4 de 794×1123.
-- Fase 4. Abrir en Work el mismo motor; convertir a documento o a presentación solo con vista previa de pérdidas; conflictos entre pestañas. Compartir el navegador no es sincronizar en la nube.
-- Fase 5. Fototeca, gráficos de datos, vídeo con línea de tiempo, sitio publicable, pizarra infinita, colaboración. Siguen fuera, como dice CONTINUIDAD.
+1. El guardado escribe primero `orvupi-studio-projects-next` y después la clave principal. Si el navegador se corta en medio, la siguiente apertura adopta la copia completa. «Guardado» solo aparece cuando el JSON quedó escrito y la imagen subida también. Si IndexedDB rechaza la imagen, el estado dice que no quedó guardada.
+2. El diseño 41 no borra el primero. Con 40 proyectos, uno nuevo se aparta en `orvupi-studio-recovery` y el aviso lo dice. Actualizar uno de los 40 sigue pudiendo guardarse. Abrir el recuperado lo intenta de nuevo; si la lista sigue llena, no pisa a nadie.
+3. Otra pestaña con una revisión anterior no pisa el diseño. El aviso ofrece «Guardar como copia». La revisión es un contador en `meta` (0 si el archivo antiguo no la tenía). No cambia textos ni capas. La clave vieja `orvupi-studio-draft` no se borra.
+4. Importar un archivo con más de 8 páginas, 48 capas, 2000 caracteres o un lienzo fuera de 64–2048 px lanza un error y no devuelve un documento recortado. En el editor, la capa 49 y la página 9 se rechazan con un texto. Un texto que se pasa de 2000 caracteres al escribir se corta y el estado lo dice.
+5. El paquete `orvupi-design` versión 1 lleva el documento y los píxeles de las imágenes subidas. No lleva los TTF. El aviso dice que Anton, Bangers, Archivo Black, Silkscreen, Audiowide, Barlow Condensed y Saira ExtraCondensed viajan con la aplicación y que otro programa puede sustituirlas. Importar el paquete crea un proyecto nuevo y restaura las imágenes. El JSON suelto de «Exportar JSON» sigue sin los bytes de imagen y lo dice.
+6. El PDF junta las páginas elegidas. Cada página es el mismo raster que el PNG, a 96 ppp, en DeviceRGB, sin sangrado, y el texto deja de ser editable. No se etiqueta como 300 ppp ni como cuatricromía. 794×1123 px se describe como un A4 a 96 ppp. El proyecto editable no se borra. El archivo puede ser grande porque el raster no va comprimido.
 
-Los proyectos ya guardados en un navegador no se reescriben ni se borran. Quien abra de nuevo un diseño antiguo ve lo que guardó, aunque se hubiera creado desde la base genérica. Las plantillas nuevas no pisan esos registros.
+## 10. Fase 4 — Studio y Work
 
-No hay migración de `localStorage` en esta rama. Recuperar el comportamiento anterior es no fusionar esta rama.
+Qué convierte:
 
-## 10. Pruebas
+| Ruta | Qué se conserva | Qué no |
+| --- | --- | --- |
+| Guardar el diseño en Work | Todas las capas, páginas, textos, formas e imágenes. El mismo editor. | La biblioteca local no es una nube. No hay vuelta automática desde un derivado. |
+| Convertir a documento | Textos en orden de lectura: título si el tamaño es de 48 px o más, si no párrafo. Imágenes subidas con bytes. | La posición absoluta. Recorte, volteo y rotación. Formas y líneas. No hay tablas en el modelo de Studio. No se pega una captura de la página. Fuentes de Studio a Arial; Silkscreen a Courier New. |
+| Convertir a presentación | Posición, tamaño, rotación, volteo y grupos, a escala sobre 960×540. | El bloqueo, las guías, la cuadrícula y un fondo de catálogo (entra como color). A partir del elemento 61 de una página, el resto no entra. Un lienzo que no es 16:9 deja márgenes. La misma sustitución de fuentes. |
+
+Una diapositiva de Work mide 960×540. Un deck de 1920×1080 entra a escala 0.5. Un CV de 794×1123 no es 16:9 y la vista previa lo dice.
+
+El id de Work es un UUID. El id de Studio (`proj_…`) sigue dentro del paquete. Si la copia de Work tiene una revisión más nueva, se guarda otro archivo en vez de pisarlo.
+
+## 11. Qué queda fuera
+
+- Fase 5. Fototeca, gráficos de datos, vídeo con línea de tiempo, sitio publicable, pizarra infinita, colaboración. Siguen fuera.
+- El PDF no conserva texto vectorial ni una marca de 300 ppp.
+- El paquete no incrusta las fuentes.
+- El módulo Dibujos de Work no recibe el diseño.
+- El bundle ya publicado en `web/v2/work/` es anterior a la redirección del diseño nativo. En esta rama el código fuente de Work sí asigna `/studio/#/work/<uuid>`. El servidor estático de esta comprobación responde 404 en `/work/document/d/…/edit` porque no reescribe la ruta a `index.html`. La biblioteca sí lista el documento, y los bytes leídos de esa biblioteca contienen el texto convertido.
+- No hay sincronización entre dispositivos.
+
+Los proyectos ya guardados no se reescriben en su contenido. Al volver a guardarlos se añade el contador de revisión. Quien abra un diseño antiguo ve lo que guardó.
+
+## 12. Pruebas
 
 - `test/studio-fase1.test.ts` y `test/studio-p0.test.ts`: la apertura de las 106 y los dos casos de la sección 2.1.
 - `test/studio-fase2.test.ts`: ajuste real, fragmentos de texto, negrita en el raster, círculo, volteo, distribución y páginas.
-- Playwright de Studio (`studio-vista`, `studio-categorias`, `studio-rapido`, `studio-guardar`, `studio-placa`) en escritorio y en 390 px: el lienzo cabe, la pizarra y el sitio conservan sus controles, y no hay scroll horizontal.
-- `npm test`: la suite del repositorio. Si el borrador del tablero debe listar el archivo nuevo, se regenera en local con `node dist/lab/tools/build-pages.js`, sin `--publish`. Ese HTML es un borrador local (`site-drafts/`), no un despliegue.
+- `test/studio-fase3.test.ts`: el proyecto 41 conserva el primero, el conflicto no pisa, la recuperación de la clave intermedia, el rechazo sin recorte, el paquete con píxeles, el PDF a 96 ppp y la lista de pérdidas de la conversión.
+- `apps/work/tests/unit/studio-bridge.test.ts`: la ruta del diseño nativo, `parseOrvdoc` / `parseSlides`, y un DOCX y un PPTX que contienen el texto de origen.
+- Playwright de Studio en escritorio y en 390 px, más una pasada manual en Chrome: estado «Guardado», menú de paquete y PDF, diálogo de Work, archivo real en `orvupi-work`, tope de 48 capas y el lienzo en 390 px sin ensanchar la página.
+- `npm test`: la suite del repositorio. El borrador del tablero lista `test/studio-fase3.test.ts` tras `node dist/lab/tools/build-pages.js`, sin `--publish`.
 
-## 11. Autorización
+Muestras locales, fuera del repositorio: `/opt/cursor/artifacts/studio-fase3/` (paquete, PDF, DOCX, PPTX y capturas).
+
+## 13. Autorización
 
 No fusionar. No desplegar. No borrar datos de usuarios.
 

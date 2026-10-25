@@ -38,18 +38,25 @@ import {
 import { exportAllowed } from "./lib/filter.mjs";
 import { createImageStore } from "./lib/images.mjs";
 import { LOGO_MAX_BYTES, readLogoPng } from "./lib/logo.mjs";
+import { packDesign, unpackDesign, userImageIds } from "./lib/package.mjs";
+import { pdfFromPages } from "./lib/pdf-raster.mjs";
 import { IDEAS, filterPlantillas, instantiate } from "./lib/plantillas.mjs";
 import { documentForThumb } from "./lib/thumb-docs.mjs";
 import {
   adoptLegacyDraft,
   deleteProject,
+  dropRecovery,
   duplicateProject,
   listProjects,
+  listRecovery,
   loadProject,
+  recoverWrite,
   saveProject,
 } from "./lib/projects.mjs";
 import { FILE_NAME, REVOKE_MS, canShareFiles, isIOS, saveMode } from "./lib/save.mjs";
 import { applySpan, spanIs } from "./lib/text-style.mjs";
+import { conversionPreview, toOrvdoc, toSlides } from "./lib/work-convert.mjs";
+import { DESIGN_MIME, DOC_MIME, SLIDE_MIME, loadWorkBytes, saveWorkBytes, workIdFromHash } from "./lib/work-store.mjs";
 import { catalogBody, layerStyle, renderDesigns, renderEditor, renderHome, renderMarca, renderPlantillas, renderRecursos } from "./views.mjs";
 
 const root = document.getElementById("studio-root");
@@ -203,7 +210,35 @@ const COPY = {
     unidadNota: "Unidad: px. Las medidas en pulgadas y milímetros quedan para una pasada posterior.",
     menu: "Menú",
     abrirWork: "Abrir en Work",
-    workNota: "Este diseño no se abre todavía en Work. No se crea una copia ni una conversión. El archivo sigue en este navegador.",
+    workNota: "Se crea una copia en la biblioteca local de Work. Esa biblioteca no es una sincronización en la nube. El diseño original sigue en este navegador.",
+    workNativo: "Guardar el diseño en Work",
+    workDoc: "Convertir a documento",
+    workSlides: "Convertir a presentación",
+    workConfirmar: "Crear la copia",
+    workHecho: "La copia está en Work. El diseño original sigue aquí.",
+    workCopia: "Work ya tenía una revisión más nueva. Se guardó otra copia, sin pisar la anterior.",
+    workFallo: "La copia en Work no se escribió. El diseño sigue en este navegador.",
+    paquete: "Exportar paquete",
+    importarPaquete: "Importar paquete",
+    pdf: "PDF",
+    pdfNota: "El PDF aplana cada página a 96 ppp. No anuncia cuatricromía ni sangrado. El texto deja de ser editable. El diseño original sigue en este navegador.",
+    pdfA4: "794×1123 px es un A4 a 96 ppp.",
+    pdfPaginas: "Páginas del PDF",
+    pdfListo: "El PDF se descargó. El diseño editable sigue aquí.",
+    pdfVacio: "Elige al menos una página.",
+    capaTope: "Esta versión guarda hasta 48 capas. No se añadió otra.",
+    topeProyectos: "Hay 40 diseños. Este no sustituye a ninguno y quedó aparte.",
+    conflicto: "Otra pestaña guardó este diseño. No se ha pisado.",
+    guardarCopia: "Guardar como copia",
+    abrirRecuperado: "Abrir el diseño recuperado",
+    limitePaginas: "Este archivo trae más de 8 páginas. No se recorta.",
+    limiteCapas: "Este archivo trae más de 48 capas. No se recorta.",
+    limiteTexto: "Un texto pasa de 2000 caracteres. No se recorta.",
+    limiteMedida: "El lienzo tiene que medir entre 64 y 2048 px. No se recorta.",
+    imagenNo: "La imagen no se pudo guardar. No queda marcado como guardado.",
+    guardadoCorto: "Guardado",
+    topeCorto: "Tope de 40. No se borró ninguno.",
+    conflictoCorto: "Conflicto. No se pisó.",
     negrita: "Negrita",
     cursiva: "Cursiva",
     subrayado: "Subrayado",
@@ -372,7 +407,35 @@ const COPY = {
     unidadNota: "Unit: px. Inch and millimetre sizes come in a later pass.",
     menu: "Menu",
     abrirWork: "Open in Work",
-    workNota: "This design does not open in Work yet. No copy and no conversion are created. The file stays in this browser.",
+    workNota: "A copy is created in Work's local library. That library is not cloud sync. The original design stays in this browser.",
+    workNativo: "Save the design in Work",
+    workDoc: "Convert to document",
+    workSlides: "Convert to presentation",
+    workConfirmar: "Create the copy",
+    workHecho: "The copy is in Work. The original design stays here.",
+    workCopia: "Work already had a newer revision. Another copy was saved, and the previous file was left as it was.",
+    workFallo: "The Work copy was not written. The design stays in this browser.",
+    paquete: "Export package",
+    importarPaquete: "Import package",
+    pdf: "PDF",
+    pdfNota: "The PDF flattens each page at 96 ppi. It does not claim process color or bleed. Text is no longer editable. The original design stays in this browser.",
+    pdfA4: "794×1123 px is an A4 page at 96 ppi.",
+    pdfPaginas: "PDF pages",
+    pdfListo: "The PDF downloaded. The editable design stays here.",
+    pdfVacio: "Choose at least one page.",
+    capaTope: "This version keeps up to 48 layers. Another one was not added.",
+    topeProyectos: "There are 40 designs. This one does not replace any of them and was kept aside.",
+    conflicto: "Another tab saved this design. It was not overwritten.",
+    guardarCopia: "Save as a copy",
+    abrirRecuperado: "Open the recovered design",
+    limitePaginas: "This file has more than 8 pages. It is not trimmed.",
+    limiteCapas: "This file has more than 48 layers. It is not trimmed.",
+    limiteTexto: "A text is over 2000 characters. It is not trimmed.",
+    limiteMedida: "The canvas must be between 64 and 2048 px. It is not trimmed.",
+    imagenNo: "The image could not be stored. It is not marked as saved.",
+    guardadoCorto: "Saved",
+    topeCorto: "40 design limit. None were deleted.",
+    conflictoCorto: "Conflict. Nothing was overwritten.",
     negrita: "Bold",
     cursiva: "Italic",
     subrayado: "Underline",
@@ -446,6 +509,10 @@ const state = {
   guides: false,
   editingId: "",
   workNote: false,
+  workRoute: "",
+  workPreview: null,
+  pdfOpen: false,
+  imageFailed: false,
   pageNote: "",
   cropping: false,
   clip: null,
@@ -453,6 +520,7 @@ const state = {
 
 let fileMode = "image";
 let saveTimer = 0;
+let saveChain = Promise.resolve();
 let logoTicket = 0;
 let clockTimer = 0;
 const urlCache = new Map();
@@ -480,11 +548,26 @@ function statusText() {
   if (state.status === "missing-image") return t("faltaImagen");
   if (state.status === "version") return t("version");
   if (state.status === "invalid") return t("invalido");
-  if (state.status === "saved") return t("guardado");
+  if (state.status === "cap") return t("topeCorto");
+  if (state.status === "conflict") return t("conflictoCorto");
+  if (state.status === "image-fail") return t("imagenNo");
+  if (state.status === "limite-paginas") return t("limitePaginas");
+  if (state.status === "limite-capas") return t("limiteCapas");
+  if (state.status === "limite-texto") return t("limiteTexto");
+  if (state.status === "limite-medida") return t("limiteMedida");
+  if (state.status === "saved") return t("guardadoCorto");
   return "";
 }
 
+function statusFromError(error) {
+  const message = error?.message || "";
+  if (message === "version-desconocida") return "version";
+  if (message === "limite-paginas" || message === "limite-capas" || message === "limite-texto" || message === "limite-medida") return message;
+  return "invalid";
+}
+
 function viewName() {
+  if (workIdFromHash(location.hash) && state.doc) return "editor";
   const hash = location.hash.replace(/^#\/?/, "");
   const known = ["plantillas", "disenos", "editor", "recursos", "marca"];
   if (location.hash) return known.includes(hash) ? hash : "inicio";
@@ -527,19 +610,46 @@ function snapshot() {
   state.future = [];
 }
 
+function applySaveResult(result) {
+  if (!result?.ok) {
+    if (result?.reason === "cap") {
+      state.status = "cap";
+      state.pageNote = t("topeProyectos");
+    } else if (result?.reason === "conflict") {
+      state.status = "conflict";
+      state.pageNote = t("conflicto");
+    } else state.status = "quota";
+    return result;
+  }
+  if (state.doc) state.doc.meta.revision = result.revision;
+  if (state.doc) dropRecovery(storage, state.doc.id);
+  if (state.status === "cap" || state.status === "conflict" || state.status === "image-fail") state.pageNote = "";
+  state.status = state.imageFailed ? "image-fail" : "saved";
+  if (state.imageFailed) state.pageNote = t("imagenNo");
+  return result;
+}
+
 function scheduleSave() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
-    if (!state.doc) return;
-    syncPages();
-    const result = saveProject(storage, state.doc);
-    state.status = result.ok ? "saved" : "quota";
-    const node = document.getElementById("estado-guardado");
-    if (node) node.textContent = statusText();
+    saveChain = saveChain.then(() => commitSave()).catch(() => {});
   }, 400);
 }
 
-function openDoc(doc) {
+async function commitSave() {
+  if (!state.doc) return;
+  syncPages();
+  const result = saveProject(storage, state.doc);
+  applySaveResult(result);
+  if (!result.ok) render();
+  else {
+    const node = document.getElementById("estado-guardado");
+    if (node) node.textContent = statusText();
+  }
+  if (result.ok && state.doc?.meta?.workFileId) await syncWorkFile();
+}
+
+function openDoc(doc, options = {}) {
   state.doc = doc;
   state.page = bindPages(doc);
   state.selected = [];
@@ -554,6 +664,10 @@ function openDoc(doc) {
   state.cropping = false;
   state.pageNote = "";
   state.workNote = false;
+  state.workRoute = "";
+  state.workPreview = null;
+  state.pdfOpen = false;
+  state.imageFailed = Boolean(options.imageFailed);
   state.navOpen = false;
   const narrow = window.innerWidth < 800;
   state.panelOpen = !narrow;
@@ -561,9 +675,13 @@ function openDoc(doc) {
   state.timerOn = false;
   state.timerSeconds = 0;
   clearInterval(clockTimer);
-  const saved = saveProject(storage, doc);
-  state.status = saved.ok ? "saved" : "quota";
-  if (location.hash !== "#/editor") location.hash = "#/editor";
+  const workId = options.workFileId || doc.meta?.workFileId || "";
+  if (workId) doc.meta.workFileId = workId;
+  else if (doc.meta) doc.meta.workFileId = "";
+  if (!options.skipSave) applySaveResult(saveProject(storage, doc));
+  else state.status = state.imageFailed ? "image-fail" : "saved";
+  const next = workId ? `#/work/${workId}` : "#/editor";
+  if (location.hash !== next) location.hash = next;
   else render();
   void hydrateUsers();
 }
@@ -651,6 +769,12 @@ function applyFormat(id) {
 }
 
 function applyCustomSize(width, height) {
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width < 64 || height < 64 || width > 2048 || height > 2048) {
+    state.pageNote = t("limiteMedida");
+    state.dialog = true;
+    render();
+    return;
+  }
   if (state.resizing && state.doc) {
     snapshot();
     state.doc.format = makeFormat({ id: "custom", width, height });
@@ -986,6 +1110,13 @@ function syncChrome() {
 }
 
 function addLayer(layer) {
+  if (!state.doc) return;
+  if (state.doc.layers.length >= 48) {
+    state.pageNote = t("capaTope");
+    render();
+    return;
+  }
+  state.pageNote = "";
   snapshot();
   layer.z = Math.max(0, ...state.doc.layers.map((item) => item.z)) + 1;
   state.doc.layers.push(layer);
@@ -1055,12 +1186,38 @@ function onRootClick(event) {
   }
   if (buttonNode.id === "abrir-work") {
     state.workNote = true;
+    state.workRoute = "";
+    state.workPreview = null;
+    state.pdfOpen = false;
     render();
   }
   if (buttonNode.id === "cerrar-work") {
     state.workNote = false;
+    state.workRoute = "";
+    state.workPreview = null;
     render();
   }
+  if (buttonNode.id === "work-nativo" || buttonNode.id === "work-doc" || buttonNode.id === "work-diapositivas") {
+    const route = buttonNode.id === "work-nativo" ? "native" : buttonNode.id === "work-doc" ? "doc" : "slide";
+    state.workRoute = route;
+    state.workPreview = state.doc ? conversionPreview(state.doc, route) : null;
+    render();
+  }
+  if (buttonNode.id === "work-confirmar") void confirmWork();
+  if (buttonNode.id === "abrir-pdf") {
+    state.pdfOpen = true;
+    state.workNote = false;
+    state.fileMenu = false;
+    render();
+  }
+  if (buttonNode.id === "cerrar-pdf") {
+    state.pdfOpen = false;
+    render();
+  }
+  if (buttonNode.id === "exportar-pdf") void exportPdf();
+  if (buttonNode.id === "exportar-paquete" && state.doc) void exportPackage(state.doc.id);
+  if (buttonNode.id === "guardar-copia") void saveAsCopy();
+  if (buttonNode.id === "abrir-recuperado") openRecovered();
   if (buttonNode.id === "alternar-panel") {
     state.panelOpen = !state.panelOpen;
     render();
@@ -1149,11 +1306,7 @@ function onRootClick(event) {
     const doc = loadProject(storage, buttonNode.dataset.open);
     if (doc) openDoc(doc);
   }
-  if (buttonNode.dataset.duplicate) {
-    const copy = duplicateProject(storage, buttonNode.dataset.duplicate);
-    state.status = copy ? "saved" : "quota";
-    render();
-  }
+  if (buttonNode.dataset.duplicate) void duplicateWithImages(buttonNode.dataset.duplicate);
   if (buttonNode.dataset.delete) {
     if (window.confirm(t("confirmarBorrar"))) {
       deleteProject(storage, buttonNode.dataset.delete);
@@ -1162,10 +1315,10 @@ function onRootClick(event) {
     }
   }
   if (buttonNode.dataset.export) exportJson(buttonNode.dataset.export);
-  if (buttonNode.id === "importar-json" || buttonNode.id === "subir-imagen" || buttonNode.id === "cambiar-imagen") {
-    fileMode = buttonNode.id === "importar-json" ? "project" : "image";
+  if (buttonNode.id === "importar-json" || buttonNode.id === "importar-paquete" || buttonNode.id === "subir-imagen" || buttonNode.id === "cambiar-imagen") {
+    fileMode = buttonNode.id === "importar-json" || buttonNode.id === "importar-paquete" ? "project" : "image";
     if (logoInput) {
-      logoInput.accept = fileMode === "project" ? "application/json" : "image/png,image/jpeg,image/webp";
+      logoInput.accept = fileMode === "project" ? "application/json,.json" : "image/png,image/jpeg,image/webp";
       logoInput.click();
     }
   }
@@ -1287,8 +1440,12 @@ function runAction(action, id) {
   if (action === "undo") {
     if (!state.past.length || !state.doc) return;
     syncPages();
+    const revision = state.doc.meta.revision;
+    const workFileId = state.doc.meta.workFileId;
     state.future.push(JSON.stringify(exportProject(state.doc)));
     state.doc = importProject(state.past.pop());
+    state.doc.meta.revision = revision;
+    state.doc.meta.workFileId = workFileId;
     state.page = bindPages(state.doc);
     scheduleSave();
     render();
@@ -1297,8 +1454,12 @@ function runAction(action, id) {
   if (action === "redo") {
     if (!state.future.length || !state.doc) return;
     syncPages();
+    const revision = state.doc.meta.revision;
+    const workFileId = state.doc.meta.workFileId;
     state.past.push(JSON.stringify(exportProject(state.doc)));
     state.doc = importProject(state.future.pop());
+    state.doc.meta.revision = revision;
+    state.doc.meta.workFileId = workFileId;
     state.page = bindPages(state.doc);
     scheduleSave();
     render();
@@ -1321,6 +1482,13 @@ function runAction(action, id) {
     state.selected = state.selected.filter((id) => state.doc.layers.some((item) => item.id === id));
   }
   if (action === "duplicate") {
+    const count = Math.max(1, state.selected.length);
+    if (state.doc.layers.length + count > 48) {
+      state.past.pop();
+      state.pageNote = t("capaTope");
+      render();
+      return;
+    }
     const copies = state.selected.length > 1 ? duplicateLayers(state.doc, state.selected) : [duplicateLayer(state.doc, state.selected[0])].filter(Boolean);
     retargetCopies(copies);
     state.selected = copies.map((item) => item.id);
@@ -1509,6 +1677,12 @@ function bindInputs() {
     }
     if (!state.doc) return;
     if (target.id === "notas-pizarra" && state.doc) {
+      if (target.value.length > 2000) {
+        state.status = "limite-texto";
+        state.pageNote = t("limiteTexto");
+        const node = document.getElementById("estado-guardado");
+        if (node) node.textContent = statusText();
+      }
       state.doc.meta.note = target.value.slice(0, 2000);
       scheduleSave();
     }
@@ -1519,7 +1693,14 @@ function bindInputs() {
     if (target.dataset.edit) {
       const layer = state.doc.layers.find((item) => item.id === target.dataset.edit);
       if (layer?.type === "text") {
-        layer.props.text = target.textContent.slice(0, 2000);
+        const raw = target.textContent || "";
+        if (raw.length > 2000) {
+          state.status = "limite-texto";
+        state.pageNote = t("limiteTexto");
+          const node = document.getElementById("estado-guardado");
+          if (node) node.textContent = statusText();
+        }
+        layer.props.text = raw.slice(0, 2000);
         scheduleSave();
       }
     }
@@ -1573,7 +1754,14 @@ function bindInputs() {
     if (target.id === "texto-capa") {
       const layer = primary();
       if (!layer || layer.type !== "text") return;
-      layer.props.text = target.value.slice(0, 2000);
+      const raw = target.value || "";
+      if (raw.length > 2000) {
+        state.status = "limite-texto";
+        state.pageNote = t("limiteTexto");
+        const node = document.getElementById("estado-guardado");
+        if (node) node.textContent = statusText();
+      }
+      layer.props.text = raw.slice(0, 2000);
       const node = root.querySelector(`.capa[data-id="${layer.id}"] .capa-texto`);
       if (node) node.textContent = layer.props.text;
       scheduleSave();
@@ -1699,6 +1887,11 @@ function onKey(event) {
   }
   if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "v" && state.doc && state.clip?.length) {
     event.preventDefault();
+    if (state.doc.layers.length + state.clip.length > 48) {
+      state.pageNote = t("capaTope");
+      render();
+      return;
+    }
     snapshot();
     const copies = cloneForPaste(state.clip, () => uid("ly"));
     for (const copy of copies) {
@@ -1782,7 +1975,12 @@ async function onLogo() {
     layer.src = { kind: "user", id: layer.id };
     state.userImages.set(layer.id, image);
     urlCache.delete(layer.id);
-    await images.put(state.doc.id, layer.id, image);
+    const stored = await images.put(state.doc.id, layer.id, image);
+    state.imageFailed = stored === false;
+    if (state.imageFailed) {
+      state.status = "image-fail";
+      state.pageNote = t("imagenNo");
+    }
     if (logoEstado) logoEstado.textContent = t("imagenLista");
     scheduleSave();
     render();
@@ -1792,14 +1990,295 @@ async function onLogo() {
 }
 
 async function importJson(file) {
+  let text = "";
   try {
-    const doc = importProject(await file.text());
+    text = await file.text();
+  } catch {
+    state.status = "invalid";
+    render();
+    return;
+  }
+  let data = null;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    state.status = "invalid";
+    render();
+    return;
+  }
+  if (data?.format === "orvupi-design") {
+    await importPackage(data);
+    return;
+  }
+  try {
+    const doc = importProject(data);
     doc.id = uid("proj");
-    const missing = doc.layers.some((layer) => layer.src?.kind === "user");
-    if (missing) state.status = "missing-image";
+    doc.meta.revision = 0;
+    doc.meta.workFileId = "";
+    const missing = userImageIds(doc).length > 0;
+    openDoc(doc, { imageFailed: false });
+    if (missing) {
+      state.status = "missing-image";
+      render();
+    }
+  } catch (error) {
+    state.status = statusFromError(error);
+    state.pageNote = statusText();
+    render();
+  }
+}
+
+async function importPackage(data) {
+  try {
+    const opened = unpackDesign(data);
+    let imageFailed = false;
+    for (const [id, image] of opened.images) {
+      const stored = await images.put(opened.doc.id, id, image);
+      if (!stored) imageFailed = true;
+      state.userImages.set(id, image);
+    }
+    openDoc(opened.doc, { imageFailed });
+    if (opened.missing.length) {
+      state.status = "missing-image";
+      state.pageNote = t("faltaImagen");
+      render();
+    }
+  } catch (error) {
+    state.status = statusFromError(error);
+    state.pageNote = statusText();
+    render();
+  }
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), REVOKE_MS);
+}
+
+async function collectImages(doc) {
+  const list = [];
+  for (const id of userImageIds(doc)) {
+    let image = state.userImages.get(id);
+    if (!image) image = await images.get(doc.id, id);
+    if (!image) continue;
+    list.push({ id, width: image.width, height: image.height, rgba: image.rgba });
+  }
+  return list;
+}
+
+async function exportPackage(id) {
+  const doc = id === state.doc?.id ? state.doc : loadProject(storage, id);
+  if (!doc) return;
+  const packed = packDesign(doc, await collectImages(doc));
+  downloadBlob(new Blob([JSON.stringify(packed)], { type: "application/json" }), "diseno.orvdesign.json");
+  if (packed.missing.length) {
+    state.status = "missing-image";
+    state.pageNote = t("faltaImagen");
+    render();
+  }
+}
+
+async function exportPdf() {
+  if (!state.doc || state.busy) return;
+  const texts = projectTexts(state.doc);
+  if (!exportAllowed(texts.title, texts.body, undefined, texts.label)) {
+    if (avisoBloqueo) avisoBloqueo.hidden = false;
+    return;
+  }
+  const boxes = [...document.querySelectorAll("[data-pdf-page]")].filter((node) => node.checked).map((node) => Number(node.dataset.pdfPage));
+  if (!boxes.length) {
+    state.pageNote = t("pdfVacio");
+    render();
+    return;
+  }
+  state.busy = true;
+  syncChrome();
+  try {
+    syncPages();
+    const pages = [];
+    for (const index of boxes) {
+      const layers = state.doc.meta.pages?.[index] || state.doc.layers;
+      const rendered = await renderDocument({ ...state.doc, layers }, { userImages: state.userImages });
+      pages.push({ width: rendered.width, height: rendered.height, rgba: rendered.rgba });
+    }
+    const pdf = pdfFromPages(pages);
+    downloadBlob(new Blob([pdf], { type: "application/pdf" }), "studio.pdf");
+    state.pdfOpen = false;
+    state.pageNote = t("pdfListo");
+    render();
+  } catch {
+    state.status = "invalid";
+    render();
+  } finally {
+    state.busy = false;
+    syncChrome();
+  }
+}
+
+async function duplicateWithImages(id) {
+  const copy = duplicateProject(storage, id);
+  if (!copy) {
+    const full = listProjects(storage).length >= 40;
+    state.status = full ? "cap" : "quota";
+    state.pageNote = full ? t("topeProyectos") : "";
+    render();
+    return;
+  }
+  const ok = await images.copyProject(id, copy.id, userImageIds(copy));
+  state.imageFailed = !ok;
+  state.status = ok ? "saved" : "image-fail";
+  if (!ok) state.pageNote = t("imagenNo");
+  render();
+}
+
+function openRecovered() {
+  const raw = listRecovery(storage)[0];
+  if (!raw) return;
+  try {
+    const doc = importProject(raw);
     openDoc(doc);
   } catch (error) {
-    state.status = error?.message === "version-desconocida" ? "version" : "invalid";
+    state.status = statusFromError(error);
+    state.pageNote = statusText();
+    render();
+  }
+}
+
+async function saveAsCopy() {
+  if (!state.doc) return;
+  const previous = state.doc.id;
+  syncPages();
+  const raw = exportProject(state.doc);
+  raw.id = uid("proj");
+  raw.name = `${state.doc.name} copia`.slice(0, 80);
+  raw.meta.revision = 0;
+  raw.meta.workFileId = "";
+  const doc = importProject(raw);
+  const imagesOk = await images.copyProject(previous, doc.id, userImageIds(doc));
+  openDoc(doc, { imageFailed: !imagesOk });
+}
+
+async function syncWorkFile() {
+  if (!state.doc?.meta?.workFileId) return;
+  try {
+    const packed = packDesign(state.doc, await collectImages(state.doc));
+    const bytes = new TextEncoder().encode(JSON.stringify(packed));
+    const saved = await saveWorkBytes({
+      id: state.doc.meta.workFileId,
+      name: state.doc.name,
+      kind: "other",
+      mime: DESIGN_MIME,
+      bytes,
+      revision: state.doc.meta.revision || 0,
+      snippet: projectTexts(state.doc).title,
+    });
+    if (!saved.ok) {
+      state.pageNote = t("workFallo");
+    } else if (saved.copied) {
+      state.doc.meta.workFileId = saved.id;
+      state.pageNote = t("workCopia");
+      applySaveResult(saveProject(storage, state.doc));
+      const next = `#/work/${saved.id}`;
+      if (location.hash !== next) location.hash = next;
+    }
+    const node = document.getElementById("estado-guardado");
+    if (node) node.textContent = statusText();
+  } catch {
+    state.pageNote = t("workFallo");
+  }
+}
+
+async function confirmWork() {
+  if (!state.doc || !state.workRoute) return;
+  syncPages();
+  const route = state.workRoute;
+  const collected = await collectImages(state.doc);
+  const imageMap = new Map(collected.map((image) => [image.id, image]));
+  try {
+    if (route === "native") {
+      const packed = packDesign(state.doc, collected);
+      const bytes = new TextEncoder().encode(JSON.stringify(packed));
+      const saved = await saveWorkBytes({
+        id: state.doc.meta.workFileId || "",
+        name: state.doc.name,
+        kind: "other",
+        mime: DESIGN_MIME,
+        bytes,
+        revision: state.doc.meta.revision || 0,
+        snippet: projectTexts(state.doc).title,
+      });
+      if (!saved.ok) {
+        state.pageNote = t("workFallo");
+        render();
+        return;
+      }
+      state.doc.meta.workFileId = saved.id;
+      state.workNote = false;
+      state.pageNote = saved.copied ? t("workCopia") : t("workHecho");
+      applySaveResult(saveProject(storage, state.doc));
+      const next = `#/work/${saved.id}`;
+      if (location.hash !== next) location.hash = next;
+      else render();
+      return;
+    }
+    const file = route === "doc" ? await toOrvdoc(state.doc, { images: imageMap }) : await toSlides(state.doc, { images: imageMap });
+    const bytes = new TextEncoder().encode(JSON.stringify(file));
+    const saved = await saveWorkBytes({
+      name: file.title,
+      kind: route === "doc" ? "doc" : "slide",
+      mime: route === "doc" ? DOC_MIME : SLIDE_MIME,
+      bytes,
+      snippet: projectTexts(state.doc).title,
+    });
+    if (!saved.ok) {
+      state.pageNote = t("workFallo");
+      render();
+      return;
+    }
+    state.workNote = false;
+    state.pageNote = t("workHecho");
+    render();
+    const path = route === "doc" ? `/work/document/d/${saved.id}/edit` : `/work/presentation/d/${saved.id}/edit`;
+    window.location.assign(path);
+  } catch {
+    state.pageNote = t("workFallo");
+    render();
+  }
+}
+
+async function openFromWork(id) {
+  const loaded = await loadWorkBytes(id);
+  if (!loaded) {
+    state.status = "invalid";
+    state.pageNote = t("invalido");
+    render();
+    return;
+  }
+  let data = null;
+  try {
+    data = JSON.parse(new TextDecoder().decode(loaded.bytes));
+  } catch {
+    state.status = "invalid";
+    render();
+    return;
+  }
+  try {
+    const opened = unpackDesign(data, { keepId: true });
+    opened.doc.meta.workFileId = id;
+    let imageFailed = false;
+    for (const [imageId, image] of opened.images) {
+      const stored = await images.put(opened.doc.id, imageId, image);
+      if (!stored) imageFailed = true;
+      state.userImages.set(imageId, image);
+    }
+    openDoc(opened.doc, { workFileId: id, imageFailed });
+  } catch (error) {
+    state.status = statusFromError(error);
+    state.pageNote = statusText();
     render();
   }
 }
@@ -1877,6 +2356,7 @@ async function deliver(kind, forceShare = false) {
 
 function boot() {
   try {
+    recoverWrite(storage);
     adoptLegacyDraft(storage);
   } catch {
     /* el navegador puede negar el almacén; la página sigue */
@@ -1887,7 +2367,14 @@ function boot() {
   bindInputs();
   bindLayersDrag();
   document.addEventListener("keydown", onKey);
-  window.addEventListener("hashchange", render);
+  window.addEventListener("hashchange", () => {
+    const id = workIdFromHash(location.hash);
+    if (id && state.doc?.meta?.workFileId !== id) {
+      void openFromWork(id);
+      return;
+    }
+    render();
+  });
   let wasNarrow = window.innerWidth < 800;
   window.addEventListener("resize", () => {
     if (viewName() !== "editor") return;
@@ -1918,6 +2405,8 @@ function boot() {
     go("inicio");
   });
   render();
+  const pendingWork = workIdFromHash(location.hash);
+  if (pendingWork) void openFromWork(pendingWork);
 }
 
 if (root) boot();

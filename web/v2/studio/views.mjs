@@ -1204,6 +1204,28 @@ function bottomBar(ctx) {
   return el("div", { class: "barra-inferior" }, bits);
 }
 
+function pdfDialog(ctx) {
+  const { state, t } = ctx;
+  const count = state.doc?.meta?.pages?.length || 1;
+  const pages = [];
+  for (let index = 0; index < count; index += 1) {
+    pages.push(el("label", {}, [
+      el("input", { type: "checkbox", "data-pdf-page": String(index), checked: "checked" }),
+      el("span", { text: ` ${index + 1}` }),
+    ]));
+  }
+  const a4 = state.doc?.format?.width === 794 && state.doc?.format?.height === 1123;
+  return el("dialog", { id: "dialogo-pdf", open: "open" }, [
+    el("h2", { text: t("pdf") }),
+    el("p", { text: t("pdfNota") }),
+    a4 ? el("p", { id: "nota-a4", text: t("pdfA4") }) : null,
+    el("p", { text: t("pdfPaginas") }),
+    el("div", { id: "pdf-paginas" }, pages),
+    button(t("pdf"), { id: "exportar-pdf" }),
+    button(t("cerrar"), { id: "cerrar-pdf" }),
+  ]);
+}
+
 export function renderEditor(ctx) {
   const { root, state, t } = ctx;
   const doc = state.doc;
@@ -1214,6 +1236,11 @@ export function renderEditor(ctx) {
     button("Hacer una copia", { "data-duplicate": doc.id }),
     button(t("exportar"), { "data-export": doc.id }),
     button(t("importar"), { id: "importar-json" }),
+    button(t("paquete"), { id: "exportar-paquete" }),
+    button(t("importarPaquete"), { id: "importar-paquete" }),
+    button(t("pdf"), { id: "abrir-pdf" }),
+    state.status === "conflict" ? button(t("guardarCopia"), { id: "guardar-copia" }) : null,
+    state.status === "cap" ? button(t("abrirRecuperado"), { id: "abrir-recuperado" }) : null,
   ]) : null;
   const editorClass = `editor${state.panelOpen ? "" : " panel-cerrado"}${state.inspectorOpen ? "" : " inspector-cerrado"}`;
   root.replaceChildren(
@@ -1263,16 +1290,26 @@ export function renderEditor(ctx) {
       state.workNote ? el("dialog", { id: "dialogo-work", open: "open" }, [
         el("h2", { text: t("abrirWork") }),
         el("p", { text: t("workNota") }),
+        button(t("workNativo"), { id: "work-nativo" }),
+        button(t("workDoc"), { id: "work-doc" }),
+        button(t("workSlides"), { id: "work-diapositivas" }),
+        state.workPreview ? el("div", { id: "vista-conversion" }, [
+          el("p", { text: state.workPreview.dimension || "" }),
+          el("ul", {}, (state.workPreview.keeps || []).map((line) => el("li", { text: line }))),
+          el("ul", {}, (state.workPreview.losses || []).map((line) => el("li", { text: line }))),
+          button(t("workConfirmar"), { id: "work-confirmar" }),
+        ]) : null,
         button(t("cerrar"), { id: "cerrar-work" }),
       ]) : null,
     ]), { navOpen: state.navOpen }),
     sizeDialog(ctx),
     state.preview ? el("dialog", { id: "dialogo-previa", open: "open" }, [
       el("h2", { text: t("vistaPrevia") }),
-      el("p", { text: `${doc.name} · ${doc.format.width}×${doc.format.height} px` }),
+      el("p", { text: `${doc.name}. ${doc.format.width}×${doc.format.height} px` }),
       el("p", { text: t("previewNota") }),
       button(t("cerrar"), { id: "cerrar-previa" }),
     ]) : null,
+    state.pdfOpen ? pdfDialog(ctx) : null,
   );
   const bar = root.querySelector(".editor-bar");
   if (ctx.acciones && bar) bar.append(ctx.acciones);
