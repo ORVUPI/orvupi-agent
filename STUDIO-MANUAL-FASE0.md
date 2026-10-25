@@ -384,7 +384,7 @@ El id de Work es un UUID. El id de Studio (`proj_…`) sigue dentro del paquete.
 
 ## 11. Qué queda fuera
 
-- Fase 5. Fototeca, gráficos de datos, vídeo con línea de tiempo, sitio publicable, pizarra infinita, colaboración. Siguen fuera.
+- Fase 5 (P2) se entrega en la rama `cursor/studio-fase5-p2-722e` y el informe `STUDIO-MANUAL-FASE5.md`: fototeca CC0 local, gráficos/tablas con datos, escenas de vídeo sin MP4/audio, HTML de sitio sin publicar, pizarra ampliable con comentarios e historial local, IA opcional sin modelo. Colaboración remota y hosting siguen fuera.
 - El PDF no conserva texto vectorial ni una marca de 300 ppp.
 - El paquete no incrusta las fuentes.
 - El módulo Dibujos de Work no recibe el diseño.

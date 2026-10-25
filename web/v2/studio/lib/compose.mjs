@@ -2,14 +2,18 @@
 
 import catalog from "../catalog.json" with { type: "json" };
 import { paintBackground } from "./backgrounds.mjs";
+import { paintChart } from "./chart-data.mjs";
 import { PNG_COMMENT } from "./copy.mjs";
 import { fontById, orderedLayers } from "./document.mjs";
 import { drawFace, lineBox, loadFace, wrapFace } from "./draw.mjs";
+import { photoById } from "./photos.mjs";
 import { decodePng, encodePng } from "./png.mjs";
+import { paintTableGrid } from "./table-data.mjs";
 import { piecesOf } from "./text-style.mjs";
 import { measureFont } from "./ttf.mjs";
 
 const catalogCache = new Map();
+const libraryCache = new Map();
 
 function hexColor(hex) {
   const raw = String(hex || "").trim();
@@ -69,6 +73,17 @@ function userImage(options, id) {
   return image;
 }
 
+async function loadPngFile(rel) {
+  const url = new URL(`../${rel}`, import.meta.url);
+  if (globalThis.process?.versions?.node) {
+    const { readFile } = await import("node:fs/promises");
+    return new Uint8Array(await readFile(url));
+  }
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(rel);
+  return new Uint8Array(await response.arrayBuffer());
+}
+
 async function catalogImage(id) {
   if (catalogCache.has(id)) return catalogCache.get(id);
   const item = catalog.items.find((entry) => entry.id === id);
@@ -77,22 +92,52 @@ async function catalogImage(id) {
     return null;
   }
   try {
-    const url = new URL(`../${item.archivo}`, import.meta.url);
-    let bytes;
-    if (globalThis.process?.versions?.node) {
-      const { readFile } = await import("node:fs/promises");
-      bytes = new Uint8Array(await readFile(url));
-    } else {
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(item.archivo);
-      bytes = new Uint8Array(await response.arrayBuffer());
-    }
-    const image = await decodePng(bytes);
+    const image = await decodePng(await loadPngFile(item.archivo));
     catalogCache.set(id, image);
     return image;
   } catch {
     catalogCache.set(id, null);
     return null;
+  }
+}
+
+async function libraryImage(id) {
+  if (libraryCache.has(id)) return libraryCache.get(id);
+  const item = photoById(id);
+  if (!item?.archivo) {
+    libraryCache.set(id, null);
+    return null;
+  }
+  try {
+    const image = await decodePng(await loadPngFile(item.archivo));
+    libraryCache.set(id, image);
+    return image;
+  } catch {
+    libraryCache.set(id, null);
+    return null;
+  }
+}
+
+async function paintTable(local, w, h, layer) {
+  const data = paintTableGrid(local, w, h, layer.props);
+  const rows = data.rows.length;
+  const cols = data.rows[0]?.length || 1;
+  const cellW = w / cols;
+  const cellH = h / rows;
+  const font = await loadFace(fontById("barlow").file);
+  const size = Math.max(10, Math.min(28, Math.floor(cellH * 0.35)));
+  for (let r = 0; r < rows; r += 1) {
+    for (let c = 0; c < cols; c += 1) {
+      const text = String(data.rows[r][c] || "");
+      if (!text) continue;
+      const fake = {
+        props: { text, fontId: "barlow", size, color: "#102032", align: "left", lineHeight: 1.1 },
+        w: Math.max(8, cellW - 8),
+        h: Math.max(8, cellH - 8),
+        opacity: 1,
+      };
+      await paintPlainText(local, w, h, Math.round(c * cellW) + 4, Math.round(r * cellH) + 4, fake, font);
+    }
   }
 }
 
@@ -366,7 +411,11 @@ export async function renderDocument(doc, options = {}) {
     }
     const local = new Uint8ClampedArray(w * h * 4);
     if (layer.type === "image") {
-      const image = layer.src?.kind === "user" ? userImage(options, layer.src.id) : await catalogImage(layer.src?.id);
+      const image = layer.src?.kind === "user"
+        ? userImage(options, layer.src.id)
+        : layer.src?.kind === "library"
+          ? await libraryImage(layer.src.id)
+          : await catalogImage(layer.src?.id);
       if (!image) {
         warnings.push(layer.src?.id || layer.id);
         fillRect(local, w, h, 0, 0, w, 4, hexColor("#FF3070"), 255);
@@ -374,6 +423,10 @@ export async function renderDocument(doc, options = {}) {
         fillRect(local, w, h, 0, 0, 4, h, hexColor("#FF3070"), 255);
         fillRect(local, w, h, w - 4, 0, 4, h, hexColor("#FF3070"), 255);
       } else paintImage(local, w, h, image, layer.crop);
+    } else if (layer.type === "chart") {
+      paintChart(local, w, h, layer.props);
+    } else if (layer.type === "table") {
+      await paintTable(local, w, h, layer);
     } else paintShape(local, w, h, layer);
     stamp(rgba, width, height, layer, local);
   }

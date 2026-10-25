@@ -110,7 +110,12 @@ export function conversionPreview(doc, route) {
         fontLoss,
         "Recorte, volteo y rotación de las imágenes no se conservan.",
         "Las formas y las líneas no entran como objetos del documento.",
-        "No hay tablas que mapear en este diseño.",
+        layers.some((layer) => layer.type === "table")
+          ? "Las tablas de Studio pasan a texto plano por filas, no a una tabla nativa de Docs en esta versión."
+          : "Si no hay tablas, no se inventan.",
+        layers.some((layer) => layer.type === "chart")
+          ? "Los gráficos de datos se omiten en el documento: solo se listan las etiquetas como párrafo."
+          : "No hay gráficos de datos en este diseño.",
         "No se pega una captura de la página como si fuera un documento editable.",
         userImages ? "Si falta el archivo de una imagen, esa imagen no entra." : "Este diseño no tiene imágenes subidas.",
         "No hay vuelta automática al diseño original.",
@@ -123,8 +128,13 @@ export function conversionPreview(doc, route) {
     fontLoss,
     "El bloqueo de capas no se conserva.",
     "Las guías y la cuadrícula no se convierten.",
-    "No hay tablas que mapear. Los gráficos de datos no existen aquí: una forma sigue siendo una forma.",
-    "Un vídeo, si lo hubiera, entra como fotograma estático.",
+    layers.some((layer) => layer.type === "table")
+      ? "Las tablas no entran como tabla nativa de diapositivas; se omiten o se aplanan en una pasada posterior."
+      : "No hay tablas que mapear.",
+    layers.some((layer) => layer.type === "chart")
+      ? "Los gráficos de datos no se convierten a objetos de diapositiva en esta versión."
+      : "No hay gráficos de datos en este diseño.",
+    "Un vídeo, si lo hubiera, entra como fotograma estático. No hay audio ni exportación MP4.",
     "No hay vuelta automática al diseño original.",
   ];
   if (catalogBg) losses.push("El fondo de catálogo entra como color plano.");
@@ -176,6 +186,18 @@ export async function toOrvdoc(doc, options = {}) {
     for (const layer of ordered(pages[index])) {
       if (layer.visible === false) continue;
       if (layer.type === "text") content.push(textBlock(layer));
+      if (layer.type === "table" && Array.isArray(layer.props?.rows)) {
+        for (const row of layer.props.rows) {
+          content.push({
+            type: "paragraph",
+            content: [{ type: "text", text: (Array.isArray(row) ? row : [row]).map((cell) => String(cell ?? "")).join(" | ") }],
+          });
+        }
+      }
+      if (layer.type === "chart" && Array.isArray(layer.props?.labels)) {
+        const labels = layer.props.labels.map((label, i) => `${label}: ${layer.props.values?.[i] ?? 0}`).join(", ");
+        content.push({ type: "paragraph", content: [{ type: "text", text: labels }] });
+      }
       if (layer.type === "image" && layer.src?.kind === "user") {
         const image = imageOf(options.images, layer.src.id);
         const src = await pngDataUrl(image);

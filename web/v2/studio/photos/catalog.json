@@ -1,0 +1,90 @@
+{
+  "version": "2026-10-25-fase5",
+  "license": "CC0-1.0",
+  "note": {
+    "es": "Fotografías geométricas generadas en el repositorio ORVUPI. Licencia CC0 1.0. No son stock de pago ni descargas remotas.",
+    "en": "Geometric photographs generated in the ORVUPI repository. CC0 1.0 license. Not paid stock and not remote downloads."
+  },
+  "items": [
+    {
+      "id": "foto-crema",
+      "archivo": "photos/foto-crema.png",
+      "width": 640,
+      "height": 480,
+      "nombre": { "es": "Campo crema", "en": "Cream field" },
+      "etiquetas": ["crema", "minimal", "fondo"],
+      "licencia": "CC0 1.0 — generada en ORVUPI Studio, dominio público.",
+      "licenciaEn": "CC0 1.0 — generated in ORVUPI Studio, public domain."
+    },
+    {
+      "id": "foto-navy",
+      "archivo": "photos/foto-navy.png",
+      "width": 640,
+      "height": 480,
+      "nombre": { "es": "Degradado navy", "en": "Navy gradient" },
+      "etiquetas": ["azul", "degradado", "marca"],
+      "licencia": "CC0 1.0 — generada en ORVUPI Studio, dominio público.",
+      "licenciaEn": "CC0 1.0 — generated in ORVUPI Studio, public domain."
+    },
+    {
+      "id": "foto-cuadricula",
+      "archivo": "photos/foto-cuadricula.png",
+      "width": 640,
+      "height": 480,
+      "nombre": { "es": "Cuadrícula clara", "en": "Light grid" },
+      "etiquetas": ["cuadricula", "pizarra", "plano"],
+      "licencia": "CC0 1.0 — generada en ORVUPI Studio, dominio público.",
+      "licenciaEn": "CC0 1.0 — generated in ORVUPI Studio, public domain."
+    },
+    {
+      "id": "foto-circulos",
+      "archivo": "photos/foto-circulos.png",
+      "width": 640,
+      "height": 480,
+      "nombre": { "es": "Círculos de color", "en": "Color circles" },
+      "etiquetas": ["circulos", "formas", "abstracto"],
+      "licencia": "CC0 1.0 — generada en ORVUPI Studio, dominio público.",
+      "licenciaEn": "CC0 1.0 — generated in ORVUPI Studio, public domain."
+    },
+    {
+      "id": "foto-bandas",
+      "archivo": "photos/foto-bandas.png",
+      "width": 640,
+      "height": 480,
+      "nombre": { "es": "Bandas verticales", "en": "Vertical bands" },
+      "etiquetas": ["bandas", "color", "rayas"],
+      "licencia": "CC0 1.0 — generada en ORVUPI Studio, dominio público.",
+      "licenciaEn": "CC0 1.0 — generated in ORVUPI Studio, public domain."
+    },
+    {
+      "id": "foto-diagonal",
+      "archivo": "photos/foto-diagonal.png",
+      "width": 640,
+      "height": 480,
+      "nombre": { "es": "Rayas diagonales", "en": "Diagonal stripes" },
+      "etiquetas": ["rayas", "patron", "contraste"],
+      "licencia": "CC0 1.0 — generada en ORVUPI Studio, dominio público.",
+      "licenciaEn": "CC0 1.0 — generated in ORVUPI Studio, public domain."
+    },
+    {
+      "id": "foto-horizonte",
+      "archivo": "photos/foto-horizonte.png",
+      "width": 640,
+      "height": 480,
+      "nombre": { "es": "Horizonte simple", "en": "Simple horizon" },
+      "etiquetas": ["horizonte", "paisaje", "plano"],
+      "licencia": "CC0 1.0 — generada en ORVUPI Studio, dominio público.",
+      "licenciaEn": "CC0 1.0 — generated in ORVUPI Studio, public domain."
+    },
+    {
+      "id": "foto-papel",
+      "archivo": "photos/foto-papel.png",
+      "width": 640,
+      "height": 480,
+      "nombre": { "es": "Papel con acento", "en": "Paper with accent" },
+      "etiquetas": ["papel", "textura", "documento"],
+      "licencia": "CC0 1.0 — generada en ORVUPI Studio, dominio público.",
+      "licenciaEn": "CC0 1.0 — generated in ORVUPI Studio, public domain."
+    }
+  ]
+}
