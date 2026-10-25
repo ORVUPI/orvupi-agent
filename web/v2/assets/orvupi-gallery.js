@@ -7,6 +7,10 @@
  const en=()=>(document.documentElement.getAttribute('data-lang')||document.documentElement.lang||'').toLowerCase().startsWith('en');
  const cols=[];const seen=new Map();
  for(const x of items){if(!seen.has(x.collection)){const c={slug:x.collection,es:x.collection_es,en:x.collection_en,n:0};seen.set(x.collection,c);cols.push(c);}seen.get(x.collection).n++;}
+ const albumImages=document.querySelector("[data-album-images]");
+ const albumCols=document.querySelector("[data-album-collections]");
+ if(albumImages)albumImages.textContent=String(items.length);
+ if(albumCols)albumCols.textContent=String(new Set(items.map(x=>x.category_slug)).size);
  const fromHash=()=>{const m=location.hash.match(/coleccion=([\w-]+)/);return m&&seen.has(m[1])?m[1]:'';};
  current=fromHash();
  function chip(slug,label,n){const b=document.createElement('button');b.type='button';b.className='or-chip';b.dataset.slug=slug;b.setAttribute('aria-pressed',String(slug===current));b.append(label+' ');const s=document.createElement('span');s.textContent=n;b.append(s);b.addEventListener('click',()=>select(slug));return b;}
