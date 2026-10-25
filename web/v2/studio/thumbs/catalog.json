@@ -952,5 +952,229 @@
     "width": 640,
     "height": 360,
     "file": "thumbs/negocio-05-partnership-deck.png"
+  },
+  {
+    "id": "tpl-curriculum-09",
+    "templateId": "tpl-curriculum-09",
+    "category": "curriculum",
+    "title": "CV Coral",
+    "width": 540,
+    "height": 720,
+    "file": "thumbs/curriculum-09-cv-coral.png",
+    "vivid": true
+  },
+  {
+    "id": "tpl-presentacion-09",
+    "templateId": "tpl-presentacion-09",
+    "category": "presentacion",
+    "title": "Taller de abril",
+    "width": 720,
+    "height": 405,
+    "file": "thumbs/presentacion-09-taller-abril.png",
+    "vivid": true,
+    "pages": 8
+  },
+  {
+    "id": "tpl-documento-06",
+    "templateId": "tpl-documento-06",
+    "category": "documento",
+    "title": "Revista de mesa",
+    "width": 540,
+    "height": 720,
+    "file": "thumbs/documento-06-revista-de-mesa.png",
+    "vivid": true,
+    "pages": 6
+  },
+  {
+    "id": "tpl-informe-06",
+    "templateId": "tpl-informe-06",
+    "category": "informe",
+    "title": "Resumen del mes",
+    "width": 720,
+    "height": 540,
+    "file": "thumbs/informe-06-resumen-del-mes.png",
+    "vivid": true,
+    "pages": 4
+  },
+  {
+    "id": "tpl-propuesta-06",
+    "templateId": "tpl-propuesta-06",
+    "category": "propuesta",
+    "title": "Estudio norte",
+    "width": 540,
+    "height": 720,
+    "file": "thumbs/propuesta-06-estudio-norte.png",
+    "vivid": true,
+    "pages": 5
+  },
+  {
+    "id": "tpl-tarjeta-visita-07",
+    "templateId": "tpl-tarjeta-visita-07",
+    "category": "tarjeta-visita",
+    "title": "Tarjeta Lara",
+    "width": 720,
+    "height": 405,
+    "file": "thumbs/tarjeta-visita-07-tarjeta-lara.png",
+    "vivid": true
+  },
+  {
+    "id": "tpl-logo-07",
+    "templateId": "tpl-logo-07",
+    "category": "logo",
+    "title": "Marca Sol",
+    "width": 640,
+    "height": 640,
+    "file": "thumbs/logo-07-marca-sol.png",
+    "vivid": true
+  },
+  {
+    "id": "tpl-flyer-06",
+    "templateId": "tpl-flyer-06",
+    "category": "flyer",
+    "title": "Mercado del sábado",
+    "width": 540,
+    "height": 720,
+    "file": "thumbs/flyer-06-mercado-sabado.png",
+    "vivid": true
+  },
+  {
+    "id": "tpl-cartel-05",
+    "templateId": "tpl-cartel-05",
+    "category": "cartel",
+    "title": "Noche en vivo",
+    "width": 540,
+    "height": 720,
+    "file": "thumbs/cartel-05-noche-en-vivo.png",
+    "vivid": true
+  },
+  {
+    "id": "tpl-infografia-06",
+    "templateId": "tpl-infografia-06",
+    "category": "infografia",
+    "title": "Cuatro pasos",
+    "width": 405,
+    "height": 720,
+    "file": "thumbs/infografia-06-cuatro-pasos.png",
+    "vivid": true
+  },
+  {
+    "id": "tpl-invitacion-05",
+    "templateId": "tpl-invitacion-05",
+    "category": "invitacion",
+    "title": "Cena en el jardín",
+    "width": 540,
+    "height": 720,
+    "file": "thumbs/invitacion-05-cena-jardin.png",
+    "vivid": true
+  },
+  {
+    "id": "tpl-post-instagram-09",
+    "templateId": "tpl-post-instagram-09",
+    "category": "post-instagram",
+    "title": "Menos ruido",
+    "width": 640,
+    "height": 640,
+    "file": "thumbs/post-instagram-09-menos-ruido.png",
+    "vivid": true
+  },
+  {
+    "id": "tpl-post-instagram-10",
+    "templateId": "tpl-post-instagram-10",
+    "category": "post-instagram",
+    "title": "Desayuno",
+    "width": 640,
+    "height": 640,
+    "file": "thumbs/post-instagram-10-desayuno.png",
+    "vivid": true
+  },
+  {
+    "id": "tpl-post-instagram-11",
+    "templateId": "tpl-post-instagram-11",
+    "category": "post-instagram",
+    "title": "Collage de mesa",
+    "width": 640,
+    "height": 640,
+    "file": "thumbs/post-instagram-11-collage-mesa.png",
+    "vivid": true
+  },
+  {
+    "id": "tpl-story-07",
+    "templateId": "tpl-story-07",
+    "category": "story",
+    "title": "Colección de lino",
+    "width": 405,
+    "height": 720,
+    "file": "thumbs/story-07-coleccion-lino.png",
+    "vivid": true
+  },
+  {
+    "id": "tpl-story-08",
+    "templateId": "tpl-story-08",
+    "category": "story",
+    "title": "Salida 5 km",
+    "width": 405,
+    "height": 720,
+    "file": "thumbs/story-08-salida-cinco-km.png",
+    "vivid": true
+  },
+  {
+    "id": "tpl-miniatura-youtube-06",
+    "templateId": "tpl-miniatura-youtube-06",
+    "category": "miniatura-youtube",
+    "title": "Cinco ideas",
+    "width": 720,
+    "height": 405,
+    "file": "thumbs/miniatura-youtube-06-cinco-ideas.png",
+    "vivid": true
+  },
+  {
+    "id": "tpl-portada-05",
+    "templateId": "tpl-portada-05",
+    "category": "portada",
+    "title": "Estreno película",
+    "width": 720,
+    "height": 405,
+    "file": "thumbs/portada-05-estreno-pelicula.png",
+    "vivid": true
+  },
+  {
+    "id": "tpl-video-05",
+    "templateId": "tpl-video-05",
+    "category": "video",
+    "title": "Costa en verano",
+    "width": 405,
+    "height": 720,
+    "file": "thumbs/video-05-costa-verano.png",
+    "vivid": true
+  },
+  {
+    "id": "tpl-pizarra-05",
+    "templateId": "tpl-pizarra-05",
+    "category": "pizarra",
+    "title": "Notas de ideas",
+    "width": 720,
+    "height": 540,
+    "file": "thumbs/pizarra-05-notas-de-ideas.png",
+    "vivid": true
+  },
+  {
+    "id": "tpl-sitio-web-05",
+    "templateId": "tpl-sitio-web-05",
+    "category": "sitio-web",
+    "title": "Enlaces",
+    "width": 405,
+    "height": 720,
+    "file": "thumbs/sitio-web-05-enlaces.png",
+    "vivid": true
+  },
+  {
+    "id": "tpl-negocio-06",
+    "templateId": "tpl-negocio-06",
+    "category": "negocio",
+    "title": "Carta del café",
+    "width": 540,
+    "height": 720,
+    "file": "thumbs/negocio-06-carta-cafe.png",
+    "vivid": true
   }
 ]

@@ -21,7 +21,42 @@ test("móvil: plantillas usa el shell Canva, sin barra lateral", async ({ page }
   await expect(page.locator(".canva-nav > button.canva-tab[data-go='plantillas']")).toHaveAttribute("aria-current", "page");
   await expect(page.locator(".canva-nav")).toContainText("ORVUPI IA");
   await expect(page.locator(".canva-nav")).toContainText("Más");
+  await expect(page.locator(".canva-avatar, .canva-badge")).toHaveCount(0);
+  await expect(page.locator(".tpl-chevron")).toBeVisible();
+  await expect(page.locator(".tpl-tile", { hasText: "Enlace en la biografía" })).toBeVisible();
+  await expect(page.locator(".tpl-tile", { hasText: "Tu historia" })).toBeVisible();
   await expect(page.locator("#studio-root")).not.toContainText(/Disney|Descubre Canva|Canva IA/i);
+
+  const chrome = await page.evaluate(() => {
+    const title = getComputedStyle(document.querySelector(".tpl-title"));
+    const more = getComputedStyle(document.querySelector(".tpl-masonry .canva-more summary"));
+    const arrow = document.querySelector(".tpl-arrow");
+    const rail = document.querySelector(".tpl-rail-row");
+    const card = rail.querySelector(".tpl-rail-card");
+    const masonry = document.querySelector(".tpl-masonry");
+    const first = masonry.querySelector(".tpl-card");
+    return {
+      titleBorder: title.borderTopWidth,
+      titleBg: title.backgroundColor,
+      titleSize: Number.parseFloat(title.fontSize),
+      moreSize: Number.parseFloat(more.width),
+      moreBorder: more.borderTopWidth,
+      arrowDisplay: arrow ? getComputedStyle(arrow).display : "none",
+      railLeft: Math.round(card.getBoundingClientRect().left - rail.getBoundingClientRect().left),
+      masonryShadow: getComputedStyle(first).boxShadow,
+      scroll: getComputedStyle(document.documentElement).scrollbarWidth,
+    };
+  });
+  expect(chrome.titleBorder).toBe("0px");
+  expect(chrome.titleBg).toBe("rgba(0, 0, 0, 0)");
+  expect(chrome.titleSize).toBeGreaterThanOrEqual(24);
+  expect(chrome.titleSize).toBeLessThanOrEqual(28);
+  expect(chrome.moreSize).toBeLessThanOrEqual(28);
+  expect(chrome.moreBorder).toBe("0px");
+  expect(chrome.arrowDisplay).toBe("none");
+  expect(chrome.railLeft).toBeGreaterThanOrEqual(12);
+  expect(chrome.railLeft).toBeLessThanOrEqual(20);
+  expect(chrome.masonryShadow).not.toBe("none");
 
   const layout = await page.evaluate(() => {
     const masonry = document.querySelector(".tpl-masonry");

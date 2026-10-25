@@ -725,6 +725,31 @@ function businessDoc(w, h, title, format) {
   return docPage(w, h, title, 1);
 }
 
+function vividDoc(w, h, title, n) {
+  const fills = ["#FFF6EE", "#F3F7F2", "#F7F3FF", "#FFF8EC", "#F4FBFA", "#FFF1F2"];
+  const bands = ["#E76F51", "#2A9D8F", "#8B3DFF", "#E9C46A", "#457B9D", "#FB6F92"];
+  const fill = fills[(n - 1) % fills.length];
+  const band = bands[(n - 1) % bands.length];
+  if (h >= w) {
+    return {
+      fill,
+      layers: [
+        bx("Banda", 0, 0, w, Math.round(h * 0.42), band, 1),
+        tx("Titulo", 40, Math.round(h * 0.5), w - 80, 140, title, "archivo", 36, "#1A1A1E", 20),
+        tx("Nota", 40, Math.round(h * 0.72), w - 80, 100, "Edita el texto y el color.", "barlow", 22, "#1A1A1E", 21),
+      ],
+    };
+  }
+  return {
+    fill,
+    layers: [
+      bx("Banda", 0, 0, Math.round(w * 0.28), h, band, 1),
+      tx("Titulo", Math.round(w * 0.34), Math.round(h * 0.28), Math.round(w * 0.6), Math.round(h * 0.32), title, "archivo", 32, "#1A1A1E", 20),
+      tx("Nota", Math.round(w * 0.34), Math.round(h * 0.66), Math.round(w * 0.6), 48, "Edita esta pieza.", "barlow", 20, "#1A1A1E", 21),
+    ],
+  };
+}
+
 function build(item) {
   const format = formatIdFor(item);
   const preset = PRESETS.find((entry) => entry.id === format);
@@ -734,7 +759,8 @@ function build(item) {
   const title = canvasHeadline(item);
   const cat = item.category;
   let spec;
-  if (item.id === "tpl-presentacion-01") spec = portadaEstrategia(w, h);
+  if (item.vivid) spec = vividDoc(w, h, title, n);
+  else if (item.id === "tpl-presentacion-01") spec = portadaEstrategia(w, h);
   else if (cat === "curriculum") spec = cvDoc(w, h, n);
   else if (cat === "presentacion") spec = deckDoc(w, h, title, n);
   else if (cat === "documento" || cat === "informe" || cat === "propuesta") spec = format === "deck" ? deckDoc(w, h, title, n === 2 ? 1 : 8) : docPage(w, h, title, n);
