@@ -8,6 +8,7 @@ import { HISTORY_COST, listHistory } from "./lib/history.mjs";
 import { listPhotos, PHOTO_LICENSE_NOTE } from "./lib/photos.mjs";
 import { tablePlainText } from "./lib/table-data.mjs";
 import { piecesOf } from "./lib/text-style.mjs";
+import { keepsMascot } from "./lib/neutral.mjs";
 import { IDEAS, PLANTILLAS, filterPlantillas, instantiate } from "./lib/plantillas.mjs";
 import { listProjects } from "./lib/projects.mjs";
 import { documentForThumb } from "./lib/thumb-docs.mjs";
@@ -57,17 +58,38 @@ function button(text, attrs = {}) {
 const SVG_NS = "http:" + "//www.w3.org/2000/svg";
 
 function icon(d) {
+  return svgIcon([d]);
+}
+
+function svgIcon(paths) {
   const svg = document.createElementNS(SVG_NS, "svg");
   svg.setAttribute("viewBox", "0 0 24 24");
   svg.setAttribute("aria-hidden", "true");
-  const path = document.createElementNS(SVG_NS, "path");
-  path.setAttribute("d", d);
-  path.setAttribute("fill", "none");
-  path.setAttribute("stroke", "currentColor");
-  path.setAttribute("stroke-width", "1.8");
-  path.setAttribute("stroke-linecap", "round");
-  path.setAttribute("stroke-linejoin", "round");
-  svg.append(path);
+  for (const d of paths) {
+    const path = document.createElementNS(SVG_NS, "path");
+    path.setAttribute("d", d);
+    path.setAttribute("fill", "none");
+    path.setAttribute("stroke", "currentColor");
+    path.setAttribute("stroke-width", "1.8");
+    path.setAttribute("stroke-linecap", "round");
+    path.setAttribute("stroke-linejoin", "round");
+    svg.append(path);
+  }
+  return svg;
+}
+
+function dotsIcon() {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  for (const cx of [6, 12, 18]) {
+    const circle = document.createElementNS(SVG_NS, "circle");
+    circle.setAttribute("cx", String(cx));
+    circle.setAttribute("cy", "12");
+    circle.setAttribute("r", "1.7");
+    circle.setAttribute("fill", "currentColor");
+    svg.append(circle);
+  }
   return svg;
 }
 
@@ -762,15 +784,406 @@ function quickRow(ctx) {
   }));
 }
 
+/** Inicio móvil al estilo de la referencia: sin barra lateral, con pestañas abajo. */
+const CAT_WASH = [
+  "linear-gradient(160deg,#d9f4ff,#f7e7ff)",
+  "linear-gradient(160deg,#ffe7d6,#fff6ea)",
+  "linear-gradient(160deg,#e7ffe8,#e5f6ff)",
+  "linear-gradient(160deg,#ffe4f1,#f3e8ff)",
+  "linear-gradient(160deg,#fff4cc,#ffe8ef)",
+  "linear-gradient(160deg,#e6f0ff,#fde7f3)",
+  "linear-gradient(160deg,#e8fff6,#e7f0ff)",
+  "linear-gradient(160deg,#f3e8ff,#ffe9d6)",
+];
+
+const START_HOW = [
+  ["cat", "redes", "Redes sociales", "Social", "#7B61FF", "M7 8h10v8H7zM9 7V5h6v2"],
+  ["format", "cv", "Currículum", "Resume", "#F97316", "M7 4h7l3 3v13H7z"],
+  ["cat", "presentacion", "Presentación", "Presentation", "#FF7A45", "M4 7h16v10H4zM8 11h8"],
+  ["format", "flyer", "Flyer", "Flyer", "#EC4899", "M7 4h10v16H7z"],
+  ["cat", "videos", "Video", "Video", "#FF4B6E", "M8 7l10 5-10 5z"],
+  ["format", "poster", "Cartel", "Poster", "#6366F1", "M6 3h12v18H6z"],
+  ["cat", "impresion", "Impresión", "Print", "#20C997", "M6 8h12v8H6zM8 16v3h8v-3"],
+  ["format", "invite", "Invitación", "Invitation", "#A855F7", "M4 8l8 5 8-5v10H4z"],
+  ["cat", "documentos", "Doc", "Doc", "#3B82F6", "M7 3h7l4 4v14H7z"],
+  ["format", "info", "Infografía", "Infographic", "#0EA5E9", "M5 19V5M10 19V9M15 19v-6M20 19V8"],
+  ["cat", "pizarra", "Pizarra", "Whiteboard", "#F5B942", "M4 5h16v12H4zM8 20h8"],
+  ["format", "story", "Historia", "Story", "#F43F5E", "M8 3h8v18H8z"],
+  ["cat", "web", "Sitio web", "Website", "#14B8A6", "M4 6h16v12H4zM4 10h16"],
+  ["format", "trifold", "Folleto", "Leaflet", "#10B981", "M3 6h18v12H3zM9 6v12M15 6v12"],
+  ["format", "logo", "Logo", "Logo", "#102032", "M12 4l2.2 4.6L19 9.2l-3.5 3.3.9 5L12 15.2 7.6 17.5l.9-5L5 9.2l4.8-.6z"],
+  ["format", "sheet", "Hoja", "Sheet", "#64748B", "M5 5h14v14H5zM5 10h14M5 15h14M10 5v14"],
+];
+
+const MOST_USED = [
+  ["trifold", "Folleto", "Leaflet", "flyer", 0],
+  ["poster", "Cartel", "Poster", "cartel", 0],
+  ["web", "Sitio web", "Website", "sitio-web", 0],
+  ["cv", "Currículum", "Resume", "curriculum", 0],
+  ["flyer", "Flyer", "Flyer", "flyer", 1],
+  ["doc", "Documento", "Document", "documento", 0],
+  ["invite", "Invitación", "Invitation", "invitacion", 0],
+  ["info", "Infografía", "Infographic", "infografia", 0],
+  ["story", "Historia", "Story", "story", 0],
+  ["deck", "Presentación", "Presentation", "presentacion", 0],
+];
+
+const SHORTCUTS = [
+  ["fotos", "Editor de fotos", "Photo editor", "#7B61FF", "M4 7h16v12H4zM8 15l3-3 2 2 3-4 2 3"],
+  ["texto", "Texto", "Text", "#3B82F6", "M6 6h12M6 12h12M6 18h8"],
+  ["capas", "Capas", "Layers", "#0EA5E9", "M5 8h10v10H5zM9 6h10v10"],
+  ["formas", "Formas", "Shapes", "#F97316", "M5 5h8v8H5zM13 11h6v8h-6z"],
+  ["graficos", "Gráficos", "Charts", "#10B981", "M5 19V5M9 19v-6M13 19V9M17 19v-9"],
+  ["fondo", "Fondo", "Background", "#A855F7", "M4 6h16v12H4zM8 14l2-2 2 2 3-3 3 3"],
+  ["subidos", "Subidos", "Uploads", "#64748B", "M12 16V6M8 10l4-4 4 4M5 18h14"],
+  ["ia", "ORVUPI IA", "ORVUPI AI", "#6D28D9", "M12 3l1.2 4.2L17.5 8.5 13.2 9.8 12 14l-1.2-4.2L6.5 8.5l4.3-1.3z"],
+  ["elementos", "Elementos", "Elements", "#EC4899", "M12 4l2 5h5l-4 3 2 5-5-3-5 3 2-5-4-3h5z"],
+  ["marca", "Marca", "Brand", "#102032", "M12 3l2.2 5.2L20 9l-4 3.6L17.2 18 12 15.4 6.8 18 8 12.6 4 9l5.8-.8z"],
+];
+
+const INTEREST_CATS = ["post-instagram", "logo", "negocio", "presentacion", "propuesta", "tarjeta-visita", "portada", "informe"];
+
+function localeBase() {
+  const path = location.pathname;
+  return ["/en", "/pt-br", "/ja", "/ko"].find((prefix) => path === prefix || path.startsWith(`${prefix}/`)) || "";
+}
+
+function proThumbList() {
+  const items = [];
+  for (const cat of THUMB_CATS) {
+    if (cat.id === "meme") continue;
+    items.push(...thumbsIn(cat.id));
+  }
+  return items;
+}
+
+function projectTitle(item, t) {
+  const name = String(item?.name || "").trim();
+  if (!name || name === "Sin título" || name === "Untitled") return t("sinTitulo");
+  return name;
+}
+
+function canvaHead(title, more) {
+  return el("div", { class: "canva-head" }, [el("h2", { text: title }), more || null]);
+}
+
+function seeAll(label, attrs) {
+  return button(label, { class: "canva-see", ...attrs });
+}
+
+function thumbFace(item) {
+  return el("span", { class: "canva-thumb" }, [
+    el("img", { src: studioAsset(item.file), alt: "", loading: "lazy", decoding: "async" }),
+  ]);
+}
+
+function moreMenu(label, actions) {
+  return el("details", { class: "canva-more" }, [
+    el("summary", { "aria-label": label }, [dotsIcon()]),
+    el("div", {}, actions),
+  ]);
+}
+
+function canvaTop(ctx) {
+  const pill = el("a", { class: "canva-pill", href: `${localeBase()}/work/` }, [
+    svgIcon(["M4 16h16M5 16l2-8 3.5 3.2L12 5l1.5 6.2L17 8l2 8"]),
+    el("span", { text: ctx.t("pillWork") }),
+  ]);
+  return el("header", { class: "canva-top" }, [
+    button(ctx.t("inicio"), { class: "canva-inicio canva-plain", "data-go": "inicio" }),
+    pill,
+  ]);
+}
+
+function canvaHero(ctx) {
+  const { t, state } = ctx;
+  return el("div", { class: "canva-hero" }, [
+    el("h1", { text: t("hero") }),
+    el("label", { class: "canva-search" }, [
+      el("span", { class: "sr", text: t("buscar") }),
+      svgIcon(["M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14zM20 20l-3.5-3.5"]),
+      el("input", {
+        id: "buscar",
+        type: "search",
+        value: state.filters.text,
+        placeholder: t("buscarDiseno"),
+        autocomplete: "off",
+        "aria-label": t("buscar"),
+      }),
+      state.filters.text ? button("×", { id: "limpiar-filtros", class: "canva-clear", "aria-label": t("limpiar") }) : null,
+    ]),
+  ]);
+}
+
+function canvaFab(ctx) {
+  const node = button("", { id: "crear-pieza", class: "canva-fab", "aria-label": ctx.t("crearPieza") });
+  node.append(svgIcon(["M6 8h9v9H6zM16 5v5M13.5 7.5h5"]));
+  return node;
+}
+
+function navTab(label, view, current, d) {
+  const node = button("", {
+    class: "canva-tab canva-plain",
+    "data-go": view,
+    "aria-current": current === view ? "page" : null,
+    "aria-label": label,
+  });
+  node.append(svgIcon([d]), el("span", { text: label }));
+  return node;
+}
+
+function canvaNav(ctx, tab) {
+  const { t, lang } = ctx;
+  const base = localeBase();
+  const en = lang === "en";
+  const menu = el("details", { class: "canva-tab-menu" }, [
+    el("summary", { "aria-label": t("menu") }, [
+      el("span", { class: "canva-avatar", "aria-hidden": "true" }, [
+        el("span", { text: "O" }),
+        el("span", { class: "canva-badge" }),
+      ]),
+      el("span", { text: t("menu") }),
+    ]),
+    el("div", { class: "canva-sheet" }, [
+      el("p", { class: "canva-sheet-title", text: "ORVUPI" }),
+      button(t("disenos"), { "data-go": "disenos" }),
+      button(t("plantillas"), { "data-go": "plantillas" }),
+      button(t("marca"), { "data-go": "marca" }),
+      button(t("recursos"), { "data-go": "recursos" }),
+      el("a", { href: `${base}/work/`, text: t("abrirWork") }),
+      el("a", { href: `${base}/studio/reglas/`, text: en ? "Rules and assets" : "Reglas y recursos" }),
+      el("p", { class: "canva-sheet-note", text: t("local") }),
+      el("div", { class: "canva-langs" }, [
+        el("a", { href: "/studio/", lang: "es", text: "Español" }),
+        el("a", { href: "/en/studio/", lang: "en", text: "English" }),
+        el("a", { href: "/pt-br/studio/", lang: "pt-BR", text: "Português" }),
+        el("a", { href: "/ja/studio/", lang: "ja", text: "日本語" }),
+        el("a", { href: "/ko/studio/", lang: "ko", text: "한국어" }),
+      ]),
+    ]),
+  ]);
+  return el("nav", { class: "canva-nav", "aria-label": t("menu") }, [
+    navTab(t("inicio"), "inicio", tab, "M4 11 L12 4 L20 11 V20 H4 Z"),
+    navTab(t("disenos"), "disenos", tab, "M4 7h6l2 2h8v9H4z"),
+    navTab(t("plantillas"), "plantillas", tab, "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"),
+    navTab(t("iaTab"), "ia", tab, "M12 3l1.2 4.2L17.5 8.5 13.2 9.8 12 14l-1.2-4.2L6.5 8.5l4.3-1.3z"),
+    menu,
+  ]);
+}
+
+function canvaShell(ctx, tab, feed, withHero) {
+  const kids = [canvaTop(ctx)];
+  if (withHero) kids.push(canvaHero(ctx));
+  kids.push(feed);
+  if (withHero) kids.push(canvaFab(ctx));
+  kids.push(canvaNav(ctx, tab));
+  return el("div", { class: "canva-home", "data-tab": tab }, kids);
+}
+
+function recentHomeCard(item, t) {
+  let doc = null;
+  try {
+    doc = importProject(item);
+  } catch {
+    doc = null;
+  }
+  const open = button("", { class: "canva-plain canva-recent-open", "data-open": item.id });
+  const face = el("span", { class: "canva-recent-face" });
+  if (doc?.format?.width && doc.layers?.length) face.append(miniStage(doc));
+  else face.append(el("span", { class: "canva-ph" }));
+  face.append(el("span", { class: "canva-card-name", text: projectTitle(item, t) }));
+  open.append(face);
+  return el("article", { class: "canva-recent" }, [
+    open,
+    moreMenu(t("masOpciones"), [
+      button(t("duplicar"), { "data-duplicate": item.id }),
+      button(t("exportar"), { "data-export": item.id }),
+      button(t("eliminar"), { "data-delete": item.id }),
+    ]),
+  ]);
+}
+
+function seguirHome(ctx) {
+  const { t } = ctx;
+  const projects = listProjects(ctx.storage).slice(0, 8);
+  if (!projects.length) {
+    return el("section", { class: "canva-section", id: "seguir" }, [
+      canvaHead(t("seguir")),
+      el("p", { id: "seguir-vacio", class: "canva-empty", text: t("vacioReciente") }),
+    ]);
+  }
+  return el("section", { class: "canva-section", id: "seguir" }, [
+    canvaHead(t("seguir"), seeAll(t("verTodo"), { "data-go": "disenos" })),
+    el("div", { class: "canva-row" }, projects.map((item) => recentHomeCard(item, t))),
+  ]);
+}
+
+function startHome(ctx) {
+  const en = ctx.lang === "en";
+  const row = el("div", { class: "canva-start" }, START_HOW.map(([kind, id, es, labelEn, tone, d]) => {
+    const attrs = kind === "cat" ? { "data-cat": id } : { "data-format": id };
+    const node = button("", { class: "canva-plain canva-bubble-btn", ...attrs });
+    node.append(
+      el("span", { class: "canva-bubble", style: `background:${tone}` }, [svgIcon([d])]),
+      el("span", { class: "canva-bubble-label", text: en ? labelEn : es }),
+    );
+    return node;
+  }));
+  return el("section", { class: "canva-section", "aria-label": ctx.t("elige") }, [
+    canvaHead(ctx.t("elige")),
+    row,
+  ]);
+}
+
+function usedHome(ctx) {
+  const en = ctx.lang === "en";
+  const cards = MOST_USED.map(([id, es, labelEn, cat, skip]) => {
+    const sample = thumbsIn(cat)[skip] || thumbsIn(cat)[0];
+    const node = button("", { class: "canva-plain canva-format", "data-format": id });
+    const face = el("span", { class: "canva-thumb" });
+    if (sample?.file) face.append(el("img", { src: studioAsset(sample.file), alt: "", loading: "lazy", decoding: "async" }));
+    node.append(face, el("span", { class: "canva-card-name", text: en ? labelEn : es }));
+    return node;
+  });
+  return el("section", { class: "canva-section" }, [
+    canvaHead(ctx.t("masUsadas")),
+    el("div", { class: "canva-row" }, cards),
+  ]);
+}
+
+function portraitCard(item, lang) {
+  const node = button("", { class: "canva-plain canva-port", "data-thumb": item.id });
+  node.append(thumbFace(item), el("span", { class: "canva-card-name", text: thumbLabel(item, lang) }));
+  return node;
+}
+
+function popularHome(ctx) {
+  const items = proThumbList().filter((item) => item.height >= item.width).slice(0, 10);
+  return el("section", { class: "canva-section" }, [
+    canvaHead(ctx.t("populares")),
+    el("div", { class: "canva-row" }, items.map((item) => portraitCard(item, ctx.lang))),
+  ]);
+}
+
+function shortcutsHome(ctx) {
+  const en = ctx.lang === "en";
+  const row = el("div", { class: "canva-start" }, SHORTCUTS.map(([rail, es, labelEn, tone, d]) => {
+    const node = button("", { class: "canva-plain canva-bubble-btn", "data-start-rail": rail });
+    node.append(
+      el("span", { class: "canva-bubble", style: `background:${tone}` }, [svgIcon([d])]),
+      el("span", { class: "canva-bubble-label", text: en ? labelEn : es }),
+    );
+    return node;
+  }));
+  return el("section", { class: "canva-section", "aria-label": ctx.t("acceso") }, [
+    canvaHead(ctx.t("acceso")),
+    row,
+  ]);
+}
+
+function interestCard(item, ctx) {
+  const open = button("", { class: "canva-plain", "data-thumb": item.id });
+  open.append(thumbFace(item));
+  return el("article", { class: "canva-sq" }, [
+    open,
+    moreMenu(ctx.t("masOpciones"), [
+      button(ctx.t("usarPlantilla"), { "data-thumb": item.id }),
+      button(ctx.t("verCategoria"), { "data-go": "plantillas", "data-thumb-cat": item.category }),
+    ]),
+    el("span", { class: "canva-card-name", text: thumbLabel(item, ctx.lang) }),
+  ]);
+}
+
+function interestHome(ctx) {
+  const items = [];
+  for (const cat of INTEREST_CATS) {
+    for (const item of thumbsIn(cat)) {
+      if (item.category === "meme") continue;
+      items.push(item);
+      if (items.length >= 8) break;
+    }
+    if (items.length >= 8) break;
+  }
+  return el("section", { class: "canva-section" }, [
+    canvaHead(ctx.t("interes"), seeAll(ctx.t("verTodo"), { "data-go": "plantillas", "data-thumb-cat": "" })),
+    el("div", { class: "canva-row" }, items.map((item) => interestCard(item, ctx))),
+  ]);
+}
+
+function categoriesHome(ctx) {
+  const en = ctx.lang === "en";
+  const cats = THUMB_CATS.filter((cat) => cat.id !== "meme");
+  const cards = cats.map((cat, index) => {
+    const sample = thumbsIn(cat.id)[0];
+    const node = button("", {
+      class: "canva-plain canva-cat",
+      "data-go": "plantillas",
+      "data-thumb-cat": cat.id,
+      style: `background:${CAT_WASH[index % CAT_WASH.length]}`,
+    });
+    if (sample?.file) node.append(el("img", { src: studioAsset(sample.file), alt: "", loading: "lazy", decoding: "async" }));
+    node.append(el("span", { text: en ? cat.en : cat.es }));
+    return node;
+  });
+  return el("section", { class: "canva-section" }, [
+    canvaHead(ctx.t("exploraPlantillas")),
+    el("div", { class: "canva-row" }, cards),
+  ]);
+}
+
+function homeResults(ctx) {
+  const { state, lang, t } = ctx;
+  const q = state.filters.text.trim().toLowerCase();
+  const thumbs = proThumbList().filter((item) => `${item.title} ${item.category}`.toLowerCase().includes(q)).slice(0, 12);
+  const templates = filterPlantillas(state.filters).filter((item) => !keepsMascot(item)).slice(0, 12);
+  const kids = [];
+  if (thumbs.length) {
+    kids.push(el("section", { class: "canva-section" }, [
+      canvaHead(t("plantillas")),
+      el("div", { class: "canva-row" }, thumbs.map((item) => interestCard(item, ctx))),
+    ]));
+  }
+  if (templates.length) {
+    kids.push(el("section", { class: "canva-section" }, [
+      canvaHead(t("piezas")),
+      el("div", { class: "canva-row" }, templates.map((item) => templateCard(item, lang))),
+    ]));
+  }
+  if (!kids.length) kids.push(el("p", { id: "vacio-plantillas", class: "canva-empty", text: t("vacio") }));
+  return el("div", { class: "canva-feed" }, kids);
+}
+
+function homeFeed(ctx) {
+  return el("div", { class: "canva-feed" }, [
+    seguirHome(ctx),
+    startHome(ctx),
+    usedHome(ctx),
+    popularHome(ctx),
+    shortcutsHome(ctx),
+    interestHome(ctx),
+    categoriesHome(ctx),
+  ]);
+}
+
 export function renderHome(ctx) {
-  const { root, t } = ctx;
-  root.replaceChildren(
-    frame(sideNav(ctx), el("div", { class: "orv-main" }, [
-      el("h1", { class: "hero-titulo", text: t("hero") }),
-      catalogBody(ctx),
-    ])),
-    sizeDialog(ctx),
-  );
+  const feed = ctx.state.filters.text.trim() ? homeResults(ctx) : homeFeed(ctx);
+  ctx.root.replaceChildren(canvaShell(ctx, "inicio", feed, true), sizeDialog(ctx));
+}
+
+export function renderIa(ctx) {
+  const copy = aiPanelCopy(ctx.lang);
+  const phrases = localPhrases(ctx.lang);
+  const feed = el("div", { class: "canva-feed" }, [
+    el("section", { class: "canva-section canva-ia" }, [
+      el("h1", { text: ctx.t("iaTab") }),
+      el("p", { text: copy.body }),
+      el("p", { class: "nota", text: copy.off }),
+      el("h2", { text: copy.phrases }),
+      el("ul", { class: "canva-phrases" }, phrases.map((phrase) => el("li", { text: phrase }))),
+      button(ctx.t("usarEnDiseno"), { class: "canva-ia-go", "data-start-rail": "ia" }),
+    ]),
+  ]);
+  ctx.root.replaceChildren(canvaShell(ctx, "ia", feed, false));
 }
 
 export function renderPlantillas(ctx) {

@@ -65,7 +65,7 @@ import { FILE_NAME, REVOKE_MS, canShareFiles, isIOS, saveMode } from "./lib/save
 import { applySpan, spanIs } from "./lib/text-style.mjs";
 import { conversionPreview, toOrvdoc, toSlides } from "./lib/work-convert.mjs";
 import { DESIGN_MIME, DOC_MIME, SLIDE_MIME, loadWorkBytes, saveWorkBytes, workIdFromHash } from "./lib/work-store.mjs";
-import { catalogBody, layerStyle, renderDesigns, renderEditor, renderHome, renderMarca, renderPlantillas, renderRecursos } from "./views.mjs";
+import { catalogBody, layerStyle, renderDesigns, renderEditor, renderHome, renderIa, renderMarca, renderPlantillas, renderRecursos } from "./views.mjs";
 
 const root = document.getElementById("studio-root");
 const lang = (document.documentElement.lang || "es").toLowerCase().startsWith("en") ? "en" : "es";
@@ -197,6 +197,20 @@ const COPY = {
     calidad: "Calidad JPG",
     bloqueo: "Hay palabras o datos que no se pueden usar. Cambia el texto para descargar.",
     hero: "¿Qué diseñamos hoy?",
+    buscarDiseno: "¿Qué quieres diseñar?",
+    elige: "Elige cómo empezar",
+    masUsadas: "Las más usadas",
+    populares: "Populares en ORVUPI",
+    acceso: "Acceso directo",
+    interes: "Plantillas que podrían interesarte",
+    exploraPlantillas: "Explora las categorías de plantillas",
+    sinTitulo: "Diseño sin título",
+    pillWork: "ORVUPI Work",
+    iaTab: "ORVUPI IA",
+    masOpciones: "Más opciones",
+    usarPlantilla: "Usar plantilla",
+    verCategoria: "Ver categoría",
+    usarEnDiseno: "Usar en un diseño",
     fotos: "Fotos",
     graficos: "Gráficos",
     datos: "Datos",
@@ -418,6 +432,20 @@ const COPY = {
     calidad: "JPG quality",
     bloqueo: "Some words or data cannot be used. Change the text to download.",
     hero: "What should we design?",
+    buscarDiseno: "What do you want to design?",
+    elige: "Choose how to start",
+    masUsadas: "Most used",
+    populares: "Popular on ORVUPI",
+    acceso: "Shortcuts",
+    interes: "Templates you might like",
+    exploraPlantillas: "Explore template categories",
+    sinTitulo: "Untitled design",
+    pillWork: "ORVUPI Work",
+    iaTab: "ORVUPI AI",
+    masOpciones: "More options",
+    usarPlantilla: "Use template",
+    verCategoria: "See category",
+    usarEnDiseno: "Use in a design",
     fotos: "Photos",
     graficos: "Charts",
     datos: "Data",
@@ -537,6 +565,7 @@ const state = {
   masCats: false,
   thumbCat: "",
   rail: "plantillas",
+  pendingRail: "",
   tool: "select",
   doc: null,
   selected: [],
@@ -628,7 +657,7 @@ function statusFromError(error) {
 function viewName() {
   if (workIdFromHash(location.hash) && state.doc) return "editor";
   const hash = location.hash.replace(/^#\/?/, "");
-  const known = ["plantillas", "disenos", "editor", "recursos", "marca"];
+  const known = ["plantillas", "disenos", "editor", "recursos", "marca", "ia"];
   if (location.hash) return known.includes(hash) ? hash : "inicio";
   const path = location.pathname.replace(/\/+$/, "");
   const hit = known.find((name) => path.endsWith(`/${name}`));
@@ -714,7 +743,9 @@ function openDoc(doc, options = {}) {
   state.selected = [];
   state.past = [];
   state.future = [];
-  state.rail = shellRail(doc);
+  state.rail = state.pendingRail || shellRail(doc);
+  const openedRail = state.pendingRail;
+  state.pendingRail = "";
   state.dialog = false;
   state.resizing = false;
   state.preview = false;
@@ -729,7 +760,7 @@ function openDoc(doc, options = {}) {
   state.imageFailed = Boolean(options.imageFailed);
   state.navOpen = false;
   const narrow = window.innerWidth < 800;
-  state.panelOpen = !narrow;
+  state.panelOpen = openedRail ? true : !narrow;
   state.inspectorOpen = !narrow;
   state.timerOn = false;
   state.timerSeconds = 0;
@@ -1033,6 +1064,7 @@ function render() {
   const view = viewName();
   const ctx = makeCtx();
   if (view === "inicio") renderHome(ctx);
+  else if (view === "ia") renderIa(ctx);
   else if (view === "plantillas") renderPlantillas(ctx);
   else if (view === "disenos") renderDesigns(ctx);
   else if (view === "marca") renderMarca(ctx);
@@ -1218,6 +1250,10 @@ function onRootClick(event) {
     state.resizing = false;
     state.dialog = true;
     render();
+  }
+  if (buttonNode.dataset.startRail) {
+    state.pendingRail = buttonNode.dataset.startRail;
+    applyFormat("square");
   }
   if (buttonNode.id === "cerrar-tamano" || buttonNode.id === "cerrar-previa") {
     state.dialog = false;
@@ -1816,6 +1852,16 @@ function bindInputs() {
     if (!(target instanceof HTMLElement)) return;
     if (target.id === "buscar") {
       state.filters.text = target.value;
+      if (viewName() === "inicio") {
+        render();
+        const field = document.getElementById("buscar");
+        if (field instanceof HTMLInputElement) {
+          field.focus();
+          const end = field.value.length;
+          field.setSelectionRange(end, end);
+        }
+        return;
+      }
       const parent = target.closest("#catalogo");
       if (!parent) return;
       parent.replaceWith(catalogBody(makeCtx()));
@@ -2583,6 +2629,19 @@ function boot() {
   }
   if (!document.getElementById("calidad-jpg") && acciones) ensureQuality();
   root.addEventListener("click", onRootClick);
+  root.addEventListener("toggle", (event) => {
+    const details = event.target;
+    if (!(details instanceof HTMLDetailsElement) || !details.classList.contains("canva-more") || !details.open) return;
+    const panel = details.querySelector("div");
+    const summary = details.querySelector("summary");
+    if (!panel || !summary) return;
+    const rect = summary.getBoundingClientRect();
+    panel.style.position = "fixed";
+    panel.style.top = `${Math.round(rect.bottom + 6)}px`;
+    panel.style.right = `${Math.max(8, Math.round(window.innerWidth - rect.right))}px`;
+    panel.style.left = "auto";
+    panel.style.zIndex = "60";
+  }, true);
   bindStage();
   bindInputs();
   bindLayersDrag();
