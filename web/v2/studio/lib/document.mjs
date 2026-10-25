@@ -1,6 +1,7 @@
 /** Documento de diseño ORVUPI Studio, versión 2. Código MIT. */
 
 import { exportAllowed } from "./filter.mjs";
+import { cleanRuns } from "./text-style.mjs";
 
 export const DOC_VERSION = 2;
 
@@ -188,6 +189,10 @@ export function textLayer(spec = {}) {
       color: spec.color || spec.props?.color || BRAND.navy,
       align: spec.align || spec.props?.align || "left",
       lineHeight: spec.lineHeight ?? spec.props?.lineHeight ?? 1.15,
+      bold: Boolean(spec.bold ?? spec.props?.bold),
+      italic: Boolean(spec.italic ?? spec.props?.italic),
+      underline: Boolean(spec.underline ?? spec.props?.underline),
+      runs: spec.runs || spec.props?.runs || [],
     },
   });
 }
@@ -208,6 +213,8 @@ export function imageLayer(spec = {}) {
     z: spec.z,
     src: spec.src || { kind: "catalog", id: "" },
     crop: spec.crop || null,
+    flipX: spec.flipX,
+    flipY: spec.flipY,
   });
 }
 
@@ -230,6 +237,7 @@ export function rectLayer(spec = {}) {
       fill: spec.fill ?? spec.props?.fill ?? BRAND.pink,
       stroke: spec.stroke ?? spec.props?.stroke ?? "",
       strokeWidth: spec.strokeWidth ?? spec.props?.strokeWidth ?? 0,
+      shape: spec.shape === "ellipse" || spec.props?.shape === "ellipse" ? "ellipse" : "rect",
     },
   });
 }
@@ -293,6 +301,10 @@ function normalizeLayer(layer) {
       color: typeof props.color === "string" ? props.color : BRAND.navy,
       align: props.align === "center" || props.align === "right" ? props.align : "left",
       lineHeight: clamp(num(props.lineHeight, 1.15), 0.8, 3),
+      bold: Boolean(props.bold),
+      italic: Boolean(props.italic),
+      underline: Boolean(props.underline),
+      runs: cleanRuns(String(props.text ?? "").slice(0, 2000), props.runs),
     };
   } else if (type === "image") {
     const src = layer?.src || {};
@@ -304,6 +316,8 @@ function normalizeLayer(layer) {
     base.crop = crop && Number.isFinite(Number(crop.w)) && Number.isFinite(Number(crop.h))
       ? { x: num(crop.x, 0), y: num(crop.y, 0), w: Math.max(1, num(crop.w, 1)), h: Math.max(1, num(crop.h, 1)) }
       : null;
+    base.flipX = Boolean(layer?.flipX);
+    base.flipY = Boolean(layer?.flipY);
   } else if (type === "line") {
     const props = layer?.props || {};
     base.props = {
@@ -316,6 +330,7 @@ function normalizeLayer(layer) {
       fill: typeof props.fill === "string" ? props.fill : BRAND.pink,
       stroke: typeof props.stroke === "string" ? props.stroke : "",
       strokeWidth: Math.max(0, num(props.strokeWidth, 0)),
+      shape: props.shape === "ellipse" ? "ellipse" : "rect",
     };
   }
   return base;

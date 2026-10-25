@@ -1,6 +1,7 @@
 /** ORVUPI Studio. El diseño se edita y se guarda en este navegador. */
 
 import catalog from "./catalog.json" with { type: "json" };
+import { cloneForPaste, distributeLayers, duplicatePageAt, fitScale, movePageAt, proportionalSize, removePageAt, shiftCrop, snapBox } from "./lib/arrange.mjs";
 import { paintBackground } from "./lib/backgrounds.mjs";
 import { encodeJpeg, jpegQuality, renderDocument } from "./lib/compose.mjs";
 import {
@@ -48,6 +49,7 @@ import {
   saveProject,
 } from "./lib/projects.mjs";
 import { FILE_NAME, REVOKE_MS, canShareFiles, isIOS, saveMode } from "./lib/save.mjs";
+import { applySpan, spanIs } from "./lib/text-style.mjs";
 import { catalogBody, layerStyle, renderDesigns, renderEditor, renderHome, renderMarca, renderPlantillas, renderRecursos } from "./views.mjs";
 
 const root = document.getElementById("studio-root");
@@ -199,6 +201,38 @@ const COPY = {
     barra: "Barra",
     punto: "Punto",
     unidadNota: "Unidad: px. Las medidas en pulgadas y milímetros quedan para una pasada posterior.",
+    menu: "Menú",
+    abrirWork: "Abrir en Work",
+    workNota: "Este diseño no se abre todavía en Work. No se crea una copia ni una conversión. El archivo sigue en este navegador.",
+    negrita: "Negrita",
+    cursiva: "Cursiva",
+    subrayado: "Subrayado",
+    interlineado: "Interlineado",
+    tamanoTexto: "Tamaño",
+    medidaLienzo: "Tamaño",
+    menos: "Reducir tamaño",
+    mas: "Aumentar tamaño",
+    opacidad: "Opacidad",
+    contorno: "Contorno",
+    grosor: "Grosor",
+    circulo: "Círculo",
+    voltearH: "Voltear horizontal",
+    voltearV: "Voltear vertical",
+    distribuirH: "Distribuir horizontal",
+    distribuirV: "Distribuir vertical",
+    guias: "Guías",
+    duplicarPagina: "Duplicar página",
+    borrarPagina: "Borrar página",
+    anterior: "Anterior",
+    siguiente: "Siguiente",
+    paginas: "Páginas",
+    cerrarInspector: "Cerrar inspector",
+    cerrarPanel: "Cerrar panel",
+    colorFondo: "Color de fondo",
+    fotosNota: "Imágenes de esta pieza. No hay una fototeca aparte.",
+    graficosNota: "Estas piezas son formas. No calculan datos.",
+    paginaTope: "Esta versión guarda hasta 8 páginas.",
+    ultimaPagina: "La última página no se borra.",
     previewNota: "Esto no publica la pieza. La descarga se queda en este dispositivo.",
     videoNota: "La descarga de este formato es un fotograma PNG.",
     tamanosNota: "Tamaños listos. El lienzo nuevo se abre en este navegador.",
@@ -336,6 +370,38 @@ const COPY = {
     barra: "Bar",
     punto: "Dot",
     unidadNota: "Unit: px. Inch and millimetre sizes come in a later pass.",
+    menu: "Menu",
+    abrirWork: "Open in Work",
+    workNota: "This design does not open in Work yet. No copy and no conversion are created. The file stays in this browser.",
+    negrita: "Bold",
+    cursiva: "Italic",
+    subrayado: "Underline",
+    interlineado: "Line spacing",
+    tamanoTexto: "Size",
+    medidaLienzo: "Size",
+    menos: "Decrease size",
+    mas: "Increase size",
+    opacidad: "Opacity",
+    contorno: "Stroke",
+    grosor: "Weight",
+    circulo: "Circle",
+    voltearH: "Flip horizontal",
+    voltearV: "Flip vertical",
+    distribuirH: "Distribute horizontal",
+    distribuirV: "Distribute vertical",
+    guias: "Guides",
+    duplicarPagina: "Duplicate page",
+    borrarPagina: "Delete page",
+    anterior: "Previous",
+    siguiente: "Next",
+    paginas: "Pages",
+    cerrarInspector: "Close inspector",
+    cerrarPanel: "Close panel",
+    colorFondo: "Background color",
+    fotosNota: "Images in this piece. There is no separate photo library.",
+    graficosNota: "These pieces are shapes. They do not calculate data.",
+    paginaTope: "This version keeps up to 8 pages.",
+    ultimaPagina: "The last page stays.",
     previewNota: "This does not publish the piece. The download stays on this device.",
     videoNota: "The download for this format is a PNG frame.",
     tamanosNota: "Ready-made sizes. A new canvas opens in this browser.",
@@ -374,6 +440,15 @@ const state = {
   dialog: false,
   resizing: false,
   timerSeconds: 0,
+  inspectorOpen: true,
+  panelOpen: true,
+  navOpen: false,
+  guides: false,
+  editingId: "",
+  workNote: false,
+  pageNote: "",
+  cropping: false,
+  clip: null,
 };
 
 let fileMode = "image";
@@ -475,6 +550,14 @@ function openDoc(doc) {
   state.resizing = false;
   state.preview = false;
   state.notesOpen = false;
+  state.editingId = "";
+  state.cropping = false;
+  state.pageNote = "";
+  state.workNote = false;
+  state.navOpen = false;
+  const narrow = window.innerWidth < 800;
+  state.panelOpen = !narrow;
+  state.inspectorOpen = !narrow;
   state.timerOn = false;
   state.timerSeconds = 0;
   clearInterval(clockTimer);
@@ -599,13 +682,75 @@ function addPage() {
   const shell = state.doc.meta.shell;
   if (shell === "whiteboard" || shell === "doc" || shell === "video" || shell === "web") return;
   syncPages();
-  if (state.doc.meta.pages.length >= 8) return;
+  if (state.doc.meta.pages.length >= 8) {
+    state.pageNote = t("paginaTope");
+    render();
+    return;
+  }
+  state.pageNote = "";
   snapshot();
   state.doc.meta.pages.push([]);
   state.page = state.doc.meta.pages.length - 1;
   state.doc.layers = state.doc.meta.pages[state.page];
   state.doc.meta.page = state.page;
   state.selected = [];
+  scheduleSave();
+  render();
+}
+
+function duplicateCurrentPage() {
+  if (!state.doc) return;
+  const shell = state.doc.meta.shell;
+  if (shell === "whiteboard" || shell === "doc" || shell === "video" || shell === "web") return;
+  syncPages();
+  if (state.doc.meta.pages.length >= 8) {
+    state.pageNote = t("paginaTope");
+    render();
+    return;
+  }
+  snapshot();
+  const at = duplicatePageAt(state.doc.meta.pages, state.page, () => uid("ly"));
+  if (at == null) return;
+  state.pageNote = "";
+  state.page = at;
+  state.doc.layers = state.doc.meta.pages[at];
+  state.doc.meta.page = at;
+  state.selected = [];
+  scheduleSave();
+  render();
+}
+
+function deleteCurrentPage() {
+  if (!state.doc) return;
+  const shell = state.doc.meta.shell;
+  if (shell === "whiteboard" || shell === "doc" || shell === "video" || shell === "web") return;
+  syncPages();
+  if (state.doc.meta.pages.length < 2) {
+    state.pageNote = t("ultimaPagina");
+    render();
+    return;
+  }
+  snapshot();
+  removePageAt(state.doc.meta.pages, state.page);
+  state.page = Math.min(state.page, state.doc.meta.pages.length - 1);
+  state.doc.layers = state.doc.meta.pages[state.page];
+  state.doc.meta.page = state.page;
+  state.pageNote = "";
+  state.selected = [];
+  scheduleSave();
+  render();
+}
+
+function shiftPage(delta) {
+  if (!state.doc) return;
+  syncPages();
+  const to = state.page + delta;
+  if (to < 0 || to >= state.doc.meta.pages.length) return;
+  snapshot();
+  movePageAt(state.doc.meta.pages, state.page, to);
+  state.page = to;
+  state.doc.layers = state.doc.meta.pages[to];
+  state.doc.meta.page = to;
   scheduleSave();
   render();
 }
@@ -690,8 +835,12 @@ function makeCtx() {
   };
 }
 
+let rendering = false;
+
 function render() {
+  rendering = true;
   if (viewName() === "editor" && !state.doc) {
+    rendering = false;
     go("inicio");
     return;
   }
@@ -703,11 +852,14 @@ function render() {
   else if (view === "marca") renderMarca(ctx);
   else if (view === "recursos") renderRecursos(ctx);
   else renderEditor(ctx);
+  applyStageFit();
+  focusEditing();
   if (state.dialog) {
     const dialog = document.getElementById("dialogo-tamano");
     if (dialog && !dialog.open) dialog.showModal();
   }
   syncChrome();
+  rendering = false;
 }
 
 function ensureQuality() {
@@ -744,6 +896,79 @@ async function paintBackdrop() {
   canvas.height = h;
   canvas.getContext("2d", { willReadFrequently: true }).putImageData(new ImageData(rgba, w, h), 0, 0);
   if (root.querySelector(".stage-art") === art) art.style.backgroundImage = `url(${canvas.toDataURL("image/png")})`;
+}
+
+function stageRoom() {
+  const host = root.querySelector(".escenario");
+  if (!host || host.clientWidth < 80 || host.clientHeight < 80) return null;
+  const scroll = host.querySelector(".stage-scroll");
+  let extra = 0;
+  for (const child of host.children) {
+    if (child === scroll) continue;
+    extra += child.getBoundingClientRect().height;
+  }
+  return {
+    w: Math.max(120, host.clientWidth - 8),
+    h: Math.max(120, host.clientHeight - extra - 8),
+  };
+}
+
+function applyStageFit() {
+  if (!state.doc || viewName() !== "editor") return;
+  const art = root.querySelector(".stage-art");
+  const frame = root.querySelector(".stage-frame");
+  const shell = root.querySelector(".orv-frame");
+  if (shell) {
+    const top = shell.getBoundingClientRect().top + window.scrollY;
+    shell.style.height = `${Math.max(320, Math.round(window.innerHeight - top - 8))}px`;
+  }
+  if (!art || !frame) return;
+  if (state.zoom === "100") state.scale = 1;
+  else if (state.zoom === "fit") {
+    const room = stageRoom();
+    if (!room) {
+      if (!applyStageFit.waiting) {
+        applyStageFit.waiting = true;
+        requestAnimationFrame(() => {
+          applyStageFit.waiting = false;
+          applyStageFit();
+        });
+      }
+      return;
+    }
+    state.scale = fitScale(state.doc.format.width, state.doc.format.height, room.w, room.h);
+  } else {
+    const numeric = Number(state.zoom);
+    if (Number.isFinite(numeric)) state.scale = Math.min(2, Math.max(0.1, numeric));
+  }
+  frame.style.width = `${Math.round(state.doc.format.width * state.scale)}px`;
+  frame.style.height = `${Math.round(state.doc.format.height * state.scale)}px`;
+  art.style.transform = `scale(${state.scale})`;
+}
+
+function focusEditing() {
+  const node = state.editingId ? root.querySelector(`[data-edit="${state.editingId}"]`) : null;
+  if (node instanceof HTMLElement && document.activeElement !== node) {
+    rendering = true;
+    node.focus();
+    rendering = false;
+  }
+}
+
+function textRange(layer) {
+  const node = root.querySelector("[data-edit]");
+  if (!(node instanceof HTMLElement)) return [0, layer.props.text.length];
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount || !node.contains(sel.anchorNode)) return [0, layer.props.text.length];
+  const measure = (container, offset) => {
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    range.setEnd(container, offset);
+    return range.toString().length;
+  };
+  const a = measure(sel.anchorNode, sel.anchorOffset);
+  const b = measure(sel.focusNode, sel.focusOffset);
+  return [Math.min(a, b), Math.max(a, b)];
 }
 
 function syncChrome() {
@@ -820,6 +1045,38 @@ function onRootClick(event) {
   }
   if (buttonNode.dataset.page) showPage(Number(buttonNode.dataset.page));
   if (buttonNode.id === "anadir-pagina") addPage();
+  if (buttonNode.id === "duplicar-pagina") duplicateCurrentPage();
+  if (buttonNode.id === "borrar-pagina") deleteCurrentPage();
+  if (buttonNode.id === "pagina-anterior") shiftPage(-1);
+  if (buttonNode.id === "pagina-siguiente") shiftPage(1);
+  if (buttonNode.id === "menu-estudio") {
+    state.navOpen = !state.navOpen;
+    render();
+  }
+  if (buttonNode.id === "abrir-work") {
+    state.workNote = true;
+    render();
+  }
+  if (buttonNode.id === "cerrar-work") {
+    state.workNote = false;
+    render();
+  }
+  if (buttonNode.id === "alternar-panel") {
+    state.panelOpen = !state.panelOpen;
+    render();
+  }
+  if (buttonNode.id === "alternar-inspector" || buttonNode.id === "cerrar-inspector") {
+    state.inspectorOpen = buttonNode.id === "cerrar-inspector" ? false : !state.inspectorOpen;
+    render();
+  }
+  if (buttonNode.id === "guias") {
+    state.guides = !state.guides;
+    render();
+  }
+  if (buttonNode.id === "modo-recorte") {
+    state.cropping = !state.cropping;
+    render();
+  }
   if (buttonNode.id === "anadir-seccion") addSection();
   if (buttonNode.id === "imprimir") window.print();
   if (buttonNode.id === "vista-previa") {
@@ -851,8 +1108,11 @@ function onRootClick(event) {
     const layer = current?.type === "text" ? current : state.doc.layers.find((item) => item.type === "text");
     if (layer) {
       snapshot();
-      const delta = buttonNode.dataset.size === "up" ? 2 : -2;
-      layer.props.size = Math.min(400, Math.max(8, (layer.props.size || 32) + delta));
+      const delta = buttonNode.dataset.size === "up" ? 1 : -1;
+      const next = Math.min(400, Math.max(8, Math.round(layer.props.size || 32) + delta));
+      const [from, to] = textRange(layer);
+      if (state.editingId === layer.id && to > from) layer.props.runs = applySpan(layer.props.text, layer.props.runs, from, to, { size: next }, layer.props);
+      else layer.props.size = next;
       scheduleSave();
       render();
     }
@@ -945,6 +1205,45 @@ function onRootClick(event) {
     scheduleSave();
     render();
   }
+  if (buttonNode.dataset.style && state.doc) {
+    const layer = primary();
+    if (layer?.type === "text") {
+      const key = buttonNode.dataset.style;
+      const [from, to] = textRange(layer);
+      const on = !spanIs(layer.props.text, layer.props.runs, from, to, key, layer.props);
+      snapshot();
+      const whole = to <= from || (from === 0 && to === layer.props.text.length);
+      if (whole) layer.props[key] = on;
+      layer.props.runs = applySpan(layer.props.text, layer.props.runs, from, to, { [key]: on }, layer.props);
+      scheduleSave();
+      render();
+    }
+  }
+  if (buttonNode.dataset.textAlign && state.doc) {
+    const layer = primary();
+    if (layer?.type === "text") {
+      snapshot();
+      layer.props.align = buttonNode.dataset.textAlign;
+      scheduleSave();
+      render();
+    }
+  }
+  if (buttonNode.dataset.flip && state.doc) {
+    const layer = primary();
+    if (layer?.type === "image") {
+      snapshot();
+      if (buttonNode.dataset.flip === "x") layer.flipX = !layer.flipX;
+      else layer.flipY = !layer.flipY;
+      scheduleSave();
+      render();
+    }
+  }
+  if (buttonNode.dataset.distribute && state.doc) {
+    snapshot();
+    distributeLayers(state.doc, state.selected, buttonNode.dataset.distribute);
+    scheduleSave();
+    render();
+  }
   if (buttonNode.dataset.align) {
     snapshot();
     alignLayers(state.doc, state.selected.length ? state.selected : [primary()?.id].filter(Boolean), buttonNode.dataset.align);
@@ -960,7 +1259,11 @@ function onRootClick(event) {
     render();
   }
   if (buttonNode.dataset.zoom) {
-    state.zoom = buttonNode.dataset.zoom;
+    if (buttonNode.dataset.zoom === "in" || buttonNode.dataset.zoom === "out") {
+      const current = state.zoom === "fit" || state.zoom === "100" ? state.scale : Number(state.zoom) || state.scale;
+      const next = buttonNode.dataset.zoom === "in" ? Math.min(2, current + 0.1) : Math.max(0.1, current - 0.1);
+      state.zoom = String(Math.round(next * 100) / 100);
+    } else state.zoom = buttonNode.dataset.zoom;
     render();
   }
   if (buttonNode.dataset.layers) {
@@ -971,6 +1274,7 @@ function onRootClick(event) {
 
 function addFromTool(kind) {
   if (kind === "rect") addLayer(rectLayer({ name: t("forma"), x: 120, y: 120, w: 280, h: 180, fill: BRAND.pink }));
+  if (kind === "ellipse") addLayer(rectLayer({ name: t("circulo"), x: 160, y: 160, w: 220, h: 220, fill: BRAND.pink, shape: "ellipse" }));
   if (kind === "barra") addLayer(rectLayer({ name: t("barra"), x: 80, y: 80, w: 360, h: 48, fill: BRAND.pink }));
   if (kind === "punto") addLayer(rectLayer({ name: t("punto"), x: 80, y: 160, w: 36, h: 36, fill: BRAND.navy }));
   if (kind === "line") addLayer(lineLayer({ name: t("linea"), x: 120, y: 200, w: 420, h: 16, color: BRAND.navy, strokeWidth: 8 }));
@@ -1000,7 +1304,7 @@ function runAction(action, id) {
     render();
     return;
   }
-  if (!layer && !["group", "ungroup", "lock", "duplicate"].includes(action)) return;
+  if (!layer && !["group", "ungroup", "lock", "duplicate", "remove"].includes(action)) return;
   snapshot();
   if (action === "front" && layer) bringToFront(state.doc, layer.id);
   if (action === "forward" && layer) bringForward(state.doc, layer.id);
@@ -1011,6 +1315,11 @@ function runAction(action, id) {
   if (action === "group") groupLayers(state.doc, state.selected);
   if (action === "ungroup") ungroupLayers(state.doc, state.selected);
   if (action === "lock") lockLayers(state.doc, state.selected, true);
+  if (action === "remove") {
+    const ids = new Set(state.selected);
+    state.doc.layers = state.doc.layers.filter((item) => !ids.has(item.id) || item.locked);
+    state.selected = state.selected.filter((id) => state.doc.layers.some((item) => item.id === id));
+  }
   if (action === "duplicate") {
     const copies = state.selected.length > 1 ? duplicateLayers(state.doc, state.selected) : [duplicateLayer(state.doc, state.selected[0])].filter(Boolean);
     retargetCopies(copies);
@@ -1032,11 +1341,20 @@ function retargetCopies(copies) {
 }
 
 function bindStage() {
+  const lastTap = { id: "", at: 0 };
   root.addEventListener("pointerdown", (event) => {
     const resize = event.target.closest?.("[data-resize]");
+    const cropEdge = event.target.closest?.("[data-crop-edge]");
     const capa = event.target.closest?.(".capa");
     const art = event.target.closest?.(".stage-art");
     if (!state.doc || !art) return;
+    if (event.target.closest?.("[data-edit]")) return;
+    if (cropEdge) {
+      event.preventDefault();
+      event.stopPropagation();
+      startCrop(cropEdge.dataset.cropEdge, event);
+      return;
+    }
     if (resize) {
       event.preventDefault();
       event.stopPropagation();
@@ -1053,6 +1371,16 @@ function bindStage() {
       }
       state.selected = [id];
       const layer = state.doc.layers.find((item) => item.id === id);
+      const now = performance.now();
+      const again = id === lastTap.id && now - lastTap.at < 450;
+      lastTap.id = id;
+      lastTap.at = now;
+      if (layer?.type === "text" && (event.detail >= 2 || again)) {
+        state.editingId = id;
+        snapshot();
+        render();
+        return;
+      }
       if (!layer || layer.locked || state.tool === "text") {
         render();
         return;
@@ -1085,8 +1413,14 @@ function startDrag(id, event) {
   const members = layer.groupId ? state.doc.layers.filter((item) => item.groupId === layer.groupId) : [layer];
   const origins = members.map((item) => ({ id: item.id, x: item.x, y: item.y }));
   const move = (ev) => {
-    const dx = Math.round((ev.clientX - startX) / state.scale);
-    const dy = Math.round((ev.clientY - startY) / state.scale);
+    let dx = Math.round((ev.clientX - startX) / state.scale);
+    let dy = Math.round((ev.clientY - startY) / state.scale);
+    if (state.guides && layer) {
+      const others = state.doc.layers.filter((item) => !origins.some((origin) => origin.id === item.id));
+      const snapped = snapBox({ x: origins[0].x + dx, y: origins[0].y + dy, w: layer.w, h: layer.h }, others, state.doc.format);
+      dx = snapped.x - origins[0].x;
+      dy = snapped.y - origins[0].y;
+    }
     for (const origin of origins) {
       const item = state.doc.layers.find((layerItem) => layerItem.id === origin.id);
       if (!item) continue;
@@ -1113,8 +1447,9 @@ function startResize(id, event) {
   const startY = event.clientY;
   const origin = { w: layer.w, h: layer.h };
   const move = (ev) => {
-    layer.w = Math.max(8, Math.round(origin.w + (ev.clientX - startX) / state.scale));
-    layer.h = Math.max(8, Math.round(origin.h + (ev.clientY - startY) / state.scale));
+    const next = proportionalSize(origin, (ev.clientX - startX) / state.scale, (ev.clientY - startY) / state.scale, layer.type === "image" || ev.shiftKey);
+    layer.w = next.w;
+    layer.h = next.h;
     const node = root.querySelector(`.capa[data-id="${id}"]`);
     if (node) node.style.width = `${layer.w}px`, node.style.height = `${layer.h}px`;
   };
@@ -1181,6 +1516,60 @@ function bindInputs() {
       state.doc.name = target.value.slice(0, 80);
       scheduleSave();
     }
+    if (target.dataset.edit) {
+      const layer = state.doc.layers.find((item) => item.id === target.dataset.edit);
+      if (layer?.type === "text") {
+        layer.props.text = target.textContent.slice(0, 2000);
+        scheduleSave();
+      }
+    }
+    if (target.id === "fondo-color") {
+      state.doc.background = { type: "solid", catalogId: "", fill: target.value };
+      const art = root.querySelector(".stage-art");
+      if (art) {
+        art.style.background = target.value;
+        art.style.backgroundImage = "";
+      }
+      scheduleSave();
+    }
+    if (target.id === "color-texto" || target.id === "tamano-texto" || target.id === "interlineado") {
+      const layer = primary();
+      if (layer?.type === "text") {
+        if (target.id === "color-texto") {
+          const [from, to] = textRange(layer);
+          if (state.editingId === layer.id && to > from) layer.props.runs = applySpan(layer.props.text, layer.props.runs, from, to, { color: target.value }, layer.props);
+          else layer.props.color = target.value;
+        }
+        if (target.id === "tamano-texto") layer.props.size = Math.min(400, Math.max(8, Math.round(Number(target.value) || layer.props.size)));
+        if (target.id === "interlineado") layer.props.lineHeight = Math.min(3, Math.max(0.8, Number(target.value) || layer.props.lineHeight));
+        const node = root.querySelector(`.capa[data-id="${layer.id}"] .capa-texto`);
+        if (node instanceof HTMLElement) {
+          node.style.color = layer.props.color;
+          node.style.fontSize = `${layer.props.size}px`;
+          node.style.lineHeight = String(layer.props.lineHeight);
+        }
+        scheduleSave();
+      }
+    }
+    if (target.dataset.opacidad) {
+      const layer = primary();
+      if (layer) {
+        layer.opacity = Math.min(1, Math.max(0, Number(target.value)));
+        const node = root.querySelector(`.capa[data-id="${layer.id}"]`);
+        if (node instanceof HTMLElement) node.style.opacity = String(layer.opacity);
+        scheduleSave();
+      }
+    }
+    if (target.dataset.stroke || target.id === "contorno-color") {
+      const layer = primary();
+      if (layer && (layer.type === "rect" || layer.type === "line")) {
+        if (target.id === "contorno-color") {
+          if (layer.type === "line") layer.props.color = target.value;
+          else layer.props.stroke = target.value;
+        } else layer.props.strokeWidth = Math.max(0, Math.round(Number(target.value) || 0));
+        scheduleSave();
+      }
+    }
     if (target.id === "texto-capa") {
       const layer = primary();
       if (!layer || layer.type !== "text") return;
@@ -1211,7 +1600,24 @@ function bindInputs() {
     }
   });
   root.addEventListener("change", (event) => {
-    if (event.target?.dataset?.crop) render();
+    if (event.target?.dataset?.crop || event.target?.id === "contorno-color" || event.target?.dataset?.stroke || event.target?.id === "tamano-texto" || event.target?.id === "interlineado" || event.target?.id === "color-texto" || event.target?.id === "fondo-color") render();
+  });
+  root.addEventListener("focusin", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement) || !state.doc) return;
+    if (target.matches("#tamano-texto, #interlineado, #fondo-color, #color-texto, #contorno-color, [data-opacidad], [data-stroke], #texto-capa")) snapshot();
+  });
+  root.addEventListener("mousedown", (event) => {
+    const keep = event.target.closest?.("[data-style], [data-size], [data-font], [data-text-align], #color-texto, [data-action], .editor-bar, #barra-texto, .tira");
+    if (keep && state.editingId) event.preventDefault();
+  });
+  root.addEventListener("focusout", (event) => {
+    const target = event.target;
+    if (rendering || !(target instanceof HTMLElement) || !target.dataset.edit) return;
+    const next = event.relatedTarget;
+    if (next instanceof Element && next.closest("#barra-texto")) return;
+    state.editingId = "";
+    render();
   });
 }
 
@@ -1241,12 +1647,78 @@ function bindLayersDrag() {
   });
 }
 
+function naturalOf(layer) {
+  if (layer.src?.kind === "user") {
+    const image = state.userImages.get(layer.src.id);
+    if (image?.width && image?.height) return { w: image.width, h: image.height };
+  }
+  const item = layer.src?.kind === "catalog" ? catalogItem(layer.src.id) : null;
+  if (item?.width && item?.height) return { w: item.width, h: item.height };
+  return { w: Math.max(1, layer.w), h: Math.max(1, layer.h) };
+}
+
+function startCrop(edge, event) {
+  const layer = primary();
+  if (!layer || layer.type !== "image") return;
+  snapshot();
+  const natural = naturalOf(layer);
+  if (!layer.crop) layer.crop = { x: 0, y: 0, w: natural.w, h: natural.h };
+  const origin = { ...layer.crop };
+  const startX = event.clientX;
+  const startY = event.clientY;
+  const move = (ev) => {
+    const dx = ((ev.clientX - startX) / state.scale) * (origin.w / Math.max(1, layer.w));
+    const dy = ((ev.clientY - startY) / state.scale) * (origin.h / Math.max(1, layer.h));
+    layer.crop = shiftCrop(origin, edge, dx, dy);
+  };
+  window.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", () => {
+    window.removeEventListener("pointermove", move);
+    scheduleSave();
+    render();
+  }, { once: true });
+}
+
 function onKey(event) {
   const tag = document.activeElement?.tagName;
-  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || document.activeElement?.isContentEditable) return;
   if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z") {
     event.preventDefault();
     runAction(event.shiftKey ? "redo" : "undo");
+    return;
+  }
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "a" && state.doc) {
+    event.preventDefault();
+    state.selected = state.doc.layers.map((layer) => layer.id);
+    render();
+    return;
+  }
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "c" && state.doc) {
+    state.clip = state.doc.layers.filter((layer) => state.selected.includes(layer.id)).map((layer) => JSON.parse(JSON.stringify(layer)));
+    return;
+  }
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "v" && state.doc && state.clip?.length) {
+    event.preventDefault();
+    snapshot();
+    const copies = cloneForPaste(state.clip, () => uid("ly"));
+    for (const copy of copies) {
+      copy.z = Math.max(0, ...state.doc.layers.map((item) => item.z)) + 1;
+      state.doc.layers.push(copy);
+    }
+    retargetCopies(copies);
+    state.selected = copies.map((item) => item.id);
+    scheduleSave();
+    render();
+    return;
+  }
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "d" && state.doc && state.selected.length) {
+    event.preventDefault();
+    runAction("duplicate");
+    return;
+  }
+  if ((event.key === "Delete" || event.key === "Backspace") && state.doc && state.selected.length) {
+    event.preventDefault();
+    runAction("remove");
     return;
   }
   if (!state.doc || !state.selected.length) return;
@@ -1416,6 +1888,20 @@ function boot() {
   bindLayersDrag();
   document.addEventListener("keydown", onKey);
   window.addEventListener("hashchange", render);
+  let wasNarrow = window.innerWidth < 800;
+  window.addEventListener("resize", () => {
+    if (viewName() !== "editor") return;
+    const narrow = window.innerWidth < 800;
+    if (narrow && !wasNarrow) {
+      state.panelOpen = false;
+      state.inspectorOpen = false;
+      wasNarrow = true;
+      render();
+      return;
+    }
+    wasNarrow = narrow;
+    applyStageFit();
+  });
   logoInput?.addEventListener("change", () => { void onLogo(); });
   logoInput?.addEventListener("cancel", () => {
     fileMode = "image";

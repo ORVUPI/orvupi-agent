@@ -1,4 +1,4 @@
-# Studio ORVUPI — Fase 0 y corrección P0 (Fase 1)
+# Studio ORVUPI — Fase 0, corrección P0 (Fase 1) y editor (Fase 2)
 
 Fecha: 25 de octubre de 2026. Entorno aislado. Esta rama no se publica y no se fusiona.
 
@@ -321,11 +321,44 @@ Leyenda: «título» significa que el lienzo repite el título del catálogo. Ot
 | tpl-negocio-04 | negocio | Fact Sheet | thumbs/negocio-04-fact-sheet.png | doc 794×1123 | 1 | 5 | título | editable neutro |
 | tpl-negocio-05 | negocio | Partnership Deck | thumbs/negocio-05-partnership-deck.png | deck 1920×1080 | 1 | 7 | Alianza | editable neutro |
 
-## 8. Qué queda para las Fases 2–4
+## 8. Fase 2 — editor en esta rama
 
-No está en esta rama y no se anuncia como hecho:
+La Fase 2 está en esta rama. No sustituye a la Fase 1: CV Ejecutivo Navy y Portada Estrategia siguen abriendo su documento.
 
-- Fase 2. Distribución del editor, ajuste real del lienzo, edición de texto en el lienzo, inspector completo, imágenes con recorte visual, formas con contorno, páginas reordenables, accesibilidad.
+Qué hace el editor:
+
+1. Barra superior con nombre, estado de guardado, deshacer, rehacer, tamaño, «Abrir en Work», exportar PNG/JPG y el resto de acciones que ya tenía cada tipo de pieza. Un riel y un panel de recursos. Lienzo central. Inspector que se cierra. La navegación global se contrae al editar; el botón Menú la abre.
+2. El ajuste usa el hueco medido del escenario (`fitScale` en `lib/arrange.mjs`) y la altura real bajo la cabecera del sitio. Abrir o cerrar panel e inspector vuelve a medir. No hay un margen fijo de 760 px ni un `zoom` de CSS sobre la interfaz.
+3. Texto: doble clic en el lienzo, fragmentos (`lib/text-style.mjs`), tamaño numérico de una unidad, negrita, cursiva, subrayado, color, alineación e interlineado. La fuente del lienzo y la del PNG/JPG es el mismo archivo TTF. Negrita y cursiva son sintéticas porque cada familia es un solo archivo: en pantalla `font-weight` / `font-style`, y en el raster un segundo pase desplazado o un cizallado. Inter no entra en el documento.
+4. Imágenes: reemplazar (JPG, PNG, WebP), mover, escala proporcional, rotar, voltear, opacidad y recorte visual del recuadro de origen.
+5. Formas: rectángulo, círculo (un rectángulo con `shape: "ellipse"`), línea y el resto de vectores ya compatibles. Relleno, contorno y grosor.
+6. Objetos: selección múltiple, duplicar, copiar y pegar, borrar con deshacer, agrupar, bloquear, orden, alinear, distribuir y guías opcionales.
+7. Fondo de color libre. Los fondos de catálogo se quedan porque su pintura ya estaba completa.
+8. Páginas: añadir, duplicar, borrar, reordenar y navegar, con deshacer, en las piezas que ya podían crecer. Documento, pizarra, vídeo y sitio no ganan un botón de página nueva. El tope sigue siendo 8, con el aviso «Esta versión guarda hasta 8 páginas.» La última página no se borra.
+9. Cada cambio de documento pasa por la pila de deshacer y por el guardado del navegador. «Abrir en Work» abre un aviso: el diseño no se abre en Work, no se crea copia ni conversión, y el archivo sigue en este navegador.
+
+Móvil (ancho menor de 800 px): el lienzo queda en el centro, el riel se fija abajo y el panel y el inspector son capas por encima. Al estrechar la ventana se cierran para no tapar la pieza.
+
+Capturas del mismo caso, antes de esta distribución y después. El contenido del CV ya era el de la Fase 1 en las dos:
+
+- `antes-editor-cv.png`, `despues-editor-cv.png` (1366×900, CV Ejecutivo Navy)
+- `antes-editor-movil.png`, `despues-editor-movil.png` (390×844)
+- `despues-editor-portada.png` (1366×900, Portada Estrategia)
+
+En el escritorio, cerrar panel e inspector pasa el ancho útil de la portada de 522 px a 949 px. En el móvil el lienzo queda entre la barra superior y la barra de zoom, con el riel abajo, y la página no se ensancha.
+
+### Qué no hace la Fase 2
+
+- No abre el diseño en Work. El botón no copia ni convierte.
+- No hay fototeca ni gráficos calculados con datos. «Fotos» sigue siendo la subida de esta pieza. «Gráficos» inserta formas, no series.
+- Vídeo sigue siendo un fotograma. El sitio no se publica. La pizarra sigue siendo finita.
+- El tope de 8 páginas, 48 capas, 2048 px y 2000 caracteres no sube. Un proyecto 41.º guardado sigue sujeto al tope de 40 del navegador.
+- Los proyectos ya guardados no se reescriben. No hay migración de `localStorage`.
+- Las plantillas no son un calco píxel a píxel de los PNG históricos.
+- PDF multipágina, paquete con imágenes y el aviso antes de truncar quedan para la Fase 3. El puente real con Work queda para la Fase 4.
+
+## 9. Qué queda para las Fases 3–5
+
 - Fase 3. El proyecto 41 no debe descartar el primero en silencio. Aviso antes de truncar capas, páginas o caracteres. Paquete con imágenes y fuentes. PDF multipágina. No llamar «300 ppp» a un A4 de 794×1123.
 - Fase 4. Abrir en Work el mismo motor; convertir a documento o a presentación solo con vista previa de pérdidas; conflictos entre pestañas. Compartir el navegador no es sincronizar en la nube.
 - Fase 5. Fototeca, gráficos de datos, vídeo con línea de tiempo, sitio publicable, pizarra infinita, colaboración. Siguen fuera, como dice CONTINUIDAD.
@@ -334,13 +367,15 @@ Los proyectos ya guardados en un navegador no se reescriben ni se borran. Quien 
 
 No hay migración de `localStorage` en esta rama. Recuperar el comportamiento anterior es no fusionar esta rama.
 
-## 9. Pruebas
+## 10. Pruebas
 
-- `test/studio-fase1.test.ts` y `test/studio-p0.test.ts`: pasan.
-- `npm test`: la suite del repositorio, después de regenerar el borrador del tablero para que liste `test/studio-fase1.test.ts`. Ese HTML es un borrador local (`site-drafts/`), no un despliegue.
+- `test/studio-fase1.test.ts` y `test/studio-p0.test.ts`: la apertura de las 106 y los dos casos de la sección 2.1.
+- `test/studio-fase2.test.ts`: ajuste real, fragmentos de texto, negrita en el raster, círculo, volteo, distribución y páginas.
+- Playwright de Studio (`studio-vista`, `studio-categorias`, `studio-rapido`, `studio-guardar`, `studio-placa`) en escritorio y en 390 px: el lienzo cabe, la pizarra y el sitio conservan sus controles, y no hay scroll horizontal.
+- `npm test`: la suite del repositorio. Si el borrador del tablero debe listar el archivo nuevo, se regenera en local con `node dist/lab/tools/build-pages.js`, sin `--publish`. Ese HTML es un borrador local (`site-drafts/`), no un despliegue.
 
-## 10. Autorización
+## 11. Autorización
 
 No fusionar. No desplegar. No borrar datos de usuarios.
 
-Meme IA: pedir el OK de quien encarga el producto antes de cualquier publicación. La rama revisable es `cursor/studio-fase0-fase1-08f9`.
+Meme IA: pedir el OK de quien encarga el producto antes de cualquier publicación. La rama revisable es `cursor/studio-fase0-fase1-08f9`. El PR abierto sigue sin fusionarse.

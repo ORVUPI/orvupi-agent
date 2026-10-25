@@ -393,6 +393,33 @@ body.studio-standalone footer.or-footer a[href$="risks/"] {
   background-image: radial-gradient(circle, #8aa0b8 1.15px, transparent 1.25px);
   background-size: 22px 22px;
 }
+.capa-forma.elipse { border-radius: 50%; }
+.recorte-visual { position: absolute; inset: 0; pointer-events: none; }
+.asa-recorte {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  pointer-events: auto;
+  background: #fff8ec;
+  border: 2px solid #102032;
+}
+.asa-recorte.move { left: 50%; top: 50%; transform: translate(-50%, -50%); }
+.asa-recorte.n { left: 50%; top: 0; transform: translate(-50%, -50%); }
+.asa-recorte.e { right: 0; top: 50%; transform: translate(50%, -50%); }
+.asa-recorte.s { left: 50%; bottom: 0; transform: translate(-50%, 50%); }
+.asa-recorte.w { left: 0; top: 50%; transform: translate(-50%, -50%); }
+.stage-art.guias::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  border-left: 1px dashed #ff3070;
+  pointer-events: none;
+  z-index: 4;
+}
 .stage-art.cuadricula::after {
   content: "";
   position: absolute;
@@ -834,4 +861,99 @@ body.studio-standalone footer.or-footer a[href$="risks/"] {
 @media (max-width: 800px) {
   #dialogo-tamano .crear-side { flex-direction: row; overflow-x: auto; }
   #dialogo-tamano .cat-btn { width: auto; flex: 0 0 auto; }
+}
+
+.orv-frame.editando:not(.nav-abierta) { grid-template-columns: minmax(0, 1fr); }
+body.studio-standalone:has(.orv-frame.editando) footer.or-footer { display: none; }
+.orv-frame.editando .orv-main {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0.45rem;
+}
+.orv-frame.editando .orv-editor {
+  flex: 1;
+  min-height: 0;
+  gap: 0.35rem;
+}
+.orv-frame.editando .editor {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+  grid-template-columns: 9.6rem minmax(15rem, 18rem) minmax(0, 1fr) minmax(15rem, 18rem);
+  align-items: stretch;
+}
+.orv-frame.editando .editor.panel-cerrado { grid-template-columns: 9.6rem minmax(0, 1fr) minmax(15rem, 18rem); }
+.orv-frame.editando .editor.inspector-cerrado { grid-template-columns: 9.6rem minmax(15rem, 18rem) minmax(0, 1fr); }
+.orv-frame.editando .editor.panel-cerrado.inspector-cerrado { grid-template-columns: 9.6rem minmax(0, 1fr); }
+.orv-frame.editando .escenario {
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.orv-frame.editando .stage-scroll { flex: 1; min-height: 0; }
+.orv-frame.editando .riel,
+.orv-frame.editando .panel,
+.orv-frame.editando .lado { max-height: 100%; overflow: auto; }
+.orv-frame.editando .riel button,
+.orv-frame.editando .editor-bar button,
+.orv-frame.editando .barra-texto button,
+.orv-frame.editando .barra-inferior button,
+.orv-frame.editando .barra-inferior span,
+.orv-frame.editando .tira button,
+.orv-frame.editando .lado button,
+.orv-frame.editando #estado-guardado,
+.orv-frame.editando .medidas-titulo,
+.orv-frame.editando #studio-acciones,
+.orv-frame.editando #studio-acciones button,
+.orv-frame.editando #studio-acciones label { white-space: nowrap; flex: 0 0 auto; max-width: none; width: auto; }
+.orv-frame.editando #nombre-diseno { flex: 0 0 12rem; width: 12rem; max-width: none; }
+.orv-frame.editando .barra-texto,
+.orv-frame.editando .editor-bar,
+.orv-frame.editando .tira,
+.orv-frame.editando .barra-inferior { display: flex; align-items: center; gap: 0.35rem; flex: 0 0 auto; flex-wrap: nowrap; overflow-x: auto; min-height: 44px; }
+.orv-frame.editando .barra-texto textarea {
+  min-height: 2.5rem;
+  height: 2.5rem;
+  width: 12rem;
+  flex: 0 0 12rem;
+}
+.orv-frame.editando .barra-texto label { flex: 0 0 auto; }
+.orv-frame.editando .capa-texto { font-synthesis: weight style; }
+@media (max-width: 800px) {
+  body.studio-standalone:has(.orv-frame.editando) { padding-bottom: 0; }
+  .orv-frame.editando .editor,
+  .orv-frame.editando .editor.panel-cerrado,
+  .orv-frame.editando .editor.inspector-cerrado,
+  .orv-frame.editando .editor.panel-cerrado.inspector-cerrado {
+    display: flex;
+    flex-direction: column;
+  }
+  .orv-frame.editando .orv-editor { padding-bottom: 3.4rem; }
+  .orv-frame.editando .escenario { order: -1; flex: 1 1 auto; }
+  .orv-frame.editando .riel {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    flex-direction: row;
+    max-height: none;
+    background: #fff8ec;
+    border-top: 1px solid #102032;
+    padding: 0.2rem 0.2rem calc(0.2rem + env(safe-area-inset-bottom));
+  }
+  .orv-frame.editando .panel,
+  .orv-frame.editando .lado {
+    position: fixed;
+    z-index: 32;
+    left: 0.4rem;
+    right: 0.4rem;
+    top: 4.2rem;
+    bottom: 4.8rem;
+    max-height: none;
+  }
 }
