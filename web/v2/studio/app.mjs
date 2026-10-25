@@ -2669,7 +2669,7 @@ function boot() {
   root.addEventListener("click", onRootClick);
   root.addEventListener("toggle", (event) => {
     const details = event.target;
-    if (!(details instanceof HTMLDetailsElement) || !details.classList.contains("canva-more") || !details.open) return;
+    if (!(details instanceof HTMLDetailsElement) || !details.hasAttribute("data-card-menu") || !details.open) return;
     const panel = details.querySelector("div");
     const summary = details.querySelector("summary");
     if (!panel || !summary) return;
@@ -2685,7 +2685,7 @@ function boot() {
   bindLayersDrag();
   document.addEventListener("keydown", onKey);
   window.addEventListener("scroll", () => {
-    const home = root.querySelector(".canva-plantillas");
+    const home = root.querySelector("[data-tab='plantillas']");
     if (!home) return;
     home.classList.toggle("is-scrolled", window.scrollY > 12);
   }, { passive: true });

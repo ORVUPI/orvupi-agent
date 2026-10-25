@@ -895,7 +895,7 @@ function thumbFace(item) {
 }
 
 function moreMenu(label, actions) {
-  return el("details", { class: "canva-more" }, [
+  return el("details", { class: "canva-more", "data-card-menu": "" }, [
     el("summary", { "aria-label": label }, [dotsIcon()]),
     el("div", {}, actions),
   ]);
@@ -1469,11 +1469,18 @@ function railSection(ctx, title, items, sectionId, width) {
   ]);
 }
 
+function leadFeed(items) {
+  const feed = [];
+  const other = [];
+  for (const item of items) (item.feed ? feed : other).push(item);
+  return feed.length ? [...feed, ...other] : items;
+}
+
 function masonrySection(ctx, title, items) {
   if (!items.length) return null;
   return el("section", { class: "canva-section", "data-section": "mas" }, [
     canvaHead(title),
-    el("div", { class: "tpl-masonry" }, masonryOrder(items).map((item) => previewCard(item, ctx))),
+    el("div", { class: "tpl-masonry" }, masonryOrder(leadFeed(items)).map((item) => previewCard(item, ctx))),
   ]);
 }
 
