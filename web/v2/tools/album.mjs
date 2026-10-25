@@ -1,6 +1,8 @@
 #!/usr/bin/env node
-// Las imágenes del álbum (~490 MB) no viven en git: se sirven igual, pero se
-// añaden al directorio de despliegue justo antes de subirlo.
+// La portada y /memes sirven PNG optimizados (≤800 px) que sí están en git,
+// en assets/orvupi/album, en las mismas rutas .png que pide el HTML.
+// Este manifiesto describe los originales (~490 MB); `fetch` los copia a un
+// directorio de despliegue si hay un origen. Pages no lo necesita: publica web/v2.
 //   node web/v2/tools/album.mjs manifest <dir>        genera album-manifest.json desde una copia local
 //   node web/v2/tools/album.mjs fetch <destino> [--from <dir>]
 //        copia (desde <dir>) o descarga (desde https://orvupi.com, o ALBUM_ORIGIN) cada imagen a
