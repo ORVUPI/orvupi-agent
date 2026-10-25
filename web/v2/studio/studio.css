@@ -1053,11 +1053,17 @@ body.studio-standalone:has(.canva-home) {
   margin: 0;
   padding: 0;
 }
-body.studio-standalone:has(.canva-home) header.site,
 body.studio-standalone:has(.canva-home) footer.or-footer,
 body.studio-standalone:has(.canva-home) a.skip,
 body.studio-standalone:has(.canva-home) .langsuggest {
   display: none !important;
+}
+/* El shell a pantalla completa es de móvil. En escritorio el selector de idioma
+   del sitio sigue en la barra, igual que en el resto de páginas. */
+@media (max-width: 980px) {
+  body.studio-standalone:has(.canva-home) header.site {
+    display: none !important;
+  }
 }
 body.studio-standalone:has(.canva-home) main.studio-app {
   padding: 0;
