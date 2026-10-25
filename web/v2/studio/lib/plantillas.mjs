@@ -1,8 +1,9 @@
-/** Seis plantillas de meme y comunidad. El texto vive en el documento y se puede editar. */
+/** Plantillas editables. El álbum de memes conserva la mascota; el resto se neutraliza al instanciar. */
 
 import { BRAND, createDocument, imageLayer, rectLayer, textLayer } from "./document.mjs";
 import { lotePlantillas } from "./lote-plantillas.mjs";
 import { masPlantillas } from "./mas-plantillas.mjs";
+import { keepsMascot, neutralizeDocument } from "./neutral.mjs";
 
 const CREAM = BRAND.cream;
 const NAVY = BRAND.navy;
@@ -499,8 +500,11 @@ export function instantiate(id) {
   });
   doc.templateId = item.id;
   doc.meta.shell = item.shell || doc.meta.shell;
+  if (!keepsMascot(item)) neutralizeDocument(doc);
   if (typeof item.extraPages === "function") {
-    doc.meta.pages = [doc.layers, item.extraPages()];
+    const extra = { layers: item.extraPages(), meta: {} };
+    if (!keepsMascot(item)) neutralizeDocument(extra);
+    doc.meta.pages = [doc.layers, extra.layers];
     doc.meta.page = 0;
   }
   return doc;

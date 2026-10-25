@@ -1,6 +1,7 @@
 [
   {
     "id": "tpl-curriculum-01",
+    "templateId": "tpl-curriculum-01",
     "category": "curriculum",
     "title": "CV Ejecutivo Navy",
     "width": 420,
@@ -9,6 +10,7 @@
   },
   {
     "id": "tpl-curriculum-02",
+    "templateId": "tpl-curriculum-02",
     "category": "curriculum",
     "title": "CV Consultor Cream",
     "width": 420,
@@ -17,6 +19,7 @@
   },
   {
     "id": "tpl-curriculum-03",
+    "templateId": "tpl-curriculum-03",
     "category": "curriculum",
     "title": "CV UX Bold",
     "width": 420,
@@ -25,6 +28,7 @@
   },
   {
     "id": "tpl-curriculum-04",
+    "templateId": "tpl-curriculum-04",
     "category": "curriculum",
     "title": "CV Tech con Foto",
     "width": 420,
@@ -33,6 +37,7 @@
   },
   {
     "id": "tpl-curriculum-05",
+    "templateId": "tpl-curriculum-05",
     "category": "curriculum",
     "title": "CV Board Executive",
     "width": 420,
@@ -41,6 +46,7 @@
   },
   {
     "id": "tpl-curriculum-06",
+    "templateId": "tpl-curriculum-06",
     "category": "curriculum",
     "title": "CV Timeline Marketing",
     "width": 420,
@@ -49,6 +55,7 @@
   },
   {
     "id": "tpl-curriculum-07",
+    "templateId": "tpl-curriculum-07",
     "category": "curriculum",
     "title": "CV Data Grid",
     "width": 420,
@@ -57,6 +64,7 @@
   },
   {
     "id": "tpl-curriculum-08",
+    "templateId": "tpl-curriculum-08",
     "category": "curriculum",
     "title": "CV Clásico Serif",
     "width": 420,
@@ -65,6 +73,7 @@
   },
   {
     "id": "tpl-presentacion-01",
+    "templateId": "tpl-presentacion-01",
     "category": "presentacion",
     "title": "Portada Estrategia",
     "width": 640,
@@ -73,6 +82,7 @@
   },
   {
     "id": "tpl-presentacion-02",
+    "templateId": "tpl-presentacion-02",
     "category": "presentacion",
     "title": "Agenda Ejecutiva",
     "width": 640,
@@ -81,6 +91,7 @@
   },
   {
     "id": "tpl-presentacion-03",
+    "templateId": "tpl-presentacion-03",
     "category": "presentacion",
     "title": "KPIs del Trimestre",
     "width": 640,
@@ -89,6 +100,7 @@
   },
   {
     "id": "tpl-presentacion-04",
+    "templateId": "tpl-presentacion-04",
     "category": "presentacion",
     "title": "Reto y Solución",
     "width": 640,
@@ -97,6 +109,7 @@
   },
   {
     "id": "tpl-presentacion-05",
+    "templateId": "tpl-presentacion-05",
     "category": "presentacion",
     "title": "Cita con Imagen",
     "width": 640,
@@ -105,6 +118,7 @@
   },
   {
     "id": "tpl-presentacion-06",
+    "templateId": "tpl-presentacion-06",
     "category": "presentacion",
     "title": "Roadmap Anual",
     "width": 640,
@@ -113,6 +127,7 @@
   },
   {
     "id": "tpl-presentacion-07",
+    "templateId": "tpl-presentacion-07",
     "category": "presentacion",
     "title": "Slide Equipo",
     "width": 640,
@@ -121,6 +136,7 @@
   },
   {
     "id": "tpl-presentacion-08",
+    "templateId": "tpl-presentacion-08",
     "category": "presentacion",
     "title": "Cierre Gracias",
     "width": 640,
@@ -129,6 +145,7 @@
   },
   {
     "id": "tpl-documento-01",
+    "templateId": "tpl-documento-01",
     "category": "documento",
     "title": "Creative Brief",
     "width": 420,
@@ -137,6 +154,7 @@
   },
   {
     "id": "tpl-documento-02",
+    "templateId": "tpl-documento-02",
     "category": "documento",
     "title": "Acuerdo de Servicios",
     "width": 420,
@@ -145,6 +163,7 @@
   },
   {
     "id": "tpl-documento-03",
+    "templateId": "tpl-documento-03",
     "category": "documento",
     "title": "Guía de Onboarding",
     "width": 420,
@@ -153,6 +172,7 @@
   },
   {
     "id": "tpl-documento-04",
+    "templateId": "tpl-documento-04",
     "category": "documento",
     "title": "Informe Técnico",
     "width": 420,
@@ -161,6 +181,7 @@
   },
   {
     "id": "tpl-documento-05",
+    "templateId": "tpl-documento-05",
     "category": "documento",
     "title": "Acta de Proyecto",
     "width": 420,
@@ -169,6 +190,7 @@
   },
   {
     "id": "tpl-informe-01",
+    "templateId": "tpl-informe-01",
     "category": "informe",
     "title": "Informe Mensual",
     "width": 420,
@@ -177,6 +199,7 @@
   },
   {
     "id": "tpl-informe-02",
+    "templateId": "tpl-informe-02",
     "category": "informe",
     "title": "Memoria Anual Cover",
     "width": 420,
@@ -185,6 +208,7 @@
   },
   {
     "id": "tpl-informe-03",
+    "templateId": "tpl-informe-03",
     "category": "informe",
     "title": "Dashboard Resumen",
     "width": 640,
@@ -193,6 +217,7 @@
   },
   {
     "id": "tpl-informe-04",
+    "templateId": "tpl-informe-04",
     "category": "informe",
     "title": "Comparativa Antes/Después",
     "width": 420,
@@ -201,6 +226,7 @@
   },
   {
     "id": "tpl-informe-05",
+    "templateId": "tpl-informe-05",
     "category": "informe",
     "title": "Datos del Sector",
     "width": 420,
@@ -209,6 +235,7 @@
   },
   {
     "id": "tpl-propuesta-01",
+    "templateId": "tpl-propuesta-01",
     "category": "propuesta",
     "title": "Propuesta de Colaboración",
     "width": 420,
@@ -217,6 +244,7 @@
   },
   {
     "id": "tpl-propuesta-02",
+    "templateId": "tpl-propuesta-02",
     "category": "propuesta",
     "title": "Pitch Cover Navy",
     "width": 640,
@@ -225,6 +253,7 @@
   },
   {
     "id": "tpl-propuesta-03",
+    "templateId": "tpl-propuesta-03",
     "category": "propuesta",
     "title": "Alcance y Timeline",
     "width": 640,
@@ -233,6 +262,7 @@
   },
   {
     "id": "tpl-propuesta-04",
+    "templateId": "tpl-propuesta-04",
     "category": "propuesta",
     "title": "Inversión y Valor",
     "width": 640,
@@ -241,6 +271,7 @@
   },
   {
     "id": "tpl-propuesta-05",
+    "templateId": "tpl-propuesta-05",
     "category": "propuesta",
     "title": "Cierre de Propuesta",
     "width": 640,
@@ -249,6 +280,7 @@
   },
   {
     "id": "tpl-tarjeta-visita-01",
+    "templateId": "tpl-tarjeta-visita-01",
     "category": "tarjeta-visita",
     "title": "Tarjeta Clásica",
     "width": 525,
@@ -257,6 +289,7 @@
   },
   {
     "id": "tpl-tarjeta-visita-02",
+    "templateId": "tpl-tarjeta-visita-02",
     "category": "tarjeta-visita",
     "title": "Tarjeta Navy",
     "width": 525,
@@ -265,6 +298,7 @@
   },
   {
     "id": "tpl-tarjeta-visita-03",
+    "templateId": "tpl-tarjeta-visita-03",
     "category": "tarjeta-visita",
     "title": "Tarjeta Cream Serif",
     "width": 525,
@@ -273,6 +307,7 @@
   },
   {
     "id": "tpl-tarjeta-visita-04",
+    "templateId": "tpl-tarjeta-visita-04",
     "category": "tarjeta-visita",
     "title": "Tarjeta Accent Rosa",
     "width": 525,
@@ -281,6 +316,7 @@
   },
   {
     "id": "tpl-tarjeta-visita-05",
+    "templateId": "tpl-tarjeta-visita-05",
     "category": "tarjeta-visita",
     "title": "Tarjeta Minimal",
     "width": 525,
@@ -289,6 +325,7 @@
   },
   {
     "id": "tpl-tarjeta-visita-06",
+    "templateId": "tpl-tarjeta-visita-06",
     "category": "tarjeta-visita",
     "title": "Tarjeta Consultor",
     "width": 525,
@@ -297,6 +334,7 @@
   },
   {
     "id": "tpl-logo-01",
+    "templateId": "tpl-logo-01",
     "category": "logo",
     "title": "Marca Nova",
     "width": 400,
@@ -305,6 +343,7 @@
   },
   {
     "id": "tpl-logo-02",
+    "templateId": "tpl-logo-02",
     "category": "logo",
     "title": "Marca Atlas",
     "width": 400,
@@ -313,6 +352,7 @@
   },
   {
     "id": "tpl-logo-03",
+    "templateId": "tpl-logo-03",
     "category": "logo",
     "title": "Marca Meridian",
     "width": 400,
@@ -321,6 +361,7 @@
   },
   {
     "id": "tpl-logo-04",
+    "templateId": "tpl-logo-04",
     "category": "logo",
     "title": "Marca Linea",
     "width": 400,
@@ -329,6 +370,7 @@
   },
   {
     "id": "tpl-logo-05",
+    "templateId": "tpl-logo-05",
     "category": "logo",
     "title": "Marca Forge",
     "width": 400,
@@ -337,6 +379,7 @@
   },
   {
     "id": "tpl-logo-06",
+    "templateId": "tpl-logo-06",
     "category": "logo",
     "title": "Marca Horizon",
     "width": 400,
@@ -345,6 +388,7 @@
   },
   {
     "id": "tpl-flyer-01",
+    "templateId": "tpl-flyer-01",
     "category": "flyer",
     "title": "Meetup Empresa",
     "width": 420,
@@ -353,6 +397,7 @@
   },
   {
     "id": "tpl-flyer-02",
+    "templateId": "tpl-flyer-02",
     "category": "flyer",
     "title": "Workshop Pitch",
     "width": 420,
@@ -361,6 +406,7 @@
   },
   {
     "id": "tpl-flyer-03",
+    "templateId": "tpl-flyer-03",
     "category": "flyer",
     "title": "Outlet Corporativo",
     "width": 420,
@@ -369,6 +415,7 @@
   },
   {
     "id": "tpl-flyer-04",
+    "templateId": "tpl-flyer-04",
     "category": "flyer",
     "title": "Evento Formación",
     "width": 420,
@@ -377,6 +424,7 @@
   },
   {
     "id": "tpl-flyer-05",
+    "templateId": "tpl-flyer-05",
     "category": "flyer",
     "title": "Open Day",
     "width": 420,
@@ -385,6 +433,7 @@
   },
   {
     "id": "tpl-cartel-01",
+    "templateId": "tpl-cartel-01",
     "category": "cartel",
     "title": "Summit Futuro del Trabajo",
     "width": 420,
@@ -393,6 +442,7 @@
   },
   {
     "id": "tpl-cartel-02",
+    "templateId": "tpl-cartel-02",
     "category": "cartel",
     "title": "Exposición Galería",
     "width": 420,
@@ -401,6 +451,7 @@
   },
   {
     "id": "tpl-cartel-03",
+    "templateId": "tpl-cartel-03",
     "category": "cartel",
     "title": "Conferencia Tech",
     "width": 420,
@@ -409,6 +460,7 @@
   },
   {
     "id": "tpl-cartel-04",
+    "templateId": "tpl-cartel-04",
     "category": "cartel",
     "title": "Muestra Anual",
     "width": 420,
@@ -417,6 +469,7 @@
   },
   {
     "id": "tpl-infografia-01",
+    "templateId": "tpl-infografia-01",
     "category": "infografia",
     "title": "Proceso en 4 Pasos",
     "width": 420,
@@ -425,6 +478,7 @@
   },
   {
     "id": "tpl-infografia-02",
+    "templateId": "tpl-infografia-02",
     "category": "infografia",
     "title": "Datos del Sector",
     "width": 420,
@@ -433,6 +487,7 @@
   },
   {
     "id": "tpl-infografia-03",
+    "templateId": "tpl-infografia-03",
     "category": "infografia",
     "title": "Comparativa",
     "width": 420,
@@ -441,6 +496,7 @@
   },
   {
     "id": "tpl-infografia-04",
+    "templateId": "tpl-infografia-04",
     "category": "infografia",
     "title": "Embudo de Ventas",
     "width": 420,
@@ -449,6 +505,7 @@
   },
   {
     "id": "tpl-infografia-05",
+    "templateId": "tpl-infografia-05",
     "category": "infografia",
     "title": "Roadmap Visual",
     "width": 640,
@@ -457,6 +514,7 @@
   },
   {
     "id": "tpl-invitacion-01",
+    "templateId": "tpl-invitacion-01",
     "category": "invitacion",
     "title": "Cena Formal Clientes",
     "width": 420,
@@ -465,6 +523,7 @@
   },
   {
     "id": "tpl-invitacion-02",
+    "templateId": "tpl-invitacion-02",
     "category": "invitacion",
     "title": "Inauguración Oficina",
     "width": 420,
@@ -473,6 +532,7 @@
   },
   {
     "id": "tpl-invitacion-03",
+    "templateId": "tpl-invitacion-03",
     "category": "invitacion",
     "title": "Masterclass UX",
     "width": 420,
@@ -481,6 +541,7 @@
   },
   {
     "id": "tpl-invitacion-04",
+    "templateId": "tpl-invitacion-04",
     "category": "invitacion",
     "title": "Evento Networking",
     "width": 420,
@@ -489,6 +550,7 @@
   },
   {
     "id": "tpl-post-instagram-01",
+    "templateId": "tpl-post-instagram-01",
     "category": "post-instagram",
     "title": "Cita Cultura Equipo",
     "width": 540,
@@ -497,6 +559,7 @@
   },
   {
     "id": "tpl-post-instagram-02",
+    "templateId": "tpl-post-instagram-02",
     "category": "post-instagram",
     "title": "Promo Plan Pro",
     "width": 540,
@@ -505,6 +568,7 @@
   },
   {
     "id": "tpl-post-instagram-03",
+    "templateId": "tpl-post-instagram-03",
     "category": "post-instagram",
     "title": "Tips Productividad",
     "width": 540,
@@ -513,6 +577,7 @@
   },
   {
     "id": "tpl-post-instagram-04",
+    "templateId": "tpl-post-instagram-04",
     "category": "post-instagram",
     "title": "Colección Overlay",
     "width": 540,
@@ -521,6 +586,7 @@
   },
   {
     "id": "tpl-post-instagram-05",
+    "templateId": "tpl-post-instagram-05",
     "category": "post-instagram",
     "title": "Stat del Mes",
     "width": 540,
@@ -529,6 +595,7 @@
   },
   {
     "id": "tpl-post-instagram-06",
+    "templateId": "tpl-post-instagram-06",
     "category": "post-instagram",
     "title": "Checklist Lanzamiento",
     "width": 540,
@@ -537,6 +604,7 @@
   },
   {
     "id": "tpl-post-instagram-07",
+    "templateId": "tpl-post-instagram-07",
     "category": "post-instagram",
     "title": "Marca Clara",
     "width": 540,
@@ -545,6 +613,7 @@
   },
   {
     "id": "tpl-post-instagram-08",
+    "templateId": "tpl-post-instagram-08",
     "category": "post-instagram",
     "title": "Testimonio Cliente",
     "width": 540,
@@ -553,6 +622,7 @@
   },
   {
     "id": "tpl-story-01",
+    "templateId": "tpl-story-01",
     "category": "story",
     "title": "Anuncio Inscripciones",
     "width": 324,
@@ -561,6 +631,7 @@
   },
   {
     "id": "tpl-story-02",
+    "templateId": "tpl-story-02",
     "category": "story",
     "title": "Countdown Webinar",
     "width": 324,
@@ -569,6 +640,7 @@
   },
   {
     "id": "tpl-story-03",
+    "templateId": "tpl-story-03",
     "category": "story",
     "title": "Tip Rápido",
     "width": 324,
@@ -577,6 +649,7 @@
   },
   {
     "id": "tpl-story-04",
+    "templateId": "tpl-story-04",
     "category": "story",
     "title": "Producto Nuevo",
     "width": 324,
@@ -585,6 +658,7 @@
   },
   {
     "id": "tpl-story-05",
+    "templateId": "tpl-story-05",
     "category": "story",
     "title": "Encuesta Equipo",
     "width": 324,
@@ -593,6 +667,7 @@
   },
   {
     "id": "tpl-story-06",
+    "templateId": "tpl-story-06",
     "category": "story",
     "title": "Behind the Scenes",
     "width": 324,
@@ -601,6 +676,7 @@
   },
   {
     "id": "tpl-miniatura-youtube-01",
+    "templateId": "tpl-miniatura-youtube-01",
     "category": "miniatura-youtube",
     "title": "Así lo Hicimos",
     "width": 640,
@@ -609,6 +685,7 @@
   },
   {
     "id": "tpl-miniatura-youtube-02",
+    "templateId": "tpl-miniatura-youtube-02",
     "category": "miniatura-youtube",
     "title": "Antes y Después",
     "width": 640,
@@ -617,6 +694,7 @@
   },
   {
     "id": "tpl-miniatura-youtube-03",
+    "templateId": "tpl-miniatura-youtube-03",
     "category": "miniatura-youtube",
     "title": "5 Errores",
     "width": 640,
@@ -625,6 +703,7 @@
   },
   {
     "id": "tpl-miniatura-youtube-04",
+    "templateId": "tpl-miniatura-youtube-04",
     "category": "miniatura-youtube",
     "title": "10 Herramientas",
     "width": 640,
@@ -633,6 +712,7 @@
   },
   {
     "id": "tpl-miniatura-youtube-05",
+    "templateId": "tpl-miniatura-youtube-05",
     "category": "miniatura-youtube",
     "title": "Ronda Seed",
     "width": 640,
@@ -641,6 +721,7 @@
   },
   {
     "id": "tpl-portada-01",
+    "templateId": "tpl-portada-01",
     "category": "portada",
     "title": "Libro Liderazgo",
     "width": 420,
@@ -649,6 +730,7 @@
   },
   {
     "id": "tpl-portada-02",
+    "templateId": "tpl-portada-02",
     "category": "portada",
     "title": "Memoria Anual",
     "width": 420,
@@ -657,6 +739,7 @@
   },
   {
     "id": "tpl-portada-03",
+    "templateId": "tpl-portada-03",
     "category": "portada",
     "title": "Ebook Guía",
     "width": 420,
@@ -665,6 +748,7 @@
   },
   {
     "id": "tpl-portada-04",
+    "templateId": "tpl-portada-04",
     "category": "portada",
     "title": "Informe Cover Cream",
     "width": 420,
@@ -673,6 +757,7 @@
   },
   {
     "id": "tpl-video-01",
+    "templateId": "tpl-video-01",
     "category": "video",
     "title": "Cover Documental",
     "width": 640,
@@ -681,6 +766,7 @@
   },
   {
     "id": "tpl-video-02",
+    "templateId": "tpl-video-02",
     "category": "video",
     "title": "Webinar En Directo",
     "width": 640,
@@ -689,6 +775,7 @@
   },
   {
     "id": "tpl-video-03",
+    "templateId": "tpl-video-03",
     "category": "video",
     "title": "Serie Episodio",
     "width": 640,
@@ -697,6 +784,7 @@
   },
   {
     "id": "tpl-video-04",
+    "templateId": "tpl-video-04",
     "category": "video",
     "title": "Trailer Producto",
     "width": 640,
@@ -705,6 +793,7 @@
   },
   {
     "id": "tpl-pizarra-01",
+    "templateId": "tpl-pizarra-01",
     "category": "pizarra",
     "title": "Sprint Board",
     "width": 640,
@@ -713,6 +802,7 @@
   },
   {
     "id": "tpl-pizarra-02",
+    "templateId": "tpl-pizarra-02",
     "category": "pizarra",
     "title": "Mind Map Idea",
     "width": 640,
@@ -721,6 +811,7 @@
   },
   {
     "id": "tpl-pizarra-03",
+    "templateId": "tpl-pizarra-03",
     "category": "pizarra",
     "title": "Notas Adhesivas",
     "width": 640,
@@ -729,6 +820,7 @@
   },
   {
     "id": "tpl-pizarra-04",
+    "templateId": "tpl-pizarra-04",
     "category": "pizarra",
     "title": "Kanban Producto",
     "width": 640,
@@ -737,6 +829,7 @@
   },
   {
     "id": "tpl-sitio-web-01",
+    "templateId": "tpl-sitio-web-01",
     "category": "sitio-web",
     "title": "Landing SaaS",
     "width": 640,
@@ -745,6 +838,7 @@
   },
   {
     "id": "tpl-sitio-web-02",
+    "templateId": "tpl-sitio-web-02",
     "category": "sitio-web",
     "title": "Dashboard App",
     "width": 640,
@@ -753,6 +847,7 @@
   },
   {
     "id": "tpl-sitio-web-03",
+    "templateId": "tpl-sitio-web-03",
     "category": "sitio-web",
     "title": "Portfolio Studio",
     "width": 640,
@@ -761,6 +856,7 @@
   },
   {
     "id": "tpl-sitio-web-04",
+    "templateId": "tpl-sitio-web-04",
     "category": "sitio-web",
     "title": "Home Corporativa",
     "width": 640,
@@ -769,6 +865,7 @@
   },
   {
     "id": "tpl-meme-01",
+    "templateId": "tpl-meme-01",
     "category": "meme",
     "title": "Standup Eterno",
     "width": 540,
@@ -777,6 +874,7 @@
   },
   {
     "id": "tpl-meme-02",
+    "templateId": "tpl-meme-02",
     "category": "meme",
     "title": "Reunión vs Doc",
     "width": 540,
@@ -785,6 +883,7 @@
   },
   {
     "id": "tpl-meme-03",
+    "templateId": "tpl-meme-03",
     "category": "meme",
     "title": "Opción Correcta",
     "width": 540,
@@ -793,6 +892,7 @@
   },
   {
     "id": "tpl-meme-04",
+    "templateId": "tpl-meme-04",
     "category": "meme",
     "title": "Expectativa Realidad",
     "width": 540,
@@ -801,6 +901,7 @@
   },
   {
     "id": "tpl-meme-05",
+    "templateId": "tpl-meme-05",
     "category": "meme",
     "title": "Un Minuto Slack",
     "width": 540,
@@ -809,6 +910,7 @@
   },
   {
     "id": "tpl-negocio-01",
+    "templateId": "tpl-negocio-01",
     "category": "negocio",
     "title": "One-pager Oferta",
     "width": 420,
@@ -817,6 +919,7 @@
   },
   {
     "id": "tpl-negocio-02",
+    "templateId": "tpl-negocio-02",
     "category": "negocio",
     "title": "Pitch Elevator",
     "width": 640,
@@ -825,6 +928,7 @@
   },
   {
     "id": "tpl-negocio-03",
+    "templateId": "tpl-negocio-03",
     "category": "negocio",
     "title": "Tarjeta Empresa",
     "width": 525,
@@ -833,6 +937,7 @@
   },
   {
     "id": "tpl-negocio-04",
+    "templateId": "tpl-negocio-04",
     "category": "negocio",
     "title": "Fact Sheet",
     "width": 420,
@@ -841,6 +946,7 @@
   },
   {
     "id": "tpl-negocio-05",
+    "templateId": "tpl-negocio-05",
     "category": "negocio",
     "title": "Partnership Deck",
     "width": 640,

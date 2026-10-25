@@ -4,6 +4,7 @@ import catalog from "./catalog.json" with { type: "json" };
 import { BRAND, FONTS, PRESETS, fontById, importProject, orderedLayers, overlappingIds } from "./lib/document.mjs";
 import { IDEAS, PLANTILLAS, filterPlantillas, instantiate } from "./lib/plantillas.mjs";
 import { listProjects } from "./lib/projects.mjs";
+import { documentForThumb } from "./lib/thumb-docs.mjs";
 import { THUMB_CATS, THUMB_GROUPS, thumbCatsFor, thumbsForGrupo, thumbsIn } from "./lib/thumbs.mjs";
 
 const GROUPS = {
@@ -281,8 +282,6 @@ const PARA_TI = [
   "sitio-comunidad", "folleto-tres", "web-fichas",
 ];
 
-const SEGUIR = ["deck-cierre", "deck-cita", "deck-tres", "red-fb-partido"];
-
 const SAMPLE = {
   square: "publi-feed",
   story: "historia-saludo",
@@ -332,17 +331,16 @@ const THUMB_PARA = [
   "tpl-flyer-01", "tpl-miniatura-youtube-01", "tpl-cartel-03", "tpl-story-03",
   "tpl-invitacion-02", "tpl-video-01", "tpl-negocio-01", "tpl-documento-01",
 ];
-const THUMB_SEGUIR = ["tpl-presentacion-02", "tpl-miniatura-youtube-03", "tpl-video-04", "tpl-negocio-03"];
 
 function thumbLabel(item, lang) {
   return lang === "en" && item.titleEn ? item.titleEn : item.title;
 }
 
 function thumbCard(item, lang) {
+  const doc = documentForThumb(item.id);
   const node = button("", { class: "plantilla thumb-card", "data-thumb": item.id });
-  const slot = el("span", { class: "mini-slot thumb-slot", style: `aspect-ratio:${item.width} / ${item.height}` });
-  slot.append(el("img", { src: studioAsset(item.file), alt: "", draggable: "false", loading: "lazy", decoding: "async" }));
-  node.append(slot, el("span", { class: "plantilla-nombre", text: thumbLabel(item, lang) }));
+  if (doc) node.append(miniStage(doc));
+  node.append(el("span", { class: "plantilla-nombre", text: thumbLabel(item, lang) }));
   return node;
 }
 
@@ -353,13 +351,16 @@ function thumbBlank(ctx, formatId) {
 function thumbSeguir(ctx) {
   const { t } = ctx;
   const projects = listProjects(ctx.storage).slice(0, 4);
-  const cards = projects.length
-    ? projects.map((item) => recentCard(item, t))
-    : THUMB_SEGUIR.map((id) => THUMBS_BY_ID(id)).filter(Boolean).map((item) => thumbCard(item, ctx.lang));
-  const more = button(t("verTodo"), { class: "ver-todo", "data-go": projects.length ? "disenos" : "plantillas", "data-thumb-cat": "" });
-  return el("section", { class: "carril-bloque" }, [
+  if (!projects.length) {
+    return el("section", { class: "carril-bloque", id: "seguir" }, [
+      el("div", { class: "carril-head" }, [el("h2", { text: t("seguir") })]),
+      el("p", { id: "seguir-vacio", class: "nota", text: t("vacioReciente") }),
+    ]);
+  }
+  const more = button(t("verTodo"), { class: "ver-todo", "data-go": "disenos" });
+  return el("section", { class: "carril-bloque", id: "seguir" }, [
     el("div", { class: "carril-head" }, [el("h2", { text: t("seguir") }), more]),
-    el("div", { class: "seguir-grid" }, cards),
+    el("div", { class: "seguir-grid" }, projects.map((item) => recentCard(item, t))),
   ]);
 }
 
@@ -386,6 +387,7 @@ function catTile(ctx, cat, index) {
   const { state, lang } = ctx;
   const en = lang === "en";
   const sample = thumbsIn(cat.id)[0];
+  const doc = sample ? documentForThumb(sample.id) : null;
   const node = button("", {
     class: "cat-tile",
     "data-thumb-cat": cat.id,
@@ -393,11 +395,7 @@ function catTile(ctx, cat, index) {
     "aria-pressed": state.thumbCat === cat.id ? "true" : "false",
   });
   const fondo = el("span", { class: "cat-fondo", style: `background:${PASTEL[index % PASTEL.length]}` });
-  if (sample) {
-    const slot = el("span", { class: "mini-slot thumb-slot", style: `aspect-ratio:${sample.width} / ${sample.height}` });
-    slot.append(el("img", { src: studioAsset(sample.file), alt: "", draggable: "false", loading: "lazy", decoding: "async" }));
-    fondo.append(slot);
-  }
+  if (doc) fondo.append(miniStage(doc));
   node.append(fondo, el("span", { class: "plantilla-nombre", text: en ? cat.en : cat.es }));
   return node;
 }
@@ -503,21 +501,19 @@ function groupChips(ctx) {
   })));
 }
 
-function seguirSection(ctx, shown) {
-  const { t, lang } = ctx;
+function seguirSection(ctx) {
+  const { t } = ctx;
   const projects = listProjects(ctx.storage).slice(0, 4);
-  const cards = projects.length
-    ? projects.map((item) => recentCard(item, t))
-    : SEGUIR.map((id) => {
-      const item = PLANTILLAS.find((entry) => entry.id === id);
-      if (!item) return null;
-      shown.add(id);
-      return templateCard(item, lang);
-    }).filter(Boolean);
-  const more = button(t("verTodo"), { class: "ver-todo", "data-go": projects.length ? "disenos" : "plantillas" });
-  return el("section", { class: "carril-bloque" }, [
+  if (!projects.length) {
+    return el("section", { class: "carril-bloque", id: "seguir" }, [
+      el("div", { class: "carril-head" }, [el("h2", { text: t("seguir") })]),
+      el("p", { id: "seguir-vacio", class: "nota", text: t("vacioReciente") }),
+    ]);
+  }
+  const more = button(t("verTodo"), { class: "ver-todo", "data-go": "disenos" });
+  return el("section", { class: "carril-bloque", id: "seguir" }, [
     el("div", { class: "carril-head" }, [el("h2", { text: t("seguir") }), more]),
-    el("div", { class: "seguir-grid" }, cards),
+    el("div", { class: "seguir-grid" }, projects.map((item) => recentCard(item, t))),
   ]);
 }
 
@@ -961,7 +957,6 @@ function panel(ctx) {
     return el("div", { class: "rejilla" }, [
       button(t("forma"), { "data-add": "rect" }),
       button(t("linea"), { "data-add": "line" }),
-      ...["orvupi-avatar", "orvupi-saludo", "orvupi-buen-humor"].map((id) => button(catalogItem(id)?.nombre?.[lang] || id, { "data-avatar": id })),
     ]);
   }
   if (state.rail === "texto") {

@@ -1,4 +1,4 @@
-/** Más diseños listos para editar. Texto real, formas y el pulpo de ORVUPI. */
+/** Más diseños listos para editar. La mascota no forma parte del contenido genérico. */
 
 import { imageLayer, rectLayer, textLayer } from "./document.mjs";
 

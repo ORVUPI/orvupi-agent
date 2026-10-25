@@ -206,7 +206,7 @@ export function imageLayer(spec = {}) {
     locked: spec.locked,
     visible: spec.visible,
     z: spec.z,
-    src: spec.src || { kind: "catalog", id: "orvupi-avatar" },
+    src: spec.src || { kind: "catalog", id: "" },
     crop: spec.crop || null,
   });
 }

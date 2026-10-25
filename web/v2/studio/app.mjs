@@ -38,7 +38,7 @@ import { exportAllowed } from "./lib/filter.mjs";
 import { createImageStore } from "./lib/images.mjs";
 import { LOGO_MAX_BYTES, readLogoPng } from "./lib/logo.mjs";
 import { IDEAS, filterPlantillas, instantiate } from "./lib/plantillas.mjs";
-import { thumbById, thumbCat } from "./lib/thumbs.mjs";
+import { documentForThumb } from "./lib/thumb-docs.mjs";
 import {
   adoptLegacyDraft,
   deleteProject,
@@ -546,11 +546,8 @@ function shellRail(doc) {
 }
 
 function openThumb(id) {
-  const item = thumbById(id);
-  const meta = item ? thumbCat(item.category) : null;
-  const doc = meta ? instantiate(meta.open) : null;
+  const doc = documentForThumb(id);
   if (!doc) return;
-  doc.name = item.title.slice(0, 80);
   openDoc(doc);
 }
 
