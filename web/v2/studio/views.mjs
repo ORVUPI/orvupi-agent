@@ -1,7 +1,12 @@
 /** Cromo de ORVUPI Studio. La pieza se queda en este navegador. */
 
 import catalog from "./catalog.json" with { type: "json" };
+import { aiPanelCopy, localPhrases } from "./lib/ai-optional.mjs";
+import { chartSeriesText } from "./lib/chart-data.mjs";
 import { BRAND, FONTS, PRESETS, fontById, importProject, orderedLayers, overlappingIds } from "./lib/document.mjs";
+import { HISTORY_COST, listHistory } from "./lib/history.mjs";
+import { listPhotos, PHOTO_LICENSE_NOTE } from "./lib/photos.mjs";
+import { tablePlainText } from "./lib/table-data.mjs";
 import { piecesOf } from "./lib/text-style.mjs";
 import { IDEAS, PLANTILLAS, filterPlantillas, instantiate } from "./lib/plantillas.mjs";
 import { listProjects } from "./lib/projects.mjs";
@@ -19,7 +24,7 @@ const GROUPS = {
   web: ["web", "deck"],
 };
 
-const STANDARD = ["plantillas", "elementos", "texto", "marca", "subidos", "herramientas", "proyectos", "fotos", "formas", "graficos", "fondo", "capas"];
+const STANDARD = ["plantillas", "elementos", "texto", "marca", "subidos", "herramientas", "proyectos", "fotos", "formas", "graficos", "fondo", "capas", "ia"];
 
 export const RAILS = {
   design: STANDARD,
@@ -27,8 +32,8 @@ export const RAILS = {
   video: STANDARD,
   print: STANDARD,
   web: STANDARD,
-  doc: ["plantillas", "elementos", "marca", "subidos", "proyectos", "fotos", "formas", "graficos", "capas"],
-  whiteboard: STANDARD.filter((id) => id !== "fondo"),
+  doc: ["plantillas", "elementos", "marca", "subidos", "proyectos", "fotos", "formas", "graficos", "capas", "ia"],
+  whiteboard: [...STANDARD.filter((id) => id !== "fondo"), "notas"],
 };
 
 function el(tag, attrs = {}, children = []) {
@@ -633,9 +638,17 @@ function miniStage(doc) {
       node.append(text);
     } else if (layer.type === "image") {
       const frameNode = el("span", { class: "mini-img" });
-      const item = layer.src?.kind === "catalog" ? catalogItem(layer.src.id) : null;
-      if (item) frameNode.append(el("img", { src: studioAsset(item.archivo), alt: "", draggable: "false", loading: "lazy", decoding: "async" }));
+      if (layer.src?.kind === "catalog") {
+        const item = catalogItem(layer.src.id);
+        if (item) frameNode.append(el("img", { src: studioAsset(item.archivo), alt: "", draggable: "false", loading: "lazy", decoding: "async" }));
+      } else if (layer.src?.kind === "library") {
+        frameNode.append(el("img", { src: studioAsset(`photos/${layer.src.id}.png`), alt: "", draggable: "false", loading: "lazy", decoding: "async" }));
+      }
       node.append(frameNode);
+    } else if (layer.type === "chart") {
+      node.append(el("span", { class: "mini-forma", style: "background:linear-gradient(180deg,#FF3070 40%,#102032 40%)" }));
+    } else if (layer.type === "table") {
+      node.append(el("span", { class: "mini-forma", style: "background:#FFF8EC;border:2px solid #102032" }));
     } else if (layer.type === "line") {
       node.append(el("span", { class: "mini-forma", style: `background:${layer.props.color || BRAND.navy}` }));
     } else {
@@ -862,6 +875,57 @@ function textBlock(layer, editing) {
   return node;
 }
 
+function chartNode(layer) {
+  const props = layer.props || {};
+  const max = Math.max(1, ...(props.values || [1]));
+  const wrap = el("div", { class: "capa-chart", "data-chart": props.chartType || "bar" });
+  if (props.chartType === "pie") {
+    const total = Math.max(1, (props.values || []).reduce((sum, value) => sum + Number(value || 0), 0));
+    let start = 0;
+    const stops = (props.values || []).map((value, index) => {
+      const sweep = (Number(value || 0) / total) * 100;
+      const color = props.colors?.[index] || BRAND.pink;
+      const part = `${color} ${start}% ${start + sweep}%`;
+      start += sweep;
+      return part;
+    });
+    wrap.style.background = `conic-gradient(${stops.join(",")})`;
+    return wrap;
+  }
+  if (props.chartType === "line") {
+    wrap.classList.add("is-line");
+    const n = Math.max(1, (props.values || []).length - 1);
+    (props.values || []).forEach((value, index) => {
+      const dot = el("span", { class: "chart-dot" });
+      dot.style.left = `${(index / n) * 100}%`;
+      dot.style.bottom = `${(Number(value || 0) / max) * 100}%`;
+      dot.style.background = props.colors?.[index] || BRAND.navy;
+      wrap.append(dot);
+    });
+    return wrap;
+  }
+  (props.values || []).forEach((value, index) => {
+    const bar = el("span", { class: "chart-bar" });
+    bar.style.height = `${(Number(value || 0) / max) * 100}%`;
+    bar.style.background = props.colors?.[index] || BRAND.pink;
+    wrap.append(bar);
+  });
+  return wrap;
+}
+
+function tableNode(layer) {
+  const props = layer.props || {};
+  const table = el("table", { class: "capa-tabla" });
+  (props.rows || []).forEach((row, index) => {
+    const tr = el("tr", {});
+    (Array.isArray(row) ? row : [row]).forEach((cell) => {
+      tr.append(el(props.header && index === 0 ? "th" : "td", { text: String(cell ?? "") }));
+    });
+    table.append(tr);
+  });
+  return table;
+}
+
 function imageNode(ctx, layer) {
   const frameNode = el("div", { class: "capa-img" });
   if (layer.src?.kind === "user" && !ctx.state.userImages.has(layer.src.id)) {
@@ -876,6 +940,9 @@ function imageNode(ctx, layer) {
       img.src = studioAsset(item.archivo);
       natural = item.width && item.height ? { w: item.width, h: item.height } : null;
     }
+  } else if (layer.src?.kind === "library") {
+    img.src = studioAsset(`photos/${layer.src.id}.png`);
+    natural = { w: 640, h: 480 };
   } else if (layer.src?.kind === "user") {
     const image = ctx.state.userImages.get(layer.src.id);
     if (image) {
@@ -922,6 +989,8 @@ function stageNode(ctx) {
     if (layer.visible === false) node.style.visibility = "hidden";
     if (layer.type === "text") node.append(textBlock(layer, state.editingId === layer.id));
     else if (layer.type === "image") node.append(imageNode(ctx, layer));
+    else if (layer.type === "chart") node.append(chartNode(layer));
+    else if (layer.type === "table") node.append(tableNode(layer));
     else if (layer.type === "line") {
       const bar = el("div", { class: "capa-linea" });
       bar.style.background = layer.props.color;
@@ -977,6 +1046,7 @@ function rail(ctx) {
     datos: t("datos"),
     notas: t("notas"),
     capas: t("capas"),
+    ia: t("iaOpcional"),
   };
   return el("div", { class: "riel", role: "tablist", "aria-label": t("herramientas") }, tabs.map((id) => button(labels[id] || id, {
     "data-rail": id,
@@ -1018,28 +1088,87 @@ function panel(ctx) {
       el("div", { class: "rejilla" }, FONTS.map((font) => button(font[lang] || font.es, { "data-font": font.id, style: `font-family:${font.css}` }))),
     ]);
   }
-  if (state.rail === "subidos" || state.rail === "fotos") {
+  if (state.rail === "subidos") {
     const uploaded = doc.layers.filter((layer) => layer.src?.kind === "user");
     return el("div", {}, [
       el("div", { id: "hueco-subida" }),
-      el("p", { text: t("fotosNota") }),
+      el("p", { text: t("sinSubidas") }),
       button(t("subir"), { id: "subir-imagen" }),
-      uploaded.length ? el("ul", {}, uploaded.map((layer) => el("li", {}, [button(layer.name, { "data-pick": layer.id })]))) : el("p", { text: t("sinSubidas") }),
+      uploaded.length ? el("ul", {}, uploaded.map((layer) => el("li", {}, [button(layer.name, { "data-pick": layer.id })]))) : null,
+    ]);
+  }
+  if (state.rail === "fotos") {
+    const photos = listPhotos(state.photoQuery || "", lang);
+    const uploaded = doc.layers.filter((layer) => layer.src?.kind === "user");
+    return el("div", { class: "panel-fotos" }, [
+      el("p", { text: t("fotosNota") }),
+      el("p", { class: "nota", text: PHOTO_LICENSE_NOTE[lang] || PHOTO_LICENSE_NOTE.es }),
+      el("label", { class: "buscar-wrap", for: "buscar-fotos" }, [
+        el("span", { class: "sr", text: t("buscarFotos") }),
+        el("input", { id: "buscar-fotos", type: "search", value: state.photoQuery || "", placeholder: t("buscarFotos"), autocomplete: "off" }),
+      ]),
+      el("div", { class: "rejilla fotos-rejilla" }, photos.map((item) => {
+        const control = button("", { "data-photo": item.id, class: "foto-card" });
+        control.append(
+          el("img", { src: studioAsset(item.archivo), alt: item.nombre[lang] || item.nombre.es, loading: "lazy", decoding: "async" }),
+          el("span", { text: item.nombre[lang] || item.nombre.es }),
+          el("small", { text: `${t("licenciaFoto")}: CC0` }),
+        );
+        return control;
+      })),
+      el("div", { id: "hueco-subida" }),
+      button(t("subir"), { id: "subir-imagen" }),
+      uploaded.length ? el("ul", {}, uploaded.map((layer) => el("li", {}, [button(layer.name, { "data-pick": layer.id })]))) : null,
     ]);
   }
   if (state.rail === "graficos" || state.rail === "datos") {
+    const selected = primary(state);
+    const dataEditor = selected?.type === "chart"
+      ? el("label", { text: t("editarDatos") }, [el("textarea", { id: "datos-grafico", text: chartSeriesText(selected.props) })])
+      : selected?.type === "table"
+        ? el("label", { text: t("editarTabla") }, [el("textarea", { id: "datos-tabla", text: tablePlainText(selected.props) })])
+        : null;
     return el("div", {}, [
       el("p", { text: t("graficosNota") }),
       el("div", { class: "rejilla" }, [
-        button(t("barra"), { "data-add": "barra" }),
-        button(t("punto"), { "data-add": "punto" }),
-        button(t("forma"), { "data-add": "rect" }),
+        button(t("graficoBarras"), { "data-add": "barra" }),
+        button(t("graficoLineas"), { "data-add": "lineas" }),
+        button(t("graficoTarta"), { "data-add": "tarta" }),
+        button(t("tabla"), { "data-add": "tabla" }),
       ]),
+      dataEditor,
+    ]);
+  }
+  if (state.rail === "ia") {
+    const copy = aiPanelCopy(lang);
+    return el("div", {}, [
+      el("h2", { text: copy.title }),
+      el("p", { text: copy.body }),
+      el("p", { class: "nota", text: copy.off }),
+      el("p", { text: copy.phrases }),
+      el("div", { class: "chips" }, localPhrases(lang).map((phrase) => button(phrase, { "data-phrase": phrase }))),
     ]);
   }
   if (state.rail === "notas") {
-    return el("label", { text: t("notasPizarra") }, [
-      el("textarea", { id: "notas-pizarra", text: doc.meta?.note || "" }),
+    const comments = Array.isArray(doc.meta?.comments) ? doc.meta.comments : [];
+    const history = listHistory(ctx.storage || globalThis.localStorage, doc.id);
+    return el("div", {}, [
+      el("label", { text: t("notasPizarra") }, [
+        el("textarea", { id: "notas-pizarra", text: doc.meta?.note || "" }),
+      ]),
+      button(t("ampliarPizarra"), { id: "ampliar-pizarra" }),
+      button(t("anadirComentario"), { id: "anadir-comentario" }),
+      el("ul", { class: "comentarios" }, comments.map((item) => el("li", {}, [
+        el("textarea", { "data-comment": item.id, text: item.text || "" }),
+      ]))),
+      el("h3", { text: t("historial") }),
+      el("p", { class: "nota", text: HISTORY_COST[lang] || HISTORY_COST.es }),
+      el("p", { class: "nota", text: t("colaboracionNota") }),
+      button(t("guardarHistorial"), { id: "guardar-historial" }),
+      el("ul", {}, history.map((item) => el("li", {}, [
+        button(`${item.at.slice(0, 19)} · r${item.revision}`, { "data-history": item.id }),
+      ]))),
+      state.historyNote ? el("p", { text: state.historyNote }) : null,
     ]);
   }
   if (state.rail === "capas") {
@@ -1059,6 +1188,24 @@ function panel(ctx) {
     el("div", { class: "chips" }, [["#FF3070", t("rosa")], ["#FFF8EC", t("crema")], ["#102032", t("azul")]].map(([hex, key]) => button(key, { "data-fondo": hex, style: swatchStyle(hex) }))),
     el("div", { class: "rejilla" }, fondos.map((item) => button(item.nombre[lang] || item.nombre.es, { "data-fondo-id": item.id }))),
   ]);
+}
+
+function dataPanel(ctx) {
+  const { state, t } = ctx;
+  const layer = primary(state);
+  if (layer?.type === "chart") {
+    return el("section", { class: "datos-capa" }, [
+      el("h2", { text: t("editarDatos") }),
+      el("textarea", { id: "datos-grafico", text: chartSeriesText(layer.props), "aria-label": t("editarDatos") }),
+    ]);
+  }
+  if (layer?.type === "table") {
+    return el("section", { class: "datos-capa" }, [
+      el("h2", { text: t("editarTabla") }),
+      el("textarea", { id: "datos-tabla", text: tablePlainText(layer.props), "aria-label": t("editarTabla") }),
+    ]);
+  }
+  return null;
 }
 
 function positionPanel(ctx) {
@@ -1162,21 +1309,43 @@ function pageStrip(ctx) {
   const { state, t } = ctx;
   const shell = shellOf(state.doc);
   const pages = state.doc.meta?.pages?.length || 1;
-  const withStrip = shell === "deck" || shell === "web" || shell === "design" || shell === "print";
+  const withStrip = shell === "deck" || shell === "web" || shell === "design" || shell === "print" || shell === "video";
   if (!withStrip) return null;
   const buttons = [];
   for (let index = 0; index < pages; index += 1) {
-    buttons.push(button(String(index + 1), { "data-page": String(index), "aria-pressed": state.page === index ? "true" : "false" }));
+    const label = shell === "video" ? `${index + 1}` : String(index + 1);
+    buttons.push(button(label, { "data-page": String(index), "aria-pressed": state.page === index ? "true" : "false" }));
   }
-  const canAdd = shell !== "doc" && shell !== "whiteboard" && shell !== "video" && shell !== "web";
-  return el("div", { id: "tira-paginas", class: "tira", role: "navigation", "aria-label": t("paginas") }, [
+  const canAdd = shell !== "doc" && shell !== "whiteboard" && shell !== "web";
+  return el("div", { id: "tira-paginas", class: "tira", role: "navigation", "aria-label": shell === "video" ? t("escenas") : t("paginas") }, [
     ...buttons,
-    canAdd ? button("+", { id: "anadir-pagina", "aria-label": t("anadirPagina") }) : null,
-    canAdd ? button(t("duplicarPagina"), { id: "duplicar-pagina" }) : null,
-    canAdd ? button(t("borrarPagina"), { id: "borrar-pagina" }) : null,
+    canAdd ? button("+", { id: shell === "video" ? "anadir-escena" : "anadir-pagina", "aria-label": shell === "video" ? t("anadirEscena") : t("anadirPagina") }) : null,
+    canAdd && shell !== "video" ? button(t("duplicarPagina"), { id: "duplicar-pagina" }) : null,
+    canAdd && shell !== "video" ? button(t("borrarPagina"), { id: "borrar-pagina" }) : null,
     canAdd ? button(t("anterior"), { id: "pagina-anterior" }) : null,
     canAdd ? button(t("siguiente"), { id: "pagina-siguiente" }) : null,
     state.pageNote ? el("p", { id: "aviso-paginas", text: state.pageNote }) : null,
+  ]);
+}
+
+function videoTimeline(ctx) {
+  const { state, t } = ctx;
+  const scenes = Array.isArray(state.doc.meta?.scenes) ? state.doc.meta.scenes : [];
+  const page = state.page || 0;
+  const current = scenes[page] || { duration: 5, label: `${t("escenas")} ${page + 1}` };
+  const total = scenes.reduce((sum, scene) => sum + (Number(scene.duration) || 5), 0) || current.duration;
+  return el("div", { id: "linea-tiempo", class: "linea-tiempo" }, [
+    el("p", { class: "nota", text: t("videoLimite") }),
+    el("div", { class: "escenas-pista" }, (scenes.length ? scenes : [current]).map((scene, index) => button(scene.label || `${index + 1}`, {
+      "data-page": String(index),
+      class: index === page ? "activa" : "",
+      style: `flex:${Math.max(1, Number(scene.duration) || 5)}`,
+    }))),
+    el("label", { text: t("duracionEscena") }, [
+      el("input", { id: "duracion-escena", type: "number", min: "1", max: "60", value: String(current.duration || 5) }),
+    ]),
+    el("span", { text: `0:00 → 0:${String(Math.round(total)).padStart(2, "0")}` }),
+    button(t("anadirEscena"), { id: "anadir-escena" }),
   ]);
 }
 
@@ -1190,6 +1359,7 @@ function bottomBar(ctx) {
   const clock = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
   const bits = [
     shell === "whiteboard" ? button(t("notas"), { id: "abrir-notas", "aria-pressed": state.notesOpen ? "true" : "false" }) : null,
+    shell === "whiteboard" ? button(t("ampliarPizarra"), { id: "ampliar-pizarra" }) : null,
     shell === "whiteboard" ? button(state.timerOn ? t("parar") : t("temporizador"), { id: "temporizador" }) : null,
     shell === "whiteboard" && state.timerOn ? el("span", { id: "reloj", text: clock }) : null,
     button(t("ajustar"), { "data-zoom": "fit", "aria-pressed": state.zoom === "fit" ? "true" : "false" }),
@@ -1259,7 +1429,7 @@ export function renderEditor(ctx) {
         shell === "print" ? button(t("imprimir"), { id: "imprimir" }) : null,
         shell === "deck" ? button(t("presentar"), { id: "presentar" }) : null,
         shell === "web" || shell === "video" ? button(t("vistaPrevia"), { id: "vista-previa" }) : null,
-        shell === "web" ? button(t("exportarSitio"), { id: "exportar-sitio" }) : null,
+        shell === "web" ? button(t("exportarHtml"), { id: "exportar-sitio" }) : null,
         button(state.panelOpen ? t("cerrarPanel") : t("recursos"), { id: "alternar-panel", "aria-pressed": state.panelOpen ? "true" : "false" }),
         button(state.inspectorOpen ? t("cerrarInspector") : t("posicion"), { id: "alternar-inspector", "aria-pressed": state.inspectorOpen ? "true" : "false" }),
       ]),
@@ -1272,17 +1442,15 @@ export function renderEditor(ctx) {
           stageNode(ctx),
           shell === "web" ? button(t("anadirSeccion"), { id: "anadir-seccion", class: "anadir-seccion" }) : null,
           pageStrip(ctx),
-          shell === "video" ? el("div", { id: "linea-tiempo" }, [
-            button("▶", { id: "reproducir", "aria-label": "Vista previa" }),
-            el("span", { text: "0:00" }),
-            el("span", { class: "pista", text: "Fotograma" }),
-            el("span", { text: "0:05" }),
-          ]) : null,
+          shell === "video" ? videoTimeline(ctx) : null,
+          shell === "web" ? el("p", { class: "nota", text: t("htmlNota") }) : null,
+          state.htmlNote ? el("p", { class: "nota", text: state.htmlNote }) : null,
           state.notesOpen ? el("label", { text: t("notas") }, [el("textarea", { id: "notas-pizarra", text: doc.meta?.note || "" })]) : null,
         ]),
         state.inspectorOpen ? el("aside", { class: "lado", id: "inspector", "aria-label": t("posicion") }, [
           button(t("cerrarInspector"), { id: "cerrar-inspector" }),
           positionPanel(ctx),
+          dataPanel(ctx),
           layersPanel(ctx),
         ]) : null,
       ]),

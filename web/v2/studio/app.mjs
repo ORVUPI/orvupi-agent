@@ -13,6 +13,7 @@ import {
   bringForward,
   makeFormat,
   bringToFront,
+  chartLayer,
   duplicateLayer,
   duplicateLayers,
   exportProject,
@@ -31,16 +32,23 @@ import {
   sendBackward,
   sendToBack,
   shellForFormat,
+  tableLayer,
   textLayer,
   uid,
   ungroupLayers,
 } from "./lib/document.mjs";
 import { exportAllowed } from "./lib/filter.mjs";
+import { loadHistory, pushHistory } from "./lib/history.mjs";
+import { exportSiteHtml } from "./lib/html-export.mjs";
 import { createImageStore } from "./lib/images.mjs";
 import { LOGO_MAX_BYTES, readLogoPng } from "./lib/logo.mjs";
+import { localPhrases } from "./lib/ai-optional.mjs";
 import { packDesign, unpackDesign, userImageIds } from "./lib/package.mjs";
 import { pdfFromPages } from "./lib/pdf-raster.mjs";
+import { photoById } from "./lib/photos.mjs";
 import { IDEAS, filterPlantillas, instantiate } from "./lib/plantillas.mjs";
+import { parseSeriesText } from "./lib/chart-data.mjs";
+import { parseTableText } from "./lib/table-data.mjs";
 import { documentForThumb } from "./lib/thumb-docs.mjs";
 import {
   adoptLegacyDraft,
@@ -264,13 +272,37 @@ const COPY = {
     cerrarInspector: "Cerrar inspector",
     cerrarPanel: "Cerrar panel",
     colorFondo: "Color de fondo",
-    fotosNota: "Imágenes de esta pieza. No hay una fototeca aparte.",
-    graficosNota: "Estas piezas son formas. No calculan datos.",
+    fotosNota: "Biblioteca local con licencia CC0. También puedes subir imágenes propias. Sin stock de pago.",
+    graficosNota: "Gráfico con datos editables o tabla con celdas. Todo se calcula en este navegador.",
     paginaTope: "Esta versión guarda hasta 8 páginas.",
     ultimaPagina: "La última página no se borra.",
     previewNota: "Esto no publica la pieza. La descarga se queda en este dispositivo.",
-    videoNota: "La descarga de este formato es un fotograma PNG.",
+    videoNota: "Escenas locales con duración. No hay audio ni exportación MP4: haría falta un codificador pesado en el navegador. La descarga sigue siendo PNG o PDF de fotogramas.",
     tamanosNota: "Tamaños listos. El lienzo nuevo se abre en este navegador.",
+    buscarFotos: "Buscar fotos",
+    licenciaFoto: "Licencia",
+    graficoBarras: "Barras",
+    graficoLineas: "Líneas",
+    graficoTarta: "Tarta",
+    tabla: "Tabla",
+    editarDatos: "Editar datos",
+    editarTabla: "Editar tabla",
+    exportarHtml: "Descargar HTML",
+    htmlNota: "Descarga un HTML responsive en este dispositivo. Studio no publica ni aloja sitios de usuarios.",
+    htmlListo: "HTML descargado. No se ha publicado nada.",
+    ampliarPizarra: "Ampliar pizarra",
+    comentario: "Comentario",
+    anadirComentario: "Añadir comentario",
+    historial: "Historial local",
+    guardarHistorial: "Guardar instantánea",
+    restaurarHistorial: "Restaurar",
+    historialNota: "Hasta 20 instantáneas en este navegador. Sin colaboración remota.",
+    iaOpcional: "IA opcional",
+    escenas: "Escenas",
+    anadirEscena: "Añadir escena",
+    duracionEscena: "Segundos",
+    videoLimite: "Sin audio y sin MP4 en esta versión gratuita local.",
+    colaboracionNota: "La colaboración en tiempo real no está disponible: exige identidad y almacenamiento remoto con coste.",
   },
   en: {
     inicio: "Home",
@@ -461,13 +493,37 @@ const COPY = {
     cerrarInspector: "Close inspector",
     cerrarPanel: "Close panel",
     colorFondo: "Background color",
-    fotosNota: "Images in this piece. There is no separate photo library.",
-    graficosNota: "These pieces are shapes. They do not calculate data.",
+    fotosNota: "Local CC0 library. You can also upload your own images. No paid stock.",
+    graficosNota: "Charts with editable data or tables with cells. Everything runs in this browser.",
     paginaTope: "This version keeps up to 8 pages.",
     ultimaPagina: "The last page stays.",
     previewNota: "This does not publish the piece. The download stays on this device.",
-    videoNota: "The download for this format is a PNG frame.",
+    videoNota: "Local scenes with duration. No audio and no MP4 export: that would need a heavy in-browser encoder. Downloads remain PNG or PDF frames.",
     tamanosNota: "Ready-made sizes. A new canvas opens in this browser.",
+    buscarFotos: "Search photos",
+    licenciaFoto: "License",
+    graficoBarras: "Bars",
+    graficoLineas: "Lines",
+    graficoTarta: "Pie",
+    tabla: "Table",
+    editarDatos: "Edit data",
+    editarTabla: "Edit table",
+    exportarHtml: "Download HTML",
+    htmlNota: "Downloads a responsive HTML file on this device. Studio does not publish or host user sites.",
+    htmlListo: "HTML downloaded. Nothing was published.",
+    ampliarPizarra: "Expand board",
+    comentario: "Comment",
+    anadirComentario: "Add comment",
+    historial: "Local history",
+    guardarHistorial: "Save snapshot",
+    restaurarHistorial: "Restore",
+    historialNota: "Up to 20 snapshots in this browser. No remote collaboration.",
+    iaOpcional: "Optional AI",
+    escenas: "Scenes",
+    anadirEscena: "Add scene",
+    duracionEscena: "Seconds",
+    videoLimite: "No audio and no MP4 in this free local version.",
+    colaboracionNota: "Real-time collaboration is unavailable: it needs identity and paid remote storage.",
   },
 };
 
@@ -516,6 +572,9 @@ const state = {
   pageNote: "",
   cropping: false,
   clip: null,
+  photoQuery: "",
+  historyNote: "",
+  htmlNote: "",
 };
 
 let fileMode = "image";
@@ -804,7 +863,7 @@ function showPage(index) {
 function addPage() {
   if (!state.doc) return;
   const shell = state.doc.meta.shell;
-  if (shell === "whiteboard" || shell === "doc" || shell === "video" || shell === "web") return;
+  if (shell === "whiteboard" || shell === "doc" || shell === "web") return;
   syncPages();
   if (state.doc.meta.pages.length >= 8) {
     state.pageNote = t("paginaTope");
@@ -814,6 +873,9 @@ function addPage() {
   state.pageNote = "";
   snapshot();
   state.doc.meta.pages.push([]);
+  const scenes = Array.isArray(state.doc.meta.scenes) ? state.doc.meta.scenes.slice() : [];
+  scenes.push({ duration: 5, label: `${t("escenas")} ${scenes.length + 1}` });
+  state.doc.meta.scenes = scenes.slice(0, 8);
   state.page = state.doc.meta.pages.length - 1;
   state.doc.layers = state.doc.meta.pages[state.page];
   state.doc.meta.page = state.page;
@@ -825,7 +887,7 @@ function addPage() {
 function duplicateCurrentPage() {
   if (!state.doc) return;
   const shell = state.doc.meta.shell;
-  if (shell === "whiteboard" || shell === "doc" || shell === "video" || shell === "web") return;
+  if (shell === "whiteboard" || shell === "doc" || shell === "web") return;
   syncPages();
   if (state.doc.meta.pages.length >= 8) {
     state.pageNote = t("paginaTope");
@@ -1240,7 +1302,15 @@ function onRootClick(event) {
     state.preview = true;
     render();
   }
-  if (buttonNode.id === "exportar-sitio") void deliver("png");
+  if (buttonNode.id === "exportar-sitio") downloadHtml();
+  if (buttonNode.id === "exportar-html") downloadHtml();
+  if (buttonNode.id === "ampliar-pizarra") expandBoard();
+  if (buttonNode.id === "anadir-comentario") addComment();
+  if (buttonNode.id === "guardar-historial") saveHistorySnapshot();
+  if (buttonNode.dataset.history) restoreHistorySnapshot(buttonNode.dataset.history);
+  if (buttonNode.dataset.photo) addLibraryPhoto(buttonNode.dataset.photo);
+  if (buttonNode.dataset.phrase) insertPhrase(buttonNode.dataset.phrase);
+  if (buttonNode.id === "anadir-escena") addPage();
   if (buttonNode.id === "presentar" || buttonNode.id === "pantalla") toggleFullscreen();
   if (buttonNode.id === "cuadricula") {
     state.grid = !state.grid;
@@ -1428,11 +1498,102 @@ function onRootClick(event) {
 function addFromTool(kind) {
   if (kind === "rect") addLayer(rectLayer({ name: t("forma"), x: 120, y: 120, w: 280, h: 180, fill: BRAND.pink }));
   if (kind === "ellipse") addLayer(rectLayer({ name: t("circulo"), x: 160, y: 160, w: 220, h: 220, fill: BRAND.pink, shape: "ellipse" }));
-  if (kind === "barra") addLayer(rectLayer({ name: t("barra"), x: 80, y: 80, w: 360, h: 48, fill: BRAND.pink }));
-  if (kind === "punto") addLayer(rectLayer({ name: t("punto"), x: 80, y: 160, w: 36, h: 36, fill: BRAND.navy }));
+  if (kind === "barra") addLayer(chartLayer({ name: t("graficoBarras"), x: 80, y: 80, w: 480, h: 300, props: { chartType: "bar" } }));
+  if (kind === "punto" || kind === "lineas") addLayer(chartLayer({ name: t("graficoLineas"), x: 80, y: 80, w: 480, h: 300, props: { chartType: "line" } }));
+  if (kind === "tarta") addLayer(chartLayer({ name: t("graficoTarta"), x: 80, y: 80, w: 360, h: 360, props: { chartType: "pie" } }));
+  if (kind === "tabla") addLayer(tableLayer({ name: t("tabla"), x: 80, y: 120, w: 520, h: 260 }));
   if (kind === "line") addLayer(lineLayer({ name: t("linea"), x: 120, y: 200, w: 420, h: 16, color: BRAND.navy, strokeWidth: 8 }));
   if (kind === "titulo") addLayer(textLayer({ name: t("titulo"), x: 80, y: 80, w: 640, h: 140, text: t("titulo"), fontId: "anton", size: 72, color: BRAND.navy }));
   if (kind === "cuerpo" || kind === "texto") addLayer(textLayer({ name: t("cuerpo"), x: 80, y: 240, w: 640, h: 160, text: t("cuerpo"), fontId: "barlow", size: 40, color: BRAND.navy }));
+}
+
+function addLibraryPhoto(id) {
+  const item = photoById(id);
+  if (!item) return;
+  addLayer(imageLayer({
+    name: (item.nombre?.[lang] || item.nombre?.es || item.id).slice(0, 40),
+    x: 80,
+    y: 80,
+    w: 480,
+    h: 360,
+    src: { kind: "library", id: item.id },
+  }));
+}
+
+function downloadHtml() {
+  if (!state.doc) return;
+  const html = exportSiteHtml(state.doc, { lang });
+  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${(state.doc.name || "sitio").replace(/[\\/]/g, "-").slice(0, 60)}.html`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  state.htmlNote = t("htmlListo");
+  render();
+}
+
+function expandBoard() {
+  if (!state.doc || state.doc.meta.shell !== "whiteboard") return;
+  snapshot();
+  const next = Math.min(2048, state.doc.format.width + 240);
+  const nextH = Math.min(2048, state.doc.format.height + 160);
+  state.doc.format = makeFormat({ id: "board", width: next, height: nextH });
+  state.doc.meta.boardExtra = (state.doc.meta.boardExtra || 0) + 1;
+  scheduleSave();
+  render();
+}
+
+function addComment() {
+  if (!state.doc) return;
+  snapshot();
+  const comments = Array.isArray(state.doc.meta.comments) ? state.doc.meta.comments.slice() : [];
+  comments.push({
+    id: uid("cmt"),
+    text: lang === "en" ? "Comment" : "Comentario",
+    x: 48 + comments.length * 12,
+    y: 48 + comments.length * 12,
+    at: new Date().toISOString(),
+    layerId: state.selected[0] || "",
+  });
+  state.doc.meta.comments = comments.slice(0, 40);
+  scheduleSave();
+  render();
+}
+
+function saveHistorySnapshot() {
+  if (!state.doc) return;
+  const result = pushHistory(storage, exportProject(state.doc));
+  state.historyNote = result.ok ? t("historialNota") : (lang === "en" ? "Could not save snapshot (quota)." : "No se pudo guardar la instantánea (cuota).");
+  render();
+}
+
+function restoreHistorySnapshot(historyId) {
+  if (!state.doc) return;
+  const doc = loadHistory(storage, state.doc.id, historyId);
+  if (!doc) return;
+  snapshot();
+  const revision = state.doc.meta.revision;
+  const workFileId = state.doc.meta.workFileId;
+  state.doc = importProject(doc);
+  state.doc.id = state.doc.id || doc.id;
+  state.doc.meta.revision = revision;
+  state.doc.meta.workFileId = workFileId;
+  scheduleSave();
+  render();
+}
+
+function insertPhrase(text) {
+  const layer = primary();
+  if (layer?.type === "text") {
+    snapshot();
+    layer.props.text = String(text || "").slice(0, 2000);
+    scheduleSave();
+    render();
+    return;
+  }
+  addLayer(textLayer({ name: t("texto"), x: 80, y: 80, w: 640, h: 120, text: String(text || "").slice(0, 2000), fontId: "barlow", size: 40, color: BRAND.navy }));
 }
 
 function runAction(action, id) {
@@ -1675,7 +1836,66 @@ function bindInputs() {
         node.hidden = q.length > 0 && !label.includes(q);
       });
     }
+    if (target.id === "buscar-fotos") {
+      state.photoQuery = target.value;
+      render();
+      const field = document.getElementById("buscar-fotos");
+      if (field instanceof HTMLInputElement) {
+        field.focus();
+        const end = field.value.length;
+        field.setSelectionRange(end, end);
+      }
+      return;
+    }
     if (!state.doc) return;
+    if (target.id === "datos-grafico") {
+      const layer = primary();
+      if (layer?.type === "chart") {
+        const caret = target.selectionStart;
+        layer.props = parseSeriesText(target.value, layer.props);
+        scheduleSave();
+        render();
+        const field = document.getElementById("datos-grafico");
+        if (field instanceof HTMLTextAreaElement) {
+          field.focus();
+          const at = Math.min(caret ?? field.value.length, field.value.length);
+          field.setSelectionRange(at, at);
+        }
+        return;
+      }
+    }
+    if (target.id === "datos-tabla") {
+      const layer = primary();
+      if (layer?.type === "table") {
+        const caret = target.selectionStart;
+        layer.props = parseTableText(target.value, layer.props);
+        scheduleSave();
+        render();
+        const field = document.getElementById("datos-tabla");
+        if (field instanceof HTMLTextAreaElement) {
+          field.focus();
+          const at = Math.min(caret ?? field.value.length, field.value.length);
+          field.setSelectionRange(at, at);
+        }
+        return;
+      }
+    }
+    if (target.id === "duracion-escena") {
+      const scenes = Array.isArray(state.doc.meta.scenes) ? state.doc.meta.scenes.slice() : [];
+      const index = state.page || 0;
+      while (scenes.length <= index) scenes.push({ duration: 5, label: `${t("escenas")} ${scenes.length + 1}` });
+      scenes[index] = { ...scenes[index], duration: Math.min(60, Math.max(1, Math.round(Number(target.value) || 5))) };
+      state.doc.meta.scenes = scenes;
+      scheduleSave();
+    }
+    if (target.dataset.comment) {
+      const comments = Array.isArray(state.doc.meta.comments) ? state.doc.meta.comments : [];
+      const item = comments.find((entry) => entry.id === target.dataset.comment);
+      if (item) {
+        item.text = String(target.value || "").slice(0, 500);
+        scheduleSave();
+      }
+    }
     if (target.id === "notas-pizarra" && state.doc) {
       if (target.value.length > 2000) {
         state.status = "limite-texto";

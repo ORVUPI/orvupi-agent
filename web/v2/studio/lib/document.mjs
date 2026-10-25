@@ -1,6 +1,8 @@
 /** Documento de diseño ORVUPI Studio, versión 2. Código MIT. */
 
+import { cleanChartProps } from "./chart-data.mjs";
 import { exportAllowed } from "./filter.mjs";
+import { cleanTableProps } from "./table-data.mjs";
 import { cleanRuns } from "./text-style.mjs";
 
 export const DOC_VERSION = 2;
@@ -139,9 +141,37 @@ function workFileIdOf(value) {
   return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value) ? value : "";
 }
 
+function normalizeComments(comments) {
+  if (!Array.isArray(comments)) return [];
+  return comments.slice(0, 40).map((item) => ({
+    id: typeof item?.id === "string" && item.id ? item.id.slice(0, 80) : uid("cmt"),
+    text: String(item?.text || "").slice(0, 500),
+    x: num(item?.x, 24),
+    y: num(item?.y, 24),
+    at: String(item?.at || new Date().toISOString()).slice(0, 40),
+    layerId: typeof item?.layerId === "string" ? item.layerId.slice(0, 80) : "",
+  }));
+}
+
+function normalizeScenes(scenes, pageCount) {
+  const count = Math.max(1, pageCount || 1);
+  const list = Array.isArray(scenes) ? scenes : [];
+  const out = [];
+  for (let index = 0; index < count; index += 1) {
+    const item = list[index] || {};
+    out.push({
+      duration: clamp(num(item.duration, 5), 1, 60),
+      label: String(item.label || `Escena ${index + 1}`).slice(0, 40),
+    });
+  }
+  return out;
+}
+
 function normalizeMeta(meta, formatId) {
   const shell = normalizeShell(meta?.shell) || shellForFormat(formatId);
   const page = Math.max(0, Math.round(num(meta?.page, 0)));
+  const pages = normalizePages(meta?.pages);
+  const pageCount = Math.max(1, pages.length || 1);
   return {
     locale: meta?.locale === "en" ? "en" : "es",
     useTags: Array.isArray(meta?.useTags) ? meta.useTags.map(String).slice(0, 8) : [],
@@ -149,9 +179,12 @@ function normalizeMeta(meta, formatId) {
     shell,
     page,
     note: String(meta?.note || "").slice(0, 2000),
-    pages: normalizePages(meta?.pages),
+    pages,
     revision: Math.max(0, Math.round(num(meta?.revision, 0))),
     workFileId: workFileIdOf(meta?.workFileId),
+    comments: normalizeComments(meta?.comments),
+    scenes: normalizeScenes(meta?.scenes, pageCount),
+    boardExtra: clamp(Math.round(num(meta?.boardExtra, 0)), 0, EDGE.max),
   };
 }
 
@@ -173,6 +206,10 @@ export function assertImportLimits(data) {
       if (typeof text === "string" && text.length > LIMITS.text) throw new Error("limite-texto");
       const note = layer?.props?.note;
       if (typeof note === "string" && note.length > LIMITS.text) throw new Error("limite-texto");
+      if (layer?.type === "table" && Array.isArray(layer?.props?.rows)) {
+        const joined = layer.props.rows.flat().map((cell) => String(cell ?? "")).join("\n");
+        if (joined.length > LIMITS.text) throw new Error("limite-texto");
+      }
     }
   }
   const note = data?.meta?.note;
@@ -296,6 +333,44 @@ export function lineLayer(spec = {}) {
   });
 }
 
+export function chartLayer(spec = {}) {
+  return normalizeLayer({
+    id: spec.id,
+    type: "chart",
+    name: spec.name || "Gráfico",
+    x: spec.x ?? 80,
+    y: spec.y ?? 80,
+    w: spec.w ?? 480,
+    h: spec.h ?? 320,
+    rotation: spec.rotation,
+    opacity: spec.opacity,
+    locked: spec.locked,
+    visible: spec.visible,
+    z: spec.z,
+    groupId: spec.groupId,
+    props: cleanChartProps(spec.props || spec),
+  });
+}
+
+export function tableLayer(spec = {}) {
+  return normalizeLayer({
+    id: spec.id,
+    type: "table",
+    name: spec.name || "Tabla",
+    x: spec.x ?? 80,
+    y: spec.y ?? 80,
+    w: spec.w ?? 520,
+    h: spec.h ?? 280,
+    rotation: spec.rotation,
+    opacity: spec.opacity,
+    locked: spec.locked,
+    visible: spec.visible,
+    z: spec.z,
+    groupId: spec.groupId,
+    props: cleanTableProps(spec.props || spec),
+  });
+}
+
 function normalizeBackground(background) {
   const fill = typeof background?.fill === "string" ? background.fill : BRAND.navy;
   const type = background?.type === "catalog" || background?.type === "user" ? background.type : "solid";
@@ -308,15 +383,16 @@ function normalizeBackground(background) {
 
 function normalizeLayer(layer) {
   const raw = layer?.type === "shape" ? "rect" : layer?.type;
-  const type = raw === "image" || raw === "rect" || raw === "line" || raw === "text" ? raw : "text";
+  const type = raw === "image" || raw === "rect" || raw === "line" || raw === "text" || raw === "chart" || raw === "table" ? raw : "text";
+  const names = { text: "Texto", image: "Imagen", line: "Línea", chart: "Gráfico", table: "Tabla", rect: "Forma" };
   const base = {
     id: typeof layer?.id === "string" && layer.id ? layer.id : uid("ly"),
     type,
-    name: String(layer?.name || (type === "text" ? "Texto" : type === "image" ? "Imagen" : type === "line" ? "Línea" : "Forma")).slice(0, 40),
+    name: String(layer?.name || names[type] || "Forma").slice(0, 40),
     x: num(layer?.x, 48),
     y: num(layer?.y, 48),
-    w: Math.max(8, num(layer?.w, type === "line" ? 360 : 320)),
-    h: Math.max(type === "line" ? 2 : 8, num(layer?.h, type === "line" ? 12 : 120)),
+    w: Math.max(8, num(layer?.w, type === "line" ? 360 : type === "chart" || type === "table" ? 480 : 320)),
+    h: Math.max(type === "line" ? 2 : 8, num(layer?.h, type === "line" ? 12 : type === "chart" || type === "table" ? 280 : 120)),
     rotation: num(layer?.rotation, 0),
     opacity: clamp(num(layer?.opacity, 1), 0, 1),
     locked: Boolean(layer?.locked),
@@ -340,9 +416,10 @@ function normalizeLayer(layer) {
     };
   } else if (type === "image") {
     const src = layer?.src || {};
+    const kind = src.kind === "user" ? "user" : src.kind === "library" ? "library" : "catalog";
     base.src = {
-      kind: src.kind === "user" ? "user" : "catalog",
-      id: String(src.id || "orvupi-avatar"),
+      kind,
+      id: String(src.id || (kind === "library" ? "foto-crema" : "orvupi-avatar")),
     };
     const crop = layer?.crop;
     base.crop = crop && Number.isFinite(Number(crop.w)) && Number.isFinite(Number(crop.h))
@@ -356,6 +433,10 @@ function normalizeLayer(layer) {
       color: typeof props.color === "string" ? props.color : BRAND.navy,
       strokeWidth: Math.max(2, num(props.strokeWidth, base.h)),
     };
+  } else if (type === "chart") {
+    base.props = cleanChartProps(layer?.props || {});
+  } else if (type === "table") {
+    base.props = cleanTableProps(layer?.props || {});
   } else {
     const props = layer?.props || {};
     base.props = {
@@ -438,7 +519,10 @@ export function exportProject(doc) {
   const data = JSON.parse(JSON.stringify(doc));
   data.v = DOC_VERSION;
   for (const layer of data.layers || []) {
-    if (layer.src) layer.src = { kind: layer.src.kind === "user" ? "user" : "catalog", id: String(layer.src.id || "") };
+    if (layer.src) {
+      const kind = layer.src.kind === "user" ? "user" : layer.src.kind === "library" ? "library" : "catalog";
+      layer.src = { kind, id: String(layer.src.id || "") };
+    }
     if (layer.props) {
       delete layer.props.rgba;
       delete layer.props.bytes;
@@ -487,10 +571,21 @@ export function projectTexts(doc) {
   const texts = [];
   for (const layers of bags) {
     for (const layer of layers) {
-      if (layer?.type === "text" && layer.visible !== false) texts.push(String(layer.props?.text || ""));
+      if (layer?.visible === false) continue;
+      if (layer?.type === "text") texts.push(String(layer.props?.text || ""));
+      if (layer?.type === "table") {
+        for (const row of cleanTableProps(layer.props).rows) texts.push(row.join(" "));
+      }
+      if (layer?.type === "chart") {
+        const chart = cleanChartProps(layer.props);
+        texts.push(chart.labels.join(" "));
+      }
     }
   }
   if (doc?.meta?.note) texts.push(String(doc.meta.note));
+  for (const comment of doc?.meta?.comments || []) {
+    if (comment?.text) texts.push(String(comment.text));
+  }
   return {
     title: texts[0] || "",
     body: texts.slice(1).join("\n"),
