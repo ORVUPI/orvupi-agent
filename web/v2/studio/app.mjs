@@ -231,6 +231,17 @@ const COPY = {
     punto: "Punto",
     unidadNota: "Unidad: px. Las medidas en pulgadas y milímetros quedan para una pasada posterior.",
     menu: "Menú",
+    masTab: "Más",
+    buscaPlantillas: "Busca plantillas",
+    echaVistazo: "Echa un vistazo a las plantillas",
+    proximosEventos: "Próximos eventos",
+    inspirado: "Inspirado en tus diseños",
+    destacados: "Destacados ORVUPI",
+    tendencias: "Tendencias cerca de ti",
+    masPlantillas: "Más plantillas para ti",
+    anterior: "Anterior",
+    siguiente: "Siguiente",
+    todasPlantillas: "Todas las plantillas",
     abrirWork: "Abrir en Work",
     workNota: "Se crea una copia en la biblioteca local de Work. Esa biblioteca no es una sincronización en la nube. El diseño original sigue en este navegador.",
     workNativo: "Guardar el diseño en Work",
@@ -466,6 +477,17 @@ const COPY = {
     punto: "Dot",
     unidadNota: "Unit: px. Inch and millimetre sizes come in a later pass.",
     menu: "Menu",
+    masTab: "More",
+    buscaPlantillas: "Search templates",
+    echaVistazo: "Take a look at the templates",
+    proximosEventos: "Upcoming events",
+    inspirado: "Inspired by your designs",
+    destacados: "ORVUPI highlights",
+    tendencias: "Trends near you",
+    masPlantillas: "More templates for you",
+    anterior: "Previous",
+    siguiente: "Next",
+    todasPlantillas: "All templates",
     abrirWork: "Open in Work",
     workNota: "A copy is created in Work's local library. That library is not cloud sync. The original design stays in this browser.",
     workNativo: "Save the design in Work",
@@ -1243,6 +1265,19 @@ function onRootClick(event) {
     state.filters.uso = "";
     state.filters.text = "";
     state.filters.formato = "";
+    if (!buttonNode.dataset.go && !buttonNode.dataset.thumb) render();
+  }
+  if (buttonNode.dataset.railDir) {
+    const scroller = buttonNode.closest(".tpl-rail-wrap, .tpl-glance-wrap")?.querySelector(".tpl-rail-row, .tpl-glance");
+    if (scroller) {
+      const dir = buttonNode.dataset.railDir === "prev" ? -1 : 1;
+      scroller.scrollBy({ left: dir * Math.max(160, Math.round(scroller.clientWidth * 0.72)), behavior: "smooth" });
+    }
+  }
+  if (buttonNode.id === "tpl-buscar-icono") {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    const field = document.getElementById("buscar");
+    if (field instanceof HTMLInputElement) field.focus();
   }
   if (buttonNode.dataset.thumb) openThumb(buttonNode.dataset.thumb);
   if (buttonNode.dataset.go) go(buttonNode.dataset.go);
@@ -1390,8 +1425,11 @@ function onRootClick(event) {
     if (doc) openDoc(doc);
   }
   if ("grupo" in buttonNode.dataset) {
-    state.grupo = buttonNode.dataset.grupo || "";
+    const next = buttonNode.dataset.grupo || "";
+    const toggle = buttonNode.classList.contains("tpl-chip") || buttonNode.classList.contains("tpl-menu-item");
+    state.grupo = toggle && next && state.grupo === next ? "" : next;
     state.masCats = false;
+    if (toggle) state.thumbCat = "";
     render();
   }
   if (buttonNode.id === "mostrar-mas") {
@@ -1852,7 +1890,7 @@ function bindInputs() {
     if (!(target instanceof HTMLElement)) return;
     if (target.id === "buscar") {
       state.filters.text = target.value;
-      if (viewName() === "inicio") {
+      if (viewName() === "inicio" || viewName() === "plantillas") {
         render();
         const field = document.getElementById("buscar");
         if (field instanceof HTMLInputElement) {
@@ -2646,6 +2684,11 @@ function boot() {
   bindInputs();
   bindLayersDrag();
   document.addEventListener("keydown", onKey);
+  window.addEventListener("scroll", () => {
+    const home = root.querySelector(".canva-plantillas");
+    if (!home) return;
+    home.classList.toggle("is-scrolled", window.scrollY > 12);
+  }, { passive: true });
   window.addEventListener("hashchange", () => {
     const id = workIdFromHash(location.hash);
     if (id && state.doc?.meta?.workFileId !== id) {

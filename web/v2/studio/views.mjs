@@ -937,12 +937,12 @@ function canvaNav(ctx, tab) {
   const base = localeBase();
   const en = lang === "en";
   const menu = el("details", { class: "canva-tab-menu" }, [
-    el("summary", { "aria-label": t("menu") }, [
+    el("summary", { "aria-label": t("masTab") }, [
       el("span", { class: "canva-avatar", "aria-hidden": "true" }, [
         el("span", { text: "O" }),
         el("span", { class: "canva-badge" }),
       ]),
-      el("span", { text: t("menu") }),
+      el("span", { text: t("masTab") }),
     ]),
     el("div", { class: "canva-sheet" }, [
       el("p", { class: "canva-sheet-title", text: "ORVUPI" }),
@@ -1186,14 +1186,351 @@ export function renderIa(ctx) {
   ctx.root.replaceChildren(canvaShell(ctx, "ia", feed, false));
 }
 
+const GLANCE = [
+  ["curriculum", "Currículum", "Resume"],
+  ["presentacion", "Presentación", "Presentation"],
+  ["documento", "Doc", "Doc"],
+  ["cartel", "Cartel", "Poster"],
+  ["post-instagram", "Post de Instagram", "Instagram post"],
+  ["story", "Historia", "Story"],
+  ["video", "Vídeo", "Video"],
+  ["informe", "Informe", "Report"],
+  ["logo", "Logo", "Logo"],
+  ["invitacion", "Invitación", "Invitation"],
+  ["flyer", "Flyer", "Flyer"],
+  ["negocio", "Negocio", "Business"],
+  ["infografia", "Infografía", "Infographic"],
+  ["tarjeta-visita", "Tarjeta", "Card"],
+  ["propuesta", "Propuesta", "Proposal"],
+  ["portada", "Portada", "Cover"],
+  ["miniatura-youtube", "Miniatura", "Thumbnail"],
+  ["pizarra", "Pizarra", "Whiteboard"],
+  ["sitio-web", "Sitio web", "Website"],
+];
+
+const GLANCE_WASH = [
+  "#E5F7F4", "#F4E8FF", "#FFE8D8", "#E7F0FF", "#FDE7F2", "#FFF3C9", "#E7FFF3", "#EEE7FF",
+  "#FFE4EE", "#E5F4FF", "#FFF0E0", "#EDE9FE", "#E7FBF6", "#F8E8FF", "#FFE9D6", "#E8EEFF",
+];
+
+const CHIP_ICON = {
+  negocios: "M4 8h16v11H4zM8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2",
+  redes: "M7 8h4v4H7zM13 8h4v4h-4zM7 14h4v4H7zM13 14h4v4h-4z",
+  video: "M8 7l10 5-10 5z",
+  educacion: "M3 8l9-4 9 4-9 4zM7 11v4c1.6 1.2 8.4 1.2 10 0v-4",
+  documentos: "M7 3h7l4 4v14H7zM14 3v4h4",
+  marketing: "M4 10h5l8-4v12l-8-4H4z",
+};
+
+const VIDEO_CATS = new Set(["video", "miniatura-youtube", "portada"]);
+
+function plantillasPool(ctx) {
+  const items = ctx.state.grupo ? thumbsForGrupo(ctx.state.grupo) : proThumbList();
+  return items.filter((item) => item?.file && item.category !== "meme");
+}
+
+function mixCats(items, cats, limit) {
+  const buckets = cats.map((cat) => items.filter((item) => item.category === cat));
+  const out = [];
+  let index = 0;
+  while (out.length < limit) {
+    let added = false;
+    for (const bucket of buckets) {
+      if (!bucket[index]) continue;
+      out.push(bucket[index]);
+      added = true;
+      if (out.length >= limit) break;
+    }
+    if (!added) break;
+    index += 1;
+  }
+  return out;
+}
+
+function masonryOrder(items) {
+  const buckets = [];
+  const seen = new Map();
+  for (const item of items) {
+    if (!seen.has(item.category)) {
+      seen.set(item.category, []);
+      buckets.push(seen.get(item.category));
+    }
+    seen.get(item.category).push(item);
+  }
+  const out = [];
+  let index = 0;
+  while (out.length < items.length) {
+    let added = false;
+    for (const bucket of buckets) {
+      if (!bucket[index]) continue;
+      out.push(bucket[index]);
+      added = true;
+    }
+    if (!added) break;
+    index += 1;
+  }
+  return out;
+}
+
+function glanceList(ctx) {
+  const group = THUMB_GROUPS.find((item) => item.id === ctx.state.grupo);
+  const allow = group ? new Set(group.cats) : null;
+  const list = GLANCE.filter(([id]) => !allow || allow.has(id));
+  if (allow) {
+    for (const id of allow) {
+      if (id === "meme" || list.some(([item]) => item === id)) continue;
+      const cat = THUMB_CATS.find((item) => item.id === id);
+      if (cat) list.push([id, cat.es, cat.en]);
+    }
+  }
+  return list;
+}
+
+function arrowButton(label, dir) {
+  const node = button("", {
+    class: `tpl-arrow canva-plain is-${dir}`,
+    "data-rail-dir": dir,
+    "aria-label": label,
+  });
+  node.append(svgIcon([dir === "prev" ? "M15 6l-6 6 6 6" : "M9 6l6 6-6 6"]));
+  return node;
+}
+
+function pageOrPlay(item) {
+  if (VIDEO_CATS.has(item.category)) {
+    const play = el("span", { class: "tpl-play", "aria-hidden": "true" }, [svgIcon(["M9 7.5l7 4.5-7 4.5z"])]);
+    const kids = [play];
+    if (item.category === "video") {
+      kids.push(el("span", { class: "tpl-mute", "aria-hidden": "true" }, [
+        svgIcon(["M5 10h3l4-3v10l-4-3H5z", "M16.5 10.5l3 3", "M19.5 10.5l-3 3"]),
+      ]));
+    }
+    return el("span", { class: "tpl-media" }, kids);
+  }
+  const pages = Number(item.pages || 0);
+  if (!(pages > 1)) return null;
+  return el("span", { class: "tpl-pages", "aria-label": String(pages) }, [
+    svgIcon(["M8 4h9v13H8z", "M6 7h9v13H6z"]),
+    el("span", { text: String(pages) }),
+  ]);
+}
+
+function previewCard(item, ctx, extra) {
+  const open = button("", {
+    class: "canva-plain tpl-open",
+    "data-thumb": item.id,
+    "aria-label": thumbLabel(item, ctx.lang),
+  });
+  const face = thumbFace(item);
+  const img = face.querySelector("img");
+  if (img && item.width && item.height) {
+    img.setAttribute("width", String(item.width));
+    img.setAttribute("height", String(item.height));
+    img.style.aspectRatio = `${item.width} / ${item.height}`;
+  }
+  open.append(face);
+  return el("article", { class: extra ? `tpl-card ${extra}` : "tpl-card" }, [
+    open,
+    moreMenu(ctx.t("masOpciones"), [
+      button(ctx.t("usarPlantilla"), { "data-thumb": item.id }),
+      button(ctx.t("verCategoria"), { "data-go": "plantillas", "data-thumb-cat": item.category }),
+    ]),
+    pageOrPlay(item),
+  ]);
+}
+
+function plantillasTop(ctx) {
+  const { t, lang, state } = ctx;
+  const en = lang === "en";
+  const summary = el("summary", { class: "tpl-title" }, [
+    el("span", { text: t("plantillas") }),
+    svgIcon(["M6 9l6 6 6-6"]),
+  ]);
+  const items = [
+    button(t("todasPlantillas"), {
+      "data-grupo": "",
+      class: "tpl-menu-item",
+      "aria-pressed": state.grupo ? "false" : "true",
+    }),
+    ...THUMB_GROUPS.map((group) => button(en ? group.en : group.es, {
+      "data-grupo": group.id,
+      class: "tpl-menu-item",
+      "aria-pressed": state.grupo === group.id ? "true" : "false",
+    })),
+  ];
+  const finder = button("", {
+    id: "tpl-buscar-icono",
+    class: "tpl-search-btn canva-plain",
+    "aria-label": t("buscar"),
+  });
+  finder.append(svgIcon(["M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14zM20 20l-3.5-3.5"]));
+  return el("header", { class: "tpl-top" }, [
+    el("div", { class: "tpl-top-bar" }, [
+      el("details", { class: "tpl-drop" }, [summary, el("div", { class: "tpl-menu" }, items)]),
+      finder,
+    ]),
+  ]);
+}
+
+function plantillasSearch(ctx) {
+  const { t, state } = ctx;
+  return el("div", { class: "tpl-search-wrap" }, [
+    el("label", { class: "canva-search" }, [
+      el("span", { class: "sr", text: t("buscar") }),
+      svgIcon(["M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14zM20 20l-3.5-3.5"]),
+      el("input", {
+        id: "buscar",
+        type: "search",
+        value: state.filters.text,
+        placeholder: t("buscaPlantillas"),
+        autocomplete: "off",
+        "aria-label": t("buscar"),
+      }),
+      state.filters.text ? button("×", { id: "limpiar-filtros", class: "canva-clear", "aria-label": t("limpiar") }) : null,
+    ]),
+  ]);
+}
+
+function plantillasChips(ctx) {
+  const en = ctx.lang === "en";
+  return el("div", { class: "tpl-chips", role: "group", "aria-label": ctx.t("tema") }, THUMB_GROUPS.map((group) => {
+    const node = button("", {
+      class: "tpl-chip canva-plain",
+      "data-grupo": group.id,
+      "aria-pressed": ctx.state.grupo === group.id ? "true" : "false",
+    });
+    node.append(svgIcon([CHIP_ICON[group.id] || "M4 4h16v16H4z"]), el("span", { text: en ? group.en : group.es }));
+    return node;
+  }));
+}
+
+function glanceSection(ctx) {
+  const en = ctx.lang === "en";
+  const grid = el("div", { class: "tpl-glance" });
+  glanceList(ctx).forEach(([id, es, labelEn], index) => {
+    const sample = thumbsIn(id)[0];
+    if (!sample?.file) return;
+    const node = button("", {
+      class: "tpl-tile canva-plain",
+      "data-go": "plantillas",
+      "data-thumb-cat": id,
+      "aria-pressed": ctx.state.thumbCat === id ? "true" : "false",
+    });
+    node.append(
+      el("span", { class: "tpl-tile-face", style: `background:${GLANCE_WASH[index % GLANCE_WASH.length]}` }, [
+        el("img", { src: studioAsset(sample.file), alt: "", loading: "lazy", decoding: "async" }),
+      ]),
+      el("span", { class: "tpl-tile-label", text: en ? labelEn : es }),
+    );
+    grid.append(node);
+  });
+  if (!grid.childElementCount) return null;
+  return el("section", { class: "canva-section", "data-section": "vistazo" }, [
+    canvaHead(ctx.t("echaVistazo")),
+    el("div", { class: "tpl-glance-wrap" }, [grid, arrowButton(ctx.t("siguiente"), "next")]),
+  ]);
+}
+
+function railSection(ctx, title, items, sectionId, width) {
+  if (!items.length) return null;
+  const row = el("div", { class: `tpl-rail-row ${width || ""}`.trim() });
+  for (const item of items) row.append(previewCard(item, ctx, "tpl-rail-card"));
+  const kids = [row];
+  if (items.length > 1) {
+    kids.push(arrowButton(ctx.t("anterior"), "prev"), arrowButton(ctx.t("siguiente"), "next"));
+  }
+  return el("section", { class: "canva-section", "data-section": sectionId }, [
+    canvaHead(title),
+    el("div", { class: "tpl-rail-wrap" }, kids),
+  ]);
+}
+
+function masonrySection(ctx, title, items) {
+  if (!items.length) return null;
+  return el("section", { class: "canva-section", "data-section": "mas" }, [
+    canvaHead(title),
+    el("div", { class: "tpl-masonry" }, masonryOrder(items).map((item) => previewCard(item, ctx))),
+  ]);
+}
+
+function plantillasHub(ctx) {
+  const pool = plantillasPool(ctx);
+  const used = new Set();
+  const take = (list) => {
+    const fresh = list.filter((item) => item && !used.has(item.id));
+    for (const item of fresh) used.add(item.id);
+    return fresh;
+  };
+  const eventos = take(mixCats(pool, ["invitacion", "flyer", "cartel"], 8));
+  const inspirado = take(mixCats(pool, ["post-instagram", "story", "logo", "tarjeta-visita"], 8));
+  const featured = THUMB_PARA.map((id) => pool.find((item) => item.id === id)).filter(Boolean);
+  const destacados = take(featured.length ? featured : mixCats(pool, ["logo", "post-instagram", "curriculum", "flyer"], 6));
+  const tendencias = take(mixCats(pool, ["presentacion", "informe", "negocio", "propuesta", "documento"], 6));
+  let rest = pool.filter((item) => !used.has(item.id));
+  if (rest.length < 6) rest = pool;
+  return el("div", { class: "canva-feed tpl-feed" }, [
+    glanceSection(ctx),
+    railSection(ctx, ctx.t("proximosEventos"), eventos, "eventos", "is-wide"),
+    railSection(ctx, ctx.t("inspirado"), inspirado, "inspirado", "is-pair"),
+    railSection(ctx, ctx.t("destacados"), destacados, "destacados", "is-feature"),
+    railSection(ctx, ctx.t("tendencias"), tendencias, "tendencias", "is-hero"),
+    masonrySection(ctx, ctx.t("masPlantillas"), rest),
+  ]);
+}
+
+function plantillasResults(ctx) {
+  const q = ctx.state.filters.text.trim().toLowerCase();
+  const allow = ctx.state.grupo
+    ? new Set(THUMB_GROUPS.find((group) => group.id === ctx.state.grupo)?.cats || [])
+    : null;
+  const items = plantillasPool({ ...ctx, state: { ...ctx.state, grupo: "" } }).filter((item) => {
+    if (allow && !allow.has(item.category)) return false;
+    const cat = THUMB_CATS.find((entry) => entry.id === item.category);
+    const blob = `${item.title} ${item.titleEn || ""} ${item.category} ${cat?.es || ""} ${cat?.en || ""}`.toLowerCase();
+    return blob.includes(q);
+  });
+  if (!items.length) {
+    return el("div", { class: "canva-feed tpl-feed" }, [
+      el("p", { id: "vacio-plantillas", class: "canva-empty", text: ctx.t("vacio") }),
+    ]);
+  }
+  return el("div", { class: "canva-feed tpl-feed" }, [
+    masonrySection(ctx, ctx.t("plantillas"), items),
+  ]);
+}
+
+function plantillasCategory(ctx) {
+  const cat = THUMB_CATS.find((item) => item.id === ctx.state.thumbCat);
+  if (!cat) return plantillasHub(ctx);
+  const en = ctx.lang === "en";
+  const items = thumbsIn(cat.id).filter((item) => item?.file && item.category !== "meme");
+  return el("div", { class: "canva-feed tpl-feed" }, [
+    el("section", { class: "canva-section", "data-section": "categoria" }, [
+      canvaHead(en ? cat.en : cat.es, seeAll(ctx.t("verTodo"), { "data-go": "plantillas", "data-thumb-cat": "" })),
+      items.length
+        ? el("div", { class: "tpl-masonry" }, items.map((item) => previewCard(item, ctx)))
+        : el("p", { id: "vacio-plantillas", class: "canva-empty", text: ctx.t("vacio") }),
+      button(ctx.t("crearBlanco"), { "data-format": cat.format, class: "tpl-blank" }),
+    ]),
+  ]);
+}
+
+function plantillasShell(ctx, body) {
+  const node = el("div", { class: "canva-home canva-plantillas", "data-tab": "plantillas" }, [
+    plantillasTop(ctx),
+    plantillasSearch(ctx),
+    plantillasChips(ctx),
+    body,
+    canvaNav(ctx, "plantillas"),
+  ]);
+  if (typeof window !== "undefined" && window.scrollY > 12) node.classList.add("is-scrolled");
+  return node;
+}
+
 export function renderPlantillas(ctx) {
-  ctx.root.replaceChildren(
-    frame(sideNav(ctx), el("div", { class: "orv-main" }, [
-      el("h1", { class: "hero-titulo", text: ctx.t("plantillas") }),
-      catalogBody(ctx),
-    ])),
-    sizeDialog(ctx),
-  );
+  const q = ctx.state.filters.text.trim();
+  const body = q ? plantillasResults(ctx) : ctx.state.thumbCat ? plantillasCategory(ctx) : plantillasHub(ctx);
+  ctx.root.replaceChildren(plantillasShell(ctx, body), sizeDialog(ctx));
 }
 
 export function renderDesigns(ctx) {
