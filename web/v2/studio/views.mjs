@@ -329,10 +329,10 @@ function blankCardFor(uso, en) {
 
 const THUMB_PARA = [
   "tpl-presentacion-01", "tpl-post-instagram-01", "tpl-curriculum-01", "tpl-logo-01",
-  "tpl-flyer-01", "tpl-youtube-thumb-01", "tpl-cartel-03", "tpl-story-03",
-  "tpl-invitacion-02", "tpl-video-cover-01", "tpl-negocio-01", "tpl-doc-01",
+  "tpl-flyer-01", "tpl-miniatura-youtube-01", "tpl-cartel-03", "tpl-story-03",
+  "tpl-invitacion-02", "tpl-video-01", "tpl-negocio-01", "tpl-documento-01",
 ];
-const THUMB_SEGUIR = ["tpl-presentacion-02", "tpl-youtube-thumb-03", "tpl-video-cover-04", "tpl-negocio-03"];
+const THUMB_SEGUIR = ["tpl-presentacion-02", "tpl-miniatura-youtube-03", "tpl-video-04", "tpl-negocio-03"];
 
 function thumbLabel(item, lang) {
   return lang === "en" && item.titleEn ? item.titleEn : item.title;
