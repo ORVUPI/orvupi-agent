@@ -118,6 +118,10 @@ https://superb-horse-9036f5.netlify.app/*  https://orvupi.com/:splat  301!
 /pt-br/studio/lib/*                              /studio/lib/:splat 200
 /ja/studio/lib/*                                 /studio/lib/:splat 200
 /ko/studio/lib/*                                 /studio/lib/:splat 200
+/en/studio/photos/*                              /studio/photos/:splat 200
+/pt-br/studio/photos/*                           /studio/photos/:splat 200
+/ja/studio/photos/*                              /studio/photos/:splat 200
+/ko/studio/photos/*                              /studio/photos/:splat 200
 /en/studio/studio-boot.js                        /studio/studio-boot.js 200
 /pt-br/studio/studio-boot.js                     /studio/studio-boot.js 200
 /ja/studio/studio-boot.js                        /studio/studio-boot.js 200

@@ -1053,11 +1053,17 @@ body.studio-standalone:has(.canva-home) {
   margin: 0;
   padding: 0;
 }
-body.studio-standalone:has(.canva-home) header.site,
 body.studio-standalone:has(.canva-home) footer.or-footer,
 body.studio-standalone:has(.canva-home) a.skip,
 body.studio-standalone:has(.canva-home) .langsuggest {
   display: none !important;
+}
+/* El shell a pantalla completa es de móvil. En escritorio el selector de idioma
+   del sitio sigue en la barra, igual que en el resto de páginas. */
+@media (max-width: 980px) {
+  body.studio-standalone:has(.canva-home) header.site {
+    display: none !important;
+  }
 }
 body.studio-standalone:has(.canva-home) main.studio-app {
   padding: 0;
@@ -1905,3 +1911,212 @@ body.studio-standalone:has(.canva-plantillas) { background: #fff; }
 }
 #studio-root .canva-nav button.canva-tab[aria-current="page"],
 .canva-tab-menu[open] > summary { color: #8B3DFF; }
+
+/* Plantillas: el cromo global (summary/button con borde #102032) no puede
+   volver a pintar el título, el tab Más ni los «…» como píldoras. */
+.canva-home.canva-plantillas {
+  background-image: radial-gradient(125% 72% at 100% -12%, #E8D9FE 0%, #f6f0ff 32%, #ffffff 68%);
+  font-family: "Inter Studio", Inter, system-ui, sans-serif;
+}
+.canva-home.canva-plantillas h1,
+.canva-home.canva-plantillas h2,
+.canva-home.canva-plantillas h3,
+.canva-home.canva-plantillas button,
+.canva-home.canva-plantillas summary,
+.canva-home.canva-plantillas input,
+.canva-home .canva-nav,
+.canva-home .canva-nav button,
+.canva-home .canva-tab-menu > summary {
+  font-family: "Inter Studio", Inter, system-ui, sans-serif;
+}
+html:has(.canva-plantillas),
+body.studio-standalone:has(.canva-plantillas) {
+  scrollbar-width: none;
+}
+html:has(.canva-plantillas)::-webkit-scrollbar,
+body.studio-standalone:has(.canva-plantillas)::-webkit-scrollbar,
+.canva-plantillas .tpl-feed::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+.canva-plantillas .tpl-feed { scrollbar-width: none; }
+#studio-root .canva-plantillas summary.tpl-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #1a1a1e;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.tpl-chevron {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid #e5e5ea;
+  background: #f5f5f7;
+  color: #3a3a40;
+  display: grid;
+  place-items: center;
+  flex: 0 0 22px;
+}
+.tpl-chevron svg { width: 14px; height: 14px; }
+.canva-plantillas .canva-head h2 {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #1a1a1e;
+}
+.canva-plantillas #buscar {
+  min-height: 46px;
+  border: 0;
+  box-shadow: 0 4px 16px rgba(80, 40, 140, 0.06);
+}
+.tpl-chips {
+  padding: 14px 24px 2px 16px;
+  gap: 8px;
+  scroll-padding-inline: 16px;
+}
+#studio-root button.tpl-chip {
+  padding: 0 12px;
+  font-size: 13.5px;
+  border: 1px solid #e6e6ea;
+  box-shadow: none;
+  font-weight: 650;
+}
+#studio-root button.tpl-chip[aria-pressed="true"] {
+  background: #f3e8ff;
+  border-color: #e0d0ff;
+  color: #8B3DFF;
+}
+#studio-root button.tpl-chip[aria-pressed="true"] svg { color: #8B3DFF; }
+.tpl-glance {
+  grid-auto-columns: 86px;
+  column-gap: 8px;
+  row-gap: 10px;
+  padding: 2px 16px 8px;
+}
+#studio-root button.tpl-tile,
+#studio-root button.tpl-tile[aria-pressed="true"] {
+  width: 86px;
+  gap: 6px;
+}
+.tpl-tile-face {
+  width: 76px;
+  height: 76px;
+  border-radius: 12px;
+}
+.tpl-tile-face img {
+  width: 84%;
+  height: 84%;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 3px 8px rgba(16, 32, 50, 0.1);
+}
+.tpl-tile-label {
+  max-width: 84px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.tpl-rail-row {
+  gap: 10px;
+  padding: 0 0 8px 16px;
+  scroll-padding-left: 16px;
+}
+.tpl-rail-card:last-child { margin-right: 16px; }
+.tpl-rail-card .canva-thumb {
+  height: 188px;
+  overflow: hidden;
+  background: #f4f2f6;
+}
+.tpl-rail-row.is-wide .tpl-rail-card .canva-thumb { height: 200px; }
+.tpl-rail-row.is-pair .tpl-rail-card .canva-thumb { height: 228px; }
+.tpl-rail-row.is-feature .tpl-rail-card .canva-thumb { height: 176px; }
+.tpl-rail-row.is-hero .tpl-rail-card .canva-thumb { height: 210px; }
+.tpl-rail-card.tpl-card .canva-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  aspect-ratio: auto;
+}
+.tpl-masonry {
+  column-gap: 10px;
+  padding: 0 16px 12px;
+}
+.tpl-masonry .tpl-card {
+  margin: 0 0 10px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(16, 32, 50, 0.08), 0 0 0 1px rgba(16, 32, 50, 0.06);
+}
+#studio-root .canva-home .canva-more summary {
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  min-height: 26px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 3px rgba(16, 32, 50, 0.16);
+  color: #1c1c1f;
+}
+#studio-root .canva-home .canva-more summary svg { width: 14px; height: 14px; }
+.tpl-card .canva-more { top: 8px; right: 8px; }
+#studio-root button.tpl-arrow {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 1px 4px rgba(16, 32, 50, 0.14);
+}
+@media (max-width: 720px) {
+  #studio-root .canva-plantillas button.tpl-arrow { display: none; }
+}
+.tpl-play,
+.tpl-mute {
+  width: 26px;
+  height: 26px;
+  border: 0;
+  box-shadow: 0 1px 3px rgba(16, 32, 50, 0.14);
+}
+#studio-root .canva-home .canva-tab-menu > summary {
+  width: 100%;
+  min-height: 52px;
+  margin: 0;
+  padding: 2px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #6b7280;
+  font-size: 10px;
+  font-weight: 650;
+  line-height: 1.15;
+}
+#studio-root .canva-home .canva-tab-menu > summary svg { width: 22px; height: 22px; }
+#studio-root .canva-home .canva-nav button.canva-tab[aria-current="page"] {
+  color: #8B3DFF;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}

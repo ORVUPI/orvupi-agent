@@ -93,6 +93,23 @@ function dotsIcon() {
   return svg;
 }
 
+function navDots() {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  for (const cx of [5, 12, 19]) {
+    const circle = document.createElementNS(SVG_NS, "circle");
+    circle.setAttribute("cx", String(cx));
+    circle.setAttribute("cy", "12");
+    circle.setAttribute("r", "1.55");
+    circle.setAttribute("fill", "none");
+    circle.setAttribute("stroke", "currentColor");
+    circle.setAttribute("stroke-width", "1.7");
+    svg.append(circle);
+  }
+  return svg;
+}
+
 function iconButton(label, attrs, d) {
   const node = button("", { ...attrs, class: `nav-btn ${attrs.class || ""}`.trim() });
   node.append(icon(d), el("span", { text: label }));
@@ -878,7 +895,7 @@ function thumbFace(item) {
 }
 
 function moreMenu(label, actions) {
-  return el("details", { class: "canva-more" }, [
+  return el("details", { class: "canva-more", "data-card-menu": "" }, [
     el("summary", { "aria-label": label }, [dotsIcon()]),
     el("div", {}, actions),
   ]);
@@ -936,14 +953,10 @@ function canvaNav(ctx, tab) {
   const { t, lang } = ctx;
   const base = localeBase();
   const en = lang === "en";
+  const mas = el("summary", { class: "canva-tab", "aria-label": t("masTab") });
+  mas.append(navDots(), el("span", { text: t("masTab") }));
   const menu = el("details", { class: "canva-tab-menu" }, [
-    el("summary", { "aria-label": t("masTab") }, [
-      el("span", { class: "canva-avatar", "aria-hidden": "true" }, [
-        el("span", { text: "O" }),
-        el("span", { class: "canva-badge" }),
-      ]),
-      el("span", { text: t("masTab") }),
-    ]),
+    mas,
     el("div", { class: "canva-sheet" }, [
       el("p", { class: "canva-sheet-title", text: "ORVUPI" }),
       button(t("disenos"), { "data-go": "disenos" }),
@@ -965,7 +978,7 @@ function canvaNav(ctx, tab) {
   return el("nav", { class: "canva-nav", "aria-label": t("menu") }, [
     navTab(t("inicio"), "inicio", tab, "M4 11 L12 4 L20 11 V20 H4 Z"),
     navTab(t("disenos"), "disenos", tab, "M4 7h6l2 2h8v9H4z"),
-    navTab(t("plantillas"), "plantillas", tab, "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"),
+    navTab(t("plantillas"), "plantillas", tab, "M3 4h10v8H3zM15 4h6v5h-6zM3 14h6v6H3zM11 14h10v6H11z"),
     navTab(t("iaTab"), "ia", tab, "M12 3l1.2 4.2L17.5 8.5 13.2 9.8 12 14l-1.2-4.2L6.5 8.5l4.3-1.3z"),
     menu,
   ]);
@@ -1188,24 +1201,24 @@ export function renderIa(ctx) {
 
 const GLANCE = [
   ["curriculum", "Currículum", "Resume"],
-  ["presentacion", "Presentación", "Presentation"],
   ["documento", "Doc", "Doc"],
-  ["cartel", "Cartel", "Poster"],
   ["post-instagram", "Post de Instagram", "Instagram post"],
-  ["story", "Historia", "Story"],
-  ["video", "Vídeo", "Video"],
-  ["informe", "Informe", "Report"],
+  ["sitio-web", "Enlace en la biografía", "Link in bio"],
+  ["informe", "Documento", "Document"],
+  ["presentacion", "Presentación", "Presentation"],
+  ["cartel", "Cartel", "Poster"],
+  ["story", "Tu historia", "Your story"],
   ["logo", "Logo", "Logo"],
   ["invitacion", "Invitación", "Invitation"],
+  ["video", "Vídeo", "Video"],
+  ["miniatura-youtube", "Miniatura de YouTube", "YouTube thumbnail"],
   ["flyer", "Flyer", "Flyer"],
   ["negocio", "Negocio", "Business"],
   ["infografia", "Infografía", "Infographic"],
   ["tarjeta-visita", "Tarjeta", "Card"],
   ["propuesta", "Propuesta", "Proposal"],
   ["portada", "Portada", "Cover"],
-  ["miniatura-youtube", "Miniatura", "Thumbnail"],
   ["pizarra", "Pizarra", "Whiteboard"],
-  ["sitio-web", "Sitio web", "Website"],
 ];
 
 const GLANCE_WASH = [
@@ -1214,10 +1227,10 @@ const GLANCE_WASH = [
 ];
 
 const CHIP_ICON = {
-  negocios: "M4 8h16v11H4zM8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2",
-  redes: "M7 8h4v4H7zM13 8h4v4h-4zM7 14h4v4H7zM13 14h4v4h-4z",
-  video: "M8 7l10 5-10 5z",
-  educacion: "M3 8l9-4 9 4-9 4zM7 11v4c1.6 1.2 8.4 1.2 10 0v-4",
+  negocios: "M4 9h16v10H4zM8 9V7a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2",
+  redes: "M12 20s-7-4.4-7-9a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 4.6-7 9-7 9z",
+  video: "M4 8h10a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4zM15 11l5-3v8l-5-3z",
+  educacion: "M5 5h10a2 2 0 0 1 2 2v12H7a2 2 0 0 0-2 2V5zM7 5v14",
   documentos: "M7 3h7l4 4v14H7zM14 3v4h4",
   marketing: "M4 10h5l8-4v12l-8-4H4z",
 };
@@ -1229,8 +1242,15 @@ function plantillasPool(ctx) {
   return items.filter((item) => item?.file && item.category !== "meme");
 }
 
+function vividFirst(list) {
+  return list
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => Number(Boolean(b.item.vivid)) - Number(Boolean(a.item.vivid)) || a.index - b.index)
+    .map((entry) => entry.item);
+}
+
 function mixCats(items, cats, limit) {
-  const buckets = cats.map((cat) => items.filter((item) => item.category === cat));
+  const buckets = cats.map((cat) => vividFirst(items.filter((item) => item.category === cat)));
   const out = [];
   let index = 0;
   while (out.length < limit) {
@@ -1257,6 +1277,7 @@ function masonryOrder(items) {
     }
     seen.get(item.category).push(item);
   }
+  for (let i = 0; i < buckets.length; i += 1) buckets[i] = vividFirst(buckets[i]);
   const out = [];
   let index = 0;
   while (out.length < items.length) {
@@ -1326,7 +1347,7 @@ function previewCard(item, ctx, extra) {
   if (img && item.width && item.height) {
     img.setAttribute("width", String(item.width));
     img.setAttribute("height", String(item.height));
-    img.style.aspectRatio = `${item.width} / ${item.height}`;
+    if (extra !== "tpl-rail-card") img.style.aspectRatio = `${item.width} / ${item.height}`;
   }
   open.append(face);
   return el("article", { class: extra ? `tpl-card ${extra}` : "tpl-card" }, [
@@ -1342,9 +1363,11 @@ function previewCard(item, ctx, extra) {
 function plantillasTop(ctx) {
   const { t, lang, state } = ctx;
   const en = lang === "en";
+  const chevron = el("span", { class: "tpl-chevron", "aria-hidden": "true" });
+  chevron.append(svgIcon(["M8 10.5l4 4 4-4"]));
   const summary = el("summary", { class: "tpl-title" }, [
-    el("span", { text: t("plantillas") }),
-    svgIcon(["M6 9l6 6 6-6"]),
+    el("span", { class: "tpl-title-text", text: t("plantillas") }),
+    chevron,
   ]);
   const items = [
     button(t("todasPlantillas"), {
@@ -1408,7 +1431,8 @@ function glanceSection(ctx) {
   const en = ctx.lang === "en";
   const grid = el("div", { class: "tpl-glance" });
   glanceList(ctx).forEach(([id, es, labelEn], index) => {
-    const sample = thumbsIn(id)[0];
+    const samples = thumbsIn(id);
+    const sample = samples.find((item) => item.vivid) || samples[0];
     if (!sample?.file) return;
     const node = button("", {
       class: "tpl-tile canva-plain",
@@ -1445,11 +1469,18 @@ function railSection(ctx, title, items, sectionId, width) {
   ]);
 }
 
+function leadFeed(items) {
+  const feed = [];
+  const other = [];
+  for (const item of items) (item.feed ? feed : other).push(item);
+  return feed.length ? [...feed, ...other] : items;
+}
+
 function masonrySection(ctx, title, items) {
   if (!items.length) return null;
   return el("section", { class: "canva-section", "data-section": "mas" }, [
     canvaHead(title),
-    el("div", { class: "tpl-masonry" }, masonryOrder(items).map((item) => previewCard(item, ctx))),
+    el("div", { class: "tpl-masonry" }, masonryOrder(leadFeed(items)).map((item) => previewCard(item, ctx))),
   ]);
 }
 
@@ -1463,10 +1494,9 @@ function plantillasHub(ctx) {
   };
   const eventos = take(mixCats(pool, ["invitacion", "flyer", "cartel"], 8));
   const inspirado = take(mixCats(pool, ["post-instagram", "story", "logo", "tarjeta-visita"], 8));
-  const featured = THUMB_PARA.map((id) => pool.find((item) => item.id === id)).filter(Boolean);
-  const destacados = take(featured.length ? featured : mixCats(pool, ["logo", "post-instagram", "curriculum", "flyer"], 6));
+  const destacados = take(mixCats(pool, ["video", "portada", "miniatura-youtube", "infografia", "curriculum", "pizarra"], 6));
   const tendencias = take(mixCats(pool, ["presentacion", "informe", "negocio", "propuesta", "documento"], 6));
-  let rest = pool.filter((item) => !used.has(item.id));
+  let rest = pool.filter((item) => !used.has(item.id) || item.vivid);
   if (rest.length < 6) rest = pool;
   return el("div", { class: "canva-feed tpl-feed" }, [
     glanceSection(ctx),

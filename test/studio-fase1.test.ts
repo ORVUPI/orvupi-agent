@@ -140,7 +140,7 @@ describe("studio fase 1 catálogo", () => {
     assert.match(textsOf(round), /Informe ejecutivo/);
   });
 
-  test("las 106 miniaturas tienen documento propio, neutro y exportable", async () => {
+  test("las miniaturas tienen documento propio, neutro y exportable", async () => {
     const api = await load<{
       thumbInventory: () => {
         templateId: string;
@@ -158,8 +158,8 @@ describe("studio fase 1 catálogo", () => {
       documentForThumb: (id: string) => Doc | null;
     }>("lib/thumb-docs.mjs");
     const rows = api.thumbInventory();
-    assert.equal(rows.length, 106);
-    assert.equal(new Set(rows.map((row) => row.templateId)).size, 106);
+    assert.equal(rows.length, 425);
+    assert.equal(new Set(rows.map((row) => row.templateId)).size, 425);
     const byCategory = new Map<string, Set<string>>();
     for (const row of rows) {
       assert.equal(row.editable, true, row.templateId);
