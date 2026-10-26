@@ -28,7 +28,7 @@ function memoryStorage() {
 describe("studio mis diseños", () => {
   test("la biblioteca vive en la lista de proyectos y sobrevive a un guardado", async () => {
     const { blankDocument } = await load<{
-      blankDocument: (id: string) => { id: string; name: string; meta: { revision: number } };
+      blankDocument: (id: string) => { id: string; name: string; meta: { revision: number }; library?: { favorite?: boolean; kind?: string } };
     }>("lib/document.mjs");
     const projects = await load<{
       saveProject: (storage: ReturnType<typeof memoryStorage>, doc: { id: string; name: string; meta: { revision: number }; library?: { favorite?: boolean } }) => { ok: boolean; revision?: number; reason?: string };

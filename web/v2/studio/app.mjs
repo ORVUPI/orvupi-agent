@@ -70,6 +70,7 @@ import { applySpan, spanIs } from "./lib/text-style.mjs";
 import { conversionPreview, toOrvdoc, toSlides } from "./lib/work-convert.mjs";
 import { DESIGN_MIME, DOC_MIME, SLIDE_MIME, loadWorkBytes, saveWorkBytes, workIdFromHash } from "./lib/work-store.mjs";
 import { queryFromHash, routeFromHash } from "./lib/route.mjs";
+import { bindIaRuntime, handleIaClick, handleIaFile, handleIaInput, handleIaKeydown } from "./ia.mjs";
 import { catalogBody, layerStyle, renderDesigns, renderEditor, renderHome, renderIa, renderLibrary, renderMarca, renderPlantillas, renderRecursos } from "./views.mjs";
 
 const root = document.getElementById("studio-root");
@@ -1832,6 +1833,10 @@ function handleDesignClick(buttonNode) {
 function onRootClick(event) {
   const buttonNode = event.target.closest("button");
   if (!buttonNode || !root.contains(buttonNode)) return;
+  if (buttonNode.dataset.ia) {
+    handleIaClick(buttonNode);
+    return;
+  }
   if (handleDesignClick(buttonNode)) return;
   if (buttonNode.dataset.sheetClose != null) {
     state.librarySheet = false;
@@ -2537,6 +2542,11 @@ function bindInputs() {
   root.addEventListener("input", (event) => {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
+    if (target.id.startsWith("ia-")) {
+      if (!handleIaInput(target)) return;
+      render();
+      return;
+    }
     if (target.id === "buscar") {
       const view = viewName();
       if (view === "disenos") {
@@ -2784,6 +2794,12 @@ function bindInputs() {
     }
   });
   root.addEventListener("change", (event) => {
+    if (event.target?.id === "ia-adjunto" && event.target instanceof HTMLInputElement) {
+      handleIaFile(event.target.files?.[0]);
+      event.target.value = "";
+      render();
+      return;
+    }
     if (event.target?.dataset?.crop || event.target?.id === "contorno-color" || event.target?.dataset?.stroke || event.target?.id === "tamano-texto" || event.target?.id === "interlineado" || event.target?.id === "color-texto" || event.target?.id === "fondo-color") render();
   });
   root.addEventListener("focusin", (event) => {
@@ -3385,6 +3401,7 @@ async function deliver(kind, forceShare = false) {
 }
 
 function boot() {
+  bindIaRuntime({ render, storage, lang });
   try {
     recoverWrite(storage);
     adoptLegacyDraft(storage);
@@ -3449,6 +3466,7 @@ function boot() {
     patchItem(storage, state.designFolder, { library: { description: target.value } });
   });
   root.addEventListener("keydown", (event) => {
+    if (handleIaKeydown(event)) return;
     if (event.key !== "Enter") return;
     const target = event.target;
     if (!(target instanceof HTMLInputElement)) return;

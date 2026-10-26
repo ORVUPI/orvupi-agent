@@ -2,6 +2,7 @@
 
 import catalog from "./catalog.json" with { type: "json" };
 import { aiPanelCopy, localPhrases } from "./lib/ai-optional.mjs";
+import { renderOrvupiIa } from "./ia.mjs";
 import { chartSeriesText } from "./lib/chart-data.mjs";
 import { BRAND, FONTS, PRESETS, fontById, importProject, orderedLayers, overlappingIds } from "./lib/document.mjs";
 import { HISTORY_COST, listHistory } from "./lib/history.mjs";
@@ -948,14 +949,17 @@ function canvaFab(ctx) {
   return node;
 }
 
-function navTab(label, view, current, d) {
+function navTab(label, view, current, d, image) {
   const node = button("", {
     class: "canva-tab canva-plain",
     "data-go": view,
     "aria-current": current === view ? "page" : null,
     "aria-label": label,
   });
-  node.append(svgIcon([d]), el("span", { text: label }));
+  if (image) node.append(el("img", { class: "canva-tab-avatar", src: image, alt: "", width: "22", height: "22" }));
+  else node.append(svgIcon([d]));
+  node.append(el("span", { text: label }));
+  if (view === "ia" && current === view) node.append(el("i", { class: "ia-nav-dot", "aria-hidden": "true" }));
   return node;
 }
 
@@ -989,7 +993,7 @@ export function canvaNav(ctx, tab) {
     navTab(t("inicio"), "inicio", tab, "M4 11 L12 4 L20 11 V20 H4 Z"),
     navTab(t("disenos"), "disenos", tab, "M4 7h6l2 2h8v9H4z"),
     navTab(t("plantillas"), "plantillas", tab, "M3 4h10v8H3zM15 4h6v5h-6zM3 14h6v6H3zM11 14h10v6H11z"),
-    navTab(t("iaTab"), "ia", tab, "M12 3l1.2 4.2L17.5 8.5 13.2 9.8 12 14l-1.2-4.2L6.5 8.5l4.3-1.3z"),
+    navTab(t("iaTab"), "ia", tab, "M12 3l1.2 4.2L17.5 8.5 13.2 9.8 12 14l-1.2-4.2L6.5 8.5l4.3-1.3z", studioAsset("assets/orvupi-avatar.png")),
     menu,
   ]);
 }
@@ -1194,19 +1198,7 @@ export function renderHome(ctx) {
 }
 
 export function renderIa(ctx) {
-  const copy = aiPanelCopy(ctx.lang);
-  const phrases = localPhrases(ctx.lang);
-  const feed = el("div", { class: "canva-feed" }, [
-    el("section", { class: "canva-section canva-ia" }, [
-      el("h1", { text: ctx.t("iaTab") }),
-      el("p", { text: copy.body }),
-      el("p", { class: "nota", text: copy.off }),
-      el("h2", { text: copy.phrases }),
-      el("ul", { class: "canva-phrases" }, phrases.map((phrase) => el("li", { text: phrase }))),
-      button(ctx.t("usarEnDiseno"), { class: "canva-ia-go", "data-start-rail": "ia" }),
-    ]),
-  ]);
-  ctx.root.replaceChildren(canvaShell(ctx, "ia", feed, false));
+  renderOrvupiIa(ctx, { nav: () => canvaNav(ctx, "ia"), asset: studioAsset });
 }
 
 const GLANCE = [
