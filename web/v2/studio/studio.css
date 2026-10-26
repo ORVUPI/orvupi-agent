@@ -2454,6 +2454,23 @@ body.studio-standalone:has(.canva-plantillas)::-webkit-scrollbar,
   font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.011em;
+  border: 0;
+  border-bottom: 0;
+  box-shadow: none;
+  text-decoration: none;
+  background-image: none;
+  transform: none;
+}
+#studio-root .lib-sheet-nav button.lib-row:hover,
+#studio-root .lib-sheet-nav button.lib-row:active {
+  box-shadow: none;
+  text-decoration: none;
+  transform: none;
+}
+#studio-root .lib-sheet-nav button.lib-row span {
+  text-decoration: none;
+  border: 0;
+  box-shadow: none;
 }
 #studio-root .lib-sheet-nav button.lib-row svg {
   width: 22px;
@@ -2505,12 +2522,25 @@ body.studio-standalone:has(.canva-plantillas)::-webkit-scrollbar,
   margin: 0;
   padding: 0 18px;
   border: 0;
+  border-bottom: 0;
   border-radius: 0;
+  box-shadow: none;
   background: transparent;
+  background-image: none;
   color: #1c1c1f;
   text-align: left;
+  text-decoration: none;
   font-size: 16px;
   font-weight: 650;
+  transform: none;
+}
+#studio-root button.lib-row:hover,
+#studio-root button.lib-row:active,
+#studio-root button.lib-row span {
+  box-shadow: none;
+  text-decoration: none;
+  transform: none;
+  border-bottom: 0;
 }
 #studio-root button.lib-row svg { width: 24px; height: 24px; flex: 0 0 24px; }
 #studio-root button.lib-row[aria-current="true"] {

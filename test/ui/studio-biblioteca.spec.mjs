@@ -31,6 +31,23 @@ test("móvil: el chevron abre la biblioteca y cada vista monta", async ({ page }
   expect(active.width).toBe("4px");
   expect(active.background).toBe("rgb(139, 61, 255)");
   expect(active.row).toBe("rgb(243, 232, 255)");
+  const lines = await sheet.locator(".lib-row").evaluateAll((nodes) => nodes.map((node) => {
+    const row = getComputedStyle(node);
+    const label = node.querySelector("span");
+    const text = label ? getComputedStyle(label) : row;
+    return {
+      shadow: row.boxShadow,
+      borderBottom: row.borderBottomWidth,
+      decoration: row.textDecorationLine,
+      labelDecoration: text.textDecorationLine,
+    };
+  }));
+  for (const line of lines) {
+    expect(line.shadow).toBe("none");
+    expect(line.borderBottom).toBe("0px");
+    expect(line.decoration).toBe("none");
+    expect(line.labelDecoration).toBe("none");
+  }
 
   await sheet.locator(".lib-x").click();
   await expect(sheet).toHaveCount(0);
