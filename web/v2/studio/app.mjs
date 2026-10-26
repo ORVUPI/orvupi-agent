@@ -52,12 +52,16 @@ import { parseTableText } from "./lib/table-data.mjs";
 import { documentForThumb } from "./lib/thumb-docs.mjs";
 import {
   adoptLegacyDraft,
+  createContainer,
   deleteProject,
   dropRecovery,
   duplicateProject,
+  libraryOf,
   listProjects,
   listRecovery,
   loadProject,
+  normalizeLibrary,
+  patchItem,
   recoverWrite,
   saveProject,
 } from "./lib/projects.mjs";
@@ -683,6 +687,27 @@ const state = {
   favs: [],
   favLayout: "grid",
   routeHash: null,
+  designSheet: "",
+  designView: "todos",
+  designQuery: "",
+  designCreateQuery: "",
+  designTipo: "",
+  designCategoria: "",
+  designTitular: "",
+  designFecha: "",
+  designLayout: "list",
+  designFolder: "",
+  designCreate: false,
+  designItem: "",
+  designSelect: false,
+  designSelected: [],
+  designMove: [],
+  designTab: "curso",
+  designDraft: "folder",
+  designNotice: "",
+  designUndo: [],
+  designOpen: "",
+  pendingFolder: "",
 };
 
 let fileMode = "image";
@@ -766,6 +791,14 @@ function syncRouteFromHash() {
     state.librarySheet = false;
     state.filterSheet = false;
     state.viewSheet = false;
+    state.designSheet = "";
+  }
+  if (segment === "disenos") {
+    const views = ["todos", "recientes", "mios", "favoritos", "compartidos", "offline", "enlaces"];
+    state.designView = views.includes(params.vista) ? params.vista : "todos";
+    state.designFolder = typeof params.carpeta === "string" ? params.carpeta : "";
+    state.designCreate = params.crear === "1";
+    if (params.abrir) state.designOpen = params.abrir;
   }
   const text = hashText(params);
   const prevText = hashText(prevParams);
@@ -809,6 +842,7 @@ function bindPages(doc) {
 }
 
 function go(view) {
+  state.pendingFolder = "";
   const next = view === "inicio" ? "#/" : `#/${view}`;
   if (location.hash === next) render();
   else location.hash = next;
@@ -889,6 +923,11 @@ function openDoc(doc, options = {}) {
   state.timerOn = false;
   state.timerSeconds = 0;
   clearInterval(clockTimer);
+  if (state.pendingFolder) {
+    const current = doc.library && typeof doc.library === "object" ? doc.library : {};
+    doc.library = normalizeLibrary({ ...current, folderId: state.pendingFolder });
+    state.pendingFolder = "";
+  }
   const workId = options.workFileId || doc.meta?.workFileId || "";
   if (workId) doc.meta.workFileId = workId;
   else if (doc.meta) doc.meta.workFileId = "";
@@ -1198,7 +1237,31 @@ function render() {
   else if (view === "ia") renderIa(ctx);
   else if (view === "plantillas") renderPlantillas(ctx);
   else if (view === "fotos" || view === "elementos" || view === "favoritos") renderLibrary(ctx);
-  else if (view === "disenos") renderDesigns(ctx);
+  else if (view === "disenos") {
+    if (state.designOpen) {
+      const id = state.designOpen;
+      state.designOpen = "";
+      if (String(location.hash).includes("abrir=")) {
+        history.replaceState(null, "", `${location.pathname}${location.search}#/disenos`);
+        state.routeHash = "#/disenos";
+      }
+      const doc = loadProject(storage, id);
+      if (doc) {
+        queueMicrotask(() => openDoc(doc));
+        rendering = false;
+        return;
+      }
+      const raw = listProjects(storage).find((item) => item.id === id);
+      const kind = raw ? libraryOf(raw).kind : "";
+      if (raw && (kind === "folder" || kind === "course") && !libraryOf(raw).deletedAt) {
+        state.designFolder = id;
+        queueMicrotask(() => designHash());
+        rendering = false;
+        return;
+      }
+    }
+    renderDesigns(ctx);
+  }
   else if (view === "marca") renderMarca(ctx);
   else if (view === "recursos") renderRecursos(ctx);
   else renderEditor(ctx);
@@ -1209,7 +1272,7 @@ function render() {
     if (dialog && !dialog.open) dialog.showModal();
   }
   syncChrome();
-  document.body?.classList.toggle("lib-sheet-open", Boolean(state.librarySheet || state.filterSheet || state.viewSheet));
+  document.body?.classList.toggle("lib-sheet-open", Boolean(state.librarySheet || state.filterSheet || state.viewSheet || state.designSheet));
   rendering = false;
 }
 
@@ -1368,9 +1431,408 @@ function applyColor(hex) {
   render();
 }
 
+function say(esText, enText) {
+  return lang === "en" ? enText : esText;
+}
+
+function designHash() {
+  const params = new URLSearchParams();
+  if (state.designView && state.designView !== "todos") params.set("vista", state.designView);
+  if (state.designFolder) params.set("carpeta", state.designFolder);
+  if (state.designCreate) params.set("crear", "1");
+  const query = params.toString();
+  const next = query ? `#/disenos?${query}` : "#/disenos";
+  if (location.hash === next) render();
+  else location.hash = next;
+}
+
+function designLink(id) {
+  const url = new URL(location.href);
+  url.hash = `#/disenos?abrir=${encodeURIComponent(id)}`;
+  return url.toString();
+}
+
+function pickDesignFile(mode) {
+  fileMode = mode;
+  if (!logoInput) {
+    state.designNotice = say("Este navegador no puede abrir archivos aquí.", "This browser cannot open files here.");
+    render();
+    return;
+  }
+  logoInput.accept = mode === "project"
+    ? "application/json,.json"
+    : "image/png,image/jpeg,image/webp,video/mp4,video/quicktime,application/pdf,.pdf,.json";
+  logoInput.click();
+}
+
+function folderContains(ancestor, maybeChild) {
+  if (!ancestor || !maybeChild) return false;
+  let cursor = maybeChild;
+  const seen = new Set();
+  while (cursor) {
+    if (cursor === ancestor) return true;
+    if (seen.has(cursor)) return false;
+    seen.add(cursor);
+    const raw = listProjects(storage).find((item) => item.id === cursor);
+    cursor = raw ? libraryOf(raw).folderId : "";
+  }
+  return false;
+}
+
+function trashDesigns(ids) {
+  const now = new Date().toISOString();
+  const done = [];
+  for (const id of ids) {
+    if (!id) continue;
+    if (patchItem(storage, id, { library: { deletedAt: now } })) done.push(id);
+  }
+  state.designUndo = done;
+  state.designSheet = "";
+  state.designSelect = false;
+  state.designSelected = [];
+  state.designMove = [];
+  state.designNotice = done.length ? say("Movido a la papelera.", "Moved to trash.") : say("No se pudo mover el elemento.", "Could not move that item.");
+  render();
+}
+
+function copyDesign(id) {
+  const raw = listProjects(storage).find((item) => item.id === id);
+  if (!raw) return;
+  if (loadProject(storage, id)) {
+    const copy = duplicateProject(storage, id);
+    state.designNotice = copy ? say("Copia creada.", "Copy created.") : say("No se pudo copiar.", "Could not copy.");
+    return;
+  }
+  const lib = libraryOf(raw);
+  const item = createContainer(storage, {
+    kind: lib.kind,
+    name: `${raw.name} copia`,
+    access: lib.access,
+    folderId: lib.folderId,
+    description: lib.description,
+  });
+  state.designNotice = item ? say("Copia creada.", "Copy created.") : say("No se pudo copiar.", "Could not copy.");
+}
+
+function runDesignAction(action) {
+  const id = state.designItem;
+  const raw = listProjects(storage).find((item) => item.id === id);
+  if (action === "select-cancel") {
+    state.designSelect = false;
+    state.designSelected = [];
+    render();
+    return;
+  }
+  if (action === "select-move") {
+    state.designMove = [...(state.designSelected || [])];
+    state.designSheet = "move";
+    render();
+    return;
+  }
+  if (action === "select-trash") {
+    trashDesigns(state.designSelected || []);
+    return;
+  }
+  if (action === "create") {
+    state.pendingFolder = state.designFolder || "";
+    state.designCreate = true;
+    state.designCreateQuery = "";
+    state.designSheet = "";
+    designHash();
+    return;
+  }
+  if (action === "upload") {
+    state.pendingFolder = state.designFolder || "";
+    state.designSheet = "";
+    pickDesignFile("library");
+    return;
+  }
+  if (action === "import") {
+    state.pendingFolder = state.designFolder || "";
+    state.designSheet = "";
+    pickDesignFile("project");
+    return;
+  }
+  if (action === "print-now") {
+    state.designSheet = "";
+    render();
+    window.print();
+    return;
+  }
+  if (!raw) return;
+  const lib = libraryOf(raw);
+  if (action === "details") state.designSheet = "details";
+  else if (action === "print") state.designSheet = "print";
+  else if (action === "share") state.designSheet = "share";
+  else if (action === "move") {
+    state.designMove = [id];
+    state.designSheet = "move";
+  } else if (action === "select") {
+    state.designSelect = true;
+    state.designSelected = [id];
+    state.designSheet = "";
+  } else if (action === "fav") {
+    const next = !lib.favorite;
+    patchItem(storage, id, { library: { favorite: next } });
+    state.designSheet = "";
+    state.designNotice = next ? say("Añadido a Favoritos.", "Added to Favorites.") : say("Quitado de Favoritos.", "Removed from Favorites.");
+  } else if (action === "offline") {
+    const next = !lib.offline;
+    patchItem(storage, id, { library: { offline: next } });
+    state.designSheet = "";
+    state.designNotice = next ? say("Disponible sin conexión.", "Available offline.") : say("Quitado de sin conexión.", "Removed from offline.");
+  } else if (action === "trash") {
+    trashDesigns([id]);
+    return;
+  } else if (action === "copy") {
+    copyDesign(id);
+    state.designSheet = "";
+  } else if (action === "template") {
+    const copy = duplicateProject(storage, id);
+    if (copy) {
+      const base = String(copy.name || "").replace(/ copia$/, "");
+      patchItem(storage, copy.id, { name: `${base} plantilla`.slice(0, 80), library: { template: true } });
+      state.designNotice = say("Guardado como plantilla.", "Saved as a template.");
+    } else state.designNotice = say("No se pudo guardar la plantilla.", "Could not save the template.");
+    state.designSheet = "";
+  } else if (action === "download") {
+    if (loadProject(storage, id)) exportJson(id);
+    else state.designNotice = say("Este elemento no tiene un archivo para descargar.", "This item has no file to download.");
+    state.designSheet = "";
+  } else if (action === "link") {
+    const link = designLink(id);
+    state.designSheet = "";
+    const done = (copied) => {
+      state.designNotice = copied ? say("Enlace copiado.", "Link copied.") : link;
+      render();
+    };
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(link).then(() => done(true)).catch(() => done(false));
+      return;
+    }
+    done(false);
+    return;
+  }
+  render();
+}
+
+function handleDesignClick(buttonNode) {
+  const keys = [
+    "designClose", "designClear", "designUndo", "designBack", "designLayout", "designTab", "designDone",
+    "designMenu", "designOpen", "designSheet", "designDraft", "designView", "designTipo", "designCategoria",
+    "designTitular", "designFecha", "designAccess", "designMoveTo", "designAction", "designRenameSave",
+    "designCreateSave", "designCustom",
+  ];
+  if (!keys.some((key) => key in buttonNode.dataset)) return false;
+  if (!("designUndo" in buttonNode.dataset)) {
+    state.designNotice = "";
+    state.designUndo = [];
+  }
+  if ("designClose" in buttonNode.dataset) {
+    state.designSheet = "";
+    render();
+    return true;
+  }
+  if ("designUndo" in buttonNode.dataset) {
+    for (const id of state.designUndo || []) patchItem(storage, id, { library: { deletedAt: null } });
+    state.designUndo = [];
+    state.designNotice = say("Restaurado.", "Restored.");
+    render();
+    return true;
+  }
+  if ("designClear" in buttonNode.dataset) {
+    const key = buttonNode.dataset.designClear;
+    if (key === "all") {
+      state.designTipo = "";
+      state.designCategoria = "";
+      state.designTitular = "";
+      state.designFecha = "";
+      state.designQuery = "";
+    } else if (key === "query") state.designQuery = "";
+    else if (key === "create-query") state.designCreateQuery = "";
+    else if (key === "tipo") state.designTipo = "";
+    else if (key === "categoria") state.designCategoria = "";
+    else if (key === "titular") state.designTitular = "";
+    else if (key === "fecha") state.designFecha = "";
+    render();
+    return true;
+  }
+  if ("designBack" in buttonNode.dataset) {
+    state.designSheet = "";
+    if (buttonNode.dataset.designBack === "create") {
+      state.designCreate = false;
+      state.pendingFolder = "";
+    } else {
+      state.designFolder = "";
+      state.designTab = "curso";
+    }
+    designHash();
+    return true;
+  }
+  if ("designLayout" in buttonNode.dataset) {
+    state.designLayout = buttonNode.dataset.designLayout === "grid" ? "grid" : "list";
+    render();
+    return true;
+  }
+  if ("designTab" in buttonNode.dataset) {
+    state.designTab = buttonNode.dataset.designTab === "seguimiento" ? "seguimiento" : "curso";
+    render();
+    return true;
+  }
+  if ("designDone" in buttonNode.dataset) {
+    const raw = listProjects(storage).find((item) => item.id === buttonNode.dataset.designDone);
+    if (raw) patchItem(storage, raw.id, { library: { done: !libraryOf(raw).done } });
+    render();
+    return true;
+  }
+  if ("designMenu" in buttonNode.dataset) {
+    state.designItem = buttonNode.dataset.designMenu;
+    state.designSheet = "item";
+    render();
+    return true;
+  }
+  if ("designOpen" in buttonNode.dataset) {
+    const id = buttonNode.dataset.designOpen;
+    if (state.designSelect) {
+      const picked = new Set(state.designSelected || []);
+      if (picked.has(id)) picked.delete(id);
+      else picked.add(id);
+      state.designSelected = [...picked];
+      render();
+      return true;
+    }
+    const raw = listProjects(storage).find((item) => item.id === id);
+    const kind = raw ? libraryOf(raw).kind : "";
+    if (kind === "folder" || kind === "course") {
+      state.designFolder = id;
+      state.designCreate = false;
+      state.designTab = "curso";
+      state.designSheet = "";
+      designHash();
+      return true;
+    }
+    const doc = loadProject(storage, id);
+    if (doc) {
+      openDoc(doc);
+      return true;
+    }
+    state.designItem = id;
+    state.designSheet = "details";
+    render();
+    return true;
+  }
+  if ("designView" in buttonNode.dataset) {
+    const views = ["todos", "recientes", "mios", "favoritos", "compartidos", "offline", "enlaces"];
+    if (!views.includes(buttonNode.dataset.designView)) return true;
+    state.designView = buttonNode.dataset.designView;
+    state.designFolder = "";
+    state.designCreate = false;
+    state.pendingFolder = "";
+    state.designSheet = "";
+    state.designSelect = false;
+    state.designSelected = [];
+    designHash();
+    return true;
+  }
+  if ("designTipo" in buttonNode.dataset) {
+    state.designTipo = buttonNode.dataset.designTipo || "";
+    state.designSheet = "";
+    render();
+    return true;
+  }
+  if ("designCategoria" in buttonNode.dataset) {
+    state.designCategoria = buttonNode.dataset.designCategoria || "";
+    state.designSheet = "";
+    render();
+    return true;
+  }
+  if ("designTitular" in buttonNode.dataset) {
+    state.designTitular = buttonNode.dataset.designTitular || "";
+    state.designSheet = "";
+    render();
+    return true;
+  }
+  if ("designFecha" in buttonNode.dataset) {
+    state.designFecha = buttonNode.dataset.designFecha || "";
+    state.designSheet = "";
+    render();
+    return true;
+  }
+  if ("designAccess" in buttonNode.dataset) {
+    patchItem(storage, state.designItem, { library: { access: buttonNode.dataset.designAccess === "link" ? "link" : "private" } });
+    render();
+    return true;
+  }
+  if ("designMoveTo" in buttonNode.dataset) {
+    const target = buttonNode.dataset.designMoveTo || "";
+    const ids = state.designMove?.length ? state.designMove : [state.designItem];
+    let moved = 0;
+    for (const itemId of ids) {
+      if (!itemId || itemId === target) continue;
+      if (target && folderContains(itemId, target)) continue;
+      if (patchItem(storage, itemId, { library: { folderId: target || null } })) moved += 1;
+    }
+    state.designSheet = "";
+    state.designMove = [];
+    state.designSelect = false;
+    state.designSelected = [];
+    state.designNotice = moved ? say("Movido.", "Moved.") : say("No se pudo mover.", "Could not move.");
+    render();
+    return true;
+  }
+  if ("designRenameSave" in buttonNode.dataset) {
+    const name = document.getElementById("md-rename")?.value || "";
+    patchItem(storage, state.designItem, { name });
+    state.designSheet = "item";
+    render();
+    return true;
+  }
+  if ("designCreateSave" in buttonNode.dataset) {
+    const name = document.getElementById("md-nombre")?.value || "";
+    const access = document.querySelector("input[name='md-acceso']:checked")?.value === "link" ? "link" : "private";
+    const kind = state.designDraft === "course" ? "course" : "folder";
+    const item = createContainer(storage, { kind, name, access, folderId: state.designFolder || null });
+    state.designSheet = "";
+    if (!item) {
+      state.designNotice = say("No se pudo crear.", "Could not create it.");
+      render();
+      return true;
+    }
+    state.designFolder = item.id;
+    state.designCreate = false;
+    state.designTab = "curso";
+    designHash();
+    return true;
+  }
+  if ("designCustom" in buttonNode.dataset) {
+    const width = Number(document.getElementById("md-ancho")?.value);
+    const height = Number(document.getElementById("md-alto")?.value);
+    if (!Number.isFinite(width) || !Number.isFinite(height) || width < 64 || height < 64 || width > 2048 || height > 2048) {
+      state.designNotice = say("Usa un tamaño entre 64 y 2048 px.", "Use a size between 64 and 2048 px.");
+      state.dialog = false;
+      render();
+      return true;
+    }
+    applyCustomSize(width, height);
+    return true;
+  }
+  if ("designAction" in buttonNode.dataset) {
+    runDesignAction(buttonNode.dataset.designAction);
+    return true;
+  }
+  if ("designSheet" in buttonNode.dataset) {
+    if (buttonNode.dataset.designDraft) state.designDraft = buttonNode.dataset.designDraft;
+    state.designSheet = buttonNode.dataset.designSheet;
+    render();
+    return true;
+  }
+  return true;
+}
+
 function onRootClick(event) {
   const buttonNode = event.target.closest("button");
   if (!buttonNode || !root.contains(buttonNode)) return;
+  if (handleDesignClick(buttonNode)) return;
   if (buttonNode.dataset.sheetClose != null) {
     state.librarySheet = false;
     state.filterSheet = false;
@@ -2077,6 +2539,17 @@ function bindInputs() {
     if (!(target instanceof HTMLElement)) return;
     if (target.id === "buscar") {
       const view = viewName();
+      if (view === "disenos") {
+        state.designQuery = target.value;
+        render();
+        const field = document.getElementById("buscar");
+        if (field instanceof HTMLInputElement) {
+          field.focus();
+          const end = field.value.length;
+          field.setSelectionRange(end, end);
+        }
+        return;
+      }
       if (view === "fotos" || view === "elementos") {
         state.libraryQuery = target.value;
         render();
@@ -2108,6 +2581,26 @@ function bindInputs() {
         const end = field.value.length;
         field.setSelectionRange(end, end);
       }
+      return;
+    }
+    if (target.id === "md-crear-buscar") {
+      state.designCreateQuery = target.value;
+      render();
+      const field = document.getElementById("md-crear-buscar");
+      if (field instanceof HTMLInputElement) {
+        field.focus();
+        const end = field.value.length;
+        field.setSelectionRange(end, end);
+      }
+      return;
+    }
+    if (target.id === "md-cat-buscar") {
+      const q = target.value.trim().toLowerCase();
+      root.querySelectorAll(".md-cat").forEach((node) => {
+        if (!(node instanceof HTMLElement)) return;
+        const label = (node.textContent || "").toLowerCase();
+        node.hidden = Boolean(q) && !label.includes(q);
+      });
       return;
     }
     if (target.id === "buscar-tamano") {
@@ -2371,6 +2864,11 @@ function startCrop(edge, event) {
 }
 
 function onKey(event) {
+  if (event.key === "Escape" && state.designSheet) {
+    state.designSheet = "";
+    render();
+    return;
+  }
   const tag = document.activeElement?.tagName;
   if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || document.activeElement?.isContentEditable) return;
   if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z") {
@@ -2452,6 +2950,34 @@ async function onLogo() {
     await importJson(file);
     return;
   }
+  if (fileMode === "library") {
+    fileMode = "image";
+    logoInput.accept = "image/png,image/jpeg,image/webp";
+    const base = file.name.replace(/\.[^.]+$/, "").slice(0, 80) || say("Archivo", "File");
+    if (file.type === "application/json" || /\.json$/i.test(file.name)) {
+      await importJson(file);
+      return;
+    }
+    if (file.type.startsWith("image/")) {
+      const doc = blankDocument("square");
+      doc.name = base;
+      doc.library = normalizeLibrary({ kind: "image" });
+      openDoc(doc);
+    } else {
+      const kind = file.type.startsWith("video/") ? "video" : "file";
+      const item = createContainer(storage, {
+        kind,
+        name: file.name.slice(0, 80),
+        folderId: state.pendingFolder || state.designFolder || null,
+      });
+      state.pendingFolder = "";
+      state.designSheet = "";
+      state.designNotice = item ? say("Archivo añadido a tus diseños.", "File added to your designs.") : say("No se pudo guardar el archivo.", "Could not save that file.");
+      if (viewName() === "disenos") render();
+      else go("disenos");
+      return;
+    }
+  }
   if (file.size > LOGO_MAX_BYTES) {
     showLogoError("logo-bytes");
     return;
@@ -2527,6 +3053,7 @@ async function importJson(file) {
   } catch (error) {
     state.status = statusFromError(error);
     state.pageNote = statusText();
+    if (routeFromHash(location.hash) === "disenos") state.designNotice = state.pageNote || say("No se pudo importar.", "Could not import.");
     render();
   }
 }
@@ -2884,7 +3411,7 @@ function boot() {
   bindLayersDrag();
   document.addEventListener("keydown", onKey);
   window.addEventListener("scroll", () => {
-    const home = root.querySelector("[data-tab='plantillas']");
+    const home = root.querySelector(".canva-plantillas, .canva-disenos");
     if (!home) return;
     home.classList.toggle("is-scrolled", window.scrollY > 12);
   }, { passive: true });
@@ -2914,6 +3441,19 @@ function boot() {
   logoInput?.addEventListener("cancel", () => {
     fileMode = "image";
     if (logoInput) logoInput.accept = "image/png,image/jpeg,image/webp";
+    if (viewName() === "disenos") state.pendingFolder = "";
+  });
+  root.addEventListener("focusout", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLTextAreaElement) || target.id !== "curso-desc" || !state.designFolder) return;
+    patchItem(storage, state.designFolder, { library: { description: target.value } });
+  });
+  root.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) return;
+    if (target.id === "md-nombre") document.querySelector("[data-design-create-save]")?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    if (target.id === "md-rename") document.querySelector("[data-design-rename-save]")?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
   });
   descargar?.addEventListener("click", () => { void deliver("png"); });
   descargarJpg?.addEventListener("click", () => { void deliver("jpg"); });
