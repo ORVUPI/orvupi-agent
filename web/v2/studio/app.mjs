@@ -678,9 +678,13 @@ function statusFromError(error) {
   return "invalid";
 }
 
+function routeFromHash(hash) {
+  return String(hash || "").replace(/^#\/?/, "").split(/[?&]/, 1)[0];
+}
+
 function viewName() {
   if (workIdFromHash(location.hash) && state.doc) return "editor";
-  const hash = location.hash.replace(/^#\/?/, "");
+  const hash = routeFromHash(location.hash);
   const known = ["plantillas", "disenos", "editor", "recursos", "marca", "ia"];
   if (location.hash) return known.includes(hash) ? hash : "inicio";
   const path = location.pathname.replace(/\/+$/, "");

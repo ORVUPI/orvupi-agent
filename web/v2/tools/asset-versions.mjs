@@ -8,6 +8,8 @@ const hash={};const h=p=>hash[p]??=createHash('sha256').update(readFileSync(join
 const pages=[];(function walk(d){for(const n of readdirSync(d)){if(n==='node_modules'||n==='work'||n.startsWith('.'))continue;const p=join(d,n);if(statSync(p).isDirectory())walk(p);else if(n.endsWith('.html'))pages.push(p);}})(root);
 let stale=0;
 for(const f of pages){const s=readFileSync(f,'utf8');
- const t=s.replace(/((?:src|href)=")(\/assets\/[^"?#]+\.(?:js|css))(?:\?v=[\w]*)?"/g,(m,a,p)=>existsSync(join(root,p))?`${a}${p}?v=${h(p.slice(1))}"`:m);
+ let t=s.replace(/((?:src|href)=")(\/assets\/[^"?#]+\.(?:js|css))(?:\?v=[\w]*)?"/g,(m,a,p)=>existsSync(join(root,p))?`${a}${p}?v=${h(p.slice(1))}"`:m);
+ const studioCss='studio/studio.css';
+ t=t.replace(/((?:src|href)=")((?:\/studio\/)?studio\.css)(?:\?v=[\w]*)?"/g,(m,a,p)=>existsSync(join(root,studioCss))?`${a}${p}?v=${h(studioCss)}"`:m);
  if(t!==s){stale++;if(!check)writeFileSync(f,t);}}
 console.log(`${pages.length} páginas, ${stale} ${check?'desactualizadas':'actualizadas'}`);if(check&&stale)process.exit(1);

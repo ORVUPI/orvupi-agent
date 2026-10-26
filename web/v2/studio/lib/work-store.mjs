@@ -11,7 +11,7 @@ export function isWorkId(value) {
 }
 
 export function workIdFromHash(hash) {
-  const clean = String(hash || "").replace(/^#\/?/, "");
+  const clean = String(hash || "").replace(/^#\/?/, "").split(/[?&]/, 1)[0];
   const match = /^work\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i.exec(clean);
   return match ? match[1] : "";
 }

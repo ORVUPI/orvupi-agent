@@ -1244,6 +1244,13 @@ describe("studio", () => {
     assert.match(home, /href="\/studio\/"/);
     const headers = readFileSync(path.join(repoRoot(), "web/v2/_headers"), "utf8");
     assert.equal((headers.match(/^\/studio\/\*$/gm) ?? []).length, 0);
+    for (const pattern of ["/studio/*.css", "/studio/*.mjs", "/studio/*.js", "/studio/lib/*.mjs"]) {
+      const block = headers.split("\n").slice(headers.split("\n").findIndex((line) => line === pattern));
+      assert.match(block[1] ?? "", /Cache-Control: public, max-age=0, must-revalidate/, pattern);
+    }
+    const cssBytes = readFileSync(path.join(studioRoot(), "studio.css"));
+    const cssVersion = createHash("sha256").update(cssBytes).digest("hex").slice(0, 10);
+    assert.match(readStudio("index.html"), new RegExp(`href="studio\\.css\\?v=${cssVersion}"`));
     assert.match(readStudio("index.html"), /default-src 'none'/);
     assert.match(readStudio("index.html"), /worker-src 'self'/);
     assert.match(readStudio("index.html"), /connect-src 'self'/);
