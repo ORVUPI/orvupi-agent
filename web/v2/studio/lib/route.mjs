@@ -8,6 +8,14 @@ export function routeFromHash(hash) {
   return segment;
 }
 
+/** Trozos del hash antes de `?` o `&`. `#/mas/marca` → `["mas","marca"]`. */
+export function pathFromHash(hash) {
+  const body = String(hash || "").replace(/^#/, "").replace(/^\/+/, "");
+  const cut = body.search(/[?&]/);
+  const path = cut < 0 ? body : body.slice(0, cut);
+  return path.split("/").filter(Boolean);
+}
+
 export function queryFromHash(hash) {
   const body = String(hash || "").replace(/^#/, "").replace(/^\/+/, "");
   const cut = body.search(/[?&]/);

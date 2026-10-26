@@ -70,8 +70,10 @@ import { applySpan, spanIs } from "./lib/text-style.mjs";
 import { conversionPreview, toOrvdoc, toSlides } from "./lib/work-convert.mjs";
 import { DESIGN_MIME, DOC_MIME, SLIDE_MIME, loadWorkBytes, saveWorkBytes, workIdFromHash } from "./lib/work-store.mjs";
 import { queryFromHash, routeFromHash } from "./lib/route.mjs";
+import { pushNotice } from "./lib/mas-store.mjs";
 import { bindIaRuntime, handleIaClick, handleIaFile, handleIaInput, handleIaKeydown } from "./ia.mjs";
-import { catalogBody, layerStyle, renderDesigns, renderEditor, renderHome, renderIa, renderLibrary, renderMarca, renderPlantillas, renderRecursos } from "./views.mjs";
+import { applyMasChrome, handleMasClick, handleMasInput, renderMas } from "./mas.mjs";
+import { canvaNav, catalogBody, layerStyle, renderDesigns, renderEditor, renderHome, renderIa, renderLibrary, renderMarca, renderPlantillas, renderRecursos } from "./views.mjs";
 
 const root = document.getElementById("studio-root");
 const lang = (document.documentElement.lang || "es").toLowerCase().startsWith("en") ? "en" : "es";
@@ -146,7 +148,7 @@ const COPY = {
     exportar: "Exportar JSON",
     importar: "Importar JSON",
     soloAqui: "Solo en este navegador.",
-    confirmarBorrar: "¿Eliminar este diseño de este navegador?",
+    confirmarBorrar: "¿Mover este diseño a la papelera? Se puede recuperar durante 30 días.",
     elementos: "Elementos",
     texto: "Texto",
     subidos: "Subidos",
@@ -415,7 +417,7 @@ const COPY = {
     exportar: "Export JSON",
     importar: "Import JSON",
     soloAqui: "Only in this browser.",
-    confirmarBorrar: "Delete this design from this browser?",
+    confirmarBorrar: "Move this design to trash? It can be restored for 30 days.",
     elementos: "Elements",
     texto: "Text",
     subidos: "Uploads",
@@ -761,7 +763,7 @@ function statusFromError(error) {
 
 function viewName() {
   if (workIdFromHash(location.hash) && state.doc) return "editor";
-  const known = ["plantillas", "disenos", "editor", "recursos", "marca", "ia", "fotos", "elementos", "favoritos"];
+  const known = ["plantillas", "disenos", "editor", "recursos", "marca", "ia", "fotos", "elementos", "favoritos", "mas"];
   if (location.hash) {
     const segment = routeFromHash(location.hash);
     return known.includes(segment) ? segment : "inicio";
@@ -1263,6 +1265,7 @@ function render() {
     }
     renderDesigns(ctx);
   }
+  else if (view === "mas") renderMas(ctx, { nav: () => canvaNav(ctx, "mas") });
   else if (view === "marca") renderMarca(ctx);
   else if (view === "recursos") renderRecursos(ctx);
   else renderEditor(ctx);
@@ -1478,6 +1481,13 @@ function folderContains(ancestor, maybeChild) {
     cursor = raw ? libraryOf(raw).folderId : "";
   }
   return false;
+}
+
+function moveToTrash(id) {
+  if (!id) return;
+  const moved = patchItem(storage, id, { library: { deletedAt: new Date().toISOString() } });
+  if (!moved) deleteProject(storage, id);
+  if (state.doc?.id === id) state.doc = null;
 }
 
 function trashDesigns(ids) {
@@ -1838,6 +1848,20 @@ function onRootClick(event) {
     return;
   }
   if (handleDesignClick(buttonNode)) return;
+  if (handleMasClick(buttonNode, {
+    storage,
+    lang,
+    render,
+    go,
+    state,
+    onWipe() {
+      state.doc = null;
+      state.past = [];
+      state.future = [];
+      applyMasChrome(storage);
+      go("mas/cuenta/datos");
+    },
+  })) return;
   if (buttonNode.dataset.sheetClose != null) {
     state.librarySheet = false;
     state.filterSheet = false;
@@ -2107,8 +2131,7 @@ function onRootClick(event) {
   if (buttonNode.dataset.duplicate) void duplicateWithImages(buttonNode.dataset.duplicate);
   if (buttonNode.dataset.delete) {
     if (window.confirm(t("confirmarBorrar"))) {
-      deleteProject(storage, buttonNode.dataset.delete);
-      if (state.doc?.id === buttonNode.dataset.delete) state.doc = null;
+      moveToTrash(buttonNode.dataset.delete);
       render();
     }
   }
@@ -2547,6 +2570,7 @@ function bindInputs() {
       render();
       return;
     }
+    if (handleMasInput(target, { storage })) return;
     if (target.id === "buscar") {
       const view = viewName();
       if (view === "disenos") {
@@ -3373,6 +3397,12 @@ async function deliver(kind, forceShare = false) {
     const shareOk = canShareFiles(navigator, file);
     const mode = kind === "jpg" ? "download" : forceShare && shareOk ? "share" : saveMode({ ios: isIOS(navigator), share: shareOk });
     const url = URL.createObjectURL(ready);
+    const label = String(kind || "png").toUpperCase();
+    pushNotice(storage, {
+      id: `export:${label}`,
+      title: lang === "en" ? "Export ready" : "Exportación lista",
+      body: lang === "en" ? `The ${label} file stayed on this device.` : `El archivo ${label} se quedó en este dispositivo.`,
+    });
     if (mode === "share") {
       await navigator.share({ files: [file] });
       setTimeout(() => URL.revokeObjectURL(url), REVOKE_MS);
@@ -3479,10 +3509,10 @@ function boot() {
   borrar?.addEventListener("click", () => {
     if (!state.doc) return;
     if (!window.confirm(t("confirmarBorrar"))) return;
-    deleteProject(storage, state.doc.id);
-    state.doc = null;
-    go("inicio");
+    moveToTrash(state.doc.id);
+    go("mas/papelera");
   });
+  applyMasChrome(storage);
   render();
   const pendingWork = workIdFromHash(location.hash);
   if (pendingWork) void openFromWork(pendingWork);

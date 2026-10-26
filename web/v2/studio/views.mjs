@@ -13,6 +13,7 @@ import { keepsMascot } from "./lib/neutral.mjs";
 import { IDEAS, PLANTILLAS, filterPlantillas, instantiate } from "./lib/plantillas.mjs";
 import { designView } from "./mis-disenos.mjs";
 import { listDesigns } from "./lib/projects.mjs";
+import { loadMas } from "./lib/mas-store.mjs";
 import { documentForThumb } from "./lib/thumb-docs.mjs";
 import { THUMB_CATS, THUMB_GROUPS, thumbCatsFor, thumbsForGrupo, thumbsIn } from "./lib/thumbs.mjs";
 import {
@@ -964,37 +965,20 @@ function navTab(label, view, current, d, image) {
 }
 
 export function canvaNav(ctx, tab) {
-  const { t, lang } = ctx;
-  const base = localeBase();
-  const en = lang === "en";
-  const mas = el("summary", { class: "canva-tab", "aria-label": t("masTab") });
+  const { t } = ctx;
+  const mas = button("", {
+    class: "canva-tab canva-plain",
+    "data-go": "mas",
+    "aria-current": tab === "mas" ? "page" : null,
+    "aria-label": t("masTab"),
+  });
   mas.append(navDots(), el("span", { text: t("masTab") }));
-  const menu = el("details", { class: "canva-tab-menu" }, [
-    mas,
-    el("div", { class: "canva-sheet" }, [
-      el("p", { class: "canva-sheet-title", text: "ORVUPI" }),
-      button(t("disenos"), { "data-go": "disenos" }),
-      button(t("plantillas"), { "data-go": "plantillas" }),
-      button(t("marca"), { "data-go": "marca" }),
-      button(t("recursos"), { "data-go": "recursos" }),
-      el("a", { href: `${base}/work/`, text: t("abrirWork") }),
-      el("a", { href: `${base}/studio/reglas/`, text: en ? "Rules and assets" : "Reglas y recursos" }),
-      el("p", { class: "canva-sheet-note", text: t("local") }),
-      el("div", { class: "canva-langs" }, [
-        el("a", { href: "/studio/", lang: "es", text: "Español" }),
-        el("a", { href: "/en/studio/", lang: "en", text: "English" }),
-        el("a", { href: "/pt-br/studio/", lang: "pt-BR", text: "Português" }),
-        el("a", { href: "/ja/studio/", lang: "ja", text: "日本語" }),
-        el("a", { href: "/ko/studio/", lang: "ko", text: "한국어" }),
-      ]),
-    ]),
-  ]);
   return el("nav", { class: "canva-nav", "aria-label": t("menu") }, [
     navTab(t("inicio"), "inicio", tab, "M4 11 L12 4 L20 11 V20 H4 Z"),
     navTab(t("disenos"), "disenos", tab, "M4 7h6l2 2h8v9H4z"),
     navTab(t("plantillas"), "plantillas", tab, "M3 4h10v8H3zM15 4h6v5h-6zM3 14h6v6H3zM11 14h10v6H11z"),
     navTab(t("iaTab"), "ia", tab, "M12 3l1.2 4.2L17.5 8.5 13.2 9.8 12 14l-1.2-4.2L6.5 8.5l4.3-1.3z", studioAsset("assets/orvupi-avatar.png")),
-    menu,
+    mas,
   ]);
 }
 
@@ -1181,13 +1165,14 @@ function homeResults(ctx) {
 }
 
 function homeFeed(ctx) {
+  const personal = loadMas(ctx.storage).privacy.home !== false;
   return el("div", { class: "canva-feed" }, [
     seguirHome(ctx),
     startHome(ctx),
     usedHome(ctx),
     popularHome(ctx),
     shortcutsHome(ctx),
-    interestHome(ctx),
+    personal ? interestHome(ctx) : null,
     categoriesHome(ctx),
   ]);
 }
