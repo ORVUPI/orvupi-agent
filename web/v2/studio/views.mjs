@@ -10,7 +10,8 @@ import { tablePlainText } from "./lib/table-data.mjs";
 import { piecesOf } from "./lib/text-style.mjs";
 import { keepsMascot } from "./lib/neutral.mjs";
 import { IDEAS, PLANTILLAS, filterPlantillas, instantiate } from "./lib/plantillas.mjs";
-import { listProjects } from "./lib/projects.mjs";
+import { designView } from "./mis-disenos.mjs";
+import { listDesigns } from "./lib/projects.mjs";
 import { documentForThumb } from "./lib/thumb-docs.mjs";
 import { THUMB_CATS, THUMB_GROUPS, thumbCatsFor, thumbsForGrupo, thumbsIn } from "./lib/thumbs.mjs";
 import {
@@ -405,7 +406,7 @@ function thumbBlank(ctx, formatId) {
 
 function thumbSeguir(ctx) {
   const { t } = ctx;
-  const projects = listProjects(ctx.storage).slice(0, 4);
+  const projects = listDesigns(ctx.storage).slice(0, 4);
   if (!projects.length) {
     return el("section", { class: "carril-bloque", id: "seguir" }, [
       el("div", { class: "carril-head" }, [el("h2", { text: t("seguir") })]),
@@ -558,7 +559,7 @@ function groupChips(ctx) {
 
 function seguirSection(ctx) {
   const { t } = ctx;
-  const projects = listProjects(ctx.storage).slice(0, 4);
+  const projects = listDesigns(ctx.storage).slice(0, 4);
   if (!projects.length) {
     return el("section", { class: "carril-bloque", id: "seguir" }, [
       el("div", { class: "carril-head" }, [el("h2", { text: t("seguir") })]),
@@ -777,7 +778,7 @@ function recentCard(item, t) {
 
 function recents(ctx) {
   const { t } = ctx;
-  const items = listProjects(ctx.storage).slice(0, 8);
+  const items = listDesigns(ctx.storage).slice(0, 8);
   if (!items.length) return null;
   return el("section", { class: "bloque" }, [
     el("div", { class: "carril-head" }, [el("h2", { text: t("reciente") })]),
@@ -958,7 +959,7 @@ function navTab(label, view, current, d) {
   return node;
 }
 
-function canvaNav(ctx, tab) {
+export function canvaNav(ctx, tab) {
   const { t, lang } = ctx;
   const base = localeBase();
   const en = lang === "en";
@@ -1027,7 +1028,7 @@ function recentHomeCard(item, t) {
 
 function seguirHome(ctx) {
   const { t } = ctx;
-  const projects = listProjects(ctx.storage).slice(0, 8);
+  const projects = listDesigns(ctx.storage).slice(0, 8);
   if (!projects.length) {
     return el("section", { class: "canva-section", id: "seguir" }, [
       canvaHead(t("seguir")),
@@ -1928,24 +1929,9 @@ export function renderPlantillas(ctx) {
 }
 
 export function renderDesigns(ctx) {
-  const { root, t } = ctx;
-  const items = listProjects(ctx.storage);
-  const list = el("ul", { class: "disenos" }, items.map((item) => el("li", {}, [
-    el("span", { text: item.name || t("abrir") }),
-    button(t("abrir"), { "data-open": item.id }),
-    button(t("duplicar"), { "data-duplicate": item.id }),
-    button(t("eliminar"), { "data-delete": item.id }),
-    button(t("exportar"), { "data-export": item.id }),
-  ])));
-  root.replaceChildren(
-    frame(sideNav(ctx), el("div", { class: "orv-main" }, [
-      el("h1", { class: "hero-titulo", text: t("disenos") }),
-      el("p", { text: t("soloAqui") }),
-      button(t("importar"), { id: "importar-json" }),
-      items.length ? list : el("p", { text: t("vacioReciente") }),
-      el("p", { id: "estado-guardado", "aria-live": "polite", text: ctx.statusText() }),
-    ])),
-  );
+  const { screen, sheet } = designView(ctx);
+  screen.append(canvaNav(ctx, "disenos"));
+  ctx.root.replaceChildren(screen, ...(sheet ? [sheet] : []));
 }
 
 export function renderMarca(ctx) {
