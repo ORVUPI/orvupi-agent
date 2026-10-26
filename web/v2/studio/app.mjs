@@ -65,7 +65,8 @@ import { FILE_NAME, REVOKE_MS, canShareFiles, isIOS, saveMode } from "./lib/save
 import { applySpan, spanIs } from "./lib/text-style.mjs";
 import { conversionPreview, toOrvdoc, toSlides } from "./lib/work-convert.mjs";
 import { DESIGN_MIME, DOC_MIME, SLIDE_MIME, loadWorkBytes, saveWorkBytes, workIdFromHash } from "./lib/work-store.mjs";
-import { catalogBody, layerStyle, renderDesigns, renderEditor, renderHome, renderIa, renderMarca, renderPlantillas, renderRecursos } from "./views.mjs";
+import { queryFromHash, routeFromHash } from "./lib/route.mjs";
+import { catalogBody, layerStyle, renderDesigns, renderEditor, renderHome, renderIa, renderLibrary, renderMarca, renderPlantillas, renderRecursos } from "./views.mjs";
 
 const root = document.getElementById("studio-root");
 const lang = (document.documentElement.lang || "es").toLowerCase().startsWith("en") ? "en" : "es";
@@ -329,6 +330,28 @@ const COPY = {
     duracionEscena: "Segundos",
     videoLimite: "Sin audio y sin MP4 en esta versión gratuita local.",
     colaboracionNota: "La colaboración en tiempo real no está disponible: exige identidad y almacenamiento remoto con coste.",
+    elementosGraficos: "Elementos gráficos",
+    favoritos: "Favoritos",
+    buscaFotosCalidad: "Busca fotos de alta calidad",
+    buscaElementos: "Busca elementos gráficos de alta calidad",
+    fotosPerfectas: "Fotos perfectas",
+    explorarFotos: "Explorar fotos",
+    elementosLlamativos: "Elementos gráficos llamativos",
+    descubreElementos: "Descubre los elementos gráficos",
+    filtros: "Filtros",
+    gratisYPro: "Gratis y Pro",
+    pro: "Pro",
+    aplicarFiltros: "Aplicar filtros",
+    generarImagen: "Generar mi propia imagen",
+    generarElemento: "Generar mi propio elemento",
+    favVacioTitulo: "Esta carpeta está vacía, pero llena de potencial",
+    favVacioCuerpo: "Aquí aparecerán los elementos que añadas a Favoritos.",
+    verCuadricula: "Ver como cuadrícula",
+    verLista: "Ver como lista",
+    anadirFavorito: "Añadir a favoritos",
+    quitarFavorito: "Quitar de favoritos",
+    volver: "Volver",
+    vacioBiblioteca: "Nada coincide con esa búsqueda.",
   },
   en: {
     inicio: "Home",
@@ -576,6 +599,28 @@ const COPY = {
     duracionEscena: "Seconds",
     videoLimite: "No audio and no MP4 in this free local version.",
     colaboracionNota: "Real-time collaboration is unavailable: it needs identity and paid remote storage.",
+    elementosGraficos: "Graphic elements",
+    favoritos: "Favorites",
+    buscaFotosCalidad: "Search high-quality photos",
+    buscaElementos: "Search high-quality graphic elements",
+    fotosPerfectas: "Perfect photos",
+    explorarFotos: "Explore photos",
+    elementosLlamativos: "Bold graphic elements",
+    descubreElementos: "Discover graphic elements",
+    filtros: "Filters",
+    gratisYPro: "Free and Pro",
+    pro: "Pro",
+    aplicarFiltros: "Apply filters",
+    generarImagen: "Generate my own image",
+    generarElemento: "Generate my own element",
+    favVacioTitulo: "This folder is empty, but full of potential",
+    favVacioCuerpo: "Items you add to Favorites will show up here.",
+    verCuadricula: "View as grid",
+    verLista: "View as list",
+    anadirFavorito: "Add to favorites",
+    quitarFavorito: "Remove from favorites",
+    volver: "Back",
+    vacioBiblioteca: "Nothing matches that search.",
   },
 };
 
@@ -628,6 +673,16 @@ const state = {
   photoQuery: "",
   historyNote: "",
   htmlNote: "",
+  librarySheet: false,
+  filterSheet: false,
+  viewSheet: false,
+  libraryQuery: "",
+  libraryTopic: "",
+  priceFilter: "",
+  priceDraft: "",
+  favs: [],
+  favLayout: "grid",
+  routeHash: null,
 };
 
 let fileMode = "image";
@@ -678,18 +733,59 @@ function statusFromError(error) {
   return "invalid";
 }
 
-function routeFromHash(hash) {
-  return String(hash || "").replace(/^#\/?/, "").split(/[?&]/, 1)[0];
-}
-
 function viewName() {
   if (workIdFromHash(location.hash) && state.doc) return "editor";
-  const hash = routeFromHash(location.hash);
-  const known = ["plantillas", "disenos", "editor", "recursos", "marca", "ia"];
-  if (location.hash) return known.includes(hash) ? hash : "inicio";
+  const known = ["plantillas", "disenos", "editor", "recursos", "marca", "ia", "fotos", "elementos", "favoritos"];
+  if (location.hash) {
+    const segment = routeFromHash(location.hash);
+    return known.includes(segment) ? segment : "inicio";
+  }
   const path = location.pathname.replace(/\/+$/, "");
   const hit = known.find((name) => path.endsWith(`/${name}`));
   return hit || "inicio";
+}
+
+function hashText(params) {
+  if (!params) return null;
+  if (params.text != null) return params.text;
+  if (params.q != null) return params.q;
+  if (params.buscar != null) return params.buscar;
+  return null;
+}
+
+function syncRouteFromHash() {
+  const hash = location.hash;
+  if (hash === state.routeHash) return;
+  const prev = state.routeHash;
+  state.routeHash = hash;
+  const segment = routeFromHash(hash);
+  const prevSegment = prev == null ? "" : routeFromHash(prev);
+  const params = queryFromHash(hash);
+  const prevParams = prev == null ? {} : queryFromHash(prev);
+  if (prev != null && segment !== prevSegment) {
+    state.librarySheet = false;
+    state.filterSheet = false;
+    state.viewSheet = false;
+  }
+  const text = hashText(params);
+  const prevText = hashText(prevParams);
+  const library = segment === "fotos" || segment === "elementos";
+  if (text != null) {
+    if (library) state.libraryQuery = text;
+    else state.filters.text = text;
+  } else if (prevText != null) {
+    if (library) state.libraryQuery = "";
+    else state.filters.text = "";
+  }
+  if (params.grupo != null) state.grupo = params.grupo;
+  else if (prevParams.grupo != null) state.grupo = "";
+  if (params.cat != null) state.thumbCat = params.cat;
+  else if (params.thumbCat != null) state.thumbCat = params.thumbCat;
+  else if (prevParams.cat != null || prevParams.thumbCat != null) state.thumbCat = "";
+  if (params.topic != null) state.libraryTopic = params.topic;
+  else if (prevParams.topic != null) state.libraryTopic = "";
+  if (params.precio != null) state.priceFilter = params.precio;
+  else if (prevParams.precio != null) state.priceFilter = "";
 }
 
 function syncPages() {
@@ -1084,6 +1180,13 @@ let rendering = false;
 
 function render() {
   rendering = true;
+  syncRouteFromHash();
+  const path = location.pathname.replace(/\/+$/, "");
+  if (routeFromHash(location.hash) === "creators" || path.endsWith("/creators")) {
+    rendering = false;
+    go("plantillas");
+    return;
+  }
   if (viewName() === "editor" && !state.doc) {
     rendering = false;
     go("inicio");
@@ -1094,6 +1197,7 @@ function render() {
   if (view === "inicio") renderHome(ctx);
   else if (view === "ia") renderIa(ctx);
   else if (view === "plantillas") renderPlantillas(ctx);
+  else if (view === "fotos" || view === "elementos" || view === "favoritos") renderLibrary(ctx);
   else if (view === "disenos") renderDesigns(ctx);
   else if (view === "marca") renderMarca(ctx);
   else if (view === "recursos") renderRecursos(ctx);
@@ -1105,6 +1209,7 @@ function render() {
     if (dialog && !dialog.open) dialog.showModal();
   }
   syncChrome();
+  document.body?.classList.toggle("lib-sheet-open", Boolean(state.librarySheet || state.filterSheet || state.viewSheet));
   rendering = false;
 }
 
@@ -1266,6 +1371,82 @@ function applyColor(hex) {
 function onRootClick(event) {
   const buttonNode = event.target.closest("button");
   if (!buttonNode || !root.contains(buttonNode)) return;
+  if (buttonNode.dataset.sheetClose != null) {
+    state.librarySheet = false;
+    state.filterSheet = false;
+    state.viewSheet = false;
+    render();
+    return;
+  }
+  if (buttonNode.dataset.librarySheet != null) {
+    state.librarySheet = true;
+    state.filterSheet = false;
+    state.viewSheet = false;
+    render();
+    return;
+  }
+  if (buttonNode.dataset.library) {
+    state.librarySheet = false;
+    state.filterSheet = false;
+    state.viewSheet = false;
+    state.libraryTopic = "";
+    state.libraryQuery = "";
+    state.priceFilter = "";
+    state.priceDraft = "";
+    go(buttonNode.dataset.library);
+    return;
+  }
+  if ("topic" in buttonNode.dataset) {
+    const next = buttonNode.dataset.topic || "";
+    state.libraryTopic = state.libraryTopic === next ? "" : next;
+    render();
+    return;
+  }
+  if (buttonNode.dataset.priceOpen != null) {
+    state.priceDraft = state.priceFilter || "";
+    state.filterSheet = true;
+    state.librarySheet = false;
+    render();
+    return;
+  }
+  if ("pricePick" in buttonNode.dataset) {
+    state.priceDraft = buttonNode.dataset.pricePick || "";
+    render();
+    return;
+  }
+  if (buttonNode.dataset.priceApply != null) {
+    state.priceFilter = state.priceDraft || "";
+    state.filterSheet = false;
+    render();
+    return;
+  }
+  if (buttonNode.dataset.fav) {
+    const id = buttonNode.dataset.fav;
+    const list = new Set(state.favs || []);
+    if (list.has(id)) list.delete(id);
+    else list.add(id);
+    state.favs = [...list];
+    render();
+    return;
+  }
+  if (buttonNode.dataset.viewSheet != null) {
+    state.viewSheet = true;
+    state.librarySheet = false;
+    state.filterSheet = false;
+    render();
+    return;
+  }
+  if (buttonNode.dataset.favLayout) {
+    state.favLayout = buttonNode.dataset.favLayout;
+    state.viewSheet = false;
+    render();
+    return;
+  }
+  if (buttonNode.id === "limpiar-biblioteca") {
+    state.libraryQuery = "";
+    render();
+    return;
+  }
   if ("thumbCat" in buttonNode.dataset) {
     state.thumbCat = buttonNode.dataset.thumbCat || "";
     state.filters.uso = "";
@@ -1895,8 +2076,20 @@ function bindInputs() {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
     if (target.id === "buscar") {
+      const view = viewName();
+      if (view === "fotos" || view === "elementos") {
+        state.libraryQuery = target.value;
+        render();
+        const field = document.getElementById("buscar");
+        if (field instanceof HTMLInputElement) {
+          field.focus();
+          const end = field.value.length;
+          field.setSelectionRange(end, end);
+        }
+        return;
+      }
       state.filters.text = target.value;
-      if (viewName() === "inicio" || viewName() === "plantillas") {
+      if (view === "inicio" || view === "plantillas") {
         render();
         const field = document.getElementById("buscar");
         if (field instanceof HTMLInputElement) {
