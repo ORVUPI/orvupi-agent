@@ -122,11 +122,16 @@ export function handleIaFile(file) {
 
 export function handleIaInput(target) {
   if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) return false;
+  // Cada tecla no puede rehacer la vista: el textarea nuevo mueve el cursor.
+  if (target.id === "ia-prompt") {
+    ui.draft = target.value.slice(0, 2000);
+    syncPromptSide();
+    return false;
+  }
   const caret = "selectionStart" in target ? target.selectionStart : null;
   ui.focus = target.id;
   ui.caret = caret;
-  if (target.id === "ia-prompt") ui.draft = target.value.slice(0, 2000);
-  else if (target.id === "ia-buscar") ui.search = target.value.slice(0, 80);
+  if (target.id === "ia-buscar") ui.search = target.value.slice(0, 80);
   else if (target.id === "ia-nombre" || target.id === "ia-about") {
     const data = store();
     const next = target.id === "ia-nombre"
@@ -362,6 +367,32 @@ function iconButton(label, action, paths, className = "ia-icon") {
   return node;
 }
 
+function promptSideKind() {
+  if (ui.busy) return "stop";
+  if (ui.draft.trim() || ui.attachmentName) return "send";
+  return "mic";
+}
+
+function sideButton(kind, text) {
+  if (kind === "stop") {
+    return button("", { class: "ia-stop", "data-ia": "stop", "data-ia-side": "stop", "aria-label": text.stop }, [el("i", { "aria-hidden": "true" })]);
+  }
+  if (kind === "send") {
+    return button("", { class: "ia-send", "data-ia": "send", "data-ia-side": "send", "aria-label": text.send }, [icon(["M12 19V6", "M7 11l5-5 5 5"])]);
+  }
+  return button("", { class: "ia-tool", "data-ia": "mic", "data-ia-side": "mic", "aria-label": text.mic }, [
+    icon(["M12 15a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3z", "M8 11a4 4 0 0 0 8 0", "M12 18v3", "M9 21h6"]),
+  ]);
+}
+
+function syncPromptSide() {
+  const current = document.querySelector(".orvupi-ia .ia-card [data-ia-side]");
+  if (!current) return;
+  const kind = promptSideKind();
+  if (current.getAttribute("data-ia") === kind) return;
+  current.replaceWith(sideButton(kind, copy(runtime.lang === "en" ? "en" : "es")));
+}
+
 function pageHead(text, label, back = "chats") {
   return el("header", { class: "ia-top" }, [
     iconButton(label, back, ["M15 6l-6 6 6 6"]),
@@ -584,17 +615,7 @@ function landingScreen(data, lang, text) {
 
 function dock(text, show) {
   if (!show) return null;
-  const canSend = Boolean(ui.draft.trim() || ui.attachmentName);
-  let side;
-  if (ui.busy) {
-    side = button("", { class: "ia-stop", "data-ia": "stop", "aria-label": text.stop }, [el("i", { "aria-hidden": "true" })]);
-  } else if (canSend) {
-    side = button("", { class: "ia-send", "data-ia": "send", "aria-label": text.send }, [icon(["M12 19V6", "M7 11l5-5 5 5"])]);
-  } else {
-    side = button("", { class: "ia-tool", "data-ia": "mic", "aria-label": text.mic }, [
-      icon(["M12 15a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3z", "M8 11a4 4 0 0 0 8 0", "M12 18v3", "M9 21h6"]),
-    ]);
-  }
+  const side = sideButton(promptSideKind(), text);
   const chip = ui.attachmentName
     ? el("div", { class: "ia-chip" }, [
       el("span", { text: ui.attachmentName }),
@@ -706,6 +727,8 @@ export function renderOrvupiIa(ctx, parts) {
   restoreFocus();
   if (chat) {
     queueMicrotask(() => {
+      const prompt = document.getElementById("ia-prompt");
+      if (prompt && document.activeElement === prompt && !ui.busy) return;
       document.querySelector(".ia-think, .ia-count")?.scrollIntoView({ block: "nearest" });
     });
   }

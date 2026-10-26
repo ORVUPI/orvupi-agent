@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("ORVUPI IA móvil: landing, cajón, memoria, espera y currículum", async ({ page }, testInfo) => {
+test("ORVUPI IA móvil: landing, cajón, currículum y proyecto de empresa", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile", "la referencia es el móvil");
   await page.goto("/studio/#/ia");
   await expect(page.locator("#ia-saludo")).toHaveText("¿Qué diseñamos hoy?");
@@ -55,6 +55,23 @@ test("ORVUPI IA móvil: landing, cajón, memoria, espera y currículum", async (
   const before = await page.locator(".ia-grid img").count();
   await page.getByRole("button", { name: "Mostrar más plantillas" }).click();
   await expect.poll(async () => page.locator(".ia-grid img").count()).toBeGreaterThan(before);
+
+  await page.goto("/studio/#/ia");
+  const empresa = page.locator("#ia-prompt");
+  await empresa.click();
+  await page.evaluate(() => {
+    window.__iaPrompt = document.getElementById("ia-prompt");
+  });
+  await empresa.pressSequentially("Quiero plantillas para proyecto de empresa", { delay: 12 });
+  await expect(empresa).toHaveValue("Quiero plantillas para proyecto de empresa");
+  await expect.poll(() => page.evaluate(() => window.__iaPrompt === document.getElementById("ia-prompt"))).toBe(true);
+  await page.getByRole("button", { name: "Enviar" }).click();
+  await expect(page.locator(".ia-assistant")).toContainText("proyecto de empresa", { timeout: 5000 });
+  await expect(page.locator(".ia-assistant")).not.toContainText(/currículum/i);
+  await expect(page.locator(".ia-grid img")).toHaveCount(4);
+  const srcs = await page.locator(".ia-grid img").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("src") || ""));
+  expect(srcs.some((src) => /curriculum/.test(src))).toBe(false);
+  expect(srcs.some((src) => /presentacion|propuesta|negocio|documento|informe/.test(src))).toBe(true);
 
   await page.goto("/studio/#/");
   await expect(page.getByRole("heading", { name: "Elige cómo empezar" })).toBeVisible();
