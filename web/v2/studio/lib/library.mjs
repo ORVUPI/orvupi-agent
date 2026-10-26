@@ -1,5 +1,5 @@
 /**
- * Biblioteca local de Studio (fotos, elementos, creators).
+ * Biblioteca local de Studio (fotos y elementos).
  * Escenas SVG geométricas originales, CC0, sin stock y sin mascota.
  * No son archivos de la biblioteca del editor (`photos/catalog.json`).
  */
@@ -47,23 +47,6 @@ const ELEMENT_NAMES = {
   ondas: [["Onda", "Wave"], ["Cinta", "Ribbon"], ["Onda doble", "Double wave"], ["Espiral suave", "Soft spiral"]],
   stickers: [["Estrella", "Star"], ["Etiqueta", "Label"], ["Destello", "Spark"], ["Sello", "Seal"]],
 };
-
-const CREATORS = [
-  { id: "marina-soler", name: "Marina Soler", followers: 12840, designs: 86, hue: 262 },
-  { id: "leo-park", name: "Leo Park", followers: 8420, designs: 54, hue: 198 },
-  { id: "nina-varela", name: "Nina Varela", followers: 23110, designs: 140, hue: 332 },
-  { id: "hugo-mendes", name: "Hugo Mendes", followers: 5600, designs: 37, hue: 24 },
-  { id: "aya-okada", name: "Aya Okada", followers: 17330, designs: 98, hue: 152 },
-  { id: "mateo-ruiz", name: "Mateo Ruiz", followers: 4120, designs: 29, hue: 210 },
-  { id: "clara-nunez", name: "Clara Núñez", followers: 9904, designs: 71, hue: 278 },
-  { id: "omar-diallo", name: "Omar Diallo", followers: 15002, designs: 88, hue: 18 },
-  { id: "ines-vidal", name: "Inés Vidal", followers: 7340, designs: 46, hue: 340 },
-  { id: "kenji-mori", name: "Kenji Mori", followers: 18880, designs: 112, hue: 200 },
-  { id: "sara-blum", name: "Sara Blum", followers: 2560, designs: 22, hue: 48 },
-  { id: "theo-march", name: "Théo March", followers: 11220, designs: 63, hue: 250 },
-  { id: "lila-costa", name: "Lila Costa", followers: 6408, designs: 41, hue: 310 },
-  { id: "noor-rahman", name: "Noor Rahman", followers: 20150, designs: 127, hue: 168 },
-];
 
 const RATIOS = [[3, 4], [1, 1], [4, 5], [5, 4], [2, 3], [3, 2], [4, 3], [5, 7]];
 
@@ -506,14 +489,6 @@ export function browseElements() {
   return items;
 }
 
-export function browseCreators() {
-  const photos = browsePhotos();
-  return CREATORS.map((creator, index) => {
-    const samples = [0, 3, 7, 11].map((step) => photos[(index * 13 + step) % photos.length]);
-    return { ...creator, samples };
-  });
-}
-
 export function browseAsset(id) {
   return browsePhotos().find((item) => item.id === id) || browseElements().find((item) => item.id === id) || null;
 }
@@ -528,13 +503,6 @@ export function filterBrowse(items, { query = "", topic = "", price = "" } = {})
     const blob = `${item.es} ${item.en} ${item.topic} ${(item.tags || []).join(" ")}`.toLowerCase();
     return blob.includes(q);
   });
-}
-
-export function filterCreators(query = "") {
-  const q = String(query || "").trim().toLowerCase();
-  const items = browseCreators();
-  if (!q) return items;
-  return items.filter((item) => item.name.toLowerCase().includes(q) || item.id.includes(q));
 }
 
 export function emptyFolderScene() {

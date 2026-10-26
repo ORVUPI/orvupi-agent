@@ -10,14 +10,15 @@ test("móvil: el chevron abre la biblioteca y cada vista monta", async ({ page }
   await page.locator(".tpl-title").click();
   const sheet = page.locator(".lib-sheet");
   await expect(sheet).toBeVisible();
-  await expect(sheet.locator(".lib-row")).toHaveCount(5);
+  await expect(sheet.locator(".lib-grab")).toBeVisible();
+  await expect(sheet.locator(".lib-row")).toHaveCount(4);
   await expect(sheet.locator(".lib-row")).toHaveText([
     "Plantillas",
     "Fotos",
     "Elementos gráficos",
-    "Creators",
     "Favoritos",
   ]);
+  await expect(sheet.getByText("Creators")).toHaveCount(0);
   await expect(sheet.locator(".lib-row[aria-current='true']")).toHaveText("Plantillas");
   const active = await sheet.locator(".lib-row[aria-current='true']").evaluate((node) => {
     const before = getComputedStyle(node, "::before");
@@ -84,16 +85,12 @@ test("móvil: el chevron abre la biblioteca y cada vista monta", async ({ page }
   expect(boxBg).toBe("rgb(243, 244, 246)");
 
   await page.locator(".lib-back").click();
-  await page.locator(".tpl-title").click();
-  await page.locator(".lib-row", { hasText: "Creators" }).click();
-  await expect(page).toHaveURL(/#\/creators$/);
-  const creators = await page.locator("[data-creator]").count();
-  expect(creators).toBeGreaterThanOrEqual(12);
-  await expect(page.locator(".creator-avatar").first()).toBeVisible();
-  await page.locator(".lib-follow").first().click();
-  await expect(page.locator(".lib-follow[aria-pressed='true']").first()).toHaveText("Siguiendo");
-
-  await page.locator(".lib-back").click();
+  await page.goto("/studio/#/creators");
+  await expect(page).toHaveURL(/#\/plantillas$/);
+  await expect(page.locator(".tpl-title")).toContainText("Plantillas");
+  await expect(page.locator("[data-creator]")).toHaveCount(0);
+  await expect(page.locator(".lib-follow")).toHaveCount(0);
+  await expect(page.getByText("Creators", { exact: true })).toHaveCount(0);
   await page.locator(".tpl-title").click();
   await page.locator(".lib-row", { hasText: "Favoritos" }).click();
   await expect(page).toHaveURL(/#\/favoritos$/);
@@ -127,9 +124,9 @@ test("móvil: /en/studio/ muestra la biblioteca en inglés", async ({ page }) =>
     "Templates",
     "Photos",
     "Graphic elements",
-    "Creators",
     "Favorites",
   ]);
+  await expect(page.getByText("Creators", { exact: true })).toHaveCount(0);
   await page.locator(".lib-row", { hasText: "Photos" }).click();
   await expect(page.locator("#buscar")).toHaveAttribute("placeholder", "Search high-quality photos");
   await expect(page.locator(".lib-hero")).toContainText("Perfect photos");

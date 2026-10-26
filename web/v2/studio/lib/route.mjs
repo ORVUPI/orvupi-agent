@@ -1,6 +1,6 @@
 /** Hash de Studio: el tramo de vista va antes de `?`, `&` o `/`. */
 
-export const LIBRARY_VIEWS = ["plantillas", "fotos", "elementos", "creators", "favoritos"];
+export const LIBRARY_VIEWS = ["plantillas", "fotos", "elementos", "favoritos"];
 
 export function routeFromHash(hash) {
   const body = String(hash || "").replace(/^#/, "").replace(/^\/+/, "");

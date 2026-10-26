@@ -331,11 +331,9 @@ const COPY = {
     videoLimite: "Sin audio y sin MP4 en esta versión gratuita local.",
     colaboracionNota: "La colaboración en tiempo real no está disponible: exige identidad y almacenamiento remoto con coste.",
     elementosGraficos: "Elementos gráficos",
-    creators: "Creators",
     favoritos: "Favoritos",
     buscaFotosCalidad: "Busca fotos de alta calidad",
     buscaElementos: "Busca elementos gráficos de alta calidad",
-    buscaCreators: "Busca creators",
     fotosPerfectas: "Fotos perfectas",
     explorarFotos: "Explorar fotos",
     elementosLlamativos: "Elementos gráficos llamativos",
@@ -346,9 +344,6 @@ const COPY = {
     aplicarFiltros: "Aplicar filtros",
     generarImagen: "Generar mi propia imagen",
     generarElemento: "Generar mi propio elemento",
-    seguirCreador: "Seguir",
-    siguiendo: "Siguiendo",
-    creatorsTitulo: "Creators de la comunidad",
     favVacioTitulo: "Esta carpeta está vacía, pero llena de potencial",
     favVacioCuerpo: "Aquí aparecerán los elementos que añadas a Favoritos.",
     verCuadricula: "Ver como cuadrícula",
@@ -605,11 +600,9 @@ const COPY = {
     videoLimite: "No audio and no MP4 in this free local version.",
     colaboracionNota: "Real-time collaboration is unavailable: it needs identity and paid remote storage.",
     elementosGraficos: "Graphic elements",
-    creators: "Creators",
     favoritos: "Favorites",
     buscaFotosCalidad: "Search high-quality photos",
     buscaElementos: "Search high-quality graphic elements",
-    buscaCreators: "Search creators",
     fotosPerfectas: "Perfect photos",
     explorarFotos: "Explore photos",
     elementosLlamativos: "Bold graphic elements",
@@ -620,9 +613,6 @@ const COPY = {
     aplicarFiltros: "Apply filters",
     generarImagen: "Generate my own image",
     generarElemento: "Generate my own element",
-    seguirCreador: "Follow",
-    siguiendo: "Following",
-    creatorsTitulo: "Community creators",
     favVacioTitulo: "This folder is empty, but full of potential",
     favVacioCuerpo: "Items you add to Favorites will show up here.",
     verCuadricula: "View as grid",
@@ -691,7 +681,6 @@ const state = {
   priceFilter: "",
   priceDraft: "",
   favs: [],
-  follows: {},
   favLayout: "grid",
   routeHash: null,
 };
@@ -746,7 +735,7 @@ function statusFromError(error) {
 
 function viewName() {
   if (workIdFromHash(location.hash) && state.doc) return "editor";
-  const known = ["plantillas", "disenos", "editor", "recursos", "marca", "ia", "fotos", "elementos", "creators", "favoritos"];
+  const known = ["plantillas", "disenos", "editor", "recursos", "marca", "ia", "fotos", "elementos", "favoritos"];
   if (location.hash) {
     const segment = routeFromHash(location.hash);
     return known.includes(segment) ? segment : "inicio";
@@ -780,7 +769,7 @@ function syncRouteFromHash() {
   }
   const text = hashText(params);
   const prevText = hashText(prevParams);
-  const library = segment === "fotos" || segment === "elementos" || segment === "creators";
+  const library = segment === "fotos" || segment === "elementos";
   if (text != null) {
     if (library) state.libraryQuery = text;
     else state.filters.text = text;
@@ -1192,6 +1181,12 @@ let rendering = false;
 function render() {
   rendering = true;
   syncRouteFromHash();
+  const path = location.pathname.replace(/\/+$/, "");
+  if (routeFromHash(location.hash) === "creators" || path.endsWith("/creators")) {
+    rendering = false;
+    go("plantillas");
+    return;
+  }
   if (viewName() === "editor" && !state.doc) {
     rendering = false;
     go("inicio");
@@ -1202,7 +1197,7 @@ function render() {
   if (view === "inicio") renderHome(ctx);
   else if (view === "ia") renderIa(ctx);
   else if (view === "plantillas") renderPlantillas(ctx);
-  else if (view === "fotos" || view === "elementos" || view === "creators" || view === "favoritos") renderLibrary(ctx);
+  else if (view === "fotos" || view === "elementos" || view === "favoritos") renderLibrary(ctx);
   else if (view === "disenos") renderDesigns(ctx);
   else if (view === "marca") renderMarca(ctx);
   else if (view === "recursos") renderRecursos(ctx);
@@ -1431,12 +1426,6 @@ function onRootClick(event) {
     if (list.has(id)) list.delete(id);
     else list.add(id);
     state.favs = [...list];
-    render();
-    return;
-  }
-  if (buttonNode.dataset.follow) {
-    const id = buttonNode.dataset.follow;
-    state.follows = { ...(state.follows || {}), [id]: !state.follows?.[id] };
     render();
     return;
   }
@@ -2088,7 +2077,7 @@ function bindInputs() {
     if (!(target instanceof HTMLElement)) return;
     if (target.id === "buscar") {
       const view = viewName();
-      if (view === "fotos" || view === "elementos" || view === "creators") {
+      if (view === "fotos" || view === "elementos") {
         state.libraryQuery = target.value;
         render();
         const field = document.getElementById("buscar");

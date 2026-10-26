@@ -15,13 +15,11 @@ import { documentForThumb } from "./lib/thumb-docs.mjs";
 import { THUMB_CATS, THUMB_GROUPS, thumbCatsFor, thumbsForGrupo, thumbsIn } from "./lib/thumbs.mjs";
 import {
   browseAsset,
-  browseCreators,
   browseElements,
   browsePhotos,
   elementTopics,
   emptyFolderScene,
   filterBrowse,
-  filterCreators,
   photoTopics,
 } from "./lib/library.mjs";
 
@@ -1607,16 +1605,6 @@ function libraryCount(n, lang, one, many) {
   return `${num} ${n === 1 ? one : many}`;
 }
 
-function followersLabel(n, lang) {
-  const locale = libraryLocale(lang);
-  if (n >= 10000) {
-    const compact = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(n / 1000);
-    return lang === "en" ? `${compact}k followers` : `${compact} mil seguidores`;
-  }
-  const num = new Intl.NumberFormat(locale).format(n);
-  return lang === "en" ? `${num} followers` : `${num} seguidores`;
-}
-
 function backButton(ctx) {
   const node = button("", { class: "lib-back canva-plain", "data-go": "plantillas", "aria-label": ctx.t("volver") });
   const icon = svgIcon(["M15 6l-6 6 6 6"]);
@@ -1626,10 +1614,11 @@ function backButton(ctx) {
   return node;
 }
 
-function sheetIcon(paths) {
+function sheetIcon(paths, size = 22) {
   const icon = svgIcon(paths);
-  icon.setAttribute("width", "24");
-  icon.setAttribute("height", "24");
+  icon.setAttribute("width", String(size));
+  icon.setAttribute("height", String(size));
+  for (const node of icon.querySelectorAll("path")) node.setAttribute("stroke-width", "1.6");
   return icon;
 }
 
@@ -1638,14 +1627,26 @@ function librarySheet(ctx) {
   const { t } = ctx;
   const current = ctx.viewName() === "plantillas" ? "plantillas" : ctx.viewName();
   const rows = [
-    ["plantillas", t("plantillas"), ["M6 5h5.2a1.5 1.5 0 0 1 1.5 1.5v11a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 17.5v-11A1.5 1.5 0 0 1 6 5z", "M14.2 5H18a1.5 1.5 0 0 1 1.5 1.5v11a1.5 1.5 0 0 1-1.5 1.5h-3.8a1.5 1.5 0 0 1-1.5-1.5v-11A1.5 1.5 0 0 1 14.2 5z"]],
-    ["fotos", t("fotos"), ["M4 7h16v11H4z", "M8 14l2.2-2.2L13 14.5 16 11"]],
-    ["elementos", t("elementosGraficos"), ["M8 15a3 3 0 0 1 0-5c1.2-2 2.4-3 4-3s2.8 1 4 3a3 3 0 0 1 0 5c-1.4 1.6-2.8 3-4 3s-2.6-1.4-4-3z", "M5 18h4v3H5z", "M15 6h3v3h-3z"]],
-    ["creators", t("creators"), ["M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z", "M4.5 19v-1.2A3.8 3.8 0 0 1 8.3 14h1.4a3.8 3.8 0 0 1 3.8 3.8V19", "M16.5 10.5a2.3 2.3 0 1 0 0-4.6 2.3 2.3 0 0 0 0 4.6z", "M16 14.2h.8A3.2 3.2 0 0 1 20 17.4V19"]],
-    ["favoritos", t("favoritos"), ["M12 4.5l1.7 4.1 4.5.4-3.4 2.9.9 4.4L12 14.2 8.3 16.3l.9-4.4L5.8 9l4.5-.4z"]],
+    ["plantillas", t("plantillas"), [
+      "M6.15 5.15h3.7c.62 0 1.12.5 1.12 1.12v11.46c0 .62-.5 1.12-1.12 1.12h-3.7c-.62 0-1.12-.5-1.12-1.12V6.27c0-.62.5-1.12 1.12-1.12z",
+      "M14.15 5.15h3.7c.62 0 1.12.5 1.12 1.12v11.46c0 .62-.5 1.12-1.12 1.12h-3.7c-.62 0-1.12-.5-1.12-1.12V6.27c0-.62.5-1.12 1.12-1.12z",
+    ]],
+    ["fotos", t("fotos"), [
+      "M4.15 7.15h15.7c.7 0 1.25.55 1.25 1.25v8.2c0 .7-.55 1.25-1.25 1.25H4.15c-.7 0-1.25-.55-1.25-1.25v-8.2c0-.7.55-1.25 1.25-1.25z",
+      "M16.35 10.2a1.15 1.15 0 1 0 0-2.3 1.15 1.15 0 0 0 0 2.3z",
+      "M4.55 16.2l3.55-3.4 2.35 2.15 2.85-3.1 5.15 4.35",
+    ]],
+    ["elementos", t("elementosGraficos"), [
+      "M7.35 17.85a2.7 2.7 0 1 1 0-5.4 2.7 2.7 0 0 1 0 5.4z",
+      "M12 4.7l4.25 7.4H7.75L12 4.7z",
+      "M14.35 13.05h5.15a.85.85 0 0 1 .85.85v4.3a.85.85 0 0 1-.85.85h-5.15a.85.85 0 0 1-.85-.85v-4.3a.85.85 0 0 1 .85-.85z",
+    ]],
+    ["favoritos", t("favoritos"), [
+      "M12 4.15l1.95 4.2 4.55.45-3.45 3.05 1 4.45L12 14.05l-4.05 2.25 1-4.45-3.45-3.05 4.55-.45z",
+    ]],
   ];
   const close = button("", { class: "lib-x canva-plain", "data-sheet-close": "1", "aria-label": t("cerrar") });
-  close.append(svgIcon(["M7 7l10 10", "M17 7L7 17"]));
+  close.append(sheetIcon(["M8 8l8 8", "M16 8l-8 8"], 20));
   const list = el("div", { class: "lib-rows" }, rows.map(([id, label, paths]) => {
     const row = button("", {
       class: "lib-row",
@@ -1657,7 +1658,8 @@ function librarySheet(ctx) {
   }));
   return el("div", { class: "lib-layer", id: "biblioteca-sheet" }, [
     button("", { class: "lib-overlay", "data-sheet-close": "1", "aria-label": t("cerrar") }),
-    el("div", { class: "lib-sheet", role: "dialog", "aria-modal": "true", "aria-label": t("plantillas") }, [
+    el("div", { class: "lib-sheet lib-sheet-nav", role: "dialog", "aria-modal": "true", "aria-label": t("plantillas") }, [
+      el("span", { class: "lib-grab", "aria-hidden": "true" }),
       el("div", { class: "lib-sheet-head" }, [
         el("h2", { text: t("plantillas") }),
         close,
@@ -1861,47 +1863,6 @@ function browseBody(ctx, kind) {
   ]);
 }
 
-function creatorsBody(ctx) {
-  const { lang, state, t } = ctx;
-  const items = filterCreators(state.libraryQuery || "");
-  if (!items.length) return el("div", { class: "lib-feed" }, [el("p", { class: "canva-empty", text: t("vacioBiblioteca") })]);
-  const grid = el("div", { class: "lib-creators" });
-  for (const creator of items) {
-    const follow = button(state.follows?.[creator.id] ? t("siguiendo") : t("seguirCreador"), {
-      class: "lib-follow",
-      "data-follow": creator.id,
-      "aria-pressed": state.follows?.[creator.id] ? "true" : "false",
-    });
-    const thumbs = el("div", { class: "creator-thumbs" });
-    for (const sample of creator.samples.slice(1, 4)) {
-      const shot = el("span", { class: "creator-shot" });
-      shot.append(mountScene(sample.scene));
-      thumbs.append(shot);
-    }
-    const hero = el("div", { class: "creator-hero" });
-    hero.append(mountScene(creator.samples[0].scene));
-    const initials = creator.name.split(" ").slice(0, 2).map((part) => part[0]).join("");
-    const card = el("article", { class: "creator-card", "data-creator": creator.id }, [
-      hero,
-      thumbs,
-      el("div", { class: "creator-meta" }, [
-        el("span", { class: "creator-avatar", style: `background:hsl(${creator.hue} 62% 46%)`, text: initials }),
-        el("span", { class: "creator-id" }, [
-          el("strong", { text: creator.name }),
-          el("span", { text: followersLabel(creator.followers, lang) }),
-        ]),
-        follow,
-      ]),
-    ]);
-    grid.append(card);
-  }
-  const searching = Boolean((state.libraryQuery || "").trim());
-  return el("div", { class: "lib-feed" }, [
-    searching ? null : el("h2", { class: "lib-creators-title", text: t("creatorsTitulo") }),
-    grid,
-  ]);
-}
-
 function favoritesChrome(ctx) {
   const more = button("", { class: "lib-back canva-plain", "data-view-sheet": "1", "aria-label": ctx.t("masOpciones") });
   more.append(dotsIcon());
@@ -1952,8 +1913,8 @@ export function renderLibrary(ctx) {
     mountLibrary(ctx, favoritesChrome(ctx), favoritesBody(ctx));
     return;
   }
-  const placeholder = view === "elementos" ? ctx.t("buscaElementos") : view === "creators" ? ctx.t("buscaCreators") : ctx.t("buscaFotosCalidad");
-  const body = view === "creators" ? creatorsBody(ctx) : browseBody(ctx, view === "elementos" ? "elementos" : "fotos");
+  const placeholder = view === "elementos" ? ctx.t("buscaElementos") : ctx.t("buscaFotosCalidad");
+  const body = browseBody(ctx, view === "elementos" ? "elementos" : "fotos");
   mountLibrary(ctx, librarySearch(ctx, placeholder), body);
 }
 
