@@ -158,8 +158,8 @@ describe("studio fase 1 catálogo", () => {
       documentForThumb: (id: string) => Doc | null;
     }>("lib/thumb-docs.mjs");
     const rows = api.thumbInventory();
-    assert.equal(rows.length, 425);
-    assert.equal(new Set(rows.map((row) => row.templateId)).size, 425);
+    assert.equal(rows.length, 485);
+    assert.equal(new Set(rows.map((row) => row.templateId)).size, 485);
     const byCategory = new Map<string, Set<string>>();
     for (const row of rows) {
       assert.equal(row.editable, true, row.templateId);

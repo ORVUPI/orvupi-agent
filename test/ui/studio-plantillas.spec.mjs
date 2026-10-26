@@ -8,12 +8,15 @@ test("móvil: plantillas usa el shell Canva, sin barra lateral", async ({ page }
   await expect(page.locator(".tpl-title")).toContainText("Plantillas");
   await expect(page.locator("#buscar")).toHaveAttribute("placeholder", "Busca plantillas");
   await expect(page.locator(".tpl-chip")).toHaveCount(6);
-  await expect(page.getByRole("heading", { name: "Echa un vistazo a las plantillas" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Próximos eventos" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Inspirado en tus diseños" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Destacados ORVUPI" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Tendencias cerca de ti" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Más plantillas para ti" })).toBeVisible();
+  await expect(page.locator(".tpl-feed h2")).toHaveText([
+    "Echa un vistazo a las plantillas",
+    "Próximos eventos",
+    "Inspirado en tus diseños",
+    "Descubre ORVUPI",
+    "Tendencias cerca de ti",
+    "Los destacados en ORVUPI",
+    "Más plantillas para ti",
+  ]);
   await expect(page.locator(".tpl-glance .tpl-tile").first()).toBeVisible();
   await expect(page.locator(".tpl-masonry img").first()).toBeVisible();
   await expect(page.locator(".tpl-masonry .canva-card-name, .tpl-masonry .plantilla-nombre")).toHaveCount(0);
@@ -23,6 +26,33 @@ test("móvil: plantillas usa el shell Canva, sin barra lateral", async ({ page }
   await expect(page.locator(".canva-nav")).toContainText("Más");
   await expect(page.locator(".canva-avatar, .canva-badge")).toHaveCount(0);
   await expect(page.locator(".tpl-chevron")).toBeVisible();
+  const chevron = await page.locator(".tpl-chevron").boundingBox();
+  expect(chevron.width).toBeGreaterThanOrEqual(20);
+  expect(chevron.width).toBeLessThanOrEqual(24);
+  expect(chevron.height).toBeGreaterThanOrEqual(20);
+  expect(chevron.height).toBeLessThanOrEqual(24);
+  const thumbs = await page.evaluate(() => {
+    const srcOf = (img) => img.getAttribute("src") || "";
+    const glance = [...document.querySelectorAll(".tpl-glance img")].map(srcOf);
+    const rails = [...document.querySelectorAll(".tpl-rail-card img")].map(srcOf);
+    const masonry = [...document.querySelectorAll(".tpl-masonry img")].map(srcOf);
+    const ids = [...document.querySelectorAll(".tpl-feed .tpl-open")].map((node) => node.getAttribute("data-thumb") || "");
+    const repeated = (list) => [...new Set(list.filter((value, index) => value && list.indexOf(value) !== index))];
+    const all = [...glance, ...rails, ...masonry];
+    return {
+      glance: glance.length,
+      rails: rails.length,
+      masonry: masonry.length,
+      dupSrc: repeated(all),
+      dupId: repeated(ids),
+    };
+  });
+  expect(thumbs.glance).toBeGreaterThan(0);
+  expect(thumbs.rails).toBeGreaterThan(0);
+  expect(thumbs.masonry).toBeGreaterThanOrEqual(390);
+  expect(thumbs.masonry).toBeLessThanOrEqual(430);
+  expect(thumbs.dupSrc).toEqual([]);
+  expect(thumbs.dupId).toEqual([]);
   await expect(page.locator(".tpl-tile", { hasText: "Enlace en la biografía" })).toBeVisible();
   await expect(page.locator(".tpl-tile", { hasText: "Tu historia" })).toBeVisible();
   await expect(page.locator("#studio-root")).not.toContainText(/Disney|Descubre Canva|Canva IA/i);

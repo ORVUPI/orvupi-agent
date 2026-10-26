@@ -1615,11 +1615,14 @@ body.studio-standalone:has(.canva-plantillas) { background: #fff; }
   min-height: 44px;
   gap: 8px;
 }
-.tpl-drop { position: relative; }
+.tpl-drop { position: relative; width: max-content; max-width: calc(100% - 48px); }
 .tpl-title {
   display: inline-flex;
+  flex-flow: row nowrap;
   align-items: center;
   gap: 4px;
+  width: auto;
+  max-width: 100%;
   list-style: none;
   cursor: pointer;
   font-size: 28px;
@@ -1629,8 +1632,8 @@ body.studio-standalone:has(.canva-plantillas) { background: #fff; }
   color: #1a1a1e;
 }
 .tpl-title::-webkit-details-marker { display: none; }
-.tpl-title::marker { content: ""; }
-.tpl-title svg { width: 22px; height: 22px; }
+.tpl-title::marker { content: none; }
+.tpl-title svg { width: 14px; height: 14px; max-width: 14px; max-height: 14px; }
 #studio-root button.tpl-search-btn {
   width: 40px;
   height: 40px;
@@ -1941,12 +1944,21 @@ body.studio-standalone:has(.canva-plantillas)::-webkit-scrollbar,
   height: 0;
 }
 .canva-plantillas .tpl-feed { scrollbar-width: none; }
+#studio-root .canva-plantillas details.tpl-drop {
+  width: max-content;
+  max-width: calc(100% - 48px);
+}
 #studio-root .canva-plantillas summary.tpl-title {
   display: inline-flex;
+  flex-flow: row nowrap;
   align-items: center;
   gap: 6px;
   margin: 0;
   padding: 0;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 36px;
   min-height: 0;
   min-width: 0;
   border: 0;
@@ -1958,19 +1970,36 @@ body.studio-standalone:has(.canva-plantillas)::-webkit-scrollbar,
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.1;
+  list-style: none;
 }
-.tpl-chevron {
+#studio-root .canva-plantillas summary.tpl-title::-webkit-details-marker { display: none; }
+#studio-root .canva-plantillas summary.tpl-title::marker { content: none; font-size: 0; }
+#studio-root .canva-plantillas .tpl-chevron {
   width: 22px;
   height: 22px;
+  min-width: 22px;
+  max-width: 22px;
+  min-height: 22px;
+  max-height: 22px;
+  flex: 0 0 22px;
+  box-sizing: border-box;
+  overflow: hidden;
   border-radius: 50%;
   border: 1px solid #e5e5ea;
   background: #f5f5f7;
   color: #3a3a40;
   display: grid;
   place-items: center;
-  flex: 0 0 22px;
 }
-.tpl-chevron svg { width: 14px; height: 14px; }
+#studio-root .canva-plantillas .tpl-chevron svg {
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  max-width: 14px;
+  min-height: 14px;
+  max-height: 14px;
+  display: block;
+}
 .canva-plantillas .canva-head h2 {
   font-size: 21px;
   font-weight: 700;
