@@ -3193,3 +3193,525 @@ body.studio-standalone:has(.canva-disenos) { background: #fff; }
 @media (max-width: 480px) {
   .md-selectbar, .md-notice { left: 8px; right: 8px; width: auto; transform: none; }
 }
+
+/* ORVUPI IA: chat móvil. El pulpo sustituye al icono del tab y a la espera. */
+#studio-root .canva-nav img.canva-tab-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+#studio-root .canva-nav .ia-nav-dot {
+  width: 5px;
+  height: 5px;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: #8B3DFF;
+  display: block;
+}
+.canva-home.orvupi-ia {
+  background: #fff;
+  color: #1c1c1f;
+  min-height: 100dvh;
+}
+.canva-home.orvupi-ia.is-landing {
+  background-color: #fff;
+  background-image:
+    radial-gradient(120% 58% at 0% -4%, #8eecff 0%, rgba(142, 236, 255, 0) 54%),
+    radial-gradient(92% 52% at 100% 0%, #ff8ed6 0%, rgba(255, 142, 214, 0) 50%),
+    radial-gradient(70% 36% at 62% 16%, #ffe4f7 0%, rgba(255, 255, 255, 0) 62%),
+    linear-gradient(180deg, #e5f8ff 0%, #fde4f6 36%, #ffffff 70%);
+  background-repeat: no-repeat;
+}
+#studio-root .orvupi-ia button {
+  border: 0;
+  background: transparent;
+  min-height: 0;
+  min-width: 0;
+  padding: 0;
+  border-radius: 0;
+  color: inherit;
+  font: inherit;
+  box-shadow: none;
+}
+#studio-root .orvupi-ia h1,
+#studio-root .orvupi-ia h2 {
+  color: #241438;
+  letter-spacing: -0.03em;
+}
+.orvupi-ia .ia-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 56px;
+  padding: calc(8px + env(safe-area-inset-top)) 10px 4px;
+}
+.orvupi-ia.is-sub .ia-top,
+.orvupi-ia.is-chat .ia-top {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #fff;
+}
+.orvupi-ia .ia-top h1 {
+  margin: 0;
+  flex: 1;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+}
+.orvupi-ia .ia-top-gap { width: 44px; }
+.orvupi-ia .ia-top-actions { display: flex; align-items: center; }
+#studio-root .orvupi-ia button.ia-icon,
+#studio-root .orvupi-ia summary.ia-icon {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  color: #1c1c1f;
+  border-radius: 12px;
+}
+#studio-root .orvupi-ia button.ia-icon svg,
+#studio-root .orvupi-ia summary.ia-icon svg { width: 22px; height: 22px; }
+#studio-root .orvupi-ia button.ia-icon.is-square {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  border: 1.5px solid #1c1c1f;
+  border-radius: 10px;
+}
+.orvupi-ia .ia-landing {
+  min-height: calc(100dvh - 230px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px 28px 20px;
+}
+.orvupi-ia .ia-landing h1 {
+  margin: 0 0 12px;
+  font-size: 34px;
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: -0.04em;
+}
+.orvupi-ia .ia-landing p {
+  margin: 0;
+  max-width: 18rem;
+  color: #5c5670;
+  font-size: 16px;
+  line-height: 1.4;
+}
+.ia-dock {
+  position: fixed;
+  z-index: 35;
+  left: 50%;
+  bottom: calc(64px + env(safe-area-inset-bottom));
+  width: min(480px, 100%);
+  margin-left: -240px;
+  padding: 0 16px 12px;
+  box-sizing: border-box;
+}
+.orvupi-ia.is-chat .ia-dock {
+  bottom: 0;
+  padding: 8px 12px calc(10px + env(safe-area-inset-bottom));
+  background: #fff;
+  border-top: 1px solid rgba(16, 32, 50, 0.06);
+}
+@media (max-width: 480px) {
+  .ia-dock { left: 0; margin-left: 0; }
+}
+.ia-card {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  min-height: 56px;
+  padding: 6px;
+  background: #fff;
+  border-radius: 28px;
+  box-shadow: 0 12px 32px rgba(70, 30, 110, 0.16);
+}
+.orvupi-ia.is-chat .ia-card {
+  background: #f4f5f7;
+  box-shadow: none;
+}
+#studio-root .orvupi-ia button.ia-tool,
+#studio-root .orvupi-ia button.ia-send,
+#studio-root .orvupi-ia button.ia-stop {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+#studio-root .orvupi-ia button.ia-tool { color: #3f3f46; }
+#studio-root .orvupi-ia button.ia-tool svg,
+#studio-root .orvupi-ia button.ia-send svg { width: 22px; height: 22px; }
+#studio-root .orvupi-ia button.ia-send {
+  background: #7c3aed;
+  color: #fff;
+}
+#studio-root .orvupi-ia button.ia-stop {
+  background: #fff;
+  border: 2px solid #1c1c1f;
+}
+#studio-root .orvupi-ia button.ia-stop i {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: #1c1c1f;
+  display: block;
+}
+.ia-prompt-label { flex: 1; min-width: 0; margin: 0; }
+#studio-root .orvupi-ia .ia-card textarea {
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  max-height: 96px;
+  margin: 0;
+  padding: 10px 4px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  resize: none;
+  font-size: 16px;
+  line-height: 1.35;
+  box-shadow: none;
+}
+.ia-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: max-content;
+  max-width: 100%;
+  margin: 0 8px 8px;
+  padding: 6px 8px 6px 12px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(70, 30, 110, 0.12);
+  font-size: 13px;
+  font-weight: 650;
+}
+#studio-root .orvupi-ia button.ia-chip-x {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 50%;
+  font-size: 18px;
+}
+.ia-page { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+.ia-chats {
+  min-height: calc(100dvh - 8px);
+  display: flex;
+  flex-direction: column;
+  padding-top: 8px;
+}
+.ia-search-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+}
+.ia-search {
+  position: relative;
+  flex: 1;
+  margin: 0;
+}
+.ia-search svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin-top: -9px;
+  color: #6b7280;
+  pointer-events: none;
+}
+#studio-root .orvupi-ia .ia-search input {
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: #f3f4f6;
+  padding: 0 14px 0 40px;
+  font-size: 15px;
+}
+.ia-chat-list { flex: 1; padding: 12px 8px; }
+.ia-empty {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+  padding: 24px 28px;
+  color: #6b7280;
+}
+.ia-empty strong { color: #1c1c1f; font-size: 16px; }
+.ia-empty p { margin: 0; }
+#studio-root .orvupi-ia button.ia-chat-hit,
+#studio-root .orvupi-ia button.ia-row,
+#studio-root .orvupi-ia button.ia-link {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 8px;
+  border-radius: 12px;
+  text-align: left;
+  font-weight: 650;
+  font-size: 16px;
+}
+#studio-root .orvupi-ia button.ia-link { gap: 12px; }
+#studio-root .orvupi-ia button.ia-link span { flex: 1; }
+#studio-root .orvupi-ia button.ia-link svg { width: 22px; height: 22px; flex: 0 0 auto; }
+.ia-links { margin-top: auto; padding: 8px 8px 12px; }
+.ia-block { padding: 4px 18px 24px; }
+.ia-kicker, .ia-lead { margin: 0 0 8px; }
+.ia-kicker { font-weight: 700; }
+.ia-lead, .ia-note { color: #4b5563; }
+.ia-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+#studio-root .orvupi-ia .ia-field input,
+#studio-root .orvupi-ia .ia-field textarea,
+#studio-root .orvupi-ia .ia-field select {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #e6e6ea;
+  border-radius: 12px;
+  background: #fff;
+  padding: 10px 12px;
+  font-weight: 500;
+}
+#studio-root .orvupi-ia .ia-field textarea { min-height: 96px; }
+#studio-root .orvupi-ia button.ia-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 8px;
+  border-radius: 14px;
+  background: #7c3aed;
+  color: #fff;
+  font-weight: 700;
+}
+#studio-root .orvupi-ia button.ia-primary.is-off { opacity: 0.45; }
+.ia-presets { display: flex; flex-direction: column; gap: 2px; }
+.ia-block h2 { margin: 18px 0 8px; font-size: 18px; }
+.ia-tabs, .ia-seg { display: flex; }
+.ia-tabs {
+  gap: 18px;
+  padding: 0 18px;
+  border-bottom: 1px solid #eee;
+}
+#studio-root .orvupi-ia .ia-tabs button {
+  min-height: 44px;
+  padding: 0 2px;
+  border-radius: 0;
+  color: #6b7280;
+  font-weight: 700;
+  background: transparent;
+  border-bottom: 2px solid transparent;
+}
+#studio-root .orvupi-ia .ia-tabs button[aria-selected="true"] {
+  color: #1c1c1f;
+  background: transparent;
+  border-bottom-color: #1c1c1f;
+}
+.ia-seg {
+  gap: 4px;
+  margin: 8px 16px 12px;
+  padding: 4px;
+  background: #f3f4f6;
+  border-radius: 14px;
+}
+#studio-root .orvupi-ia .ia-seg button {
+  flex: 1;
+  min-height: 36px;
+  border-radius: 10px;
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 700;
+  background: transparent;
+}
+#studio-root .orvupi-ia .ia-seg button[aria-selected="true"] {
+  background: #fff;
+  color: #1c1c1f;
+  box-shadow: 0 1px 3px rgba(16, 32, 50, 0.08);
+}
+.ia-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 8px 16px 150px;
+}
+.ia-turn { display: flex; flex-direction: column; gap: 8px; }
+.ia-bubble {
+  max-width: min(86%, 320px);
+  padding: 12px 14px;
+  font-size: 15px;
+  line-height: 1.4;
+}
+.ia-bubble p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ia-bubble p + p { margin-top: 6px; }
+.ia-user {
+  align-self: flex-end;
+  color: #fff;
+  background: linear-gradient(135deg, #ff8ebf 0%, #e879f9 46%, #8b3dff 100%);
+  border-radius: 22px 22px 5px 22px;
+}
+.ia-assistant {
+  align-self: flex-start;
+  color: #1c1c1f;
+  background: #eceff3;
+  border-radius: 5px 22px 22px 22px;
+}
+.ia-file { font-size: 13px; font-weight: 650; }
+.ia-think {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #4b5563;
+  font-weight: 650;
+  scroll-margin-top: 72px;
+}
+.ia-octo {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  animation: ia-octo 1s ease-in-out infinite;
+}
+@keyframes ia-octo {
+  0%, 100% { transform: translateY(0) rotate(-8deg); }
+  50% { transform: translateY(-3px) rotate(8deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ia-octo { animation: none; }
+}
+.ia-count {
+  margin: 2px 0 0;
+  font-size: 15px;
+  font-weight: 750;
+  scroll-margin-top: 72px;
+}
+.ia-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+#studio-root .orvupi-ia button.ia-tile {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #f6f7f9;
+  box-shadow: 0 6px 16px rgba(16, 32, 50, 0.08);
+}
+.ia-tile img {
+  display: block;
+  width: 100%;
+  height: 168px;
+  object-fit: cover;
+  object-position: top center;
+}
+.ia-fabs {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+#studio-root .orvupi-ia button.ia-fab {
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #fff;
+  color: #1c1c1f;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(40, 20, 80, 0.16);
+}
+#studio-root .orvupi-ia button.ia-fab.is-generate {
+  background: #7c3aed;
+  color: #fff;
+}
+.ia-sheet-layer {
+  position: fixed;
+  z-index: 60;
+  left: 50%;
+  bottom: 0;
+  width: min(480px, 100%);
+  height: 100dvh;
+  margin-left: -240px;
+}
+@media (max-width: 480px) {
+  .ia-sheet-layer { left: 0; margin-left: 0; }
+}
+#studio-root .orvupi-ia button.ia-sheet-scrim {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(16, 32, 50, 0.45);
+}
+.ia-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 8px 16px calc(16px + env(safe-area-inset-bottom));
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+}
+.ia-grab {
+  display: block;
+  width: 40px;
+  height: 4px;
+  margin: 4px auto 10px;
+  border-radius: 999px;
+  background: #e4e4e7;
+}
+.ia-sheet h2 { margin: 4px 0 8px; font-size: 20px; }
+.ia-menu { position: relative; }
+.ia-menu > summary { list-style: none; cursor: pointer; }
+.ia-menu > summary::-webkit-details-marker { display: none; }
+.ia-menu > div {
+  position: absolute;
+  right: 0;
+  top: 44px;
+  z-index: 6;
+  min-width: 200px;
+  padding: 6px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(16, 32, 50, 0.16);
+}
+#studio-root .orvupi-ia .ia-menu button {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 10px;
+  border-radius: 10px;
+  text-align: left;
+  font-weight: 650;
+}
+
