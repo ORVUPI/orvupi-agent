@@ -9,6 +9,7 @@ el texto de otra categoría.
 
 import json
 import re
+import sys
 import unicodedata
 from pathlib import Path
 
@@ -422,5 +423,71 @@ def main():
     print("added", len(fresh), "catalog", len(items) + len(fresh), "mb", round(total_bytes / 1_048_576, 2))
 
 
+def append_feed(count):
+    """Añade piezas nuevas sin borrar el feed ya generado. Cada archivo es único."""
+    if count < 1:
+        raise SystemExit("append pide un entero positivo")
+    photos = load_sources()
+    items = json.loads(CATALOG.read_text())
+    feed_now = sum(1 for item in items if item.get("feed"))
+    if feed_now >= ADD + count:
+        print("append skip", "feed", feed_now, "catalog", len(items))
+        return
+    used_titles = {item.get("title", "") for item in items}
+    used_files = {item.get("file") for item in items}
+    used_ids = {item.get("id") for item in items}
+    next_n = {}
+    for item in items:
+        match = re.search(r"-(\d+)$", item["id"])
+        if not match:
+            continue
+        cat = item["category"]
+        next_n[cat] = max(next_n.get(cat, 0), int(match.group(1)))
+    plan = []
+    base, extra = divmod(count, len(CATS))
+    for index, cat in enumerate(CATS):
+        plan.extend([cat] * (base + (1 if index < extra else 0)))
+    assert len(plan) == count
+    per_cat_count = {}
+    for cat in plan:
+        per_cat_count[cat] = per_cat_count.get(cat, 0) + 1
+    phrases = {cat: titles_for(cat, per_cat_count[cat], set(used_titles)) for cat in per_cat_count}
+    cursor = {cat: 0 for cat in per_cat_count}
+    fresh = []
+    for i, cat in enumerate(plan):
+        title = phrases[cat][cursor[cat]]
+        cursor[cat] += 1
+        n = next_n.get(cat, 0) + 1
+        next_n[cat] = n
+        aspect = ASPECTS[(i * 5 + 3 + len(cat)) % len(ASPECTS)]
+        w, h = size_for(aspect)
+        seed = i + 997
+        shots = [grade(photos[(seed + k * 7) % len(photos)], (seed + k * 2) % 6) for k in range(3)]
+        canvas = Image.new("RGB", (w, h), PAPER[(i + 3) % len(PAPER)])
+        LAYOUTS[(i + 3) % len(LAYOUTS)](canvas, shots, title, LABEL[cat], PAPER[(i + 3) % len(PAPER)])
+        file_name = "thumbs/%s-%02d-%s.png" % (cat, n, slug(title))
+        item_id = "tpl-%s-%02d" % (cat, n)
+        if file_name in used_files or item_id in used_ids:
+            raise SystemExit("id o archivo repetido: " + item_id)
+        save_png(canvas, STUDIO / file_name)
+        fresh.append({
+            "id": item_id,
+            "templateId": item_id,
+            "category": cat,
+            "title": title,
+            "width": w,
+            "height": h,
+            "file": file_name,
+            "vivid": True,
+            "feed": True,
+        })
+    CATALOG.write_text(json.dumps(items + fresh, ensure_ascii=False, indent=2) + "\n")
+    total_bytes = sum((STUDIO / item["file"]).stat().st_size for item in fresh)
+    print("appended", len(fresh), "catalog", len(items) + len(fresh), "mb", round(total_bytes / 1_048_576, 2))
+
+
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == "--append":
+        append_feed(int(sys.argv[2]))
+    else:
+        main()

@@ -1364,7 +1364,11 @@ function plantillasTop(ctx) {
   const { t, lang, state } = ctx;
   const en = lang === "en";
   const chevron = el("span", { class: "tpl-chevron", "aria-hidden": "true" });
-  chevron.append(svgIcon(["M8 10.5l4 4 4-4"]));
+  const chevronIcon = svgIcon(["M8 10.5l4 4 4-4"]);
+  // Sin estos atributos el SVG cae a 300×150 y el círculo del título ocupa el viewport.
+  chevronIcon.setAttribute("width", "14");
+  chevronIcon.setAttribute("height", "14");
+  chevron.append(chevronIcon);
   const summary = el("summary", { class: "tpl-title" }, [
     el("span", { class: "tpl-title-text", text: t("plantillas") }),
     chevron,
@@ -1427,12 +1431,25 @@ function plantillasChips(ctx) {
   }));
 }
 
-function glanceSection(ctx) {
+function glancePicks(ctx, pool) {
+  const picks = [];
+  for (const [id] of glanceList(ctx)) {
+    const samples = pool.filter((item) => item.category === id);
+    const sample = samples.find((item) => item.vivid) || samples[0];
+    if (sample) picks.push(sample);
+  }
+  return picks;
+}
+
+function glanceSection(ctx, picks) {
   const en = ctx.lang === "en";
+  const chosen = new Map();
+  for (const item of picks || []) {
+    if (item && !chosen.has(item.category)) chosen.set(item.category, item);
+  }
   const grid = el("div", { class: "tpl-glance" });
   glanceList(ctx).forEach(([id, es, labelEn], index) => {
-    const samples = thumbsIn(id);
-    const sample = samples.find((item) => item.vivid) || samples[0];
+    const sample = chosen.get(id);
     if (!sample?.file) return;
     const node = button("", {
       class: "tpl-tile canva-plain",
@@ -1487,23 +1504,31 @@ function masonrySection(ctx, title, items) {
 function plantillasHub(ctx) {
   const pool = plantillasPool(ctx);
   const used = new Set();
+  const freshPool = () => pool.filter((item) => item?.file && !used.has(item.id) && !used.has(item.file));
   const take = (list) => {
-    const fresh = list.filter((item) => item && !used.has(item.id));
-    for (const item of fresh) used.add(item.id);
+    const fresh = [];
+    for (const item of list) {
+      if (!item?.file || used.has(item.id) || used.has(item.file)) continue;
+      used.add(item.id);
+      used.add(item.file);
+      fresh.push(item);
+    }
     return fresh;
   };
-  const eventos = take(mixCats(pool, ["invitacion", "flyer", "cartel"], 8));
-  const inspirado = take(mixCats(pool, ["post-instagram", "story", "logo", "tarjeta-visita"], 8));
-  const destacados = take(mixCats(pool, ["video", "portada", "miniatura-youtube", "infografia", "curriculum", "pizarra"], 6));
-  const tendencias = take(mixCats(pool, ["presentacion", "informe", "negocio", "propuesta", "documento"], 6));
-  let rest = pool.filter((item) => !used.has(item.id) || item.vivid);
-  if (rest.length < 6) rest = pool;
+  const glance = take(glancePicks(ctx, freshPool()));
+  const eventos = take(mixCats(freshPool(), ["invitacion", "flyer", "cartel"], 8));
+  const inspirado = take(mixCats(freshPool(), ["post-instagram", "story", "logo", "tarjeta-visita"], 8));
+  const descubre = take(mixCats(freshPool(), ["portada", "video", "cartel", "story", "sitio-web", "post-instagram"], 6));
+  const tendencias = take(mixCats(freshPool(), ["presentacion", "informe", "negocio", "propuesta", "documento"], 6));
+  const destacados = take(mixCats(freshPool(), ["miniatura-youtube", "infografia", "curriculum", "pizarra", "portada", "video"], 6));
+  const rest = freshPool();
   return el("div", { class: "canva-feed tpl-feed" }, [
-    glanceSection(ctx),
+    glanceSection(ctx, glance),
     railSection(ctx, ctx.t("proximosEventos"), eventos, "eventos", "is-wide"),
     railSection(ctx, ctx.t("inspirado"), inspirado, "inspirado", "is-pair"),
-    railSection(ctx, ctx.t("destacados"), destacados, "destacados", "is-feature"),
-    railSection(ctx, ctx.t("tendencias"), tendencias, "tendencias", "is-hero"),
+    railSection(ctx, ctx.t("descubre"), descubre, "descubre", "is-hero"),
+    railSection(ctx, ctx.t("tendencias"), tendencias, "tendencias", "is-feature"),
+    railSection(ctx, ctx.t("destacados"), destacados, "destacados", "is-wide"),
     masonrySection(ctx, ctx.t("masPlantillas"), rest),
   ]);
 }
