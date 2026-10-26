@@ -179,26 +179,36 @@ test("redimensionar una imagen con los tiradores; se guarda y la barra cambia el
   }
 });
 
-test("logo de Work: pulpo con documento centrado y alineado con el texto", async ({ page }, info) => {
+test("logo de Work: pulpo avatar centrado y «ORVUPI Work» entero", async ({ page }, info) => {
   for (const size of viewports(info.project.name)) {
     await page.setViewportSize(size);
     await page.goto("/");
     const mobileMark = page.locator(".ow-brandmark");
     const title = page.locator(".ow-top-title");
     await expect(title).toBeVisible();
+    await expect(title).toContainText("ORVUPI Work");
     const t = (await title.boundingBox())!;
+    const markImg = (await mobileMark.isVisible()) ? mobileMark.locator("img") : title.locator("img");
+    await expect(markImg).toHaveAttribute("src", /\/avatar\.png$/);
+    const fitted = await title.evaluate((el) => {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const box = range.getBoundingClientRect();
+      return { right: box.right, width: box.width, text: el.textContent ?? "" };
+    });
+    expect(fitted.text.includes("ORVUPI Work")).toBe(true);
+    expect(fitted.right).toBeLessThanOrEqual(size.width + 0.5);
+    expect(fitted.width).toBeGreaterThan(70);
     if (await mobileMark.isVisible()) {
       const b = (await mobileMark.boundingBox())!;
-      const i = (await mobileMark.locator("img").boundingBox())!;
+      const i = (await markImg.boundingBox())!;
       // La imagen está centrada en su botón y el botón alineado con el texto
       expect(Math.abs(i.x + i.width / 2 - (b.x + b.width / 2))).toBeLessThanOrEqual(1);
       expect(Math.abs(i.y + i.height / 2 - (b.y + b.height / 2))).toBeLessThanOrEqual(1);
       expect(Math.abs(b.y + b.height / 2 - (t.y + t.height / 2))).toBeLessThanOrEqual(3);
-      expect(await mobileMark.locator("img").evaluate((img) => (img as HTMLImageElement).naturalWidth > 0)).toBe(true);
+      expect(await markImg.evaluate((img) => (img as HTMLImageElement).naturalWidth > 0)).toBe(true);
     } else {
-      const logo = title.locator("img");
-      await expect(logo).toBeVisible();
-      const l = (await logo.boundingBox())!;
+      const l = (await markImg.boundingBox())!;
       expect(Math.abs(l.y + l.height / 2 - (t.y + t.height / 2))).toBeLessThanOrEqual(2);
     }
     await page.locator(".ow-topbar").screenshot({ path: join(await screenshotDir(), `083-logo-${size.width}-${info.project.name}.png`) });
