@@ -1119,8 +1119,9 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
   .ow-top-actions > .ow-dropdown,
   .ow-top-actions > .ow-save,
   .ow-top-actions > .ow-button { flex: none; }
-  .ow-top-title,
   .ow-top-actions > .ow-filename { flex: 1 1 auto; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; font-size: 14px; line-height: 32px; white-space: nowrap; }
+  /* El nombre del producto no es un hueco flexible: si encoge, «ORVUPI Work» pierde la última letra. */
+  .ow-top-title { flex: 0 0 auto; min-width: max-content; max-width: none; overflow: visible; text-overflow: clip; font-size: 14px; line-height: 1.15; white-space: nowrap; }
   .ow-topbar .ow-icon-button { min-width: 32px; min-height: 32px; padding: 0; }
   .ow-topbar .ow-dropdown > button, .ow-topbar .ow-file span.ow-button { min-height: 32px; padding: 2px 6px; font-size: 12px; white-space: nowrap; }
   .ow-search { flex: 1 0 100%; order: 5; }
@@ -1402,14 +1403,36 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
 .ow-docs-tab .ow-tab-main span.ow-tab-title { flex: 1; font-size: 14px; }
 .ow-tablist .ow-docs-outline { margin-top: 2px; margin-bottom: 6px; }
 
-/* 0.8.3 · Marca de Work: pulpo con documento, centrado con el texto */
+/* Marca: el avatar del pulpo ORVUPI, centrado con el texto «ORVUPI Work». */
 .ow-brandmark { display: none; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 0; margin: 0; border: 0; border-radius: 12px; background: transparent; cursor: pointer; flex: none; }
-.ow-brandmark img { display: block; width: 32px; height: 32px; }
+.ow-brandmark img { display: block; width: 32px; height: 32px; object-fit: contain; }
 .ow-brandmark:focus-visible { outline: 2px solid #b0124f; outline-offset: 1px; }
 .ow-top-title { display: inline-flex; align-items: center; gap: 8px; line-height: 1; }
-.ow-top-logo { display: block; width: 28px; height: 28px; flex: none; }
+.ow-top-logo { display: block; width: 28px; height: 28px; flex: none; object-fit: contain; }
 @media (max-width: 960px) { .ow-brandmark { display: inline-flex; } .ow-top-logo { display: none; } .ow-top-actions { align-items: center; } }
-@media (max-width: 768px) { .ow-brandmark { width: 32px; height: 32px; border-radius: 10px; } .ow-brandmark img { width: 28px; height: 28px; } }
+@media (max-width: 768px) { .ow-brandmark { width: 32px; height: 32px; border-radius: 10px; } .ow-brandmark img { width: 30px; height: 30px; } }
+/* Cabe «ORVUPI Work» entero junto a Importar y Exportar. Por debajo de 380px se aprietan huecos, no el título. */
+@media (max-width: 520px) {
+  .ow-topbar { padding-left: 4px; padding-right: 4px; }
+  .ow-top-actions { gap: 2px; }
+  .ow-topbar .ow-dropdown > button,
+  .ow-topbar .ow-file span.ow-button { padding: 2px 5px; }
+  /* エクスポート es más ancho que Exportar: solo en japonés se aprietan los botones. */
+  :root:lang(ja) .ow-topbar { padding-left: 2px; padding-right: 2px; }
+  :root:lang(ja) .ow-top-actions { gap: 1px; }
+  :root:lang(ja) .ow-topbar .ow-dropdown > button,
+  :root:lang(ja) .ow-topbar .ow-file span.ow-button { padding: 2px 2px; font-size: 11px; }
+  :root:lang(ja) .ow-topbar .ow-lang select { width: 32px; min-width: 32px; max-width: 32px; height: 32px; }
+}
+@media (max-width: 380px) {
+  .ow-topbar { padding-left: 2px; padding-right: 2px; }
+  .ow-top-actions { gap: 1px; }
+  .ow-topbar .ow-dropdown > button,
+  .ow-topbar .ow-file span.ow-button { padding: 2px 2px; }
+  .ow-brandmark { width: 28px; height: 28px; }
+  .ow-brandmark img { width: 26px; height: 26px; }
+  .ow-topbar .ow-lang select { width: 32px; min-width: 32px; max-width: 32px; height: 32px; }
+}
 
 /* 0.8.3 · Identidad ORVUPI en todas las herramientas: crema, rosa del pulpo, bordes gruesos y sombra «sticker» */
 :root { --sticker: 3px 3px 0 #102032; --pink-soft: #ffe1ea; --cream: #fff8ec; }
