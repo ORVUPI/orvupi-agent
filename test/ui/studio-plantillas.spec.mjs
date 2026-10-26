@@ -1,5 +1,19 @@
 import { expect, test } from "@playwright/test";
 
+test("el hash con consulta abre Plantillas y conserva la URL", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const hash of ["#/plantillas", "#/plantillas?foo=1", "#/plantillas&resto"]) {
+    await page.goto(`/studio/${hash}`);
+    await expect(page.locator(".canva-plantillas")).toBeVisible();
+    await expect(page.locator("#buscar")).toHaveAttribute("placeholder", "Busca plantillas");
+    await expect(page.locator(".tpl-title")).toContainText("Plantillas");
+    expect(await page.evaluate(() => location.hash)).toBe(hash);
+  }
+  await page.goto("/studio/#/no-es-ruta?foo=1");
+  await expect(page.locator(".canva-home")).toBeVisible();
+  await expect(page.locator(".canva-plantillas")).toHaveCount(0);
+});
+
 test("móvil: plantillas usa el shell Canva, sin barra lateral", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/studio/#/plantillas");

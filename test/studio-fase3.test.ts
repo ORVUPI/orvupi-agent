@@ -218,6 +218,7 @@ describe("studio fase 3 y 4", () => {
     const native = bridge.conversionPreview(doc, "native");
     assert.match(native.losses.join(" "), /nube/);
     assert.equal(workIdFromHash("#/work/123e4567-e89b-12d3-a456-426614174000"), "123e4567-e89b-12d3-a456-426614174000");
+    assert.equal(workIdFromHash("#/work/123e4567-e89b-12d3-a456-426614174000?v=1"), "123e4567-e89b-12d3-a456-426614174000");
     assert.equal(workIdFromHash("#/editor"), "");
     const record = workRecord({
       id: "123e4567-e89b-12d3-a456-426614174000",
