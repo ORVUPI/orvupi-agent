@@ -1432,6 +1432,8 @@ ul[data-type="taskList"] li { display: flex; gap: 8px; align-items: flex-start; 
   .ow-brandmark { width: 28px; height: 28px; }
   .ow-brandmark img { width: 26px; height: 26px; }
   .ow-topbar .ow-lang select { width: 32px; min-width: 32px; max-width: 32px; height: 32px; }
+  :root:lang(ja) .ow-topbar .ow-icon-button { min-width: 30px; width: 30px; }
+  :root:lang(ja) .ow-topbar .ow-lang select { width: 30px; min-width: 30px; max-width: 30px; height: 30px; }
 }
 
 /* 0.8.3 · Identidad ORVUPI en todas las herramientas: crema, rosa del pulpo, bordes gruesos y sombra «sticker» */
