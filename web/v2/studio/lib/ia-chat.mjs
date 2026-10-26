@@ -45,21 +45,40 @@ export const ABOUT_PRESETS = [
   },
 ];
 
-const RULES = [
-  { cat: "curriculum", format: "cv", es: "currículum", en: "resume", re: /curricul|curriculum|\bcv\b|resume|hoja de vida/ },
-  { cat: "presentacion", format: "deck", es: "presentación", en: "presentation", re: /presentaci|diapositiv|\bslides?\b/ },
-  { cat: "flyer", format: "flyer", es: "flyer", en: "flyer", re: /\bflyers?\b|folleto|volante/ },
-  { cat: "cartel", format: "poster", es: "cartel", en: "poster", re: /cartel|poster/ },
-  { cat: "logo", format: "logo", es: "logo", en: "logo", re: /\blogos?\b/ },
-  { cat: "post-instagram", format: "ig", es: "publicación", en: "post", re: /instagram/ },
-  { cat: "story", format: "story", es: "historia", en: "story", re: /\bstories?\b|\bstory\b|historias?\b/ },
-  { cat: "documento", format: "doc", es: "documento", en: "document", re: /documentos?\b|\bdocs?\b/ },
-  { cat: "infografia", format: "info", es: "infografía", en: "infographic", re: /infograf/ },
-  { cat: "invitacion", format: "invite", es: "invitación", en: "invitation", re: /invitaci/ },
-  { cat: "video", format: "video", es: "vídeo", en: "video", re: /\bvideos?\b/ },
-  { cat: "sitio-web", format: "web", es: "sitio web", en: "website", re: /sitio web|pagina web|website/ },
-  { cat: "miniatura-youtube", format: "thumb", es: "miniatura", en: "thumbnail", re: /miniatura|youtube|thumbnail/ },
+/** Categorías del catálogo. La palabra «plantilla» no elige ninguna por sí sola. */
+const CATALOG = [
+  { id: "curriculum", format: "cv", es: "currículum", en: "resume", keys: ["curriculum", "curriculo", "cv", "resume", "hoja de vida"] },
+  { id: "presentacion", format: "deck", es: "presentación", en: "presentation", keys: ["presentacion", "presentaciones", "presentation", "presentations", "diapositiva", "diapositivas", "slide", "slides", "powerpoint", "ppt", "deck", "decks"] },
+  { id: "propuesta", format: "doc", es: "propuesta", en: "proposal", keys: ["propuesta", "propuestas", "proposal", "proposals"] },
+  { id: "documento", format: "doc", es: "documento", en: "document", keys: ["documento", "documentos", "document", "documents", "doc", "docs", "brief", "acuerdo", "onboarding"] },
+  { id: "informe", format: "doc", es: "informe", en: "report", keys: ["informe", "informes", "reporte", "report", "reports", "memoria", "dashboard"] },
+  { id: "negocio", format: "doc", es: "negocio", en: "business", keys: ["one-pager", "one pager", "fact sheet"] },
+  { id: "tarjeta-visita", format: "card", es: "tarjeta de visita", en: "business card", keys: ["tarjeta de visita", "tarjetas de visita", "business card", "business cards", "tarjeta", "tarjetas"] },
+  { id: "logo", format: "logo", es: "logo", en: "logo", keys: ["logo", "logos", "logotipo", "logotipos"] },
+  { id: "flyer", format: "flyer", es: "flyer", en: "flyer", keys: ["flyer", "flyers", "folleto", "folletos", "volante", "volantes"] },
+  { id: "cartel", format: "poster", es: "cartel", en: "poster", keys: ["cartel", "carteles", "poster", "posters", "afiche", "afiches"] },
+  { id: "infografia", format: "info", es: "infografía", en: "infographic", keys: ["infografia", "infografias", "infographic", "infographics"] },
+  { id: "invitacion", format: "invite", es: "invitación", en: "invitation", keys: ["invitacion", "invitaciones", "invitation", "invitations"] },
+  { id: "post-instagram", format: "ig", es: "publicación", en: "post", keys: ["instagram", "publicacion", "publicaciones", "post"] },
+  { id: "story", format: "story", es: "historia", en: "story", keys: ["story", "stories", "historia", "historias"] },
+  { id: "miniatura-youtube", format: "thumb", es: "miniatura", en: "thumbnail", keys: ["miniatura", "miniaturas", "youtube", "thumbnail", "thumbnails"] },
+  { id: "portada", format: "video", es: "portada", en: "cover", keys: ["portada", "portadas", "cover", "covers", "ebook"] },
+  { id: "video", format: "video", es: "vídeo", en: "video", keys: ["video", "videos"] },
+  { id: "pizarra", format: "board", es: "pizarra", en: "whiteboard", keys: ["pizarra", "pizarras", "whiteboard", "kanban"] },
+  { id: "sitio-web", format: "web", es: "sitio web", en: "website", keys: ["sitio web", "pagina web", "website", "landing"] },
 ];
+
+const BUSINESS_IDS = ["presentacion", "propuesta", "negocio", "documento", "informe"];
+const BUSINESS_RE = /(?:^|[^a-z0-9])(?:proyectos?(?:[^a-z0-9]+de[^a-z0-9]+(?:empresa|negocio))?|projects?|empresariales?|empresas?|negocios?|pitch|corporativ[a-z]*|startups?|comercial(?:es)?|compan(?:y|ies)|business(?:es)?)(?=$|[^a-z0-9])/;
+const ASKING_RE = /(?:^|[^a-z0-9])(?:plantillas?|templates?)(?=$|[^a-z0-9])|^(?:quiero|necesito|busco|ensen\w*|muestr\w*|dame|hazme|disena|disenar|show|want|need|looking)\b/;
+
+const META = new Set([
+  "plantilla", "plantillas", "template", "templates", "quiero", "necesito", "busco", "busca", "buscar",
+  "ensename", "ensenar", "ensenarme", "muestrame", "mostrame", "muestra", "mostrar", "ver", "dame", "hazme", "hacer", "haz", "disena", "disenar",
+  "diseno", "disenos", "para", "por", "con", "sin", "una", "uno", "unos", "unas", "un", "el", "la", "los",
+  "las", "de", "del", "al", "en", "y", "o", "u", "mi", "mis", "tu", "tus", "que", "como", "favor", "mas",
+  "the", "and", "for", "of", "to", "my", "me", "show", "want", "need", "please", "some", "looking", "a", "an",
+]);
 
 export function fold(value) {
   return String(value || "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
@@ -218,8 +237,11 @@ export function copy(lang) {
     results: (n) => (en ? `${n} ${n === 1 ? "result" : "results"}` : `${n} ${n === 1 ? "resultado" : "resultados"}`),
     catalog: (label) => (en ? `These ${label} templates are in the Studio catalog.` : `Estas plantillas de ${label} están en el catálogo de Studio.`),
     askFormat: en
-      ? "Tell me a format and I will show templates from the Studio catalog: resume, presentation, flyer, logo, or story."
-      : "Dime un formato y te enseño plantillas del catálogo de Studio: currículum, presentación, flyer, logo o historia.",
+      ? "Tell me a format and I will show templates from the Studio catalog: presentation, proposal, logo, poster, or story."
+      : "Dime un formato y te enseño plantillas del catálogo de Studio: presentación, propuesta, logo, cartel o historia.",
+    miss: (topic, alts) => (en
+      ? `Nothing in the Studio catalog matches “${topic}”. Closest options: ${alts}.`
+      : `No hay plantillas de «${topic}» en el catálogo de Studio. Lo más cercano: ${alts}.`),
     attached: en ? "The file is in this chat." : "El archivo ya está en este chat.",
   };
 }
@@ -249,23 +271,141 @@ export function hrefFor(screen, chatId = "") {
   return query ? `#/ia?${query}` : "#/ia";
 }
 
+function categoryById(id) {
+  return CATALOG.find((item) => item.id === id) || null;
+}
+
+function hasPhrase(text, phrase) {
+  const needle = fold(phrase).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "[^a-z0-9]+");
+  if (!needle) return false;
+  return new RegExp(`(?:^|[^a-z0-9])${needle}(?=$|[^a-z0-9])`).test(text);
+}
+
+function specificMatches(folded) {
+  return CATALOG.filter((item) => item.keys.some((key) => hasPhrase(folded, key)));
+}
+
+function refineHits(hits, folded) {
+  const story = ["story", "stories", "historia", "historias"].some((word) => hasPhrase(folded, word));
+  const post = ["post", "publicacion", "publicaciones"].some((word) => hasPhrase(folded, word));
+  const ig = hasPhrase(folded, "instagram");
+  let next = hits.slice();
+  if (ig && story) next = next.filter((item) => item.id !== "post-instagram");
+  else if (ig && post) next = next.filter((item) => item.id !== "story");
+  else if (ig && !story && !post && next.length && next.every((item) => item.id === "post-instagram")) {
+    const storyCat = categoryById("story");
+    if (storyCat) next = next.concat(storyCat);
+  }
+  return next;
+}
+
+function contentTokens(folded) {
+  return folded.split(/[^a-z0-9]+/).filter((token) => token.length > 2 && !META.has(token));
+}
+
+function orList(labels, lang) {
+  const clean = labels.filter(Boolean);
+  if (clean.length <= 1) return clean[0] || "";
+  const conj = lang === "en" ? " or " : " o ";
+  if (clean.length === 2) return `${clean[0]}${conj}${clean[1]}`;
+  return `${clean.slice(0, -1).join(", ")}${conj}${clean[clean.length - 1]}`;
+}
+
+function catLabel(item, lang) {
+  return lang === "en" ? item.en : item.es;
+}
+
+function humanLabel(cats, lang) {
+  const labels = cats.map((item) => catLabel(item, lang));
+  if (labels.length <= 1) return labels[0] || "";
+  const conj = lang === "en" ? " and " : " y ";
+  if (labels.length === 2) return `${labels[0]}${conj}${labels[1]}`;
+  return `${labels.slice(0, -1).join(", ")}${conj}${labels[labels.length - 1]}`;
+}
+
+function defaultNear(lang) {
+  const ids = ["presentacion", "propuesta", "logo", "cartel", "story"];
+  return orList(ids.map((id) => catLabel(categoryById(id), lang)), lang);
+}
+
+function closestCategories(tokens, thumbs) {
+  const blobs = new Map();
+  for (const item of thumbs) {
+    if (!item?.category || item.category === "meme" || item.category === "curriculum") continue;
+    const list = blobs.get(item.category) || [];
+    if (list.length >= 8) continue;
+    list.push(fold(item.title));
+    blobs.set(item.category, list);
+  }
+  const ranked = [];
+  for (const cat of CATALOG) {
+    if (cat.id === "curriculum") continue;
+    const blob = (blobs.get(cat.id) || []).join(" ");
+    let score = 0;
+    for (const token of tokens) {
+      if (token.length < 4 || !blob.includes(token)) continue;
+      score += token.length;
+    }
+    if (score > 0) ranked.push({ cat, score });
+  }
+  ranked.sort((a, b) => b.score - a.score || a.cat.es.localeCompare(b.cat.es));
+  return ranked.slice(0, 3).map((item) => item.cat);
+}
+
+function templatesFor(catIds, thumbs) {
+  const buckets = catIds.map((id) => thumbs.filter((item) => item && item.category === id && item.file && item.category !== "meme"));
+  const out = [];
+  let index = 0;
+  while (out.length < 24) {
+    let added = false;
+    for (const bucket of buckets) {
+      const item = bucket[index];
+      if (!item) continue;
+      out.push({ id: item.id, title: item.title, file: item.file, category: item.category });
+      added = true;
+      if (out.length >= 24) break;
+    }
+    if (!added) break;
+    index += 1;
+  }
+  return out;
+}
+
+function fromCategories(cats, lang, thumbs, label) {
+  const templates = templatesFor(cats.map((item) => item.id), thumbs);
+  const name = label || humanLabel(cats, lang);
+  return {
+    text: templates.length ? copy(lang).catalog(name) : copy(lang).askFormat,
+    templates,
+    format: templates.length ? cats[0].format : "",
+    label: templates.length ? name : "",
+  };
+}
+
 export function localAnswer(text, lang, thumbs = THUMBS) {
   const folded = fold(text);
-  const wantsTemplates = /plantilla|template/.test(folded);
-  const rule = RULES.find((item) => item.re.test(folded)) || (wantsTemplates ? RULES[0] : null);
-  if (!rule) {
+  const specific = refineHits(specificMatches(folded), folded);
+  if (specific.some((item) => item.id === "curriculum")) {
+    return fromCategories(specific.filter((item) => item.id === "curriculum"), lang, thumbs);
+  }
+  if (specific.length) return fromCategories(specific, lang, thumbs);
+  if (BUSINESS_RE.test(folded)) {
+    const cats = BUSINESS_IDS.map(categoryById).filter(Boolean);
+    const label = lang === "en" ? "business project" : "proyecto de empresa";
+    return fromCategories(cats, lang, thumbs, label);
+  }
+  const asking = ASKING_RE.test(folded);
+  const tokens = contentTokens(folded);
+  if (!asking || !tokens.length) {
     return { text: copy(lang).askFormat, templates: [], format: "", label: "" };
   }
-  const templates = thumbs
-    .filter((item) => item.category === rule.cat && item.file && item.category !== "meme")
-    .slice(0, 24)
-    .map((item) => ({ id: item.id, title: item.title, file: item.file, category: item.category }));
-  const label = lang === "en" ? rule.en : rule.es;
+  const near = closestCategories(tokens, thumbs);
+  const alts = near.length ? orList(near.map((item) => catLabel(item, lang)), lang) : defaultNear(lang);
   return {
-    text: templates.length ? copy(lang).catalog(label) : copy(lang).askFormat,
-    templates,
-    format: templates.length ? rule.format : "",
-    label,
+    text: copy(lang).miss(tokens.join(" ").slice(0, 80), alts),
+    templates: [],
+    format: "",
+    label: "",
   };
 }
 

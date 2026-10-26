@@ -52,23 +52,61 @@ describe("studio ORVUPI IA", () => {
     assert.equal(ia.copy("es").noScheduled, "No hay tareas programadas");
   });
 
-  test("un currículum o la palabra plantillas devuelven la rejilla del catálogo", async () => {
+  test("un currículum pedido a propósito sigue siendo currículum", async () => {
     const ia = await load<{
       localAnswer: (text: string, lang: string) => { text: string; format: string; templates: { id: string; file: string; category: string }[] };
+      answerPrompt: (text: string, lang: string) => Promise<{ text: string; format: string; templates: { category: string }[] }>;
       workBootStatus: () => { wired: boolean; source: string };
     }>("lib/ia-chat.mjs");
-    for (const phrase of ["Quiero un CV", "plantillas de currículum", "enséñame plantillas"]) {
+    for (const phrase of ["Quiero un CV", "plantillas de currículum", "hoja de vida"]) {
       const answer = ia.localAnswer(phrase, "es");
-      assert.equal(answer.format, "cv");
+      assert.equal(answer.format, "cv", phrase);
       assert.ok(answer.templates.length >= 4, phrase);
-      assert.ok(answer.templates.every((item) => item.category === "curriculum" && item.file.includes("curriculum")));
+      assert.ok(answer.templates.every((item) => item.category === "curriculum" && item.file.includes("curriculum")), phrase);
       assert.match(answer.text, /currículum/);
     }
     const logo = ia.localAnswer("plantillas de logo", "es");
     assert.equal(logo.format, "logo");
+    assert.ok(logo.templates.every((item) => item.category === "logo"));
+    const vague = ia.localAnswer("enséñame plantillas", "es");
+    assert.equal(vague.templates.length, 0);
+    assert.equal(vague.format, "");
     assert.equal(ia.localAnswer("hola", "es").templates.length, 0);
     assert.equal(ia.workBootStatus().source, "catalog");
     assert.equal(ia.workBootStatus().wired, false);
+    const hooked = await ia.answerPrompt("Quiero plantillas para proyecto de empresa", "es");
+    assert.equal(hooked.templates.some((item) => item.category === "curriculum"), false);
+  });
+
+  test("proyecto de empresa no devuelve currículum y otros encargos eligen su categoría", async () => {
+    const ia = await load<{
+      localAnswer: (text: string, lang: string) => { text: string; format: string; templates: { id: string; file: string; category: string; title: string }[] };
+    }>("lib/ia-chat.mjs");
+    const business = ["presentacion", "propuesta", "negocio", "documento", "informe"];
+    for (const phrase of ["Quiero plantillas para proyecto de empresa", "plantillas de pitch para la empresa", "I want templates for a business project"]) {
+      const answer = ia.localAnswer(phrase, phrase.startsWith("I ") ? "en" : "es");
+      assert.notEqual(answer.format, "cv", phrase);
+      assert.equal(/curricul|resume/i.test(answer.text), false, answer.text);
+      assert.ok(answer.templates.length >= 4, phrase);
+      assert.ok(answer.templates.every((item) => business.includes(item.category)), phrase);
+      const first = answer.templates.slice(0, 4).map((item) => item.category);
+      assert.ok(first.includes("presentacion"), phrase);
+      assert.ok(first.includes("propuesta"), phrase);
+      assert.ok(first.includes("negocio"), phrase);
+      assert.equal(first.includes("curriculum"), false);
+    }
+    const cartel = ia.localAnswer("Necesito un cartel para el evento", "es");
+    assert.equal(cartel.format, "poster");
+    assert.ok(cartel.templates.every((item) => item.category === "cartel"));
+    const story = ia.localAnswer("Quiero un story de Instagram", "es");
+    assert.equal(story.format, "story");
+    assert.ok(story.templates.every((item) => item.category === "story"));
+    assert.equal(/curricul/i.test(story.text), false);
+    const miss = ia.localAnswer("Quiero plantillas de bodas", "es");
+    assert.equal(miss.templates.length, 0);
+    assert.match(miss.text, /bodas/);
+    assert.match(miss.text, /presentación/);
+    assert.equal(/curricul/i.test(miss.text), false);
   });
 
   test("la estantería y los chats se quedan en este navegador", async () => {
