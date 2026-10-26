@@ -3820,6 +3820,10 @@ body.studio-standalone:has(.canva-disenos) { background: #fff; }
   box-shadow: none;
   position: relative;
 }
+#studio-root .mas-screen .mas-tools button.mas-iconbtn {
+  background: transparent;
+  color: #1c1c1f;
+}
 .mas-iconbtn.is-spacer { visibility: hidden; pointer-events: none; }
 .mas-iconbtn svg,
 .mas-ico svg,
@@ -4055,7 +4059,10 @@ body.studio-standalone:has(.canva-disenos) { background: #fff; }
 .mas-product small, .mas-course span, .mas-feature span { color: var(--mas-muted); font-size: 12.5px; }
 .mas-tile-face img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .mas-tile-face.is-colors { display: flex; }
-.mas-tile-face.is-colors i { flex: 1; }
+.mas-tile-face.is-colors i { flex: 1; display: block; min-height: 100%; }
+.mas-fill-pink { background: #ff3070; }
+.mas-fill-navy { background: #102032; }
+.mas-fill-cream { background: #fff8ec; }
 .mas-tile-face.is-type { display: grid; place-items: center; font-size: 56px; font-weight: 750; color: #6d28d9; background: #e7f6ef; }
 .mas-tile-face.is-quote { display: grid; place-items: center; font-size: 72px; color: #8B3DFF; background: #f3e8ff; }
 .mas-tile-face.is-bars { display: flex; align-items: flex-end; gap: 8px; padding: 16px; background: #eef6ff; }
@@ -4310,6 +4317,13 @@ body.studio-standalone:has(.canva-disenos) { background: #fff; }
 .mas-swatch { width: 42px; height: 42px; border-radius: 12px; border: 1px solid rgba(0, 0, 0, 0.08); flex: 0 0 auto; }
 .mas-swatches small, .mas-keys span { display: block; color: var(--mas-muted); font-size: 12px; }
 .mas-fonts li { font-size: 28px; }
+.mas-font-anton { font-family: "Studio Anton", sans-serif; }
+.mas-font-bangers { font-family: "Studio Bangers", sans-serif; }
+.mas-font-archivo { font-family: "Studio Archivo", sans-serif; }
+.mas-font-silkscreen { font-family: "Studio Pixel", sans-serif; }
+.mas-font-audiowide { font-family: "Studio Audiowide", sans-serif; }
+.mas-font-barlow { font-family: "Studio Barlow", sans-serif; }
+.mas-font-saira { font-family: "Studio Saira", sans-serif; }
 .mas-keys li { justify-content: space-between; font-size: 13px; }
 .mas-keys code { font-size: 12px; }
 .mas-bytes { margin: 8px 16px; font-size: 32px; font-weight: 750; letter-spacing: -0.03em; }
@@ -4341,6 +4355,8 @@ body.studio-standalone:has(.canva-disenos) { background: #fff; }
   font-weight: 700;
 }
 .mas-flash { margin: 8px 16px; padding: 10px 12px; border-radius: 12px; background: #ecfdf5; color: #065f46; font-weight: 650; }
+html[data-studio-theme="dark"] { color-scheme: dark; }
+html[data-studio-theme="light"] { color-scheme: light; }
 html[data-studio-theme="dark"] .canva-home.mas-screen {
   --mas-ink: #f4f4f5;
   --mas-muted: #b6b6c2;

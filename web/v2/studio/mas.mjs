@@ -46,6 +46,7 @@ const ui = {
   noticeSelect: false,
   picked: [],
   flash: "",
+  savedQuery: {},
 };
 
 let themeListen = false;
@@ -156,6 +157,14 @@ function crown() {
   return svg;
 }
 
+function fillClass(hex) {
+  const value = String(hex || "").toLowerCase();
+  if (value === BRAND.pink.toLowerCase()) return "mas-fill-pink";
+  if (value === BRAND.navy.toLowerCase()) return "mas-fill-navy";
+  if (value === BRAND.cream.toLowerCase()) return "mas-fill-cream";
+  return "mas-fill-cream";
+}
+
 function asset(path) {
   return new URL(path, import.meta.url).href;
 }
@@ -205,7 +214,6 @@ export function applyMasChrome(storage) {
   root.dataset.reduceMotion = prefs.a11y.reduceMotion ? "1" : "0";
   root.dataset.contrast = prefs.a11y.contrast ? "1" : "0";
   root.dataset.textScale = prefs.a11y.textSize || "md";
-  root.style.colorScheme = theme === "dark" ? "dark" : "light";
   if (!themeListen && typeof window !== "undefined" && window.matchMedia) {
     themeListen = true;
     window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
@@ -513,7 +521,7 @@ function renderMarca(ctx, path) {
     return el("div", { class: "mas-page" }, [
       subhead(ctx, tr(lang, "Colores", "Colors"), back),
       el("ul", { class: "mas-swatches" }, colors.map(([hex, label]) => el("li", {}, [
-        el("span", { class: "mas-swatch", style: `background:${hex}` }),
+        el("span", { class: `mas-swatch ${fillClass(hex)}` }),
         el("span", {}, [el("strong", { text: label }), el("small", { text: hex })]),
       ]))),
       cta(tr(lang, "Ver la marca en Studio", "See the brand in Studio"), null, "marca"),
@@ -523,7 +531,7 @@ function renderMarca(ctx, path) {
     return el("div", { class: "mas-page" }, [
       subhead(ctx, tr(lang, "Fuentes", "Fonts"), back),
       lead(tr(lang, "Estas tipografías van incluidas. No hace falta un plan de pago.", "These typefaces are included. No paid plan is required.")),
-      el("ul", { class: "mas-fonts" }, FONTS.map((font) => el("li", { style: `font-family:${font.css}`, text: font[lang] || font.es }))),
+      el("ul", { class: "mas-fonts" }, FONTS.map((font) => el("li", { class: `mas-font-${font.id}`, text: font[lang] || font.es }))),
     ]);
   }
   if (part === "voz") {
@@ -569,7 +577,11 @@ function renderMarcaHome(ctx) {
   const tiles = [
     tile(lang, { es: "Plantillas de la marca", en: "Brand templates", go: "mas/marca/plantillas", face: face("is-wash", [el("span", { class: "mas-mini a" }), el("span", { class: "mas-mini b" })]) }),
     tile(lang, { es: "Logos", en: "Logos", go: "mas/marca/logos", face: face("is-logo", [logo ? el("img", { src: asset(logo.archivo), alt: "" }) : el("span", { text: "OR" })]) }),
-    tile(lang, { es: "Colores", en: "Colors", go: "mas/marca/colores", face: face("is-colors", [el("i", { style: `background:${BRAND.pink}` }), el("i", { style: `background:${BRAND.navy}` }), el("i", { style: `background:${BRAND.cream}` })]) }),
+    tile(lang, { es: "Colores", en: "Colors", go: "mas/marca/colores", face: face("is-colors", [
+      el("i", { class: fillClass(BRAND.pink) }),
+      el("i", { class: fillClass(BRAND.navy) }),
+      el("i", { class: fillClass(BRAND.cream) }),
+    ]) }),
     tile(lang, { es: "Fuentes", en: "Fonts", go: "mas/marca/fuentes", face: face("is-type", [el("span", { text: "Aa" })]) }),
     tile(lang, { es: "Voz de la marca", en: "Brand voice", go: "mas/marca/voz", face: face("is-quote", [el("span", { text: "“" })]) }),
     tile(lang, { es: "Fotos", en: "Photos", go: "mas/marca/fotos", face: face("is-photo", [photo ? el("img", { src: photoUrl(photo.id), alt: "" }) : null]) }),
@@ -1143,8 +1155,10 @@ export function renderMas(ctx, parts) {
   purgeExpiredTrash(ctx.storage);
   const path = pathFromHash(typeof location === "undefined" ? "" : location.hash).slice(1).join("/");
   if (path !== ui.path) {
+    const remember = loadMas(ctx.storage).privacy.searches !== false;
+    if (remember && ui.path) ui.savedQuery[ui.path] = ui.query;
     ui.path = path;
-    ui.query = "";
+    ui.query = remember ? (ui.savedQuery[path] || "") : "";
     ui.chip = "";
     ui.step = 1;
     ui.noticeSelect = false;
@@ -1187,6 +1201,7 @@ export function handleMasClick(buttonNode, ctx) {
     const key = buttonNode.dataset.masToggle;
     const next = togglePref(storage, key);
     if (key === "ai.history" && next.ai.history === false) clearIaChats(storage);
+    if (key === "privacy.searches" && next.privacy.searches === false) ui.savedQuery = {};
     refresh();
     return true;
   }
