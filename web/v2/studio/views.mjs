@@ -13,6 +13,17 @@ import { IDEAS, PLANTILLAS, filterPlantillas, instantiate } from "./lib/plantill
 import { listProjects } from "./lib/projects.mjs";
 import { documentForThumb } from "./lib/thumb-docs.mjs";
 import { THUMB_CATS, THUMB_GROUPS, thumbCatsFor, thumbsForGrupo, thumbsIn } from "./lib/thumbs.mjs";
+import {
+  browseAsset,
+  browseCreators,
+  browseElements,
+  browsePhotos,
+  elementTopics,
+  emptyFolderScene,
+  filterBrowse,
+  filterCreators,
+  photoTopics,
+} from "./lib/library.mjs";
 
 const GROUPS = {
   "para-ti": ["square", "story", "x", "tiktok", "ig", "deck", "doc", "cv", "video", "flyer", "logo", "poster", "web", "board"],
@@ -1361,30 +1372,21 @@ function previewCard(item, ctx, extra) {
 }
 
 function plantillasTop(ctx) {
-  const { t, lang, state } = ctx;
-  const en = lang === "en";
+  const { t, state } = ctx;
   const chevron = el("span", { class: "tpl-chevron", "aria-hidden": "true" });
   const chevronIcon = svgIcon(["M8 10.5l4 4 4-4"]);
   // Sin estos atributos el SVG cae a 300×150 y el círculo del título ocupa el viewport.
   chevronIcon.setAttribute("width", "14");
   chevronIcon.setAttribute("height", "14");
   chevron.append(chevronIcon);
-  const summary = el("summary", { class: "tpl-title" }, [
-    el("span", { class: "tpl-title-text", text: t("plantillas") }),
-    chevron,
-  ]);
-  const items = [
-    button(t("todasPlantillas"), {
-      "data-grupo": "",
-      class: "tpl-menu-item",
-      "aria-pressed": state.grupo ? "false" : "true",
-    }),
-    ...THUMB_GROUPS.map((group) => button(en ? group.en : group.es, {
-      "data-grupo": group.id,
-      class: "tpl-menu-item",
-      "aria-pressed": state.grupo === group.id ? "true" : "false",
-    })),
-  ];
+  const title = button("", {
+    class: "tpl-title canva-plain",
+    "data-library-sheet": "1",
+    "aria-expanded": state.librarySheet ? "true" : "false",
+    "aria-haspopup": "dialog",
+    "aria-controls": "biblioteca-sheet",
+  });
+  title.append(el("span", { class: "tpl-title-text", text: t("plantillas") }), chevron);
   const finder = button("", {
     id: "tpl-buscar-icono",
     class: "tpl-search-btn canva-plain",
@@ -1392,10 +1394,7 @@ function plantillasTop(ctx) {
   });
   finder.append(svgIcon(["M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14zM20 20l-3.5-3.5"]));
   return el("header", { class: "tpl-top" }, [
-    el("div", { class: "tpl-top-bar" }, [
-      el("details", { class: "tpl-drop" }, [summary, el("div", { class: "tpl-menu" }, items)]),
-      finder,
-    ]),
+    el("div", { class: "tpl-top-bar" }, [title, finder]),
   ]);
 }
 
@@ -1582,10 +1581,389 @@ function plantillasShell(ctx, body) {
   return node;
 }
 
+function mountScene(scene, className) {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", `0 0 ${scene.w} ${scene.h}`);
+  svg.setAttribute("preserveAspectRatio", "xMidYMid slice");
+  svg.setAttribute("aria-hidden", "true");
+  if (className) svg.setAttribute("class", className);
+  for (const node of scene.nodes) {
+    const shape = document.createElementNS(SVG_NS, node.t);
+    for (const [key, value] of Object.entries(node)) {
+      if (key === "t" || value == null || value === false) continue;
+      shape.setAttribute(key, String(value));
+    }
+    svg.append(shape);
+  }
+  return svg;
+}
+
+function libraryLocale(lang) {
+  return lang === "en" ? "en-US" : "es-ES";
+}
+
+function libraryCount(n, lang, one, many) {
+  const num = new Intl.NumberFormat(libraryLocale(lang)).format(n);
+  return `${num} ${n === 1 ? one : many}`;
+}
+
+function followersLabel(n, lang) {
+  const locale = libraryLocale(lang);
+  if (n >= 10000) {
+    const compact = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(n / 1000);
+    return lang === "en" ? `${compact}k followers` : `${compact} mil seguidores`;
+  }
+  const num = new Intl.NumberFormat(locale).format(n);
+  return lang === "en" ? `${num} followers` : `${num} seguidores`;
+}
+
+function backButton(ctx) {
+  const node = button("", { class: "lib-back canva-plain", "data-go": "plantillas", "aria-label": ctx.t("volver") });
+  const icon = svgIcon(["M15 6l-6 6 6 6"]);
+  icon.setAttribute("width", "22");
+  icon.setAttribute("height", "22");
+  node.append(icon);
+  return node;
+}
+
+function sheetIcon(paths) {
+  const icon = svgIcon(paths);
+  icon.setAttribute("width", "24");
+  icon.setAttribute("height", "24");
+  return icon;
+}
+
+function librarySheet(ctx) {
+  if (!ctx.state.librarySheet) return null;
+  const { t } = ctx;
+  const current = ctx.viewName() === "plantillas" ? "plantillas" : ctx.viewName();
+  const rows = [
+    ["plantillas", t("plantillas"), ["M6 5h5.2a1.5 1.5 0 0 1 1.5 1.5v11a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 17.5v-11A1.5 1.5 0 0 1 6 5z", "M14.2 5H18a1.5 1.5 0 0 1 1.5 1.5v11a1.5 1.5 0 0 1-1.5 1.5h-3.8a1.5 1.5 0 0 1-1.5-1.5v-11A1.5 1.5 0 0 1 14.2 5z"]],
+    ["fotos", t("fotos"), ["M4 7h16v11H4z", "M8 14l2.2-2.2L13 14.5 16 11"]],
+    ["elementos", t("elementosGraficos"), ["M8 15a3 3 0 0 1 0-5c1.2-2 2.4-3 4-3s2.8 1 4 3a3 3 0 0 1 0 5c-1.4 1.6-2.8 3-4 3s-2.6-1.4-4-3z", "M5 18h4v3H5z", "M15 6h3v3h-3z"]],
+    ["creators", t("creators"), ["M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z", "M4.5 19v-1.2A3.8 3.8 0 0 1 8.3 14h1.4a3.8 3.8 0 0 1 3.8 3.8V19", "M16.5 10.5a2.3 2.3 0 1 0 0-4.6 2.3 2.3 0 0 0 0 4.6z", "M16 14.2h.8A3.2 3.2 0 0 1 20 17.4V19"]],
+    ["favoritos", t("favoritos"), ["M12 4.5l1.7 4.1 4.5.4-3.4 2.9.9 4.4L12 14.2 8.3 16.3l.9-4.4L5.8 9l4.5-.4z"]],
+  ];
+  const close = button("", { class: "lib-x canva-plain", "data-sheet-close": "1", "aria-label": t("cerrar") });
+  close.append(svgIcon(["M7 7l10 10", "M17 7L7 17"]));
+  const list = el("div", { class: "lib-rows" }, rows.map(([id, label, paths]) => {
+    const row = button("", {
+      class: "lib-row",
+      "data-library": id,
+      "aria-current": current === id ? "true" : null,
+    });
+    row.append(sheetIcon(paths), el("span", { text: label }));
+    return row;
+  }));
+  return el("div", { class: "lib-layer", id: "biblioteca-sheet" }, [
+    button("", { class: "lib-overlay", "data-sheet-close": "1", "aria-label": t("cerrar") }),
+    el("div", { class: "lib-sheet", role: "dialog", "aria-modal": "true", "aria-label": t("plantillas") }, [
+      el("div", { class: "lib-sheet-head" }, [
+        el("h2", { text: t("plantillas") }),
+        close,
+      ]),
+      list,
+    ]),
+  ]);
+}
+
+function filterSheet(ctx) {
+  if (!ctx.state.filterSheet) return null;
+  const { t, state } = ctx;
+  const draft = state.priceDraft ?? state.priceFilter ?? "";
+  const options = [
+    ["", t("gratisYPro")],
+    ["pro", t("pro")],
+    ["gratis", t("gratis")],
+  ];
+  const close = button("", { class: "lib-x canva-plain", "data-sheet-close": "1", "aria-label": t("cerrar") });
+  close.append(svgIcon(["M7 7l10 10", "M17 7L7 17"]));
+  return el("div", { class: "lib-layer", id: "filtros-sheet" }, [
+    button("", { class: "lib-overlay", "data-sheet-close": "1", "aria-label": t("cerrar") }),
+    el("div", { class: "lib-sheet lib-sheet-filter", role: "dialog", "aria-modal": "true", "aria-label": t("filtros") }, [
+      el("div", { class: "lib-sheet-head" }, [el("h2", { text: t("precio") }), close]),
+      el("div", { class: "lib-price", role: "radiogroup", "aria-label": t("precio") }, options.map(([value, label]) => button(label, {
+        class: "lib-price-opt",
+        "data-price-pick": value,
+        "aria-pressed": draft === value ? "true" : "false",
+      }))),
+      button(t("aplicarFiltros"), { class: "lib-apply", "data-price-apply": "1" }),
+    ]),
+  ]);
+}
+
+function viewSheet(ctx) {
+  if (!ctx.state.viewSheet) return null;
+  const { t, state } = ctx;
+  const close = button("", { class: "lib-x canva-plain", "data-sheet-close": "1", "aria-label": t("cerrar") });
+  close.append(svgIcon(["M7 7l10 10", "M17 7L7 17"]));
+  return el("div", { class: "lib-layer" }, [
+    button("", { class: "lib-overlay", "data-sheet-close": "1", "aria-label": t("cerrar") }),
+    el("div", { class: "lib-sheet", role: "dialog", "aria-modal": "true", "aria-label": t("verCuadricula") }, [
+      el("div", { class: "lib-sheet-head" }, [el("h2", { text: t("favoritos") }), close]),
+      button(t("verCuadricula"), {
+        class: "lib-row",
+        "data-fav-layout": "grid",
+        "aria-pressed": state.favLayout === "grid" ? "true" : "false",
+      }),
+      button(t("verLista"), {
+        class: "lib-row",
+        "data-fav-layout": "list",
+        "aria-pressed": state.favLayout === "list" ? "true" : "false",
+      }),
+    ]),
+  ]);
+}
+
+function libraryLayers(ctx) {
+  return librarySheet(ctx) || filterSheet(ctx) || viewSheet(ctx);
+}
+
+function assetMenu(ctx, item) {
+  const saved = (ctx.state.favs || []).includes(item.id);
+  return moreMenu(ctx.t("masOpciones"), [
+    button(saved ? ctx.t("quitarFavorito") : ctx.t("anadirFavorito"), { "data-fav": item.id }),
+  ]);
+}
+
+function assetFace(item, className) {
+  const face = el("span", { class: className || "lib-face", style: `aspect-ratio:${item.scene.w} / ${item.scene.h}` });
+  face.append(mountScene(item.scene));
+  return face;
+}
+
+function splitColumns(cards) {
+  const left = el("div", { class: "lib-col" });
+  const right = el("div", { class: "lib-col" });
+  cards.forEach((card, index) => (index % 2 === 0 ? left : right).append(card));
+  return el("div", { class: "lib-masonry" }, [left, right]);
+}
+
+function generateTile(ctx, kind) {
+  const node = button("", {
+    class: "lib-generate canva-plain",
+    "data-generate": kind,
+    "data-go": "ia",
+    "aria-label": kind === "elementos" ? ctx.t("generarElemento") : ctx.t("generarImagen"),
+  });
+  const icon = el("span", { class: "lib-generate-icon", "aria-hidden": "true" });
+  icon.append(svgIcon(["M5 7h10v9H5z", "M8 13l2-2 2 2 2-3", "M16 5l.7 2.1L19 8l-2.3.7L16 11l-.7-2.3L13 8l2.3-.9z"]));
+  node.append(icon, el("span", { class: "lib-generate-label", text: kind === "elementos" ? ctx.t("generarElemento") : ctx.t("generarImagen") }));
+  return node;
+}
+
+function photoCard(ctx, item) {
+  const open = button("", { class: "lib-open canva-plain", "aria-label": ctx.lang === "en" ? item.en : item.es });
+  open.append(assetFace(item));
+  return el("article", { class: "lib-card", "data-asset": item.id }, [open, assetMenu(ctx, item)]);
+}
+
+function elementCard(ctx, item) {
+  const open = button("", { class: "lib-open canva-plain", "aria-label": ctx.lang === "en" ? item.en : item.es });
+  const box = el("span", { class: "lib-box" });
+  box.append(mountScene(item.scene, "lib-glyph"));
+  open.append(box);
+  return el("article", { class: "lib-card lib-element", "data-asset": item.id }, [open, assetMenu(ctx, item)]);
+}
+
+function topicChips(ctx, topics) {
+  const en = ctx.lang === "en";
+  return el("div", { class: "tpl-chips lib-chips", role: "group", "aria-label": ctx.t("tema") }, topics.map((topic) => button(en ? topic.en : topic.es, {
+    class: "tpl-chip canva-plain",
+    "data-topic": topic.id,
+    "aria-pressed": ctx.state.libraryTopic === topic.id ? "true" : "false",
+  })));
+}
+
+function exploreRow(ctx, title, countText, countN) {
+  const filters = button("", { class: "lib-filters canva-plain", "data-price-open": "1" });
+  filters.append(svgIcon(["M4 6h16", "M7 12h10", "M10 18h4"]), el("span", { text: ctx.t("filtros") }));
+  return el("div", { class: "lib-explore" }, [
+    el("h2", { text: title }),
+    el("div", { class: "lib-explore-bar" }, [
+      filters,
+      el("p", { class: "lib-count", "data-library-count": String(countN), text: countText }),
+    ]),
+  ]);
+}
+
+function librarySearch(ctx, placeholder) {
+  const { t, state } = ctx;
+  return el("header", { class: "lib-chrome" }, [
+    backButton(ctx),
+    el("label", { class: "canva-search lib-search" }, [
+      el("span", { class: "sr", text: t("buscar") }),
+      svgIcon(["M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14zM20 20l-3.5-3.5"]),
+      el("input", {
+        id: "buscar",
+        type: "search",
+        value: state.libraryQuery || "",
+        placeholder,
+        autocomplete: "off",
+        "aria-label": t("buscar"),
+      }),
+      state.libraryQuery ? button("×", { id: "limpiar-biblioteca", class: "canva-clear", "aria-label": t("limpiar") }) : null,
+    ]),
+  ]);
+}
+
+function heroBanner(title, tone, scenes) {
+  const art = el("div", { class: "lib-hero-art", "aria-hidden": "true" });
+  for (const item of scenes) {
+    const frame = el("span", { class: "lib-hero-shot" });
+    frame.append(mountScene(item.scene));
+    art.append(frame);
+  }
+  return el("section", { class: `lib-hero is-${tone}` }, [
+    el("h2", { class: "lib-hero-title", text: title }),
+    art,
+  ]);
+}
+
+function browseBody(ctx, kind) {
+  const { lang, state, t } = ctx;
+  const en = lang === "en";
+  const source = kind === "elementos" ? browseElements() : browsePhotos();
+  const topics = kind === "elementos" ? elementTopics() : photoTopics();
+  const items = filterBrowse(source, {
+    query: state.libraryQuery || "",
+    topic: state.libraryTopic || "",
+    price: state.priceFilter || "",
+  });
+  const searching = Boolean((state.libraryQuery || "").trim());
+  const cards = items.map((item) => (kind === "elementos" ? elementCard(ctx, item) : photoCard(ctx, item)));
+  if (!searching) cards.unshift(generateTile(ctx, kind));
+  const grid = kind === "elementos"
+    ? el("div", { class: "lib-grid" }, cards)
+    : splitColumns(cards);
+  if (searching) {
+    return el("div", { class: "lib-feed" }, [
+      items.length ? grid : el("p", { class: "canva-empty", text: t("vacioBiblioteca") }),
+    ]);
+  }
+  const count = libraryCount(
+    items.length,
+    lang,
+    kind === "elementos" ? (en ? "graphic element" : "elemento gráfico") : (en ? "photo" : "foto"),
+    kind === "elementos" ? (en ? "graphic elements" : "elementos gráficos") : (en ? "photos" : "fotos"),
+  );
+  const sampleA = source.find((item) => item.topic === (kind === "elementos" ? "formas" : "flores"));
+  const sampleB = source.find((item) => item.topic === (kind === "elementos" ? "ondas" : "campo"));
+  return el("div", { class: "lib-feed" }, [
+    heroBanner(
+      kind === "elementos" ? t("elementosLlamativos") : t("fotosPerfectas"),
+      kind === "elementos" ? "blue" : "green",
+      [sampleA, sampleB].filter(Boolean),
+    ),
+    topicChips(ctx, topics),
+    exploreRow(ctx, kind === "elementos" ? t("descubreElementos") : t("explorarFotos"), count, items.length),
+    grid,
+  ]);
+}
+
+function creatorsBody(ctx) {
+  const { lang, state, t } = ctx;
+  const items = filterCreators(state.libraryQuery || "");
+  if (!items.length) return el("div", { class: "lib-feed" }, [el("p", { class: "canva-empty", text: t("vacioBiblioteca") })]);
+  const grid = el("div", { class: "lib-creators" });
+  for (const creator of items) {
+    const follow = button(state.follows?.[creator.id] ? t("siguiendo") : t("seguirCreador"), {
+      class: "lib-follow",
+      "data-follow": creator.id,
+      "aria-pressed": state.follows?.[creator.id] ? "true" : "false",
+    });
+    const thumbs = el("div", { class: "creator-thumbs" });
+    for (const sample of creator.samples.slice(1, 4)) {
+      const shot = el("span", { class: "creator-shot" });
+      shot.append(mountScene(sample.scene));
+      thumbs.append(shot);
+    }
+    const hero = el("div", { class: "creator-hero" });
+    hero.append(mountScene(creator.samples[0].scene));
+    const initials = creator.name.split(" ").slice(0, 2).map((part) => part[0]).join("");
+    const card = el("article", { class: "creator-card", "data-creator": creator.id }, [
+      hero,
+      thumbs,
+      el("div", { class: "creator-meta" }, [
+        el("span", { class: "creator-avatar", style: `background:hsl(${creator.hue} 62% 46%)`, text: initials }),
+        el("span", { class: "creator-id" }, [
+          el("strong", { text: creator.name }),
+          el("span", { text: followersLabel(creator.followers, lang) }),
+        ]),
+        follow,
+      ]),
+    ]);
+    grid.append(card);
+  }
+  const searching = Boolean((state.libraryQuery || "").trim());
+  return el("div", { class: "lib-feed" }, [
+    searching ? null : el("h2", { class: "lib-creators-title", text: t("creatorsTitulo") }),
+    grid,
+  ]);
+}
+
+function favoritesChrome(ctx) {
+  const more = button("", { class: "lib-back canva-plain", "data-view-sheet": "1", "aria-label": ctx.t("masOpciones") });
+  more.append(dotsIcon());
+  return el("header", { class: "lib-chrome lib-chrome-center" }, [
+    backButton(ctx),
+    el("h1", { text: ctx.t("favoritos") }),
+    more,
+  ]);
+}
+
+function favoritesBody(ctx) {
+  const { t, state } = ctx;
+  const saved = (state.favs || []).map((id) => browseAsset(id)).filter(Boolean);
+  const bar = button("", { class: "lib-viewbar", "data-view-sheet": "1" });
+  bar.append(svgIcon(["M4 4h6v6H4z", "M14 4h6v6h-6z", "M4 14h6v6H4z", "M14 14h6v6h-6z"]), el("span", { text: t("verCuadricula") }));
+  if (!saved.length) {
+    const art = el("div", { class: "lib-empty-art", "aria-hidden": "true" });
+    art.append(mountScene(emptyFolderScene()));
+    return el("div", { class: "lib-feed lib-empty" }, [
+      art,
+      el("h2", { text: t("favVacioTitulo") }),
+      el("p", { text: t("favVacioCuerpo") }),
+      bar,
+    ]);
+  }
+  const cards = saved.map((item) => (item.kind === "elemento" ? elementCard(ctx, item) : photoCard(ctx, item)));
+  const grid = state.favLayout === "list" ? el("div", { class: "lib-grid is-list" }, cards) : el("div", { class: "lib-grid" }, cards);
+  return el("div", { class: "lib-feed" }, [grid, bar]);
+}
+
+function mountLibrary(ctx, chrome, body) {
+  const view = ctx.viewName();
+  const node = el("div", {
+    class: `canva-home canva-plantillas canva-library is-${view}`,
+    "data-tab": "plantillas",
+    "data-library": view,
+  }, [chrome, body, canvaNav(ctx, "plantillas")]);
+  if (typeof window !== "undefined" && window.scrollY > 12) node.classList.add("is-scrolled");
+  const kids = [node, sizeDialog(ctx)];
+  const layer = libraryLayers(ctx);
+  if (layer) kids.push(layer);
+  ctx.root.replaceChildren(...kids);
+}
+
+export function renderLibrary(ctx) {
+  const view = ctx.viewName();
+  if (view === "favoritos") {
+    mountLibrary(ctx, favoritesChrome(ctx), favoritesBody(ctx));
+    return;
+  }
+  const placeholder = view === "elementos" ? ctx.t("buscaElementos") : view === "creators" ? ctx.t("buscaCreators") : ctx.t("buscaFotosCalidad");
+  const body = view === "creators" ? creatorsBody(ctx) : browseBody(ctx, view === "elementos" ? "elementos" : "fotos");
+  mountLibrary(ctx, librarySearch(ctx, placeholder), body);
+}
+
 export function renderPlantillas(ctx) {
   const q = ctx.state.filters.text.trim();
   const body = q ? plantillasResults(ctx) : ctx.state.thumbCat ? plantillasCategory(ctx) : plantillasHub(ctx);
-  ctx.root.replaceChildren(plantillasShell(ctx, body), sizeDialog(ctx));
+  const kids = [plantillasShell(ctx, body), sizeDialog(ctx)];
+  const layer = libraryLayers(ctx);
+  if (layer) kids.push(layer);
+  ctx.root.replaceChildren(...kids);
 }
 
 export function renderDesigns(ctx) {
