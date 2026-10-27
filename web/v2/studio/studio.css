@@ -318,23 +318,12 @@ body.studio-standalone .langpick ul {
   right: 0;
   left: auto;
 }
+/* El pie del sitio no forma parte del shell de Studio. Antes se ocultaba
+   todo el pie menos el enlace a /risks/, y ese enlace (fondo oscuro, texto
+   «Riesgos») se pintaba un instante encima de la página vacía hasta que
+   montaba la app. La página de riesgos sigue siendo /risks/. */
 body.studio-standalone footer.or-footer {
-  margin: 0.75rem;
-  padding: 0.35rem 0.9rem;
-}
-body.studio-standalone footer.or-footer h2,
-body.studio-standalone footer.or-footer > .wrap > p,
-body.studio-standalone footer.or-footer .or-footer-links a:not([href$="risks/"]) {
   display: none;
-}
-body.studio-standalone footer.or-footer .or-footer-links {
-  margin: 0;
-}
-body.studio-standalone footer.or-footer a[href$="risks/"] {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  font-weight: 700;
 }
 .orv-frame {
   display: grid;

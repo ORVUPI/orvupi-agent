@@ -65,6 +65,13 @@ export function tabTitle(name: string, kind: EditorKind): string {
   return clean ? `${clean} - ${product}` : product;
 }
 
+/** Huella de web/v2/assets/orvupi/avatar.png. La pestaña no debe reutilizar el icono anterior. */
+export const WORK_TAB_ICON_VERSION = "352f34d8";
+
+export function workTabIcon(): string {
+  return `${withBase("/favicon-32.png")}?v=${WORK_TAB_ICON_VERSION}`;
+}
+
 export function applyDocumentChrome(title: string, favicon: string): void {
   if (typeof document === "undefined") return;
   document.title = title;
@@ -74,7 +81,8 @@ export function applyDocumentChrome(title: string, favicon: string): void {
     link.rel = "icon";
     document.head.appendChild(link);
   }
-  link.type = favicon.endsWith(".svg") ? "image/svg+xml" : "image/png";
+  const path = favicon.split("?")[0] ?? favicon;
+  link.type = path.endsWith(".svg") ? "image/svg+xml" : "image/png";
   link.href = favicon;
 }
 

@@ -17,9 +17,8 @@ import { DocTabs } from "./DocTabs";
 import { BODY_POINT, POINTS, applyRuns, clampPoint, nextSize, selectionPoint, selectionRuns, stylePoint, wordAround, type BlockPoint } from "./font-size";
 import type { DocTab } from "./tabs";
 import { TableDialog, TableGrid, openTableDialog } from "../ui/TablePicker";
+import { DOC_DOWNLOADS, type ExportKind } from "./downloads";
 import type { JsonNode, PageMargin, PageOrientation, PageSize } from "./model";
-
-type ExportKind = "pdf" | "html" | "txt" | "orvdoc" | "docx";
 
 const PAGE_W = 794;
 const PAGE_H = 1123;
@@ -927,10 +926,10 @@ export function DocsSurface({
                 <ChevronDown size={18} />
               </button>
               {exportOpen ? (
-                <div role="menu" aria-label={t("export")}>
-                  {(["pdf", "html", "txt", "docx", "orvdoc"] as const).map((kind) => (
-                    <button key={kind} type="button" role="menuitem" onClick={() => { onExport(kind); setExportOpen(false); }}>
-                      {kind === "orvdoc" ? "ORVDOC" : kind.toUpperCase()}
+                <div role="menu" aria-label={t("download")}>
+                  {DOC_DOWNLOADS.map((item) => (
+                    <button key={item.id} type="button" role="menuitem" onClick={() => { onExport(item.id); setExportOpen(false); }}>
+                      {t(item.labelKey)}
                     </button>
                   ))}
                 </div>
@@ -1675,12 +1674,11 @@ function MenuInline({
           { id: "setup", label: t("pageSetup"), onSelect: onPageSetup },
           { id: "copy", label: t("copyDoc"), onSelect: onCopyDoc },
           { id: "print", label: t("print"), hint: "Ctrl+P", onSelect: onPrint },
-          { id: "export", label: t("export"), children: [
-            { id: "pdf", label: "PDF", onSelect: () => onExport("pdf") },
-            { id: "html", label: "HTML", onSelect: () => onExport("html") },
-            { id: "txt", label: "TXT", onSelect: () => onExport("txt") },
-            { id: "docx", label: "DOCX", onSelect: () => onExport("docx") },
-          ] },
+          { id: "download", label: t("download"), children: DOC_DOWNLOADS.map((item) => ({
+            id: item.id,
+            label: t(item.labelKey),
+            onSelect: () => onExport(item.id),
+          })) },
           { id: "close", label: t("closeDoc"), onSelect: onClose },
         ] },
         { id: "edit", label: t("menuEdit"), items: [

@@ -84,8 +84,13 @@ test("el pie de riesgo y la etiqueta de imagen no están en ninguna vista", asyn
     await page.goto(path);
     await showSpanish(page);
     await expect(page.locator("footer p.mica"), path).toHaveCount(0);
-    await expect(page.locator("footer a[href$='risks/']").first(), path).toBeVisible();
-    await expect(page.locator("footer"), path).not.toContainText(FOOTER_ES);
+    if (path === "/studio/") {
+      await expect(page.locator("footer"), path).toHaveCount(0);
+      await expect(page.locator("a[href$='risks/']:visible"), path).toHaveCount(0);
+    } else {
+      await expect(page.locator("footer a[href$='risks/']").first(), path).toBeVisible();
+      await expect(page.locator("footer"), path).not.toContainText(FOOTER_ES);
+    }
   }
 });
 

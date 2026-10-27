@@ -24,11 +24,12 @@ import { createExtensions, pastedHtml } from "./extensions";
 import { imageAttrs, contentWidth, prepareImage } from "./image-paste";
 import { findBefore, findInSlices, type TextSlice } from "./find";
 import { exportHtml } from "./html";
+import { exportEpub, exportHtmlZip, exportMarkdown, exportOdt, exportRtf, type ExportKind } from "./downloads";
 import { countWords, docToText, firstLine, UNTITLED_NAMES, type DocComment, type DocVersion, type JsonNode, type PageMargin, type PageOrientation, type PageSize } from "./model";
 import { marginTw, serializeOrvdoc, withContent, type OrvdocFile } from "./orvdoc";
 import { SaveController, createSaveQueue, type SaveState } from "./save-status";
 
-export type ExportKind = "pdf" | "html" | "txt" | "orvdoc" | "docx";
+export type { ExportKind } from "./downloads";
 
 export type DocSession = {
   name: string;
@@ -342,6 +343,31 @@ export function DocsEditor({
       const { exportDocx } = await import("./docx");
       const docx = await exportDocx(nameRef.current, content, headerRef.current, footerRef.current, layoutRef.current.pageNumber, { ...layoutRef.current, comments: commentsRef.current });
       downloadBytes(docx, fileNameWithExtension(nameRef.current, "docx"), "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+      return;
+    }
+    if (kind === "md") {
+      downloadBytes(new TextEncoder().encode(exportMarkdown(content)), fileNameWithExtension(nameRef.current, "md"), "text/markdown");
+      return;
+    }
+    if (kind === "rtf") {
+      downloadBytes(new TextEncoder().encode(exportRtf(nameRef.current, content)), fileNameWithExtension(nameRef.current, "rtf"), "application/rtf");
+      return;
+    }
+    if (kind === "odt") {
+      downloadBytes(exportOdt(nameRef.current, content), fileNameWithExtension(nameRef.current, "odt"), "application/vnd.oasis.opendocument.text");
+      return;
+    }
+    if (kind === "epub") {
+      downloadBytes(exportEpub(nameRef.current, content, locale), fileNameWithExtension(nameRef.current, "epub"), "application/epub+zip");
+      return;
+    }
+    if (kind === "htmlzip") {
+      await preloadAssets(content);
+      try {
+        downloadBytes(exportHtmlZip(nameRef.current, content, locale), fileNameWithExtension(nameRef.current, "zip"), "application/zip");
+      } finally {
+        releaseExportAssets();
+      }
       return;
     }
     const { exportPdf } = await import("./pdf");
