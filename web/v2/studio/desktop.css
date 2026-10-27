@@ -53,7 +53,6 @@
     border-right: 1px solid rgba(22, 16, 40, 0.08);
     box-sizing: border-box;
   }
-  .desk-crear-slot { height: 78px; flex: 0 0 78px; }
   .desk-rail-nav {
     flex: 1 1 auto;
     min-height: 0;
@@ -120,32 +119,56 @@
     color: #6d28d9;
   }
   #studio-root .desk-rail button.desk-crear {
-    width: 48px;
-    height: 48px;
-    min-width: 48px;
-    min-height: 48px;
-    margin: 4px auto 12px;
-    padding: 0;
+    width: 80px;
+    min-height: 0;
+    margin: 2px auto 4px;
+    padding: 4px 2px 2px;
+    border-radius: 12px;
+    background: transparent;
+    color: #3c3c46;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 4px;
+    position: static;
+    box-shadow: none;
+    text-align: center;
+  }
+  #studio-root .desk-rail button.desk-crear .desk-crear-mark {
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
     border-radius: 50%;
     background: #6d28d9;
     color: #fff;
     display: grid;
     place-items: center;
-    position: relative;
-    box-shadow: 0 8px 18px rgba(109, 40, 217, 0.35);
+    box-shadow: 0 8px 18px rgba(109, 40, 217, 0.28);
+    flex: 0 0 auto;
+    max-width: none;
   }
-  #studio-root .desk-rail button.desk-crear svg { width: 22px; height: 22px; }
-  #studio-root .desk-rail button.desk-crear span {
-    position: absolute;
-    top: 52px;
-    left: 50%;
-    transform: translateX(-50%);
+  #studio-root .desk-rail button.desk-crear .desk-crear-mark svg {
+    width: 22px;
+    height: 22px;
+    display: block;
+  }
+  #studio-root .desk-rail button.desk-crear span.desk-crear-label {
+    position: static;
+    top: auto;
+    left: auto;
+    transform: none;
+    display: block;
+    max-width: 76px;
     color: #3c3c46;
     font-size: 11px;
     font-weight: 650;
-    max-width: none;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
   }
-  #studio-root .desk-rail button.desk-crear:hover { background: #5b21b6; }
+  #studio-root .desk-rail button.desk-crear:hover { background: #f4f0fa; }
+  #studio-root .desk-rail button.desk-crear:hover .desk-crear-mark { background: #5b21b6; }
   #studio-root .desk-work {
     width: 80px;
     color: #3c3c46;
@@ -167,28 +190,8 @@
   .desk-work svg { width: 22px; height: 22px; }
   .desk-work:hover { background: #f4f0fa; }
 
-  #studio-root button#crear-pieza.canva-fab {
-    left: 22px;
-    right: auto;
-    top: 16px;
-    bottom: auto;
-    width: 48px;
-    height: 48px;
-    min-width: 48px;
-    min-height: 48px;
-    z-index: 46;
-  }
-  #studio-root button#crear-pieza.canva-fab::after {
-    content: attr(data-desk-label);
-    position: absolute;
-    top: 50px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: #3c3c46;
-    font-size: 11px;
-    font-weight: 650;
-    line-height: 1.1;
-  }
+  /* El FAB móvil se queda abajo a la derecha bajo 900px. En el rail, Crear es .desk-crear. */
+  #studio-root button#crear-pieza.canva-fab { display: none; }
 
   .desk-sub {
     display: flex;

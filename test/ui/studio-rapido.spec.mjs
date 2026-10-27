@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 async function openHome(page) {
   await page.goto("/studio/");
-  await expect(page.locator("#crear-pieza")).toBeVisible();
+  await expect(page.locator("#crear-pieza:visible, .desk-crear:visible").first()).toBeVisible();
 }
 
 test("móvil: filtros, idea y sin scroll horizontal", async ({ page }) => {
@@ -50,7 +50,7 @@ test("escritorio: capas, bloqueo, grupo y texto", async ({ page }) => {
 
 test("inicio: crear abre el tamaño y el lienzo en blanco", async ({ page }) => {
   await openHome(page);
-  await page.locator("#crear-pieza").click();
+  await page.locator("#crear-pieza:visible, .desk-crear:visible").first().click();
   const dialog = page.locator("#dialogo-tamano");
   await expect(dialog).toBeVisible();
   await expect(dialog.locator("[data-format='square']")).toBeVisible();

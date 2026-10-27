@@ -974,7 +974,6 @@ function canvaFab(ctx) {
     id: "crear-pieza",
     class: "canva-fab",
     "aria-label": ctx.t("crearPieza"),
-    "data-desk-label": ctx.lang === "en" ? "Create" : "Crear",
   });
   node.append(svgIcon(["M6 8h9v9H6zM16 5v5M13.5 7.5h5"]));
   return node;

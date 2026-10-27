@@ -30,7 +30,7 @@ function yellowPng() {
 
 async function ready(page) {
   await page.goto("/studio/");
-  await page.locator("#crear-pieza").click();
+  await page.locator("#crear-pieza:visible, .desk-crear:visible").first().click();
   await page.locator("#dialogo-tamano [data-format='square']").click();
   await expect(page.locator("#descargar")).toBeEnabled();
   await page.setInputFiles("#logo", { name: "logo.png", mimeType: "image/png", buffer: yellowPng() });

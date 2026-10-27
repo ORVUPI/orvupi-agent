@@ -117,7 +117,9 @@ function crearButton(ctx) {
     "data-open-create": "1",
     "aria-label": label,
   });
-  node.append(icon(["M12 5v14", "M5 12h14"]), el("span", { text: label }));
+  const mark = el("span", { class: "desk-crear-mark", "aria-hidden": "true" });
+  mark.append(icon(["M12 5v14", "M5 12h14"]));
+  node.append(mark, el("span", { class: "desk-crear-label", text: label }));
   return node;
 }
 
@@ -141,10 +143,7 @@ export function desktopRail(ctx, tab) {
       el("span", { text: "Work" }),
     ]),
   ]);
-  const kids = [];
-  if (tab !== "inicio") kids.push(crearButton(ctx));
-  else kids.push(el("div", { class: "desk-crear-slot", "aria-hidden": "true" }));
-  kids.push(nav, foot);
+  const kids = [crearButton(ctx), nav, foot];
   return el("aside", { class: "desk-rail", "aria-label": tr(ctx, "Navegación", "Navigation") }, kids);
 }
 

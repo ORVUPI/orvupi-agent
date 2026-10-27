@@ -16,7 +16,7 @@ test("la historia exporta 1080×1920 y la plantilla vertical no lleva marca de a
   await expect(page.locator("body")).not.toContainText(/Community content, unofficial|Imagen generada con IA|AI-generated image/);
 
   await page.goto("/studio/");
-  await page.locator("#crear-pieza").click();
+  await page.locator("#crear-pieza:visible, .desk-crear:visible").first().click();
   await page.locator("#dialogo-tamano [data-format='story']").click();
   await expect(page.locator("#descargar")).toBeEnabled();
   const ios = await page.evaluate(() => /iPhone/.test(navigator.userAgent));
