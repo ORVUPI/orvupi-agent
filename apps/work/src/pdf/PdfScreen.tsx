@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Download, Hand, Maximize2, MessageSquarePlus, Minus, MousePointer2, PanelLeft, Plus, Printer } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
 import { downloadBytes } from "../security/bytes";
 import { fileNameWithExtension, formatBytes } from "../security/names";
@@ -8,6 +8,7 @@ import { useWorkspace } from "../app/workspace";
 import { MenuBar, type BarItem } from "../ui/menus";
 import { Button } from "../ui/kit";
 import { openPdfDocument, pageSize, pageText, paintPage, paintThumb, readOutline, type PdfOutline } from "./engine";
+import { anchorOnPage, pageBoxInScroller, scrollToAnchor, type ZoomAnchor } from "./zoomAnchor";
 import "./pdf.css";
 
 const ZOOMS = [50, 75, 100, 125, 150, 200];
@@ -68,6 +69,14 @@ function PdfViewer({ record }: { record: FileRecord }) {
   const nameRef = useRef<HTMLInputElement>(null);
   const bytesRef = useRef<Uint8Array | null>(null);
   const drag = useRef<{ x: number; y: number; left: number; top: number } | null>(null);
+  const anchorRef = useRef<ZoomAnchor | null>(null);
+  const ignoreScroll = useRef(0);
+  const sawFit = useRef(false);
+  const queuedScale = useRef<number | null>(null);
+  const scaleRef = useRef(scale);
+  const pageRef = useRef(page);
+  scaleRef.current = scale;
+  pageRef.current = page;
 
   useEffect(() => {
     if (!storage) return;
@@ -111,6 +120,21 @@ function PdfViewer({ record }: { record: FileRecord }) {
     void doc?.destroy();
   }, [doc]);
 
+  function holdView() {
+    const root = scrollRef.current;
+    if (!root) return;
+    const pages = [...root.querySelectorAll<HTMLElement>("[data-pdf-page]")].map((node) => ({
+      page: Number(node.dataset.pdfPage),
+      ...pageBoxInScroller(root, node),
+    }));
+    anchorRef.current = anchorOnPage(
+      pages,
+      root.scrollLeft + root.clientWidth / 2,
+      root.scrollTop + root.clientHeight / 2,
+      pageRef.current,
+    );
+  }
+
   useEffect(() => {
     if (!fit) return;
     const stage = stageRef.current;
@@ -118,13 +142,46 @@ function PdfViewer({ record }: { record: FileRecord }) {
     if (!stage || width <= 0) return;
     const apply = () => {
       const available = Math.max(160, stage.clientWidth - 96);
-      setScale(Math.min(4, Math.max(0.25, available / width)));
+      const next = Math.min(4, Math.max(0.25, available / width));
+      if (queuedScale.current !== null && Math.abs(queuedScale.current - next) < 0.0001) return;
+      if (Math.abs(scaleRef.current - next) < 0.0001) {
+        queuedScale.current = null;
+        sawFit.current = true;
+        return;
+      }
+      if (sawFit.current) holdView();
+      queuedScale.current = next;
+      sawFit.current = true;
+      setScale(next);
     };
     apply();
     const observer = new ResizeObserver(apply);
     observer.observe(stage);
     return () => observer.disconnect();
   }, [fit, base, showSide]);
+
+  useLayoutEffect(() => {
+    const root = scrollRef.current;
+    const anchor = anchorRef.current;
+    anchorRef.current = null;
+    if (queuedScale.current !== null && Math.abs(queuedScale.current - scale) < 0.0001) queuedScale.current = null;
+    if (!root || !anchor) return;
+    const node = root.querySelector<HTMLElement>(`[data-pdf-page="${anchor.page}"]`);
+    if (!node) return;
+    const next = scrollToAnchor(
+      pageBoxInScroller(root, node),
+      anchor,
+      { width: root.clientWidth, height: root.clientHeight },
+      { left: root.scrollWidth - root.clientWidth, top: root.scrollHeight - root.clientHeight },
+    );
+    ignoreScroll.current += 1;
+    root.scrollLeft = next.scrollLeft;
+    root.scrollTop = next.scrollTop;
+    setPage(anchor.page);
+    requestAnimationFrame(() => {
+      ignoreScroll.current = Math.max(0, ignoreScroll.current - 1);
+    });
+  }, [scale]);
 
   function go(next: number) {
     if (!doc) return;
@@ -134,6 +191,7 @@ function PdfViewer({ record }: { record: FileRecord }) {
   }
 
   function onScroll() {
+    if (ignoreScroll.current > 0) return;
     const root = scrollRef.current;
     if (!root) return;
     const rootTop = root.getBoundingClientRect().top;
@@ -149,8 +207,12 @@ function PdfViewer({ record }: { record: FileRecord }) {
   }, [page]);
 
   function setZoom(next: number, fitting = false) {
+    if (!fitting) {
+      const clamped = Math.min(4, Math.max(0.25, next));
+      if (Math.abs(clamped - scaleRef.current) > 0.0001) holdView();
+      setScale(clamped);
+    }
     setFit(fitting);
-    if (!fitting) setScale(Math.min(4, Math.max(0.25, next)));
     setZoomOpen(false);
   }
 

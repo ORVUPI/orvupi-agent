@@ -13,7 +13,7 @@ import { browserLocale, errorMessageKey, loadLocale, readSharedLocale, translate
 import { downloadBytes } from "../security/bytes";
 import { isWorkError, WorkError } from "../security/errors";
 import { fileNameWithExtension, formatBytes, createId } from "../security/names";
-import { applyDocumentChrome, withBase, editorKind, editorPath, openEditorWindow, parseEditorPath, studioDesignPath, tabTitle, toolFavicon, viewForKind, type EditorKind } from "../routing/paths";
+import { applyDocumentChrome, withBase, editorKind, editorPath, openEditorWindow, parseEditorPath, studioDesignPath, tabTitle, toolFavicon, viewForKind, workTabIcon, type EditorKind } from "../routing/paths";
 import { subscribeFilesChanged } from "../routing/sync";
 import { createBrowserStorage } from "../storage/browser";
 import type { FileBrowseMode, DateFilter } from "../files/query";
@@ -188,7 +188,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const route = parseEditorPath(window.location.pathname);
     if (!route) {
-      applyDocumentChrome("ORVUPI Work", withBase("/favicon-32.png"));
+      applyDocumentChrome("ORVUPI Work", workTabIcon());
       return;
     }
     const listed = files.find((file) => file.id === route.id)?.name ?? "";
