@@ -73,7 +73,7 @@ import { queryFromHash, routeFromHash } from "./lib/route.mjs";
 import { pushNotice } from "./lib/mas-store.mjs";
 import { bindIaRuntime, handleIaClick, handleIaFile, handleIaInput, handleIaKeydown } from "./ia.mjs";
 import { applyMasChrome, handleMasClick, handleMasInput, renderMas } from "./mas.mjs";
-import { canvaNav, catalogBody, layerStyle, renderDesigns, renderEditor, renderHome, renderIa, renderLibrary, renderMarca, renderPlantillas, renderRecursos } from "./views.mjs";
+import { canvaNav, catalogBody, layerStyle, renderDesigns, renderEditor, renderHome, renderIa, renderLibrary, renderMarca, renderPlantillas, renderRecursos, sizeDialog } from "./views.mjs";
 
 const root = document.getElementById("studio-root");
 const lang = (document.documentElement.lang || "es").toLowerCase().startsWith("en") ? "en" : "es";
@@ -1271,6 +1271,7 @@ function render() {
   else renderEditor(ctx);
   applyStageFit();
   focusEditing();
+  if (state.dialog && !document.getElementById("dialogo-tamano")) root.append(sizeDialog(ctx));
   if (state.dialog) {
     const dialog = document.getElementById("dialogo-tamano");
     if (dialog && !dialog.open) dialog.showModal();

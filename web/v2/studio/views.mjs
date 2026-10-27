@@ -733,7 +733,7 @@ function presetCard(item, lang) {
   return node;
 }
 
-function sizeDialog(ctx) {
+export function sizeDialog(ctx) {
   const { state, t, lang } = ctx;
   const cat = state.createCat || "para-ti";
   const ids = GROUPS[cat] || GROUPS["para-ti"];
