@@ -48,7 +48,7 @@ function hashPath() {
 const AVATAR = new URL("./assets/orvupi-avatar.png", import.meta.url).href;
 
 const RAIL = [
-  ["ia", "ORVUPI IA", "ORVUPI AI", "ia", null, true],
+  ["ia", "Catálogo", "Catalog", "ia", null, true],
   ["inicio", "Inicio", "Home", "inicio", ["M4 11 12 4l8 7", "M6 10.5V20h12v-9.5"]],
   ["disenos", "Mis diseños", "My designs", "disenos", ["M4 7h6l2 2h8v10H4z"]],
   ["plantillas", "Plantillas", "Templates", "plantillas", ["M4 4h7v7H4z", "M13 4h7v7h-7z", "M4 13h7v7H4z", "M13 13h7v7h-7z"]],

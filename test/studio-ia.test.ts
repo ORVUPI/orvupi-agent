@@ -45,7 +45,7 @@ describe("studio ORVUPI IA", () => {
     assert.equal(ia.greeting("", "es"), "¿Qué diseñamos hoy?");
     assert.equal(ia.greeting("Ana", "es"), "¿Qué diseñamos hoy, Ana?");
     assert.equal(ia.copy("es").emptyChats, "Todos tus chats aparecerán aquí");
-    assert.equal(ia.copy("es").thinking, "Pensando…");
+    assert.equal(ia.copy("es").thinking, "Buscando en el catálogo…");
     assert.equal(ia.copy("es").more, "Mostrar más plantillas");
     assert.equal(ia.copy("es").generate, "Generar");
     assert.equal(ia.copy("es").sheetShelf, "Crear una estantería");
@@ -55,7 +55,7 @@ describe("studio ORVUPI IA", () => {
   test("un currículum pedido a propósito sigue siendo currículum", async () => {
     const ia = await load<{
       localAnswer: (text: string, lang: string) => { text: string; format: string; templates: { id: string; file: string; category: string }[] };
-      answerPrompt: (text: string, lang: string) => Promise<{ text: string; format: string; templates: { category: string }[] }>;
+      answerPrompt: (text: string, lang: string) => Promise<{ text: string; format: string; mode?: string; provider?: string; modelId?: string; templates: { category: string }[] }>;
       workBootStatus: () => { wired: boolean; source: string };
     }>("lib/ia-chat.mjs");
     for (const phrase of ["Quiero un CV", "plantillas de currículum", "hoja de vida"]) {
@@ -76,6 +76,20 @@ describe("studio ORVUPI IA", () => {
     assert.equal(ia.workBootStatus().wired, false);
     const hooked = await ia.answerPrompt("Quiero plantillas para proyecto de empresa", "es");
     assert.equal(hooked.templates.some((item) => item.category === "curriculum"), false);
+    const bag = globalThis as typeof globalThis & { __ORVUPI_AI_ASK__?: (input: unknown) => Promise<{ text: string; mode: string; provider: string; modelId: string }> };
+    const previous = bag.__ORVUPI_AI_ASK__;
+    bag.__ORVUPI_AI_ASK__ = async () => ({ text: "", mode: "rules", provider: "none", modelId: "none" });
+    try {
+      const kept = await ia.answerPrompt("plantillas de logo", "es");
+      assert.equal(kept.format, "logo");
+      assert.equal(kept.mode, "rules");
+      assert.equal(kept.provider, "none");
+      assert.equal(kept.modelId, "none");
+      assert.match(kept.text, /logo|catálogo/i);
+    } finally {
+      if (previous) bag.__ORVUPI_AI_ASK__ = previous;
+      else delete bag.__ORVUPI_AI_ASK__;
+    }
   });
 
   test("proyecto de empresa no devuelve currículum y otros encargos eligen su categoría", async () => {
@@ -161,7 +175,7 @@ describe("studio ORVUPI IA", () => {
     assert.equal(chat.includes("Canva"), false);
     assert.equal(/riesgo|disclaimer/i.test(ia + chat), false);
     assert.match(ia, /orvupi-avatar\.png/);
-    assert.match(chat, /Pensando…/);
+    assert.match(chat, /Buscando en el catálogo…/);
     assert.equal(fn.includes("modelo"), false);
   });
 });

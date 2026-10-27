@@ -71,7 +71,7 @@ const CREATE_GROUPS = [
 ];
 
 const FEATURES = [
-  ["ia", "ORVUPI IA", "ORVUPI AI"],
+  ["ia", "Catálogo", "Catalog"],
   ["deck", "Presentación", "Presentation"],
   ["doc", "Doc", "Doc"],
   ["board", "Pizarra", "Whiteboard"],

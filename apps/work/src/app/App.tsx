@@ -297,7 +297,7 @@ export function App() {
         />
       )}
       aside={
-        workspace.aiOpen ? (
+        workspace.aiOpen && workspace.view !== "ai" ? (
           <aside className="ow-ai" data-tool="ai" aria-label={workspace.t("aiTitle")}>
             <header>
               <h2>{workspace.t("aiTitle")}</h2>

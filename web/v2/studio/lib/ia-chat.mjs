@@ -187,16 +187,16 @@ export function copy(lang) {
     sub: en ? "What task should we complete next?" : "¿Qué tarea deberíamos completar a continuación?",
     placeholder: en ? "Ask me anything" : "Pregúntame lo que quieras",
     emptyChats: en ? "All your chats will appear here" : "Todos tus chats aparecerán aquí",
-    emptyHint: en ? "Start designing with ORVUPI AI" : "Empieza a diseñar con ORVUPI IA",
+    emptyHint: en ? "Start with the Studio catalog" : "Empieza con el catálogo de Studio",
     search: en ? "Search recent chats" : "Buscar chats recientes",
     noHits: en ? "No chats match that search" : "Ningún chat coincide con la búsqueda",
     memory: en ? "Memory" : "Memoria",
     tasks: en ? "Tasks" : "Tareas",
     library: en ? "Library" : "Biblioteca",
     memoryLibrary: en ? "Memory library" : "Biblioteca de memorias",
-    aboutLead: en ? "Personalize ORVUPI AI with About me" : "Personaliza ORVUPI IA con Acerca de mí",
+    aboutLead: en ? "Personalize the catalog chat with About me" : "Personaliza el chat del catálogo con Acerca de mí",
     about: en ? "About me" : "Acerca de mí",
-    aboutPh: en ? "Tell ORVUPI AI how you design" : "Cuéntale a ORVUPI IA cómo diseñas",
+    aboutPh: en ? "Tell the catalog how you design" : "Cuéntale al catálogo cómo diseñas",
     name: en ? "Name" : "Nombre",
     shelves: en ? "Shelves" : "Estanterías",
     noShelves: en ? "No shelves yet" : "Todavía no hay estanterías",
@@ -218,7 +218,7 @@ export function copy(lang) {
     noMedia: en ? "No media yet" : "Todavía no hay multimedia",
     noChats: en ? "No chats yet" : "Todavía no hay chats",
     noFavs: en ? "No favorite chats yet" : "Todavía no hay chats favoritos",
-    thinking: en ? "Thinking…" : "Pensando…",
+    thinking: en ? "Searching the catalog…" : "Buscando en el catálogo…",
     more: en ? "Show more templates" : "Mostrar más plantillas",
     generate: en ? "Generate" : "Generar",
     recent: en ? "Recent chats" : "Chats recientes",
@@ -416,8 +416,11 @@ export async function answerPrompt(text, lang, profile = {}) {
   try {
     const remote = await ask({ text, lang, about: profile.about || "", name: profile.name || "" });
     const next = typeof remote?.text === "string" ? remote.text.trim().slice(0, 2000) : "";
-    if (!next) return local;
-    return { ...local, text: next };
+    const mode = remote?.mode === "model" || remote?.mode === "mixed" || remote?.mode === "extractive" || remote?.mode === "rules" ? remote.mode : "rules";
+    const provider = remote?.provider === "third-party" || remote?.provider === "arqiven" || remote?.provider === "none" ? remote.provider : "none";
+    const modelId = typeof remote?.modelId === "string" ? remote.modelId.slice(0, 80) : "none";
+    if (!next) return { ...local, mode, provider, modelId };
+    return { ...local, mode, provider, modelId, text: next };
   } catch {
     return local;
   }

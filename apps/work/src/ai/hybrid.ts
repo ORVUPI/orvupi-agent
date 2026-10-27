@@ -11,7 +11,7 @@ import { isDegenerate } from "./clean";
 export type Generate = (messages: ChatMessage[], maxTokens: number) => Promise<string | null>;
 export type HybridResult = { markdown: string; fromModel: number; fromText: number; mode: "model" | "mixed" | "extractive" };
 
-const SYSTEM = "Eres ORVUPI AI, un asistente que trabaja dentro del navegador. Escribes siempre en español correcto y claro. Usas solo la información que te dan, sin inventar nada.";
+const SYSTEM = "Trabajas dentro del navegador, con un modelo de terceros. Escribes siempre en español correcto y claro. Usas solo la información que te dan, sin inventar nada. No digas que eres Arqiven-N.";
 
 function numbered(sentences: string[]): string {
   return sentences.map((s, i) => `${i + 1}. ${s}`).join("\n");

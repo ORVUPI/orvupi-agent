@@ -36,7 +36,7 @@ test("móvil: plantillas usa el shell Canva, sin barra lateral", async ({ page }
   await expect(page.locator(".tpl-masonry .canva-card-name, .tpl-masonry .plantilla-nombre")).toHaveCount(0);
   await expect(page.locator(".tpl-masonry .canva-more").first()).toBeVisible();
   await expect(page.locator(".canva-nav > button.canva-tab[data-go='plantillas']")).toHaveAttribute("aria-current", "page");
-  await expect(page.locator(".canva-nav")).toContainText("ORVUPI IA");
+  await expect(page.locator(".canva-nav")).toContainText("Catálogo");
   await expect(page.locator(".canva-nav")).toContainText("Más");
   await expect(page.locator(".canva-avatar, .canva-badge")).toHaveCount(0);
   await expect(page.locator(".tpl-chevron")).toBeVisible();

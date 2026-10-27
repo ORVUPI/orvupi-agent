@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<title>ARQIVEN · esqueleto apagado</title>
+<style>
+:root{--ink:#102032;--pink:#ff3070;--muted:#5c6570;--line:#e6e6e6;--nav:258px;--paper:#fff;--side:#f6f6f6}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{margin:0;background:#fff;color:var(--ink);min-height:100%}
+body{font-family:Inter,"Segoe UI",Arial,sans-serif;font-size:15px;line-height:1.5}
+button,textarea,input{font:inherit;color:inherit}
+button,a{cursor:pointer}
+button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #157759;outline-offset:3px}
+svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.gate{max-width:40rem;margin:0 auto;padding:2.5rem 1.25rem 3rem}
+.gate h1{font-size:clamp(1.6rem,4vw,2.1rem);letter-spacing:-.03em;line-height:1.2;margin:0 0 .75rem}
+.gate p{color:var(--muted);margin:.6rem 0}
+.gate a{color:#9d2348}
+.tag{display:inline-block;border:1px solid #f3d5e0;background:#fff5f8;color:#8d2948;border-radius:999px;padding:.2rem .6rem;font-size:.78rem;margin-bottom:.8rem}
+.app{min-height:100dvh;display:flex;flex-direction:column}
+.app-body{flex:1;display:grid;grid-template-columns:var(--nav) minmax(0,1fr);min-height:0}
+.app.is-collapsed .app-body{grid-template-columns:4.5rem minmax(0,1fr)}
+.sitebar{background:#f6f1e4;color:#102032;border-bottom:1px solid #eadfce}
+.sitebar-top{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.75rem 1rem .15rem;min-width:0}
+.sitebrand{font-weight:750;letter-spacing:-.03em;text-decoration:none;color:inherit;font-size:1.05rem}
+.site-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:.4rem}
+.pill-link{border:1.5px solid #102032;border-radius:999px;padding:.28rem .7rem;text-decoration:none;color:inherit;font-size:.82rem;background:#fff}
+.sitenav{padding:.2rem 1rem .35rem}
+.sitenav ul{display:flex;flex-wrap:wrap;gap:.2rem .85rem;list-style:none;margin:0;padding:0}
+.sitenav a{color:#102032;text-decoration:none;font-weight:650;font-size:.92rem;border-radius:.4rem;padding:.15rem .1rem;display:inline-flex;align-items:center;gap:.35rem}
+.sitenav a[aria-current="page"]{color:#d12659}
+.crop{position:relative;display:block;overflow:hidden;container-type:inline-size;flex:0 0 auto}
+.crop img{position:absolute;max-width:none;height:auto}
+.crop-icon{width:1.85rem;height:calc(1.85rem * 482 / 496)}
+.crop-icon img{width:calc(100cqw * 1254 / 496);left:calc(100cqw * -381 / 496);top:calc(100cqw * -109 / 496)}
+.crop-pink{width:1.15rem;height:calc(1.15rem * 253 / 258);border-radius:.32rem}
+.crop-pink img{width:calc(100cqw * 1254 / 258);left:calc(100cqw * -811 / 258);top:calc(100cqw * -911 / 258)}
+.crop-lockup{width:min(18rem,78vw);height:calc(min(18rem,78vw) * 650 / 854);margin:0 auto .9rem}
+.crop-lockup img{width:calc(100cqw * 1254 / 854);left:calc(100cqw * -199 / 854);top:calc(100cqw * -106 / 854)}
+.site-note{margin:0;padding:0 1rem .6rem;font-size:.75rem;color:#6d6256}
+.sidebar{background:var(--side);padding:1.1rem .8rem 1rem;display:flex;flex-direction:column;gap:1rem;min-width:0}
+.brandrow{display:flex;align-items:center;justify-content:space-between;gap:.4rem}
+.brand{display:flex;align-items:center;gap:.55rem;font-weight:650;letter-spacing:-.03em;text-decoration:none;color:inherit;min-width:0}
+.ghost{border:0;background:transparent;border-radius:.5rem;padding:.35rem}
+.ghost:hover{background:#ececec}
+.new,.nav button{width:100%;border:0;background:transparent;border-radius:.6rem;padding:.65rem .75rem;text-align:left;display:flex;gap:.6rem;align-items:center}
+.new:hover,.nav button:hover,.nav button[aria-current="page"]{background:#ececec}
+.nav{display:grid;gap:.15rem}
+.history h2{font-size:.78rem;font-weight:500;color:#8b8b8b;margin:0 0 .4rem;padding:0 .4rem}
+.history input{width:100%;border:0;background:#efefef;border-radius:.5rem;padding:.5rem .65rem;margin-bottom:.4rem}
+.recent{display:grid;gap:.1rem;max-height:9rem;overflow:auto}
+.recent button{border:0;background:transparent;text-align:left;border-radius:.4rem;padding:.4rem .6rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.recent button[aria-current="true"]{background:#e7e7e7}
+.recent p,.pending{color:var(--muted);font-size:.85rem;margin:.2rem .4rem}
+.sidebar-bottom{margin-top:auto;display:grid;gap:.15rem;border-top:1px solid #ebebeb;padding-top:.7rem}
+.sidebar-bottom a{display:flex;justify-content:space-between;gap:.5rem;text-decoration:none;color:#65696e;border-radius:.5rem;padding:.45rem .6rem;font-size:.9rem}
+.sidebar-bottom a:hover{background:#efefef}
+.session{padding:.4rem .6rem;font-size:.8rem;color:var(--muted)}
+.is-collapsed .hide-collapsed{display:none}
+.is-collapsed .new,.is-collapsed .nav button{font-size:0;justify-content:center;padding:.65rem}
+.workspace{min-width:0;display:flex;flex-direction:column;min-height:0}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:.6rem;min-height:4rem;padding:0 1rem}
+.topbar h1{font-size:1.15rem;font-weight:550;margin:0;letter-spacing:-.02em}
+.menu{display:none}
+.pill{border:1px solid #f7dce6;background:#fff7fa;color:#9b4a65;border-radius:999px;padding:.3rem .6rem;font-size:.75rem}
+.view{flex:1;display:flex;flex-direction:column;justify-content:center;padding:1.5rem 1rem 12vh;min-width:0}
+.view.is-thread{justify-content:flex-start;padding-bottom:1rem}
+.welcome{width:min(46rem,100%);margin:0 auto;text-align:center}
+.welcome h2{font-size:clamp(1.6rem,4vw,2rem);font-weight:550;letter-spacing:-.03em;margin:0}
+.composer-area{width:min(46rem,100%);margin:1.2rem auto 0}
+.composer{border:1px solid var(--line);border-radius:1.4rem;padding:1rem .9rem .7rem;box-shadow:0 3px 15px #00000009}
+.composer:focus-within{border-color:#d7c5ce}
+textarea{width:100%;border:0;resize:none;min-height:3.2rem;max-height:8rem;padding:.2rem;background:transparent}
+.row{display:flex;align-items:center;justify-content:space-between;gap:.4rem;min-width:0}
+.left,.right{display:flex;align-items:center;gap:.35rem;min-width:0}
+.iconbtn{border:0;background:transparent;border-radius:50%;width:2.2rem;height:2.2rem;display:grid;place-items:center}
+.iconbtn:hover{background:#f3f3f3}
+.tools{position:relative}
+.tools summary{list-style:none;border-radius:999px;padding:.4rem .6rem;display:flex;align-items:center;gap:.35rem;font-size:.85rem}
+.tools summary::-webkit-details-marker{display:none}
+.tools summary:hover,.tools[open] summary{background:#f3f3f3}
+.popup{position:absolute;bottom:2.6rem;left:0;z-index:2;width:min(16rem,70vw);background:#fff;border:1px solid #e5e5e5;border-radius:.9rem;box-shadow:0 8px 24px #1020321a;padding:.6rem}
+.popup p{margin:.1rem .4rem .4rem;color:#919191;font-size:.75rem}
+.popup button{width:100%;border:0;background:transparent;text-align:left;border-radius:.5rem;padding:.5rem .55rem}
+.popup button[aria-pressed="true"]{background:#fff0f5;color:#bc2451}
+.popup button:hover{background:#f7f7f7}
+.selected{font-size:.75rem;color:#ba2d57;background:#fff0f5;border-radius:999px;padding:.25rem .5rem;max-width:6.5rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.send{width:2.2rem;height:2.2rem;border:0;border-radius:50%;background:var(--pink);color:#fff;display:grid;place-items:center}
+.send:disabled{background:#eee;color:#a2a2a2}
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:.45rem;margin:1rem 0 0}
+.chips button{border:1px solid #ebebeb;background:#fff;border-radius:999px;padding:.55rem .75rem;color:#5e656c;font-size:.85rem}
+.chips button:hover{border-color:#e5bdcc}
+.note{text-align:center;color:#8a8a8a;font-size:.78rem;margin:.8rem 0 0}
+.messages{width:min(46rem,100%);margin:0 auto 1rem;display:grid;gap:.9rem}
+.user{justify-self:end;max-width:100%;background:#f5efe6;border-radius:1rem 1rem .2rem 1rem;padding:.7rem .9rem;white-space:pre-wrap;overflow-wrap:anywhere}
+.assistant{overflow-wrap:anywhere}
+.assistant .meta{display:flex;gap:.4rem;align-items:center;font-size:.78rem;color:var(--muted);margin-bottom:.25rem}
+.badge{border:1px solid #ebd8b9;background:#fff7e9;border-radius:.3rem;padding:.05rem .35rem;color:#82613a}
+.panel{width:min(46rem,100%);margin:0 auto}
+.panel h2{font-size:clamp(1.5rem,4vw,1.9rem);letter-spacing:-.03em;margin:0 0 .4rem}
+.card{border:1px solid var(--line);border-radius:.9rem;padding:.9rem 1rem;margin-top:.7rem}
+.card small{color:var(--muted)}
+.backdrop{display:none}
+@media(max-width:760px){
+  .app-body,.app.is-collapsed .app-body{grid-template-columns:minmax(0,1fr)}
+  .sidebar{display:none;position:fixed;inset:0 auto 0 0;width:min(16rem,88vw);z-index:3;height:100dvh}
+  .sidebar.open{display:flex}
+  .backdrop.open{display:block;position:fixed;inset:0;background:#10203255;z-index:2}
+  .menu{display:grid}
+  .is-collapsed .hide-collapsed{display:initial}
+  .is-collapsed .new,.is-collapsed .nav button{font-size:inherit;justify-content:flex-start}
+}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<section class="gate" id="gate">
+  <p class="tag">Demostración de interfaz · apagada</p>
+  <span class="crop crop-lockup"><img src="../assets/arqiven-logo-oficial.png" alt=""></span>
+  <h1>ARQIVEN no está activada</h1>
+  <p>Esta página es un esqueleto de diseño de la Fase 0. No hay un modelo conectado y no forma parte de orvupi.com. ORVUPI sigue siendo el sitio. ARQIVEN es la marca del producto. La ficha de un modelo propio, cuando exista, dirá Arqiven-N. Esta vista no carga Arqiven-1.</p>
+  <p>La vista de revisión se abre con el parámetro <code>preview=1</code>. Sin ese parámetro no se muestra el recorrido.</p>
+  <p>Work y Studio siguen en sus direcciones actuales. Esta carpeta no se despliega con el sitio.</p>
+  <p lang="en">Design skeleton only. It is off unless the page is opened with <code>preview=1</code>. It is not a working assistant.</p>
+</section>
+
+<div class="app" id="app" hidden>
+  <header class="sitebar">
+    <div class="sitebar-top">
+      <a class="sitebrand" href="https://orvupi.com/">ORVUPI</a>
+      <div class="site-actions">
+        <span class="pill-link">Español</span>
+        <a class="pill-link" href="https://orvupi.com/">Explorar todo</a>
+      </div>
+    </div>
+    <nav class="sitenav" aria-label="Barra principal, maqueta">
+      <ul>
+        <li><a href="https://orvupi.com/">Inicio</a></li>
+        <li><a href="https://orvupi.com/#herramientas">Herramientas</a></li>
+        <li><a href="https://orvupi.com/work/">Work</a></li>
+        <li><a href="#chat" id="nav-arqiven" aria-current="page"><span class="crop crop-pink" aria-hidden="true"><img src="../assets/arqiven-logo-oficial.png" alt=""></span>ARQIVEN</a></li>
+        <li><a href="https://orvupi.com/memes/">Memes</a></li>
+        <li><a href="https://orvupi.com/novedades/">Novedades</a></li>
+        <li><a href="https://orvupi.com/community/">Comunidad</a></li>
+        <li><a href="https://orvupi.com/vision/">Visión</a></li>
+        <li><a href="https://orvupi.com/token/">Token ORVUPI</a></li>
+      </ul>
+    </nav>
+    <p class="site-note">Maqueta de la barra de orvupi.com. El ítem ARQIVEN no está publicado. La ficha reservada del experimento es Arqiven-1 experimental (<code>arqiven-1-experimental</code>) y no hay checkpoint.</p>
+  </header>
+  <div class="backdrop" id="backdrop"></div>
+  <div class="app-body">
+  <aside class="sidebar" id="sidebar" aria-label="Navegación de la demostración">
+    <div class="brandrow">
+      <a class="brand" href="#chat" id="home-link"><span class="crop crop-icon" aria-hidden="true"><img src="../assets/arqiven-logo-oficial.png" alt=""></span><span class="hide-collapsed">ARQIVEN</span></a>
+      <button type="button" class="ghost" id="collapse" aria-label="Contraer barra lateral"><svg aria-hidden="true"><use href="#side"/></svg></button>
+    </div>
+    <button type="button" class="new" id="new-chat"><svg aria-hidden="true"><use href="#plus"/></svg><span class="hide-collapsed">Nuevo chat</span></button>
+    <nav class="nav" aria-label="Secciones">
+      <button type="button" id="nav-chat" aria-current="page"><svg aria-hidden="true"><use href="#chat"/></svg><span class="hide-collapsed">Chat</span></button>
+      <button type="button" id="nav-projects"><svg aria-hidden="true"><use href="#grid"/></svg><span class="hide-collapsed">Proyectos</span></button>
+      <button type="button" id="nav-docs"><svg aria-hidden="true"><use href="#doc"/></svg><span class="hide-collapsed">Documentos</span></button>
+    </nav>
+    <section class="history hide-collapsed" aria-labelledby="hist-label">
+      <h2 id="hist-label">Esta pestaña</h2>
+      <input id="search" type="search" aria-label="Buscar en los mensajes de esta pestaña" placeholder="Buscar en esta pestaña…">
+      <div class="recent" id="recent"><p>Todavía no hay mensajes.</p></div>
+    </section>
+    <div class="sidebar-bottom hide-collapsed">
+      <a href="https://orvupi.com/work/">ORVUPI Work <span aria-hidden="true">↗</span></a>
+      <a href="https://orvupi.com/studio/">ORVUPI Studio <span aria-hidden="true">↗</span></a>
+      <p class="session">Sesión de esta pestaña. No es una cuenta. Misma biblioteca que Work y Studio cuando el puente esté conectado. Aquí no se abre.</p>
+    </div>
+  </aside>
+  <main class="workspace">
+    <header class="topbar">
+      <button type="button" class="iconbtn menu" id="menu" aria-label="Abrir menú" aria-expanded="false"><svg aria-hidden="true"><use href="#icon-menu"/></svg></button>
+      <h1 id="title">ARQIVEN</h1>
+      <span class="pill">Sin modelo</span>
+    </header>
+    <section class="view" id="chat-view" aria-label="Conversación de demostración">
+      <div class="welcome" id="welcome"><h2>¿En qué puedo ayudarte?</h2></div>
+      <div class="messages" id="messages" aria-live="polite"></div>
+      <div class="composer-area">
+        <form class="composer" id="composer">
+          <label class="sr" for="prompt" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Mensaje</label>
+          <textarea id="prompt" placeholder="Pregunta lo que quieras" maxlength="4000"></textarea>
+          <div class="row">
+            <div class="left">
+              <button type="button" class="iconbtn" id="attach" aria-label="Adjuntar texto, pendiente de implementación" title="Pendiente de implementación"><svg aria-hidden="true"><use href="#plus"/></svg></button>
+              <details class="tools" id="tools">
+                <summary>Herramientas</summary>
+                <div class="popup" role="group" aria-label="Herramientas de demostración">
+                  <p>Atajos de la caja. No ejecutan un modelo.</p>
+                  <button type="button" data-tool="chat" aria-pressed="true">Conversar</button>
+                  <button type="button" data-tool="summarize" aria-pressed="false">Resumir</button>
+                  <button type="button" data-tool="write" aria-pressed="false">Redactar</button>
+                  <button type="button" data-tool="explain" aria-pressed="false">Explicar</button>
+                  <button type="button" data-tool="translate" aria-pressed="false">Traducir</button>
+                </div>
+              </details>
+              <span id="selected" class="selected" hidden></span>
+            </div>
+            <div class="right">
+              <button type="button" class="iconbtn" id="voice" aria-label="Voz, función propuesta, sin micrófono"><svg aria-hidden="true"><use href="#mic"/></svg></button>
+              <button type="submit" class="send" id="send" aria-label="Enviar mensaje de demostración" disabled><svg aria-hidden="true"><use href="#up"/></svg></button>
+            </div>
+          </div>
+        </form>
+        <div class="chips" id="chips">
+          <button type="button" data-fill="Quiero crear un texto.">Crear un texto</button>
+          <button type="button" data-fill="Quiero analizar un documento.">Analizar un documento</button>
+          <button type="button" data-fill="Quiero aprender algo.">Aprender algo</button>
+          <button type="button" data-fill="Quiero organizar una idea de programación.">Programar</button>
+        </div>
+        <p class="note" id="status">Demostración de interfaz. La marca visible es ARQIVEN. No hay Arqiven-N cargado y no se genera una respuesta. Los atajos no garantizan una capacidad.</p>
+      </div>
+    </section>
+    <section class="view" id="projects-view" hidden>
+      <div class="panel">
+        <h2>Proyectos</h2>
+        <p class="pending">Pendiente de implementación. Un proyecto real agruparía chats y archivos con un límite de contexto. Estas tarjetas no guardan nada.</p>
+        <article class="card"><strong>Ejemplo visual</strong><p>Nombre, archivos e instrucciones. Sin datos de una persona.</p><small>No es un proyecto guardado.</small></article>
+      </div>
+    </section>
+    <section class="view" id="docs-view" hidden>
+      <div class="panel">
+        <h2>Documentos</h2>
+        <p class="pending">Pendiente de implementación. Esta vista no lee archivos ni los sube a un servidor.</p>
+      </div>
+    </section>
+  </main>
+  </div>
+</div>
+<svg hidden aria-hidden="true"><defs>
+<symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="chat" viewBox="0 0 24 24"><path d="M20 11.5a8 8 0 0 1-8 8H4l1.8-4.1A8 8 0 1 1 20 11.5Z"/><path d="M8 10h8M8 14h5"/></symbol>
+<symbol id="doc" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z"/><path d="M14 3v6h6"/></symbol>
+<symbol id="grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+<symbol id="up" viewBox="0 0 24 24"><path d="M12 19V5m-6 6 6-6 6 6"/></symbol>
+<symbol id="mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M6 11v1a6 6 0 0 0 12 0v-1M12 18v3"/></symbol>
+<symbol id="icon-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+<symbol id="side" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></symbol>
+</defs></svg>
+<script>
+(function () {
+  var on = new URLSearchParams(location.search).get("preview") === "1";
+  if (!on) return;
+  document.title = "ARQIVEN";
+  document.getElementById("gate").hidden = true;
+  document.getElementById("app").hidden = false;
+  var tool = "chat";
+  var names = { chat: "Conversar", summarize: "Resumir", write: "Redactar", explain: "Explicar", translate: "Traducir" };
+  var threads = [];
+  var current = null;
+  var $ = function (id) { return document.getElementById(id); };
+  function status(text) { $("status").textContent = text; }
+  function setTool(next) {
+    tool = next;
+    document.querySelectorAll("[data-tool]").forEach(function (button) {
+      var active = button.getAttribute("data-tool") === tool;
+      button.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+    var label = $("selected");
+    label.hidden = tool === "chat";
+    label.textContent = names[tool];
+    $("tools").open = false;
+  }
+  function syncSend() { $("send").disabled = !$("prompt").value.trim(); }
+  function show(name) {
+    ["chat", "projects", "docs"].forEach(function (id) {
+      $(id + "-view").hidden = id !== name;
+      var nav = $("nav-" + (id === "docs" ? "docs" : id === "projects" ? "projects" : "chat"));
+      if (id === name) nav.setAttribute("aria-current", "page");
+      else nav.removeAttribute("aria-current");
+    });
+    $("title").textContent = name === "chat" ? "ARQIVEN" : name === "projects" ? "Proyectos" : "Documentos";
+    closeMenu();
+  }
+  function closeMenu() {
+    $("sidebar").classList.remove("open");
+    $("backdrop").classList.remove("open");
+    $("menu").setAttribute("aria-expanded", "false");
+  }
+  function render() {
+    var root = $("messages");
+    var list = $("recent");
+    root.replaceChildren();
+    list.replaceChildren();
+    var query = $("search").value.trim().toLocaleLowerCase("es");
+    var visible = threads.filter(function (item) {
+      return !query || item.title.toLocaleLowerCase("es").includes(query) || item.user.toLocaleLowerCase("es").includes(query);
+    });
+    if (!visible.length) list.append(Object.assign(document.createElement("p"), { textContent: query ? "No hay coincidencias." : "Todavía no hay mensajes." }));
+    visible.forEach(function (item) {
+      var button = document.createElement("button");
+      button.type = "button";
+      button.textContent = item.title;
+      if (item.id === current) button.setAttribute("aria-current", "true");
+      button.addEventListener("click", function () { current = item.id; show("chat"); render(); });
+      list.append(button);
+    });
+    var thread = threads.find(function (item) { return item.id === current; });
+    var has = Boolean(thread);
+    $("welcome").hidden = has;
+    $("chips").hidden = has;
+    $("chat-view").classList.toggle("is-thread", has);
+    if (!has) return;
+    var user = document.createElement("article");
+    user.className = "user";
+    user.textContent = thread.user;
+    var answer = document.createElement("article");
+    answer.className = "assistant";
+    var meta = document.createElement("div");
+    meta.className = "meta";
+    meta.append(document.createTextNode("ARQIVEN"));
+    var badge = document.createElement("span");
+    badge.className = "badge";
+    badge.textContent = "Sin modelo";
+    meta.append(badge);
+    var body = document.createElement("p");
+    body.textContent = "No hay respuesta generada. Esta pantalla solo enseña el recorrido. El mensaje no sale de la pestaña y no lo ha escrito un modelo.";
+    answer.append(meta, body);
+    root.append(user, answer);
+  }
+  $("prompt").addEventListener("input", syncSend);
+  $("prompt").addEventListener("keydown", function (event) {
+    if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+      event.preventDefault();
+      if (!$("send").disabled) $("composer").requestSubmit();
+    }
+  });
+  $("composer").addEventListener("submit", function (event) {
+    event.preventDefault();
+    var text = $("prompt").value.trim();
+    if (!text) return;
+    current = String(Date.now());
+    threads.push({ id: current, title: text.slice(0, 42), user: text });
+    $("prompt").value = "";
+    syncSend();
+    show("chat");
+    render();
+    status("Mensaje guardado solo en esta pestaña. No se ha llamado a ningún modelo.");
+    $("prompt").focus();
+  });
+  document.querySelectorAll("[data-tool]").forEach(function (button) {
+    button.addEventListener("click", function () { setTool(button.getAttribute("data-tool")); $("prompt").focus(); });
+  });
+  document.querySelectorAll("[data-fill]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      $("prompt").value = button.getAttribute("data-fill");
+      syncSend();
+      status("Atajo de tarea. No demuestra que un modelo sepa hacer esto.");
+      $("prompt").focus();
+    });
+  });
+  $("new-chat").addEventListener("click", function () {
+    current = null;
+    $("prompt").value = "";
+    $("search").value = "";
+    syncSend();
+    show("chat");
+    render();
+    status("Nueva conversación de esta pestaña. Sigue sin haber un modelo.");
+    $("prompt").focus();
+  });
+  $("home-link").addEventListener("click", function (event) { event.preventDefault(); show("chat"); });
+  $("nav-arqiven").addEventListener("click", function (event) { event.preventDefault(); show("chat"); });
+  $("nav-chat").addEventListener("click", function () { show("chat"); });
+  $("nav-projects").addEventListener("click", function () { show("projects"); });
+  $("nav-docs").addEventListener("click", function () { show("docs"); });
+  $("search").addEventListener("input", render);
+  $("collapse").addEventListener("click", function () {
+    var collapsed = document.querySelector(".app").classList.toggle("is-collapsed");
+    this.setAttribute("aria-label", collapsed ? "Expandir barra lateral" : "Contraer barra lateral");
+  });
+  $("menu").addEventListener("click", function () {
+    var open = !$("sidebar").classList.contains("open");
+    $("sidebar").classList.toggle("open", open);
+    $("backdrop").classList.toggle("open", open);
+    this.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  $("backdrop").addEventListener("click", closeMenu);
+  $("voice").addEventListener("click", function () {
+    status("La voz es una propuesta de sitio en la caja. Esta página no abre el micrófono ni graba audio.");
+  });
+  $("attach").addEventListener("click", function () {
+    status("Adjuntar está pendiente. Esta demostración no lee archivos.");
+  });
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") { $("tools").open = false; closeMenu(); }
+  });
+  syncSend();
+})();
+</script>
+</body>
+</html>

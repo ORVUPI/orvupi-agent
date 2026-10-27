@@ -35,9 +35,9 @@ export function localPhrases(lang = "es") {
 
 export function aiPanelCopy(lang = "es") {
   return {
-    title: lang === "en" ? "Optional AI" : "IA opcional",
+    title: lang === "en" ? "Quick text" : "Textos rápidos",
     body: AI_STATUS.note[lang] || AI_STATUS.note.es,
     off: lang === "en" ? "No model is loaded." : "No hay ningún modelo cargado.",
-    phrases: lang === "en" ? "Local phrases" : "Frases locales",
+    phrases: lang === "en" ? "Ready-made phrases" : "Frases ya escritas",
   };
 }

@@ -6,7 +6,7 @@ export type AiAction = "summarize" | "explain" | "ask" | "rewrite" | "translate"
 export const CHUNK_CHARS = 6000;
 export const MAX_PARTS = 6;
 
-const SYSTEM = "Eres ORVUPI AI, un asistente que trabaja dentro del navegador del usuario. Responde siempre en español, de forma clara y fiel al texto. No inventes datos que no estén en el texto.";
+const SYSTEM = "Trabajas dentro del navegador, con un modelo de terceros. Responde siempre en español, de forma clara y fiel al texto. No inventes datos que no estén en el texto. No digas que eres Arqiven-N.";
 
 export function splitText(text: string, size = CHUNK_CHARS): string[] {
   const clean = text.replace(/\r/g, "").replace(/\n{3,}/g, "\n\n").trim();
