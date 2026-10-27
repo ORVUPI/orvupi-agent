@@ -33,7 +33,7 @@ test("recorrido crear, escribir, cerrar, volver, recuperar y exportar", async ({
   await expect(reopened.locator(".ProseMirror")).toContainText("Informe de prueba ORVUPI");
   await reopened.getByRole("button", { name: "Exportar", exact: true }).click();
   const downloadPromise = reopened.waitForEvent("download");
-  await reopened.getByRole("menuitem", { name: "TXT" }).click();
+  await reopened.getByRole("menuitem", { name: "Texto sin formato (.txt)" }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/\.txt$/);
   const filePath = await download.path();

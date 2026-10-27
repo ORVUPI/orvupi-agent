@@ -40,12 +40,15 @@ type WorkspaceValue = {
   openFormId: string | null;
   openDrawingId: string | null;
   openNoteId: string | null;
+  openPdfId: string | null;
   openDoc: (id: string) => void;
   openSheet: (id: string) => void;
   openSlide: (id: string) => void;
   openForm: (id: string) => void;
   openDrawing: (id: string) => void;
   openNote: (id: string) => void;
+  openPdf: (id: string) => void;
+  closePdf: () => void;
   openRecord: (file: FileRecord) => void;
   closeDoc: () => void;
   query: string;
@@ -129,6 +132,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [openFormId, setOpenFormId] = useState<string | null>(boot.form);
   const [openDrawingId, setOpenDrawingId] = useState<string | null>(boot.drawing);
   const [openNoteId, setOpenNoteId] = useState<string | null>(boot.note);
+  const [openPdfId, setOpenPdfId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [browse, setBrowse] = useState<FileBrowseMode>("folder");
   const [kindFilter, setKindFilter] = useState<"all" | FileKind>("all");
@@ -184,7 +188,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const route = parseEditorPath(window.location.pathname);
     if (!route) {
-      applyDocumentChrome("ORVUPI Work", withBase("/brand-work.svg"));
+      applyDocumentChrome("ORVUPI Work", withBase("/favicon-32.png"));
       return;
     }
     const listed = files.find((file) => file.id === route.id)?.name ?? "";
@@ -422,8 +426,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
           const opened = openEditorWindow(kind, saved.id);
           if (opened === null) window.location.assign(editorPath(kind, saved.id));
           pushToast(t("toastImported"));
+        } else if (prepared.kind === "pdf") {
+          setOpenPdfId(saved.id);
+          setView("pdf");
+          pushToast(t("toastStored"));
         } else {
-          setView(prepared.kind === "pdf" ? "pdf" : "files");
+          setView("files");
           pushToast(t("toastStored"));
         }
       } catch (error) {
@@ -514,6 +522,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         setOpenFormId(null);
         setOpenDrawingId(null);
         setOpenNoteId(null);
+        setOpenPdfId(null);
         setView("home");
         pushToast(t("toastRestored"));
       } catch (error) {
@@ -552,6 +561,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       if (next !== "forms") setOpenFormId(null);
       if (next !== "drawings") setOpenDrawingId(null);
       if (next !== "notes") setOpenNoteId(null);
+      setOpenPdfId(null);
       if (parseEditorPath(window.location.pathname)) window.history.pushState({}, "", withBase("/"));
       setNavOpen(false);
       setView(next);
@@ -562,12 +572,20 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     openFormId,
     openDrawingId,
     openNoteId,
+    openPdfId,
     openDoc: (id) => reveal("doc", id),
     openSheet: (id) => reveal("sheet", id),
     openSlide: (id) => reveal("slide", id),
     openForm: (id) => reveal("form", id),
     openDrawing: (id) => reveal("drawing", id),
     openNote: (id) => reveal("note", id),
+    openPdf: (id) => {
+      setOpenPdfId(id);
+      setView("pdf");
+      setQuery("");
+      setNavOpen(false);
+    },
+    closePdf: () => setOpenPdfId(null),
     openRecord: (file) => {
       const target = file.shortcutOf ? files.find((item) => item.id === file.shortcutOf) ?? file : file;
       const studio = studioDesignPath(target);
@@ -580,7 +598,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         reveal(kind, target.id);
         return;
       }
-      setView(file.kind === "pdf" ? "pdf" : "files");
+      if (target.kind === "pdf") {
+        setOpenPdfId(target.id);
+        setView("pdf");
+      } else setView("files");
       setQuery("");
       setNavOpen(false);
     },
@@ -631,6 +652,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       setOpenFormId(null);
       setOpenDrawingId(null);
       setOpenNoteId(null);
+      setOpenPdfId(null);
       if (parseEditorPath(window.location.pathname)) window.history.pushState({}, "", withBase("/"));
       setBrowse(mode);
       setNavOpen(false);
@@ -657,6 +679,6 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 }
 
 export function exportName(name: string, kind: ExportKind): string {
-  const extension = kind === "orvdoc" ? "orvdoc" : kind;
+  const extension = kind === "htmlzip" ? "zip" : kind;
   return fileNameWithExtension(name, extension);
 }

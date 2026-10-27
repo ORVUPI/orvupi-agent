@@ -322,8 +322,8 @@ test("archivo, editar, ver, herramientas, extensiones y ayuda responden", async 
   await expect(doc.locator("html")).toHaveAttribute("data-printed", "1");
   const download = doc.waitForEvent("download");
   await doc.getByRole("menuitem", { name: "Archivo", exact: true }).click();
-  await doc.getByRole("menuitem", { name: "Exportar", exact: true }).click();
-  await doc.getByRole("menuitem", { name: "TXT", exact: true }).click();
+  await doc.getByRole("menuitem", { name: "Descargar", exact: true }).click();
+  await doc.getByRole("menuitem", { name: "Texto sin formato (.txt)", exact: true }).click();
   expect((await download).suggestedFilename()).toMatch(/\.txt$/);
   await doc.locator(".ow-docs-toolbar").getByRole("button", { name: "Buscar" }).click();
   await expect(doc.getByRole("textbox", { name: "Buscar" })).toBeVisible();
