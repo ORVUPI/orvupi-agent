@@ -60,6 +60,7 @@ test("escritorio: la pieza se ve entera al editar", async ({ page }) => {
   expect(editing.tabTop).toBeGreaterThanOrEqual(-1);
   expect(editing.tabBottom).toBeLessThanOrEqual(editing.vh + 1);
 
+  await page.locator("#editor-app .tb-home").click();
   await page.locator("#buscar").fill("Meme de un golpe");
   await page.locator("[data-template='meme-punch']").click();
   const memeModal = page.locator("#vista-plantilla");

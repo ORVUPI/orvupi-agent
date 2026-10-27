@@ -661,6 +661,10 @@ const state = {
   preview: false,
   openPreview: "",
   previewPage: 0,
+  previewMore: false,
+  starred: {},
+  painter: null,
+  helpOpen: false,
   pop: "",
   editMenu: false,
   drawColor: "#102032",
@@ -919,6 +923,9 @@ function openDoc(doc, options = {}) {
   state.preview = false;
   state.openPreview = "";
   state.previewPage = 0;
+  state.previewMore = false;
+  state.painter = null;
+  state.helpOpen = false;
   state.pop = "";
   state.editMenu = false;
   state.notesOpen = false;
@@ -931,9 +938,8 @@ function openDoc(doc, options = {}) {
   state.pdfOpen = false;
   state.imageFailed = Boolean(options.imageFailed);
   state.navOpen = false;
-  const narrow = window.innerWidth < 800;
-  state.panelOpen = openedRail ? true : !narrow;
-  state.inspectorOpen = !narrow;
+  state.panelOpen = Boolean(openedRail);
+  state.inspectorOpen = false;
   state.timerOn = false;
   state.timerSeconds = 0;
   clearInterval(clockTimer);
@@ -1379,8 +1385,29 @@ function applyStageFit() {
   frame.style.width = `${Math.round(state.doc.format.width * state.scale)}px`;
   frame.style.height = `${Math.round(state.doc.format.height * state.scale)}px`;
   art.style.transform = `scale(${state.scale})`;
+  const pct = Math.round(state.scale * 100);
   const zoom = root.querySelector("#zoom-indicador");
-  if (zoom) zoom.textContent = `${Math.round(state.scale * 100)}%`;
+  if (zoom) zoom.textContent = `${pct}%`;
+  const range = root.querySelector("#zoom-rango");
+  if (range instanceof HTMLInputElement && document.activeElement !== range) range.value = String(Math.min(200, Math.max(10, pct)));
+  placeSelectionPill();
+}
+
+function placeSelectionPill() {
+  const pill = root.querySelector("#pastilla-seleccion");
+  const capa = root.querySelector(".capa.seleccionada");
+  const host = root.querySelector(".escenario");
+  if (!(pill instanceof HTMLElement) || !(capa instanceof HTMLElement) || !(host instanceof HTMLElement)) return;
+  const box = capa.getBoundingClientRect();
+  const hostBox = host.getBoundingClientRect();
+  const width = pill.offsetWidth || 280;
+  const height = pill.offsetHeight || 40;
+  let left = box.left - hostBox.left;
+  let top = box.top - hostBox.top - height - 10;
+  if (top < 8) top = box.bottom - hostBox.top + 8;
+  left = Math.max(8, Math.min(left, Math.max(8, hostBox.width - width - 8)));
+  pill.style.left = `${Math.round(left)}px`;
+  pill.style.top = `${Math.round(top)}px`;
 }
 
 function focusEditing() {
@@ -1980,6 +2007,17 @@ function onRootClick(event) {
   if (buttonNode.id === "cerrar-plantilla" || buttonNode.dataset.closePreview != null) {
     state.openPreview = "";
     state.previewPage = 0;
+    state.previewMore = false;
+    render();
+    return;
+  }
+  if (buttonNode.id === "tpl-guardar" && state.openPreview) {
+    state.starred[state.openPreview] = !state.starred[state.openPreview];
+    render();
+    return;
+  }
+  if (buttonNode.id === "tpl-mas") {
+    state.previewMore = !state.previewMore;
     render();
     return;
   }
@@ -2004,6 +2042,7 @@ function onRootClick(event) {
   if (previewId && documentForOpen(previewId)?.templateId === previewId) {
     state.openPreview = previewId;
     state.previewPage = 0;
+    state.previewMore = false;
     render();
     return;
   }
@@ -2111,6 +2150,14 @@ function onRootClick(event) {
   if (buttonNode.dataset.phrase) insertPhrase(buttonNode.dataset.phrase);
   if (buttonNode.id === "anadir-escena") addPage();
   if (buttonNode.id === "presentar" || buttonNode.id === "pantalla") toggleFullscreen();
+  if (buttonNode.id === "ayuda") {
+    state.helpOpen = !state.helpOpen;
+    render();
+  }
+  if (buttonNode.id === "cerrar-ayuda") {
+    state.helpOpen = false;
+    render();
+  }
   if (buttonNode.id === "cuadricula") {
     state.grid = !state.grid;
     render();
@@ -2195,8 +2242,13 @@ function onRootClick(event) {
     }
   }
   if (buttonNode.dataset.rail) {
-    state.rail = buttonNode.dataset.rail;
-    state.panelOpen = true;
+    const next = buttonNode.dataset.rail;
+    const fromStrip = buttonNode.classList.contains("strip-btn");
+    if (fromStrip && state.panelOpen && state.rail === next) state.panelOpen = false;
+    else {
+      state.rail = next;
+      state.panelOpen = true;
+    }
     state.pop = "";
     render();
   }
@@ -2295,14 +2347,69 @@ function onRootClick(event) {
   }
   if (buttonNode.dataset.style && state.doc) {
     const layer = primary();
-    if (layer?.type === "text") {
-      const key = buttonNode.dataset.style;
+    const key = buttonNode.dataset.style;
+    if (layer?.type === "text" && key === "strike") {
+      snapshot();
+      layer.props.strike = !layer.props.strike;
+      scheduleSave();
+      render();
+    } else if (layer?.type === "text" && (key === "bold" || key === "italic" || key === "underline")) {
       const [from, to] = textRange(layer);
       const on = !spanIs(layer.props.text, layer.props.runs, from, to, key, layer.props);
       snapshot();
       const whole = to <= from || (from === 0 && to === layer.props.text.length);
       if (whole) layer.props[key] = on;
       layer.props.runs = applySpan(layer.props.text, layer.props.runs, from, to, { [key]: on }, layer.props);
+      scheduleSave();
+      render();
+    }
+  }
+  if (buttonNode.dataset.case === "cycle" && state.doc) {
+    const layer = primary();
+    if (layer?.type === "text") {
+      const order = ["", "upper", "lower", "title"];
+      const index = Math.max(0, order.indexOf(layer.props.textCase || ""));
+      snapshot();
+      layer.props.textCase = order[(index + 1) % order.length];
+      scheduleSave();
+      render();
+    }
+  }
+  if (buttonNode.dataset.list && state.doc) {
+    const layer = primary();
+    if (layer?.type === "text") {
+      snapshot();
+      const next = buttonNode.dataset.list === "none" ? "" : buttonNode.dataset.list;
+      layer.props.list = layer.props.list === next ? "" : next;
+      scheduleSave();
+      render();
+    }
+  }
+  if (buttonNode.id === "copiar-formato") {
+    const layer = primary();
+    if (layer?.type === "text") {
+      state.painter = {
+        id: layer.id,
+        props: {
+          fontId: layer.props.fontId,
+          size: layer.props.size,
+          color: layer.props.color,
+          bold: layer.props.bold,
+          italic: layer.props.italic,
+          underline: layer.props.underline,
+          strike: Boolean(layer.props.strike),
+          align: layer.props.align,
+          textCase: layer.props.textCase || "",
+        },
+      };
+      render();
+    }
+  }
+  if (buttonNode.id === "magia-capa") {
+    const layer = primary();
+    if (layer?.type === "text") {
+      snapshot();
+      layer.props.effect = layer.props.effect ? "" : "sombra";
       scheduleSave();
       render();
     }
@@ -2536,6 +2643,9 @@ function retargetCopies(copies) {
 
 function bindStage() {
   const lastTap = { id: "", at: 0 };
+  root.addEventListener("scroll", (event) => {
+    if (event.target?.classList?.contains("stage-scroll")) placeSelectionPill();
+  }, true);
   root.addEventListener("pointerdown", (event) => {
     const resize = event.target.closest?.("[data-resize]");
     const cropEdge = event.target.closest?.("[data-crop-edge]");
@@ -2575,13 +2685,31 @@ function bindStage() {
       startCrop(cropEdge.dataset.cropEdge, event);
       return;
     }
+    const rotate = event.target.closest?.("[data-rotate]");
     if (resize) {
       event.preventDefault();
       event.stopPropagation();
       startResize(resize.dataset.resize, event);
       return;
     }
+    if (rotate) {
+      event.preventDefault();
+      event.stopPropagation();
+      startRotate(rotate.dataset.rotate, event);
+      return;
+    }
     if (capa) {
+      const hit = state.doc.layers.find((item) => item.id === capa.dataset.id);
+      if (state.painter && hit?.type === "text" && state.painter.id !== hit.id) {
+        event.preventDefault();
+        snapshot();
+        Object.assign(hit.props, state.painter.props);
+        state.painter = null;
+        state.selected = [hit.id];
+        scheduleSave();
+        render();
+        return;
+      }
       event.preventDefault();
       const id = capa.dataset.id;
       if (event.shiftKey || event.metaKey || event.ctrlKey) {
@@ -2670,6 +2798,28 @@ function startDrag(id, event) {
   window.addEventListener("pointermove", move);
   window.addEventListener("pointerup", up, { once: true });
   render();
+}
+
+function startRotate(id, event) {
+  snapshot();
+  const layer = state.doc.layers.find((item) => item.id === id);
+  const node = root.querySelector(`.capa[data-id="${id}"]`);
+  if (!layer || !(node instanceof HTMLElement)) return;
+  const box = node.getBoundingClientRect();
+  const cx = box.left + box.width / 2;
+  const cy = box.top + box.height / 2;
+  const move = (ev) => {
+    layer.rotation = Math.round(Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI + 90);
+    const fx = layer.flipX ? -1 : 1;
+    const fy = layer.flipY ? -1 : 1;
+    node.style.transform = `rotate(${layer.rotation}deg) scale(${fx}, ${fy})`;
+  };
+  window.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", () => {
+    window.removeEventListener("pointermove", move);
+    scheduleSave();
+    render();
+  }, { once: true });
 }
 
 function startResize(id, event) {
@@ -2936,6 +3086,10 @@ function bindInputs() {
         }
         return;
       }
+    }
+    if (target.id === "zoom-rango") {
+      state.zoom = String(Math.min(200, Math.max(10, Number(target.value) || 100)) / 100);
+      applyStageFit();
     }
     if (target.id === "color-texto" || target.id === "tamano-texto" || target.id === "interlineado" || target.id === "interletrado") {
       const layer = primary();

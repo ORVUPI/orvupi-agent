@@ -2066,16 +2066,23 @@ function textBlock(layer, editing) {
   node.style.letterSpacing = `${props.letterSpacing || 0}px`;
   node.style.fontWeight = props.bold ? "700" : "400";
   node.style.fontStyle = props.italic ? "italic" : "normal";
-  node.style.textDecoration = props.underline ? "underline" : "none";
+  const decoration = [props.underline ? "underline" : "", props.strike ? "line-through" : ""].filter(Boolean).join(" ") || "none";
+  node.style.textDecoration = decoration;
+  if (props.textCase === "upper") node.style.textTransform = "uppercase";
+  else if (props.textCase === "lower") node.style.textTransform = "lowercase";
+  else if (props.textCase === "title") node.style.textTransform = "capitalize";
   if (props.effect) node.classList.add(`fx-${props.effect}`);
   const parts = piecesOf(props.text, props.runs, props);
-  if (parts.length <= 1) node.textContent = props.text;
+  const listed = !editing && parts.length <= 1 && (props.list === "bullet" || props.list === "number")
+    ? String(props.text || "").split("\n").map((line, index) => (props.list === "number" ? `${index + 1}. ${line}` : `• ${line}`)).join("\n")
+    : props.text;
+  if (parts.length <= 1) node.textContent = listed;
   else {
     for (const part of parts) {
       const span = el("span", { text: part.text });
       span.style.fontWeight = part.bold ? "700" : "400";
       span.style.fontStyle = part.italic ? "italic" : "normal";
-      span.style.textDecoration = part.underline ? "underline" : "none";
+      span.style.textDecoration = [part.underline ? "underline" : "", props.strike ? "line-through" : ""].filter(Boolean).join(" ") || "none";
       span.style.color = part.color;
       span.style.fontSize = `${part.size}px`;
       node.append(span);
@@ -2224,7 +2231,12 @@ function stageNode(ctx) {
         "aria-label": edge === "move" ? "Mover recorte" : `Recorte ${edge}`,
       }))));
     }
-    if (state.selected.includes(layer.id) && !layer.locked) node.append(el("span", { class: "asa", "data-resize": layer.id }));
+    if (state.selected.includes(layer.id) && !layer.locked) {
+      for (const corner of ["nw", "ne", "sw", "se"]) {
+        node.append(el("span", { class: `asa asa-${corner}`, "data-resize": corner === "se" ? layer.id : null }));
+      }
+      node.append(el("span", { class: "asa-giro", "data-rotate": layer.id, "aria-hidden": "true" }));
+    }
     art.append(node);
   }
   frameNode.append(art);
@@ -2243,23 +2255,25 @@ function stageNode(ctx) {
 }
 
 const STRIP = [
-  ["plantillas", "Diseño", "Design", ["M4 4h7v7H4z", "M13 4h7v7h-7z", "M4 13h7v7H4z", "M13 13h7v7h-7z"]],
+  ["ia", "ORVUPI IA", "ORVUPI AI", null],
+  ["plantillas", "Plantillas", "Templates", ["M4 4h7v7H4z", "M13 4h7v7h-7z", "M4 13h7v7H4z", "M13 13h7v7h-7z"]],
   ["elementos", "Elementos", "Elements", ["M5 5h6v6H5z", "M13 8h6", "M13 12h6", "M13 16h4", "M5 14h6v5H5z"]],
   ["texto", "Texto", "Text", ["M5 6h14", "M12 6v12", "M8 18h8"]],
   ["marca", "Marca", "Brand", ["M12 3l2.2 5.2L20 9l-4 3.6.8 5.4L12 15.4 7.2 18l.8-5.4L4 9l5.8-.8z"]],
   ["subidos", "Subidos", "Uploads", ["M12 16V6", "M8 9l4-4 4 4", "M5 19h14"]],
-  ["herramientas", "Dibujo", "Draw", ["M4 16l8-8 4 4-8 8H4z", "M14 6l4 4"]],
+  ["herramientas", "Herramientas", "Tools", ["M4 16l8-8 4 4-8 8H4z", "M14 6l4 4"]],
   ["proyectos", "Proyectos", "Projects", ["M4 7h6l2 2h8v10H4z"]],
   ["apps", "Apps", "Apps", ["M5 5h6v6H5z", "M13 5h6v6h-6z", "M5 13h6v6H5z", "M13 13h6v6h-6z"]],
 ];
 
-const APP_RAILS = new Set(["apps", "fotos", "graficos", "fondo", "formas", "capas", "ia", "notas"]);
+const APP_RAILS = new Set(["apps", "fotos", "graficos", "fondo", "formas", "capas", "notas"]);
 
 function rail(ctx) {
   const { state, t, lang } = ctx;
+  const textQuiet = primary(state)?.type === "text" && !state.panelOpen;
   return el("nav", { class: "riel canva-strip", role: "tablist", "aria-label": t("herramientas") }, STRIP.map(([id, es, en, paths]) => {
     const label = lang === "en" ? en : es;
-    const selected = id === "apps" ? APP_RAILS.has(state.rail) : state.rail === id;
+    const selected = textQuiet ? id === "texto" : (id === "apps" ? APP_RAILS.has(state.rail) : state.rail === id);
     const node = button("", {
       class: "strip-btn",
       "data-rail": id,
@@ -2267,7 +2281,9 @@ function rail(ctx) {
       "aria-selected": selected ? "true" : "false",
       "aria-label": label,
     });
-    node.append(svgIcon(paths), el("span", { text: label }));
+    if (id === "ia") node.append(el("img", { class: "strip-octo", src: studioAsset("assets/orvupi-avatar.png"), alt: "" }));
+    else node.append(svgIcon(paths));
+    node.append(el("span", { text: label }));
     return node;
   }));
 }
@@ -2533,7 +2549,11 @@ function positionPanel(ctx) {
     state.selected.length > 2 ? button(t("distribuirH"), { "data-distribute": "x" }) : null,
     state.selected.length > 2 ? button(t("distribuirV"), { "data-distribute": "y" }) : null,
   ]);
+  const textField = layer?.type === "text" ? el("label", { text: t("texto") }, [
+    el("textarea", { id: "texto-capa", text: layer.props.text, "aria-label": t("texto") }),
+  ]) : null;
   return el("section", { class: "posicion" }, [
+    textField,
     el("h2", { text: t("posicion") }),
     el("div", { class: "chips" }, [
       button(t("alFrente"), { "data-action": "front" }),
@@ -2571,8 +2591,14 @@ function layersPanel(ctx) {
   ]);
 }
 
-function popButton(label, id, open) {
-  return button(label, { "data-pop": id, class: "tb-pop", "aria-expanded": open ? "true" : "false" });
+function popButton(label, id, open, extra = "") {
+  return button(label, { "data-pop": id, class: `tb-pop ${extra}`.trim(), "aria-expanded": open ? "true" : "false" });
+}
+
+function iconBtn(label, attrs, paths) {
+  const node = button("", { ...attrs, "aria-label": label, class: `${attrs.class || ""} tb-icon`.trim() });
+  node.append(paths === "dots" ? dotsIcon() : svgIcon(paths));
+  return node;
 }
 
 function textBar(ctx) {
@@ -2585,14 +2611,12 @@ function textBar(ctx) {
   if (!layer && !textTarget) return null;
   const target = textTarget;
   const en = lang === "en";
-  const size = target ? Math.round(target.props.size) : 32;
-  const font = target ? fontById(target.props.fontId) : null;
-  const kids = [
-    el("label", { class: "sr", text: t("texto") }),
-  ];
+  const kids = [];
   if (target) {
-    kids.push(el("textarea", { id: "texto-capa", text: target.props.text, "aria-label": t("texto") }));
-    kids.push(popButton(font ? (font[lang] || font.es) : t("texto"), "font", state.pop === "font"));
+    const size = Math.round(target.props.size || 32);
+    const font = fontById(target.props.fontId);
+    const color = /^#[0-9a-fA-F]{6}$/.test(target.props.color) ? target.props.color : "#102032";
+    kids.push(popButton(font ? (font[lang] || font.es) : "Inter", "font", state.pop === "font", "tb-font"));
     if (state.pop === "font") {
       kids.push(el("div", { class: "tb-menu", id: "menu-fuente" }, FONTS.map((item) => button(item[lang] || item.es, {
         "data-font": item.id,
@@ -2601,45 +2625,57 @@ function textBar(ctx) {
         "aria-pressed": target.props.fontId === item.id ? "true" : "false",
       }))));
     }
-    kids.push(el("label", { class: "sr", text: t("tamanoTexto") }, [el("input", {
-      id: "tamano-texto",
-      type: "number",
-      min: "8",
-      max: "400",
-      step: "1",
-      value: String(size),
-      "aria-label": t("tamanoTexto"),
-    })]));
-    kids.push(button("B", { "data-style": "bold", class: "tb-mark", "aria-pressed": target.props.bold ? "true" : "false", "aria-label": t("negrita") }));
-    kids.push(button("I", { "data-style": "italic", class: "tb-mark is-italic", "aria-pressed": target.props.italic ? "true" : "false", "aria-label": t("cursiva") }));
-    kids.push(popButton(t("color"), "color", state.pop === "color"));
+    kids.push(el("span", { class: "tb-size" }, [
+      button("−", { "data-size": "down", class: "tb-step", "aria-label": t("menos") }),
+      el("input", {
+        id: "tamano-texto",
+        type: "number",
+        min: "8",
+        max: "400",
+        step: "1",
+        value: String(size),
+        "aria-label": t("tamanoTexto"),
+      }),
+      button("+", { "data-size": "up", class: "tb-step", "aria-label": t("mas") }),
+    ]));
+    kids.push(button("A", { "data-pop": "color", class: "tb-a tb-pop", "aria-label": t("color"), "aria-expanded": state.pop === "color" ? "true" : "false", style: `--ink:${color}` }));
     if (state.pop === "color") {
-      const current = /^#[0-9a-fA-F]{6}$/.test(target.props.color) ? target.props.color : "#102032";
       kids.push(el("div", { class: "tb-menu", id: "menu-color" }, [
-        el("input", { type: "color", id: "color-texto", value: current, "aria-label": t("color") }),
+        el("input", { type: "color", id: "color-texto", value: color, "aria-label": t("color") }),
         ...["#102032", "#FF3070", "#FFFFFF", "#7d2ae8", "#0f766e", "#F4A261"].map((hex) => button("", {
           "data-color": hex,
           "aria-label": hex,
           style: swatchStyle(hex),
         })),
       ]));
-    } else {
-      kids.push(el("input", {
-        type: "color",
-        id: "color-texto",
-        class: "tb-color",
-        value: /^#[0-9a-fA-F]{6}$/.test(target.props.color) ? target.props.color : "#102032",
-        "aria-label": t("color"),
-      }));
     }
-    kids.push(button(t("izquierda"), { "data-text-align": "left", "aria-pressed": target.props.align === "left" ? "true" : "false" }));
-    kids.push(button(t("centro"), { "data-text-align": "center", "aria-pressed": target.props.align === "center" ? "true" : "false" }));
-    kids.push(button(t("derecha"), { "data-text-align": "right", "aria-pressed": target.props.align === "right" ? "true" : "false" }));
-    kids.push(popButton(en ? "Spacing" : "Espaciado", "space", state.pop === "space"));
+    kids.push(button("B", { "data-style": "bold", class: "tb-mark", "aria-pressed": target.props.bold ? "true" : "false", "aria-label": t("negrita") }));
+    kids.push(button("I", { "data-style": "italic", class: "tb-mark is-italic", "aria-pressed": target.props.italic ? "true" : "false", "aria-label": t("cursiva") }));
+    kids.push(button("U", { "data-style": "underline", class: "tb-mark is-under", "aria-pressed": target.props.underline ? "true" : "false", "aria-label": en ? "Underline" : "Subrayado" }));
+    kids.push(button("S", { "data-style": "strike", class: "tb-mark is-strike", "aria-pressed": target.props.strike ? "true" : "false", "aria-label": en ? "Strikethrough" : "Tachado" }));
+    kids.push(button("aA", { "data-case": "cycle", class: "tb-mark tb-case", "aria-label": en ? "Letter case" : "Mayúsculas" }));
+    kids.push(iconBtn(en ? "Align" : "Alinear", { "data-pop": "align", class: "tb-pop", "aria-expanded": state.pop === "align" ? "true" : "false" }, ["M4 6h16", "M8 12h8", "M4 18h16"]));
+    if (state.pop === "align") {
+      kids.push(el("div", { class: "tb-menu", id: "menu-alinear" }, [
+        button(t("izquierda"), { "data-text-align": "left", "aria-pressed": target.props.align === "left" ? "true" : "false" }),
+        button(t("centro"), { "data-text-align": "center", "aria-pressed": target.props.align === "center" ? "true" : "false" }),
+        button(t("derecha"), { "data-text-align": "right", "aria-pressed": target.props.align === "right" ? "true" : "false" }),
+      ]));
+    }
+    kids.push(iconBtn(en ? "List" : "Lista", { "data-pop": "list", class: "tb-pop", "aria-expanded": state.pop === "list" ? "true" : "false" }, ["M9 6h11", "M9 12h11", "M9 18h11", "M4 6h.01", "M4 12h.01", "M4 18h.01"]));
+    if (state.pop === "list") {
+      kids.push(el("div", { class: "tb-menu", id: "menu-lista" }, [
+        button(en ? "None" : "Ninguna", { "data-list": "none", "aria-pressed": !target.props.list ? "true" : "false" }),
+        button(en ? "Bullets" : "Viñetas", { "data-list": "bullet", "aria-pressed": target.props.list === "bullet" ? "true" : "false" }),
+        button(en ? "Numbers" : "Numerada", { "data-list": "number", "aria-pressed": target.props.list === "number" ? "true" : "false" }),
+      ]));
+    }
+    kids.push(iconBtn(en ? "Spacing" : "Espaciado", { "data-pop": "space", class: "tb-pop", "aria-expanded": state.pop === "space" ? "true" : "false" }, ["M8 4v16", "M16 4v16", "M4 8h16", "M4 16h16"]));
     if (state.pop === "space") {
       kids.push(el("div", { class: "tb-menu", id: "menu-espacio" }, [
         el("label", { text: t("interlineado") }, [el("input", { id: "interlineado", type: "number", min: "0.8", max: "3", step: "0.05", value: String(target.props.lineHeight ?? 1.15), "aria-label": t("interlineado") })]),
         el("label", { text: en ? "Letter spacing" : "Interletrado" }, [el("input", { id: "interletrado", type: "number", min: "-8", max: "40", step: "0.5", value: String(target.props.letterSpacing ?? 0), "aria-label": en ? "Letter spacing" : "Interletrado" })]),
+        el("label", { text: en ? "Transparency" : "Transparencia" }, [el("input", { type: "range", min: "0", max: "1", step: "0.05", "data-opacidad": "1", value: String(target.opacity ?? 1), "aria-label": t("opacidad") })]),
       ]));
     }
     kids.push(popButton(en ? "Effects" : "Efectos", "fx", state.pop === "fx"));
@@ -2661,18 +2697,13 @@ function textBar(ctx) {
         ["rebote", en ? "Bounce" : "Rebote"],
       ].map(([id, label]) => button(label, { "data-anim": id || "ninguna", "aria-pressed": (subject.anim || "") === id ? "true" : "false" }))));
     }
-    kids.push(button(t("posicion"), { id: "alternar-inspector", "aria-pressed": state.inspectorOpen ? "true" : "false" }));
-    kids.push(el("label", { class: "tb-opacity", text: en ? "Transparency" : "Transparencia" }, [
-      el("input", {
-        type: "range",
-        min: "0",
-        max: "1",
-        step: "0.05",
-        "data-opacidad": "1",
-        value: String(subject.opacity ?? 1),
-        "aria-label": t("opacidad"),
-      }),
-    ]));
+    kids.push(button(t("posicion"), { id: "alternar-inspector", class: "tb-pop", "aria-pressed": state.inspectorOpen ? "true" : "false" }));
+    if (!target && subject) {
+      kids.push(el("label", { class: "tb-opacity", text: en ? "Transparency" : "Transparencia" }, [
+        el("input", { type: "range", min: "0", max: "1", step: "0.05", "data-opacidad": "1", value: String(subject.opacity ?? 1), "aria-label": t("opacidad") }),
+      ]));
+    }
+    kids.push(iconBtn(en ? "Copy style" : "Copiar estilo", { id: "copiar-formato", "aria-pressed": state.painter ? "true" : "false" }, ["M14 4l5 5-8 8H6v-5z", "M4 20h6"]));
   }
   return el("div", { id: "barra-texto", class: "barra-texto", role: "toolbar", "aria-label": t("texto") }, kids);
 }
@@ -2721,6 +2752,13 @@ function videoTimeline(ctx) {
   ]);
 }
 
+function labeledBtn(label, attrs, paths) {
+  const node = button("", attrs);
+  if (paths) node.append(svgIcon(paths));
+  node.append(el("span", { text: label }));
+  return node;
+}
+
 function bottomBar(ctx) {
   const { state, t } = ctx;
   const shell = shellOf(state.doc);
@@ -2729,24 +2767,41 @@ function bottomBar(ctx) {
   const pageLabel = ctx.lang === "en" ? `${here} of ${pages}` : `${here} de ${pages}`;
   const seconds = Math.max(0, Math.floor(Number(state.timerSeconds) || 0));
   const clock = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
-  const pct = `${Math.round((Number(state.scale) || 1) * 100)}%`;
-  const bits = [
-    button(t("notas"), { id: "abrir-notas", "aria-pressed": state.notesOpen ? "true" : "false" }),
-    shell === "whiteboard" ? button(t("ampliarPizarra"), { id: "ampliar-pizarra" }) : null,
-    button(state.timerOn ? t("parar") : t("temporizador"), { id: "temporizador" }),
-    state.timerOn ? el("span", { id: "reloj", text: clock }) : null,
-    button(t("ajustar"), { "data-zoom": "fit", "aria-pressed": state.zoom === "fit" ? "true" : "false" }),
-    button("−", { "data-zoom": "out", "aria-label": t("menos") }),
-    el("span", { id: "zoom-indicador", text: pct }),
-    button(t("cien"), { "data-zoom": "100", "aria-pressed": state.zoom === "100" ? "true" : "false" }),
-    button("+", { "data-zoom": "in", "aria-label": t("mas") }),
-    el("span", { class: "paginas-palabra", text: shell === "video" ? (ctx.lang === "en" ? "Scenes" : "Escenas") : (ctx.lang === "en" ? "Pages" : "Páginas") }),
-    el("span", { id: "paginas-indicador", text: pageLabel }),
-    button(t("cuadricula"), { id: "cuadricula", "aria-pressed": state.grid ? "true" : "false" }),
-    button(t("guias"), { id: "guias", "aria-pressed": state.guides ? "true" : "false" }),
-    button(t("pantalla"), { id: "pantalla" }),
-  ];
-  return el("div", { class: "barra-inferior" }, bits);
+  const pctNum = Math.round((Number(state.scale) || 1) * 100);
+  const en = ctx.lang === "en";
+  const grid = iconBtn(t("cuadricula"), { id: "cuadricula", "aria-pressed": state.grid ? "true" : "false" }, ["M4 4h7v7H4z", "M13 4h7v7h-7z", "M4 13h7v7H4z", "M13 13h7v7h-7z"]);
+  const full = iconBtn(t("pantalla"), { id: "pantalla" }, ["M4 9V4h5", "M20 9V4h-5", "M4 15v5h5", "M20 15v5h-5"]);
+  const help = iconBtn(en ? "Help" : "Ayuda", { id: "ayuda" }, ["M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z", "M9.5 9a2.5 2.5 0 1 1 3.2 2.4c-.8.4-1.2.9-1.2 1.8", "M12 17h.01"]);
+  return el("div", { class: "barra-inferior" }, [
+    el("div", { class: "barra-izq" }, [
+      labeledBtn(t("notas"), { id: "abrir-notas", "aria-pressed": state.notesOpen ? "true" : "false" }, ["M6 3h9l3 3v15H6z", "M15 3v4h4"]),
+      shell === "whiteboard" ? button(t("ampliarPizarra"), { id: "ampliar-pizarra" }) : null,
+      labeledBtn(state.timerOn ? t("parar") : t("temporizador"), { id: "temporizador" }, ["M12 21a8 8 0 1 0 0-16 8 8 0 0 0 0 16z", "M12 8v5l3 2"]),
+      state.timerOn ? el("span", { id: "reloj", text: clock }) : null,
+    ]),
+    el("div", { class: "barra-der" }, [
+      button(t("ajustar"), { "data-zoom": "fit", class: "sr", "aria-pressed": state.zoom === "fit" ? "true" : "false" }),
+      button("−", { "data-zoom": "out", class: "sr", "aria-label": t("menos") }),
+      button(t("cien"), { "data-zoom": "100", class: "sr", "aria-pressed": state.zoom === "100" ? "true" : "false" }),
+      button("+", { "data-zoom": "in", class: "sr", "aria-label": t("mas") }),
+      el("input", {
+        id: "zoom-rango",
+        type: "range",
+        min: "10",
+        max: "200",
+        step: "1",
+        value: String(Math.min(200, Math.max(10, pctNum))),
+        "aria-label": "Zoom",
+      }),
+      el("span", { id: "zoom-indicador", text: `${pctNum}%` }),
+      grid,
+      button(t("guias"), { id: "guias", class: "tb-extra", "aria-pressed": state.guides ? "true" : "false" }),
+      el("span", { class: "paginas-palabra", text: shell === "video" ? (en ? "Scenes" : "Escenas") : (en ? "Pages" : "Páginas") }),
+      el("span", { id: "paginas-indicador", text: pageLabel }),
+      full,
+      help,
+    ]),
+  ]);
 }
 
 function pdfDialog(ctx) {
@@ -2782,11 +2837,35 @@ function previewMeta(doc, lang) {
   if (!doc) return "";
   const w = doc.format?.width || 0;
   const h = doc.format?.height || 0;
-  const orient = h >= w ? (lang === "en" ? "Portrait" : "Vertical") : (lang === "en" ? "Landscape" : "Horizontal");
-  if (doc.format?.id === "cv" || doc.format?.id === "doc") {
-    return lang === "en" ? `A4, ${orient} · 21 × 29.7 cm` : `A4, ${orient} · 21 × 29,7 cm`;
+  const en = lang === "en";
+  const preset = PRESETS.find((item) => item.id === doc.format?.id);
+  const name = preset ? (en ? preset.en : preset.es) : (en ? "Design" : "Diseño");
+  const orient = h >= w ? (en ? "Portrait" : "Vertical") : (en ? "Landscape" : "Horizontal");
+  if (doc.format?.id === "cv" || doc.format?.id === "doc" || preset?.ratio === "A4") {
+    return en ? `${name} (A4, ${orient}) · 21 × 29.7 cm` : `${name} (A4, ${orient}) · 21 × 29,7 cm`;
   }
-  return `${w} × ${h} px · ${orient}`;
+  const ratio = preset?.ratio && preset.ratio !== "página" ? `${preset.ratio}, ` : "";
+  return `${name} (${ratio}${orient}) · ${w} × ${h} px`;
+}
+
+function pageThumb(doc, layers, index, pressed) {
+  const node = button("", {
+    class: "canva-plain tpl-modal-mini tpl-modal-page",
+    "data-preview-page": String(index),
+    "aria-pressed": pressed ? "true" : "false",
+    "aria-label": String(index + 1),
+  });
+  node.append(miniStage({ ...doc, layers }));
+  return node;
+}
+
+function starIcon(filled) {
+  const svg = svgIcon(["M12 3l2.2 5.2L20 9l-4 3.6.8 5.4L12 15.4 7.2 18l.8-5.4L4 9l5.8-.8z"]);
+  if (filled) {
+    const path = svg.querySelector("path");
+    if (path) path.setAttribute("fill", "currentColor");
+  }
+  return svg;
 }
 
 function relatedThumb(id, label) {
@@ -2806,6 +2885,28 @@ function relatedThumb(id, label) {
   return node;
 }
 
+function selectionPill(ctx) {
+  const { state, t, lang } = ctx;
+  const layer = primary(state);
+  if (!layer || !state.selected.includes(layer.id)) return null;
+  const en = lang === "en";
+  const ask = button(en ? "ORVUPI AI" : "ORVUPI IA", { class: "pill-ia", "data-rail": "ia" });
+  ask.prepend(el("img", { src: studioAsset("assets/orvupi-avatar.png"), alt: "" }));
+  const magic = iconBtn(en ? "Magic" : "Magia", { id: "magia-capa", class: "pill-btn" }, ["M15 4l1.2 3.2L19.4 8.4 16.2 9.6 15 12.8 13.8 9.6 10.6 8.4l3.2-1.2z", "M6 14l.7 1.8L8.5 16.5 6.7 17.2 6 19l-.7-1.8L3.5 16.5l1.8-.7z"]);
+  const lock = iconBtn(t("bloquear"), { class: "pill-btn", "data-action": "lock", "aria-pressed": layer.locked ? "true" : "false" }, ["M8 11V8a4 4 0 0 1 8 0v3", "M6 11h12v9H6z"]);
+  const dup = iconBtn(t("duplicar"), { class: "pill-btn", "data-action": "duplicate" }, ["M8 8h11v11H8z", "M5 16V5h11"]);
+  const del = iconBtn(t("eliminar"), { class: "pill-btn", "data-action": "remove" }, ["M5 7h14", "M9 7V5h6v2", "M7 7l1 13h8l1-13"]);
+  const more = iconBtn(en ? "More" : "Más", { class: "pill-btn", "data-pop": "mas", "aria-expanded": state.pop === "mas" ? "true" : "false" }, "dots");
+  const kids = [ask, magic, lock, dup, del, more];
+  if (state.pop === "mas") {
+    kids.push(el("div", { class: "tb-menu pill-menu" }, [
+      button(t("alFrente"), { "data-action": "front" }),
+      button(t("alFondo"), { "data-action": "back" }),
+    ]));
+  }
+  return el("div", { id: "pastilla-seleccion", class: "pastilla-seleccion" }, kids);
+}
+
 export function templatePreview(ctx) {
   const id = ctx.state.openPreview;
   if (!id) return null;
@@ -2816,24 +2917,27 @@ export function templatePreview(ctx) {
   const pages = Array.isArray(doc.meta?.pages) && doc.meta.pages.length ? doc.meta.pages : [doc.layers];
   const pageIndex = Math.min(pages.length - 1, Math.max(0, ctx.state.previewPage || 0));
   const view = { ...doc, layers: pages[pageIndex] || doc.layers };
-  const cat = thumbById(id) ? thumbCat(thumbById(id).category) : null;
-  const kicker = cat ? (en ? cat.en : cat.es) : (en ? "Studio" : "Studio");
   const close = button("", { id: "cerrar-plantilla", class: "canva-plain tpl-modal-x", "aria-label": t("cerrar") });
   close.append(svgIcon(["M7 7l10 10", "M17 7L7 17"]));
-  const stage = el("div", { class: "tpl-modal-stage" }, [
-    el("div", { class: "tpl-modal-hero" }, [miniStage(view)]),
-  ]);
-  if (pages.length > 1) {
-    stage.append(el("div", { class: "tpl-modal-pages" }, pages.map((_, index) => button(String(index + 1), {
-      "data-preview-page": String(index),
-      class: "tpl-modal-page",
-      "aria-pressed": index === pageIndex ? "true" : "false",
-    }))));
-  }
-  const related = relatedOpenIds(id, 8).map((relatedId) => {
+  const pageButtons = pages.map((layers, index) => pageThumb(doc, layers, index, index === pageIndex));
+  const related = relatedOpenIds(id, Math.max(1, 6 - pageButtons.length)).map((relatedId) => {
     const sample = documentForOpen(relatedId);
     return relatedThumb(relatedId, sample?.name || relatedId);
   });
+  const star = button("", {
+    id: "tpl-guardar",
+    class: "tpl-icon",
+    "aria-pressed": ctx.state.starred?.[id] ? "true" : "false",
+    "aria-label": en ? "Save" : "Guardar",
+  });
+  star.append(starIcon(Boolean(ctx.state.starred?.[id])));
+  const more = button("", {
+    id: "tpl-mas",
+    class: "tpl-icon",
+    "aria-expanded": ctx.state.previewMore ? "true" : "false",
+    "aria-label": en ? "More" : "Más",
+  });
+  more.append(dotsIcon());
   const backdrop = button("", { class: "tpl-modal-backdrop", "data-close-preview": "1", "aria-label": t("cerrar") });
   return el("div", { class: "tpl-modal-root" }, [
     backdrop,
@@ -2847,20 +2951,25 @@ export function templatePreview(ctx) {
     }, [
       close,
       el("div", { class: "tpl-modal-grid" }, [
-        stage,
+        el("div", { class: "tpl-modal-stage" }, [
+          el("div", { class: "tpl-modal-hero" }, [miniStage(view)]),
+          el("div", { class: "tpl-modal-rail", id: "tpl-variantes" }, [...pageButtons, ...related]),
+        ]),
         el("aside", { class: "tpl-modal-side" }, [
-          el("p", { class: "tpl-modal-kicker", text: kicker }),
           el("h2", { id: "tpl-modal-title", text: doc.name }),
           el("p", { class: "tpl-modal-meta", text: previewMeta(doc, lang) }),
-          button(en ? "Customize this template" : "Personalizar esta plantilla", {
-            class: "tpl-cta",
-            "data-personalizar": id,
-          }),
+          ctx.state.previewMore ? el("div", { class: "tpl-more-menu", id: "tpl-more-menu" }, [
+            button(t("cerrar"), { "data-close-preview": "1" }),
+          ]) : null,
+          el("div", { class: "tpl-modal-actions" }, [
+            button(en ? "Customize this template" : "Personalizar esta plantilla", {
+              class: "tpl-cta",
+              "data-personalizar": id,
+            }),
+            star,
+            more,
+          ]),
         ]),
-      ]),
-      el("section", { class: "tpl-modal-more" }, [
-        el("h3", { text: t("masOpciones") }),
-        el("div", { class: "tpl-modal-rail" }, related),
       ]),
     ]),
   ]);
@@ -2871,6 +2980,7 @@ export function renderEditor(ctx) {
   const doc = state.doc;
   const shell = shellOf(doc);
   const name = el("input", { id: "nombre-diseno", type: "text", value: doc.name, maxlength: "80", "aria-label": t("nombre") });
+  const en = ctx.lang === "en";
   const fileMenu = state.fileMenu ? el("div", { class: "menu-archivo", id: "menu-archivo" }, [
     el("p", { text: `${doc.format.width}×${doc.format.height} px` }),
     button("Hacer una copia", { "data-duplicate": doc.id }),
@@ -2879,12 +2989,20 @@ export function renderEditor(ctx) {
     button(t("paquete"), { id: "exportar-paquete" }),
     button(t("importarPaquete"), { id: "importar-paquete" }),
     button(t("pdf"), { id: "abrir-pdf" }),
+    shell === "print" ? button(t("imprimir"), { id: "imprimir" }) : null,
+    shell === "deck" ? button(t("presentar"), { id: "presentar" }) : null,
+    shell === "web" || shell === "video" ? button(t("vistaPrevia"), { id: "vista-previa" }) : null,
+    shell === "web" ? button(t("exportarHtml"), { id: "exportar-sitio" }) : null,
+    button(t("abrirWork"), { id: "abrir-work" }),
     state.status === "conflict" ? button(t("guardarCopia"), { id: "guardar-copia" }) : null,
     state.status === "cap" ? button(t("abrirRecuperado"), { id: "abrir-recuperado" }) : null,
   ]) : null;
-  const en = ctx.lang === "en";
-  const home = button("", { "data-go": "inicio", class: "tb-home", "aria-label": t("inicio") });
-  home.append(svgIcon(["M4 11 12 4l8 7", "M6 10.5V20h12v-9.5"]), el("span", { text: t("inicio") }));
+  const home = button("", { "data-go": "inicio", class: "tb-home tb-icon", "aria-label": t("inicio") });
+  home.append(svgIcon(["M4 11 12 4l8 7", "M6 10.5V20h12v-9.5"]));
+  const undo = button("", { "data-action": "undo", class: "tb-quiet tb-icon", "aria-label": t("deshacer") });
+  undo.append(svgIcon(["M9 14 4 9l5-5", "M4 9h10.5a5.5 5.5 0 1 1 0 11H12"]));
+  const redo = button("", { "data-action": "redo", class: "tb-quiet tb-icon", "aria-label": t("rehacer") });
+  redo.append(svgIcon(["M15 14l5-5-5-5", "M20 9H9.5a5.5 5.5 0 1 0 0 11H12"]));
   const editMenu = state.editMenu ? el("div", { class: "menu-archivo", id: "menu-editar" }, [
     button(t("deshacer"), { "data-action": "undo" }),
     button(t("rehacer"), { "data-action": "redo" }),
@@ -2903,21 +3021,16 @@ export function renderEditor(ctx) {
     }, [
       el("div", { class: "editor-bar canva-topbar" }, [
         home,
-        button(t("menu"), { id: "menu-estudio", class: "tb-quiet", "aria-expanded": state.navOpen ? "true" : "false" }),
+        button(t("menu"), { id: "menu-estudio", class: "tb-quiet tb-menu-movil", "aria-expanded": state.navOpen ? "true" : "false" }),
         button("Archivo", { id: "abrir-archivo", class: "tb-quiet" }),
         fileMenu,
         button(en ? "Resize" : "Redimensionar", { id: "redimensionar", class: "tb-quiet" }),
-        button(en ? "Edit" : "Editar", { id: "menu-editar-btn", class: "tb-quiet", "aria-expanded": state.editMenu ? "true" : "false" }),
+        button(en ? "Edit ▾" : "Editar ▾", { id: "menu-editar-btn", class: "tb-quiet", "aria-expanded": state.editMenu ? "true" : "false" }),
         editMenu,
-        button(t("deshacer"), { "data-action": "undo", class: "tb-quiet", "aria-label": t("deshacer") }),
-        button(t("rehacer"), { "data-action": "redo", class: "tb-quiet", "aria-label": t("rehacer") }),
-        el("span", { id: "estado-guardado", "aria-live": "polite", text: ctx.statusText() }),
+        undo,
+        redo,
+        el("span", { id: "estado-guardado", class: "nube-guardado", "aria-live": "polite", text: ctx.statusText() }),
         name,
-        shell === "print" ? button(t("imprimir"), { id: "imprimir", class: "tb-quiet" }) : null,
-        shell === "deck" ? button(t("presentar"), { id: "presentar", class: "tb-quiet" }) : null,
-        shell === "web" || shell === "video" ? button(t("vistaPrevia"), { id: "vista-previa", class: "tb-quiet" }) : null,
-        shell === "web" ? button(t("exportarHtml"), { id: "exportar-sitio", class: "tb-quiet" }) : null,
-        button(t("abrirWork"), { id: "abrir-work", class: "tb-quiet" }),
         button(en ? "Share" : "Compartir", { id: "compartir-studio", class: "canva-share" }),
       ]),
       shell === "video" ? el("p", { class: "nota", text: t("videoNota") }) : null,
@@ -2926,6 +3039,7 @@ export function renderEditor(ctx) {
         state.panelOpen ? el("div", { class: "panel", id: "panel-riel" }, [panel(ctx)]) : null,
         el("div", { class: "escenario" }, [
           textBar(ctx),
+          selectionPill(ctx),
           stageNode(ctx),
           shell === "web" ? button(t("anadirSeccion"), { id: "anadir-seccion", class: "anadir-seccion" }) : null,
           pageStrip(ctx),
@@ -2942,6 +3056,12 @@ export function renderEditor(ctx) {
         ]) : null,
       ]),
       bottomBar(ctx),
+      state.fileMenu ? null : el("div", { id: "muelle-acciones", class: "sr" }),
+      state.helpOpen ? el("dialog", { id: "dialogo-ayuda", open: "open" }, [
+        el("h2", { text: en ? "ORVUPI Studio" : "ORVUPI Studio" }),
+        el("p", { text: en ? "The design stays in this browser. There is no account." : "El diseño se queda en este navegador. No hay cuenta." }),
+        button(t("cerrar"), { id: "cerrar-ayuda" }),
+      ]) : null,
       state.workNote ? el("dialog", { id: "dialogo-work", open: "open" }, [
         el("h2", { text: t("abrirWork") }),
         el("p", { text: t("workNota") }),
@@ -2966,8 +3086,10 @@ export function renderEditor(ctx) {
     ]) : null,
     state.pdfOpen ? pdfDialog(ctx) : null,
   );
-  const bar = root.querySelector(".editor-bar");
-  if (ctx.acciones && bar) bar.append(ctx.acciones);
+  const menu = root.querySelector("#menu-archivo");
+  const hold = root.querySelector("#muelle-acciones");
+  if (ctx.acciones && menu) menu.append(ctx.acciones);
+  else if (ctx.acciones && hold) hold.append(ctx.acciones);
   ctx.ensureQuality();
   void ctx.paintBackdrop();
   const slot = root.querySelector("#hueco-subida");

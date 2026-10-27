@@ -66,6 +66,8 @@ test("studio: exporta PNG", async ({ page }, info) => {
     page.waitForEvent("download", { timeout: 90_000 }).then((download) => ({ download })),
     page.context().waitForEvent("page", { timeout: 90_000 }).then((popup) => ({ popup })),
   ]);
+  if (!(await page.locator("#menu-archivo #descargar").count())) await page.locator("#abrir-archivo").click();
+  await expect(page.locator("#menu-archivo #descargar")).toBeVisible();
   await page.click("#descargar");
   const result = await outcome;
   let buf;

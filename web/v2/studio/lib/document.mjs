@@ -414,6 +414,9 @@ function normalizeLayer(layer) {
       bold: Boolean(props.bold),
       italic: Boolean(props.italic),
       underline: Boolean(props.underline),
+      strike: Boolean(props.strike),
+      textCase: props.textCase === "upper" || props.textCase === "lower" || props.textCase === "title" ? props.textCase : "",
+      list: props.list === "bullet" || props.list === "number" ? props.list : "",
       effect: props.effect === "sombra" || props.effect === "neon" || props.effect === "glitch" ? props.effect : "",
       runs: cleanRuns(String(props.text ?? "").slice(0, 2000), props.runs),
     };

@@ -37,6 +37,8 @@ test("escritorio: capas, bloqueo, grupo y texto", async ({ page }) => {
   await expect(modal).toHaveAttribute("data-open-id", "publi-feed");
   await modal.locator("[data-personalizar]").click();
   await expect(page.locator("#editor-app")).toHaveAttribute("data-template-id", "publi-feed");
+  await page.locator(".capa-texto").first().click();
+  await page.locator("#alternar-inspector").click();
   await expect(page.locator("#capas [data-layer]").first()).toBeVisible();
   const backId = await page.locator("#capas [data-layer]").last().getAttribute("data-layer");
   await page.locator(`#capas [data-layer="${backId}"] [data-pick]`).click();

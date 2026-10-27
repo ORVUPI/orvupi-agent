@@ -26,6 +26,8 @@ test("la historia exporta 1080×1920 y la plantilla vertical no lleva marca de a
   await expect(page.locator("#descargar")).toBeEnabled();
   const ios = await page.evaluate(() => /iPhone/.test(navigator.userAgent));
   if (!ios) {
+  if (!(await page.locator("#menu-archivo #descargar").count())) await page.locator("#abrir-archivo").click();
+  await expect(page.locator("#menu-archivo #descargar")).toBeVisible();
   const [download] = await Promise.all([
     page.waitForEvent("download", { timeout: 60_000 }),
     page.click("#descargar"),
