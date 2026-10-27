@@ -391,6 +391,12 @@ test("el pie no repite el riesgo y enlaza a Riesgos", () => {
   const root = repoRoot();
   for (const rel of ROUTES) {
     const html = readFileSync(path.join(root, "web/v2", rel), "utf8");
+    // Studio es una app: el pie del sitio pintaba «Riesgos» antes de montar.
+    if (rel === "studio/index.html") {
+      assert.equal(html.includes("<footer"), false, rel);
+      assert.equal(html.includes('class="mica"'), false, rel);
+      continue;
+    }
     const footer = html.slice(html.lastIndexOf("<footer"));
     assert.equal(footer.includes(FOOTER_ES), false, rel);
     assert.equal(footer.includes(FOOTER_EN), false, rel);
@@ -403,6 +409,27 @@ test("el pie no repite el riesgo y enlaza a Riesgos", () => {
     const main = html.slice(0, html.lastIndexOf("<footer"));
     if (!keepsRisk) assert.equal(main.includes('class="mica"'), false, rel);
   }
+});
+
+test("el shell de Studio no lleva el pie que pintaba Riesgos", () => {
+  const root = repoRoot();
+  const shells = [
+    "studio/index.html",
+    "en/studio/index.html",
+    "pt-br/studio/index.html",
+    "ja/studio/index.html",
+    "ko/studio/index.html",
+  ];
+  for (const rel of shells) {
+    const html = readFileSync(path.join(root, "web/v2", rel), "utf8");
+    assert.equal(html.includes("<footer"), false, rel);
+  }
+  const css = readFileSync(path.join(root, "web/v2/studio/studio.css"), "utf8");
+  assert.equal(css.includes('a[href$="risks/"]'), false);
+  const risks = readFileSync(path.join(root, "web/v2/risks/index.html"), "utf8");
+  assert.match(risks, /Límites y riesgos/);
+  assert.match(risks, /href="\/risks\/"/);
+  assert.match(risks, /<footer/);
 });
 
 test("las frases retiradas no salen fuera de /risks y /legal", () => {
