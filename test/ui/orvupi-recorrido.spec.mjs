@@ -52,7 +52,12 @@ test("studio: exporta PNG", async ({ page }, info) => {
   });
   await page.goto("/studio/");
   await expect(page.locator("body")).not.toContainText(new RegExp(["STU", "BX"].join(""), "i"));
+  await page.locator("#buscar").fill("Meme de un golpe");
   await page.locator("[data-template='meme-punch']").click();
+  const modal = page.locator("#vista-plantilla");
+  await expect(modal).toHaveAttribute("data-open-id", "meme-punch");
+  await modal.locator("[data-personalizar]").click();
+  await expect(page.locator("#editor-app")).toHaveAttribute("data-template-id", "meme-punch");
   await expect(page.locator("#descargar")).toBeEnabled({ timeout: 30_000 });
   await shot(page, info, "studio");
   // En iPhone (WebKit móvil) Descargar no dispara una descarga: abre el PNG en una pestaña nueva
@@ -61,6 +66,8 @@ test("studio: exporta PNG", async ({ page }, info) => {
     page.waitForEvent("download", { timeout: 90_000 }).then((download) => ({ download })),
     page.context().waitForEvent("page", { timeout: 90_000 }).then((popup) => ({ popup })),
   ]);
+  if (!(await page.locator("#menu-archivo #descargar").count())) await page.locator("#abrir-archivo").click();
+  await expect(page.locator("#menu-archivo #descargar")).toBeVisible();
   await page.click("#descargar");
   const result = await outcome;
   let buf;

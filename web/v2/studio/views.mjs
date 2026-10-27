@@ -3,20 +3,19 @@
 import catalog from "./catalog.json" with { type: "json" };
 import { aiPanelCopy, localPhrases } from "./lib/ai-optional.mjs";
 import { renderOrvupiIa } from "./ia.mjs";
-import { chartSeriesText } from "./lib/chart-data.mjs";
 import { BRAND, FONTS, PRESETS, fontById, importProject, orderedLayers, overlappingIds } from "./lib/document.mjs";
 import { HISTORY_COST, listHistory } from "./lib/history.mjs";
-import { listPhotos, PHOTO_LICENSE_NOTE } from "./lib/photos.mjs";
+import { listPhotos, PHOTO_LICENSE_NOTE, photoById } from "./lib/photos.mjs";
 import { tablePlainText } from "./lib/table-data.mjs";
 import { piecesOf } from "./lib/text-style.mjs";
-import { keepsMascot } from "./lib/neutral.mjs";
 import { IDEAS, PLANTILLAS, filterPlantillas, instantiate } from "./lib/plantillas.mjs";
 import { desktopRail, designsSub } from "./desktop.mjs";
 import { designView } from "./mis-disenos.mjs";
 import { listDesigns } from "./lib/projects.mjs";
 import { loadMas } from "./lib/mas-store.mjs";
 import { documentForThumb } from "./lib/thumb-docs.mjs";
-import { THUMB_CATS, THUMB_GROUPS, thumbCatsFor, thumbsForGrupo, thumbsIn } from "./lib/thumbs.mjs";
+import { documentForOpen, openKind, relatedOpenIds } from "./lib/open-target.mjs";
+import { THUMB_CATS, THUMB_GROUPS, thumbById, thumbCat, thumbCatsFor, thumbsForGrupo, thumbsIn } from "./lib/thumbs.mjs";
 import {
   browseAsset,
   browseElements,
@@ -692,7 +691,11 @@ function miniStage(doc) {
       const frameNode = el("span", { class: "mini-img" });
       if (layer.src?.kind === "catalog") {
         const item = catalogItem(layer.src.id);
-        if (item) frameNode.append(el("img", { src: studioAsset(item.archivo), alt: "", draggable: "false", loading: "lazy", decoding: "async" }));
+        if (item?.archivo) frameNode.append(el("img", { src: studioAsset(item.archivo), alt: "", draggable: "false", loading: "lazy", decoding: "async" }));
+        else {
+          const asset = browseAsset(layer.src.id);
+          if (asset?.scene) frameNode.append(mountScene(asset.scene, "capa-escena"));
+        }
       } else if (layer.src?.kind === "library") {
         frameNode.append(el("img", { src: studioAsset(`photos/${layer.src.id}.png`), alt: "", draggable: "false", loading: "lazy", decoding: "async" }));
       }
@@ -1195,7 +1198,7 @@ function homeResults(ctx) {
   const { state, lang, t } = ctx;
   const q = state.filters.text.trim().toLowerCase();
   const thumbs = proThumbList().filter((item) => `${item.title} ${item.category}`.toLowerCase().includes(q)).slice(0, 12);
-  const templates = filterPlantillas(state.filters).filter((item) => !keepsMascot(item)).slice(0, 12);
+  const templates = filterPlantillas(state.filters).slice(0, 24);
   const kids = [];
   if (thumbs.length) {
     kids.push(el("section", { class: "canva-section" }, [
@@ -1787,17 +1790,29 @@ function generateTile(ctx, kind) {
 }
 
 function photoCard(ctx, item) {
-  const open = button("", { class: "lib-open canva-plain", "aria-label": ctx.lang === "en" ? item.en : item.es });
-  open.append(assetFace(item));
-  return el("article", { class: "lib-card", "data-asset": item.id }, [open, assetMenu(ctx, item)]);
+  const open = button("", {
+    class: "lib-open canva-plain",
+    "data-asset": item.id,
+    "aria-label": ctx.lang === "en" ? item.en : item.es,
+  });
+  if (item.file) open.append(el("img", { src: studioAsset(item.file), alt: "", class: "lib-file" }));
+  else open.append(assetFace(item));
+  return el("article", { class: "lib-card" }, [open, assetMenu(ctx, item)]);
 }
 
 function elementCard(ctx, item) {
-  const open = button("", { class: "lib-open canva-plain", "aria-label": ctx.lang === "en" ? item.en : item.es });
-  const box = el("span", { class: "lib-box" });
-  box.append(mountScene(item.scene, "lib-glyph"));
-  open.append(box);
-  return el("article", { class: "lib-card lib-element", "data-asset": item.id }, [open, assetMenu(ctx, item)]);
+  const open = button("", {
+    class: "lib-open canva-plain",
+    "data-asset": item.id,
+    "aria-label": ctx.lang === "en" ? item.en : item.es,
+  });
+  if (item.file) open.append(el("img", { src: studioAsset(item.file), alt: "", class: "lib-file" }));
+  else if (item.scene) {
+    const box = el("span", { class: "lib-box" });
+    box.append(mountScene(item.scene, "lib-glyph"));
+    open.append(box);
+  } else open.append(el("span", { class: "lib-box", style: `background:${item.fill || "#102032"}` }));
+  return el("article", { class: "lib-card lib-element" }, [open, assetMenu(ctx, item)]);
 }
 
 function topicChips(ctx, topics) {
@@ -1854,10 +1869,37 @@ function heroBanner(title, tone, scenes) {
   ]);
 }
 
+function fileInventory(kind) {
+  if (kind === "fotos") {
+    return listPhotos().map((item) => ({
+      id: item.id,
+      kind: "foto",
+      topic: "archivo",
+      es: item.nombre?.es || item.id,
+      en: item.nombre?.en || item.id,
+      tags: [...(item.etiquetas || []), item.id, "cc0"],
+      premium: false,
+      file: item.archivo,
+    }));
+  }
+  return catalog.items
+    .filter((item) => item.tipo === "avatar" || item.tipo === "fondo")
+    .map((item) => ({
+      id: item.id,
+      kind: "elemento",
+      topic: item.tipo,
+      es: item.nombre?.es || item.id,
+      en: item.nombre?.en || item.id,
+      tags: [item.tipo, item.id],
+      premium: false,
+      file: item.archivo || "",
+    }));
+}
+
 function browseBody(ctx, kind) {
   const { lang, state, t } = ctx;
   const en = lang === "en";
-  const source = kind === "elementos" ? browseElements() : browsePhotos();
+  const source = (kind === "elementos" ? browseElements() : browsePhotos()).concat(fileInventory(kind));
   const topics = kind === "elementos" ? elementTopics() : photoTopics();
   const items = filterBrowse(source, {
     query: state.libraryQuery || "",
@@ -1907,7 +1949,7 @@ function favoritesChrome(ctx) {
 
 function favoritesBody(ctx) {
   const { t, state } = ctx;
-  const saved = (state.favs || []).map((id) => browseAsset(id)).filter(Boolean);
+  const saved = (state.favs || []).map((id) => browseAsset(id) || fileInventory("fotos").concat(fileInventory("elementos")).find((item) => item.id === id)).filter(Boolean);
   const bar = button("", { class: "lib-viewbar", "data-view-sheet": "1" });
   bar.append(svgIcon(["M4 4h6v6H4z", "M14 4h6v6h-6z", "M4 14h6v6H4z", "M14 14h6v6h-6z"]), el("span", { text: t("verCuadricula") }));
   if (!saved.length) {
@@ -1976,8 +2018,9 @@ export function renderMarca(ctx) {
       el("p", { text: t("kit") }),
       el("div", { class: "rejilla-plantillas" }, ["orvupi-avatar", "orvupi-saludo", "orvupi-buen-humor"].map((id) => {
         const item = catalogItem(id);
-        const node = el("figure", { class: "marca-card" });
-        node.append(el("img", { src: studioAsset(item.archivo), alt: item.nombre[lang] || item.nombre.es }), el("figcaption", { text: item.nombre[lang] || item.nombre.es }));
+        const label = item.nombre[lang] || item.nombre.es;
+        const node = button("", { class: "marca-card", "data-asset": id, "aria-label": label });
+        node.append(el("img", { src: studioAsset(item.archivo), alt: "" }), el("span", { text: label }));
         return node;
       })),
       el("div", { class: "chips" }, colors.map(([hex, label]) => el("span", { class: "muestra", style: swatchStyle(hex), text: label }))),
@@ -2001,7 +2044,8 @@ export function renderRecursos(ctx) {
 export function layerStyle(layer) {
   const fx = layer.flipX ? -1 : 1;
   const fy = layer.flipY ? -1 : 1;
-  return `left:${layer.x}px;top:${layer.y}px;width:${layer.w}px;height:${layer.h}px;transform:rotate(${layer.rotation || 0}deg) scale(${fx}, ${fy});opacity:${layer.opacity ?? 1};z-index:${layer.z};`;
+  const origin = layer.type === "line" ? "transform-origin:0 50%;" : "";
+  return `left:${layer.x}px;top:${layer.y}px;width:${layer.w}px;height:${layer.h}px;${origin}transform:rotate(${layer.rotation || 0}deg) scale(${fx}, ${fy});opacity:${layer.opacity ?? 1};z-index:${layer.z};`;
 }
 
 function textBlock(layer, editing) {
@@ -2019,17 +2063,26 @@ function textBlock(layer, editing) {
   node.style.color = props.color;
   node.style.textAlign = props.align;
   node.style.lineHeight = String(props.lineHeight);
+  node.style.letterSpacing = `${props.letterSpacing || 0}px`;
   node.style.fontWeight = props.bold ? "700" : "400";
   node.style.fontStyle = props.italic ? "italic" : "normal";
-  node.style.textDecoration = props.underline ? "underline" : "none";
+  const decoration = [props.underline ? "underline" : "", props.strike ? "line-through" : ""].filter(Boolean).join(" ") || "none";
+  node.style.textDecoration = decoration;
+  if (props.textCase === "upper") node.style.textTransform = "uppercase";
+  else if (props.textCase === "lower") node.style.textTransform = "lowercase";
+  else if (props.textCase === "title") node.style.textTransform = "capitalize";
+  if (props.effect) node.classList.add(`fx-${props.effect}`);
   const parts = piecesOf(props.text, props.runs, props);
-  if (parts.length <= 1) node.textContent = props.text;
+  const listed = !editing && parts.length <= 1 && (props.list === "bullet" || props.list === "number")
+    ? String(props.text || "").split("\n").map((line, index) => (props.list === "number" ? `${index + 1}. ${line}` : `• ${line}`)).join("\n")
+    : props.text;
+  if (parts.length <= 1) node.textContent = listed;
   else {
     for (const part of parts) {
       const span = el("span", { text: part.text });
       span.style.fontWeight = part.bold ? "700" : "400";
       span.style.fontStyle = part.italic ? "italic" : "normal";
-      span.style.textDecoration = part.underline ? "underline" : "none";
+      span.style.textDecoration = [part.underline ? "underline" : "", props.strike ? "line-through" : ""].filter(Boolean).join(" ") || "none";
       span.style.color = part.color;
       span.style.fontSize = `${part.size}px`;
       node.append(span);
@@ -2099,9 +2152,15 @@ function imageNode(ctx, layer) {
   let natural = null;
   if (layer.src?.kind === "catalog") {
     const item = catalogItem(layer.src.id);
-    if (item) {
+    if (item?.archivo) {
       img.src = studioAsset(item.archivo);
       natural = item.width && item.height ? { w: item.width, h: item.height } : null;
+    } else {
+      const asset = browseAsset(layer.src.id);
+      if (asset?.scene) {
+        frameNode.append(mountScene(asset.scene, "capa-escena"));
+        return frameNode;
+      }
     }
   } else if (layer.src?.kind === "library") {
     img.src = studioAsset(`photos/${layer.src.id}.png`);
@@ -2145,7 +2204,7 @@ function stageNode(ctx) {
   art.style.transform = `scale(${state.scale})`;
   for (const layer of orderedLayers(doc)) {
     const node = el("div", {
-      class: `capa${state.selected.includes(layer.id) ? " seleccionada" : ""}${layer.locked ? " bloqueada" : ""}`,
+      class: `capa${state.selected.includes(layer.id) ? " seleccionada" : ""}${layer.locked ? " bloqueada" : ""}${layer.anim ? ` anim-${layer.anim}` : ""}`,
       "data-id": layer.id,
       style: layerStyle(layer),
     });
@@ -2172,7 +2231,12 @@ function stageNode(ctx) {
         "aria-label": edge === "move" ? "Mover recorte" : `Recorte ${edge}`,
       }))));
     }
-    if (state.selected.includes(layer.id) && !layer.locked) node.append(el("span", { class: "asa", "data-resize": layer.id }));
+    if (state.selected.includes(layer.id) && !layer.locked) {
+      for (const corner of ["nw", "ne", "sw", "se"]) {
+        node.append(el("span", { class: `asa asa-${corner}`, "data-resize": corner === "se" ? layer.id : null }));
+      }
+      node.append(el("span", { class: "asa-giro", "data-rotate": layer.id, "aria-hidden": "true" }));
+    }
     art.append(node);
   }
   frameNode.append(art);
@@ -2190,37 +2254,91 @@ function stageNode(ctx) {
   return scroll;
 }
 
+const STRIP = [
+  ["ia", "ORVUPI IA", "ORVUPI AI", null],
+  ["plantillas", "Plantillas", "Templates", ["M4 4h7v7H4z", "M13 4h7v7h-7z", "M4 13h7v7H4z", "M13 13h7v7h-7z"]],
+  ["elementos", "Elementos", "Elements", ["M5 5h6v6H5z", "M13 8h6", "M13 12h6", "M13 16h4", "M5 14h6v5H5z"]],
+  ["texto", "Texto", "Text", ["M5 6h14", "M12 6v12", "M8 18h8"]],
+  ["marca", "Marca", "Brand", ["M12 3l2.2 5.2L20 9l-4 3.6.8 5.4L12 15.4 7.2 18l.8-5.4L4 9l5.8-.8z"]],
+  ["subidos", "Subidos", "Uploads", ["M12 16V6", "M8 9l4-4 4 4", "M5 19h14"]],
+  ["herramientas", "Herramientas", "Tools", ["M4 16l8-8 4 4-8 8H4z", "M14 6l4 4"]],
+  ["proyectos", "Proyectos", "Projects", ["M4 7h6l2 2h8v10H4z"]],
+  ["apps", "Apps", "Apps", ["M5 5h6v6H5z", "M13 5h6v6h-6z", "M5 13h6v6H5z", "M13 13h6v6h-6z"]],
+];
+
+const APP_RAILS = new Set(["apps", "fotos", "graficos", "fondo", "formas", "capas", "notas"]);
+
 function rail(ctx) {
-  const { state, t } = ctx;
-  const shell = shellOf(state.doc);
-  const tabs = RAILS[shell] || RAILS.design;
-  const labels = {
-    plantillas: t("plantillas"),
-    elementos: t("elementos"),
-    texto: t("texto"),
-    marca: t("marca"),
-    subidos: t("subidos"),
-    herramientas: t("herramientas"),
-    fondo: t("fondo"),
-    proyectos: t("disenos"),
-    fotos: t("fotos"),
-    graficos: t("graficos"),
-    formas: t("forma"),
-    datos: t("datos"),
-    notas: t("notas"),
-    capas: t("capas"),
-    ia: t("iaOpcional"),
-  };
-  return el("div", { class: "riel", role: "tablist", "aria-label": t("herramientas") }, tabs.map((id) => button(labels[id] || id, {
-    "data-rail": id,
-    role: "tab",
-    "aria-selected": state.rail === id ? "true" : "false",
-  })));
+  const { state, t, lang } = ctx;
+  const textQuiet = primary(state)?.type === "text" && !state.panelOpen;
+  return el("nav", { class: "riel canva-strip", role: "tablist", "aria-label": t("herramientas") }, STRIP.map(([id, es, en, paths]) => {
+    const label = lang === "en" ? en : es;
+    const selected = textQuiet ? id === "texto" : (id === "apps" ? APP_RAILS.has(state.rail) : state.rail === id);
+    const node = button("", {
+      class: "strip-btn",
+      "data-rail": id,
+      role: "tab",
+      "aria-selected": selected ? "true" : "false",
+      "aria-label": label,
+    });
+    if (id === "ia") node.append(el("img", { class: "strip-octo", src: studioAsset("assets/orvupi-avatar.png"), alt: "" }));
+    else node.append(svgIcon(paths));
+    node.append(el("span", { text: label }));
+    return node;
+  }));
+}
+
+function chartSheet(layer, lang) {
+  const labels = layer?.props?.labels || [];
+  const values = layer?.props?.values || [];
+  const en = lang === "en";
+  const rows = labels.map((label, index) => el("tr", {}, [
+    el("td", {}, [el("input", {
+      "data-chart-row": String(index),
+      "data-chart-field": "label",
+      value: String(label),
+      "aria-label": en ? `Label ${index + 1}` : `Etiqueta ${index + 1}`,
+    })]),
+    el("td", {}, [el("input", {
+      "data-chart-row": String(index),
+      "data-chart-field": "value",
+      type: "number",
+      value: String(values[index] ?? 0),
+      "aria-label": en ? `Value ${index + 1}` : `Cantidad ${index + 1}`,
+    })]),
+  ]));
+  return el("div", { class: "datos-vivo" }, [
+    el("p", { class: "nota", text: en ? "Edit the table. The chart updates with these numbers." : "Edita la tabla. El gráfico usa estos números." }),
+    el("table", {}, [
+      el("thead", {}, [el("tr", {}, [
+        el("th", { text: en ? "Label" : "Etiqueta" }),
+        el("th", { text: en ? "Amount" : "Cantidad" }),
+      ])]),
+      el("tbody", {}, rows),
+    ]),
+  ]);
 }
 
 function panel(ctx) {
   const { state, t, lang } = ctx;
   const doc = state.doc;
+  const shell = shellOf(doc);
+  if (state.rail === "apps") {
+    const extras = [
+      ["fotos", t("fotos")],
+      ["graficos", t("graficos")],
+      ["formas", t("forma")],
+      ["capas", t("capas")],
+      ["ia", t("iaOpcional")],
+    ];
+    if (shell !== "whiteboard") extras.splice(2, 0, ["fondo", t("fondo")]);
+    if (shell === "whiteboard") extras.push(["notas", t("notas")]);
+    return el("div", { class: "apps-lista" }, [
+      el("h2", { text: lang === "en" ? "Apps" : "Apps" }),
+      el("p", { class: "nota", text: lang === "en" ? "Open a tool. It stays in this browser." : "Abre una herramienta. Se queda en este navegador." }),
+      ...extras.map(([id, label]) => button(label, { "data-rail": id, class: "app-row" })),
+    ]);
+  }
   if (state.rail === "plantillas" || state.rail === "proyectos") return state.rail === "proyectos" ? el("div", {}, [el("p", { text: t("soloAqui") }), button(t("disenos"), { "data-go": "disenos" })]) : catalogBody(ctx);
   if (state.rail === "elementos" || state.rail === "formas") {
     return el("div", { class: "rejilla" }, [
@@ -2245,7 +2363,10 @@ function panel(ctx) {
         const item = catalogItem(id);
         const control = button("", { "data-avatar": id, class: "marca-pulpo" });
         control.append(el("img", { src: studioAsset(item.archivo), alt: item.nombre[lang] || item.nombre.es, width: "96", height: "96" }), el("span", { text: item.nombre[lang] || item.nombre.es }));
-        return control;
+        return el("div", { class: "asset-open" }, [
+          control,
+          button(lang === "en" ? "Open" : "Abrir", { "data-asset": id }),
+        ]);
       })),
       el("div", { class: "chips" }, colors.map(([hex, key]) => button(key, { "data-color": hex, style: swatchStyle(hex) }))),
       el("div", { class: "rejilla" }, FONTS.map((font) => button(font[lang] || font.es, { "data-font": font.id, style: `font-family:${font.css}` }))),
@@ -2277,7 +2398,11 @@ function panel(ctx) {
           el("span", { text: item.nombre[lang] || item.nombre.es }),
           el("small", { text: `${t("licenciaFoto")}: CC0` }),
         );
-        return control;
+        return el("div", { class: "asset-open" }, [
+          control,
+          button(lang === "en" ? "Open" : "Abrir", { "data-asset": item.id }),
+          button(lang === "en" ? "Set as background" : "Al fondo", { "data-photo-bg": item.id }),
+        ]);
       })),
       el("div", { id: "hueco-subida" }),
       button(t("subir"), { id: "subir-imagen" }),
@@ -2287,7 +2412,7 @@ function panel(ctx) {
   if (state.rail === "graficos" || state.rail === "datos") {
     const selected = primary(state);
     const dataEditor = selected?.type === "chart"
-      ? el("label", { text: t("editarDatos") }, [el("textarea", { id: "datos-grafico", text: chartSeriesText(selected.props) })])
+      ? (state.inspectorOpen ? null : chartSheet(selected, lang))
       : selected?.type === "table"
         ? el("label", { text: t("editarTabla") }, [el("textarea", { id: "datos-tabla", text: tablePlainText(selected.props) })])
         : null;
@@ -2341,15 +2466,35 @@ function panel(ctx) {
     ]);
   }
   if (state.rail === "herramientas") {
-    const tools = [["select", t("seleccionar")], ["draw", t("dibujar")], ["rect", t("forma")], ["line", t("linea")], ["text", t("anadirTexto")]];
-    return el("div", { class: "chips" }, tools.map(([id, label]) => button(label, { "data-tool": id, "aria-pressed": state.tool === id ? "true" : "false" })));
+    const en = lang === "en";
+    const tools = [
+      ["select", t("seleccionar")],
+      ["draw", t("dibujar")],
+      ["erase", en ? "Eraser" : "Borrador"],
+      ["rect", t("forma")],
+      ["line", t("linea")],
+      ["text", t("anadirTexto")],
+    ];
+    return el("div", {}, [
+      el("p", { class: "nota", text: en ? "Draw on the page. The eraser removes strokes and shapes." : "Dibuja en la página. El borrador quita trazos y formas." }),
+      el("div", { class: "chips" }, tools.map(([id, label]) => button(label, { "data-tool": id, "aria-pressed": state.tool === id ? "true" : "false" }))),
+      el("div", { class: "chips" }, ["#102032", "#FF3070", "#7d2ae8", "#0f766e"].map((hex) => button("", {
+        "data-draw-color": hex,
+        "aria-label": hex,
+        "aria-pressed": (state.drawColor || "#102032") === hex ? "true" : "false",
+        style: swatchStyle(hex),
+      }))),
+    ]);
   }
   const fondos = catalog.items.filter((item) => item.tipo === "fondo");
   const current = /^#[0-9a-fA-F]{6}$/.test(doc.background.fill || "") ? doc.background.fill : "#FFF8EC";
   return el("div", {}, [
     el("label", { text: t("colorFondo") }, [el("input", { type: "color", id: "fondo-color", value: current, "aria-label": t("colorFondo") })]),
     el("div", { class: "chips" }, [["#FF3070", t("rosa")], ["#FFF8EC", t("crema")], ["#102032", t("azul")]].map(([hex, key]) => button(key, { "data-fondo": hex, style: swatchStyle(hex) }))),
-    el("div", { class: "rejilla" }, fondos.map((item) => button(item.nombre[lang] || item.nombre.es, { "data-fondo-id": item.id }))),
+    el("div", { class: "rejilla" }, fondos.map((item) => el("div", { class: "asset-open" }, [
+      button(item.nombre[lang] || item.nombre.es, { "data-fondo-id": item.id }),
+      button(lang === "en" ? "Open" : "Abrir", { "data-asset": item.id }),
+    ]))),
   ]);
 }
 
@@ -2359,7 +2504,7 @@ function dataPanel(ctx) {
   if (layer?.type === "chart") {
     return el("section", { class: "datos-capa" }, [
       el("h2", { text: t("editarDatos") }),
-      el("textarea", { id: "datos-grafico", text: chartSeriesText(layer.props), "aria-label": t("editarDatos") }),
+      chartSheet(layer, ctx.lang),
     ]);
   }
   if (layer?.type === "table") {
@@ -2404,7 +2549,11 @@ function positionPanel(ctx) {
     state.selected.length > 2 ? button(t("distribuirH"), { "data-distribute": "x" }) : null,
     state.selected.length > 2 ? button(t("distribuirV"), { "data-distribute": "y" }) : null,
   ]);
+  const textField = layer?.type === "text" ? el("label", { text: t("texto") }, [
+    el("textarea", { id: "texto-capa", text: layer.props.text, "aria-label": t("texto") }),
+  ]) : null;
   return el("section", { class: "posicion" }, [
+    textField,
     el("h2", { text: t("posicion") }),
     el("div", { class: "chips" }, [
       button(t("alFrente"), { "data-action": "front" }),
@@ -2442,30 +2591,121 @@ function layersPanel(ctx) {
   ]);
 }
 
+function popButton(label, id, open, extra = "") {
+  return button(label, { "data-pop": id, class: `tb-pop ${extra}`.trim(), "aria-expanded": open ? "true" : "false" });
+}
+
+function iconBtn(label, attrs, paths) {
+  const node = button("", { ...attrs, "aria-label": label, class: `${attrs.class || ""} tb-icon`.trim() });
+  node.append(paths === "dots" ? dotsIcon() : svgIcon(paths));
+  return node;
+}
+
 function textBar(ctx) {
   const { state, t, lang } = ctx;
   const shell = shellOf(state.doc);
   const layer = primary(state);
-  const show = shell === "doc" || layer?.type === "text";
-  if (!show) return null;
-  const target = layer?.type === "text" ? layer : state.doc.layers.find((item) => item.type === "text");
-  const size = target ? Math.round(target.props.size) : 32;
-  return el("div", { id: "barra-texto", class: "barra-texto", role: "toolbar", "aria-label": t("texto") }, [
-    el("label", { class: "sr", text: t("texto") }),
-    target ? el("textarea", { id: "texto-capa", text: target.props.text, "aria-label": t("texto") }) : el("p", { text: "Empieza a escribir." }),
-    ...FONTS.map((font) => button(font[lang] || font.es, { "data-font": font.id, class: "chip", style: `font-family:${font.css}` })),
-    el("label", { text: t("tamanoTexto") }, [el("input", { id: "tamano-texto", type: "number", min: "8", max: "400", step: "1", value: String(size), "aria-label": t("tamanoTexto") })]),
-    button("−", { "data-size": "down", "aria-label": t("menos") }),
-    button("+", { "data-size": "up", "aria-label": t("mas") }),
-    button(t("negrita"), { "data-style": "bold", "aria-pressed": target?.props.bold ? "true" : "false" }),
-    button(t("cursiva"), { "data-style": "italic", "aria-pressed": target?.props.italic ? "true" : "false" }),
-    button(t("subrayado"), { "data-style": "underline", "aria-pressed": target?.props.underline ? "true" : "false" }),
-    target ? el("input", { type: "color", id: "color-texto", value: /^#[0-9a-fA-F]{6}$/.test(target.props.color) ? target.props.color : "#102032", "aria-label": t("color") }) : null,
-    button(t("izquierda"), { "data-text-align": "left", "aria-pressed": target?.props.align === "left" ? "true" : "false" }),
-    button(t("centro"), { "data-text-align": "center", "aria-pressed": target?.props.align === "center" ? "true" : "false" }),
-    button(t("derecha"), { "data-text-align": "right", "aria-pressed": target?.props.align === "right" ? "true" : "false" }),
-    el("label", { text: t("interlineado") }, [el("input", { id: "interlineado", type: "number", min: "0.8", max: "3", step: "0.05", value: String(target?.props.lineHeight ?? 1.15), "aria-label": t("interlineado") })]),
-  ]);
+  const textTarget = layer?.type === "text"
+    ? layer
+    : (!layer && shell === "doc" ? state.doc.layers.find((item) => item.type === "text") : null);
+  if (!layer && !textTarget) return null;
+  const target = textTarget;
+  const en = lang === "en";
+  const kids = [];
+  if (target) {
+    const size = Math.round(target.props.size || 32);
+    const font = fontById(target.props.fontId);
+    const color = /^#[0-9a-fA-F]{6}$/.test(target.props.color) ? target.props.color : "#102032";
+    kids.push(popButton(font ? (font[lang] || font.es) : "Inter", "font", state.pop === "font", "tb-font"));
+    if (state.pop === "font") {
+      kids.push(el("div", { class: "tb-menu", id: "menu-fuente" }, FONTS.map((item) => button(item[lang] || item.es, {
+        "data-font": item.id,
+        class: "chip",
+        style: `font-family:${item.css}`,
+        "aria-pressed": target.props.fontId === item.id ? "true" : "false",
+      }))));
+    }
+    kids.push(el("span", { class: "tb-size" }, [
+      button("−", { "data-size": "down", class: "tb-step", "aria-label": t("menos") }),
+      el("input", {
+        id: "tamano-texto",
+        type: "number",
+        min: "8",
+        max: "400",
+        step: "1",
+        value: String(size),
+        "aria-label": t("tamanoTexto"),
+      }),
+      button("+", { "data-size": "up", class: "tb-step", "aria-label": t("mas") }),
+    ]));
+    kids.push(button("A", { "data-pop": "color", class: "tb-a tb-pop", "aria-label": t("color"), "aria-expanded": state.pop === "color" ? "true" : "false", style: `--ink:${color}` }));
+    if (state.pop === "color") {
+      kids.push(el("div", { class: "tb-menu", id: "menu-color" }, [
+        el("input", { type: "color", id: "color-texto", value: color, "aria-label": t("color") }),
+        ...["#102032", "#FF3070", "#FFFFFF", "#7d2ae8", "#0f766e", "#F4A261"].map((hex) => button("", {
+          "data-color": hex,
+          "aria-label": hex,
+          style: swatchStyle(hex),
+        })),
+      ]));
+    }
+    kids.push(button("B", { "data-style": "bold", class: "tb-mark", "aria-pressed": target.props.bold ? "true" : "false", "aria-label": t("negrita") }));
+    kids.push(button("I", { "data-style": "italic", class: "tb-mark is-italic", "aria-pressed": target.props.italic ? "true" : "false", "aria-label": t("cursiva") }));
+    kids.push(button("U", { "data-style": "underline", class: "tb-mark is-under", "aria-pressed": target.props.underline ? "true" : "false", "aria-label": en ? "Underline" : "Subrayado" }));
+    kids.push(button("S", { "data-style": "strike", class: "tb-mark is-strike", "aria-pressed": target.props.strike ? "true" : "false", "aria-label": en ? "Strikethrough" : "Tachado" }));
+    kids.push(button("aA", { "data-case": "cycle", class: "tb-mark tb-case", "aria-label": en ? "Letter case" : "Mayúsculas" }));
+    kids.push(iconBtn(en ? "Align" : "Alinear", { "data-pop": "align", class: "tb-pop", "aria-expanded": state.pop === "align" ? "true" : "false" }, ["M4 6h16", "M8 12h8", "M4 18h16"]));
+    if (state.pop === "align") {
+      kids.push(el("div", { class: "tb-menu", id: "menu-alinear" }, [
+        button(t("izquierda"), { "data-text-align": "left", "aria-pressed": target.props.align === "left" ? "true" : "false" }),
+        button(t("centro"), { "data-text-align": "center", "aria-pressed": target.props.align === "center" ? "true" : "false" }),
+        button(t("derecha"), { "data-text-align": "right", "aria-pressed": target.props.align === "right" ? "true" : "false" }),
+      ]));
+    }
+    kids.push(iconBtn(en ? "List" : "Lista", { "data-pop": "list", class: "tb-pop", "aria-expanded": state.pop === "list" ? "true" : "false" }, ["M9 6h11", "M9 12h11", "M9 18h11", "M4 6h.01", "M4 12h.01", "M4 18h.01"]));
+    if (state.pop === "list") {
+      kids.push(el("div", { class: "tb-menu", id: "menu-lista" }, [
+        button(en ? "None" : "Ninguna", { "data-list": "none", "aria-pressed": !target.props.list ? "true" : "false" }),
+        button(en ? "Bullets" : "Viñetas", { "data-list": "bullet", "aria-pressed": target.props.list === "bullet" ? "true" : "false" }),
+        button(en ? "Numbers" : "Numerada", { "data-list": "number", "aria-pressed": target.props.list === "number" ? "true" : "false" }),
+      ]));
+    }
+    kids.push(iconBtn(en ? "Spacing" : "Espaciado", { "data-pop": "space", class: "tb-pop", "aria-expanded": state.pop === "space" ? "true" : "false" }, ["M8 4v16", "M16 4v16", "M4 8h16", "M4 16h16"]));
+    if (state.pop === "space") {
+      kids.push(el("div", { class: "tb-menu", id: "menu-espacio" }, [
+        el("label", { text: t("interlineado") }, [el("input", { id: "interlineado", type: "number", min: "0.8", max: "3", step: "0.05", value: String(target.props.lineHeight ?? 1.15), "aria-label": t("interlineado") })]),
+        el("label", { text: en ? "Letter spacing" : "Interletrado" }, [el("input", { id: "interletrado", type: "number", min: "-8", max: "40", step: "0.5", value: String(target.props.letterSpacing ?? 0), "aria-label": en ? "Letter spacing" : "Interletrado" })]),
+        el("label", { text: en ? "Transparency" : "Transparencia" }, [el("input", { type: "range", min: "0", max: "1", step: "0.05", "data-opacidad": "1", value: String(target.opacity ?? 1), "aria-label": t("opacidad") })]),
+      ]));
+    }
+    kids.push(popButton(en ? "Effects" : "Efectos", "fx", state.pop === "fx"));
+    if (state.pop === "fx") {
+      kids.push(el("div", { class: "tb-menu" }, ["", "sombra", "neon", "glitch"].map((id) => button(id ? id : (en ? "None" : "Ninguno"), {
+        "data-effect": id || "ninguno",
+        "aria-pressed": (target.props.effect || "") === id ? "true" : "false",
+      }))));
+    }
+  }
+  const subject = layer || target;
+  if (subject) {
+    kids.push(popButton(en ? "Animate" : "Animar", "anim", state.pop === "anim"));
+    if (state.pop === "anim") {
+      kids.push(el("div", { class: "tb-menu" }, [
+        ["", en ? "None" : "Ninguna"],
+        ["aparecer", en ? "Fade" : "Aparecer"],
+        ["subir", en ? "Rise" : "Subir"],
+        ["rebote", en ? "Bounce" : "Rebote"],
+      ].map(([id, label]) => button(label, { "data-anim": id || "ninguna", "aria-pressed": (subject.anim || "") === id ? "true" : "false" }))));
+    }
+    kids.push(button(t("posicion"), { id: "alternar-inspector", class: "tb-pop", "aria-pressed": state.inspectorOpen ? "true" : "false" }));
+    if (!target && subject) {
+      kids.push(el("label", { class: "tb-opacity", text: en ? "Transparency" : "Transparencia" }, [
+        el("input", { type: "range", min: "0", max: "1", step: "0.05", "data-opacidad": "1", value: String(subject.opacity ?? 1), "aria-label": t("opacidad") }),
+      ]));
+    }
+    kids.push(iconBtn(en ? "Copy style" : "Copiar estilo", { id: "copiar-formato", "aria-pressed": state.painter ? "true" : "false" }, ["M14 4l5 5-8 8H6v-5z", "M4 20h6"]));
+  }
+  return el("div", { id: "barra-texto", class: "barra-texto", role: "toolbar", "aria-label": t("texto") }, kids);
 }
 
 function pageStrip(ctx) {
@@ -2482,7 +2722,7 @@ function pageStrip(ctx) {
   const canAdd = shell !== "doc" && shell !== "whiteboard" && shell !== "web";
   return el("div", { id: "tira-paginas", class: "tira", role: "navigation", "aria-label": shell === "video" ? t("escenas") : t("paginas") }, [
     ...buttons,
-    canAdd ? button("+", { id: shell === "video" ? "anadir-escena" : "anadir-pagina", "aria-label": shell === "video" ? t("anadirEscena") : t("anadirPagina") }) : null,
+    canAdd ? button(shell === "video" ? t("anadirEscena") : `+ ${t("anadirPagina")}`, { id: shell === "video" ? "anadir-escena" : "anadir-pagina", class: "anadir-pagina", "aria-label": shell === "video" ? t("anadirEscena") : t("anadirPagina") }) : null,
     canAdd && shell !== "video" ? button(t("duplicarPagina"), { id: "duplicar-pagina" }) : null,
     canAdd && shell !== "video" ? button(t("borrarPagina"), { id: "borrar-pagina" }) : null,
     canAdd ? button(t("anterior"), { id: "pagina-anterior" }) : null,
@@ -2512,6 +2752,13 @@ function videoTimeline(ctx) {
   ]);
 }
 
+function labeledBtn(label, attrs, paths) {
+  const node = button("", attrs);
+  if (paths) node.append(svgIcon(paths));
+  node.append(el("span", { text: label }));
+  return node;
+}
+
 function bottomBar(ctx) {
   const { state, t } = ctx;
   const shell = shellOf(state.doc);
@@ -2520,21 +2767,41 @@ function bottomBar(ctx) {
   const pageLabel = ctx.lang === "en" ? `${here} of ${pages}` : `${here} de ${pages}`;
   const seconds = Math.max(0, Math.floor(Number(state.timerSeconds) || 0));
   const clock = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
-  const bits = [
-    shell === "whiteboard" ? button(t("notas"), { id: "abrir-notas", "aria-pressed": state.notesOpen ? "true" : "false" }) : null,
-    shell === "whiteboard" ? button(t("ampliarPizarra"), { id: "ampliar-pizarra" }) : null,
-    shell === "whiteboard" ? button(state.timerOn ? t("parar") : t("temporizador"), { id: "temporizador" }) : null,
-    shell === "whiteboard" && state.timerOn ? el("span", { id: "reloj", text: clock }) : null,
-    button(t("ajustar"), { "data-zoom": "fit", "aria-pressed": state.zoom === "fit" ? "true" : "false" }),
-    button("−", { "data-zoom": "out", "aria-label": t("menos") }),
-    button(t("cien"), { "data-zoom": "100", "aria-pressed": state.zoom === "100" ? "true" : "false" }),
-    button("+", { "data-zoom": "in", "aria-label": t("mas") }),
-    el("span", { id: "paginas-indicador", text: pageLabel }),
-    button(t("cuadricula"), { id: "cuadricula", "aria-pressed": state.grid ? "true" : "false" }),
-    button(t("guias"), { id: "guias", "aria-pressed": state.guides ? "true" : "false" }),
-    button(t("pantalla"), { id: "pantalla" }),
-  ];
-  return el("div", { class: "barra-inferior" }, bits);
+  const pctNum = Math.round((Number(state.scale) || 1) * 100);
+  const en = ctx.lang === "en";
+  const grid = iconBtn(t("cuadricula"), { id: "cuadricula", "aria-pressed": state.grid ? "true" : "false" }, ["M4 4h7v7H4z", "M13 4h7v7h-7z", "M4 13h7v7H4z", "M13 13h7v7h-7z"]);
+  const full = iconBtn(t("pantalla"), { id: "pantalla" }, ["M4 9V4h5", "M20 9V4h-5", "M4 15v5h5", "M20 15v5h-5"]);
+  const help = iconBtn(en ? "Help" : "Ayuda", { id: "ayuda" }, ["M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z", "M9.5 9a2.5 2.5 0 1 1 3.2 2.4c-.8.4-1.2.9-1.2 1.8", "M12 17h.01"]);
+  return el("div", { class: "barra-inferior" }, [
+    el("div", { class: "barra-izq" }, [
+      labeledBtn(t("notas"), { id: "abrir-notas", "aria-pressed": state.notesOpen ? "true" : "false" }, ["M6 3h9l3 3v15H6z", "M15 3v4h4"]),
+      shell === "whiteboard" ? button(t("ampliarPizarra"), { id: "ampliar-pizarra" }) : null,
+      labeledBtn(state.timerOn ? t("parar") : t("temporizador"), { id: "temporizador" }, ["M12 21a8 8 0 1 0 0-16 8 8 0 0 0 0 16z", "M12 8v5l3 2"]),
+      state.timerOn ? el("span", { id: "reloj", text: clock }) : null,
+    ]),
+    el("div", { class: "barra-der" }, [
+      button(t("ajustar"), { "data-zoom": "fit", class: "sr", "aria-pressed": state.zoom === "fit" ? "true" : "false" }),
+      button("−", { "data-zoom": "out", class: "sr", "aria-label": t("menos") }),
+      button(t("cien"), { "data-zoom": "100", class: "sr", "aria-pressed": state.zoom === "100" ? "true" : "false" }),
+      button("+", { "data-zoom": "in", class: "sr", "aria-label": t("mas") }),
+      el("input", {
+        id: "zoom-rango",
+        type: "range",
+        min: "10",
+        max: "200",
+        step: "1",
+        value: String(Math.min(200, Math.max(10, pctNum))),
+        "aria-label": "Zoom",
+      }),
+      el("span", { id: "zoom-indicador", text: `${pctNum}%` }),
+      grid,
+      button(t("guias"), { id: "guias", class: "tb-extra", "aria-pressed": state.guides ? "true" : "false" }),
+      el("span", { class: "paginas-palabra", text: shell === "video" ? (en ? "Scenes" : "Escenas") : (en ? "Pages" : "Páginas") }),
+      el("span", { id: "paginas-indicador", text: pageLabel }),
+      full,
+      help,
+    ]),
+  ]);
 }
 
 function pdfDialog(ctx) {
@@ -2559,11 +2826,161 @@ function pdfDialog(ctx) {
   ]);
 }
 
+function previewAttr(id) {
+  const kind = openKind(id);
+  if (kind === "thumb") return { "data-thumb": id };
+  if (kind === "plantilla") return { "data-template": id };
+  return { "data-asset": id };
+}
+
+function previewMeta(doc, lang) {
+  if (!doc) return "";
+  const w = doc.format?.width || 0;
+  const h = doc.format?.height || 0;
+  const en = lang === "en";
+  const preset = PRESETS.find((item) => item.id === doc.format?.id);
+  const name = preset ? (en ? preset.en : preset.es) : (en ? "Design" : "Diseño");
+  const orient = h >= w ? (en ? "Portrait" : "Vertical") : (en ? "Landscape" : "Horizontal");
+  if (doc.format?.id === "cv" || doc.format?.id === "doc" || preset?.ratio === "A4") {
+    return en ? `${name} (A4, ${orient}) · 21 × 29.7 cm` : `${name} (A4, ${orient}) · 21 × 29,7 cm`;
+  }
+  const ratio = preset?.ratio && preset.ratio !== "página" ? `${preset.ratio}, ` : "";
+  return `${name} (${ratio}${orient}) · ${w} × ${h} px`;
+}
+
+function pageThumb(doc, layers, index, pressed) {
+  const node = button("", {
+    class: "canva-plain tpl-modal-mini tpl-modal-page",
+    "data-preview-page": String(index),
+    "aria-pressed": pressed ? "true" : "false",
+    "aria-label": String(index + 1),
+  });
+  node.append(miniStage({ ...doc, layers }));
+  return node;
+}
+
+function starIcon(filled) {
+  const svg = svgIcon(["M12 3l2.2 5.2L20 9l-4 3.6.8 5.4L12 15.4 7.2 18l.8-5.4L4 9l5.8-.8z"]);
+  if (filled) {
+    const path = svg.querySelector("path");
+    if (path) path.setAttribute("fill", "currentColor");
+  }
+  return svg;
+}
+
+function relatedThumb(id, label) {
+  const node = button("", { class: "canva-plain tpl-modal-mini", ...previewAttr(id), "aria-label": label });
+  const thumb = thumbById(id);
+  const photo = photoById(id);
+  const visual = catalogItem(id);
+  const asset = browseAsset(id);
+  if (thumb?.file) node.append(el("img", { src: studioAsset(thumb.file), alt: "" }));
+  else if (photo?.archivo) node.append(el("img", { src: studioAsset(photo.archivo), alt: "" }));
+  else if (visual?.archivo) node.append(el("img", { src: studioAsset(visual.archivo), alt: "" }));
+  else if (asset?.scene) node.append(mountScene(asset.scene));
+  else {
+    const sample = documentForOpen(id);
+    if (sample) node.append(miniStage(sample));
+  }
+  return node;
+}
+
+function selectionPill(ctx) {
+  const { state, t, lang } = ctx;
+  const layer = primary(state);
+  if (!layer || !state.selected.includes(layer.id)) return null;
+  const en = lang === "en";
+  const ask = button(en ? "ORVUPI AI" : "ORVUPI IA", { class: "pill-ia", "data-rail": "ia" });
+  ask.prepend(el("img", { src: studioAsset("assets/orvupi-avatar.png"), alt: "" }));
+  const magic = iconBtn(en ? "Magic" : "Magia", { id: "magia-capa", class: "pill-btn" }, ["M15 4l1.2 3.2L19.4 8.4 16.2 9.6 15 12.8 13.8 9.6 10.6 8.4l3.2-1.2z", "M6 14l.7 1.8L8.5 16.5 6.7 17.2 6 19l-.7-1.8L3.5 16.5l1.8-.7z"]);
+  const lock = iconBtn(t("bloquear"), { class: "pill-btn", "data-action": "lock", "aria-pressed": layer.locked ? "true" : "false" }, ["M8 11V8a4 4 0 0 1 8 0v3", "M6 11h12v9H6z"]);
+  const dup = iconBtn(t("duplicar"), { class: "pill-btn", "data-action": "duplicate" }, ["M8 8h11v11H8z", "M5 16V5h11"]);
+  const del = iconBtn(t("eliminar"), { class: "pill-btn", "data-action": "remove" }, ["M5 7h14", "M9 7V5h6v2", "M7 7l1 13h8l1-13"]);
+  const more = iconBtn(en ? "More" : "Más", { class: "pill-btn", "data-pop": "mas", "aria-expanded": state.pop === "mas" ? "true" : "false" }, "dots");
+  const kids = [ask, magic, lock, dup, del, more];
+  if (state.pop === "mas") {
+    kids.push(el("div", { class: "tb-menu pill-menu" }, [
+      button(t("alFrente"), { "data-action": "front" }),
+      button(t("alFondo"), { "data-action": "back" }),
+    ]));
+  }
+  return el("div", { id: "pastilla-seleccion", class: "pastilla-seleccion" }, kids);
+}
+
+export function templatePreview(ctx) {
+  const id = ctx.state.openPreview;
+  if (!id) return null;
+  const doc = documentForOpen(id);
+  if (!doc || doc.templateId !== id) return null;
+  const { lang, t } = ctx;
+  const en = lang === "en";
+  const pages = Array.isArray(doc.meta?.pages) && doc.meta.pages.length ? doc.meta.pages : [doc.layers];
+  const pageIndex = Math.min(pages.length - 1, Math.max(0, ctx.state.previewPage || 0));
+  const view = { ...doc, layers: pages[pageIndex] || doc.layers };
+  const close = button("", { id: "cerrar-plantilla", class: "canva-plain tpl-modal-x", "aria-label": t("cerrar") });
+  close.append(svgIcon(["M7 7l10 10", "M17 7L7 17"]));
+  const pageButtons = pages.map((layers, index) => pageThumb(doc, layers, index, index === pageIndex));
+  const related = relatedOpenIds(id, Math.max(1, 6 - pageButtons.length)).map((relatedId) => {
+    const sample = documentForOpen(relatedId);
+    return relatedThumb(relatedId, sample?.name || relatedId);
+  });
+  const star = button("", {
+    id: "tpl-guardar",
+    class: "tpl-icon",
+    "aria-pressed": ctx.state.starred?.[id] ? "true" : "false",
+    "aria-label": en ? "Save" : "Guardar",
+  });
+  star.append(starIcon(Boolean(ctx.state.starred?.[id])));
+  const more = button("", {
+    id: "tpl-mas",
+    class: "tpl-icon",
+    "aria-expanded": ctx.state.previewMore ? "true" : "false",
+    "aria-label": en ? "More" : "Más",
+  });
+  more.append(dotsIcon());
+  const backdrop = button("", { class: "tpl-modal-backdrop", "data-close-preview": "1", "aria-label": t("cerrar") });
+  return el("div", { class: "tpl-modal-root" }, [
+    backdrop,
+    el("div", {
+      id: "vista-plantilla",
+      class: "tpl-modal",
+      role: "dialog",
+      "aria-modal": "true",
+      "aria-labelledby": "tpl-modal-title",
+      "data-open-id": id,
+    }, [
+      close,
+      el("div", { class: "tpl-modal-grid" }, [
+        el("div", { class: "tpl-modal-stage" }, [
+          el("div", { class: "tpl-modal-hero" }, [miniStage(view)]),
+          el("div", { class: "tpl-modal-rail", id: "tpl-variantes" }, [...pageButtons, ...related]),
+        ]),
+        el("aside", { class: "tpl-modal-side" }, [
+          el("h2", { id: "tpl-modal-title", text: doc.name }),
+          el("p", { class: "tpl-modal-meta", text: previewMeta(doc, lang) }),
+          ctx.state.previewMore ? el("div", { class: "tpl-more-menu", id: "tpl-more-menu" }, [
+            button(t("cerrar"), { "data-close-preview": "1" }),
+          ]) : null,
+          el("div", { class: "tpl-modal-actions" }, [
+            button(en ? "Customize this template" : "Personalizar esta plantilla", {
+              class: "tpl-cta",
+              "data-personalizar": id,
+            }),
+            star,
+            more,
+          ]),
+        ]),
+      ]),
+    ]),
+  ]);
+}
+
 export function renderEditor(ctx) {
   const { root, state, t } = ctx;
   const doc = state.doc;
   const shell = shellOf(doc);
   const name = el("input", { id: "nombre-diseno", type: "text", value: doc.name, maxlength: "80", "aria-label": t("nombre") });
+  const en = ctx.lang === "en";
   const fileMenu = state.fileMenu ? el("div", { class: "menu-archivo", id: "menu-archivo" }, [
     el("p", { text: `${doc.format.width}×${doc.format.height} px` }),
     button("Hacer una copia", { "data-duplicate": doc.id }),
@@ -2572,36 +2989,57 @@ export function renderEditor(ctx) {
     button(t("paquete"), { id: "exportar-paquete" }),
     button(t("importarPaquete"), { id: "importar-paquete" }),
     button(t("pdf"), { id: "abrir-pdf" }),
+    shell === "print" ? button(t("imprimir"), { id: "imprimir" }) : null,
+    shell === "deck" ? button(t("presentar"), { id: "presentar" }) : null,
+    shell === "web" || shell === "video" ? button(t("vistaPrevia"), { id: "vista-previa" }) : null,
+    shell === "web" ? button(t("exportarHtml"), { id: "exportar-sitio" }) : null,
+    button(t("abrirWork"), { id: "abrir-work" }),
     state.status === "conflict" ? button(t("guardarCopia"), { id: "guardar-copia" }) : null,
     state.status === "cap" ? button(t("abrirRecuperado"), { id: "abrir-recuperado" }) : null,
   ]) : null;
+  const home = button("", { "data-go": "inicio", class: "tb-home tb-icon", "aria-label": t("inicio") });
+  home.append(svgIcon(["M4 11 12 4l8 7", "M6 10.5V20h12v-9.5"]));
+  const undo = button("", { "data-action": "undo", class: "tb-quiet tb-icon", "aria-label": t("deshacer") });
+  undo.append(svgIcon(["M9 14 4 9l5-5", "M4 9h10.5a5.5 5.5 0 1 1 0 11H12"]));
+  const redo = button("", { "data-action": "redo", class: "tb-quiet tb-icon", "aria-label": t("rehacer") });
+  redo.append(svgIcon(["M15 14l5-5-5-5", "M20 9H9.5a5.5 5.5 0 1 0 0 11H12"]));
+  const editMenu = state.editMenu ? el("div", { class: "menu-archivo", id: "menu-editar" }, [
+    button(t("deshacer"), { "data-action": "undo" }),
+    button(t("rehacer"), { "data-action": "redo" }),
+    button(t("duplicarPagina"), { "data-page-cmd": "duplicate" }),
+    button(t("borrarPagina"), { "data-page-cmd": "delete" }),
+    button(t("duplicar"), { "data-action": "duplicate" }),
+    button(t("eliminar"), { "data-action": "remove" }),
+  ]) : null;
   const editorClass = `editor${state.panelOpen ? "" : " panel-cerrado"}${state.inspectorOpen ? "" : " inspector-cerrado"}`;
   root.replaceChildren(
-    frame(sideNav(ctx), el("div", { class: "orv-main orv-editor", id: "editor-app", "data-shell": shell }, [
-      el("div", { class: "editor-bar" }, [
-        button(t("menu"), { id: "menu-estudio", "aria-expanded": state.navOpen ? "true" : "false" }),
-        button("Archivo", { id: "abrir-archivo" }),
+    frame(sideNav(ctx), el("div", {
+      class: "orv-main orv-editor canva-edit",
+      id: "editor-app",
+      "data-shell": shell,
+      "data-template-id": doc.templateId || "",
+    }, [
+      el("div", { class: "editor-bar canva-topbar" }, [
+        home,
+        button(t("menu"), { id: "menu-estudio", class: "tb-quiet tb-menu-movil", "aria-expanded": state.navOpen ? "true" : "false" }),
+        button("Archivo", { id: "abrir-archivo", class: "tb-quiet" }),
         fileMenu,
+        button(en ? "Resize" : "Redimensionar", { id: "redimensionar", class: "tb-quiet" }),
+        button(en ? "Edit ▾" : "Editar ▾", { id: "menu-editar-btn", class: "tb-quiet", "aria-expanded": state.editMenu ? "true" : "false" }),
+        editMenu,
+        undo,
+        redo,
+        el("span", { id: "estado-guardado", class: "nube-guardado", "aria-live": "polite", text: ctx.statusText() }),
         name,
-        el("span", { id: "estado-guardado", "aria-live": "polite", text: ctx.statusText() }),
-        button(t("deshacer"), { "data-action": "undo" }),
-        button(t("rehacer"), { "data-action": "redo" }),
-        button(t("medidaLienzo"), { id: "redimensionar" }),
-        el("span", { class: "medidas-titulo", text: `${doc.format.width}×${doc.format.height}` }),
-        button(t("abrirWork"), { id: "abrir-work" }),
-        shell === "print" ? button(t("imprimir"), { id: "imprimir" }) : null,
-        shell === "deck" ? button(t("presentar"), { id: "presentar" }) : null,
-        shell === "web" || shell === "video" ? button(t("vistaPrevia"), { id: "vista-previa" }) : null,
-        shell === "web" ? button(t("exportarHtml"), { id: "exportar-sitio" }) : null,
-        button(state.panelOpen ? t("cerrarPanel") : t("recursos"), { id: "alternar-panel", "aria-pressed": state.panelOpen ? "true" : "false" }),
-        button(state.inspectorOpen ? t("cerrarInspector") : t("posicion"), { id: "alternar-inspector", "aria-pressed": state.inspectorOpen ? "true" : "false" }),
+        button(en ? "Share" : "Compartir", { id: "compartir-studio", class: "canva-share" }),
       ]),
-      textBar(ctx),
       shell === "video" ? el("p", { class: "nota", text: t("videoNota") }) : null,
       el("div", { class: editorClass }, [
         rail(ctx),
         state.panelOpen ? el("div", { class: "panel", id: "panel-riel" }, [panel(ctx)]) : null,
         el("div", { class: "escenario" }, [
+          textBar(ctx),
+          selectionPill(ctx),
           stageNode(ctx),
           shell === "web" ? button(t("anadirSeccion"), { id: "anadir-seccion", class: "anadir-seccion" }) : null,
           pageStrip(ctx),
@@ -2618,6 +3056,12 @@ export function renderEditor(ctx) {
         ]) : null,
       ]),
       bottomBar(ctx),
+      state.fileMenu ? null : el("div", { id: "muelle-acciones", class: "sr" }),
+      state.helpOpen ? el("dialog", { id: "dialogo-ayuda", open: "open" }, [
+        el("h2", { text: en ? "ORVUPI Studio" : "ORVUPI Studio" }),
+        el("p", { text: en ? "The design stays in this browser. There is no account." : "El diseño se queda en este navegador. No hay cuenta." }),
+        button(t("cerrar"), { id: "cerrar-ayuda" }),
+      ]) : null,
       state.workNote ? el("dialog", { id: "dialogo-work", open: "open" }, [
         el("h2", { text: t("abrirWork") }),
         el("p", { text: t("workNota") }),
@@ -2642,8 +3086,10 @@ export function renderEditor(ctx) {
     ]) : null,
     state.pdfOpen ? pdfDialog(ctx) : null,
   );
-  const bar = root.querySelector(".editor-bar");
-  if (ctx.acciones && bar) bar.append(ctx.acciones);
+  const menu = root.querySelector("#menu-archivo");
+  const hold = root.querySelector("#muelle-acciones");
+  if (ctx.acciones && menu) menu.append(ctx.acciones);
+  else if (ctx.acciones && hold) hold.append(ctx.acciones);
   ctx.ensureQuality();
   void ctx.paintBackdrop();
   const slot = root.querySelector("#hueco-subida");

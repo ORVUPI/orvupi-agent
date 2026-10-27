@@ -399,6 +399,7 @@ function normalizeLayer(layer) {
     visible: layer?.visible !== false,
     z: Math.round(num(layer?.z, 1)),
     groupId: typeof layer?.groupId === "string" ? layer.groupId.slice(0, 80) : "",
+    anim: layer?.anim === "aparecer" || layer?.anim === "subir" || layer?.anim === "rebote" ? layer.anim : "",
   };
   if (type === "text") {
     const props = layer?.props || {};
@@ -409,9 +410,14 @@ function normalizeLayer(layer) {
       color: typeof props.color === "string" ? props.color : BRAND.navy,
       align: props.align === "center" || props.align === "right" ? props.align : "left",
       lineHeight: clamp(num(props.lineHeight, 1.15), 0.8, 3),
+      letterSpacing: clamp(num(props.letterSpacing, 0), -8, 40),
       bold: Boolean(props.bold),
       italic: Boolean(props.italic),
       underline: Boolean(props.underline),
+      strike: Boolean(props.strike),
+      textCase: props.textCase === "upper" || props.textCase === "lower" || props.textCase === "title" ? props.textCase : "",
+      list: props.list === "bullet" || props.list === "number" ? props.list : "",
+      effect: props.effect === "sombra" || props.effect === "neon" || props.effect === "glitch" ? props.effect : "",
       runs: cleanRuns(String(props.text ?? "").slice(0, 2000), props.runs),
     };
   } else if (type === "image") {

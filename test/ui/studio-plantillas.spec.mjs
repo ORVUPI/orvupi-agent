@@ -132,6 +132,14 @@ test("móvil: plantillas usa el shell Canva, sin barra lateral", async ({ page }
   await page.locator("#buscar").fill("Estrategia");
   await expect(page.locator(".tpl-open", { hasText: "" }).first()).toBeVisible();
   await expect(page.locator(".tpl-masonry .tpl-open[aria-label*='Estrategia']").first()).toBeVisible();
-  await page.locator(".tpl-masonry .tpl-open").first().click();
+  const card = page.locator(".tpl-masonry .tpl-open").first();
+  const thumbId = await card.getAttribute("data-thumb");
+  await card.click();
+  const modal = page.locator("#vista-plantilla");
+  await expect(modal).toHaveAttribute("data-open-id", thumbId || "");
+  const title = (await modal.locator("h2").innerText()).trim();
+  await modal.locator("[data-personalizar]").click();
   await expect(page.locator("#editor-app")).toBeVisible();
+  await expect(page.locator("#editor-app")).toHaveAttribute("data-template-id", thumbId || "");
+  await expect(page.locator("#nombre-diseno")).toHaveValue(title);
 });

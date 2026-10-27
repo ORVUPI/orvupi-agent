@@ -6,7 +6,12 @@ import { decodePng } from "../../web/v2/studio/lib/png.mjs";
 test("la historia exporta 1080×1920 y la plantilla vertical no lleva marca de agua", async ({ page }) => {
   test.setTimeout(90_000);
   await page.goto("/studio/");
+  await page.locator("#buscar").fill("Saludo de historia");
   await page.locator("[data-template='historia-saludo']").click();
+  const modal = page.locator("#vista-plantilla");
+  await expect(modal).toHaveAttribute("data-open-id", "historia-saludo");
+  await modal.locator("[data-personalizar]").click();
+  await expect(page.locator("#editor-app")).toHaveAttribute("data-template-id", "historia-saludo");
   await expect(page.locator(".stage-frame")).toBeVisible();
   const ratio = await page.evaluate(() => {
     const frame = document.querySelector(".stage-frame");
@@ -21,6 +26,8 @@ test("la historia exporta 1080×1920 y la plantilla vertical no lleva marca de a
   await expect(page.locator("#descargar")).toBeEnabled();
   const ios = await page.evaluate(() => /iPhone/.test(navigator.userAgent));
   if (!ios) {
+  if (!(await page.locator("#menu-archivo #descargar").count())) await page.locator("#abrir-archivo").click();
+  await expect(page.locator("#menu-archivo #descargar")).toBeVisible();
   const [download] = await Promise.all([
     page.waitForEvent("download", { timeout: 60_000 }),
     page.click("#descargar"),

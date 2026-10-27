@@ -6,6 +6,12 @@ import { decodePng } from "../../web/v2/studio/lib/png.mjs";
 
 const shots = process.env.STUDIO_SHOTS ?? "test-results/studio-guardar";
 
+async function showExport(page, id = "#descargar") {
+  const button = page.locator(`#menu-archivo ${id}`);
+  if (!(await button.count())) await page.locator("#abrir-archivo").click();
+  await expect(page.locator(`#menu-archivo ${id}`)).toBeVisible();
+}
+
 function crc32(buf) {
   let c, crc = 0xffffffff;
   for (const b of buf) {
@@ -57,6 +63,7 @@ test("guardar: la descarga trae la imagen y el aviso sale en iPhone sin comparti
   if (ios) {
     const shareable = await page.evaluate(() => typeof navigator.canShare === "function");
     const popup = page.waitForEvent("popup", { timeout: 15000 }).catch(() => null);
+    await showExport(page);
     await page.click("#descargar");
     if (!shareable) {
       await expect(page.locator("#aviso-guardar")).toBeVisible();
@@ -64,6 +71,7 @@ test("guardar: la descarga trae la imagen y el aviso sale en iPhone sin comparti
       await popup;
     }
   } else {
+    await showExport(page);
     const [download] = await Promise.all([page.waitForEvent("download", { timeout: 60_000 }), page.click("#descargar")]);
     expect(download.suggestedFilename()).toBe("studio.png");
     const bytes = readFileSync(await download.path());
@@ -104,6 +112,7 @@ test("guardar: en iPhone con share, Descargar abre la hoja de compartir", async 
   await ready(page);
   const ios = await page.evaluate(() => /iPhone/.test(navigator.userAgent));
   test.skip(!ios, "solo iPhone");
+  await showExport(page);
   await page.click("#descargar");
   await expect.poll(() => page.evaluate(() => window.__shared || 0), { timeout: 60_000 }).toBe(1);
   await expect(page.locator("#aviso-guardar")).toBeHidden();
@@ -150,6 +159,7 @@ test("guardar: lo que se abre en la pestaña (noopener) es el PNG final", async 
   await ready(page);
   const ios = await page.evaluate(() => /iPhone/.test(navigator.userAgent) && typeof navigator.canShare !== "function");
   test.skip(!ios, "solo iPhone sin share");
+  await showExport(page);
   await page.click("#descargar");
   await expect.poll(() => page.evaluate(() => Boolean(window.__opened)), { timeout: 60_000 }).toBe(true);
   const opened = await page.evaluate(() => window.__opened);
@@ -170,6 +180,7 @@ test("guardar: el JPG sale con calidad libre", async ({ page }) => {
   const ios = await page.evaluate(() => /iPhone/.test(navigator.userAgent));
   test.skip(ios, "el JPG se descarga; en iPhone el PNG usa otra salida");
   await ready(page);
+  await showExport(page, "#descargar-jpg");
   const [download] = await Promise.all([page.waitForEvent("download", { timeout: 60_000 }), page.click("#descargar-jpg")]);
   expect(download.suggestedFilename()).toBe("studio.jpg");
   const bytes = readFileSync(await download.path());
