@@ -4,6 +4,7 @@ import catalog from "./catalog.json" with { type: "json" };
 import { BRAND, EDGE, FONTS, LIMITS } from "./lib/document.mjs";
 import { listPhotos, photoUrl } from "./lib/photos.mjs";
 import { PROJECT_CAP, libraryOf, listDesigns } from "./lib/projects.mjs";
+import { desktopRail, designsSub, marcaSub, printSub } from "./desktop.mjs";
 import { pathFromHash } from "./lib/route.mjs";
 import { thumbsIn } from "./lib/thumbs.mjs";
 import { sendIaPrompt } from "./ia.mjs";
@@ -1096,6 +1097,17 @@ export function renderMas(ctx, parts) {
     "data-tab": "mas",
     "data-mas-screen": path || "hub",
   }, [page, parts.nav()]);
+  const sub = path === "papelera"
+    ? designsSub(ctx)
+    : (path === "marca" || path.startsWith("marca/"))
+      ? marcaSub(ctx, path)
+      : path === "imprime"
+        ? printSub(ctx)
+        : null;
+  if (sub) {
+    shell.classList.add("has-sub");
+    shell.prepend(desktopRail(ctx, "mas"), sub);
+  } else shell.prepend(desktopRail(ctx, "mas"));
   ctx.root.replaceChildren(shell);
   if (ui.query) applyQuery(shell, ui.query);
   const fieldNode = document.getElementById("mas-buscar");

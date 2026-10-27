@@ -1832,6 +1832,7 @@ function handleDesignClick(buttonNode) {
     return true;
   }
   if ("designSheet" in buttonNode.dataset) {
+    if (buttonNode.dataset.designSheet === "views" && window.matchMedia("(min-width: 900px)").matches) return true;
     if (buttonNode.dataset.designDraft) state.designDraft = buttonNode.dataset.designDraft;
     state.designSheet = buttonNode.dataset.designSheet;
     render();
@@ -1946,7 +1947,7 @@ function onRootClick(event) {
     if (!buttonNode.dataset.go && !buttonNode.dataset.thumb) render();
   }
   if (buttonNode.dataset.railDir) {
-    const scroller = buttonNode.closest(".tpl-rail-wrap, .tpl-glance-wrap")?.querySelector(".tpl-rail-row, .tpl-glance");
+    const scroller = buttonNode.closest(".tpl-rail-wrap, .tpl-glance-wrap, .desk-carousel")?.querySelector(".tpl-rail-row, .tpl-glance, .canva-row, .canva-start");
     if (scroller) {
       const dir = buttonNode.dataset.railDir === "prev" ? -1 : 1;
       scroller.scrollBy({ left: dir * Math.max(160, Math.round(scroller.clientWidth * 0.72)), behavior: "smooth" });
@@ -1959,7 +1960,7 @@ function onRootClick(event) {
   }
   if (buttonNode.dataset.thumb) openThumb(buttonNode.dataset.thumb);
   if (buttonNode.dataset.go) go(buttonNode.dataset.go);
-  if (buttonNode.id === "crear-pieza") {
+  if (buttonNode.id === "crear-pieza" || "openCreate" in buttonNode.dataset) {
     state.resizing = false;
     state.dialog = true;
     render();
@@ -3514,6 +3515,10 @@ function boot() {
   });
   applyMasChrome(storage);
   render();
+  window.matchMedia("(min-width: 900px)").addEventListener("change", () => {
+    if (viewName() === "editor") return;
+    render();
+  });
   const pendingWork = workIdFromHash(location.hash);
   if (pendingWork) void openFromWork(pendingWork);
 }
