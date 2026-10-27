@@ -26,10 +26,10 @@ export async function pageSize(doc: PDFDocumentProxy, pageNumber: number): Promi
 export async function paintPage(page: PDFPageProxy, canvas: HTMLCanvasElement, scale: number): Promise<void> {
   const viewport = page.getViewport({ scale });
   const dpr = Math.min(2, window.devicePixelRatio || 1);
+  // The sheet sets the CSS box. Writing canvas.style here would resize the
+  // bitmap's layout after scroll has already been anchored and shove the page.
   canvas.width = Math.max(1, Math.floor(viewport.width * dpr));
   canvas.height = Math.max(1, Math.floor(viewport.height * dpr));
-  canvas.style.width = `${viewport.width}px`;
-  canvas.style.height = `${viewport.height}px`;
   const context = canvas.getContext("2d");
   if (!context) return;
   context.setTransform(1, 0, 0, 1, 0, 0);
