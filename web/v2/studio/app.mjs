@@ -1859,7 +1859,7 @@ function onRootClick(event) {
       state.past = [];
       state.future = [];
       applyMasChrome(storage);
-      go("mas/cuenta/datos");
+      go("mas/preferencias/datos");
     },
   })) return;
   if (buttonNode.dataset.sheetClose != null) {

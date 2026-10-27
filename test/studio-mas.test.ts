@@ -50,10 +50,10 @@ describe("studio más", () => {
     }>("lib/mas-store.mjs");
     assert.deepEqual(store.HUB_ROWS.map((row) => row.id), [
       "marca", "imprime", "apps", "dream", "anuncios", "escuela",
-      "cuenta", "config", "papelera", "tema", "comentarios", "avanzadas", "salir",
+      "preferencias", "config", "papelera", "tema", "comentarios", "avanzadas", "borrar",
     ]);
     const labels = store.HUB_ROWS.flatMap((row) => [row.es, row.en, row.go]).join("\n");
-    assert.equal(/canva|creators/i.test(labels), false);
+    assert.equal(/canva|creators|mi cuenta|my account|cerrar sesi[oó]n|sign out/i.test(labels), false);
     assert.equal(store.HUB_ROWS.every((row) => row.go.startsWith("mas/")), true);
     const hrefs = store.ORVUPI_APPS.map((item) => item.href);
     for (const href of ["/work/", "/lab/", "/verify/", "/cuaderno/", "/aprender/", "/marca/"]) {

@@ -1,4 +1,4 @@
-/** Pestaña Más: hub y subpantallas. El perfil y la papelera viven en este navegador. */
+/** Pestaña Más: hub y subpantallas. Las preferencias y la papelera viven en este navegador. */
 
 import catalog from "./catalog.json" with { type: "json" };
 import { BRAND, EDGE, FONTS, LIMITS } from "./lib/document.mjs";
@@ -16,7 +16,6 @@ import {
   clearIaChats,
   clearOfflineFlags,
   clearStudioData,
-  displayName,
   emptyTrash,
   formatBytes,
   listTrash,
@@ -31,7 +30,6 @@ import {
   setTheme,
   storageReport,
   studioNotices,
-  teamLabel,
   togglePref,
   deleteProjectSafe,
 } from "./lib/mas-store.mjs";
@@ -67,6 +65,8 @@ const ICONS = {
   info: ["M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z", "M12 11v6", "M12 8h.01"],
   grid: ["M4 4h7v7H4z", "M13 4h7v7h-7z", "M4 13h7v7H4z", "M13 13h7v7h-7z"],
   logout: ["M10 7V5H5v14h5v-2", "M10 12h9", "M16 9l3 3-3 3"],
+  sliders: ["M4 7h16", "M4 12h16", "M4 17h16", "M8 7a1.2 1.2 0 1 0 .1 0", "M14 12a1.2 1.2 0 1 0 .1 0", "M10 17a1.2 1.2 0 1 0 .1 0"],
+  reset: ["M4 12a8 8 0 1 0 2.2-5.5", "M4 4v5h5"],
   back: ["M15 6l-6 6 6 6"],
   chev: ["M9 6l6 6-6 6"],
   down: ["M6 9l6 6 6-6"],
@@ -302,27 +302,6 @@ function toggle(lang, es, en, key, on) {
   return node;
 }
 
-function textInput(key, value, max, placeholder) {
-  return el("input", {
-    "data-mas-field": key,
-    value: value || "",
-    maxlength: String(max),
-    placeholder: placeholder || "",
-    autocomplete: "off",
-    type: "text",
-  });
-}
-
-function area(key, value, placeholder) {
-  const node = el("textarea", { "data-mas-field": key, maxlength: "400", rows: "4", placeholder: placeholder || "" });
-  node.value = value || "";
-  return node;
-}
-
-function field(label, control) {
-  return el("label", { class: "mas-field" }, [el("span", { text: label }), control]);
-}
-
 function pop(label, actions) {
   return el("details", { class: "mas-pop" }, [
     el("summary", { "aria-label": label }, [dots()]),
@@ -363,43 +342,22 @@ const ROW_ICON = {
   dream: "flag",
   anuncios: "ads",
   escuela: "star",
-  cuenta: "person",
+  preferencias: "sliders",
   config: "gear",
   papelera: "trash",
   tema: "moon",
   comentarios: "info",
   avanzadas: "grid",
-  salir: "logout",
+  borrar: "reset",
 };
 
 function renderHub(ctx) {
   const { lang, storage } = ctx;
   const data = loadMas(storage);
-  const name = displayName(data.profile, lang);
-  const email = data.profile.email || tr(lang, "Perfil local", "Local profile");
-  const team = teamLabel(data.profile, lang);
   const unread = studioNotices(storage, lang).filter((item) => !data.read.includes(item.id)).length;
   const bell = iconBtn(tr(lang, "Notificaciones", "Notifications"), { "data-go": "mas/avisos" }, "bell");
   if (unread) bell.append(el("i", { class: "mas-badge", "aria-label": String(unread) }));
   const help = iconBtn(tr(lang, "Ayuda", "Help"), { "data-go": "mas/te-ayudamos" }, "help");
-  const account = button("", { class: "mas-account-row canva-plain", "data-go": "mas/cuenta" });
-  account.append(
-    el("span", { class: "mas-avatar is-person", text: initials(name, 1), "aria-hidden": "true" }),
-    el("span", { class: "mas-account-text" }, [
-      el("strong", { text: name }),
-      el("small", { text: email }),
-    ]),
-    el("span", { class: "mas-chev", "aria-hidden": "true" }, [icon("down")]),
-  );
-  const squad = button("", { class: "mas-account-row canva-plain", "data-go": "mas/cuenta/equipos" });
-  squad.append(
-    el("span", { class: "mas-avatar is-team", text: initials(team, 2), "aria-hidden": "true" }),
-    el("span", { class: "mas-account-text" }, [
-      el("strong", { text: team }),
-      el("small", { text: tr(lang, "Gratis · 1", "Free · 1") }),
-    ]),
-    el("span", { class: "mas-chev", "aria-hidden": "true" }, [icon("chev")]),
-  );
   const grouped = HUB_ROWS.filter((item) => item.group).map((item) => row(lang, { ...item, icon: ROW_ICON[item.id] }));
   const plain = HUB_ROWS.filter((item) => !item.group).map((item) => row(lang, { ...item, icon: ROW_ICON[item.id] }));
   return el("div", { class: "mas-page" }, [
@@ -412,9 +370,8 @@ function renderHub(ctx) {
       el("p", { text: tr(lang, "Da rienda suelta a tu creatividad con el kit de marca, las plantillas y ORVUPI IA. Todo se queda en este navegador.", "Use the brand kit, the templates, and ORVUPI AI. Everything stays in this browser.") }),
       el("a", { class: "mas-cta", href: "/work/", text: tr(lang, "Abrir ORVUPI Work", "Open ORVUPI Work") }),
     ]),
-    el("section", { class: "mas-card mas-account" }, [account, squad]),
     el("nav", { class: "mas-card mas-list", "aria-label": tr(lang, "Más", "More") }, grouped),
-    el("nav", { class: "mas-list is-plain", "aria-label": tr(lang, "Cuenta", "Account") }, plain),
+    el("nav", { class: "mas-list is-plain", "aria-label": tr(lang, "Preferencias", "Preferences") }, plain),
   ]);
 }
 
@@ -737,8 +694,8 @@ function renderAds(ctx, path) {
   }
   if (part === "vincular") {
     return el("div", { class: "mas-page" }, [
-      subhead(ctx, tr(lang, "Vincular cuenta", "Link an account"), "mas/anuncios"),
-      note(tr(lang, "No hay una cuenta publicitaria que vincular. Las herramientas de ORVUPI están en Apps.", "There is no ad account to link. ORVUPI tools are in Apps.")),
+      subhead(ctx, tr(lang, "Red de anuncios", "Ad network"), "mas/anuncios"),
+      note(tr(lang, "Studio no envía piezas a una red de anuncios. Las herramientas de ORVUPI están en Apps.", "Studio does not send pieces to an ad network. ORVUPI tools are in Apps.")),
       cta("Apps", null, "mas/apps"),
     ]);
   }
@@ -749,7 +706,7 @@ function renderAds(ctx, path) {
       row(lang, { es: "Crear anuncios", en: "Create ads", go: "mas/anuncios/crear", icon: "spark", tone: "purple" }),
       row(lang, { es: "Publicar", en: "Publish", go: "mas/anuncios/publicar", icon: "ads", tone: "purple" }),
       row(lang, { es: "Analizar", en: "Analyze", go: "mas/anuncios/analizar", icon: "grid", tone: "purple" }),
-      row(lang, { es: "Vincular cuenta", en: "Link an account", go: "mas/anuncios/vincular", icon: "link", tone: "purple" }),
+      row(lang, { es: "Red de anuncios", en: "Ad network", go: "mas/anuncios/vincular", icon: "link", tone: "purple" }),
     ]),
   ]);
 }
@@ -772,62 +729,41 @@ function renderSchool(ctx) {
   ]);
 }
 
-const CUENTA_ROWS = [
-  ["perfil", "Mi perfil", "My profile", "person"],
-  ["seguridad", "Cuenta y seguridad", "Account and security", "shield"],
+const PREF_ROWS = [
+  ["idioma", "Idioma", "Language", "globe"],
   ["accesibilidad", "Accesibilidad", "Accessibility", "eye"],
   ["avisos", "Notificaciones", "Notifications", "bell"],
-  ["privacidad", "Controles de privacidad", "Privacy controls", "lock"],
+  ["privacidad", "Privacidad en este navegador", "Privacy on this browser", "lock"],
   ["datos", "Datos y almacenamiento", "Data and storage", "db"],
-  ["equipos", "Tus equipos", "Your teams", "team"],
-  ["ia", "Personalización de la IA", "AI personalization", "spark"],
-  ["vinculos", "Tus apps", "Your apps", "apps"],
+  ["ia", "ORVUPI IA", "ORVUPI AI", "spark"],
+  ["work", "Work en este navegador", "Work in this browser", "doc"],
 ];
+
+function prefsPart(path) {
+  if (path === "cuenta" || path === "preferencias") return "";
+  if (path.startsWith("cuenta/")) return path.slice("cuenta/".length);
+  if (path.startsWith("preferencias/")) return path.slice("preferencias/".length);
+  return null;
+}
 
 function renderCuenta(ctx, path) {
   const lang = ctx.lang;
-  const part = path === "cuenta" ? "" : path.slice("cuenta/".length);
+  const part = prefsPart(path);
   const data = loadMas(ctx.storage);
-  if (!part) {
+  if (part == null) return renderMissing(ctx);
+  if (part === "perfil") return renderIdioma(ctx);
+  if (part === "borrar") return renderClearPrefs(ctx);
+  if (!part || part === "seguridad" || part === "equipos") {
     return el("div", { class: "mas-page" }, [
-      subhead(ctx, tr(lang, "Tu cuenta", "Your account"), "mas"),
-      el("nav", { class: "mas-list is-plain" }, CUENTA_ROWS.map(([id, es, en, glyph]) => row(lang, {
-        es, en, icon: glyph, go: `mas/cuenta/${id}`, tone: "ink",
+      subhead(ctx, tr(lang, "Preferencias", "Preferences"), "mas"),
+      lead(tr(lang, "Opciones de este navegador.", "Options for this browser.")),
+      el("nav", { class: "mas-list is-plain" }, PREF_ROWS.map(([id, es, en, glyph]) => row(lang, {
+        es, en, icon: glyph, go: `mas/preferencias/${id}`, tone: "ink",
       }))),
     ]);
   }
-  const back = "mas/cuenta";
-  if (part === "perfil") {
-    const current = typeof location === "undefined" ? "" : location.pathname.replace(/\/+$/, "") || "/";
-    const langs = [
-      ["/studio/", "es", "Español"],
-      ["/en/studio/", "en", "English"],
-      ["/pt-br/studio/", "pt-BR", "Português"],
-      ["/ja/studio/", "ja", "日本語"],
-      ["/ko/studio/", "ko", "한국어"],
-    ];
-    return el("div", { class: "mas-page" }, [
-      subhead(ctx, tr(lang, "Mi perfil", "My profile"), back),
-      lead(tr(lang, "El nombre y el correo se quedan en este navegador. No hay cuenta obligatoria.", "The name and email stay in this browser. No account is required.")),
-      field(tr(lang, "Nombre", "Name"), textInput("profile.name", data.profile.name, 80, tr(lang, "Visitante", "Guest"))),
-      field(tr(lang, "Correo", "Email"), textInput("profile.email", data.profile.email, 120, tr(lang, "Opcional", "Optional"))),
-      field(tr(lang, "¿Para qué vas a usar ORVUPI?", "What will you use ORVUPI for?"), area("profile.about", data.profile.about, "")),
-      field(tr(lang, "Redes", "Social"), textInput("profile.social", data.profile.social, 80, "@")),
-      h2(tr(lang, "Idioma", "Language")),
-      el("div", { class: "mas-langs" }, langs.map(([href, code, label]) => el("a", {
-        href,
-        lang: code,
-        text: label,
-        "aria-current": current === href.replace(/\/+$/, "") || `${current}/` === href ? "true" : null,
-      }))),
-    ]);
-  }
-  if (part === "seguridad") {
-    return el("div", { class: "mas-page" }, [
-      subhead(ctx, tr(lang, "Cuenta y seguridad", "Account and security"), back),
-      note(tr(lang, "Studio no guarda una contraseña en un servidor. El perfil y los diseños se quedan en este navegador.", "Studio does not store a password on a server. The profile and designs stay in this browser.")),
-    ]);
-  }
+  const back = "mas/preferencias";
+  if (part === "idioma") return renderIdioma(ctx);
   if (part === "accesibilidad") {
     return el("div", { class: "mas-page" }, [
       subhead(ctx, tr(lang, "Accesibilidad", "Accessibility"), back),
@@ -857,28 +793,12 @@ function renderCuenta(ctx, path) {
   if (part === "privacidad") {
     return el("div", { class: "mas-page" }, [
       subhead(ctx, tr(lang, "Controles de privacidad", "Privacy controls"), back),
-      note(tr(lang, "Las búsquedas y el perfil no salen de este navegador.", "Searches and the profile do not leave this browser.")),
+      note(tr(lang, "Las búsquedas se quedan en este navegador.", "Searches stay in this browser.")),
       toggle(lang, "Recordar la búsqueda de esta pestaña", "Remember search on this tab", "privacy.searches", data.privacy.searches),
       toggle(lang, "Personalizar el inicio con tus diseños", "Personalize Home with your designs", "privacy.home", data.privacy.home),
     ]);
   }
   if (part === "datos") return renderDatos(ctx, data);
-  if (part === "equipos") {
-    return el("div", { class: "mas-page" }, [
-      subhead(ctx, tr(lang, "Tus equipos", "Your teams"), back),
-      el("article", { class: "mas-card mas-account" }, [
-        el("div", { class: "mas-account-row" }, [
-          el("span", { class: "mas-avatar is-team", text: initials(teamLabel(data.profile, lang), 2) }),
-          el("span", { class: "mas-account-text" }, [
-            el("strong", { text: teamLabel(data.profile, lang) }),
-            el("small", { text: tr(lang, "Gratis · 1 persona", "Free · 1 person") }),
-          ]),
-        ]),
-      ]),
-      field(tr(lang, "Nombre del equipo", "Team name"), textInput("profile.team", data.profile.team, 80, "ORVUPI")),
-      note(tr(lang, "Un equipo local. Studio no invita a otras personas.", "One local team. Studio does not invite other people.")),
-    ]);
-  }
   if (part === "ia") {
     return el("div", { class: "mas-page" }, [
       subhead(ctx, tr(lang, "Personalización de la IA", "AI personalization"), back),
@@ -887,28 +807,44 @@ function renderCuenta(ctx, path) {
       button(tr(lang, "Borrar chats de ORVUPI IA", "Clear ORVUPI AI chats"), { class: "mas-danger canva-plain", "data-mas-clear": "chats" }),
     ]);
   }
-  if (part === "vinculos") {
+  if (part === "work" || part === "vinculos") {
     return el("div", { class: "mas-page" }, [
-      subhead(ctx, tr(lang, "Tus apps", "Your apps"), back),
-      toggle(lang, "Usar Work en este navegador", "Use Work in this browser", "linked.work", data.linked.work),
-      note(tr(lang, data.linked.work ? "Work puede guardar una copia local del diseño." : "Work queda marcado como no usado en este perfil.", data.linked.work ? "Work can keep a local copy of the design." : "Work is marked unused on this profile.")),
-      el("div", { class: "mas-apps" }, ORVUPI_APPS.slice(0, 6).map((item) => el("a", {
-        class: "mas-app",
-        href: localHref(item.href),
-      }, [
-        el("strong", { text: tr(lang, item.es, item.en) }),
-        el("span", { class: "mas-chev", "aria-hidden": "true" }, [icon("chev")]),
-      ]))),
+      subhead(ctx, tr(lang, "Work en este navegador", "Work in this browser"), back),
+      toggle(lang, "Guardar una copia local en Work", "Keep a local copy in Work", "linked.work", data.linked.work),
+      note(tr(lang, data.linked.work ? "Work puede guardar una copia del diseño en este navegador." : "Work no guarda una copia desde Studio.", data.linked.work ? "Work can keep a copy of the design in this browser." : "Work does not keep a copy from Studio.")),
+      el("a", { class: "mas-cta", href: "/work/", text: tr(lang, "Abrir ORVUPI Work", "Open ORVUPI Work") }),
     ]);
   }
-  return renderMissing(ctx, path);
+  return renderMissing(ctx);
+}
+
+function renderIdioma(ctx) {
+  const lang = ctx.lang;
+  const current = typeof location === "undefined" ? "" : location.pathname.replace(/\/+$/, "") || "/";
+  const langs = [
+    ["/studio/", "es", "Español"],
+    ["/en/studio/", "en", "English"],
+    ["/pt-br/studio/", "pt-BR", "Português"],
+    ["/ja/studio/", "ja", "日本語"],
+    ["/ko/studio/", "ko", "한국어"],
+  ];
+  return el("div", { class: "mas-page" }, [
+    subhead(ctx, tr(lang, "Idioma", "Language"), "mas/preferencias"),
+    lead(tr(lang, "El idioma abre la página de Studio en ese idioma.", "Language opens the Studio page in that language.")),
+    el("div", { class: "mas-langs" }, langs.map(([href, code, label]) => el("a", {
+      href,
+      lang: code,
+      text: label,
+      "aria-current": current === href.replace(/\/+$/, "") || `${current}/` === href ? "true" : null,
+    }))),
+  ]);
 }
 
 function renderDatos(ctx, data) {
   const lang = ctx.lang;
   const report = storageReport(ctx.storage);
   return el("div", { class: "mas-page" }, [
-    subhead(ctx, tr(lang, "Datos y almacenamiento", "Data and storage"), "mas/cuenta"),
+    subhead(ctx, tr(lang, "Datos y almacenamiento", "Data and storage"), "mas/preferencias"),
     el("p", { class: "mas-bytes", text: formatBytes(report.bytes) }),
     note(tr(lang, `${report.designs} elementos en la biblioteca · ${report.trash} en la papelera.`, `${report.designs} library items · ${report.trash} in trash.`)),
     el("ul", { class: "mas-keys" }, report.keys.map((item) => el("li", {}, [
@@ -922,10 +858,6 @@ function renderDatos(ctx, data) {
 }
 
 const CONFIG_BLOCKS = [
-  ["people", "Gestión de personas", "People", [
-    ["personas", "Personas", "People", "person"],
-    ["equipo", "Perfil del equipo", "Team profile", "team"],
-  ]],
   ["pay", "Pagos y planes", "Payments and plans", [
     ["pedidos", "Pedidos y facturas", "Orders and invoices", "bag"],
     ["suscripcion", "Suscripción", "Subscription", "card"],
@@ -942,7 +874,6 @@ const CONFIG_BLOCKS = [
 function renderConfig(ctx, path) {
   const lang = ctx.lang;
   const part = path === "config" ? "" : path.slice("config/".length);
-  const data = loadMas(ctx.storage);
   if (!part) {
     const blocks = CONFIG_BLOCKS.map(([, es, en, rows]) => el("section", {}, [
       h2(tr(lang, es, en)),
@@ -956,18 +887,11 @@ function renderConfig(ctx, path) {
     ]);
   }
   const back = "mas/config";
-  if (part === "personas") {
+  if (part === "personas" || part === "equipo") {
     return el("div", { class: "mas-page" }, [
-      subhead(ctx, tr(lang, "Personas", "People"), back),
-      field(tr(lang, "Nombre en este navegador", "Name in this browser"), textInput("profile.name", data.profile.name, 80, "")),
-      note(tr(lang, "Studio no invita personas. Hay un perfil en este navegador.", "Studio does not invite people. There is one profile in this browser.")),
-    ]);
-  }
-  if (part === "equipo") {
-    return el("div", { class: "mas-page" }, [
-      subhead(ctx, tr(lang, "Perfil del equipo", "Team profile"), back),
-      field(tr(lang, "Nombre del equipo", "Team name"), textInput("profile.team", data.profile.team, 80, "ORVUPI")),
-      note(tr(lang, "Gratis · 1. Sin asientos de pago.", "Free · 1. No paid seats.")),
+      subhead(ctx, tr(lang, "Configuración", "Settings"), back),
+      note(tr(lang, "El idioma, el tema y el almacenamiento están en Preferencias.", "Language, theme, and storage are in Preferences.")),
+      cta(tr(lang, "Abrir preferencias", "Open preferences"), null, "mas/preferencias"),
     ]);
   }
   if (part === "pedidos") {
@@ -1110,12 +1034,12 @@ function renderAdvanced(ctx) {
   ]);
 }
 
-function renderSignOut(ctx) {
+function renderClearPrefs(ctx) {
   const lang = ctx.lang;
   return el("div", { class: "mas-page" }, [
-    subhead(ctx, tr(lang, "Cerrar sesión", "Sign out"), "mas"),
-    note(tr(lang, "Se restablece el perfil local: nombre, correo y preferencias de cuenta. Los diseños se quedan. El tema también.", "This resets the local profile: name, email, and account preferences. Designs stay. So does the theme.")),
-    button(tr(lang, "Restablecer perfil local", "Reset local profile"), { class: "mas-danger canva-plain", "data-mas-signout": "" }),
+    subhead(ctx, tr(lang, "Borrar preferencias", "Clear preferences"), "mas"),
+    note(tr(lang, "Se borran los avisos, la privacidad y las opciones de ORVUPI IA de este navegador. Los diseños se quedan. El tema y la accesibilidad también.", "This clears notices, privacy, and ORVUPI AI options in this browser. Designs stay. So do the theme and accessibility.")),
+    button(tr(lang, "Borrar preferencias", "Clear preferences"), { class: "mas-danger canva-plain", "data-mas-signout": "" }),
   ]);
 }
 
@@ -1136,18 +1060,18 @@ function renderScreen(ctx, path) {
   if (path === "dream") return renderDream(ctx);
   if (path === "anuncios" || path.startsWith("anuncios/")) return renderAds(ctx, path);
   if (path === "escuela") return renderSchool(ctx);
-  if (path === "cuenta" || path.startsWith("cuenta/")) return renderCuenta(ctx, path);
+  if (path === "cuenta" || path.startsWith("cuenta/") || path === "preferencias" || path.startsWith("preferencias/")) return renderCuenta(ctx, path);
   if (path === "config" || path.startsWith("config/")) return renderConfig(ctx, path);
   if (path === "papelera") return renderTrash(ctx);
   if (path === "tema") return renderTema(ctx);
   if (path === "comentarios") return renderComments(ctx);
   if (path === "avanzadas") return renderAdvanced(ctx);
-  if (path === "salir") return renderSignOut(ctx);
+  if (path === "salir" || path === "borrar") return renderClearPrefs(ctx);
   return renderMissing(ctx);
 }
 
 function shellClass(path) {
-  const grad = !path || path.startsWith("cuenta") || path === "avisos" || path === "te-ayudamos" || path === "tema" || path === "salir" || path === "comentarios";
+  const grad = !path || path.startsWith("cuenta") || path.startsWith("preferencias") || path === "avisos" || path === "te-ayudamos" || path === "tema" || path === "salir" || path === "borrar" || path === "comentarios";
   return `${path ? "mas-sub" : "mas-hub"} ${grad ? "is-grad" : "is-plain"}`;
 }
 
@@ -1250,9 +1174,9 @@ export function handleMasClick(buttonNode, ctx) {
     return true;
   }
   if ("masSignout" in buttonNode.dataset) {
-    if (!ask(lang, "¿Restablecer el perfil local? Los diseños se quedan.", "Reset the local profile? Designs stay.")) return true;
+    if (!ask(lang, "¿Borrar las preferencias de este navegador? Los diseños se quedan.", "Clear preferences in this browser? Designs stay.")) return true;
     resetProfile(storage);
-    ui.flash = tr(lang, "Perfil local restablecido.", "Local profile reset.");
+    ui.flash = tr(lang, "Preferencias borradas.", "Preferences cleared.");
     applyMasChrome(storage);
     go(ctx, "mas");
     return true;
@@ -1271,13 +1195,13 @@ export function handleMasClick(buttonNode, ctx) {
     return true;
   }
   if (buttonNode.dataset.masClear === "all") {
-    if (!ask(lang, "¿Eliminar diseños, historial, chats y perfil de este navegador?", "Delete designs, history, chats, and the profile from this browser?")) return true;
+    if (!ask(lang, "¿Eliminar diseños, historial y chats de este navegador?", "Delete designs, history, and chats from this browser?")) return true;
     clearStudioData(storage);
     ui.flash = tr(lang, "Datos de Studio borrados de este navegador.", "Studio data cleared from this browser.");
     if (typeof ctx.onWipe === "function") ctx.onWipe();
     else {
       applyMasChrome(storage);
-      go(ctx, "mas/cuenta/datos");
+      go(ctx, "mas/preferencias/datos");
     }
     return true;
   }

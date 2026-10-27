@@ -36,13 +36,13 @@ export const HUB_ROWS = [
   { id: "dream", es: "Dream Lab", en: "Dream Lab", go: "mas/dream", tone: "purple", group: true },
   { id: "anuncios", es: "Anuncios", en: "Ads", go: "mas/anuncios", tone: "purple", group: true },
   { id: "escuela", es: "Design School", en: "Design School", go: "mas/escuela", tone: "purple", group: true },
-  { id: "cuenta", es: "Mi cuenta", en: "My account", go: "mas/cuenta", tone: "ink" },
+  { id: "preferencias", es: "Preferencias", en: "Preferences", go: "mas/preferencias", tone: "ink" },
   { id: "config", es: "Configuración", en: "Settings", go: "mas/config", tone: "ink" },
   { id: "papelera", es: "Papelera", en: "Trash", go: "mas/papelera", tone: "ink" },
   { id: "tema", es: "Tema", en: "Theme", go: "mas/tema", tone: "ink" },
   { id: "comentarios", es: "Ayuda y comentarios", en: "Help and feedback", go: "mas/comentarios", tone: "ink" },
   { id: "avanzadas", es: "Herramientas avanzadas", en: "Advanced tools", go: "mas/avanzadas", tone: "purple" },
-  { id: "salir", es: "Cerrar sesión", en: "Sign out", go: "mas/salir", tone: "ink", chevron: false },
+  { id: "borrar", es: "Borrar preferencias", en: "Clear preferences", go: "mas/preferencias/borrar", tone: "ink", chevron: false },
 ];
 
 export const ORVUPI_APPS = [
@@ -245,7 +245,6 @@ export function resetProfile(storage) {
   const next = defaultMas();
   next.theme = current.theme;
   next.a11y = current.a11y;
-  next.signedOutAt = new Date().toISOString();
   saveMas(storage, next);
   return next;
 }
