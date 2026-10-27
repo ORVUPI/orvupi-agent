@@ -18,7 +18,7 @@ El parámetro no se guarda. Recargar sin `preview=1` vuelve a la página apagada
 
 ## Qué hace la vista encendida
 
-- Barra principal en el orden de `web/v2/index.html`, con ARQIVEN después de Work. Los demás enlaces apuntan a orvupi.com. ARQIVEN se queda en esta página.
+- Barra principal en el orden de `web/v2/index.html`, con ARQIVEN después de Work. El chip de ese ítem y el icono de la barra lateral salen de `docs/orvupi-ia/assets/arqiven-logo-oficial.png` (variante 3 y variante 1). No hay un símbolo genérico. Los demás enlaces apuntan a orvupi.com. ARQIVEN se queda en esta página.
 - Saludo «¿En qué puedo ayudarte?» y caja «Pregunta lo que quieras».
 - Barra lateral plegable, nuevo chat, búsqueda de la sesión, proyectos y documentos marcados como pendientes.
 - Herramientas dentro de la caja. La voz dice que es una propuesta y no abre el micrófono.
@@ -43,5 +43,7 @@ Chrome headless 1366×900 de ventana, emulación, el 27 de octubre de 2026. No e
 El zoom es el de CSS, no el del menú del navegador. A 200 % la página crece hacia abajo y se puede recorrer; no se sale por el lado. No se usó un teléfono ni un monitor físico.
 
 En la misma pasada, con `preview=1`: el ítem ARQIVEN queda el actual y no cambia de URL; un atajo solo rellena la caja; enviar muestra «No hay respuesta generada»; la voz avisa que no abre el micrófono; Proyectos y Documentos se muestran; en 390 px el menú abre y un toque fuera lo cierra. La página apagada deja el recorrido en `display: none`.
+
+Tras colocar el logotipo oficial, las mismas anchuras volvieron a medirse: horizontal y vertical siguen en 0 px. Con la barra lateral contraída, el icono sigue visible y el horizontal sigue en 0 px.
 
 La página de funciones de la maqueta v02 no es la pantalla de inicio. Aquí no se ha copiado.

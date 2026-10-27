@@ -31,14 +31,20 @@ svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke
 .pill-link{border:1.5px solid #102032;border-radius:999px;padding:.28rem .7rem;text-decoration:none;color:inherit;font-size:.82rem;background:#fff}
 .sitenav{padding:.2rem 1rem .35rem}
 .sitenav ul{display:flex;flex-wrap:wrap;gap:.2rem .85rem;list-style:none;margin:0;padding:0}
-.sitenav a{color:#102032;text-decoration:none;font-weight:650;font-size:.92rem;border-radius:.4rem;padding:.15rem .1rem}
+.sitenav a{color:#102032;text-decoration:none;font-weight:650;font-size:.92rem;border-radius:.4rem;padding:.15rem .1rem;display:inline-flex;align-items:center;gap:.35rem}
 .sitenav a[aria-current="page"]{color:#d12659}
+.crop{position:relative;display:block;overflow:hidden;container-type:inline-size;flex:0 0 auto}
+.crop img{position:absolute;max-width:none;height:auto}
+.crop-icon{width:1.85rem;height:calc(1.85rem * 482 / 496)}
+.crop-icon img{width:calc(100cqw * 1254 / 496);left:calc(100cqw * -381 / 496);top:calc(100cqw * -109 / 496)}
+.crop-pink{width:1.15rem;height:calc(1.15rem * 253 / 258);border-radius:.32rem}
+.crop-pink img{width:calc(100cqw * 1254 / 258);left:calc(100cqw * -811 / 258);top:calc(100cqw * -911 / 258)}
+.crop-lockup{width:min(18rem,78vw);height:calc(min(18rem,78vw) * 650 / 854);margin:0 auto .9rem}
+.crop-lockup img{width:calc(100cqw * 1254 / 854);left:calc(100cqw * -199 / 854);top:calc(100cqw * -106 / 854)}
 .site-note{margin:0;padding:0 1rem .6rem;font-size:.75rem;color:#6d6256}
 .sidebar{background:var(--side);padding:1.1rem .8rem 1rem;display:flex;flex-direction:column;gap:1rem;min-width:0}
 .brandrow{display:flex;align-items:center;justify-content:space-between;gap:.4rem}
 .brand{display:flex;align-items:center;gap:.55rem;font-weight:650;letter-spacing:-.03em;text-decoration:none;color:inherit;min-width:0}
-.mark{width:1.9rem;height:1.9rem;border-radius:50%;background:#ffe7ef;color:#d12659;display:grid;place-items:center;flex:0 0 auto}
-.mark svg{width:1.1rem;height:1.1rem}
 .ghost{border:0;background:transparent;border-radius:.5rem;padding:.35rem}
 .ghost:hover{background:#ececec}
 .new,.nav button{width:100%;border:0;background:transparent;border-radius:.6rem;padding:.65rem .75rem;text-align:left;display:flex;gap:.6rem;align-items:center}
@@ -114,6 +120,7 @@ textarea{width:100%;border:0;resize:none;min-height:3.2rem;max-height:8rem;paddi
 <body>
 <section class="gate" id="gate">
   <p class="tag">Demostración de interfaz · apagada</p>
+  <span class="crop crop-lockup"><img src="../assets/arqiven-logo-oficial.png" alt=""></span>
   <h1>ARQIVEN no está activada</h1>
   <p>Esta página es un esqueleto de diseño de la Fase 0. No hay un modelo conectado y no forma parte de orvupi.com. ORVUPI sigue siendo el sitio. ARQIVEN es la marca del producto. La ficha de un modelo propio, cuando exista, dirá Arqiven-N. Esta vista no carga Arqiven-1.</p>
   <p>La vista de revisión se abre con el parámetro <code>preview=1</code>. Sin ese parámetro no se muestra el recorrido.</p>
@@ -135,7 +142,7 @@ textarea{width:100%;border:0;resize:none;min-height:3.2rem;max-height:8rem;paddi
         <li><a href="https://orvupi.com/">Inicio</a></li>
         <li><a href="https://orvupi.com/#herramientas">Herramientas</a></li>
         <li><a href="https://orvupi.com/work/">Work</a></li>
-        <li><a href="#chat" id="nav-arqiven" aria-current="page">ARQIVEN</a></li>
+        <li><a href="#chat" id="nav-arqiven" aria-current="page"><span class="crop crop-pink" aria-hidden="true"><img src="../assets/arqiven-logo-oficial.png" alt=""></span>ARQIVEN</a></li>
         <li><a href="https://orvupi.com/memes/">Memes</a></li>
         <li><a href="https://orvupi.com/novedades/">Novedades</a></li>
         <li><a href="https://orvupi.com/community/">Comunidad</a></li>
@@ -149,7 +156,7 @@ textarea{width:100%;border:0;resize:none;min-height:3.2rem;max-height:8rem;paddi
   <div class="app-body">
   <aside class="sidebar" id="sidebar" aria-label="Navegación de la demostración">
     <div class="brandrow">
-      <a class="brand hide-collapsed" href="#chat" id="home-link"><span class="mark" aria-hidden="true"><svg><use href="#spark"/></svg></span> ARQIVEN</a>
+      <a class="brand" href="#chat" id="home-link"><span class="crop crop-icon" aria-hidden="true"><img src="../assets/arqiven-logo-oficial.png" alt=""></span><span class="hide-collapsed">ARQIVEN</span></a>
       <button type="button" class="ghost" id="collapse" aria-label="Contraer barra lateral"><svg aria-hidden="true"><use href="#side"/></svg></button>
     </div>
     <button type="button" class="new" id="new-chat"><svg aria-hidden="true"><use href="#plus"/></svg><span class="hide-collapsed">Nuevo chat</span></button>
@@ -230,7 +237,6 @@ textarea{width:100%;border:0;resize:none;min-height:3.2rem;max-height:8rem;paddi
   </div>
 </div>
 <svg hidden aria-hidden="true"><defs>
-<symbol id="spark" viewBox="0 0 24 24"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5Z"/></symbol>
 <symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
 <symbol id="chat" viewBox="0 0 24 24"><path d="M20 11.5a8 8 0 0 1-8 8H4l1.8-4.1A8 8 0 1 1 20 11.5Z"/><path d="M8 10h8M8 14h5"/></symbol>
 <symbol id="doc" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z"/><path d="M14 3v6h6"/></symbol>

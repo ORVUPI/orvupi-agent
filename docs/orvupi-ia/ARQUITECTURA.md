@@ -15,6 +15,24 @@ ARQIVEN es la marca del producto. ORVUPI es el sitio. La familia de modelos se e
 
 `provider` vale `"third-party"`, `"arqiven"` o `"none"`. `"arqiven"` queda reservado a un checkpoint de la familia. Los siete modelos actuales no lo usan. `capabilities()` no lista un id `arqiven-*` hasta que ese checkpoint exista y la evaluación lo sostenga.
 
+### Logotipo
+
+El propietario confirmó el 27 de octubre de 2026 la hoja oficial, 1254×1254. En esta fase el archivo está en `docs/orvupi-ia/assets/arqiven-logo-oficial.png`. SHA256 `f0b8294692096b5d81151e1702e22fdfbe686a535e8cd834c72323af0000812b`, 1 681 304 bytes. No está en `web/v2/`: copiarlo ahí lo publicaría el siguiente despliegue de Pages. La ruta prevista, cuando se autorice, es `web/v2/assets/arqiven/logo-oficial.png`, con el mismo hash.
+
+La hoja trae las tres variantes. Las cajas están medidas sobre el PNG, en píxeles, origen arriba a la izquierda:
+
+| Variante | Qué es | Caja |
+| --- | --- | --- |
+| 1, icono | Tentáculos en azul oscuro y «A» en el negativo, sobre blanco | x 381, y 109, ancho 496, alto 482 |
+| 1, wordmark | ARQIVEN en el mismo azul, debajo del icono | x 200, y 618, ancho 850, alto 135 |
+| 1, conjunto | Icono y wordmark, el bloque que cabe en una cabecera | x 199, y 106, ancho 854, alto 650 |
+| 2 | Icono blanco sobre el recuadro azul. El corte vertical de la hoja está en x 628; el azul empieza en y 836 | Icono blanco: x 181, y 903, ancho 288, alto 278 |
+| 3 | Icono blanco dentro del cuadrado rosa de esquinas redondas | x 811, y 911, ancho 258, alto 253 |
+
+El azul del trazo y del wordmark mide `(16, 32, 50)`, que es `#102032`. El campo rosa de la variante 3, en este raster, se agrupa alrededor de `(252, 45, 99)`, cerca de `#FC2D63`, no el `#FF3070` del encargo. No se recolorea el archivo. El rosa de interfaz que ya usa el esqueleto sigue siendo `#FF3070`.
+
+El esqueleto no recorta un segundo PNG. Enseña la variante 1 (conjunto) en la página apagada, el icono de la variante 1 en la marca lateral y la variante 3 como chip del ítem ARQIVEN, con `overflow` sobre este mismo archivo.
+
 ### Barra principal
 
 La barra es `<nav class="site">` en 110 HTML de `web/v2/`, no un componente. El detalle del conteo está en [AUDITORIA.md](AUDITORIA.md). El ítem se inserta después de Work:

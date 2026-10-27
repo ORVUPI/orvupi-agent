@@ -12,6 +12,7 @@ Esta entrega no conecta un modelo, no entrena pesos y no publica nada en orvupi.
 | [ARQUITECTURA.md](ARQUITECTURA.md) | Núcleo común con Work y Studio, ruta `/arqiven/` e identificadores Arqiven-N. |
 | [PLAN-IMPLEMENTACION.md](PLAN-IMPLEMENTACION.md) | Primera implementación en rama, flags, reversión y ficha del experimento. |
 | [PAQUETE.md](PAQUETE.md) | SHA256 del paquete y SHA del HEAD auditado. |
-| [prototipo/](prototipo/README.md) | Esqueleto visual apagado por defecto. Muestra la barra del sitio con el ítem ARQIVEN. No es el producto. |
+| [prototipo/](prototipo/README.md) | Esqueleto visual apagado por defecto. Muestra la barra del sitio con el ítem ARQIVEN y el logotipo oficial. No es el producto. |
+| [assets/arqiven-logo-oficial.png](assets/arqiven-logo-oficial.png) | Hoja oficial 1254×1254. SHA256 `f0b8294692096b5d81151e1702e22fdfbe686a535e8cd834c72323af0000812b`. No está en el sitio público. |
 
 No existe `AGENTS.md` en este repositorio. Las normas usadas son `README.md`, `CONTRIBUTING.md` y `docs/ORVUPI.md`.

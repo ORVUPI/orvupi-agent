@@ -29,7 +29,8 @@ Orden del encargo, sección 7. Cada fila es un cambio pequeño y reversible.
 | 3. Cliente ARQIVEN de prueba | El prototipo de `docs/orvupi-ia/prototipo/`, todavía fuera de `web/v2/` | Sustituir el aviso «sin modelo» por eventos del contrato cuando el flag de prueba esté encendido. Las tareas no hechas siguen diciéndolo. El contexto de prueba usa ids de la biblioteca, no un almacén nuevo. | Sitemap, las 110 copias de `<nav class="site">`, idiomas publicados |
 | 4. Studio | `web/v2/studio/lib/ia-chat.mjs`, `web/v2/studio/views.mjs`, `web/v2/studio/lib/ai-optional.mjs` | Chat marca `rules`. El rail pasa a «Textos rápidos». Se quita la espera de 1000 ms llamada «Pensando…» o se cambia el texto para que no simule un modelo. | Catálogo de plantillas, diseños guardados |
 | 5. Puente con Work y Studio | `web/v2/studio/lib/work-store.mjs`, `apps/work/src/storage/db.ts` y un test con IndexedDB desechable | Comprobar ida y vuelta de un archivo de prueba. El cliente ARQIVEN lee y escribe por el mismo `WORK_DB` (`orvupi-work`, versión 1) y escucha `BroadcastChannel("orvupi-work")`. No abrir la base de un usuario real. | Versión 1 del esquema, salvo que el test demuestre una rotura. No se fusionan los hilos de chat de Work y de Studio. |
-| 6. Barra, cuando se autorice | Las 110 copias de `<nav class="site">` en `web/v2/`, más `web/v2/arqiven/` y las cuatro carpetas de idioma | Insertar `<li><a href="/arqiven/">ARQIVEN</a></li>` después de Work. El texto no se traduce. `aria-current="page"` solo en esas páginas. | `web/v2/sitemap.xml` hasta la autorización. `details.mapa` no sustituye a la barra. |
+| 6. Barra, cuando se autorice | Las 110 copias de `<nav class="site">` en `web/v2/`, más `web/v2/arqiven/` y las cuatro carpetas de idioma | Insertar el ítem después de Work. El texto es ARQIVEN y no se traduce. `aria-current="page"` solo en esas páginas. El chip, si se mantiene, usa la variante 3 del logotipo. | `web/v2/sitemap.xml` hasta la autorización. `details.mapa` no sustituye a la barra. |
+| 7. Logotipo publicado, en el mismo paso que la ruta | `web/v2/assets/arqiven/logo-oficial.png`, favicon de `/arqiven/` | Copiar el PNG de `docs/orvupi-ia/assets/` sin cambiar bytes: el SHA256 tiene que seguir siendo `f0b8294692096b5d81151e1702e22fdfbe686a535e8cd834c72323af0000812b`. Exportar la variante 3 a `favicon-32.png` y a un icono de 192 para `apple-touch-icon`, al modo de `/work/favicon-32.png`. La hoja entera no se usa como favicon. | No sustituir el avatar de ORVUPI ni el favicon de Work o Studio. |
 
 La pantalla ARQIVEN no se copia a `web/v2/arqiven/` en el paso 3, y el ítem no se añade a la barra. El alojamiento real publica ese directorio. Hace falta, antes de copiarla:
 
@@ -42,7 +43,8 @@ La pantalla ARQIVEN no se copia a `web/v2/arqiven/` en el paso 3, y el ítem no 
 ## Qué enseñará la interfaz
 
 - Cromo del producto: ARQIVEN. La cabecera del sitio sigue diciendo ORVUPI. Saludo «¿En qué puedo ayudarte?», caja «Pregunta lo que quieras», rosa `#FF3070` y azul `#102032`.
-- Barra principal de revisión, en el mismo orden que `web/v2/index.html`, con ARQIVEN después de Work. Es una maqueta: no navega a una ruta publicada.
+- Barra principal de revisión, en el mismo orden que `web/v2/index.html`, con ARQIVEN después de Work. El chip de ese ítem es la variante 3 del logotipo oficial. Es una maqueta: no navega a una ruta publicada.
+- Marca lateral: icono de la variante 1 (tentáculos y «A» en el negativo) y la palabra ARQIVEN. Al contraer la barra queda el icono. El símbolo genérico anterior no se usa.
 - Herramientas dentro de la caja. La acción elegida queda visible.
 - Sugerencias «Crear un texto», «Analizar un documento», «Aprender algo» y «Programar» como atajos de tarea, con un texto que no promete que el modelo sepa hacerlas.
 - Voz marcada como propuesta. No se llama a `getUserMedia`.

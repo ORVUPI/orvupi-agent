@@ -17,6 +17,8 @@ El paquete de encargo usa «ORVUPI IA» como nombre de producto. El propietario 
 | Identificador de máquina | `arqiven-1-experimental` | Campo `modelId`. No es el rótulo de la interfaz |
 | Sitio | ORVUPI | Cabecera, Work, Studio, token |
 
+El logotipo oficial es la hoja 1254×1254 en `docs/orvupi-ia/assets/arqiven-logo-oficial.png` (SHA256 `f0b8294692096b5d81151e1702e22fdfbe686a535e8cd834c72323af0000812b`). No está en `web/v2/`. Las cajas de las tres variantes están en [ARQUITECTURA.md](ARQUITECTURA.md).
+
 «ORVUPI IA» deja de usarse como nombre comercial. El código auditado todavía pinta «ORVUPI AI» en `apps/work/src/ai/AiStudio.tsx` (título, botones, `console.info`) y en el sistema de `hybrid.ts` y `prompts.ts`. Eso es el estado actual, no la marca acordada. Cambiar esas cadenas es de la fase de interfaz.
 
 Renombrar Qwen, LFM2 o SmolLM2 a Arqiven-N no crea un modelo de la familia. Los siete del catálogo siguen siendo de terceros.

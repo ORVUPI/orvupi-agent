@@ -39,3 +39,17 @@ Los cinco archivos de contenido coinciden con `04_MANIFIESTO`. El manifiesto no 
 La maqueta es una referencia visual. Sus respuestas son ejemplos fijos. No se ha copiado a `web/v2/` y no se presenta como producto.
 
 El paquete nombra el producto «ORVUPI IA». El propietario, el 27 de octubre de 2026, fija la marca visible en ARQIVEN y la familia de modelos en Arqiven-N. Esa decisión no cambia estos hashes: cambia el nombre que usan el informe, la arquitectura y el esqueleto. El id de experimento del paquete no se adopta; el reservado es `arqiven-1-experimental`, con ficha «Arqiven-1 experimental».
+
+## Logotipo oficial
+
+El propietario confirmó la hoja adjunta como logotipo de ARQIVEN. Se guardó tal cual, sin recomprimir.
+
+| Campo | Valor |
+| --- | --- |
+| Ruta en esta fase | `docs/orvupi-ia/assets/arqiven-logo-oficial.png` |
+| Ruta pública prevista | `web/v2/assets/arqiven/logo-oficial.png`, solo cuando se autorice `/arqiven/` |
+| Píxeles | 1254 × 1254 |
+| Bytes | 1 681 304 |
+| SHA256 | `f0b8294692096b5d81151e1702e22fdfbe686a535e8cd834c72323af0000812b` |
+
+No hay copia en `web/v2/`. Las tres variantes y las cajas medidas están en [ARQUITECTURA.md](ARQUITECTURA.md).

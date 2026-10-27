@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, test } from "node:test";
 import { repoRoot } from "../src/paths.js";
+
+const LOGO_SHA256 = "f0b8294692096b5d81151e1702e22fdfbe686a535e8cd834c72323af0000812b";
 
 const root = repoRoot();
 
@@ -19,7 +22,12 @@ describe("ARQIVEN fase 0", () => {
     assert.match(pack, /arqiven-1-experimental/);
     assert.equal(existsSync(path.join(root, "web/v2/ia/index.html")), false);
     assert.equal(existsSync(path.join(root, "web/v2/arqiven/index.html")), false);
+    assert.equal(existsSync(path.join(root, "web/v2/assets/arqiven/logo-oficial.png")), false);
     assert.equal(read("web/v2/index.html").includes("ARQIVEN"), false);
+    const logo = path.join(root, "docs/orvupi-ia/assets/arqiven-logo-oficial.png");
+    const hash = createHash("sha256").update(readFileSync(logo)).digest("hex");
+    assert.equal(hash, LOGO_SHA256);
+    assert.match(pack, new RegExp(LOGO_SHA256));
   });
 
   test("la marca visible es ARQIVEN y la ficha es Arqiven-N", () => {
@@ -51,7 +59,9 @@ describe("ARQIVEN fase 0", () => {
     assert.equal(html.includes("orvupi-text-experimental"), false);
     assert.match(html, /No hay respuesta generada/);
     assert.match(html, /get\("preview"\) === "1"/);
-    assert.match(html, /aria-current="page">ARQIVEN</);
+    assert.match(html, /id="nav-arqiven"[^>]*aria-current="page"/);
+    assert.match(html, /assets\/arqiven-logo-oficial\.png/);
+    assert.equal(html.includes('href="#spark"'), false);
     assert.match(html, /arqiven-1-experimental/);
     assert.equal(html.includes("localStorage"), false);
     assert.equal(html.includes("getUserMedia"), false);
