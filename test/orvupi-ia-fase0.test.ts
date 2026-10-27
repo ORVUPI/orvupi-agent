@@ -21,9 +21,10 @@ describe("ARQIVEN fase 0", () => {
     assert.match(pack, /ecb9dd6f489d4748970913f854aef5d5971507d2fb7d24c7804b3c33900d3ba9/);
     assert.match(pack, /arqiven-1-experimental/);
     assert.equal(existsSync(path.join(root, "web/v2/ia/index.html")), false);
-    assert.equal(existsSync(path.join(root, "web/v2/arqiven/index.html")), false);
-    assert.equal(existsSync(path.join(root, "web/v2/assets/arqiven/logo-oficial.png")), false);
-    assert.equal(read("web/v2/index.html").includes("ARQIVEN"), false);
+    assert.equal(existsSync(path.join(root, "web/v2/arqiven/index.html")), true);
+    const published = readFileSync(path.join(root, "web/v2/assets/arqiven/logo-oficial.png"));
+    assert.equal(createHash("sha256").update(published).digest("hex"), LOGO_SHA256);
+    assert.match(read("web/v2/index.html"), /href="\/work\/"[\s\S]{0,500}href="\/arqiven\/"/);
     const logo = path.join(root, "docs/orvupi-ia/assets/arqiven-logo-oficial.png");
     const hash = createHash("sha256").update(readFileSync(logo)).digest("hex");
     assert.equal(hash, LOGO_SHA256);

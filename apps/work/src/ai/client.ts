@@ -1,0 +1,22 @@
+/** Envoltorio del motor. Apagado salvo localStorage arqiven-core=1.
+ * No renombra Qwen, LFM2 ni SmolLM2 a Arqiven-N.
+ */
+
+import { settleResult, type AiRequest, type AiResult } from "./contract";
+
+export function coreEnabled(): boolean {
+  try {
+    return globalThis.localStorage?.getItem("arqiven-core") === "1";
+  } catch {
+    return false;
+  }
+}
+
+export async function runWorkGenerate<T extends { text: string }>(
+  request: AiRequest,
+  generate: () => Promise<T & { modelId: string; provider: AiResult["provider"]; mode: AiResult["mode"]; checkpoint?: boolean; modelVersion?: string }>,
+): Promise<T & AiResult> {
+  const raw = await generate();
+  const settled = settleResult(request, raw);
+  return { ...raw, ...settled };
+}

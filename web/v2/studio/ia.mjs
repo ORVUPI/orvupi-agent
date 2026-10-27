@@ -21,6 +21,9 @@ import {
   withAssistantMessage,
   withUserMessage,
 } from "./lib/ia-chat.mjs";
+import { catalogAsk } from "../shared/ia/contract.mjs";
+
+if (typeof globalThis.__ORVUPI_AI_ASK__ !== "function") globalThis.__ORVUPI_AI_ASK__ = catalogAsk;
 
 const SVG_NS = "http:" + "//www.w3.org/2000/svg";
 
@@ -611,6 +614,10 @@ function landingScreen(data, lang, text) {
   return el("div", { class: "ia-landing" }, [
     el("h1", { id: "ia-saludo", text: greeting(data.name, lang) }),
     el("p", { text: text.sub }),
+    el("p", { class: "ia-arqiven" }, [
+      el("span", { text: lang === "en" ? "These answers come from the Studio catalog. " : "Estas respuestas salen del catálogo de Studio. " }),
+      el("a", { href: "/arqiven/", text: "ARQIVEN" }),
+    ]),
   ]);
 }
 

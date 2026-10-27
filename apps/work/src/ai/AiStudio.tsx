@@ -12,6 +12,8 @@ import { createId } from "../security/names";
 import { downloadBytes } from "../security/bytes";
 import { openEditorWindow, editorPath } from "../routing/paths";
 import { publishFilesChanged } from "../routing/sync";
+import { buildWorkRequest } from "./contract";
+import { coreEnabled, runWorkGenerate } from "./client";
 
 export type AiTask = Intent["action"];
 export type InsertMode = "insert" | "replace" | "below";
@@ -324,7 +326,15 @@ export function AiStudio({
       for (const options of attempts) {
         if (stopRef.current) return null;
         let acc = "";
-        const r = await engine.generate(messages, maxTokens, (chunk) => { acc += chunk; setOutput(cleanOutput(acc)); }, options).catch(() => null);
+        const r = await (coreEnabled()
+          ? runWorkGenerate(
+            buildWorkRequest({ task, messages, contextRefs: fileId ? [fileId] : [] }),
+            async () => {
+              const next = await engine.generate(messages, maxTokens, (chunk) => { acc += chunk; setOutput(cleanOutput(acc)); }, options);
+              return { ...next, modelId: current.id, provider: "third-party" as const, mode: "model" as const, checkpoint: false };
+            },
+          )
+          : engine.generate(messages, maxTokens, (chunk) => { acc += chunk; setOutput(cleanOutput(acc)); }, options)).catch(() => null);
         if (!r) break;
         tokens += r.tokens;
         const text = cleanOutput(r.text);

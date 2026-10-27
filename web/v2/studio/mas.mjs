@@ -368,7 +368,7 @@ function renderHub(ctx) {
         el("span", { class: "mas-crown", "aria-hidden": "true" }, [crown()]),
         el("span", { text: tr(lang, "Alcanza tus objetivos de diseño con ORVUPI", "Reach your design goals with ORVUPI") }),
       ]),
-      el("p", { text: tr(lang, "Da rienda suelta a tu creatividad con el kit de marca, las plantillas y ORVUPI IA. Todo se queda en este navegador.", "Use the brand kit, the templates, and ORVUPI AI. Everything stays in this browser.") }),
+      el("p", { text: tr(lang, "Da rienda suelta a tu creatividad con el kit de marca, las plantillas y el catálogo. Todo se queda en este navegador.", "Use the brand kit, the templates, and the catalog. Everything stays in this browser.") }),
       el("a", { class: "mas-cta", href: "/work/", text: tr(lang, "Abrir ORVUPI Work", "Open ORVUPI Work") }),
     ]),
     el("nav", { class: "mas-card mas-list", "aria-label": tr(lang, "Más", "More") }, grouped),
@@ -420,10 +420,10 @@ function renderHelp(ctx) {
   return el("div", { class: "mas-page" }, [
     subhead(ctx, tr(lang, "Te ayudamos", "We can help"), "mas"),
     el("h2", { class: "mas-display", text: tr(lang, "¿En qué te puedo ayudar?", "What can I help you with?") }),
-    lead(tr(lang, "ORVUPI IA responde con el catálogo de Studio en este navegador.", "ORVUPI AI answers from the Studio catalog in this browser.")),
+    lead(tr(lang, "El catálogo responde con las plantillas de Studio en este navegador.", "The catalog answers from Studio templates in this browser.")),
     el("div", { class: "mas-actions" }, prompts.map((text) => button(text, { class: "mas-chip canva-plain", "data-mas-help": text }))),
     el("a", { class: "mas-cta", href: "mailto:orvupi.hq@gmail.com", text: "orvupi.hq@gmail.com" }),
-    cta(tr(lang, "Abrir ORVUPI IA", "Open ORVUPI AI"), null, "ia"),
+    cta(tr(lang, "Abrir catálogo", "Open catalog"), null, "ia"),
   ]);
 }
 
@@ -658,11 +658,11 @@ function renderDream(ctx) {
       ]),
       (() => {
         const node = button("", { class: "mas-feature is-ia canva-plain", "data-go": "ia" });
-        node.append(el("strong", { text: "ORVUPI IA" }), el("span", { text: tr(lang, "Diseñar con el chat", "Design with the chat") }));
+        node.append(el("strong", { text: "Catálogo" }), el("span", { text: tr(lang, "Diseñar con el chat", "Design with the chat") }));
         return node;
       })(),
     ]),
-    cta("ORVUPI IA", null, "ia"),
+    cta("Catálogo", null, "ia"),
     el("a", { class: "mas-cta mas-cta-secondary", href: localHref("/aprender/"), text: tr(lang, "Abrir Aprender", "Open Learn") }),
   ]);
 }
@@ -736,7 +736,7 @@ const PREF_ROWS = [
   ["avisos", "Notificaciones", "Notifications", "bell"],
   ["privacidad", "Privacidad en este navegador", "Privacy on this browser", "lock"],
   ["datos", "Datos y almacenamiento", "Data and storage", "db"],
-  ["ia", "ORVUPI IA", "ORVUPI AI", "spark"],
+  ["ia", "Catálogo", "Catalog", "spark"],
   ["work", "Work en este navegador", "Work in this browser", "doc"],
 ];
 
@@ -803,9 +803,9 @@ function renderCuenta(ctx, path) {
   if (part === "ia") {
     return el("div", { class: "mas-page" }, [
       subhead(ctx, tr(lang, "Personalización de la IA", "AI personalization"), back),
-      toggle(lang, "Guardar el historial de ORVUPI IA", "Keep ORVUPI AI history", "ai.history", data.ai.history),
-      note(tr(lang, "Si lo apagas, se borran los chats de ORVUPI IA en este navegador. Las plantillas siguen en el catálogo.", "Turning this off clears ORVUPI AI chats in this browser. Templates stay in the catalog.")),
-      button(tr(lang, "Borrar chats de ORVUPI IA", "Clear ORVUPI AI chats"), { class: "mas-danger canva-plain", "data-mas-clear": "chats" }),
+      toggle(lang, "Guardar el historial del catálogo", "Keep catalog history", "ai.history", data.ai.history),
+      note(tr(lang, "Si lo apagas, se borran los chats del catálogo en este navegador. Las plantillas siguen en el catálogo.", "Turning this off clears catalog chats in this browser. Templates stay in the catalog.")),
+      button(tr(lang, "Borrar chats del catálogo", "Clear catalog chats"), { class: "mas-danger canva-plain", "data-mas-clear": "chats" }),
     ]);
   }
   if (part === "work" || part === "vinculos") {
@@ -1014,7 +1014,7 @@ function renderComments(ctx) {
     ]))),
     el("a", { class: "mas-cta", href: "mailto:orvupi.hq@gmail.com", text: "orvupi.hq@gmail.com" }),
     el("a", { class: "mas-cta mas-cta-secondary", href: localHref("/studio/reglas/"), text: tr(lang, "Reglas y recursos", "Rules and assets") }),
-    cta(tr(lang, "Preguntar a ORVUPI IA", "Ask ORVUPI AI"), null, "mas/te-ayudamos"),
+    cta(tr(lang, "Preguntar al catálogo", "Ask the catalog"), null, "mas/te-ayudamos"),
   ]);
 }
 
@@ -1039,7 +1039,7 @@ function renderClearPrefs(ctx) {
   const lang = ctx.lang;
   return el("div", { class: "mas-page" }, [
     subhead(ctx, tr(lang, "Borrar preferencias", "Clear preferences"), "mas"),
-    note(tr(lang, "Se borran los avisos, la privacidad y las opciones de ORVUPI IA de este navegador. Los diseños se quedan. El tema y la accesibilidad también.", "This clears notices, privacy, and ORVUPI AI options in this browser. Designs stay. So do the theme and accessibility.")),
+    note(tr(lang, "Se borran los avisos, la privacidad y las opciones del catálogo de este navegador. Los diseños se quedan. El tema y la accesibilidad también.", "This clears notices, privacy, and catalog options in this browser. Designs stay. So do the theme and accessibility.")),
     button(tr(lang, "Borrar preferencias", "Clear preferences"), { class: "mas-danger canva-plain", "data-mas-signout": "" }),
   ]);
 }
@@ -1200,7 +1200,7 @@ export function handleMasClick(buttonNode, ctx) {
     return true;
   }
   if (buttonNode.dataset.masClear === "chats") {
-    if (!ask(lang, "¿Borrar los chats de ORVUPI IA en este navegador?", "Clear ORVUPI AI chats in this browser?")) return true;
+    if (!ask(lang, "¿Borrar los chats del catálogo en este navegador?", "Clear catalog chats in this browser?")) return true;
     clearIaChats(storage);
     ui.flash = tr(lang, "Chats borrados.", "Chats cleared.");
     refresh();

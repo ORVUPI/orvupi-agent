@@ -885,7 +885,7 @@ const SHORTCUTS = [
   ["graficos", "Gráficos", "Charts", "#10B981", "M5 19V5M9 19v-6M13 19V9M17 19v-9"],
   ["fondo", "Fondo", "Background", "#A855F7", "M4 6h16v12H4zM8 14l2-2 2 2 3-3 3 3"],
   ["subidos", "Subidos", "Uploads", "#64748B", "M12 16V6M8 10l4-4 4 4M5 18h14"],
-  ["ia", "ORVUPI IA", "ORVUPI AI", "#6D28D9", "M12 3l1.2 4.2L17.5 8.5 13.2 9.8 12 14l-1.2-4.2L6.5 8.5l4.3-1.3z"],
+  ["ia", "Catálogo", "Catalog", "#6D28D9", "M12 3l1.2 4.2L17.5 8.5 13.2 9.8 12 14l-1.2-4.2L6.5 8.5l4.3-1.3z"],
   ["elementos", "Elementos", "Elements", "#EC4899", "M12 4l2 5h5l-4 3 2 5-5-3-5 3 2-5-4-3h5z"],
   ["marca", "Marca", "Brand", "#102032", "M12 3l2.2 5.2L20 9l-4 3.6L17.2 18 12 15.4 6.8 18 8 12.6 4 9l5.8-.8z"],
 ];
@@ -2255,7 +2255,7 @@ function stageNode(ctx) {
 }
 
 const STRIP = [
-  ["ia", "ORVUPI IA", "ORVUPI AI", null],
+  ["ia", "Textos rápidos", "Quick text", null],
   ["plantillas", "Plantillas", "Templates", ["M4 4h7v7H4z", "M13 4h7v7h-7z", "M4 13h7v7H4z", "M13 13h7v7h-7z"]],
   ["elementos", "Elementos", "Elements", ["M5 5h6v6H5z", "M13 8h6", "M13 12h6", "M13 16h4", "M5 14h6v5H5z"]],
   ["texto", "Texto", "Text", ["M5 6h14", "M12 6v12", "M8 18h8"]],
@@ -2890,7 +2890,7 @@ function selectionPill(ctx) {
   const layer = primary(state);
   if (!layer || !state.selected.includes(layer.id)) return null;
   const en = lang === "en";
-  const ask = button(en ? "ORVUPI AI" : "ORVUPI IA", { class: "pill-ia", "data-rail": "ia" });
+  const ask = button(en ? "Quick text" : "Textos rápidos", { class: "pill-ia", "data-rail": "ia" });
   ask.prepend(el("img", { src: studioAsset("assets/orvupi-avatar.png"), alt: "" }));
   const magic = iconBtn(en ? "Magic" : "Magia", { id: "magia-capa", class: "pill-btn" }, ["M15 4l1.2 3.2L19.4 8.4 16.2 9.6 15 12.8 13.8 9.6 10.6 8.4l3.2-1.2z", "M6 14l.7 1.8L8.5 16.5 6.7 17.2 6 19l-.7-1.8L3.5 16.5l1.8-.7z"]);
   const lock = iconBtn(t("bloquear"), { class: "pill-btn", "data-action": "lock", "aria-pressed": layer.locked ? "true" : "false" }, ["M8 11V8a4 4 0 0 1 8 0v3", "M6 11h12v9H6z"]);

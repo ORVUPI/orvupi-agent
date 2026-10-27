@@ -1,6 +1,25 @@
 # Plan de la primera implementación
 
-Esta rama no implementa el motor ni la pantalla pública. El siguiente trabajo, en otra revisión de la misma línea, es la interfaz de prueba y el envoltorio del motor de Work. El entrenamiento queda descrito al final y no se ejecuta.
+La pantalla `/arqiven/`, la barra y el envoltorio del contrato ya están en esta rama. No hay despliegue a Cloudflare y no hay entrenamiento. El motor propio sigue sin existir: la página pública responde con `provider: "none"` y `modelId: "none"`.
+
+## Hecho en esta revisión
+
+El propietario autorizó la ruta. Estas filas sustituyen el plan de «todavía no copiar»:
+
+| Pieza | Estado |
+| --- | --- |
+| `<nav class="site">` y `details.mapa` | ARQIVEN justo después de Work, y también después de Studio en el mapa. 110 páginas ya existentes, más las cinco de `/arqiven/`. El rótulo no se traduce. `aria-current="page"` solo en esas cinco. |
+| `/arqiven/` y `/en/`, `/pt-br/`, `/ja/`, `/ko/` | Interfaz usable. Saludo, caja, herramientas, chips y barra lateral. Sin respuestas de la maqueta. |
+| Logotipo | `web/v2/assets/arqiven/logo-oficial.png` con el mismo SHA256. Favicon 32 y 192 salen de la variante 3. |
+| Contrato | `web/v2/shared/ia/contract.mjs` y `apps/work/src/ai/contract.ts` más `client.ts`. `arqiven-core` solo si `localStorage` vale `1`. Por defecto AiStudio no pasa por el envoltorio. |
+| Studio | El chat del catálogo sigue siendo determinista. El gancho vacío no sustituye el texto. El rail de frases se llama «Textos rápidos». La espera dice «Buscando en el catálogo…». |
+| Puente | «Guardar en Work» crea una nota nueva (`orvupi-note` v1) y avisa por `BroadcastChannel("orvupi-work")`. No reescribe una nota anterior. |
+| Sitemap | Cinco URL, porque la ruta ya está autorizada. Sigue sin desplegarse. |
+| CSP | `/arqiven/` hereda `connect-src 'self'`. No descarga pesos, así que no se abre el origen de Hugging Face. |
+
+`arqiven-central` no es una clave de `localStorage`: la ruta es la página. Para quitarla del árbol, se revierten estos commits. `arqiven-core` en Work vuelve al camino anterior en cuanto la clave no es `1`. No se borran `engine.ts`, `hybrid.ts`, `worker.ts` ni `download.ts`.
+
+Lo que sigue debajo es el plan con el que se preparó la fase. Donde diga que la pantalla aún no se copia, manda esta sección.
 
 ## Flag y reversión
 

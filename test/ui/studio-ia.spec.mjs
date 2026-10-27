@@ -13,7 +13,7 @@ test("ORVUPI IA móvil: landing, cajón, currículum y proyecto de empresa", asy
 
   await page.getByRole("button", { name: "Chats recientes" }).click();
   await expect(page.locator("[data-ia-screen='chats']")).toContainText("Todos tus chats aparecerán aquí");
-  await expect(page.locator("[data-ia-screen='chats']")).toContainText("Empieza a diseñar con ORVUPI IA");
+  await expect(page.locator("[data-ia-screen='chats']")).toContainText("Empieza con el catálogo de Studio");
   await page.getByRole("button", { name: "Memoria" }).click();
   await expect(page.locator("[data-ia-screen='memoria']")).toContainText("Biblioteca de memorias");
   await expect(page.locator("[data-ia-screen='memoria']")).toContainText("Acerca de mí");
@@ -37,7 +37,7 @@ test("ORVUPI IA móvil: landing, cajón, currículum y proyecto de empresa", asy
   const prompt = page.locator("#ia-prompt");
   await prompt.fill("Quiero plantillas de currículum");
   await page.getByRole("button", { name: "Enviar" }).click();
-  await expect(page.locator(".ia-think")).toContainText("Pensando");
+  await expect(page.locator(".ia-think")).toContainText("Buscando en el catálogo");
   await expect(page.locator(".ia-octo")).toHaveAttribute("src", /orvupi-avatar\.png/);
   await expect(page.getByRole("button", { name: "Parar" })).toBeVisible();
   await expect(page.locator(".canva-nav")).toHaveCount(0);
