@@ -27,14 +27,14 @@ type Layer = {
   h: number;
   locked?: boolean;
   props?: { text?: string; fill?: string };
-  src?: { id?: string };
+  src?: { id?: string; kind?: string };
 };
 
 type Doc = {
   id: string;
   name: string;
   templateId: string;
-  background: { fill: string };
+  background: { type?: string; fill: string; catalogId?: string };
   format: { id: string; width: number; height: number };
   layers: Layer[];
 };
@@ -221,5 +221,111 @@ describe("studio fase 1 catálogo", () => {
     assert.ok(meme);
     assert.match(JSON.stringify(meme), /orvupi-buen-humor/);
     assert.match(textsOf(meme), /pulpo/);
+  });
+
+  test("abrir conserva el diseño de cada ficha del inventario", async () => {
+    const { documentForOpen, inventoryCounts } = await load<{
+      documentForOpen: (id: string) => Doc | null;
+      inventoryCounts: () => {
+        thumbs: number;
+        plantillas: number;
+        fotos: number;
+        elementos: number;
+        fotosArchivo: number;
+        catalogo: number;
+      };
+    }>("lib/open-target.mjs");
+    const { documentForThumb } = await load<{ documentForThumb: (id: string) => Doc | null }>("lib/thumb-docs.mjs");
+    const { THUMBS } = await load<{ THUMBS: { id: string }[] }>("lib/thumbs.mjs");
+    const { PLANTILLAS, instantiate } = await load<{
+      PLANTILLAS: { id: string }[];
+      instantiate: (id: string) => Doc | null;
+    }>("lib/plantillas.mjs");
+    const { browsePhotos, browseElements } = await load<{
+      browsePhotos: () => { id: string; es: string; scene: { w: number; h: number } }[];
+      browseElements: () => { id: string; es: string; scene: { w: number; h: number } }[];
+    }>("lib/library.mjs");
+    const { listPhotos } = await load<{
+      listPhotos: () => { id: string; width?: number; height?: number }[];
+    }>("lib/photos.mjs");
+    const catalog = JSON.parse(readStudio("catalog.json")) as {
+      items: { id: string; tipo: string; fill?: string }[];
+    };
+    const counts = inventoryCounts();
+    assert.equal(counts.thumbs, 485);
+    assert.equal(counts.plantillas, PLANTILLAS.length);
+    assert.ok(counts.fotos >= 180);
+    assert.ok(counts.elementos >= 100);
+    assert.ok(counts.fotosArchivo >= 1);
+    assert.ok(counts.catalogo >= 3);
+
+    function geometry(doc: Doc) {
+      return JSON.stringify({
+        name: doc.name,
+        templateId: doc.templateId,
+        format: doc.format,
+        fill: doc.background.fill,
+        bg: doc.background,
+        texts: textsOf(doc),
+        layers: doc.layers.map((layer) => ({
+          type: layer.type,
+          x: layer.x,
+          y: layer.y,
+          w: layer.w,
+          h: layer.h,
+          text: layer.props?.text || "",
+          src: layer.src?.id || "",
+        })),
+      });
+    }
+
+    assert.equal(THUMBS.length, 485);
+    for (const item of THUMBS) {
+      const opened = documentForOpen(item.id);
+      const own = documentForThumb(item.id);
+      assert.ok(opened, item.id);
+      assert.ok(own, item.id);
+      assert.equal(opened.templateId, item.id);
+      assert.equal(geometry(opened), geometry(own), item.id);
+    }
+    for (const item of PLANTILLAS) {
+      const opened = documentForOpen(item.id);
+      const own = instantiate(item.id);
+      assert.ok(opened, item.id);
+      assert.ok(own, item.id);
+      assert.equal(opened.templateId, item.id);
+      assert.equal(geometry(opened), geometry(own), item.id);
+    }
+    for (const item of [...browsePhotos(), ...browseElements()]) {
+      const opened = documentForOpen(item.id);
+      assert.ok(opened, item.id);
+      assert.equal(opened.templateId, item.id);
+      assert.equal(opened.name, item.es);
+      assert.equal(opened.format.width, Math.round(item.scene.w));
+      assert.equal(opened.format.height, Math.round(item.scene.h));
+      assert.equal(opened.layers[0]?.src?.id, item.id);
+      assert.equal(opened.layers[0]?.src?.kind, "catalog");
+    }
+    for (const photo of listPhotos()) {
+      const opened = documentForOpen(photo.id);
+      assert.ok(opened, photo.id);
+      assert.equal(opened.templateId, photo.id);
+      assert.equal(opened.layers[0]?.src?.kind, "library");
+      assert.equal(opened.layers[0]?.src?.id, photo.id);
+      assert.equal(opened.format.width, Math.round(photo.width || 640));
+      assert.equal(opened.format.height, Math.round(photo.height || 480));
+    }
+    for (const item of catalog.items.filter((entry) => entry.tipo === "avatar" || entry.tipo === "fondo")) {
+      const opened = documentForOpen(item.id);
+      assert.ok(opened, item.id);
+      assert.equal(opened.templateId, item.id);
+      if (item.tipo === "fondo") {
+        assert.equal(opened.background.type, "catalog");
+        assert.equal(opened.background.catalogId, item.id);
+        assert.equal(opened.layers.length, 0);
+      } else {
+        assert.equal(opened.layers[0]?.src?.id, item.id);
+      }
+    }
   });
 });

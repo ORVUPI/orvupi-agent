@@ -49,7 +49,9 @@ import { photoById } from "./lib/photos.mjs";
 import { IDEAS, filterPlantillas, instantiate } from "./lib/plantillas.mjs";
 import { parseSeriesText } from "./lib/chart-data.mjs";
 import { parseTableText } from "./lib/table-data.mjs";
+import { documentForOpen } from "./lib/open-target.mjs";
 import { documentForThumb } from "./lib/thumb-docs.mjs";
+import { thumbById } from "./lib/thumbs.mjs";
 import {
   adoptLegacyDraft,
   createContainer,
@@ -73,7 +75,7 @@ import { queryFromHash, routeFromHash } from "./lib/route.mjs";
 import { pushNotice } from "./lib/mas-store.mjs";
 import { bindIaRuntime, handleIaClick, handleIaFile, handleIaInput, handleIaKeydown } from "./ia.mjs";
 import { applyMasChrome, handleMasClick, handleMasInput, renderMas } from "./mas.mjs";
-import { canvaNav, catalogBody, layerStyle, renderDesigns, renderEditor, renderHome, renderIa, renderLibrary, renderMarca, renderPlantillas, renderRecursos, sizeDialog } from "./views.mjs";
+import { canvaNav, catalogBody, layerStyle, renderDesigns, renderEditor, renderHome, renderIa, renderLibrary, renderMarca, renderPlantillas, renderRecursos, sizeDialog, templatePreview } from "./views.mjs";
 
 const root = document.getElementById("studio-root");
 const lang = (document.documentElement.lang || "es").toLowerCase().startsWith("en") ? "en" : "es";
@@ -657,6 +659,11 @@ const state = {
   createCat: "para-ti",
   fileMenu: false,
   preview: false,
+  openPreview: "",
+  previewPage: 0,
+  pop: "",
+  editMenu: false,
+  drawColor: "#102032",
   page: 0,
   grid: false,
   notesOpen: false,
@@ -910,6 +917,10 @@ function openDoc(doc, options = {}) {
   state.dialog = false;
   state.resizing = false;
   state.preview = false;
+  state.openPreview = "";
+  state.previewPage = 0;
+  state.pop = "";
+  state.editMenu = false;
   state.notesOpen = false;
   state.editingId = "";
   state.cropping = false;
@@ -1004,7 +1015,7 @@ function shellRail(doc) {
 
 function openThumb(id) {
   const doc = documentForThumb(id);
-  if (!doc) return;
+  if (!doc || doc.templateId !== id) return;
   openDoc(doc);
 }
 
@@ -1269,6 +1280,11 @@ function render() {
   else if (view === "marca") renderMarca(ctx);
   else if (view === "recursos") renderRecursos(ctx);
   else renderEditor(ctx);
+  if (state.openPreview) {
+    const modal = templatePreview(ctx);
+    if (modal) root.append(modal);
+    else state.openPreview = "";
+  }
   applyStageFit();
   focusEditing();
   if (state.dialog && !document.getElementById("dialogo-tamano")) root.append(sizeDialog(ctx));
@@ -1363,6 +1379,8 @@ function applyStageFit() {
   frame.style.width = `${Math.round(state.doc.format.width * state.scale)}px`;
   frame.style.height = `${Math.round(state.doc.format.height * state.scale)}px`;
   art.style.transform = `scale(${state.scale})`;
+  const zoom = root.querySelector("#zoom-indicador");
+  if (zoom) zoom.textContent = `${Math.round(state.scale * 100)}%`;
 }
 
 function focusEditing() {
@@ -1959,6 +1977,36 @@ function onRootClick(event) {
     const field = document.getElementById("buscar");
     if (field instanceof HTMLInputElement) field.focus();
   }
+  if (buttonNode.id === "cerrar-plantilla" || buttonNode.dataset.closePreview != null) {
+    state.openPreview = "";
+    state.previewPage = 0;
+    render();
+    return;
+  }
+  if (buttonNode.dataset.personalizar) {
+    const id = buttonNode.dataset.personalizar;
+    if (thumbById(id)) openThumb(id);
+    else {
+      const opened = documentForOpen(id);
+      if (opened && opened.templateId === id) openDoc(opened);
+    }
+    return;
+  }
+  if (buttonNode.dataset.previewPage != null && state.openPreview) {
+    state.previewPage = Number(buttonNode.dataset.previewPage) || 0;
+    render();
+    return;
+  }
+  const previewId = buttonNode.dataset.thumb
+    || buttonNode.dataset.template
+    || buttonNode.dataset.asset
+    || (buttonNode.dataset.idea ? IDEAS.find((item) => item.id === buttonNode.dataset.idea)?.plantilla : "");
+  if (previewId && documentForOpen(previewId)?.templateId === previewId) {
+    state.openPreview = previewId;
+    state.previewPage = 0;
+    render();
+    return;
+  }
   if (buttonNode.dataset.thumb) openThumb(buttonNode.dataset.thumb);
   if (buttonNode.dataset.go) go(buttonNode.dataset.go);
   if (buttonNode.id === "crear-pieza" || "openCreate" in buttonNode.dataset) {
@@ -2074,6 +2122,7 @@ function onRootClick(event) {
   }
   if (buttonNode.id === "abrir-archivo") {
     state.fileMenu = !state.fileMenu;
+    state.editMenu = false;
     render();
   }
   if (buttonNode.id === "redimensionar") {
@@ -2147,7 +2196,69 @@ function onRootClick(event) {
   }
   if (buttonNode.dataset.rail) {
     state.rail = buttonNode.dataset.rail;
+    state.panelOpen = true;
+    state.pop = "";
     render();
+  }
+  if (buttonNode.id === "menu-editar-btn") {
+    state.editMenu = !state.editMenu;
+    state.fileMenu = false;
+    render();
+  }
+  if (buttonNode.dataset.pageCmd === "duplicate") duplicateCurrentPage();
+  if (buttonNode.dataset.pageCmd === "delete") deleteCurrentPage();
+  if (buttonNode.id === "compartir-studio") {
+    if (compartir && !compartir.hidden) compartir.click();
+    else descargar?.click();
+  }
+  if (buttonNode.dataset.pop) {
+    state.pop = state.pop === buttonNode.dataset.pop ? "" : buttonNode.dataset.pop;
+    render();
+    return;
+  }
+  if (buttonNode.dataset.drawColor) {
+    state.drawColor = buttonNode.dataset.drawColor;
+    state.tool = "draw";
+    render();
+  }
+  if (buttonNode.dataset.effect && state.doc) {
+    const layer = primary();
+    if (layer?.type === "text") {
+      snapshot();
+      const next = buttonNode.dataset.effect === "ninguno" ? "" : buttonNode.dataset.effect;
+      layer.props.effect = layer.props.effect === next ? "" : next;
+      scheduleSave();
+      render();
+    }
+  }
+  if (buttonNode.dataset.anim && state.doc) {
+    const layer = primary();
+    if (layer) {
+      snapshot();
+      const next = buttonNode.dataset.anim === "ninguna" ? "" : buttonNode.dataset.anim;
+      layer.anim = layer.anim === next ? "" : next;
+      scheduleSave();
+      render();
+    }
+  }
+  if (buttonNode.dataset.photoBg) {
+    const item = photoById(buttonNode.dataset.photoBg);
+    if (item && state.doc) {
+      addLayer(imageLayer({
+        name: (item.nombre?.[lang] || item.nombre?.es || item.id).slice(0, 40),
+        x: 0,
+        y: 0,
+        w: state.doc.format.width,
+        h: state.doc.format.height,
+        src: { kind: "library", id: item.id },
+      }));
+      const placed = primary();
+      if (placed) {
+        placed.z = Math.min(...state.doc.layers.map((entry) => entry.z)) - 1;
+        scheduleSave();
+        render();
+      }
+    }
   }
   if (buttonNode.dataset.tool) {
     state.tool = buttonNode.dataset.tool;
@@ -2164,6 +2275,7 @@ function onRootClick(event) {
     if (targets.length) {
       snapshot();
       for (const layer of targets) layer.props.fontId = buttonNode.dataset.font;
+      state.pop = "";
       scheduleSave();
       render();
     }
@@ -2431,6 +2543,32 @@ function bindStage() {
     const art = event.target.closest?.(".stage-art");
     if (!state.doc || !art) return;
     if (event.target.closest?.("[data-edit]")) return;
+    if (state.tool === "erase") {
+      event.preventDefault();
+      snapshot();
+      const wipe = (node, ev) => {
+        const point = stagePoint(node, ev);
+        const hit = [...state.doc.layers].reverse().find((layer) => {
+          if (layer.locked || (layer.type !== "line" && layer.type !== "rect")) return false;
+          return point.x >= layer.x - 14 && point.x <= layer.x + layer.w + 14 && point.y >= layer.y - 14 && point.y <= layer.y + layer.h + 14;
+        });
+        if (!hit) return;
+        state.doc.layers = state.doc.layers.filter((layer) => layer.id !== hit.id);
+        state.selected = state.selected.filter((id) => id !== hit.id);
+      };
+      wipe(art, event);
+      const move = (ev) => {
+        const live = root.querySelector(".stage-art");
+        if (live) wipe(live, ev);
+      };
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", () => {
+        window.removeEventListener("pointermove", move);
+        scheduleSave();
+        render();
+      }, { once: true });
+      return;
+    }
     if (cropEdge) {
       event.preventDefault();
       event.stopPropagation();
@@ -2514,6 +2652,18 @@ function startDrag(id, event) {
   };
   const up = () => {
     window.removeEventListener("pointermove", move);
+    if (layer?.type === "image" && !layer.groupId && state.doc) {
+      const format = state.doc.format;
+      const area = (layer.w * layer.h) / Math.max(1, format.width * format.height);
+      const near = layer.x <= 48 && layer.y <= 48 && layer.x + layer.w >= format.width - 48 && layer.y + layer.h >= format.height - 48;
+      if (area >= 0.72 || near) {
+        layer.x = 0;
+        layer.y = 0;
+        layer.w = format.width;
+        layer.h = format.height;
+        layer.z = Math.min(...state.doc.layers.map((entry) => entry.z)) - 1;
+      }
+    }
     scheduleSave();
     render();
   };
@@ -2545,19 +2695,40 @@ function startResize(id, event) {
 
 function startDraw(point, event) {
   snapshot();
-  const layer = lineLayer({ x: point.x, y: point.y, w: 8, h: 8, color: BRAND.navy, strokeWidth: 8 });
-  layer.z = Math.max(0, ...state.doc.layers.map((item) => item.z)) + 1;
-  state.doc.layers.push(layer);
-  state.selected = [layer.id];
-  const art = root.querySelector(".stage-art");
+  let last = point;
+  let count = 0;
+  const place = (a, b) => {
+    if (!state.doc || state.doc.layers.length >= 48 || count > 36) return;
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const len = Math.hypot(dx, dy);
+    if (len < 4) return;
+    const layer = lineLayer({
+      x: a.x,
+      y: a.y - 4,
+      w: Math.max(2, len),
+      h: 8,
+      color: state.drawColor || BRAND.navy,
+      strokeWidth: 8,
+    });
+    layer.rotation = Math.atan2(dy, dx) * 180 / Math.PI;
+    layer.z = Math.max(0, ...state.doc.layers.map((item) => item.z)) + 1;
+    state.doc.layers.push(layer);
+    state.selected = [layer.id];
+    count += 1;
+  };
   const move = (ev) => {
+    const art = root.querySelector(".stage-art");
+    if (!art) return;
     const next = stagePoint(art, ev);
-    layer.w = Math.max(8, next.x - layer.x);
-    layer.h = Math.max(8, Math.abs(next.y - layer.y));
+    if (Math.hypot(next.x - last.x, next.y - last.y) < 12) return;
+    place(last, next);
+    last = next;
   };
   window.addEventListener("pointermove", move);
   window.addEventListener("pointerup", () => {
     window.removeEventListener("pointermove", move);
+    if (!count) place(point, { x: point.x + 8, y: point.y + 4 });
     scheduleSave();
     render();
   }, { once: true });
@@ -2745,7 +2916,28 @@ function bindInputs() {
       }
       scheduleSave();
     }
-    if (target.id === "color-texto" || target.id === "tamano-texto" || target.id === "interlineado") {
+    if (target.dataset.chartField != null && target.dataset.chartRow != null) {
+      const layer = primary();
+      if (layer?.type === "chart") {
+        const index = Number(target.dataset.chartRow);
+        const labels = (layer.props.labels || []).slice();
+        const values = (layer.props.values || []).slice();
+        if (target.dataset.chartField === "label") labels[index] = String(target.value || "").slice(0, 40);
+        else values[index] = Math.max(0, Math.min(1e6, Number(target.value) || 0));
+        layer.props = { ...layer.props, labels, values };
+        const caret = target.selectionStart;
+        scheduleSave();
+        render();
+        const next = root.querySelector(`[data-chart-row="${index}"][data-chart-field="${target.dataset.chartField}"]`);
+        if (next instanceof HTMLInputElement) {
+          next.focus();
+          const at = Math.min(caret ?? next.value.length, next.value.length);
+          try { next.setSelectionRange(at, at); } catch { /* number inputs */ }
+        }
+        return;
+      }
+    }
+    if (target.id === "color-texto" || target.id === "tamano-texto" || target.id === "interlineado" || target.id === "interletrado") {
       const layer = primary();
       if (layer?.type === "text") {
         if (target.id === "color-texto") {
@@ -2755,11 +2947,13 @@ function bindInputs() {
         }
         if (target.id === "tamano-texto") layer.props.size = Math.min(400, Math.max(8, Math.round(Number(target.value) || layer.props.size)));
         if (target.id === "interlineado") layer.props.lineHeight = Math.min(3, Math.max(0.8, Number(target.value) || layer.props.lineHeight));
+        if (target.id === "interletrado") layer.props.letterSpacing = Math.min(40, Math.max(-8, Number(target.value) || 0));
         const node = root.querySelector(`.capa[data-id="${layer.id}"] .capa-texto`);
         if (node instanceof HTMLElement) {
           node.style.color = layer.props.color;
           node.style.fontSize = `${layer.props.size}px`;
           node.style.lineHeight = String(layer.props.lineHeight);
+          node.style.letterSpacing = `${layer.props.letterSpacing || 0}px`;
         }
         scheduleSave();
       }
@@ -2831,7 +3025,7 @@ function bindInputs() {
   root.addEventListener("focusin", (event) => {
     const target = event.target;
     if (!(target instanceof HTMLElement) || !state.doc) return;
-    if (target.matches("#tamano-texto, #interlineado, #fondo-color, #color-texto, #contorno-color, [data-opacidad], [data-stroke], #texto-capa")) snapshot();
+    if (target.matches("#tamano-texto, #interlineado, #interletrado, #fondo-color, #color-texto, #contorno-color, [data-opacidad], [data-stroke], #texto-capa, [data-chart-field]")) snapshot();
   });
   root.addEventListener("mousedown", (event) => {
     const keep = event.target.closest?.("[data-style], [data-size], [data-font], [data-text-align], #color-texto, [data-action], .editor-bar, #barra-texto, .tira");
@@ -2906,6 +3100,12 @@ function startCrop(edge, event) {
 }
 
 function onKey(event) {
+  if (event.key === "Escape" && state.openPreview) {
+    state.openPreview = "";
+    state.previewPage = 0;
+    render();
+    return;
+  }
   if (event.key === "Escape" && state.designSheet) {
     state.designSheet = "";
     render();

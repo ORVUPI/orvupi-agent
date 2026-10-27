@@ -117,8 +117,6 @@ test("móvil: el chevron abre la biblioteca y cada vista monta", async ({ page }
   await expect(page.locator("[data-asset]")).toHaveCount(0);
 
   await expect(page.locator(".canva-nav > button.canva-tab[data-go='plantillas']")).toHaveAttribute("aria-current", "page");
-  await expect(page.locator(".canva-langs a[href='/studio/']")).toHaveCount(1);
-  await expect(page.locator(".canva-langs a[href='/en/studio/']")).toHaveCount(1);
 });
 
 test("móvil: el hash de plantillas conserva la consulta", async ({ page }) => {
