@@ -1,6 +1,8 @@
 import { isLocale, LOCALES } from "../i18n";
 import { useEffect, useMemo, useState } from "react";
+import { DOC_DOWNLOADS } from "../docs/downloads";
 import type { ExportKind } from "../docs/DocsEditor";
+import { PdfScreen } from "../pdf/PdfScreen";
 import { ProgressBar } from "../ui/kit";
 import { AiStudio } from "../ai/AiStudio";
 import { CommandPalette, type Command } from "../ui/CommandPalette";
@@ -15,7 +17,7 @@ import { FormsScreen } from "../forms/FormsScreen";
 import { NotesScreen } from "../notes/NotesScreen";
 import { SheetsScreen } from "../sheets/SheetScreen";
 import { SlidesScreen } from "../slides/SlidesScreen";
-import { DocsScreen, HomeScreen, LaterScreen, SearchResults, SettingsScreen, TemplateLibrary } from "../views/screens";
+import { DocsScreen, HomeScreen, SearchResults, SettingsScreen, TemplateLibrary } from "../views/screens";
 import { useWorkspace, type ViewId } from "./workspace";
 
 export function App() {
@@ -88,13 +90,7 @@ export function App() {
 
   const exportItems = useMemo(() => {
     if (workspace.session) {
-      const kinds: Array<{ id: ExportKind; label: string }> = [
-        { id: "pdf", label: workspace.t("exportPdf") },
-        { id: "html", label: workspace.t("exportHtml") },
-        { id: "txt", label: workspace.t("exportTxt") },
-        { id: "orvdoc", label: workspace.t("exportOrvdoc") },
-        { id: "docx", label: workspace.t("exportDocx") },
-      ];
+      const kinds: Array<{ id: ExportKind; label: string }> = DOC_DOWNLOADS.map((item) => ({ id: item.id, label: workspace.t(item.labelKey) }));
       return kinds.map((kind) => ({
         id: kind.id,
         label: kind.label,
@@ -133,7 +129,7 @@ export function App() {
   else if (workspace.view === "forms") content = <FormsScreen />;
   else if (workspace.view === "drawings") content = <DrawingsScreen />;
   else if (workspace.view === "notes") content = <NotesScreen />;
-  else if (workspace.view === "pdf") content = <LaterScreen view="pdf" />;
+  else if (workspace.view === "pdf") content = <PdfScreen />;
   else if (workspace.view === "ai") content = <div className="ow-page ow-ai-page"><h1>{workspace.t("aiTitle")}</h1><AiStudio locale={workspace.locale} storage={workspace.storage} files={workspace.files} /></div>;
 
   if (workspace.bootError) {
@@ -153,10 +149,11 @@ export function App() {
   const editorOpen = Boolean(
     workspace.openDocId || workspace.openSheetId || workspace.openSlideId || workspace.openFormId || workspace.openDrawingId || workspace.openNoteId,
   );
+  const pdfOpen = workspace.view === "pdf" && Boolean(workspace.openPdfId) && !workspace.query.trim();
 
   return (
     <ShellFrame
-      className={editorOpen ? "is-doc" : ""}
+      className={editorOpen ? "is-doc" : pdfOpen ? "is-pdf" : ""}
       skip={workspace.t("skip")}
       sidebar={
         <Sidebar
