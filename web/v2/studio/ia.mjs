@@ -1,5 +1,6 @@
 /** ORVUPI IA: chat móvil sobre #/ia. El pulpo es el logo y el indicador de espera. */
 
+import { desktopRail } from "./desktop.mjs";
 import {
   ABOUT_PRESETS,
   IA_THINK_MS,
@@ -706,7 +707,7 @@ export function renderOrvupiIa(ctx, parts) {
   else body = landingScreen(data, lang, text);
   const landing = screen.name === "landing";
   const chat = screen.name === "chat";
-  const kids = [];
+  const kids = [desktopRail(ctx, "ia")];
   if (landing) {
     kids.push(el("header", { class: "ia-top" }, [
       iconButton(text.recent, "chats", ["M4 19.5A2.5 2.5 0 0 1 6.5 17H20", "M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"]),

@@ -11,6 +11,7 @@ import { tablePlainText } from "./lib/table-data.mjs";
 import { piecesOf } from "./lib/text-style.mjs";
 import { keepsMascot } from "./lib/neutral.mjs";
 import { IDEAS, PLANTILLAS, filterPlantillas, instantiate } from "./lib/plantillas.mjs";
+import { desktopRail, designsSub } from "./desktop.mjs";
 import { designView } from "./mis-disenos.mjs";
 import { listDesigns } from "./lib/projects.mjs";
 import { loadMas } from "./lib/mas-store.mjs";
@@ -732,7 +733,7 @@ function presetCard(item, lang) {
   return node;
 }
 
-function sizeDialog(ctx) {
+export function sizeDialog(ctx) {
   const { state, t, lang } = ctx;
   const cat = state.createCat || "para-ti";
   const ids = GROUPS[cat] || GROUPS["para-ti"];
@@ -745,13 +746,29 @@ function sizeDialog(ctx) {
       el("div", { class: "crear-side" }, cats.map(([id, label, tone]) => catButton(id, label, cat === id, tone))),
       el("div", { class: "crear-main" }, [
         el("div", { class: "crear-top" }, [
-          el("h2", { text: t("tamano") }),
+          el("h2", {}, [
+            el("span", { class: "mob-label", text: t("tamano") }),
+            el("span", { class: "desk-label", text: lang === "en" ? "Create a design" : "Crea un diseño" }),
+          ]),
           button(t("cerrar"), { id: "cerrar-tamano" }),
         ]),
         el("label", { class: "buscar-wrap", for: "buscar-tamano" }, [
           el("span", { class: "sr", text: t("buscarCrear") }),
-          el("input", { id: "buscar-tamano", type: "search", placeholder: t("buscarCrear"), autocomplete: "off" }),
+          el("input", { id: "buscar-tamano", type: "search", placeholder: wideDesk() ? (lang === "en" ? "What do you want to design?" : "¿Qué quieres diseñar?") : t("buscarCrear"), autocomplete: "off" }),
         ]),
+        el("h3", { class: "desk-only", text: lang === "en" ? "Popular tools" : "Funciones populares" }),
+        el("div", { class: "desk-only desk-features" }, [
+          ["deck", lang === "en" ? "Presentation" : "Presentación", "#7B61FF", "M4 7h16v10H4zM8 11h8"],
+          ["ig", lang === "en" ? "Social" : "Redes", "#FF4B6E", "M7 8h10v8H7z"],
+          ["video", lang === "en" ? "Video" : "Vídeo", "#0EA5E9", "M8 7l10 5-10 5z"],
+          ["doc", "Doc", "#3B82F6", "M7 3h7l4 4v14H7z"],
+          ["flyer", lang === "en" ? "Print" : "Impresión", "#20C997", "M6 8h12v8H6zM8 16v3h8v-3"],
+        ].map(([id, label, tone, d]) => {
+          const node = button("", { class: "desk-feature", "data-format": id, "aria-label": label });
+          node.append(el("span", { class: "desk-feature-bubble", style: `background:${tone}` }, [svgIcon([d])]), el("span", { text: label }));
+          return node;
+        })),
+        el("h3", { class: "desk-only", text: cat === "para-ti" ? (lang === "en" ? "Most used" : "Más usados") : (lang === "en" ? "Popular" : "Populares") }),
         el("div", { class: "crear-grid" }, presets.map((item) => presetCard(item, lang))),
         el("h3", { text: t("personalizado") }),
         el("div", { class: "medidas" }, [
@@ -892,8 +909,11 @@ function projectTitle(item, t) {
   return name;
 }
 
-function canvaHead(title, more) {
-  return el("div", { class: "canva-head" }, [el("h2", { text: title }), more || null]);
+function canvaHead(title, more, deskTitle) {
+  const heading = deskTitle
+    ? el("h2", {}, [el("span", { class: "mob-label", text: title }), el("span", { class: "desk-label", text: deskTitle })])
+    : el("h2", { text: title });
+  return el("div", { class: "canva-head" }, [heading, more || null]);
 }
 
 function seeAll(label, attrs) {
@@ -928,6 +948,7 @@ function canvaHero(ctx) {
   const { t, state } = ctx;
   return el("div", { class: "canva-hero" }, [
     el("h1", { text: t("hero") }),
+    deskPills(ctx, "inicio"),
     el("label", { class: "canva-search" }, [
       el("span", { class: "sr", text: t("buscar") }),
       svgIcon(["M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14zM20 20l-3.5-3.5"]),
@@ -935,7 +956,7 @@ function canvaHero(ctx) {
         id: "buscar",
         type: "search",
         value: state.filters.text,
-        placeholder: t("buscarDiseno"),
+        placeholder: wideDesk() ? (ctx.lang === "en" ? "Search for anything" : "Busca lo que quieras") : t("buscarDiseno"),
         autocomplete: "off",
         "aria-label": t("buscar"),
       }),
@@ -944,10 +965,33 @@ function canvaHero(ctx) {
   ]);
 }
 
+function wideDesk() {
+  return typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(min-width: 900px)").matches;
+}
+
 function canvaFab(ctx) {
-  const node = button("", { id: "crear-pieza", class: "canva-fab", "aria-label": ctx.t("crearPieza") });
+  const node = button("", {
+    id: "crear-pieza",
+    class: "canva-fab",
+    "aria-label": ctx.t("crearPieza"),
+    "data-desk-label": ctx.lang === "en" ? "Create" : "Crear",
+  });
   node.append(svgIcon(["M6 8h9v9H6zM16 5v5M13.5 7.5h5"]));
   return node;
+}
+
+function deskPills(ctx, current) {
+  const inicio = button(ctx.t("inicio"), {
+    class: "canva-plain desk-pill",
+    "data-go": "inicio",
+    "aria-current": current === "inicio" ? "page" : null,
+  });
+  const plantillas = button(ctx.t("plantillas"), {
+    class: "canva-plain desk-pill",
+    "data-go": "plantillas",
+    "aria-current": current === "plantillas" ? "page" : null,
+  });
+  return el("div", { class: "desk-only desk-pills", role: "tablist" }, [inicio, plantillas]);
 }
 
 function navTab(label, view, current, d, image) {
@@ -983,7 +1027,7 @@ export function canvaNav(ctx, tab) {
 }
 
 function canvaShell(ctx, tab, feed, withHero) {
-  const kids = [canvaTop(ctx)];
+  const kids = [desktopRail(ctx, tab), canvaTop(ctx)];
   if (withHero) kids.push(canvaHero(ctx));
   kids.push(feed);
   if (withHero) kids.push(canvaFab(ctx));
@@ -1023,9 +1067,11 @@ function seguirHome(ctx) {
       el("p", { id: "seguir-vacio", class: "canva-empty", text: t("vacioReciente") }),
     ]);
   }
-  return el("section", { class: "canva-section", id: "seguir" }, [
+  return el("section", { class: "canva-section desk-carousel", id: "seguir" }, [
     canvaHead(t("seguir"), seeAll(t("verTodo"), { "data-go": "disenos" })),
     el("div", { class: "canva-row" }, projects.map((item) => recentHomeCard(item, t))),
+    arrowButton(t("anterior"), "prev"),
+    arrowButton(t("siguiente"), "next"),
   ]);
 }
 
@@ -1040,9 +1086,11 @@ function startHome(ctx) {
     );
     return node;
   }));
-  return el("section", { class: "canva-section", "aria-label": ctx.t("elige") }, [
+  return el("section", { class: "canva-section desk-carousel", "data-home": "start", "aria-label": ctx.t("elige") }, [
     canvaHead(ctx.t("elige")),
     row,
+    arrowButton(ctx.t("anterior"), "prev"),
+    arrowButton(ctx.t("siguiente"), "next"),
   ]);
 }
 
@@ -1056,7 +1104,7 @@ function usedHome(ctx) {
     node.append(face, el("span", { class: "canva-card-name", text: en ? labelEn : es }));
     return node;
   });
-  return el("section", { class: "canva-section" }, [
+  return el("section", { class: "canva-section", "data-home": "used" }, [
     canvaHead(ctx.t("masUsadas")),
     el("div", { class: "canva-row" }, cards),
   ]);
@@ -1070,7 +1118,7 @@ function portraitCard(item, lang) {
 
 function popularHome(ctx) {
   const items = proThumbList().filter((item) => item.height >= item.width).slice(0, 10);
-  return el("section", { class: "canva-section" }, [
+  return el("section", { class: "canva-section", "data-home": "popular" }, [
     canvaHead(ctx.t("populares")),
     el("div", { class: "canva-row" }, items.map((item) => portraitCard(item, ctx.lang))),
   ]);
@@ -1086,7 +1134,7 @@ function shortcutsHome(ctx) {
     );
     return node;
   }));
-  return el("section", { class: "canva-section", "aria-label": ctx.t("acceso") }, [
+  return el("section", { class: "canva-section", "data-home": "shortcuts", "aria-label": ctx.t("acceso") }, [
     canvaHead(ctx.t("acceso")),
     row,
   ]);
@@ -1115,9 +1163,11 @@ function interestHome(ctx) {
     }
     if (items.length >= 8) break;
   }
-  return el("section", { class: "canva-section" }, [
-    canvaHead(ctx.t("interes"), seeAll(ctx.t("verTodo"), { "data-go": "plantillas", "data-thumb-cat": "" })),
+  return el("section", { class: "canva-section desk-carousel", "data-home": "interest" }, [
+    canvaHead(ctx.t("interes"), seeAll(ctx.t("verTodo"), { "data-go": "plantillas", "data-thumb-cat": "" }), ctx.t("paraTi")),
     el("div", { class: "canva-row" }, items.map((item) => interestCard(item, ctx))),
+    arrowButton(ctx.t("anterior"), "prev"),
+    arrowButton(ctx.t("siguiente"), "next"),
   ]);
 }
 
@@ -1136,7 +1186,7 @@ function categoriesHome(ctx) {
     node.append(el("span", { text: en ? cat.en : cat.es }));
     return node;
   });
-  return el("section", { class: "canva-section" }, [
+  return el("section", { class: "canva-section", "data-home": "categories" }, [
     canvaHead(ctx.t("exploraPlantillas")),
     el("div", { class: "canva-row" }, cards),
   ]);
@@ -1384,7 +1434,7 @@ function plantillasSearch(ctx) {
         id: "buscar",
         type: "search",
         value: state.filters.text,
-        placeholder: t("buscaPlantillas"),
+        placeholder: wideDesk() ? (ctx.lang === "en" ? "Search the templates" : "Busca entre las plantillas") : t("buscaPlantillas"),
         autocomplete: "off",
         "aria-label": t("buscar"),
       }),
@@ -1547,6 +1597,11 @@ function plantillasCategory(ctx) {
 
 function plantillasShell(ctx, body) {
   const node = el("div", { class: "canva-home canva-plantillas", "data-tab": "plantillas" }, [
+    desktopRail(ctx, "plantillas"),
+    el("div", { class: "desk-only desk-tpl-hero" }, [
+      el("h1", { text: ctx.t("hero") }),
+      deskPills(ctx, "plantillas"),
+    ]),
     plantillasTop(ctx),
     plantillasSearch(ctx),
     plantillasChips(ctx),
@@ -1877,7 +1932,7 @@ function mountLibrary(ctx, chrome, body) {
     class: `canva-home canva-plantillas canva-library is-${view}`,
     "data-tab": "plantillas",
     "data-library": view,
-  }, [chrome, body, canvaNav(ctx, "plantillas")]);
+  }, [desktopRail(ctx, "plantillas"), chrome, body, canvaNav(ctx, "plantillas")]);
   if (typeof window !== "undefined" && window.scrollY > 12) node.classList.add("is-scrolled");
   const kids = [node, sizeDialog(ctx)];
   const layer = libraryLayers(ctx);
@@ -1907,6 +1962,8 @@ export function renderPlantillas(ctx) {
 
 export function renderDesigns(ctx) {
   const { screen, sheet } = designView(ctx);
+  screen.classList.add("has-sub");
+  screen.prepend(desktopRail(ctx, "disenos"), designsSub(ctx));
   screen.append(canvaNav(ctx, "disenos"));
   ctx.root.replaceChildren(screen, ...(sheet ? [sheet] : []));
 }
