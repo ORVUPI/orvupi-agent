@@ -49,6 +49,7 @@ export async function paintThumb(doc: PDFDocumentProxy, pageNumber: number): Pro
   return canvas.toDataURL("image/jpeg", 0.72);
 }
 
+/** Texto que el PDF ya contiene. getTextContent no es OCR: una página escaneada puede devolver una cadena vacía y no se inventa texto. */
 export async function pageText(doc: PDFDocumentProxy, pageNumber: number): Promise<string> {
   const page = await doc.getPage(pageNumber);
   const content = await page.getTextContent();
