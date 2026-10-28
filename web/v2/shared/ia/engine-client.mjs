@@ -9,6 +9,7 @@ export function createEngineClient() {
   let phase = "idle";
   let model = defaultModel();
   let progress = { loaded: 0, total: 0, file: "" };
+  let probe = false;
   let error = "";
   let nextId = 0;
   let pending = null;
@@ -22,6 +23,7 @@ export function createEngineClient() {
       modelId: model?.id || "",
       modelVersion: model?.version || "",
       progress: { ...progress },
+      probe,
       error,
     };
   }
@@ -56,12 +58,14 @@ export function createEngineClient() {
     }
     if (msg.type === "preparing") {
       phase = "preparing";
+      probe = true;
       progress = { loaded: 0, total: 0, file: "" };
       emit();
       return;
     }
     if (msg.type === "ready") {
       phase = "ready";
+      probe = false;
       error = "";
       emit();
       return;
@@ -87,6 +91,7 @@ export function createEngineClient() {
       if (pending && (msg.id == null || msg.id === pending.id)) failPending(new Error(message));
       if (phase !== "ready") {
         phase = "error";
+        probe = false;
         error = message;
         emit();
       }
@@ -111,6 +116,7 @@ export function createEngineClient() {
     if (!next) return snapshot();
     model = next;
     error = "";
+    probe = false;
     progress = { loaded: 0, total: 0, file: "" };
     phase = "preparing";
     emit();
@@ -130,6 +136,7 @@ export function createEngineClient() {
       worker = null;
       failPending(new Error("cancelled"));
       phase = "idle";
+      probe = false;
       error = "";
       progress = { loaded: 0, total: 0, file: "" };
       return emit();

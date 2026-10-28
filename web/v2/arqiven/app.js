@@ -244,7 +244,7 @@ function updateEngineUi() {
   if (snap.phase === "preparing") {
     const file = snap.progress.file ? ` ${snap.progress.file}` : "";
     const ratio = snap.progress.total > 0 ? ` ${pct}%` : "";
-    progress.textContent = `${snap.progress.file || snap.progress.total ? ui.preparing : ui.checking}${ratio}${file}`;
+    progress.textContent = `${snap.probe ? ui.checking : ui.preparing}${ratio}${file}`;
   } else if (snap.phase === "error") progress.textContent = `${ui.error} ${snap.error}`.trim();
   else if (snap.phase === "ready") progress.textContent = `${ui.ready} · ${snap.modelId} · ${snap.modelVersion}`;
   else progress.textContent = "";

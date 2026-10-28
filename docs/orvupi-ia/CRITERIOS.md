@@ -12,7 +12,7 @@ Estados: comprobado (hay prueba en esta corrida), pendiente, no aplicable.
 | Caja protagonista, herramientas dentro, chips | comprobado | `#tools` visible en 360, 390, 768 y 1366. Enter abre el menú y activa «Resumir». El chip «Crear un texto» rellena la caja y no crea un mensaje. |
 | Barra lateral | comprobado | Nuevo chat, Chat, Proyectos, Documentos, historial de la pestaña, enlaces a Work y Studio. Contraer deja el icono y el desbordamiento horizontal sigue en 0 (1366). |
 | Colores | comprobado | El botón de enviar usa `#fc2d63`, medido en la hoja del logotipo. No se recolorea el PNG. La cabecera de ORVUPI sigue en su CSS (`#FF3070` / `#102032`). |
-| 360, 390, 768, 1366 y zoom 200 % | comprobado | `scrollWidth - clientWidth = 0` en los cuatro anchos y con `zoom: 2` a 1366. Hay scroll vertical (cabecera y pie del sitio). No es un teléfono físico. |
+| 360, 390, 768, 1366 y zoom 200 % | comprobado | Con la barra de preparación, `scrollWidth - clientWidth = 0` en 360, 390, 768 y 1366, y con `zoom: 2` a 1366. Chrome headless. No es un teléfono físico. |
 | Sin datos personales de la maqueta | comprobado | No está «Espacio de Cristian» ni las respuestas fijas («Podríamos organizar tu idea», «RESUMEN DE EJEMPLO»). Test `arqiven-public`. |
 | Lo no hecho se dice | comprobado | Proyectos y Documentos: «pendiente de implementación». La voz avisa de que no hay micrófono. Tras pulsarla, `getUserMedia` no se llama. |
 | Nav tras Work y mapa | comprobado | Inicio, Herramientas, Work, ARQIVEN, Memes… en la home. 110 barras ya existentes más el mapa tras Studio. `aria-current="page"` en las cinco páginas de ARQIVEN. |
@@ -23,7 +23,7 @@ Estados: comprobado (hay prueba en esta corrida), pendiente, no aplicable.
 | Criterio | Estado | Evidencia |
 | --- | --- | --- |
 | Contrato AiRequest / AiResult | comprobado | `web/v2/shared/ia/contract.mjs` y el paralelo `apps/work/src/ai/contract.ts`. Test de `createRequest`, `honestResult`, `settleResult`. |
-| Sin modelo preparado: `none` / `rules` | comprobado en fuente | `app.js` llama a `honestResult` si el worker no está listo. El atributo `data-honest` sigue en las cinco páginas. La descarga no arranca sola: `prepare` es un click. |
+| Sin modelo preparado: `none` / `rules` | comprobado | Chrome headless, `/arqiven/`. Enviar «hola» sin preparar dejó `rules · none · none` y «No hay respuesta generada…». La caja siguió habilitada. El cuerpo no contiene «Pensando». |
 | Un tercero no pasa a llamarse Arqiven-N | comprobado | `thirdPartyResult` deja `smol135-cpu` / `third-party` / `SmolLM2-135M-Instruct`. `arqiven-1-experimental` sin checkpoint vuelve a `none`. `capabilities().models` sigue vacío. Test `arqiven-engine`. |
 | Una sola superficie de AiStudio | comprobado en fuente y en el bundle | El menú abre el panel y no navega a `ai`. La ruta `ai` muestra un aviso y el mismo panel. El bundle `index-CS73DIMf.js` repite ese montaje. No se ha rehecho el build de Work. |
 | Studio no sustituye el catálogo | comprobado | Sin `__ARQIVEN_ENGINE__.ready`, `studioAsk()` devuelve el catálogo vacío. Un resultado `arqiven` sin checkpoint tampoco lo sustituye. «Textos rápidos» no se toca. |
@@ -45,7 +45,8 @@ Estados: comprobado (hay prueba en esta corrida), pendiente, no aplicable.
 
 | Criterio | Estado | Evidencia |
 | --- | --- | --- |
-| Línea documentada, sin ejecutarla | pendiente | `docs/orvupi-ia/entrenamiento/comprobar.mjs` imprime 17504640 parámetros (`initialize_from: random`, semilla 42, 8/384/6/512/8192) y rechaza un checkpoint. No hay forward, backward, GPU ni red. El entrenamiento sigue pendiente. |
+| Conteo a coste 0 | comprobado | `node docs/orvupi-ia/entrenamiento/comprobar.mjs` imprimió 17504640 y salió 0. Con `--checkpoint x.bin` salió 2 y no leyó el archivo. |
+| Entrenamiento | pendiente | No hay forward, backward, GPU ni red. El tope de 100 € no se usa. |
 | Id Arqiven-N | comprobado como reserva | El id de producto es `arqiven-1-experimental`. No existe `orvupi-text-experimental-0.1`. Arqiven-2 es solo un nombre. |
 | Equivalencia con otros asistentes | no aplicable | No se afirma. |
 
@@ -74,11 +75,11 @@ Se eligió conservar funciones y la marca ARQIVEN.
 
 | Criterio | Estado | Evidencia |
 | --- | --- | --- |
-| Preparar no bloquea el hilo ni arranca solo | comprobado en fuente | `prepare()` hace `postMessage` y vuelve. El worker es un módulo en `/arqiven/engine-worker.mjs`. No hay llamada a `prepare` al cargar. |
-| Cancelar y error visibles | comprobado en fuente | Cancelar durante la descarga hace `terminate()`. El estado de error se escribe en `#engine-progress`. No hay «Pensando». |
-| Etiqueta | comprobado | Insignia `mode · provider · modelId · version`. El id por defecto es `smol135-cpu`, versión `SmolLM2-135M-Instruct`, provider `third-party`. |
-| Editor lateral | pendiente de medición | El editor muestra el texto local de la pestaña. En ancho de 1101 px o más es columna; por debajo ocupa la vista. No genera un documento. |
-| Anchos 360, 390, 768, 1366 y zoom 200 % con el motor | pendiente de esta corrida | La medición anterior sigue valiendo para la página sin preparar. Hay que repetirla con la barra de preparación y el editor. |
+| Preparar no bloquea el hilo ni arranca solo | comprobado | El click pidió `transformers@4.3.1` en jsDelivr y `HuggingFaceTB/SmolLM2-135M-Instruct` en Hugging Face. A los 2 s el estado era «Descargando un modelo de terceros. Puedes seguir escribiendo. 100% onnx/model_quantized.onnx». La caja seguía habilitada. |
+| Cancelar | comprobado | En una carga anterior, Cancelar dejó el progreso vacío y la pastilla en «Sin modelo». |
+| Etiqueta tras generar | comprobado | Con el modelo listo, la pastilla era `tercero · smol135-cpu`. Un envío produjo `model · third-party · smol135-cpu · SmolLM2-135M-Instruct` y texto del modelo. No es una respuesta fija de la maqueta ni un Arqiven-1. SmolLM2 135M divaga: eso se muestra, no se reescribe. |
+| Editor lateral | comprobado | A 390 px el editor mide 390×844 y tapa la vista. El aviso dice que es texto local, no un documento generado. Desbordamiento 0. |
+| Voz | comprobado | El botón dejó el aviso de propuesta. `getUserMedia` no se llamó. |
 
 ## Cómo probarlo en local
 

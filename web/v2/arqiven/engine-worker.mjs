@@ -76,9 +76,16 @@ async function handle(msg) {
           const now = Date.now();
           const loaded = Number(data?.loaded) || 0;
           const total = Number(data?.total) || 0;
-          if (now - last < 200 && loaded < total) return;
+          const ratio = Number(data?.progress) || 0;
+          if (now - last < 200 && ratio < 100 && loaded < total) return;
           last = now;
-          post({ type: "progress", loaded, total, file: String(data?.file || ""), status: String(data?.status || "") });
+          post({
+            type: "progress",
+            loaded: loaded || ratio,
+            total: total || (ratio ? 100 : 0),
+            file: String(data?.file || data?.name || ""),
+            status: String(data?.status || ""),
+          });
         },
       });
       loadedKey = key;
