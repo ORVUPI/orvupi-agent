@@ -166,7 +166,10 @@ describe("motor de terceros de ARQIVEN", () => {
     assert.equal(Number.isFinite(first.loss), true);
     assert.equal(first.loss, 0.0007700743344215597);
     assert.match(read("web/v2/studio/lib/ai-optional.mjs"), /Textos rápidos/);
-    assert.match(read("web/v2/studio/views.mjs"), /Textos rápidos/);
+    assert.match(read("apps/work/src/pdf/engine.ts"), /getTextContent/);
+    assert.match(read("apps/work/src/pdf/engine.ts"), /no es OCR/);
+    assert.match(read("apps/work/src/pdf/PdfScreen.tsx"), /pdfNotOcr/);
+    assert.match(read("apps/work/src/i18n/messages.ts"), /No es OCR/);
     const plain = await import(pathToFileURL(path.join(root, "web/v2/shared/ia/plain.mjs")).href) as {
       sanitizePlain: (value: string, max?: number) => string;
     };

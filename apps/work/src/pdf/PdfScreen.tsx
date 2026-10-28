@@ -426,6 +426,7 @@ function PdfViewer({ record }: { record: FileRecord }) {
           </form>
         ) : null}
       </header>
+      <p className="ow-muted" role="note">{t("pdfNotOcr")}</p>
       <div className="ow-pdf-body">
         {showSide ? (
           <aside className="ow-pdf-side" aria-label={side === "thumbs" ? t("pdfThumbs") : t("pdfOutline")}>

@@ -25,7 +25,7 @@ Estados: comprobado (hay prueba en esta corrida), pendiente, no aplicable.
 | Contrato AiRequest / AiResult | comprobado | `web/v2/shared/ia/contract.mjs` y el paralelo `apps/work/src/ai/contract.ts`. Test de `createRequest`, `honestResult`, `settleResult`. |
 | Arranque solo del modelo de terceros | comprobado en fuente | Al cargar, `app.js` llama a `engine.prepare(defaultModel().id)` (SmolLM2). Enviar antes de que esté listo encola «Preparando modelo de terceros…» y no deja `rules · none · none` por no haber pulsado un botón. El botón visible es «Reintentar» o «Usar este modelo». Si la descarga falla, el aviso es el error, no una generación. |
 | Un tercero no pasa a llamarse Arqiven-N | comprobado | `thirdPartyResult` deja `smol135-cpu` / `third-party` / `SmolLM2-135M-Instruct`. `arqiven-1-experimental` sin checkpoint vuelve a `none`. `capabilities().models` sigue vacío. Test `arqiven-engine`. |
-| Una sola superficie de AiStudio | comprobado en el bundle reconstruido | `vite build --base /work/` publicó `index-BGkMX4Gd.js`. El menú no navega a `ai`. La ruta muestra el aviso y el mismo panel. |
+| Una sola superficie de AiStudio | comprobado en el bundle reconstruido | `vite build --base /work/` publicó `index-Dl6kppPb.js`. El menú no navega a `ai`. La ruta muestra el aviso y el mismo panel. El texto del PDF dice que no es OCR. |
 | Studio no sustituye el catálogo | comprobado | Sin `__ARQIVEN_ENGINE__.ready`, `studioAsk()` devuelve el catálogo vacío. Un resultado `arqiven` sin checkpoint tampoco lo sustituye. «Textos rápidos» no se toca. |
 | Textos rápidos y espera honesta | comprobado en fuente | Título del panel en `ai-optional.mjs`. La copia dice «Buscando en el catálogo…». El spec de Playwright de Studio no se ha vuelto a ejecutar. |
 | Sin SharedWorker | comprobado | `app.js` no lo menciona. El worker de ARQIVEN es dedicado, un hilo (`numThreads = 1`). |
@@ -41,7 +41,7 @@ Estados: comprobado (hay prueba en esta corrida), pendiente, no aplicable.
 | Sin ejecución del texto | comprobado | `app.js` no usa `innerHTML`. `sanitizePlain` quita controles y deja las etiquetas como texto. |
 | Sin `localStorage` para encender la página | comprobado | `app.js` no usa `localStorage`. |
 | Los documentos no salen | comprobado en política | `documentsLeaveDevice: false`. La CSP nueva de `/arqiven/` solo añade Hugging Face y jsDelivr, los orígenes que Work ya usa para pesos y WASM. No hay `unsafe-inline`, ni YouTube, ni `form-action`. `/*` sigue en `connect-src 'self'`. Studio no recibe esa excepción. |
-| OCR y DOCX/PDF | pendiente | La página dice que no genera DOCX ni PDF. No se ha vuelto a medir la fidelidad de pdf.js en Work. Esa lectura sigue siendo `getTextContent`, no OCR. |
+| OCR y DOCX/PDF | comprobado como límite | `pageText` en `apps/work/src/pdf/engine.ts` llama a `getTextContent`. No es OCR. La pantalla del PDF dice que un escaneado sin texto no se presenta como texto extraído. `/arqiven/` no genera DOCX ni PDF. |
 
 ## D. Entrenamiento
 
@@ -81,6 +81,7 @@ Se eligió conservar funciones y la marca ARQIVEN.
 | Cancelar | comprobado | En una carga anterior, Cancelar dejó el progreso vacío y la pastilla en «Sin modelo». |
 | Etiqueta tras generar | comprobado | Con el modelo listo, la pastilla era `tercero · smol135-cpu`. Un envío produjo `model · third-party · smol135-cpu · SmolLM2-135M-Instruct` y texto del modelo. No es una respuesta fija de la maqueta ni un Arqiven-1. SmolLM2 135M divaga: eso se muestra, no se reescribe. |
 | Editor con el resultado | comprobado | Chrome headless, 1366. Tras «hola», sin pulsar Editar, el panel se abrió con el texto del modelo y la insignia `model · third-party · smol135-cpu · SmolLM2-135M-Instruct`. A 390 px el editor abierto mide 390×844 y el cierre dice «Volver al chat». |
+| Ida y vuelta en Work | comprobado | Chrome headless. Nota `92537ab4-ed53-4fd6-b304-efed12e0144f` guardada desde `/arqiven/` y abierta en Notas de `/work/`. El textarea mostró `nota-abierta-1793178012321`. Misma base `orvupi-work`. |
 | Voz | comprobado | El botón dejó el aviso de propuesta. `getUserMedia` no se llamó. |
 
 ## Cómo probarlo en local
