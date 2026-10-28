@@ -85,7 +85,7 @@ describe("motor de terceros de ARQIVEN", () => {
     assert.equal(worker.includes("arqiven-1"), false);
     assert.equal(worker.includes("Eres ORVUPI AI"), false);
     assert.match(app, /honestResult/);
-    assert.match(app, /engine\.prepare\(defaultModel\(\)\.id\)/);
+    assert.match(app, /startPrepare\(defaultModel\(\)\.id\)/);
     assert.match(app, /Preparando modelo de terceros/);
     assert.equal(app.includes("Preparar modelo de terceros"), false);
     assert.match(app, /prepare\.addEventListener/);
@@ -150,6 +150,19 @@ describe("motor de terceros de ARQIVEN", () => {
     const manifest = JSON.parse(read("docs/orvupi-ia/entrenamiento/manifiesto.ejemplo.json")) as { documents: unknown[]; modelId: string };
     assert.equal(manifest.modelId, "arqiven-1-experimental");
     assert.deepEqual(manifest.documents, []);
+    const step = await import(pathToFileURL(path.join(root, "docs/orvupi-ia/entrenamiento/paso-cpu.mjs")).href) as {
+      cpuStep: (config: typeof train.CPU_CHECK) => { loss: number; checkpoint: boolean; network: boolean; publicModel: boolean };
+    };
+    const first = step.cpuStep(train.CPU_CHECK);
+    const second = step.cpuStep(train.CPU_CHECK);
+    assert.equal(first.checkpoint, false);
+    assert.equal(first.network, false);
+    assert.equal(first.publicModel, false);
+    assert.equal(first.loss, second.loss);
+    assert.equal(Number.isFinite(first.loss), true);
+    assert.equal(first.loss, 0.0007700743344215597);
+    assert.match(read("web/v2/studio/lib/ai-optional.mjs"), /Textos rápidos/);
+    assert.match(read("web/v2/studio/views.mjs"), /Textos rápidos/);
     const source = read("docs/orvupi-ia/entrenamiento/comprobar.mjs");
     assert.equal(source.includes("fetch("), false);
     assert.equal(source.includes("https://"), false);

@@ -21,6 +21,8 @@ La cuenta es la de un Transformer causal con embeddings de token y de posición,
 
 Si se pasa una ruta de checkpoint, el script sale con código 2 y no lee el archivo.
 
+El mismo comando hace un paso diminuto en CPU (`paso-cpu.mjs`): tabla de embeddings al azar con semilla 42, sin archivo de pesos y sin red. Imprime `cpuStepLoss`. Esa cifra solo fija la semilla. No es una loss de entrenamiento ni una respuesta. Arqiven-1 no es un producto público: `capabilities().models` sigue vacío y SmolLM2, Qwen y LFM2 no son el inicio de este experimento.
+
 ## Manifiesto
 
 `manifiesto.ejemplo.json` es un ejemplo vacío: cero documentos y particiones vacías. No trae textos, licencias ni hashes. Un manifiesto real, cuando exista, tendrá que anotar procedencia y licencia de cada documento antes de cualquier entrenamiento. Este archivo no lo sustituye.

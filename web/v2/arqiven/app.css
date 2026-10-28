@@ -75,13 +75,13 @@
 .popup button { width: 100%; border: 0; background: transparent; text-align: left; border-radius: .5rem; padding: .5rem .55rem; min-height: 44px; }
 .popup button[aria-pressed="true"] { background: #fff0f5; color: #bc2451; }
 .popup button:hover { background: #f7f7f7; }
-.selected { font-size: .75rem; color: #ba2d57; background: #fff0f5; border-radius: 999px; padding: .25rem .5rem; max-width: 8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.selected { font-size: .75rem; color: #ba2d57; background: #fff0f5; border-radius: 999px; padding: .25rem .55rem; max-width: 14rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .send { width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--pink); color: #fff; display: grid; place-items: center; padding: 0; }
 .send:disabled { background: #eee; color: #a2a2a2; }
 .send svg { stroke: currentColor; }
 .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: .55rem; margin: 1.15rem 0 0; }
 .view.is-thread .chips { display: none; }
-.chips button { border: 1px solid #ebebeb; background: #fff; border-radius: 1.3rem; padding: .55rem .8rem; color: #73777b; font-size: .85rem; min-height: 44px; }
+.chips button { border: 1px solid #ebebeb; background: #fff; border-radius: 1.3rem; padding: .55rem .8rem; color: #73777b; font-size: .82rem; min-height: 44px; }
 .chips button:hover { border-color: #e5bdcc; background: #fafafa; }
 .note, .status { text-align: center; color: #8a8a8a; font-size: .78rem; margin: .8rem 0 0; overflow-wrap: anywhere; }
 .messages { width: min(46rem, 100%); margin: 0 auto 1rem; display: grid; gap: .9rem; }
