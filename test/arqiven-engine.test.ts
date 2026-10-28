@@ -93,6 +93,10 @@ describe("motor de terceros de ARQIVEN", () => {
     assert.equal(app.includes("getUserMedia"), false);
     assert.equal(app.includes("localStorage"), false);
     assert.equal(app.includes("SharedWorker"), false);
+    assert.equal(app.includes("innerHTML"), false);
+    assert.match(app, /loadWorkBytes/);
+    assert.match(app, /openEditorWith/);
+    assert.match(app, /randomUUID/);
     const globalBlock = headers.slice(headers.indexOf("\n/*\n"), headers.indexOf("\n/verify/\n"));
     assert.match(globalBlock, /connect-src 'self'/);
     assert.equal(globalBlock.includes("huggingface"), false);
@@ -163,6 +167,12 @@ describe("motor de terceros de ARQIVEN", () => {
     assert.equal(first.loss, 0.0007700743344215597);
     assert.match(read("web/v2/studio/lib/ai-optional.mjs"), /Textos rápidos/);
     assert.match(read("web/v2/studio/views.mjs"), /Textos rápidos/);
+    const plain = await import(pathToFileURL(path.join(root, "web/v2/shared/ia/plain.mjs")).href) as {
+      sanitizePlain: (value: string, max?: number) => string;
+    };
+    assert.equal(plain.sanitizePlain("a<b>\u0000c"), "a<b>c");
+    assert.equal(plain.sanitizePlain("javascript:alert(1)").includes("alert"), true);
+    assert.equal(plain.sanitizePlain("x".repeat(9000)).length, 8000);
     const source = read("docs/orvupi-ia/entrenamiento/comprobar.mjs");
     assert.equal(source.includes("fetch("), false);
     assert.equal(source.includes("https://"), false);
