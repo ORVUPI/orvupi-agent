@@ -50,6 +50,7 @@
 .is-collapsed .new, .is-collapsed .nav button { justify-content: center; padding: .65rem; }
 .workspace { min-width: 0; display: flex; flex-direction: column; background: #fff; }
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: .6rem; min-height: 4rem; padding: 0 1rem; }
+.arq-app .workspace .topbar { flex-wrap: wrap; }
 .topbar h1 { font-size: 1.15rem; font-weight: 550; margin: 0; letter-spacing: -.02em; }
 .menu { display: none; }
 .pill { border: 1px solid #f7dce6; background: #fff7fa; color: #9b4a65; border-radius: 999px; padding: .3rem .6rem; font-size: .75rem; }
@@ -91,7 +92,29 @@
 .card { border: 1px solid var(--line); border-radius: .9rem; padding: .9rem 1rem; margin-top: .7rem; }
 .card p { margin: .4rem 0; }
 .card a { color: #9d2348; }
+.engine-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin: 0 0 .7rem; }
+.engine-bar select, .engine-bar .prepare, .engine-bar .cancel, .editor-toggle {
+  min-height: 44px; border-radius: 999px; border: 1px solid var(--line); background: #fff; padding: .35rem .75rem;
+}
+.engine-bar select { max-width: 100%; min-width: 0; flex: 1 1 12rem; }
+.engine-bar .prepare { background: var(--ink); color: #fff; border-color: var(--ink); }
+.engine-bar .prepare:disabled { background: #c5c8cc; border-color: #c5c8cc; }
+.engine-progress { flex-basis: 100%; margin: 0; color: var(--muted); font-size: .78rem; overflow-wrap: anywhere; }
+.editor-toggle { margin-left: auto; }
+.local-editor { min-width: 0; background: #fff; display: flex; flex-direction: column; gap: .6rem; padding: 1rem; }
+.editor-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.local-editor h2 { margin: 0; font-size: 1rem; font-weight: 550; }
+.editor-note { margin: 0; color: var(--muted); font-size: .8rem; }
+.local-editor textarea { width: 100%; min-height: 16rem; border: 1px solid var(--line); border-radius: .8rem; padding: .7rem; background: #fff; resize: vertical; }
 .file-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+@media (min-width: 1101px) {
+  .arq-app.has-editor .arq-shell { grid-template-columns: var(--nav) minmax(0, 1fr) minmax(16rem, 24rem); }
+  .arq-app.has-editor.is-collapsed .arq-shell { grid-template-columns: 4.5rem minmax(0, 1fr) minmax(16rem, 24rem); }
+  .arq-app.has-editor .local-editor { border-left: 1px solid var(--line); }
+}
+@media (max-width: 1100px) {
+  .arq-app.has-editor .local-editor { position: fixed; inset: 0; z-index: 6; overflow: auto; }
+}
 .backdrop { display: none; }
 .save { border: 1px solid var(--line); background: #fff; border-radius: 999px; min-height: 44px; padding: .4rem .8rem; }
 @media (max-width: 760px) {

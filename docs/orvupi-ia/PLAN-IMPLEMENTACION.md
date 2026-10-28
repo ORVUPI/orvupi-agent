@@ -1,6 +1,6 @@
 # Plan de la primera implementación
 
-La pantalla `/arqiven/`, la barra y el envoltorio del contrato ya están en esta rama. No hay despliegue a Cloudflare y no hay entrenamiento. El motor propio sigue sin existir: la página pública responde con `provider: "none"` y `modelId: "none"`.
+La pantalla `/arqiven/` ya está publicada. Esta rama conecta el motor de terceros de Work (SmolLM2, Qwen, LFM2) por el contrato. Sin preparación, la respuesta sigue siendo `provider: "none"` y `modelId: "none"`. No hay checkpoint Arqiven-1 y no hay despliegue en esta rama.
 
 ## Hecho en esta revisión
 
@@ -11,11 +11,11 @@ El propietario autorizó la ruta. Estas filas sustituyen el plan de «todavía n
 | `<nav class="site">` y `details.mapa` | ARQIVEN justo después de Work, y también después de Studio en el mapa. 110 páginas ya existentes, más las cinco de `/arqiven/`. El rótulo no se traduce. `aria-current="page"` solo en esas cinco. |
 | `/arqiven/` y `/en/`, `/pt-br/`, `/ja/`, `/ko/` | Interfaz usable. Saludo, caja, herramientas, chips y barra lateral. Sin respuestas de la maqueta. |
 | Logotipo | `web/v2/assets/arqiven/logo-oficial.png` con el mismo SHA256. Favicon 32 y 192 salen de la variante 3. |
-| Contrato | `web/v2/shared/ia/contract.mjs` y `apps/work/src/ai/contract.ts` más `client.ts`. `arqiven-core` solo si `localStorage` vale `1`. Por defecto AiStudio no pasa por el envoltorio. |
+| Contrato | `web/v2/shared/ia/contract.mjs` y `apps/work/src/ai/contract.ts` más `client.ts`. `arqiven-core` queda encendido salvo `localStorage` `0`. |
 | Studio | El chat del catálogo sigue siendo determinista. El gancho vacío no sustituye el texto. El rail de frases se llama «Textos rápidos». La espera dice «Buscando en el catálogo…». |
 | Puente | «Guardar en Work» crea una nota nueva (`orvupi-note` v1) y avisa por `BroadcastChannel("orvupi-work")`. No reescribe una nota anterior. |
 | Sitemap | Cinco URL, porque la ruta ya está autorizada. Sigue sin desplegarse. |
-| CSP | `/arqiven/` hereda `connect-src 'self'`. No descarga pesos, así que no se abre el origen de Hugging Face. |
+| CSP | `/arqiven/` puede conectar con Hugging Face y jsDelivr, los mismos orígenes que Work, solo para pesos y WASM. `/*` sigue en `connect-src 'self'`. Studio no se abre. |
 
 `arqiven-central` no es una clave de `localStorage`: la ruta es la página. Para quitarla del árbol, se revierten estos commits. `arqiven-core` en Work vuelve al camino anterior en cuanto la clave no es `1`. No se borran `engine.ts`, `hybrid.ts`, `worker.ts` ni `download.ts`.
 
@@ -93,6 +93,8 @@ En una rama aparte, cuando se aborde el experimento, y solo con herramientas ya 
 4. Guardar semilla, configuración, versiones y hash del código.
 
 Eso puede hacerse en CPU, con una red minúscula, sin alquilar. El equipo descrito en el encargo (i3-1115G4, 8 GB, gráfica integrada) sirve para ese ensayo mínimo. No se extrapola su tiempo a un entrenamiento útil. No se instala aquí ningún stack de entrenamiento: esta rama no añade dependencias.
+
+El esqueleto de esta entrega es `docs/orvupi-ia/entrenamiento/comprobar.mjs`. Imprime 17504640 parámetros para la config de arriba y sale con código 2 si se le pide un checkpoint. No hace el batch de forward ni backward.
 
 ### Lo que sigue, y no empieza solo
 

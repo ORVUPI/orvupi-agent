@@ -23,13 +23,13 @@ Estados: comprobado (hay prueba en esta corrida), pendiente, no aplicable.
 | Criterio | Estado | Evidencia |
 | --- | --- | --- |
 | Contrato AiRequest / AiResult | comprobado | `web/v2/shared/ia/contract.mjs` y el paralelo `apps/work/src/ai/contract.ts`. Test de `createRequest`, `honestResult`, `settleResult`. |
-| Sin modelo: `none` / `rules` | comprobado | En Chrome el mensaje lleva `rules · none · none` y el texto «No hay respuesta generada». |
-| Un tercero no pasa a llamarse Arqiven-N | comprobado | `settleResult` conserva `qwen05-gpu` / `third-party`. `arqiven-1-experimental` sin `checkpoint: true` vuelve a `none`. `listModels` quita los id `arqiven-*` si no hay checkpoint. `capabilities().models` está vacío. |
-| Una sola superficie de AiStudio | comprobado en fuente | `App.tsx`: el lateral no se monta si `view === "ai"`. El paquete publicado `web/v2/work/assets/` no se ha reconstruido. |
-| Studio no sustituye el catálogo | comprobado | Test: un gancho con texto vacío deja el formato `logo` y añade `mode: rules`. `catalogAsk()` no devuelve texto. |
-| Textos rápidos y espera honesta | comprobado en fuente | Título del panel en `ai-optional.mjs`. La copia dice «Buscando en el catálogo…». El spec de Playwright de Studio se actualizó y no se ejecutó en esta corrida. |
-| Sin SharedWorker | comprobado | `app.js` no lo menciona. No hay promesa de un worker compartido. |
-| Flag `arqiven-core` | comprobado en fuente | `coreEnabled()` lee `localStorage` `arqiven-core=1`. Por defecto el camino de `engine.generate` no cambia. |
+| Sin modelo preparado: `none` / `rules` | comprobado en fuente | `app.js` llama a `honestResult` si el worker no está listo. El atributo `data-honest` sigue en las cinco páginas. La descarga no arranca sola: `prepare` es un click. |
+| Un tercero no pasa a llamarse Arqiven-N | comprobado | `thirdPartyResult` deja `smol135-cpu` / `third-party` / `SmolLM2-135M-Instruct`. `arqiven-1-experimental` sin checkpoint vuelve a `none`. `capabilities().models` sigue vacío. Test `arqiven-engine`. |
+| Una sola superficie de AiStudio | comprobado en fuente y en el bundle | El menú abre el panel y no navega a `ai`. La ruta `ai` muestra un aviso y el mismo panel. El bundle `index-CS73DIMf.js` repite ese montaje. No se ha rehecho el build de Work. |
+| Studio no sustituye el catálogo | comprobado | Sin `__ARQIVEN_ENGINE__.ready`, `studioAsk()` devuelve el catálogo vacío. Un resultado `arqiven` sin checkpoint tampoco lo sustituye. «Textos rápidos» no se toca. |
+| Textos rápidos y espera honesta | comprobado en fuente | Título del panel en `ai-optional.mjs`. La copia dice «Buscando en el catálogo…». El spec de Playwright de Studio no se ha vuelto a ejecutar. |
+| Sin SharedWorker | comprobado | `app.js` no lo menciona. El worker de ARQIVEN es dedicado, un hilo (`numThreads = 1`). |
+| Flag `arqiven-core` | comprobado en fuente | `coreEnabled()` es verdadero salvo `localStorage` `arqiven-core=0`. El bundle publicado no llama a `runWorkGenerate`: esa llamada se añadió después del último build de Work. |
 
 ## C. Privacidad y documentos
 
@@ -38,14 +38,14 @@ Estados: comprobado (hay prueba en esta corrida), pendiente, no aplicable.
 | Guardar es explícito y no pisa | comprobado | Dos pulsaciones de «Guardar en Work» crearon `432bbff6-7287-496a-8474-f485cc867d3a` y `fca6ba35-816e-43cc-82f5-755d47f2e93c`. Nota `orvupi-note` versión 1. `BroadcastChannel` lo emite `work-store.mjs`. |
 | TXT/MD se lee aquí | comprobado | `nota.txt` dejó el estado «Archivo leído en este navegador. No se ha enviado a ningún servidor.» |
 | Sin `localStorage` para encender la página | comprobado | `app.js` no usa `localStorage`. |
-| Los documentos no salen | comprobado | `documentsLeaveDevice: false`. La CSP de `/arqiven/` sigue en `connect-src 'self'`. |
+| Los documentos no salen | comprobado en política | `documentsLeaveDevice: false`. La CSP nueva de `/arqiven/` solo añade Hugging Face y jsDelivr, los orígenes que Work ya usa para pesos y WASM. No hay `unsafe-inline`, ni YouTube, ni `form-action`. `/*` sigue en `connect-src 'self'`. Studio no recibe esa excepción. |
 | OCR y DOCX/PDF | pendiente | La página dice que no genera DOCX ni PDF. No se ha vuelto a medir la fidelidad de pdf.js en Work. Esa lectura sigue siendo `getTextContent`, no OCR. |
 
 ## D. Entrenamiento
 
 | Criterio | Estado | Evidencia |
 | --- | --- | --- |
-| Línea documentada, sin ejecutarla | pendiente | Sigue en `PLAN-IMPLEMENTACION.md`: `initialize_from: random`, semilla 42, 8 capas, hidden 384, 6 cabezas, contexto 512, vocabulario 8192. No se ha alquilado GPU ni se han cargado pesos. |
+| Línea documentada, sin ejecutarla | pendiente | `docs/orvupi-ia/entrenamiento/comprobar.mjs` imprime 17504640 parámetros (`initialize_from: random`, semilla 42, 8/384/6/512/8192) y rechaza un checkpoint. No hay forward, backward, GPU ni red. El entrenamiento sigue pendiente. |
 | Id Arqiven-N | comprobado como reserva | El id de producto es `arqiven-1-experimental`. No existe `orvupi-text-experimental-0.1`. Arqiven-2 es solo un nombre. |
 | Equivalencia con otros asistentes | no aplicable | No se afirma. |
 
@@ -54,7 +54,7 @@ Estados: comprobado (hay prueba en esta corrida), pendiente, no aplicable.
 | Criterio | Estado | Evidencia |
 | --- | --- | --- |
 | Autorización de la ruta | comprobado | El propietario pidió la implementación en esta rama, sin merge y sin `wrangler`. |
-| Publicación en orvupi.com | pendiente | No hay deploy. El sitemap ya incluye las cinco URL para cuando se publique. |
+| Publicación en orvupi.com | pendiente en esta rama | La ruta ya está en producción por el merge `760e3d0` y el deploy `a30885da`. Este cambio de motor no se despliega aquí. |
 | Gasto | comprobado | Autorizado 0, gastado 0, reservado 0. Sin API de pago ni GPU. |
 | Reversión | comprobado como procedimiento | Revertir los commits de esta rama quita la ruta, la barra y el sitemap. `arqiven-core` apagado deja AiStudio como está. No se borra el motor de Work. |
 
@@ -66,10 +66,20 @@ Se eligió conservar funciones y la marca ARQIVEN.
 | --- | --- |
 | Nombre comercial «ORVUPI IA» e id `orvupi-text-experimental-0.1` | UI pública ARQIVEN. Id reservado `arqiven-1-experimental`. |
 | Respuestas de ejemplo de la maqueta v02 | No se copian. La caja admite texto y la respuesta dice que no hay generación. |
-| Work se presenta como «ORVUPI AI» | Se mantiene en la interfaz y en los tests e2e de Work, y en el paquete ya compilado `web/v2/work/`. El prompt de sistema en fuente ya no dice «Eres ORVUPI AI». |
-| Abrir CSP si la página descarga pesos | No se abre. La página no descarga pesos. Work conserva su excepción actual. |
+| Work se presenta como «ORVUPI AI» | El botón «Preparar ORVUPI AI» y el `aria-label` se mantienen por los e2e. El prompt del bundle ya no dice «Eres ORVUPI AI». La ficha visible dice que Qwen, LFM2 y SmolLM2 son de terceros. |
+| Abrir CSP si la página descarga pesos | Excepción mínima en `/arqiven/` y en el meta de las cinco páginas: Hugging Face y jsDelivr. `/*` y Studio no cambian. |
 | Tope de 100 € | No es autorización. Esta corrida gasta 0. |
+
+## Motor de terceros
+
+| Criterio | Estado | Evidencia |
+| --- | --- | --- |
+| Preparar no bloquea el hilo ni arranca solo | comprobado en fuente | `prepare()` hace `postMessage` y vuelve. El worker es un módulo en `/arqiven/engine-worker.mjs`. No hay llamada a `prepare` al cargar. |
+| Cancelar y error visibles | comprobado en fuente | Cancelar durante la descarga hace `terminate()`. El estado de error se escribe en `#engine-progress`. No hay «Pensando». |
+| Etiqueta | comprobado | Insignia `mode · provider · modelId · version`. El id por defecto es `smol135-cpu`, versión `SmolLM2-135M-Instruct`, provider `third-party`. |
+| Editor lateral | pendiente de medición | El editor muestra el texto local de la pestaña. En ancho de 1101 px o más es columna; por debajo ocupa la vista. No genera un documento. |
+| Anchos 360, 390, 768, 1366 y zoom 200 % con el motor | pendiente de esta corrida | La medición anterior sigue valiendo para la página sin preparar. Hay que repetirla con la barra de preparación y el editor. |
 
 ## Cómo probarlo en local
 
-Servir `web/v2/` y abrir `/arqiven/`. Escribir y enviar muestra la frase de «no hay respuesta generada». «Guardar en Work» crea una nota nueva en IndexedDB `orvupi-work`. No hace falta red para ese recorrido.
+Servir `web/v2/` y abrir `/arqiven/`. Enviar sin pulsar «Preparar modelo de terceros» muestra «No hay respuesta generada» y la insignia `rules · none · none`. Preparar descarga SmolLM2 en el navegador y, al terminar, la insignia pasa a `model · third-party · smol135-cpu · SmolLM2-135M-Instruct`. Cancelar corta la descarga. «Guardar en Work» sigue creando una nota nueva. Studio, sin motor listo en esa página, sigue respondiendo con el catálogo.

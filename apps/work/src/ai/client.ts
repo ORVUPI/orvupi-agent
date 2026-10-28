@@ -1,4 +1,4 @@
-/** Envoltorio del motor. Apagado salvo localStorage arqiven-core=1.
+/** Envoltorio del motor. Encendido salvo localStorage arqiven-core=0.
  * No renombra Qwen, LFM2 ni SmolLM2 a Arqiven-N.
  */
 
@@ -6,9 +6,9 @@ import { settleResult, type AiRequest, type AiResult } from "./contract";
 
 export function coreEnabled(): boolean {
   try {
-    return globalThis.localStorage?.getItem("arqiven-core") === "1";
+    return globalThis.localStorage?.getItem("arqiven-core") !== "0";
   } catch {
-    return false;
+    return true;
   }
 }
 

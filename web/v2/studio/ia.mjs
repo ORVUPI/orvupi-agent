@@ -21,9 +21,9 @@ import {
   withAssistantMessage,
   withUserMessage,
 } from "./lib/ia-chat.mjs";
-import { catalogAsk } from "../shared/ia/contract.mjs";
+import { studioAsk } from "../shared/ia/studio-hook.mjs";
 
-if (typeof globalThis.__ORVUPI_AI_ASK__ !== "function") globalThis.__ORVUPI_AI_ASK__ = catalogAsk;
+if (typeof globalThis.__ORVUPI_AI_ASK__ !== "function") globalThis.__ORVUPI_AI_ASK__ = studioAsk;
 
 const SVG_NS = "http:" + "//www.w3.org/2000/svg";
 
@@ -186,6 +186,9 @@ async function finishTurn(token, chatId, asked, profile, lang) {
     id: uid("m"),
     role: "assistant",
     text: answer.text,
+    mode: answer.mode,
+    provider: answer.provider,
+    modelId: answer.modelId,
     attachment: "",
     templates: answer.templates,
     format: answer.format,
@@ -537,6 +540,9 @@ function bibliotecaScreen(data, text) {
 
 function bubble(message) {
   const kids = [];
+  if (message.provider === "third-party") {
+    kids.push(el("p", { class: "ia-meta", text: `${message.mode || "model"} · third-party · ${message.modelId || ""}` }));
+  }
   if (message.text) kids.push(el("p", { text: message.text }));
   if (message.attachment) kids.push(el("p", { class: "ia-file", text: message.attachment }));
   return el("div", { class: `ia-bubble ia-${message.role}` }, kids);

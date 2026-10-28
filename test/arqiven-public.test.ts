@@ -65,7 +65,8 @@ describe("ARQIVEN público", () => {
     for (const loc of ["https://orvupi.com/arqiven/", "https://orvupi.com/en/arqiven/", "https://orvupi.com/pt-br/arqiven/", "https://orvupi.com/ja/arqiven/", "https://orvupi.com/ko/arqiven/"]) {
       assert.ok(sitemap.includes(loc), loc);
     }
-    assert.match(read("apps/work/src/app/App.tsx"), /workspace\.aiOpen && workspace\.view !== "ai"/);
+    assert.match(read("apps/work/src/app/App.tsx"), /workspace\.aiOpen \|\| workspace\.view === "ai"/);
+    assert.equal(read("apps/work/src/app/App.tsx").includes('navigate("ai")'), false);
     const contract = await import(pathToFileURL(path.join(root, "web/v2/shared/ia/contract.mjs")).href) as {
       capabilities: () => { models: string[]; documentsLeaveDevice: boolean; reservedModelId: string };
       createRequest: (input: { source: string; task: string; messages: Array<{ role: string; content: string }>; contextRefs: string[] }) => { source: string; task: string; contextRefs: string[] };
