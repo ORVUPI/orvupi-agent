@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { pathToFileURL, fileURLToPath } from "node:url";
 import { CONFIG, CPU_CHECK, CPU_CHECK_PARAMS, EXPECTED_PARAMS, countParams } from "./config.mjs";
+import { cpuStep } from "./paso-cpu.mjs";
 
 export { CONFIG, CPU_CHECK, CPU_CHECK_PARAMS, EXPECTED_PARAMS, countParams };
 
@@ -35,14 +36,18 @@ if (isMain()) {
     process.exit(1);
   }
   const manifest = readExampleManifest();
+  const step = cpuStep(CPU_CHECK);
+  if (step.checkpoint !== false || step.network !== false || step.publicModel !== false) process.exit(1);
   console.log(JSON.stringify({
     config: CONFIG,
     params: full,
     cpuCheck: CPU_CHECK,
     cpuCheckParams: tiny,
+    cpuStepLoss: step.loss,
     documents: manifest.documents.length,
     gpu: false,
     network: false,
     checkpoint: false,
+    publicModel: false,
   }));
 }

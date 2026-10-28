@@ -9,12 +9,12 @@ Estados: comprobado (hay prueba en esta corrida), pendiente, no aplicable.
 | Criterio | Estado | Evidencia |
 | --- | --- | --- |
 | Saludo «¿En qué puedo ayudarte?» | comprobado | Chrome headless del entorno, `http://127.0.0.1:8765/arqiven/`, 1366×900. El inglés dice «How can I help?». |
-| Caja protagonista, herramientas dentro, chips | comprobado | `#tools` visible en 360, 390, 768 y 1366. Enter abre el menú y activa «Resumir». El chip «Crear un texto» rellena la caja y no crea un mensaje. |
+| Caja protagonista, herramientas dentro, chips | comprobado | Chrome headless, 28-10-2026. Saludo «¿En qué puedo ayudarte?» y placeholder «Pregunta lo que quieras». Flecha abajo en Herramientas enfoca «Resumir» y Enter lo deja como «Tarea: Resumir». «Crear un texto» rellena la caja, no envía, y avisa que es un atajo. «Programar» dice que no está implementado y no crea un mensaje. |
 | Barra lateral | comprobado | Nuevo chat, Chat, Proyectos, Documentos, historial de la pestaña, enlaces a Work y Studio. Contraer deja el icono y el desbordamiento horizontal sigue en 0 (1366). |
 | Colores | comprobado | El botón de enviar usa `#fc2d63`, medido en la hoja del logotipo. No se recolorea el PNG. La cabecera de ORVUPI sigue en su CSS (`#FF3070` / `#102032`). |
-| 360, 390, 768, 1366 y zoom 200 % | comprobado | Con la barra de preparación, `scrollWidth - clientWidth = 0` en 360, 390, 768 y 1366, y con `zoom: 2` a 1366. Chrome headless. No es un teléfono físico. |
+| 360, 390, 768, 1366 y zoom 200 % | comprobado | `scrollWidth - clientWidth = 0` en 360, 390, 768 y 1366, y con `zoom: 2` a 1366. En 360 y 390 el menú abre la barra (`display: flex`) y Escape la cierra. Chrome headless. No es un teléfono físico. |
 | Sin datos personales de la maqueta | comprobado | No está «Espacio de Cristian» ni las respuestas fijas («Podríamos organizar tu idea», «RESUMEN DE EJEMPLO»). Test `arqiven-public`. |
-| Lo no hecho se dice | comprobado | Proyectos y Documentos: «pendiente de implementación». La voz avisa de que no hay micrófono. Tras pulsarla, `getUserMedia` no se llama. |
+| Lo no hecho se dice | comprobado | Proyectos y Documentos siguen en «pendiente de implementación». «Programar» avisa que no crea un programa. La voz no llama a `getUserMedia`. |
 | Nav tras Work y mapa | comprobado | Inicio, Herramientas, Work, ARQIVEN, Memes… en la home. 110 barras ya existentes más el mapa tras Studio. `aria-current="page"` en las cinco páginas de ARQIVEN. |
 | La home no es la página de funciones de la maqueta | comprobado | La vista inicial es el saludo y la caja. |
 
@@ -45,7 +45,7 @@ Estados: comprobado (hay prueba en esta corrida), pendiente, no aplicable.
 
 | Criterio | Estado | Evidencia |
 | --- | --- | --- |
-| Conteo a coste 0 | comprobado | `node docs/orvupi-ia/entrenamiento/comprobar.mjs` imprimió 17504640 y salió 0. Con `--checkpoint x.bin` salió 2 y no leyó el archivo. |
+| Conteo y paso CPU | comprobado | `comprobar.mjs` imprime 17504640, 108864 y `cpuStepLoss` 0.0007700743344215597 con semilla 42. Pesos aleatorios, sin red y sin checkpoint. Arqiven-1 no es un producto público. |
 | Entrenamiento | pendiente | No hay forward, backward, GPU ni red. El tope de 100 € no se usa. |
 | Id Arqiven-N | comprobado como reserva | El id de producto es `arqiven-1-experimental`. No existe `orvupi-text-experimental-0.1`. Arqiven-2 es solo un nombre. |
 | Equivalencia con otros asistentes | no aplicable | No se afirma. |
@@ -55,7 +55,7 @@ Estados: comprobado (hay prueba en esta corrida), pendiente, no aplicable.
 | Criterio | Estado | Evidencia |
 | --- | --- | --- |
 | Autorización de la ruta | comprobado | El propietario pidió la implementación en esta rama, sin merge y sin `wrangler`. |
-| Publicación en orvupi.com | live hasta el motor anterior | Merge `28289ef` y deploy `411d5b02` publicaron el motor con botón «Preparar». Esta rama quita ese paso obligatorio y no se despliega aquí. |
+| Publicación en orvupi.com | live el auto-prepare | Merge `df87efb` y deploy `5b516aa4` publicaron SmolLM2 al abrir `/arqiven/`. Esta rama no se despliega. |
 | Gasto | comprobado | Autorizado 0, gastado 0, reservado 0. Sin API de pago ni GPU. |
 | Reversión | comprobado como procedimiento | Revertir los commits de esta rama quita la ruta, la barra y el sitemap. `arqiven-core` apagado deja AiStudio como está. No se borra el motor de Work. |
 
