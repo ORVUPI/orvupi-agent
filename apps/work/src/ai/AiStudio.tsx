@@ -20,7 +20,7 @@ export type InsertMode = "insert" | "replace" | "below";
 
 const ES = {
   title: "ORVUPI AI",
-  privacy: "Funciona dentro de tu navegador. Tus documentos no salen del dispositivo: solo se descarga el modelo la primera vez y queda guardado.",
+  privacy: "Funciona dentro de tu navegador. Tus documentos no salen del dispositivo: solo se descarga el modelo la primera vez y queda guardado. Los modelos son de terceros (Qwen, LFM2, SmolLM2) y no se llaman Arqiven-N.",
   model: "1. Preparar la IA",
   checking: "Comprobando qué puede ejecutar este dispositivo…",
   none: "Este navegador no puede ejecutar la IA local. Prueba con Chrome, Edge, Firefox o Safari recientes.",
@@ -28,8 +28,8 @@ const ES = {
   modelGpuLarge: "Qwen2.5 1.5B · más preciso",
   modelCpu: "Qwen2.5 0.5B · compatible",
   modelCpuLarge: "Qwen2.5 1.5B · más preciso, en equipos con 8 GB o más",
-  modelTiny: "Modelo muy ligero",
-  modelLfm: "Modelo ligero, bueno en español",
+  modelTiny: "SmolLM2 135M · tercero",
+  modelLfm: "LFM2 350M · tercero",
   prepare: "Preparar ORVUPI AI ({size}, solo la primera vez)",
   prepareCached: "Preparar ORVUPI AI",
   ready: "IA lista en este dispositivo",
@@ -115,14 +115,14 @@ const ES = {
 };
 const EN: typeof ES = {
   ...ES,
-  privacy: "Runs inside your browser. Your documents never leave the device: only the model is downloaded once and cached.",
+  privacy: "Runs inside your browser. Your documents never leave the device: only the model is downloaded once and cached. The models belong to other authors (Qwen, LFM2, SmolLM2) and are not named Arqiven-N.",
   none: "This browser cannot run local AI. Try a recent Chrome, Edge, Firefox, or Safari.",
   modelGpuSmall: "Qwen2.5 0.5B",
   modelGpuLarge: "Qwen2.5 1.5B · more precise",
   modelCpu: "Qwen2.5 0.5B · compatible",
   modelCpuLarge: "Qwen2.5 1.5B · more precise, on devices with 8 GB or more",
-  modelTiny: "Very small model",
-  modelLfm: "Small model, strong in Spanish",
+  modelTiny: "SmolLM2 135M · third party",
+  modelLfm: "LFM2 350M · third party",
   ready: "AI is ready on this device",
   readyDetail: "You can summarize, explain, or create a document.",
   advanced: "Advanced options",

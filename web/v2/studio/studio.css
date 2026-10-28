@@ -3622,6 +3622,7 @@ body.studio-standalone:has(.canva-disenos) { background: #fff; }
   line-height: 1.4;
 }
 .ia-bubble p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ia-bubble .ia-meta { font-size: 12px; color: #82613a; }
 .ia-bubble p + p { margin-top: 6px; }
 .ia-user {
   align-self: flex-end;

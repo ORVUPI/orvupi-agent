@@ -130,7 +130,7 @@ export function App() {
   else if (workspace.view === "drawings") content = <DrawingsScreen />;
   else if (workspace.view === "notes") content = <NotesScreen />;
   else if (workspace.view === "pdf") content = <PdfScreen />;
-  else if (workspace.view === "ai") content = <div className="ow-page ow-ai-page"><h1>{workspace.t("aiTitle")}</h1><AiStudio locale={workspace.locale} storage={workspace.storage} files={workspace.files} /></div>;
+  else if (workspace.view === "ai") content = <div className="ow-page ow-ai-page"><h1>{workspace.t("aiTitle")}</h1><p>{workspace.t("aiOnePanel")}</p></div>;
 
   if (workspace.bootError) {
     content = (
@@ -171,10 +171,8 @@ export function App() {
             else if (id === "recent") void workspace.showBrowse("recent");
             else if (id === "starred") void workspace.showBrowse("starred");
             else if (id === "trash") void workspace.showBrowse("trash");
-            else if (id === "ai") {
-              workspace.setAiOpen(true);
-              void workspace.navigate("ai");
-            } else void workspace.navigate(id as ViewId);
+            else if (id === "ai") workspace.setAiOpen(true);
+            else void workspace.navigate(id as ViewId);
           }}
           onClose={() => workspace.setNavOpen(false)}
           closeLabel={workspace.t("closeMenu")}
@@ -297,7 +295,7 @@ export function App() {
         />
       )}
       aside={
-        workspace.aiOpen && workspace.view !== "ai" ? (
+        workspace.aiOpen || workspace.view === "ai" ? (
           <aside className="ow-ai" data-tool="ai" aria-label={workspace.t("aiTitle")}>
             <header>
               <h2>{workspace.t("aiTitle")}</h2>
