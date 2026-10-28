@@ -189,6 +189,7 @@ async function finishTurn(token, chatId, asked, profile, lang) {
     mode: answer.mode,
     provider: answer.provider,
     modelId: answer.modelId,
+    modelVersion: answer.modelVersion,
     attachment: "",
     templates: answer.templates,
     format: answer.format,
@@ -541,7 +542,8 @@ function bibliotecaScreen(data, text) {
 function bubble(message) {
   const kids = [];
   if (message.provider === "third-party") {
-    kids.push(el("p", { class: "ia-meta", text: `${message.mode || "model"} · third-party · ${message.modelId || ""}` }));
+    const version = message.modelVersion ? ` · ${message.modelVersion}` : "";
+    kids.push(el("p", { class: "ia-meta", text: `${message.mode || "model"} · third-party · ${message.modelId || ""}${version}` }));
   }
   if (message.text) kids.push(el("p", { text: message.text }));
   if (message.attachment) kids.push(el("p", { class: "ia-file", text: message.attachment }));

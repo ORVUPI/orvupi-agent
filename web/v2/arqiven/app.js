@@ -11,14 +11,14 @@ const honest = root.getAttribute("data-honest") || honestResult(createRequest({ 
 const uiLang = lang === "en" ? "en" : lang === "pt" || lang === "pt-BR" ? "pt" : lang === "ja" ? "ja" : lang === "ko" ? "ko" : "es";
 const UI = {
   es: {
-    prepare: "Preparar modelo de terceros",
+    prepare: "Reintentar",
     ready: "Modelo de terceros listo",
-    again: "Cambiar modelo de terceros",
+    again: "Usar este modelo",
     cancel: "Cancelar",
     preparing: "Descargando un modelo de terceros. Puedes seguir escribiendo.",
     checking: "Comprobando que el modelo de terceros responde en este navegador.",
     idle: "Sin modelo",
-    queued: "El modelo de terceros sigue descargándose. Este aviso se sustituye cuando haya texto.",
+    queued: "Preparando modelo de terceros… Puedes seguir escribiendo. Este aviso se sustituye cuando haya texto.",
     cancelled: "Cancelado. No hay respuesta generada.",
     error: "El modelo de terceros no se ha preparado.",
     emptyModel: "El modelo de terceros no escribió un texto usable.",
@@ -30,14 +30,14 @@ const UI = {
     third: "tercero",
   },
   en: {
-    prepare: "Prepare a third-party model",
+    prepare: "Retry",
     ready: "Third-party model ready",
-    again: "Switch third-party model",
+    again: "Use this model",
     cancel: "Cancel",
     preparing: "Downloading a third-party model. You can keep typing.",
     checking: "Checking that the third-party model answers in this browser.",
     idle: "No model",
-    queued: "The third-party model is still downloading. This notice is replaced when there is text.",
+    queued: "Preparing a third-party model… You can keep typing. This notice is replaced when there is text.",
     cancelled: "Cancelled. There is no generated answer.",
     error: "The third-party model was not prepared.",
     emptyModel: "The third-party model did not write usable text.",
@@ -49,14 +49,14 @@ const UI = {
     third: "third party",
   },
   pt: {
-    prepare: "Preparar modelo de terceiros",
+    prepare: "Tentar de novo",
     ready: "Modelo de terceiros pronto",
-    again: "Trocar modelo de terceiros",
+    again: "Usar este modelo",
     cancel: "Cancelar",
     preparing: "Baixando um modelo de terceiros. Você pode continuar escrevendo.",
     checking: "Conferindo se o modelo de terceiros responde neste navegador.",
     idle: "Sem modelo",
-    queued: "O modelo de terceiros ainda está baixando. Este aviso é trocado quando houver texto.",
+    queued: "Preparando modelo de terceiros… Você pode continuar escrevendo. Este aviso é trocado quando houver texto.",
     cancelled: "Cancelado. Não há resposta gerada.",
     error: "O modelo de terceiros não foi preparado.",
     emptyModel: "O modelo de terceiros não escreveu um texto usável.",
@@ -68,14 +68,14 @@ const UI = {
     third: "terceiro",
   },
   ja: {
-    prepare: "第三者モデルを準備",
+    prepare: "再試行",
     ready: "第三者モデルの準備ができました",
-    again: "第三者モデルを変える",
+    again: "このモデルを使う",
     cancel: "キャンセル",
     preparing: "第三者モデルをダウンロードしています。入力は続けられます。",
     checking: "このブラウザで第三者モデルが応答するか確認しています。",
     idle: "モデルなし",
-    queued: "第三者モデルはまだダウンロード中です。テキストができたらこの表示を置き換えます。",
+    queued: "第三者モデルを準備しています… 入力は続けられます。テキストができたらこの表示を置き換えます。",
     cancelled: "キャンセルしました。生成された回答はありません。",
     error: "第三者モデルを準備できませんでした。",
     emptyModel: "第三者モデルは使えるテキストを書きませんでした。",
@@ -87,14 +87,14 @@ const UI = {
     third: "第三者",
   },
   ko: {
-    prepare: "제3자 모델 준비",
+    prepare: "다시 시도",
     ready: "제3자 모델이 준비되었습니다",
-    again: "제3자 모델 바꾸기",
+    again: "이 모델 사용",
     cancel: "취소",
     preparing: "제3자 모델을 받는 중입니다. 계속 입력할 수 있습니다.",
     checking: "이 브라우저에서 제3자 모델이 응답하는지 확인하는 중입니다.",
     idle: "모델 없음",
-    queued: "제3자 모델은 아직 받는 중입니다. 텍스트가 생기면 이 안내를 바꿉니다.",
+    queued: "제3자 모델을 준비하는 중… 계속 입력할 수 있습니다. 텍스트가 생기면 이 안내를 바꿉니다.",
     cancelled: "취소했습니다. 생성된 답은 없습니다.",
     error: "제3자 모델을 준비하지 못했습니다.",
     emptyModel: "제3자 모델이 쓸 수 있는 글을 쓰지 않았습니다.",
@@ -239,7 +239,7 @@ function updateEngineUi() {
     else pill.textContent = ui.idle;
   }
   prepare.textContent = snap.phase === "ready" ? ui.again : ui.prepare;
-  prepare.disabled = snap.phase === "preparing";
+  prepare.disabled = snap.phase === "preparing" || snap.phase === "ready" && modelPick.value === snap.modelId;
   cancel.hidden = snap.phase !== "preparing" && !state.queue.some((item) => item.running);
   if (snap.phase === "preparing") {
     const file = snap.progress.file ? ` ${snap.progress.file}` : "";
@@ -288,7 +288,7 @@ function paint() {
         meta.className = "meta";
         const badge = document.createElement("span");
         badge.className = "badge";
-        badge.textContent = badgeOf(item);
+        badge.textContent = item.pending ? `${ui.queued.split("…")[0]}… · ${ui.third} · ${defaultModel().id}` : badgeOf(item);
         meta.append(badge);
         node.append(meta);
       }
@@ -404,6 +404,20 @@ async function streamInto(item, request) {
   paint();
 }
 
+function failQueue(message) {
+  for (const item of state.messages) {
+    if (!item.pending) continue;
+    item.pending = false;
+    item.request = null;
+    item.content = `${ui.error} ${message || ""}`.trim();
+    item.mode = "rules";
+    item.provider = "none";
+    item.modelId = "none";
+    item.modelVersion = "";
+  }
+  state.queue = state.queue.filter((item) => item.running);
+}
+
 async function flushQueue() {
   const next = state.queue.find((item) => item.pending && item.request);
   if (!next || !state.snap.ready) return;
@@ -441,13 +455,9 @@ async function send() {
   const chip = document.getElementById("file-chip");
   if (chip) chip.textContent = "";
   if (!state.snap.ready) {
-    if (state.snap.phase === "preparing") {
-      const item = assistant({ content: ui.queued, pending: true, request });
-      state.queue.push(item);
-    } else {
-      const answer = honestResult(request, lang);
-      assistant({ content: honest || answer.text, mode: answer.mode, provider: answer.provider, modelId: answer.modelId });
-    }
+    if (state.snap.phase !== "preparing") engine.prepare(modelPick.value || defaultModel().id);
+    const item = assistant({ content: ui.queued, pending: true, request });
+    state.queue.push(item);
     paint();
     field?.focus();
     return;
@@ -461,6 +471,7 @@ engine.subscribe((snap) => {
   const was = state.snap.phase;
   state.snap = snap;
   if (snap.phase === "idle" && was === "preparing") markCancelled();
+  if (snap.phase === "error") failQueue(snap.error);
   paint();
   if (snap.phase === "ready") void flushQueue();
 });
@@ -587,4 +598,5 @@ save?.addEventListener("click", () => {
 });
 
 search?.addEventListener("input", () => paint());
+engine.prepare(defaultModel().id);
 paint();

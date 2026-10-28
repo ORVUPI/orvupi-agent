@@ -1,28 +1,22 @@
-/** Esqueleto a coste 0. Cuenta parámetros de la config de partida. No carga pesos, no usa red y no usa GPU. */
+/** Esqueleto a coste 0. Cuenta parámetros y comprueba que el manifiesto de ejemplo está vacío. No carga pesos. */
 
-import { pathToFileURL } from "node:url";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { pathToFileURL, fileURLToPath } from "node:url";
+import { CONFIG, CPU_CHECK, CPU_CHECK_PARAMS, EXPECTED_PARAMS, countParams } from "./config.mjs";
 
-export const CONFIG = {
-  initialize_from: "random",
-  seed: 42,
-  n_layer: 8,
-  n_embd: 384,
-  n_head: 6,
-  n_ctx: 512,
-  vocab: 8192,
-};
+export { CONFIG, CPU_CHECK, CPU_CHECK_PARAMS, EXPECTED_PARAMS, countParams };
 
-/** GPT pequeño: embeddings atados, posición aprendida, sin sesgos, MLP 4x. n_head solo fija el tamaño de cabeza. */
-export function countParams(config = CONFIG) {
-  if (config.initialize_from !== "random") throw new Error("solo random");
-  if (config.n_embd % config.n_head !== 0) throw new Error("cabezas");
-  const hidden = config.n_embd;
-  const embeddings = config.vocab * hidden + config.n_ctx * hidden;
-  const perLayer = 4 * hidden * hidden + 8 * hidden * hidden + 2 * hidden;
-  return embeddings + config.n_layer * perLayer + hidden;
+export function readExampleManifest(dir = dirname(fileURLToPath(import.meta.url))) {
+  const manifest = JSON.parse(readFileSync(join(dir, "manifiesto.ejemplo.json"), "utf8"));
+  if (manifest.format !== "arqiven-data-manifest" || manifest.version !== 1) throw new Error("formato");
+  if (manifest.modelId !== "arqiven-1-experimental" || manifest.initialize_from !== "random") throw new Error("ficha");
+  if (!Array.isArray(manifest.documents) || manifest.documents.length !== 0) throw new Error("documentos");
+  for (const split of ["train", "valid", "test"]) {
+    if (!Array.isArray(manifest.splits?.[split]) || manifest.splits[split].length !== 0) throw new Error("particion");
+  }
+  return manifest;
 }
-
-export const EXPECTED_PARAMS = 17504640;
 
 function isMain() {
   return Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;
@@ -34,10 +28,21 @@ if (isMain()) {
     console.error("Este esqueleto no carga pesos.");
     process.exit(2);
   }
-  const total = countParams(CONFIG);
-  if (total !== EXPECTED_PARAMS) {
-    console.error(String(total));
+  const full = countParams(CONFIG);
+  const tiny = countParams(CPU_CHECK);
+  if (full !== EXPECTED_PARAMS || tiny !== CPU_CHECK_PARAMS) {
+    console.error(JSON.stringify({ full, tiny }));
     process.exit(1);
   }
-  console.log(JSON.stringify({ ...CONFIG, params: total, gpu: false, network: false, checkpoint: false }));
+  const manifest = readExampleManifest();
+  console.log(JSON.stringify({
+    config: CONFIG,
+    params: full,
+    cpuCheck: CPU_CHECK,
+    cpuCheckParams: tiny,
+    documents: manifest.documents.length,
+    gpu: false,
+    network: false,
+    checkpoint: false,
+  }));
 }

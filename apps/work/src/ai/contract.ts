@@ -45,7 +45,8 @@ export function buildWorkRequest(input: {
   const task = TASKS.includes(input.task as AiTask) ? (input.task as AiTask) : "chat";
   const messages = input.messages.flatMap((item) => {
     if ((item.role !== "user" && item.role !== "assistant") || typeof item.content !== "string") return [];
-    return [{ role: item.role, content: item.content.slice(0, 8000) }];
+    const role: "user" | "assistant" = item.role;
+    return [{ role, content: item.content.slice(0, 8000) }];
   }).slice(0, 40);
   const request: AiRequest = {
     requestId: newId(),
