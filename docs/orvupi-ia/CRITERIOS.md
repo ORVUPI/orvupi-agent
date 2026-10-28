@@ -35,8 +35,10 @@ Estados: comprobado (hay prueba en esta corrida), pendiente, no aplicable.
 
 | Criterio | Estado | Evidencia |
 | --- | --- | --- |
-| Guardar es explícito y no pisa | comprobado | Dos pulsaciones de «Guardar en Work» crearon `432bbff6-7287-496a-8474-f485cc867d3a` y `fca6ba35-816e-43cc-82f5-755d47f2e93c`. Nota `orvupi-note` versión 1. `BroadcastChannel` lo emite `work-store.mjs`. |
-| TXT/MD se lee aquí | comprobado | `nota.txt` dejó el estado «Archivo leído en este navegador. No se ha enviado a ningún servidor.» |
+| Guardar es explícito y no pisa | comprobado | Dos pulsaciones crearon `2e0c44d7-233f-48e5-87d4-d8ebeab82917` y `6ee56fbd-20cc-4a7b-8b78-03f923ac00fa`. La segunda se releyó: `orvupi-note` v1, `kind: note`, MIME `application/vnd.orvupi.note+json`, base `orvupi-work`. El cuerpo conservó `<script>` como texto. |
+| Dónde se procesa y se guarda | comprobado | El editor dice que el modelo corre en este navegador y que guardar escribe en IndexedDB `orvupi-work` de este dispositivo. |
+| TXT/MD se lee aquí | comprobado | Sigue el aviso de lectura local. Otros formatos no se leen. No hay OCR. |
+| Sin ejecución del texto | comprobado | `app.js` no usa `innerHTML`. `sanitizePlain` quita controles y deja las etiquetas como texto. |
 | Sin `localStorage` para encender la página | comprobado | `app.js` no usa `localStorage`. |
 | Los documentos no salen | comprobado en política | `documentsLeaveDevice: false`. La CSP nueva de `/arqiven/` solo añade Hugging Face y jsDelivr, los orígenes que Work ya usa para pesos y WASM. No hay `unsafe-inline`, ni YouTube, ni `form-action`. `/*` sigue en `connect-src 'self'`. Studio no recibe esa excepción. |
 | OCR y DOCX/PDF | pendiente | La página dice que no genera DOCX ni PDF. No se ha vuelto a medir la fidelidad de pdf.js en Work. Esa lectura sigue siendo `getTextContent`, no OCR. |
@@ -78,7 +80,7 @@ Se eligió conservar funciones y la marca ARQIVEN.
 | La descarga arranca al abrir | comprobado | Chrome headless, sin pulsar el botón. El estado empezó en «Descargando un modelo de terceros. Puedes seguir escribiendo.» La caja seguía habilitada. El botón decía «Reintentar». Un «hola» mostró «Preparando modelo de terceros… · tercero · smol135-cpu» y acabó en `model · third-party · smol135-cpu · SmolLM2-135M-Instruct` con texto del modelo («Hello! I'm glad you…»). No es Arqiven-1. |
 | Cancelar | comprobado | En una carga anterior, Cancelar dejó el progreso vacío y la pastilla en «Sin modelo». |
 | Etiqueta tras generar | comprobado | Con el modelo listo, la pastilla era `tercero · smol135-cpu`. Un envío produjo `model · third-party · smol135-cpu · SmolLM2-135M-Instruct` y texto del modelo. No es una respuesta fija de la maqueta ni un Arqiven-1. SmolLM2 135M divaga: eso se muestra, no se reescribe. |
-| Editor lateral | comprobado | A 390 px el editor mide 390×844 y tapa la vista. El aviso dice que es texto local, no un documento generado. Desbordamiento 0. |
+| Editor con el resultado | comprobado | Chrome headless, 1366. Tras «hola», sin pulsar Editar, el panel se abrió con el texto del modelo y la insignia `model · third-party · smol135-cpu · SmolLM2-135M-Instruct`. A 390 px el editor abierto mide 390×844 y el cierre dice «Volver al chat». |
 | Voz | comprobado | El botón dejó el aviso de propuesta. `getUserMedia` no se llamó. |
 
 ## Cómo probarlo en local
