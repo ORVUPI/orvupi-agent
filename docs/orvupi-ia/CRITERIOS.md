@@ -23,13 +23,13 @@ Estados: comprobado (hay prueba en esta corrida), pendiente, no aplicable.
 | Criterio | Estado | Evidencia |
 | --- | --- | --- |
 | Contrato AiRequest / AiResult | comprobado | `web/v2/shared/ia/contract.mjs` y el paralelo `apps/work/src/ai/contract.ts`. Test de `createRequest`, `honestResult`, `settleResult`. |
-| Sin modelo preparado: `none` / `rules` | comprobado | Chrome headless, `/arqiven/`. Enviar «hola» sin preparar dejó `rules · none · none` y «No hay respuesta generada…». La caja siguió habilitada. El cuerpo no contiene «Pensando». |
+| Arranque solo del modelo de terceros | comprobado en fuente | Al cargar, `app.js` llama a `engine.prepare(defaultModel().id)` (SmolLM2). Enviar antes de que esté listo encola «Preparando modelo de terceros…» y no deja `rules · none · none` por no haber pulsado un botón. El botón visible es «Reintentar» o «Usar este modelo». Si la descarga falla, el aviso es el error, no una generación. |
 | Un tercero no pasa a llamarse Arqiven-N | comprobado | `thirdPartyResult` deja `smol135-cpu` / `third-party` / `SmolLM2-135M-Instruct`. `arqiven-1-experimental` sin checkpoint vuelve a `none`. `capabilities().models` sigue vacío. Test `arqiven-engine`. |
-| Una sola superficie de AiStudio | comprobado en fuente y en el bundle | El menú abre el panel y no navega a `ai`. La ruta `ai` muestra un aviso y el mismo panel. El bundle `index-CS73DIMf.js` repite ese montaje. No se ha rehecho el build de Work. |
+| Una sola superficie de AiStudio | comprobado en el bundle reconstruido | `vite build --base /work/` publicó `index-BGkMX4Gd.js`. El menú no navega a `ai`. La ruta muestra el aviso y el mismo panel. |
 | Studio no sustituye el catálogo | comprobado | Sin `__ARQIVEN_ENGINE__.ready`, `studioAsk()` devuelve el catálogo vacío. Un resultado `arqiven` sin checkpoint tampoco lo sustituye. «Textos rápidos» no se toca. |
 | Textos rápidos y espera honesta | comprobado en fuente | Título del panel en `ai-optional.mjs`. La copia dice «Buscando en el catálogo…». El spec de Playwright de Studio no se ha vuelto a ejecutar. |
 | Sin SharedWorker | comprobado | `app.js` no lo menciona. El worker de ARQIVEN es dedicado, un hilo (`numThreads = 1`). |
-| Flag `arqiven-core` | comprobado en fuente | `coreEnabled()` es verdadero salvo `localStorage` `arqiven-core=0`. El bundle publicado no llama a `runWorkGenerate`: esa llamada se añadió después del último build de Work. |
+| Flag `arqiven-core` | comprobado en el bundle | `coreEnabled()` es verdadero salvo `localStorage` `arqiven-core=0`. El JS publicado contiene `arqiven-core`)!==`0`. El prompt no dice «Eres ORVUPI AI». |
 
 ## C. Privacidad y documentos
 
@@ -55,7 +55,7 @@ Estados: comprobado (hay prueba en esta corrida), pendiente, no aplicable.
 | Criterio | Estado | Evidencia |
 | --- | --- | --- |
 | Autorización de la ruta | comprobado | El propietario pidió la implementación en esta rama, sin merge y sin `wrangler`. |
-| Publicación en orvupi.com | pendiente en esta rama | La ruta ya está en producción por el merge `760e3d0` y el deploy `a30885da`. Este cambio de motor no se despliega aquí. |
+| Publicación en orvupi.com | live hasta el motor anterior | Merge `28289ef` y deploy `411d5b02` publicaron el motor con botón «Preparar». Esta rama quita ese paso obligatorio y no se despliega aquí. |
 | Gasto | comprobado | Autorizado 0, gastado 0, reservado 0. Sin API de pago ni GPU. |
 | Reversión | comprobado como procedimiento | Revertir los commits de esta rama quita la ruta, la barra y el sitemap. `arqiven-core` apagado deja AiStudio como está. No se borra el motor de Work. |
 
@@ -75,7 +75,7 @@ Se eligió conservar funciones y la marca ARQIVEN.
 
 | Criterio | Estado | Evidencia |
 | --- | --- | --- |
-| Preparar no bloquea el hilo ni arranca solo | comprobado | El click pidió `transformers@4.3.1` en jsDelivr y `HuggingFaceTB/SmolLM2-135M-Instruct` en Hugging Face. A los 2 s el estado era «Descargando un modelo de terceros. Puedes seguir escribiendo. 100% onnx/model_quantized.onnx». La caja seguía habilitada. |
+| La descarga arranca al abrir | comprobado | Chrome headless, sin pulsar el botón. El estado empezó en «Descargando un modelo de terceros. Puedes seguir escribiendo.» La caja seguía habilitada. El botón decía «Reintentar». Un «hola» mostró «Preparando modelo de terceros… · tercero · smol135-cpu» y acabó en `model · third-party · smol135-cpu · SmolLM2-135M-Instruct` con texto del modelo («Hello! I'm glad you…»). No es Arqiven-1. |
 | Cancelar | comprobado | En una carga anterior, Cancelar dejó el progreso vacío y la pastilla en «Sin modelo». |
 | Etiqueta tras generar | comprobado | Con el modelo listo, la pastilla era `tercero · smol135-cpu`. Un envío produjo `model · third-party · smol135-cpu · SmolLM2-135M-Instruct` y texto del modelo. No es una respuesta fija de la maqueta ni un Arqiven-1. SmolLM2 135M divaga: eso se muestra, no se reescribe. |
 | Editor lateral | comprobado | A 390 px el editor mide 390×844 y tapa la vista. El aviso dice que es texto local, no un documento generado. Desbordamiento 0. |
@@ -83,4 +83,4 @@ Se eligió conservar funciones y la marca ARQIVEN.
 
 ## Cómo probarlo en local
 
-Servir `web/v2/` y abrir `/arqiven/`. Enviar sin pulsar «Preparar modelo de terceros» muestra «No hay respuesta generada» y la insignia `rules · none · none`. Preparar descarga SmolLM2 en el navegador y, al terminar, la insignia pasa a `model · third-party · smol135-cpu · SmolLM2-135M-Instruct`. Cancelar corta la descarga. «Guardar en Work» sigue creando una nota nueva. Studio, sin motor listo en esa página, sigue respondiendo con el catálogo.
+Servir `web/v2/` y abrir `/arqiven/`. Sin pulsar nada, la página descarga SmolLM2 y se puede escribir. Enviar «hola» antes de que termine deja «Preparando modelo de terceros…» y, al acabar, la insignia `model · third-party · smol135-cpu · SmolLM2-135M-Instruct`. Si la descarga falla, el texto es el error y «Reintentar» vuelve a pedir el modelo. No queda `rules · none · none` solo por no haber pulsado un botón. «Guardar en Work» sigue creando una nota nueva. Studio, sin motor listo en esa página, sigue con el catálogo y «Textos rápidos».

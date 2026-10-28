@@ -1,0 +1,10 @@
+{
+  "format": "arqiven-data-manifest",
+  "version": 1,
+  "modelId": "arqiven-1-experimental",
+  "initialize_from": "random",
+  "seed": 42,
+  "documents": [],
+  "splits": { "train": [], "valid": [], "test": [] },
+  "notes": "Ejemplo vacío. No hay documentos, licencias ni hashes. No autoriza entrenamiento ni gasto."
+}

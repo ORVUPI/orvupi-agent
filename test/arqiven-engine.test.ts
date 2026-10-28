@@ -43,7 +43,7 @@ describe("motor de terceros de ARQIVEN", () => {
     const hook = await import(pathToFileURL(path.join(root, "web/v2/shared/ia/studio-hook.mjs")).href) as {
       studioAsk: (input: { text: string }) => Promise<{ text: string; mode: string; provider: string; modelId: string }>;
     };
-    const bag = globalThis as typeof globalThis & { __ARQIVEN_ENGINE__?: { ready: boolean; run: (request: unknown) => Promise<unknown> } };
+    const bag = globalThis as typeof globalThis & { __ARQIVEN_ENGINE__?: { ready: boolean; timeoutMs?: number; run: (request: unknown) => Promise<unknown> } };
     const previous = bag.__ARQIVEN_ENGINE__;
     delete bag.__ARQIVEN_ENGINE__;
     assert.deepEqual(await hook.studioAsk({ text: "logo" }), { text: "", mode: "rules", provider: "none", modelId: "none" });
@@ -61,6 +61,10 @@ describe("motor de terceros de ARQIVEN", () => {
     };
     assert.equal((await hook.studioAsk({ text: "logo" })).text, "");
     bag.__ARQIVEN_ENGINE__ = { ready: false, run: async () => ({ text: "no", modelId: "smol135-cpu", provider: "third-party", mode: "model" }) };
+    assert.equal((await hook.studioAsk({ text: "logo" })).text, "");
+    bag.__ARQIVEN_ENGINE__ = { ready: true, timeoutMs: 30, run: () => new Promise(() => undefined) };
+    assert.equal((await hook.studioAsk({ text: "logo" })).text, "");
+    bag.__ARQIVEN_ENGINE__ = { ready: true, run: async () => ({ text: "otro", modelId: "inventado", provider: "third-party", mode: "model" }) };
     assert.equal((await hook.studioAsk({ text: "logo" })).text, "");
     if (previous) bag.__ARQIVEN_ENGINE__ = previous;
     else delete bag.__ARQIVEN_ENGINE__;
@@ -81,6 +85,9 @@ describe("motor de terceros de ARQIVEN", () => {
     assert.equal(worker.includes("arqiven-1"), false);
     assert.equal(worker.includes("Eres ORVUPI AI"), false);
     assert.match(app, /honestResult/);
+    assert.match(app, /engine\.prepare\(defaultModel\(\)\.id\)/);
+    assert.match(app, /Preparando modelo de terceros/);
+    assert.equal(app.includes("Preparar modelo de terceros"), false);
     assert.match(app, /prepare\.addEventListener/);
     assert.equal(app.includes("Pensando"), false);
     assert.equal(app.includes("getUserMedia"), false);
@@ -105,10 +112,13 @@ describe("motor de terceros de ARQIVEN", () => {
       assert.equal(meta.includes("youtube"), false, rel);
       assert.equal(meta.includes("'unsafe-eval'"), false, rel);
     }
-    const bundle = read("web/v2/work/assets/index-CS73DIMf.js");
+    const entry = read("web/v2/work/index.html").match(/src="(\/work\/assets\/index-[^"]+\.js)"/)?.[1] ?? "";
+    assert.match(entry, /\/work\/assets\/index-/);
+    const bundle = read(`web/v2${entry}`);
     assert.equal(bundle.includes("Eres ORVUPI AI"), false);
     assert.match(bundle, /No digas que eres Arqiven-N/);
     assert.match(bundle, /aside:e\.aiOpen\|\|e\.view===`ai`/);
+    assert.match(bundle, /arqiven-core`\)!==`0`/);
     assert.equal(bundle.includes("e.navigate(`ai`)"), false);
     assert.match(bundle, /Preparar ORVUPI AI/);
     assert.match(read("apps/work/src/ai/client.ts"), /arqiven-core"\) !== "0"/);
@@ -119,8 +129,10 @@ describe("motor de terceros de ARQIVEN", () => {
   test("el esqueleto de entrenamiento cuenta parámetros y no abre la red", async () => {
     const train = await import(pathToFileURL(path.join(root, "docs/orvupi-ia/entrenamiento/comprobar.mjs")).href) as {
       CONFIG: { initialize_from: string; seed: number; n_layer: number; n_embd: number; n_head: number; n_ctx: number; vocab: number };
-      countParams: (config?: { initialize_from: string; seed: number; n_layer: number; n_embd: number; n_head: number; n_ctx: number; vocab: number }) => number;
+      CPU_CHECK: { device: string; n_layer: number; initialize_from: string; seed: number; n_embd: number; n_head: number; n_ctx: number; vocab: number; modelId: string; ffn_hidden_size: number; tie_embeddings: boolean };
+      countParams: (config?: { initialize_from: string; modelId: string; device: string; n_embd: number; n_head: number; ffn_hidden_size: number; n_ctx: number; vocab: number; n_layer: number; tie_embeddings: boolean }) => number;
       EXPECTED_PARAMS: number;
+      CPU_CHECK_PARAMS: number;
     };
     assert.equal(train.CONFIG.initialize_from, "random");
     assert.equal(train.CONFIG.seed, 42);
@@ -131,6 +143,13 @@ describe("motor de terceros de ARQIVEN", () => {
     assert.equal(train.CONFIG.vocab, 8192);
     assert.equal(train.countParams(), train.EXPECTED_PARAMS);
     assert.equal(train.EXPECTED_PARAMS, 17504640);
+    assert.equal(train.countParams(train.CPU_CHECK), train.CPU_CHECK_PARAMS);
+    assert.equal(train.CPU_CHECK_PARAMS, 108864);
+    assert.equal(train.CPU_CHECK.device, "cpu");
+    assert.equal(train.CPU_CHECK.n_layer, 2);
+    const manifest = JSON.parse(read("docs/orvupi-ia/entrenamiento/manifiesto.ejemplo.json")) as { documents: unknown[]; modelId: string };
+    assert.equal(manifest.modelId, "arqiven-1-experimental");
+    assert.deepEqual(manifest.documents, []);
     const source = read("docs/orvupi-ia/entrenamiento/comprobar.mjs");
     assert.equal(source.includes("fetch("), false);
     assert.equal(source.includes("https://"), false);
