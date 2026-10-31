@@ -151,3 +151,15 @@ https://superb-horse-9036f5.netlify.app/*  https://orvupi.com/:splat  301!
 /ja/token/metadata.json                          /token/metadata.json 200
 /ko/token/metadata.json                          /token/metadata.json 200
 # /i18n:rewrites
+
+# ORVUPI Sonar: /sonar/ es el alias de la app. /verify/ sigue respondiendo.
+/sonar              /verify/     200
+/sonar/             /verify/     200
+/en/sonar           /en/verify/  200
+/en/sonar/          /en/verify/  200
+/pt-br/sonar        /pt-br/verify/ 200
+/pt-br/sonar/       /pt-br/verify/ 200
+/ja/sonar           /ja/verify/  200
+/ja/sonar/          /ja/verify/  200
+/ko/sonar           /ko/verify/  200
+/ko/sonar/          /ko/verify/  200

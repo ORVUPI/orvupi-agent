@@ -1,0 +1,127 @@
+{
+  "schema": "orvupi.verify.chains.v1",
+  "checked": "2026-10-31",
+  "limits": {
+    "maxNodes": 16,
+    "maxDepth": 2,
+    "maxSignatures": 12,
+    "maxTransactions": 6,
+    "pageSize": 8,
+    "maxChainsPerRead": 3
+  },
+  "chains": [
+    {
+      "id": "solana",
+      "family": "solana",
+      "status": "viable-con-limites",
+      "label": { "es": "Solana", "en": "Solana" },
+      "rpc": ["https://solana-rpc.publicnode.com", "https://api.mainnet-beta.solana.com"],
+      "gecko": "solana",
+      "native": { "symbol": "SOL", "decimals": 9 },
+      "explorer": "https://solscan.io/account/{address}"
+    },
+    {
+      "id": "ethereum",
+      "family": "evm",
+      "status": "viable-con-limites",
+      "chainId": 1,
+      "label": { "es": "Ethereum", "en": "Ethereum" },
+      "rpc": ["https://ethereum-rpc.publicnode.com", "https://cloudflare-eth.com"],
+      "gecko": "eth",
+      "native": { "symbol": "ETH", "decimals": 18 },
+      "explorer": "https://etherscan.io/address/{address}"
+    },
+    {
+      "id": "base",
+      "family": "evm",
+      "status": "viable-con-limites",
+      "chainId": 8453,
+      "label": { "es": "Base", "en": "Base" },
+      "rpc": ["https://mainnet.base.org", "https://base-rpc.publicnode.com"],
+      "gecko": "base",
+      "native": { "symbol": "ETH", "decimals": 18 },
+      "explorer": "https://basescan.org/address/{address}"
+    },
+    {
+      "id": "bnb",
+      "family": "evm",
+      "status": "viable-con-limites",
+      "chainId": 56,
+      "label": { "es": "BNB Chain", "en": "BNB Chain" },
+      "rpc": ["https://bsc-rpc.publicnode.com", "https://bsc-dataseed.binance.org"],
+      "gecko": "bsc",
+      "native": { "symbol": "BNB", "decimals": 18 },
+      "explorer": "https://bscscan.com/address/{address}"
+    },
+    {
+      "id": "arbitrum",
+      "family": "evm",
+      "status": "viable-con-limites",
+      "chainId": 42161,
+      "label": { "es": "Arbitrum", "en": "Arbitrum" },
+      "rpc": ["https://arbitrum-one-rpc.publicnode.com", "https://arb1.arbitrum.io/rpc"],
+      "gecko": "arbitrum",
+      "native": { "symbol": "ETH", "decimals": 18 },
+      "explorer": "https://arbiscan.io/address/{address}"
+    },
+    {
+      "id": "polygon",
+      "family": "evm",
+      "status": "viable-con-limites",
+      "chainId": 137,
+      "label": { "es": "Polygon", "en": "Polygon" },
+      "rpc": ["https://polygon-bor-rpc.publicnode.com", "https://polygon-rpc.com"],
+      "gecko": "polygon_pos",
+      "native": { "symbol": "POL", "decimals": 18 },
+      "explorer": "https://polygonscan.com/address/{address}"
+    },
+    {
+      "id": "optimism",
+      "family": "evm",
+      "status": "viable-con-limites",
+      "chainId": 10,
+      "label": { "es": "Optimism", "en": "Optimism" },
+      "rpc": ["https://optimism-rpc.publicnode.com", "https://mainnet.optimism.io"],
+      "gecko": "optimism",
+      "native": { "symbol": "ETH", "decimals": 18 },
+      "explorer": "https://optimistic.etherscan.io/address/{address}"
+    },
+    {
+      "id": "avalanche",
+      "family": "evm",
+      "status": "viable-con-limites",
+      "chainId": 43114,
+      "label": { "es": "Avalanche", "en": "Avalanche" },
+      "rpc": ["https://avalanche-c-chain-rpc.publicnode.com", "https://api.avax.network/ext/bc/C/rpc"],
+      "gecko": "avax",
+      "native": { "symbol": "AVAX", "decimals": 18 },
+      "explorer": "https://snowtrace.io/address/{address}"
+    },
+    {
+      "id": "bitcoin",
+      "family": "bitcoin",
+      "status": "viable-con-limites",
+      "label": { "es": "Bitcoin", "en": "Bitcoin" },
+      "api": "https://mempool.space",
+      "native": { "symbol": "BTC", "decimals": 8 },
+      "explorer": "https://mempool.space/address/{address}"
+    },
+    {
+      "id": "tron",
+      "family": "tron",
+      "status": "viable-con-limites",
+      "label": { "es": "Tron", "en": "Tron" },
+      "api": "https://api.trongrid.io",
+      "native": { "symbol": "TRX", "decimals": 6 },
+      "explorer": "https://tronscan.org/#/address/{address}"
+    }
+  ],
+  "unsupported": [
+    { "id": "flare", "label": "Flare" },
+    { "id": "dogecoin", "label": "Dogecoin" },
+    { "id": "zcash", "label": "Zcash" },
+    { "id": "hyperevm", "label": "HyperEVM" },
+    { "id": "hypercore", "label": "Hypercore" },
+    { "id": "robinhood", "label": "Robinhood Chain" }
+  ]
+}
