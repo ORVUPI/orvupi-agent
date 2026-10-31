@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-/** ORVUPI AI 0.8.8: documento con imágenes pegadas → resultado limpio, documento creado y exportaciones.
+/** ARQIVEN 0.8.8: documento con imágenes pegadas → resultado limpio, documento creado y exportaciones.
  *  Descarga el modelo real: solo con ORVUPI_AI_REAL=1. */
-test("ORVUPI AI: resultado limpio como documento, PDF y Word", async ({ page }) => {
+test("ARQIVEN: resultado limpio como documento, PDF y Word", async ({ page }) => {
   test.skip(process.env.ORVUPI_AI_REAL !== "1", "ORVUPI_AI_REAL=1 para descargar y ejecutar el modelo");
   test.setTimeout(1_800_000);
   await page.goto("/");
@@ -24,7 +24,7 @@ test("ORVUPI AI: resultado limpio como documento, PDF y Word", async ({ page }) 
   await doc.close();
   await page.reload();
   const panel = page.locator("aside.ow-ai");
-  if (!(await panel.isVisible())) await page.locator('.ow-top-actions [aria-label="ORVUPI AI"]').first().click();
+  if (!(await panel.isVisible())) await page.locator('.ow-top-actions [aria-label="ARQIVEN"]').first().click();
   await panel.getByText("Opciones avanzadas").click();
   await panel.locator(".ow-ai-advanced select").selectOption(process.env.ORVUPI_AI_MODEL ?? "smol135-cpu");
   await panel.getByRole("button", { name: "Usar este modelo" }).click();

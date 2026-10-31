@@ -642,9 +642,9 @@ export function DocsEditor({
       />
       <LayoutTools editor={editor} t={t} />
       {aiOpen ? (
-        <aside className="ow-doc-aipanel" data-tool="ai" aria-label="ORVUPI AI">
+        <aside className="ow-doc-aipanel" data-tool="ai" aria-label={t("aiTitle")}>
           <header>
-            <h2>ORVUPI AI</h2>
+            <h2>{t("aiTitle")}</h2>
             <button type="button" className="ow-button ow-button-ghost" onClick={() => setAiOpen(false)}>{t("closeAi")}</button>
           </header>
           <AiStudio

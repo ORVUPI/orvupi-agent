@@ -3245,7 +3245,9 @@ body.studio-standalone:has(.canva-disenos) { background: #fff; }
   .md-selectbar, .md-notice { left: 8px; right: 8px; width: auto; transform: none; }
 }
 
-/* ORVUPI IA: chat móvil. El pulpo sustituye al icono del tab y a la espera. */
+/* Chat del catálogo. El pulpo sustituye al icono del tab y a la espera. */
+.ia-arqiven { margin: 8px 16px 0; font-size: 14px; color: #5c6570; }
+.ia-arqiven a { color: #9d2348; font-weight: 650; }
 #studio-root .canva-nav img.canva-tab-avatar {
   width: 22px;
   height: 22px;

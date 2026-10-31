@@ -124,7 +124,8 @@ describe("motor de terceros de ARQIVEN", () => {
     assert.match(bundle, /aside:e\.aiOpen\|\|e\.view===`ai`/);
     assert.match(bundle, /arqiven-core`\)!==`0`/);
     assert.equal(bundle.includes("e.navigate(`ai`)"), false);
-    assert.match(bundle, /Preparar ORVUPI AI/);
+    assert.match(bundle, /Preparar ARQIVEN/);
+    assert.equal(bundle.includes("ORVUPI AI"), false);
     assert.match(read("apps/work/src/ai/client.ts"), /arqiven-core"\) !== "0"/);
     assert.match(read("apps/work/src/app/App.tsx"), /aiOnePanel/);
     assert.equal(read("web/v2/studio/index.html").includes("huggingface.co"), false);

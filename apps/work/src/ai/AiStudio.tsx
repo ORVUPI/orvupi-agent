@@ -19,7 +19,8 @@ export type AiTask = Intent["action"];
 export type InsertMode = "insert" | "replace" | "below";
 
 const ES = {
-  title: "ORVUPI AI",
+  title: "ARQIVEN",
+  deep: "Chat completo en ARQIVEN",
   privacy: "Funciona dentro de tu navegador. Tus documentos no salen del dispositivo: solo se descarga el modelo la primera vez y queda guardado. Los modelos son de terceros (Qwen, LFM2, SmolLM2) y no se llaman Arqiven-N.",
   model: "1. Preparar la IA",
   checking: "Comprobando qué puede ejecutar este dispositivo…",
@@ -30,8 +31,8 @@ const ES = {
   modelCpuLarge: "Qwen2.5 1.5B · más preciso, en equipos con 8 GB o más",
   modelTiny: "SmolLM2 135M · tercero",
   modelLfm: "LFM2 350M · tercero",
-  prepare: "Preparar ORVUPI AI ({size}, solo la primera vez)",
-  prepareCached: "Preparar ORVUPI AI",
+  prepare: "Preparar ARQIVEN ({size}, modelo de terceros, solo la primera vez)",
+  prepareCached: "Preparar ARQIVEN",
   ready: "IA lista en este dispositivo",
   readyDetail: "Ya puedes resumir, explicar o crear un documento.",
   loading: "Preparando IA: descargando {pct} % ({done} de {total}). Puedes seguir usando Work.",
@@ -41,7 +42,7 @@ const ES = {
   offline: "Sin conexión: la IA se descarga la primera vez. Lo descargado queda guardado y continuará donde se quedó al volver la conexión.",
   quota: "No hay espacio en el navegador para guardar la IA. Libera espacio y vuelve a intentarlo.",
   advanced: "Opciones avanzadas",
-  advancedHelp: "ORVUPI AI elige sola el modo que funciona en este dispositivo y recuerda lo que funcionó. No hace falta cambiar nada.",
+  advancedHelp: "ARQIVEN elige el modo que funciona en este dispositivo y recuerda lo que funcionó. Los modelos son de terceros. No hace falta cambiar nada.",
   pickModel: "Modelo",
   useModel: "Usar este modelo",
   recommended: "recomendado",
@@ -126,7 +127,8 @@ const EN: typeof ES = {
   ready: "AI is ready on this device",
   readyDetail: "You can summarize, explain, or create a document.",
   advanced: "Advanced options",
-  advancedHelp: "ORVUPI AI picks a mode that works on this device and remembers what worked. You don't need to change anything.",
+  deep: "Full chat in ARQIVEN",
+  advancedHelp: "ARQIVEN picks a mode that works on this device and remembers what worked. The models belong to other authors. You don't need to change anything.",
   useModel: "Use this model",
   allFailed: "We could not start AI on this device right now. Check the connection (the model downloads the first time) and try again in a while. Meanwhile, Analyze works without a download.",
   source: "2. Text to use", actions: "3. What to do", srcOpen: "Open document", srcSelection: "Selected text", srcFile: "Another Work file", srcPaste: "Paste text",
@@ -267,7 +269,7 @@ export function AiStudio({
         } catch (error) {
           const kind = (error as { kind?: string }).kind ?? "other";
           lastKind = kind;
-          console.info("[ORVUPI AI] no funcionó", candidate.id, kind, error instanceof Error ? error.message.slice(0, 160) : "");
+          console.info("[ARQIVEN] no funcionó", candidate.id, kind, error instanceof Error ? error.message.slice(0, 160) : "");
           // Sin red se pueden seguir probando los modelos ya descargados. Un fallo de ejecución sí se recuerda.
           if (blocksFurtherDownloads(kind)) downloadsBlocked = true;
           else rememberModel(found, candidate.id, false);
@@ -306,7 +308,7 @@ export function AiStudio({
 
   function titleFor(task: AiTask, lang = language): string {
     const names = L.actionNames.split("|");
-    const label = names[TASKS.indexOf(task)] ?? "ORVUPI AI";
+    const label = names[TASKS.indexOf(task)] ?? "ARQIVEN";
     const name = sourceName();
     return `${label}${task === "translate" ? ` al ${lang}` : ""}${name ? ` · ${name}` : ""}`.slice(0, 120);
   }
@@ -339,7 +341,7 @@ export function AiStudio({
         tokens += r.tokens;
         const text = cleanOutput(r.text);
         if (!r.degenerate && text) return { text, tokens };
-        console.info("[ORVUPI AI] salida descartada por degenerada; reintento", r.text.slice(0, 120));
+        console.info("[ARQIVEN] salida descartada por degenerada; reintento", r.text.slice(0, 120));
       }
       if (round === 0 && current.device === "webgpu" && support && !stopRef.current) {
         rememberModel(support, current.id, false);
@@ -369,7 +371,7 @@ export function AiStudio({
   }
 
   async function exportAs(kind: "pdf" | "docx", markdown = output, titleIn = docTitle) {
-    const title = titleIn || "ORVUPI AI";
+    const title = titleIn || "ARQIVEN";
     const safe = title.replace(/[\\/:*?"<>|]+/g, "-").slice(0, 80);
     if (kind === "docx") {
       const { exportDocx } = await import("../docs/docx");
@@ -512,6 +514,7 @@ export function AiStudio({
   return (
     <div className={`ow-aistudio${compact ? " is-compact" : ""}`} data-ai-phase={phase}>
       <p className="ow-ai-privacy">{L.privacy}</p>
+      <p className="ow-ai-deep"><a href="/arqiven/">{L.deep}</a></p>
       <section aria-labelledby={`ow-ai-model-${uid}`}>
         <h3 id={`ow-ai-model-${uid}`}>{L.model}</h3>
         {!support ? <p role="status">{L.checking}</p> : models.length === 0 ? <p role="alert">{L.none}</p> : (
@@ -636,7 +639,7 @@ export function AiStudio({
             {output && !busy && storage ? (
               created
                 ? <a className="ow-button ow-button-primary" href={editorPath("doc", created.id)} target="_blank" rel="noopener" data-ai-open-doc>{f(L.openCreated, { name: created.name })}</a>
-                : <button type="button" className="ow-button ow-button-primary" data-ai-open-doc onClick={() => void saveAsDocument(output, docTitle || "ORVUPI AI", true)}>{L.openDoc}</button>
+                : <button type="button" className="ow-button ow-button-primary" data-ai-open-doc onClick={() => void saveAsDocument(output, docTitle || "ARQIVEN", true)}>{L.openDoc}</button>
             ) : null}
             {output && !busy ? <button type="button" className="ow-button" onClick={() => void exportAs("docx")}>{L.downloadDocx}</button> : null}
             {output && !busy ? <button type="button" className="ow-button" onClick={() => void exportAs("pdf")}>{L.downloadPdf}</button> : null}

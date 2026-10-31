@@ -130,7 +130,7 @@ export function App() {
   else if (workspace.view === "drawings") content = <DrawingsScreen />;
   else if (workspace.view === "notes") content = <NotesScreen />;
   else if (workspace.view === "pdf") content = <PdfScreen />;
-  else if (workspace.view === "ai") content = <div className="ow-page ow-ai-page"><h1>{workspace.t("aiTitle")}</h1><p>{workspace.t("aiOnePanel")}</p></div>;
+  else if (workspace.view === "ai") content = <div className="ow-page ow-ai-page"><h1>{workspace.t("aiTitle")}</h1><p>{workspace.t("aiOnePanel")}</p><p><a href="/arqiven/">{workspace.t("aiDeep")}</a></p></div>;
 
   if (workspace.bootError) {
     content = (
