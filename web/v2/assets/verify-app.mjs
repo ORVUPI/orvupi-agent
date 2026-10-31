@@ -39,6 +39,8 @@ const state = {
   moreOpen: false,
   editingAlert: "",
   editingLabel: "",
+  inspectTab: "overview",
+  selectedNode: PROJECT_WALLET,
 };
 
 let chartHandle = null;
@@ -81,15 +83,23 @@ function setPage(id, page) {
   state.pages[id] = page;
   render();
 }
+function markNav(screen) {
+  document.querySelectorAll("[data-vf-view]").forEach((button) => {
+    if (button.getAttribute("data-vf-view") === screen) button.setAttribute("aria-current", "page");
+    else button.removeAttribute("aria-current");
+  });
+  document.querySelectorAll("details.vf-more").forEach((menu) => {
+    const inside = [...menu.querySelectorAll("[data-vf-view]")].some((button) => button.getAttribute("data-vf-view") === screen);
+    if (inside) menu.setAttribute("data-current", "true");
+    else menu.removeAttribute("data-current");
+  });
+}
 function go(screen) {
   state.screen = screen;
   document.querySelectorAll("details.vf-more").forEach((menu) => { menu.open = false; });
   history.replaceState(null, "", `#${screen}`);
   window.scrollTo(0, 0);
-  document.querySelectorAll("[data-vf-view]").forEach((button) => {
-    if (button.getAttribute("data-vf-view") === screen) button.setAttribute("aria-current", "page");
-    else button.removeAttribute("aria-current");
-  });
+  markNav(screen);
   const jump = document.getElementById("vf-jump");
   if (jump) jump.value = screen;
   render();
@@ -157,12 +167,20 @@ function networkCell(id) {
   const name = networkName(id);
   return h("span", { class: "vf-netname" }, [h("span", { class: "vf-netdot", "data-net": String(id || ""), "aria-hidden": "true" }, name.slice(0, 1)), name]);
 }
+function sourceName(provider) {
+  const text = String(provider || "");
+  if (!text) return "";
+  try {
+    if (text.startsWith("http")) return new URL(text).host;
+  } catch { /* el nombre ya es corto */ }
+  return text;
+}
 function sourceLine(provider, at, tip, stale) {
   if (!provider && !at) return null;
   const line = h("p", { class: "vf-source" });
   const when = at ? clock(at) : "";
   const freshness = stale ? t("actualizado", "updated") : t("en vivo", "live");
-  line.append(`${t("Fuente", "Source")}: ${provider || "—"}${when ? ` · ${freshness} · ${when}` : ""}`);
+  line.append(`${t("Fuente", "Source")}: ${sourceName(provider) || "—"}${when ? ` · ${freshness} · ${when}` : ""}`);
   if (tip) line.append(h("button", { type: "button", class: "vf-info", title: tip, "aria-label": tip }, "ⓘ"));
   return line;
 }
@@ -213,13 +231,15 @@ function short(value) {
   if (text.length < 14) return text || "—";
   return `${text.slice(0, 6)}…${text.slice(-4)}`;
 }
-function addr(value, chain) {
+function addr(value, chain, compact) {
   if (!value) return h("span", {}, t("sin datos", "no data"));
-  const wrap = h("span", { class: "vf-addr" });
+  const wrap = h("span", { class: compact ? "vf-addr vf-addr-short" : "vf-addr", title: value });
   wrap.append(short(value));
-  wrap.append(h("button", { type: "button", onclick: () => navigator.clipboard?.writeText(value) }, t("copiar", "copy")));
-  const href = explorerHref(chain || state.dossier?.chain || "solana", value);
-  if (href) wrap.append(h("a", { href, target: "_blank", rel: "noopener noreferrer" }, t("enlace", "link")));
+  if (!compact) {
+    wrap.append(h("button", { type: "button", onclick: () => navigator.clipboard?.writeText(value) }, t("copiar", "copy")));
+    const href = explorerHref(chain || state.dossier?.chain || "solana", value);
+    if (href) wrap.append(h("a", { href, target: "_blank", rel: "noopener noreferrer" }, t("enlace", "link")));
+  }
   return wrap;
 }
 function empty(text) {
@@ -233,10 +253,10 @@ function pagerBar(id, window) {
   ]);
 }
 function table(columns, rows, chain) {
-  const head = h("tr", {}, columns.map((column) => h("th", { scope: "col" }, column.label)));
+  const head = h("tr", {}, columns.map((column) => h("th", { scope: "col", class: column.align === "end" ? "num" : "" }, column.label)));
   const body = rows.map((row) => h("tr", {}, columns.map((column) => {
     const value = column.cell ? column.cell(row) : row[column.key];
-    return h("td", {}, value && value.nodeType ? value : value == null || value === "" ? t("sin datos", "no data") : String(value));
+    return h("td", { class: column.align === "end" ? "num" : "" }, value && value.nodeType ? value : value == null || value === "" ? t("sin datos", "no data") : String(value));
   })));
   const cards = h("div", { class: "vf-cards" }, rows.map((row) => h("article", { class: "vf-card-row" }, columns.map((column) => h("p", {}, [
     h("strong", {}, `${column.label}: `),
@@ -245,35 +265,71 @@ function table(columns, rows, chain) {
   const scroller = h("div", { class: "vf-scroll" }, h("table", { class: "vf-table" }, [h("thead", {}, head), h("tbody", {}, body.length ? body : h("tr", {}, h("td", { colspan: String(columns.length) }, t("sin datos", "no data"))))]));
   return h("div", {}, [scroller, cards, chain ? h("p", { class: "vf-meta" }, chain) : null]);
 }
-function transferColumns() {
+function amountText(row) {
+  if (row?.value == null || row.value === "") return "—";
+  const raw = String(row.value);
+  if (raw.includes(".")) {
+    const number = Number(raw);
+    return Number.isFinite(number) ? number.toLocaleString(locale(), { maximumFractionDigits: 6 }) : raw;
+  }
+  return formatUnits(raw, row.decimals) || "—";
+}
+function tokenLabel(row) {
+  const token = String(row?.token || "");
+  if (!token) return "—";
+  if (token === "SOL") return "SOL";
+  if (isOfficialAddress(token)) return "ORVUPI";
+  if (/^(buy|sell)$/i.test(token)) return state.pool?.name || token;
+  return token.length > 12 ? short(token) : token;
+}
+function transferFeed(rows) {
+  return h("ul", { class: "vf-feed" }, rows.map((row) => h("li", {}, [
+    h("span", { class: "vf-feed-time num" }, clock(row.time) || "—"),
+    h("span", { class: "vf-feed-route" }, [
+      addr(row.from, row.chain, true),
+      h("span", { "aria-hidden": "true" }, "→"),
+      addr(row.to, row.chain, true),
+    ]),
+    h("strong", { class: "vf-feed-amt num" }, `${amountText(row)} ${tokenLabel(row)}`),
+  ])));
+}
+function transferColumns(compact) {
   return [
     { label: t("Hora", "Time"), cell: (row) => clock(row.time) || "—" },
-    { label: t("De", "From"), cell: (row) => addr(row.from, row.chain) },
-    { label: t("A", "To"), cell: (row) => addr(row.to, row.chain) },
-    { label: t("Cantidad", "Amount"), cell: (row) => formatUnits(row.value, row.decimals) || "—" },
-    { label: "Token", cell: (row) => row.token || "—" },
-    { label: "USD", cell: (row) => row.usd == null ? "—" : compactUsd(row.usd) },
+    { label: t("De", "From"), cell: (row) => addr(row.from, row.chain, compact) },
+    { label: t("A", "To"), cell: (row) => addr(row.to, row.chain, compact) },
+    { label: t("Cantidad", "Amount"), align: "end", cell: (row) => h("span", { class: "num" }, amountText(row)) },
+    { label: "Token", cell: (row) => tokenLabel(row) },
+    { label: "USD", align: "end", cell: (row) => h("span", { class: "num" }, row.usd == null ? "—" : compactUsd(row.usd)) },
   ];
 }
 function feedRows() {
   if (state.screen === "ficha" && state.dossier?.transfers?.length) return state.dossier.transfers;
-  if ((state.screen === "tracer" || state.screen === "visualizer") && state.trace?.transfers?.length) return state.trace.transfers;
   return state.liveTrades?.rows || [];
 }
-function transferBlock(id) {
-  const focus = state.screen === "ficha" ? (state.dossier?.address || "") : state.screen === "tracer" || state.screen === "visualizer" ? (state.trace?.address || "") : (state.liveTrades?.pool || "");
-  let rows = filterTransfers(feedRows(), { direction: state.direction, focus, chains: null, minUsd: state.usdOn ? 1 : null, query: state.query });
+function transferBlock(id, options = {}) {
+  const source = options.rows || feedRows();
+  const focus = options.focus != null ? options.focus : state.screen === "ficha" ? (state.dossier?.address || "") : (state.liveTrades?.pool || "");
+  const ready = options.ready != null ? options.ready : Boolean(state.liveTrades || state.dossier);
+  let rows = filterTransfers(source, { direction: state.direction, focus, chains: null, minUsd: state.usdOn ? 1 : null, query: state.query });
   const window = slicePage(rows, pageOf(id));
-  return h("section", { class: "vf-card" }, [
-    h("div", { class: "vf-row" }, [h("h2", {}, "Transfers"), pagerBar(id, window)]),
+  const body = rows.length
+    ? (options.compact ? transferFeed(window.rows) : table(transferColumns(options.compact), window.rows, ""))
+    : source.length
+      ? h("p", { class: "vf-meta" }, t("Nada coincide con el filtro.", "Nothing matches the filter."))
+      : ready
+        ? h("p", { class: "vf-meta" }, options.empty || t("Esta lectura no trajo transferencias.", "This read did not include transfers."))
+        : skeleton(4);
+  return h("section", { class: options.plain ? "vf-transfers" : "vf-card" }, [
+    h("div", { class: "vf-row" }, [h("h2", {}, "Transfers"), rows.length ? pagerBar(id, window) : null]),
     h("div", { class: "vf-chips" }, [
       h("button", { type: "button", "aria-pressed": String(state.direction === "all"), onclick: () => { state.direction = "all"; render(); } }, t("Todas", "All")),
       h("button", { type: "button", "aria-pressed": String(state.direction === "in"), onclick: () => { state.direction = "in"; render(); } }, t("Entradas", "In")),
       h("button", { type: "button", "aria-pressed": String(state.direction === "out"), onclick: () => { state.direction = "out"; render(); } }, t("Salidas", "Out")),
       h("button", { type: "button", "aria-pressed": String(state.usdOn), onclick: () => { state.usdOn = !state.usdOn; render(); } }, "USD ≥ 1"),
     ]),
-    rows.length ? table(transferColumns(), window.rows, "") : feedRows().length ? h("p", { class: "vf-meta" }, t("Nada coincide con el filtro.", "Nothing matches the filter.")) : (state.liveTrades || state.dossier || state.trace ? failed(t("Las fuentes no respondieron.", "The sources did not respond."), loadLive) : skeleton(4)),
-    sourceLine(state.liveTrades?.provider || state.dossier?.provider, state.liveTrades?.fetchedAt || state.dossier?.fetchedAt, state.liveTrades?.scope || "", state.liveTrades?.stale),
+    body,
+    sourceLine(options.provider || state.liveTrades?.provider || state.dossier?.provider, options.at || state.liveTrades?.fetchedAt || state.dossier?.fetchedAt, options.scope || state.liveTrades?.scope || "", options.stale ?? state.liveTrades?.stale),
   ]);
 }
 function chartFrames() {
@@ -341,9 +397,15 @@ function ensureChart() {
         const pressed = document.querySelector(".vf-chart-card .vf-seg[aria-pressed='true']");
         if (pressed && pressed.textContent !== real) pressed.textContent = real;
       }
-      const line = document.querySelector("#vf-root .vf-chart-card .vf-source");
+      const card = document.querySelector("#vf-root .vf-chart-card");
       const next = sourceLine(result?.provider, result?.fetchedAt, result?.scope || "", result?.stale);
+      const line = card?.querySelector(".vf-source");
       if (line && next) line.replaceWith(next);
+      else if (next && card) {
+        const host = card.querySelector("#vf-chart-host");
+        if (host) host.before(next);
+        else card.append(next);
+      }
     },
   });
 }
@@ -412,25 +474,40 @@ function tokenView() {
     chartCard(),
   ]);
 }
+function marketTabButton(id, label) {
+  const tab = state.marketTab || "spot";
+  return h("button", { type: "button", class: "vf-seg", "aria-pressed": String(tab === id), onclick: () => { state.marketTab = id; render(); } }, label);
+}
 function market() {
-  return h("div", {}, [
-    h("div", { class: "vf-pills" }, ["resumen", "spot", "futuros", "opciones"].map((id) => h("button", { type: "button", "aria-pressed": String((state.marketTab || "spot") === id), onclick: () => { state.marketTab = id; render(); } }, id))),
-    (state.marketTab || "spot") === "spot" || !(state.marketTab) ? h("div", {}, [chartCard(), quoteCard()]) : null,
-    state.marketTab === "resumen" ? quoteCard() : null,
-    state.marketTab === "futuros" || state.marketTab === "opciones" ? empty(t("No hay una fuente gratuita de futuros u opciones.", "There is no free futures or options source.")) : null,
+  const tab = state.marketTab || "spot";
+  return h("div", { class: "vf-stack" }, [
+    h("div", { class: "vf-segments", role: "tablist", "aria-label": t("Mercado", "Market") }, [
+      marketTabButton("resumen", t("Resumen", "Overview")),
+      marketTabButton("spot", "Spot"),
+    ]),
+    tab === "resumen" ? marketResumen() : chartCard(),
   ]);
 }
-function quoteCard() {
-  const quote = state.quote;
-  if (!quote) return h("section", { class: "vf-card" }, skeleton(3));
-  if (!quote.ok) return h("section", { class: "vf-card" }, failed(t("La cotización no respondió.", "The quote did not respond."), loadQuote));
+function marketResumen() {
+  const globe = state.global;
+  const sample = state.markets?.coins || [];
+  const cap = globe?.ok ? globe.marketCap : sample.reduce((sum, coin) => sum + (Number(coin.marketCap) || 0), 0);
+  const volume = globe?.ok ? globe.volume : sample.reduce((sum, coin) => sum + (Number(coin.volumeH24) || 0), 0);
+  const body = !globe && !sample.length
+    ? skeleton(3)
+    : cap
+      ? h("div", { class: "vf-metrics" }, [
+        metric(t("Capitalización", "Market cap"), compactUsd(cap)),
+        metric(t("Volumen 24 h", "24h volume"), compactUsd(volume)),
+        globe?.btcDominance != null ? metric("BTC", `${Number(globe.btcDominance).toLocaleString(locale(), { maximumFractionDigits: 2 })}%`) : null,
+        globe?.change24 != null ? changeText(globe.change24) : null,
+      ])
+      : failed(t("El mercado no respondió.", "The market did not respond."), loadLive);
   return h("section", { class: "vf-card" }, [
-    h("h2", {}, "Bitcoin"),
-    h("p", { class: "vf-token-px" }, priceText(quote.usd)),
-    quote.changeH24 != null ? h("p", {}, changeText(quote.changeH24)) : null,
-    quote.marketCap != null ? h("p", {}, `${t("Capitalización", "Market cap")} ${compactUsd(quote.marketCap)}`) : null,
-    quote.volumeH24 != null ? h("p", {}, `${t("Volumen 24 h", "24h volume")} ${compactUsd(quote.volumeH24)}`) : null,
-    sourceLine(quote.provider, quote.fetchedAt, quote.scope, quote.stale),
+    h("h2", {}, t("Mercado", "Market")),
+    body,
+    coinCards(),
+    sourceLine(globe?.provider || state.markets?.provider, globe?.fetchedAt || state.markets?.fetchedAt, globe?.scope || state.markets?.scope, globe?.stale || state.markets?.stale),
   ]);
 }
 function metric(label, value) {
@@ -458,52 +535,169 @@ function panels() {
     chartCard(),
   ]);
 }
+function traceRows() {
+  return (state.trace?.transfers || []).filter((row) => row.from && row.to);
+}
+function builtinViews() {
+  return [
+    { id: "project", title: t("Wallet del proyecto", "Project wallet"), address: PROJECT_WALLET, chain: "solana" },
+    { id: "official", title: "ORVUPI", address: OFFICIAL_ADDRESS, chain: "solana" },
+  ];
+}
+function viewButton(view) {
+  const current = (state.trace?.address || PROJECT_WALLET) === view.address;
+  return h("li", {}, h("button", {
+    type: "button",
+    class: "vf-view",
+    "aria-pressed": String(current),
+    onclick: () => openTrace(view.address, view.chain || "solana"),
+  }, [
+    h("strong", {}, view.title),
+    h("span", { class: "vf-meta" }, short(view.address)),
+  ]));
+}
 function visualizer() {
   const drawn = graphSvg();
+  const saved = loadList(KEYS.views).filter((view) => view.address);
   return h("div", { class: "vf-side" }, [
-    h("aside", { class: "vf-card" }, [
+    h("aside", { class: "vf-card vf-views-col" }, [
       h("div", { class: "vf-row" }, [h("h2", {}, t("Vistas", "Views")), h("button", { type: "button", onclick: saveView }, t("+ Nueva", "+ New"))]),
-      loadList(KEYS.views).length ? h("ul", {}, loadList(KEYS.views).map((view) => h("li", {}, `${view.title} · ${clock(view.at)}`))) : h("p", { class: "vf-meta" }, t("Puedes guardar esta vista.", "You can save this view.")),
-      h("p", { class: "vf-meta" }, `${loadList(KEYS.views).length} · ${t("máximo", "max")} ${LIMITS.maxNodes} ${t("nodos", "nodes")} · ${t("profundidad", "depth")} 1`),
+      h("ul", { class: "vf-views" }, builtinViews().map(viewButton)),
+      saved.length ? h("ul", { class: "vf-views" }, saved.map((view) => viewButton({ ...view, title: view.title || short(view.address) }))) : null,
+      h("p", { class: "vf-meta" }, drawn.graph.nodes.length
+        ? `${drawn.graph.nodes.length} ${t("nodos", "nodes")} · ${t("profundidad", "depth")} 1`
+        : t("Leyendo la wallet del proyecto.", "Reading the project wallet.")),
     ]),
-    h("section", { class: "vf-card" }, drawn.graph.nodes.length ? drawn.svg : (state.trace ? failed(t("Esa lectura no dejó transferencias.", "That read left no transfers."), () => loadExample("trace")) : skeleton(2))),
-    h("section", {}, [chartCard(), transferBlock("viz")]),
+    h("section", { class: "vf-card vf-stage" }, [
+      h("h2", {}, "Visualizer"),
+      drawn.graph.nodes.length ? drawn.svg : (state.trace ? failed(t("Esa lectura no dejó transferencias.", "That read left no transfers."), () => openTrace(PROJECT_WALLET)) : skeleton(2)),
+    ]),
+    inspectPanel(drawn.graph),
   ]);
 }
+function inspectPanel(graph) {
+  const focus = state.selectedNode || state.trace?.address || "";
+  const tab = state.inspectTab === "nodes" ? "nodes" : "overview";
+  const rows = traceRows().filter((row) => !focus || row.from === focus || row.to === focus);
+  const provider = rows[0]?.provider || state.trace?.provider;
+  return h("aside", { class: "vf-card vf-inspect" }, [
+    h("div", { class: "vf-segments", role: "tablist", "aria-label": "Visualizer" }, [
+      h("button", { type: "button", class: "vf-seg", "aria-pressed": String(tab === "overview"), onclick: () => { state.inspectTab = "overview"; render(); } }, t("Resumen", "Overview")),
+      h("button", { type: "button", class: "vf-seg", "aria-pressed": String(tab === "nodes"), onclick: () => { state.inspectTab = "nodes"; render(); } }, t("Nodos", "Nodes")),
+    ]),
+    tab === "nodes" ? nodeList(graph) : nodeOverview(focus),
+    transferBlock("viz", {
+      rows: traceRows().filter((row) => !focus || row.from === focus || row.to === focus),
+      focus,
+      ready: Boolean(state.trace),
+      plain: true,
+      compact: true,
+      provider,
+      at: state.trace?.fetchedAt,
+      scope: t("Transferencias de la muestra", "Transfers in the sample"),
+      stale: state.trace?.stale,
+      empty: t("Ese nodo no tiene transferencias en la muestra.", "That node has no transfers in the sample."),
+    }),
+  ]);
+}
+function nodeOverview(focus) {
+  if (!state.trace) return skeleton(3);
+  const card = state.trace;
+  const lamports = focus === card.address ? (card.facts || []).find((item) => item.id === "lamports") : null;
+  const touched = traceRows().filter((row) => row.from === focus || row.to === focus);
+  return h("div", { class: "vf-overview" }, [
+    h("p", { class: "vf-kicker" }, focus === card.address ? t("Dirección leída", "Address read") : t("Nodo seleccionado", "Selected node")),
+    addr(focus, card.chain || "solana"),
+    h("p", {}, `${t("Red", "Network")}: ${networkName(card.chain || "solana")}`),
+    lamports?.value != null ? h("p", { class: "num" }, `SOL ${amount({ ...lamports, symbol: "" })}`) : null,
+    h("p", { class: "num" }, `${touched.length} ${t("transferencias en la muestra", "transfers in the sample")}`),
+  ]);
+}
+function nodeList(graph) {
+  if (!graph.nodes.length) return h("p", { class: "vf-meta" }, state.trace ? t("Sin nodos en esta lectura.", "No nodes in this read.") : t("Leyendo la wallet del proyecto.", "Reading the project wallet."));
+  const focus = state.selectedNode || state.trace?.address || "";
+  return h("ul", { class: "vf-views" }, graph.nodes.map((node) => h("li", {}, h("button", {
+    type: "button",
+    class: "vf-view",
+    "aria-pressed": String(node.id === focus),
+    onclick: () => { state.selectedNode = node.id; render(); },
+  }, [
+    h("strong", {}, node.seed ? t("Origen", "Origin") : short(node.id)),
+    h("span", { class: "vf-meta" }, node.seed ? short(node.id) : t("Contraparte", "Counterparty")),
+  ]))));
+}
 function graphSvg() {
-  const rows = feedRows();
-  const graph = buildGraph(rows, { seed: state.trace?.address || state.dossier?.address || rows[0]?.to || "", maxNodes: LIMITS.maxNodes, depth: 1 });
+  const rows = traceRows();
+  const seed = state.trace?.address || "";
+  const graph = buildGraph(rows, { seed, maxNodes: LIMITS.maxNodes, depth: 1 });
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", "0 0 640 360");
+  svg.setAttribute("viewBox", "0 0 640 420");
   svg.setAttribute("width", "100%");
-  svg.setAttribute("height", "360");
+  svg.setAttribute("height", "420");
   svg.setAttribute("role", "img");
-  graph.nodes.forEach((node, index) => {
-    const angle = (Math.PI * 2 * index) / Math.max(1, graph.nodes.length);
-    node.x = 320 + Math.cos(angle) * 120;
-    node.y = 180 + Math.sin(angle) * 90;
+  svg.setAttribute("aria-label", seed ? `${short(seed)} · ${graph.nodes.length}` : "Visualizer");
+  const others = graph.nodes.filter((node) => !node.seed);
+  const origin = graph.nodes.find((node) => node.seed) || graph.nodes[0];
+  if (origin) { origin.x = 320; origin.y = 200; }
+  others.forEach((node, index) => {
+    const angle = (Math.PI * 2 * index) / Math.max(1, others.length) - Math.PI / 2;
+    node.x = 320 + Math.cos(angle) * 168;
+    node.y = 200 + Math.sin(angle) * 132;
   });
   const byId = new Map(graph.nodes.map((node) => [node.id, node]));
+  const seen = new Set();
   for (const edge of graph.edges) {
     const from = byId.get(edge.from);
     const to = byId.get(edge.to);
     if (!from || !to) continue;
+    const key = [edge.from, edge.to].sort().join(":");
+    if (seen.has(key)) continue;
+    seen.add(key);
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
     line.setAttribute("x1", from.x);
     line.setAttribute("y1", from.y);
     line.setAttribute("x2", to.x);
     line.setAttribute("y2", to.y);
     line.setAttribute("stroke", "#ff3070");
-    line.setAttribute("stroke-width", "2");
+    line.setAttribute("stroke-width", "1.5");
+    line.setAttribute("stroke-opacity", "0.85");
     svg.append(line);
   }
+  const focus = state.selectedNode || seed;
   for (const node of graph.nodes) {
+    const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    group.setAttribute("class", "vf-node");
+    group.setAttribute("tabindex", "0");
+    group.setAttribute("role", "button");
+    group.setAttribute("aria-label", node.id);
+    group.setAttribute("aria-pressed", String(node.id === focus));
+    const choose = (event) => {
+      event.stopPropagation();
+      event.preventDefault();
+      state.selectedNode = node.id;
+      render();
+    };
+    group.addEventListener("pointerdown", (event) => event.stopPropagation());
+    group.addEventListener("click", choose);
+    group.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") choose(event);
+    });
     const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     circle.setAttribute("cx", node.x);
     circle.setAttribute("cy", node.y);
-    circle.setAttribute("r", node.seed ? 16 : 10);
-    circle.setAttribute("fill", node.seed ? "#ff3070" : "#102032");
-    svg.append(circle);
+    circle.setAttribute("r", node.seed ? 18 : 12);
+    circle.setAttribute("fill", node.seed ? "#ff3070" : "#243044");
+    circle.setAttribute("stroke", node.id === focus ? "#f4f7fb" : "#ff3070");
+    circle.setAttribute("stroke-width", node.id === focus ? "3" : "1.5");
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("x", node.x);
+    label.setAttribute("y", node.y + (node.seed ? 34 : 28));
+    label.setAttribute("text-anchor", "middle");
+    label.setAttribute("fill", "#d5dde6");
+    label.setAttribute("font-size", "12");
+    label.textContent = node.seed ? t("Origen", "Origin") : short(node.id);
+    group.append(circle, label);
+    svg.append(group);
   }
   return { graph, svg: bindGraph(svg) };
 }
@@ -558,7 +752,7 @@ function tracer() {
     h("aside", { class: "vf-card" }, [
       h("div", { class: "vf-row" }, [h("h2", {}, "Traces"), h("button", { type: "button", onclick: () => investigate(document.getElementById("direccion-token")?.value, document.getElementById("red")?.value || "solana") }, t("+ Nueva", "+ New"))]),
       h("p", { class: "vf-meta" }, state.trace?.address ? short(state.trace.address) : t("Leyendo una dirección pública.", "Reading a public address.")),
-      h("p", { class: "vf-meta" }, t(`Gratis. Profundidad ${LIMITS.maxDepth}, máximo ${LIMITS.maxNodes} nodos y ${LIMITS.maxTransactions} transacciones.`, `Free. Depth ${LIMITS.maxDepth}, at most ${LIMITS.maxNodes} nodes and ${LIMITS.maxTransactions} transactions.`)),
+      h("p", { class: "vf-meta" }, t(`Gratis. Profundidad ${LIMITS.maxDepth}, máximo ${LIMITS.maxNodes} nodos y ${LIMITS.maxSignatures} firmas.`, `Free. Depth ${LIMITS.maxDepth}, at most ${LIMITS.maxNodes} nodes and ${LIMITS.maxSignatures} signatures.`)),
     ]),
     h("section", { class: "vf-card" }, [
       h("h2", {}, "Tracer"),
@@ -569,19 +763,10 @@ function tracer() {
 function dex() {
   const rows = state.pools.filter((pool) => !state.query || `${pool.name} ${pool.address}`.toLowerCase().includes(state.query.toLowerCase()));
   const window = slicePage(rows, pageOf("dex"));
-  return h("div", {}, [
-    h("div", { class: "vf-pills" }, [
-      h("button", { type: "button", "aria-pressed": String(state.dexMode === "screener"), onclick: () => { state.dexMode = "screener"; render(); } }, "Screener"),
-      h("button", { type: "button", "aria-pressed": String(state.dexMode === "leaderboard"), onclick: () => { state.dexMode = "leaderboard"; render(); } }, "Leaderboard"),
-    ]),
-    state.dexMode === "leaderboard"
-      ? empty(t("No hay una fuente gratuita de P&L realizado.", "There is no free source of realized P&L."))
-      : h("section", { class: "vf-card" }, [
-        h("div", { class: "vf-row" }, [h("h2", {}, "DEX")]),
-        poolTable(window.rows.length ? window.rows : state.pools),
-        sourceLine(state.poolMeta?.provider, state.poolMeta?.fetchedAt, state.poolMeta?.scope, state.poolMeta?.stale),
-        pagerBar("dex", window),
-      ]),
+  return h("section", { class: "vf-card" }, [
+    h("div", { class: "vf-row" }, [h("h2", {}, "DEX"), window.total ? pagerBar("dex", window) : null]),
+    poolTable(window.rows.length ? window.rows : state.pools),
+    sourceLine(state.poolMeta?.provider, state.poolMeta?.fetchedAt, state.poolMeta?.scope, state.poolMeta?.stale),
   ]);
 }
 function rid() {
@@ -590,7 +775,7 @@ function rid() {
 function alerts() {
   const rows = loadList(KEYS.alerts).map((row) => ({ ...row, id: row.id || rid() }));
   const editing = rows.find((row) => row.id === state.editingAlert);
-  return h("div", { class: "vf-side" }, [
+  return h("div", { class: "vf-two" }, [
     h("aside", { class: "vf-card" }, [
       h("h2", {}, t("Alertas", "Alerts")),
       h("p", {}, `${rows.length} / 10`),
@@ -651,7 +836,7 @@ function labels() {
   ]);
 }
 function transfersPage() {
-  return h("section", {}, [h("h2", {}, "Transfers"), transferBlock("all")]);
+  return transferBlock("all");
 }
 function ficha() {
   const card = state.dossier;
@@ -669,7 +854,7 @@ function ficha() {
     h("div", { class: "vf-two" }, [
       h("section", { class: "vf-card" }, [
         h("h2", {}, t("Lectura", "Reading")),
-        h("ul", {}, (card.facts || []).map((item) => h("li", {}, `${item.id}: ${amount(item)} · ${item.state}`))),
+        h("ul", {}, (card.facts || []).map((item) => h("li", {}, item.value == null || item.state === "sin-datos" ? `${item.id}: ${amount(item)}` : `${item.id}: ${amount(item)} · ${item.state}`))),
         card.transferNote ? h("p", {}, card.transferNote) : null,
       ]),
       chartCard(),
@@ -802,9 +987,34 @@ async function investigate(raw, chainId) {
   go("ficha");
 }
 function saveView() {
-  const rows = loadList(KEYS.views);
-  rows.unshift({ title: state.dossier?.address || t("Vacía", "Empty"), at: new Date().toISOString() });
+  const address = state.trace?.address || state.selectedNode || "";
+  if (!address) return;
+  const rows = loadList(KEYS.views).filter((row) => row.address !== address);
+  rows.unshift({ title: short(address), address, chain: state.trace?.chain || "solana", at: new Date().toISOString() });
   saveList(KEYS.views, rows);
+  render();
+}
+let traceTicket = 0;
+async function openTrace(address, chain = "solana") {
+  const target = String(address || "").trim();
+  if (!target) return;
+  const ticket = ++traceTicket;
+  state.selectedNode = target;
+  if (state.trace?.address === target && Array.isArray(state.trace.transfers)) {
+    render();
+    return;
+  }
+  const previous = state.trace;
+  state.trace = null;
+  if (previous) render();
+  try {
+    const card = await readAddress(chain, target);
+    if (ticket !== traceTicket) return;
+    state.trace = card ? { ...card, address: card.address || target, chain: card.chain || chain, transfers: card.transfers || [] } : { ok: false, address: target, chain, transfers: [], facts: [], largest: [] };
+  } catch {
+    if (ticket !== traceTicket) return;
+    state.trace = { ok: false, address: target, chain, transfers: [], facts: [], largest: [] };
+  }
   render();
 }
 function render() {
@@ -870,6 +1080,7 @@ function boot() {
   });
   const hash = location.hash.replace("#", "");
   if (hash && ["home", "dex", "tracer", "visualizer", "alertas", "etiquetas", "paneles", "transfers", "mercado", "ficha", "token"].includes(hash)) state.screen = hash;
+  markNav(state.screen);
   const read = h("button", { type: "button", id: "vf-leer", onclick: () => investigate(document.getElementById("direccion-token")?.value, document.getElementById("red")?.value || "solana") }, t("Ficha", "Profile"));
   document.querySelector(".consulta-barra")?.append(read);
   const slot = document.createElement("div");
@@ -886,15 +1097,38 @@ function boot() {
     investigate(document.getElementById("direccion-token")?.value, document.getElementById("red")?.value || "solana");
   }, true);
   const field = document.getElementById("direccion-token");
-  if (field) field.setAttribute("placeholder", t("Busca tokens, direcciones o pools", "Search tokens, addresses or pools"));
-  document.querySelector(".langsuggest")?.remove();
-  const heading = document.querySelector("main h1");
-  if (heading && !document.querySelector(".vf-tagline")) {
-    const tag = document.createElement("p");
-    tag.className = "vf-tagline";
-    tag.textContent = "Sonar · verify on-chain";
-    heading.after(tag);
+  if (field) {
+    field.setAttribute("placeholder", t("Buscar", "Search"));
+    field.setAttribute("aria-label", t("Dirección o token", "Address or token"));
+    field.setAttribute("aria-keyshortcuts", "/");
+    if (!field.parentElement?.querySelector(".vf-slash")) {
+      const slash = document.createElement("kbd");
+      slash.className = "vf-slash";
+      slash.textContent = "/";
+      slash.title = t("Buscar", "Search");
+      field.after(slash);
+    }
   }
+  document.querySelector(".langsuggest")?.remove();
+  const brand = document.querySelector("header.site .brand");
+  if (brand) {
+    const strong = brand.querySelector("strong");
+    let copy = brand.querySelector(".vf-brandcopy");
+    if (!copy) {
+      copy = document.createElement("span");
+      copy.className = "vf-brandcopy";
+      if (strong) copy.append(strong);
+      brand.append(copy);
+    }
+    let tag = copy.querySelector(".vf-tagline") || document.querySelector(".vf-tagline");
+    if (!tag) {
+      tag = document.createElement("span");
+      tag.className = "vf-tagline";
+      tag.textContent = "Sonar · verify on-chain";
+    }
+    if (tag.parentElement !== copy) copy.append(tag);
+  }
+  document.querySelectorAll("main .vf-tagline").forEach((node) => node.remove());
   document.title = "ORVUPI Sonar";
   ensureNetworks();
   render();
@@ -919,6 +1153,7 @@ function paintSheet() {
   }
 }
 async function loadLive() {
+  const traceJob = openTrace(PROJECT_WALLET);
   try {
     state.markets = await fetchTopMarkets();
     const btc = state.markets?.coins?.find((coin) => coin.id === "bitcoin");
@@ -939,7 +1174,15 @@ async function loadLive() {
   }
   render();
   try {
-    if (state.pool?.address) state.liveTrades = await fetchPoolTrades(state.pool.network, state.pool.address);
+    for (const pool of (state.pools || []).slice(0, 6)) {
+      if (!pool?.address) continue;
+      const read = await fetchPoolTrades(pool.network, pool.address);
+      if (read?.rows?.length) {
+        state.pool = pool;
+        state.liveTrades = read;
+        break;
+      }
+    }
     if (!state.liveTrades?.rows?.length) state.liveTrades = await fetchLargeTransfers();
     else if (state.liveTrades.rows.length < 9) {
       const extra = await fetchLargeTransfers();
@@ -956,17 +1199,11 @@ async function loadLive() {
     state.global = state.global || { ok: false };
   }
   render();
+  await traceJob;
   try {
-    state.dossier = await readAddress("solana", OFFICIAL_ADDRESS);
+    if (!state.dossier || state.dossier.address !== OFFICIAL_ADDRESS) state.dossier = await readAddress("solana", OFFICIAL_ADDRESS, { activity: false });
   } catch {
     state.dossier = { ok: false, address: OFFICIAL_ADDRESS, chain: "solana", facts: [], transfers: [], largest: [], message: t("La lectura no salió.", "The read did not complete.") };
-  }
-  render();
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    state.trace = await readAddress("solana", PROJECT_WALLET);
-  } catch {
-    state.trace = { ok: false, address: PROJECT_WALLET, chain: "solana", transfers: [], facts: [], largest: [] };
   }
   render();
 }

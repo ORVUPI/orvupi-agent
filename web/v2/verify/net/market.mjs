@@ -309,7 +309,9 @@ export async function fetchTopMarkets() {
 }
 
 export async function fetchPoolTrades(network, pool) {
-  if (!network || !pool) return { ok: false, state: "sin-datos", rows: [], provider: "GeckoTerminal", fetchedAt: new Date().toISOString(), scope: "Operaciones del pool" };
+  if (!network || !pool || !OHLCV_NETWORKS.has(network)) {
+    return { ok: false, state: "no-soportado", rows: [], provider: "GeckoTerminal", fetchedAt: new Date().toISOString(), scope: "Operaciones del pool" };
+  }
   return withCache(`trades:${network}:${pool}`, async () => {
     const url = `https://api.geckoterminal.com/api/v2/networks/${encodeURIComponent(network)}/pools/${encodeURIComponent(pool)}/trades`;
     const response = await fetchJson(url, { headers: GECKO_HEADERS, attempts: 2 });

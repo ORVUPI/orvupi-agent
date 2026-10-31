@@ -67,13 +67,38 @@ test("recorre Sonar sin errores de la aplicación", async ({ page }, info) => {
   const shots = info.project.name.startsWith("chromium");
   await page.goto("/verify/");
   await expect(page).toHaveTitle(/ORVUPI Sonar/);
-  await expect(page.locator(".vf-tagline")).toHaveText("Sonar · verify on-chain");
+  await expect(page.locator("header.site .brand")).toContainText("ORVUPI Sonar");
+  await expect(page.locator("header.site .vf-tagline")).toHaveText("Sonar · verify on-chain");
+  await expect(page.locator("main .vf-tagline")).toHaveCount(0);
+  await expect(page.locator("#direccion-token")).toHaveAttribute("placeholder", /Buscar|Search/);
+  await expect(page.locator("#direccion-token")).toHaveAttribute("aria-label", /Dirección o token|Address or token/);
+  if (!mobile) await expect(page.locator(".vf-slash")).toBeVisible();
   await page.waitForSelector(".vf-coin strong", { timeout: 60_000 });
   await page.waitForSelector(".vf-chart-canvas:not([hidden])", { timeout: 60_000 });
   await page.locator(".vf-netname:visible").first().waitFor({ state: "visible", timeout: 60_000 });
 
   async function shot(name) {
     if (!shots) return;
+    if (name === "visualizer" || name === "tracer") {
+      await page.waitForSelector(".vf-node", { timeout: 90_000 });
+      await expect(page.locator(".vf-node")).not.toHaveCount(1);
+    }
+    if (name === "visualizer") {
+      await expect(page.locator("#vf-root .vf-chart-card")).toHaveCount(0);
+      await expect(page.locator(".vf-inspect")).toContainText(/Resumen|Overview/);
+      await expect(page.locator(".vf-inspect .vf-pager")).toHaveText(/\d+\s*\/\s*\d+/);
+    }
+    if (name === "transfers" || name === "explorar") {
+      await expect(page.locator("#vf-root .vf-pager").last()).toHaveText(/\d+\s*\/\s*\d+/, { timeout: 60_000 });
+    }
+    if (name === "mercado") {
+      await expect(page.locator("#vf-root").getByRole("button", { name: "Spot" })).toBeVisible();
+      await expect(page.locator("#vf-root").getByRole("button", { name: /futuros|opciones/i })).toHaveCount(0);
+      await expect(page.locator("#vf-root .vf-chart-card h2")).toHaveCount(1);
+    }
+    if (name === "ficha") {
+      await page.waitForSelector("[data-address]", { timeout: 90_000 });
+    }
     if (await page.locator(".vf-chart-canvas").count()) {
       await page.waitForSelector(".vf-chart-canvas:not([hidden])", { timeout: 40_000 }).catch(() => {});
     }
@@ -86,6 +111,12 @@ test("recorre Sonar sin errores de la aplicación", async ({ page }, info) => {
   for (const [id, label] of SCREENS) {
     await openScreen(page, id, label, mobile);
     await expect(page.locator("#vf-root")).toBeVisible();
+    const inBar = mobile ? ["home", "dex", "tracer", "visualizer", "mercado"].includes(id) : ["home", "dex", "tracer", "visualizer", "alertas", "etiquetas"].includes(id);
+    if (inBar) await expect(page.locator("[data-vf-view][aria-current='page']:visible")).toHaveCount(1);
+    if (!mobile && ["paneles", "transfers", "mercado", "ficha"].includes(id)) {
+      await expect(page.locator("details.vf-more[data-current='true'] > summary")).toBeVisible();
+      await expect(page.locator(".vf-nav > [data-vf-view][aria-current='page']")).toHaveCount(0);
+    }
     await shot(id === "home" ? "explorar" : id);
   }
 
@@ -125,8 +156,11 @@ test("recorre Sonar sin errores de la aplicación", async ({ page }, info) => {
   await page.locator("#vf-root").getByRole("button", { name: "Salidas" }).click();
   await page.locator("#vf-root").getByRole("button", { name: "Todas" }).click();
   await page.locator("#vf-root").getByRole("button", { name: "USD ≥ 1" }).click();
-  const next = page.locator(".vf-card").getByRole("button", { name: "›" }).last();
-  if (await next.isEnabled()) await next.click();
+  const next = page.locator("#vf-root").getByRole("button", { name: "›" });
+  if (await next.count()) {
+    const button = next.last();
+    if (await button.isEnabled()) await button.click();
+  }
 
   await openScreen(page, "visualizer", "Visualizer", mobile);
   const graph = page.locator(".vf-graph");
@@ -152,12 +186,13 @@ test("recorre Sonar sin errores de la aplicación", async ({ page }, info) => {
   await page.locator(".vf-graph-reset").click();
 
   await openScreen(page, "dex", "DEX", mobile);
-  await page.locator("#vf-root").getByRole("button", { name: "Leaderboard" }).click();
-  await page.locator("#vf-root").getByRole("button", { name: "Screener" }).click();
+  await expect(page.locator("#vf-root").getByRole("button", { name: "Leaderboard" })).toHaveCount(0);
+  await page.locator("#vf-root .vf-netname:visible").first().waitFor({ state: "visible", timeout: 60_000 });
   await openScreen(page, "mercado", "Mercado", mobile);
-  await page.locator("#vf-root").getByRole("button", { name: "resumen" }).click();
-  await page.locator("#vf-root").getByRole("button", { name: "futuros" }).click();
-  await page.locator("#vf-root").getByRole("button", { name: "spot" }).click();
+  await page.locator("#vf-root").getByRole("button", { name: "Resumen" }).click();
+  await expect(page.locator("#vf-root .vf-metrics, #vf-root .vf-coins").first()).toBeVisible();
+  await page.locator("#vf-root").getByRole("button", { name: "Spot" }).click();
+  await expect(page.locator("#vf-root .vf-chart-card")).toBeVisible();
 
   if (info.project.name === "chromium-1440") {
     for (const [chain, address] of ADDRESSES) {

@@ -1,7 +1,7 @@
 /**
  * Lecturas de red. El mercado vive en market.mjs. Sin claves, sin relleno y sin DeFiLlama.
  */
-import { fetchJson } from "./http.mjs";
+import { fetchJson, withCache } from "./http.mjs";
 import { fetchEthereumActivity } from "./market.mjs";
 import { CHAINS, LIMITS, chainById, identify } from "./present.mjs";
 import { bondingCurvePda, decodeCurveAccount, decodeMintAccount } from "../../shared/solana-read.js";
@@ -20,26 +20,100 @@ export {
 } from "./market.mjs";
 
 const TIMEOUT_MS = 8_000;
+const BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
+const INDEXED_METHODS = new Set(["getTransaction", "getTokenSupply", "getTokenLargestAccounts"]);
+const hostNext = new Map();
+let vibeCursor = 0;
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** El endpoint público de Vibe Station corta ráfagas. Hay 1,2 s entre dos llamadas al mismo host. */
+async function paceHost(url) {
+  if (!String(url).includes("solanavibestation.com")) return;
+  const gap = 1_200;
+  const now = Date.now();
+  const due = hostNext.get(url) || 0;
+  hostNext.set(url, Math.max(now, due) + gap);
+  if (due > now) await wait(due - now);
+}
 
 function finite(value) {
   const number = typeof value === "number" ? value : typeof value === "string" && value.trim() !== "" ? Number(value) : NaN;
   return Number.isFinite(number) ? number : null;
 }
 
-async function solanaRpc(method, params) {
+function historyMiss(method, body) {
+  const result = body?.result;
+  if (method === "getSignaturesForAddress") return Array.isArray(result) && result.length === 0;
+  if (method === "getTransaction") return result == null;
+  return false;
+}
+
+function solanaCandidates(method, prefer) {
   const chain = chainById("solana");
+  const urls = [];
+  if (prefer && chain.rpc.includes(prefer)) urls.push(prefer);
+  for (const url of chain.rpc) if (!urls.includes(url)) urls.push(url);
+  const allowed = urls.filter((url) => {
+    if (url.includes("publicnode") && INDEXED_METHODS.has(method)) return false;
+    if (BROWSER && /mainnet(-beta)?\.solana\.com/.test(url)) return false;
+    return true;
+  });
+  if (prefer || !INDEXED_METHODS.has(method)) return allowed;
+  const vibe = allowed.filter((url) => url.includes("solanavibestation.com"));
+  const other = allowed.filter((url) => !url.includes("solanavibestation.com"));
+  if (vibe.length < 2) return allowed;
+  const shift = vibeCursor % vibe.length;
+  vibeCursor += 1;
+  return [...vibe.slice(shift), ...vibe.slice(0, shift), ...other];
+}
+
+async function solanaRpc(method, params, prefer) {
+  const urls = solanaCandidates(method, prefer);
   let last = null;
-  for (const url of chain.rpc) {
+  for (const url of urls) {
+    await paceHost(url);
     last = await fetchJson(url, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
       timeoutMs: TIMEOUT_MS,
+      attempts: 1,
     });
-    if (last.ok && last.body && !last.body.error) return { ...last, provider: url };
-    if (last.status !== 429 && last.status !== 403 && last.status !== 0) break;
+    const miss = historyMiss(method, last.body);
+    if (last.ok && last.body && !last.body.error && !miss) return { ...last, provider: url };
+    if (!miss && last.status !== 429 && last.status !== 403 && last.status !== 0) break;
   }
-  return { ...(last || { ok: false, body: null, fetchedAt: new Date().toISOString() }), provider: chain.rpc[0] };
+  return { ...(last || { ok: false, body: null, fetchedAt: new Date().toISOString() }), provider: urls[0] || chainById("solana").rpc[0] };
+}
+
+async function solanaBatch(url, signatures) {
+  await paceHost(url);
+  const payload = signatures.map((signature, index) => ({
+    jsonrpc: "2.0",
+    id: index + 1,
+    method: "getTransaction",
+    params: [signature, { encoding: "jsonParsed", commitment: "confirmed", maxSupportedTransactionVersion: 0 }],
+  }));
+  const response = await fetchJson(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload),
+    timeoutMs: TIMEOUT_MS,
+    attempts: 1,
+  });
+  if (!response.ok || !Array.isArray(response.body)) return { ok: false, status: response.status || 0, rows: [], provider: url };
+  return {
+    ok: true,
+    status: response.status,
+    provider: url,
+    rows: signatures.map((signature, index) => {
+      const item = response.body.find((entry) => entry?.id === index + 1) || response.body[index];
+      return { signature, result: item?.result ?? null };
+    }),
+  };
 }
 
 function accountData(value) {
@@ -51,7 +125,7 @@ function accountData(value) {
   return bytes;
 }
 
-export async function readSolana(address) {
+export async function readSolana(address, options = {}) {
   const fetchedAt = new Date().toISOString();
   const info = await solanaRpc("getAccountInfo", [address, { encoding: "base64", commitment: "confirmed" }]);
   if (!info.ok || info.body?.error) {
@@ -99,48 +173,93 @@ export async function readSolana(address) {
       curve = { state: "sin-datos", present: false };
     }
     facts.push({ id: "curve", state: curve.state, value: curve.present ? "cuenta de curva" : null });
-    const activity = await solanaTransfers(address, info.provider);
+    const activity = options.activity === false ? { transfers: [], provider: info.provider } : await cachedTransfers(address);
     return { ok: true, state: "comprobado", chain: "solana", address, kind, provider: info.provider, fetchedAt: info.fetchedAt, slot, facts, largest: sample, transfers: activity.transfers, curve };
   }
   const balance = await solanaRpc("getBalance", [address, { commitment: "confirmed" }]);
   const lamports = balance.body?.result?.value;
   facts.push({ id: "lamports", state: balance.ok && lamports != null ? "comprobado" : "requiere-atencion", value: lamports != null ? String(lamports) : null, decimals: 9 });
-  const activity = await solanaTransfers(address, info.provider);
+  const activity = options.activity === false ? { transfers: [], provider: info.provider } : await cachedTransfers(address);
   return { ok: true, state: "comprobado", chain: "solana", address, kind, provider: info.provider, fetchedAt: info.fetchedAt, slot, facts, largest: [], transfers: activity.transfers };
 }
 
-async function solanaTransfers(address, provider) {
+async function cachedTransfers(address) {
+  const cached = await withCache(`solana.transfers.v1:${address}`, async () => {
+    const value = await solanaTransfers(address);
+    return { ok: value.ok !== false, transfers: value.transfers || [], provider: value.provider || "", fetchedAt: new Date().toISOString() };
+  });
+  return { transfers: cached?.transfers || [], provider: cached?.provider || "" };
+}
+
+async function solanaTransfers(address) {
   const sigs = await solanaRpc("getSignaturesForAddress", [address, { limit: LIMITS.maxSignatures, commitment: "confirmed" }]);
-  const list = sigs.body?.result;
-  if (!Array.isArray(list)) return { transfers: [] };
+  const list = Array.isArray(sigs.body?.result) ? sigs.body.result.filter((row) => row?.signature).slice(0, LIMITS.maxSignatures) : [];
+  if (!sigs.ok || sigs.body?.error) return { ok: false, transfers: [], provider: sigs.provider };
+  if (!list.length) return { ok: true, transfers: [], provider: sigs.provider };
+  const hosts = solanaCandidates("getTransaction");
+  const loaded = new Map();
+  let pending = list.map((row) => row.signature);
+  const tries = new Map();
+  let hostIndex = 0;
+  while (pending.length && hosts.length) {
+    const chunk = [];
+    const later = [];
+    for (const signature of pending) {
+      const count = tries.get(signature) || 0;
+      if (count >= hosts.length) continue;
+      if (chunk.length < 3) {
+        chunk.push(signature);
+        tries.set(signature, count + 1);
+      } else later.push(signature);
+    }
+    pending = later;
+    if (!chunk.length) break;
+    const host = hosts[hostIndex % hosts.length];
+    hostIndex += 1;
+    const batch = await solanaBatch(host, chunk);
+    if (!batch.ok) {
+      pending = [...chunk, ...pending];
+      if (batch.status === 429) await wait(700);
+      continue;
+    }
+    const missed = [];
+    for (const row of batch.rows) {
+      if (row.result) loaded.set(row.signature, { result: row.result, provider: batch.provider });
+      else missed.push(row.signature);
+    }
+    if (missed.length) pending = [...missed, ...pending];
+  }
   const transfers = [];
-  for (const row of list.slice(0, LIMITS.maxTransactions)) {
-    if (!row?.signature) continue;
-    const tx = await solanaRpc("getTransaction", [row.signature, { encoding: "jsonParsed", commitment: "confirmed", maxSupportedTransactionVersion: 0 }]);
-    const parsed = tx.body?.result;
-    const extracted = parsed ? extractSolanaTransfers(parsed, row.signature) : [];
-    if (extracted.length) transfers.push(...extracted.map((item) => ({ ...item, chain: "solana", provider, slot: row.slot ?? parsed?.slot ?? null })));
-    else {
-      transfers.push({
-        id: row.signature,
-        signature: row.signature,
-        chain: "solana",
-        from: null,
-        to: null,
-        value: null,
-        token: null,
-        usd: null,
-        time: row.blockTime ? new Date(row.blockTime * 1000).toISOString() : null,
-        state: tx.ok ? "sin-datos" : "requiere-atencion",
-        provider,
-        slot: row.slot ?? null,
-      });
+  for (const row of list) {
+    const hit = loaded.get(row.signature);
+    if (!hit?.result) continue;
+    for (const item of extractSolanaTransfers(hit.result, row.signature)) {
+      if (item.from !== address && item.to !== address) continue;
+      transfers.push({ ...item, chain: "solana", provider: hit.provider, slot: row.slot ?? hit.result.slot ?? null });
     }
   }
-  return { transfers };
+  return { ok: true, transfers, provider: loaded.size ? [...loaded.values()][0].provider : sigs.provider };
+}
+
+const WSOL_MINT = "So11111111111111111111111111111111111111112";
+
+function accountKeys(tx) {
+  return (tx?.transaction?.message?.accountKeys || []).map((key) => (typeof key === "string" ? key : key?.pubkey)).filter(Boolean);
+}
+
+function tokenOwners(tx) {
+  const keys = accountKeys(tx);
+  const map = new Map();
+  const meta = tx?.meta || {};
+  for (const row of [...(meta.preTokenBalances || []), ...(meta.postTokenBalances || [])]) {
+    const key = keys[row?.accountIndex];
+    if (key && row?.owner) map.set(key, row.owner);
+  }
+  return map;
 }
 
 function extractSolanaTransfers(tx, signature) {
+  const owners = tokenOwners(tx);
   const message = tx?.transaction?.message;
   const instructions = [
     ...(message?.instructions || []),
@@ -151,21 +270,29 @@ function extractSolanaTransfers(tx, signature) {
     const parsed = ix?.parsed;
     if (!parsed || (parsed.type !== "transfer" && parsed.type !== "transferChecked")) continue;
     const info = parsed.info || {};
-    const amount = info.tokenAmount?.amount ?? info.amount ?? null;
+    const lamports = info.lamports != null ? String(info.lamports) : null;
+    const amount = info.tokenAmount?.amount ?? info.amount ?? lamports;
+    let from = info.source || null;
+    let to = info.destination || null;
+    if (from && owners.has(from)) from = owners.get(from);
+    if (to && owners.has(to)) to = owners.get(to);
+    if (!from || !to || from === to) continue;
+    let token = info.mint || (lamports != null ? "SOL" : "");
+    if (token === WSOL_MINT) token = "SOL";
     rows.push({
       id: `${signature}:${rows.length}`,
       signature,
-      from: info.source || info.authority || null,
-      to: info.destination || null,
+      from,
+      to,
       value: amount == null ? null : String(amount),
-      decimals: info.tokenAmount?.decimals ?? (parsed.type === "transfer" && !info.mint ? 9 : null),
-      token: info.mint || (parsed.type === "transfer" && !info.mint ? "SOL" : ""),
+      decimals: info.tokenAmount?.decimals ?? (lamports != null || token === "SOL" ? 9 : null),
+      token,
       usd: null,
       time: tx.blockTime ? new Date(tx.blockTime * 1000).toISOString() : null,
       state: tx.meta?.err ? "requiere-atencion" : "comprobado",
     });
   }
-  return rows.filter((row) => row.from && row.to);
+  return rows;
 }
 
 const SELECTORS = { name: "0x06fdde03", symbol: "0x95d89b41", decimals: "0x313ce567", totalSupply: "0x18160ddd" };
@@ -354,10 +481,10 @@ export async function readTron(address) {
   };
 }
 
-export async function readAddress(chainId, raw) {
+export async function readAddress(chainId, raw, options = {}) {
   const found = identify(raw);
   if (found.kind === "unknown" || found.kind === "empty") return { ok: false, state: "no-soportado", transfers: [], largest: [], facts: [] };
-  if (found.kind === "solana" || chainId === "solana") return readSolana(found.address);
+  if (found.kind === "solana" || chainId === "solana") return readSolana(found.address, options);
   if (found.kind === "bitcoin" || chainId === "bitcoin") return readBitcoin(found.address);
   if (found.kind === "tron" || chainId === "tron") return readTron(found.address);
   const chain = chainById(chainId) || CHAINS.find((item) => item.family === "evm");

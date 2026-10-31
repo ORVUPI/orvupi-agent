@@ -1,39 +1,59 @@
 # QA de ORVUPI Sonar
 
-Fecha: 31 de octubre de 2026. Sin merge y sin deploy. La herramienta se llama ORVUPI Sonar, con el subtítulo «Sonar · verify on-chain». `/sonar/` es un alias de la misma app y `/verify/` sigue activo.
+Fecha: 31 de octubre de 2026. Sin merge y sin deploy. Rama `cursor/verify-app-b8c0`, pull request #142. La herramienta se llama ORVUPI Sonar y el subtítulo, dentro de la marca, es «Sonar · verify on-chain». `/sonar/` sigue siendo alias y `/verify/` sigue activo.
 
-## Qué se comprobó
+## Pulido de esta pasada
 
-| Comprobación | Resultado |
+| Punto | Qué queda |
 | --- | --- |
-| Título, cabecera, `<title>`, subtítulo y manifest (`short_name`: Sonar) | Hecho en español e inglés en la app, y en los títulos y descripciones de pt-BR, ja y ko |
-| Menú principal, junto a Work y ARQIVEN | El enlace se llama Sonar y apunta a `/sonar/` (o a la variante de idioma) |
-| Favicon y estado de carga | Pulpo rosa con ondas hacia puntos de red, en `assets/orvupi/sonar.svg` y en el esqueleto de carga |
-| Velas con datos reales y redimensionado | En 1440 y 390 el gráfico de Bitcoin muestra velas. La fuente visible es una línea corta, por ejemplo «Fuente: CoinGecko · en vivo · 21:14» |
-| Números y redes | Capitalización y volumen en formato compacto (`$488,91K`, `$2,92M`). La variación de 24 h va en verde o rojo. La red se lee con nombre (Ethereum, TON, Robinhood Chain) y un punto de color |
-| Horas | Hora local del navegador (`21:14`, `31 oct 21:14`), no ISO con Z |
-| Temporalidades | Bitcoin/CoinGecko: 30m, 4h y 1D. Un pool de GeckoTerminal: 1m, 5m, 15m, 1h, 4h y 1D. El botón muestra el tamaño real si la fuente lo cambia |
-| Pantallas con datos al abrir | Explorar, DEX, Mercado y Transfers cargan mercado, pools y operaciones. Tracer y Visualizer leen la dirección pública del proyecto. Ficha abre el mint de ORVUPI. Paneles muestra capitalización, volumen y dominio de BTC. Alertas y Etiquetas tienen formulario, alta, edición y borrado local |
-| Cadena de respaldo | CoinGecko, luego pool de GeckoTerminal, luego klines de `data-api.binance.vision` y `api.binance.com`. En la prueba, al cortar CoinGecko y GeckoTerminal el gráfico siguió con Binance. Coinbase, Kraken, Tronscan, el archivo CC BY-NC-SA de Binance Vision y la API de Blockscout con clave no se llaman. Detalle en MATRIZ.md |
-| Direcciones reales | En Chromium a 1440: mint ORVUPI, USDC de Ethereum, USDC de Base, WBNB, USDC de Arbitrum, USDC de Polygon, una dirección Bitcoin y USDT de Tron. La entrada `esto-no-es-una-direccion` muestra «Eso no es una dirección…» y no tumba la página |
-| Navegación | Menú, dock móvil, Más, pestañas de DEX y Mercado, filtros de Transfers, paginación, buscador con `/`, zoom, arrastre y pellizco del grafo, cambio a inglés y apertura de `/sonar/` |
-| Accesibilidad | axe sobre `#vf-root` en Chromium 1440, sin violaciones críticas. El contraste de color se revisó aparte del tema oscuro y no bloqueó la prueba |
-| Consola | El recorrido no deja `pageerror` ni promesas rechazadas. Un 429 de la fuente sigue pudiendo escribir en la consola del navegador la falta de cabecera CORS; la app no lo enseña como un cero y pasa a la fuente siguiente |
-| Capturas | `docs/verify/capturas/` a 1440 y 390: explorar, dex, tracer, visualizer, mercado, alertas, etiquetas, paneles, transfers y ficha |
+| Visualizer | Abre el grafo de la wallet pública del proyecto `GKpccLJwKArptzt9j897njXUx9RsV5NKL3Egu7bfMA6Q`. En la captura hay 6 nodos y las contrapartes de las transferencias leídas. El panel derecho es Resumen / Nodos y las transferencias del nodo elegido. No repite las velas de Bitcoin |
+| Vistas | Wallet del proyecto y el contrato ORVUPI `Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU`, más las vistas guardadas en el navegador |
+| Transfers | Filas reales y paginador `1 / 2` en la captura de escritorio. En Visualizer, `1 / 1`. Si no hay filas, el paginador no se pinta. `present.pager(0, 1).label` sigue siendo `— / —` |
+| Cabecera | El wordmark es ORVUPI Sonar. El subtítulo va debajo, dentro del logo, y ya no flota en el contenido |
+| Mercado | Pestañas segmentadas Resumen y Spot, con mayúscula inicial. Futuros y opciones no tienen una fuente gratuita válida y no están. Una sola tarjeta de Bitcoin |
+| Navegación | Solo el ítem activo va en rosa, en el menú de escritorio y en la barra móvil. Las secciones de Más marcan Más, no Tracer ni Visualizer |
+| Buscador | El placeholder es «Buscar» (en inglés, «Search»). La etiqueta accesible sigue siendo «Dirección o token». En escritorio se ve el atajo `/` |
+| Densidad | Tablas con `tabular-nums`, números a la derecha y scroll horizontal si no caben. Las tarjetas de dos columnas se alinean al contenido. Alertas usa dos columnas y no deja una tercera vacía |
+
+La lectura de Solana en el navegador no llama a `api.mainnet-beta.solana.com`: cualquier `Origin` recibe 403. La cuenta sale de PublicNode. Si la lista de firmas viene vacía, sigue en el RPC público de Vibe Station (el host general y las regiones `atl1` y `ams1`), sin clave. `getTransaction` va en lotes de 3, con 1,2 s entre llamadas al mismo host. Suministro y cuentas grandes no pasan por PublicNode, que las marca como indexadas. El detalle y los términos están en `MATRIZ.md`.
 
 ## Playwright
 
-Configuración: `playwright.sonar.config.mjs`. Chromium y Firefox, 1440 y 390.
+`npx playwright test --config=playwright.sonar.config.mjs`
+
+31 de octubre de 2026, después del pulido: 5 pasaron, 3 se omitieron, salida 0, 1,7 min. El respaldo de velas solo corre en Chromium 1440.
 
 | Proyecto | Recorrido | Respaldo de velas |
 | --- | --- | --- |
-| chromium-1440 | pasa | pasa |
-| firefox-1440 | pasa | omitido (basta un navegador) |
+| chromium-1440 | pasa | pasa (al cortar CoinGecko y GeckoTerminal el gráfico sigue; la línea de fuente puede quedar en Binance) |
+| firefox-1440 | pasa | omitido |
 | chromium-390 | pasa | omitido |
 | firefox-390 | pasa | omitido |
 
-## `npm test` y build
+El recorrido abre las diez pantallas, pulsa pestañas, filtros, temporalidades, paginación, buscador, zoom, arrastre y pellizco del grafo, alta, edición y borrado local de alertas y etiquetas, el dock móvil y el cambio a inglés y a `/sonar/`. En Chromium 1440 también lee el mint de ORVUPI, USDC de Ethereum, USDC de Base, WBNB, USDC de Arbitrum, USDC de Polygon, una dirección Bitcoin, USDT de Tron y la entrada `esto-no-es-una-direccion`. axe sobre `#vf-root` no dejó violaciones críticas. El contraste de color del tema oscuro no bloquea la prueba.
 
-`npm run build` es `tsc`. La pasada completa de `npm test` compila y ejecuta la suite. Los tests nuevos de Sonar (`test/verify-fallback.test.ts`) pasan, igual que la CSP de Verify (el hash del estilo del gráfico no abre `unsafe-inline`).
+## Consola
 
-La suite completa del repositorio sigue en rojo por fallos que ya estaban en la rama y no tocan estos archivos: clases `canva-*` dentro de Studio, la palabra `reserve` dentro del worker PDF de Work, el tablero generado de `site-drafts` y el rastreo de nombres en documentos ajenos a Sonar. No se han cambiado para no mezclar ese arreglo con esta entrega.
+La prueba falla si hay `pageerror`, una promesa rechazada sin manejar, o un `console.error` de la aplicación. En esta pasada eso quedó en cero.
+
+El navegador puede escribir por su cuenta `Failed to load resource` o un aviso CORS cuando una fuente responde 429 y no manda `Access-Control-Allow-Origin`. CoinGecko lo hace a veces desde `127.0.0.1`. Esas líneas no tumbran la prueba: la app no enseña un cero y pasa a la fuente siguiente. Un 4xx o 5xx que la app deja sin tratar sí haría fallar el recorrido.
+
+## Capturas
+
+Regeneradas en `docs/verify/capturas/` a 1440 y 390: explorar, dex, tracer, visualizer, mercado, alertas, etiquetas, paneles, transfers y ficha. Las de 768, 1024 y `1440-token.png` son de una pasada anterior; este Playwright no las vuelve a sacar.
+
+El bloque «Qué puede comprobar esta red» que se ve debajo de la app es el glosario clásico de `/verify/`. Sigue ahí a propósito.
+
+## `npm test`
+
+`npm test` compila con `tsc` y luego corre la suite. La compilación salió. Resultado de esta pasada: 456 pruebas en verde, 1 omitida, 6 en rojo. Las de Sonar (respaldo de velas, cabecera `<strong>ORVUPI</strong>`, CSP con los hosts de Vibe Station) están entre las verdes.
+
+Los seis rojos ya estaban y no se tocan en este cambio:
+
+| Prueba | Por qué se queda |
+| --- | --- |
+| `los HTML generados coinciden con los archivos del repositorio` | Solo difiere `site-drafts/tablero/index.html`. El propio test dice que la fila «Usage measurement» está en el tablero editado a mano y que eso ya fallaba en main. Regenerarlo borraría esa fila |
+| Studio, «la interfaz no nombra otras herramientas…» y «la licencia va literal…» | `web/v2/studio/app.mjs` usa clases `canva-row`, `canva-plantillas` y similares. La prueba busca la palabra `canva` como término suelto y esas clases la disparan. Renombrar el layout de Studio no es este pulido |
+| Studio, «no hay hosts externos…» | `web/v2/studio/desktop.css` lleva `http://www.w3.org/2000/svg` dentro de un icono SVG en un data-URI. Es el espacio de nombres del SVG, no un host de Sonar, y la lista permitida es la de Studio |
+| «el nombre y los apellidos no distinguen mayúsculas» | Marca `docs/orvupi-ia/CRITERIOS.md`, `docs/orvupi-ia/PLAN-IMPLEMENTACION.md`, `docs/orvupi-ia/README.md`, `docs/verify/AUDITORIA.md`, `test/arqiven-public.test.ts`, `test/orvupi-ia-fase0.test.ts` y el diff de la rama frente a main. Reescribir esos documentos o el historial queda fuera de Sonar |
+| «las palabras prohibidas no salen…» | El único resto es `reserve` dentro de `work/assets/pdf.worker.min-yatZIOMy.mjs`, el worker PDF minificado de Work. No es texto de Sonar y no se edita un archivo minificado para quitar una palabra interna |

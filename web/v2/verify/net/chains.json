@@ -15,7 +15,7 @@
       "family": "solana",
       "status": "viable-con-limites",
       "label": { "es": "Solana", "en": "Solana" },
-      "rpc": ["https://solana-rpc.publicnode.com", "https://api.mainnet-beta.solana.com"],
+      "rpc": ["https://solana-rpc.publicnode.com", "https://public.rpc.solanavibestation.com", "https://public.rpc.atl1.solanavibestation.com", "https://public.rpc.ams1.solanavibestation.com", "https://api.mainnet-beta.solana.com"],
       "gecko": "solana",
       "native": { "symbol": "SOL", "decimals": 9 },
       "explorer": "https://solscan.io/account/{address}"
