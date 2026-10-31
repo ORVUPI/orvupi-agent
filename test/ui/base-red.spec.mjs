@@ -165,11 +165,10 @@ async function shotNotice(page, name) {
 async function chooseBase(page) {
   await page.goto("/verify/");
   await expect(page.locator("#red")).toHaveValue("solana");
-  await expect(page.locator("#aviso-guardar .aviso-nodos .lang.es")).toHaveText(SOLANA_NOTICE.es);
+  await expect(page.locator("#aviso-guardar")).toBeHidden();
   await expect(page.locator("#aviso-rpc-base")).toBeHidden();
   await page.locator("#red").selectOption("base");
   await expectNoticeBesideButton(page, "es");
-  await expect(page.locator("#aviso-guardar .aviso-nodos")).toBeHidden();
   await expect(page.locator("#comprobaciones-red")).toContainText("Si hay una dirección owner, el contrato puede darle funciones especiales. Esta lectura no dice cuáles son.");
   await expect(page.locator("#comprobaciones-red")).toContainText("Con un proxy, el código al que se reenvía puede cambiarse. Esta lectura no dice si ha cambiado.");
   await expect(page.locator("#comprobaciones-red")).toContainText("Otros tipos de proxy no se comprueban aquí");

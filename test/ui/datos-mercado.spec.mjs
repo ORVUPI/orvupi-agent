@@ -154,48 +154,9 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
   }
 
   await page.goto("/verify/");
-  const nodesEs = "Para leerla en directo, se envía a los nodos públicos de Solana solana-rpc.publicnode.com y api.mainnet-beta.solana.com, que también ven tu IP.";
-  const nodes = page.locator("#aviso-guardar .aviso-nodos .lang.es");
-  await expect(nodes).toBeVisible();
-  await expect(nodes).toContainText(nodesEs);
-  await expect(page.locator("#aviso-guardar details")).not.toContainText(nodesEs);
+  await expect(page.locator("#aviso-guardar")).toBeHidden();
   const field = page.locator("#direccion-token");
-  const check = page.locator("#consulta button[type='submit']");
-  const nodesBox = await nodes.boundingBox();
-  const fieldBox = await field.boundingBox();
-  const checkBox = await check.boundingBox();
-  expect(nodesBox).toBeTruthy();
-  expect(fieldBox).toBeTruthy();
-  expect(checkBox).toBeTruthy();
-  const besideLookup = (phrase, control) => {
-    const gapX = Math.max(phrase.x, control.x) - Math.min(phrase.x + phrase.width, control.x + control.width);
-    const gapY = Math.max(phrase.y, control.y) - Math.min(phrase.y + phrase.height, control.y + control.height);
-    if (gapX < 0 && gapY < 0) return 0;
-    if (gapX < 0) return gapY;
-    if (gapY < 0) return gapX;
-    return Math.hypot(gapX, gapY);
-  };
-  const nextToLookup = Math.min(besideLookup(nodesBox, fieldBox), besideLookup(nodesBox, checkBox));
-  expect(nextToLookup).toBeGreaterThanOrEqual(0);
-  const inForm = await nodes.evaluate((node) => Boolean(node.closest("form#consulta")));
-  expect(inForm).toBe(true);
-  const barBox = await page.locator(".consulta-barra").boundingBox();
-  if (barBox) {
-    const noticeBox = await page.locator("#aviso-guardar").boundingBox();
-    expect(noticeBox).toBeTruthy();
-    // En móvil la barra de consulta va fija abajo y el aviso va en el flujo del formulario,
-    // sin quedarse fijo encima del contenido ni de la barra (se puede cerrar con la X).
-    const barFixed = await page.locator(".consulta-barra").evaluate((el) => getComputedStyle(el).position === "fixed");
-    if (barFixed) {
-      expect(await page.locator("#aviso-guardar").evaluate((el) => getComputedStyle(el).position)).not.toBe("fixed");
-      await expect(page.locator("#aviso-guardar .aviso-cerrar")).toBeVisible();
-    } else {
-      expect(besideLookup(noticeBox, barBox)).toBeLessThan(24);
-      expect(nodesBox.y).toBeGreaterThanOrEqual(barBox.y - noticeBox.height - 24);
-    }
-  } else {
-    expect(nextToLookup).toBeLessThan(80);
-  }
+  await expect(field).toBeVisible();
   await page.locator("#direccion-token").fill(USDC);
   await page.locator("#consulta button[type='submit']").click();
   const block = page.locator("#resultado .datos-mercado");
@@ -236,8 +197,7 @@ test("datos de mercado en Verify y en el cuaderno", async ({ page }, testInfo) =
   await shot("ok");
 
   await switchLang(page, "en");
-  await expect(page.locator("#aviso-guardar .aviso-nodos .lang.en")).toBeVisible();
-  await expect(page.locator("#aviso-guardar .aviso-nodos .lang.en")).toContainText("it is sent to the Solana public nodes solana-rpc.publicnode.com and api.mainnet-beta.solana.com, which also see your IP");
+  await expect(page.locator("#aviso-guardar")).toBeHidden();
   await expect(block).toContainText("Market data");
   await expect(block).toContainText("Data: DEX Screener. It may be inaccurate or out of date.");
   await expect(block).toContainText(STAMP_EN);
