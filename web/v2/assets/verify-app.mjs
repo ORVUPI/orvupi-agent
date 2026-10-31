@@ -1,4 +1,4 @@
-import { defillamaBlocked, fetchBitcoinOhlc, fetchBitcoinQuote, fetchDexSnapshot, fetchPoolCandles, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs";
+import { defillamaBlocked, fetchBitcoinOhlc, fetchBitcoinQuote, fetchCoinOhlc, fetchDexSnapshot, fetchPoolCandles, fetchPoolTrades, fetchTopMarkets, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs";
 import { mountLiveChart } from "../verify/net/chart.mjs";
 import { POLL_MS, TIMEFRAMES, observedStep } from "../verify/net/ohlcv.mjs";
 import { LIMITS, buildGraph, chainById, explorerHref, filterTransfers, formatUnits, groupSearch, identify, pager, slicePage, storageKeys, supportedIds, UNSUPPORTED } from "../verify/net/present.mjs";
@@ -11,9 +11,12 @@ const state = {
   pools: [],
   poolMeta: null,
   pool: null,
-  chartMode: "pool",
+  chartMode: "btc",
+  coinId: "bitcoin",
   chartStatus: null,
   quote: null,
+  markets: null,
+  liveTrades: null,
   dossier: null,
   dex: null,
   pages: {},
@@ -151,9 +154,13 @@ function transferColumns() {
     { label: "USD", cell: (row) => row.usd == null ? t("sin datos", "no data") : usd(row.usd) },
   ];
 }
+function feedRows() {
+  if (state.screen === "ficha" && state.dossier?.transfers?.length) return state.dossier.transfers;
+  return state.liveTrades?.rows || [];
+}
 function transferBlock(id) {
   const focus = state.dossier?.address || "";
-  let rows = filterTransfers(state.dossier?.transfers || [], { direction: state.direction, focus, chains: state.nets, minUsd: state.usdOn ? 1 : null, query: state.query });
+  let rows = filterTransfers(feedRows(), { direction: state.direction, focus: state.screen === "ficha" ? focus : "", chains: null, minUsd: state.usdOn ? 1 : null, query: state.query });
   const window = slicePage(rows, pageOf(id));
   return h("section", { class: "vf-card" }, [
     h("div", { class: "vf-row" }, [h("h2", {}, "Transfers"), pagerBar(id, window)]),
@@ -203,12 +210,9 @@ function chartCard() {
 function ensureChart() {
   const host = document.getElementById("vf-chart-host");
   if (!host) return;
-  if (state.chartMode === "pool" && !state.pool?.address) {
-    host.append(empty(t("sin datos. Elige un pool de la muestra.", "no data. Choose a pool from the sample.")));
-    return;
-  }
   chartHandle = mountLiveChart(host, async () => {
-    if (state.chartMode === "btc") return fetchBitcoinOhlc("1");
+    if (state.chartMode === "coin") return fetchCoinOhlc(state.coinId || "ethereum", "1");
+    if (state.chartMode === "btc" || !state.pool?.address) return fetchBitcoinOhlc("1");
     return fetchPoolCandles(state.pool.network, state.pool.address, state.timeframe);
   }, {
     emptyText: t("sin datos", "no data"),
@@ -226,29 +230,73 @@ function ensureChart() {
     },
   });
 }
+function coinCards() {
+  const pack = state.markets;
+  if (!pack) return h("p", { class: "vf-meta" }, t("Leyendo CoinGecko…", "Reading CoinGecko…"));
+  if (!pack.ok) return empty(`${pack.state || "sin datos"} · CoinGecko`);
+  return h("div", { class: "vf-coins" }, pack.coins.map((coin) => h("button", { type: "button", class: "vf-coin", onclick: () => openCoin(coin) }, [
+    h("strong", {}, coin.symbol),
+    h("span", {}, usd(coin.price)),
+    h("span", { class: coin.change24 != null && coin.change24 < 0 ? "vf-down" : "vf-up" }, coin.change24 == null ? "—" : `${coin.change24 > 0 ? "+" : ""}${coin.change24.toFixed(2)}% 24h`),
+    h("span", { class: "vf-meta" }, `MC ${usd(coin.marketCap)}`),
+  ])));
+}
 function home() {
-  const cards = state.pools.length
-    ? h("div", { class: "vf-row" }, state.pools.slice(0, 4).map((pool) => h("article", { class: "vf-card" }, [
-      h("h3", {}, pool.name),
-      h("p", {}, pool.network || t("sin datos", "no data")),
-      h("p", {}, `USD ${usd(pool.reserveUsd)}`),
-      h("p", { class: "vf-meta" }, `${pool.provider} · ${pool.fetchedAt}`),
-      h("button", { type: "button", onclick: () => { state.pool = pool; state.chartMode = "pool"; go("mercado"); } }, t("Ver velas", "View candles")),
-    ])))
-    : empty(t("sin datos. Carga la muestra de GeckoTerminal.", "no data. Load the GeckoTerminal sample."));
+  const tradeNote = state.liveTrades?.ok
+    ? `${state.liveTrades.provider} · ${state.liveTrades.network} · ${state.liveTrades.fetchedAt} · ${state.liveTrades.scope}`
+    : state.liveTrades ? `${state.liveTrades.state} · ${state.liveTrades.provider}` : t("Leyendo operaciones…", "Reading trades…");
   return h("div", { class: "vf-grid" }, [
-    h("div", {}, [
+    h("div", { class: "vf-stack" }, [
+      chartCard(),
       h("section", { class: "vf-card" }, [
-        h("div", { class: "vf-row" }, [h("h2", {}, t("Entidades", "Entities")), h("span", {}, "‹ ›")]),
-        empty(t("sin datos. No hay una base de entidades gratuita. No se inventan nombres.", "no data. There is no free entity database. Names are not invented.")),
-      ]),
-      h("section", { class: "vf-card" }, [
-        h("div", { class: "vf-row" }, [h("h2", {}, t("Explorador de pools", "Pool explorer"))]),
-        h("button", { type: "button", onclick: loadPools }, state.busy === "pools" ? "…" : t("Cargar muestra", "Load sample")),
-        cards,
+        h("div", { class: "vf-row" }, [h("h2", {}, t("Mercado", "Market")), h("span", { class: "vf-meta" }, state.markets?.fetchedAt || "")]),
+        coinCards(),
+        state.markets?.ok ? h("p", { class: "vf-meta" }, `${state.markets.provider} · ${state.markets.scope}`) : null,
       ]),
     ]),
-    transferBlock("home"),
+    h("div", { class: "vf-stack" }, [
+      h("section", { class: "vf-card" }, [
+        h("h2", {}, t("Pools en tendencia", "Trending pools")),
+        poolTable(state.pools),
+        state.poolMeta ? h("p", { class: "vf-meta" }, `${state.poolMeta.provider || "GeckoTerminal"} · ${state.poolMeta.fetchedAt || ""} · ${state.poolMeta.scope || state.poolMeta.state || ""}`) : h("p", { class: "vf-meta" }, t("Leyendo GeckoTerminal…", "Reading GeckoTerminal…")),
+      ]),
+      h("div", {}, [transferBlock("home"), h("p", { class: "vf-meta" }, tradeNote)]),
+    ]),
+  ]);
+}
+function poolTable(pools) {
+  if (!pools?.length) return state.poolMeta && !state.poolMeta.ok ? empty(`${state.poolMeta.state} · GeckoTerminal`) : h("p", { class: "vf-meta" }, t("Leyendo GeckoTerminal…", "Reading GeckoTerminal…"));
+  return table([
+    { label: t("Par", "Pair"), key: "name" },
+    { label: t("Red", "Network"), key: "network" },
+    { label: "USD", cell: (row) => usd(row.reserveUsd) },
+    { label: "24h", cell: (row) => usd(row.volumeH24) },
+    { label: "", cell: (row) => h("button", { type: "button", onclick: () => openPool(row) }, t("Ficha", "Profile")) },
+  ], pools.slice(0, 8), "");
+}
+function openCoin(coin) {
+  state.coin = coin;
+  state.coinId = coin.id;
+  state.chartMode = coin.id === "bitcoin" ? "btc" : "coin";
+  go("token");
+}
+function openPool(pool) {
+  state.pool = pool;
+  state.chartMode = "pool";
+  state.coin = { symbol: pool.name, name: pool.name, price: null, change24: pool.changeH24, marketCap: pool.reserveUsd, id: pool.address };
+  go("token");
+}
+function tokenView() {
+  const coin = state.coin;
+  return h("div", { class: "vf-stack" }, [
+    h("header", { class: "vf-card vf-token-head" }, [
+      h("h2", {}, coin ? `${coin.symbol} ${coin.name || ""}` : t("Token", "Token")),
+      coin?.price != null ? h("p", { class: "vf-token-px" }, usd(coin.price)) : null,
+      coin?.change24 != null ? h("p", {}, `${coin.change24 > 0 ? "+" : ""}${Number(coin.change24).toFixed(2)}% 24h`) : null,
+      coin?.marketCap != null ? h("p", { class: "vf-meta" }, `MC ${usd(coin.marketCap)}`) : null,
+      h("p", { class: "vf-meta" }, "CoinGecko / GeckoTerminal"),
+    ]),
+    chartCard(),
   ]);
 }
 function market() {
@@ -300,7 +348,8 @@ function visualizer() {
   ]);
 }
 function graphSvg() {
-  const graph = buildGraph(state.dossier?.transfers || [], { seed: state.dossier?.address, maxNodes: LIMITS.maxNodes, depth: 1 });
+  const rows = feedRows();
+  const graph = buildGraph(rows, { seed: rows[0]?.to || state.dossier?.address || "", maxNodes: LIMITS.maxNodes, depth: 1 });
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", "0 0 640 360");
   svg.setAttribute("width", "100%");
@@ -403,21 +452,12 @@ function dex() {
       h("button", { type: "button", "aria-pressed": String(state.dexMode === "leaderboard"), onclick: () => { state.dexMode = "leaderboard"; render(); } }, "Leaderboard"),
     ]),
     state.dexMode === "leaderboard"
-      ? empty(t("no soportado. No hay una fuente gratuita de P&L realizado por trader.", "not supported. There is no free source of realized trader P&L."))
-      : h("div", { class: "vf-two" }, [
-        h("section", { class: "vf-card" }, [
-          h("div", { class: "vf-row" }, [h("h2", {}, t("Explorador", "Explorer")), h("span", { class: "vf-live", "data-state": state.poolMeta?.state || "sin-datos" }, state.poolMeta?.fetchedAt || t("sin datos", "no data"))]),
-          h("button", { type: "button", onclick: loadPools }, t("Cargar muestra", "Load sample")),
-          table([
-            { label: t("Par", "Pair"), key: "name" },
-            { label: t("Red", "Network"), key: "network" },
-            { label: "USD", cell: (row) => usd(row.reserveUsd) },
-            { label: t("Volumen 24 h", "24h volume"), cell: (row) => usd(row.volumeH24) },
-            { label: "", cell: (row) => h("button", { type: "button", onclick: () => { state.pool = row; state.chartMode = "pool"; go("mercado"); } }, t("Velas", "Candles")) },
-          ], window.rows, state.poolMeta?.scope || ""),
-          pagerBar("dex", window),
-        ]),
-        h("section", { class: "vf-card" }, empty(t("Cuentas en línea: sin datos. La muestra no trae carteras ni entidades.", "Addresses online: no data. The sample has no wallets or entities."))),
+      ? empty(t("no soportado. No hay una fuente gratuita de P&L realizado.", "not supported. There is no free source of realized P&L."))
+      : h("section", { class: "vf-card" }, [
+        h("div", { class: "vf-row" }, [h("h2", {}, "DEX"), h("span", { class: "vf-live", "data-state": state.poolMeta?.state || "sin-datos" }, state.poolMeta?.fetchedAt || "")]),
+        poolTable(window.rows.length ? window.rows : state.pools),
+        state.poolMeta ? h("p", { class: "vf-meta" }, `${state.poolMeta.provider || ""} · ${state.poolMeta.scope || state.poolMeta.state || ""}`) : null,
+        pagerBar("dex", window),
       ]),
   ]);
 }
@@ -569,7 +609,7 @@ function render() {
   const root = document.getElementById("vf-root");
   if (!root) return;
   stopChart();
-  const screens = { home, dex, tracer, visualizer, alertas: alerts, etiquetas: labels, paneles: panels, transfers: transfersPage, mercado: market, ficha };
+  const screens = { home, dex, tracer, visualizer, alertas: alerts, etiquetas: labels, paneles: panels, transfers: transfersPage, mercado: market, ficha, token: tokenView };
   const view = screens[state.screen] || home;
   const dialog = searchDialog();
   root.replaceChildren(view());
@@ -620,9 +660,33 @@ function boot() {
     }
   });
   const hash = location.hash.replace("#", "");
-  if (hash && ["home", "dex", "tracer", "visualizer", "alertas", "etiquetas", "paneles", "transfers", "mercado", "ficha"].includes(hash)) state.screen = hash;
-  const read = h("button", { type: "button", id: "vf-leer", onclick: () => investigate(document.getElementById("direccion-token")?.value, document.getElementById("red")?.value || "solana") }, t("Leer ficha", "Read profile"));
+  if (hash && ["home", "dex", "tracer", "visualizer", "alertas", "etiquetas", "paneles", "transfers", "mercado", "ficha", "token"].includes(hash)) state.screen = hash;
+  const read = h("button", { type: "button", id: "vf-leer", onclick: () => investigate(document.getElementById("direccion-token")?.value, document.getElementById("red")?.value || "solana") }, t("Ficha", "Profile"));
   document.querySelector(".consulta-barra")?.append(read);
+  const slot = document.createElement("div");
+  slot.id = "vf-search-slot";
+  slot.className = "vf-search-slot";
+  document.querySelector(".vf-nav")?.after(slot);
+  const form = document.getElementById("consulta");
+  if (form && slot) slot.append(form);
+  const field = document.getElementById("direccion-token");
+  if (field) field.setAttribute("placeholder", t("Busca tokens, direcciones o pools", "Search tokens, addresses or pools"));
+  document.querySelector(".langsuggest")?.remove();
+  render();
+  loadLive();
+}
+async function loadLive() {
+  const [markets, pools] = await Promise.all([fetchTopMarkets(), fetchTrendingPools()]);
+  state.markets = markets;
+  state.poolMeta = pools;
+  state.pools = pools.pools || [];
+  const top = state.pools[0];
+  if (top?.address && top.network) {
+    state.pool = state.pool || top;
+    state.liveTrades = await fetchPoolTrades(top.network, top.address);
+  } else {
+    state.liveTrades = { ok: false, state: pools.state || "sin-datos", provider: "GeckoTerminal", rows: [] };
+  }
   render();
 }
 

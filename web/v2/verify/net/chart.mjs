@@ -44,8 +44,8 @@ export function mountLiveChart(host, load, hooks = {}) {
     if (!chart) {
       chart = createChart(canvas, {
         autoSize: true,
-        layout: { background: { type: ColorType.Solid, color: "#fffdf8" }, textColor: "#102032", fontFamily: "Inter, system-ui, sans-serif" },
-        grid: { vertLines: { color: "#f3e3ea" }, horzLines: { color: "#f3e3ea" } },
+        layout: { background: { type: ColorType.Solid, color: "#10161d" }, textColor: "#e7edf4", fontFamily: "Inter, system-ui, sans-serif" },
+        grid: { vertLines: { color: "#243041" }, horzLines: { color: "#243041" } },
         crosshair: { mode: CrosshairMode.Normal, vertLine: { color: "#ff3070", labelBackgroundColor: "#102032" }, horzLine: { color: "#ff3070", labelBackgroundColor: "#102032" } },
         rightPriceScale: { borderColor: "#102032" },
         timeScale: { borderColor: "#102032", timeVisible: true, secondsVisible: false },

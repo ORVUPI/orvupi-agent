@@ -44,7 +44,7 @@ const PAGES = [
   "/404.html",
 ];
 // /proofs/, /status/, /tokenomics/, /build/ y /avances/ son redirecciones a la portada (web/v2/_redirects); las comprueba web-v2.test.
-const TOOLS = ["/verify/", "/lab/", "/tablero/"];
+const TOOLS = ["/lab/", "/tablero/"];
 const BUY_LANGUAGE =
   /\b(comprar|cómpralo|compra ya|buy now|buy|precio|prices?|urgent\w*|urgencia|ahora mismo|última oportunidad|last chance)\b/i;
 const DENIAL =

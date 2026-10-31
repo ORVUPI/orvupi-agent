@@ -234,12 +234,13 @@ body.verify-app .vf-pager { font-variant-numeric: tabular-nums; font-weight: 700
 }
 
 @media (max-width: 767px) {
-  body.verify-app form.consulta,
-  body.verify-app .consulta-barra { flex-direction: column; align-items: stretch; }
-  body.verify-app .consulta-barra button,
-  body.verify-app #vf-leer,
-  body.verify-app #consulta button { width: 100%; }
   body.verify-app .vf-grid { grid-template-columns: 1fr; }
+  body.verify-app #consulta { flex-wrap: nowrap; }
+  body.verify-app .selector-red { width: auto; flex: 0 0 auto; }
+  body.verify-app .selector-red select { max-width: 6.5rem; }
+  body.verify-app #direccion-token { flex: 1 1 auto; width: auto; }
+  body.verify-app #consulta button[type="submit"],
+  body.verify-app #vf-leer { width: auto; flex: 0 0 auto; padding: 0 8px; }
   body.verify-app .vf-table { display: none; }
   body.verify-app .vf-cards { display: grid; gap: 8px; }
   body.verify-app .vf-card-row { border: 1px solid #ead7df; border-radius: 12px; padding: 8px; background: #fff; }
@@ -255,4 +256,160 @@ body.verify-app .vf-pager { font-variant-numeric: tabular-nums; font-weight: 700
   body.verify-app .vf-graph { height: 180px; }
   body.verify-app main h1 { font-size: 1.2rem; margin: 4px 0; }
   body.verify-app .vf-dock { padding-top: 2px; }
+}
+
+/* Tema oscuro de app. Los acentos siguen siendo el rosa de ORVUPI. */
+body.verify-app { background: #0c1016; color: #e7edf4; }
+body.verify-app header.site { background: #0c1016; border-bottom: 1px solid #243041; }
+body.verify-app header.site > .wrap {
+  max-width: 1280px;
+  padding: 6px 12px;
+  gap: 10px;
+  display: grid;
+  grid-template-columns: auto auto minmax(240px, 1fr) auto;
+  grid-template-areas: "brand nav search lang";
+  align-items: center;
+}
+body.verify-app header.site .brand { grid-area: brand; }
+body.verify-app .vf-nav { grid-area: nav; order: unset; }
+body.verify-app .vf-search-slot { grid-area: search; order: unset; min-width: 0; }
+body.verify-app .langpick { grid-area: lang; order: unset; margin-left: 0; }
+body.verify-app #vf-open-search { display: none; }
+body.verify-app #consulta button { white-space: nowrap; flex: 0 0 auto; }
+body.verify-app #vf-leer { display: none; }
+body.verify-app #consulta button[type="submit"] { width: 44px; min-width: 44px; padding: 0; font-size: 0; }
+body.verify-app #consulta button[type="submit"]::after { content: "→"; font-size: 1.1rem; }
+body.verify-app #direccion-token { min-width: 180px; flex: 1 1 180px; }
+body.verify-app #direccion-token::placeholder { color: #9aa6b4; opacity: 1; }
+body.verify-app .vf-nav button { padding: 4px 8px; font-size: 0.84rem; min-height: 36px; }
+body.verify-app .vf-table th { background: #1b2430; color: #e7edf4; }
+body.verify-app #consulta,
+body.verify-app .consulta-barra {
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  inset: auto !important;
+  z-index: auto !important;
+  box-shadow: none !important;
+}
+body.verify-app #consulta { display: flex; align-items: center; gap: 6px; width: 100%; margin: 0; max-width: none; background: transparent; border: 0; }
+body.verify-app .selector-red label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+body.verify-app .selector-red select,
+body.verify-app .vf-jump select,
+body.verify-app input,
+body.verify-app select {
+  background: #121820;
+  color: #e7edf4;
+  border: 1px solid #2c3848;
+  border-radius: 8px;
+  min-height: 40px;
+  box-shadow: none;
+}
+body.verify-app .selector-red select { max-width: 7.2rem; padding: 0 6px; }
+body.verify-app .consulta-barra {
+  flex: 1;
+  min-width: 0;
+  background: #121820;
+  border: 1px solid #2c3848;
+  border-radius: 10px;
+  box-shadow: none;
+  min-height: 40px;
+}
+body.verify-app #direccion-token { background: transparent; color: #e7edf4; }
+body.verify-app #consulta button,
+body.verify-app #vf-leer {
+  background: #ff3070;
+  color: #1a0a10;
+  border: 0;
+  border-radius: 8px;
+  box-shadow: none;
+  min-height: 40px;
+  font-weight: 700;
+}
+body.verify-app .aviso[data-disclaimer="si"],
+body.verify-app #aviso-guardar,
+body.verify-app .langsuggest,
+body.verify-app main > h1,
+body.verify-app #resultado[data-state="vacio"],
+body.verify-app #ver-lectura-caida,
+body.verify-app p.source,
+body.verify-app .lede,
+body.verify-app .ayuda-terminos,
+body.verify-app main > p.aviso-fijo,
+body.verify-app details.como,
+body.verify-app details.tecnico { display: none !important; }
+body.verify-app #comprobaciones-red { order: 20; font-size: 0.78rem; color: #9aa6b4; }
+body.verify-app .vf-card,
+body.verify-app .vf-chart-card {
+  background: #141a22;
+  color: #e7edf4;
+  border: 1px solid #2a3544;
+  border-radius: 10px;
+  box-shadow: none;
+}
+body.verify-app .vf-card h2,
+body.verify-app .vf-chart-card h2,
+body.verify-app .vf-card h3 { color: #e7edf4; font-family: Inter, system-ui, sans-serif; font-weight: 650; letter-spacing: 0; font-size: 0.92rem; }
+body.verify-app .vf-coins { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+body.verify-app .vf-coin {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 8px;
+  text-align: left;
+  background: #10161d;
+  color: #e7edf4;
+  border: 1px solid #2a3544;
+  border-radius: 8px;
+  box-shadow: none;
+  min-height: 64px;
+  padding: 8px;
+}
+body.verify-app .vf-coin strong { font-size: 0.95rem; }
+body.verify-app .vf-up { color: #7dcea0; }
+body.verify-app .vf-down { color: #f0a0b0; }
+body.verify-app .vf-meta,
+body.verify-app .vf-live { color: #aeb8c4; }
+body.verify-app .vf-table th,
+body.verify-app .vf-table td { border-bottom: 1px solid #243041; color: #e7edf4; }
+body.verify-app .vf-table tbody tr:hover { background: #1c2530; }
+body.verify-app .vf-card-row { background: #10161d; border-color: #2a3544; color: #e7edf4; }
+body.verify-app .vf-pills button,
+body.verify-app .vf-chips button,
+body.verify-app .vf-card button,
+body.verify-app .vf-chart-card button {
+  background: #10161d;
+  color: #e7edf4;
+  border: 1px solid #2c3848;
+  border-radius: 8px;
+  box-shadow: none;
+}
+body.verify-app .vf-pills button[aria-pressed="true"],
+body.verify-app .vf-chips button[aria-pressed="true"],
+body.verify-app .vf-nav button[aria-current="page"],
+body.verify-app .vf-dock button[aria-current="page"] { background: #ff3070; color: #1a0a10; border-color: #ff3070; }
+body.verify-app .vf-chart-canvas { background: #10161d; }
+body.verify-app .vf-graph { background: #10161d; }
+body.verify-app .vf-empty { color: #c5ced8; }
+body.verify-app footer.or-footer { background: #0c1016; color: #aeb8c4; border-top: 1px solid #243041; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }
+body.verify-app footer.or-footer h2,
+body.verify-app footer.or-footer p { display: none; }
+body.verify-app footer.or-footer .or-footer-links { display: flex; flex-wrap: wrap; gap: 12px; }
+body.verify-app footer.or-footer a { color: #e7edf4; }
+body.verify-app .vf-token-px { font-size: 1.6rem; font-weight: 650; margin: 4px 0; }
+body.verify-app .vf-stack { display: grid; gap: 12px; min-width: 0; }
+body.verify-app main.wrap { padding-top: 12px; }
+@media (max-width: 1023px) {
+  body.verify-app header.site > .wrap {
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "brand lang" "search search";
+  }
+  body.verify-app .vf-dock { background: #0c1016; border-top: 1px solid #243041; }
+}
+@media (max-width: 767px) {
+  body.verify-app .vf-coins { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.verify-app .vf-jump { display: none !important; }
+  body.verify-app #consulta,
+  body.verify-app .consulta-barra { flex-wrap: nowrap !important; }
+  body.verify-app #direccion-token { width: auto !important; flex: 1 1 auto !important; min-width: 0 !important; }
 }

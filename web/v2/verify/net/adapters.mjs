@@ -142,6 +142,88 @@ export async function fetchBitcoinOhlc(days = "1") {
   };
 }
 
+export async function fetchTopMarkets() {
+  const url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=8&page=1&sparkline=false&price_change_percentage=24h";
+  const response = await fetchJson(url, { headers: { accept: "application/json" } });
+  const rows = Array.isArray(response.body) ? response.body : [];
+  const coins = rows.flatMap((coin) => {
+    const price = finite(coin.current_price);
+    if (!coin.id || price == null) return [];
+    return [{
+      id: String(coin.id),
+      symbol: String(coin.symbol || "").toUpperCase(),
+      name: String(coin.name || coin.symbol || ""),
+      price,
+      change24: finite(coin.price_change_percentage_24h),
+      marketCap: finite(coin.market_cap),
+      volumeH24: finite(coin.total_volume),
+    }];
+  });
+  return {
+    ok: response.ok && coins.length > 0,
+    state: !response.ok ? (response.status === 429 ? "requiere-atencion" : "sin-datos") : coins.length ? "comprobado" : "sin-datos",
+    coins,
+    provider: "CoinGecko",
+    fetchedAt: response.fetchedAt,
+    scope: "coins/markets, 8 primeros por capitalización, USD. Keyless.",
+  };
+}
+
+export async function fetchPoolTrades(network, pool) {
+  if (!network || !pool) return { ok: false, state: "sin-datos", rows: [], provider: "GeckoTerminal", fetchedAt: new Date().toISOString() };
+  const url = `https://api.geckoterminal.com/api/v2/networks/${encodeURIComponent(network)}/pools/${encodeURIComponent(pool)}/trades`;
+  const response = await fetchJson(url, { headers: { accept: "application/json;version=20230203" } });
+  const rows = [];
+  for (const item of response.body?.data || []) {
+    const attrs = item?.attributes || {};
+    if (!attrs.tx_hash) continue;
+    rows.push({
+      id: String(attrs.tx_hash),
+      signature: String(attrs.tx_hash),
+      time: attrs.block_timestamp || null,
+      from: attrs.tx_from_address || null,
+      to: pool,
+      value: attrs.from_token_amount || null,
+      token: attrs.kind || "",
+      usd: finite(attrs.volume_in_usd),
+      chain: network,
+      provider: "GeckoTerminal",
+      state: "comprobado",
+    });
+  }
+  rows.sort((a, b) => (b.usd ?? -1) - (a.usd ?? -1));
+  return {
+    ok: response.ok && rows.length > 0,
+    state: !response.ok ? (response.status === 429 ? "requiere-atencion" : "sin-datos") : rows.length ? "comprobado" : "sin-datos",
+    rows: rows.slice(0, 12),
+    provider: "GeckoTerminal",
+    fetchedAt: response.fetchedAt,
+    network,
+    pool,
+    scope: "Operaciones de ese pool, las 12 de mayor volumen USD en la respuesta. No es un índice global.",
+  };
+}
+
+export async function fetchCoinOhlc(coinId, days = "1") {
+  const url = coingeckoOhlcUrl(coinId, days);
+  const response = await fetchJson(url, { headers: { accept: "application/json" } });
+  const parsed = parseCoingeckoOhlc(response.body);
+  return {
+    ok: response.ok && parsed.candles.length > 0,
+    state: !response.ok ? (response.status === 429 ? "requiere-atencion" : "sin-datos") : parsed.candles.length ? "comprobado" : "sin-datos",
+    candles: parsed.candles,
+    volumeKnown: false,
+    stepSeconds: parsed.stepSeconds,
+    provider: "CoinGecko",
+    network: coinId,
+    pool: coinId,
+    timeframe: `days=${days}`,
+    fetchedAt: response.fetchedAt,
+    scope: `OHLC keyless de ${coinId}, days=${days}. Paso observado ${parsed.stepSeconds ?? "desconocido"} s. Sin volumen por vela.`,
+    httpStatus: response.status,
+  };
+}
+
 export async function fetchBitcoinQuote() {
   const url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_vol=true&include_24hr_change=true&include_market_cap=true";
   const response = await fetchJson(url, { headers: { accept: "application/json" } });

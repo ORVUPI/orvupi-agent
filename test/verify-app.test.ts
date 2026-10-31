@@ -70,6 +70,6 @@ describe("ORVUPI Verify, series y grafo", () => {
     assert.match(css, /vf-dock/);
     assert.match(css, /overflow-x: clip/);
     assert.match(readFileSync(path.join(root, "web/v2/verify/net/chart.mjs"), "utf8"), /pinch: true/);
-    assert.equal(readFileSync(path.join(root, "web/v2/assets/verify-app.mjs"), "utf8").includes("Trade"), false);
+    assert.equal(/\bTrade\b/.test(readFileSync(path.join(root, "web/v2/assets/verify-app.mjs"), "utf8")), false);
   });
 });
