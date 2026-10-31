@@ -69,7 +69,7 @@ Se eligió conservar funciones y la marca ARQIVEN.
 | --- | --- |
 | Nombre comercial «ORVUPI IA» e id `orvupi-text-experimental-0.1` | UI pública ARQIVEN. Id reservado `arqiven-1-experimental`. |
 | Respuestas de ejemplo de la maqueta v02 | No se copian. La caja admite texto y la respuesta dice que no hay generación. |
-| Work se presenta como «ORVUPI AI» | El botón «Preparar ORVUPI AI» y el `aria-label` se mantienen por los e2e. El prompt del bundle ya no dice «Eres ORVUPI AI». La ficha visible dice que Qwen, LFM2 y SmolLM2 son de terceros. |
+| Work se presenta como «ORVUPI AI» | La interfaz de Work y Studio dice ARQIVEN. El panel contextual se mantiene. El botón es «Preparar ARQIVEN» y nombra el modelo de terceros. El prompt no dice «Eres ORVUPI AI». Hay enlace a `/arqiven/`. |
 | Abrir CSP si la página descarga pesos | Excepción mínima en `/arqiven/` y en el meta de las cinco páginas: Hugging Face y jsDelivr. `/*` y Studio no cambian. |
 | Tope de 100 € | No es autorización. Esta corrida gasta 0. |
 

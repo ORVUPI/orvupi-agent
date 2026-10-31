@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { expect, test, type Page } from "@playwright/test";
 import { screenshotDir } from "./shots";
 
-/** ORVUPI AI real en el navegador. La prueba con el modelo de verdad se activa con ORVUPI_AI_REAL=1 (descarga cientos de MB). */
+/** ARQIVEN real en el navegador. La prueba con el modelo de verdad se activa con ORVUPI_AI_REAL=1 (descarga cientos de MB). */
 const shot = async (page: Page, name: string) =>
   page.screenshot({ path: join(await screenshotDir(), `083-ia-${name}-${test.info().project.name}.png`) });
 
@@ -22,16 +22,16 @@ async function newDocWithText(page: Page): Promise<Page> {
   return doc;
 }
 
-test("ORVUPI AI: guía, elección de modelo, origen y acciones (Drive y Docs)", async ({ page }) => {
+test("ARQIVEN: guía, elección de modelo, origen y acciones (Drive y Docs)", async ({ page }) => {
   test.setTimeout(120_000);
   await page.goto("/");
   const panel = page.locator("aside.ow-ai");
-  if (!(await panel.isVisible())) await page.locator('.ow-top-actions [aria-label="ORVUPI AI"]').first().click();
+  if (!(await panel.isVisible())) await page.locator('.ow-top-actions [aria-label="ARQIVEN"]').first().click();
   await expect(panel).toBeVisible();
   await expect(panel.getByText("Tus documentos no salen del dispositivo")).toBeVisible();
   await expect(panel.getByText("El modelo local no se descarga")).toHaveCount(0);
   // IA: se prepara sola con un botón (elige el modo del dispositivo); los modelos, en opciones avanzadas
-  await expect(panel.getByRole("button", { name: /Preparar ORVUPI AI/ })).toBeVisible({ timeout: 20_000 });
+  await expect(panel.getByRole("button", { name: /Preparar ARQIVEN/ })).toBeVisible({ timeout: 20_000 });
   await panel.getByText("Opciones avanzadas").click();
   const select = panel.locator(".ow-ai-advanced select");
   expect(await select.locator("option").count()).toBeGreaterThan(0);
@@ -54,7 +54,7 @@ test("ORVUPI AI: guía, elección de modelo, origen y acciones (Drive y Docs)", 
   await shot(page, "panel");
 
   const doc = await newDocWithText(page);
-  await doc.getByRole("button", { name: "ORVUPI AI" }).filter({ visible: true }).first().click();
+  await doc.getByRole("button", { name: "ARQIVEN" }).filter({ visible: true }).first().click();
   const drawer = doc.locator(".ow-doc-aipanel");
   await expect(drawer).toBeVisible();
   await expect(drawer.getByRole("radio", { name: /Documento abierto/ })).toBeChecked();
@@ -62,7 +62,7 @@ test("ORVUPI AI: guía, elección de modelo, origen y acciones (Drive y Docs)", 
   await shot(doc, "docs");
 });
 
-test("ORVUPI AI: resumen real con el modelo pequeño, sin enviar el documento", async ({ page }, info) => {
+test("ARQIVEN: resumen real con el modelo pequeño, sin enviar el documento", async ({ page }, info) => {
   test.skip(process.env.ORVUPI_AI_REAL !== "1", "ORVUPI_AI_REAL=1 para descargar y ejecutar el modelo");
   test.setTimeout(1_800_000);
   const modelId = process.env.ORVUPI_AI_MODEL ?? "qwen05-cpu";
@@ -73,9 +73,9 @@ test("ORVUPI AI: resumen real con el modelo pequeño, sin enviar el documento", 
     const body = request.postData() ?? "";
     if (body.includes("enfermedades profesionales") || request.url().includes("enfermedades")) leaks.push(request.url());
   });
-  await doc.getByRole("button", { name: "ORVUPI AI" }).filter({ visible: true }).first().click();
+  await doc.getByRole("button", { name: "ARQIVEN" }).filter({ visible: true }).first().click();
   const drawer = doc.locator(".ow-doc-aipanel");
-  await expect(drawer.getByRole("button", { name: /Preparar ORVUPI AI/ })).toBeVisible({ timeout: 20_000 });
+  await expect(drawer.getByRole("button", { name: /Preparar ARQIVEN/ })).toBeVisible({ timeout: 20_000 });
   await drawer.getByText("Opciones avanzadas").click();
   await drawer.locator(".ow-ai-advanced select").selectOption(modelId);
   const t0 = Date.now();

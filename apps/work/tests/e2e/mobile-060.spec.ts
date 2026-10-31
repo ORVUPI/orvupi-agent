@@ -86,7 +86,7 @@ test("el inicio y Drive caben, y el móvil tiene barra y botón Nuevo", async ({
     expect(headerRatio).toBeLessThan(0.2);
     const aiFits = await page.evaluate(() => {
       const actions = document.querySelector(".ow-top-actions");
-      const ai = document.querySelector('.ow-top-actions .ow-icon-button[aria-label="ORVUPI AI"]');
+      const ai = document.querySelector('.ow-top-actions .ow-icon-button[aria-label="ARQIVEN"]');
       if (!(actions instanceof HTMLElement) || !(ai instanceof HTMLElement)) return { gap: 99, inside: false };
       const box = ai.getBoundingClientRect();
       return {
@@ -521,7 +521,7 @@ test("no hay desbordamiento en 360, 390, 412, 460 ni 768", async ({ page }) => {
     await fits(page, `inicio ${width}`);
     const aiFits = await page.evaluate(() => {
       const actions = document.querySelector(".ow-top-actions");
-      const ai = document.querySelector('.ow-top-actions .ow-icon-button[aria-label="ORVUPI AI"]');
+      const ai = document.querySelector('.ow-top-actions .ow-icon-button[aria-label="ARQIVEN"]');
       if (!(actions instanceof HTMLElement) || !(ai instanceof HTMLElement)) return { gap: 99, inside: false };
       const box = ai.getBoundingClientRect();
       return {

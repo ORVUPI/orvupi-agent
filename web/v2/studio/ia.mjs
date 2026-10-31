@@ -623,7 +623,7 @@ function landingScreen(data, lang, text) {
     el("h1", { id: "ia-saludo", text: greeting(data.name, lang) }),
     el("p", { text: text.sub }),
     el("p", { class: "ia-arqiven" }, [
-      el("span", { text: lang === "en" ? "These answers come from the Studio catalog. " : "Estas respuestas salen del catálogo de Studio. " }),
+      el("span", { text: lang === "en" ? "These answers come from the Studio catalog. For the full chat, open " : "Estas respuestas salen del catálogo de Studio. Para el chat completo, abre " }),
       el("a", { href: "/arqiven/", text: "ARQIVEN" }),
     ]),
   ]);
