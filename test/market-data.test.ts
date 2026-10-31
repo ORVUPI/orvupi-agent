@@ -398,11 +398,16 @@ describe("datos de mercado", () => {
     const globalCsp = headers.split("/*")[1]?.split("\n\n")[0] ?? "";
     assert.equal(globalCsp.includes("dexscreener"), false);
     assert.match(headers, /connect-src 'self'/);
-    for (const html of [verify, notebookHtml]) {
-      const meta = html.match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
-      assert.equal((meta.match(/connect-src/g) ?? []).length, 1);
-      assert.match(meta, /connect-src 'self' https:\/\/solana-rpc\.publicnode\.com https:\/\/api\.mainnet-beta\.solana\.com https:\/\/mainnet\.base\.org https:\/\/ethereum-rpc\.publicnode\.com https:\/\/bsc-rpc\.publicnode\.com https:\/\/api\.dexscreener\.com;/);
-      assert.equal(meta.includes("*"), false);
+    const notebookMeta = notebookHtml.match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
+    assert.equal((notebookMeta.match(/connect-src/g) ?? []).length, 1);
+    assert.match(notebookMeta, /connect-src 'self' https:\/\/solana-rpc\.publicnode\.com https:\/\/api\.mainnet-beta\.solana\.com https:\/\/mainnet\.base\.org https:\/\/ethereum-rpc\.publicnode\.com https:\/\/bsc-rpc\.publicnode\.com https:\/\/api\.dexscreener\.com;/);
+    assert.equal(notebookMeta.includes("*"), false);
+    const verifyMeta = verify.match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
+    assert.equal((verifyMeta.match(/connect-src/g) ?? []).length, 1);
+    assert.equal(verifyMeta.includes("*"), false);
+    assert.equal(verifyMeta.includes("llama.fi"), false);
+    for (const host of ["solana-rpc.publicnode.com", "api.mainnet-beta.solana.com", "mainnet.base.org", "ethereum-rpc.publicnode.com", "bsc-rpc.publicnode.com", "api.dexscreener.com", "arbitrum-one-rpc.publicnode.com", "polygon-bor-rpc.publicnode.com", "optimism-rpc.publicnode.com", "avalanche-c-chain-rpc.publicnode.com", "api.geckoterminal.com", "api.coingecko.com", "mempool.space", "api.trongrid.io"]) {
+      assert.ok(verifyMeta.includes(host), host);
     }
     const paresMeta = pares.match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
     assert.equal(paresMeta.includes("dexscreener"), false);

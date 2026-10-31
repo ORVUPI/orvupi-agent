@@ -1,0 +1,15 @@
+{
+  "name": "ORVUPI Verify",
+  "short_name": "Verify",
+  "description": "Lectura pública de direcciones, paneles, mercado y conexiones. Sin cuenta y sin cartera.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fff8ec",
+  "theme_color": "#ff3070",
+  "lang": "es",
+  "icons": [
+    { "src": "favicon-32.png", "sizes": "32x32", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/orvupi/avatar.png", "sizes": "1254x1254", "type": "image/png", "purpose": "any" }
+  ]
+}
