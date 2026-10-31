@@ -1,4 +1,6 @@
-# Matriz de fuentes de ORVUPI Verify
+# Matriz de fuentes de ORVUPI Sonar
+
+La herramienta se llama ORVUPI Sonar. El subtítulo es «Sonar · verify on-chain». La ruta principal nueva es `/sonar/` (alias de la misma app). `/verify/` sigue respondiendo para no romper enlaces.
 
 Comprobado el 31 de octubre de 2026 con documentación pública y, donde se indica, una lectura puntual sin clave. Coste de operación: 0. Nada de esto es una redistribución de la base completa del proveedor.
 
@@ -19,7 +21,18 @@ Comprobado el 31 de octubre de 2026 con documentación pública y, donde se indi
 
 Cada cifra en pantalla lleva red, proveedor, hora y alcance, y uno de estos estados: comprobado, requiere atención, sin datos, no soportado. Un fallo no se enseña como cero. No hay puntuación de riesgo ni modo de demostración con cifras falsas.
 
-El único contrato nombrado como ORVUPI es `Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU`, leído de `orvupi-contract.json`.
+El único contrato nombrado como ORVUPI es `Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU`, leído de `orvupi-contract.json`. La dirección pública usada al abrir Tracer es `GKpccLJwKArptzt9j897njXUx9RsV5NKL3Egu7bfMA6Q`. No se le atribuye una persona.
+
+## Cadena de respaldo (31-10-2026)
+
+| Dato | Orden real | No se usa |
+| --- | --- | --- |
+| Precios y velas | CoinGecko OHLC, luego un pool de GeckoTerminal, luego klines públicas de `data-api.binance.vision` y, si falla, `api.binance.com` | Coinbase Exchange: los Market Data Terms no confirman permiso para mostrarlo. Kraken: los términos globales del 28-10-2026 no permiten poner su contenido a disposición de terceros. El archivo histórico `data.binance.vision` es CC BY-NC-SA y no se descarga |
+| Pools | GeckoTerminal `trending_pools`, luego búsqueda de DEX Screener y, si hace falta, `token-profiles/latest/v1` | OHLCV no documentado de DEX Screener |
+| Transferencias | Operaciones del pool, transacciones recientes de `eth.blockscout.com` sin clave, y para Bitcoin `mempool.space` con respaldo `blockstream.info`. Tron sigue en `api.trongrid.io`. Los RPC de EVM rotan un segundo endpoint público | Tronscan: la API exige clave. `api.blockscout.com` exige clave. Las instancias de Base, Arbitrum y Polygon respondieron con un desafío y no se llaman |
+| Mercado global | CoinGecko `/global`. Si no responde, el panel usa la muestra de los ocho primeros ya leída y lo dice la fuente | DeFiLlama, por la cláusula 8 |
+
+Reintentos con espera creciente, tiempo límite de 8 s y caché local de la última respuesta real (memoria, localStorage e IndexedDB). La hora en pantalla es la del navegador. «Sin datos» con botón de reintentar solo si toda la cadena falla.
 
 ## Gráficos
 

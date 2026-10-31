@@ -26,7 +26,7 @@
       "status": "viable-con-limites",
       "chainId": 1,
       "label": { "es": "Ethereum", "en": "Ethereum" },
-      "rpc": ["https://ethereum-rpc.publicnode.com"],
+      "rpc": ["https://ethereum-rpc.publicnode.com", "https://cloudflare-eth.com"],
       "gecko": "eth",
       "native": { "symbol": "ETH", "decimals": 18 },
       "explorer": "https://etherscan.io/address/{address}"
@@ -37,7 +37,7 @@
       "status": "viable-con-limites",
       "chainId": 8453,
       "label": { "es": "Base", "en": "Base" },
-      "rpc": ["https://mainnet.base.org"],
+      "rpc": ["https://mainnet.base.org", "https://base-rpc.publicnode.com"],
       "gecko": "base",
       "native": { "symbol": "ETH", "decimals": 18 },
       "explorer": "https://basescan.org/address/{address}"
@@ -48,7 +48,7 @@
       "status": "viable-con-limites",
       "chainId": 56,
       "label": { "es": "BNB Chain", "en": "BNB Chain" },
-      "rpc": ["https://bsc-rpc.publicnode.com"],
+      "rpc": ["https://bsc-rpc.publicnode.com", "https://bsc-dataseed.binance.org"],
       "gecko": "bsc",
       "native": { "symbol": "BNB", "decimals": 18 },
       "explorer": "https://bscscan.com/address/{address}"
@@ -59,7 +59,7 @@
       "status": "viable-con-limites",
       "chainId": 42161,
       "label": { "es": "Arbitrum", "en": "Arbitrum" },
-      "rpc": ["https://arbitrum-one-rpc.publicnode.com"],
+      "rpc": ["https://arbitrum-one-rpc.publicnode.com", "https://arb1.arbitrum.io/rpc"],
       "gecko": "arbitrum",
       "native": { "symbol": "ETH", "decimals": 18 },
       "explorer": "https://arbiscan.io/address/{address}"
@@ -70,7 +70,7 @@
       "status": "viable-con-limites",
       "chainId": 137,
       "label": { "es": "Polygon", "en": "Polygon" },
-      "rpc": ["https://polygon-bor-rpc.publicnode.com"],
+      "rpc": ["https://polygon-bor-rpc.publicnode.com", "https://polygon-rpc.com"],
       "gecko": "polygon_pos",
       "native": { "symbol": "POL", "decimals": 18 },
       "explorer": "https://polygonscan.com/address/{address}"
@@ -81,7 +81,7 @@
       "status": "viable-con-limites",
       "chainId": 10,
       "label": { "es": "Optimism", "en": "Optimism" },
-      "rpc": ["https://optimism-rpc.publicnode.com"],
+      "rpc": ["https://optimism-rpc.publicnode.com", "https://mainnet.optimism.io"],
       "gecko": "optimism",
       "native": { "symbol": "ETH", "decimals": 18 },
       "explorer": "https://optimistic.etherscan.io/address/{address}"
@@ -92,7 +92,7 @@
       "status": "viable-con-limites",
       "chainId": 43114,
       "label": { "es": "Avalanche", "en": "Avalanche" },
-      "rpc": ["https://avalanche-c-chain-rpc.publicnode.com"],
+      "rpc": ["https://avalanche-c-chain-rpc.publicnode.com", "https://api.avax.network/ext/bc/C/rpc"],
       "gecko": "avax",
       "native": { "symbol": "AVAX", "decimals": 18 },
       "explorer": "https://snowtrace.io/address/{address}"

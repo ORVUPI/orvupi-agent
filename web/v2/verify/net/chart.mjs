@@ -15,14 +15,33 @@ export function mountLiveChart(host, load, hooks = {}) {
   let candlesSeries = null;
   let volumeSeries = null;
   let last = null;
+  let observer = null;
 
   const canvas = document.createElement("div");
   canvas.className = "vf-chart-canvas";
+  canvas.hidden = true;
   const empty = document.createElement("p");
-  empty.className = "vf-empty";
+  empty.className = "vf-skel";
+  empty.setAttribute("aria-busy", "true");
   host.replaceChildren(canvas, empty);
 
+  function box() {
+    const width = Math.floor(canvas.clientWidth);
+    const height = Math.floor(canvas.clientHeight);
+    return width >= 20 && height >= 20 ? { width, height } : null;
+  }
+
+  function fit() {
+    if (!chart || dead) return;
+    const size = box();
+    if (!size) return;
+    chart.resize(size.width, size.height);
+    chart.timeScale().fitContent();
+  }
+
   function destroyChart() {
+    observer?.disconnect();
+    observer = null;
     chart?.remove();
     chart = null;
     candlesSeries = null;
@@ -36,19 +55,23 @@ export function mountLiveChart(host, load, hooks = {}) {
       destroyChart();
       canvas.hidden = true;
       empty.hidden = false;
+      empty.className = "vf-empty";
+      empty.removeAttribute("aria-busy");
       empty.textContent = hooks.emptyText || "sin datos";
       return;
     }
     empty.hidden = true;
     canvas.hidden = false;
     if (!chart) {
+      const size = box() || { width: Math.max(320, host.clientWidth || 640), height: Math.max(280, host.clientHeight || 420) };
       chart = createChart(canvas, {
-        autoSize: true,
+        ...size,
+        autoSize: false,
         layout: { background: { type: ColorType.Solid, color: "#10161d" }, textColor: "#e7edf4", fontFamily: "Inter, system-ui, sans-serif" },
         grid: { vertLines: { color: "#243041" }, horzLines: { color: "#243041" } },
         crosshair: { mode: CrosshairMode.Normal, vertLine: { color: "#ff3070", labelBackgroundColor: "#102032" }, horzLine: { color: "#ff3070", labelBackgroundColor: "#102032" } },
-        rightPriceScale: { borderColor: "#102032" },
-        timeScale: { borderColor: "#102032", timeVisible: true, secondsVisible: false },
+        rightPriceScale: { borderColor: "#2a3544" },
+        timeScale: { borderColor: "#2a3544", timeVisible: true, secondsVisible: false },
         handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: true },
         handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: { time: true, price: true } },
         kineticScroll: { touch: true, mouse: false },
@@ -62,10 +85,8 @@ export function mountLiveChart(host, load, hooks = {}) {
         wickDownColor: DOWN,
       });
       candlesSeries.priceScale().applyOptions({ scaleMargins: { top: 0.08, bottom: result.volumeKnown ? 0.28 : 0.08 } });
-      chart.subscribeCrosshairMove((param) => {
-        const point = param?.seriesData?.get(candlesSeries);
-        hooks.onCrosshair?.(point && point.open != null ? point : null);
-      });
+      observer = new ResizeObserver(() => fit());
+      observer.observe(canvas);
     }
     candlesSeries.setData(result.candles.map((candle) => ({ time: candle.time, open: candle.open, high: candle.high, low: candle.low, close: candle.close })));
     if (result.volumeKnown) {
@@ -76,13 +97,13 @@ export function mountLiveChart(host, load, hooks = {}) {
       volumeSeries.setData(result.candles.filter((candle) => candle.volume != null).map((candle) => ({
         time: candle.time,
         value: candle.volume,
-        color: candle.close >= candle.open ? "rgba(11,93,54,0.45)" : "rgba(163,18,63,0.45)",
+        color: candle.close >= candle.open ? "rgba(125,206,160,0.55)" : "rgba(240,160,176,0.55)",
       })));
     } else if (volumeSeries) {
       chart.removeSeries(volumeSeries);
       volumeSeries = null;
     }
-    chart.timeScale().fitContent();
+    requestAnimationFrame(() => requestAnimationFrame(fit));
   }
 
   async function tick() {
@@ -102,6 +123,7 @@ export function mountLiveChart(host, load, hooks = {}) {
     if (!dead && document.visibilityState === "visible") tick();
   }
   document.addEventListener("visibilitychange", onVisible);
+  if (hooks.initial?.candles?.length) paint(hooks.initial);
   tick();
   timer = window.setInterval(tick, POLL_MS);
 

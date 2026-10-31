@@ -13,6 +13,28 @@ export const TIMEFRAMES = Object.freeze([
   { id: "1D", path: "day", aggregate: 1, label: "1D" },
 ]);
 
+/** CoinGecko free OHLC: el rango elige el tamaño real de la vela. */
+export const COIN_FRAMES = Object.freeze([
+  { id: "30m", days: "1", label: "30m" },
+  { id: "4h", days: "14", label: "4h" },
+  { id: "1D", days: "180", label: "1D" },
+]);
+
+export function stepLabel(seconds) {
+  if (!Number.isFinite(seconds) || seconds <= 0) return "";
+  const near = (target, slack) => Math.abs(seconds - target) <= slack;
+  if (near(60, 20)) return "1m";
+  if (near(300, 40)) return "5m";
+  if (near(900, 90)) return "15m";
+  if (near(1800, 180)) return "30m";
+  if (near(3600, 240)) return "1h";
+  if (near(14400, 900)) return "4h";
+  if (near(86400, 3600)) return "1D";
+  if (seconds >= 86400) return `${Math.round(seconds / 86400)}d`;
+  if (seconds >= 3600) return `${Math.round(seconds / 3600)}h`;
+  return `${Math.round(seconds / 60)}m`;
+}
+
 export const PROVIDERS = Object.freeze({
   gecko: {
     id: "geckoterminal",
@@ -105,6 +127,61 @@ export function parseGeckoOhlcv(list) {
     volumeKnown: unique.candles.some((candle) => candle.volume != null),
   };
 }
+
+/** Klines públicas: [openTime_ms, open, high, low, close, volume, ...]. */
+export function parseBinanceKlines(list) {
+  const parsed = [];
+  let rejected = 0;
+  if (!Array.isArray(list)) return { candles: [], rejected: 0, droppedDuplicates: 0, volumeKnown: false, stepSeconds: null };
+  for (const row of list) {
+    if (!Array.isArray(row) || row.length < 6) {
+      rejected += 1;
+      continue;
+    }
+    const timeMs = finite(row[0]);
+    const candle = candleFrom(timeMs == null ? null : Math.trunc(timeMs / 1000), finite(row[1]), finite(row[2]), finite(row[3]), finite(row[4]), finite(row[5]));
+    if (!candle) {
+      rejected += 1;
+      continue;
+    }
+    parsed.push(candle);
+  }
+  const unique = dedupeCandles(parsed);
+  return { ...unique, rejected, volumeKnown: unique.candles.some((candle) => candle.volume != null), stepSeconds: observedStep(unique.candles) };
+}
+
+export const BINANCE_INTERVALS = Object.freeze({
+  "1m": "1m",
+  "5m": "5m",
+  "15m": "15m",
+  "30m": "30m",
+  "1h": "1h",
+  "4h": "4h",
+  "1D": "1d",
+});
+
+export function binanceKlineUrl(origin, symbol, interval, limit = 200) {
+  const frame = BINANCE_INTERVALS[interval] || (Object.values(BINANCE_INTERVALS).includes(interval) ? interval : "");
+  if (!origin || !symbol || !frame) return "";
+  const params = new URLSearchParams({ symbol, interval: frame, limit: String(Math.min(1000, Math.max(1, limit))) });
+  return `${origin}/api/v3/klines?${params}`;
+}
+
+/**
+ * Fuentes pedidas que no se llaman.
+ * Coinbase: la documentación de Exchange ata el acceso a los Market Data Terms y no se pudo
+ * confirmar un permiso de muestra pública. Kraken: los términos globales del 28-10-2026
+ * no permiten poner su contenido a disposición de terceros sin licencia.
+ * Tronscan: exige clave. El archivo histórico de data.binance.vision es CC BY-NC-SA.
+ * La API unificada api.blockscout.com exige clave. Las instancias con desafío no se llaman.
+ */
+export const EXCLUDED = Object.freeze({
+  coinbase: "Market Data Terms, sin permiso confirmado para mostrarlo",
+  kraken: "términos globales, sin licencia de redistribución",
+  tronscan: "la API exige clave",
+  binanceVisionArchive: "dataset CC BY-NC-SA, uso comercial excluido",
+  blockscoutKeyed: "api.blockscout.com exige clave",
+});
 
 export function parseCoingeckoOhlc(list) {
   const parsed = [];

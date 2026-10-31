@@ -1,15 +1,16 @@
 {
-  "name": "ORVUPI Verify",
-  "short_name": "Verify",
-  "description": "Lectura pública de direcciones, paneles, mercado y conexiones. Sin cuenta y sin cartera.",
-  "start_url": "./",
-  "scope": "./",
+  "name": "ORVUPI Sonar",
+  "short_name": "Sonar",
+  "description": "Sonar · verify on-chain",
+  "start_url": "/sonar/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#fff8ec",
+  "background_color": "#0c1016",
   "theme_color": "#ff3070",
   "lang": "es",
   "icons": [
-    { "src": "favicon-32.png", "sizes": "32x32", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/orvupi/sonar.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/assets/orvupi/sonar-32.png", "sizes": "32x32", "type": "image/png", "purpose": "any" },
     { "src": "/assets/orvupi/avatar.png", "sizes": "1254x1254", "type": "image/png", "purpose": "any" }
   ]
 }

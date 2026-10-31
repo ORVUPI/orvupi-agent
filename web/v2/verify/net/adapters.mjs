@@ -1,55 +1,29 @@
 /**
- * Lecturas de red y de mercado. Sin claves, sin relleno y sin DeFiLlama.
+ * Lecturas de red. El mercado vive en market.mjs. Sin claves, sin relleno y sin DeFiLlama.
  */
+import { fetchJson } from "./http.mjs";
+import { fetchEthereumActivity } from "./market.mjs";
 import { CHAINS, LIMITS, chainById, identify } from "./present.mjs";
-import {
-  coingeckoOhlcUrl,
-  geckoOhlcvUrl,
-  parseCoingeckoOhlc,
-  parseGeckoOhlcv,
-  timeframeById,
-} from "./ohlcv.mjs";
 import { bondingCurvePda, decodeCurveAccount, decodeMintAccount } from "../../shared/solana-read.js";
+
+export {
+  fetchBitcoinOhlc,
+  fetchBitcoinQuote,
+  fetchCoinOhlc,
+  fetchDexSnapshot,
+  fetchGlobalMarket,
+  fetchLargeTransfers,
+  fetchPoolCandles,
+  fetchPoolTrades,
+  fetchTopMarkets,
+  fetchTrendingPools,
+} from "./market.mjs";
 
 const TIMEOUT_MS = 8_000;
 
 function finite(value) {
   const number = typeof value === "number" ? value : typeof value === "string" && value.trim() !== "" ? Number(value) : NaN;
   return Number.isFinite(number) ? number : null;
-}
-
-async function fetchJson(url, options = {}) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? TIMEOUT_MS);
-  try {
-    const response = await fetch(url, {
-      method: options.method || "GET",
-      headers: options.headers,
-      body: options.body,
-      credentials: "omit",
-      referrerPolicy: "no-referrer",
-      cache: "no-store",
-      signal: options.signal ?? controller.signal,
-    });
-    const text = await response.text();
-    let body = null;
-    try {
-      body = text ? JSON.parse(text) : null;
-    } catch {
-      body = null;
-    }
-    return { ok: response.ok, status: response.status, body, fetchedAt: new Date().toISOString() };
-  } catch (error) {
-    return {
-      ok: false,
-      status: error?.name === "AbortError" ? 0 : 0,
-      body: null,
-      fetchedAt: new Date().toISOString(),
-      error: error?.name === "AbortError" ? "timeout" : "red",
-    };
-  } finally {
-    clearTimeout(timer);
-  }
 }
 
 async function solanaRpc(method, params) {
@@ -60,215 +34,12 @@ async function solanaRpc(method, params) {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+      timeoutMs: TIMEOUT_MS,
     });
     if (last.ok && last.body && !last.body.error) return { ...last, provider: url };
     if (last.status !== 429 && last.status !== 403 && last.status !== 0) break;
   }
   return { ...(last || { ok: false, body: null, fetchedAt: new Date().toISOString() }), provider: chain.rpc[0] };
-}
-
-export async function fetchTrendingPools() {
-  const url = "https://api.geckoterminal.com/api/v2/networks/trending_pools?page=1";
-  const response = await fetchJson(url, { headers: { accept: "application/json;version=20230203" } });
-  if (!response.ok || !Array.isArray(response.body?.data)) {
-    return { ok: false, state: response.status === 429 ? "requiere-atencion" : "sin-datos", pools: [], fetchedAt: response.fetchedAt, provider: "GeckoTerminal", scope: "página 1 de trending_pools" };
-  }
-  const pools = [];
-  for (const item of response.body.data) {
-    const attrs = item?.attributes || {};
-    if (!attrs.address || !attrs.name) continue;
-    pools.push({
-      name: String(attrs.name),
-      address: String(attrs.address),
-      network: String(item?.relationships?.network?.data?.id || ""),
-      reserveUsd: finite(attrs.reserve_in_usd),
-      volumeH24: finite(attrs.volume_usd?.h24),
-      changeH24: finite(attrs.price_change_percentage?.h24),
-      provider: "GeckoTerminal",
-      fetchedAt: response.fetchedAt,
-    });
-  }
-  return {
-    ok: pools.length > 0,
-    state: pools.length ? "comprobado" : "sin-datos",
-    pools,
-    fetchedAt: response.fetchedAt,
-    provider: "GeckoTerminal",
-    scope: "página 1 de trending_pools; no es el mercado completo",
-  };
-}
-
-export async function fetchPoolCandles(network, pool, timeframeId) {
-  const frame = timeframeById(timeframeId);
-  const url = geckoOhlcvUrl(network, pool, timeframeId, 200);
-  if (!url) return { ok: false, state: "no-soportado", candles: [], provider: "GeckoTerminal", fetchedAt: new Date().toISOString() };
-  const response = await fetchJson(url, { headers: { accept: "application/json;version=20230203" } });
-  const parsed = parseGeckoOhlcv(response.body?.data?.attributes?.ohlcv_list);
-  const base = response.body?.meta?.base || {};
-  return {
-    ok: response.ok && parsed.candles.length > 0,
-    state: !response.ok ? (response.status === 429 ? "requiere-atencion" : "sin-datos") : parsed.candles.length ? "comprobado" : "sin-datos",
-    candles: parsed.candles,
-    volumeKnown: parsed.volumeKnown,
-    rejected: parsed.rejected,
-    droppedDuplicates: parsed.droppedDuplicates,
-    provider: "GeckoTerminal",
-    network,
-    pool,
-    timeframe: frame?.label || timeframeId,
-    fetchedAt: response.fetchedAt,
-    scope: `OHLCV ${frame?.label || timeframeId} del pool, hasta 200 velas, USD de GeckoTerminal. ${base.symbol ? `Base ${base.symbol}. ` : ""}Huecos no rellenados.`,
-    httpStatus: response.status,
-  };
-}
-
-export async function fetchBitcoinOhlc(days = "1") {
-  const url = coingeckoOhlcUrl("bitcoin", days);
-  const response = await fetchJson(url, { headers: { accept: "application/json" } });
-  const parsed = parseCoingeckoOhlc(response.body);
-  return {
-    ok: response.ok && parsed.candles.length > 0,
-    state: !response.ok ? (response.status === 429 ? "requiere-atencion" : "sin-datos") : parsed.candles.length ? "comprobado" : "sin-datos",
-    candles: parsed.candles,
-    volumeKnown: false,
-    stepSeconds: parsed.stepSeconds,
-    provider: "CoinGecko",
-    network: "bitcoin",
-    pool: "bitcoin",
-    timeframe: `days=${days}`,
-    fetchedAt: response.fetchedAt,
-    scope: `OHLC keyless de bitcoin, days=${days}. El paso observado es ${parsed.stepSeconds ?? "desconocido"} s. Sin volumen por vela. No es 1m salvo que el paso lo sea.`,
-    httpStatus: response.status,
-  };
-}
-
-export async function fetchTopMarkets() {
-  const url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=8&page=1&sparkline=false&price_change_percentage=24h";
-  const response = await fetchJson(url, { headers: { accept: "application/json" } });
-  const rows = Array.isArray(response.body) ? response.body : [];
-  const coins = rows.flatMap((coin) => {
-    const price = finite(coin.current_price);
-    if (!coin.id || price == null) return [];
-    return [{
-      id: String(coin.id),
-      symbol: String(coin.symbol || "").toUpperCase(),
-      name: String(coin.name || coin.symbol || ""),
-      price,
-      change24: finite(coin.price_change_percentage_24h),
-      marketCap: finite(coin.market_cap),
-      volumeH24: finite(coin.total_volume),
-    }];
-  });
-  return {
-    ok: response.ok && coins.length > 0,
-    state: !response.ok ? (response.status === 429 ? "requiere-atencion" : "sin-datos") : coins.length ? "comprobado" : "sin-datos",
-    coins,
-    provider: "CoinGecko",
-    fetchedAt: response.fetchedAt,
-    scope: "coins/markets, 8 primeros por capitalización, USD. Keyless.",
-  };
-}
-
-export async function fetchPoolTrades(network, pool) {
-  if (!network || !pool) return { ok: false, state: "sin-datos", rows: [], provider: "GeckoTerminal", fetchedAt: new Date().toISOString() };
-  const url = `https://api.geckoterminal.com/api/v2/networks/${encodeURIComponent(network)}/pools/${encodeURIComponent(pool)}/trades`;
-  const response = await fetchJson(url, { headers: { accept: "application/json;version=20230203" } });
-  const rows = [];
-  for (const item of response.body?.data || []) {
-    const attrs = item?.attributes || {};
-    if (!attrs.tx_hash) continue;
-    rows.push({
-      id: String(attrs.tx_hash),
-      signature: String(attrs.tx_hash),
-      time: attrs.block_timestamp || null,
-      from: attrs.tx_from_address || null,
-      to: pool,
-      value: attrs.from_token_amount || null,
-      token: attrs.kind || "",
-      usd: finite(attrs.volume_in_usd),
-      chain: network,
-      provider: "GeckoTerminal",
-      state: "comprobado",
-    });
-  }
-  rows.sort((a, b) => (b.usd ?? -1) - (a.usd ?? -1));
-  return {
-    ok: response.ok && rows.length > 0,
-    state: !response.ok ? (response.status === 429 ? "requiere-atencion" : "sin-datos") : rows.length ? "comprobado" : "sin-datos",
-    rows: rows.slice(0, 12),
-    provider: "GeckoTerminal",
-    fetchedAt: response.fetchedAt,
-    network,
-    pool,
-    scope: "Operaciones de ese pool, las 12 de mayor volumen USD en la respuesta. No es un índice global.",
-  };
-}
-
-export async function fetchCoinOhlc(coinId, days = "1") {
-  const url = coingeckoOhlcUrl(coinId, days);
-  const response = await fetchJson(url, { headers: { accept: "application/json" } });
-  const parsed = parseCoingeckoOhlc(response.body);
-  return {
-    ok: response.ok && parsed.candles.length > 0,
-    state: !response.ok ? (response.status === 429 ? "requiere-atencion" : "sin-datos") : parsed.candles.length ? "comprobado" : "sin-datos",
-    candles: parsed.candles,
-    volumeKnown: false,
-    stepSeconds: parsed.stepSeconds,
-    provider: "CoinGecko",
-    network: coinId,
-    pool: coinId,
-    timeframe: `days=${days}`,
-    fetchedAt: response.fetchedAt,
-    scope: `OHLC keyless de ${coinId}, days=${days}. Paso observado ${parsed.stepSeconds ?? "desconocido"} s. Sin volumen por vela.`,
-    httpStatus: response.status,
-  };
-}
-
-export async function fetchBitcoinQuote() {
-  const url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_vol=true&include_24hr_change=true&include_market_cap=true";
-  const response = await fetchJson(url, { headers: { accept: "application/json" } });
-  const row = response.body?.bitcoin;
-  if (!response.ok || !row || finite(row.usd) == null) {
-    return { ok: false, state: response.status === 429 ? "requiere-atencion" : "sin-datos", provider: "CoinGecko", fetchedAt: response.fetchedAt };
-  }
-  return {
-    ok: true,
-    state: "comprobado",
-    provider: "CoinGecko",
-    fetchedAt: response.fetchedAt,
-    network: "bitcoin",
-    usd: finite(row.usd),
-    marketCap: finite(row.usd_market_cap),
-    volumeH24: finite(row.usd_24h_vol),
-    changeH24: finite(row.usd_24h_change),
-    scope: "simple/price de bitcoin. La variación y el volumen son de 24 h según CoinGecko, no de una vela.",
-  };
-}
-
-export async function fetchDexSnapshot(chainId, tokenAddress) {
-  const dexSlug = { solana: "solana", ethereum: "ethereum", base: "base", bnb: "bsc", arbitrum: "arbitrum", polygon: "polygon", optimism: "optimism", avalanche: "avalanche" }[chainId];
-  if (!tokenAddress || !dexSlug) return { ok: false, state: "no-soportado", provider: "DEX Screener" };
-  const url = `https://api.dexscreener.com/token-pairs/v1/${encodeURIComponent(dexSlug)}/${encodeURIComponent(tokenAddress)}`;
-  const response = await fetchJson(url, { headers: { accept: "application/json" } });
-  const pairs = Array.isArray(response.body) ? response.body : [];
-  if (!response.ok) return { ok: false, state: response.status === 429 ? "requiere-atencion" : "sin-datos", provider: "DEX Screener", fetchedAt: response.fetchedAt, pairs: [] };
-  const rows = pairs.slice(0, 8).map((pair) => ({
-    pair: pair.pairAddress || "",
-    dex: pair.dexId || "",
-    chain: pair.chainId || dexSlug,
-    liquidityUsd: finite(pair.liquidity?.usd),
-    volumeH24: finite(pair.volume?.h24),
-    base: pair.baseToken?.symbol || "",
-    quote: pair.quoteToken?.symbol || "",
-  }));
-  return {
-    ok: true,
-    state: rows.length ? "comprobado" : "sin-datos",
-    provider: "DEX Screener",
-    fetchedAt: response.fetchedAt,
-    pairs: rows,
-    scope: "token-pairs v1, como máximo 8 pares. Sin velas: esa API no las documenta.",
-  };
 }
 
 function accountData(value) {
@@ -400,13 +171,19 @@ function extractSolanaTransfers(tx, signature) {
 const SELECTORS = { name: "0x06fdde03", symbol: "0x95d89b41", decimals: "0x313ce567", totalSupply: "0x18160ddd" };
 
 async function evmRpc(chain, method, params) {
-  const url = chain.rpc[0];
-  const response = await fetchJson(url, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
-  });
-  return { ...response, provider: url };
+  const urls = Array.isArray(chain.rpc) ? chain.rpc : [chain.rpc].filter(Boolean);
+  let last = null;
+  for (const url of urls) {
+    last = await fetchJson(url, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+      timeoutMs: TIMEOUT_MS,
+    });
+    if (last.ok && last.body && !last.body.error) return { ...last, provider: url };
+    if (last.status && last.status !== 429 && last.status !== 403 && last.status !== 0) break;
+  }
+  return { ...(last || { ok: false, body: null, fetchedAt: new Date().toISOString() }), provider: urls[0] || "" };
 }
 
 function decodeAbiString(hex) {
@@ -459,28 +236,46 @@ export async function readEvm(chainId, address) {
       { id: "supply", state: supplyHex && supplyHex !== "0x" ? "comprobado" : "sin-datos", value: supplyHex && supplyHex !== "0x" ? BigInt(supplyHex).toString() : null },
     );
   }
-  facts.push({ id: "transfers", state: "no-soportado", value: null });
+  let transfers = [];
+  let provider = chain.rpc[0];
+  if (chainId === "ethereum") {
+    const activity = await fetchEthereumActivity(address);
+    if (activity.ok) {
+      transfers = activity.rows;
+      provider = activity.provider || provider;
+      facts.push({ id: "transfers", state: "comprobado", value: String(transfers.length) });
+    }
+  }
   return {
     ok: true,
     state: "comprobado",
     chain: chainId,
     address,
     kind,
-    provider: chain.rpc[0],
+    provider,
     fetchedAt,
     slot: null,
     facts,
     largest: [],
-    transfers: [],
-    transferNote: "El RPC público no entrega un índice de transferencias. No se rellena la tabla.",
+    transfers,
   };
 }
 
 export async function readBitcoin(address) {
-  const url = `https://mempool.space/api/address/${encodeURIComponent(address)}`;
-  const info = await fetchJson(url, { headers: { accept: "application/json" } });
-  const txs = await fetchJson(`https://mempool.space/api/address/${encodeURIComponent(address)}/txs`, { headers: { accept: "application/json" } });
-  if (!info.ok) return { ok: false, state: info.status === 429 ? "requiere-atencion" : "sin-datos", chain: "bitcoin", address, provider: "mempool.space", fetchedAt: info.fetchedAt, transfers: [], largest: [], facts: [] };
+  const hosts = [
+    ["https://mempool.space", "mempool.space"],
+    ["https://blockstream.info", "Blockstream"],
+  ];
+  let info = null;
+  let txs = null;
+  let provider = "mempool.space";
+  for (const [origin, name] of hosts) {
+    info = await fetchJson(`${origin}/api/address/${encodeURIComponent(address)}`, { headers: { accept: "application/json" }, attempts: 1 });
+    txs = await fetchJson(`${origin}/api/address/${encodeURIComponent(address)}/txs`, { headers: { accept: "application/json" }, attempts: 1 });
+    provider = name;
+    if (info.ok) break;
+  }
+  if (!info?.ok) return { ok: false, state: info?.status === 429 ? "requiere-atencion" : "sin-datos", chain: "bitcoin", address, provider, fetchedAt: info?.fetchedAt, transfers: [], largest: [], facts: [] };
   const funded = finite(info.body?.chain_stats?.funded_txo_sum);
   const spent = finite(info.body?.chain_stats?.spent_txo_sum);
   const balance = funded != null && spent != null ? String(BigInt(Math.trunc(funded)) - BigInt(Math.trunc(spent))) : null;
@@ -502,8 +297,7 @@ export async function readBitcoin(address) {
         usd: null,
         time: tx.status?.block_time ? new Date(tx.status.block_time * 1000).toISOString() : null,
         state: from && to && value != null ? "comprobado" : "sin-datos",
-        provider: "mempool.space",
-        scope: "primer input y primer output; no es el neto de la transacción",
+        provider,
       });
     }
   }
@@ -513,7 +307,7 @@ export async function readBitcoin(address) {
     chain: "bitcoin",
     address,
     kind: "cuenta",
-    provider: "mempool.space",
+    provider,
     fetchedAt: info.fetchedAt,
     facts: [{ id: "sats", state: balance != null ? "comprobado" : "sin-datos", value: balance, decimals: 8, symbol: "BTC" }],
     largest: [],
