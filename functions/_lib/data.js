@@ -68,6 +68,33 @@ export function getMarkets(env, ctx, query) {
   return cached(key, ttl, stale, () => cg.getMarkets(env, query), ctx);
 }
 
+// Total real de monedas con mercado en CoinGecko (/coins/markets), no el «active_cryptocurrencies» de /global,
+// que cuenta más activos de los que la lista devuelve. Búsqueda binaria sobre páginas de 250, que ya se cachean.
+export const MARKETS_PROBE_PER = 250;
+export async function getMarketsTotal(env, ctx, hint = 0) {
+  const run = () => cached("cg:markets:total", 6 * 3600, 2 * DAY, () => countMarkets(env, ctx, hint), ctx, 2 * DAY);
+  // En frío no bloquea la primera página: cuenta en segundo plano y esta respuesta usa el total de /global.
+  if (ctx?.waitUntil && !(await peek("cg:markets:total"))) {
+    ctx.waitUntil(run().catch((error) => console.error("sonar-markets-total", error?.status || error?.code || "fail")));
+    return null;
+  }
+  return run();
+}
+export async function countMarkets(env, ctx, hint = 0, load = getMarkets) {
+  const per = MARKETS_PROBE_PER;
+  const size = async (page) => ((await load(env, ctx, { page, per, order: "market_cap_desc", category: "", ids: "" }))?.rows || []).length;
+  let lo = 1;
+  let hi = Math.max(2, Math.ceil((Number(hint) || 20000) / per) + 4);
+  if ((await size(lo)) === 0) return { count: 0, fetchedAt: new Date().toISOString() };
+  while ((await size(hi)) > 0) { lo = hi; hi *= 2; if (hi > 2000) break; }
+  while (hi - lo > 1) {
+    const mid = (lo + hi) >> 1;
+    if ((await size(mid)) > 0) lo = mid; else hi = mid;
+  }
+  const last = await size(lo);
+  return { count: (lo - 1) * per + last, fetchedAt: new Date().toISOString() };
+}
+
 export function getQuotes(env, ctx, ids) {
   const key = `cg:quotes:${ids.slice().sort().join(",")}`;
   return cached(key, 30, 600, () => cg.getSimple(env, ids), ctx);

@@ -111,7 +111,7 @@ export async function handle(request, env = {}, ctx = {}) {
   }
 
   async function markets(query, fx) {
-    const page = intIn(query.get("page"), 1, 400, 1);
+    const page = intIn(query.get("page"), 1, 2000, 1);
     const per = oneOf(query.get("per"), ["20", "50", "100", "250"], "100");
     const order = oneOf(query.get("order"), ORDERS, "market_cap_desc");
     const category = query.get("category") || "";
@@ -126,7 +126,9 @@ export async function handle(request, env = {}, ctx = {}) {
     if (!category && idList.length === 0) {
       const global = await data.getGlobal(env, ctx).catch(() => null);
       const assets = Number(global?.assets);
-      total = Number.isFinite(assets) && assets > 0 ? assets : null;
+      const listed = await data.getMarketsTotal(env, ctx, assets).catch(() => null);
+      const count = Number(listed?.count);
+      total = Number.isFinite(count) && count > 0 ? count : Number.isFinite(assets) && assets > 0 ? assets : null;
     }
     return json(200, { ok: true, ...withVs(scaled, fx), total }, cacheHeaders(page === 1 ? 60 : 600, 3600, payload));
   }

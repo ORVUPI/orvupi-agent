@@ -162,7 +162,7 @@ body.verify-app footer.or-footer .sn-attrib a { display: block; color: #e7edf4; 
 .sn-pager .sn-btn:disabled { opacity: 0.35; }
 .sn-pager-gap { color: #8b97a6; padding: 0 2px; }
 .sn-pager .sn-select { flex-direction: row; align-items: center; gap: 6px; width: auto; font-size: 13px; }
-.sn-pager .sn-select select { width: auto; min-height: 28px; height: 28px; }
+.sn-pager .sn-select select { width: auto; min-height: 28px; height: 28px; padding: 0 8px; line-height: 26px; }
 .sn-paged { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .sn-split-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; align-items: start; }
 .sn-table .sn-star, .sn-mrow .sn-star { min-height: 28px; width: 28px; height: 28px; padding: 0; }
@@ -257,6 +257,7 @@ body.sonar-market .sn-mrow .sn-mid small { display: block; white-space: nowrap; 
     display: grid;
     grid-template-columns: 280px minmax(0, 1fr);
     grid-template-areas: "head main" "extra main";
+    grid-template-rows: auto 1fr;
     column-gap: 16px;
     row-gap: 6px;
     align-items: start;
@@ -322,8 +323,9 @@ body.sonar-market .sn-mrow .sn-mid small { display: block; white-space: nowrap; 
   .sn-coinhead .sn-coinpx { flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
   .sn-coin [data-sn=coin-tabs],
   .sn-coin .sn-tools { flex-wrap: nowrap; overflow-x: auto; }
+  .sn-coin [data-sn=coin-tabs] > *, .sn-coin .sn-tools > * { flex: 0 0 auto; white-space: nowrap; }
   #sn-coin-panel > label.sn-select { flex-direction: row; align-items: center; gap: 8px; }
-  #sn-coin-panel > label.sn-select select { height: 32px; min-height: 32px; flex: 1; }
+  #sn-coin-panel > label.sn-select select { height: 32px; min-height: 32px; flex: 1; padding: 0 8px; }
   .sn-chart { height: min(34vh, 240px); min-height: 168px; }
 }
 .sn-as-grid .sn-scroll, .sn-as-grid .sn-mlist { display: none !important; }

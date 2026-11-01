@@ -1,6 +1,7 @@
 import { locale, t } from "./i18n.mjs";
 
 export function finite(value) {
+  if (value == null || value === "" || typeof value === "boolean") return null; // Number(null) es 0: no inventar ceros
   const number = typeof value === "number" ? value : Number(value);
   return Number.isFinite(number) ? number : null;
 }

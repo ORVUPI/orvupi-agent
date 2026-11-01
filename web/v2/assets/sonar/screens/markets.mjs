@@ -35,12 +35,15 @@ function shell(ctx, tab) {
   ]);
 }
 
+// Tope de seguridad; el último número real sale del total que da la API (todas las monedas de CoinGecko).
+const MAX_PAGE = 2000;
+
 async function ranking(host, ctx, mine) {
   const body = host.querySelector("#sn-market-body");
   const prefs = snapshot().prefs;
   const category = ctx.route.params.get("category") || "";
   const period = ctx.route.params.get("period") || prefs.period || "24h";
-  const page = Math.min(400, Math.max(1, Number(ctx.route.params.get("page") || 1) || 1));
+  const page = Math.min(MAX_PAGE, Math.max(1, Number(ctx.route.params.get("page") || 1) || 1));
   const perRaw = Number(ctx.route.params.get("per") || 20);
   const per = [20, 50, 100].includes(perRaw) ? perRaw : 20;
   const view = ctx.route.params.get("view") || prefs.view || "list";
@@ -67,11 +70,11 @@ async function ranking(host, ctx, mine) {
   function pageInfo() {
     const total = Number(meta?.total);
     if (!category && Number.isFinite(total) && total > 0) {
-      let pages = Math.max(1, Math.min(400, Math.ceil(total / per)));
+      let pages = Math.max(1, Math.min(MAX_PAGE, Math.ceil(total / per)));
       if (rows.length < per) pages = Math.min(pages, page);
       return { pages, more: false };
     }
-    if (rows.length >= per && page < 400) return { pages: page, more: true };
+    if (rows.length >= per && page < MAX_PAGE) return { pages: page, more: true };
     return { pages: Math.max(1, page), more: false };
   }
   function pageBar(withSize) {

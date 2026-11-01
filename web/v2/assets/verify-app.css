@@ -366,7 +366,7 @@ body.verify-app .vf-chart-card {
 body.verify-app .vf-card h2,
 body.verify-app .vf-chart-card h2,
 body.verify-app .vf-card h3 { color: #e7edf4; font-family: Inter, system-ui, sans-serif; font-weight: 650; letter-spacing: 0; font-size: 0.92rem; }
-body.verify-app .vf-coins { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 8px; }
+body.verify-app .vf-coins { display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: 8px; }
 body.verify-app .vf-coin {
   display: grid;
   grid-template-columns: 1fr auto;

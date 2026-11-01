@@ -165,3 +165,23 @@ test("/:lang/sonar/* deja pasar /assets/sonar/* a los estáticos", async () => {
   await onRequest({ params: { lang: "assets", path: ["shell.mjs"] }, request: new Request("https://orvupi.com/assets/sonar/shell.mjs"), env: {}, next: () => { passed = true; return new Response("static"); } });
   assert.equal(passed, true);
 });
+
+test("el total del ranking sale de la lista real y todas las páginas son alcanzables", async () => {
+  const { countMarkets } = await import("./data.js");
+  const real = 18680;
+  const calls = [];
+  const load = async (_env, _ctx, q) => {
+    calls.push(q.page);
+    const start = (q.page - 1) * q.per;
+    return { rows: Array.from({ length: Math.max(0, Math.min(q.per, real - start)) }, () => ({})) };
+  };
+  const out = await countMarkets({}, {}, 22683, load);
+  assert.equal(out.count, real);
+  assert.ok(calls.length < 20);
+  const last = Math.ceil(real / 20);
+  assert.ok(last > 400);
+  const deep = await handle(new Request(`http://local/api/sonar/markets?page=${last}&per=20&category=%3Cx%3E`), {}, {});
+  assert.equal(deep.status, 400);
+  const tooDeep = await handle(new Request("http://local/api/sonar/markets?page=2001&per=20"), {}, {});
+  assert.equal(tooDeep.status, 400);
+});

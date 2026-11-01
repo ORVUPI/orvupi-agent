@@ -14,7 +14,7 @@ function note(name, ok, detail = "") {
 }
 
 const browser = await chromium.launch({
-  executablePath: "/usr/local/bin/google-chrome",
+  executablePath: process.env.CHROME_PATH || "/usr/local/bin/google-chrome",
   headless: true,
   args: ["--no-sandbox", "--disable-dev-shm-usage"],
 });
