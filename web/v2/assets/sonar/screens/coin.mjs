@@ -1,0 +1,372 @@
+import { api, qs } from "../api.mjs";
+import { chartHost, chartNote, drawChart, rsi } from "../chart.mjs";
+import { compact, day, money, plain, show, when } from "../format.mjs";
+import { t } from "../i18n.mjs";
+import { activeList, snapshot, uid, update } from "../store.mjs";
+import { el, emptyBlock, errorBlock, field, logo, missing, pctNode, setChildren, skeleton, sourceLine } from "../ui.mjs";
+import { positionOf } from "./portfolio.mjs";
+
+const TABS = ["resumen", "estadisticas", "mercados", "noticias", "cartera", "acerca", "historico"];
+const PERIODS = [["1h", "1", "1h"], ["24h", "1", ""], ["7d", "7", ""], ["30d", "30", ""], ["90d", "90", ""], ["1y", "365", ""], ["ytd", "365", "ytd"], ["all", "max", ""]];
+const CHAINS = { ethereum: "ethereum", solana: "solana", base: "base", "binance-smart-chain": "bnb", "polygon-pos": "polygon", "arbitrum-one": "arbitrum", "optimistic-ethereum": "optimism", avalanche: "avalanche", tron: "tron" };
+
+let stopChart = null;
+let ticket = 0;
+
+export async function mount(host, ctx) {
+  const mine = ++ticket;
+  stopChart?.();
+  stopChart = null;
+  if (!ctx.route.id) {
+    host.replaceChildren(emptyBlock());
+    return;
+  }
+  host.replaceChildren(skeleton(12));
+  const vs = snapshot().prefs.vs;
+  try {
+    const coin = await api(`/api/sonar/coin/${ctx.route.id}${qs({ vs })}`);
+    if (mine !== ticket) return;
+    const tab = TABS.includes(ctx.route.params.get("tab")) ? ctx.route.params.get("tab") : "resumen";
+    paint(host, ctx, coin, tab, mine);
+    document.title = `${coin.name} (${coin.symbol}) · ORVUPI Sonar`;
+  } catch (error) {
+    if (mine !== ticket) return;
+    host.replaceChildren(error.status === 404 ? emptyBlock(t("unavailable")) : errorBlock(() => mount(host, ctx)));
+  }
+}
+
+function paint(host, ctx, coin, tab, mine) {
+  const page = el("article", { class: "sn-coin", "data-sn": "coin", "data-coin": coin.id });
+  page.append(header(ctx, coin), tabs(ctx, tab), el("div", { id: "sn-coin-panel" }));
+  host.replaceChildren(page);
+  const panel = page.querySelector("#sn-coin-panel");
+  if (tab === "resumen") summary(panel, ctx, coin, mine);
+  else if (tab === "estadisticas") {
+    panel.append(stats(coin), converter(coin));
+    treasury(ctx, coin).then((node) => { if (node && panel.isConnected) panel.append(node); });
+  }
+  else if (tab === "mercados") markets(panel, ctx, coin);
+  else if (tab === "noticias") panel.append(el("p", { class: "sn-state", "data-sn": "news", text: t("newsOff") }));
+  else if (tab === "cartera") panel.append(holding(ctx, coin));
+  else if (tab === "acerca") panel.append(about(ctx, coin), links(coin), contracts(ctx, coin));
+  else history(panel, ctx, coin);
+}
+
+function header(ctx, coin) {
+  const vs = coin.vs || snapshot().prefs.vs;
+  return el("header", { class: "sn-coinhead" }, [
+    el("button", { type: "button", class: "sn-btn", onclick: () => ctx.go("/sonar/"), text: t("back") }),
+    logo(coin),
+    el("div", {}, [el("h2", { text: coin.name }), el("p", { text: `${coin.symbol} · ${t("rankOf")} ${show(coin.rank)}` })]),
+    el("div", { class: "sn-coinpx" }, [
+      el("strong", { "data-k": "price", text: show(money(coin.price, vs)) }),
+      el("span", { "data-k": "ch24h" }, pctNode(coin.ch24h)),
+      coin.priceBtc == null ? null : el("small", { text: `${t("inBtc")} ${plain(coin.priceBtc, 6)}` }),
+    ]),
+    el("div", { class: "sn-actions" }, [
+      el("button", { type: "button", class: "sn-btn", "data-sn": "share", onclick: () => share(ctx, coin), text: t("share") }),
+      el("button", { type: "button", class: "sn-star", "data-sn-star": coin.id, onclick: () => star(coin), text: "★" }),
+      el("button", { type: "button", class: "sn-btn", "data-sn": "alert", onclick: () => alertForm(coin), text: t("saveAlert") }),
+    ]),
+  ]);
+}
+
+function tabs(ctx, tab) {
+  return el("div", { class: "sn-tabs", "data-sn": "coin-tabs" }, TABS.map((id) => el("button", {
+    type: "button",
+    class: "sn-tab",
+    "data-sn-tab": id,
+    "aria-selected": tab === id ? "true" : "false",
+    onclick: () => ctx.go(`/sonar/crypto/${ctx.route.id}?tab=${id}`),
+    text: t(id === "resumen" ? "summary" : id === "estadisticas" ? "stats" : id === "mercados" ? "mkts" : id === "noticias" ? "news" : id === "cartera" ? "wallet" : id === "acerca" ? "about" : "hist"),
+  })));
+}
+
+async function summary(panel, ctx, coin, mine) {
+  const chart = chartHost();
+  const tools = el("div", { class: "sn-tools", "data-sn": "periods" });
+  let mode = "line";
+  let period = "24h";
+  let compare = "";
+  let sma = false;
+  const note = el("p", { class: "sn-note" });
+  const read = el("p", { class: "sn-note", "data-sn": "rsi" });
+  for (const [id, , ] of PERIODS) {
+    tools.append(el("button", { type: "button", class: id === period ? "sn-btn on" : "sn-btn", "data-sn-period": id, onclick: () => { period = id; draw(); }, text: t(id === "1h" ? "p1h" : id === "24h" ? "p24h" : id === "7d" ? "p7d" : id === "30d" ? "p30d" : id === "90d" ? "p90d" : id === "1y" ? "p1y" : id === "ytd" ? "ytd" : "all") }));
+  }
+  tools.append(
+    el("button", { type: "button", class: "sn-btn", "data-sn": "mode-line", onclick: () => { mode = "line"; draw(); }, text: t("line") }),
+    el("button", { type: "button", class: "sn-btn", "data-sn": "mode-candles", onclick: () => { mode = "candles"; draw(); }, text: t("candles") }),
+    el("button", { type: "button", class: "sn-btn", "data-sn": "sma", onclick: () => { sma = !sma; draw(); }, text: t("sma") }),
+  );
+  const select = el("select", { "data-sn": "compare", onchange: (event) => { compare = event.target.value; draw(); } }, [el("option", { value: "", text: t("none") }), el("option", { value: "bitcoin", text: t("btc") }), el("option", { value: "ethereum", text: t("eth") })]);
+  panel.append(tools, el("label", { class: "sn-select", text: t("compare") }, select), chart, note, read, stats(coin), converter(coin), sourceLine(coin));
+  async function draw() {
+    tools.querySelectorAll("[data-sn-period]").forEach((button) => button.classList.toggle("on", button.getAttribute("data-sn-period") === period));
+    const spec = PERIODS.find((row) => row[0] === period);
+    try {
+      const path = mode === "candles"
+        ? `/api/sonar/coin/${coin.id}/ohlc${qs({ vs: coin.vs, days: spec[1] === "max" ? "365" : spec[1] })}`
+        : `/api/sonar/coin/${coin.id}/chart${qs({ vs: coin.vs, days: spec[1], interval: spec[2] === "1h" ? "1h" : "" })}`;
+      const payload = await api(path);
+      if (mine !== ticket) return;
+      let points = payload.points || [];
+      if (spec[2] === "ytd") {
+        const start = Date.parse(`${new Date().getUTCFullYear()}-01-01T00:00:00Z`);
+        points = points.filter((row) => row[0] >= start);
+        payload.points = points;
+        payload.maxRangeNote = t("ytdNote");
+      }
+      let other = null;
+      if (compare && compare !== coin.id && mode === "line") other = await api(`/api/sonar/coin/${compare}/chart${qs({ vs: coin.vs, days: spec[1] === "max" ? "365" : spec[1] })}`);
+      stopChart?.();
+      stopChart = await drawChart(chart, payload, { mode, compare: other, sma, markers: [] });
+      note.textContent = [chartNote(payload), compare ? t("compareNote") : "", t("candleNote")].filter(Boolean).join(" ");
+      const value = rsi(payload.points);
+      read.textContent = value == null ? "" : `${t("rsi")}: ${plain(value, 1)} · ${t("calc")}`;
+    } catch {
+      if (mine !== ticket) return;
+      chart.replaceChildren(errorBlock(draw));
+    }
+  }
+  draw();
+}
+
+function stats(coin) {
+  const vs = coin.vs || "usd";
+  const ratio = coin.volume24h != null && coin.marketCap ? coin.volume24h / coin.marketCap : null;
+  const circ = coin.circulating != null && coin.max ? (coin.circulating / coin.max) * 100 : null;
+  return el("section", { class: "sn-stats-grid", "data-sn": "stats" }, [
+    field(t("mcap"), text(compact(coin.marketCap, vs))),
+    field(t("volume"), text(compact(coin.volume24h, vs))),
+    field(t("fdv"), text(compact(coin.fdv, vs))),
+    field(t("volMcap"), text(ratio == null ? null : plain(ratio, 4))),
+    field(t("supply"), text(plain(coin.circulating, 0))),
+    field(t("total"), text(plain(coin.total, 0))),
+    field(t("max"), text(plain(coin.max, 0))),
+    field(t("circPct"), text(circ == null ? null : `${plain(circ, 2)}%`)),
+    field(t("high24"), text(money(coin.high24h, vs))),
+    field(t("low24"), text(money(coin.low24h, vs))),
+    field(t("ath"), text(coin.ath == null ? null : `${money(coin.ath, vs)} · ${day(coin.athDate) || ""}`)),
+    field(t("fromAth"), pctNode(coin.athChange)),
+    field(t("atl"), text(coin.atl == null ? null : `${money(coin.atl, vs)} · ${day(coin.atlDate) || ""}`)),
+    field(t("fromAtl"), pctNode(coin.atlChange)),
+    field(t("h1"), pctNode(coin.ch1h)),
+    field(t("d7"), pctNode(coin.ch7d)),
+    coin.sentimentUp == null ? null : field(t("votes"), text(`${plain(coin.sentimentUp, 0)}%`)),
+  ]);
+}
+
+function text(value) {
+  if (value == null || value === "") return missing();
+  return document.createTextNode(String(value));
+}
+
+function converter(coin) {
+  const vs = (coin.vs || "usd").toUpperCase();
+  const input = el("input", { type: "number", min: "0", step: "any", value: "1", "data-sn": "convert", oninput: sync });
+  const out = el("output", { "data-sn": "convert-out" });
+  function sync() {
+    const qty = Number(input.value);
+    out.textContent = !Number.isFinite(qty) || coin.price == null ? t("unavailable") : show(money(qty * coin.price, coin.vs));
+  }
+  sync();
+  return el("section", { class: "sn-box", "data-sn": "converter" }, [el("h3", { text: t("converter") }), el("label", {}, [t("youHave"), input, coin.symbol || ""]), el("p", {}, [t("worth"), " ", out, " ", vs])]);
+}
+
+function about(ctx, coin) {
+  const box = el("section", { class: "sn-box", "data-sn": "about" }, [el("h3", { text: t("about") })]);
+  if (!coin.description) box.append(el("p", { text: t("noDesc") }));
+  else {
+    if (coin.descriptionLang === "en") box.append(el("p", { class: "sn-note", text: t("descEn") }));
+    box.append(el("p", { text: coin.description }));
+  }
+  if (coin.categories?.length) {
+    box.append(el("div", { class: "sn-pills" }, coin.categories.map((name) => el("span", { class: "sn-pill", text: name }))));
+  }
+  box.append(sourceLine(coin));
+  return box;
+}
+
+function links(coin) {
+  const bag = coin.links || {};
+  const rows = [];
+  const push = (label, href) => { if (href) rows.push(el("a", { href, rel: "noreferrer", text: label })); };
+  for (const href of bag.homepage || []) push(t("website"), href);
+  push(t("whitepaper"), bag.whitepaper);
+  for (const href of bag.explorers || []) push(t("explorers"), href);
+  push(t("twitter"), bag.twitter);
+  push(t("telegram"), bag.telegram);
+  push(t("reddit"), bag.reddit);
+  for (const href of bag.github || []) push(t("github"), href);
+  if (!rows.length) return null;
+  return el("section", { class: "sn-box" }, [el("h3", { text: t("community") }), el("div", { class: "sn-links" }, rows)]);
+}
+
+function contracts(ctx, coin) {
+  const entries = Object.entries(coin.platforms || {}).filter(([, address]) => address);
+  if (!entries.length) return null;
+  const list = el("ul", { class: "sn-contracts" });
+  for (const [platform, address] of entries) {
+    const chain = CHAINS[platform];
+    const href = chain ? `${ctx.prefix}/verify/?chain=${chain}&address=${encodeURIComponent(address)}#ficha` : null;
+    list.append(el("li", {}, [
+      el("strong", { text: platform }),
+      el("code", { text: address }),
+      el("button", { type: "button", class: "sn-btn", "data-sn": "copy-contract", onclick: () => copy(address), text: t("copyAddr") }),
+      href ? el("a", { href, text: t("verify") }) : null,
+    ]));
+  }
+  return el("section", { class: "sn-box", "data-sn": "contracts" }, [el("h3", { text: t("contracts") }), list]);
+}
+
+async function markets(panel, ctx, coin) {
+  panel.append(skeleton(6));
+  try {
+    const body = await api(`/api/sonar/coin/${coin.id}/tickers${qs({ type: "all", vs: coin.vs })}`);
+    const spot = body.spot?.rows || [];
+    const total = spot.reduce((sum, row) => sum + (row.volume24h || 0), 0);
+    const table = el("table", { class: "sn-table" });
+    table.append(el("thead", {}, el("tr", {}, [t("exchange"), t("pair"), t("price"), t("spread"), t("depth"), t("volume"), t("ofVol"), t("trust"), t("updated")].map((label) => el("th", { text: label })))));
+    const tbody = el("tbody");
+    for (const row of spot) {
+      tbody.append(el("tr", {}, [
+        el("td", {}, row.exchangeId ? el("a", { href: `${ctx.prefix}/sonar/exchanges/${row.exchangeId}`, text: row.exchangeName || row.exchangeId }) : (row.exchangeName || t("unavailable"))),
+        el("td", { text: row.base && row.target ? `${row.base}/${row.target}` : t("unavailable") }),
+        el("td", { text: show(money(row.price, coin.vs)) }),
+        el("td", { text: row.spreadPct == null ? t("unavailable") : `${plain(row.spreadPct, 3)}%` }),
+        el("td", { text: row.depthUp2 == null && row.depthDown2 == null ? t("unavailable") : `${show(compact(row.depthUp2, coin.vs))} / ${show(compact(row.depthDown2, coin.vs))}` }),
+        el("td", { text: show(compact(row.volume24h, coin.vs)) }),
+        el("td", { text: row.volume24h != null && total ? `${plain((row.volume24h / total) * 100, 2)}%` : t("unavailable") }),
+        el("td", { text: row.trust || t("unavailable") }),
+        el("td", { text: row.lastTradedAt ? when(row.lastTradedAt) : t("unavailable") }),
+      ]));
+    }
+    table.append(tbody);
+    const pools = el("ul", { class: "sn-pools" });
+    for (const pool of body.dex || []) {
+      pools.append(el("li", {}, [
+        el("a", { href: pool.url || `${ctx.prefix}/sonar/crypto/${coin.id}`, rel: "noreferrer", text: pool.name || pool.dex || t("pool") }),
+        el("span", { text: show(money(pool.price, coin.vs)) }),
+        el("span", { text: show(compact(pool.reserveUsd, coin.vs)) }),
+        el("small", { text: pool.network || "" }),
+      ]));
+    }
+    setChildren(panel, [
+      el("h3", { text: t("mkts") }),
+      spot.length ? el("div", { class: "sn-scroll" }, table) : emptyBlock(),
+      el("p", { class: "sn-note", text: t("liq") }),
+      sourceLine(body.spot),
+      el("h3", { text: t("dex") }),
+      pools.childNodes.length ? pools : emptyBlock(),
+      sourceLine(body.dex?.[0] ? { source: "GeckoTerminal", sourceUrl: "https://www.geckoterminal.com/", attribution: t("gt"), fetchedAt: body.spot?.fetchedAt } : null),
+    ]);
+  } catch {
+    panel.replaceChildren(errorBlock(() => markets(panel, ctx, coin)));
+  }
+}
+
+async function history(panel, ctx, coin) {
+  panel.append(skeleton(8));
+  try {
+    const body = await api(`/api/sonar/coin/${coin.id}/history${qs({ vs: coin.vs, days: "90" })}`);
+    const table = el("table", { class: "sn-table" });
+    table.append(el("thead", {}, el("tr", {}, [t("date"), t("open"), t("high"), t("low"), t("close"), t("volume")].map((label) => el("th", { text: label })))));
+    const tbody = el("tbody");
+    for (const row of (body.rows || []).slice(-30).reverse()) {
+      tbody.append(el("tr", {}, [
+        el("td", { text: day(row.time) || t("unavailable") }),
+        el("td", { text: show(money(row.open, coin.vs)) }),
+        el("td", { text: show(money(row.high, coin.vs)) }),
+        el("td", { text: show(money(row.low, coin.vs)) }),
+        el("td", { text: show(money(row.close, coin.vs)) }),
+        el("td", { text: row.volume == null ? t("unavailable") : show(compact(row.volume, coin.vs)) }),
+      ]));
+    }
+    table.append(tbody);
+    panel.replaceChildren(el("h3", { text: t("hist") }), el("div", { class: "sn-scroll" }, table), el("p", { class: "sn-note", text: body.volumeNote || t("volMissing") }), sourceLine(body));
+  } catch {
+    panel.replaceChildren(errorBlock(() => history(panel, ctx, coin)));
+  }
+}
+
+async function treasury(ctx, coin) {
+  if (coin.id !== "bitcoin" && coin.id !== "ethereum") return null;
+  const box = el("section", { class: "sn-box", "data-sn": "treasury" }, [el("h3", { text: t("treasury") }), skeleton(3)]);
+  try {
+    const body = await api(`/api/sonar/treasury/${coin.id}${qs({ vs: coin.vs })}`);
+    const list = el("ul");
+    for (const row of (body.companies || []).slice(0, 8)) {
+      list.append(el("li", {}, `${row.name}: ${show(plain(row.holdings, 0))} · ${show(compact(row.valueUsd, coin.vs))}`));
+    }
+    box.replaceChildren(el("h3", { text: t("treasury") }), el("p", { text: `${t("holdings")} ${show(plain(body.totalHoldings, 0))}` }), list.childNodes.length ? list : emptyBlock(), sourceLine(body));
+  } catch {
+    box.replaceChildren(el("h3", { text: t("treasury") }), emptyBlock());
+  }
+  return box;
+}
+
+function holding(ctx, coin) {
+  const txs = snapshot().txs.filter((row) => row.portfolioId === snapshot().activePortfolio && row.coinId === coin.id);
+  const pos = positionOf(txs, coin.price);
+  const box = el("section", { class: "sn-box", "data-sn": "position" }, [
+    el("h3", { text: t("position") }),
+    txs.length ? el("ul", {}, [
+      el("li", { text: `${t("qty")} ${show(plain(pos.qty, 6))}` }),
+      el("li", { text: `${t("avg")} ${pos.avg == null ? t("unavailable") : show(money(pos.avg, coin.vs))}` }),
+      el("li", { text: `${t("value")} ${pos.value == null ? t("unavailable") : show(money(pos.value, coin.vs))}` }),
+      el("li", { text: `${t("unrealized")} ${pos.unrealized == null ? t("unavailable") : show(money(pos.unrealized, coin.vs))}` }),
+      el("li", { text: `${t("realized")} ${show(money(pos.realized, coin.vs))}` }),
+    ]) : el("p", { text: t("noPosition") }),
+    el("a", { href: `${ctx.prefix}/sonar/portfolio/`, text: t("addTx") }),
+  ]);
+  return box;
+}
+
+async function star(coin) {
+  await update((data) => {
+    const list = data.lists.find((item) => item.id === data.activeList) || data.lists[0];
+    if (!list) return data;
+    list.ids = list.ids.includes(coin.id) ? list.ids.filter((id) => id !== coin.id) : [coin.id, ...list.ids];
+    return data;
+  });
+  const button = document.querySelector(`[data-sn-star="${coin.id}"]`);
+  if (button) button.classList.toggle("on", activeList()?.ids.includes(coin.id));
+}
+
+async function share(ctx, coin) {
+  const url = `${location.origin}${ctx.prefix}/sonar/crypto/${coin.id}`;
+  try {
+    if (navigator.share) await navigator.share({ title: coin.name, url });
+    else await navigator.clipboard.writeText(url);
+  } catch {
+    try { await navigator.clipboard.writeText(url); } catch { /* el usuario puede copiar la URL */ }
+  }
+}
+
+function copy(text) {
+  navigator.clipboard?.writeText(text).catch(() => {});
+}
+
+async function alertForm(coin) {
+  const price = window.prompt(t("target"), coin.price != null ? String(coin.price) : "");
+  if (!price) return;
+  const value = Number(price);
+  if (!Number.isFinite(value)) return;
+  await update((data) => {
+    data.alerts.push({ id: uid(), coinId: coin.id, op: "above", price: value });
+    return data;
+  });
+}
+
+export function checkAlerts(updates) {
+  const alerts = snapshot().alerts || [];
+  for (const update of updates) {
+    for (const alert of alerts) {
+      if (alert.coinId !== update.id || update.prev == null) continue;
+      const hit = alert.op === "below" ? update.prev > alert.price && update.price <= alert.price : update.prev < alert.price && update.price >= alert.price;
+      if (!hit || Notification.permission !== "granted") continue;
+      try { new Notification("ORVUPI Sonar", { body: `${update.id} ${update.price}` }); } catch { /* sin permiso */ }
+    }
+  }
+}
