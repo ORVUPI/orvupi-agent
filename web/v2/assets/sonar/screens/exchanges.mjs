@@ -1,6 +1,7 @@
 import { api, qs } from "../api.mjs";
 import { compact, plain, show } from "../format.mjs";
-import { t } from "../i18n.mjs";
+import { pageTitle, t } from "../i18n.mjs";
+import { parseRoute, setCrumb } from "../shell.mjs";
 import { snapshot } from "../store.mjs";
 import { el, emptyBlock, errorBlock, logo, pagedBlock, skeleton, sourceLine } from "../ui.mjs";
 
@@ -72,7 +73,9 @@ async function detail(host, ctx) {
       api(`/api/sonar/exchanges/${ctx.route.id}/tickers${qs({ vs })}`).catch(() => null),
       api(`/api/sonar/exchanges/${ctx.route.id}/volume?days=7`).catch(() => null),
     ]);
-    document.title = `${row.name} · ORVUPI Sonar`;
+    if (parseRoute().section !== "exchanges" || parseRoute().id !== ctx.route.id) return;
+    document.title = pageTitle(row.name);
+    setCrumb([{ label: t("exchanges"), href: "/sonar/exchanges/" }, { label: row.name }]);
     const pairs = tickers?.rows || [];
     const state = { page: 1, per: 20, paint() {} };
     const head = el("div", { class: "sn-exchange-head" }, [

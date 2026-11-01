@@ -1,6 +1,7 @@
 const DICT = {
   es: {
-    markets: "Mercados", search: "Buscar", watchlist: "Favoritos", portfolio: "Cartera", more: "Más",
+    markets: "Sonar Mercados", marketsShort: "Mercados", search: "Buscar", watchlist: "Favoritos", portfolio: "Cartera", more: "Más",
+    crumb: "Ruta",
     top: "Ranking", trending: "Tendencia", overview: "Vista general",
     price: "Precio", h1: "1 h", h24: "24 h", d7: "7 d", mcap: "Capitalización", volume: "Volumen 24 h", supply: "Oferta circulante",
     rank: "#", name: "Nombre", fdv: "FDV", total: "Oferta total", max: "Oferta máxima",
@@ -181,7 +182,8 @@ const DICT = {
 };
 
 const EN = {
-  markets: "Markets", search: "Search", watchlist: "Watchlist", portfolio: "Portfolio", more: "More",
+  markets: "Sonar Markets", marketsShort: "Markets", search: "Search", watchlist: "Watchlist", portfolio: "Portfolio", more: "More",
+  crumb: "Breadcrumb",
   top: "Top", trending: "Trending", overview: "Overview",
   price: "Price", h1: "1h", h24: "24h", d7: "7d", mcap: "Market cap", volume: "Volume 24h", supply: "Circulating supply",
   rank: "#", name: "Name", fdv: "FDV", total: "Total supply", max: "Max supply",
@@ -357,7 +359,7 @@ const EN = {
 
 const PT = {
   ...EN,
-  markets: "Mercados", search: "Buscar", watchlist: "Watchlist", portfolio: "Carteira", more: "Mais",
+  markets: "Sonar Mercados", marketsShort: "Mercados", search: "Buscar", watchlist: "Watchlist", portfolio: "Carteira", more: "Mais",
   trending: "Em alta", overview: "Visão geral", price: "Preço", mcap: "Capitalização", volume: "Volume 24 h", supply: "Oferta circulante",
   name: "Nome", list: "Lista", grid: "Grade", filters: "Filtros", apply: "Aplicar", clear: "Limpar",
   loading: "Carregando", empty: "Nenhum resultado com estes filtros.", error: "Não foi possível carregar os dados.", retry: "Tentar de novo",
@@ -389,7 +391,7 @@ const PT = {
 };
 const JA = {
   ...EN,
-  markets: "マーケット", search: "検索", watchlist: "ウォッチリスト", portfolio: "ポートフォリオ", more: "その他",
+  markets: "Sonar マーケット", marketsShort: "マーケット", search: "検索", watchlist: "ウォッチリスト", portfolio: "ポートフォリオ", more: "その他",
   trending: "トレンド", overview: "概要", price: "価格", mcap: "時価総額", volume: "出来高 24h", supply: "循環供給",
   name: "名前", list: "リスト", grid: "グリッド", filters: "絞り込み", apply: "適用", clear: "クリア",
   loading: "読み込み中", empty: "この条件では結果がありません。", error: "データを読み込めませんでした。", retry: "再試行",
@@ -418,7 +420,7 @@ const JA = {
 };
 const KO = {
   ...EN,
-  markets: "시장", search: "검색", watchlist: "관심목록", portfolio: "포트폴리오", more: "더보기",
+  markets: "Sonar 시장", marketsShort: "시장", search: "검색", watchlist: "관심목록", portfolio: "포트폴리오", more: "더보기",
   trending: "트렌드", overview: "개요", price: "가격", mcap: "시가총액", volume: "거래량 24시간", supply: "유통 공급량",
   name: "이름", list: "목록", grid: "격자", filters: "필터", apply: "적용", clear: "지우기",
   loading: "불러오는 중", empty: "이 필터로는 결과가 없습니다.", error: "데이터를 불러오지 못했습니다.", retry: "다시 시도",
@@ -469,6 +471,11 @@ export function t(key, vars) {
     for (const [name, value] of Object.entries(vars)) text = String(text).replaceAll(`{${name}}`, String(value ?? ""));
   }
   return text;
+}
+
+export function pageTitle(name) {
+  const section = t("markets");
+  return name ? `${name} · ${section}` : `${section} · ORVUPI`;
 }
 
 export function labelOf(group, value) {

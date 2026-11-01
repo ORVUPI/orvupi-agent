@@ -1,7 +1,8 @@
 import { api, qs } from "../api.mjs";
 import { chartHost, chartNote, drawChart, rsi } from "../chart.mjs";
 import { btcPrice, compact, day, money, plain, show, when } from "../format.mjs";
-import { categoryName, t } from "../i18n.mjs";
+import { categoryName, pageTitle, t } from "../i18n.mjs";
+import { parseRoute, setCrumb } from "../shell.mjs";
 import { activeList, snapshot, uid, update } from "../store.mjs";
 import { el, emptyBlock, errorBlock, field, logo, missing, pagedBlock, pctNode, setChildren, skeleton, sourceLine } from "../ui.mjs";
 import { positionOf } from "./portfolio.mjs";
@@ -25,10 +26,11 @@ export async function mount(host, ctx) {
   const vs = snapshot().prefs.vs;
   try {
     const coin = await api(`/api/sonar/coin/${ctx.route.id}${qs({ vs })}`);
-    if (mine !== ticket) return;
+    if (mine !== ticket || parseRoute().section !== "crypto" || parseRoute().id !== ctx.route.id) return;
     const tab = TABS.includes(ctx.route.params.get("tab")) ? ctx.route.params.get("tab") : "resumen";
     paint(host, ctx, coin, tab, mine);
-    document.title = `${coin.name} (${coin.symbol}) · ORVUPI Sonar`;
+    document.title = pageTitle(`${coin.name} (${coin.symbol})`);
+    setCrumb([{ label: coin.name }]);
   } catch (error) {
     if (mine !== ticket) return;
     host.replaceChildren(error.status === 404 ? emptyBlock(t("missingCoin")) : errorBlock(() => mount(host, ctx)));

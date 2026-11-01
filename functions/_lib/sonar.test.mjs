@@ -6,6 +6,35 @@ import { handle } from "./router.js";
 import { safeJson } from "./seo.js";
 import { specOf } from "../sonar/[[path]].js";
 
+test("el listado se llama Sonar Mercados y la verificación sigue con su nombre", async () => {
+  const { marketTitle, sectionName } = await import("./seo.js");
+  assert.equal(sectionName(""), "Sonar Mercados");
+  assert.equal(sectionName("/en"), "Sonar Markets");
+  assert.equal(marketTitle(""), "Sonar Mercados · ORVUPI");
+  assert.equal(marketTitle("/en"), "Sonar Markets · ORVUPI");
+  assert.equal(marketTitle("", "Bitcoin (BTC)"), "Bitcoin (BTC) · Sonar Mercados");
+  assert.equal(marketTitle("/pt-br", "Bitcoin (BTC)"), "Bitcoin (BTC) · Sonar Mercados");
+  const previous = globalThis.document;
+  const { t } = await import("../../web/v2/assets/sonar/i18n.mjs");
+  function as(lang) {
+    globalThis.document = { documentElement: { getAttribute: () => lang, lang } };
+  }
+  try {
+    as("es");
+    assert.equal(t("markets"), "Sonar Mercados");
+    assert.equal(t("marketsShort"), "Mercados");
+    assert.equal(t("mkts"), "Mercados");
+    assert.equal(t("verifySection"), "Verificación on-chain");
+    as("en");
+    assert.equal(t("markets"), "Sonar Markets");
+    assert.equal(t("marketsShort"), "Markets");
+    assert.equal(t("mkts"), "Markets");
+  } finally {
+    if (previous === undefined) delete globalThis.document;
+    else globalThis.document = previous;
+  }
+});
+
 test("las URLs http de una web oficial se conservan y javascript no", () => {
   assert.equal(webUrl("http://bitcoin.org/"), "http://bitcoin.org/");
   assert.equal(httpsUrl("http://bitcoin.org/"), null);
