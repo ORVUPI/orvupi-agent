@@ -99,11 +99,15 @@ export async function getOrRefresh({ key, ttlSec, staleSec, maxAgeSec = 86400, l
   function join() {
     const pending = inflight.get(key);
     if (pending) return pending;
-    const job = refresh().finally(() => {
-      if (inflight.get(key) === job) inflight.delete(key);
+    let settle = null;
+    const gate = new Promise((resolve, reject) => {
+      settle = { resolve, reject };
     });
-    inflight.set(key, job);
-    return job;
+    inflight.set(key, gate);
+    refresh().then(settle.resolve, settle.reject).finally(() => {
+      if (inflight.get(key) === gate) inflight.delete(key);
+    });
+    return gate;
   }
 
   async function refresh() {

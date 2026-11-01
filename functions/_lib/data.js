@@ -11,6 +11,23 @@ import { getBtcFees, getEthGas } from "./providers/chain.js";
 
 const DAY = 86400;
 
+/** Ventanas frescas. La clave demo solo se gasta cuando esto caduca, muy por debajo de ~330 llamadas al día. */
+export const CACHE_FRESH = {
+  markets: 180,
+  marketsOther: 300,
+  coin: 1200,
+  categories: 3600,
+  exchanges: 3600,
+  count: 86400,
+  quotes: 180,
+  chartShort: 900,
+  chartLong: 3600,
+  global: 300,
+  trending: 900,
+  rates: 3600,
+  search: 900,
+};
+
 function cached(key, ttlSec, staleSec, loader, ctx, maxAgeSec = DAY) {
   return getOrRefresh({ key, ttlSec, staleSec, maxAgeSec, loader, ctx });
 }
@@ -25,8 +42,24 @@ async function orFallback(load, fallback) {
 }
 
 export function getGlobal(env, ctx) {
-  return cached("cg:global", 60, 900, () => cg.getGlobal(env), ctx);
+  return cached("cg:global", CACHE_FRESH.global, DAY, () => cg.getGlobal(env), ctx);
 }
+
+export function getAssetCount(env, ctx) {
+  return cached("cg:count", CACHE_FRESH.count, 7 * DAY, () => loadCount(env, ctx), ctx, 7 * DAY);
+}
+
+async function loadCount(env, ctx) {
+  const global = await getGlobal(env, ctx);
+  return {
+    assets: global.assets ?? null,
+    source: global.source,
+    sourceUrl: global.sourceUrl,
+    attribution: global.attribution,
+    fetchedAt: global.fetchedAt,
+  };
+}
+
 export function getFear(env, ctx) {
   return cached("am:fng", 3600, DAY, () => getFearGreed(env), ctx);
 }
@@ -40,7 +73,7 @@ export function getFees(env, ctx) {
   return cached("chain:btc", 60, 900, () => getBtcFees(env), ctx);
 }
 export function getRates(env, ctx) {
-  return cached("cg:rates", 600, DAY, () => cg.getRates(env), ctx);
+  return cached("cg:rates", CACHE_FRESH.rates, DAY, () => cg.getRates(env), ctx);
 }
 export function getVs(env, ctx) {
   return cached("cg:vs", DAY, 7 * DAY, () => cg.getSupportedVs(env), ctx, 7 * DAY);
@@ -49,10 +82,10 @@ export function getPlatforms(env, ctx) {
   return cached("cg:platforms", DAY, 7 * DAY, () => cg.getPlatforms(env), ctx, 7 * DAY);
 }
 export function getCategories(env, ctx) {
-  return cached("cg:categories", 1800, 6 * 3600, () => orFallback(() => cg.getCategories(env), () => paprika.getCategories(env)), ctx);
+  return cached("cg:categories", CACHE_FRESH.categories, DAY, () => orFallback(() => cg.getCategories(env), () => paprika.getCategories(env)), ctx);
 }
 export function getTrendingCg(env, ctx) {
-  return cached("cg:trending", 600, 3600, () => cg.getTrending(env), ctx);
+  return cached("cg:trending", CACHE_FRESH.trending, DAY, () => cg.getTrending(env), ctx);
 }
 export function getTrendingPools(env, ctx) {
   return cached("gt:trending", 600, 3600, () => gt.trendingPools(env), ctx);
@@ -73,10 +106,10 @@ export function getDerivatives(env, ctx) {
 export function getMarkets(env, ctx, query) {
   const page = query.page;
   const per = query.per;
-  const ttl = page === 1 && !query.category && !query.ids ? 60 : 600;
-  const stale = page === 1 && !query.category && !query.ids ? 600 : 3600;
+  const hot = page === 1 && !query.category && !query.ids;
+  const ttl = hot ? CACHE_FRESH.markets : CACHE_FRESH.marketsOther;
   const key = `cg:markets:${query.order}:${per}:${page}:${query.category || "-"}:${query.ids || "-"}`;
-  return cached(key, ttl, stale, () => loadMarkets(env, query), ctx);
+  return cached(key, ttl, DAY, () => loadMarkets(env, query), ctx);
 }
 
 async function loadMarkets(env, query) {
@@ -92,11 +125,11 @@ async function loadMarkets(env, query) {
 
 export function getQuotes(env, ctx, ids) {
   const key = `cg:quotes:${ids.slice().sort().join(",")}`;
-  return cached(key, 30, 600, () => cg.getSimple(env, ids), ctx);
+  return cached(key, CACHE_FRESH.quotes, DAY, () => cg.getSimple(env, ids), ctx);
 }
 
 export function getCoin(env, ctx, id) {
-  return cached(`cg:coin:${id}`, 120, 3600, () => loadCoin(env, id), ctx);
+  return cached(`cg:coin:${id}`, CACHE_FRESH.coin, DAY, () => loadCoin(env, id), ctx);
 }
 
 async function loadCoin(env, id) {
@@ -120,7 +153,7 @@ async function loadCoin(env, id) {
 }
 
 export function getSearch(env, ctx, q) {
-  return cached(`cg:search:${q.toLowerCase()}`, 600, 3600, () => cg.getSearch(env, q), ctx);
+  return cached(`cg:search:${q.toLowerCase()}`, CACHE_FRESH.search, DAY, () => cg.getSearch(env, q), ctx);
 }
 
 export function searchPools(env, ctx, q) {
@@ -162,7 +195,8 @@ export function scaleRows(payload, factor) {
 }
 
 export async function getChart(env, ctx, id, days) {
-  return cached(`cg:chart:${id}:${days}`, days === "1" || days === "7" ? 300 : 3600, days === "1" || days === "7" ? 3600 : DAY, () => cg.getChart(env, id, days), ctx);
+  const short = days === "1" || days === "7";
+  return cached(`cg:chart:${id}:${days}`, short ? CACHE_FRESH.chartShort : CACHE_FRESH.chartLong, DAY, () => cg.getChart(env, id, days), ctx);
 }
 
 /** Una sola serie de 7 días, ya cacheada, cuando falta 1 h, 24 h o 7 d. No toca el objeto cacheado. */
@@ -177,7 +211,7 @@ export async function withWindowChanges(env, ctx, coin) {
 }
 
 export async function getOhlc(env, ctx, id, days) {
-  return cached(`cg:ohlc:${id}:${days}`, 300, 3600, () => cg.getOhlc(env, id, days), ctx);
+  return cached(`cg:ohlc:${id}:${days}`, CACHE_FRESH.chartShort, DAY, () => cg.getOhlc(env, id, days), ctx);
 }
 
 export async function getRange(env, ctx, id, from, to) {
@@ -185,7 +219,7 @@ export async function getRange(env, ctx, id, from, to) {
 }
 
 export function getTickers(env, ctx, id) {
-  return cached(`cg:tickers:${id}`, 300, 3600, () => cg.getTickers(env, id), ctx);
+  return cached(`cg:tickers:${id}`, CACHE_FRESH.chartShort, DAY, () => cg.getTickers(env, id), ctx);
 }
 
 export async function getDexPools(env, ctx, platforms) {
@@ -215,7 +249,7 @@ export async function getDexPools(env, ctx, platforms) {
 }
 
 export function getExchange(env, ctx, id) {
-  return cached(`cg:exchange:${id}`, 3600, DAY, () => loadExchange(env, id), ctx);
+  return cached(`cg:exchange:${id}`, CACHE_FRESH.exchanges, DAY, () => loadExchange(env, id), ctx);
 }
 
 async function loadExchange(env, id) {
@@ -237,7 +271,7 @@ async function loadExchange(env, id) {
 }
 
 export function getExchangeList(env, ctx, page) {
-  return cached(`cg:exchanges:${page}`, 3600, DAY, () => loadExchangeList(env, page), ctx);
+  return cached(`cg:exchanges:${page}`, CACHE_FRESH.exchanges, DAY, () => loadExchangeList(env, page), ctx);
 }
 
 async function loadExchangeList(env, page) {
@@ -277,7 +311,7 @@ async function classExchanges(env, ctx) {
 }
 
 export function getExchangeTickers(env, ctx, id) {
-  return cached(`cg:extickers:${id}`, 300, 3600, () => cg.getExchangeTickers(env, id), ctx);
+  return cached(`cg:extickers:${id}`, CACHE_FRESH.chartShort, DAY, () => cg.getExchangeTickers(env, id), ctx);
 }
 
 export function getExchangeVolume(env, ctx, id, days) {

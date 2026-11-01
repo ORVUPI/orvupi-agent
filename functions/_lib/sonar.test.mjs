@@ -346,10 +346,12 @@ test("la ficha y el exchange usan el respaldo real si CoinGecko no responde", { 
   }
 });
 
-test("CG_API_KEY usa la cabecera del plan", async () => {
+test("CG_API_KEY demo solo entra tras un 429 y nunca sale al cliente", async () => {
   const { clearCache } = await import("./cache.js");
   const { coingeckoBase, coingeckoHeaders } = await import("./providers/coingecko.js");
+  const { keyedUsage, resetKeyedUsage, setKeyedUsageForTests } = await import("./cg-usage.js");
   assert.equal(coingeckoBase({}), "https://api.coingecko.com/api/v3");
+  assert.equal(coingeckoBase({ CG_API_KEY: "demo-key", CG_API_TIER: "demo" }), "https://api.coingecko.com/api/v3");
   assert.equal(coingeckoHeaders({ CG_API_KEY: "demo-key" })["x-cg-demo-api-key"], "demo-key");
   assert.equal(coingeckoHeaders({ CG_API_KEY: "demo-key", CG_API_TIER: "demo" })["x-cg-pro-api-key"], undefined);
   assert.equal(coingeckoBase({ CG_API_KEY: "pro-key", CG_API_TIER: "pro" }), "https://pro-api.coingecko.com/api/v3");
@@ -357,31 +359,94 @@ test("CG_API_KEY usa la cabecera del plan", async () => {
   assert.equal(coingeckoHeaders({})["x-cg-demo-api-key"], undefined);
 
   const original = globalThis.fetch;
+  const originalLog = console.log;
   const seen = [];
-  globalThis.fetch = async (url, options) => {
-    seen.push({ href: String(url), headers: options?.headers || {} });
-    if (String(url).includes("/global")) {
-      return jsonResponse({ data: { total_market_cap: { usd: 1 }, total_volume: { usd: 1 }, market_cap_percentage: { btc: 1, eth: 1 }, active_cryptocurrencies: 1, markets: 1, market_cap_change_percentage_24h_usd: 0 } });
-    }
-    return new Response("{}", { status: 503, headers: { "content-type": "application/json" } });
-  };
+  const logs = [];
+  const globalBody = { data: { total_market_cap: { usd: 1 }, total_volume: { usd: 1 }, market_cap_percentage: { btc: 1, eth: 1 }, active_cryptocurrencies: 1, markets: 1, market_cap_change_percentage_24h_usd: 0 } };
   const envBase = { SONAR_DISABLE: "patternplus,chain,alternative" };
-  try {
-    await clearCache();
-    const demo = await handle(new Request("http://local/api/sonar/global"), { ...envBase, CG_API_KEY: "demo-key", CG_API_TIER: "demo" }, {});
-    assert.equal(demo.status, 200);
-    const demoHit = seen.find((item) => item.href.includes("/global"));
-    assert.ok(demoHit.href.startsWith("https://api.coingecko.com/"));
-    assert.equal(demoHit.headers["x-cg-demo-api-key"], "demo-key");
-    await clearCache();
+  const demoEnv = { ...envBase, CG_API_KEY: "demo-key", CG_API_TIER: "demo" };
+  console.log = (...args) => {
+    logs.push(args.map(String).join(" "));
+  };
+  function install(respond) {
     seen.length = 0;
+    globalThis.fetch = async (url, options) => {
+      const href = String(url);
+      const headers = options?.headers || {};
+      seen.push({ href, headers });
+      return respond(href, seen.length);
+    };
+  }
+  try {
+    resetKeyedUsage();
+    await clearCache();
+    install((href) => (href.includes("/global") ? jsonResponse(globalBody) : new Response("{}", { status: 503, headers: { "content-type": "application/json" } })));
+    const open = await handle(new Request("http://local/api/sonar/global"), demoEnv, {});
+    assert.equal(open.status, 200);
+    const openHits = seen.filter((item) => item.href.includes("/global"));
+    assert.equal(openHits.length, 1);
+    assert.equal(openHits[0].headers["x-cg-demo-api-key"], undefined);
+    assert.equal(keyedUsage().calls, 0);
+    assert.equal(JSON.stringify(await open.json()).includes("demo-key"), false);
+
+    await clearCache();
+    let globals = 0;
+    install((href) => {
+      if (!href.includes("/global")) return new Response("{}", { status: 503, headers: { "content-type": "application/json" } });
+      globals += 1;
+      if (globals === 1) return new Response("{}", { status: 429, headers: { "retry-after": "30", "content-type": "application/json" } });
+      return jsonResponse(globalBody);
+    });
+    const keyed = await handle(new Request("http://local/api/sonar/global"), demoEnv, {});
+    assert.equal(keyed.status, 200);
+    const keyedHits = seen.filter((item) => item.href.includes("api.coingecko.com") && item.href.includes("/global"));
+    assert.equal(keyedHits.length, 2);
+    assert.equal(keyedHits[0].headers["x-cg-demo-api-key"], undefined);
+    assert.equal(keyedHits[1].headers["x-cg-demo-api-key"], "demo-key");
+    assert.equal(keyedUsage().calls, 1);
+    assert.match(logs.find((line) => line.startsWith("sonar-cg-demo day=")) || "", /calls=1/);
+    assert.equal(logs.some((line) => line.includes("demo-key")), false);
+    assert.equal(JSON.stringify(await keyed.json()).includes("demo-key"), false);
+
+    resetKeyedUsage();
+    await clearCache();
+    logs.length = 0;
+    install((href) => (href.includes("/global") ? jsonResponse(globalBody) : new Response("{}", { status: 503, headers: { "content-type": "application/json" } })));
     await handle(new Request("http://local/api/sonar/global"), { ...envBase, CG_API_KEY: "pro-key", CG_API_TIER: "pro" }, {});
     const proHit = seen.find((item) => item.href.includes("/global"));
     assert.ok(proHit.href.startsWith("https://pro-api.coingecko.com/"));
     assert.equal(proHit.headers["x-cg-pro-api-key"], "pro-key");
     assert.equal(proHit.headers["x-cg-demo-api-key"], undefined);
+    assert.equal(keyedUsage().calls, 0);
+
+    setKeyedUsageForTests({ calls: keyedUsage().dayCap });
+    await clearCache();
+    logs.length = 0;
+    install(() => new Response("{}", { status: 429, headers: { "retry-after": "30", "content-type": "application/json" } }));
+    await handle(new Request("http://local/api/sonar/global"), demoEnv, {});
+    assert.equal(seen.some((item) => item.headers["x-cg-demo-api-key"]), false);
+    assert.equal(keyedUsage().calls, keyedUsage().dayCap);
+    assert.match(logs.join("\n"), /sonar-cg-demo skip .*reason=day/);
+
+    setKeyedUsageForTests({ calls: 1, minute: keyedUsage().minuteCap });
+    await clearCache();
+    logs.length = 0;
+    install(() => new Response("{}", { status: 429, headers: { "retry-after": "1", "content-type": "application/json" } }));
+    await handle(new Request("http://local/api/sonar/global"), demoEnv, {});
+    assert.equal(seen.some((item) => item.headers["x-cg-demo-api-key"]), false);
+    assert.equal(keyedUsage().calls, 1);
+    assert.match(logs.join("\n"), /reason=minute/);
+
+    resetKeyedUsage();
+    await clearCache();
+    install(() => new Response("{}", { status: 503, headers: { "content-type": "application/json" } }));
+    await handle(new Request("http://local/api/sonar/global"), demoEnv, {});
+    assert.equal(seen.some((item) => item.headers["x-cg-demo-api-key"]), false);
+    assert.equal(keyedUsage().calls, 0);
   } finally {
+    console.log = originalLog;
     globalThis.fetch = original;
+    resetKeyedUsage();
     await clearCache();
   }
 });
@@ -461,6 +526,151 @@ test("solo stubxai.pages.dev redirige a orvupi.com", async () => {
   });
   assert.equal(apex.status, 301);
   assert.equal(apex.headers.get("location"), "https://orvupi.com/sonar/?q=1");
+});
+
+test("los TTL frescos caben en el cupo de la clave demo", async () => {
+  const { CACHE_FRESH } = await import("./data.js");
+  assert.ok(CACHE_FRESH.markets >= 120 && CACHE_FRESH.markets <= 300);
+  assert.ok(CACHE_FRESH.marketsOther >= 120 && CACHE_FRESH.marketsOther <= 300);
+  assert.ok(CACHE_FRESH.coin >= 900 && CACHE_FRESH.coin <= 1800);
+  assert.equal(CACHE_FRESH.categories, 3600);
+  assert.equal(CACHE_FRESH.exchanges, 3600);
+  assert.equal(CACHE_FRESH.count, 86400);
+});
+
+test("una lectura fresca no repite la llamada y publica el TTL", async () => {
+  const { clearCache } = await import("./cache.js");
+  await clearCache();
+  const original = globalThis.fetch;
+  let fetches = 0;
+  globalThis.fetch = async (url) => {
+    fetches += 1;
+    const href = String(url);
+    if (href.includes("/global")) {
+      return jsonResponse({
+        data: {
+          active_cryptocurrencies: 12,
+          total_market_cap: { usd: 9 },
+          total_volume: { usd: 4 },
+          market_cap_percentage: { btc: 50, eth: 10 },
+          markets: 2,
+          market_cap_change_percentage_24h_usd: 0,
+        },
+      });
+    }
+    if (href.includes("/coins/markets")) {
+      const page = Number(new URL(href).searchParams.get("page") || "1");
+      const rows = page === 1 ? [{ id: "bitcoin", symbol: "btc", name: "Bitcoin", current_price: 3, market_cap: 8 }] : [];
+      return jsonResponse(rows);
+    }
+    if (href.includes("/coins/bitcoin/market_chart")) return jsonResponse({ prices: [[1, 1], [2, 3]], market_caps: [], total_volumes: [] });
+    if (href.includes("/coins/bitcoin?")) {
+      return jsonResponse({
+        id: "bitcoin",
+        symbol: "btc",
+        name: "Bitcoin",
+        market_data: {
+          current_price: { usd: 3 },
+          market_cap: { usd: 8 },
+          price_change_percentage_1h_in_currency: { usd: 0 },
+          price_change_percentage_24h_in_currency: { usd: 1 },
+          price_change_percentage_7d_in_currency: { usd: -1 },
+        },
+      });
+    }
+    if (href.includes("/coins/categories")) return jsonResponse([{ id: "layer-1", name: "Layer 1", market_cap: 8, volume_24h: 1 }]);
+    if (href.includes("/simple/price")) return jsonResponse({ bitcoin: { usd: 3, usd_24h_change: 1 } });
+    if (href.includes("/exchanges/binance/tickers")) return jsonResponse({ tickers: [] });
+    return new Response("{}", { status: 503, headers: { "content-type": "application/json" } });
+  };
+  try {
+    const first = await handle(new Request("http://local/api/sonar/markets?page=1&per=20"), {}, {});
+    assert.equal(first.status, 200);
+    assert.match(first.headers.get("cache-control"), /max-age=180/);
+    assert.match(first.headers.get("cache-control"), /stale-while-revalidate=86400/);
+    const after = fetches;
+    const second = await handle(new Request("http://local/api/sonar/markets?page=1&per=20"), {}, {});
+    assert.equal(second.status, 200);
+    assert.equal(fetches, after);
+    const other = await handle(new Request("http://local/api/sonar/markets?page=2&per=20"), {}, {});
+    assert.match(other.headers.get("cache-control"), /max-age=300/);
+    const coin = await handle(new Request("http://local/api/sonar/coin/bitcoin"), {}, {});
+    assert.equal(coin.status, 200);
+    assert.match(coin.headers.get("cache-control"), /max-age=1200/);
+    const categories = await handle(new Request("http://local/api/sonar/categories"), {}, {});
+    assert.equal(categories.status, 200);
+    assert.match(categories.headers.get("cache-control"), /max-age=3600/);
+    const chart = await handle(new Request("http://local/api/sonar/coin/bitcoin/chart?days=1"), {}, {});
+    assert.equal(chart.status, 200);
+    assert.match(chart.headers.get("cache-control"), /max-age=900/);
+    const quotes = await handle(new Request("http://local/api/sonar/quotes?ids=bitcoin"), {}, {});
+    assert.equal(quotes.status, 200);
+    assert.match(quotes.headers.get("cache-control"), /max-age=180/);
+  } finally {
+    globalThis.fetch = original;
+    await clearCache();
+  }
+});
+
+test("una misma clave de caché tiene un solo refresco en vuelo", async () => {
+  const { clearCache } = await import("./cache.js");
+  await clearCache();
+  const original = globalThis.fetch;
+  let markets = 0;
+  let release = () => {};
+  const gate = new Promise((resolve) => { release = resolve; });
+  globalThis.fetch = async (url) => {
+    const href = String(url);
+    if (href.includes("/global")) {
+      return jsonResponse({ data: { active_cryptocurrencies: 4, total_market_cap: { usd: 1 }, total_volume: { usd: 1 }, market_cap_percentage: { btc: 1, eth: 1 }, markets: 1, market_cap_change_percentage_24h_usd: 0 } });
+    }
+    if (href.includes("/coins/markets")) {
+      markets += 1;
+      await gate;
+      return jsonResponse([{ id: "bitcoin", symbol: "btc", name: "Bitcoin", current_price: 2, market_cap: 3 }]);
+    }
+    return new Response("{}", { status: 503, headers: { "content-type": "application/json" } });
+  };
+  try {
+    const first = handle(new Request("http://local/api/sonar/markets?page=1&per=20"), {}, {});
+    const second = handle(new Request("http://local/api/sonar/markets?page=1&per=20"), {}, {});
+    const started = Date.now();
+    while (markets < 1 && Date.now() - started < 1000) await new Promise((resolve) => setTimeout(resolve, 5));
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    assert.equal(markets, 1);
+    release();
+    const [a, b] = await Promise.all([first, second]);
+    assert.equal(a.status, 200);
+    assert.equal(b.status, 200);
+    assert.equal(markets, 1);
+    assert.equal((await a.json()).rows[0].id, "bitcoin");
+    assert.equal((await b.json()).rows[0].price, 2);
+  } finally {
+    release();
+    globalThis.fetch = original;
+    await clearCache();
+  }
+});
+
+test("Retry-After de 30 s se recorta a un segundo", async () => {
+  const { getJson } = await import("./limits.js");
+  const original = globalThis.fetch;
+  const times = [];
+  globalThis.fetch = async () => {
+    times.push(Date.now());
+    if (times.length === 1) return new Response("{}", { status: 429, headers: { "retry-after": "30", "content-type": "application/json" } });
+    return jsonResponse({ ok: true });
+  };
+  try {
+    const body = await getJson("https://example.test/retry");
+    assert.deepEqual(body, { ok: true });
+    assert.equal(times.length, 2);
+    const gap = times[1] - times[0];
+    assert.ok(gap < 2500, `la segunda llamada tardó ${gap} ms`);
+    assert.ok(gap >= 700, `no esperó el tope de un segundo (${gap} ms)`);
+  } finally {
+    globalThis.fetch = original;
+  }
 });
 
 const TICKER = {

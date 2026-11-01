@@ -1,3 +1,4 @@
+import { keyedAllowed, keyedUsage, noteKeyedCall } from "../cg-usage.js";
 import { getJson } from "../limits.js";
 import { disabledSet, httpsUrl, imageUrl, publicHandle, webUrl } from "../security.js";
 import { coinRow, num, plainFromHtml, stamp, text } from "../normalize.js";
@@ -11,16 +12,24 @@ export function coingeckoBase(env) {
     : "https://api.coingecko.com/api/v3";
 }
 
-export function coingeckoHeaders(env) {
-  const out = {
+function publicHeaders() {
+  return {
     accept: "application/json",
     "user-agent": "ORVUPI-Sonar/1.0 (+https://orvupi.com/sonar/)",
   };
+}
+
+export function coingeckoHeaders(env) {
+  const out = publicHeaders();
   const key = env?.CG_API_KEY;
   if (!key) return out;
   if (String(env?.CG_API_TIER || "demo").toLowerCase() === "pro") out["x-cg-pro-api-key"] = key;
   else out["x-cg-demo-api-key"] = key;
   return out;
+}
+
+function demoKey(env) {
+  return Boolean(env?.CG_API_KEY) && String(env?.CG_API_TIER || "demo").toLowerCase() !== "pro";
 }
 
 async function cg(env, path) {
@@ -29,7 +38,23 @@ async function cg(env, path) {
     error.code = "disabled";
     throw error;
   }
-  return getJson(`${coingeckoBase(env)}${path}`, { headers: coingeckoHeaders(env), provider: "coingecko" });
+  const url = `${coingeckoBase(env)}${path}`;
+  if (!demoKey(env)) {
+    return getJson(url, { headers: coingeckoHeaders(env), provider: "coingecko" });
+  }
+  try {
+    return await getJson(url, { headers: publicHeaders(), provider: "coingecko", attempts: 1 });
+  } catch (error) {
+    if (error?.status !== 429) throw error;
+    const gate = await keyedAllowed();
+    if (!gate.ok) {
+      const usage = keyedUsage();
+      console.log(`sonar-cg-demo skip day=${usage.day} calls=${usage.calls} reason=${gate.reason}`);
+      throw error;
+    }
+    await noteKeyedCall(path);
+    return getJson(url, { headers: coingeckoHeaders(env), provider: "coingecko", attempts: 1 });
+  }
 }
 
 function meta(extra) {

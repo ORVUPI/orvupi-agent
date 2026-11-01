@@ -87,7 +87,7 @@ export async function handle(request, env = {}, ctx = {}) {
         };
       }
       const body = { ok: true, ...withVs({ data: overview }, fx), source: "mixed", fetchedAt: overview.global?.fetchedAt || new Date().toISOString() };
-      return json(200, body, cacheHeaders(60, 900, overview.global || {}));
+      return json(200, body, cacheHeaders(data.CACHE_FRESH.global, 86400, overview.global || {}));
     }
     if (head === "markets" && path.length === 1) return markets(query, fx);
     if (head === "quotes" && path.length === 1) return quotes(query, fx);
@@ -126,19 +126,21 @@ export async function handle(request, env = {}, ctx = {}) {
     const idList = ids ? ids.split(",").filter(Boolean) : [];
     if (idList.length > 50 || idList.some((id) => !slugOk(id))) return json(400, { ok: false, error: "invalid" });
     const listed = !category && idList.length === 0;
-    const [payload, global] = await Promise.all([
+    const hot = page === 1 && listed;
+    const [payload, count] = await Promise.all([
       data.getMarkets(env, ctx, { page, per: Number(per), category, order, ids: idList.join(",") }),
-      listed ? data.getGlobal(env, ctx).catch(() => null) : null,
+      listed ? data.getAssetCount(env, ctx).catch(() => null) : null,
     ]);
     const scaled = data.scaleRows(payload, fx.missing ? 1 : fx.factor);
     let total = null;
     if (listed) {
       const fromSource = Number(payload?.total);
-      const assets = Number(global?.assets);
+      const assets = Number(count?.assets);
       if (payload?.total != null && Number.isFinite(fromSource)) total = fromSource;
       else if (Number.isFinite(assets) && assets > 0) total = assets;
     }
-    return json(200, { ok: true, ...withVs(scaled, fx), total }, cacheHeaders(page === 1 ? 60 : 600, 3600, payload));
+    const fresh = hot ? data.CACHE_FRESH.markets : data.CACHE_FRESH.marketsOther;
+    return json(200, { ok: true, ...withVs(scaled, fx), total }, cacheHeaders(fresh, 86400, payload));
   }
 
   async function quotes(query, fx) {
@@ -146,7 +148,7 @@ export async function handle(request, env = {}, ctx = {}) {
     if (!ids.length || ids.length > 50 || ids.some((id) => !slugOk(id))) return json(400, { ok: false, error: "invalid" });
     const payload = await data.getQuotes(env, ctx, ids);
     const scaled = data.applyFactor(payload, fx.missing ? 1 : fx.factor, "quotes");
-    return json(200, { ok: true, ...withVs(scaled, fx) }, cacheHeaders(30, 600, payload));
+    return json(200, { ok: true, ...withVs(scaled, fx) }, cacheHeaders(data.CACHE_FRESH.quotes, 86400, payload));
   }
 
   async function coin(path, query, fx) {
@@ -157,7 +159,7 @@ export async function handle(request, env = {}, ctx = {}) {
       const raw = await data.getCoin(env, ctx, id);
       const filled = await data.withWindowChanges(env, ctx, raw);
       const payload = data.applyFactor(filled, fx.missing ? 1 : fx.factor, "coin");
-      return json(200, { ok: true, ...withVs(payload, fx) }, cacheHeaders(120, 3600, payload));
+      return json(200, { ok: true, ...withVs(payload, fx) }, cacheHeaders(data.CACHE_FRESH.coin, 86400, payload));
     }
     if (sub === "chart") return chart(id, query, fx);
     if (sub === "ohlc") return ohlc(id, query, fx);
@@ -206,7 +208,8 @@ export async function handle(request, env = {}, ctx = {}) {
       }
     }
     const payload = await data.getChart(env, ctx, id, days);
-    return json(200, { ok: true, ...withVs(seriesPayload(payload, "prices", fx), fx) }, cacheHeaders(days === "1" || days === "7" ? 300 : 3600, 3600, payload));
+    const fresh = days === "1" || days === "7" ? data.CACHE_FRESH.chartShort : data.CACHE_FRESH.chartLong;
+    return json(200, { ok: true, ...withVs(seriesPayload(payload, "prices", fx), fx) }, cacheHeaders(fresh, 86400, payload));
   }
 
   function seriesPayload(payload, field, fx, note) {
@@ -264,7 +267,7 @@ export async function handle(request, env = {}, ctx = {}) {
         points,
         volumeNote: "ohlc-volume",
       }, fx),
-    }, cacheHeaders(300, 3600, payload));
+    }, cacheHeaders(data.CACHE_FRESH.chartShort, 86400, payload));
   }
 
   async function tickers(id, query) {
@@ -276,7 +279,7 @@ export async function handle(request, env = {}, ctx = {}) {
     ]);
     let dex = [];
     if (type !== "cex" && coin?.platforms) dex = (await data.getDexPools(env, ctx, coin.platforms)).pools || [];
-    return json(200, { ok: true, spot, dex, type }, cacheHeaders(300, 3600, spot));
+    return json(200, { ok: true, spot, dex, type }, cacheHeaders(data.CACHE_FRESH.chartShort, 86400, spot));
   }
 
   async function history(id, query, fx) {
@@ -333,7 +336,7 @@ export async function handle(request, env = {}, ctx = {}) {
         dominanceBasis: "capitalización de la categoría / capitalización total",
       };
     });
-    return json(200, { ok: true, ...withVs({ ...payload, rows }, fx) }, cacheHeaders(1800, 6 * 3600, payload));
+    return json(200, { ok: true, ...withVs({ ...payload, rows }, fx) }, cacheHeaders(data.CACHE_FRESH.categories, 86400, payload));
   }
 
   async function category(id, query, fx) {
@@ -356,7 +359,7 @@ export async function handle(request, env = {}, ctx = {}) {
       marketCap: found.marketCap == null ? null : found.marketCap * factor,
       volume24h: found.volume24h == null ? null : found.volume24h * factor,
     } : null;
-    return json(200, { ok: true, ...withVs({ ...marketRest, category: categoryRow }, fx) }, cacheHeaders(300, 3600, markets));
+    return json(200, { ok: true, ...withVs({ ...marketRest, category: categoryRow }, fx) }, cacheHeaders(data.CACHE_FRESH.marketsOther, 86400, markets));
   }
 
   async function exchanges(query, fx) {
@@ -370,7 +373,7 @@ export async function handle(request, env = {}, ctx = {}) {
         volume24h: row.volume24hBtc == null || btc == null ? null : row.volume24hBtc * btc,
         openInterest: row.openInterestBtc == null || btc == null ? null : row.openInterestBtc * btc,
       }));
-      return json(200, { ok: true, ...withVs({ ...payload, rows, type }, fx) }, cacheHeaders(3600, 86400, payload));
+      return json(200, { ok: true, ...withVs({ ...payload, rows, type }, fx) }, cacheHeaders(data.CACHE_FRESH.exchanges, 86400, payload));
     }
     const ratesJob = data.getRates(env, ctx).catch(() => null);
     const payload = await data.getExchangesClassed(env, ctx);
@@ -396,7 +399,7 @@ export async function handle(request, env = {}, ctx = {}) {
       sharePct: row.volume24h != null && total > 0 ? (row.volume24h / total) * 100 : null,
       shareBasis: "porcentaje sobre la suma de esta lista",
     }));
-    return json(200, { ok: true, ...withVs({ ...payload, rows, type }, fx) }, cacheHeaders(3600, 86400, payload));
+    return json(200, { ok: true, ...withVs({ ...payload, rows, type }, fx) }, cacheHeaders(data.CACHE_FRESH.exchanges, 86400, payload));
   }
 
   async function exchange(id, fx) {
@@ -413,7 +416,7 @@ export async function handle(request, env = {}, ctx = {}) {
     return json(200, {
       ok: true,
       ...withVs({ ...payload, volume24h }, fx),
-    }, cacheHeaders(3600, 86400, payload));
+    }, cacheHeaders(data.CACHE_FRESH.exchanges, 86400, payload));
   }
 
   async function exchangeTickers(id, fx) {
@@ -427,7 +430,7 @@ export async function handle(request, env = {}, ctx = {}) {
       depthUp2: row.depthUp2 == null ? null : row.depthUp2 * factor,
       depthDown2: row.depthDown2 == null ? null : row.depthDown2 * factor,
     }));
-    return json(200, { ok: true, ...withVs({ ...payload, rows }, fx) }, cacheHeaders(300, 3600, payload));
+    return json(200, { ok: true, ...withVs({ ...payload, rows }, fx) }, cacheHeaders(data.CACHE_FRESH.chartShort, 86400, payload));
   }
 
   async function exchangeVolume(id, query) {
@@ -460,7 +463,7 @@ export async function handle(request, env = {}, ctx = {}) {
       data.getTrendingCg(env, ctx).catch((error) => { console.error("sonar-trend", error?.status || "fail"); return null; }),
       data.getTrendingPools(env, ctx).catch((error) => { console.error("sonar-pools", error?.status || "fail"); return null; }),
     ]);
-    return json(200, { ok: true, searches, pools }, cacheHeaders(600, 3600, searches || {}));
+    return json(200, { ok: true, searches, pools }, cacheHeaders(data.CACHE_FRESH.trending, 86400, searches || {}));
   }
 
   async function fresh() {
@@ -475,7 +478,7 @@ export async function handle(request, env = {}, ctx = {}) {
       data.getSearch(env, ctx, text).catch((error) => { console.error("sonar-search", error?.status || "fail"); return null; }),
       data.searchPools(env, ctx, text).catch((error) => { console.error("sonar-search-pool", error?.status || "fail"); return null; }),
     ]);
-    return json(200, { ok: true, coins, pools }, cacheHeaders(600, 3600, coins || {}));
+    return json(200, { ok: true, coins, pools }, cacheHeaders(data.CACHE_FRESH.search, 86400, coins || {}));
   }
 
   async function suggest() {
@@ -492,7 +495,7 @@ export async function handle(request, env = {}, ctx = {}) {
       gainers: rows.slice().sort((a, b) => b.ch24h - a.ch24h).slice(0, 3),
       losers: rows.slice().sort((a, b) => a.ch24h - b.ch24h).slice(0, 3),
       note: "Subidas y bajadas de esta vista: las 100 mayores con volumen de al menos 50 000 USD.",
-    }, cacheHeaders(120, 900, trending || {}));
+    }, cacheHeaders(data.CACHE_FRESH.markets, 86400, trending || {}));
   }
 
   async function calendar(query) {
@@ -535,7 +538,7 @@ export async function handle(request, env = {}, ctx = {}) {
 
   async function rates() {
     const payload = await data.getRates(env, ctx);
-    return json(200, { ok: true, ...payload }, cacheHeaders(600, 86400, payload));
+    return json(200, { ok: true, ...payload }, cacheHeaders(data.CACHE_FRESH.rates, 86400, payload));
   }
 
   async function pairs() {

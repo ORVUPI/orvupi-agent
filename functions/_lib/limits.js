@@ -32,10 +32,11 @@ export async function guarded(_provider, run) {
   return run();
 }
 
-export async function getJson(url, { headers, timeout = FETCH_MS } = {}) {
+export async function getJson(url, { headers, timeout = FETCH_MS, attempts = 2 } = {}) {
   const end = deadline();
+  const max = attempts === 1 ? 1 : 2;
   let last = null;
-  for (let attempt = 0; attempt < 2; attempt += 1) {
+  for (let attempt = 0; attempt < max; attempt += 1) {
     const left = end - Date.now();
     if (left < 250) break;
     const wait = Math.min(timeout, FETCH_MS, left);
@@ -43,7 +44,7 @@ export async function getJson(url, { headers, timeout = FETCH_MS } = {}) {
       const response = await attemptFetch(url, headers, wait);
       if (response.status === 429 || response.status >= 500) {
         last = response.status;
-        if (attempt === 1) break;
+        if (attempt === max - 1) break;
         const retry = Number(response.headers.get("retry-after"));
         const pause = Math.min(
           Number.isFinite(retry) && retry > 0 ? retry * 1000 : 200,
