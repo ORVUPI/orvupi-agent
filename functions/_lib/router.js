@@ -111,7 +111,7 @@ export async function handle(request, env = {}, ctx = {}) {
   }
 
   async function markets(query, fx) {
-    const page = intIn(query.get("page"), 1, 100, 1);
+    const page = intIn(query.get("page"), 1, 400, 1);
     const per = oneOf(query.get("per"), ["50", "100", "250"], "100");
     const order = oneOf(query.get("order"), ORDERS, "market_cap_desc");
     const category = query.get("category") || "";
@@ -320,7 +320,7 @@ export async function handle(request, env = {}, ctx = {}) {
 
   async function category(id, query, fx) {
     if (!slugOk(id)) return json(400, { ok: false, error: "invalid" });
-    const page = intIn(query.get("page"), 1, 100, 1);
+    const page = intIn(query.get("page"), 1, 400, 1);
     if (page == null) return json(400, { ok: false, error: "invalid" });
     const per = oneOf(query.get("per"), ["50", "100", "250"], "100");
     const [directory, markets] = await Promise.all([

@@ -40,7 +40,7 @@ async function ranking(host, ctx, mine) {
   const prefs = snapshot().prefs;
   const category = ctx.route.params.get("category") || "";
   const period = ctx.route.params.get("period") || prefs.period || "24h";
-  const page = Math.min(100, Math.max(1, Number(ctx.route.params.get("page") || 1) || 1));
+  const page = Math.min(400, Math.max(1, Number(ctx.route.params.get("page") || 1) || 1));
   const perRaw = Number(ctx.route.params.get("per") || 100);
   const per = [50, 100, 250].includes(perRaw) ? perRaw : 100;
   const view = ctx.route.params.get("view") || prefs.view || "list";
@@ -86,7 +86,7 @@ async function ranking(host, ctx, mine) {
       el("div", { class: "sn-tools" }, [
         page > 1 ? el("button", { type: "button", class: "sn-btn", "data-sn": "page-prev", onclick: () => { setParam(ctx, { page: String(page - 1) }); ranking(host, ctx, mine); }, text: t("prev") }) : null,
         el("span", { text: `${t("page")} ${page}` }),
-        rows.length >= per && page < 100 ? el("button", { type: "button", class: "sn-btn", "data-sn": "page-next", onclick: () => { setParam(ctx, { page: String(page + 1) }); ranking(host, ctx, mine); }, text: t("next") }) : null,
+        rows.length >= per && page < 400 ? el("button", { type: "button", class: "sn-btn", "data-sn": "page-next", onclick: () => { setParam(ctx, { page: String(page + 1) }); ranking(host, ctx, mine); }, text: t("next") }) : null,
       ]),
       sourceLine(meta),
     ]);

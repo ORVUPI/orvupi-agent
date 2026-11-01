@@ -123,3 +123,10 @@ test("slugOk acepta ids reales de CoinGecko y rechaza rutas", async () => {
   for (const ok of ["bitcoin", "uniswap_v3", "binance_futures", "sectorone-v2.0-base", "hive_dollar"]) assert.equal(slugOk(ok), true, ok);
   for (const bad of ["", "..", "../etc", "a/b", "a..b", "<x>", ".", "x".repeat(121)]) assert.equal(slugOk(bad), false, bad);
 });
+
+test("/:lang/sonar/* deja pasar /assets/sonar/* a los estáticos", async () => {
+  const { onRequest } = await import("../[lang]/sonar/[[path]].js");
+  let passed = false;
+  await onRequest({ params: { lang: "assets", path: ["shell.mjs"] }, request: new Request("https://orvupi.com/assets/sonar/shell.mjs"), env: {}, next: () => { passed = true; return new Response("static"); } });
+  assert.equal(passed, true);
+});
