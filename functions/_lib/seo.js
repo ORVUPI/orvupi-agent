@@ -64,7 +64,7 @@ function localePrefix(pathname) {
 export async function renderSonarPage(request, env, ctx, spec) {
   const prefix = localePrefix(new URL(request.url).pathname);
   const assetPath = `${prefix}/verify/index.html`;
-  if (spec.id && !slugOk(spec.id)) return documentResponse(notFoundHtml(), 404);
+  if (spec.kind === "notfound" || (spec.id && !slugOk(spec.id))) return documentResponse(notFoundHtml(), 404);
   let meta;
   try {
     meta = await describe(env, ctx, spec, prefix);
