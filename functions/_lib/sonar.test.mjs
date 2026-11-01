@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { httpsUrl, publicHandle, webUrl } from "./security.js";
-import { coinRow } from "./normalize.js";
+import { applySeriesChanges, changeOver, coinRow } from "./normalize.js";
 import { handle } from "./router.js";
 import { safeJson } from "./seo.js";
 import { specOf } from "../sonar/[[path]].js";
@@ -125,6 +125,24 @@ test("slugOk acepta ids reales de CoinGecko y rechaza rutas", async () => {
   const { slugOk } = await import("./security.js");
   for (const ok of ["bitcoin", "uniswap_v3", "binance_futures", "sectorone-v2.0-base", "hive_dollar"]) assert.equal(slugOk(ok), true, ok);
   for (const bad of ["", "..", "../etc", "a/b", "a..b", "<x>", ".", "x".repeat(121)]) assert.equal(slugOk(bad), false, bad);
+});
+
+test("el cambio sale de un punto con marca de tiempo, o se queda vacío", () => {
+  const end = 1_700_000_000_000;
+  const hour = 3600 * 1000;
+  const points = [[end - 7 * hour, 50], [end - 24 * hour, 80], [end - hour, 90], [end, 100]];
+  assert.ok(Math.abs(changeOver(points, 1, 0.5) - ((100 - 90) / 90) * 100) < 1e-9);
+  assert.equal(changeOver(points, 24, 2), 25);
+  assert.equal(changeOver(points, 168, 6), null);
+  const far = [[end - 10 * hour, 50], [end, 100]];
+  assert.equal(changeOver(far, 1, 0.5), null);
+  assert.equal(changeOver(far, 24, 2), null);
+  assert.equal(changeOver([[end, 0], [end - hour, 10]], 1, 0.5), null);
+  const kept = applySeriesChanges({ ch24h: 1.5, ch1h: null, ch7d: null }, points);
+  assert.equal(kept.ch24h, 1.5);
+  assert.ok(Math.abs(kept.ch1h - ((100 - 90) / 90) * 100) < 1e-9);
+  assert.equal(kept.ch7d, null);
+  assert.equal(applySeriesChanges({ ch1h: null, ch24h: null, ch7d: null }, []).ch24h, null);
 });
 
 test("/:lang/sonar/* deja pasar /assets/sonar/* a los estáticos", async () => {

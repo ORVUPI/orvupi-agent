@@ -42,7 +42,8 @@ await home.page.waitForSelector("[data-sn-stat]", { timeout: 30000 });
 await home.page.waitForSelector("[data-coin=bitcoin]", { timeout: 30000 });
 const fear = await home.page.locator("[data-sn-stat=fear]").innerText();
 const alt = await home.page.locator("[data-sn-stat=alt]").innerText();
-note("stats", /Fear & Greed: Alternative\.me/.test(fear) && /PatternPlus/.test(alt) && /\d/.test(fear), fear.split("\n")[1]);
+const attrib = await home.page.locator("footer .sn-attrib").innerText();
+note("stats", /\d/.test(fear) && /\d/.test(alt) && /Alternative\.me/.test(attrib) && /PatternPlus/.test(attrib), fear.replace(/\s+/g, " "));
 await home.page.waitForFunction(() => [...document.querySelectorAll(".sn-table img.sn-logo")].some((img) => img.naturalWidth > 0), { timeout: 10000 });
 const logos = await home.page.evaluate(() => [...document.querySelectorAll(".sn-table img.sn-logo")].slice(0, 3).map((img) => img.naturalWidth));
 note("logos", logos.some((width) => width > 0), String(logos));
@@ -155,7 +156,16 @@ for (const [name, viewport] of phones) {
   const dock = await page.page.locator(".sn-dock").isVisible();
   note(`viewport-${name}`, wide <= 1 && (viewport.width < 768 ? dock : !dock), `overflow ${wide} dock ${dock}`);
   await shot(page.page, `${name}-mercados`);
-  if (name === "390") await shot(page.page, "390-iphone");
+  if (name === "390") {
+    await shot(page.page, "390-iphone");
+    await page.page.goto(`${base}/sonar/crypto/bitcoin`, { waitUntil: "domcontentloaded" });
+    await page.page.waitForSelector("[data-sn=chart]", { timeout: 45000 });
+    const header = await page.page.locator(".sn-coinhead").boundingBox();
+    const chart = await page.page.locator("[data-sn=chart]").boundingBox();
+    const fold = !!header && !!chart && header.y < viewport.height - 80 && chart.y + 40 < viewport.height;
+    note("390-fold", fold, `header ${header?.y ?? "-"} chart ${chart?.y ?? "-"}`);
+    await shot(page.page, "390-bitcoin");
+  }
   note(`console-${name}`, page.errors.length === 0, page.errors.slice(0, 1).join(" | "));
   await page.page.close();
 }

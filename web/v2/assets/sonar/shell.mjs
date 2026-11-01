@@ -217,35 +217,68 @@ async function draw() {
 }
 
 function statsBar(ctx) {
-  const bar = el("section", { class: "sn-stats", "data-sn": "stats" }, skeleton(4));
+  const wrap = el("section", { class: "sn-marketbar", "data-sn": "stats" });
+  const live = el("p", { id: "sn-live", class: "sn-note", text: t("disconnected") });
+  const strip = el("div", { class: "sn-strip", "data-sn": "strip" }, [
+    el("span", { class: "sn-strip-item", text: t("loading") }),
+    live,
+  ]);
+  wrap.append(strip);
+  const home = ctx.route.section === "home";
+  const cards = home ? el("div", { class: "sn-stats", "data-sn": "stats-cards" }) : null;
+  if (home) {
+    wrap.append(el("details", { class: "sn-stats-fold" }, [
+      el("summary", { text: t("moreStats") }),
+      cards,
+    ]));
+  }
   const vs = snapshot().prefs.vs;
   queueMicrotask(() => api(`/api/sonar/global${qs({ vs })}`).then((body) => {
-    if (!bar.isConnected) return;
+    if (!wrap.isConnected) return;
     const data = body.data || {};
-    const fx = body.rateMissing ? el("p", { class: "sn-note", text: t("rateMissing") }) : null;
+    const global = data.global || {};
     const fear = data.fear;
     const alt = data.alt;
-    bar.replaceChildren(
-      stat(t("cap"), show(compact(data.global?.marketCap, body.vs)), pctNode(data.global?.change24h), data.global),
-      stat(t("volume"), show(compact(data.global?.volume24h, body.vs)), null, data.global),
-      stat(t("btcDom"), data.global?.dominance?.btc == null ? t("unavailable") : `${plain(data.global.dominance.btc, 2)}%`, null, data.global),
-      stat(t("ethDom"), data.global?.dominance?.eth == null ? t("unavailable") : `${plain(data.global.dominance.eth, 2)}%`, null, data.global),
-      stat(t("assets"), show(plain(data.global?.assets, 0)), null, data.global),
-      stat(t("marketsN"), show(plain(data.global?.markets, 0)), null, data.global),
-      fearCard(fear),
-      altCard(alt),
-      stat(t("gas"), data.gas?.gwei == null ? t("unavailable") : `${plain(data.gas.gwei, 3)} ${t("gwei")}`, null, data.gas),
-      stat(t("fee"), data.fees?.hour == null ? t("unavailable") : `${plain(data.fees.hour, 0)} ${t("sat")}`, null, data.fees),
+    const unit = String(body.vs || "usd").toUpperCase();
+    strip.replaceChildren(
+      stripStat("cap", t("capShort"), show(compact(global.marketCap, "")), global.change24h == null ? null : pctNode(global.change24h), `${t("cap")} ${unit}`),
+      stripStat("volume", t("volShort"), show(compact(global.volume24h, "")), null, `${t("volume")} ${unit}`, "Vol."),
+      stripStat("btc", t("btcShort"), global.dominance?.btc == null ? t("unavailable") : `${plain(global.dominance.btc, 1)}%`, null, t("btcDom")),
+      stripStat("fear", t("fearShort"), fear?.value == null ? t("unavailable") : String(fear.value), null, fear?.label ? `${t("fear")}: ${labelOf("fearWord", fear.label)}` : t("fear")),
+      stripStat("alt", t("altShort"), alt?.value == null ? t("unavailable") : `${plain(alt.value, 0)}`, null, t("alt")),
+      currencySelect(vs),
+      live,
     );
-    if (fx) bar.after(fx);
-    const select = currencySelect(vs);
-    bar.append(select);
-    const live = el("p", { id: "sn-live", class: "sn-note", text: t("disconnected") });
-    bar.append(live);
+    if (cards) {
+      cards.replaceChildren(
+        stat(t("cap"), show(compact(global.marketCap, body.vs)), pctNode(global.change24h), global),
+        stat(t("volume"), show(compact(global.volume24h, body.vs)), null, global),
+        stat(t("btcDom"), global.dominance?.btc == null ? t("unavailable") : `${plain(global.dominance.btc, 2)}%`, null, global),
+        stat(t("ethDom"), global.dominance?.eth == null ? t("unavailable") : `${plain(global.dominance.eth, 2)}%`, null, global),
+        stat(t("assets"), show(plain(global.assets, 0)), null, global),
+        stat(t("marketsN"), show(plain(global.markets, 0)), null, global),
+        fearCard(fear),
+        altCard(alt),
+        stat(t("gas"), data.gas?.gwei == null ? t("unavailable") : `${plain(data.gas.gwei, 3)} ${t("gwei")}`, null, data.gas),
+        stat(t("fee"), data.fees?.hour == null ? t("unavailable") : `${plain(data.fees.hour, 0)} ${t("sat")}`, null, data.fees),
+      );
+    }
+    if (body.rateMissing) wrap.after(el("p", { class: "sn-note", "data-sn": "rate-missing", text: t("rateMissing") }));
   }).catch(() => {
-    if (bar.isConnected) bar.replaceChildren(errorBlock(() => draw()));
+    if (wrap.isConnected) wrap.replaceChildren(errorBlock(() => draw()));
   }));
-  return bar;
+  return wrap;
+}
+
+function stripStat(name, label, value, extra, title, short) {
+  const caption = short
+    ? el("span", {}, [el("span", { class: "sn-strip-long", text: label }), el("span", { class: "sn-strip-short", text: short })])
+    : el("span", { text: label });
+  return el("span", { class: "sn-strip-item", "data-sn-stat": name, title, "aria-label": `${title}: ${value}` }, [
+    caption,
+    el("strong", { text: value }),
+    extra ? el("span", { class: "sn-strip-pct" }, extra) : null,
+  ]);
 }
 
 function stat(label, value, extra, source) {
@@ -258,7 +291,7 @@ function stat(label, value, extra, source) {
 }
 
 function fearCard(fear) {
-  const card = el("article", { class: "sn-stat", "data-sn-stat": "fear" }, [
+  const card = el("article", { class: "sn-stat", "data-sn-detail": "fear" }, [
     el("span", { text: t("fear") }),
     el("strong", { text: fear?.value == null ? t("unavailable") : String(fear.value) }),
     el("em", { text: fear?.label ? labelOf("fearWord", fear.label) : "" }),
@@ -269,7 +302,7 @@ function fearCard(fear) {
 }
 
 function altCard(alt) {
-  return el("article", { class: "sn-stat", "data-sn-stat": "alt" }, [
+  return el("article", { class: "sn-stat", "data-sn-detail": "alt" }, [
     el("span", { text: t("alt") }),
     el("strong", { text: alt?.value == null ? t("unavailable") : `${plain(alt.value, 0)}` }),
     el("small", { text: alt?.season ? labelOf("season", alt.season) : "" }),
@@ -280,9 +313,8 @@ function altCard(alt) {
 
 function currencySelect(vs) {
   const codes = ["usd", "eur", "gbp", "jpy", "brl", "krw", "cny", "cad", "aud", "chf"];
-  return el("label", { class: "sn-select sn-stat" }, [
-    t("currency"),
-    el("select", { "data-sn": "currency", onchange: async (event) => {
+  return el("label", { class: "sn-strip-select" }, [
+    el("select", { "data-sn": "currency", "aria-label": t("currency"), onchange: async (event) => {
       await update((data) => { data.prefs.vs = event.target.value; return data; });
       globalThis.__sonarVs = event.target.value;
       draw();

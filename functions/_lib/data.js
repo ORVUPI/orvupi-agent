@@ -1,5 +1,5 @@
 import { getOrRefresh, peek, putEntry } from "./cache.js";
-import { scaleMoney, scaleSeries } from "./normalize.js";
+import { applySeriesChanges, scaleMoney, scaleSeries } from "./normalize.js";
 import * as cg from "./providers/coingecko.js";
 import * as gt from "./providers/geckoterminal.js";
 import { getFearGreed } from "./providers/alternative.js";
@@ -121,6 +121,17 @@ export function scaleRows(payload, factor) {
 
 export async function getChart(env, ctx, id, days) {
   return cached(`cg:chart:${id}:${days}`, days === "1" || days === "7" ? 300 : 3600, days === "1" || days === "7" ? 3600 : DAY, () => cg.getChart(env, id, days), ctx);
+}
+
+/** Una sola serie de 7 días, ya cacheada, cuando falta 1 h, 24 h o 7 d. No toca el objeto cacheado. */
+export async function withWindowChanges(env, ctx, coin) {
+  if (!coin?.id || (coin.ch1h != null && coin.ch24h != null && coin.ch7d != null)) return coin;
+  try {
+    const chart = await getChart(env, ctx, coin.id, "7");
+    return applySeriesChanges(coin, chart?.prices);
+  } catch {
+    return coin;
+  }
 }
 
 export async function getOhlc(env, ctx, id, days) {

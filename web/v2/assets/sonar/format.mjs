@@ -24,7 +24,7 @@ export function compact(value, currency = "usd") {
   const abs = Math.abs(number);
   const unit = abs >= 1e12 ? [1e12, "T"] : abs >= 1e9 ? [1e9, "B"] : abs >= 1e6 ? [1e6, "M"] : abs >= 1e3 ? [1e3, "K"] : [1, ""];
   const body = plain(abs / unit[0], unit[1] ? 2 : abs >= 1 ? 2 : 4);
-  const code = String(currency || "usd").toUpperCase();
+  const code = currency ? String(currency).toUpperCase() : "";
   const sign = number < 0 ? "−" : "";
   return code ? `${sign}${body}${unit[1]} ${code}` : `${sign}${body}${unit[1]}`;
 }

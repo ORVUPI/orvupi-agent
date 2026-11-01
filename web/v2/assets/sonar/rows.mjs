@@ -1,3 +1,5 @@
+import { api } from "./api.mjs";
+import { changeOver } from "./changes.mjs";
 import { compact, money, plain, show } from "./format.mjs";
 import { t } from "./i18n.mjs";
 import { hasCoin } from "./store.mjs";
@@ -56,11 +58,15 @@ export function paintRanking(rows, opts) {
   table.append(body);
   const mobile = el("div", { class: "sn-mlist", "data-sn": "mlist" }, rows.map((row, index) => mobileRow(row, key, currency, opts, index)));
   const grid = opts.view === "grid" ? el("div", { class: "sn-grid", "data-sn": "grid" }, rows.map((row) => gridCard(row, key, currency, opts))) : null;
-  return el("div", { "data-sn": "ranking" }, [
+  const root = el("div", { "data-sn": "ranking" }, [
     el("div", { class: "sn-scroll" }, table),
     mobile,
     grid,
   ]);
+  queueMicrotask(() => {
+    if (root.isConnected) hydrateMissingChanges(root);
+  });
+  return root;
 }
 
 function rowRank(row, opts, index) {
@@ -73,9 +79,9 @@ function desktopRow(row, head, key, currency, opts, index) {
     rank: el("td", { class: "num", text: rowRank(row, opts, index) }),
     name: el("td", {}, el("span", { class: "sn-name" }, [logo(row), coinLink(row, opts.prefix, [el("strong", { text: row.name }), el("small", { text: row.symbol })])])),
     price: el("td", { class: "num", "data-k": "price", text: show(money(row.price, currency)) }),
-    ch1h: el("td", { class: "num" }, pctNode(row.ch1h)),
-    ch24h: el("td", { class: "num", "data-k": "ch24h" }, pctNode(row.ch24h)),
-    ch7d: el("td", { class: "num" }, pctNode(row.ch7d)),
+    ch1h: changeCell(row, "ch1h"),
+    ch24h: changeCell(row, "ch24h"),
+    ch7d: changeCell(row, "ch7d"),
     marketCap: el("td", { class: "num", text: show(compact(row.marketCap, currency)) }),
     volume24h: el("td", { class: "num", text: show(compact(row.volume24h, currency)) }),
     circulating: el("td", { class: "num" }, supplyCell(row)),
@@ -91,7 +97,7 @@ function mobileRow(row, key, currency, opts, index) {
     logo(row),
     el("a", { class: "sn-mid", href: `${opts.prefix}/sonar/crypto/${row.id}` }, [el("strong", { text: row.symbol || row.name }), el("small", { text: show(compact(row.marketCap, currency)) })]),
     el("span", { class: "sn-px", "data-k": "price", text: show(money(row.price, currency)) }),
-    el("span", { class: "sn-right" }, [el("span", { "data-k": "ch24h" }, pctNode(row[key])), spark(row.spark7d, (row[key] ?? 0) >= 0)]),
+    el("span", { class: "sn-right" }, [changeCell(row, key, "span"), spark(row.spark7d, (row[key] ?? 0) >= 0)]),
     starButton(row, opts),
   ]);
 }
@@ -100,9 +106,71 @@ function gridCard(row, key, currency, opts) {
   return el("article", { class: "sn-card", "data-coin": row.id }, [
     el("div", { class: "sn-card-top" }, [logo(row), coinLink(row, opts.prefix, row.symbol || row.name), starButton(row, opts)]),
     el("strong", { "data-k": "price", text: show(money(row.price, currency)) }),
-    pctNode(row[key]),
+    changeCell(row, key, "span"),
     spark(row.spark7d, (row[key] ?? 0) >= 0),
   ]);
+}
+
+function changeCell(row, key, tag = "td") {
+  const attrs = { "data-k": key };
+  if (tag === "td") attrs.class = "num";
+  if (row[key] == null) attrs["data-missing"] = "1";
+  return el(tag, attrs, pctNode(row[key]));
+}
+
+const chartPoints = new Map();
+const WINDOWS = { ch1h: [1, 0.5], ch24h: [24, 2], ch7d: [168, 6] };
+
+function loadChart(id) {
+  if (!chartPoints.has(id)) {
+    chartPoints.set(id, api(`/api/sonar/coin/${encodeURIComponent(id)}/chart?days=7`).then((body) => (Array.isArray(body?.points) ? body.points : [])).catch(() => null));
+  }
+  return chartPoints.get(id);
+}
+
+/** Rellena celdas vacías con la serie real de 7 días. Dos peticiones a la vez. Si no hay punto en la ventana, el hueco se queda. */
+export function hydrateMissingChanges(root) {
+  if (!root?.querySelectorAll) return;
+  const groups = new Map();
+  for (const node of root.querySelectorAll("[data-missing='1']")) {
+    const id = node.closest("[data-coin]")?.getAttribute("data-coin");
+    if (!id) continue;
+    if (!groups.has(id)) groups.set(id, []);
+    groups.get(id).push(node);
+  }
+  const ids = [...groups.keys()];
+  if (!ids.length) return;
+  let cursor = 0;
+  const workers = Math.min(2, ids.length);
+  const placeholder = t("unavailable");
+  async function worker() {
+    while (cursor < ids.length) {
+      const id = ids[cursor];
+      cursor += 1;
+      if (!root.isConnected) return;
+      let points = null;
+      try {
+        points = await loadChart(id);
+      } catch {
+        points = null;
+      }
+      if (!root.isConnected) return;
+      for (const cell of groups.get(id) || []) {
+        if (!cell.isConnected || !cell.hasAttribute("data-missing")) continue;
+        const current = cell.textContent.trim();
+        if (current && current !== placeholder) {
+          cell.removeAttribute("data-missing");
+          continue;
+        }
+        const spec = WINDOWS[cell.getAttribute("data-k")];
+        const value = spec && points ? changeOver(points, spec[0], spec[1]) : null;
+        cell.removeAttribute("data-missing");
+        if (value == null) continue;
+        cell.replaceChildren(pctNode(value));
+      }
+    }
+  }
+  for (let index = 0; index < workers; index += 1) worker();
 }
 
 function supplyCell(row) {

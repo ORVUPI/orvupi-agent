@@ -190,15 +190,17 @@ function about(ctx, coin) {
     if (coin.descriptionLang === "en") box.append(el("p", { class: "sn-note", text: t("descEn") }));
   }
   if (coin.categories?.length) {
-    const pills = coin.categories.filter((name) => name && name !== "null").map((name) => el("a", { class: "sn-pill", href: `${ctx.prefix}/sonar/categories/`, "data-name": name, text: categoryName(name) }));
-    box.append(el("div", { class: "sn-pills" }, pills));
+    const chips = coin.categories.filter((name) => name && name !== "null").map((name) => el("span", { class: "sn-chip", "data-name": name, text: categoryName(name) }));
+    box.append(el("div", { class: "sn-pills" }, chips));
     api(`/api/sonar/categories${qs({ vs: coin.vs || "usd" })}`).then((body) => {
       const ids = new Map((body.rows || []).map((row) => [String(row.name || "").toLowerCase(), row.id]));
-      for (const pill of pills) {
-        const id = ids.get(String(pill.getAttribute("data-name")).toLowerCase());
-        if (id) pill.setAttribute("href", `${ctx.prefix}/sonar/categories/${encodeURIComponent(id)}`);
+      for (const chip of chips) {
+        if (!chip.isConnected) continue;
+        const id = ids.get(String(chip.getAttribute("data-name")).toLowerCase());
+        if (!id) continue;
+        chip.replaceWith(el("a", { class: "sn-pill", href: `${ctx.prefix}/sonar/categories/${encodeURIComponent(id)}`, text: chip.textContent }));
       }
-    }).catch(() => { /* se quedan enlazadas a la lista */ });
+    }).catch(() => { /* sin ficha: el chip no enlaza */ });
   }
   const source = sourceLine(coin);
   if (source) box.append(source);
@@ -303,15 +305,20 @@ async function markets(panel, ctx, coin) {
   try {
     const body = await api(`/api/sonar/coin/${coin.id}/tickers${qs({ type: "all", vs: coin.vs })}`);
     const ref = coin.price;
-    const spot = (body.spot?.rows || []).filter((row) => {
+    const rawSpot = body.spot?.rows || [];
+    const rawDex = body.dex || [];
+    const inBand = (price) => {
+      if (price == null) return false;
+      if (!ref) return true;
+      const ratio = price / ref;
+      return ratio <= 3 && ratio >= 0.3;
+    };
+    const spot = rawSpot.filter((row) => {
       if (row.volume24h == null || row.volume24h <= 0 || row.price == null) return false;
       if (row.coinId && row.coinId !== coin.id) return false;
-      if (ref) {
-        const ratio = row.price / ref;
-        if (ratio > 3 || ratio < 0.3) return false;
-      }
-      return true;
+      return inBand(row.price);
     }).sort((a, b) => b.volume24h - a.volume24h);
+    const dex = rawDex.filter((pool) => pool.price == null || inBand(pool.price));
     const showTrust = spot.some((row) => row.trust);
     const total = spot.reduce((sum, row) => sum + (row.volume24h || 0), 0);
     const table = el("table", { class: "sn-table" });
@@ -333,7 +340,7 @@ async function markets(panel, ctx, coin) {
     }
     table.append(tbody);
     const pools = el("ul", { class: "sn-pools" });
-    for (const pool of body.dex || []) {
+    for (const pool of dex) {
       pools.append(el("li", {}, [
         el("a", { href: pool.url || `${ctx.prefix}/sonar/crypto/${coin.id}`, rel: "noreferrer", text: pool.name || pool.dex || t("pool") }),
         el("span", { text: show(money(pool.price, coin.vs)) }),
@@ -341,15 +348,39 @@ async function markets(panel, ctx, coin) {
         el("small", { text: pool.network || "" }),
       ]));
     }
-    setChildren(panel, [
-      el("h3", { text: t("mkts") }),
-      spot.length ? el("div", { class: "sn-scroll" }, table) : emptyBlock(),
-      el("p", { class: "sn-note", text: t("liq") }),
-      sourceLine(body.spot),
-      el("h3", { text: t("dex") }),
-      pools.childNodes.length ? pools : emptyBlock(),
-      sourceLine(body.dex?.[0] ? { source: "GeckoTerminal", sourceUrl: "https://www.geckoterminal.com/", attribution: t("gt"), fetchedAt: body.spot?.fetchedAt } : null),
-    ]);
+    let active = spot.length ? "cex" : dex.length ? "dex" : "cex";
+    const dexSource = rawDex[0] ? { source: "GeckoTerminal", sourceUrl: "https://www.geckoterminal.com/", attribution: t("gt"), fetchedAt: body.spot?.fetchedAt } : null;
+    const paint = () => {
+      const cexEmpty = rawSpot.length ? t("noPairPrice") : t("noCex");
+      const dexEmpty = rawDex.length && !dex.length ? t("noPairPrice") : t("noDex");
+      setChildren(panel, [
+        el("h3", { text: t("mkts") }),
+        el("div", { class: "sn-tabs", role: "tablist", "data-sn": "market-tabs" }, [
+          marketTab("cex", t("cex")),
+          marketTab("dex", t("dex")),
+        ]),
+        active === "cex"
+          ? (spot.length ? el("div", { class: "sn-scroll" }, table) : emptyBlock(cexEmpty))
+          : (dex.length ? pools : emptyBlock(dexEmpty)),
+        active === "cex" ? el("p", { class: "sn-note", text: t("liq") }) : null,
+        sourceLine(active === "cex" ? body.spot : dexSource),
+      ]);
+    };
+    function marketTab(id, label) {
+      return el("button", {
+        type: "button",
+        class: "sn-tab",
+        role: "tab",
+        "data-sn-venue": id,
+        "aria-selected": active === id ? "true" : "false",
+        onclick: () => {
+          active = id;
+          paint();
+        },
+        text: label,
+      });
+    }
+    paint();
   } catch {
     panel.replaceChildren(errorBlock(() => markets(panel, ctx, coin)));
   }

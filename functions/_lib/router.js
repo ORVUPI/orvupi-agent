@@ -138,7 +138,9 @@ export async function handle(request, env = {}, ctx = {}) {
     if (!slugOk(id)) return json(400, { ok: false, error: "invalid" });
     const sub = path[2] || "";
     if (!sub) {
-      const payload = data.applyFactor(await data.getCoin(env, ctx, id), fx.missing ? 1 : fx.factor, "coin");
+      const raw = await data.getCoin(env, ctx, id);
+      const filled = await data.withWindowChanges(env, ctx, raw);
+      const payload = data.applyFactor(filled, fx.missing ? 1 : fx.factor, "coin");
       return json(200, { ok: true, ...withVs(payload, fx) }, cacheHeaders(120, 3600, payload));
     }
     if (sub === "chart") return chart(id, query, fx);

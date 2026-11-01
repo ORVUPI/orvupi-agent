@@ -2,7 +2,7 @@
   {
     "name": "stats",
     "ok": true,
-    "detail": "34"
+    "detail": "F&G 34"
   },
   {
     "name": "logos",
@@ -148,6 +148,11 @@
     "name": "viewport-390",
     "ok": true,
     "detail": "overflow 0 dock true"
+  },
+  {
+    "name": "390-fold",
+    "ok": true,
+    "detail": "header 197.53125 chart 463.84375"
   },
   {
     "name": "console-390",

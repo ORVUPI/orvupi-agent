@@ -126,7 +126,7 @@ async function dexSearch() {
 }
 
 async function dexProfiles() {
-  const response = await fetchJson("https://api.dexscreener.com/token-profiles/latest/v1", { headers: JSON_HEADERS, attempts: 1 });
+  const response = await fetchJson("https://api.dexscreener.com/token-profiles/latest/v1", { headers: JSON_HEADERS, attempts: 3 });
   const rows = Array.isArray(response.body) ? response.body : [];
   const pools = [];
   for (const row of rows) {
@@ -207,7 +207,7 @@ async function coingeckoCandles(coinId, days) {
 async function geckoCoinCandles(coinId, frameId) {
   const pair = COIN_SYMBOL[coinId];
   if (!pair) return { ok: false, state: "no-soportado", candles: [], provider: "GeckoTerminal", fetchedAt: new Date().toISOString() };
-  const response = await fetchJson(`https://api.geckoterminal.com/api/v2/search/pools?query=${encodeURIComponent(pair[0])}`, { headers: GECKO_HEADERS, attempts: 1 });
+  const response = await fetchJson(`https://api.geckoterminal.com/api/v2/search/pools?query=${encodeURIComponent(pair[0])}`, { headers: GECKO_HEADERS, attempts: 3 });
   const pools = (response.body?.data || []).map(poolFromSearch).filter((pool) => pool && OHLCV_NETWORKS.has(pool.network));
   pools.sort((a, b) => (b.reserveUsd ?? 0) - (a.reserveUsd ?? 0));
   const pool = pools[0];
@@ -224,7 +224,7 @@ async function binanceCandles(coinId, frameId) {
   let last = null;
   for (const origin of BINANCE_ORIGINS) {
     const url = binanceKlineUrl(origin, symbol, frameId, 200);
-    const response = await fetchJson(url, { headers: JSON_HEADERS, attempts: 1 });
+    const response = await fetchJson(url, { headers: JSON_HEADERS, attempts: 3 });
     const parsed = parseBinanceKlines(response.body);
     last = {
       ok: response.ok && parsed.candles.length > 0,
@@ -283,7 +283,7 @@ export async function fetchTopMarkets() {
     if (response.ok && coins.length) {
       return { ok: true, state: "comprobado", coins, provider: "CoinGecko", fetchedAt: response.fetchedAt, scope: "Ocho primeros por capitalización" };
     }
-    const ticker = await fetchJson("https://data-api.binance.vision/api/v3/ticker/24hr?symbol=BTCUSDT", { headers: JSON_HEADERS, attempts: 1 });
+    const ticker = await fetchJson("https://data-api.binance.vision/api/v3/ticker/24hr?symbol=BTCUSDT", { headers: JSON_HEADERS, attempts: 3 });
     const price = finite(ticker.body?.lastPrice);
     if (ticker.ok && price != null) {
       return {
@@ -364,7 +364,7 @@ export async function fetchBitcoinQuote() {
         scope: "Bitcoin",
       };
     }
-    const ticker = await fetchJson("https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT", { headers: JSON_HEADERS, attempts: 1 });
+    const ticker = await fetchJson("https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT", { headers: JSON_HEADERS, attempts: 3 });
     const price = finite(ticker.body?.lastPrice);
     if (ticker.ok && price != null) {
       return {

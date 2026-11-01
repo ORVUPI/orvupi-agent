@@ -83,6 +83,54 @@ export function coinRow(raw) {
   };
 }
 
+/**
+ * Cambio porcentual entre el último precio y el punto más cercano a `hours` atrás.
+ * Null si no hay un precio real dentro de la tolerancia: no se inventa la ventana.
+ */
+export function changeOver(points, hours, toleranceHours) {
+  if (!Array.isArray(points) || points.length < 2) return null;
+  const windowMs = hours * 3600 * 1000;
+  const toleranceMs = toleranceHours * 3600 * 1000;
+  let lastTime = null;
+  let lastPrice = null;
+  for (let index = points.length - 1; index >= 0; index -= 1) {
+    const time = points[index]?.[0];
+    const price = points[index]?.[1];
+    if (typeof time !== "number" || !Number.isFinite(time)) continue;
+    if (typeof price !== "number" || !Number.isFinite(price) || price <= 0) continue;
+    lastTime = time;
+    lastPrice = price;
+    break;
+  }
+  if (lastTime == null) return null;
+  const target = lastTime - windowMs;
+  let bestPrice = null;
+  let bestDistance = Infinity;
+  for (const point of points) {
+    const time = point?.[0];
+    const price = point?.[1];
+    if (typeof time !== "number" || !Number.isFinite(time) || time >= lastTime) continue;
+    if (typeof price !== "number" || !Number.isFinite(price) || price <= 0) continue;
+    const distance = Math.abs(time - target);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestPrice = price;
+    }
+  }
+  if (bestPrice == null || bestDistance > toleranceMs) return null;
+  const change = ((lastPrice - bestPrice) / bestPrice) * 100;
+  return Number.isFinite(change) ? change : null;
+}
+
+/** Rellena solo los porcentajes ausentes. Un valor publicado por la fuente se conserva. */
+export function applySeriesChanges(row, points) {
+  const next = { ...row };
+  if (next.ch1h == null) next.ch1h = changeOver(points, 1, 0.5);
+  if (next.ch24h == null) next.ch24h = changeOver(points, 24, 2);
+  if (next.ch7d == null) next.ch7d = changeOver(points, 168, 6);
+  return next;
+}
+
 const MONEY_FIELDS = ["price", "marketCap", "fdv", "volume24h", "high24h", "low24h", "ath", "atl"];
 
 export function scaleMoney(row, factor) {
