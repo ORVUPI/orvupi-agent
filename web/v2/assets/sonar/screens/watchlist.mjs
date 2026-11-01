@@ -5,7 +5,7 @@ import { activeList, exportJson, importJson, snapshot, uid, update } from "../st
 import { el, emptyBlock, errorBlock, skeleton } from "../ui.mjs";
 
 export async function mount(host, ctx) {
-  const shared = (ctx.route.params.get("ids") || "").split(",").filter((id) => /^[a-z0-9-]{1,80}$/.test(id));
+  const shared = (ctx.route.params.get("ids") || "").split(",").filter((id) => /^(?!.*\.\.)[A-Za-z0-9_-][A-Za-z0-9_.-]{0,119}$/.test(id));
   if (shared.length) {
     await update((data) => {
       const id = uid();

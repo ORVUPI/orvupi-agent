@@ -61,7 +61,7 @@ async function ask(text, out, ctx) {
     return;
   }
   const id = ids[0] || ctx.route?.id;
-  if (id && /^[a-z0-9-]{1,80}$/.test(id)) {
+  if (id && /^(?!.*\.\.)[A-Za-z0-9_-][A-Za-z0-9_.-]{0,119}$/.test(id)) {
     out.textContent = t("willLoad");
     try {
       const coin = await api(`/api/sonar/coin/${id}${qs({ vs: snapshot().prefs.vs })}`);

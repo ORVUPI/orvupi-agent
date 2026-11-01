@@ -18,7 +18,8 @@ export const SONAR_CSP = [
   "upgrade-insecure-requests",
 ].join("; ");
 
-const SLUG = /^[a-z0-9-]{1,80}$/;
+// Ids de CoinGecko: minúsculas, dígitos, "-", "_" y "." (p. ej. uniswap_v3, sectorone-v2.0-base). Nunca "/" ni "..".
+const SLUG = /^(?!.*\.\.)[A-Za-z0-9_-][A-Za-z0-9_.-]{0,119}$/;
 const buckets = new Map();
 
 export function clientIp(request) {

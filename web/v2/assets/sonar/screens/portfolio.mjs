@@ -145,7 +145,7 @@ function form(host, ctx, vs) {
     const qty = Number(data.get("qty"));
     const price = Number(data.get("price"));
     const at = String(data.get("at") || "");
-    if (!/^[a-z0-9-]{1,80}$/.test(coinId) || !(qty > 0) || !Number.isFinite(price) || !at) {
+    if (!/^(?!.*\.\.)[A-Za-z0-9_-][A-Za-z0-9_.-]{0,119}$/.test(coinId) || !(qty > 0) || !Number.isFinite(price) || !at) {
       node.querySelector("[data-sn=tx-error]").hidden = false;
       return;
     }
@@ -219,7 +219,7 @@ function labeled(name, label, type) {
 
 async function fill(form) {
   const id = form.coinId.value.trim();
-  if (!/^[a-z0-9-]{1,80}$/.test(id)) return;
+  if (!/^(?!.*\.\.)[A-Za-z0-9_-][A-Za-z0-9_.-]{0,119}$/.test(id)) return;
   try {
     const body = await api(`/api/sonar/quotes${qs({ vs: snapshot().prefs.vs, ids: id })}`);
     if (body.quotes?.[id]?.price != null) form.price.value = String(body.quotes[id].price);
@@ -229,7 +229,7 @@ async function fill(form) {
 async function fillDate(form) {
   const id = form.coinId.value.trim();
   const date = form.at.value;
-  if (!/^[a-z0-9-]{1,80}$/.test(id) || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+  if (!/^(?!.*\.\.)[A-Za-z0-9_-][A-Za-z0-9_.-]{0,119}$/.test(id) || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
   try {
     const from = Math.floor(Date.parse(`${date}T00:00:00Z`) / 1000);
     const body = await api(`/api/sonar/coin/${id}/history${qs({ from, to: from + 86400 })}`);

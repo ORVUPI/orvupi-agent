@@ -117,3 +117,9 @@ test("las rutas de Sonar distinguen ficha, exchange y listado", () => {
   assert.deepEqual(specOf([]), { kind: "shell", id: "" });
   assert.deepEqual(specOf("categories/meme-token".split("/")), { kind: "category", id: "meme-token" });
 });
+
+test("slugOk acepta ids reales de CoinGecko y rechaza rutas", async () => {
+  const { slugOk } = await import("./security.js");
+  for (const ok of ["bitcoin", "uniswap_v3", "binance_futures", "sectorone-v2.0-base", "hive_dollar"]) assert.equal(slugOk(ok), true, ok);
+  for (const bad of ["", "..", "../etc", "a/b", "a..b", "<x>", ".", "x".repeat(121)]) assert.equal(slugOk(bad), false, bad);
+});
