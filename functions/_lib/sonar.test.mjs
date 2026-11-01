@@ -46,7 +46,7 @@ test("CoinGecko recibe User-Agent", async () => {
   try {
     const response = await handle(new Request("http://local/api/sonar/global?vs=usd"), { SONAR_DISABLE: "patternplus,chain" }, {});
     assert.equal(response.status, 200);
-    const hit = seen.find((item) => item.href.includes("api.coingecko.com"));
+    const hit = seen.find((item) => new URL(item.href).hostname === "api.coingecko.com");
     assert.ok(hit, "no hubo llamada a CoinGecko");
     assert.match(hit.ua, /ORVUPI-Sonar/);
   } finally {

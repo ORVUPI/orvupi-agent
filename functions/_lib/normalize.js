@@ -13,18 +13,15 @@ export function text(value, max = 8000) {
   return clean.slice(0, max);
 }
 
+const ENTITIES = { "&nbsp;": " ", "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'" };
+
+/** Texto plano desde HTML de CoinGecko. El resultado es texto: quien lo pinta lo escapa (textContent / esc). */
 export function plainFromHtml(value) {
   if (typeof value !== "string") return null;
   const clean = value
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
+    .replace(/<(script|style)\b[\s\S]*?<\/\1\b[^>]*>/gi, " ")
+    .replace(/<[^>]*>?/g, " ")
+    .replace(/&(?:nbsp|amp|lt|gt|quot|#39);/g, (entity) => ENTITIES[entity])
     .replace(/\s+/g, " ")
     .trim();
   return clean ? clean.slice(0, 8000) : null;
