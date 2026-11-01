@@ -69,12 +69,12 @@ body.verify-app footer.or-footer .sn-attrib a { display: block; color: #e7edf4; 
 .sn-tab[aria-selected="true"], .sn-pill.on, .sn-btn.on, .sn-star.on, .sn-dock button[aria-current="page"] {
   background: #ff3070; color: #1a0a10; border-color: #ff3070;
 }
-.sn-up { color: #7dcea0; }
-.sn-down { color: #f0a0b0; }
+.sn-up { color: #16c784; }
+.sn-down { color: #ea3943; }
 .sn-upflash { animation: sn-up 600ms ease; }
 .sn-downflash { animation: sn-down 600ms ease; }
-@keyframes sn-up { from { background: color-mix(in srgb, #7dcea0 25%, transparent); } to { background: transparent; } }
-@keyframes sn-down { from { background: color-mix(in srgb, #ff3070 25%, transparent); } to { background: transparent; } }
+@keyframes sn-up { from { background: color-mix(in srgb, #16c784 25%, transparent); } to { background: transparent; } }
+@keyframes sn-down { from { background: color-mix(in srgb, #ea3943 25%, transparent); } to { background: transparent; } }
 @media (prefers-reduced-motion: reduce) {
   .sn-upflash, .sn-downflash, .sn-skel span { animation: none; }
 }
@@ -126,6 +126,7 @@ body.verify-app footer.or-footer .sn-attrib a { display: block; color: #e7edf4; 
 .sn-coinhead { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .sn-coinpx { display: flex; flex-direction: column; }
 .sn-chart { min-height: 220px; height: 320px; background: #10161d; border: 1px solid #2a3544; border-radius: 8px; overflow: hidden; }
+.sn-chart.sn-mini { height: 160px; min-height: 140px; }
 .sn-chart-svg, .sn-chart-canvas { width: 100%; height: 100%; display: block; }
 .sn-stats-grid, .sn-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 6px; }
 .sn-field { display: flex; flex-direction: column; gap: 2px; background: #10161d; border-radius: 8px; padding: 6px 8px; }
@@ -188,8 +189,8 @@ body.sonar-market,
 body.sonar-market :where(th, td, a, h1, h2, h3, h4, p, li, label, code, small, strong, span, button, summary) {
   color: #e7edf4;
 }
-body.sonar-market .sn-up { color: #7dcea0 !important; }
-body.sonar-market .sn-down { color: #f0a0b0 !important; }
+body.sonar-market .sn-up { color: #16c784 !important; }
+body.sonar-market .sn-down { color: #ea3943 !important; }
 body.sonar-market .sn-tab[aria-selected="true"],
 body.sonar-market .sn-pill.on,
 body.sonar-market .sn-btn.on,

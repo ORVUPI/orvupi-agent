@@ -1,5 +1,6 @@
 import { clsPct, pct, show, when } from "./format.mjs";
 import { t } from "./i18n.mjs";
+import { finiteSeries, priceColor, seriesUp } from "./price-color.mjs";
 
 export function el(tag, attrs, children) {
   const node = document.createElement(tag);
@@ -69,15 +70,17 @@ export function pctNode(value) {
   return el("span", { class: clsPct(value), text });
 }
 
-export function spark(values, up) {
-  if (!Array.isArray(values) || values.length < 2) return el("span", { class: "sn-spark sn-spark-empty", "aria-hidden": "true" });
+export function spark(values) {
+  const clean = finiteSeries(values);
+  if (clean.length < 2) return el("span", { class: "sn-spark sn-spark-empty", "aria-hidden": "true" });
   const width = 88;
   const height = 28;
-  const min = Math.min(...values);
-  const max = Math.max(...values);
+  const min = Math.min(...clean);
+  const max = Math.max(...clean);
   const span = max - min || 1;
-  const points = values.map((value, index) => {
-    const x = (index / (values.length - 1)) * width;
+  const up = seriesUp(clean);
+  const points = clean.map((value, index) => {
+    const x = (index / (clean.length - 1)) * width;
     const y = height - ((value - min) / span) * (height - 2) - 1;
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   }).join(" ");
@@ -85,11 +88,14 @@ export function spark(values, up) {
   svg.setAttribute("class", "sn-spark");
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
   svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("data-sn-trend", up == null ? "flat" : up ? "up" : "down");
   const line = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
   line.setAttribute("points", points);
   line.setAttribute("fill", "none");
-  line.setAttribute("stroke", up === false ? "#f0a0b0" : "#7dcea0");
+  line.setAttribute("stroke", priceColor(up));
   line.setAttribute("stroke-width", "1.6");
+  line.setAttribute("stroke-linejoin", "round");
+  line.setAttribute("stroke-linecap", "round");
   svg.append(line);
   return svg;
 }

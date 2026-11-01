@@ -5,8 +5,8 @@
 import { CandlestickSeries, ColorType, CrosshairMode, HistogramSeries, createChart } from "/assets/vendor/lightweight-charts-5.0.9.mjs";
 import { POLL_MS } from "./ohlcv.mjs";
 
-const UP = "#0b5d36";
-const DOWN = "#a3123f";
+const UP = "#16c784";
+const DOWN = "#ea3943";
 
 export function mountLiveChart(host, load, hooks = {}) {
   let dead = false;
@@ -69,7 +69,7 @@ export function mountLiveChart(host, load, hooks = {}) {
         autoSize: false,
         layout: { background: { type: ColorType.Solid, color: "#10161d" }, textColor: "#e7edf4", fontFamily: "Inter, system-ui, sans-serif" },
         grid: { vertLines: { color: "#243041" }, horzLines: { color: "#243041" } },
-        crosshair: { mode: CrosshairMode.Normal, vertLine: { color: "#ff3070", labelBackgroundColor: "#102032" }, horzLine: { color: "#ff3070", labelBackgroundColor: "#102032" } },
+        crosshair: { mode: CrosshairMode.Normal, vertLine: { color: "#8b97a6", labelBackgroundColor: "#102032" }, horzLine: { color: "#8b97a6", labelBackgroundColor: "#102032" } },
         rightPriceScale: { borderColor: "#2a3544" },
         timeScale: { borderColor: "#2a3544", timeVisible: true, secondsVisible: false },
         handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: true },
@@ -97,7 +97,7 @@ export function mountLiveChart(host, load, hooks = {}) {
       volumeSeries.setData(result.candles.filter((candle) => candle.volume != null).map((candle) => ({
         time: candle.time,
         value: candle.volume,
-        color: candle.close >= candle.open ? "rgba(125,206,160,0.55)" : "rgba(240,160,176,0.55)",
+        color: candle.close >= candle.open ? "rgba(22,199,132,0.45)" : "rgba(234,57,67,0.45)",
       })));
     } else if (volumeSeries) {
       chart.removeSeries(volumeSeries);

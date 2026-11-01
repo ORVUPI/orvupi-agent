@@ -85,7 +85,7 @@ function desktopRow(row, head, key, currency, opts, index) {
     marketCap: el("td", { class: "num", text: show(compact(row.marketCap, currency)) }),
     volume24h: el("td", { class: "num", text: show(compact(row.volume24h, currency)) }),
     circulating: el("td", { class: "num" }, supplyCell(row)),
-    spark: el("td", {}, spark(row.spark7d, (row[key] ?? 0) >= 0)),
+    spark: el("td", {}, spark(row.spark7d)),
     star: el("td", {}, starButton(row, opts)),
   };
   return el("tr", { "data-coin": row.id }, head.map(([id]) => cells[id]));
@@ -97,7 +97,7 @@ function mobileRow(row, key, currency, opts, index) {
     logo(row),
     el("a", { class: "sn-mid", href: `${opts.prefix}/sonar/crypto/${row.id}` }, [el("strong", { text: row.symbol || row.name }), el("small", { text: show(compact(row.marketCap, currency)) })]),
     el("span", { class: "sn-px", "data-k": "price", text: show(money(row.price, currency)) }),
-    el("span", { class: "sn-right" }, [changeCell(row, key, "span"), spark(row.spark7d, (row[key] ?? 0) >= 0)]),
+    el("span", { class: "sn-right" }, [changeCell(row, key, "span"), spark(row.spark7d)]),
     starButton(row, opts),
   ]);
 }
@@ -107,7 +107,7 @@ function gridCard(row, key, currency, opts) {
     el("div", { class: "sn-card-top" }, [logo(row), coinLink(row, opts.prefix, row.symbol || row.name), starButton(row, opts)]),
     el("strong", { "data-k": "price", text: show(money(row.price, currency)) }),
     changeCell(row, key, "span"),
-    spark(row.spark7d, (row[key] ?? 0) >= 0),
+    spark(row.spark7d),
   ]);
 }
 

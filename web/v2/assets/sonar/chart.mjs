@@ -1,6 +1,10 @@
 import { when } from "./format.mjs";
 import { t } from "./i18n.mjs";
+import { PRICE_COMPARE, PRICE_DOWN, PRICE_INDICATOR, PRICE_UP, priceColor, seriesUp } from "./price-color.mjs";
 import { el } from "./ui.mjs";
+
+const SVG = "http://www.w3.org/2000/svg";
+let areaSeq = 0;
 
 export function chartHost() {
   return el("div", { class: "sn-chart", "data-sn": "chart" });
@@ -13,23 +17,26 @@ export async function drawChart(host, payload, { mode = "line", compare = null, 
     host.append(el("p", { class: "sn-state", text: t("unavailable") }));
     return () => {};
   }
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const svg = document.createElementNS(SVG, "svg");
   svg.setAttribute("viewBox", "0 0 640 320");
   svg.setAttribute("class", "sn-chart-svg");
   svg.setAttribute("role", "img");
   svg.setAttribute("preserveAspectRatio", "none");
-  const plot = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  const closes = points.map((row) => row.close);
+  const up = seriesUp(closes);
+  svg.setAttribute("data-sn-trend", up == null ? "flat" : up ? "up" : "down");
+  const plot = document.createElementNS(SVG, "g");
   plot.setAttribute("clip-path", "inset(8px 8px 28px 48px)");
-  const values = seriesValues(points, mode);
   if (compare?.points?.length && mode !== "candles") {
-    const base = rebase(points.map((row) => row.close));
+    const base = rebase(closes);
     const other = rebase(normalize(compare).map((row) => row.close));
-    plot.append(poly(base, "#ff3070"), poly(other, "#9ecbff"));
+    plot.append(priceLine(base, priceColor(up)), poly(other, PRICE_COMPARE));
+    if (sma) plot.append(poly(moving(base, 20), PRICE_INDICATOR));
   } else if (mode === "candles" && points[0].open != null) {
     plot.append(...candles(points));
   } else {
-    plot.append(poly(points.map((row) => row.close), "#ff3070"));
-    if (sma) plot.append(poly(moving(points.map((row) => row.close), 20), "#7dcea0"));
+    plot.append(priceLine(closes, priceColor(up)));
+    if (sma) plot.append(poly(moving(closes, 20), PRICE_INDICATOR));
   }
   svg.append(plot, ...axes(points, mode));
   const tip = el("p", { class: "sn-note", "data-sn": "tip" });
@@ -56,7 +63,7 @@ function axes(points, mode) {
   for (const fraction of [0, 0.5, 1]) {
     const price = max - (max - min) * fraction;
     const y = 16 + fraction * 260;
-    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    const label = document.createElementNS(SVG, "text");
     label.setAttribute("x", "4");
     label.setAttribute("y", String(y));
     label.setAttribute("fill", "#aeb8c4");
@@ -68,7 +75,7 @@ function axes(points, mode) {
   const last = points[points.length - 1];
   for (const [row, x] of [[first, 56], [last, 620]]) {
     if (!row) continue;
-    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    const label = document.createElementNS(SVG, "text");
     label.setAttribute("x", String(x));
     label.setAttribute("y", "312");
     label.setAttribute("fill", "#aeb8c4");
@@ -96,10 +103,6 @@ function normalize(payload) {
   }).filter((row) => row.time != null && row.close != null);
 }
 
-function seriesValues(points) {
-  return points.flatMap((row) => [row.low, row.high, row.close, row.open].filter((value) => value != null));
-}
-
 function scale(values) {
   const min = Math.min(...values);
   const max = Math.max(...values);
@@ -107,18 +110,65 @@ function scale(values) {
   return (value) => 300 - ((value - min) / span) * 280;
 }
 
-function poly(values, color) {
-  const clean = values.filter((value) => value != null);
+function coordsOf(values) {
+  const clean = values.filter((value) => value != null && Number.isFinite(value));
+  if (!clean.length) return [];
   const y = scale(clean);
-  const line = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+  return clean.map((value, index) => {
+    const x = clean.length === 1 ? 320 : (index / (clean.length - 1)) * 620 + 10;
+    return [x, y(value)];
+  });
+}
+
+function poly(values, color) {
+  const coords = coordsOf(values);
+  const line = document.createElementNS(SVG, "polyline");
   line.setAttribute("fill", "none");
   line.setAttribute("stroke", color);
   line.setAttribute("stroke-width", "2");
-  line.setAttribute("points", clean.map((value, index) => {
-    const x = clean.length === 1 ? 320 : (index / (clean.length - 1)) * 620 + 10;
-    return `${x.toFixed(1)},${y(value).toFixed(1)}`;
-  }).join(" "));
+  line.setAttribute("stroke-linejoin", "round");
+  line.setAttribute("stroke-linecap", "round");
+  line.setAttribute("points", coords.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" "));
   return line;
+}
+
+function priceLine(values, color) {
+  const coords = coordsOf(values);
+  const group = document.createElementNS(SVG, "g");
+  if (coords.length >= 2) {
+    const id = `sn-area-${++areaSeq}`;
+    const defs = document.createElementNS(SVG, "defs");
+    const gradient = document.createElementNS(SVG, "linearGradient");
+    gradient.setAttribute("id", id);
+    gradient.setAttribute("x1", "0");
+    gradient.setAttribute("y1", "0");
+    gradient.setAttribute("x2", "0");
+    gradient.setAttribute("y2", "1");
+    const top = document.createElementNS(SVG, "stop");
+    top.setAttribute("offset", "0%");
+    top.setAttribute("stop-color", color);
+    top.setAttribute("stop-opacity", "0.28");
+    const bottom = document.createElementNS(SVG, "stop");
+    bottom.setAttribute("offset", "100%");
+    bottom.setAttribute("stop-color", color);
+    bottom.setAttribute("stop-opacity", "0");
+    gradient.append(top, bottom);
+    defs.append(gradient);
+    const area = document.createElementNS(SVG, "polygon");
+    const floor = 300;
+    const last = coords[coords.length - 1];
+    const first = coords[0];
+    area.setAttribute("points", [
+      ...coords.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`),
+      `${last[0].toFixed(1)},${floor}`,
+      `${first[0].toFixed(1)},${floor}`,
+    ].join(" "));
+    area.setAttribute("fill", `url(#${id})`);
+    area.setAttribute("stroke", "none");
+    group.append(defs, area);
+  }
+  group.append(poly(values, color));
+  return group;
 }
 
 function candles(points) {
@@ -128,14 +178,14 @@ function candles(points) {
   points.forEach((row, index) => {
     const x = points.length === 1 ? 320 : (index / (points.length - 1)) * 620 + 10;
     const up = row.close >= row.open;
-    const color = up ? "#7dcea0" : "#f0a0b0";
-    const wick = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    const color = up ? PRICE_UP : PRICE_DOWN;
+    const wick = document.createElementNS(SVG, "line");
     wick.setAttribute("x1", String(x));
     wick.setAttribute("x2", String(x));
     wick.setAttribute("y1", String(y(row.high)));
     wick.setAttribute("y2", String(y(row.low)));
     wick.setAttribute("stroke", color);
-    const body = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    const body = document.createElementNS(SVG, "rect");
     const top = y(Math.max(row.open, row.close));
     const height = Math.max(1, Math.abs(y(row.open) - y(row.close)));
     body.setAttribute("x", String(x - 2));
