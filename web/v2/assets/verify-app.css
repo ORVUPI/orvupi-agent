@@ -259,7 +259,22 @@ body.verify-app .vf-pager { font-variant-numeric: tabular-nums; font-weight: 700
 }
 
 /* Tema oscuro de app. Los acentos siguen siendo el rosa de ORVUPI. */
-body.verify-app { background: #0c1016; color: #e7edf4; }
+body.verify-app {
+  background: #0c1016;
+  color: #e7edf4;
+  --text: #e7edf4;
+  --muted: #c5ced8;
+  --bg: #0c1016;
+  --bg-elev: #141a22;
+  --line: #2a3544;
+  --cream: #e7edf4;
+  --abyss: #10161d;
+  --surface: #141a22;
+  --surface-2: #1c2530;
+  --text-2: #c5ced8;
+  --text-3: #aeb8c4;
+}
+body.verify-app:not(.sonar-market) button { color: #e7edf4; background: #10161d; border-color: #2a3544; }
 body.verify-app header.site { background: #0c1016; border-bottom: 1px solid #243041; }
 body.verify-app header.site > .wrap {
   max-width: 1280px;
@@ -351,7 +366,7 @@ body.verify-app .vf-chart-card {
 body.verify-app .vf-card h2,
 body.verify-app .vf-chart-card h2,
 body.verify-app .vf-card h3 { color: #e7edf4; font-family: Inter, system-ui, sans-serif; font-weight: 650; letter-spacing: 0; font-size: 0.92rem; }
-body.verify-app .vf-coins { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 8px; }
+body.verify-app .vf-coins { display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: 8px; }
 body.verify-app .vf-coin {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -580,3 +595,11 @@ body.verify-app .vf-feed-amt { white-space: nowrap; text-align: right; font-weig
   body.verify-app .consulta-barra { flex-wrap: nowrap !important; }
   body.verify-app #direccion-token { width: auto !important; flex: 1 1 auto !important; min-width: 0 !important; }
 }
+body.verify-app #vf-root :is(h1, h2, h3, h4) { color: #e7edf4; }
+body.verify-app #vf-root .vf-dialog :is(h1, h2, h3, h4, p, li, a, button, label),
+body.verify-app .vf-dialog :is(h1, h2, h3, h4, p, li, a, button, label) { color: #102032; }
+body.verify-app .vf-dialog button { background: #fffdf8; border-color: #102032; }
+body.verify-app .vf-more ul,
+body.verify-app .vf-more button,
+body.verify-app .langpick ul,
+body.verify-app .langpick a { color: #102032; }

@@ -1035,6 +1035,14 @@ function openSearch() {
   document.getElementById("vf-modal-q")?.focus();
 }
 function boot() {
+  const hash = location.hash.replace("#", "");
+  const verifyHashes = new Set(["home", "dex", "tracer", "visualizer", "alertas", "etiquetas", "paneles", "transfers", "mercado", "ficha", "token"]);
+  const market = /\/sonar(\/|$)/.test(location.pathname) && !verifyHashes.has(hash);
+  if (market) {
+    document.body.classList.add("sonar-market");
+    import("./sonar/shell.mjs").then((mod) => mod.start());
+    return;
+  }
   const dock = document.createElement("nav");
   dock.className = "vf-dock";
   dock.setAttribute("aria-label", lang() === "en" ? "Sections" : "Secciones");
@@ -1078,7 +1086,6 @@ function boot() {
       navigator.clipboard?.writeText(url.toString());
     }
   });
-  const hash = location.hash.replace("#", "");
   if (hash && ["home", "dex", "tracer", "visualizer", "alertas", "etiquetas", "paneles", "transfers", "mercado", "ficha", "token"].includes(hash)) state.screen = hash;
   markNav(state.screen);
   const read = h("button", { type: "button", id: "vf-leer", onclick: () => investigate(document.getElementById("direccion-token")?.value, document.getElementById("red")?.value || "solana") }, t("Ficha", "Profile"));
@@ -1132,6 +1139,16 @@ function boot() {
   document.title = "ORVUPI Sonar";
   ensureNetworks();
   render();
+  const params = new URLSearchParams(location.search);
+  const address = params.get("address");
+  const chain = params.get("chain");
+  if (address) {
+    const field = document.getElementById("direccion-token");
+    const red = document.getElementById("red");
+    if (field) field.value = address;
+    if (red && chain && [...red.options].some((option) => option.value === chain)) red.value = chain;
+    investigate(address, chain || red?.value || "solana");
+  }
   loadLive();
 }
 function paintSheet() {

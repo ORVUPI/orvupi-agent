@@ -1,3 +1,40 @@
+# Matriz CoinMarketCap ↔ ORVUPI Sonar
+
+Comparación del 1 de noviembre de 2026, después de la capa `/api/sonar` y las pantallas de mercado. Las capturas están en `docs/verify/capturas-cmc/`. La prueba con Chromium headless (1920, 1440, 1366, tablet 1024×768 y 768×1024, iPhone 390×844, Android 412×915) quedó en 34/34 comprobaciones, sin errores de consola y sin scroll horizontal de página. Datos reales de CoinGecko, GeckoTerminal, Alternative.me, PatternPlus y Binance. `/verify/` sigue abriendo la lectura on-chain.
+
+| Área | CoinMarketCap | ORVUPI Sonar | Estado |
+| --- | --- | --- | --- |
+| Ranking | Listado con precio, variaciones, capitalización, volumen, supply y sparkline | Tabla y fila móvil, orden, páginas de 50, 100 o 250 hasta cubrir el ranking, sparkline y estrella | Completo |
+| Barra de mercado | Cap., volumen, dominancias, índices propios | Cap., volumen, BTC/ETH, activos, mercados, gas ETH, comisión BTC | Completo |
+| Fear & Greed | Índice de su marca | Alternative.me, atribución junto al valor | Completo |
+| Índice altcoin | Método propio | PatternPlus, con método y «Data: PatternPlus» | Completo |
+| CMC20 / CMC100 | Índices de marca | No hay fuente libre equivalente | No viable |
+| Activos | Ficha con precio, supplies, enlaces y contratos | `/sonar/crypto/<slug>` con resumen, estadísticas, acerca de, conversor y contratos enlazados a la ficha on-chain | Completo |
+| Gráficos | Velas, línea, periodos y comparar | Periodos 1 h, 24 h, 7 d, 30 d, 90 d, 1 a, YTD y Todo; línea, velas, SMA 20, RSI 14 y comparar con BTC o ETH | Completo |
+| Histórico diario | OHLCV | Tabla con OHLC. El volumen solo si la misma fuente lo trae ese día | Parcial |
+| Exchanges | CEX, DEX y derivados | Ranking y ficha. CEX/DEX donde CoinGecko publica `centralized`. Derivados con interés abierto | Completo |
+| Reservas de exchanges | Seguimiento propio | Sin fuente gratuita fiable | No viable |
+| Categorías | Directorio y filtro del ranking | Directorio, pills y `/sonar/categories/<id>` | Completo |
+| Filtros | Cap., volumen, cambio, categoría, red | Categoría en la fuente; precio, volumen, cambio y supply sobre lo cargado. Antigüedad y «verificado» no vienen en el ranking gratuito | Parcial |
+| Buscador | Monedas, exchanges, categorías | Panel previo y resultados agrupados, más pools DEX | Completo |
+| Ganadores y perdedores | Listas propias | Páginas de 250 sobre el ranking, con un tope por petición para no tumbar la fuente. La nota dice sobre cuántas monedas se calculó. Volumen mínimo 50 000 USD | Completo |
+| Tendencia | Tráfico propio | Búsquedas de CoinGecko y pools de GeckoTerminal, con el criterio escrito | Completo |
+| Nuevas | Fecha de alta propia | Pools DEX recientes. Sin fecha de alta de CoinGecko (el listado nuevo es de pago y no hay KV) | Parcial |
+| Watchlist | Varias listas en la cuenta | Varias listas en el navegador, exportar, importar y compartir por URL. Sin cuentas | Completo |
+| Portfolio | Operaciones y P&L en la cuenta | Compra, venta, transferencia, depósito y retirada; P&L, precio medio, reparto e histórico con precios reales. Sin cuentas | Completo |
+| Calendario | Tipos propios, incluidos AMA y airdrops | Eventos que publica PatternPlus | Parcial |
+| Unlocks | Calendario de desbloqueos | Tabla PatternPlus y bloque cuando la ficha tiene datos | Completo |
+| Noticias | Titulares propios | Pestaña oculta: los términos de los medios no autorizan el titular | Pendiente |
+| Serie de cap. total | Gráfico histórico | Cifra actual sí. La serie no está en la fuente gratuita y no hay almacén propio | No viable |
+| Liquidaciones, ETF, funding, APY | Productos o datos de pago | Ocultos | No viable |
+| Mercados de predicción | Pestaña propia | Fuera de alcance | Fuera de alcance |
+| Cuentas y login | Sesión | No hay cuentas | Fuera de alcance |
+| ORVUPI IA | — | Resume solo datos cargados o leídos de la API, con fuente y hora | Parcial |
+| SEO | URLs de activo | Functions con título, canonical, hreflang y 404 real. Sitemap `/sitemap-sonar.xml` | Completo |
+| Verify on-chain | — | DEX, Tracer, mapa, alertas y ficha siguen en `/verify/` y en «Más» | Completo |
+
+La matriz de fuentes on-chain del 31 de octubre sigue debajo.
+
 # Matriz de fuentes de ORVUPI Sonar
 
 La herramienta se llama ORVUPI Sonar. El subtítulo es «Sonar · verify on-chain». La ruta principal nueva es `/sonar/` (alias de la misma app). `/verify/` sigue respondiendo para no romper enlaces.

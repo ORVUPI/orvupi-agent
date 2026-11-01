@@ -5,6 +5,14 @@
 
 const memory = new Map();
 const PREFIX = "orvupi.sonar.cache.v1:";
+const CACHE_LIMIT = 80;
+const CACHE_CHARS = 400_000;
+
+function touch(key, entry) {
+  if (memory.has(key)) memory.delete(key);
+  memory.set(key, entry);
+  while (memory.size > CACHE_LIMIT) memory.delete(memory.keys().next().value);
+}
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -18,13 +26,17 @@ function waitTurn() {
 }
 
 export function cacheGet(key) {
-  if (memory.has(key)) return memory.get(key);
+  if (memory.has(key)) {
+    const hit = memory.get(key);
+    touch(key, hit);
+    return hit;
+  }
   try {
     const raw = globalThis.localStorage?.getItem(PREFIX + key);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object" || !parsed.value) return null;
-    memory.set(key, parsed);
+    touch(key, parsed);
     return parsed;
   } catch {
     return null;
@@ -33,9 +45,16 @@ export function cacheGet(key) {
 
 export function cacheSet(key, value) {
   const entry = { at: new Date().toISOString(), value };
-  memory.set(key, entry);
+  let raw = "";
   try {
-    globalThis.localStorage?.setItem(PREFIX + key, JSON.stringify(entry));
+    raw = JSON.stringify(entry);
+  } catch {
+    return entry;
+  }
+  if (raw.length > CACHE_CHARS) return entry;
+  touch(key, entry);
+  try {
+    globalThis.localStorage?.setItem(PREFIX + key, raw);
   } catch {
     /* cuota del navegador */
   }
@@ -74,28 +93,39 @@ async function idbPut(key, entry) {
   }
 }
 
-export async function fetchText(url, options = {}) {
-  const attempts = options.attempts ?? 2;
+function retryDelay(index, last) {
+  const seconds = Number(last?.retryAfter);
+  if (Number.isFinite(seconds) && seconds >= 0) return Math.min(8000, Math.max(250, Math.round(seconds * 1000)));
+  return Math.min(8000, 1000 * 2 ** (index - 1));
+}
+
+async function readWithRetry(url, options, asJson) {
+  const attempts = options.attempts ?? 3;
+  const method = String(options.method || "GET").toUpperCase();
+  const key = method === "GET" ? `get:${url}` : null;
   let last = null;
   for (let i = 0; i < attempts; i += 1) {
-    if (i) await sleep(400 * 2 ** (i - 1));
-    last = await once(url, options, false);
-    if (last.ok) return last;
+    if (i) await sleep(retryDelay(i, last));
+    last = await once(url, options, asJson);
+    if (last.ok) {
+      if (key) cacheSet(key, last);
+      return last;
+    }
     if (last.status && last.status < 500 && last.status !== 429 && last.status !== 408) break;
+  }
+  if (key) {
+    const cached = cacheGet(key);
+    if (cached?.value?.ok) return { ...cached.value, stale: true, fetchedAt: cached.at };
   }
   return last;
 }
 
-export async function fetchJson(url, options = {}) {
-  const attempts = options.attempts ?? 2;
-  let last = null;
-  for (let i = 0; i < attempts; i += 1) {
-    if (i) await sleep(400 * 2 ** (i - 1));
-    last = await once(url, options, true);
-    if (last.ok) return last;
-    if (last.status && last.status < 500 && last.status !== 429 && last.status !== 408) break;
-  }
-  return last;
+export function fetchText(url, options = {}) {
+  return readWithRetry(url, options, false);
+}
+
+export function fetchJson(url, options = {}) {
+  return readWithRetry(url, options, true);
 }
 
 async function once(url, options, asJson) {
@@ -121,7 +151,17 @@ async function once(url, options, asJson) {
         body = null;
       }
     }
-    return { ok: response.ok, status: response.status, body, fetchedAt: new Date().toISOString() };
+    const retry = response.headers.get("retry-after");
+    let retryAfter = null;
+    if (retry) {
+      const seconds = Number(retry);
+      if (Number.isFinite(seconds)) retryAfter = seconds;
+      else {
+        const at = Date.parse(retry);
+        if (Number.isFinite(at)) retryAfter = Math.max(0, (at - Date.now()) / 1000);
+      }
+    }
+    return { ok: response.ok, status: response.status, body, fetchedAt: new Date().toISOString(), retryAfter };
   } catch (error) {
     return {
       ok: false,
