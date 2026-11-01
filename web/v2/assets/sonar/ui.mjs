@@ -9,10 +9,23 @@ export function el(tag, attrs, children) {
     else if (key === "html") continue;
     else if (key.startsWith("on") && typeof value === "function") node.addEventListener(key.slice(2).toLowerCase(), value);
     else if (key === "text") node.textContent = String(value);
+    else if ((key === "href" || key === "src") && !safeUrl(value)) continue;
     else node.setAttribute(key, value === true ? "" : String(value));
   }
   for (const child of [].concat(children || [])) append(node, child);
   return node;
+}
+
+function safeUrl(value) {
+  const text = String(value || "");
+  if (text.startsWith("/") && !text.startsWith("//")) return true;
+  if (text.startsWith("#") || text.startsWith("?")) return true;
+  try {
+    const url = new URL(text);
+    return url.protocol === "https:" || url.protocol === "http:";
+  } catch {
+    return false;
+  }
 }
 
 export function append(node, child) {
@@ -29,8 +42,9 @@ export function setChildren(node, children) {
 }
 
 export function skeleton(rows = 8) {
-  const box = el("div", { class: "sn-skel", "data-sn": "skeleton", "aria-busy": "true" });
-  for (let index = 0; index < rows; index += 1) box.append(el("span"));
+  const box = el("div", { class: "sn-skel", "data-sn": "skeleton", "aria-busy": "true", role: "status" });
+  box.append(el("span", { class: "sn-sr", text: t("loading") }));
+  for (let index = 0; index < rows; index += 1) box.append(el("span", { "aria-hidden": "true" }));
   return box;
 }
 

@@ -80,7 +80,7 @@ async function paint(host, ctx) {
     else total += pos.value;
     if (pos.unrealized != null) unrealized += pos.unrealized;
     if (pos.qty > 0) slices.push({ id, symbol: list[0].symbol || id, value: pos.value });
-    rows.push({ id, symbol: list[0].symbol || id, pos });
+    rows.push({ id, symbol: list[0].symbol || id, pos, txs: list });
   }
   const page = el("section", { class: "sn-screen", "data-sn": "portfolio" });
   page.append(marketTabs("portfolio", ctx.go));
@@ -101,7 +101,7 @@ async function paint(host, ctx) {
   page.append(form(host, ctx, vs));
   if (!txs.length) page.append(emptyBlock(t("noTx")));
   else page.append(txTable(txs, vs, host, ctx));
-  page.append(historyButton(rows, quotes, vs));
+  page.append(historyButton(rows, vs));
   host.replaceChildren(page);
 }
 
@@ -111,7 +111,6 @@ function kpi(label, value) {
 
 function allocation(slices, total) {
   if (!slices.length || !(total > 0)) return el("p", { class: "sn-note", text: t("allocation") });
-  const colors = ["#ff3070", "#7dcea0", "#9ecbff", "#ffd27a", "#d2b4ff", "#f0a0b0"];
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("class", "sn-donut");
   svg.setAttribute("viewBox", "0 0 36 36");
@@ -231,16 +230,20 @@ async function fillDate(form) {
   const id = form.coinId.value.trim();
   const date = form.at.value;
   if (!/^[a-z0-9-]{1,80}$/.test(id) || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
-  const [year, month, dayNum] = date.split("-");
   try {
-    const body = await api(`/api/sonar/coin/${id}/history${qs({ from: Math.floor(Date.parse(`${date}T00:00:00Z`) / 1000), to: Math.floor(Date.parse(`${date}T00:00:00Z`) / 1000) + 86400 })}`);
+    const from = Math.floor(Date.parse(`${date}T00:00:00Z`) / 1000);
+    const body = await api(`/api/sonar/coin/${id}/history${qs({ from, to: from + 86400 })}`);
     const point = (body.points || body.prices || []).find((row) => row[1] != null);
+    const err = form.querySelector("[data-sn=tx-error]");
     if (point) form.price.value = String(point[1]);
-    else form.querySelector("[data-sn=tx-error]").textContent = t("fillMissing");
+    else {
+      err.hidden = false;
+      err.textContent = t("fillMissing");
+    }
   } catch {
-    void year; void month; void dayNum;
-    form.querySelector("[data-sn=tx-error]").hidden = false;
-    form.querySelector("[data-sn=tx-error]").textContent = t("fillMissing");
+    const err = form.querySelector("[data-sn=tx-error]");
+    err.hidden = false;
+    err.textContent = t("fillMissing");
   }
 }
 
@@ -263,7 +266,7 @@ function txTable(txs, vs, host, ctx) {
   return el("div", { class: "sn-scroll" }, table);
 }
 
-function historyButton(rows, quotes, vs) {
+function historyButton(rows) {
   const box = el("section", { class: "sn-box", "data-sn": "history" }, [
     el("h2", { text: t("history") }),
     el("p", { class: "sn-note", text: t("replay") }),
@@ -272,31 +275,47 @@ function historyButton(rows, quotes, vs) {
   return box;
 }
 
+function qtyAsOf(txs, dayKey) {
+  const subset = (txs || []).filter((tx) => String(tx.at).slice(0, 10) <= dayKey);
+  return positionOf(subset, 0).qty;
+}
+
 async function loadHistory(box, rows) {
-  box.append(skeleton(4));
-  const held = rows.filter((row) => row.pos.qty > 0);
+  const pending = skeleton(4);
+  box.append(pending);
+  const held = rows.filter((row) => row.pos.qty > 0 || (row.txs || []).length);
   if (!held.length) {
+    pending.remove();
     box.append(emptyBlock());
     return;
   }
   try {
-    const series = await Promise.all(held.map(async (row) => ({ id: row.id, qty: row.pos.qty, chart: await api(`/api/sonar/coin/${row.id}/chart${qs({ vs: snapshot().prefs.vs, days: "30" })}`) })));
+    const series = await Promise.all(held.map(async (row) => ({ ...row, chart: await api(`/api/sonar/coin/${row.id}/chart${qs({ vs: snapshot().prefs.vs, days: "30" })}`) })));
     const days = new Map();
     for (const item of series) {
       for (const point of item.chart.points || []) {
         const key = new Date(point[0]).toISOString().slice(0, 10);
+        const qty = qtyAsOf(item.txs, key);
+        if (!(qty > 0)) continue;
         if (!days.has(key)) days.set(key, { sum: 0, missing: false });
         const bucket = days.get(key);
         if (point[1] == null) bucket.missing = true;
-        else bucket.sum += point[1] * item.qty;
+        else bucket.sum += point[1] * qty;
       }
     }
+    pending.remove();
     const list = el("ol");
-    for (const [key, bucket] of [...days.entries()].slice(-14)) {
+    const entries = [...days.entries()].slice(-14);
+    if (!entries.length) {
+      box.append(emptyBlock());
+      return;
+    }
+    for (const [key, bucket] of entries) {
       list.append(el("li", { text: `${key}: ${bucket.missing ? t("unavailable") : show(compact(bucket.sum, snapshot().prefs.vs))}` }));
     }
     box.append(list, el("p", { class: "sn-note", text: t("partial") }));
   } catch {
+    pending.remove();
     box.append(errorBlock(() => loadHistory(box, rows)));
   }
 }

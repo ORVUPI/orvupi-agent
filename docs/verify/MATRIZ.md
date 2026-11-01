@@ -4,7 +4,7 @@ Comparación del 1 de noviembre de 2026, después de la capa `/api/sonar` y las 
 
 | Área | CoinMarketCap | ORVUPI Sonar | Estado |
 | --- | --- | --- | --- |
-| Ranking | Listado con precio, variaciones, capitalización, volumen, supply y sparkline | Tabla y fila móvil, orden, páginas de 100 hasta cubrir el ranking, sparkline y estrella | Completo |
+| Ranking | Listado con precio, variaciones, capitalización, volumen, supply y sparkline | Tabla y fila móvil, orden, páginas de 50, 100 o 250 hasta cubrir el ranking, sparkline y estrella | Completo |
 | Barra de mercado | Cap., volumen, dominancias, índices propios | Cap., volumen, BTC/ETH, activos, mercados, gas ETH, comisión BTC | Completo |
 | Fear & Greed | Índice de su marca | Alternative.me, atribución junto al valor | Completo |
 | Índice altcoin | Método propio | PatternPlus, con método y «Data: PatternPlus» | Completo |
@@ -17,7 +17,7 @@ Comparación del 1 de noviembre de 2026, después de la capa `/api/sonar` y las 
 | Categorías | Directorio y filtro del ranking | Directorio, pills y `/sonar/categories/<id>` | Completo |
 | Filtros | Cap., volumen, cambio, categoría, red | Categoría en la fuente; precio, volumen, cambio y supply sobre lo cargado. Antigüedad y «verificado» no vienen en el ranking gratuito | Parcial |
 | Buscador | Monedas, exchanges, categorías | Panel previo y resultados agrupados, más pools DEX | Completo |
-| Ganadores y perdedores | Listas propias | Calculados sobre las 1000 mayores, volumen mínimo 50 000 USD | Completo |
+| Ganadores y perdedores | Listas propias | Páginas de 250 sobre el ranking, con un tope por petición para no tumbar la fuente. La nota dice sobre cuántas monedas se calculó. Volumen mínimo 50 000 USD | Completo |
 | Tendencia | Tráfico propio | Búsquedas de CoinGecko y pools de GeckoTerminal, con el criterio escrito | Completo |
 | Nuevas | Fecha de alta propia | Pools DEX recientes. Sin fecha de alta de CoinGecko (el listado nuevo es de pago y no hay KV) | Parcial |
 | Watchlist | Varias listas en la cuenta | Varias listas en el navegador, exportar, importar y compartir por URL. Sin cuentas | Completo |

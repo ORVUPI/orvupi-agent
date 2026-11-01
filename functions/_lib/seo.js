@@ -29,7 +29,7 @@ export function applyMeta(html, meta) {
   }
   out = out.replace(/(<link rel="alternate" hreflang="x-default" href=")[^"]*(")/, `$1${esc(`https://orvupi.com/en${meta.path}`)}$2`);
   if (meta.jsonld) {
-    out = out.replace("</head>", `<script type="application/ld+json">${meta.jsonld}</script></head>`);
+    out = out.replace("</head>", `<script type="application/ld+json">${safeJson(meta.jsonld)}</script></head>`);
   }
   return out;
 }
@@ -105,10 +105,10 @@ async function describe(env, ctx, spec, prefix) {
     const path = `/sonar/crypto/${coin.id}`;
     return {
       title: `${coin.name} (${coin.symbol}) · ORVUPI Sonar`,
-      description: `Precio y datos de ${coin.name} (${coin.symbol}) en ORVUPI Sonar.${price} Data provided by CoinGecko.`.slice(0, 180),
+      description: `Precio y datos de ${coin.name} (${coin.symbol}) en ORVUPI Sonar.${price} ${prefix ? "Data provided by CoinGecko" : "Datos de CoinGecko"}.`.slice(0, 180),
       canonical: `https://orvupi.com${prefix}${path}`,
       path,
-      jsonld: JSON.stringify({
+      jsonld: {
         "@context": "https://schema.org",
         "@type": "WebPage",
         name: `${coin.name} (${coin.symbol})`,
@@ -122,7 +122,7 @@ async function describe(env, ctx, spec, prefix) {
           unitText: "USD",
           measurementTechnique: "CoinGecko",
         },
-      }),
+      },
     };
   }
   if (spec.kind === "exchange") {
@@ -130,7 +130,7 @@ async function describe(env, ctx, spec, prefix) {
       const path = "/sonar/exchanges/";
       return {
         title: "Exchanges · ORVUPI Sonar",
-        description: "Ranking de exchanges en ORVUPI Sonar. Data provided by CoinGecko.",
+        description: `Ranking de exchanges en ORVUPI Sonar. ${prefix ? "Data provided by CoinGecko" : "Datos de CoinGecko"}.`,
         canonical: `https://orvupi.com${prefix}${path}`,
         path,
       };
@@ -139,7 +139,7 @@ async function describe(env, ctx, spec, prefix) {
     const path = `/sonar/exchanges/${row.id}`;
     return {
       title: `${row.name} · ORVUPI Sonar`,
-      description: `Volumen y mercados de ${row.name} en ORVUPI Sonar. Data provided by CoinGecko.`.slice(0, 180),
+      description: `Volumen y mercados de ${row.name} en ORVUPI Sonar. ${prefix ? "Data provided by CoinGecko" : "Datos de CoinGecko"}.`.slice(0, 180),
       canonical: `https://orvupi.com${prefix}${path}`,
       path,
     };
@@ -149,7 +149,7 @@ async function describe(env, ctx, spec, prefix) {
       const path = "/sonar/categories/";
       return {
         title: "Categorías · ORVUPI Sonar",
-        description: "Sectores del mercado cripto en ORVUPI Sonar. Data provided by CoinGecko.",
+        description: `Sectores del mercado cripto en ORVUPI Sonar. ${prefix ? "Data provided by CoinGecko" : "Datos de CoinGecko"}.`,
         canonical: `https://orvupi.com${prefix}${path}`,
         path,
       };
@@ -160,12 +160,17 @@ async function describe(env, ctx, spec, prefix) {
     const path = `/sonar/categories/${row.id}`;
     return {
       title: `${row.name} · ORVUPI Sonar`,
-      description: `Ranking de ${row.name} en ORVUPI Sonar. Data provided by CoinGecko.`.slice(0, 180),
+      description: `Ranking de ${row.name} en ORVUPI Sonar. ${prefix ? "Data provided by CoinGecko" : "Datos de CoinGecko"}.`.slice(0, 180),
       canonical: `https://orvupi.com${prefix}${path}`,
       path,
     };
   }
   return generic(spec, prefix);
+}
+
+export function safeJson(value) {
+  const raw = typeof value === "string" ? value : JSON.stringify(value);
+  return String(raw).replace(/[&<>\u2028\u2029]/g, (char) => ({ "&": "\\u0026", "<": "\\u003c", ">": "\\u003e", "\u2028": "\\u2028", "\u2029": "\\u2029" }[char]));
 }
 
 function formatUsd(value) {

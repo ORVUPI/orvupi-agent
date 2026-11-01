@@ -22,4 +22,17 @@ if (rules.some((line) => line.startsWith("/sonar") || line.includes("/sonar/")))
   console.error("quedan reglas de Sonar en _redirects");
   process.exit(1);
 }
+const sources = rules.map((line) => line.split(/\s+/)[0]);
+const wasmAt = sources.findIndex((source) => source.startsWith("/work/assets/ort-wasm"));
+const broadAt = sources.findIndex((source) => source === "/work/:section/*");
+if (wasmAt === -1 || (broadAt !== -1 && broadAt < wasmAt)) {
+  console.error("la regla del wasm de Work queda tapada o no está");
+  process.exit(1);
+}
+for (const source of ["/work/document/*", "/work/spreadsheets/*", "/work/presentation/*", "/work/forms/*", "/work/drawings/*", "/work/notes/*"]) {
+  if (!sources.includes(source)) {
+    console.error("falta", source);
+    process.exit(1);
+  }
+}
 console.log(`redirects ok: ${rules.length} reglas, ${dynamic.length} dinámicas`);

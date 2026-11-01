@@ -44,15 +44,19 @@ function withVs(payload, fx) {
   return { ...payload, vs: fx.missing ? "usd" : fx.vs, requestedVs: fx.vs, rateMissing: Boolean(fx.missing) };
 }
 
+const NEEDS_VS = new Set(["global", "markets", "quotes", "coin", "categories", "exchanges", "movers", "treasury"]);
+
 export async function handle(request, env = {}, ctx = {}) {
   if (request.method !== "GET" && request.method !== "HEAD") return json(405, { ok: false, error: "method" }, { allow: "GET, HEAD" });
   if (!allowRequest(clientIp(request))) return json(429, { ok: false, error: "rate" }, { "retry-after": "30" });
   const url = new URL(request.url);
+  if (url.search.length > 2048) return json(400, { ok: false, error: "invalid" });
   const parts = url.pathname.replace(/\/+$/, "").split("/").filter(Boolean);
   const rest = parts[0] === "api" && parts[1] === "sonar" ? parts.slice(2) : parts;
   const q = url.searchParams;
   try {
-    const fx = await vsOf();
+    const head = rest[0] || "";
+    const fx = NEEDS_VS.has(head) ? await vsOf() : { vs: "usd", factor: 1, missing: false };
     if (fx?.error) return fx.error;
     const result = await route(rest, q, fx);
     return result;
@@ -143,7 +147,7 @@ export async function handle(request, env = {}, ctx = {}) {
     if (sub === "history") return history(id, query, fx);
     if (sub === "unlocks") {
       const payload = await data.getUnlockOne(env, ctx, id);
-      return json(200, { ok: true, ...payload }, cacheHeaders(6 * 3600, DAYish(), payload));
+      return json(200, { ok: true, ...payload }, cacheHeaders(6 * 3600, 86400, payload));
     }
     return json(404, { ok: false, error: "not-found" });
   }
@@ -171,7 +175,7 @@ export async function handle(request, env = {}, ctx = {}) {
             kind: "price",
             interval,
             points: factor === 1 ? points : points.map(([t, v]) => [t, v * factor]),
-            maxRangeNote: days === "max" ? null : null,
+            maxRangeNote: null,
           }, fx),
         }, cacheHeaders(60, 3600, candles));
       }
@@ -179,7 +183,7 @@ export async function handle(request, env = {}, ctx = {}) {
         const payload = await data.getChart(env, ctx, id, "365");
         return json(200, {
           ok: true,
-          ...withVs(seriesPayload(payload, "prices", fx, "Máx. 1 año (límite de la fuente)."), fx),
+          ...withVs(seriesPayload(payload, "prices", fx, "max-year"), fx),
         }, cacheHeaders(3600, 86400, payload));
       }
     }
@@ -240,7 +244,7 @@ export async function handle(request, env = {}, ctx = {}) {
         kind: "ohlc",
         interval: days,
         points,
-        volumeNote: "El OHLC de esta fuente no trae volumen por vela.",
+        volumeNote: "ohlc-volume",
       }, fx),
     }, cacheHeaders(300, 3600, payload));
   }
@@ -289,7 +293,7 @@ export async function handle(request, env = {}, ctx = {}) {
         fetchedAt: ohlcPayload.fetchedAt,
         stale: ohlcPayload.stale,
         rows,
-        volumeNote: "El volumen solo se muestra cuando coincide el día con la serie de volumen. Si no, queda vacío.",
+        volumeNote: "volume-day",
       }, fx),
     }, cacheHeaders(3600, 86400, ohlcPayload));
   }
@@ -405,6 +409,7 @@ export async function handle(request, env = {}, ctx = {}) {
     if (!period || minVol == null) return json(400, { ok: false, error: "invalid" });
     const payload = await data.getMovers(env, ctx, { period, minVol });
     const factor = fx.missing ? 1 : (fx.factor || 1);
+    const ttl = payload.partial ? 20 : 120;
     return json(200, {
       ok: true,
       ...withVs({
@@ -412,7 +417,7 @@ export async function handle(request, env = {}, ctx = {}) {
         gainers: (payload.gainers || []).map((row) => data.applyFactor(row, factor, "coin")),
         losers: (payload.losers || []).map((row) => data.applyFactor(row, factor, "coin")),
       }, fx),
-    }, cacheHeaders(120, 900, payload));
+    }, cacheHeaders(ttl, payload.partial ? 60 : 900, payload));
   }
 
   async function trending() {
@@ -425,7 +430,7 @@ export async function handle(request, env = {}, ctx = {}) {
 
   async function fresh() {
     const payload = await data.getNewPools(env, ctx);
-    return json(200, { ok: true, ...payload, note: "Pools DEX recientes. No es la fecha de alta en el listado de CoinGecko." }, cacheHeaders(600, 3600, payload));
+    return json(200, { ok: true, ...payload, note: "new-pools" }, cacheHeaders(600, 3600, payload));
   }
 
   async function search(query) {
@@ -533,9 +538,3 @@ function dayKey(ms) {
   if (ms == null) return "";
   return new Date(ms).toISOString().slice(0, 10);
 }
-
-function DAYish() {
-  return 86400;
-}
-
-export { scaleSeries };

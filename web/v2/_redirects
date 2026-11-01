@@ -44,7 +44,12 @@ https://superb-horse-9036f5.netlify.app/*  https://orvupi.com/:splat  301!
 # ORVUPI Work vive en /work/ (build de apps/work con --base=/work/). Sus rutas internas
 # (/work/document/d/<id>/edit, etc.) las resuelve la propia aplicación.
 /work               /work/              301
-/work/:section/*                         /work/ 200
+/work/document/*      /work/              200
+/work/spreadsheets/*  /work/              200
+/work/presentation/*  /work/              200
+/work/forms/*         /work/              200
+/work/drawings/*      /work/              200
+/work/notes/*         /work/              200
 # Studio abre en /studio/ y estas rutas vuelven al mismo HTML (el hash elige la vista).
 /studio/plantillas          /studio/            200
 /studio/disenos             /studio/            200

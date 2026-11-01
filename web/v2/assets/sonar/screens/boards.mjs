@@ -1,7 +1,7 @@
 import { api, qs } from "../api.mjs";
-import { compact, pct, show } from "../format.mjs";
+import { compact, show } from "../format.mjs";
 import { t } from "../i18n.mjs";
-import { marketTabs } from "../rows.mjs";
+import { coverageNote, marketTabs } from "../rows.mjs";
 import { snapshot } from "../store.mjs";
 import { el, emptyBlock, errorBlock, logo, pctNode, skeleton, sourceLine } from "../ui.mjs";
 
@@ -14,7 +14,7 @@ export async function mountMovers(host, ctx) {
       el("div", { class: "sn-tabs" }, ["1h", "24h", "7d"].map((id) => el("button", { type: "button", class: "sn-tab", "data-sn-period": id, "aria-selected": period === id ? "true" : "false", onclick: () => ctx.go(`/sonar/movers/?period=${id}`), text: t(id === "1h" ? "p1h" : id === "7d" ? "p7d" : "p24h") }))),
       columns(t("gainers"), body.gainers, period, ctx, body.vs),
       columns(t("losers"), body.losers, period, ctx, body.vs),
-      el("p", { class: "sn-note", text: body.note || t("universe") }),
+      el("p", { class: "sn-note", text: coverageNote(body) }),
       sourceLine(body),
     ]));
   } catch {
@@ -80,7 +80,7 @@ export async function mountNew(host, ctx) {
     }
     host.replaceChildren(el("section", { class: "sn-screen", "data-sn": "new" }, [
       el("h2", { text: t("fresh") }),
-      el("p", { class: "sn-note", text: body.note || t("newNote") }),
+      el("p", { class: "sn-note", text: t("newNote") }),
       (body.pools || []).length ? list : emptyBlock(),
       sourceLine(body),
     ]));
@@ -95,5 +95,3 @@ export async function mountNews(host) {
     el("p", { class: "sn-state", text: t("newsOff") }),
   ]));
 }
-
-void pct;

@@ -26,7 +26,7 @@ export function compact(value, currency = "usd") {
   const body = plain(abs / unit[0], unit[1] ? 2 : abs >= 1 ? 2 : 4);
   const code = String(currency || "usd").toUpperCase();
   const sign = number < 0 ? "−" : "";
-  return `${sign}${body}${unit[1]} ${code}`;
+  return code ? `${sign}${body}${unit[1]} ${code}` : `${sign}${body}${unit[1]}`;
 }
 
 export function plain(value, digits = 2) {
@@ -58,7 +58,7 @@ export function day(value) {
   if (!value) return null;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return String(value).slice(0, 10);
-  return new Intl.DateTimeFormat(localeTag(), { dateStyle: "medium" }).format(date);
+  return new Intl.DateTimeFormat(localeTag(), { dateStyle: "medium", timeZone: "Europe/Madrid" }).format(date);
 }
 
 function localeTag() {

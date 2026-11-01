@@ -1,4 +1,4 @@
-import { getOrRefresh } from "./cache.js";
+import { getOrRefresh, peek, putEntry } from "./cache.js";
 import { scaleMoney, scaleSeries } from "./normalize.js";
 import * as cg from "./providers/coingecko.js";
 import * as gt from "./providers/geckoterminal.js";
@@ -169,18 +169,42 @@ export function getExchangeList(env, ctx, page) {
   return cached(`cg:exchanges:${page}`, 3600, DAY, () => cg.getExchanges(env, page), ctx);
 }
 
+const DEX_HINT = /swap|dex|uniswap|curve|raydium|pancake|orca|balancer|sushi|jupiter|camelot|aerodrome|traderjoe|velodrome|dodo|quickswap|thorchain/i;
+const exchangeJobs = new Map();
+
 export async function getExchangesClassed(env, ctx) {
+  const pending = exchangeJobs.get("classed");
+  if (pending) return pending;
+  const job = classExchanges(env, ctx).finally(() => exchangeJobs.delete("classed"));
+  exchangeJobs.set("classed", job);
+  return job;
+}
+
+async function classExchanges(env, ctx) {
   const list = await getExchangeList(env, ctx, 1);
-  const head = (list.rows || []).slice(0, 12);
-  const details = await Promise.all(head.map(async (row) => {
+  const head = (list.rows || []).slice(0, 100);
+  const hinted = head.filter((row) => DEX_HINT.test(`${row.id} ${row.name || ""}`));
+  const ordered = [...head.slice(0, 8), ...hinted.filter((row) => !head.slice(0, 8).includes(row)).slice(0, 4), ...head.slice(8)];
+  const flags = new Map();
+  let cold = 0;
+  for (const row of ordered) {
+    const cached = await peek(`cg:exchange:${row.id}`);
+    const fresh = cached && Date.now() - Date.parse(cached.fetchedAt || "") < 3_600_000;
+    if (!fresh) {
+      if (cold >= 12) continue;
+      cold += 1;
+    }
     try {
-      return await getExchange(env, ctx, row.id);
+      const detail = fresh ? cached : await getExchange(env, ctx, row.id);
+      if (detail) flags.set(row.id, detail.centralized ?? null);
     } catch (error) {
       console.error("sonar-exchange", row.id, error?.status || error?.code || "fail");
-      return null;
     }
-  }));
-  const flags = new Map(details.filter(Boolean).map((row) => [row.id, row.centralized]));
+  }
+  const rest = ordered.filter((row) => !flags.has(row.id)).slice(0, 8);
+  if (rest.length && ctx?.waitUntil) {
+    ctx.waitUntil(Promise.all(rest.map((row) => getExchange(env, ctx, row.id).catch(() => null))));
+  }
   return {
     ...list,
     rows: (list.rows || []).map((row) => ({ ...row, centralized: flags.has(row.id) ? flags.get(row.id) : null })),
@@ -195,38 +219,92 @@ export function getExchangeVolume(env, ctx, id, days) {
   return cached(`cg:exvol:${id}:${days}`, 3600, DAY, () => cg.getExchangeVolume(env, id, days), ctx);
 }
 
+const MOVERS_PAGES = 70;
+const MOVERS_PER = 250;
+const MOVERS_COLD = 6;
+const moverJobs = new Map();
+
 export async function getMovers(env, ctx, { period, minVol }) {
   const key = `calc:movers:${period}:${minVol}`;
-  return cached(key, 600, 3600, async () => {
-    const pages = [];
-    for (let page = 1; page <= 70; page += 1) {
-      try {
-        const payload = await getMarkets(env, ctx, { page, per: 250, category: "", order: "market_cap_desc", ids: "" });
-        const batch = payload.rows || [];
-        pages.push(payload);
-        if (batch.length < 250) break;
-      } catch (error) {
-        console.error("sonar-movers", page, error?.status || error?.code || "fail");
+  const hit = await peek(key);
+  const age = hit ? Date.now() - Date.parse(hit.fetchedAt || "") : Infinity;
+  if (hit && !hit.partial && age < 600_000) return { ...hit, stale: false };
+  if (hit?.partial && age < 25_000) return { ...hit, stale: true };
+  const pending = moverJobs.get(key);
+  if (pending) return pending;
+  const job = buildMovers(env, ctx, key, period, minVol).finally(() => moverJobs.delete(key));
+  moverJobs.set(key, job);
+  return job;
+}
+
+async function buildMovers(env, ctx, key, period, minVol) {
+  const pages = [];
+  let partial = false;
+  let cold = 0;
+  let nextPage = 1;
+  for (let page = 1; page <= MOVERS_PAGES; page += 1) {
+    const marketKey = `cg:markets:market_cap_desc:${MOVERS_PER}:${page}:-:-`;
+    const cached = await peek(marketKey);
+    const fresh = cached && Date.now() - Date.parse(cached.fetchedAt || "") < 600_000 && Array.isArray(cached.rows);
+    if (!fresh) {
+      if (cold >= MOVERS_COLD) {
+        partial = true;
+        nextPage = page;
         break;
       }
+      cold += 1;
     }
-    const rows = pages.flatMap((page) => page.rows || []);
-    const field = period === "1h" ? "ch1h" : period === "7d" ? "ch7d" : "ch24h";
-    const eligible = rows.filter((row) => row[field] != null && (minVol <= 0 || (row.volume24h != null && row.volume24h >= minVol)));
-    const gainers = eligible.slice().sort((a, b) => b[field] - a[field]).slice(0, 20);
-    const losers = eligible.slice().sort((a, b) => a[field] - b[field]).slice(0, 20);
-    return {
-      source: "CoinGecko",
-      sourceUrl: "https://www.coingecko.com/",
-      attribution: "Data provided by CoinGecko",
-      fetchedAt: new Date().toISOString(),
-      note: `Calculado sobre ${rows.length} monedas con capitalización.`,
-      period,
-      minVol,
-      gainers,
-      losers,
-    };
-  }, ctx);
+    try {
+      const payload = fresh ? cached : await getMarkets(env, ctx, { page, per: MOVERS_PER, category: "", order: "market_cap_desc", ids: "" });
+      const batch = payload.rows || [];
+      pages.push(payload);
+      nextPage = page + 1;
+      if (batch.length < MOVERS_PER) {
+        partial = false;
+        break;
+      }
+    } catch (error) {
+      console.error("sonar-movers", page, error?.status || error?.code || "fail");
+      partial = pages.length > 0;
+      nextPage = page;
+      break;
+    }
+  }
+  const rows = pages.flatMap((page) => page.rows || []);
+  if (!rows.length) {
+    const error = new Error("unavailable");
+    error.status = 502;
+    throw error;
+  }
+  const field = period === "1h" ? "ch1h" : period === "7d" ? "ch7d" : "ch24h";
+  const eligible = rows.filter((row) => row[field] != null && (minVol <= 0 || (row.volume24h != null && row.volume24h >= minVol)));
+  const entry = {
+    source: "CoinGecko",
+    sourceUrl: "https://www.coingecko.com/",
+    attribution: "Data provided by CoinGecko",
+    fetchedAt: new Date().toISOString(),
+    count: rows.length,
+    partial,
+    period,
+    minVol,
+    gainers: eligible.slice().sort((a, b) => b[field] - a[field]).slice(0, 20),
+    losers: eligible.slice().sort((a, b) => a[field] - b[field]).slice(0, 20),
+  };
+  await putEntry(key, entry, partial ? 20 : 600, ctx);
+  if (partial && ctx?.waitUntil) ctx.waitUntil(warmMoverPages(env, ctx, nextPage));
+  return { ...entry, stale: false };
+}
+
+async function warmMoverPages(env, ctx, start) {
+  for (let page = start; page < start + 4 && page <= MOVERS_PAGES; page += 1) {
+    try {
+      const payload = await getMarkets(env, ctx, { page, per: MOVERS_PER, category: "", order: "market_cap_desc", ids: "" });
+      if ((payload.rows || []).length < MOVERS_PER) break;
+    } catch (error) {
+      console.error("sonar-movers-warm", page, error?.status || error?.code || "fail");
+      break;
+    }
+  }
 }
 
 export async function getPairs(env, ctx) {

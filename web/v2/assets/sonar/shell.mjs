@@ -295,10 +295,10 @@ let searchTimer = 0;
 export function openSearch() {
   let dialog = document.getElementById("sn-search");
   if (!dialog) {
-    dialog = el("dialog", { id: "sn-search", class: "sn-dialog sn-search" });
+    dialog = el("dialog", { id: "sn-search", class: "sn-dialog sn-search", "aria-label": t("search") });
     document.body.append(dialog);
   }
-  const input = el("input", { type: "search", "data-sn": "q", placeholder: t("searchPh"), autocomplete: "off" });
+  const input = el("input", { type: "search", "data-sn": "q", placeholder: t("searchPh"), autocomplete: "off", "aria-label": t("search") });
   const results = el("div", { "data-sn": "search-results" });
   dialog.replaceChildren(
     el("h2", { text: t("search") }),

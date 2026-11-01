@@ -1,4 +1,4 @@
-import { compact, money, show } from "./format.mjs";
+import { compact, money, plain, show } from "./format.mjs";
 import { t } from "./i18n.mjs";
 import { hasCoin } from "./store.mjs";
 import { coinLink, el, logo, missing, pctNode, spark } from "./ui.mjs";
@@ -42,7 +42,7 @@ export function paintRanking(rows, opts) {
     ["marketCap", t("mcap")],
     ["volume24h", t("volume")],
     cols.supply === false ? null : ["circulating", t("supply")],
-    cols.spark === false ? null : ["spark", "7d"],
+    cols.spark === false ? null : ["spark", t("d7")],
     ["star", ""],
   ].filter(Boolean);
   const table = el("table", { class: "sn-table" });
@@ -131,6 +131,11 @@ function starButton(row, opts) {
     },
     text: "★",
   });
+}
+
+export function coverageNote(body) {
+  const count = body?.count == null ? "—" : show(plain(body.count, 0));
+  return t(body?.partial ? "universePartial" : "universe", { n: count });
 }
 
 export function sortRows(rows, key, dir) {

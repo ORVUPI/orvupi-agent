@@ -1,5 +1,5 @@
 import { getJson } from "../limits.js";
-import { disabledSet, httpsUrl, imageUrl, webUrl } from "../security.js";
+import { disabledSet, httpsUrl, imageUrl, publicHandle, webUrl } from "../security.js";
 import { coinRow, num, plainFromHtml, stamp, text } from "../normalize.js";
 
 const ATTR = "Data provided by CoinGecko";
@@ -102,7 +102,8 @@ export async function getCoin(env, id) {
   const whitepaper = typeof links.whitepaper === "string" ? links.whitepaper : links.whitepaper?.link;
   const platforms = {};
   for (const [key, value] of Object.entries(body.platforms || {})) {
-    if (typeof value === "string" && value.trim()) platforms[key] = value.trim();
+    const address = chainAddress(value);
+    if (address) platforms[key] = address;
   }
   const row = coinRow({
     id: body.id,
@@ -146,10 +147,10 @@ export async function getCoin(env, id) {
       forum: linkList(links.official_forum_url),
       chat: linkList(links.chat_url),
       announcement: linkList(links.announcement_url),
-      twitter: links.twitter_screen_name ? `https://x.com/${encodeURIComponent(links.twitter_screen_name)}` : null,
-      telegram: links.telegram_channel_identifier ? `https://t.me/${encodeURIComponent(links.telegram_channel_identifier)}` : null,
+      twitter: socialUrl("https://x.com/", publicHandle(links.twitter_screen_name, /^[A-Za-z0-9_]{1,15}$/)),
+      telegram: socialUrl("https://t.me/", telegramHandle(links.telegram_channel_identifier)),
       reddit: httpsUrl(links.subreddit_url),
-      facebook: links.facebook_username ? `https://www.facebook.com/${encodeURIComponent(links.facebook_username)}` : null,
+      facebook: socialUrl("https://www.facebook.com/", publicHandle(links.facebook_username, /^[A-Za-z0-9.]{1,50}$/)),
       github: linkList(links.repos_url?.github),
     },
     followers: {
@@ -245,7 +246,7 @@ export async function getExchange(env, id) {
     facebook: httpsUrl(body.facebook_url),
     reddit: httpsUrl(body.reddit_url),
     telegram: httpsUrl(body.telegram_url),
-    twitter: body.twitter_handle ? `https://x.com/${encodeURIComponent(body.twitter_handle)}` : null,
+    twitter: socialUrl("https://x.com/", publicHandle(body.twitter_handle, /^[A-Za-z0-9_]{1,15}$/)),
   });
 }
 
@@ -393,6 +394,23 @@ export async function getTreasury(env, coin) {
 export async function getHistory(env, id, date) {
   const body = await cg(env, `/coins/${encodeURIComponent(id)}/history?date=${encodeURIComponent(date)}&localization=false`);
   return meta({ price: num(body?.market_data?.current_price?.usd) });
+}
+
+function chainAddress(value) {
+  if (typeof value !== "string") return null;
+  const text = value.trim();
+  if (!/^[a-zA-Z0-9:_-]{2,128}$/.test(text)) return null;
+  return text;
+}
+
+function telegramHandle(value) {
+  const raw = String(value || "").trim();
+  const fromUrl = raw.match(/(?:https?:\/\/)?t\.me\/([A-Za-z0-9_]{1,32})/i);
+  return publicHandle(fromUrl ? fromUrl[1] : raw);
+}
+
+function socialUrl(prefix, handle) {
+  return handle ? `${prefix}${encodeURIComponent(handle)}` : null;
 }
 
 function pairs(rows) {

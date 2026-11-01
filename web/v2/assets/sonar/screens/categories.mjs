@@ -1,6 +1,6 @@
 import { api, qs } from "../api.mjs";
 import { compact, plain, show } from "../format.mjs";
-import { t } from "../i18n.mjs";
+import { categoryName, t } from "../i18n.mjs";
 import { paintRanking } from "../rows.mjs";
 import { snapshot, update } from "../store.mjs";
 import { el, emptyBlock, errorBlock, pctNode, skeleton, sourceLine } from "../ui.mjs";
@@ -16,14 +16,14 @@ async function directory(host, ctx) {
     const body = await api(`/api/sonar/categories${qs({ vs: snapshot().prefs.vs })}`);
     const rows = (body.rows || []).slice().sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0));
     const table = el("table", { class: "sn-table" });
-    table.append(el("thead", {}, el("tr", {}, [t("rank"), t("name"), t("mcap"), t("changeMc"), t("volume"), t("btcDom")].map((label) => el("th", { text: label })))));
+    table.append(el("thead", {}, el("tr", {}, [t("rank"), t("name"), t("mcap"), t("changeMc"), t("volume"), t("catShare")].map((label) => el("th", { text: label })))));
     const tbody = el("tbody");
-    rows.slice(0, 100).forEach((row, index) => {
+    rows.forEach((row, index) => {
       tbody.append(el("tr", {}, [
         el("td", { text: String(index + 1) }),
         el("td", {}, [
           el("span", { class: "sn-stacklogos" }, (row.top3 || []).map((src) => el("img", { src, alt: "", width: "20", height: "20", loading: "lazy", referrerpolicy: "no-referrer" }))),
-          el("a", { href: `${ctx.prefix}/sonar/categories/${row.id}`, text: row.name }),
+          el("a", { href: `${ctx.prefix}/sonar/categories/${row.id}`, text: categoryName(row.name) }),
         ]),
         el("td", { text: show(compact(row.marketCap, body.vs)) }),
         el("td", {}, pctNode(row.change24h)),
@@ -37,7 +37,7 @@ async function directory(host, ctx) {
       class: "sn-pill",
       "data-sn-cat": row.id,
       onclick: () => ctx.go(`/sonar/?category=${encodeURIComponent(row.id)}`),
-      text: row.name,
+      text: categoryName(row.name),
     })));
     host.replaceChildren(el("section", { class: "sn-screen", "data-sn": "categories" }, [
       el("h2", { text: t("categories") }),
@@ -62,7 +62,7 @@ async function detail(host, ctx) {
     const body = await api(`/api/sonar/categories/${ctx.route.id}${qs({ vs: snapshot().prefs.vs, per: 250, page: 1 })}`);
     const rows = (body.rows || []).map((row, index) => ({ ...row, rank: row.rank ?? index + 1 }));
     const rawName = body.category?.name || ctx.route.id.replace(/-/g, " ");
-    const name = ({ Meme: "Memes", "Meme Token": "Memes", "Artificial Intelligence": "Inteligencia artificial", "Real World Assets": "Activos del mundo real", Gaming: "Juegos", "Decentralized Finance (DeFi)": "DeFi" })[rawName] || rawName;
+    const name = categoryName(rawName);
     document.title = `${name} · ORVUPI Sonar`;
     const marketCap = body.category?.marketCap ?? sumOf(rows, "marketCap");
     const volume = body.category?.volume24h ?? sumOf(rows, "volume24h");
@@ -98,7 +98,7 @@ async function detail(host, ctx) {
       sourceLine(body),
     ]));
   } catch (error) {
-    host.replaceChildren(error.status === 404 ? emptyBlock(t("unavailable")) : errorBlock(() => detail(host, ctx)));
+    host.replaceChildren(error.status === 404 ? emptyBlock(t("missingCoin")) : errorBlock(() => detail(host, ctx)));
   }
 }
 

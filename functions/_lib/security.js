@@ -30,6 +30,11 @@ export function clientIp(request) {
 export function allowRequest(ip, limit = 120) {
   const now = Date.now();
   const recent = (buckets.get(ip) || []).filter((stamp) => now - stamp < 60_000);
+  if (buckets.size > 2000) {
+    for (const [key, stamps] of buckets) {
+      if (!stamps.length || now - stamps[stamps.length - 1] > 60_000) buckets.delete(key);
+    }
+  }
   if (recent.length >= limit) {
     buckets.set(ip, recent);
     return false;
@@ -45,10 +50,16 @@ export function slugOk(value) {
 
 export function intIn(value, min, max, fallback) {
   if (value == null || value === "") return fallback;
-  if (!/^\d+$/.test(String(value))) return null;
-  const number = Number(value);
-  if (!Number.isInteger(number) || number < min || number > max) return null;
+  const raw = String(value);
+  if (!/^\d{1,12}$/.test(raw)) return null;
+  const number = Number(raw);
+  if (!Number.isSafeInteger(number) || number < min || number > max) return null;
   return number;
+}
+
+export function publicHandle(value, pattern = /^[A-Za-z0-9_]{1,32}$/) {
+  const text = String(value || "").trim().replace(/^@/, "");
+  return pattern.test(text) ? text : null;
 }
 
 export function oneOf(value, allowed, fallback) {

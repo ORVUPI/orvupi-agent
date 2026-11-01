@@ -1,7 +1,7 @@
 import { api, qs } from "../api.mjs";
 import { chartHost, chartNote, drawChart, rsi } from "../chart.mjs";
 import { btcPrice, compact, day, money, plain, show, when } from "../format.mjs";
-import { t } from "../i18n.mjs";
+import { categoryName, t } from "../i18n.mjs";
 import { activeList, snapshot, uid, update } from "../store.mjs";
 import { el, emptyBlock, errorBlock, field, logo, missing, pctNode, setChildren, skeleton, sourceLine } from "../ui.mjs";
 import { positionOf } from "./portfolio.mjs";
@@ -31,7 +31,7 @@ export async function mount(host, ctx) {
     document.title = `${coin.name} (${coin.symbol}) · ORVUPI Sonar`;
   } catch (error) {
     if (mine !== ticket) return;
-    host.replaceChildren(error.status === 404 ? emptyBlock(t("unavailable")) : errorBlock(() => mount(host, ctx)));
+    host.replaceChildren(error.status === 404 ? emptyBlock(t("missingCoin")) : errorBlock(() => mount(host, ctx)));
   }
 }
 
@@ -46,7 +46,6 @@ function paint(host, ctx, coin, tab, mine) {
     treasury(ctx, coin).then((node) => { if (node && panel.isConnected) panel.append(node); });
   }
   else if (tab === "mercados") markets(panel, ctx, coin);
-  else if (tab === "noticias") panel.append(el("p", { class: "sn-state", "data-sn": "news", text: t("newsOff") }));
   else if (tab === "cartera") panel.append(holding(ctx, coin));
   else if (tab === "acerca") setChildren(panel, [about(ctx, coin), links(coin), contracts(ctx, coin)]);
   else history(panel, ctx, coin);
@@ -65,7 +64,7 @@ function header(ctx, coin) {
     ]),
     el("div", { class: "sn-actions" }, [
       el("button", { type: "button", class: "sn-btn", "data-sn": "share", onclick: () => share(ctx, coin), text: t("share") }),
-      el("button", { type: "button", class: "sn-star", "data-sn-star": coin.id, onclick: () => star(coin), text: "★" }),
+      el("button", { type: "button", class: "sn-star", "data-sn-star": coin.id, "aria-label": t("starAdd"), onclick: () => star(coin), text: "★" }),
       el("button", { type: "button", class: "sn-btn", "data-sn": "alert", onclick: () => alertForm(coin), text: t("saveAlert") }),
     ]),
   ]);
@@ -78,7 +77,7 @@ function tabs(ctx, tab) {
     "data-sn-tab": id,
     "aria-selected": tab === id ? "true" : "false",
     onclick: () => ctx.go(`/sonar/crypto/${ctx.route.id}?tab=${id}`),
-    text: t(id === "resumen" ? "summary" : id === "estadisticas" ? "stats" : id === "mercados" ? "mkts" : id === "noticias" ? "news" : id === "cartera" ? "wallet" : id === "acerca" ? "about" : "hist"),
+    text: t(id === "resumen" ? "summary" : id === "estadisticas" ? "stats" : id === "mercados" ? "mkts" : id === "cartera" ? "wallet" : id === "acerca" ? "about" : "hist"),
   })));
 }
 
@@ -121,7 +120,7 @@ async function summary(panel, ctx, coin, mine) {
       if (compare && compare !== coin.id && mode === "line") other = await api(`/api/sonar/coin/${compare}/chart${qs({ vs: coin.vs, days: spec[1] === "max" ? "365" : spec[1] })}`);
       stopChart?.();
       stopChart = await drawChart(chart, payload, { mode, compare: other, sma, markers: [] });
-      note.textContent = [chartNote(payload), compare ? t("compareNote") : "", t("candleNote")].filter(Boolean).join(" ");
+      note.textContent = [chartNote(payload), compare ? t("compareNote") : "", mode === "candles" ? t("candleNote") : ""].filter(Boolean).join(" ");
       const value = rsi(payload.points);
       read.textContent = value == null ? "" : `${t("rsi")}: ${plain(value, 1)} · ${t("calc")}`;
     } catch {
@@ -179,9 +178,10 @@ function about(ctx, coin) {
   if (!coin.description) box.append(el("p", { text: t("noDesc") }));
   else {
     box.append(el("p", { text: coin.description }));
+    if (coin.descriptionLang === "en") box.append(el("p", { class: "sn-note", text: t("descEn") }));
   }
   if (coin.categories?.length) {
-    box.append(el("div", { class: "sn-pills" }, coin.categories.filter((name) => name && name !== "null").map((name) => el("a", { class: "sn-pill", href: `${ctx.prefix}/sonar/categories/`, text: categoryEs(name) }))));
+    box.append(el("div", { class: "sn-pills" }, coin.categories.filter((name) => name && name !== "null").map((name) => el("a", { class: "sn-pill", href: `${ctx.prefix}/sonar/categories/`, text: categoryName(name) }))));
   }
   const source = sourceLine(coin);
   if (source) box.append(source);
@@ -226,22 +226,6 @@ function links(coin) {
   for (const href of bag.github || []) add("GitHub", href);
   if (!rows.length) return null;
   return el("section", { class: "sn-box", "data-sn": "links" }, [el("h3", { text: t("community") }), el("div", { class: "sn-links" }, rows)]);
-}
-
-const CATEGORY_ES = {
-  "Meme": "Memes", "Memes": "Memes",
-  "Real World Assets (RWA)": "Activos del mundo real", "Real World Assets": "Activos del mundo real",
-  "Artificial Intelligence (AI)": "Inteligencia artificial", "Artificial Intelligence": "Inteligencia artificial",
-  "DePIN": "DePIN", "Decentralized Finance (DeFi)": "DeFi", "Gaming": "Juegos",
-  "Layer 1 (L1)": "Capa 1", "Layer 2 (L2)": "Capa 2", "Smart Contract Platform": "Plataforma de contratos",
-  "Proof of Work (PoW)": "Prueba de trabajo", "Proof of Stake (PoS)": "Prueba de participación",
-  "Exchange-based Tokens": "Tokens de exchange", "Stablecoins": "Stablecoins",
-  "Privacy Coins": "Privacidad", "Oracle": "Oráculos", "Storage": "Almacenamiento",
-  "NFT": "NFT", "Metaverse": "Metaverso", "Social": "Social",
-};
-
-function categoryEs(name) {
-  return CATEGORY_ES[name] || name;
 }
 
 const CHAIN_NAMES = {
@@ -371,7 +355,7 @@ async function history(panel, ctx, coin) {
       ]));
     }
     table.append(tbody);
-    panel.replaceChildren(el("h3", { text: t("hist") }), el("div", { class: "sn-scroll" }, table), el("p", { class: "sn-note", text: body.volumeNote || t("volMissing") }), sourceLine(body));
+    panel.replaceChildren(el("h3", { text: t("hist") }), el("div", { class: "sn-scroll" }, table), el("p", { class: "sn-note", text: body.volumeNote === "volume-day" ? t("volumeDay") : t("volMissing") }), sourceLine(body));
   } catch {
     panel.replaceChildren(errorBlock(() => history(panel, ctx, coin)));
   }
@@ -444,16 +428,4 @@ async function alertForm(coin) {
     data.alerts.push({ id: uid(), coinId: coin.id, op: "above", price: value });
     return data;
   });
-}
-
-export function checkAlerts(updates) {
-  const alerts = snapshot().alerts || [];
-  for (const update of updates) {
-    for (const alert of alerts) {
-      if (alert.coinId !== update.id || update.prev == null) continue;
-      const hit = alert.op === "below" ? update.prev > alert.price && update.price <= alert.price : update.prev < alert.price && update.price >= alert.price;
-      if (!hit || Notification.permission !== "granted") continue;
-      try { new Notification("ORVUPI Sonar", { body: `${update.id} ${update.price}` }); } catch { /* sin permiso */ }
-    }
-  }
 }

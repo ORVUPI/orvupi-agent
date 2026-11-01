@@ -1,5 +1,5 @@
 import { api, qs } from "./api.mjs";
-import { compact, money, pct, plain, show, when } from "./format.mjs";
+import { compact, money, pct, show, when } from "./format.mjs";
 import { t } from "./i18n.mjs";
 import { snapshot } from "./store.mjs";
 import { el } from "./ui.mjs";
@@ -93,5 +93,3 @@ function line(coin) {
   const vs = coin.vs || snapshot().prefs.vs;
   return `${coin.name} (${coin.symbol}): ${show(money(coin.price, vs))}, ${t("h24")} ${show(pct(coin.ch24h))}, ${t("mcap")} ${show(compact(coin.marketCap, vs))}, ${t("fdv")} ${show(compact(coin.fdv, vs))}. ${t("according", { source: coin.source || "CoinGecko", time: when(coin.fetchedAt) || coin.fetchedAt || "" })}`;
 }
-
-void plain;

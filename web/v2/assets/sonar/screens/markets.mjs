@@ -1,21 +1,21 @@
 import { api, qs } from "../api.mjs";
 import { t } from "../i18n.mjs";
-import { applyLocalFilters, marketTabs, paintRanking, sortRows } from "../rows.mjs";
-import { snapshot, update, hasCoin } from "../store.mjs";
+import { applyLocalFilters, coverageNote, marketTabs, paintRanking, sortRows } from "../rows.mjs";
+import { snapshot, update } from "../store.mjs";
 import { el, emptyBlock, errorBlock, setChildren, skeleton, sourceLine } from "../ui.mjs";
 import { compact, money, show } from "../format.mjs";
 import { pctNode } from "../ui.mjs";
 
 const PRESETS = [
-  ["stablecoins", "Stablecoins"],
-  ["decentralized-finance-defi", "DeFi"],
-  ["artificial-intelligence", "IA"],
+  ["stablecoins", "stable"],
+  ["decentralized-finance-defi", "defi"],
+  ["artificial-intelligence", "ia"],
   ["real-world-assets-rwa", "RWA"],
   ["depin", "DePIN"],
-  ["gaming", "Gaming"],
+  ["gaming", "game"],
   ["meme-token", "Memes"],
-  ["layer-1", "Layer 1"],
-  ["layer-2", "Layer 2"],
+  ["layer-1", "l1"],
+  ["layer-2", "l2"],
 ];
 
 let ticket = 0;
@@ -40,7 +40,9 @@ async function ranking(host, ctx, mine) {
   const prefs = snapshot().prefs;
   const category = ctx.route.params.get("category") || "";
   const period = ctx.route.params.get("period") || prefs.period || "24h";
-  const page = Math.max(1, Number(ctx.route.params.get("page") || 1) || 1);
+  const page = Math.min(100, Math.max(1, Number(ctx.route.params.get("page") || 1) || 1));
+  const perRaw = Number(ctx.route.params.get("per") || 100);
+  const per = [50, 100, 250].includes(perRaw) ? perRaw : 100;
   const view = ctx.route.params.get("view") || prefs.view || "list";
   body.replaceChildren(skeleton(10));
   let rows = [];
@@ -48,7 +50,7 @@ async function ranking(host, ctx, mine) {
   const filters = readFilters(ctx.route.params);
   async function load() {
     try {
-      const payload = await api(`/api/sonar/markets${qs({ vs: prefs.vs, page, per: 100, category, order: "market_cap_desc" })}`);
+      const payload = await api(`/api/sonar/markets${qs({ vs: prefs.vs, page, per, category, order: "market_cap_desc" })}`);
       if (mine !== ticket) return;
       meta = payload;
       rows = payload.rows || [];
@@ -60,18 +62,16 @@ async function ranking(host, ctx, mine) {
   }
   function paint() {
     const shown = applyView(rows, filters, period, ctx);
-    const limit = Number(ctx.route.params.get("top") || prefs.top || 100);
-    const sliced = shown.slice(0, limit);
     setChildren(body, [
       toolbar(),
       pills(),
       filtersOpen() ? filterForm() : null,
-      sliced.length ? paintRanking(sliced, {
+      shown.length ? paintRanking(shown, {
         prefix: ctx.prefix,
         period,
         currency: meta?.vs || prefs.vs,
         columns: prefs.columns,
-        rankFrom: (page - 1) * 100 + 1,
+        rankFrom: (page - 1) * per + 1,
         view,
         onStar: (row) => toggleStar(row, paint),
         onSort: (key) => {
@@ -86,7 +86,7 @@ async function ranking(host, ctx, mine) {
       el("div", { class: "sn-tools" }, [
         page > 1 ? el("button", { type: "button", class: "sn-btn", "data-sn": "page-prev", onclick: () => { setParam(ctx, { page: String(page - 1) }); ranking(host, ctx, mine); }, text: t("prev") }) : null,
         el("span", { text: `${t("page")} ${page}` }),
-        rows.length >= 100 ? el("button", { type: "button", class: "sn-btn", "data-sn": "page-next", onclick: () => { setParam(ctx, { page: String(page + 1) }); ranking(host, ctx, mine); }, text: t("next") }) : null,
+        rows.length >= per && page < 100 ? el("button", { type: "button", class: "sn-btn", "data-sn": "page-next", onclick: () => { setParam(ctx, { page: String(page + 1) }); ranking(host, ctx, mine); }, text: t("next") }) : null,
       ]),
       sourceLine(meta),
     ]);
@@ -97,22 +97,22 @@ async function ranking(host, ctx, mine) {
       el("button", { type: "button", class: view === "list" ? "sn-btn on" : "sn-btn", "data-sn": "view-list", onclick: () => setParam(ctx, { view: "list" }) || ranking(host, ctx, mine), text: t("list") }),
       el("button", { type: "button", class: view === "grid" ? "sn-btn on" : "sn-btn", "data-sn": "view-grid", onclick: () => setParam(ctx, { view: "grid" }) || ranking(host, ctx, mine), text: t("grid") }),
       select(t("period"), period, [["1h", t("p1h")], ["24h", t("p24h")], ["7d", t("p7d")]], (value) => { update((data) => { data.prefs.period = value; return data; }); setParam(ctx, { period: value }); ranking(host, ctx, mine); }),
-      select("Top", String(ctx.route.params.get("top") || prefs.top || 100), [["100", "100"], ["250", "250"], ["500", "500"], ["1000", "1000"]], (value) => { update((data) => { data.prefs.top = Number(value); return data; }); setParam(ctx, { top: value }); ranking(host, ctx, mine); }),
+      select(t("perPage"), String(per), [["50", "50"], ["100", "100"], ["250", "250"]], (value) => { setParam(ctx, { per: value, page: "1" }); ranking(host, ctx, mine); }),
       el("button", { type: "button", class: "sn-btn", "data-sn": "filters", "aria-expanded": filtersOpen() ? "true" : "false", onclick: () => { body.toggleAttribute("data-filters"); paint(); }, text: t("filters") }),
     ]);
   }
   function pills() {
     const known = new Set(PRESETS.map((row) => row[0]));
     return el("div", { class: "sn-pills", "data-sn": "pills" }, [
-      el("button", { type: "button", class: category ? "sn-pill" : "sn-pill on", onclick: () => setParam(ctx, { category: "" }) || ranking(host, ctx, mine), text: t("allEx") }),
-      ...PRESETS.map(([id, label]) => el("button", {
+      el("button", { type: "button", class: category ? "sn-pill" : "sn-pill on", onclick: () => setParam(ctx, { category: "", page: "1" }) || ranking(host, ctx, mine), text: t("allEx") }),
+      ...PRESETS.filter(([id]) => known.has(id)).map(([id, label]) => el("button", {
         type: "button",
         class: category === id ? "sn-pill on" : "sn-pill",
         "data-sn-cat": id,
-        onclick: () => setParam(ctx, { category: id }) || ranking(host, ctx, mine),
-        text: label,
+        onclick: () => setParam(ctx, { category: id, page: "1" }) || ranking(host, ctx, mine),
+        text: label === "RWA" || label === "DePIN" || label === "Memes" ? label : t(label),
       })),
-    ].filter((node) => node && (node.getAttribute?.("data-sn-cat") ? known.has(node.getAttribute("data-sn-cat")) || true : true)));
+    ]);
   }
   function filtersOpen() {
     return body.hasAttribute("data-filters");
@@ -146,32 +146,34 @@ function applyView(rows, filters, period, ctx) {
 async function overview(host, ctx, mine) {
   const body = host.querySelector("#sn-market-body");
   body.replaceChildren(skeleton(6));
-  try {
-    const [global, movers] = await Promise.all([
-      api(`/api/sonar/global${qs({ vs: snapshot().prefs.vs })}`),
-      api(`/api/sonar/movers${qs({ vs: snapshot().prefs.vs, period: "24h", minVol: 50000 })}`),
-    ]);
-    if (mine !== ticket) return;
-    const cap = global.data?.global?.marketCap;
-    body.replaceChildren(
-      el("section", { class: "sn-overview", "data-sn": "overview" }, [
-        el("article", { class: "sn-hero" }, [
-          el("h2", { text: t("cap") }),
-          el("p", { class: "sn-hero-num", text: show(compact(cap, global.vs)) }),
-          pctNode(global.data?.global?.change24h),
-          el("p", { class: "sn-note", text: t("capMissing") }),
-          sourceLine(global.data?.global),
-        ]),
-        moverCol(t("gainers"), movers.gainers, ctx, movers.vs),
-        moverCol(t("losers"), movers.losers, ctx, movers.vs),
-      ]),
-      el("p", { class: "sn-note", text: movers.note || t("universe") }),
-      sourceLine(movers),
-    );
-  } catch {
-    if (mine !== ticket) return;
+  const vs = snapshot().prefs.vs;
+  const [globalResult, moversResult] = await Promise.allSettled([
+    api(`/api/sonar/global${qs({ vs })}`),
+    api(`/api/sonar/movers${qs({ vs, period: "24h", minVol: 50000 })}`),
+  ]);
+  if (mine !== ticket) return;
+  if (globalResult.status === "rejected" && moversResult.status === "rejected") {
     body.replaceChildren(errorBlock(() => overview(host, ctx, mine)));
+    return;
   }
+  const global = globalResult.status === "fulfilled" ? globalResult.value : null;
+  const movers = moversResult.status === "fulfilled" ? moversResult.value : null;
+  const cap = global?.data?.global?.marketCap;
+  body.replaceChildren(
+    el("section", { class: "sn-overview", "data-sn": "overview" }, [
+      el("article", { class: "sn-hero" }, global ? [
+        el("h2", { text: t("cap") }),
+        el("p", { class: "sn-hero-num", text: show(compact(cap, global.vs)) }),
+        pctNode(global.data?.global?.change24h),
+        el("p", { class: "sn-note", text: t("capMissing") }),
+        sourceLine(global.data?.global),
+      ] : [el("h2", { text: t("cap") }), errorBlock(() => overview(host, ctx, mine))]),
+      movers ? moverCol(t("gainers"), movers.gainers, ctx, movers.vs) : errorBlock(() => overview(host, ctx, mine)),
+      movers ? moverCol(t("losers"), movers.losers, ctx, movers.vs) : null,
+    ]),
+    movers ? el("p", { class: "sn-note", text: coverageNote(movers) }) : null,
+    movers ? sourceLine(movers) : null,
+  );
 }
 
 function moverCol(title, rows, ctx, currency) {
@@ -233,5 +235,3 @@ async function toggleStar(row, paint) {
   });
   paint();
 }
-
-export { toggleStar, hasCoin };

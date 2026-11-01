@@ -1,3 +1,4 @@
+import { when } from "./format.mjs";
 import { t } from "./i18n.mjs";
 import { el } from "./ui.mjs";
 
@@ -38,8 +39,8 @@ export async function drawChart(host, payload, { mode = "line", compare = null, 
     const index = Math.max(0, Math.min(points.length - 1, Math.round((x / 640) * (points.length - 1))));
     const row = points[index];
     tip.textContent = row.open != null
-      ? `${new Date(row.time).toISOString().slice(0, 16)}  O ${row.open}  H ${row.high}  L ${row.low}  C ${row.close}`
-      : `${new Date(row.time).toISOString().slice(0, 16)}  ${row.close}`;
+      ? `${when(row.time)}  ${t("open")} ${row.open}  ${t("high")} ${row.high}  ${t("low")} ${row.low}  ${t("close")} ${row.close}`
+      : `${when(row.time)}  ${row.close}`;
   });
   host.append(svg, tip);
   return () => host.replaceChildren();
@@ -179,6 +180,14 @@ export function rsi(points) {
   return 100 - 100 / (1 + rs);
 }
 
+function noteOf(value) {
+  if (!value) return "";
+  if (value === "max-year") return t("maxYear");
+  if (value === "ohlc-volume") return t("ohlcVolume");
+  if (value === "volume-day") return t("volumeDay");
+  return String(value);
+}
+
 export function chartNote(payload) {
-  return [payload?.interval || "", payload?.maxRangeNote || "", payload?.volumeNote || "", t("calc")].filter(Boolean).join(" · ");
+  return [noteOf(payload?.maxRangeNote), noteOf(payload?.volumeNote)].filter(Boolean).join(" · ");
 }

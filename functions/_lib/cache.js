@@ -1,6 +1,14 @@
 /** Caché en memoria del isolate y, si existe, Cache API. Nada más viejo de maxAgeSec se sirve. */
 
 const memory = new Map();
+const inflight = new Map();
+const MAX_MEMORY = 400;
+
+function remember(key, entry) {
+  if (memory.has(key)) memory.delete(key);
+  memory.set(key, entry);
+  while (memory.size > MAX_MEMORY) memory.delete(memory.keys().next().value);
+}
 
 function ageMs(entry) {
   const stamp = Date.parse(entry?.fetchedAt || "");
@@ -33,6 +41,19 @@ async function writeCache(key, entry, ttlSec) {
   }
 }
 
+export async function peek(key) {
+  if (memory.has(key)) return memory.get(key);
+  return readCache(key);
+}
+
+export async function putEntry(key, entry, ttlSec, ctx) {
+  remember(key, entry);
+  const job = writeCache(key, entry, ttlSec);
+  if (ctx?.waitUntil) ctx.waitUntil(job);
+  else await job;
+  return entry;
+}
+
 export async function getOrRefresh({ key, ttlSec, staleSec, maxAgeSec = 86400, loader, ctx }) {
   const freshFor = ttlSec * 1000;
   const staleFor = Math.min(staleSec, maxAgeSec) * 1000;
@@ -40,17 +61,27 @@ export async function getOrRefresh({ key, ttlSec, staleSec, maxAgeSec = 86400, l
   if (mem && ageMs(mem) < freshFor) return { ...mem, stale: false };
   const cached = mem && ageMs(mem) < staleFor ? mem : await readCache(key);
   if (cached && ageMs(cached) < freshFor) {
-    memory.set(key, cached);
+    remember(key, cached);
     return { ...cached, stale: false };
   }
   if (cached && ageMs(cached) < staleFor) {
-    const job = refresh().catch((error) => {
+    const job = join().catch((error) => {
       console.error("sonar-refresh", key.slice(0, 80), error?.status || error?.code || "fail");
     });
     if (ctx?.waitUntil) ctx.waitUntil(job);
     return { ...cached, stale: true };
   }
-  return refresh();
+  return join();
+
+  function join() {
+    const pending = inflight.get(key);
+    if (pending) return pending;
+    const job = refresh().finally(() => {
+      if (inflight.get(key) === job) inflight.delete(key);
+    });
+    inflight.set(key, job);
+    return job;
+  }
 
   async function refresh() {
     const loaded = await loader();
@@ -60,10 +91,6 @@ export async function getOrRefresh({ key, ttlSec, staleSec, maxAgeSec = 86400, l
       error.code = "stale-source";
       throw error;
     }
-    memory.set(key, entry);
-    const job = writeCache(key, entry, ttlSec);
-    if (ctx?.waitUntil) ctx.waitUntil(job);
-    else await job;
-    return { ...entry, stale: false };
+    return putEntry(key, entry, ttlSec, ctx).then(() => ({ ...entry, stale: false }));
   }
 }
