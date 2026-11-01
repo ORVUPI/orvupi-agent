@@ -24,7 +24,7 @@ Comparación del 1 de noviembre de 2026, después de la capa `/api/sonar` y las 
 | Portfolio | Operaciones y P&L en la cuenta | Compra, venta, transferencia, depósito y retirada; P&L, precio medio, reparto e histórico con precios reales. Sin cuentas | Completo |
 | Calendario | Tipos propios, incluidos AMA y airdrops | Eventos que publica PatternPlus | Parcial |
 | Unlocks | Calendario de desbloqueos | Tabla PatternPlus y bloque cuando la ficha tiene datos | Completo |
-| Noticias | Titulares propios | Apagadas: los términos de los medios no autorizan el titular | Pendiente |
+| Noticias | Titulares propios | Pestaña oculta: los términos de los medios no autorizan el titular | Pendiente |
 | Serie de cap. total | Gráfico histórico | Cifra actual sí. La serie no está en la fuente gratuita y no hay almacén propio | No viable |
 | Liquidaciones, ETF, funding, APY | Productos o datos de pago | Ocultos | No viable |
 | Mercados de predicción | Pestaña propia | Fuera de alcance | Fuera de alcance |
