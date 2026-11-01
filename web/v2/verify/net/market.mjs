@@ -267,8 +267,8 @@ export async function fetchTopMarkets() {
   return withCache("markets:top", async () => {
     const response = await fetchJson("/api/sonar/markets?vs=usd&per=50&page=1", { headers: JSON_HEADERS, attempts: 2 });
     const rows = Array.isArray(response.body?.rows) ? response.body.rows : [];
-    const coins = rows.flatMap((coin) => {
-      const price = finite(coin.current_price);
+    const coins = rows.slice(0, 8).flatMap((coin) => {
+      const price = finite(coin.price ?? coin.current_price);
       if (!coin.id || price == null) return [];
       return [{
         id: String(coin.id),

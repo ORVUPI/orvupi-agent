@@ -88,6 +88,7 @@ async function summary(panel, ctx, coin, mine) {
   let period = "24h";
   let compare = "";
   let sma = false;
+  let drawSeq = 0;
   const note = el("p", { class: "sn-note" });
   const read = el("p", { class: "sn-note", "data-sn": "rsi" });
   for (const [id, , ] of PERIODS) {
@@ -103,12 +104,15 @@ async function summary(panel, ctx, coin, mine) {
   async function draw() {
     tools.querySelectorAll("[data-sn-period]").forEach((button) => button.classList.toggle("on", button.getAttribute("data-sn-period") === period));
     const spec = PERIODS.find((row) => row[0] === period);
+    const seq = ++drawSeq;
+    chart.setAttribute("aria-busy", "true");
+    chart.style.opacity = "0.45";
     try {
       const path = mode === "candles"
         ? `/api/sonar/coin/${coin.id}/ohlc${qs({ vs: coin.vs, days: spec[1] === "max" ? "365" : spec[1] })}`
         : `/api/sonar/coin/${coin.id}/chart${qs({ vs: coin.vs, days: spec[1], interval: spec[2] === "1h" ? "1h" : "" })}`;
       const payload = await api(path);
-      if (mine !== ticket) return;
+      if (mine !== ticket || seq !== drawSeq) return;
       let points = payload.points || [];
       if (spec[2] === "ytd") {
         const start = Date.parse(`${new Date().getUTCFullYear()}-01-01T00:00:00Z`);
@@ -118,13 +122,18 @@ async function summary(panel, ctx, coin, mine) {
       }
       let other = null;
       if (compare && compare !== coin.id && mode === "line") other = await api(`/api/sonar/coin/${compare}/chart${qs({ vs: coin.vs, days: spec[1] === "max" ? "365" : spec[1] })}`);
+      if (mine !== ticket || seq !== drawSeq) return;
+      chart.removeAttribute("aria-busy");
+      chart.style.opacity = "";
       stopChart?.();
       stopChart = await drawChart(chart, payload, { mode, compare: other, sma, markers: [] });
       note.textContent = [chartNote(payload), compare ? t("compareNote") : "", mode === "candles" ? t("candleNote") : ""].filter(Boolean).join(" ");
       const value = rsi(payload.points);
       read.textContent = value == null ? "" : `${t("rsi")}: ${plain(value, 1)} · ${t("calc")}`;
     } catch {
-      if (mine !== ticket) return;
+      if (mine !== ticket || seq !== drawSeq) return;
+      chart.removeAttribute("aria-busy");
+      chart.style.opacity = "";
       chart.replaceChildren(errorBlock(draw));
     }
   }
@@ -181,7 +190,15 @@ function about(ctx, coin) {
     if (coin.descriptionLang === "en") box.append(el("p", { class: "sn-note", text: t("descEn") }));
   }
   if (coin.categories?.length) {
-    box.append(el("div", { class: "sn-pills" }, coin.categories.filter((name) => name && name !== "null").map((name) => el("a", { class: "sn-pill", href: `${ctx.prefix}/sonar/categories/`, text: categoryName(name) }))));
+    const pills = coin.categories.filter((name) => name && name !== "null").map((name) => el("a", { class: "sn-pill", href: `${ctx.prefix}/sonar/categories/`, "data-name": name, text: categoryName(name) }));
+    box.append(el("div", { class: "sn-pills" }, pills));
+    api(`/api/sonar/categories${qs({ vs: coin.vs || "usd" })}`).then((body) => {
+      const ids = new Map((body.rows || []).map((row) => [String(row.name || "").toLowerCase(), row.id]));
+      for (const pill of pills) {
+        const id = ids.get(String(pill.getAttribute("data-name")).toLowerCase());
+        if (id) pill.setAttribute("href", `${ctx.prefix}/sonar/categories/${encodeURIComponent(id)}`);
+      }
+    }).catch(() => { /* se quedan enlazadas a la lista */ });
   }
   const source = sourceLine(coin);
   if (source) box.append(source);
@@ -210,7 +227,7 @@ function links(coin) {
   const bag = coin.links || {};
   const rows = [];
   const add = (label, href, count) => {
-    if (!href || href === "null") return;
+    if (!href || href === "null" || /<|>|%3C|%3E/i.test(href)) return;
     const text = count != null ? `${label} · ${plain(count, 0)}` : label;
     rows.push(el("a", { href, rel: "noreferrer", text }));
   };
@@ -288,6 +305,7 @@ async function markets(panel, ctx, coin) {
     const ref = coin.price;
     const spot = (body.spot?.rows || []).filter((row) => {
       if (row.volume24h == null || row.volume24h <= 0 || row.price == null) return false;
+      if (row.coinId && row.coinId !== coin.id) return false;
       if (ref) {
         const ratio = row.price / ref;
         if (ratio > 3 || ratio < 0.3) return false;

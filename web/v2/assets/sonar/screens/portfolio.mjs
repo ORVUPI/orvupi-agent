@@ -143,7 +143,8 @@ function form(host, ctx, vs) {
     const data = new FormData(node);
     const coinId = String(data.get("coinId") || "").trim();
     const qty = Number(data.get("qty"));
-    const price = Number(data.get("price"));
+    const rawPrice = String(data.get("price") ?? "").trim();
+    const price = rawPrice === "" ? NaN : Number(rawPrice);
     const at = String(data.get("at") || "");
     if (!/^(?!.*\.\.)[A-Za-z0-9_-][A-Za-z0-9_.-]{0,119}$/.test(coinId) || !(qty > 0) || !Number.isFinite(price) || !at) {
       node.querySelector("[data-sn=tx-error]").hidden = false;
@@ -163,7 +164,7 @@ function form(host, ctx, vs) {
     labeled("qty", t("qty"), "number"),
     labeled("price", t("price"), "number"),
     labeled("fee", t("fee"), "number"),
-    labeled("at", t("date"), "date"),
+    labeled("at", t("date"), "date", new Date().toISOString().slice(0, 10)),
     labeled("note", t("note"), "text"),
     el("button", { type: "button", class: "sn-btn", "data-sn": "fill-price", onclick: () => fill(node), text: t("useNow") }),
     el("button", { type: "button", class: "sn-btn", "data-sn": "fill-date", onclick: () => fillDate(node), text: t("useDate") }),
@@ -213,8 +214,8 @@ function selectType() {
   return el("label", {}, [t("actions"), select]);
 }
 
-function labeled(name, label, type) {
-  return el("label", {}, [label, el("input", { name, type, step: type === "number" ? "any" : null })]);
+function labeled(name, label, type, value = null) {
+  return el("label", {}, [label, el("input", { name, type, step: type === "number" ? "any" : null, value })]);
 }
 
 async function fill(form) {
