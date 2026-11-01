@@ -55,6 +55,21 @@ export function when(value) {
   return new Intl.DateTimeFormat(localeTag(), { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Madrid" }).format(date);
 }
 
+/** Hora de una lectura guardada, en Europe/Madrid, para el sello «datos de hh:mm». */
+export function clock(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZone: "Europe/Madrid",
+  }).formatToParts(date);
+  const hh = parts.find((part) => part.type === "hour")?.value;
+  const mm = parts.find((part) => part.type === "minute")?.value;
+  return hh && mm ? `${hh}:${mm}` : "";
+}
+
 export function day(value) {
   if (!value) return null;
   const date = new Date(value);

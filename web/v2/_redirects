@@ -1,6 +1,9 @@
 # www.orvupi.com lo sirve Cloudflare Pages. Esta primera regla solo la aplica Netlify,
 # en superb-horse-9036f5.netlify.app. Cloudflare Pages ignora reglas con dominio.
 # La dirección está grabada en los metadatos on-chain. El «!» fuerza el 301 aunque el archivo exista.
+# stubxai.pages.dev (solo ese host, sin el subdominio de un preview) lo redirige
+# functions/_middleware.js. No añadas aquí *.pages.dev: una regla comodín mandaría
+# los previews a orvupi.com y no se podrían probar las Functions antes de producción.
 https://superb-horse-9036f5.netlify.app/*  https://orvupi.com/:splat  301!
 
 # Cloudflare Pages quita la extensión de un HTML suelto y lo sirve sin ella.

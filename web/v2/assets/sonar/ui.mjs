@@ -1,4 +1,4 @@
-import { clsPct, pct, show, when } from "./format.mjs";
+import { clock, clsPct, pct, show, when } from "./format.mjs";
 import { t } from "./i18n.mjs";
 import { finiteSeries, priceColor, seriesUp } from "./price-color.mjs";
 
@@ -106,6 +106,14 @@ export function sourceLine(payload, extra) {
   const link = payload?.sourceUrl ? el("a", { href: payload.sourceUrl, rel: "noreferrer", text: payload.source || payload.attribution }) : payload?.source || "";
   line.append(link || "");
   if (payload?.fetchedAt) line.append(` · ${when(payload.fetchedAt)}`);
+  if (payload?.stale) {
+    const time = clock(payload.fetchedAt);
+    const stamp = time ? t("asOf", { time }) : payload.asOf;
+    if (stamp) {
+      line.append(` · ${stamp}`);
+      line.setAttribute("data-as-of", stamp);
+    }
+  }
   if (extra) line.append(` · ${extra}`);
   return line;
 }

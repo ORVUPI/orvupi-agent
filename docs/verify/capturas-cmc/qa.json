@@ -42,7 +42,7 @@
   {
     "name": "chart-live",
     "ok": true,
-    "detail": "{\"1h\":\"up:#16c784\",\"upShot\":\"1h\",\"24h\":\"up:#16c784\",\"7d\":\"down:#ea3943\",\"downShot\":\"7d\",\"30d\":\"down:#ea3943\",\"90d\":\"up:#16c784\",\"1y\":\"down:#ea3943\",\"ytd\":\"down:#ea3943\",\"all\":\"up:#16c784\"}"
+    "detail": "{\"1h\":\"down:#ea3943\",\"downShot\":\"1h\",\"24h\":\"up:#16c784\",\"upShot\":\"24h\",\"7d\":\"down:#ea3943\",\"30d\":\"down:#ea3943\",\"90d\":\"up:#16c784\",\"1y\":\"down:#ea3943\",\"ytd\":\"down:#ea3943\",\"all\":\"up:#16c784\"}"
   },
   {
     "name": "chart-7d",

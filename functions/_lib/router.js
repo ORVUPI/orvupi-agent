@@ -1,4 +1,5 @@
 import * as data from "./data.js";
+import { runWithBudget } from "./limits.js";
 import { scaleSeries } from "./normalize.js";
 import { allowRequest, cleanQuery, clientIp, intIn, json, oneOf, slugOk } from "./security.js";
 
@@ -8,21 +9,24 @@ const PERIODS = ["1h", "24h", "7d"];
 const KINDS = ["cex", "dex", "derivatives", "all"];
 
 function cacheHeaders(ttl, stale, payload) {
-  return {
+  const headers = {
     "cache-control": `public, max-age=${ttl}, stale-while-revalidate=${stale}`,
     "x-sonar-source": payload?.source || "",
     "x-sonar-fetched-at": payload?.fetchedAt || "",
   };
+  if (payload?.asOf) headers["x-sonar-as-of"] = payload.asOf;
+  return headers;
 }
 
 function fail(error) {
   console.error("sonar-api", error?.status || error?.code || "fail");
   if (error?.status === 404) return json(404, { ok: false, error: "not-found" });
   if (error?.status === 400) return json(400, { ok: false, error: "invalid" });
-  return json(502, { ok: false, error: "unavailable" });
+  return json(503, { ok: false, error: "unavailable" });
 }
 
 async function vsFactor(env, ctx, vs) {
+  if (vs === "usd") return { vs: "usd", factor: 1, missing: false };
   let allowed = ["usd", "eur"];
   try {
     const list = await data.getVs(env, ctx);
@@ -55,11 +59,12 @@ export async function handle(request, env = {}, ctx = {}) {
   const rest = parts[0] === "api" && parts[1] === "sonar" ? parts.slice(2) : parts;
   const q = url.searchParams;
   try {
-    const head = rest[0] || "";
-    const fx = NEEDS_VS.has(head) ? await vsOf() : { vs: "usd", factor: 1, missing: false };
-    if (fx?.error) return fx.error;
-    const result = await route(rest, q, fx);
-    return result;
+    return await runWithBudget(8000, async () => {
+      const head = rest[0] || "";
+      const fx = NEEDS_VS.has(head) ? await vsOf() : { vs: "usd", factor: 1, missing: false };
+      if (fx?.error) return fx.error;
+      return route(rest, q, fx);
+    });
   } catch (error) {
     return fail(error);
   }
@@ -120,15 +125,18 @@ export async function handle(request, env = {}, ctx = {}) {
     if (category && !slugOk(category)) return json(400, { ok: false, error: "invalid" });
     const idList = ids ? ids.split(",").filter(Boolean) : [];
     if (idList.length > 50 || idList.some((id) => !slugOk(id))) return json(400, { ok: false, error: "invalid" });
-    const payload = await data.getMarkets(env, ctx, { page, per: Number(per), category, order, ids: idList.join(",") });
+    const listed = !category && idList.length === 0;
+    const [payload, global] = await Promise.all([
+      data.getMarkets(env, ctx, { page, per: Number(per), category, order, ids: idList.join(",") }),
+      listed ? data.getGlobal(env, ctx).catch(() => null) : null,
+    ]);
     const scaled = data.scaleRows(payload, fx.missing ? 1 : fx.factor);
     let total = null;
-    if (!category && idList.length === 0) {
-      const global = await data.getGlobal(env, ctx).catch(() => null);
+    if (listed) {
+      const fromSource = Number(payload?.total);
       const assets = Number(global?.assets);
-      const listed = await data.getMarketsTotal(env, ctx, assets).catch(() => null);
-      const count = Number(listed?.count);
-      total = Number.isFinite(count) && count > 0 ? count : Number.isFinite(assets) && assets > 0 ? assets : null;
+      if (payload?.total != null && Number.isFinite(fromSource)) total = fromSource;
+      else if (Number.isFinite(assets) && assets > 0) total = assets;
     }
     return json(200, { ok: true, ...withVs(scaled, fx), total }, cacheHeaders(page === 1 ? 60 : 600, 3600, payload));
   }
@@ -364,11 +372,21 @@ export async function handle(request, env = {}, ctx = {}) {
       }));
       return json(200, { ok: true, ...withVs({ ...payload, rows, type }, fx) }, cacheHeaders(3600, 86400, payload));
     }
+    const ratesJob = data.getRates(env, ctx).catch(() => null);
     const payload = await data.getExchangesClassed(env, ctx);
-    const btc = await btcUsd(fx);
+    const factor = fx.missing ? 1 : (fx.factor || 1);
+    const needsBtc = (payload.rows || []).some((row) => row.volume24hBtc != null);
+    let btc = null;
+    if (needsBtc) {
+      const rates = await ratesJob;
+      const usd = rates?.rates?.usd;
+      if (usd) btc = usd * factor;
+    } else if (ctx?.waitUntil) {
+      ctx.waitUntil(ratesJob);
+    }
     let rows = payload.rows.map((row) => ({
       ...row,
-      volume24h: row.volume24hBtc == null || btc == null ? null : row.volume24hBtc * btc,
+      volume24h: row.volume24hBtc != null && btc != null ? row.volume24hBtc * btc : row.volume24hUsd == null ? null : row.volume24hUsd * factor,
     }));
     if (type === "cex") rows = rows.filter((row) => row.centralized === true);
     if (type === "dex") rows = rows.filter((row) => row.centralized === false);
@@ -384,10 +402,17 @@ export async function handle(request, env = {}, ctx = {}) {
   async function exchange(id, fx) {
     if (!slugOk(id)) return json(400, { ok: false, error: "invalid" });
     const payload = await data.getExchange(env, ctx, id);
-    const btc = await btcUsd(fx);
+    const factor = fx.missing ? 1 : (fx.factor || 1);
+    let volume24h = null;
+    if (payload.volume24hBtc != null) {
+      const btc = await btcUsd(fx);
+      volume24h = btc == null ? null : payload.volume24hBtc * btc;
+    } else if (payload.volume24hUsd != null) {
+      volume24h = payload.volume24hUsd * factor;
+    }
     return json(200, {
       ok: true,
-      ...withVs({ ...payload, volume24h: payload.volume24hBtc == null || btc == null ? null : payload.volume24hBtc * btc }, fx),
+      ...withVs({ ...payload, volume24h }, fx),
     }, cacheHeaders(3600, 86400, payload));
   }
 

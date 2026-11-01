@@ -166,22 +166,406 @@ test("/:lang/sonar/* deja pasar /assets/sonar/* a los estáticos", async () => {
   assert.equal(passed, true);
 });
 
-test("el total del ranking sale de la lista real y todas las páginas son alcanzables", async () => {
-  const { countMarkets } = await import("./data.js");
-  const real = 18680;
-  const calls = [];
-  const load = async (_env, _ctx, q) => {
-    calls.push(q.page);
-    const start = (q.page - 1) * q.per;
-    return { rows: Array.from({ length: Math.max(0, Math.min(q.per, real - start)) }, () => ({})) };
+test("el total del ranking sale de los activos activos, sin recorrer páginas", async () => {
+  const { clearCache } = await import("./cache.js");
+  await clearCache();
+  const original = globalThis.fetch;
+  let markets = 0;
+  globalThis.fetch = async (url) => {
+    const href = String(url);
+    if (href.includes("/global")) {
+      return jsonResponse({
+        data: {
+          active_cryptocurrencies: 17000,
+          total_market_cap: { usd: 1 },
+          total_volume: { usd: 1 },
+          market_cap_percentage: { btc: 50, eth: 10 },
+          markets: 3,
+          market_cap_change_percentage_24h_usd: 0,
+        },
+      });
+    }
+    if (href.includes("/coins/markets")) {
+      markets += 1;
+      const page = Number(new URL(href).searchParams.get("page") || "1");
+      const per = Number(new URL(href).searchParams.get("per_page") || "100");
+      const rows = page === 1
+        ? Array.from({ length: per }, (_, index) => ({ id: `coin-${index}`, symbol: "x", name: "X", current_price: 3, market_cap: 1000 - index }))
+        : [];
+      return jsonResponse(rows);
+    }
+    return new Response("{}", { status: 503, headers: { "content-type": "application/json" } });
   };
-  const out = await countMarkets({}, {}, 22683, load);
-  assert.equal(out.count, real);
-  assert.ok(calls.length < 20);
-  const last = Math.ceil(real / 20);
-  assert.ok(last > 400);
-  const deep = await handle(new Request(`http://local/api/sonar/markets?page=${last}&per=20&category=%3Cx%3E`), {}, {});
-  assert.equal(deep.status, 400);
-  const tooDeep = await handle(new Request("http://local/api/sonar/markets?page=2001&per=20"), {}, {});
-  assert.equal(tooDeep.status, 400);
+  try {
+    const first = await handle(new Request("http://local/api/sonar/markets?page=1&per=20"), {}, {});
+    assert.equal(first.status, 200);
+    const body = await first.json();
+    assert.equal(body.total, 17000);
+    assert.equal(body.rows.length, 20);
+    assert.equal(markets, 1);
+    const deep = await handle(new Request("http://local/api/sonar/markets?page=934&per=20"), {}, {});
+    assert.equal(deep.status, 200);
+    const deepBody = await deep.json();
+    assert.equal(deepBody.total, 17000);
+    assert.equal(deepBody.rows.length, 0);
+    assert.equal(markets, 2);
+    const bad = await handle(new Request("http://local/api/sonar/markets?page=934&per=20&category=%3Cx%3E"), {}, {});
+    assert.equal(bad.status, 400);
+    const tooDeep = await handle(new Request("http://local/api/sonar/markets?page=2001&per=20"), {}, {});
+    assert.equal(tooDeep.status, 400);
+  } finally {
+    globalThis.fetch = original;
+    await clearCache();
+  }
 });
+
+test("un upstream lento o 429 responde en menos de 9 s con caché o respaldo", { timeout: 20000 }, async () => {
+  const { clearCache, putEntry } = await import("./cache.js");
+  await clearCache();
+  let current = installUpstream();
+  const fetchedAt = new Date(Date.now() - 3 * 3600 * 1000).toISOString();
+  await putEntry("cg:markets:market_cap_desc:20:1:-:-", {
+    source: "CoinGecko",
+    sourceUrl: "https://www.coingecko.com/",
+    attribution: "Data provided by CoinGecko",
+    fetchedAt,
+    page: 1,
+    per: 20,
+    category: null,
+    order: "market_cap_desc",
+    rows: [{ id: "bitcoin", symbol: "BTC", name: "Bitcoin", price: 42424.5, marketCap: 1, volume24h: 2, spark7d: [] }],
+  }, 86400);
+  try {
+    const started = Date.now();
+    const cached = await handle(new Request("http://local/api/sonar/markets?page=1&per=20"), {}, {});
+    const cachedMs = Date.now() - started;
+    assert.ok(cachedMs < 9000, `caché tardó ${cachedMs} ms`);
+    assert.equal(cached.status, 200);
+    const cachedBody = await cached.json();
+    assert.equal(cachedBody.source, "CoinGecko");
+    assert.equal(cachedBody.stale, true);
+    assert.match(cachedBody.asOf, /^datos de \d{2}:\d{2}$/);
+    assert.equal(cached.headers.get("x-sonar-as-of"), cachedBody.asOf);
+    assert.equal(cachedBody.rows[0].price, 42424.5);
+    assert.equal(cachedBody.rows[0].id, "bitcoin");
+    const gecko = current.calls.filter((call) => call.href.includes("/coins/markets"));
+    if (gecko.length >= 2) assert.ok(gecko[1].at - gecko[0].at < 2500, "Retry-After de 30 s no puede dormir 30 s");
+
+    await current.restore();
+    await clearCache();
+    current = installUpstream();
+    const cold = Date.now();
+    const fallback = await handle(new Request("http://local/api/sonar/markets?page=1&per=20"), {}, {});
+    const coldMs = Date.now() - cold;
+    assert.ok(coldMs < 9000, `respaldo tardó ${coldMs} ms`);
+    assert.equal(fallback.status, 200);
+    const body = await fallback.json();
+    assert.notEqual(fallback.status, 502);
+    assert.equal(body.source, "CoinPaprika");
+    assert.equal(body.attribution, "Market data by CoinPaprika");
+    assert.equal(body.rows.length, 1);
+    assert.equal(body.rows[0].id, "bitcoin");
+    assert.equal(body.rows[0].paprikaId, "btc-bitcoin");
+    assert.equal(body.rows[0].image, "https://static.coinpaprika.com/coin/btc-bitcoin/logo.png");
+    assert.equal(body.rows[0].price, 111.22);
+    assert.equal(body.rows[0].volume24h, 50);
+    assert.equal(body.rows[0].circulating, null);
+    assert.equal(body.total, 1);
+    const markets = current.calls.filter((call) => call.href.includes("api.coingecko.com") && call.href.includes("/coins/markets"));
+    assert.ok(markets.length >= 2);
+    assert.ok(markets[1].at - markets[0].at < 2500);
+  } finally {
+    await current?.restore();
+    await clearCache();
+  }
+});
+
+test("sin caché y sin respaldo la respuesta es 503, nunca 502", { timeout: 20000 }, async () => {
+  const { clearCache } = await import("./cache.js");
+  await clearCache();
+  const installed = installUpstream({ paprika: false });
+  try {
+    const started = Date.now();
+    const response = await handle(new Request("http://local/api/sonar/markets?page=1&per=100"), {}, {});
+    const elapsed = Date.now() - started;
+    assert.ok(elapsed < 9000, `agotado tardó ${elapsed} ms`);
+    assert.equal(response.status, 503);
+    const body = await response.json();
+    assert.equal(body.ok, false);
+    assert.equal(body.error, "unavailable");
+  } finally {
+    await installed.restore();
+    await clearCache();
+  }
+});
+
+test("una categoría y el orden gecko no se sustituyen por otro listado", { timeout: 20000 }, async () => {
+  const { clearCache } = await import("./cache.js");
+  await clearCache();
+  const installed = installUpstream();
+  try {
+    const category = await handle(new Request("http://local/api/sonar/categories/meme-token"), {}, {});
+    assert.equal(category.status, 503);
+    const gecko = await handle(new Request("http://local/api/sonar/markets?order=gecko_desc&per=20"), {}, {});
+    assert.equal(gecko.status, 503);
+    assert.equal(installed.calls.some((call) => call.href.includes("/v1/tickers")), false);
+  } finally {
+    await installed.restore();
+    await clearCache();
+  }
+});
+
+test("la ficha y el exchange usan el respaldo real si CoinGecko no responde", { timeout: 20000 }, async () => {
+  const { clearCache } = await import("./cache.js");
+  await clearCache();
+  const installed = installUpstream();
+  try {
+    const started = Date.now();
+    const coin = await handle(new Request("http://local/api/sonar/coin/bitcoin"), {}, {});
+    assert.ok(Date.now() - started < 9000);
+    assert.equal(coin.status, 200);
+    const coinBody = await coin.json();
+    assert.equal(coinBody.source, "CoinPaprika");
+    assert.equal(coinBody.id, "bitcoin");
+    assert.equal(coinBody.paprikaId, "btc-bitcoin");
+    assert.equal(coinBody.price, 111.22);
+    assert.equal(coinBody.priceBtc, 1);
+
+    const exchange = await handle(new Request("http://local/api/sonar/exchanges/binance"), {}, {});
+    assert.equal(exchange.status, 200);
+    const ex = await exchange.json();
+    assert.equal(ex.source, "CoinPaprika");
+    assert.equal(ex.volume24h, 999.5);
+    assert.equal(ex.volume24hBtc, null);
+    assert.equal(ex.trustScore, null);
+    assert.equal(ex.trustRank, null);
+    assert.equal(ex.centralized, true);
+  } finally {
+    await installed.restore();
+    await clearCache();
+  }
+});
+
+test("CG_API_KEY usa la cabecera del plan", async () => {
+  const { clearCache } = await import("./cache.js");
+  const { coingeckoBase, coingeckoHeaders } = await import("./providers/coingecko.js");
+  assert.equal(coingeckoBase({}), "https://api.coingecko.com/api/v3");
+  assert.equal(coingeckoHeaders({ CG_API_KEY: "demo-key" })["x-cg-demo-api-key"], "demo-key");
+  assert.equal(coingeckoHeaders({ CG_API_KEY: "demo-key", CG_API_TIER: "demo" })["x-cg-pro-api-key"], undefined);
+  assert.equal(coingeckoBase({ CG_API_KEY: "pro-key", CG_API_TIER: "pro" }), "https://pro-api.coingecko.com/api/v3");
+  assert.equal(coingeckoHeaders({ CG_API_KEY: "pro-key", CG_API_TIER: "pro" })["x-cg-pro-api-key"], "pro-key");
+  assert.equal(coingeckoHeaders({})["x-cg-demo-api-key"], undefined);
+
+  const original = globalThis.fetch;
+  const seen = [];
+  globalThis.fetch = async (url, options) => {
+    seen.push({ href: String(url), headers: options?.headers || {} });
+    if (String(url).includes("/global")) {
+      return jsonResponse({ data: { total_market_cap: { usd: 1 }, total_volume: { usd: 1 }, market_cap_percentage: { btc: 1, eth: 1 }, active_cryptocurrencies: 1, markets: 1, market_cap_change_percentage_24h_usd: 0 } });
+    }
+    return new Response("{}", { status: 503, headers: { "content-type": "application/json" } });
+  };
+  const envBase = { SONAR_DISABLE: "patternplus,chain,alternative" };
+  try {
+    await clearCache();
+    const demo = await handle(new Request("http://local/api/sonar/global"), { ...envBase, CG_API_KEY: "demo-key", CG_API_TIER: "demo" }, {});
+    assert.equal(demo.status, 200);
+    const demoHit = seen.find((item) => item.href.includes("/global"));
+    assert.ok(demoHit.href.startsWith("https://api.coingecko.com/"));
+    assert.equal(demoHit.headers["x-cg-demo-api-key"], "demo-key");
+    await clearCache();
+    seen.length = 0;
+    await handle(new Request("http://local/api/sonar/global"), { ...envBase, CG_API_KEY: "pro-key", CG_API_TIER: "pro" }, {});
+    const proHit = seen.find((item) => item.href.includes("/global"));
+    assert.ok(proHit.href.startsWith("https://pro-api.coingecko.com/"));
+    assert.equal(proHit.headers["x-cg-pro-api-key"], "pro-key");
+    assert.equal(proHit.headers["x-cg-demo-api-key"], undefined);
+  } finally {
+    globalThis.fetch = original;
+    await clearCache();
+  }
+});
+
+test("CoinPaprika solo casa un id de CoinGecko sin ambigüedad", async () => {
+  const { matchPaprikaId } = await import("./providers/coinpaprika.js");
+  assert.equal(matchPaprikaId("bitcoin", [{ id: "btc-bitcoin" }, { id: "wbtc-wrapped-bitcoin" }]), "btc-bitcoin");
+  assert.equal(matchPaprikaId("bitcoin", [{ id: "btc-bitcoin" }, { id: "xbt-bitcoin" }]), null);
+  assert.equal(matchPaprikaId("wrapped-bitcoin", [{ id: "wbtc-wrapped-bitcoin" }]), "wbtc-wrapped-bitcoin");
+  assert.equal(matchPaprikaId("meme-token", [{ id: "meme-coin" }]), null);
+});
+
+test("el sello de una lectura vieja es datos de hh:mm en Madrid", async () => {
+  const { asOfLabel } = await import("./asof.js");
+  assert.equal(asOfLabel("2026-11-01T11:05:00.000Z"), "datos de 12:05");
+  assert.equal(asOfLabel("no-es-fecha"), null);
+});
+
+test("las llamadas no se esperan en una cola global", async () => {
+  const { guarded } = await import("./limits.js");
+  const started = Date.now();
+  const values = await Promise.all([
+    guarded("coingecko", () => new Promise((resolve) => setTimeout(() => resolve(1), 200))),
+    guarded("coingecko", () => new Promise((resolve) => setTimeout(() => resolve(2), 200))),
+  ]);
+  assert.deepEqual(values, [1, 2]);
+  assert.ok(Date.now() - started < 500);
+});
+
+test("un id desconocido sigue en 404 aunque CoinGecko responda 429", { timeout: 20000 }, async () => {
+  const { clearCache } = await import("./cache.js");
+  const { renderSonarPage } = await import("./seo.js");
+  await clearCache();
+  const installed = installUpstream({ currencies: [] });
+  try {
+    const response = await handle(new Request("http://local/api/sonar/coin/no-esta-esta-moneda"), {}, {});
+    assert.equal(response.status, 404);
+    const body = await response.json();
+    assert.equal(body.error, "not-found");
+    const page = await renderSonarPage(
+      new Request("http://local/sonar/crypto/no-esta-esta-moneda"),
+      { SONAR_READ: () => "<html></html>" },
+      {},
+      { kind: "crypto", id: "no-esta-esta-moneda" },
+    );
+    assert.equal(page.status, 404);
+  } finally {
+    await installed.restore();
+    await clearCache();
+  }
+});
+
+test("solo stubxai.pages.dev redirige a orvupi.com", async () => {
+  const { pagesDevRedirect } = await import("./preview-host.js");
+  const { onRequest } = await import("../_middleware.js");
+  assert.equal(pagesDevRedirect("https://stubxai.pages.dev/api/sonar/global?x=1"), "https://orvupi.com/api/sonar/global?x=1");
+  assert.equal(pagesDevRedirect("https://stubxai.pages.dev/sonar/"), "https://orvupi.com/sonar/");
+  assert.equal(pagesDevRedirect("https://deadbeef.stubxai.pages.dev/api/sonar/markets"), null);
+  assert.equal(pagesDevRedirect("https://cursor-sonar-edge.stubxai.pages.dev/"), null);
+  assert.equal(pagesDevRedirect("https://www.stubxai.pages.dev/"), null);
+  assert.equal(pagesDevRedirect("https://orvupi.com/sonar/"), null);
+  let next = false;
+  const preview = await onRequest({
+    request: new Request("https://deadbeef.stubxai.pages.dev/api/sonar/markets?page=1"),
+    next: () => {
+      next = true;
+      return new Response("ok");
+    },
+  });
+  assert.equal(next, true);
+  assert.equal(preview.status, 200);
+  const apex = await onRequest({
+    request: new Request("https://stubxai.pages.dev/sonar/?q=1"),
+    next: () => {
+      throw new Error("el host de producción no debe seguir");
+    },
+  });
+  assert.equal(apex.status, 301);
+  assert.equal(apex.headers.get("location"), "https://orvupi.com/sonar/?q=1");
+});
+
+const TICKER = {
+  id: "btc-bitcoin",
+  name: "Bitcoin",
+  symbol: "BTC",
+  rank: 1,
+  total_supply: 19000000,
+  max_supply: 21000000,
+  quotes: {
+    USD: {
+      price: 111.22,
+      volume_24h: 50,
+      market_cap: 2000,
+      percent_change_1h: 0.1,
+      percent_change_24h: 1.2,
+      percent_change_7d: -3,
+      percent_change_30d: 4,
+      ath_price: 70000,
+      ath_date: "2021-11-10T00:00:00Z",
+    },
+  },
+};
+
+const BINANCE = {
+  id: "binance",
+  name: "Binance",
+  type: ["cex"],
+  adjusted_rank: 1,
+  currencies: 400,
+  markets: 1200,
+  quotes: { USD: { adjusted_volume_24h: 999.5, reported_volume_24h: 1000 } },
+  links: { website: ["https://www.binance.com/"] },
+};
+
+function jsonResponse(body, status = 200, headers = {}) {
+  return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", ...headers } });
+}
+
+function hang(signal, ms) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      resolve(new Response("[]", { status: 200, headers: { "content-type": "application/json" } }));
+    }, ms);
+    const abort = () => {
+      clearTimeout(timer);
+      const error = new Error("aborted");
+      error.name = "AbortError";
+      reject(error);
+    };
+    if (signal?.aborted) abort();
+    else signal?.addEventListener("abort", abort, { once: true });
+  });
+}
+
+function installUpstream({ paprika = true, hangMs = 20000, currencies } = {}) {
+  const original = globalThis.fetch;
+  const attempts = new Map();
+  const calls = [];
+  let inflight = 0;
+  let idleWait = [];
+  function settleIdle() {
+    if (inflight !== 0) return;
+    const waiters = idleWait;
+    idleWait = [];
+    for (const resolve of waiters) resolve();
+  }
+  globalThis.fetch = (url, options) => {
+    const href = String(url);
+    calls.push({ href, at: Date.now() });
+    inflight += 1;
+    const signal = options?.signal;
+    return Promise.resolve()
+      .then(async () => {
+        if (href.includes("api.coinpaprika.com")) {
+          if (!paprika) return new Response("{}", { status: 429, headers: { "retry-after": "30", "content-type": "application/json" } });
+          if (href.includes("/v1/search/")) return jsonResponse({ currencies: currencies || [{ id: "btc-bitcoin" }, { id: "wbtc-wrapped-bitcoin" }] });
+          if (href.includes("/v1/exchanges/binance")) return jsonResponse(BINANCE);
+          if (href.includes("/v1/tags")) return jsonResponse([{ id: "meme-coin", name: "Meme Coin" }]);
+          if (href.includes("/v1/tickers")) return jsonResponse(href.includes("/btc-bitcoin") ? TICKER : [TICKER]);
+          return new Response("{}", { status: 404, headers: { "content-type": "application/json" } });
+        }
+        if (href.includes("coingecko.com")) {
+          const next = (attempts.get(href) || 0) + 1;
+          attempts.set(href, next);
+          if (next === 1) return new Response("{}", { status: 429, headers: { "retry-after": "30", "content-type": "application/json" } });
+          return hang(signal, hangMs);
+        }
+        return new Response("{}", { status: 503, headers: { "content-type": "application/json" } });
+      })
+      .finally(() => {
+        inflight -= 1;
+        settleIdle();
+      });
+  };
+  return {
+    calls,
+    restore: async () => {
+      if (inflight) {
+        await Promise.race([
+          new Promise((resolve) => idleWait.push(resolve)),
+          new Promise((resolve) => setTimeout(resolve, 12000)),
+        ]);
+      }
+      globalThis.fetch = original;
+    },
+  };
+}

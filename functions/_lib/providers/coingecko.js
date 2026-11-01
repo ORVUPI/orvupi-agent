@@ -5,13 +5,13 @@ import { coinRow, num, plainFromHtml, stamp, text } from "../normalize.js";
 const ATTR = "Data provided by CoinGecko";
 const HOME = "https://www.coingecko.com/";
 
-function base(env) {
+export function coingeckoBase(env) {
   return String(env?.CG_API_TIER || "").toLowerCase() === "pro" && env?.CG_API_KEY
     ? "https://pro-api.coingecko.com/api/v3"
     : "https://api.coingecko.com/api/v3";
 }
 
-function headers(env) {
+export function coingeckoHeaders(env) {
   const out = {
     accept: "application/json",
     "user-agent": "ORVUPI-Sonar/1.0 (+https://orvupi.com/sonar/)",
@@ -29,7 +29,7 @@ async function cg(env, path) {
     error.code = "disabled";
     throw error;
   }
-  return getJson(`${base(env)}${path}`, { headers: headers(env), provider: "coingecko", timeout: 12000 });
+  return getJson(`${coingeckoBase(env)}${path}`, { headers: coingeckoHeaders(env), provider: "coingecko" });
 }
 
 function meta(extra) {

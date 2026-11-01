@@ -1,6 +1,8 @@
 import { getOrRefresh, peek, putEntry } from "./cache.js";
+import { budgetLeft } from "./limits.js";
 import { applySeriesChanges, scaleMoney, scaleSeries } from "./normalize.js";
 import * as cg from "./providers/coingecko.js";
+import * as paprika from "./providers/coinpaprika.js";
 import * as gt from "./providers/geckoterminal.js";
 import { getFearGreed } from "./providers/alternative.js";
 import { getAltseason, getCalendar, getUnlockCoin, getUnlocks } from "./providers/patternplus.js";
@@ -11,6 +13,15 @@ const DAY = 86400;
 
 function cached(key, ttlSec, staleSec, loader, ctx, maxAgeSec = DAY) {
   return getOrRefresh({ key, ttlSec, staleSec, maxAgeSec, loader, ctx });
+}
+
+async function orFallback(load, fallback) {
+  try {
+    return await load();
+  } catch (error) {
+    if (error?.status === 404 || error?.status === 400 || !fallback) throw error;
+    return fallback();
+  }
 }
 
 export function getGlobal(env, ctx) {
@@ -38,7 +49,7 @@ export function getPlatforms(env, ctx) {
   return cached("cg:platforms", DAY, 7 * DAY, () => cg.getPlatforms(env), ctx, 7 * DAY);
 }
 export function getCategories(env, ctx) {
-  return cached("cg:categories", 1800, 6 * 3600, () => cg.getCategories(env), ctx);
+  return cached("cg:categories", 1800, 6 * 3600, () => orFallback(() => cg.getCategories(env), () => paprika.getCategories(env)), ctx);
 }
 export function getTrendingCg(env, ctx) {
   return cached("cg:trending", 600, 3600, () => cg.getTrending(env), ctx);
@@ -65,34 +76,18 @@ export function getMarkets(env, ctx, query) {
   const ttl = page === 1 && !query.category && !query.ids ? 60 : 600;
   const stale = page === 1 && !query.category && !query.ids ? 600 : 3600;
   const key = `cg:markets:${query.order}:${per}:${page}:${query.category || "-"}:${query.ids || "-"}`;
-  return cached(key, ttl, stale, () => cg.getMarkets(env, query), ctx);
+  return cached(key, ttl, stale, () => loadMarkets(env, query), ctx);
 }
 
-// Total real de monedas con mercado en CoinGecko (/coins/markets), no el «active_cryptocurrencies» de /global,
-// que cuenta más activos de los que la lista devuelve. Búsqueda binaria sobre páginas de 250, que ya se cachean.
-export const MARKETS_PROBE_PER = 250;
-export async function getMarketsTotal(env, ctx, hint = 0) {
-  const run = () => cached("cg:markets:total", 6 * 3600, 2 * DAY, () => countMarkets(env, ctx, hint), ctx, 2 * DAY);
-  // En frío no bloquea la primera página: cuenta en segundo plano y esta respuesta usa el total de /global.
-  if (ctx?.waitUntil && !(await peek("cg:markets:total"))) {
-    ctx.waitUntil(run().catch((error) => console.error("sonar-markets-total", error?.status || error?.code || "fail")));
-    return null;
-  }
-  return run();
-}
-export async function countMarkets(env, ctx, hint = 0, load = getMarkets) {
-  const per = MARKETS_PROBE_PER;
-  const size = async (page) => ((await load(env, ctx, { page, per, order: "market_cap_desc", category: "", ids: "" }))?.rows || []).length;
-  let lo = 1;
-  let hi = Math.max(2, Math.ceil((Number(hint) || 20000) / per) + 4);
-  if ((await size(lo)) === 0) return { count: 0, fetchedAt: new Date().toISOString() };
-  while ((await size(hi)) > 0) { lo = hi; hi *= 2; if (hi > 2000) break; }
-  while (hi - lo > 1) {
-    const mid = (lo + hi) >> 1;
-    if ((await size(mid)) > 0) lo = mid; else hi = mid;
-  }
-  const last = await size(lo);
-  return { count: (lo - 1) * per + last, fetchedAt: new Date().toISOString() };
+async function loadMarkets(env, query) {
+  return orFallback(() => cg.getMarkets(env, query), () => {
+    if (query.category || query.ids || query.order === "gecko_desc" || query.order === "gecko_asc") {
+      const error = new Error("upstream");
+      error.status = 503;
+      throw error;
+    }
+    return paprika.getMarkets(env, query);
+  });
 }
 
 export function getQuotes(env, ctx, ids) {
@@ -101,7 +96,27 @@ export function getQuotes(env, ctx, ids) {
 }
 
 export function getCoin(env, ctx, id) {
-  return cached(`cg:coin:${id}`, 120, 3600, () => cg.getCoin(env, id), ctx);
+  return cached(`cg:coin:${id}`, 120, 3600, () => loadCoin(env, id), ctx);
+}
+
+async function loadCoin(env, id) {
+  try {
+    return await cg.getCoin(env, id);
+  } catch (error) {
+    if (error?.status === 400) throw error;
+    try {
+      const alt = error?.status === 404
+        ? await paprika.getCoinById(env, id)
+        : await paprika.getCoinForGeckoId(env, id);
+      if (alt) return alt;
+    } catch {
+      throw error;
+    }
+    if (error?.status === 404) throw error;
+    const missing = new Error("not-found");
+    missing.status = 404;
+    throw missing;
+  }
 }
 
 export function getSearch(env, ctx, q) {
@@ -200,14 +215,42 @@ export async function getDexPools(env, ctx, platforms) {
 }
 
 export function getExchange(env, ctx, id) {
-  return cached(`cg:exchange:${id}`, 3600, DAY, () => cg.getExchange(env, id), ctx);
+  return cached(`cg:exchange:${id}`, 3600, DAY, () => loadExchange(env, id), ctx);
+}
+
+async function loadExchange(env, id) {
+  try {
+    return await cg.getExchange(env, id);
+  } catch (error) {
+    if (error?.status === 400) throw error;
+    try {
+      const alt = await paprika.getExchange(env, id);
+      if (alt) return alt;
+    } catch {
+      throw error;
+    }
+    if (error?.status === 404) throw error;
+    const missing = new Error("not-found");
+    missing.status = 404;
+    throw missing;
+  }
 }
 
 export function getExchangeList(env, ctx, page) {
-  return cached(`cg:exchanges:${page}`, 3600, DAY, () => cg.getExchanges(env, page), ctx);
+  return cached(`cg:exchanges:${page}`, 3600, DAY, () => loadExchangeList(env, page), ctx);
 }
 
-const DEX_HINT = /swap|dex|uniswap|curve|raydium|pancake|orca|balancer|sushi|jupiter|camelot|aerodrome|traderjoe|velodrome|dodo|quickswap|thorchain/i;
+async function loadExchangeList(env, page) {
+  return orFallback(() => cg.getExchanges(env, page), () => {
+    if (page !== 1) {
+      const error = new Error("upstream");
+      error.status = 503;
+      throw error;
+    }
+    return paprika.getExchanges(env);
+  });
+}
+
 const exchangeJobs = new Map();
 
 export async function getExchangesClassed(env, ctx) {
@@ -220,33 +263,17 @@ export async function getExchangesClassed(env, ctx) {
 
 async function classExchanges(env, ctx) {
   const list = await getExchangeList(env, ctx, 1);
-  const head = (list.rows || []).slice(0, 100);
-  const hinted = head.filter((row) => DEX_HINT.test(`${row.id} ${row.name || ""}`));
-  const ordered = [...head.slice(0, 8), ...hinted.filter((row) => !head.slice(0, 8).includes(row)).slice(0, 4), ...head.slice(8)];
-  const flags = new Map();
-  let cold = 0;
-  for (const row of ordered) {
+  const rows = [];
+  for (const row of list.rows || []) {
+    if (row.centralized != null) {
+      rows.push(row);
+      continue;
+    }
     const cached = await peek(`cg:exchange:${row.id}`);
-    const fresh = cached && Date.now() - Date.parse(cached.fetchedAt || "") < 3_600_000;
-    if (!fresh) {
-      if (cold >= 12) continue;
-      cold += 1;
-    }
-    try {
-      const detail = fresh ? cached : await getExchange(env, ctx, row.id);
-      if (detail) flags.set(row.id, detail.centralized ?? null);
-    } catch (error) {
-      console.error("sonar-exchange", row.id, error?.status || error?.code || "fail");
-    }
+    const usable = cached && Date.now() - Date.parse(cached.fetchedAt || "") < DAY * 1000;
+    rows.push({ ...row, centralized: usable ? cached.centralized ?? null : null });
   }
-  const rest = ordered.filter((row) => !flags.has(row.id)).slice(0, 8);
-  if (rest.length && ctx?.waitUntil) {
-    ctx.waitUntil(Promise.all(rest.map((row) => getExchange(env, ctx, row.id).catch(() => null))));
-  }
-  return {
-    ...list,
-    rows: (list.rows || []).map((row) => ({ ...row, centralized: flags.has(row.id) ? flags.get(row.id) : null })),
-  };
+  return { ...list, rows };
 }
 
 export function getExchangeTickers(env, ctx, id) {
@@ -279,7 +306,6 @@ async function buildMovers(env, ctx, key, period, minVol) {
   const pages = [];
   let partial = false;
   let cold = 0;
-  let nextPage = 1;
   for (let page = 1; page <= MOVERS_PAGES; page += 1) {
     const marketKey = `cg:markets:market_cap_desc:${MOVERS_PER}:${page}:-:-`;
     const cached = await peek(marketKey);
@@ -287,16 +313,18 @@ async function buildMovers(env, ctx, key, period, minVol) {
     if (!fresh) {
       if (cold >= MOVERS_COLD) {
         partial = true;
-        nextPage = page;
         break;
       }
       cold += 1;
+    }
+    if (pages.length && budgetLeft() < 800) {
+      partial = true;
+      break;
     }
     try {
       const payload = fresh ? cached : await getMarkets(env, ctx, { page, per: MOVERS_PER, category: "", order: "market_cap_desc", ids: "" });
       const batch = payload.rows || [];
       pages.push(payload);
-      nextPage = page + 1;
       if (batch.length < MOVERS_PER) {
         partial = false;
         break;
@@ -304,22 +332,22 @@ async function buildMovers(env, ctx, key, period, minVol) {
     } catch (error) {
       console.error("sonar-movers", page, error?.status || error?.code || "fail");
       partial = pages.length > 0;
-      nextPage = page;
       break;
     }
   }
   const rows = pages.flatMap((page) => page.rows || []);
   if (!rows.length) {
     const error = new Error("unavailable");
-    error.status = 502;
+    error.status = 503;
     throw error;
   }
   const field = period === "1h" ? "ch1h" : period === "7d" ? "ch7d" : "ch24h";
   const eligible = rows.filter((row) => row[field] != null && (minVol <= 0 || (row.volume24h != null && row.volume24h >= minVol)));
+  const head = pages.find((page) => page?.source) || {};
   const entry = {
-    source: "CoinGecko",
-    sourceUrl: "https://www.coingecko.com/",
-    attribution: "Data provided by CoinGecko",
+    source: head.source || "CoinGecko",
+    sourceUrl: head.sourceUrl || "https://www.coingecko.com/",
+    attribution: head.attribution || "Data provided by CoinGecko",
     fetchedAt: new Date().toISOString(),
     count: rows.length,
     partial,
@@ -329,20 +357,7 @@ async function buildMovers(env, ctx, key, period, minVol) {
     losers: eligible.slice().sort((a, b) => a[field] - b[field]).slice(0, 20),
   };
   await putEntry(key, entry, partial ? 20 : 600, ctx);
-  if (partial && ctx?.waitUntil) ctx.waitUntil(warmMoverPages(env, ctx, nextPage));
   return { ...entry, stale: false };
-}
-
-async function warmMoverPages(env, ctx, start) {
-  for (let page = start; page < start + 4 && page <= MOVERS_PAGES; page += 1) {
-    try {
-      const payload = await getMarkets(env, ctx, { page, per: MOVERS_PER, category: "", order: "market_cap_desc", ids: "" });
-      if ((payload.rows || []).length < MOVERS_PER) break;
-    } catch (error) {
-      console.error("sonar-movers-warm", page, error?.status || error?.code || "fail");
-      break;
-    }
-  }
 }
 
 export async function getPairs(env, ctx) {
