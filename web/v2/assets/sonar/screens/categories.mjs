@@ -51,24 +51,44 @@ async function directory(host, ctx) {
   }
 }
 
+function sumOf(rows, key) {
+  const values = rows.map((row) => row[key]).filter((value) => value != null);
+  if (!values.length) return null;
+  return values.reduce((total, value) => total + value, 0);
+}
+
 async function detail(host, ctx) {
   try {
-    const body = await api(`/api/sonar/categories/${ctx.route.id}${qs({ vs: snapshot().prefs.vs })}`);
-    document.title = `${body.category?.name || ctx.route.id} · ORVUPI Sonar`;
-    const changes = (body.rows || []).map((row) => row.ch24h).filter((value) => value != null);
-    const mean = changes.length ? changes.reduce((sum, value) => sum + value, 0) / changes.length : null;
+    const body = await api(`/api/sonar/categories/${ctx.route.id}${qs({ vs: snapshot().prefs.vs, per: 250, page: 1 })}`);
+    const rows = (body.rows || []).map((row, index) => ({ ...row, rank: row.rank ?? index + 1 }));
+    const rawName = body.category?.name || ctx.route.id.replace(/-/g, " ");
+    const name = ({ Meme: "Memes", "Meme Token": "Memes", "Artificial Intelligence": "Inteligencia artificial", "Real World Assets": "Activos del mundo real", Gaming: "Juegos", "Decentralized Finance (DeFi)": "DeFi" })[rawName] || rawName;
+    document.title = `${name} · ORVUPI Sonar`;
+    const marketCap = body.category?.marketCap ?? sumOf(rows, "marketCap");
+    const volume = body.category?.volume24h ?? sumOf(rows, "volume24h");
+    const weighted = rows.filter((row) => row.ch24h != null && row.marketCap);
+    const change = body.category?.change24h ?? (weighted.length ? weighted.reduce((sum, row) => sum + row.ch24h * row.marketCap, 0) / weighted.reduce((sum, row) => sum + row.marketCap, 0) : null);
+    const ranked = rows.filter((row) => row.ch24h != null);
+    const gainers = ranked.slice().sort((a, b) => b.ch24h - a.ch24h).slice(0, 5);
+    const losers = ranked.slice().sort((a, b) => a.ch24h - b.ch24h).slice(0, 5);
     host.replaceChildren(el("section", { class: "sn-screen", "data-sn": "category" }, [
       el("button", { type: "button", class: "sn-btn", onclick: () => ctx.go("/sonar/categories/"), text: t("back") }),
-      el("h2", { text: body.category?.name || ctx.route.id }),
-      el("p", { text: `${t("mcap")} ${show(compact(body.category?.marketCap, body.vs))} · ${t("volume")} ${show(compact(body.category?.volume24h, body.vs))}` }),
-      el("p", {}, [t("changeMc"), " ", pctNode(body.category?.change24h)]),
-      el("p", { text: mean == null ? t("unavailable") : t("meanNote", { n: changes.length }) }),
-      mean == null ? null : el("p", {}, pctNode(mean)),
-      (body.rows || []).length ? paintRanking(body.rows, {
+      el("h2", { text: name }),
+      el("div", { class: "sn-kpis" }, [
+        el("article", { class: "sn-kpi" }, [el("span", { text: t("mcap") }), el("strong", { text: show(compact(marketCap, body.vs)) })]),
+        el("article", { class: "sn-kpi" }, [el("span", { text: t("volume") }), el("strong", { text: show(compact(volume, body.vs)) })]),
+        el("article", { class: "sn-kpi" }, [el("span", { text: t("h24") }), change == null ? el("strong", { text: t("unavailable") }) : pctNode(change)]),
+      ]),
+      el("div", { class: "sn-overview" }, [
+        moverList(t("gainers"), gainers, ctx),
+        moverList(t("losers"), losers, ctx),
+      ]),
+      rows.length ? paintRanking(rows, {
         prefix: ctx.prefix,
         period: "24h",
         currency: body.vs,
         columns: snapshot().prefs.columns,
+        rankFrom: 1,
         onStar: (row) => update((data) => {
           const list = data.lists.find((item) => item.id === data.activeList) || data.lists[0];
           if (list && !list.ids.includes(row.id)) list.ids.unshift(row.id);
@@ -80,4 +100,10 @@ async function detail(host, ctx) {
   } catch (error) {
     host.replaceChildren(error.status === 404 ? emptyBlock(t("unavailable")) : errorBlock(() => detail(host, ctx)));
   }
+}
+
+function moverList(title, rows, ctx) {
+  const list = el("ol", { class: "sn-mover" });
+  for (const row of rows) list.append(el("li", {}, [el("a", { href: `${ctx.prefix}/sonar/crypto/${row.id}`, text: row.symbol || row.name }), pctNode(row.ch24h)]));
+  return el("article", { class: "sn-hero" }, [el("h3", { text: title }), list.childNodes.length ? list : emptyBlock()]);
 }

@@ -1,4 +1,4 @@
-import { sitemapXml } from "../_lib/seo.js";
+import { sitemapXml } from "./_lib/seo.js";
 
 export async function onRequest(context) {
   try {

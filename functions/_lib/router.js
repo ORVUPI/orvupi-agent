@@ -107,7 +107,7 @@ export async function handle(request, env = {}, ctx = {}) {
   }
 
   async function markets(query, fx) {
-    const page = intIn(query.get("page"), 1, 10, 1);
+    const page = intIn(query.get("page"), 1, 100, 1);
     const per = oneOf(query.get("per"), ["50", "100", "250"], "100");
     const order = oneOf(query.get("order"), ORDERS, "market_cap_desc");
     const category = query.get("category") || "";
@@ -155,8 +155,9 @@ export async function handle(request, env = {}, ctx = {}) {
       const pair = await pairFor(id);
       if (pair && (days === "max" || query.get("interval") === "1h")) {
         const interval = query.get("interval") === "1h" ? "1m" : "1d";
-        const limit = interval === "1m" ? 60 : 1000;
-        const candles = await data.getKlinesCached(env, ctx, pair, interval, limit);
+        const candles = interval === "1d"
+          ? await data.getDailyHistoryCached(env, ctx, pair)
+          : await data.getKlinesCached(env, ctx, pair, interval, 60);
         const points = candles.points.map((row) => [row.time, row.close]);
         const factor = fx.missing ? 1 : fx.factor;
         return json(200, {
@@ -315,21 +316,25 @@ export async function handle(request, env = {}, ctx = {}) {
 
   async function category(id, query, fx) {
     if (!slugOk(id)) return json(400, { ok: false, error: "invalid" });
-    const page = intIn(query.get("page"), 1, 10, 1);
+    const page = intIn(query.get("page"), 1, 100, 1);
     if (page == null) return json(400, { ok: false, error: "invalid" });
+    const per = oneOf(query.get("per"), ["50", "100", "250"], "100");
     const [directory, markets] = await Promise.all([
       data.getCategories(env, ctx),
-      data.getMarkets(env, ctx, { page, per: 100, category: id, order: "market_cap_desc", ids: "" }),
+      data.getMarkets(env, ctx, { page, per: Number(per || 100), category: id, order: "market_cap_desc", ids: "" }),
     ]);
     const found = (directory.rows || []).find((row) => row.id === id) || null;
     if (!found && markets.rows?.length === 0) return json(404, { ok: false, error: "not-found" });
     const factor = fx.missing ? 1 : (fx.factor || 1);
+    const scaled = data.scaleRows(markets, factor);
+    const { category: ignoredCategory, ...marketRest } = scaled;
+    void ignoredCategory;
     const categoryRow = found ? {
       ...found,
       marketCap: found.marketCap == null ? null : found.marketCap * factor,
       volume24h: found.volume24h == null ? null : found.volume24h * factor,
     } : null;
-    return json(200, { ok: true, ...withVs({ category: categoryRow, ...data.scaleRows(markets, factor) }, fx) }, cacheHeaders(300, 3600, markets));
+    return json(200, { ok: true, ...withVs({ ...marketRest, category: categoryRow }, fx) }, cacheHeaders(300, 3600, markets));
   }
 
   async function exchanges(query, fx) {

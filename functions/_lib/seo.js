@@ -44,7 +44,7 @@ function documentResponse(html, status) {
 }
 
 function notFoundHtml() {
-  return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>ORVUPI Sonar</title><meta name="robots" content="noindex"><link rel="stylesheet" href="/assets/sonar.css"></head><body class="verify-app sonar-market"><main class="sn-miss"><h1>ORVUPI Sonar</h1><p>Dato no disponible.</p><p><a href="/sonar/">Volver a mercados</a></p></main></body></html>`;
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>ORVUPI Sonar</title><meta name="robots" content="noindex"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/assets/sonar.css"></head><body class="verify-app sonar-market"><main class="sn-404"><img src="/assets/orvupi/avatar.png" alt="" width="72" height="72"><h1>ORVUPI Sonar</h1><p>No hay una ficha con ese nombre.</p><p><a href="/sonar/">Volver a mercados</a></p></main></body></html>`;
 }
 
 async function readAsset(request, env, assetPath) {
@@ -90,6 +90,15 @@ function generic(spec, prefix) {
 }
 
 async function describe(env, ctx, spec, prefix) {
+  if (!spec.kind || spec.kind === "shell") {
+    const path = "/sonar/";
+    return {
+      title: "ORVUPI Sonar",
+      description: "ORVUPI Sonar. Sonar · verify on-chain.",
+      canonical: `https://orvupi.com${prefix}${path}`,
+      path,
+    };
+  }
   if (spec.kind === "crypto") {
     const coin = await getCoin(env, ctx, spec.id);
     const price = coin.price == null ? "" : ` ${formatUsd(coin.price)} USD.`;

@@ -160,8 +160,7 @@ function form(host, ctx, vs) {
     el("h2", { text: t("addTx") }),
     el("p", { hidden: true, "data-sn": "tx-error", class: "sn-state", text: t("need") }),
     selectType(),
-    labeled("coinId", t("pickCoin"), "text"),
-    labeled("symbol", t("symbol"), "text"),
+    coinPicker(),
     labeled("qty", t("qty"), "number"),
     labeled("price", t("price"), "number"),
     labeled("fee", t("fee"), "number"),
@@ -169,9 +168,45 @@ function form(host, ctx, vs) {
     labeled("note", t("note"), "text"),
     el("button", { type: "button", class: "sn-btn", "data-sn": "fill-price", onclick: () => fill(node), text: t("useNow") }),
     el("button", { type: "button", class: "sn-btn", "data-sn": "fill-date", onclick: () => fillDate(node), text: t("useDate") }),
-    el("button", { type: "submit", class: "sn-btn on", text: t("saved") }),
+    el("button", { type: "submit", class: "sn-btn on", "data-sn": "save-tx", text: t("save") }),
   );
   return node;
+}
+
+function coinPicker() {
+  const hidden = el("input", { name: "coinId", type: "hidden" });
+  const symbol = el("input", { name: "symbol", type: "hidden" });
+  const search = el("input", { type: "search", "data-sn": "coin-pick", placeholder: t("pickCoinPh"), autocomplete: "off" });
+  const list = el("div", { class: "sn-hits", "data-sn": "coin-results" });
+  let timer = 0;
+  search.addEventListener("input", () => {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(async () => {
+      const q = search.value.trim();
+      if (q.length < 2) {
+        list.replaceChildren();
+        return;
+      }
+      try {
+        const body = await api(`/api/sonar/search${qs({ q })}`);
+        const coins = (body.coins?.coins || []).slice(0, 6);
+        list.replaceChildren(...coins.map((row) => el("button", {
+          type: "button",
+          class: "sn-btn",
+          onclick: () => {
+            hidden.value = row.id;
+            symbol.value = row.symbol || "";
+            search.value = `${row.symbol || ""} ${row.name || ""}`.trim();
+            list.replaceChildren();
+          },
+          text: `${row.symbol || ""} ${row.name || ""}`.trim(),
+        })));
+      } catch {
+        list.replaceChildren();
+      }
+    }, 250);
+  });
+  return el("div", { class: "sn-picker" }, [el("span", { text: t("pickCoin") }), search, hidden, symbol, list]);
 }
 
 function selectType() {

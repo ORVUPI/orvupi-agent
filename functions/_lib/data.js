@@ -4,7 +4,7 @@ import * as cg from "./providers/coingecko.js";
 import * as gt from "./providers/geckoterminal.js";
 import { getFearGreed } from "./providers/alternative.js";
 import { getAltseason, getCalendar, getUnlockCoin, getUnlocks } from "./providers/patternplus.js";
-import { getKlines } from "./providers/binance.js";
+import { getDailyHistory, getKlines } from "./providers/binance.js";
 import { getBtcFees, getEthGas } from "./providers/chain.js";
 
 const DAY = 86400;
@@ -197,8 +197,19 @@ export function getExchangeVolume(env, ctx, id, days) {
 
 export async function getMovers(env, ctx, { period, minVol }) {
   const key = `calc:movers:${period}:${minVol}`;
-  return cached(key, 120, 900, async () => {
-    const pages = await Promise.all([1, 2, 3, 4].map((page) => getMarkets(env, ctx, { page, per: 250, category: "", order: "market_cap_desc", ids: "" })));
+  return cached(key, 600, 3600, async () => {
+    const pages = [];
+    for (let page = 1; page <= 70; page += 1) {
+      try {
+        const payload = await getMarkets(env, ctx, { page, per: 250, category: "", order: "market_cap_desc", ids: "" });
+        const batch = payload.rows || [];
+        pages.push(payload);
+        if (batch.length < 250) break;
+      } catch (error) {
+        console.error("sonar-movers", page, error?.status || error?.code || "fail");
+        break;
+      }
+    }
     const rows = pages.flatMap((page) => page.rows || []);
     const field = period === "1h" ? "ch1h" : period === "7d" ? "ch7d" : "ch24h";
     const eligible = rows.filter((row) => row[field] != null && (minVol <= 0 || (row.volume24h != null && row.volume24h >= minVol)));
@@ -209,7 +220,7 @@ export async function getMovers(env, ctx, { period, minVol }) {
       sourceUrl: "https://www.coingecko.com/",
       attribution: "Data provided by CoinGecko",
       fetchedAt: new Date().toISOString(),
-      note: "Calculado sobre las 1000 mayores por capitalización.",
+      note: `Calculado sobre ${rows.length} monedas con capitalización.`,
       period,
       minVol,
       gainers,
@@ -256,6 +267,10 @@ export async function getPairs(env, ctx) {
 export async function getKlinesCached(env, ctx, symbol, interval, limit) {
   const ttl = interval.endsWith("m") ? 60 : interval === "1h" ? 300 : 3600;
   return cached(`bn:${symbol}:${interval}:${limit}`, ttl, 3600, () => getKlines(env, symbol, interval, limit), ctx);
+}
+
+export function getDailyHistoryCached(env, ctx, symbol) {
+  return cached(`bn:daily:${symbol}`, 6 * 3600, DAY, () => getDailyHistory(env, symbol), ctx);
 }
 
 export function getTreasury(env, ctx, coin) {

@@ -44,6 +44,15 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Sonar API unit tests
+        run: node --test functions/_lib/sonar.test.mjs
+
+      - name: Sonar redirect budget
+        run: node scripts/check-redirects.mjs
+
+      - name: Build Pages Functions
+        run: npx --yes wrangler@4.86.0 pages functions build functions --outdir "$RUNNER_TEMP/sonar-fns"
+
       - name: ORVUPI Verify offline tests and read-only scan
         run: |
           node --test --test-reporter=spec "dist/verify/**/*.test.js"

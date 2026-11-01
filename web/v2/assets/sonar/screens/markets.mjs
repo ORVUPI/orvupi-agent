@@ -40,23 +40,22 @@ async function ranking(host, ctx, mine) {
   const prefs = snapshot().prefs;
   const category = ctx.route.params.get("category") || "";
   const period = ctx.route.params.get("period") || prefs.period || "24h";
+  const page = Math.max(1, Number(ctx.route.params.get("page") || 1) || 1);
   const view = ctx.route.params.get("view") || prefs.view || "list";
   body.replaceChildren(skeleton(10));
-  let page = 1;
   let rows = [];
   let meta = null;
   const filters = readFilters(ctx.route.params);
-  async function load(reset) {
-    if (reset) page = 1;
+  async function load() {
     try {
       const payload = await api(`/api/sonar/markets${qs({ vs: prefs.vs, page, per: 100, category, order: "market_cap_desc" })}`);
       if (mine !== ticket) return;
       meta = payload;
-      rows = reset ? payload.rows || [] : rows.concat(payload.rows || []);
+      rows = payload.rows || [];
       paint();
     } catch {
       if (mine !== ticket) return;
-      body.replaceChildren(errorBlock(() => load(true)));
+      body.replaceChildren(errorBlock(() => load()));
     }
   }
   function paint() {
@@ -72,6 +71,7 @@ async function ranking(host, ctx, mine) {
         period,
         currency: meta?.vs || prefs.vs,
         columns: prefs.columns,
+        rankFrom: (page - 1) * 100 + 1,
         view,
         onStar: (row) => toggleStar(row, paint),
         onSort: (key) => {
@@ -83,7 +83,11 @@ async function ranking(host, ctx, mine) {
       el("p", { class: "sn-note", text: t("loadedNote", { n: rows.length }) + (ctx.route.params.get("sort") ? ` ${t("sortLoaded")}` : "") }),
       el("p", { class: "sn-note", text: t("filterHint") }),
       el("p", { class: "sn-note", text: t("ageSkip") }),
-      rows.length >= page * 100 && page < 10 ? el("button", { type: "button", class: "sn-btn", "data-sn": "more-rows", onclick: () => { page += 1; load(false); }, text: t("loadMore") }) : null,
+      el("div", { class: "sn-tools" }, [
+        page > 1 ? el("button", { type: "button", class: "sn-btn", "data-sn": "page-prev", onclick: () => { setParam(ctx, { page: String(page - 1) }); ranking(host, ctx, mine); }, text: t("prev") }) : null,
+        el("span", { text: `${t("page")} ${page}` }),
+        rows.length >= 100 ? el("button", { type: "button", class: "sn-btn", "data-sn": "page-next", onclick: () => { setParam(ctx, { page: String(page + 1) }); ranking(host, ctx, mine); }, text: t("next") }) : null,
+      ]),
       sourceLine(meta),
     ]);
     body.classList.toggle("sn-as-grid", view === "grid");
@@ -129,7 +133,7 @@ async function ranking(host, ctx, mine) {
     );
     return form;
   }
-  await load(true);
+  await load();
 }
 
 function applyView(rows, filters, period, ctx) {

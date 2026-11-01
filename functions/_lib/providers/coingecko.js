@@ -1,5 +1,5 @@
 import { getJson } from "../limits.js";
-import { disabledSet, httpsUrl, imageUrl } from "../security.js";
+import { disabledSet, httpsUrl, imageUrl, webUrl } from "../security.js";
 import { coinRow, num, plainFromHtml, stamp, text } from "../normalize.js";
 
 const ATTR = "Data provided by CoinGecko";
@@ -12,7 +12,10 @@ function base(env) {
 }
 
 function headers(env) {
-  const out = { accept: "application/json" };
+  const out = {
+    accept: "application/json",
+    "user-agent": "ORVUPI-Sonar/1.0 (+https://orvupi.com/sonar/)",
+  };
   const key = env?.CG_API_KEY;
   if (!key) return out;
   if (String(env?.CG_API_TIER || "demo").toLowerCase() === "pro") out["x-cg-pro-api-key"] = key;
@@ -80,11 +83,11 @@ export async function getSimple(env, ids) {
 
 function linkList(values) {
   if (!Array.isArray(values)) return [];
-  return values.map(httpsUrl).filter(Boolean).slice(0, 12);
+  return values.map((value) => webUrl(value)).filter(Boolean).slice(0, 12);
 }
 
 export async function getCoin(env, id) {
-  const params = "localization=true&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false";
+  const params = "localization=true&tickers=false&market_data=true&community_data=true&developer_data=false&sparkline=false";
   const body = await cg(env, `/coins/${encodeURIComponent(id)}?${params}`);
   if (!body?.id) {
     const error = new Error("not-found");
@@ -130,7 +133,7 @@ export async function getCoin(env, id) {
   return meta({
     ...row,
     image: imageUrl(row.image),
-    priceBtc: num(market.current_price?.btc),
+    priceBtc: body.id === "bitcoin" ? 1 : num(market.current_price?.btc),
     ch1y: num(market.price_change_percentage_1y_in_currency?.usd ?? market.price_change_percentage_1y),
     categories: Array.isArray(body.categories) ? body.categories.filter((item) => typeof item === "string").slice(0, 24) : [],
     description: spanish || english,
@@ -138,7 +141,7 @@ export async function getCoin(env, id) {
     genesisDate: text(body.genesis_date, 20),
     links: {
       homepage: linkList(links.homepage),
-      whitepaper: httpsUrl(whitepaper),
+      whitepaper: webUrl(whitepaper),
       explorers: linkList(links.blockchain_site),
       forum: linkList(links.official_forum_url),
       chat: linkList(links.chat_url),
@@ -146,7 +149,13 @@ export async function getCoin(env, id) {
       twitter: links.twitter_screen_name ? `https://x.com/${encodeURIComponent(links.twitter_screen_name)}` : null,
       telegram: links.telegram_channel_identifier ? `https://t.me/${encodeURIComponent(links.telegram_channel_identifier)}` : null,
       reddit: httpsUrl(links.subreddit_url),
+      facebook: links.facebook_username ? `https://www.facebook.com/${encodeURIComponent(links.facebook_username)}` : null,
       github: linkList(links.repos_url?.github),
+    },
+    followers: {
+      twitter: num(body.community_data?.twitter_followers),
+      telegram: num(body.community_data?.telegram_channel_user_count),
+      reddit: num(body.community_data?.reddit_subscribers),
     },
     platforms,
     sentimentUp: num(body.sentiment_votes_up_percentage),
@@ -221,13 +230,13 @@ export async function getExchanges(env, page = 1) {
 
 export async function getExchange(env, id) {
   const body = await cg(env, `/exchanges/${encodeURIComponent(id)}`);
-  if (!body?.id) {
+  if (!body || body.error || (!body.name && !body.trade_volume_24h_btc && !body.tickers)) {
     const error = new Error("not-found");
     error.status = 404;
     throw error;
   }
   return meta({
-    ...exchangeRow(body),
+    ...exchangeRow({ ...body, id: body.id || id }),
     centralized: typeof body.centralized === "boolean" ? body.centralized : null,
     coins: num(body.coins),
     pairs: num(body.pairs),

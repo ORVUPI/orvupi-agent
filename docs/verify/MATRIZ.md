@@ -4,7 +4,7 @@ Comparación del 1 de noviembre de 2026, después de la capa `/api/sonar` y las 
 
 | Área | CoinMarketCap | ORVUPI Sonar | Estado |
 | --- | --- | --- | --- |
-| Ranking | Listado con precio, variaciones, capitalización, volumen, supply y sparkline | Tabla y fila móvil, orden, top 100–1000, sparkline y estrella | Completo |
+| Ranking | Listado con precio, variaciones, capitalización, volumen, supply y sparkline | Tabla y fila móvil, orden, páginas de 100 hasta cubrir el ranking, sparkline y estrella | Completo |
 | Barra de mercado | Cap., volumen, dominancias, índices propios | Cap., volumen, BTC/ETH, activos, mercados, gas ETH, comisión BTC | Completo |
 | Fear & Greed | Índice de su marca | Alternative.me, atribución junto al valor | Completo |
 | Índice altcoin | Método propio | PatternPlus, con método y «Data: PatternPlus» | Completo |

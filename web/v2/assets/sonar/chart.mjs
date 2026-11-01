@@ -16,17 +16,21 @@ export async function drawChart(host, payload, { mode = "line", compare = null, 
   svg.setAttribute("viewBox", "0 0 640 320");
   svg.setAttribute("class", "sn-chart-svg");
   svg.setAttribute("role", "img");
+  svg.setAttribute("preserveAspectRatio", "none");
+  const plot = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  plot.setAttribute("clip-path", "inset(8px 8px 28px 48px)");
   const values = seriesValues(points, mode);
   if (compare?.points?.length && mode !== "candles") {
     const base = rebase(points.map((row) => row.close));
     const other = rebase(normalize(compare).map((row) => row.close));
-    svg.append(poly(base, "#ff3070"), poly(other, "#9ecbff"));
+    plot.append(poly(base, "#ff3070"), poly(other, "#9ecbff"));
   } else if (mode === "candles" && points[0].open != null) {
-    svg.append(...candles(points));
+    plot.append(...candles(points));
   } else {
-    svg.append(poly(points.map((row) => row.close), "#ff3070"));
-    if (sma) svg.append(poly(moving(points.map((row) => row.close), 20), "#7dcea0"));
+    plot.append(poly(points.map((row) => row.close), "#ff3070"));
+    if (sma) plot.append(poly(moving(points.map((row) => row.close), 20), "#7dcea0"));
   }
+  svg.append(plot, ...axes(points, mode));
   const tip = el("p", { class: "sn-note", "data-sn": "tip" });
   svg.addEventListener("pointermove", (event) => {
     const rect = svg.getBoundingClientRect();
@@ -39,6 +43,48 @@ export async function drawChart(host, payload, { mode = "line", compare = null, 
   });
   host.append(svg, tip);
   return () => host.replaceChildren();
+}
+
+function axes(points, mode) {
+  const values = mode === "candles"
+    ? points.flatMap((row) => [row.low, row.high]).filter((value) => value != null)
+    : points.map((row) => row.close).filter((value) => value != null);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const nodes = [];
+  for (const fraction of [0, 0.5, 1]) {
+    const price = max - (max - min) * fraction;
+    const y = 16 + fraction * 260;
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("x", "4");
+    label.setAttribute("y", String(y));
+    label.setAttribute("fill", "#aeb8c4");
+    label.setAttribute("font-size", "11");
+    label.textContent = compactPrice(price);
+    nodes.push(label);
+  }
+  const first = points[0];
+  const last = points[points.length - 1];
+  for (const [row, x] of [[first, 56], [last, 620]]) {
+    if (!row) continue;
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("x", String(x));
+    label.setAttribute("y", "312");
+    label.setAttribute("fill", "#aeb8c4");
+    label.setAttribute("font-size", "11");
+    label.setAttribute("text-anchor", x > 300 ? "end" : "start");
+    label.textContent = new Date(row.time).toLocaleDateString("es-ES", { timeZone: "Europe/Madrid", day: "2-digit", month: "short" });
+    nodes.push(label);
+  }
+  return nodes;
+}
+
+function compactPrice(value) {
+  if (!Number.isFinite(value)) return "";
+  const abs = Math.abs(value);
+  if (abs >= 1000) return value.toLocaleString("es-ES", { maximumFractionDigits: 0 });
+  if (abs >= 1) return value.toLocaleString("es-ES", { maximumFractionDigits: 2 });
+  return value.toLocaleString("es-ES", { maximumSignificantDigits: 4 });
 }
 
 function normalize(payload) {

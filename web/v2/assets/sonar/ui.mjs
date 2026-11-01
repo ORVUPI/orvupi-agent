@@ -1,4 +1,4 @@
-import { clsPct, pct, show } from "./format.mjs";
+import { clsPct, pct, show, when } from "./format.mjs";
 import { t } from "./i18n.mjs";
 
 export function el(tag, attrs, children) {
@@ -85,8 +85,7 @@ export function sourceLine(payload, extra) {
   const line = el("p", { class: "sn-source", "data-sn": "source" });
   const link = payload?.sourceUrl ? el("a", { href: payload.sourceUrl, rel: "noreferrer", text: payload.source || payload.attribution }) : payload?.source || "";
   line.append(link || "");
-  if (payload?.fetchedAt) line.append(` · ${payload.fetchedAt.slice(11, 16)} UTC`);
-  if (payload?.stale) line.append(` · ${t("stale")}`);
+  if (payload?.fetchedAt) line.append(` · ${when(payload.fetchedAt)}`);
   if (extra) line.append(` · ${extra}`);
   return line;
 }

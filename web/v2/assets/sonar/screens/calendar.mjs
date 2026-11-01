@@ -1,6 +1,6 @@
 import { api, qs } from "../api.mjs";
 import { compact, plain, show } from "../format.mjs";
-import { labelOf, t } from "../i18n.mjs";
+import { t } from "../i18n.mjs";
 import { el, emptyBlock, errorBlock, skeleton, sourceLine } from "../ui.mjs";
 
 export async function mountCalendar(host, ctx) {
@@ -12,13 +12,19 @@ export async function mountCalendar(host, ctx) {
     const table = tableOf(body.rows || [], ctx);
     host.replaceChildren(el("section", { class: "sn-screen", "data-sn": "calendar" }, [
       el("h2", { text: t("calendar") }),
-      el("div", { class: "sn-pills" }, [el("button", { type: "button", class: kind ? "sn-pill" : "sn-pill on", onclick: () => ctx.go("/sonar/calendar/"), text: t("allEx") }), ...kinds.map((id) => el("button", { type: "button", class: kind === id ? "sn-pill on" : "sn-pill", "data-sn-kind": id, onclick: () => ctx.go(`/sonar/calendar/?kind=${encodeURIComponent(id)}`), text: labelOf("kind", id) }))]),
+      el("div", { class: "sn-pills" }, [el("button", { type: "button", class: kind ? "sn-pill" : "sn-pill on", onclick: () => ctx.go("/sonar/calendar/"), text: t("allEx") }), ...kinds.map((id) => el("button", { type: "button", class: kind === id ? "sn-pill on" : "sn-pill", "data-sn-kind": id, onclick: () => ctx.go(`/sonar/calendar/?kind=${encodeURIComponent(id)}`), text: kindLabel(id) }))]),
       (body.rows || []).length ? el("div", { class: "sn-scroll" }, table) : emptyBlock(),
       sourceLine(body),
     ]));
   } catch {
     host.replaceChildren(errorBlock(() => mountCalendar(host, ctx)));
   }
+}
+
+function kindLabel(value) {
+  const bag = t("kind");
+  if (bag && typeof bag === "object" && value && bag[value]) return bag[value];
+  return t("event");
 }
 
 function tableOf(rows, ctx) {
@@ -29,7 +35,7 @@ function tableOf(rows, ctx) {
     const asset = row.coinId ? el("a", { href: `${ctx.prefix}/sonar/crypto/${row.coinId}`, text: row.symbol || row.name || row.coinId }) : el("span", { text: row.symbol || t("unavailable") });
     body.append(el("tr", {}, [
       el("td", { text: row.date }),
-      el("td", {}, [el("strong", { text: labelOf("kind", row.kind) }), el("p", { text: row.title })]),
+      el("td", {}, [el("strong", { text: kindLabel(row.kind) }), el("p", { text: row.title })]),
       el("td", {}, asset),
     ]));
   }

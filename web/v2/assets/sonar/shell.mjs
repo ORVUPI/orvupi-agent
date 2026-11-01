@@ -119,7 +119,7 @@ function mountDock() {
     dockButton("portfolio", t("portfolio"), () => go("/sonar/portfolio/")),
     dockButton("more", t("more"), () => toggleMore()),
   ]);
-  document.body.append(dock, moreSheet(), iaButton({ go, route: parseRoute(), openSearch, prefix: parseRoute().prefix }));
+  document.body.append(dock, moreSheet());
 }
 
 function dockButton(id, label, onclick) {
@@ -163,7 +163,10 @@ function toggleMore() {
 
 function mountSearchButton() {
   const button = document.getElementById("vf-open-search");
-  if (!button) return;
+  if (!button || button.closest(".sn-headtools")) return;
+  const tools = el("div", { class: "sn-headtools" });
+  button.before(tools);
+  tools.append(iaButton({ go, route: parseRoute(), openSearch, prefix: parseRoute().prefix }), button);
   button.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopImmediatePropagation();
@@ -183,11 +186,8 @@ function footerCredit() {
   if (!footer || footer.querySelector(".sn-attrib")) return;
   footer.append(el("p", { class: "sn-attrib" }, [
     el("a", { href: "https://www.coingecko.com/", rel: "noreferrer", text: t("cg") }),
-    " · ",
     el("a", { href: "https://www.geckoterminal.com/", rel: "noreferrer", text: t("gt") }),
-    " · ",
     el("a", { href: "https://alternative.me/crypto/fear-and-greed-index/", rel: "noreferrer", text: t("am") }),
-    " · ",
     el("a", { href: "https://pattern.plus", rel: "noreferrer", text: t("pp") }),
   ]));
 }

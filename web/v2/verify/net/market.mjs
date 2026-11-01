@@ -184,10 +184,10 @@ export async function fetchPoolCandles(network, pool, timeframeId) {
 }
 
 async function coingeckoCandles(coinId, days) {
-  const url = coingeckoOhlcUrl(coinId, days);
-  if (!url) return { ok: false, state: "no-soportado", candles: [], provider: "CoinGecko", fetchedAt: new Date().toISOString(), scope: "Velas" };
-  const response = await fetchJson(url, { headers: JSON_HEADERS, attempts: 2 });
-  const parsed = parseCoingeckoOhlc(response.body);
+  const day = days === "max" ? "365" : days;
+  const response = await fetchJson(`/api/sonar/coin/${encodeURIComponent(coinId)}/ohlc?days=${encodeURIComponent(day)}`, { headers: JSON_HEADERS, attempts: 2 });
+  const points = Array.isArray(response.body?.points) ? response.body.points : [];
+  const parsed = parseCoingeckoOhlc(points.map((row) => [row[0], row[1], row[2], row[3], row[4]]));
   const label = stepLabel(parsed.stepSeconds);
   return {
     ok: response.ok && parsed.candles.length > 0,
@@ -265,9 +265,8 @@ export async function fetchBitcoinOhlc(days = "1") {
 
 export async function fetchTopMarkets() {
   return withCache("markets:top", async () => {
-    const url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=8&page=1&sparkline=false&price_change_percentage=24h";
-    const response = await fetchJson(url, { headers: JSON_HEADERS, attempts: 2 });
-    const rows = Array.isArray(response.body) ? response.body : [];
+    const response = await fetchJson("/api/sonar/markets?vs=usd&per=50&page=1", { headers: JSON_HEADERS, attempts: 2 });
+    const rows = Array.isArray(response.body?.rows) ? response.body.rows : [];
     const coins = rows.flatMap((coin) => {
       const price = finite(coin.current_price);
       if (!coin.id || price == null) return [];
@@ -276,9 +275,9 @@ export async function fetchTopMarkets() {
         symbol: String(coin.symbol || "").toUpperCase(),
         name: String(coin.name || coin.symbol || ""),
         price,
-        change24: finite(coin.price_change_percentage_24h),
-        marketCap: finite(coin.market_cap),
-        volumeH24: finite(coin.total_volume),
+        change24: finite(coin.ch24h ?? coin.price_change_percentage_24h),
+        marketCap: finite(coin.marketCap ?? coin.market_cap),
+        volumeH24: finite(coin.volume24h ?? coin.total_volume),
       }];
     });
     if (response.ok && coins.length) {
@@ -349,20 +348,19 @@ export async function fetchPoolTrades(network, pool) {
 
 export async function fetchBitcoinQuote() {
   return withCache("quote:bitcoin", async () => {
-    const url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_vol=true&include_24hr_change=true&include_market_cap=true";
-    const response = await fetchJson(url, { headers: JSON_HEADERS, attempts: 2 });
-    const row = response.body?.bitcoin;
-    if (response.ok && finite(row?.usd) != null) {
+    const response = await fetchJson("/api/sonar/markets?vs=usd&ids=bitcoin&per=50&page=1", { headers: JSON_HEADERS, attempts: 2 });
+    const row = (response.body?.rows || []).find((item) => item.id === "bitcoin");
+    if (response.ok && finite(row?.price) != null) {
       return {
         ok: true,
         state: "comprobado",
         provider: "CoinGecko",
         fetchedAt: response.fetchedAt,
         network: "bitcoin",
-        usd: finite(row.usd),
-        marketCap: finite(row.usd_market_cap),
-        volumeH24: finite(row.usd_24h_vol),
-        changeH24: finite(row.usd_24h_change),
+        usd: finite(row.price),
+        marketCap: finite(row.marketCap),
+        volumeH24: finite(row.volume24h),
+        changeH24: finite(row.ch24h),
         scope: "Bitcoin",
       };
     }
@@ -407,9 +405,9 @@ export async function fetchDexSnapshot(chainId, tokenAddress) {
 
 export async function fetchGlobalMarket() {
   return withCache("market:global", async () => {
-    const response = await fetchJson("https://api.coingecko.com/api/v3/global", { headers: JSON_HEADERS, attempts: 2 });
-    const data = response.body?.data;
-    const marketCap = finite(data?.total_market_cap?.usd);
+    const response = await fetchJson("/api/sonar/global?vs=usd", { headers: JSON_HEADERS, attempts: 2 });
+    const data = response.body?.data?.global;
+    const marketCap = finite(data?.marketCap);
     if (!response.ok || marketCap == null) return { ...failed("CoinGecko", response, "Mercado global"), marketCap: null };
     return {
       ok: true,
@@ -417,9 +415,9 @@ export async function fetchGlobalMarket() {
       provider: "CoinGecko",
       fetchedAt: response.fetchedAt,
       marketCap,
-      volume: finite(data.total_volume?.usd),
-      btcDominance: finite(data.market_cap_percentage?.btc),
-      change24: finite(data.market_cap_change_percentage_24h_usd),
+      volume: finite(data.volume24h),
+      btcDominance: finite(data.dominance?.btc),
+      change24: finite(data.change24h),
       scope: "Mercado global",
     };
   });

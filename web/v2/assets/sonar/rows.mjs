@@ -52,9 +52,9 @@ export function paintRanking(rows, opts) {
     "data-sort": id,
   }, id && opts.onSort && !["spark", "star", "name", "rank"].includes(id) ? el("button", { type: "button", class: "sn-sort", onclick: () => opts.onSort(id), text: label }) : label)))));
   const body = el("tbody");
-  for (const row of rows) body.append(desktopRow(row, head, key, currency, opts));
+  rows.forEach((row, index) => body.append(desktopRow(row, head, key, currency, opts, index)));
   table.append(body);
-  const mobile = el("div", { class: "sn-mlist", "data-sn": "mlist" }, rows.map((row) => mobileRow(row, key, currency, opts)));
+  const mobile = el("div", { class: "sn-mlist", "data-sn": "mlist" }, rows.map((row, index) => mobileRow(row, key, currency, opts, index)));
   const grid = opts.view === "grid" ? el("div", { class: "sn-grid", "data-sn": "grid" }, rows.map((row) => gridCard(row, key, currency, opts))) : null;
   return el("div", { "data-sn": "ranking" }, [
     el("div", { class: "sn-scroll" }, table),
@@ -63,9 +63,14 @@ export function paintRanking(rows, opts) {
   ]);
 }
 
-function desktopRow(row, head, key, currency, opts) {
+function rowRank(row, opts, index) {
+  if (row.rank != null) return String(row.rank);
+  return String((opts.rankFrom || 1) + index);
+}
+
+function desktopRow(row, head, key, currency, opts, index) {
   const cells = {
-    rank: el("td", { class: "num", text: show(row.rank) }),
+    rank: el("td", { class: "num", text: rowRank(row, opts, index) }),
     name: el("td", {}, el("span", { class: "sn-name" }, [logo(row), coinLink(row, opts.prefix, [el("strong", { text: row.name }), el("small", { text: row.symbol })])])),
     price: el("td", { class: "num", "data-k": "price", text: show(money(row.price, currency)) }),
     ch1h: el("td", { class: "num" }, pctNode(row.ch1h)),
@@ -80,13 +85,14 @@ function desktopRow(row, head, key, currency, opts) {
   return el("tr", { "data-coin": row.id }, head.map(([id]) => cells[id]));
 }
 
-function mobileRow(row, key, currency, opts) {
-  return el("a", { class: "sn-mrow", href: `${opts.prefix}/sonar/crypto/${row.id}`, "data-coin": row.id }, [
-    el("span", { class: "sn-rank", text: show(row.rank) }),
+function mobileRow(row, key, currency, opts, index) {
+  return el("div", { class: "sn-mrow", "data-coin": row.id }, [
+    el("span", { class: "sn-rank", text: rowRank(row, opts, index) }),
     logo(row),
-    el("span", { class: "sn-mid" }, [el("strong", { text: row.symbol || row.name }), el("small", { text: show(compact(row.marketCap, currency)) })]),
+    el("a", { class: "sn-mid", href: `${opts.prefix}/sonar/crypto/${row.id}` }, [el("strong", { text: row.symbol || row.name }), el("small", { text: show(compact(row.marketCap, currency)) })]),
     el("span", { class: "sn-px", "data-k": "price", text: show(money(row.price, currency)) }),
     el("span", { class: "sn-right" }, [el("span", { "data-k": "ch24h" }, pctNode(row[key])), spark(row.spark7d, (row[key] ?? 0) >= 0)]),
+    starButton(row, opts),
   ]);
 }
 

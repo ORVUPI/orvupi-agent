@@ -1,12 +1,12 @@
 import { api, qs } from "../api.mjs";
 import { chartHost, chartNote, drawChart, rsi } from "../chart.mjs";
-import { compact, day, money, plain, show, when } from "../format.mjs";
+import { btcPrice, compact, day, money, plain, show, when } from "../format.mjs";
 import { t } from "../i18n.mjs";
 import { activeList, snapshot, uid, update } from "../store.mjs";
 import { el, emptyBlock, errorBlock, field, logo, missing, pctNode, setChildren, skeleton, sourceLine } from "../ui.mjs";
 import { positionOf } from "./portfolio.mjs";
 
-const TABS = ["resumen", "estadisticas", "mercados", "noticias", "cartera", "acerca", "historico"];
+const TABS = ["resumen", "estadisticas", "mercados", "cartera", "acerca", "historico"];
 const PERIODS = [["1h", "1", "1h"], ["24h", "1", ""], ["7d", "7", ""], ["30d", "30", ""], ["90d", "90", ""], ["1y", "365", ""], ["ytd", "365", "ytd"], ["all", "max", ""]];
 const CHAINS = { ethereum: "ethereum", solana: "solana", base: "base", "binance-smart-chain": "bnb", "polygon-pos": "polygon", "arbitrum-one": "arbitrum", "optimistic-ethereum": "optimism", avalanche: "avalanche", tron: "tron" };
 
@@ -48,7 +48,7 @@ function paint(host, ctx, coin, tab, mine) {
   else if (tab === "mercados") markets(panel, ctx, coin);
   else if (tab === "noticias") panel.append(el("p", { class: "sn-state", "data-sn": "news", text: t("newsOff") }));
   else if (tab === "cartera") panel.append(holding(ctx, coin));
-  else if (tab === "acerca") panel.append(about(ctx, coin), links(coin), contracts(ctx, coin));
+  else if (tab === "acerca") setChildren(panel, [about(ctx, coin), links(coin), contracts(ctx, coin)]);
   else history(panel, ctx, coin);
 }
 
@@ -61,7 +61,7 @@ function header(ctx, coin) {
     el("div", { class: "sn-coinpx" }, [
       el("strong", { "data-k": "price", text: show(money(coin.price, vs)) }),
       el("span", { "data-k": "ch24h" }, pctNode(coin.ch24h)),
-      coin.priceBtc == null ? null : el("small", { text: `${t("inBtc")} ${plain(coin.priceBtc, 6)}` }),
+      el("small", { text: `${t("inBtc")} ${show(btcPrice(coin.priceBtc, coin.id))}` }),
     ]),
     el("div", { class: "sn-actions" }, [
       el("button", { type: "button", class: "sn-btn", "data-sn": "share", onclick: () => share(ctx, coin), text: t("share") }),
@@ -100,7 +100,7 @@ async function summary(panel, ctx, coin, mine) {
     el("button", { type: "button", class: "sn-btn", "data-sn": "sma", onclick: () => { sma = !sma; draw(); }, text: t("sma") }),
   );
   const select = el("select", { "data-sn": "compare", onchange: (event) => { compare = event.target.value; draw(); } }, [el("option", { value: "", text: t("none") }), el("option", { value: "bitcoin", text: t("btc") }), el("option", { value: "ethereum", text: t("eth") })]);
-  panel.append(tools, el("label", { class: "sn-select", text: t("compare") }, select), chart, note, read, stats(coin), converter(coin), sourceLine(coin));
+  setChildren(panel, [tools, el("label", { class: "sn-select", text: t("compare") }, select), chart, note, read, stats(coin), converter(coin), sourceLine(coin)]);
   async function draw() {
     tools.querySelectorAll("[data-sn-period]").forEach((button) => button.classList.toggle("on", button.getAttribute("data-sn-period") === period));
     const spec = PERIODS.find((row) => row[0] === period);
@@ -178,56 +178,143 @@ function about(ctx, coin) {
   const box = el("section", { class: "sn-box", "data-sn": "about" }, [el("h3", { text: t("about") })]);
   if (!coin.description) box.append(el("p", { text: t("noDesc") }));
   else {
-    if (coin.descriptionLang === "en") box.append(el("p", { class: "sn-note", text: t("descEn") }));
     box.append(el("p", { text: coin.description }));
   }
   if (coin.categories?.length) {
-    box.append(el("div", { class: "sn-pills" }, coin.categories.map((name) => el("span", { class: "sn-pill", text: name }))));
+    box.append(el("div", { class: "sn-pills" }, coin.categories.filter((name) => name && name !== "null").map((name) => el("a", { class: "sn-pill", href: `${ctx.prefix}/sonar/categories/`, text: categoryEs(name) }))));
   }
-  box.append(sourceLine(coin));
+  const source = sourceLine(coin);
+  if (source) box.append(source);
   return box;
+}
+
+const LINK_NAMES = {
+  "x.com": "X", "twitter.com": "X", "t.me": "Telegram", "telegram.me": "Telegram",
+  "discord.com": "Discord", "discord.gg": "Discord", "github.com": "GitHub",
+  "reddit.com": "Reddit", "www.reddit.com": "Reddit", "facebook.com": "Facebook", "www.facebook.com": "Facebook",
+  "etherscan.io": "Etherscan", "bscscan.com": "BscScan", "solscan.io": "Solscan",
+  "arbiscan.io": "Arbiscan", "optimistic.etherscan.io": "Optimism Explorer", "polygonscan.com": "Polygonscan",
+  "basescan.org": "BaseScan", "snowtrace.io": "Snowtrace",
+};
+
+function hostOf(href) {
+  try { return new URL(href).hostname.replace(/^www\./, ""); } catch { return ""; }
+}
+
+function linkLabel(href, fallback) {
+  const host = hostOf(href);
+  return LINK_NAMES[host] || LINK_NAMES[`www.${host}`] || host || fallback;
 }
 
 function links(coin) {
   const bag = coin.links || {};
   const rows = [];
-  const push = (label, href) => { if (href) rows.push(el("a", { href, rel: "noreferrer", text: label })); };
-  for (const href of bag.homepage || []) push(t("website"), href);
-  push(t("whitepaper"), bag.whitepaper);
-  for (const href of bag.explorers || []) push(t("explorers"), href);
-  push(t("twitter"), bag.twitter);
-  push(t("telegram"), bag.telegram);
-  push(t("reddit"), bag.reddit);
-  for (const href of bag.github || []) push(t("github"), href);
+  const add = (label, href, count) => {
+    if (!href || href === "null") return;
+    const text = count != null ? `${label} · ${plain(count, 0)}` : label;
+    rows.push(el("a", { href, rel: "noreferrer", text }));
+  };
+  for (const href of bag.homepage || []) add(linkLabel(href, t("website")), href);
+  add(t("whitepaper"), bag.whitepaper);
+  for (const href of bag.explorers || []) add(linkLabel(href, t("explorers")), href);
+  add("X", bag.twitter, coin.followers?.twitter);
+  add("Telegram", bag.telegram, coin.followers?.telegram);
+  add("Reddit", bag.reddit, coin.followers?.reddit);
+  add("Facebook", bag.facebook);
+  for (const href of bag.chat || []) add(linkLabel(href, t("community")), href);
+  for (const href of bag.forum || []) add(linkLabel(href, t("community")), href);
+  for (const href of bag.github || []) add("GitHub", href);
   if (!rows.length) return null;
-  return el("section", { class: "sn-box" }, [el("h3", { text: t("community") }), el("div", { class: "sn-links" }, rows)]);
+  return el("section", { class: "sn-box", "data-sn": "links" }, [el("h3", { text: t("community") }), el("div", { class: "sn-links" }, rows)]);
+}
+
+const CATEGORY_ES = {
+  "Meme": "Memes", "Memes": "Memes",
+  "Real World Assets (RWA)": "Activos del mundo real", "Real World Assets": "Activos del mundo real",
+  "Artificial Intelligence (AI)": "Inteligencia artificial", "Artificial Intelligence": "Inteligencia artificial",
+  "DePIN": "DePIN", "Decentralized Finance (DeFi)": "DeFi", "Gaming": "Juegos",
+  "Layer 1 (L1)": "Capa 1", "Layer 2 (L2)": "Capa 2", "Smart Contract Platform": "Plataforma de contratos",
+  "Proof of Work (PoW)": "Prueba de trabajo", "Proof of Stake (PoS)": "Prueba de participación",
+  "Exchange-based Tokens": "Tokens de exchange", "Stablecoins": "Stablecoins",
+  "Privacy Coins": "Privacidad", "Oracle": "Oráculos", "Storage": "Almacenamiento",
+  "NFT": "NFT", "Metaverse": "Metaverso", "Social": "Social",
+};
+
+function categoryEs(name) {
+  return CATEGORY_ES[name] || name;
+}
+
+const CHAIN_NAMES = {
+  ethereum: "Ethereum", bitcoin: "Bitcoin", solana: "Solana", base: "Base",
+  "binance-smart-chain": "BNB Chain", "polygon-pos": "Polygon", "arbitrum-one": "Arbitrum",
+  "optimistic-ethereum": "Optimism", avalanche: "Avalanche", tron: "Tron",
+};
+const CHAIN_ORDER = ["ethereum", "bitcoin", "solana", "base", "binance-smart-chain", "polygon-pos", "arbitrum-one", "optimistic-ethereum", "avalanche", "tron"];
+const EXPLORER = {
+  ethereum: (address) => `https://etherscan.io/token/${address}`,
+  "binance-smart-chain": (address) => `https://bscscan.com/token/${address}`,
+  solana: (address) => `https://solscan.io/token/${address}`,
+  base: (address) => `https://basescan.org/token/${address}`,
+  "polygon-pos": (address) => `https://polygonscan.com/token/${address}`,
+  "arbitrum-one": (address) => `https://arbiscan.io/token/${address}`,
+  "optimistic-ethereum": (address) => `https://optimistic.etherscan.io/token/${address}`,
+  avalanche: (address) => `https://snowtrace.io/token/${address}`,
+  tron: (address) => `https://tronscan.org/#/token20/${address}`,
+};
+
+function chainName(id) {
+  return CHAIN_NAMES[id] || id.replace(/-/g, " ");
+}
+
+function contractItem(ctx, platform, address) {
+  const chain = CHAINS[platform];
+  const verifyHref = chain ? `${ctx.prefix}/verify/?chain=${chain}&address=${encodeURIComponent(address)}#ficha` : null;
+  const explorer = EXPLORER[platform]?.(address) || null;
+  return el("li", {}, [
+    el("strong", { text: chainName(platform) }),
+    el("code", { text: address }),
+    el("button", { type: "button", class: "sn-btn", "data-sn": "copy-contract", onclick: () => copy(address), text: t("copyAddr") }),
+    explorer ? el("a", { href: explorer, rel: "noreferrer", text: linkLabel(explorer, t("explorers")) }) : null,
+    verifyHref ? el("a", { href: verifyHref, text: t("verify") }) : null,
+  ]);
 }
 
 function contracts(ctx, coin) {
-  const entries = Object.entries(coin.platforms || {}).filter(([, address]) => address);
+  const entries = Object.entries(coin.platforms || {}).filter(([, address]) => address && address !== "null");
   if (!entries.length) return null;
+  entries.sort((a, b) => {
+    const ai = CHAIN_ORDER.indexOf(a[0]);
+    const bi = CHAIN_ORDER.indexOf(b[0]);
+    return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+  });
   const list = el("ul", { class: "sn-contracts" });
-  for (const [platform, address] of entries) {
-    const chain = CHAINS[platform];
-    const href = chain ? `${ctx.prefix}/verify/?chain=${chain}&address=${encodeURIComponent(address)}#ficha` : null;
-    list.append(el("li", {}, [
-      el("strong", { text: platform }),
-      el("code", { text: address }),
-      el("button", { type: "button", class: "sn-btn", "data-sn": "copy-contract", onclick: () => copy(address), text: t("copyAddr") }),
-      href ? el("a", { href, text: t("verify") }) : null,
-    ]));
-  }
-  return el("section", { class: "sn-box", "data-sn": "contracts" }, [el("h3", { text: t("contracts") }), list]);
+  entries.slice(0, 5).forEach(([platform, address]) => list.append(contractItem(ctx, platform, address)));
+  const more = entries.slice(5);
+  const extra = more.length ? el("details", {}, [
+    el("summary", { text: `${t("moreContracts")} (${more.length})` }),
+    el("ul", { class: "sn-contracts" }, more.map(([platform, address]) => contractItem(ctx, platform, address))),
+  ]) : null;
+  return el("section", { class: "sn-box", "data-sn": "contracts" }, [el("h3", { text: t("contracts") }), list, extra]);
 }
 
 async function markets(panel, ctx, coin) {
   panel.append(skeleton(6));
   try {
     const body = await api(`/api/sonar/coin/${coin.id}/tickers${qs({ type: "all", vs: coin.vs })}`);
-    const spot = body.spot?.rows || [];
+    const ref = coin.price;
+    const spot = (body.spot?.rows || []).filter((row) => {
+      if (row.volume24h == null || row.volume24h <= 0 || row.price == null) return false;
+      if (ref) {
+        const ratio = row.price / ref;
+        if (ratio > 3 || ratio < 0.3) return false;
+      }
+      return true;
+    }).sort((a, b) => b.volume24h - a.volume24h);
+    const showTrust = spot.some((row) => row.trust);
     const total = spot.reduce((sum, row) => sum + (row.volume24h || 0), 0);
     const table = el("table", { class: "sn-table" });
-    table.append(el("thead", {}, el("tr", {}, [t("exchange"), t("pair"), t("price"), t("spread"), t("depth"), t("volume"), t("ofVol"), t("trust"), t("updated")].map((label) => el("th", { text: label })))));
+    const heads = [t("exchange"), t("pair"), t("price"), t("spread"), t("depth"), t("volume"), t("ofVol"), showTrust ? t("trust") : null, t("updated")].filter(Boolean);
+    table.append(el("thead", {}, el("tr", {}, heads.map((label) => el("th", { text: label })))));
     const tbody = el("tbody");
     for (const row of spot) {
       tbody.append(el("tr", {}, [
@@ -238,7 +325,7 @@ async function markets(panel, ctx, coin) {
         el("td", { text: row.depthUp2 == null && row.depthDown2 == null ? t("unavailable") : `${show(compact(row.depthUp2, coin.vs))} / ${show(compact(row.depthDown2, coin.vs))}` }),
         el("td", { text: show(compact(row.volume24h, coin.vs)) }),
         el("td", { text: row.volume24h != null && total ? `${plain((row.volume24h / total) * 100, 2)}%` : t("unavailable") }),
-        el("td", { text: row.trust || t("unavailable") }),
+        showTrust ? el("td", { text: row.trust || "" }) : null,
         el("td", { text: row.lastTradedAt ? when(row.lastTradedAt) : t("unavailable") }),
       ]));
     }

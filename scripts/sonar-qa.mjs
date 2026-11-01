@@ -96,8 +96,9 @@ await shot(home.page, "1440-tendencia");
 
 await home.page.goto(`${base}/sonar/portfolio/`, { waitUntil: "domcontentloaded" });
 await home.page.waitForSelector("[data-sn=portfolio]", { timeout: 20000 });
-await home.page.fill("[name=coinId]", "bitcoin");
-await home.page.fill("[name=symbol]", "BTC");
+await home.page.fill("[data-sn=coin-pick]", "bitcoin");
+await home.page.locator("[data-sn=coin-results] button").first().waitFor({ timeout: 20000 });
+await home.page.locator("[data-sn=coin-results] button").first().click();
 await home.page.fill("[name=qty]", "0.1");
 await home.page.fill("[name=price]", "100");
 await home.page.fill("[name=at]", "2026-01-02");

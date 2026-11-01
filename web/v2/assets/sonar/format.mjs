@@ -51,7 +51,7 @@ export function show(text) {
 export function when(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat(localeTag(), { dateStyle: "medium", timeStyle: "short" }).format(date);
+  return new Intl.DateTimeFormat(localeTag(), { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Madrid" }).format(date);
 }
 
 export function day(value) {
@@ -68,6 +68,17 @@ function localeTag() {
   if (lang === "ko") return "ko-KR";
   if (lang === "en") return "en-US";
   return "es-ES";
+}
+
+export function btcPrice(value, coinId) {
+  if (coinId === "bitcoin") return "1";
+  const number = finite(value);
+  if (number == null) return null;
+  const abs = Math.abs(number);
+  if (abs === 0) return "0";
+  if (abs >= 1) return plain(number, 4);
+  const digits = Math.min(12, Math.max(2, 3 - Math.floor(Math.log10(abs))));
+  return plain(number, digits);
 }
 
 export function clsPct(value) {

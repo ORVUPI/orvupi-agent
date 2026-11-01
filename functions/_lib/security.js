@@ -4,7 +4,7 @@ export const SONAR_CSP = [
   "default-src 'self'",
   "script-src 'self'",
   "style-src 'self' 'unsafe-hashes' 'sha256-3pRED1tOXas1FXFoPb9TGCjmYe9XQsmO9OV23khV2nY='",
-  "img-src 'self' https://coin-images.coingecko.com https://assets.geckoterminal.com",
+  "img-src 'self' https://coin-images.coingecko.com https://assets.coingecko.com https://assets.geckoterminal.com",
   "font-src 'self'",
   "connect-src 'self' wss://data-stream.binance.vision https://solana-rpc.publicnode.com https://public.rpc.solanavibestation.com https://public.rpc.atl1.solanavibestation.com https://public.rpc.ams1.solanavibestation.com https://api.mainnet-beta.solana.com https://mainnet.base.org https://ethereum-rpc.publicnode.com https://bsc-rpc.publicnode.com https://api.dexscreener.com https://arbitrum-one-rpc.publicnode.com https://polygon-bor-rpc.publicnode.com https://optimism-rpc.publicnode.com https://avalanche-c-chain-rpc.publicnode.com https://api.geckoterminal.com https://api.coingecko.com https://mempool.space https://api.trongrid.io https://data-api.binance.vision https://api.binance.com https://blockstream.info https://base-rpc.publicnode.com https://bsc-dataseed.binance.org https://arb1.arbitrum.io https://polygon-rpc.com https://mainnet.optimism.io https://api.avax.network https://cloudflare-eth.com https://eth.blockscout.com",
   "manifest-src 'self'",
@@ -63,10 +63,14 @@ export function cleanQuery(value) {
 }
 
 export function httpsUrl(value) {
-  if (typeof value !== "string" || !value) return null;
+  return webUrl(value, ["https:"]);
+}
+
+export function webUrl(value, protocols = ["https:", "http:"]) {
+  if (typeof value !== "string" || !value || value === "null") return null;
   try {
-    const url = new URL(value);
-    if (url.protocol !== "https:") return null;
+    const url = new URL(value.trim());
+    if (!protocols.includes(url.protocol)) return null;
     return url.toString();
   } catch {
     return null;
