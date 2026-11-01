@@ -47,7 +47,7 @@ async function list(host, ctx, type) {
       el("div", { class: "sn-tabs" }, types.map(([id, label]) => el("button", { type: "button", class: "sn-tab", "aria-selected": type === id ? "true" : "false", "data-sn-ex": id, onclick: () => ctx.go(`/sonar/exchanges/?type=${id}`), text: label }))),
       (body.rows || []).length ? el("div", { class: "sn-scroll" }, table) : emptyBlock(),
       el("p", { class: "sn-note", text: t("classNote") }),
-      el("p", { class: "sn-note", text: t("reserves") }),
+      el("p", { class: "sn-note", text: t("custody") }),
       el("p", { class: "sn-note", text: t("shareList") }),
       sourceLine(body),
     ]));
