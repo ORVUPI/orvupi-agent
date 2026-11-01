@@ -110,7 +110,7 @@ export function coinLink(row, prefix, child) {
 
 export function logo(row) {
   if (!row?.image) return el("span", { class: "sn-logo sn-logo-empty", "aria-hidden": "true", text: (row?.symbol || "?").slice(0, 1) });
-  return el("img", { class: "sn-logo", src: row.image, alt: "", width: "28", height: "28", loading: "lazy", referrerpolicy: "no-referrer" });
+  return el("img", { class: "sn-logo", src: row.image, alt: "", width: "22", height: "22", loading: "lazy", referrerpolicy: "no-referrer" });
 }
 
 export function field(label, valueNode) {
@@ -123,4 +123,114 @@ export function textOrMissing(value) {
 
 export function showText(value) {
   return show(value);
+}
+
+/** Números de página con huecos: 1, 2, …, N. Con `more`, no hay última conocida. */
+export function pageItems(page, pages, more = false) {
+  const current = Math.max(1, Math.floor(Number(page) || 1));
+  const last = more ? current + 1 : Math.max(current, Math.floor(Number(pages) || 1));
+  const seeds = [1, last, current - 1, current, current + 1];
+  const nums = [...new Set(seeds.filter((n) => n >= 1 && n <= last))].sort((a, b) => a - b);
+  const out = [];
+  let prev = 0;
+  for (const n of nums) {
+    if (prev && n - prev > 1) out.push("gap");
+    out.push(n);
+    prev = n;
+  }
+  if (more) out.push("gap");
+  return out;
+}
+
+export function slicePage(rows, page, per) {
+  const list = Array.isArray(rows) ? rows : [];
+  const size = Math.max(1, Math.floor(Number(per) || 1));
+  const pages = Math.max(1, Math.ceil(list.length / size) || 1);
+  const current = Math.min(Math.max(1, Math.floor(Number(page) || 1)), pages);
+  const start = (current - 1) * size;
+  return { page: current, pages, per: size, total: list.length, rows: list.slice(start, start + size) };
+}
+
+function scrollList() {
+  document.getElementById("sn-outlet")?.scrollIntoView({ block: "start" });
+}
+
+export function pager({ page, pages = 1, more = false, per, sizes = [], onPage, onPer }) {
+  const items = pageItems(page, pages, more);
+  const canPrev = page > 1;
+  const canNext = more || page < pages;
+  const jump = (next) => {
+    if (next === page || next < 1) return;
+    onPage(next);
+    scrollList();
+  };
+  const pagesBox = el("div", { class: "sn-pager-pages" });
+  pagesBox.append(el("button", {
+    type: "button",
+    class: "sn-btn",
+    "data-sn": "page-prev",
+    "aria-label": t("prev"),
+    disabled: canPrev ? null : true,
+    onclick: () => { if (canPrev) jump(page - 1); },
+    text: "‹",
+  }));
+  for (const item of items) {
+    if (item === "gap") pagesBox.append(el("span", { class: "sn-pager-gap", "aria-hidden": "true", text: "…" }));
+    else pagesBox.append(el("button", {
+      type: "button",
+      class: item === page ? "sn-btn on" : "sn-btn",
+      "aria-current": item === page ? "page" : null,
+      "aria-label": `${t("page")} ${item}`,
+      onclick: () => jump(item),
+      text: String(item),
+    }));
+  }
+  pagesBox.append(el("button", {
+    type: "button",
+    class: "sn-btn",
+    "data-sn": "page-next",
+    "aria-label": t("next"),
+    disabled: canNext ? null : true,
+    onclick: () => { if (canNext) jump(page + 1); },
+    text: "›",
+  }));
+  const size = sizes.length ? el("label", { class: "sn-select sn-pager-size" }, [
+    el("span", { text: t("perPage") }),
+    el("select", {
+      "data-sn": "per-page",
+      "aria-label": t("perPage"),
+      onchange: (event) => {
+        onPer(Number(event.target.value));
+        scrollList();
+      },
+    }, sizes.map((n) => el("option", { value: String(n), selected: n === Number(per) ? true : null, text: String(n) }))),
+  ]) : null;
+  return el("nav", { class: "sn-pager", "data-sn": "pager", "aria-label": t("page") }, [pagesBox, size]);
+}
+
+/** Corta `rows` y pinta ‹ 1 2 … N › arriba (si hay más de una) y abajo, con el selector. */
+export function pagedBlock(rows, state, sizes, render) {
+  const view = slicePage(rows, state.page, state.per);
+  state.page = view.page;
+  state.per = view.per;
+  const opts = {
+    page: view.page,
+    pages: view.pages,
+    per: view.per,
+    onPage: (next) => {
+      state.page = next;
+      state.paint();
+    },
+    onPer: (next) => {
+      state.per = next;
+      state.page = 1;
+      state.paint();
+    },
+  };
+  const bar = () => pager({ ...opts, sizes });
+  return el("div", { class: "sn-paged" }, [
+    view.pages > 1 ? bar() : null,
+    render(view.rows, view),
+    bar(),
+  ]);
 }

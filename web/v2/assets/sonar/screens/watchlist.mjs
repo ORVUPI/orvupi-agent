@@ -2,7 +2,7 @@ import { api, qs } from "../api.mjs";
 import { t } from "../i18n.mjs";
 import { marketTabs, paintRanking } from "../rows.mjs";
 import { activeList, exportJson, importJson, snapshot, uid, update } from "../store.mjs";
-import { el, emptyBlock, errorBlock, skeleton } from "../ui.mjs";
+import { el, emptyBlock, errorBlock, pagedBlock, skeleton } from "../ui.mjs";
 
 export async function mount(host, ctx) {
   const shared = (ctx.route.params.get("ids") || "").split(",").filter((id) => /^(?!.*\.\.)[A-Za-z0-9_-][A-Za-z0-9_.-]{0,119}$/.test(id));
@@ -50,11 +50,21 @@ async function paint(host, ctx) {
     page.append(emptyBlock(t("emptyWatch")), el("button", { type: "button", class: "sn-btn on", "data-sn": "add-coins", onclick: () => ctx.openSearch(), text: t("addCoins") }));
   } else if (!rows.length) page.append(emptyBlock());
   else {
-    page.append(paintRanking(rows, {
+    const state = {
+      page: watchPage,
+      per: watchPer,
+      paint() {
+        watchPage = state.page;
+        watchPer = state.per;
+        paint(host, ctx);
+      },
+    };
+    const block = pagedBlock(rows, state, [20, 50, 100], (slice, view) => paintRanking(slice, {
       prefix: ctx.prefix,
       period: "24h",
       currency: meta?.vs || data.prefs.vs,
       columns: data.prefs.columns,
+      rankFrom: (view.page - 1) * view.per + 1,
       onStar: async (row) => {
         await update((store) => {
           const current = store.lists.find((item) => item.id === store.activeList);
@@ -64,6 +74,9 @@ async function paint(host, ctx) {
         paint(host, ctx);
       },
     }));
+    watchPage = state.page;
+    watchPer = state.per;
+    page.append(block);
     page.append(orderButtons(list, host, ctx));
   }
   host.replaceChildren(page);
@@ -76,6 +89,9 @@ function orderButtons(list, host, ctx) {
     el("button", { type: "button", class: "sn-btn", disabled: index === list.ids.length - 1, onclick: () => move(index, 1, host, ctx), text: t("down") }),
   ])));
 }
+
+let watchPage = 1;
+let watchPer = 20;
 
 async function move(index, delta, host, ctx) {
   await update((data) => {

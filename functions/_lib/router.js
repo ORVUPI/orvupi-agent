@@ -112,7 +112,7 @@ export async function handle(request, env = {}, ctx = {}) {
 
   async function markets(query, fx) {
     const page = intIn(query.get("page"), 1, 400, 1);
-    const per = oneOf(query.get("per"), ["50", "100", "250"], "100");
+    const per = oneOf(query.get("per"), ["20", "50", "100", "250"], "100");
     const order = oneOf(query.get("order"), ORDERS, "market_cap_desc");
     const category = query.get("category") || "";
     const ids = query.get("ids") || "";
@@ -122,7 +122,13 @@ export async function handle(request, env = {}, ctx = {}) {
     if (idList.length > 50 || idList.some((id) => !slugOk(id))) return json(400, { ok: false, error: "invalid" });
     const payload = await data.getMarkets(env, ctx, { page, per: Number(per), category, order, ids: idList.join(",") });
     const scaled = data.scaleRows(payload, fx.missing ? 1 : fx.factor);
-    return json(200, { ok: true, ...withVs(scaled, fx) }, cacheHeaders(page === 1 ? 60 : 600, 3600, payload));
+    let total = null;
+    if (!category && idList.length === 0) {
+      const global = await data.getGlobal(env, ctx).catch(() => null);
+      const assets = Number(global?.assets);
+      total = Number.isFinite(assets) && assets > 0 ? assets : null;
+    }
+    return json(200, { ok: true, ...withVs(scaled, fx), total }, cacheHeaders(page === 1 ? 60 : 600, 3600, payload));
   }
 
   async function quotes(query, fx) {
@@ -324,7 +330,7 @@ export async function handle(request, env = {}, ctx = {}) {
     if (!slugOk(id)) return json(400, { ok: false, error: "invalid" });
     const page = intIn(query.get("page"), 1, 400, 1);
     if (page == null) return json(400, { ok: false, error: "invalid" });
-    const per = oneOf(query.get("per"), ["50", "100", "250"], "100");
+    const per = oneOf(query.get("per"), ["20", "50", "100", "250"], "100");
     const [directory, markets] = await Promise.all([
       data.getCategories(env, ctx),
       data.getMarkets(env, ctx, { page, per: Number(per || 100), category: id, order: "market_cap_desc", ids: "" }),

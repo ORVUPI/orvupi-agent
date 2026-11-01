@@ -7,7 +7,7 @@
   {
     "name": "logos",
     "ok": true,
-    "detail": "250,250,250"
+    "detail": "250,0,250"
   },
   {
     "name": "home-console",
@@ -152,7 +152,7 @@
   {
     "name": "390-fold",
     "ok": true,
-    "detail": "header 197.53125 chart 463.84375"
+    "detail": "header 195.53125 chart 441.46875"
   },
   {
     "name": "console-390",

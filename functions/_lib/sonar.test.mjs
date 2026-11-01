@@ -145,6 +145,20 @@ test("el cambio sale de un punto con marca de tiempo, o se queda vacío", () => 
   assert.equal(applySeriesChanges({ ch1h: null, ch24h: null, ch7d: null }, []).ch24h, null);
 });
 
+test("la paginación numérica deja huecos y no inventa la última página", async () => {
+  const { pageItems, slicePage } = await import("../../web/v2/assets/sonar/ui.mjs");
+  assert.deepEqual(pageItems(1, 10), [1, 2, "gap", 10]);
+  assert.deepEqual(pageItems(5, 20), [1, "gap", 4, 5, 6, "gap", 20]);
+  assert.deepEqual(pageItems(20, 20), [1, "gap", 19, 20]);
+  assert.deepEqual(pageItems(1, 1, true), [1, 2, "gap"]);
+  assert.deepEqual(pageItems(6, 6, true), [1, "gap", 5, 6, 7, "gap"]);
+  const view = slicePage([1, 2, 3, 4, 5], 2, 2);
+  assert.deepEqual(view.rows, [3, 4]);
+  assert.equal(view.pages, 3);
+  assert.equal(slicePage([], 4, 10).page, 1);
+  assert.equal(slicePage([], 4, 10).rows.length, 0);
+});
+
 test("/:lang/sonar/* deja pasar /assets/sonar/* a los estáticos", async () => {
   const { onRequest } = await import("../[lang]/sonar/[[path]].js");
   let passed = false;

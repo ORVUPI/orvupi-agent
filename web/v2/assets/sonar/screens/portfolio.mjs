@@ -2,7 +2,7 @@ import { api, qs } from "../api.mjs";
 import { compact, day, money, plain, show } from "../format.mjs";
 import { t } from "../i18n.mjs";
 import { snapshot, uid, update } from "../store.mjs";
-import { el, emptyBlock, errorBlock, skeleton } from "../ui.mjs";
+import { el, emptyBlock, errorBlock, pagedBlock, skeleton } from "../ui.mjs";
 import { marketTabs } from "../rows.mjs";
 
 export function positionOf(txs, price) {
@@ -99,6 +99,10 @@ async function paint(host, ctx) {
   page.append(el("p", { class: "sn-note", text: t("local") }));
   page.append(allocation(slices, total));
   page.append(form(host, ctx, vs));
+  if (txPortfolio !== data.activePortfolio) {
+    txPortfolio = data.activePortfolio;
+    txPage = 1;
+  }
   if (!txs.length) page.append(emptyBlock(t("noTx")));
   else page.append(txTable(txs, vs, host, ctx));
   page.append(historyButton(rows, vs));
@@ -248,23 +252,42 @@ async function fillDate(form) {
   }
 }
 
+let txPage = 1;
+let txPer = 10;
+let txPortfolio = "";
+
 function txTable(txs, vs, host, ctx) {
-  const table = el("table", { class: "sn-table" });
-  table.append(el("thead", {}, el("tr", {}, [t("date"), t("actions"), t("name"), t("qty"), t("price"), t("fee"), ""].map((label) => el("th", { text: label })))));
-  const body = el("tbody");
-  for (const tx of txs.slice().reverse()) {
-    body.append(el("tr", {}, [
-      el("td", { text: day(tx.at) || tx.at }),
-      el("td", { text: t(tx.type) }),
-      el("td", {}, el("a", { href: `/sonar/crypto/${tx.coinId}`, text: tx.symbol || tx.coinId })),
-      el("td", { text: show(plain(tx.qty, 6)) }),
-      el("td", { text: show(money(tx.price, vs)) }),
-      el("td", { text: show(money(tx.fee || 0, vs)) }),
-      el("td", {}, el("button", { type: "button", class: "sn-btn", onclick: async () => { await update((row) => { row.txs = row.txs.filter((item) => item.id !== tx.id); return row; }); paint(host, ctx); }, text: t("del") })),
-    ]));
-  }
-  table.append(body);
-  return el("div", { class: "sn-scroll" }, table);
+  const ordered = txs.slice().reverse();
+  const state = {
+    page: txPage,
+    per: txPer,
+    paint() {
+      txPage = state.page;
+      txPer = state.per;
+      paint(host, ctx);
+    },
+  };
+  const block = pagedBlock(ordered, state, [10, 20, 50], (slice) => {
+    const table = el("table", { class: "sn-table" });
+    table.append(el("thead", {}, el("tr", {}, [t("date"), t("actions"), t("name"), t("qty"), t("price"), t("fee"), ""].map((label) => el("th", { text: label })))));
+    const body = el("tbody");
+    for (const tx of slice) {
+      body.append(el("tr", {}, [
+        el("td", { text: day(tx.at) || tx.at }),
+        el("td", { text: t(tx.type) }),
+        el("td", {}, el("a", { href: `/sonar/crypto/${tx.coinId}`, text: tx.symbol || tx.coinId })),
+        el("td", { text: show(plain(tx.qty, 6)) }),
+        el("td", { text: show(money(tx.price, vs)) }),
+        el("td", { text: show(money(tx.fee || 0, vs)) }),
+        el("td", {}, el("button", { type: "button", class: "sn-btn", onclick: async () => { await update((row) => { row.txs = row.txs.filter((item) => item.id !== tx.id); return row; }); paint(host, ctx); }, text: t("del") })),
+      ]));
+    }
+    table.append(body);
+    return el("div", { class: "sn-scroll" }, table);
+  });
+  txPage = state.page;
+  txPer = state.per;
+  return block;
 }
 
 function historyButton(rows) {

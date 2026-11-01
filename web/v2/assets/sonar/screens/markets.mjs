@@ -2,7 +2,7 @@ import { api, qs } from "../api.mjs";
 import { t } from "../i18n.mjs";
 import { applyLocalFilters, coverageNote, marketTabs, paintRanking, sortRows } from "../rows.mjs";
 import { snapshot, update } from "../store.mjs";
-import { el, emptyBlock, errorBlock, setChildren, skeleton, sourceLine } from "../ui.mjs";
+import { el, emptyBlock, errorBlock, pager, setChildren, skeleton, sourceLine } from "../ui.mjs";
 import { compact, money, show } from "../format.mjs";
 import { pctNode } from "../ui.mjs";
 
@@ -41,8 +41,8 @@ async function ranking(host, ctx, mine) {
   const category = ctx.route.params.get("category") || "";
   const period = ctx.route.params.get("period") || prefs.period || "24h";
   const page = Math.min(400, Math.max(1, Number(ctx.route.params.get("page") || 1) || 1));
-  const perRaw = Number(ctx.route.params.get("per") || 100);
-  const per = [50, 100, 250].includes(perRaw) ? perRaw : 100;
+  const perRaw = Number(ctx.route.params.get("per") || 20);
+  const per = [20, 50, 100].includes(perRaw) ? perRaw : 20;
   const view = ctx.route.params.get("view") || prefs.view || "list";
   body.replaceChildren(skeleton(10));
   let rows = [];
@@ -60,12 +60,40 @@ async function ranking(host, ctx, mine) {
       body.replaceChildren(errorBlock(() => load()));
     }
   }
+  function turn(next) {
+    setParam(ctx, next);
+    ranking(host, ctx, mine);
+  }
+  function pageInfo() {
+    const total = Number(meta?.total);
+    if (!category && Number.isFinite(total) && total > 0) {
+      let pages = Math.max(1, Math.min(400, Math.ceil(total / per)));
+      if (rows.length < per) pages = Math.min(pages, page);
+      return { pages, more: false };
+    }
+    if (rows.length >= per && page < 400) return { pages: page, more: true };
+    return { pages: Math.max(1, page), more: false };
+  }
+  function pageBar(withSize) {
+    const info = pageInfo();
+    return pager({
+      page,
+      pages: info.pages,
+      more: info.more,
+      per,
+      sizes: withSize ? [20, 50, 100] : [],
+      onPage: (value) => turn({ page: String(value) }),
+      onPer: (value) => turn({ per: String(value), page: "1" }),
+    });
+  }
   function paint() {
     const shown = applyView(rows, filters, period, ctx);
+    const info = pageInfo();
     setChildren(body, [
       toolbar(),
       pills(),
       filtersOpen() ? filterForm() : null,
+      info.pages > 1 || info.more ? pageBar(true) : null,
       shown.length ? paintRanking(shown, {
         prefix: ctx.prefix,
         period,
@@ -80,14 +108,10 @@ async function ranking(host, ctx, mine) {
           paint();
         },
       }) : emptyBlock(),
+      pageBar(true),
       el("p", { class: "sn-note", text: t("loadedNote", { n: rows.length }) + (ctx.route.params.get("sort") ? ` ${t("sortLoaded")}` : "") }),
       el("p", { class: "sn-note", text: t("filterHint") }),
       el("p", { class: "sn-note", text: t("ageSkip") }),
-      el("div", { class: "sn-tools" }, [
-        page > 1 ? el("button", { type: "button", class: "sn-btn", "data-sn": "page-prev", onclick: () => { setParam(ctx, { page: String(page - 1) }); ranking(host, ctx, mine); }, text: t("prev") }) : null,
-        el("span", { text: `${t("page")} ${page}` }),
-        rows.length >= per && page < 400 ? el("button", { type: "button", class: "sn-btn", "data-sn": "page-next", onclick: () => { setParam(ctx, { page: String(page + 1) }); ranking(host, ctx, mine); }, text: t("next") }) : null,
-      ]),
       sourceLine(meta),
     ]);
     body.classList.toggle("sn-as-grid", view === "grid");
@@ -97,7 +121,6 @@ async function ranking(host, ctx, mine) {
       el("button", { type: "button", class: view === "list" ? "sn-btn on" : "sn-btn", "data-sn": "view-list", onclick: () => setParam(ctx, { view: "list" }) || ranking(host, ctx, mine), text: t("list") }),
       el("button", { type: "button", class: view === "grid" ? "sn-btn on" : "sn-btn", "data-sn": "view-grid", onclick: () => setParam(ctx, { view: "grid" }) || ranking(host, ctx, mine), text: t("grid") }),
       select(t("period"), period, [["1h", t("p1h")], ["24h", t("p24h")], ["7d", t("p7d")]], (value) => { update((data) => { data.prefs.period = value; return data; }); setParam(ctx, { period: value }); ranking(host, ctx, mine); }),
-      select(t("perPage"), String(per), [["50", "50"], ["100", "100"], ["250", "250"]], (value) => { setParam(ctx, { per: value, page: "1" }); ranking(host, ctx, mine); }),
       el("button", { type: "button", class: "sn-btn", "data-sn": "filters", "aria-expanded": filtersOpen() ? "true" : "false", onclick: () => { body.toggleAttribute("data-filters"); paint(); }, text: t("filters") }),
     ]);
   }

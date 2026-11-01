@@ -3,7 +3,7 @@ import { chartHost, chartNote, drawChart, rsi } from "../chart.mjs";
 import { btcPrice, compact, day, money, plain, show, when } from "../format.mjs";
 import { categoryName, t } from "../i18n.mjs";
 import { activeList, snapshot, uid, update } from "../store.mjs";
-import { el, emptyBlock, errorBlock, field, logo, missing, pctNode, setChildren, skeleton, sourceLine } from "../ui.mjs";
+import { el, emptyBlock, errorBlock, field, logo, missing, pagedBlock, pctNode, setChildren, skeleton, sourceLine } from "../ui.mjs";
 import { positionOf } from "./portfolio.mjs";
 
 const TABS = ["resumen", "estadisticas", "mercados", "cartera", "acerca", "historico"];
@@ -37,9 +37,11 @@ export async function mount(host, ctx) {
 
 function paint(host, ctx, coin, tab, mine) {
   const page = el("article", { class: "sn-coin", "data-sn": "coin", "data-coin": coin.id });
-  page.append(header(ctx, coin), tabs(ctx, tab), el("div", { id: "sn-coin-panel" }));
+  const panel = el("div", { id: "sn-coin-panel" });
+  const main = el("div", { class: "sn-coin-main" }, [tabs(ctx, tab), panel]);
+  const extra = el("div", { class: "sn-coin-extra" }, [sideStats(coin), links(coin), contractChips(ctx, coin)]);
+  page.append(el("div", { class: "sn-coin-layout" }, [header(ctx, coin), main, extra]));
   host.replaceChildren(page);
-  const panel = page.querySelector("#sn-coin-panel");
   if (tab === "resumen") summary(panel, ctx, coin, mine);
   else if (tab === "estadisticas") {
     panel.append(stats(coin), converter(coin));
@@ -47,7 +49,7 @@ function paint(host, ctx, coin, tab, mine) {
   }
   else if (tab === "mercados") markets(panel, ctx, coin);
   else if (tab === "cartera") panel.append(holding(ctx, coin));
-  else if (tab === "acerca") setChildren(panel, [about(ctx, coin), links(coin), contracts(ctx, coin)]);
+  else if (tab === "acerca") setChildren(panel, [about(ctx, coin), contracts(ctx, coin)]);
   else history(panel, ctx, coin);
 }
 
@@ -100,7 +102,7 @@ async function summary(panel, ctx, coin, mine) {
     el("button", { type: "button", class: "sn-btn", "data-sn": "sma", onclick: () => { sma = !sma; draw(); }, text: t("sma") }),
   );
   const select = el("select", { "data-sn": "compare", onchange: (event) => { compare = event.target.value; draw(); } }, [el("option", { value: "", text: t("none") }), el("option", { value: "bitcoin", text: t("btc") }), el("option", { value: "ethereum", text: t("eth") })]);
-  setChildren(panel, [tools, el("label", { class: "sn-select", text: t("compare") }, select), chart, note, read, stats(coin), converter(coin), sourceLine(coin)]);
+  setChildren(panel, [tools, el("label", { class: "sn-select", text: t("compare") }, select), chart, note, read, converter(coin), sourceLine(coin)]);
   async function draw() {
     tools.querySelectorAll("[data-sn-period]").forEach((button) => button.classList.toggle("on", button.getAttribute("data-sn-period") === period));
     const spec = PERIODS.find((row) => row[0] === period);
@@ -168,6 +170,31 @@ function stats(coin) {
 function text(value) {
   if (value == null || value === "") return missing();
   return document.createTextNode(String(value));
+}
+
+function sideStats(coin) {
+  const vs = coin.vs || "usd";
+  const ratio = coin.volume24h != null && coin.marketCap ? coin.volume24h / coin.marketCap : null;
+  const circ = coin.circulating != null && coin.max ? (coin.circulating / coin.max) * 100 : null;
+  const items = [
+    [t("mcap"), compact(coin.marketCap, vs)],
+    [t("volume"), compact(coin.volume24h, vs)],
+    [t("fdv"), compact(coin.fdv, vs)],
+    [t("volMcap"), ratio == null ? null : plain(ratio, 4)],
+    [t("supply"), plain(coin.circulating, 0)],
+    [t("max"), plain(coin.max, 0)],
+    [t("circPct"), circ == null ? null : `${plain(circ, 2)}%`],
+    [t("high24"), money(coin.high24h, vs)],
+    [t("low24"), money(coin.low24h, vs)],
+  ];
+  const list = el("dl", { class: "sn-sidestats", "data-sn": "side-stats" });
+  for (const [label, value] of items) list.append(el("dt", { text: label }), el("dd", {}, text(value)));
+  list.append(
+    el("dt", { text: t("h1") }), el("dd", {}, pctNode(coin.ch1h)),
+    el("dt", { text: t("h24") }), el("dd", { "data-k": "ch24h" }, pctNode(coin.ch24h)),
+    el("dt", { text: t("d7") }), el("dd", {}, pctNode(coin.ch7d)),
+  );
+  return list;
 }
 
 function converter(coin) {
@@ -244,7 +271,7 @@ function links(coin) {
   for (const href of bag.forum || []) add(linkLabel(href, t("community")), href);
   for (const href of bag.github || []) add("GitHub", href);
   if (!rows.length) return null;
-  return el("section", { class: "sn-box", "data-sn": "links" }, [el("h3", { text: t("community") }), el("div", { class: "sn-links" }, rows)]);
+  return el("section", { class: "sn-sideblock", "data-sn": "links" }, [el("h3", { text: t("community") }), el("div", { class: "sn-links" }, rows)]);
 }
 
 const CHAIN_NAMES = {
@@ -282,22 +309,78 @@ function contractItem(ctx, platform, address) {
   ]);
 }
 
-function contracts(ctx, coin) {
+function contractEntries(coin) {
   const entries = Object.entries(coin.platforms || {}).filter(([, address]) => address && address !== "null");
-  if (!entries.length) return null;
   entries.sort((a, b) => {
     const ai = CHAIN_ORDER.indexOf(a[0]);
     const bi = CHAIN_ORDER.indexOf(b[0]);
     return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
   });
-  const list = el("ul", { class: "sn-contracts" });
-  entries.slice(0, 5).forEach(([platform, address]) => list.append(contractItem(ctx, platform, address)));
-  const more = entries.slice(5);
-  const extra = more.length ? el("details", {}, [
-    el("summary", { text: `${t("moreContracts")} (${more.length})` }),
-    el("ul", { class: "sn-contracts" }, more.map(([platform, address]) => contractItem(ctx, platform, address))),
-  ]) : null;
-  return el("section", { class: "sn-box", "data-sn": "contracts" }, [el("h3", { text: t("contracts") }), list, extra]);
+  return entries;
+}
+
+function shortAddr(address) {
+  const text = String(address);
+  if (text.length <= 14) return text;
+  return `${text.slice(0, 6)}…${text.slice(-4)}`;
+}
+
+function contractChips(ctx, coin) {
+  const entries = contractEntries(coin);
+  if (!entries.length) return null;
+  const row = el("div", { class: "sn-links" });
+  for (const [platform, address] of entries.slice(0, 3)) {
+    const explorer = EXPLORER[platform]?.(address);
+    const label = `${chainName(platform)} ${shortAddr(address)}`;
+    row.append(explorer
+      ? el("a", { class: "sn-chip", href: explorer, rel: "noreferrer", text: label })
+      : el("span", { class: "sn-chip", text: label }));
+  }
+  if (entries.length > 3) {
+    row.append(el("button", {
+      type: "button",
+      class: "sn-btn",
+      "data-sn": "see-contracts",
+      onclick: () => ctx.go(`/sonar/crypto/${coin.id}?tab=acerca&contracts=1`),
+      text: t("seeAll"),
+    }));
+  }
+  return el("section", { class: "sn-sideblock", "data-sn": "contract-chips" }, [el("h3", { text: t("contracts") }), row]);
+}
+
+function contracts(ctx, coin) {
+  const entries = contractEntries(coin);
+  if (!entries.length) return null;
+  const preview = el("ul", { class: "sn-contracts sn-contract-preview" });
+  entries.slice(0, 3).forEach(([platform, address]) => preview.append(contractItem(ctx, platform, address)));
+  const box = el("section", { class: "sn-box sn-box-flat", "data-sn": "contracts" }, [
+    el("h3", { text: t("contracts") }),
+    preview,
+  ]);
+  if (entries.length <= 3) return box;
+  const full = el("div", { class: "sn-contract-all", hidden: true, "data-sn": "contracts-all" });
+  const state = { page: 1, per: 8, paint() {} };
+  state.paint = () => {
+    full.replaceChildren(pagedBlock(entries, state, [8, 16], (slice) => el("ul", { class: "sn-contracts" }, slice.map(([platform, address]) => contractItem(ctx, platform, address)))));
+  };
+  const open = ctx.route.params.get("contracts") === "1";
+  const btn = el("button", {
+    type: "button",
+    class: "sn-btn",
+    "data-sn": "contracts-all-btn",
+    text: open ? t("close") : t("seeAll"),
+    onclick: () => {
+      full.hidden = !full.hidden;
+      if (!full.hidden && !full.childElementCount) state.paint();
+      btn.textContent = full.hidden ? t("seeAll") : t("close");
+    },
+  });
+  box.append(btn, full);
+  if (open) {
+    full.hidden = false;
+    state.paint();
+  }
+  return box;
 }
 
 async function markets(panel, ctx, coin) {
@@ -321,47 +404,53 @@ async function markets(panel, ctx, coin) {
     const dex = rawDex.filter((pool) => pool.price == null || inBand(pool.price));
     const showTrust = spot.some((row) => row.trust);
     const total = spot.reduce((sum, row) => sum + (row.volume24h || 0), 0);
-    const table = el("table", { class: "sn-table" });
     const heads = [t("exchange"), t("pair"), t("price"), t("spread"), t("depth"), t("volume"), t("ofVol"), showTrust ? t("trust") : null, t("updated")].filter(Boolean);
-    table.append(el("thead", {}, el("tr", {}, heads.map((label) => el("th", { text: label })))));
-    const tbody = el("tbody");
-    for (const row of spot) {
-      tbody.append(el("tr", {}, [
-        el("td", {}, row.exchangeId ? el("a", { href: `${ctx.prefix}/sonar/exchanges/${row.exchangeId}`, text: row.exchangeName || row.exchangeId }) : (row.exchangeName || t("unavailable"))),
-        el("td", { text: row.base && row.target ? `${row.base}/${row.target}` : t("unavailable") }),
-        el("td", { text: show(money(row.price, coin.vs)) }),
-        el("td", { text: row.spreadPct == null ? t("unavailable") : `${plain(row.spreadPct, 3)}%` }),
-        el("td", { text: row.depthUp2 == null && row.depthDown2 == null ? t("unavailable") : `${show(compact(row.depthUp2, coin.vs))} / ${show(compact(row.depthDown2, coin.vs))}` }),
-        el("td", { text: show(compact(row.volume24h, coin.vs)) }),
-        el("td", { text: row.volume24h != null && total ? `${plain((row.volume24h / total) * 100, 2)}%` : t("unavailable") }),
-        showTrust ? el("td", { text: row.trust || "" }) : null,
-        el("td", { text: row.lastTradedAt ? when(row.lastTradedAt) : t("unavailable") }),
-      ]));
+    function cexTable(slice) {
+      const table = el("table", { class: "sn-table" });
+      table.append(el("thead", {}, el("tr", {}, heads.map((label) => el("th", { text: label })))));
+      const tbody = el("tbody");
+      for (const row of slice) {
+        tbody.append(el("tr", {}, [
+          el("td", {}, row.exchangeId ? el("a", { href: `${ctx.prefix}/sonar/exchanges/${row.exchangeId}`, text: row.exchangeName || row.exchangeId }) : (row.exchangeName || t("unavailable"))),
+          el("td", { text: row.base && row.target ? `${row.base}/${row.target}` : t("unavailable") }),
+          el("td", { text: show(money(row.price, coin.vs)) }),
+          el("td", { text: row.spreadPct == null ? t("unavailable") : `${plain(row.spreadPct, 3)}%` }),
+          el("td", { text: row.depthUp2 == null && row.depthDown2 == null ? t("unavailable") : `${show(compact(row.depthUp2, coin.vs))} / ${show(compact(row.depthDown2, coin.vs))}` }),
+          el("td", { text: show(compact(row.volume24h, coin.vs)) }),
+          el("td", { text: row.volume24h != null && total ? `${plain((row.volume24h / total) * 100, 2)}%` : t("unavailable") }),
+          showTrust ? el("td", { text: row.trust || "" }) : null,
+          el("td", { text: row.lastTradedAt ? when(row.lastTradedAt) : t("unavailable") }),
+        ]));
+      }
+      table.append(tbody);
+      return el("div", { class: "sn-scroll" }, table);
     }
-    table.append(tbody);
-    const pools = el("ul", { class: "sn-pools" });
-    for (const pool of dex) {
-      pools.append(el("li", {}, [
+    function dexList(slice) {
+      return el("ul", { class: "sn-pools" }, slice.map((pool) => el("li", {}, [
         el("a", { href: pool.url || `${ctx.prefix}/sonar/crypto/${coin.id}`, rel: "noreferrer", text: pool.name || pool.dex || t("pool") }),
         el("span", { text: show(money(pool.price, coin.vs)) }),
         el("span", { text: show(compact(pool.reserveUsd, coin.vs)) }),
         el("small", { text: pool.network || "" }),
-      ]));
+      ])));
     }
     let active = spot.length ? "cex" : dex.length ? "dex" : "cex";
+    const state = { cex: { page: 1, per: 20, paint() {} }, dex: { page: 1, per: 20, paint() {} } };
     const dexSource = rawDex[0] ? { source: "GeckoTerminal", sourceUrl: "https://www.geckoterminal.com/", attribution: t("gt"), fetchedAt: body.spot?.fetchedAt } : null;
     const paint = () => {
       const cexEmpty = rawSpot.length ? t("noPairPrice") : t("noCex");
       const dexEmpty = rawDex.length && !dex.length ? t("noPairPrice") : t("noDex");
+      const rows = active === "cex" ? spot : dex;
+      const st = state[active];
+      st.paint = paint;
       setChildren(panel, [
         el("h3", { text: t("mkts") }),
         el("div", { class: "sn-tabs", role: "tablist", "data-sn": "market-tabs" }, [
           marketTab("cex", t("cex")),
           marketTab("dex", t("dex")),
         ]),
-        active === "cex"
-          ? (spot.length ? el("div", { class: "sn-scroll" }, table) : emptyBlock(cexEmpty))
-          : (dex.length ? pools : emptyBlock(dexEmpty)),
+        rows.length
+          ? pagedBlock(rows, st, [10, 20], (slice) => (active === "cex" ? cexTable(slice) : dexList(slice)))
+          : emptyBlock(active === "cex" ? cexEmpty : dexEmpty),
         active === "cex" ? el("p", { class: "sn-note", text: t("liq") }) : null,
         sourceLine(active === "cex" ? body.spot : dexSource),
       ]);
@@ -390,21 +479,34 @@ async function history(panel, ctx, coin) {
   panel.append(skeleton(8));
   try {
     const body = await api(`/api/sonar/coin/${coin.id}/history${qs({ vs: coin.vs, days: "90" })}`);
-    const table = el("table", { class: "sn-table" });
-    table.append(el("thead", {}, el("tr", {}, [t("date"), t("open"), t("high"), t("low"), t("close"), t("volume")].map((label) => el("th", { text: label })))));
-    const tbody = el("tbody");
-    for (const row of (body.rows || []).slice(-30).reverse()) {
-      tbody.append(el("tr", {}, [
-        el("td", { text: day(row.time) || t("unavailable") }),
-        el("td", { text: show(money(row.open, coin.vs)) }),
-        el("td", { text: show(money(row.high, coin.vs)) }),
-        el("td", { text: show(money(row.low, coin.vs)) }),
-        el("td", { text: show(money(row.close, coin.vs)) }),
-        el("td", { text: row.volume == null ? t("unavailable") : show(compact(row.volume, coin.vs)) }),
-      ]));
-    }
-    table.append(tbody);
-    panel.replaceChildren(el("h3", { text: t("hist") }), el("div", { class: "sn-scroll" }, table), el("p", { class: "sn-note", text: body.volumeNote === "volume-day" ? t("volumeDay") : t("volMissing") }), sourceLine(body));
+    const rows = (body.rows || []).slice().reverse();
+    const state = { page: 1, per: 15, paint() {} };
+    state.paint = () => {
+      if (!panel.isConnected) return;
+      panel.replaceChildren(
+        el("h3", { text: t("hist") }),
+        rows.length ? pagedBlock(rows, state, [15, 30], (slice) => {
+          const table = el("table", { class: "sn-table" });
+          table.append(el("thead", {}, el("tr", {}, [t("date"), t("open"), t("high"), t("low"), t("close"), t("volume")].map((label) => el("th", { text: label })))));
+          const tbody = el("tbody");
+          for (const row of slice) {
+            tbody.append(el("tr", {}, [
+              el("td", { text: day(row.time) || t("unavailable") }),
+              el("td", { text: show(money(row.open, coin.vs)) }),
+              el("td", { text: show(money(row.high, coin.vs)) }),
+              el("td", { text: show(money(row.low, coin.vs)) }),
+              el("td", { text: show(money(row.close, coin.vs)) }),
+              el("td", { text: row.volume == null ? t("unavailable") : show(compact(row.volume, coin.vs)) }),
+            ]));
+          }
+          table.append(tbody);
+          return el("div", { class: "sn-scroll" }, table);
+        }) : emptyBlock(),
+        el("p", { class: "sn-note", text: body.volumeNote === "volume-day" ? t("volumeDay") : t("volMissing") }),
+        sourceLine(body),
+      );
+    };
+    state.paint();
   } catch {
     panel.replaceChildren(errorBlock(() => history(panel, ctx, coin)));
   }
