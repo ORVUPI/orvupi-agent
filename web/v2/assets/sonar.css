@@ -110,7 +110,7 @@ body.verify-app footer.or-footer .sn-attrib a { display: block; color: #e7edf4; 
   background: #ff3070; color: #1a0a10; border: 0; font-weight: 800; box-shadow: none; cursor: pointer;
 }
 .sn-headtools { grid-area: search; display: flex; justify-content: flex-end; align-items: center; gap: 8px; min-width: 0; }
-.sn-404 { max-width: 36rem; margin: 12vh auto; padding: 24px; text-align: center; color: #e7edf4; }
+.sn-404 { font-family: Inter, system-ui, sans-serif; max-width: 36rem; margin: 12vh auto; padding: 24px; text-align: center; color: #e7edf4; }
 .sn-404 h1, .sn-404 p, .sn-404 a { color: #e7edf4; }
 .sn-links a, .sn-contracts a, .sn-contracts code { color: #e7edf4; }
 .sn-contracts li { align-items: flex-start; flex-wrap: wrap; }
@@ -180,7 +180,14 @@ body.sonar-market .sn-rank { flex: 0 0 auto; min-width: 1.6rem; text-align: righ
 body.sonar-market .sn-mrow .sn-mid { flex: 1 1 auto; min-width: 4.2rem; overflow: hidden; }
 @media (max-width: 420px) {
   body.sonar-market .sn-mrow .sn-spark { display: none; }
+  body.sonar-market .sn-mrow { gap: 6px; padding: 6px 8px; }
+  body.sonar-market .sn-mrow .sn-mid { min-width: 2.8rem; }
+  body.sonar-market .sn-mrow .sn-px, body.sonar-market .sn-mrow .sn-right { font-size: 0.86rem; }
+  body.sonar-market .sn-mrow .sn-star { min-width: 36px; min-height: 36px; padding: 0; }
 }
+body.sonar-market .sn-mlist { grid-template-columns: minmax(0, 1fr); }
+body.sonar-market .sn-mrow { max-width: 100%; box-sizing: border-box; }
+body.sonar-market .sn-mrow > :not(.sn-mid) { flex: 0 0 auto; }
 body.sonar-market .sn-mrow .sn-mid strong,
 body.sonar-market .sn-mrow .sn-mid small { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
