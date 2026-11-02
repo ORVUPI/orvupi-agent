@@ -443,7 +443,8 @@ async function markets(panel, ctx, coin) {
           el("td", { text: row.base && row.target ? `${row.base}/${row.target}` : t("unavailable") }),
           el("td", { text: show(money(row.price, coin.vs)) }),
           el("td", { text: row.spreadPct == null ? t("unavailable") : `${plain(row.spreadPct, 3)}%` }),
-          el("td", { text: row.depthUp2 == null && row.depthDown2 == null ? t("unavailable") : `${show(compact(row.depthUp2, coin.vs))} / ${show(compact(row.depthDown2, coin.vs))}` }),
+          // CoinGecko devuelve 0 cuando no informa la profundidad: se trata como dato no disponible.
+          el("td", { text: !row.depthUp2 && !row.depthDown2 ? t("unavailable") : `${show(compact(row.depthUp2 || null, coin.vs))} / ${show(compact(row.depthDown2 || null, coin.vs))}` }),
           el("td", { text: show(compact(row.volume24h, coin.vs)) }),
           el("td", { text: row.volume24h != null && total ? `${plain((row.volume24h / total) * 100, 2)}%` : t("unavailable") }),
           showTrust ? el("td", { text: row.trust || "" }) : null,
