@@ -421,9 +421,12 @@ async function markets(panel, ctx, coin) {
       const ratio = price / ref;
       return ratio <= 3 && ratio >= 0.3;
     };
+    // CoinGecko a veces etiqueta los tickers con un id antiguo (simons-cat frente a simon-s-cat).
+    // Solo se descartan ids ajenos si al menos un ticker trae el id de la ficha.
+    const ownId = rawSpot.some((row) => row.coinId === coin.id);
     const spot = rawSpot.filter((row) => {
       if (row.volume24h == null || row.volume24h <= 0 || row.price == null) return false;
-      if (row.coinId && row.coinId !== coin.id) return false;
+      if (ownId && row.coinId && row.coinId !== coin.id) return false;
       return inBand(row.price);
     }).sort((a, b) => b.volume24h - a.volume24h);
     const dex = rawDex.filter((pool) => pool.price == null || inBand(pool.price));
