@@ -603,3 +603,34 @@ body.verify-app .vf-more ul,
 body.verify-app .vf-more button,
 body.verify-app .langpick ul,
 body.verify-app .langpick a { color: #102032; }
+
+/* Formulario del verificador: red, dirección y botón en una fila.
+   Los avisos (nodo público de Base, Ethereum, BNB…, error, privacidad) van debajo a todo el ancho. */
+body.verify-app #consulta { display: flex !important; flex-wrap: wrap !important; align-items: center; row-gap: 6px; }
+body.verify-app #consulta .consulta-barra { display: contents !important; }
+body.verify-app #consulta .selector-red { order: 1; flex: 0 0 auto; min-width: 0; }
+body.verify-app #consulta #direccion-token {
+  order: 2;
+  flex: 1 1 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 44px;
+  padding: 0 12px;
+  background: #121820;
+  border: 1px solid #2c3848 !important;
+  border-radius: 10px;
+}
+body.verify-app #consulta .consulta-barra > button { order: 3; flex: 0 0 auto; }
+body.verify-app #consulta #aviso-rpc-base:not([hidden]),
+body.verify-app #consulta .campo-error:not([hidden]) {
+  order: 4;
+  flex: 1 0 100%;
+  width: 100%;
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: #9aa6b4;
+  overflow-wrap: anywhere;
+}
+body.verify-app #consulta .campo-error:not([hidden]) { color: #ff8fa3; }
+body.verify-app #consulta #aviso-guardar { order: 5; flex: 1 0 100%; }

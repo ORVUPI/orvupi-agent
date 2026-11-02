@@ -983,3 +983,32 @@ test("tras un 429 sin clave, la siguiente llamada va directa con clave (una sola
     await clearCache();
   }
 });
+
+test("Sonar no se queda en el formulario por módulos de otro despliegue en caché", async () => {
+  const { readFileSync, readdirSync, statSync } = await import("node:fs");
+  const { join } = await import("node:path");
+  const web = new URL("../../web/v2/", import.meta.url).pathname;
+  const app = readFileSync(join(web, "assets/verify-app.mjs"), "utf8");
+  assert.match(app, /import\("\.\/sonar\/shell\.mjs"\)\.then\(\(mod\) => mod\.start\(\)\)\.catch\(healSonar\)/);
+  const listed = JSON.parse(app.match(/const SONAR_MODULES = (\[[^\]]*\]);/)[1]).sort();
+  const files = [];
+  (function walk(dir, rel) {
+    for (const name of readdirSync(dir)) {
+      const full = join(dir, name);
+      if (statSync(full).isDirectory()) walk(full, `${rel}${name}/`);
+      else if (name.endsWith(".mjs") && !name.endsWith(".test.mjs")) files.push(`${rel}${name.slice(0, -4)}`);
+    }
+  })(join(web, "assets/sonar"), "");
+  assert.deepEqual(listed, files.sort());
+  const headers = readFileSync(join(web, "_headers"), "utf8");
+  assert.match(headers, /\/assets\/\*\.mjs\n {2}! Cache-Control\n {2}Cache-Control: public, max-age=0, must-revalidate/);
+  const { renderSonarPage } = await import("./seo.js");
+  const page = await renderSonarPage(
+    new Request("http://local/sonar/"),
+    { SONAR_READ: () => "<html><head><title>x</title></head><body></body></html>" },
+    {},
+    { kind: "home" },
+  );
+  assert.equal(page.status, 200);
+  assert.equal(page.headers.get("cache-control"), "public, max-age=0, must-revalidate");
+});
