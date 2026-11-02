@@ -214,7 +214,9 @@ export function safeJson(value) {
 }
 
 function formatUsd(value) {
-  return new Intl.NumberFormat("en-US", { maximumFractionDigits: value >= 1 ? 2 : 6 }).format(value);
+  // Por debajo de 1: 4 cifras significativas (0.0000001167, no «0»).
+  if (Math.abs(value) > 0 && Math.abs(value) < 1) return new Intl.NumberFormat("en-US", { maximumSignificantDigits: 4 }).format(value);
+  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(value);
 }
 
 export async function sitemapXml(env, ctx) {
