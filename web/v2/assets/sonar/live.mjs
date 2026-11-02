@@ -120,10 +120,13 @@ export function patchNodes(updates) {
       node.classList.add(update.price > update.prev ? "sn-upflash" : "sn-downflash");
     });
     if (update.ch24h == null) continue;
+    const sign = update.ch24h < 0 ? "down" : update.ch24h > 0 ? "up" : "flat";
     document.querySelectorAll(`[data-coin="${cssEscape(update.id)}"] [data-k="ch24h"]`).forEach((node) => {
       if (typeof formatPct === "function") node.textContent = formatPct(update.ch24h);
-      node.classList.toggle("sn-down", update.ch24h < 0);
-      node.classList.toggle("sn-up", update.ch24h > 0);
+      node.classList.toggle("sn-down", sign === "down");
+      node.classList.toggle("sn-up", sign === "up");
+      node.classList.toggle("sn-flat", sign === "flat");
+      node.setAttribute("data-sign", sign);
     });
   }
 }

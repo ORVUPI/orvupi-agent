@@ -1,9 +1,10 @@
 import * as data from "./data.js";
-import { runWithBudget } from "./limits.js";
+import { runWithBudget, runWithoutBudget } from "./limits.js";
 import { scaleSeries } from "./normalize.js";
 import { allowRequest, cleanQuery, clientIp, intIn, json, oneOf, slugOk } from "./security.js";
 
 const ORDERS = ["market_cap_desc", "market_cap_asc", "volume_desc", "volume_asc", "id_asc", "id_desc", "gecko_desc", "gecko_asc"];
+let spanHold = 0;
 const DAYS = ["1", "7", "30", "90", "365", "max"];
 const PERIODS = ["1h", "24h", "7d"];
 const KINDS = ["cex", "dex", "derivatives", "all"];
@@ -116,7 +117,7 @@ export async function handle(request, env = {}, ctx = {}) {
   }
 
   async function markets(query, fx) {
-    const page = intIn(query.get("page"), 1, 2000, 1);
+    let page = intIn(query.get("page"), 1, 2000, 1);
     const per = oneOf(query.get("per"), ["20", "50", "100", "250"], "100");
     const order = oneOf(query.get("order"), ORDERS, "market_cap_desc");
     const category = query.get("category") || "";
@@ -126,21 +127,32 @@ export async function handle(request, env = {}, ctx = {}) {
     const idList = ids ? ids.split(",").filter(Boolean) : [];
     if (idList.length > 50 || idList.some((id) => !slugOk(id))) return json(400, { ok: false, error: "invalid" });
     const listed = !category && idList.length === 0;
-    const hot = page === 1 && listed;
-    const [payload, count] = await Promise.all([
-      data.getMarkets(env, ctx, { page, per: Number(per), category, order, ids: idList.join(",") }),
-      listed ? data.getAssetCount(env, ctx).catch(() => null) : null,
-    ]);
+    let span = null;
+    if (listed) {
+      span = await data.peekMarketSpan();
+      const known = span?.source === "CoinGecko" && Number.isFinite(Number(span?.total)) && Number(span.total) > 0;
+      if (!known && ctx?.waitUntil && Date.now() >= spanHold) {
+        ctx.waitUntil(runWithoutBudget(() => data.getMarketSpan(env, ctx).catch((error) => {
+          spanHold = Date.now() + 60_000;
+          console.error("sonar-span", error?.status || error?.code || "fail");
+        })));
+      }
+      if (known) {
+        const last = Math.max(1, Math.ceil(Number(span.total) / Number(per)));
+        if (page > last) page = last;
+      }
+    }
+    const hot = page === 1 && listed && order === "market_cap_desc";
+    const payload = await data.getMarkets(env, ctx, { page, per: Number(per), category, order, ids: idList.join(",") });
     const scaled = data.scaleRows(payload, fx.missing ? 1 : fx.factor);
     let total = null;
     if (listed) {
       const fromSource = Number(payload?.total);
-      const assets = Number(count?.assets);
-      if (payload?.total != null && Number.isFinite(fromSource)) total = fromSource;
-      else if (Number.isFinite(assets) && assets > 0) total = assets;
+      if (payload?.source === "CoinPaprika" && Number.isFinite(fromSource)) total = fromSource;
+      else if (span?.source === "CoinGecko" && Number.isFinite(Number(span?.total)) && Number(span.total) > 0) total = Number(span.total);
     }
     const fresh = hot ? data.CACHE_FRESH.markets : data.CACHE_FRESH.marketsOther;
-    return json(200, { ok: true, ...withVs(scaled, fx), total }, cacheHeaders(fresh, 86400, payload));
+    return json(200, { ok: true, ...withVs(scaled, fx), total, page }, cacheHeaders(fresh, 86400, payload));
   }
 
   async function quotes(query, fx) {
@@ -387,10 +399,13 @@ export async function handle(request, env = {}, ctx = {}) {
     } else if (ctx?.waitUntil) {
       ctx.waitUntil(ratesJob);
     }
-    let rows = payload.rows.map((row) => ({
+    const tagged = payload.rows.map((row) => ({
       ...row,
       volume24h: row.volume24hBtc != null && btc != null ? row.volume24hBtc * btc : row.volume24hUsd == null ? null : row.volume24hUsd * factor,
     }));
+    const hasCex = tagged.some((row) => row.centralized === true);
+    const hasDex = tagged.some((row) => row.centralized === false);
+    let rows = tagged;
     if (type === "cex") rows = rows.filter((row) => row.centralized === true);
     if (type === "dex") rows = rows.filter((row) => row.centralized === false);
     const total = rows.reduce((sum, row) => sum + (row.volume24h || 0), 0);
@@ -399,7 +414,7 @@ export async function handle(request, env = {}, ctx = {}) {
       sharePct: row.volume24h != null && total > 0 ? (row.volume24h / total) * 100 : null,
       shareBasis: "porcentaje sobre la suma de esta lista",
     }));
-    return json(200, { ok: true, ...withVs({ ...payload, rows, type }, fx) }, cacheHeaders(data.CACHE_FRESH.exchanges, 86400, payload));
+    return json(200, { ok: true, ...withVs({ ...payload, rows, type, hasCex, hasDex }, fx) }, cacheHeaders(data.CACHE_FRESH.exchanges, 86400, payload));
   }
 
   async function exchange(id, fx) {

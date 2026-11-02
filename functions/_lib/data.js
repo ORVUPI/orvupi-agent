@@ -11,21 +11,22 @@ import { getBtcFees, getEthGas } from "./providers/chain.js";
 
 const DAY = 86400;
 
-/** Ventanas frescas. La clave demo solo se gasta cuando esto caduca, muy por debajo de ~330 llamadas al día. */
+/** Ventanas frescas. El plan demo ronda 30 llamadas/min: esto deja la portada en 15 min
+ *  y el resto más quieto, para no depender solo del contador por isolate. */
 export const CACHE_FRESH = {
-  markets: 180,
-  marketsOther: 300,
-  coin: 1200,
-  categories: 3600,
-  exchanges: 3600,
+  markets: 900,
+  marketsOther: 1800,
+  coin: 3600,
+  categories: 6 * 3600,
+  exchanges: 6 * 3600,
   count: 86400,
-  quotes: 180,
-  chartShort: 900,
-  chartLong: 3600,
-  global: 300,
-  trending: 900,
-  rates: 3600,
-  search: 900,
+  quotes: 900,
+  chartShort: 1800,
+  chartLong: 6 * 3600,
+  global: 900,
+  trending: 1800,
+  rates: 6 * 3600,
+  search: 1800,
 };
 
 function cached(key, ttlSec, staleSec, loader, ctx, maxAgeSec = DAY) {
@@ -47,6 +48,92 @@ export function getGlobal(env, ctx) {
 
 export function getAssetCount(env, ctx) {
   return cached("cg:count", CACHE_FRESH.count, 7 * DAY, () => loadCount(env, ctx), ctx, 7 * DAY);
+}
+
+const SPAN_PER = 250;
+const SPAN_MAX_PAGE = 120;
+
+export function peekMarketSpan() {
+  return peek("cg:span");
+}
+
+/** Longitud real de /coins/markets, no active_cryptocurrencies. Cacheada 24 h. */
+export function getMarketSpan(env, ctx) {
+  return cached("cg:span", CACHE_FRESH.count, 7 * DAY, () => loadMarketSpan(env), ctx, 7 * DAY);
+}
+
+async function loadMarketSpan(env) {
+  let hinted = null;
+  try {
+    const list = await cg.getCoinList(env);
+    if (Number.isFinite(list?.count) && list.count > 0) hinted = list.count;
+  } catch (error) {
+    console.error("sonar-span-list", error?.status || error?.code || "fail");
+  }
+  const total = await measureMarkets(env, hinted);
+  if (!Number.isFinite(total) || total <= 0) {
+    const error = new Error("span");
+    error.status = 503;
+    throw error;
+  }
+  return {
+    total,
+    per: SPAN_PER,
+    exact: true,
+    source: "CoinGecko",
+    sourceUrl: "https://www.coingecko.com/",
+    attribution: "Data provided by CoinGecko",
+    fetchedAt: new Date().toISOString(),
+  };
+}
+
+async function pageLength(env, page, probes) {
+  if (probes.n >= 8) return null;
+  probes.n += 1;
+  const payload = await cg.getMarkets(env, { page, per: SPAN_PER, order: "market_cap_desc", category: "", ids: "" });
+  return Array.isArray(payload?.rows) ? payload.rows.length : 0;
+}
+
+async function measureMarkets(env, hinted) {
+  const probes = { n: 0 };
+  const per = SPAN_PER;
+  let low = 1;
+  let high = hinted ? Math.min(SPAN_MAX_PAGE, Math.max(1, Math.ceil(hinted / per))) : SPAN_MAX_PAGE;
+  if (hinted) {
+    const edge = await pageLength(env, high, probes);
+    if (edge == null) return null;
+    if (edge > 0 && edge < per) return (high - 1) * per + edge;
+    if (edge === per) {
+      if (high >= SPAN_MAX_PAGE) return null;
+      const extra = await pageLength(env, high + 1, probes);
+      if (extra == null) return null;
+      if (extra === 0) return high * per;
+      if (extra > 0 && extra < per) return high * per + extra;
+      low = high + 1;
+      high = SPAN_MAX_PAGE;
+    } else if (edge === 0) {
+      if (high <= 1) return null;
+      high -= 1;
+    }
+  }
+  let best = 0;
+  let bounded = false;
+  while (low <= high && probes.n < 8) {
+    const page = Math.ceil((low + high) / 2);
+    const n = await pageLength(env, page, probes);
+    if (n == null) return null;
+    if (n <= 0) {
+      bounded = true;
+      high = page - 1;
+    } else if (n < per) {
+      return (page - 1) * per + n;
+    } else {
+      best = Math.max(best, page * per);
+      low = page + 1;
+    }
+  }
+  if (low <= high || !bounded) return null;
+  return best > 0 ? best : null;
 }
 
 async function loadCount(env, ctx) {
@@ -287,6 +374,33 @@ async function loadExchangeList(env, page) {
 
 const exchangeJobs = new Map();
 
+const KNOWN_DEX = new Set([
+  "uniswap", "uniswap-v2", "uniswap-v3", "uniswap-v4", "sushiswap", "sushiswap-v3",
+  "pancakeswap", "pancakeswap-v2", "pancakeswap-v3", "curve", "curve-finance",
+  "balancer", "balancer-v1", "balancer-v2", "balancer-v3", "raydium", "raydium2",
+  "orca", "jupiter", "traderjoe", "traderjoe-v2", "camelot", "camelot-v3",
+  "quickswap", "quickswap-v3", "velodrome", "velodrome-v2", "aerodrome",
+  "spookyswap", "spiritswap", "pangolin", "biswap", "apeswap", "mdex",
+  "osmosis", "thorswap", "sunswap", "sunswap-v2", "justswap", "kyberswap",
+  "kyberswap-elastic", "dodo", "dodo-bsc", "syncswap", "mute", "iziswap", "woofi",
+  "hashflow", "baseswap", "swapbased", "alien-base", "thruster", "maverick",
+  "maverick-protocol", "bancor", "loopring", "idex", "tokenlon", "airswap",
+  "phoenix", "lifinity", "meteora", "hyperliquid", "gmx", "gmx-v2", "dydx",
+  "vertex-protocol", "1inch", "oneinch", "paraswap",
+]);
+
+function normId(id) {
+  return String(id || "").toLowerCase().replace(/_/g, "-");
+}
+
+function normName(name) {
+  return String(name || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+export function getExchangeTypes(env, ctx) {
+  return cached("pp:exkinds", DAY, 7 * DAY, () => paprika.getExchangeTypes(env), ctx, 7 * DAY);
+}
+
 export async function getExchangesClassed(env, ctx) {
   const pending = exchangeJobs.get("classed");
   if (pending) return pending;
@@ -295,18 +409,25 @@ export async function getExchangesClassed(env, ctx) {
   return job;
 }
 
+function classifyExchange(row, kinds) {
+  if (row.centralized === true || row.centralized === false) return row.centralized;
+  const id = normId(row.id);
+  const name = normName(row.name);
+  if (id && kinds?.byId && Object.prototype.hasOwnProperty.call(kinds.byId, id)) return kinds.byId[id];
+  if (name && kinds?.byName && Object.prototype.hasOwnProperty.call(kinds.byName, name)) return kinds.byName[name];
+  if (KNOWN_DEX.has(id)) return false;
+  return null;
+}
+
 async function classExchanges(env, ctx) {
   const list = await getExchangeList(env, ctx, 1);
-  const rows = [];
-  for (const row of list.rows || []) {
-    if (row.centralized != null) {
-      rows.push(row);
-      continue;
-    }
-    const cached = await peek(`cg:exchange:${row.id}`);
-    const usable = cached && Date.now() - Date.parse(cached.fetchedAt || "") < DAY * 1000;
-    rows.push({ ...row, centralized: usable ? cached.centralized ?? null : null });
+  let kinds = null;
+  try {
+    kinds = await getExchangeTypes(env, ctx);
+  } catch (error) {
+    console.error("sonar-exkinds", error?.status || error?.code || "fail");
   }
+  const rows = (list.rows || []).map((row) => ({ ...row, centralized: classifyExchange(row, kinds) }));
   return { ...list, rows };
 }
 

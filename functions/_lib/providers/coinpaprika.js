@@ -180,6 +180,21 @@ export async function getCategories(env) {
   return meta({ rows });
 }
 
+export async function getExchangeTypes(env) {
+  const body = await paprika(env, "/exchanges");
+  const byId = {};
+  const byName = {};
+  for (const row of Array.isArray(body) ? body : []) {
+    const flag = centralized(row?.type);
+    if (flag == null) continue;
+    const id = String(row.id || "").toLowerCase().replace(/_/g, "-");
+    const name = String(row.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+    if (id) byId[id] = flag;
+    if (name) byName[name] = flag;
+  }
+  return { byId, byName, fetchedAt: new Date().toISOString() };
+}
+
 export async function getExchanges(env) {
   const body = await paprika(env, "/exchanges");
   const list = (Array.isArray(body) ? body : []).filter((row) => row?.id);

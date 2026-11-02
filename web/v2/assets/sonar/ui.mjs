@@ -67,7 +67,8 @@ export function missing() {
 export function pctNode(value) {
   const text = pct(value);
   if (text == null) return missing();
-  return el("span", { class: clsPct(value), text });
+  const sign = clsPct(value) === "sn-down" ? "down" : clsPct(value) === "sn-up" ? "up" : "flat";
+  return el("span", { class: clsPct(value), "data-sign": sign, text });
 }
 
 export function spark(values) {
@@ -97,7 +98,10 @@ export function spark(values) {
   line.setAttribute("stroke-linejoin", "round");
   line.setAttribute("stroke-linecap", "round");
   svg.append(line);
-  return svg;
+  return el("span", { class: "sn-sparkwrap", title: t("spark7") }, [
+    svg,
+    el("span", { class: "sn-sparkcap", text: t("d7") }),
+  ]);
 }
 
 export function sourceLine(payload, extra) {

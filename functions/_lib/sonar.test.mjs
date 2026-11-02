@@ -195,11 +195,11 @@ test("/:lang/sonar/* deja pasar /assets/sonar/* a los estáticos", async () => {
   assert.equal(passed, true);
 });
 
-test("el total del ranking sale de los activos activos, sin recorrer páginas", async () => {
+test("el total del ranking es la longitud real del listado, no una estimación", async () => {
   const { clearCache } = await import("./cache.js");
   await clearCache();
   const original = globalThis.fetch;
-  let markets = 0;
+  const book = 280;
   globalThis.fetch = async (url) => {
     const href = String(url);
     if (href.includes("/global")) {
@@ -214,31 +214,46 @@ test("el total del ranking sale de los activos activos, sin recorrer páginas", 
         },
       });
     }
+    if (href.includes("/coins/list")) {
+      return jsonResponse(Array.from({ length: book }, (_, index) => ({ id: `coin-${index}` })));
+    }
     if (href.includes("/coins/markets")) {
-      markets += 1;
       const page = Number(new URL(href).searchParams.get("page") || "1");
       const per = Number(new URL(href).searchParams.get("per_page") || "100");
-      const rows = page === 1
-        ? Array.from({ length: per }, (_, index) => ({ id: `coin-${index}`, symbol: "x", name: "X", current_price: 3, market_cap: 1000 - index }))
-        : [];
+      const start = (page - 1) * per;
+      const count = Math.max(0, Math.min(per, book - start));
+      const rows = Array.from({ length: count }, (_, index) => ({
+        id: `coin-${start + index}`,
+        symbol: "x",
+        name: "X",
+        current_price: 3,
+        market_cap: 1000 - index,
+      }));
       return jsonResponse(rows);
     }
     return new Response("{}", { status: 503, headers: { "content-type": "application/json" } });
   };
+  const jobs = [];
+  const ctx = { waitUntil(promise) { jobs.push(promise); } };
   try {
-    const first = await handle(new Request("http://local/api/sonar/markets?page=1&per=20"), {}, {});
+    const first = await handle(new Request("http://local/api/sonar/markets?page=1&per=20"), {}, ctx);
     assert.equal(first.status, 200);
     const body = await first.json();
-    assert.equal(body.total, 17000);
+    assert.equal(body.total, null);
     assert.equal(body.rows.length, 20);
-    assert.equal(markets, 1);
-    const deep = await handle(new Request("http://local/api/sonar/markets?page=934&per=20"), {}, {});
+    await Promise.all(jobs);
+    const again = await handle(new Request("http://local/api/sonar/markets?page=1&per=20"), {}, ctx);
+    const againBody = await again.json();
+    assert.equal(againBody.total, book);
+    assert.notEqual(againBody.total, 17000);
+    const deep = await handle(new Request("http://local/api/sonar/markets?page=50&per=20"), {}, ctx);
     assert.equal(deep.status, 200);
     const deepBody = await deep.json();
-    assert.equal(deepBody.total, 17000);
-    assert.equal(deepBody.rows.length, 0);
-    assert.equal(markets, 2);
-    const bad = await handle(new Request("http://local/api/sonar/markets?page=934&per=20&category=%3Cx%3E"), {}, {});
+    assert.equal(deepBody.total, book);
+    assert.equal(deepBody.page, 14);
+    assert.equal(deepBody.rows.length, 20);
+    assert.equal(deepBody.rows[0].id, "coin-260");
+    const bad = await handle(new Request("http://local/api/sonar/markets?page=50&per=20&category=%3Cx%3E"), {}, {});
     assert.equal(bad.status, 400);
     const tooDeep = await handle(new Request("http://local/api/sonar/markets?page=2001&per=20"), {}, {});
     assert.equal(tooDeep.status, 400);
@@ -557,14 +572,64 @@ test("solo stubxai.pages.dev redirige a orvupi.com", async () => {
   assert.equal(apex.headers.get("location"), "https://orvupi.com/sonar/?q=1");
 });
 
+test("CEX y DEX salen de un tipo real, y lo desconocido no se etiqueta", async () => {
+  const { clearCache } = await import("./cache.js");
+  await clearCache();
+  const original = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    const href = String(url);
+    if (href.includes("api.coinpaprika.com") && href.includes("/v1/exchanges") && !href.includes("/v1/exchanges/")) {
+      return jsonResponse([
+        { id: "kraken", name: "Kraken", type: ["cex"] },
+        { id: "uniswap-v3", name: "Uniswap V3", type: ["dex"] },
+        { id: "mystery-swap", name: "Mystery Swap", type: ["cex", "dex"] },
+      ]);
+    }
+    if (href.includes("coingecko.com") && href.includes("/exchanges?")) {
+      return jsonResponse([
+        { id: "kraken", name: "Kraken", trade_volume_24h_btc: 3, trust_score: 10, country: "United States" },
+        { id: "uniswap_v3", name: "Uniswap V3", trade_volume_24h_btc: 2, trust_score: 9 },
+        { id: "mystery", name: "Mystery", trade_volume_24h_btc: 1, trust_score: 1 },
+      ]);
+    }
+    if (href.includes("/exchange_rates")) return jsonResponse({ rates: { usd: { value: 60000 }, btc: { value: 1 } } });
+    return new Response("{}", { status: 503, headers: { "content-type": "application/json" } });
+  };
+  try {
+    const all = await handle(new Request("http://local/api/sonar/exchanges"), {}, {});
+    assert.equal(all.status, 200);
+    const body = await all.json();
+    const byId = Object.fromEntries(body.rows.map((row) => [row.id, row.centralized]));
+    assert.equal(byId.kraken, true);
+    assert.equal(byId.uniswap_v3, false);
+    assert.equal(byId.mystery, null);
+    assert.equal(body.hasCex, true);
+    assert.equal(body.hasDex, true);
+    const cex = await handle(new Request("http://local/api/sonar/exchanges?type=cex"), {}, {});
+    const cexBody = await cex.json();
+    assert.deepEqual(cexBody.rows.map((row) => row.id), ["kraken"]);
+    const dex = await handle(new Request("http://local/api/sonar/exchanges?type=dex"), {}, {});
+    const dexBody = await dex.json();
+    assert.deepEqual(dexBody.rows.map((row) => row.id), ["uniswap_v3"]);
+  } finally {
+    globalThis.fetch = original;
+    await clearCache();
+  }
+});
+
 test("los TTL frescos caben en el cupo de la clave demo", async () => {
   const { CACHE_FRESH } = await import("./data.js");
-  assert.ok(CACHE_FRESH.markets >= 120 && CACHE_FRESH.markets <= 300);
-  assert.ok(CACHE_FRESH.marketsOther >= 120 && CACHE_FRESH.marketsOther <= 300);
-  assert.ok(CACHE_FRESH.coin >= 900 && CACHE_FRESH.coin <= 1800);
-  assert.equal(CACHE_FRESH.categories, 3600);
-  assert.equal(CACHE_FRESH.exchanges, 3600);
+  const { keyedUsage } = await import("./cg-usage.js");
+  assert.equal(CACHE_FRESH.markets, 900);
+  assert.equal(CACHE_FRESH.marketsOther, 1800);
+  assert.equal(CACHE_FRESH.coin, 3600);
+  assert.equal(CACHE_FRESH.categories, 6 * 3600);
+  assert.equal(CACHE_FRESH.exchanges, 6 * 3600);
   assert.equal(CACHE_FRESH.count, 86400);
+  assert.equal(CACHE_FRESH.quotes, 900);
+  assert.equal(CACHE_FRESH.chartShort, 1800);
+  assert.equal(keyedUsage().minuteCap, 20);
+  assert.ok(keyedUsage().minuteCap <= 25);
 });
 
 test("una lectura fresca no repite la llamada y publica el TTL", async () => {
@@ -615,26 +680,26 @@ test("una lectura fresca no repite la llamada y publica el TTL", async () => {
   try {
     const first = await handle(new Request("http://local/api/sonar/markets?page=1&per=20"), {}, {});
     assert.equal(first.status, 200);
-    assert.match(first.headers.get("cache-control"), /max-age=180/);
+    assert.match(first.headers.get("cache-control"), /max-age=900/);
     assert.match(first.headers.get("cache-control"), /stale-while-revalidate=86400/);
     const after = fetches;
     const second = await handle(new Request("http://local/api/sonar/markets?page=1&per=20"), {}, {});
     assert.equal(second.status, 200);
     assert.equal(fetches, after);
     const other = await handle(new Request("http://local/api/sonar/markets?page=2&per=20"), {}, {});
-    assert.match(other.headers.get("cache-control"), /max-age=300/);
+    assert.match(other.headers.get("cache-control"), /max-age=1800/);
     const coin = await handle(new Request("http://local/api/sonar/coin/bitcoin"), {}, {});
     assert.equal(coin.status, 200);
-    assert.match(coin.headers.get("cache-control"), /max-age=1200/);
+    assert.match(coin.headers.get("cache-control"), /max-age=3600/);
     const categories = await handle(new Request("http://local/api/sonar/categories"), {}, {});
     assert.equal(categories.status, 200);
-    assert.match(categories.headers.get("cache-control"), /max-age=3600/);
+    assert.match(categories.headers.get("cache-control"), /max-age=21600/);
     const chart = await handle(new Request("http://local/api/sonar/coin/bitcoin/chart?days=1"), {}, {});
     assert.equal(chart.status, 200);
-    assert.match(chart.headers.get("cache-control"), /max-age=900/);
+    assert.match(chart.headers.get("cache-control"), /max-age=1800/);
     const quotes = await handle(new Request("http://local/api/sonar/quotes?ids=bitcoin"), {}, {});
     assert.equal(quotes.status, 200);
-    assert.match(quotes.headers.get("cache-control"), /max-age=180/);
+    assert.match(quotes.headers.get("cache-control"), /max-age=900/);
   } finally {
     globalThis.fetch = original;
     await clearCache();

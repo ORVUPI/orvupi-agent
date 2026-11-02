@@ -1,4 +1,4 @@
-import { keyedAllowed, keyedUsage, noteKeyedCall } from "../cg-usage.js";
+import { keyedAllowed, keyedUsage, noteKeyedCall, noteUpstreamCall, upstreamAllowed } from "../cg-usage.js";
 import { getJson } from "../limits.js";
 import { disabledSet, httpsUrl, imageUrl, publicHandle, webUrl } from "../security.js";
 import { coinRow, num, plainFromHtml, stamp, text } from "../normalize.js";
@@ -32,12 +32,33 @@ function demoKey(env) {
   return Boolean(env?.CG_API_KEY) && String(env?.CG_API_TIER || "demo").toLowerCase() !== "pro";
 }
 
+function rateLimited(env) {
+  if (String(env?.CG_API_TIER || "").toLowerCase() === "pro" && env?.CG_API_KEY) return false;
+  if (globalThis.SONAR_CG_CAP === true) return true;
+  if (globalThis.caches?.default) return true;
+  return demoKey(env);
+}
+
+async function takeSlot(env, path) {
+  if (!rateLimited(env)) return;
+  const gate = await upstreamAllowed();
+  if (!gate.ok) {
+    const usage = keyedUsage();
+    console.log(`sonar-cg-demo skip day=${usage.day} calls=${usage.calls} minute=${usage.minute} reason=${gate.reason}`);
+    const error = new Error("throttled");
+    error.status = 429;
+    throw error;
+  }
+  await noteUpstreamCall(path);
+}
+
 async function cg(env, path) {
   if (disabledSet(env).has("coingecko")) {
     const error = new Error("disabled");
     error.code = "disabled";
     throw error;
   }
+  await takeSlot(env, path);
   const url = `${coingeckoBase(env)}${path}`;
   if (!demoKey(env)) {
     return getJson(url, { headers: coingeckoHeaders(env), provider: "coingecko" });
@@ -49,9 +70,10 @@ async function cg(env, path) {
     const gate = await keyedAllowed();
     if (!gate.ok) {
       const usage = keyedUsage();
-      console.log(`sonar-cg-demo skip day=${usage.day} calls=${usage.calls} reason=${gate.reason}`);
+      console.log(`sonar-cg-demo skip day=${usage.day} calls=${usage.calls} minute=${usage.minute} reason=${gate.reason}`);
       throw error;
     }
+    await takeSlot(env, path);
     await noteKeyedCall(path);
     return getJson(url, { headers: coingeckoHeaders(env), provider: "coingecko", attempts: 1 });
   }
@@ -76,6 +98,12 @@ export async function getGlobal(env) {
     markets: num(data.markets),
     updatedAt: num(data.updated_at),
   });
+}
+
+export async function getCoinList(env) {
+  const body = await cg(env, "/coins/list");
+  const count = Array.isArray(body) ? body.filter((row) => row?.id).length : 0;
+  return meta({ count });
 }
 
 export async function getMarkets(env, { page = 1, per = 100, category = "", order = "market_cap_desc", ids = "" } = {}) {

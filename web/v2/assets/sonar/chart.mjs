@@ -1,4 +1,4 @@
-import { when } from "./format.mjs";
+import { localeTag, when } from "./format.mjs";
 import { t } from "./i18n.mjs";
 import { PRICE_COMPARE, PRICE_DOWN, PRICE_INDICATOR, PRICE_UP, priceColor, seriesUp } from "./price-color.mjs";
 import { el } from "./ui.mjs";
@@ -38,7 +38,7 @@ export async function drawChart(host, payload, { mode = "line", compare = null, 
     plot.append(priceLine(closes, priceColor(up)));
     if (sma) plot.append(poly(moving(closes, 20), PRICE_INDICATOR));
   }
-  svg.append(plot, ...axes(points, mode));
+  svg.append(plot);
   const tip = el("p", { class: "sn-note", "data-sn": "tip" });
   svg.addEventListener("pointermove", (event) => {
     const rect = svg.getBoundingClientRect();
@@ -49,50 +49,60 @@ export async function drawChart(host, payload, { mode = "line", compare = null, 
       ? `${when(row.time)}  ${t("open")} ${row.open}  ${t("high")} ${row.high}  ${t("low")} ${row.low}  ${t("close")} ${row.close}`
       : `${when(row.time)}  ${row.close}`;
   });
-  host.append(svg, tip);
+  host.append(svg, axisOverlay(points, mode, host), tip);
   return () => host.replaceChildren();
 }
 
-function axes(points, mode) {
+function axisOverlay(points, mode, host) {
   const values = mode === "candles"
     ? points.flatMap((row) => [row.low, row.high]).filter((value) => value != null)
     : points.map((row) => row.close).filter((value) => value != null);
   const min = Math.min(...values);
   const max = Math.max(...values);
-  const nodes = [];
+  const y = el("div", { class: "sn-axis sn-axis-y" });
   for (const fraction of [0, 0.5, 1]) {
     const price = max - (max - min) * fraction;
-    const y = 16 + fraction * 260;
-    const label = document.createElementNS(SVG, "text");
-    label.setAttribute("x", "4");
-    label.setAttribute("y", String(y));
-    label.setAttribute("fill", "#aeb8c4");
-    label.setAttribute("font-size", "11");
-    label.textContent = compactPrice(price);
-    nodes.push(label);
+    y.append(el("span", { text: compactPrice(price) }));
   }
-  const first = points[0];
-  const last = points[points.length - 1];
-  for (const [row, x] of [[first, 56], [last, 620]]) {
-    if (!row) continue;
-    const label = document.createElementNS(SVG, "text");
-    label.setAttribute("x", String(x));
-    label.setAttribute("y", "312");
-    label.setAttribute("fill", "#aeb8c4");
-    label.setAttribute("font-size", "11");
-    label.setAttribute("text-anchor", x > 300 ? "end" : "start");
-    label.textContent = new Date(row.time).toLocaleDateString("es-ES", { timeZone: "Europe/Madrid", day: "2-digit", month: "short" });
-    nodes.push(label);
+  const width = host.clientWidth || 640;
+  const count = width < 420 ? 3 : 4;
+  const lastIndex = Math.max(0, points.length - 1);
+  const indexes = [];
+  for (let step = 0; step < count; step += 1) indexes.push(Math.round((step / (count - 1)) * lastIndex));
+  const picked = [...new Set(indexes)].map((index) => points[index]).filter(Boolean);
+  const span = (picked.at(-1)?.time || 0) - (picked[0]?.time || 0);
+  let labels = picked.map((row) => axisText(row.time, span));
+  if (span > 0 && span <= 36 * 3600 * 1000 && new Set(labels).size !== labels.length) {
+    labels = picked.map((row) => `${axisText(row.time, span)} ${axisDay(row.time)}`);
   }
-  return nodes;
+  const x = el("div", { class: "sn-axis sn-axis-x" });
+  for (const text of labels) x.append(el("span", { text }));
+  return el("div", { class: "sn-axes", "aria-hidden": "true" }, [y, x]);
+}
+
+function axisText(time, span) {
+  const date = new Date(time);
+  if (Number.isNaN(date.getTime())) return "";
+  if (span <= 36 * 3600 * 1000) {
+    return new Intl.DateTimeFormat(localeTag(), {
+      hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "Europe/Madrid",
+    }).format(date);
+  }
+  if (span <= 40 * 24 * 3600 * 1000) return axisDay(time);
+  return new Intl.DateTimeFormat(localeTag(), { month: "short", year: "numeric", timeZone: "Europe/Madrid" }).format(date);
+}
+
+function axisDay(time) {
+  return new Intl.DateTimeFormat(localeTag(), { day: "2-digit", month: "short", timeZone: "Europe/Madrid" }).format(new Date(time));
 }
 
 function compactPrice(value) {
   if (!Number.isFinite(value)) return "";
   const abs = Math.abs(value);
-  if (abs >= 1000) return value.toLocaleString("es-ES", { maximumFractionDigits: 0 });
-  if (abs >= 1) return value.toLocaleString("es-ES", { maximumFractionDigits: 2 });
-  return value.toLocaleString("es-ES", { maximumSignificantDigits: 4 });
+  const tag = localeTag();
+  if (abs >= 1000) return value.toLocaleString(tag, { maximumFractionDigits: 0 });
+  if (abs >= 1) return value.toLocaleString(tag, { maximumFractionDigits: 2 });
+  return value.toLocaleString(tag, { maximumSignificantDigits: 4 });
 }
 
 function normalize(payload) {

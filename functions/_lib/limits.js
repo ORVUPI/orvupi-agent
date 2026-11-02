@@ -16,6 +16,11 @@ export function runWithBudget(ms, fn) {
   return budgetStore.run(Date.now() + ms, fn);
 }
 
+/** Mediciones en segundo plano (el total del listado) que no caben en los 8 s de la petición. */
+export function runWithoutBudget(fn) {
+  return budgetStore.run(Number.POSITIVE_INFINITY, fn);
+}
+
 export function budgetLeft() {
   const end = budgetStore.getStore();
   if (!end) return BUDGET_MS;
