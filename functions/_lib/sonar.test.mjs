@@ -1021,3 +1021,11 @@ test("sonar.css se pide con ?v=<hash> para que el CDN no sirva estilos de otro d
   const hash = createHash("sha256").update(readFileSync(new URL("sonar.css", base))).digest("hex").slice(0, 10);
   assert.ok(shell.includes(`"/assets/sonar.css?v=${hash}"`), "ejecuta node web/v2/tools/asset-versions.mjs");
 });
+
+test("la 404 de Sonar pide la misma sonar.css versionada que shell.mjs", async () => {
+  const { readFileSync } = await import("node:fs");
+  const shell = readFileSync(new URL("../../web/v2/assets/sonar/shell.mjs", import.meta.url), "utf8");
+  const seo = readFileSync(new URL("./seo.js", import.meta.url), "utf8");
+  const v = shell.match(/\/assets\/sonar\.css\?v=[0-9a-f]{10}/)?.[0];
+  assert.ok(v && seo.includes(`href="${v}"`));
+});

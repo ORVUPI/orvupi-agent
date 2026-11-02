@@ -15,6 +15,8 @@ for(const f of pages){const s=readFileSync(f,'utf8');
 // Hojas de estilo que cargan los módulos (p. ej. sonar.css desde shell.mjs): el CDN de orvupi.com
 // las guarda 4 h en el navegador, así que también llevan ?v=<hash>.
 const mods=[];(function walk(d){for(const n of readdirSync(d)){const p=join(d,n);if(statSync(p).isDirectory())walk(p);else if(n.endsWith('.mjs')&&!n.endsWith('.test.mjs'))mods.push(p);}})(join(root,'assets'));
+// La página 404 de Sonar (functions/_lib/seo.js) también carga sonar.css.
+{const seo=join(root,'..','..','functions','_lib','seo.js');if(existsSync(seo))mods.push(seo);}
 for(const f of mods){const s=readFileSync(f,'utf8');
  const t=s.replace(/(["'`])(\/assets\/[^"'`?#]+\.css)(?:\?v=[\w]*)?\1/g,(m,q,p)=>existsSync(join(root,p))?`${q}${p}?v=${h(p.slice(1))}${q}`:m);
  if(t!==s){stale++;if(!check)writeFileSync(f,t);}}

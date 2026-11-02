@@ -44,7 +44,7 @@ function documentResponse(html, status) {
 }
 
 function notFoundHtml() {
-  return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>ORVUPI Sonar</title><meta name="robots" content="noindex"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/assets/sonar.css"></head><body class="verify-app sonar-market"><main class="sn-404"><img src="/assets/orvupi/avatar.png" alt="" width="72" height="72"><h1>ORVUPI Sonar</h1><p>No hay una ficha con ese nombre.</p><p><a href="/sonar/">Volver a Sonar Mercados</a></p></main></body></html>`;
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>ORVUPI Sonar</title><meta name="robots" content="noindex"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/assets/sonar.css?v=6045e7f20c"></head><body class="verify-app sonar-market"><main class="sn-404"><img src="/assets/orvupi/avatar.png" alt="" width="72" height="72"><h1>ORVUPI Sonar</h1><p>No hay una ficha con ese nombre.</p><p><a href="/sonar/">Volver a Sonar Mercados</a></p></main></body></html>`;
 }
 
 async function readAsset(request, env, assetPath) {
