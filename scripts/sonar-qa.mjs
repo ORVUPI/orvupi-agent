@@ -54,7 +54,7 @@ note("spark-colors", sparkColors.length > 0 && sparkColors.every((color) => colo
 await shot(home.page, "1440-mercados");
 
 await home.page.locator("[data-sn-star=bitcoin]").first().click();
-await home.page.locator("[data-sn-dock=watchlist], .sn-topnav a").nth(0).waitFor();
+await home.page.locator(".sn-topnav a").nth(0).waitFor();
 await home.page.goto(`${base}/sonar/watchlist/`, { waitUntil: "domcontentloaded" });
 await home.page.waitForSelector("[data-coin=bitcoin]", { timeout: 30000 });
 note("watchlist", true);
@@ -216,7 +216,8 @@ for (const [name, viewport] of phones) {
   await page.page.waitForSelector("[data-sn=stats]", { timeout: 30000 });
   const wide = await overflow(page.page);
   const dock = await page.page.locator(".sn-dock").isVisible();
-  note(`viewport-${name}`, wide <= 1 && (viewport.width < 768 ? dock : !dock), `overflow ${wide} dock ${dock}`);
+  const topnav = await page.page.locator(".sn-topnav").isVisible();
+  note(`viewport-${name}`, wide <= 1 && !dock && topnav, `overflow ${wide} dock ${dock} topnav ${topnav}`);
   await shot(page.page, `${name}-mercados`);
   if (name === "390") {
     await shot(page.page, "390-iphone");

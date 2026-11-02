@@ -47,11 +47,11 @@ export async function start() {
   link.dataset.sonar = "1";
   if (!document.querySelector("link[data-sonar]")) document.head.append(link);
   document.body.classList.add("sonar-market");
+  document.documentElement.classList.add("sonar-market-root");
   hideVerifyChrome();
   nameSection();
   mountCrumb();
   mountTop();
-  mountDock();
   mountSearchButton();
   footerCredit();
   globalThis.__sonarFormatPrice = (value) => show(money(value, snapshot().prefs.vs));
@@ -110,22 +110,6 @@ function mountTop() {
 function hideVerifyChrome() {
   document.getElementById("consulta")?.setAttribute("hidden", "");
   document.querySelector(".vf-nav")?.setAttribute("hidden", "");
-}
-
-function mountDock() {
-  if (document.querySelector(".sn-dock")) return;
-  const dock = el("nav", { class: "sn-dock", "aria-label": t("markets") }, [
-    dockButton("markets", t("marketsShort"), () => go("/sonar/")),
-    dockButton("search", t("search"), () => openSearch()),
-    dockButton("watchlist", t("watchlist"), () => go("/sonar/watchlist/")),
-    dockButton("portfolio", t("portfolio"), () => go("/sonar/portfolio/")),
-    dockButton("more", t("more"), () => toggleMore()),
-  ]);
-  document.body.append(dock, moreSheet());
-}
-
-function dockButton(id, label, onclick) {
-  return el("button", { type: "button", "data-sn-dock": id, onclick, text: label });
 }
 
 function nameSection() {
@@ -191,41 +175,6 @@ function crumbTail(route) {
   return [{ label }];
 }
 
-function moreSheet() {
-  const prefix = () => parseRoute().prefix;
-  const items = [
-    ["/sonar/exchanges/", t("exchanges")],
-    ["/sonar/categories/", t("categories")],
-    ["/sonar/movers/", t("movers")],
-    ["/sonar/new/", t("fresh")],
-    ["/sonar/calendar/", t("calendar")],
-    ["/sonar/unlocks/", t("unlocks")],
-    ["/verify/#dex", t("dexTool")],
-    ["/verify/#tracer", t("tracer")],
-    ["/verify/#visualizer", t("map")],
-    ["/verify/#alertas", t("alerts")],
-    ["/verify/#etiquetas", t("labels")],
-    ["/verify/#paneles", t("panels")],
-    ["/verify/#transfers", t("transfers")],
-    ["/verify/#ficha", t("profile")],
-  ];
-  return el("div", { id: "sn-more", class: "sn-more", hidden: true }, items.map(([href, label]) => el("a", {
-    href: href.startsWith("/verify/") ? `${prefix()}${href}` : `${prefix()}${href}`,
-    onclick: (event) => {
-      if (href.startsWith("/verify/")) return;
-      event.preventDefault();
-      document.getElementById("sn-more").hidden = true;
-      go(href);
-    },
-    text: label,
-  })));
-}
-
-function toggleMore() {
-  const sheet = document.getElementById("sn-more");
-  if (sheet) sheet.hidden = !sheet.hidden;
-}
-
 function mountSearchButton() {
   const button = document.getElementById("vf-open-search");
   if (!button || button.closest(".sn-headtools")) return;
@@ -262,12 +211,6 @@ async function draw() {
   const route = parseRoute();
   const root = document.getElementById("vf-root");
   if (!root) return;
-  document.querySelectorAll("[data-sn-dock]").forEach((button) => {
-    const id = button.getAttribute("data-sn-dock");
-    const on = (id === "markets" && (route.section === "home" || route.section === "trending")) || id === route.section;
-    if (on) button.setAttribute("aria-current", "page");
-    else button.removeAttribute("aria-current");
-  });
   const tail = crumbTail(route);
   setCrumb(tail);
   document.title = pageTitle(tail.length ? tail[tail.length - 1].label : "");

@@ -50,7 +50,7 @@ export function paintRanking(rows, opts) {
   const table = el("table", { class: "sn-table" });
   table.append(el("thead", {}, el("tr", {}, head.map(([id, label]) => el("th", {
     scope: "col",
-    class: id === "name" || id === "star" ? "" : "num",
+    class: id === "name" ? "sn-stick-name" : id === "star" ? "" : id === "rank" ? "num sn-stick-rank" : "num",
     "data-sort": id,
   }, id && opts.onSort && !["spark", "star", "name", "rank"].includes(id) ? el("button", { type: "button", class: "sn-sort", onclick: () => opts.onSort(id), text: label }) : label)))));
   const body = el("tbody");
@@ -76,8 +76,8 @@ function rowRank(row, opts, index) {
 
 function desktopRow(row, head, key, currency, opts, index) {
   const cells = {
-    rank: el("td", { class: "num", text: rowRank(row, opts, index) }),
-    name: el("td", {}, el("span", { class: "sn-name" }, [logo(row), coinLink(row, opts.prefix, [el("strong", { text: row.name }), el("small", { text: row.symbol })])])),
+    rank: el("td", { class: "num sn-stick-rank", text: rowRank(row, opts, index) }),
+    name: el("td", { class: "sn-stick-name" }, el("span", { class: "sn-name" }, [logo(row), coinLink(row, opts.prefix, [el("strong", { text: row.name }), el("small", { text: row.symbol })])])),
     price: el("td", { class: "num", "data-k": "price", text: show(money(row.price, currency)) }),
     ch1h: changeCell(row, "ch1h"),
     ch24h: changeCell(row, "ch24h"),
