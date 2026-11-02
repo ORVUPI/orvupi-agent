@@ -43,7 +43,7 @@ export async function start() {
   await loadStore();
   const link = document.createElement("link");
   link.rel = "stylesheet";
-  link.href = "/assets/sonar.css?v=eeb8e29826";
+  link.href = "/assets/sonar.css?v=1c2a6267a5";
   link.dataset.sonar = "1";
   if (!document.querySelector("link[data-sonar]")) document.head.append(link);
   document.body.classList.add("sonar-market");
@@ -57,6 +57,7 @@ export async function start() {
   globalThis.__sonarFormatPrice = (value) => show(money(value, snapshot().prefs.vs));
   globalThis.__sonarFormatPct = (value) => show(pct(value));
   globalThis.__sonarVs = snapshot().prefs.vs;
+  document.addEventListener("focusin", revealInStrip);
   window.addEventListener("popstate", draw);
   document.getElementById("vf-root")?.replaceChildren(skeleton(8));
   draw();
@@ -90,17 +91,17 @@ function mountTop() {
   if (document.querySelector(".sn-topnav")) return;
   const nav = el("nav", { class: "sn-topnav", "aria-label": t("markets") });
   const links = [
-    ["/sonar/", t("markets")],
-    ["/sonar/exchanges/", t("exchanges")],
-    ["/sonar/categories/", t("categories")],
-    ["/sonar/movers/", t("movers")],
-    ["/sonar/trending/", t("trending")],
-    ["/sonar/calendar/", t("calendar")],
-    ["/sonar/unlocks/", t("unlocks")],
-    ["/sonar/portfolio/", t("portfolio")],
+    ["/sonar/", t("markets"), "markets"],
+    ["/sonar/exchanges/", t("exchanges"), "exchanges"],
+    ["/sonar/categories/", t("categories"), "categories"],
+    ["/sonar/movers/", t("movers"), "movers"],
+    ["/sonar/trending/", t("trending"), "trending"],
+    ["/sonar/calendar/", t("calendar"), "calendar"],
+    ["/sonar/unlocks/", t("unlocks"), "unlocks"],
+    ["/sonar/portfolio/", t("portfolio"), "portfolio"],
   ];
-  for (const [href, label] of links) {
-    nav.append(el("a", { href, onclick: (event) => { event.preventDefault(); go(href); }, text: label }));
+  for (const [href, label, id] of links) {
+    nav.append(el("a", { href, "data-sn-nav": id, onclick: (event) => { event.preventDefault(); go(href); }, text: label }));
   }
   nav.append(el("a", { href: `${parseRoute().prefix}/verify/#dex`, text: t("verifySection") }));
   (document.querySelector(".vf-nav") || document.querySelector("header.site .wrap"))?.after(nav);
@@ -206,11 +207,51 @@ function footerCredit() {
   ]));
 }
 
+function revealInStrip(event) {
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+  const scroller = target.closest(".sn-topnav, .sn-strip-stats, .sn-pills, [data-sn=coin-tabs], .sn-tools, .sn-stats");
+  if (!scroller || target === scroller) return;
+  target.scrollIntoView({ block: "nearest", inline: "nearest" });
+}
+
+function navSection(section) {
+  if (section === "home" || section === "crypto") return "markets";
+  const linked = ["exchanges", "categories", "movers", "trending", "calendar", "unlocks", "portfolio"];
+  return linked.includes(section) ? section : "";
+}
+
+function revealNavLink(link) {
+  if (!link?.isConnected) return;
+  const run = () => {
+    if (link.isConnected) link.scrollIntoView({ block: "nearest", inline: "nearest" });
+  };
+  run();
+  requestAnimationFrame(() => requestAnimationFrame(run));
+  const style = document.querySelector("link[data-sonar]");
+  if (style && !style.sheet) {
+    style.addEventListener("load", () => requestAnimationFrame(() => requestAnimationFrame(run)), { once: true });
+  }
+}
+
+function syncNav(route) {
+  const current = navSection(route.section);
+  let currentLink = null;
+  for (const link of document.querySelectorAll(".sn-topnav a[data-sn-nav]")) {
+    if (current && link.getAttribute("data-sn-nav") === current) {
+      link.setAttribute("aria-current", "page");
+      currentLink = link;
+    } else link.removeAttribute("aria-current");
+  }
+  revealNavLink(currentLink);
+}
+
 async function draw() {
   const mine = ++drawTicket;
   const route = parseRoute();
   const root = document.getElementById("vf-root");
   if (!root) return;
+  syncNav(route);
   const tail = crumbTail(route);
   setCrumb(tail);
   document.title = pageTitle(tail.length ? tail[tail.length - 1].label : "");
@@ -288,7 +329,7 @@ function stripStat(name, label, value, extra, title, short) {
   const caption = short
     ? el("span", {}, [el("span", { class: "sn-strip-long", text: label }), el("span", { class: "sn-strip-short", text: short })])
     : el("span", { text: label });
-  return el("span", { class: "sn-strip-item", "data-sn-stat": name, title, "aria-label": `${title}: ${value}` }, [
+  return el("span", { class: "sn-strip-item", tabindex: "0", "data-sn-stat": name, title, "aria-label": `${title}: ${value}` }, [
     caption,
     el("strong", { text: value }),
     extra ? el("span", { class: "sn-strip-pct" }, extra) : null,

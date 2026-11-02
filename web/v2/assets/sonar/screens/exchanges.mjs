@@ -45,7 +45,7 @@ async function list(host, ctx, type) {
             } else {
               tbody.append(el("tr", {}, [
                 el("td", { class: "sn-stick-rank", text: String(rank) }),
-                el("td", { class: "sn-exname sn-stick-name" }, [logo(row), exchangeCopy(name, row)]),
+                el("td", { class: "sn-stick-name" }, el("span", { class: "sn-exname" }, [logo(row), exchangeCopy(name, row)])),
                 el("td", { text: show(compact(row.volume24h, body.vs)) }),
                 el("td", { text: row.trustScore == null ? t("unavailable") : String(row.trustScore) }),
                 el("td", { text: countryName(row.country) || t("unavailable") }),
