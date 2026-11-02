@@ -873,3 +873,37 @@ function installUpstream({ paprika = true, hangMs = 20000, currencies } = {}) {
     },
   };
 }
+
+test("tras un 429 sin clave, la siguiente llamada va directa con clave (una sola plaza)", async () => {
+  const { clearCache } = await import("./cache.js");
+  const { keyedUsage, resetKeyedUsage } = await import("./cg-usage.js");
+  const original = globalThis.fetch;
+  const originalLog = console.log;
+  console.log = () => {};
+  const seen = [];
+  const body = { data: { total_market_cap: { usd: 1 }, total_volume: { usd: 1 }, market_cap_percentage: { btc: 1, eth: 1 }, active_cryptocurrencies: 1, markets: 1, market_cap_change_percentage_24h_usd: 0 } };
+  const env = { SONAR_DISABLE: "patternplus,chain,alternative", CG_API_KEY: "demo-key", CG_API_TIER: "demo" };
+  globalThis.fetch = async (url, options) => {
+    const href = String(url);
+    if (!href.includes("/global")) return new Response("{}", { status: 503, headers: { "content-type": "application/json" } });
+    const keyed = Boolean(options?.headers?.["x-cg-demo-api-key"]);
+    seen.push(keyed);
+    return keyed ? jsonResponse(body) : new Response("{}", { status: 429, headers: { "content-type": "application/json" } });
+  };
+  try {
+    resetKeyedUsage();
+    await clearCache();
+    assert.equal((await handle(new Request("http://local/api/sonar/global"), env, {})).status, 200);
+    assert.deepEqual(seen, [false, true]);
+    await clearCache();
+    seen.length = 0;
+    assert.equal((await handle(new Request("http://local/api/sonar/global"), env, {})).status, 200);
+    assert.deepEqual(seen, [true]);
+    assert.equal(keyedUsage().calls, 2);
+  } finally {
+    console.log = originalLog;
+    globalThis.fetch = original;
+    resetKeyedUsage();
+    await clearCache();
+  }
+});

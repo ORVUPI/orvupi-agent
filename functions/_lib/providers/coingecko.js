@@ -1,4 +1,4 @@
-import { keyedAllowed, keyedUsage, noteKeyedCall, noteUpstreamCall, upstreamAllowed } from "../cg-usage.js";
+import { holdPublic, keyedAllowed, keyedUsage, noteKeyedCall, noteUpstreamCall, publicHoldUntil, upstreamAllowed } from "../cg-usage.js";
 import { getJson } from "../limits.js";
 import { disabledSet, httpsUrl, imageUrl, publicHandle, webUrl } from "../security.js";
 import { coinRow, num, plainFromHtml, stamp, text } from "../normalize.js";
@@ -52,6 +52,8 @@ async function takeSlot(env, path) {
   await noteUpstreamCall(path);
 }
 
+const PUBLIC_HOLD_MS = 60_000;
+
 async function cg(env, path) {
   if (disabledSet(env).has("coingecko")) {
     const error = new Error("disabled");
@@ -63,17 +65,26 @@ async function cg(env, path) {
   if (!demoKey(env)) {
     return getJson(url, { headers: coingeckoHeaders(env), provider: "coingecko" });
   }
+  // Tras un 429 sin clave, durante un minuto se va directo con clave: el intento
+  // sin clave fallaría igual y gastaría otra plaza del tope por minuto.
+  const skipPublic = Date.now() < publicHoldUntil();
   try {
+    if (skipPublic) {
+      const error = new Error("public-hold");
+      error.status = 429;
+      throw error;
+    }
     return await getJson(url, { headers: publicHeaders(), provider: "coingecko", attempts: 1 });
   } catch (error) {
     if (error?.status !== 429) throw error;
+    if (!skipPublic) holdPublic(PUBLIC_HOLD_MS);
     const gate = await keyedAllowed();
     if (!gate.ok) {
       const usage = keyedUsage();
       console.log(`sonar-cg-demo skip day=${usage.day} calls=${usage.calls} minute=${usage.minute} reason=${gate.reason}`);
       throw error;
     }
-    await takeSlot(env, path);
+    if (!skipPublic) await takeSlot(env, path);
     await noteKeyedCall(path);
     return getJson(url, { headers: coingeckoHeaders(env), provider: "coingecko", attempts: 1 });
   }

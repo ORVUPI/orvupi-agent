@@ -206,7 +206,15 @@ async function loadMarkets(env, query) {
       error.status = 503;
       throw error;
     }
-    return paprika.getMarkets(env, query);
+    // Una página vacía de la reserva no sirve: mejor error (o copia anterior) que pantalla vacía.
+    return paprika.getMarkets(env, query).then((alt) => {
+      if (!alt?.rows?.length) {
+        const error = new Error("upstream");
+        error.status = 503;
+        throw error;
+      }
+      return alt;
+    });
   });
 }
 

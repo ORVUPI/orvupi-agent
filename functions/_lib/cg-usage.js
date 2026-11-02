@@ -103,6 +103,15 @@ async function hydrate() {
   state.minuteHydrated = true;
 }
 
+// Hasta cuándo se salta el intento sin clave (tras un 429 sin clave).
+export function publicHoldUntil() {
+  return state.publicHold || 0;
+}
+
+export function holdPublic(ms) {
+  state.publicHold = Date.now() + ms;
+}
+
 /** Tope de llamadas upstream a CoinGecko en este minuto, compartido por Cache API. */
 export async function upstreamAllowed() {
   await hydrate();
@@ -146,6 +155,7 @@ export function resetKeyedUsage() {
   state.minuteCount = 0;
   state.hydrated = true;
   state.minuteHydrated = true;
+  state.publicHold = 0;
 }
 
 export function setKeyedUsageForTests({ calls = 0, minute = 0 } = {}) {

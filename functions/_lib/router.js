@@ -247,9 +247,13 @@ export async function handle(request, env = {}, ctx = {}) {
     if (pair && (days === "1" || days === "7" || query.get("source") === "binance")) {
       const interval = days === "1" ? "15m" : days === "7" ? "1h" : days === "30" ? "4h" : "1d";
       const limit = days === "365" ? 365 : days === "90" ? 180 : days === "30" ? 180 : days === "7" ? 168 : 96;
-      const candles = await data.getKlinesCached(env, ctx, pair, interval, limit);
+      // Binance puede no responder desde el edge: entonces se usan las velas de CoinGecko.
+      const candles = await data.getKlinesCached(env, ctx, pair, interval, limit).catch((error) => {
+        console.error("sonar-klines", error?.status || error?.code || "fail");
+        return null;
+      });
       const factor = fx.missing ? 1 : (fx.factor || 1);
-      return json(200, {
+      if (candles) return json(200, {
         ok: true,
         ...withVs({
           source: candles.source,
