@@ -1034,13 +1034,44 @@ function openSearch() {
   render();
   document.getElementById("vf-modal-q")?.focus();
 }
+// Si el navegador mezcla módulos de dos despliegues, el import falla y la página
+// se quedaba en el formulario del verificador. Se piden de nuevo a la red y se recarga una vez.
+const SONAR_MODULES = ["api", "changes", "chart", "format", "i18n", "ia", "live", "price-color", "rows", "screens/boards", "screens/calendar", "screens/categories", "screens/coin", "screens/exchanges", "screens/markets", "screens/portfolio", "screens/watchlist", "shell", "store", "ui"];
+const SONAR_HEAL_KEY = "orvupi.sonar.heal";
+async function healSonar(error) {
+  console.error("Sonar Mercados no cargó", error);
+  let canRetry = false;
+  try {
+    const last = Number(sessionStorage.getItem(SONAR_HEAL_KEY) || 0);
+    if (Date.now() - last > 60000) {
+      sessionStorage.setItem(SONAR_HEAL_KEY, String(Date.now()));
+      canRetry = sessionStorage.getItem(SONAR_HEAL_KEY) !== null;
+    }
+  } catch {
+    canRetry = false;
+  }
+  if (canRetry) {
+    const urls = ["/assets/verify-app.mjs", ...SONAR_MODULES.map((name) => `/assets/sonar/${name}.mjs`)];
+    await Promise.allSettled(urls.map((url) => fetch(url, { cache: "reload", credentials: "same-origin" })));
+    location.reload();
+    return;
+  }
+  const form = document.getElementById("consulta");
+  if (form) form.style.display = "none";
+  const root = document.getElementById("vf-root");
+  if (!root) return;
+  root.replaceChildren(h("div", { class: "vf-card", role: "alert" }, [
+    h("p", {}, t("Sonar Mercados no ha podido cargar. Recarga la página.", "Sonar Markets could not load. Reload the page.")),
+    h("button", { type: "button", onclick: () => location.reload() }, t("Recargar", "Reload")),
+  ]));
+}
 function boot() {
   const hash = location.hash.replace("#", "");
   const verifyHashes = new Set(["home", "dex", "tracer", "visualizer", "alertas", "etiquetas", "paneles", "transfers", "mercado", "ficha", "token"]);
   const market = /\/sonar(\/|$)/.test(location.pathname) && !verifyHashes.has(hash);
   if (market) {
     document.body.classList.add("sonar-market");
-    import("./sonar/shell.mjs").then((mod) => mod.start());
+    import("./sonar/shell.mjs").then((mod) => mod.start()).catch(healSonar);
     return;
   }
   const dock = document.createElement("nav");

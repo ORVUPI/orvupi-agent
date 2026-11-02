@@ -36,6 +36,11 @@
 
 /assets/*
   Cache-Control: public, max-age=300, must-revalidate
+# Módulos ES sin ?v=: se revalidan en cada carga. Con max-age=300 un móvil mezclaba
+# módulos de dos despliegues y el import fallaba (Sonar se quedaba en el formulario).
+/assets/*.mjs
+  ! Cache-Control
+  Cache-Control: public, max-age=0, must-revalidate
 /fonts/*
   Cache-Control: public, max-age=2592000
 /kit/*

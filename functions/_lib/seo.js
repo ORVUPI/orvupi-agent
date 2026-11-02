@@ -37,7 +37,7 @@ export function applyMeta(html, meta) {
 function documentResponse(html, status) {
   const headers = securityHeaders({
     "content-type": "text/html; charset=utf-8",
-    "cache-control": status === 200 ? "public, max-age=120" : "no-store",
+    "cache-control": status === 200 ? "public, max-age=0, must-revalidate" : "no-store",
   });
   if (status === 404) headers.set("x-robots-tag", "noindex");
   return new Response(html, { status, headers });
