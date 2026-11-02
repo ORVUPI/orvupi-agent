@@ -11,12 +11,43 @@ export function money(value, currency = "usd") {
   if (number == null) return null;
   const code = String(currency || "usd").toUpperCase();
   const abs = Math.abs(number);
-  const digits = abs >= 1000 ? 2 : abs >= 1 ? 2 : abs >= 0.01 ? 4 : 6;
+  const small = abs > 0 && abs < 1;
+  const digits = small ? smallDigits(abs) : 2;
   try {
-    return new Intl.NumberFormat(localeTag(), { style: "currency", currency: code, maximumFractionDigits: digits }).format(number);
+    const format = new Intl.NumberFormat(localeTag(), { style: "currency", currency: code, maximumFractionDigits: digits });
+    return small ? squeeze(format.formatToParts(number)) : format.format(number);
   } catch {
-    return `${plain(number, digits)} ${code}`;
+    return `${small ? priceNumber(number) : plain(number, digits)} ${code}`;
   }
+}
+
+/* Precios por debajo de 1: al menos 4 cifras significativas (0,0202 → 0,0202; 0,00001234 → 0,0₄1234),
+   como CoinMarketCap. Con 4 o más ceros tras la coma se resumen con un subíndice: 0,0₄1234 = 0,00001234. */
+const SUBSCRIPT = "₀₁₂₃₄₅₆₇₈₉";
+const TINY_ZEROS = 4;
+
+function smallDigits(abs) {
+  return Math.min(20, Math.max(4, 3 - Math.floor(Math.log10(abs))));
+}
+
+function squeeze(parts) {
+  return parts.map((part) => {
+    if (part.type !== "fraction") return part.value;
+    const zeros = /^0*/.exec(part.value)[0].length;
+    if (zeros < TINY_ZEROS || zeros === part.value.length) return part.value;
+    return `0${String(zeros).split("").map((d) => SUBSCRIPT[d]).join("")}${part.value.slice(zeros)}`;
+  }).join("");
+}
+
+/** Número de precio sin moneda (ejes y lecturas de gráficas, columnas en BTC). */
+export function priceNumber(value) {
+  const number = finite(value);
+  if (number == null) return null;
+  const abs = Math.abs(number);
+  if (abs >= 1000) return plain(number, 0);
+  if (abs >= 1 || abs === 0) return plain(number, 2);
+  const format = new Intl.NumberFormat(localeTag(), { minimumFractionDigits: 2, maximumFractionDigits: smallDigits(abs) });
+  return squeeze(format.formatToParts(number));
 }
 
 export function compact(value, currency = "usd") {
@@ -24,7 +55,7 @@ export function compact(value, currency = "usd") {
   if (number == null) return null;
   const abs = Math.abs(number);
   const unit = abs >= 1e12 ? [1e12, "T"] : abs >= 1e9 ? [1e9, "B"] : abs >= 1e6 ? [1e6, "M"] : abs >= 1e3 ? [1e3, "K"] : [1, ""];
-  const body = plain(abs / unit[0], unit[1] ? 2 : abs >= 1 ? 2 : 4);
+  const body = unit[1] || abs >= 1 || abs === 0 ? plain(abs / unit[0], 2) : priceNumber(abs);
   const code = currency ? String(currency).toUpperCase() : "";
   const sign = number < 0 ? "−" : "";
   return code ? `${sign}${body}${unit[1]} ${code}` : `${sign}${body}${unit[1]}`;
@@ -93,8 +124,7 @@ export function btcPrice(value, coinId) {
   const abs = Math.abs(number);
   if (abs === 0) return "0";
   if (abs >= 1) return plain(number, 4);
-  const digits = Math.min(12, Math.max(2, 3 - Math.floor(Math.log10(abs))));
-  return plain(number, digits);
+  return priceNumber(number);
 }
 
 export function clsPct(value) {

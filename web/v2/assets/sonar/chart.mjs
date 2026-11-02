@@ -1,4 +1,4 @@
-import { localeTag, when } from "./format.mjs";
+import { localeTag, priceNumber, when } from "./format.mjs";
 import { t } from "./i18n.mjs";
 import { PRICE_COMPARE, PRICE_DOWN, PRICE_INDICATOR, PRICE_UP, priceColor, seriesUp } from "./price-color.mjs";
 import { el } from "./ui.mjs";
@@ -46,8 +46,8 @@ export async function drawChart(host, payload, { mode = "line", compare = null, 
     const index = Math.max(0, Math.min(points.length - 1, Math.round((x / 640) * (points.length - 1))));
     const row = points[index];
     tip.textContent = row.open != null
-      ? `${when(row.time)}  ${t("open")} ${row.open}  ${t("high")} ${row.high}  ${t("low")} ${row.low}  ${t("close")} ${row.close}`
-      : `${when(row.time)}  ${row.close}`;
+      ? `${when(row.time)}  ${t("open")} ${tipPrice(row.open)}  ${t("high")} ${tipPrice(row.high)}  ${t("low")} ${tipPrice(row.low)}  ${t("close")} ${tipPrice(row.close)}`
+      : `${when(row.time)}  ${tipPrice(row.close)}`;
   });
   host.append(svg, axisOverlay(points, mode, host), tip);
   return () => host.replaceChildren();
@@ -102,7 +102,11 @@ function compactPrice(value) {
   const tag = localeTag();
   if (abs >= 1000) return value.toLocaleString(tag, { maximumFractionDigits: 0 });
   if (abs >= 1) return value.toLocaleString(tag, { maximumFractionDigits: 2 });
-  return value.toLocaleString(tag, { maximumSignificantDigits: 4 });
+  return priceNumber(value) || "";
+}
+
+function tipPrice(value) {
+  return priceNumber(value) ?? t("unavailable");
 }
 
 function normalize(payload) {

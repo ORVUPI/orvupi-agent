@@ -421,9 +421,12 @@ async function markets(panel, ctx, coin) {
       const ratio = price / ref;
       return ratio <= 3 && ratio >= 0.3;
     };
+    // CoinGecko a veces etiqueta los tickers con un id antiguo (simons-cat frente a simon-s-cat).
+    // Solo se descartan ids ajenos si al menos un ticker trae el id de la ficha.
+    const ownId = rawSpot.some((row) => row.coinId === coin.id);
     const spot = rawSpot.filter((row) => {
       if (row.volume24h == null || row.volume24h <= 0 || row.price == null) return false;
-      if (row.coinId && row.coinId !== coin.id) return false;
+      if (ownId && row.coinId && row.coinId !== coin.id) return false;
       return inBand(row.price);
     }).sort((a, b) => b.volume24h - a.volume24h);
     const dex = rawDex.filter((pool) => pool.price == null || inBand(pool.price));
@@ -440,7 +443,8 @@ async function markets(panel, ctx, coin) {
           el("td", { text: row.base && row.target ? `${row.base}/${row.target}` : t("unavailable") }),
           el("td", { text: show(money(row.price, coin.vs)) }),
           el("td", { text: row.spreadPct == null ? t("unavailable") : `${plain(row.spreadPct, 3)}%` }),
-          el("td", { text: row.depthUp2 == null && row.depthDown2 == null ? t("unavailable") : `${show(compact(row.depthUp2, coin.vs))} / ${show(compact(row.depthDown2, coin.vs))}` }),
+          // CoinGecko devuelve 0 cuando no informa la profundidad: se trata como dato no disponible.
+          el("td", { text: !row.depthUp2 && !row.depthDown2 ? t("unavailable") : `${show(compact(row.depthUp2 || null, coin.vs))} / ${show(compact(row.depthDown2 || null, coin.vs))}` }),
           el("td", { text: show(compact(row.volume24h, coin.vs)) }),
           el("td", { text: row.volume24h != null && total ? `${plain((row.volume24h / total) * 100, 2)}%` : t("unavailable") }),
           showTrust ? el("td", { text: row.trust || "" }) : null,
