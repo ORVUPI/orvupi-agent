@@ -41,6 +41,10 @@
 /assets/*.mjs
   ! Cache-Control
   Cache-Control: public, max-age=0, must-revalidate
+# sonar.css se carga desde shell.mjs sin ?v=: misma regla para que no se mezcle con el JS nuevo.
+/assets/sonar.css
+  ! Cache-Control
+  Cache-Control: public, max-age=0, must-revalidate
 /fonts/*
   Cache-Control: public, max-age=2592000
 /kit/*

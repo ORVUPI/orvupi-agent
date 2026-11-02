@@ -290,10 +290,10 @@ body.sonar-market .sn-mrow .sn-mid small { display: block; white-space: nowrap; 
 @media (max-width: 800px) {
   .sn-split-cols { grid-template-columns: 1fr; }
 }
-@media (min-width: 1024px) {
+@media (min-width: 700px) {
   .sn-coin-layout {
     display: grid;
-    grid-template-columns: 280px minmax(0, 1fr);
+    grid-template-columns: clamp(220px, 28vw, 280px) minmax(0, 1fr);
     grid-template-areas: "head main" "extra main";
     grid-template-rows: auto 1fr;
     column-gap: 16px;
@@ -303,7 +303,9 @@ body.sonar-market .sn-mrow .sn-mid small { display: block; white-space: nowrap; 
   .sn-coinhead { grid-area: head; }
   .sn-coin-extra { grid-area: extra; }
   .sn-coin-main { grid-area: main; }
-  .sn-coinhead {
+}
+/* Cabecera de la ficha: igual en ordenador, tablet y móvil */
+body.sonar-market .sn-coinhead {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     gap: 2px 8px;
@@ -316,7 +318,6 @@ body.sonar-market .sn-mrow .sn-mid small { display: block; white-space: nowrap; 
   .sn-coinhead > .sn-actions { grid-column: 1 / -1; grid-row: 4; flex-wrap: wrap; }
   .sn-coinhead h2, .sn-coinhead p { margin: 0; }
   .sn-coinhead .sn-coinpx { flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
-}
 body.sonar-market header.site > .wrap {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
@@ -354,15 +355,6 @@ body.sonar-market .sn-topnav {
 @media (max-width: 520px) {
   body.sonar-market header.site .brand img { width: 32px; height: 32px; }
   body.sonar-market header.site .langpick summary { min-height: 36px; padding: 0 8px; }
-  body.sonar-market header.site .langpick summary span[lang] {
-    position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);
-  }
-  body.sonar-market #vf-open-search { width: 36px; min-width: 36px; padding: 0; justify-content: center; }
-  body.sonar-market #vf-open-search .lang,
-  body.sonar-market #vf-open-search kbd {
-    position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);
-  }
-  body.sonar-market #vf-open-search::before { content: "⌕"; font-size: 18px; line-height: 1; }
 }
 body.sonar-market .sn-coin,
 body.sonar-market .sn-coin-layout,
@@ -379,11 +371,8 @@ body.sonar-market .sn-scroll { min-width: 0; max-width: 100%; }
 }
 @media (max-width: 1023px) {
   body.sonar-market .sn-topnav { flex-wrap: nowrap; overflow-x: auto; }
-  [data-sn=ranking] > .sn-scroll { display: none; }
-  [data-sn=ranking] > .sn-mlist { display: grid; gap: 0; }
 }
 @media (max-width: 767px) {
-  body.sonar-market .sn-topnav { display: none; }
   .sn-stats { display: flex !important; flex-direction: row; overflow-x: auto; scroll-snap-type: x mandatory; grid-template-columns: none; padding-bottom: 4px; align-items: flex-start; }
   .sn-stat { flex: 0 0 auto !important; width: auto; scroll-snap-align: start; min-width: 8.5rem; max-width: 11rem; max-height: 4.8rem; overflow: hidden; padding: 6px 8px; }
   .sn-stat .sn-source, .sn-stat small { display: none; }
@@ -391,35 +380,12 @@ body.sonar-market .sn-scroll { min-width: 0; max-width: 100%; }
     display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.72rem;
   }
   .sn-select.sn-stat select { min-height: 32px; }
-  [data-sn=ranking] > .sn-scroll { display: none; }
-  [data-sn=ranking] > .sn-mlist { display: grid; gap: 0; }
   .sn-table { font-size: 12px; }
   .sn-table th, .sn-table td { padding: 6px 8px; }
-  .sn-dock {
-    display: flex; position: fixed; z-index: 40; left: 0; right: 0; bottom: 0; gap: 2px;
-    justify-content: space-around; background: #0c1016; border-top: 1px solid #243041;
-    padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
-  }
-  .sn-dock button { flex: 1; background: transparent; color: #e7edf4; border: 0; border-radius: 12px; min-height: 48px; font-size: 0.68rem; font-weight: 700; white-space: nowrap; padding: 4px 0; }
-  body.sonar-market { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
   .sn-headtools { grid-area: search; }
   .sn-strip { gap: 6px; font-size: 0.72rem; padding: 0 6px 0 8px; }
   .sn-strip-stats { gap: 8px; }
-  .sn-strip-long { display: none; }
-  .sn-strip-short { display: inline; }
-  .sn-strip-pct, .sn-strip #sn-live { display: none; }
   body.sonar-market #vf-root { gap: 6px; }
-  .sn-coinhead {
-    display: grid; grid-template-columns: auto auto minmax(0, 1fr);
-    column-gap: 8px; row-gap: 4px; align-items: center;
-  }
-  .sn-coinhead > .sn-btn { grid-column: 1; grid-row: 1; }
-  .sn-coinhead > .sn-logo { grid-column: 2; grid-row: 1; }
-  .sn-coinhead > div:not(.sn-coinpx):not(.sn-actions) { grid-column: 3; grid-row: 1; min-width: 0; }
-  .sn-coinhead > .sn-coinpx { grid-column: 1 / -1; grid-row: 2; }
-  .sn-coinhead > .sn-actions { grid-column: 1 / -1; grid-row: 3; flex-wrap: nowrap; overflow-x: auto; }
-  .sn-coinhead h2, .sn-coinhead p { margin: 0; }
-  .sn-coinhead .sn-coinpx { flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
   .sn-coin [data-sn=coin-tabs],
   .sn-coin .sn-tools { flex-wrap: nowrap; overflow-x: auto; }
   .sn-coin [data-sn=coin-tabs] > *, .sn-coin .sn-tools > * { flex: 0 0 auto; white-space: nowrap; scroll-snap-align: start; }
@@ -436,7 +402,6 @@ body.sonar-market .sn-scroll { min-width: 0; max-width: 100%; }
 }
 @media (orientation: landscape) and (max-height: 500px) {
   .sn-chart { height: 180px; min-height: 180px; }
-  .sn-dock { padding-top: 2px; }
   .sn-ia-btn { width: 44px; height: 44px; }
 }
 body.sonar-market select,
@@ -486,3 +451,54 @@ body.sonar-market .sn-excopy small { color: #8b97a6 !important; }
     background-position: right 11px center, right 6px center !important;
   }
 }
+
+/* Móvil y tablet iguales que el ordenador: menú superior completo (fila desplazable),
+   barra de cifras completa y la misma tabla del ranking con # y nombre fijos. */
+html:has(body.sonar-market), html.sonar-market-root { background: #0c1016; }
+body.sonar-market { min-height: 100vh; }
+.sn-dock, .sn-more { display: none !important; }
+body.sonar-market .sn-topnav { scrollbar-width: none; scroll-snap-type: x proximity; }
+body.sonar-market .sn-topnav::-webkit-scrollbar { display: none; }
+body.sonar-market .sn-topnav a { scroll-snap-align: start; }
+body.sonar-market .sn-strip-stats { overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+[data-sn=ranking] > .sn-mlist { display: none !important; }
+body.sonar-market .sn-scroll { overscroll-behavior-x: contain; }
+body.sonar-market .sn-scroll .sn-table :is(th, td).sn-stick-rank,
+body.sonar-market .sn-scroll .sn-table :is(th, td).sn-stick-name { position: sticky; z-index: 2; background: #0c1016; }
+body.sonar-market .sn-scroll .sn-table th:is(.sn-stick-rank, .sn-stick-name) { background: #141a22; z-index: 3; }
+body.sonar-market .sn-scroll .sn-table tr:hover td:is(.sn-stick-rank, .sn-stick-name) { background: #1c2530; }
+body.sonar-market .sn-scroll .sn-table .sn-stick-rank { left: 0; width: 2.4rem; min-width: 2.4rem; max-width: 2.4rem; box-sizing: border-box; }
+body.sonar-market .sn-scroll .sn-table .sn-stick-name { left: 2.4rem; box-shadow: 1px 0 0 #243041; }
+@media (max-width: 767px) {
+  body.sonar-market .sn-scroll .sn-table .sn-stick-rank { width: 2rem; min-width: 2rem; max-width: 2rem; padding-left: 4px; padding-right: 4px; }
+  body.sonar-market .sn-scroll .sn-table .sn-stick-name { left: 2rem; max-width: 9.5rem; }
+  body.sonar-market .sn-scroll .sn-table .sn-stick-name .sn-name { max-width: 9rem; overflow: hidden; }
+  body.sonar-market .sn-scroll .sn-table .sn-stick-name .sn-name strong { overflow: hidden; text-overflow: ellipsis; }
+  body.sonar-market .sn-scroll .sn-table td.sn-stick-name { overflow: hidden; }
+  body.sonar-market .sn-scroll .sn-table .sn-stick-name .sn-excopy { max-width: 7.2rem; }
+  body.sonar-market .sn-scroll .sn-table .sn-stick-name :is(.sn-excopy > a, .sn-excopy small) {
+    display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  body.sonar-market .sn-topnav { gap: 2px; margin: 0 -2px; }
+  body.sonar-market .sn-topnav a { padding: 4px 8px; font-size: 13px; }
+}
+@media (max-width: 520px) {
+  body.sonar-market header.site > .wrap { gap: 4px 6px; }
+  body.sonar-market header.site .vf-tagline { font-size: 10px; }
+  body.sonar-market .sn-headtools { gap: 6px; }
+  body.sonar-market .sn-ia-btn { height: 32px; padding: 0 10px; font-size: 13px; }
+  body.sonar-market #vf-open-search { min-height: 32px; padding: 0 6px; font-size: 14px; gap: 4px; }
+  body.sonar-market header.site .langpick summary { min-height: 32px; padding: 0 8px; font-size: 14px; }
+}
+@media (max-width: 400px) {
+  body.sonar-market #vf-open-search kbd { display: none; }
+  body.sonar-market header.site .vf-tagline { display: none; }
+  body.sonar-market header.site .brand img { width: 28px; height: 28px; }
+  body.sonar-market header.site .vf-wordmark { font-size: 15px; }
+  body.sonar-market header.site > .wrap { column-gap: 4px; }
+  body.sonar-market .sn-headtools { gap: 4px; }
+  body.sonar-market .sn-ia-btn { padding: 0 8px; }
+  body.sonar-market header.site .langpick summary { padding: 0 6px; gap: 3px; }
+}
+/* Sin barra inferior en Sonar: el hueco reservado para ella (y para el formulario) sobra. */
+body.sonar-market { padding-bottom: env(safe-area-inset-bottom) !important; }

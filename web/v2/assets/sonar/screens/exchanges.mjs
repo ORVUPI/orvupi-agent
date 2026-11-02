@@ -28,15 +28,15 @@ async function list(host, ctx, type) {
         el("div", { class: "sn-tabs" }, types.map(([id, label]) => el("button", { type: "button", class: "sn-tab", "aria-selected": type === id ? "true" : "false", "data-sn-ex": id, onclick: () => ctx.go(`/sonar/exchanges/?type=${id}`), text: label }))),
         rows.length ? pagedBlock(rows, state, [20, 50, 100], (slice, view) => {
           const table = el("table", { class: "sn-table" });
-          table.append(el("thead", {}, el("tr", {}, headers.map((label) => el("th", { text: label })))));
+          table.append(el("thead", {}, el("tr", {}, headers.map((label, col) => el("th", { class: col === 0 ? "sn-stick-rank" : col === 1 ? "sn-stick-name" : null, text: label })))));
           const tbody = el("tbody");
           slice.forEach((row, index) => {
             const rank = (view.page - 1) * view.per + index + 1;
             const name = el("a", { href: `${ctx.prefix}/sonar/exchanges/${row.id || ""}`, text: row.name || t("unavailable") });
             if (type === "derivatives") {
               tbody.append(el("tr", {}, [
-                el("td", { text: String(rank) }),
-                el("td", {}, [logo(row), name]),
+                el("td", { class: "sn-stick-rank", text: String(rank) }),
+                el("td", { class: "sn-stick-name" }, [logo(row), name]),
                 el("td", { text: show(compact(row.volume24h, body.vs)) }),
                 el("td", { text: show(compact(row.openInterest, body.vs)) }),
                 el("td", { text: show(plain(row.perpetual, 0)) }),
@@ -44,8 +44,8 @@ async function list(host, ctx, type) {
               ]));
             } else {
               tbody.append(el("tr", {}, [
-                el("td", { text: String(rank) }),
-                el("td", { class: "sn-exname" }, [logo(row), exchangeCopy(name, row)]),
+                el("td", { class: "sn-stick-rank", text: String(rank) }),
+                el("td", { class: "sn-exname sn-stick-name" }, [logo(row), exchangeCopy(name, row)]),
                 el("td", { text: show(compact(row.volume24h, body.vs)) }),
                 el("td", { text: row.trustScore == null ? t("unavailable") : String(row.trustScore) }),
                 el("td", { text: countryName(row.country) || t("unavailable") }),
