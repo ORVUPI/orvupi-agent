@@ -488,4 +488,12 @@ body.sonar-market .sn-scroll .sn-table .sn-stick-name { left: 2.4rem; box-shadow
 @media (max-width: 400px) {
   body.sonar-market #vf-open-search kbd { display: none; }
   body.sonar-market header.site .vf-tagline { display: none; }
+  body.sonar-market header.site .brand img { width: 28px; height: 28px; }
+  body.sonar-market header.site .vf-wordmark { font-size: 15px; }
+  body.sonar-market header.site > .wrap { column-gap: 4px; }
+  body.sonar-market .sn-headtools { gap: 4px; }
+  body.sonar-market .sn-ia-btn { padding: 0 8px; }
+  body.sonar-market header.site .langpick summary { padding: 0 6px; gap: 3px; }
 }
+/* Sin barra inferior en Sonar: el hueco reservado para ella (y para el formulario) sobra. */
+body.sonar-market { padding-bottom: env(safe-area-inset-bottom) !important; }
