@@ -41,7 +41,8 @@
 /assets/*.mjs
   ! Cache-Control
   Cache-Control: public, max-age=0, must-revalidate
-# sonar.css se carga desde shell.mjs sin ?v=: misma regla para que no se mezcle con el JS nuevo.
+# sonar.css lleva ?v=<hash> en shell.mjs y en la 404 (asset-versions.mjs): el CDN puede
+# ignorar Cache-Control. Esta regla cubre una petición sin query.
 /assets/sonar.css
   ! Cache-Control
   Cache-Control: public, max-age=0, must-revalidate

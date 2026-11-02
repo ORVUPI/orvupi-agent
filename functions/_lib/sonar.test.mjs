@@ -1022,6 +1022,18 @@ test("sonar.css se pide con ?v=<hash> para que el CDN no sirva estilos de otro d
   assert.ok(shell.includes(`"/assets/sonar.css?v=${hash}"`), "ejecuta node web/v2/tools/asset-versions.mjs");
 });
 
+test("el nombre de un exchange queda en una celda de tabla y el menú marca la sección", async () => {
+  const { readFileSync } = await import("node:fs");
+  const exchanges = readFileSync(new URL("../../web/v2/assets/sonar/screens/exchanges.mjs", import.meta.url), "utf8");
+  const shell = readFileSync(new URL("../../web/v2/assets/sonar/shell.mjs", import.meta.url), "utf8");
+  assert.doesNotMatch(exchanges, /sn-exname sn-stick-name|sn-stick-name sn-exname/);
+  assert.match(exchanges, /el\("td", \{ class: "sn-stick-name" \}, el\("span", \{ class: "sn-exname" \}/);
+  assert.match(shell, /data-sn-nav/);
+  assert.match(shell, /setAttribute\("aria-current", "page"\)/);
+  assert.match(shell, /tabindex: "0"/);
+  assert.match(shell, /scrollIntoView\(\{ block: "nearest", inline: "nearest" \}\)/);
+});
+
 test("la 404 de Sonar pide la misma sonar.css versionada que shell.mjs", async () => {
   const { readFileSync } = await import("node:fs");
   const shell = readFileSync(new URL("../../web/v2/assets/sonar/shell.mjs", import.meta.url), "utf8");
