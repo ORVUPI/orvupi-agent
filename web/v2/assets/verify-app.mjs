@@ -365,7 +365,8 @@ function chartCard() {
       h("button", { type: "button", "aria-pressed": String(state.chartMode !== "pool"), onclick: () => { state.chartMode = "btc"; state.timeframe = "30m"; state.realCandle = ""; render(); } }, "Bitcoin"),
     ]));
   }
-  card.append(sourceLine(state.chartStatus?.provider, state.chartStatus?.fetchedAt, state.chartStatus?.scope || "", state.chartStatus?.stale));
+  const source = sourceLine(state.chartStatus?.provider, state.chartStatus?.fetchedAt, state.chartStatus?.scope || "", state.chartStatus?.stale);
+  if (source) card.append(source);
   card.append(h("div", { id: "vf-chart-host" }));
   return card;
 }
