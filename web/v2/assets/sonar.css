@@ -474,6 +474,11 @@ body.sonar-market .sn-scroll .sn-table .sn-stick-name { left: 2.4rem; box-shadow
   body.sonar-market .sn-scroll .sn-table .sn-stick-name { left: 2rem; max-width: 9.5rem; }
   body.sonar-market .sn-scroll .sn-table .sn-stick-name .sn-name { max-width: 9rem; overflow: hidden; }
   body.sonar-market .sn-scroll .sn-table .sn-stick-name .sn-name strong { overflow: hidden; text-overflow: ellipsis; }
+  body.sonar-market .sn-scroll .sn-table td.sn-stick-name { overflow: hidden; }
+  body.sonar-market .sn-scroll .sn-table .sn-stick-name .sn-excopy { max-width: 7.2rem; }
+  body.sonar-market .sn-scroll .sn-table .sn-stick-name :is(.sn-excopy > a, .sn-excopy small) {
+    display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
   body.sonar-market .sn-topnav { gap: 2px; margin: 0 -2px; }
   body.sonar-market .sn-topnav a { padding: 4px 8px; font-size: 13px; }
 }
