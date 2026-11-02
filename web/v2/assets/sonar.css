@@ -502,3 +502,21 @@ body.sonar-market .sn-scroll .sn-table .sn-stick-name { left: 2.4rem; box-shadow
 }
 /* Sin barra inferior en Sonar: el hueco reservado para ella (y para el formulario) sobra. */
 body.sonar-market { padding-bottom: env(safe-area-inset-bottom) !important; }
+/* Filas deslizables en móvil y tablet (menú, pestañas, periodos, chips, cifras): sin barra visible, como
+   CoinMarketCap; se siguen deslizando con el dedo y un degradado en el borde avisa de que hay más.
+   La barra superpuesta de Android se dibujaba encima de las letras y del borde de las pastillas.
+   En el ordenador (puntero fino y ancho) no cambia nada: allí la barra ocupa su propio hueco. */
+@media (max-width: 1023px), (pointer: coarse) {
+  body.sonar-market :is(.sn-topnav, .sn-strip-stats, .sn-stats, .sn-pills, .sn-tabs, .sn-tools) { scrollbar-width: none; }
+  body.sonar-market :is(.sn-topnav, .sn-strip-stats, .sn-stats, .sn-pills, .sn-tabs, .sn-tools)::-webkit-scrollbar { display: none; width: 0; height: 0; }
+  body.sonar-market :is(.sn-topnav, .sn-pills, .sn-coin [data-sn=coin-tabs], .sn-coin .sn-tools) {
+    padding-top: 2px; padding-bottom: 4px; padding-inline-end: 24px;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+  }
+  body.sonar-market .sn-topnav a { line-height: 1.35; }
+  /* Tablas: la barra se queda (indica que hay más columnas) pero bajo la última fila, no encima. */
+  body.sonar-market .sn-scroll { padding-bottom: 8px; }
+}
+/* Conversor: «equivalen a …» con su línea completa (sin recortar la mitad inferior). */
+.sn-converter output { display: block; line-height: 1.35; padding: 2px 0; overflow: visible; min-height: 1.35em; }
