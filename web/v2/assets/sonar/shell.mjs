@@ -1,7 +1,7 @@
 import { api, qs } from "./api.mjs";
 import { compact, money, pct, plain, show } from "./format.mjs";
 import { iaButton } from "./ia.mjs";
-import { labelOf, locale, t } from "./i18n.mjs";
+import { labelOf, locale, pageTitle, t } from "./i18n.mjs";
 import { onTick, patchNodes, startLive, status } from "./live.mjs";
 import { loadStore, remember, snapshot, update } from "./store.mjs";
 import { el, errorBlock, pctNode, setChildren, skeleton, sourceLine } from "./ui.mjs";
@@ -48,6 +48,8 @@ export async function start() {
   if (!document.querySelector("link[data-sonar]")) document.head.append(link);
   document.body.classList.add("sonar-market");
   hideVerifyChrome();
+  nameSection();
+  mountCrumb();
   mountTop();
   mountDock();
   mountSearchButton();
@@ -113,7 +115,7 @@ function hideVerifyChrome() {
 function mountDock() {
   if (document.querySelector(".sn-dock")) return;
   const dock = el("nav", { class: "sn-dock", "aria-label": t("markets") }, [
-    dockButton("markets", t("markets"), () => go("/sonar/")),
+    dockButton("markets", t("marketsShort"), () => go("/sonar/")),
     dockButton("search", t("search"), () => openSearch()),
     dockButton("watchlist", t("watchlist"), () => go("/sonar/watchlist/")),
     dockButton("portfolio", t("portfolio"), () => go("/sonar/portfolio/")),
@@ -124,6 +126,69 @@ function mountDock() {
 
 function dockButton(id, label, onclick) {
   return el("button", { type: "button", "data-sn-dock": id, onclick, text: label });
+}
+
+function nameSection() {
+  const heading = document.querySelector("main h1");
+  if (heading) heading.replaceChildren(document.createTextNode(t("markets")));
+}
+
+function mountCrumb() {
+  if (document.querySelector(".sn-crumb")) return;
+  const nav = el("nav", { class: "sn-crumb", "aria-label": t("crumb") });
+  const heading = document.querySelector("main h1");
+  if (heading) heading.after(nav);
+  else document.getElementById("vf-root")?.before(nav);
+}
+
+export function setCrumb(tail = []) {
+  const nav = document.querySelector(".sn-crumb");
+  if (!nav) return;
+  const prefix = parseRoute().prefix;
+  const items = [{ label: t("markets"), href: tail.length ? "/sonar/" : "" }, ...tail];
+  const list = el("ol");
+  items.forEach((item, index) => {
+    const last = index === items.length - 1;
+    const content = !last && item.href
+      ? el("a", {
+        href: `${prefix}${item.href}`,
+        onclick: (event) => { event.preventDefault(); go(item.href); },
+        text: item.label,
+      })
+      : el("span", { "aria-current": last ? "page" : null, text: item.label });
+    list.append(el("li", {}, content));
+  });
+  nav.replaceChildren(list);
+}
+
+function crumbTail(route) {
+  const href = {
+    exchanges: "/sonar/exchanges/",
+    categories: "/sonar/categories/",
+    movers: "/sonar/movers/",
+    trending: "/sonar/trending/",
+    new: "/sonar/new/",
+    news: "/sonar/news/",
+    watchlist: "/sonar/watchlist/",
+    portfolio: "/sonar/portfolio/",
+    calendar: "/sonar/calendar/",
+    unlocks: "/sonar/unlocks/",
+  }[route.section];
+  if (!href) return [];
+  const label = {
+    exchanges: t("exchanges"),
+    categories: t("categories"),
+    movers: t("movers"),
+    trending: t("trending"),
+    new: t("fresh"),
+    news: t("news"),
+    watchlist: t("watchlist"),
+    portfolio: t("portfolio"),
+    calendar: t("calendar"),
+    unlocks: t("unlocks"),
+  }[route.section];
+  if (route.id && (route.section === "exchanges" || route.section === "categories")) return [{ label, href }];
+  return [{ label }];
 }
 
 function moreSheet() {
@@ -203,6 +268,9 @@ async function draw() {
     if (on) button.setAttribute("aria-current", "page");
     else button.removeAttribute("aria-current");
   });
+  const tail = crumbTail(route);
+  setCrumb(tail);
+  document.title = pageTitle(tail.length ? tail[tail.length - 1].label : "");
   const ctx = { route, prefix: route.prefix, go, openSearch, locale: locale() };
   root.replaceChildren(statsBar(ctx), el("div", { id: "sn-outlet" }, skeleton(8)));
   const outlet = root.querySelector("#sn-outlet");
@@ -219,9 +287,14 @@ async function draw() {
 function statsBar(ctx) {
   const wrap = el("section", { class: "sn-marketbar", "data-sn": "stats" });
   const live = el("p", { id: "sn-live", class: "sn-note", text: t("disconnected") });
-  const strip = el("div", { class: "sn-strip", "data-sn": "strip" }, [
+  const stats = el("div", { class: "sn-strip-stats" }, [
     el("span", { class: "sn-strip-item", text: t("loading") }),
     live,
+  ]);
+  const vs = snapshot().prefs.vs;
+  const strip = el("div", { class: "sn-strip", "data-sn": "strip" }, [
+    stats,
+    currencySelect(vs),
   ]);
   wrap.append(strip);
   const home = ctx.route.section === "home";
@@ -232,7 +305,6 @@ function statsBar(ctx) {
       cards,
     ]));
   }
-  const vs = snapshot().prefs.vs;
   queueMicrotask(() => api(`/api/sonar/global${qs({ vs })}`).then((body) => {
     if (!wrap.isConnected) return;
     const data = body.data || {};
@@ -240,13 +312,12 @@ function statsBar(ctx) {
     const fear = data.fear;
     const alt = data.alt;
     const unit = String(body.vs || "usd").toUpperCase();
-    strip.replaceChildren(
+    stats.replaceChildren(
       stripStat("cap", t("capShort"), show(compact(global.marketCap, "")), global.change24h == null ? null : pctNode(global.change24h), `${t("cap")} ${unit}`),
       stripStat("volume", t("volShort"), show(compact(global.volume24h, "")), null, `${t("volume")} ${unit}`, "Vol."),
       stripStat("btc", t("btcShort"), global.dominance?.btc == null ? t("unavailable") : `${plain(global.dominance.btc, 1)}%`, null, t("btcDom")),
       stripStat("fear", t("fearShort"), fear?.value == null ? t("unavailable") : String(fear.value), null, fear?.label ? `${t("fear")}: ${labelOf("fearWord", fear.label)}` : t("fear")),
       stripStat("alt", t("altShort"), alt?.value == null ? t("unavailable") : `${plain(alt.value, 0)}`, null, t("alt")),
-      currencySelect(vs),
       live,
     );
     if (cards) {

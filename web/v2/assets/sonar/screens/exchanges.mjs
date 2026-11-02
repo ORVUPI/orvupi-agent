@@ -1,6 +1,7 @@
 import { api, qs } from "../api.mjs";
-import { compact, plain, show } from "../format.mjs";
-import { t } from "../i18n.mjs";
+import { compact, countryName, plain, show } from "../format.mjs";
+import { pageTitle, t } from "../i18n.mjs";
+import { parseRoute, setCrumb } from "../shell.mjs";
 import { snapshot } from "../store.mjs";
 import { el, emptyBlock, errorBlock, logo, pagedBlock, skeleton, sourceLine } from "../ui.mjs";
 
@@ -13,7 +14,10 @@ export async function mount(host, ctx) {
 async function list(host, ctx, type) {
   try {
     const body = await api(`/api/sonar/exchanges${qs({ vs: snapshot().prefs.vs, type })}`);
-    const types = [["all", t("allEx")], ["cex", t("cex")], ["dex", t("dex")], ["derivatives", t("deriv")]];
+    const types = [["all", t("allEx")]];
+    if (body.hasCex) types.push(["cex", t("cex")]);
+    if (body.hasDex) types.push(["dex", t("dex")]);
+    types.push(["derivatives", t("deriv")]);
     const rows = body.rows || [];
     const headers = type === "derivatives"
       ? [t("rank"), t("name"), t("volume"), t("oi"), t("perps"), t("futures")]
@@ -41,10 +45,10 @@ async function list(host, ctx, type) {
             } else {
               tbody.append(el("tr", {}, [
                 el("td", { text: String(rank) }),
-                el("td", {}, [logo(row), name, el("small", { text: row.centralized == null ? t("unknownKind") : row.centralized ? t("cex") : t("dex") })]),
+                el("td", { class: "sn-exname" }, [logo(row), exchangeCopy(name, row)]),
                 el("td", { text: show(compact(row.volume24h, body.vs)) }),
                 el("td", { text: row.trustScore == null ? t("unavailable") : String(row.trustScore) }),
-                el("td", { text: row.country || t("unavailable") }),
+                el("td", { text: countryName(row.country) || t("unavailable") }),
                 el("td", { text: row.year == null ? t("unavailable") : String(row.year) }),
               ]));
             }
@@ -64,6 +68,14 @@ async function list(host, ctx, type) {
   }
 }
 
+function exchangeCopy(name, row) {
+  const copy = el("span", { class: "sn-excopy" }, [name]);
+  if (row.centralized === true || row.centralized === false) {
+    copy.append(el("small", { text: row.centralized ? t("cex") : t("dex") }));
+  }
+  return copy;
+}
+
 async function detail(host, ctx) {
   try {
     const vs = snapshot().prefs.vs;
@@ -72,7 +84,9 @@ async function detail(host, ctx) {
       api(`/api/sonar/exchanges/${ctx.route.id}/tickers${qs({ vs })}`).catch(() => null),
       api(`/api/sonar/exchanges/${ctx.route.id}/volume?days=7`).catch(() => null),
     ]);
-    document.title = `${row.name} · ORVUPI Sonar`;
+    if (parseRoute().section !== "exchanges" || parseRoute().id !== ctx.route.id) return;
+    document.title = pageTitle(row.name);
+    setCrumb([{ label: t("exchanges"), href: "/sonar/exchanges/" }, { label: row.name }]);
     const pairs = tickers?.rows || [];
     const state = { page: 1, per: 20, paint() {} };
     const head = el("div", { class: "sn-exchange-head" }, [
@@ -80,7 +94,7 @@ async function detail(host, ctx) {
       el("h2", {}, [logo(row), row.name]),
       el("p", { text: `${t("volume")} ${show(compact(row.volume24h, vs))}` }),
       el("p", { text: `${t("coins")} ${show(plain(row.coins, 0))} · ${t("pairs")} ${show(plain(row.pairs, 0))}` }),
-      el("p", { text: `${t("country")} ${row.country || t("unavailable")} · ${t("year")} ${row.year ?? t("unavailable")}` }),
+      el("p", { text: `${t("country")} ${countryName(row.country) || t("unavailable")} · ${t("year")} ${row.year ?? t("unavailable")}` }),
       el("p", { text: `${t("trust")} ${row.trustScore == null ? t("unavailable") : row.trustScore}` }),
       row.url ? el("a", { href: row.url, rel: "noreferrer", text: t("visit") }) : null,
       row.description ? el("p", { text: row.description }) : el("p", { text: t("noDesc") }),

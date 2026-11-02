@@ -1,3 +1,4 @@
+import { holdPublic, keyedAllowed, keyedUsage, noteKeyedCall, noteUpstreamCall, publicHoldUntil, upstreamAllowed } from "../cg-usage.js";
 import { getJson } from "../limits.js";
 import { disabledSet, httpsUrl, imageUrl, publicHandle, webUrl } from "../security.js";
 import { coinRow, num, plainFromHtml, stamp, text } from "../normalize.js";
@@ -5,17 +6,21 @@ import { coinRow, num, plainFromHtml, stamp, text } from "../normalize.js";
 const ATTR = "Data provided by CoinGecko";
 const HOME = "https://www.coingecko.com/";
 
-function base(env) {
+export function coingeckoBase(env) {
   return String(env?.CG_API_TIER || "").toLowerCase() === "pro" && env?.CG_API_KEY
     ? "https://pro-api.coingecko.com/api/v3"
     : "https://api.coingecko.com/api/v3";
 }
 
-function headers(env) {
-  const out = {
+function publicHeaders() {
+  return {
     accept: "application/json",
     "user-agent": "ORVUPI-Sonar/1.0 (+https://orvupi.com/sonar/)",
   };
+}
+
+export function coingeckoHeaders(env) {
+  const out = publicHeaders();
   const key = env?.CG_API_KEY;
   if (!key) return out;
   if (String(env?.CG_API_TIER || "demo").toLowerCase() === "pro") out["x-cg-pro-api-key"] = key;
@@ -23,13 +28,66 @@ function headers(env) {
   return out;
 }
 
+function demoKey(env) {
+  return Boolean(env?.CG_API_KEY) && String(env?.CG_API_TIER || "demo").toLowerCase() !== "pro";
+}
+
+function rateLimited(env) {
+  if (String(env?.CG_API_TIER || "").toLowerCase() === "pro" && env?.CG_API_KEY) return false;
+  if (globalThis.SONAR_CG_CAP === true) return true;
+  if (globalThis.caches?.default) return true;
+  return demoKey(env);
+}
+
+async function takeSlot(env, path) {
+  if (!rateLimited(env)) return;
+  const gate = await upstreamAllowed();
+  if (!gate.ok) {
+    const usage = keyedUsage();
+    console.log(`sonar-cg-demo skip day=${usage.day} calls=${usage.calls} minute=${usage.minute} reason=${gate.reason}`);
+    const error = new Error("throttled");
+    error.status = 429;
+    throw error;
+  }
+  await noteUpstreamCall(path);
+}
+
+const PUBLIC_HOLD_MS = 60_000;
+
 async function cg(env, path) {
   if (disabledSet(env).has("coingecko")) {
     const error = new Error("disabled");
     error.code = "disabled";
     throw error;
   }
-  return getJson(`${base(env)}${path}`, { headers: headers(env), provider: "coingecko", timeout: 12000 });
+  await takeSlot(env, path);
+  const url = `${coingeckoBase(env)}${path}`;
+  if (!demoKey(env)) {
+    return getJson(url, { headers: coingeckoHeaders(env), provider: "coingecko" });
+  }
+  // Tras un 429 sin clave, durante un minuto se va directo con clave: el intento
+  // sin clave fallaría igual y gastaría otra plaza del tope por minuto.
+  const skipPublic = Date.now() < publicHoldUntil();
+  try {
+    if (skipPublic) {
+      const error = new Error("public-hold");
+      error.status = 429;
+      throw error;
+    }
+    return await getJson(url, { headers: publicHeaders(), provider: "coingecko", attempts: 1 });
+  } catch (error) {
+    if (error?.status !== 429) throw error;
+    if (!skipPublic) holdPublic(PUBLIC_HOLD_MS);
+    const gate = await keyedAllowed();
+    if (!gate.ok) {
+      const usage = keyedUsage();
+      console.log(`sonar-cg-demo skip day=${usage.day} calls=${usage.calls} minute=${usage.minute} reason=${gate.reason}`);
+      throw error;
+    }
+    if (!skipPublic) await takeSlot(env, path);
+    await noteKeyedCall(path);
+    return getJson(url, { headers: coingeckoHeaders(env), provider: "coingecko", attempts: 1 });
+  }
 }
 
 function meta(extra) {
@@ -51,6 +109,12 @@ export async function getGlobal(env) {
     markets: num(data.markets),
     updatedAt: num(data.updated_at),
   });
+}
+
+export async function getCoinList(env) {
+  const body = await cg(env, "/coins/list");
+  const count = Array.isArray(body) ? body.filter((row) => row?.id).length : 0;
+  return meta({ count });
 }
 
 export async function getMarkets(env, { page = 1, per = 100, category = "", order = "market_cap_desc", ids = "" } = {}) {
@@ -224,9 +288,16 @@ export async function getCategories(env) {
 }
 
 export async function getExchanges(env, page = 1) {
-  const body = await cg(env, `/exchanges?per_page=100&page=${page}`);
+  // Los DEX con más volumen empiezan pasada la posición 100.
+  const body = await cg(env, `/exchanges?per_page=250&page=${page}`);
   const rows = Array.isArray(body) ? body.filter((row) => row?.id).map(exchangeRow) : [];
   return meta({ rows, page });
+}
+
+/** Solo el booleano. La lista de exchanges no lo trae. */
+export async function getExchangeCentralized(env, id) {
+  const body = await cg(env, `/exchanges/${encodeURIComponent(id)}`);
+  return typeof body?.centralized === "boolean" ? body.centralized : null;
 }
 
 export async function getExchange(env, id) {

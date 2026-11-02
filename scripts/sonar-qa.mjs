@@ -49,6 +49,8 @@ const logos = await home.page.evaluate(() => [...document.querySelectorAll(".sn-
 note("logos", logos.some((width) => width > 0), String(logos));
 note("home-console", home.errors.length === 0, home.errors.slice(0, 2).join(" | "));
 note("home-overflow", (await overflow(home.page)) <= 1, String(await overflow(home.page)));
+const sparkColors = await home.page.evaluate(() => [...document.querySelectorAll(".sn-spark polyline")].map((node) => node.getAttribute("stroke")));
+note("spark-colors", sparkColors.length > 0 && sparkColors.every((color) => color === "#16c784" || color === "#ea3943"), `${sparkColors.length} ${[...new Set(sparkColors)].join(",")}`);
 await shot(home.page, "1440-mercados");
 
 await home.page.locator("[data-sn-star=bitcoin]").first().click();
@@ -62,8 +64,68 @@ await home.page.goto(`${base}/sonar/crypto/bitcoin`, { waitUntil: "domcontentloa
 await home.page.waitForSelector("[data-sn=chart] svg, [data-sn=chart] .sn-state", { timeout: 45000 });
 const chartSvg = await home.page.locator("[data-sn=chart] svg").count();
 note("chart", chartSvg > 0);
-await home.page.locator("[data-sn-period='7d']").click();
-await home.page.waitForTimeout(1500);
+const painted = await home.page.evaluate(async () => {
+  const { drawChart, chartHost } = await import("/assets/sonar/chart.mjs");
+  const { spark } = await import("/assets/sonar/ui.mjs");
+  const host = chartHost();
+  host.style.cssText = "position:absolute;left:-9999px;width:640px;height:320px";
+  document.body.append(host);
+  await drawChart(host, { points: [[1, 10], [2, 8], [3, 11]] });
+  const up = host.querySelector("polyline")?.getAttribute("stroke");
+  const upStop = host.querySelector("stop")?.getAttribute("stop-color");
+  const upFill = host.querySelector("polygon")?.getAttribute("fill") || "";
+  await drawChart(host, { points: [[1, 10], [2, 12], [3, 9]] });
+  const down = host.querySelector("polyline")?.getAttribute("stroke");
+  const downStop = host.querySelector("stop")?.getAttribute("stop-color");
+  const rising = Array.from({ length: 24 }, (_, index) => [index, 10 + index]);
+  const other = Array.from({ length: 24 }, (_, index) => [index, 40 - index]);
+  await drawChart(host, { points: rising }, { compare: { points: other }, sma: true });
+  const lines = [...host.querySelectorAll("polyline")];
+  const strokes = lines.map((node) => node.getAttribute("stroke"));
+  const indicator = lines.find((node) => node.getAttribute("stroke") === "#9aa7b5");
+  host.remove();
+  return {
+    up,
+    down,
+    upStop,
+    downStop,
+    upFill,
+    strokes,
+    indicatorPoints: indicator?.getAttribute("points") || "",
+    downSpark: spark([4, 3, 2]).querySelector("polyline")?.getAttribute("stroke"),
+    upSpark: spark([1, 1, 2]).querySelector("polyline")?.getAttribute("stroke"),
+  };
+});
+note(
+  "chart-direction",
+  painted.up === "#16c784" && painted.down === "#ea3943" && painted.upStop === "#16c784" && painted.downStop === "#ea3943" && painted.upFill.startsWith("url(#sn-area-") && painted.strokes[0] === "#16c784" && painted.strokes.includes("#9ecbff") && painted.strokes.includes("#9aa7b5") && painted.indicatorPoints.includes(",") && painted.downSpark === "#ea3943" && painted.upSpark === "#16c784",
+  JSON.stringify(painted),
+);
+const ranges = ["1h", "24h", "7d", "30d", "90d", "1y", "ytd", "all"];
+const seen = {};
+for (const id of ranges) {
+  const pending = home.page.waitForResponse((res) => res.url().includes("/api/sonar/coin/bitcoin/") && res.ok(), { timeout: 45000 });
+  await home.page.locator(`[data-sn-period='${id}']`).click();
+  await pending;
+  await home.page.waitForFunction(() => {
+    const host = document.querySelector("[data-sn=chart]");
+    return host && host.getAttribute("aria-busy") !== "true" && host.querySelector("svg[data-sn-trend]");
+  }, { timeout: 45000 });
+  const trend = await home.page.locator("[data-sn=chart] svg").getAttribute("data-sn-trend");
+  const stroke = await home.page.locator("[data-sn=chart] svg polyline").first().getAttribute("stroke");
+  const expected = trend === "up" ? "#16c784" : trend === "down" ? "#ea3943" : "#8b97a6";
+  seen[id] = `${trend}:${stroke}`;
+  if (stroke !== expected) note(`chart-${id}`, false, `${trend} ${stroke}`);
+  if (trend === "up" && !seen.upShot) {
+    await shot(home.page, "1440-bitcoin-sube");
+    seen.upShot = id;
+  }
+  if (trend === "down" && !seen.downShot) {
+    await shot(home.page, "1440-bitcoin-baja");
+    seen.downShot = id;
+  }
+}
+note("chart-live", Boolean(seen.upShot) && Boolean(seen.downShot), JSON.stringify(seen));
 note("chart-7d", await home.page.locator("[data-sn=chart] svg").count() > 0);
 await home.page.locator("[data-sn-tab=acerca]").click();
 await home.page.waitForSelector("[data-sn=about]", { timeout: 15000 });

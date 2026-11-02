@@ -1,5 +1,6 @@
-import { clsPct, pct, show, when } from "./format.mjs";
+import { clock, clsPct, pct, show, when } from "./format.mjs";
 import { t } from "./i18n.mjs";
+import { finiteSeries, priceColor, seriesUp } from "./price-color.mjs";
 
 export function el(tag, attrs, children) {
   const node = document.createElement(tag);
@@ -66,18 +67,21 @@ export function missing() {
 export function pctNode(value) {
   const text = pct(value);
   if (text == null) return missing();
-  return el("span", { class: clsPct(value), text });
+  const sign = clsPct(value) === "sn-down" ? "down" : clsPct(value) === "sn-up" ? "up" : "flat";
+  return el("span", { class: clsPct(value), "data-sign": sign, text });
 }
 
-export function spark(values, up) {
-  if (!Array.isArray(values) || values.length < 2) return el("span", { class: "sn-spark sn-spark-empty", "aria-hidden": "true" });
+export function spark(values) {
+  const clean = finiteSeries(values);
+  if (clean.length < 2) return el("span", { class: "sn-spark sn-spark-empty", "aria-hidden": "true" });
   const width = 88;
   const height = 28;
-  const min = Math.min(...values);
-  const max = Math.max(...values);
+  const min = Math.min(...clean);
+  const max = Math.max(...clean);
   const span = max - min || 1;
-  const points = values.map((value, index) => {
-    const x = (index / (values.length - 1)) * width;
+  const up = seriesUp(clean);
+  const points = clean.map((value, index) => {
+    const x = (index / (clean.length - 1)) * width;
     const y = height - ((value - min) / span) * (height - 2) - 1;
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   }).join(" ");
@@ -85,13 +89,19 @@ export function spark(values, up) {
   svg.setAttribute("class", "sn-spark");
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
   svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("data-sn-trend", up == null ? "flat" : up ? "up" : "down");
   const line = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
   line.setAttribute("points", points);
   line.setAttribute("fill", "none");
-  line.setAttribute("stroke", up === false ? "#f0a0b0" : "#7dcea0");
+  line.setAttribute("stroke", priceColor(up));
   line.setAttribute("stroke-width", "1.6");
+  line.setAttribute("stroke-linejoin", "round");
+  line.setAttribute("stroke-linecap", "round");
   svg.append(line);
-  return svg;
+  return el("span", { class: "sn-sparkwrap", title: t("spark7") }, [
+    svg,
+    el("span", { class: "sn-sparkcap", text: t("d7") }),
+  ]);
 }
 
 export function sourceLine(payload, extra) {
@@ -100,6 +110,14 @@ export function sourceLine(payload, extra) {
   const link = payload?.sourceUrl ? el("a", { href: payload.sourceUrl, rel: "noreferrer", text: payload.source || payload.attribution }) : payload?.source || "";
   line.append(link || "");
   if (payload?.fetchedAt) line.append(` · ${when(payload.fetchedAt)}`);
+  if (payload?.stale) {
+    const time = clock(payload.fetchedAt);
+    const stamp = time ? t("asOf", { time }) : payload.asOf;
+    if (stamp) {
+      line.append(` · ${stamp}`);
+      line.setAttribute("data-as-of", stamp);
+    }
+  }
   if (extra) line.append(` · ${extra}`);
   return line;
 }

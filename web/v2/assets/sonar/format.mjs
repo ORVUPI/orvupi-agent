@@ -55,6 +55,21 @@ export function when(value) {
   return new Intl.DateTimeFormat(localeTag(), { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Madrid" }).format(date);
 }
 
+/** Hora de una lectura guardada, en Europe/Madrid, para el sello «datos de hh:mm». */
+export function clock(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZone: "Europe/Madrid",
+  }).formatToParts(date);
+  const hh = parts.find((part) => part.type === "hour")?.value;
+  const mm = parts.find((part) => part.type === "minute")?.value;
+  return hh && mm ? `${hh}:${mm}` : "";
+}
+
 export function day(value) {
   if (!value) return null;
   const date = new Date(value);
@@ -62,7 +77,7 @@ export function day(value) {
   return new Intl.DateTimeFormat(localeTag(), { dateStyle: "medium", timeZone: "Europe/Madrid" }).format(date);
 }
 
-function localeTag() {
+export function localeTag() {
   const lang = locale();
   if (lang === "pt-BR") return "pt-BR";
   if (lang === "ja") return "ja-JP";
@@ -85,5 +100,52 @@ export function btcPrice(value, coinId) {
 export function clsPct(value) {
   const number = finite(value);
   if (number == null) return "";
-  return number < 0 ? "sn-down" : "sn-up";
+  if (number < 0) return "sn-down";
+  if (number > 0) return "sn-up";
+  return "sn-flat";
+}
+
+const COUNTRY_ISO = {
+  "united states": "US", "united states of america": "US", usa: "US",
+  "cayman islands": "KY", seychelles: "SC", singapore: "SG", "hong kong": "HK",
+  malta: "MT", estonia: "EE", "united kingdom": "GB", uk: "GB", "great britain": "GB",
+  japan: "JP", "south korea": "KR", korea: "KR", "republic of korea": "KR",
+  australia: "AU", canada: "CA", switzerland: "CH", netherlands: "NL", "the netherlands": "NL",
+  germany: "DE", france: "FR", lithuania: "LT", "british virgin islands": "VG",
+  "virgin islands, british": "VG", "saint vincent and the grenadines": "VC",
+  "st. vincent and the grenadines": "VC", "st vincent and the grenadines": "VC",
+  china: "CN", "united arab emirates": "AE", uae: "AE", bermuda: "BM", gibraltar: "GI",
+  ireland: "IE", luxembourg: "LU", taiwan: "TW", india: "IN", brazil: "BR",
+  spain: "ES", portugal: "PT", italy: "IT", poland: "PL", sweden: "SE", norway: "NO",
+  denmark: "DK", finland: "FI", austria: "AT", belgium: "BE", "czech republic": "CZ",
+  czechia: "CZ", romania: "RO", hungary: "HU", greece: "GR", turkey: "TR", turkiye: "TR",
+  israel: "IL", russia: "RU", "russian federation": "RU", ukraine: "UA", mexico: "MX",
+  argentina: "AR", chile: "CL", colombia: "CO", "south africa": "ZA", nigeria: "NG",
+  indonesia: "ID", malaysia: "MY", thailand: "TH", vietnam: "VN", "viet nam": "VN",
+  philippines: "PH", "new zealand": "NZ", iceland: "IS", cyprus: "CY", slovenia: "SI",
+  slovakia: "SK", croatia: "HR", bulgaria: "BG", latvia: "LV", liechtenstein: "LI",
+  monaco: "MC", "isle of man": "IM", jersey: "JE", guernsey: "GG", "marshall islands": "MH",
+  panama: "PA", "costa rica": "CR", bahamas: "BS", "the bahamas": "BS", belize: "BZ",
+  barbados: "BB", "antigua and barbuda": "AG", "saint kitts and nevis": "KN",
+  dominica: "DM", vanuatu: "VU", samoa: "WS", curacao: "CW", "curaçao": "CW",
+  aruba: "AW", "puerto rico": "PR", macau: "MO", macao: "MO", kazakhstan: "KZ",
+  georgia: "GE", armenia: "AM", azerbaijan: "AZ", bahrain: "BH", qatar: "QA",
+  "saudi arabia": "SA", kuwait: "KW", egypt: "EG", morocco: "MA", kenya: "KE",
+  peru: "PE", uruguay: "UY", venezuela: "VE", ecuador: "EC", pakistan: "PK",
+  bangladesh: "BD", "sri lanka": "LK", mongolia: "MN", cambodia: "KH",
+  serbia: "RS", albania: "AL", montenegro: "ME", moldova: "MD", belarus: "BY",
+  "hong kong sar": "HK", "singapore city": "SG",
+};
+
+export function countryName(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return null;
+  const iso = COUNTRY_ISO[raw.toLowerCase()];
+  if (!iso) return raw;
+  try {
+    const name = new Intl.DisplayNames([localeTag()], { type: "region" }).of(iso);
+    return name || raw;
+  } catch {
+    return raw;
+  }
 }

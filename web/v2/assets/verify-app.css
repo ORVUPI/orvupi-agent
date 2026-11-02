@@ -383,8 +383,8 @@ body.verify-app .vf-coin {
 body.verify-app .vf-coin strong,
 body.verify-app .vf-coin span { white-space: nowrap; }
 body.verify-app .vf-coin strong { font-size: 0.95rem; }
-body.verify-app .vf-up { color: #7dcea0; }
-body.verify-app .vf-down { color: #f0a0b0; }
+body.verify-app .vf-up { color: #16c784; }
+body.verify-app .vf-down { color: #ea3943; }
 body.verify-app .vf-meta,
 body.verify-app .vf-live { color: #aeb8c4; }
 body.verify-app .vf-table th,
