@@ -12,4 +12,10 @@ for(const f of pages){const s=readFileSync(f,'utf8');
  const studioCss='studio/studio.css';
  t=t.replace(/((?:src|href)=")((?:\/studio\/)?studio\.css)(?:\?v=[\w]*)?"/g,(m,a,p)=>existsSync(join(root,studioCss))?`${a}${p}?v=${h(studioCss)}"`:m);
  if(t!==s){stale++;if(!check)writeFileSync(f,t);}}
+// Hojas de estilo que cargan los módulos (p. ej. sonar.css desde shell.mjs): el CDN de orvupi.com
+// las guarda 4 h en el navegador, así que también llevan ?v=<hash>.
+const mods=[];(function walk(d){for(const n of readdirSync(d)){const p=join(d,n);if(statSync(p).isDirectory())walk(p);else if(n.endsWith('.mjs')&&!n.endsWith('.test.mjs'))mods.push(p);}})(join(root,'assets'));
+for(const f of mods){const s=readFileSync(f,'utf8');
+ const t=s.replace(/(["'`])(\/assets\/[^"'`?#]+\.css)(?:\?v=[\w]*)?\1/g,(m,q,p)=>existsSync(join(root,p))?`${q}${p}?v=${h(p.slice(1))}${q}`:m);
+ if(t!==s){stale++;if(!check)writeFileSync(f,t);}}
 console.log(`${pages.length} páginas, ${stale} ${check?'desactualizadas':'actualizadas'}`);if(check&&stale)process.exit(1);

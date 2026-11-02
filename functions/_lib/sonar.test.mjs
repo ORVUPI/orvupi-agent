@@ -1012,3 +1012,12 @@ test("Sonar no se queda en el formulario por módulos de otro despliegue en cach
   assert.equal(page.status, 200);
   assert.equal(page.headers.get("cache-control"), "public, max-age=0, must-revalidate");
 });
+
+test("sonar.css se pide con ?v=<hash> para que el CDN no sirva estilos de otro despliegue", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { createHash } = await import("node:crypto");
+  const base = new URL("../../web/v2/assets/", import.meta.url);
+  const shell = readFileSync(new URL("sonar/shell.mjs", base), "utf8");
+  const hash = createHash("sha256").update(readFileSync(new URL("sonar.css", base))).digest("hex").slice(0, 10);
+  assert.ok(shell.includes(`"/assets/sonar.css?v=${hash}"`), "ejecuta node web/v2/tools/asset-versions.mjs");
+});

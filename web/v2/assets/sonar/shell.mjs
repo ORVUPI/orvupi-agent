@@ -43,7 +43,7 @@ export async function start() {
   await loadStore();
   const link = document.createElement("link");
   link.rel = "stylesheet";
-  link.href = "/assets/sonar.css";
+  link.href = "/assets/sonar.css?v=e442ff35c5";
   link.dataset.sonar = "1";
   if (!document.querySelector("link[data-sonar]")) document.head.append(link);
   document.body.classList.add("sonar-market");
