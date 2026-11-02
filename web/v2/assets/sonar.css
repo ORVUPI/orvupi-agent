@@ -3,7 +3,11 @@ body.sonar-market { background: #0c1016; color: #e7edf4; overflow-x: clip; color
 body.sonar-market main.wrap,
 body.sonar-market main.wrap.estrecha { max-width: min(1380px, 100%); }
 body.sonar-market #consulta { display: none !important; }
-body.sonar-market #vf-open-search { grid-area: search; justify-self: end; display: inline-flex; align-items: center; }
+body.sonar-market #vf-open-search { grid-area: search; justify-self: end; display: inline-flex; align-items: center; gap: 6px; }
+body.sonar-market #vf-open-search kbd {
+  margin: 0; padding: 0 5px; border: 1px solid #5c6b7e; border-radius: 4px;
+  background: #141a22; color: #d5dee8; font-size: 11px; line-height: 16px; font-family: inherit;
+}
 body.sonar-market .sn-topnav { display: flex; flex-wrap: wrap; gap: 4px; grid-column: 1 / -1; min-width: 0; }
 body.sonar-market .sn-topnav a {
   color: #e7edf4; text-decoration: none; border-radius: 999px; padding: 4px 8px; min-height: 28px;
@@ -25,11 +29,16 @@ body.sonar-market #vf-root h3 { font-size: 0.9rem; }
 
 .sn-marketbar { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .sn-strip {
-  display: flex; align-items: center; gap: 12px; min-width: 0;
-  height: 36px; max-height: 38px; overflow-x: auto; overflow-y: hidden; white-space: nowrap;
-  border: 1px solid #2a3544; background: #10161d; border-radius: 8px; padding: 0 10px;
+  display: flex; align-items: center; gap: 8px; min-width: 0;
+  height: 36px; max-height: 38px; overflow: hidden; white-space: nowrap;
+  border: 1px solid #2a3544; background: #10161d; border-radius: 8px; padding: 0 8px 0 10px;
   font-size: 0.78rem;
 }
+.sn-strip-stats {
+  display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1 1 auto;
+  overflow-x: auto; overflow-y: hidden; white-space: nowrap; scrollbar-width: none;
+}
+.sn-strip-stats::-webkit-scrollbar { display: none; }
 .sn-strip-item { display: inline-flex; align-items: baseline; gap: 4px; flex: 0 0 auto; color: #e7edf4; }
 .sn-strip-short { display: none; }
 .sn-strip-item > span { color: #c5ced8; }
@@ -394,7 +403,8 @@ body.sonar-market .sn-scroll { min-width: 0; max-width: 100%; }
   .sn-dock button { flex: 1; background: transparent; color: #e7edf4; border: 0; border-radius: 12px; min-height: 48px; font-size: 0.68rem; font-weight: 700; white-space: nowrap; padding: 4px 0; }
   body.sonar-market { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
   .sn-headtools { grid-area: search; }
-  .sn-strip { gap: 8px; font-size: 0.72rem; padding: 0 8px; }
+  .sn-strip { gap: 6px; font-size: 0.72rem; padding: 0 6px 0 8px; }
+  .sn-strip-stats { gap: 8px; }
   .sn-strip-long { display: none; }
   .sn-strip-short { display: inline; }
   .sn-strip-pct, .sn-strip #sn-live { display: none; }
@@ -469,4 +479,10 @@ body.sonar-market .sn-excopy small { color: #8b97a6 !important; }
 @media (max-width: 400px) {
   body.sonar-market .sn-axis,
   body.sonar-market .sn-axis span { font-size: 11px !important; }
+  .sn-strip { gap: 4px; padding-right: 4px; }
+  .sn-strip-select select {
+    padding-left: 6px;
+    padding-right: 20px;
+    background-position: right 11px center, right 6px center !important;
+  }
 }

@@ -288,9 +288,16 @@ export async function getCategories(env) {
 }
 
 export async function getExchanges(env, page = 1) {
-  const body = await cg(env, `/exchanges?per_page=100&page=${page}`);
+  // Los DEX con más volumen empiezan pasada la posición 100.
+  const body = await cg(env, `/exchanges?per_page=250&page=${page}`);
   const rows = Array.isArray(body) ? body.filter((row) => row?.id).map(exchangeRow) : [];
   return meta({ rows, page });
+}
+
+/** Solo el booleano. La lista de exchanges no lo trae. */
+export async function getExchangeCentralized(env, id) {
+  const body = await cg(env, `/exchanges/${encodeURIComponent(id)}`);
+  return typeof body?.centralized === "boolean" ? body.centralized : null;
 }
 
 export async function getExchange(env, id) {

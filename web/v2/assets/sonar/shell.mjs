@@ -287,9 +287,14 @@ async function draw() {
 function statsBar(ctx) {
   const wrap = el("section", { class: "sn-marketbar", "data-sn": "stats" });
   const live = el("p", { id: "sn-live", class: "sn-note", text: t("disconnected") });
-  const strip = el("div", { class: "sn-strip", "data-sn": "strip" }, [
+  const stats = el("div", { class: "sn-strip-stats" }, [
     el("span", { class: "sn-strip-item", text: t("loading") }),
     live,
+  ]);
+  const vs = snapshot().prefs.vs;
+  const strip = el("div", { class: "sn-strip", "data-sn": "strip" }, [
+    stats,
+    currencySelect(vs),
   ]);
   wrap.append(strip);
   const home = ctx.route.section === "home";
@@ -300,7 +305,6 @@ function statsBar(ctx) {
       cards,
     ]));
   }
-  const vs = snapshot().prefs.vs;
   queueMicrotask(() => api(`/api/sonar/global${qs({ vs })}`).then((body) => {
     if (!wrap.isConnected) return;
     const data = body.data || {};
@@ -308,13 +312,12 @@ function statsBar(ctx) {
     const fear = data.fear;
     const alt = data.alt;
     const unit = String(body.vs || "usd").toUpperCase();
-    strip.replaceChildren(
+    stats.replaceChildren(
       stripStat("cap", t("capShort"), show(compact(global.marketCap, "")), global.change24h == null ? null : pctNode(global.change24h), `${t("cap")} ${unit}`),
       stripStat("volume", t("volShort"), show(compact(global.volume24h, "")), null, `${t("volume")} ${unit}`, "Vol."),
       stripStat("btc", t("btcShort"), global.dominance?.btc == null ? t("unavailable") : `${plain(global.dominance.btc, 1)}%`, null, t("btcDom")),
       stripStat("fear", t("fearShort"), fear?.value == null ? t("unavailable") : String(fear.value), null, fear?.label ? `${t("fear")}: ${labelOf("fearWord", fear.label)}` : t("fear")),
       stripStat("alt", t("altShort"), alt?.value == null ? t("unavailable") : `${plain(alt.value, 0)}`, null, t("alt")),
-      currencySelect(vs),
       live,
     );
     if (cards) {

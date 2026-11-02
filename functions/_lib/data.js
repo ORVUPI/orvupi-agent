@@ -1,5 +1,6 @@
 import { getOrRefresh, peek, putEntry } from "./cache.js";
-import { budgetLeft } from "./limits.js";
+import { exchangeKey, staticCentralized } from "./exchange-kinds.js";
+import { budgetLeft, runWithoutBudget } from "./limits.js";
 import { applySeriesChanges, scaleMoney, scaleSeries } from "./normalize.js";
 import * as cg from "./providers/coingecko.js";
 import * as paprika from "./providers/coinpaprika.js";
@@ -200,22 +201,7 @@ export function getMarkets(env, ctx, query) {
 }
 
 async function loadMarkets(env, query) {
-  return orFallback(() => cg.getMarkets(env, query), () => {
-    if (query.category || query.ids || query.order === "gecko_desc" || query.order === "gecko_asc") {
-      const error = new Error("upstream");
-      error.status = 503;
-      throw error;
-    }
-    // Una página vacía de la reserva no sirve: mejor error (o copia anterior) que pantalla vacía.
-    return paprika.getMarkets(env, query).then((alt) => {
-      if (!alt?.rows?.length) {
-        const error = new Error("upstream");
-        error.status = 503;
-        throw error;
-      }
-      return alt;
-    });
-  });
+  return cg.getMarkets(env, query);
 }
 
 export function getQuotes(env, ctx, ids) {
@@ -228,23 +214,7 @@ export function getCoin(env, ctx, id) {
 }
 
 async function loadCoin(env, id) {
-  try {
-    return await cg.getCoin(env, id);
-  } catch (error) {
-    if (error?.status === 400) throw error;
-    try {
-      const alt = error?.status === 404
-        ? await paprika.getCoinById(env, id)
-        : await paprika.getCoinForGeckoId(env, id);
-      if (alt) return alt;
-    } catch {
-      throw error;
-    }
-    if (error?.status === 404) throw error;
-    const missing = new Error("not-found");
-    missing.status = 404;
-    throw missing;
-  }
+  return cg.getCoin(env, id);
 }
 
 export function getSearch(env, ctx, q) {
@@ -348,65 +318,37 @@ export function getExchange(env, ctx, id) {
 }
 
 async function loadExchange(env, id) {
-  try {
-    return await cg.getExchange(env, id);
-  } catch (error) {
-    if (error?.status === 400) throw error;
-    try {
-      const alt = await paprika.getExchange(env, id);
-      if (alt) return alt;
-    } catch {
-      throw error;
-    }
-    if (error?.status === 404) throw error;
-    const missing = new Error("not-found");
-    missing.status = 404;
-    throw missing;
-  }
+  return cg.getExchange(env, id);
 }
 
 export function getExchangeList(env, ctx, page) {
-  return cached(`cg:exchanges:${page}`, CACHE_FRESH.exchanges, DAY, () => loadExchangeList(env, page), ctx);
+  // 250 en la clave: una caché anterior de 100 filas era solo CEX.
+  return cached(`cg:exchanges:250:${page}`, CACHE_FRESH.exchanges, DAY, () => loadExchangeList(env, page), ctx);
 }
 
 async function loadExchangeList(env, page) {
-  return orFallback(() => cg.getExchanges(env, page), () => {
-    if (page !== 1) {
-      const error = new Error("upstream");
-      error.status = 503;
-      throw error;
-    }
-    return paprika.getExchanges(env);
-  });
+  return cg.getExchanges(env, page);
 }
 
 const exchangeJobs = new Map();
+const kindHolds = new Map();
+const KIND_FRESH_MS = 7 * DAY * 1000;
+const KIND_SERVE_MS = 30 * DAY * 1000;
+const KIND_BATCH = 2;
 
-const KNOWN_DEX = new Set([
-  "uniswap", "uniswap-v2", "uniswap-v3", "uniswap-v4", "sushiswap", "sushiswap-v3",
-  "pancakeswap", "pancakeswap-v2", "pancakeswap-v3", "curve", "curve-finance",
-  "balancer", "balancer-v1", "balancer-v2", "balancer-v3", "raydium", "raydium2",
-  "orca", "jupiter", "traderjoe", "traderjoe-v2", "camelot", "camelot-v3",
-  "quickswap", "quickswap-v3", "velodrome", "velodrome-v2", "aerodrome",
-  "spookyswap", "spiritswap", "pangolin", "biswap", "apeswap", "mdex",
-  "osmosis", "thorswap", "sunswap", "sunswap-v2", "justswap", "kyberswap",
-  "kyberswap-elastic", "dodo", "dodo-bsc", "syncswap", "mute", "iziswap", "woofi",
-  "hashflow", "baseswap", "swapbased", "alien-base", "thruster", "maverick",
-  "maverick-protocol", "bancor", "loopring", "idex", "tokenlon", "airswap",
-  "phoenix", "lifinity", "meteora", "hyperliquid", "gmx", "gmx-v2", "dydx",
-  "vertex-protocol", "1inch", "oneinch", "paraswap",
-]);
-
-function normId(id) {
-  return String(id || "").toLowerCase().replace(/_/g, "-");
+export function resetKindScheduleForTests() {
+  kindHolds.clear();
 }
 
-function normName(name) {
-  return String(name || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+function kindCacheKey(id) {
+  return `cg:xkind:${exchangeKey(id)}`;
 }
 
-export function getExchangeTypes(env, ctx) {
-  return cached("pp:exkinds", DAY, 7 * DAY, () => paprika.getExchangeTypes(env), ctx, 7 * DAY);
+function kindHit(entry) {
+  if (typeof entry?.centralized !== "boolean") return null;
+  const age = Date.now() - Date.parse(entry.fetchedAt || "");
+  if (!Number.isFinite(age) || age < 0 || age >= KIND_SERVE_MS) return null;
+  return { centralized: entry.centralized, stale: age >= KIND_FRESH_MS };
 }
 
 export async function getExchangesClassed(env, ctx) {
@@ -417,26 +359,59 @@ export async function getExchangesClassed(env, ctx) {
   return job;
 }
 
-function classifyExchange(row, kinds) {
-  if (row.centralized === true || row.centralized === false) return row.centralized;
-  const id = normId(row.id);
-  const name = normName(row.name);
-  if (id && kinds?.byId && Object.prototype.hasOwnProperty.call(kinds.byId, id)) return kinds.byId[id];
-  if (name && kinds?.byName && Object.prototype.hasOwnProperty.call(kinds.byName, name)) return kinds.byName[name];
-  if (KNOWN_DEX.has(id)) return false;
-  return null;
-}
-
 async function classExchanges(env, ctx) {
   const list = await getExchangeList(env, ctx, 1);
-  let kinds = null;
-  try {
-    kinds = await getExchangeTypes(env, ctx);
-  } catch (error) {
-    console.error("sonar-exkinds", error?.status || error?.code || "fail");
-  }
-  const rows = (list.rows || []).map((row) => ({ ...row, centralized: classifyExchange(row, kinds) }));
+  const missing = [];
+  const stale = [];
+  const rows = await Promise.all((list.rows || []).map(async (row) => {
+    const mapped = staticCentralized(row.id);
+    if (mapped === true || mapped === false) return { ...row, centralized: mapped };
+    const hit = kindHit(await peek(kindCacheKey(row.id)));
+    if (!hit) {
+      missing.push(row.id);
+      return { ...row, centralized: null };
+    }
+    if (hit.stale) stale.push(row.id);
+    return { ...row, centralized: hit.centralized };
+  }));
+  scheduleKinds(env, ctx, [...missing, ...stale]);
   return { ...list, rows };
+}
+
+function scheduleKinds(env, ctx, ids) {
+  if (!ctx?.waitUntil || !ids.length) return;
+  const now = Date.now();
+  const queued = [];
+  for (const id of ids) {
+    if (queued.length >= KIND_BATCH) break;
+    const key = exchangeKey(id);
+    if (!key || staticCentralized(key) !== null) continue;
+    if ((kindHolds.get(key) || 0) > now) continue;
+    kindHolds.set(key, now + 60_000);
+    queued.push({ key, id: String(id) });
+  }
+  if (!queued.length) return;
+  ctx.waitUntil(runWithoutBudget(async () => {
+    for (const item of queued) {
+      try {
+        const value = await cg.getExchangeCentralized(env, item.id);
+        if (value !== true && value !== false) {
+          kindHolds.set(item.key, Date.now() + 6 * 3600 * 1000);
+          continue;
+        }
+        await putEntry(kindCacheKey(item.id), {
+          centralized: value,
+          source: "CoinGecko",
+          sourceUrl: "https://www.coingecko.com/",
+          fetchedAt: new Date().toISOString(),
+        }, 30 * DAY);
+        kindHolds.delete(item.key);
+      } catch (error) {
+        kindHolds.set(item.key, Date.now() + 10 * 60 * 1000);
+        console.error("sonar-xkind", error?.status || error?.code || "fail");
+      }
+    }
+  }));
 }
 
 export function getExchangeTickers(env, ctx, id) {

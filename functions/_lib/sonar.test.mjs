@@ -263,7 +263,7 @@ test("el total del ranking es la longitud real del listado, no una estimación",
   }
 });
 
-test("un upstream lento o 429 responde en menos de 9 s con caché o respaldo", { timeout: 20000 }, async () => {
+test("un upstream lento o 429 responde en menos de 9 s con caché vieja o 503", { timeout: 20000 }, async () => {
   const { clearCache, putEntry } = await import("./cache.js");
   await clearCache();
   let current = installUpstream();
@@ -301,20 +301,12 @@ test("un upstream lento o 429 responde en menos de 9 s con caché o respaldo", {
     const cold = Date.now();
     const fallback = await handle(new Request("http://local/api/sonar/markets?page=1&per=20"), {}, {});
     const coldMs = Date.now() - cold;
-    assert.ok(coldMs < 9000, `respaldo tardó ${coldMs} ms`);
-    assert.equal(fallback.status, 200);
+    assert.ok(coldMs < 9000, `sin caché tardó ${coldMs} ms`);
+    assert.equal(fallback.status, 503);
     const body = await fallback.json();
-    assert.notEqual(fallback.status, 502);
-    assert.equal(body.source, "CoinPaprika");
-    assert.equal(body.attribution, "Market data by CoinPaprika");
-    assert.equal(body.rows.length, 1);
-    assert.equal(body.rows[0].id, "bitcoin");
-    assert.equal(body.rows[0].paprikaId, "btc-bitcoin");
-    assert.equal(body.rows[0].image, "https://static.coinpaprika.com/coin/btc-bitcoin/logo.png");
-    assert.equal(body.rows[0].price, 111.22);
-    assert.equal(body.rows[0].volume24h, 50);
-    assert.equal(body.rows[0].circulating, null);
-    assert.equal(body.total, 1);
+    assert.equal(body.ok, false);
+    assert.equal(body.error, "unavailable");
+    assert.equal(current.calls.some((call) => call.href.includes("api.coinpaprika.com")), false);
     const markets = current.calls.filter((call) => call.href.includes("api.coingecko.com") && call.href.includes("/coins/markets"));
     assert.ok(markets.length >= 2);
     assert.ok(markets[1].at - markets[0].at < 2500);
@@ -359,9 +351,35 @@ test("una categoría y el orden gecko no se sustituyen por otro listado", { time
   }
 });
 
-test("la ficha y el exchange usan el respaldo real si CoinGecko no responde", { timeout: 20000 }, async () => {
-  const { clearCache } = await import("./cache.js");
+test("la ficha y el exchange sirven la caché vieja y, en frío, responden 503", { timeout: 30000 }, async () => {
+  const { clearCache, putEntry } = await import("./cache.js");
   await clearCache();
+  const fetchedAt = new Date(Date.now() - 3 * 3600 * 1000).toISOString();
+  const exchangeAt = new Date(Date.now() - 7 * 3600 * 1000).toISOString();
+  await putEntry("cg:coin:bitcoin", {
+    source: "CoinGecko",
+    sourceUrl: "https://www.coingecko.com/",
+    attribution: "Data provided by CoinGecko",
+    fetchedAt,
+    id: "bitcoin",
+    symbol: "btc",
+    name: "Bitcoin",
+    price: 42424.5,
+    ch1h: 0.1,
+    ch24h: 1.2,
+    ch7d: -0.4,
+  }, 86400);
+  await putEntry("cg:exchange:binance", {
+    source: "CoinGecko",
+    sourceUrl: "https://www.coingecko.com/",
+    attribution: "Data provided by CoinGecko",
+    fetchedAt: exchangeAt,
+    id: "binance",
+    name: "Binance",
+    centralized: true,
+    trustScore: 10,
+    trustRank: 1,
+  }, 86400);
   const installed = installUpstream();
   try {
     const started = Date.now();
@@ -369,21 +387,26 @@ test("la ficha y el exchange usan el respaldo real si CoinGecko no responde", { 
     assert.ok(Date.now() - started < 9000);
     assert.equal(coin.status, 200);
     const coinBody = await coin.json();
-    assert.equal(coinBody.source, "CoinPaprika");
+    assert.equal(coinBody.source, "CoinGecko");
+    assert.equal(coinBody.stale, true);
     assert.equal(coinBody.id, "bitcoin");
-    assert.equal(coinBody.paprikaId, "btc-bitcoin");
-    assert.equal(coinBody.price, 111.22);
-    assert.equal(coinBody.priceBtc, 1);
+    assert.equal(coinBody.price, 42424.5);
+    assert.equal(installed.calls.some((call) => call.href.includes("api.coinpaprika.com")), false);
 
     const exchange = await handle(new Request("http://local/api/sonar/exchanges/binance"), {}, {});
     assert.equal(exchange.status, 200);
     const ex = await exchange.json();
-    assert.equal(ex.source, "CoinPaprika");
-    assert.equal(ex.volume24h, 999.5);
-    assert.equal(ex.volume24hBtc, null);
-    assert.equal(ex.trustScore, null);
-    assert.equal(ex.trustRank, null);
+    assert.equal(ex.source, "CoinGecko");
+    assert.equal(ex.stale, true);
     assert.equal(ex.centralized, true);
+    assert.equal(ex.trustScore, 10);
+
+    await clearCache();
+    const coldCoin = await handle(new Request("http://local/api/sonar/coin/bitcoin"), {}, {});
+    assert.equal(coldCoin.status, 503);
+    const coldEx = await handle(new Request("http://local/api/sonar/exchanges/binance"), {}, {});
+    assert.equal(coldEx.status, 503);
+    assert.equal(installed.calls.some((call) => call.href.includes("api.coinpaprika.com")), false);
   } finally {
     await installed.restore();
     await clearCache();
@@ -520,11 +543,19 @@ test("las llamadas no se esperan en una cola global", async () => {
   assert.ok(Date.now() - started < 500);
 });
 
-test("un id desconocido sigue en 404 aunque CoinGecko responda 429", { timeout: 20000 }, async () => {
+test("un 404 de CoinGecko sigue en 404 y un 429 sin caché es 503", async () => {
   const { clearCache } = await import("./cache.js");
   const { renderSonarPage } = await import("./seo.js");
   await clearCache();
-  const installed = installUpstream({ currencies: [] });
+  const original = globalThis.fetch;
+  let status = 404;
+  globalThis.fetch = async (url) => {
+    const href = String(url);
+    if (href.includes("/coins/no-esta-esta-moneda")) {
+      return new Response("{}", { status, headers: { "content-type": "application/json" } });
+    }
+    return new Response("{}", { status: 503, headers: { "content-type": "application/json" } });
+  };
   try {
     const response = await handle(new Request("http://local/api/sonar/coin/no-esta-esta-moneda"), {}, {});
     assert.equal(response.status, 404);
@@ -537,8 +568,12 @@ test("un id desconocido sigue en 404 aunque CoinGecko responda 429", { timeout: 
       { kind: "crypto", id: "no-esta-esta-moneda" },
     );
     assert.equal(page.status, 404);
+    status = 429;
+    const limited = await handle(new Request("http://local/api/sonar/coin/no-esta-esta-moneda"), {}, {});
+    assert.equal(limited.status, 503);
+    assert.equal((await limited.json()).error, "unavailable");
   } finally {
-    await installed.restore();
+    globalThis.fetch = original;
     await clearCache();
   }
 });
@@ -572,47 +607,88 @@ test("solo stubxai.pages.dev redirige a orvupi.com", async () => {
   assert.equal(apex.headers.get("location"), "https://orvupi.com/sonar/?q=1");
 });
 
-test("CEX y DEX salen de un tipo real, y lo desconocido no se etiqueta", async () => {
-  const { clearCache } = await import("./cache.js");
+test("el mapa estático clasifica sin red", async () => {
+  const { staticCentralized } = await import("./exchange-kinds.js");
+  assert.equal(staticCentralized("uniswap_v3"), false);
+  assert.equal(staticCentralized("gdax"), true);
+  assert.equal(staticCentralized("dextrade"), true);
+  assert.equal(staticCentralized("pancakeswap-v3-bsc"), false);
+  assert.equal(staticCentralized("not-a-venue"), null);
+  assert.equal(staticCentralized("Uniswap-V3-Ethereum"), false);
+});
+
+test("CEX y DEX salen del mapa y, si falta, del campo cacheado de CoinGecko", async () => {
+  const { clearCache, putEntry, peek } = await import("./cache.js");
+  const { resetKindScheduleForTests } = await import("./data.js");
   await clearCache();
+  resetKindScheduleForTests();
+  await putEntry("cg:xkind:uniswap-v3", {
+    centralized: true,
+    source: "CoinGecko",
+    sourceUrl: "https://www.coingecko.com/",
+    fetchedAt: new Date().toISOString(),
+  }, 30 * 86400);
   const original = globalThis.fetch;
+  const calls = [];
+  let releaseMystery = () => {};
+  const mysteryGate = new Promise((resolve) => { releaseMystery = resolve; });
   globalThis.fetch = async (url) => {
     const href = String(url);
-    if (href.includes("api.coinpaprika.com") && href.includes("/v1/exchanges") && !href.includes("/v1/exchanges/")) {
-      return jsonResponse([
-        { id: "kraken", name: "Kraken", type: ["cex"] },
-        { id: "uniswap-v3", name: "Uniswap V3", type: ["dex"] },
-        { id: "mystery-swap", name: "Mystery Swap", type: ["cex", "dex"] },
-      ]);
-    }
+    calls.push(href);
+    if (href.includes("api.coinpaprika.com")) return new Response("{}", { status: 402, headers: { "content-type": "application/json" } });
     if (href.includes("coingecko.com") && href.includes("/exchanges?")) {
+      assert.match(href, /per_page=250/);
       return jsonResponse([
-        { id: "kraken", name: "Kraken", trade_volume_24h_btc: 3, trust_score: 10, country: "United States" },
+        { id: "kraken", name: "Kraken", trade_volume_24h_btc: 4, trust_score: 10, country: "United States" },
+        { id: "dextrade", name: "Dex-Trade", trade_volume_24h_btc: 3, trust_score: 8 },
         { id: "uniswap_v3", name: "Uniswap V3", trade_volume_24h_btc: 2, trust_score: 9 },
         { id: "mystery", name: "Mystery", trade_volume_24h_btc: 1, trust_score: 1 },
       ]);
     }
+    if (href.includes("/exchanges/mystery")) {
+      await mysteryGate;
+      return jsonResponse({ name: "Mystery", centralized: false, trade_volume_24h_btc: 1 });
+    }
     if (href.includes("/exchange_rates")) return jsonResponse({ rates: { usd: { value: 60000 }, btc: { value: 1 } } });
     return new Response("{}", { status: 503, headers: { "content-type": "application/json" } });
   };
+  const jobs = [];
+  const ctx = { waitUntil(job) { jobs.push(Promise.resolve(job)); } };
   try {
-    const all = await handle(new Request("http://local/api/sonar/exchanges"), {}, {});
+    const all = await handle(new Request("http://local/api/sonar/exchanges"), {}, ctx);
     assert.equal(all.status, 200);
     const body = await all.json();
     const byId = Object.fromEntries(body.rows.map((row) => [row.id, row.centralized]));
     assert.equal(byId.kraken, true);
+    assert.equal(byId.dextrade, true);
     assert.equal(byId.uniswap_v3, false);
     assert.equal(byId.mystery, null);
     assert.equal(body.hasCex, true);
     assert.equal(body.hasDex, true);
-    const cex = await handle(new Request("http://local/api/sonar/exchanges?type=cex"), {}, {});
+    const cex = await handle(new Request("http://local/api/sonar/exchanges?type=cex"), {}, ctx);
     const cexBody = await cex.json();
-    assert.deepEqual(cexBody.rows.map((row) => row.id), ["kraken"]);
-    const dex = await handle(new Request("http://local/api/sonar/exchanges?type=dex"), {}, {});
+    assert.deepEqual(cexBody.rows.map((row) => row.id), ["kraken", "dextrade"]);
+    const dex = await handle(new Request("http://local/api/sonar/exchanges?type=dex"), {}, ctx);
     const dexBody = await dex.json();
     assert.deepEqual(dexBody.rows.map((row) => row.id), ["uniswap_v3"]);
+    releaseMystery();
+    await Promise.all(jobs);
+    const again = await handle(new Request("http://local/api/sonar/exchanges"), {}, ctx);
+    const againBody = await again.json();
+    const againById = Object.fromEntries(againBody.rows.map((row) => [row.id, row.centralized]));
+    assert.equal(againById.mystery, false);
+    assert.equal(againById.uniswap_v3, false);
+    const stored = await peek("cg:xkind:uniswap-v3");
+    assert.equal(stored.centralized, true);
+    const details = calls.filter((href) => /\/exchanges\/[^/?]+$/.test(href)).map((href) => href.split("/exchanges/")[1]);
+    assert.deepEqual(details, ["mystery"]);
+    const dexAgain = await handle(new Request("http://local/api/sonar/exchanges?type=dex"), {}, ctx);
+    const dexIds = (await dexAgain.json()).rows.map((row) => row.id);
+    assert.deepEqual(dexIds, ["uniswap_v3", "mystery"]);
   } finally {
+    releaseMystery();
     globalThis.fetch = original;
+    resetKindScheduleForTests();
     await clearCache();
   }
 });
