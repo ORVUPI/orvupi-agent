@@ -3,7 +3,7 @@ import { t } from "../i18n.mjs";
 import { applyLocalFilters, coverageNote, marketTabs, paintRanking, sortRows } from "../rows.mjs";
 import { snapshot, update } from "../store.mjs";
 import { el, emptyBlock, errorBlock, pager, setChildren, skeleton, sourceLine } from "../ui.mjs";
-import { compact, money, show } from "../format.mjs";
+import { compact, money, plain, show } from "../format.mjs";
 import { pctNode } from "../ui.mjs";
 
 const PRESETS = [
@@ -43,7 +43,7 @@ async function ranking(host, ctx, mine) {
   const prefs = snapshot().prefs;
   const category = ctx.route.params.get("category") || "";
   const period = ctx.route.params.get("period") || prefs.period || "24h";
-  const page = Math.min(MAX_PAGE, Math.max(1, Number(ctx.route.params.get("page") || 1) || 1));
+  let page = Math.min(MAX_PAGE, Math.max(1, Number(ctx.route.params.get("page") || 1) || 1));
   const perRaw = Number(ctx.route.params.get("per") || 20);
   const per = [20, 50, 100].includes(perRaw) ? perRaw : 20;
   const view = ctx.route.params.get("view") || prefs.view || "list";
@@ -70,12 +70,13 @@ async function ranking(host, ctx, mine) {
   function pageInfo() {
     const total = Number(meta?.total);
     if (!category && Number.isFinite(total) && total > 0) {
-      let pages = Math.max(1, Math.min(MAX_PAGE, Math.ceil(total / per)));
-      if (rows.length < per) pages = Math.min(pages, page);
-      return { pages, more: false };
+      const pages = Math.max(1, Math.min(MAX_PAGE, Math.ceil(total / per)));
+      if (page > pages || !rows.length) return { pages, more: false, past: page > 1 && !rows.length };
+      return { pages, more: false, past: false };
     }
-    if (rows.length >= per && page < MAX_PAGE) return { pages: page, more: true };
-    return { pages: Math.max(1, page), more: false };
+    if (!rows.length && page > 1) return { pages: page, more: false, past: true };
+    if (rows.length >= per && page < MAX_PAGE) return { pages: page, more: true, past: false };
+    return { pages: Math.max(1, page), more: false, past: false };
   }
   function pageBar(withSize) {
     const info = pageInfo();
@@ -90,8 +91,26 @@ async function ranking(host, ctx, mine) {
     });
   }
   function paint() {
+    const served = Number(meta?.page);
+    if (Number.isFinite(served) && served >= 1 && served !== page) {
+      page = served;
+      setParam(ctx, { page: String(served) });
+    }
     const shown = applyView(rows, filters, period, ctx);
     const info = pageInfo();
+    if (info.past) {
+      setChildren(body, [
+        toolbar(),
+        pills(),
+        filtersOpen() ? filterForm() : null,
+        el("p", { class: "sn-state", "data-sn": "past-end", text: t("pastEnd") }),
+        el("button", { type: "button", class: "sn-btn on", "data-sn": "past-back", onclick: () => turn({ page: "1" }), text: t("back") }),
+        sourceLine(meta),
+      ]);
+      return;
+    }
+    const total = Number(meta?.total);
+    const listed = !category && Number.isFinite(total) && total > 0 ? t("listedN", { n: plain(total, 0) }) : "";
     setChildren(body, [
       toolbar(),
       pills(),
@@ -112,7 +131,7 @@ async function ranking(host, ctx, mine) {
         },
       }) : emptyBlock(),
       pageBar(true),
-      el("p", { class: "sn-note", text: t("loadedNote", { n: rows.length }) + (ctx.route.params.get("sort") ? ` ${t("sortLoaded")}` : "") }),
+      el("p", { class: "sn-note", text: [listed, t("loadedNote", { n: rows.length }), ctx.route.params.get("sort") ? t("sortLoaded") : ""].filter(Boolean).join(" ") }),
       el("p", { class: "sn-note", text: t("filterHint") }),
       el("p", { class: "sn-note", text: t("ageSkip") }),
       sourceLine(meta),

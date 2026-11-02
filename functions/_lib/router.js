@@ -1,28 +1,33 @@
 import * as data from "./data.js";
+import { runWithBudget, runWithoutBudget } from "./limits.js";
 import { scaleSeries } from "./normalize.js";
 import { allowRequest, cleanQuery, clientIp, intIn, json, oneOf, slugOk } from "./security.js";
 
 const ORDERS = ["market_cap_desc", "market_cap_asc", "volume_desc", "volume_asc", "id_asc", "id_desc", "gecko_desc", "gecko_asc"];
+let spanHold = 0;
 const DAYS = ["1", "7", "30", "90", "365", "max"];
 const PERIODS = ["1h", "24h", "7d"];
 const KINDS = ["cex", "dex", "derivatives", "all"];
 
 function cacheHeaders(ttl, stale, payload) {
-  return {
+  const headers = {
     "cache-control": `public, max-age=${ttl}, stale-while-revalidate=${stale}`,
     "x-sonar-source": payload?.source || "",
     "x-sonar-fetched-at": payload?.fetchedAt || "",
   };
+  if (payload?.asOf) headers["x-sonar-as-of"] = payload.asOf;
+  return headers;
 }
 
 function fail(error) {
   console.error("sonar-api", error?.status || error?.code || "fail");
   if (error?.status === 404) return json(404, { ok: false, error: "not-found" });
   if (error?.status === 400) return json(400, { ok: false, error: "invalid" });
-  return json(502, { ok: false, error: "unavailable" });
+  return json(503, { ok: false, error: "unavailable" });
 }
 
 async function vsFactor(env, ctx, vs) {
+  if (vs === "usd") return { vs: "usd", factor: 1, missing: false };
   let allowed = ["usd", "eur"];
   try {
     const list = await data.getVs(env, ctx);
@@ -55,11 +60,12 @@ export async function handle(request, env = {}, ctx = {}) {
   const rest = parts[0] === "api" && parts[1] === "sonar" ? parts.slice(2) : parts;
   const q = url.searchParams;
   try {
-    const head = rest[0] || "";
-    const fx = NEEDS_VS.has(head) ? await vsOf() : { vs: "usd", factor: 1, missing: false };
-    if (fx?.error) return fx.error;
-    const result = await route(rest, q, fx);
-    return result;
+    return await runWithBudget(8000, async () => {
+      const head = rest[0] || "";
+      const fx = NEEDS_VS.has(head) ? await vsOf() : { vs: "usd", factor: 1, missing: false };
+      if (fx?.error) return fx.error;
+      return route(rest, q, fx);
+    });
   } catch (error) {
     return fail(error);
   }
@@ -82,7 +88,7 @@ export async function handle(request, env = {}, ctx = {}) {
         };
       }
       const body = { ok: true, ...withVs({ data: overview }, fx), source: "mixed", fetchedAt: overview.global?.fetchedAt || new Date().toISOString() };
-      return json(200, body, cacheHeaders(60, 900, overview.global || {}));
+      return json(200, body, cacheHeaders(data.CACHE_FRESH.global, 86400, overview.global || {}));
     }
     if (head === "markets" && path.length === 1) return markets(query, fx);
     if (head === "quotes" && path.length === 1) return quotes(query, fx);
@@ -111,7 +117,7 @@ export async function handle(request, env = {}, ctx = {}) {
   }
 
   async function markets(query, fx) {
-    const page = intIn(query.get("page"), 1, 2000, 1);
+    let page = intIn(query.get("page"), 1, 2000, 1);
     const per = oneOf(query.get("per"), ["20", "50", "100", "250"], "100");
     const order = oneOf(query.get("order"), ORDERS, "market_cap_desc");
     const category = query.get("category") || "";
@@ -120,17 +126,33 @@ export async function handle(request, env = {}, ctx = {}) {
     if (category && !slugOk(category)) return json(400, { ok: false, error: "invalid" });
     const idList = ids ? ids.split(",").filter(Boolean) : [];
     if (idList.length > 50 || idList.some((id) => !slugOk(id))) return json(400, { ok: false, error: "invalid" });
+    const listed = !category && idList.length === 0;
+    let span = null;
+    if (listed) {
+      span = await data.peekMarketSpan();
+      const known = span?.source === "CoinGecko" && Number.isFinite(Number(span?.total)) && Number(span.total) > 0;
+      if (!known && ctx?.waitUntil && Date.now() >= spanHold) {
+        ctx.waitUntil(runWithoutBudget(() => data.getMarketSpan(env, ctx).catch((error) => {
+          spanHold = Date.now() + 60_000;
+          console.error("sonar-span", error?.status || error?.code || "fail");
+        })));
+      }
+      if (known) {
+        const last = Math.max(1, Math.ceil(Number(span.total) / Number(per)));
+        if (page > last) page = last;
+      }
+    }
+    const hot = page === 1 && listed && order === "market_cap_desc";
     const payload = await data.getMarkets(env, ctx, { page, per: Number(per), category, order, ids: idList.join(",") });
     const scaled = data.scaleRows(payload, fx.missing ? 1 : fx.factor);
     let total = null;
-    if (!category && idList.length === 0) {
-      const global = await data.getGlobal(env, ctx).catch(() => null);
-      const assets = Number(global?.assets);
-      const listed = await data.getMarketsTotal(env, ctx, assets).catch(() => null);
-      const count = Number(listed?.count);
-      total = Number.isFinite(count) && count > 0 ? count : Number.isFinite(assets) && assets > 0 ? assets : null;
+    if (listed) {
+      const fromSource = Number(payload?.total);
+      if (payload?.source === "CoinPaprika" && Number.isFinite(fromSource)) total = fromSource;
+      else if (span?.source === "CoinGecko" && Number.isFinite(Number(span?.total)) && Number(span.total) > 0) total = Number(span.total);
     }
-    return json(200, { ok: true, ...withVs(scaled, fx), total }, cacheHeaders(page === 1 ? 60 : 600, 3600, payload));
+    const fresh = hot ? data.CACHE_FRESH.markets : data.CACHE_FRESH.marketsOther;
+    return json(200, { ok: true, ...withVs(scaled, fx), total, page }, cacheHeaders(fresh, 86400, payload));
   }
 
   async function quotes(query, fx) {
@@ -138,7 +160,7 @@ export async function handle(request, env = {}, ctx = {}) {
     if (!ids.length || ids.length > 50 || ids.some((id) => !slugOk(id))) return json(400, { ok: false, error: "invalid" });
     const payload = await data.getQuotes(env, ctx, ids);
     const scaled = data.applyFactor(payload, fx.missing ? 1 : fx.factor, "quotes");
-    return json(200, { ok: true, ...withVs(scaled, fx) }, cacheHeaders(30, 600, payload));
+    return json(200, { ok: true, ...withVs(scaled, fx) }, cacheHeaders(data.CACHE_FRESH.quotes, 86400, payload));
   }
 
   async function coin(path, query, fx) {
@@ -149,7 +171,7 @@ export async function handle(request, env = {}, ctx = {}) {
       const raw = await data.getCoin(env, ctx, id);
       const filled = await data.withWindowChanges(env, ctx, raw);
       const payload = data.applyFactor(filled, fx.missing ? 1 : fx.factor, "coin");
-      return json(200, { ok: true, ...withVs(payload, fx) }, cacheHeaders(120, 3600, payload));
+      return json(200, { ok: true, ...withVs(payload, fx) }, cacheHeaders(data.CACHE_FRESH.coin, 86400, payload));
     }
     if (sub === "chart") return chart(id, query, fx);
     if (sub === "ohlc") return ohlc(id, query, fx);
@@ -198,7 +220,8 @@ export async function handle(request, env = {}, ctx = {}) {
       }
     }
     const payload = await data.getChart(env, ctx, id, days);
-    return json(200, { ok: true, ...withVs(seriesPayload(payload, "prices", fx), fx) }, cacheHeaders(days === "1" || days === "7" ? 300 : 3600, 3600, payload));
+    const fresh = days === "1" || days === "7" ? data.CACHE_FRESH.chartShort : data.CACHE_FRESH.chartLong;
+    return json(200, { ok: true, ...withVs(seriesPayload(payload, "prices", fx), fx) }, cacheHeaders(fresh, 86400, payload));
   }
 
   function seriesPayload(payload, field, fx, note) {
@@ -224,9 +247,13 @@ export async function handle(request, env = {}, ctx = {}) {
     if (pair && (days === "1" || days === "7" || query.get("source") === "binance")) {
       const interval = days === "1" ? "15m" : days === "7" ? "1h" : days === "30" ? "4h" : "1d";
       const limit = days === "365" ? 365 : days === "90" ? 180 : days === "30" ? 180 : days === "7" ? 168 : 96;
-      const candles = await data.getKlinesCached(env, ctx, pair, interval, limit);
+      // Binance puede no responder desde el edge: entonces se usan las velas de CoinGecko.
+      const candles = await data.getKlinesCached(env, ctx, pair, interval, limit).catch((error) => {
+        console.error("sonar-klines", error?.status || error?.code || "fail");
+        return null;
+      });
       const factor = fx.missing ? 1 : (fx.factor || 1);
-      return json(200, {
+      if (candles) return json(200, {
         ok: true,
         ...withVs({
           source: candles.source,
@@ -256,7 +283,7 @@ export async function handle(request, env = {}, ctx = {}) {
         points,
         volumeNote: "ohlc-volume",
       }, fx),
-    }, cacheHeaders(300, 3600, payload));
+    }, cacheHeaders(data.CACHE_FRESH.chartShort, 86400, payload));
   }
 
   async function tickers(id, query) {
@@ -268,7 +295,7 @@ export async function handle(request, env = {}, ctx = {}) {
     ]);
     let dex = [];
     if (type !== "cex" && coin?.platforms) dex = (await data.getDexPools(env, ctx, coin.platforms)).pools || [];
-    return json(200, { ok: true, spot, dex, type }, cacheHeaders(300, 3600, spot));
+    return json(200, { ok: true, spot, dex, type }, cacheHeaders(data.CACHE_FRESH.chartShort, 86400, spot));
   }
 
   async function history(id, query, fx) {
@@ -325,7 +352,7 @@ export async function handle(request, env = {}, ctx = {}) {
         dominanceBasis: "capitalización de la categoría / capitalización total",
       };
     });
-    return json(200, { ok: true, ...withVs({ ...payload, rows }, fx) }, cacheHeaders(1800, 6 * 3600, payload));
+    return json(200, { ok: true, ...withVs({ ...payload, rows }, fx) }, cacheHeaders(data.CACHE_FRESH.categories, 86400, payload));
   }
 
   async function category(id, query, fx) {
@@ -348,7 +375,7 @@ export async function handle(request, env = {}, ctx = {}) {
       marketCap: found.marketCap == null ? null : found.marketCap * factor,
       volume24h: found.volume24h == null ? null : found.volume24h * factor,
     } : null;
-    return json(200, { ok: true, ...withVs({ ...marketRest, category: categoryRow }, fx) }, cacheHeaders(300, 3600, markets));
+    return json(200, { ok: true, ...withVs({ ...marketRest, category: categoryRow }, fx) }, cacheHeaders(data.CACHE_FRESH.marketsOther, 86400, markets));
   }
 
   async function exchanges(query, fx) {
@@ -362,14 +389,27 @@ export async function handle(request, env = {}, ctx = {}) {
         volume24h: row.volume24hBtc == null || btc == null ? null : row.volume24hBtc * btc,
         openInterest: row.openInterestBtc == null || btc == null ? null : row.openInterestBtc * btc,
       }));
-      return json(200, { ok: true, ...withVs({ ...payload, rows, type }, fx) }, cacheHeaders(3600, 86400, payload));
+      return json(200, { ok: true, ...withVs({ ...payload, rows, type }, fx) }, cacheHeaders(data.CACHE_FRESH.exchanges, 86400, payload));
     }
+    const ratesJob = data.getRates(env, ctx).catch(() => null);
     const payload = await data.getExchangesClassed(env, ctx);
-    const btc = await btcUsd(fx);
-    let rows = payload.rows.map((row) => ({
+    const factor = fx.missing ? 1 : (fx.factor || 1);
+    const needsBtc = (payload.rows || []).some((row) => row.volume24hBtc != null);
+    let btc = null;
+    if (needsBtc) {
+      const rates = await ratesJob;
+      const usd = rates?.rates?.usd;
+      if (usd) btc = usd * factor;
+    } else if (ctx?.waitUntil) {
+      ctx.waitUntil(ratesJob);
+    }
+    const tagged = payload.rows.map((row) => ({
       ...row,
-      volume24h: row.volume24hBtc == null || btc == null ? null : row.volume24hBtc * btc,
+      volume24h: row.volume24hBtc != null && btc != null ? row.volume24hBtc * btc : row.volume24hUsd == null ? null : row.volume24hUsd * factor,
     }));
+    const hasCex = tagged.some((row) => row.centralized === true);
+    const hasDex = tagged.some((row) => row.centralized === false);
+    let rows = tagged;
     if (type === "cex") rows = rows.filter((row) => row.centralized === true);
     if (type === "dex") rows = rows.filter((row) => row.centralized === false);
     const total = rows.reduce((sum, row) => sum + (row.volume24h || 0), 0);
@@ -378,17 +418,24 @@ export async function handle(request, env = {}, ctx = {}) {
       sharePct: row.volume24h != null && total > 0 ? (row.volume24h / total) * 100 : null,
       shareBasis: "porcentaje sobre la suma de esta lista",
     }));
-    return json(200, { ok: true, ...withVs({ ...payload, rows, type }, fx) }, cacheHeaders(3600, 86400, payload));
+    return json(200, { ok: true, ...withVs({ ...payload, rows, type, hasCex, hasDex }, fx) }, cacheHeaders(data.CACHE_FRESH.exchanges, 86400, payload));
   }
 
   async function exchange(id, fx) {
     if (!slugOk(id)) return json(400, { ok: false, error: "invalid" });
     const payload = await data.getExchange(env, ctx, id);
-    const btc = await btcUsd(fx);
+    const factor = fx.missing ? 1 : (fx.factor || 1);
+    let volume24h = null;
+    if (payload.volume24hBtc != null) {
+      const btc = await btcUsd(fx);
+      volume24h = btc == null ? null : payload.volume24hBtc * btc;
+    } else if (payload.volume24hUsd != null) {
+      volume24h = payload.volume24hUsd * factor;
+    }
     return json(200, {
       ok: true,
-      ...withVs({ ...payload, volume24h: payload.volume24hBtc == null || btc == null ? null : payload.volume24hBtc * btc }, fx),
-    }, cacheHeaders(3600, 86400, payload));
+      ...withVs({ ...payload, volume24h }, fx),
+    }, cacheHeaders(data.CACHE_FRESH.exchanges, 86400, payload));
   }
 
   async function exchangeTickers(id, fx) {
@@ -402,7 +449,7 @@ export async function handle(request, env = {}, ctx = {}) {
       depthUp2: row.depthUp2 == null ? null : row.depthUp2 * factor,
       depthDown2: row.depthDown2 == null ? null : row.depthDown2 * factor,
     }));
-    return json(200, { ok: true, ...withVs({ ...payload, rows }, fx) }, cacheHeaders(300, 3600, payload));
+    return json(200, { ok: true, ...withVs({ ...payload, rows }, fx) }, cacheHeaders(data.CACHE_FRESH.chartShort, 86400, payload));
   }
 
   async function exchangeVolume(id, query) {
@@ -435,7 +482,7 @@ export async function handle(request, env = {}, ctx = {}) {
       data.getTrendingCg(env, ctx).catch((error) => { console.error("sonar-trend", error?.status || "fail"); return null; }),
       data.getTrendingPools(env, ctx).catch((error) => { console.error("sonar-pools", error?.status || "fail"); return null; }),
     ]);
-    return json(200, { ok: true, searches, pools }, cacheHeaders(600, 3600, searches || {}));
+    return json(200, { ok: true, searches, pools }, cacheHeaders(data.CACHE_FRESH.trending, 86400, searches || {}));
   }
 
   async function fresh() {
@@ -450,7 +497,7 @@ export async function handle(request, env = {}, ctx = {}) {
       data.getSearch(env, ctx, text).catch((error) => { console.error("sonar-search", error?.status || "fail"); return null; }),
       data.searchPools(env, ctx, text).catch((error) => { console.error("sonar-search-pool", error?.status || "fail"); return null; }),
     ]);
-    return json(200, { ok: true, coins, pools }, cacheHeaders(600, 3600, coins || {}));
+    return json(200, { ok: true, coins, pools }, cacheHeaders(data.CACHE_FRESH.search, 86400, coins || {}));
   }
 
   async function suggest() {
@@ -467,7 +514,7 @@ export async function handle(request, env = {}, ctx = {}) {
       gainers: rows.slice().sort((a, b) => b.ch24h - a.ch24h).slice(0, 3),
       losers: rows.slice().sort((a, b) => a.ch24h - b.ch24h).slice(0, 3),
       note: "Subidas y bajadas de esta vista: las 100 mayores con volumen de al menos 50 000 USD.",
-    }, cacheHeaders(120, 900, trending || {}));
+    }, cacheHeaders(data.CACHE_FRESH.markets, 86400, trending || {}));
   }
 
   async function calendar(query) {
@@ -510,7 +557,7 @@ export async function handle(request, env = {}, ctx = {}) {
 
   async function rates() {
     const payload = await data.getRates(env, ctx);
-    return json(200, { ok: true, ...payload }, cacheHeaders(600, 86400, payload));
+    return json(200, { ok: true, ...payload }, cacheHeaders(data.CACHE_FRESH.rates, 86400, payload));
   }
 
   async function pairs() {

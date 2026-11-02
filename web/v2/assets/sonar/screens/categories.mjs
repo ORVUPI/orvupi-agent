@@ -1,6 +1,7 @@
 import { api, qs } from "../api.mjs";
 import { compact, plain, show } from "../format.mjs";
-import { categoryName, t } from "../i18n.mjs";
+import { categoryName, pageTitle, t } from "../i18n.mjs";
+import { parseRoute, setCrumb } from "../shell.mjs";
 import { paintRanking } from "../rows.mjs";
 import { snapshot, update } from "../store.mjs";
 import { el, emptyBlock, errorBlock, pagedBlock, pctNode, skeleton, sourceLine } from "../ui.mjs";
@@ -69,7 +70,9 @@ async function detail(host, ctx) {
     const rows = (body.rows || []).map((row, index) => ({ ...row, rank: row.rank ?? index + 1 }));
     const rawName = body.category?.name || ctx.route.id.replace(/-/g, " ");
     const name = categoryName(rawName);
-    document.title = `${name} · ORVUPI Sonar`;
+    if (parseRoute().section !== "categories" || parseRoute().id !== ctx.route.id) return;
+    document.title = pageTitle(name);
+    setCrumb([{ label: t("categories"), href: "/sonar/categories/" }, { label: name }]);
     const marketCap = body.category?.marketCap ?? sumOf(rows, "marketCap");
     const volume = body.category?.volume24h ?? sumOf(rows, "volume24h");
     const weighted = rows.filter((row) => row.ch24h != null && row.marketCap);

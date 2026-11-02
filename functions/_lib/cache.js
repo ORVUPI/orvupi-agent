@@ -1,8 +1,11 @@
-/** Caché en memoria del isolate y, si existe, Cache API. Nada más viejo de maxAgeSec se sirve. */
+/** Caché en memoria del isolate y, si existe, Cache API. Lo fresco se sirve al momento; lo viejo, hasta 24 h, con sello. */
+
+import { asOfLabel } from "./asof.js";
 
 const memory = new Map();
 const inflight = new Map();
 const MAX_MEMORY = 400;
+const DAY_MS = 86400 * 1000;
 
 function remember(key, entry) {
   if (memory.has(key)) memory.delete(key);
@@ -14,6 +17,16 @@ function ageMs(entry) {
   const stamp = Date.parse(entry?.fetchedAt || "");
   if (!Number.isFinite(stamp)) return Infinity;
   return Date.now() - stamp;
+}
+
+function present(entry, stale) {
+  const next = { ...entry };
+  if (!stale) {
+    delete next.asOf;
+    return { ...next, stale: false };
+  }
+  const asOf = asOfLabel(entry?.fetchedAt);
+  return { ...next, stale: true, ...(asOf ? { asOf } : {}) };
 }
 
 async function readCache(key) {
@@ -41,6 +54,11 @@ async function writeCache(key, entry, ttlSec) {
   }
 }
 
+export function clearCache() {
+  memory.clear();
+  inflight.clear();
+}
+
 export async function peek(key) {
   if (memory.has(key)) return memory.get(key);
   return readCache(key);
@@ -56,41 +74,63 @@ export async function putEntry(key, entry, ttlSec, ctx) {
 
 export async function getOrRefresh({ key, ttlSec, staleSec, maxAgeSec = 86400, loader, ctx }) {
   const freshFor = ttlSec * 1000;
-  const staleFor = Math.min(staleSec, maxAgeSec) * 1000;
-  const mem = memory.get(key);
-  if (mem && ageMs(mem) < freshFor) return { ...mem, stale: false };
-  const cached = mem && ageMs(mem) < staleFor ? mem : await readCache(key);
-  if (cached && ageMs(cached) < freshFor) {
-    remember(key, cached);
-    return { ...cached, stale: false };
+  const serveFor = Math.max(staleSec, 86400, maxAgeSec) * 1000;
+  const stored = await readStored(key, serveFor);
+  if (stored && ageMs(stored) < freshFor) return present(stored, false);
+  if (stored && ageMs(stored) < serveFor) {
+    refreshLater();
+    return present(stored, true);
   }
-  if (cached && ageMs(cached) < staleFor) {
+  try {
+    return await join();
+  } catch (error) {
+    const again = await readStored(key, serveFor);
+    if (again && ageMs(again) < serveFor) return present(again, true);
+    throw error;
+  }
+
+  function refreshLater() {
     const job = join().catch((error) => {
       console.error("sonar-refresh", key.slice(0, 80), error?.status || error?.code || "fail");
     });
     if (ctx?.waitUntil) ctx.waitUntil(job);
-    return { ...cached, stale: true };
   }
-  return join();
 
   function join() {
     const pending = inflight.get(key);
     if (pending) return pending;
-    const job = refresh().finally(() => {
-      if (inflight.get(key) === job) inflight.delete(key);
+    let settle = null;
+    const gate = new Promise((resolve, reject) => {
+      settle = { resolve, reject };
     });
-    inflight.set(key, job);
-    return job;
+    inflight.set(key, gate);
+    refresh().then(settle.resolve, settle.reject).finally(() => {
+      if (inflight.get(key) === gate) inflight.delete(key);
+    });
+    return gate;
   }
 
   async function refresh() {
     const loaded = await loader();
     const entry = { ...loaded, fetchedAt: loaded.fetchedAt || new Date().toISOString() };
-    if (ageMs(entry) > maxAgeSec * 1000) {
+    if (ageMs(entry) > Math.max(serveFor, DAY_MS)) {
       const error = new Error("stale-source");
       error.code = "stale-source";
       throw error;
     }
-    return putEntry(key, entry, ttlSec, ctx).then(() => ({ ...entry, stale: false }));
+    const keepStale = Boolean(loaded.stale) && ageMs(entry) >= freshFor;
+    await putEntry(key, entry, Math.ceil(serveFor / 1000), ctx);
+    return present(entry, keepStale);
+  }
+
+  async function readStored(cacheKey, maxMs) {
+    const mem = memory.get(cacheKey);
+    if (mem && ageMs(mem) < maxMs) return mem;
+    const cached = await readCache(cacheKey);
+    if (cached && ageMs(cached) < maxMs) {
+      remember(cacheKey, cached);
+      return cached;
+    }
+    return null;
   }
 }

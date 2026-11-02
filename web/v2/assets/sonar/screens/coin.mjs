@@ -1,7 +1,8 @@
 import { api, qs } from "../api.mjs";
 import { chartHost, chartNote, drawChart, rsi } from "../chart.mjs";
 import { btcPrice, compact, day, money, plain, show, when } from "../format.mjs";
-import { categoryName, t } from "../i18n.mjs";
+import { categoryName, pageTitle, t } from "../i18n.mjs";
+import { parseRoute, setCrumb } from "../shell.mjs";
 import { activeList, snapshot, uid, update } from "../store.mjs";
 import { el, emptyBlock, errorBlock, field, logo, missing, pagedBlock, pctNode, setChildren, skeleton, sourceLine } from "../ui.mjs";
 import { positionOf } from "./portfolio.mjs";
@@ -25,10 +26,11 @@ export async function mount(host, ctx) {
   const vs = snapshot().prefs.vs;
   try {
     const coin = await api(`/api/sonar/coin/${ctx.route.id}${qs({ vs })}`);
-    if (mine !== ticket) return;
+    if (mine !== ticket || parseRoute().section !== "crypto" || parseRoute().id !== ctx.route.id) return;
     const tab = TABS.includes(ctx.route.params.get("tab")) ? ctx.route.params.get("tab") : "resumen";
     paint(host, ctx, coin, tab, mine);
-    document.title = `${coin.name} (${coin.symbol}) · ORVUPI Sonar`;
+    document.title = pageTitle(`${coin.name} (${coin.symbol})`);
+    setCrumb([{ label: coin.name }]);
   } catch (error) {
     if (mine !== ticket) return;
     host.replaceChildren(error.status === 404 ? emptyBlock(t("missingCoin")) : errorBlock(() => mount(host, ctx)));
@@ -198,7 +200,6 @@ function sideStats(coin) {
 }
 
 function converter(coin) {
-  const vs = (coin.vs || "usd").toUpperCase();
   const input = el("input", { type: "number", min: "0", step: "any", value: "1", "data-sn": "convert", oninput: sync });
   const out = el("output", { "data-sn": "convert-out" });
   function sync() {
@@ -206,7 +207,14 @@ function converter(coin) {
     out.textContent = !Number.isFinite(qty) || coin.price == null ? t("unavailable") : show(money(qty * coin.price, coin.vs));
   }
   sync();
-  return el("section", { class: "sn-box", "data-sn": "converter" }, [el("h3", { text: t("converter") }), el("label", {}, [t("youHave"), input, coin.symbol || ""]), el("p", {}, [t("worth"), " ", out, " ", vs])]);
+  return el("section", { class: "sn-box sn-converter", "data-sn": "converter" }, [
+    el("h3", { text: t("converter") }),
+    el("span", { text: t("youHave") }),
+    input,
+    el("span", { class: "sn-convert-unit", text: coin.symbol || "" }),
+    el("span", { text: t("worth") }),
+    out,
+  ]);
 }
 
 function about(ctx, coin) {
@@ -255,21 +263,38 @@ function linkLabel(href, fallback) {
 function links(coin) {
   const bag = coin.links || {};
   const rows = [];
+  const seenHref = new Set();
+  const seenLabel = new Set();
+  const repos = (bag.github || []).filter((href) => href && href !== "null");
+  const unique = new Set(["github", "x", "telegram", "reddit", "facebook"]);
   const add = (label, href, count) => {
     if (!href || href === "null" || /<|>|%3C|%3E/i.test(href)) return;
+    const key = String(label || "").trim().toLowerCase();
+    if (unique.has(key) && seenLabel.has(key)) return;
+    let norm = String(href).trim().toLowerCase();
+    try { norm = new URL(href).href.replace(/\/$/, "").toLowerCase(); } catch { /* se queda el texto */ }
+    if (seenHref.has(norm)) return;
+    seenHref.add(norm);
+    seenLabel.add(key);
     const text = count != null ? `${label} · ${plain(count, 0)}` : label;
     rows.push(el("a", { href, rel: "noreferrer", text }));
   };
-  for (const href of bag.homepage || []) add(linkLabel(href, t("website")), href);
+  for (const href of bag.homepage || []) {
+    if (repos.length && hostOf(href).endsWith("github.com")) continue;
+    add(linkLabel(href, t("website")), href);
+  }
   add(t("whitepaper"), bag.whitepaper);
   for (const href of bag.explorers || []) add(linkLabel(href, t("explorers")), href);
   add("X", bag.twitter, coin.followers?.twitter);
   add("Telegram", bag.telegram, coin.followers?.telegram);
   add("Reddit", bag.reddit, coin.followers?.reddit);
   add("Facebook", bag.facebook);
-  for (const href of bag.chat || []) add(linkLabel(href, t("community")), href);
+  for (const href of bag.chat || []) {
+    if (repos.length && hostOf(href).endsWith("github.com")) continue;
+    add(linkLabel(href, t("community")), href);
+  }
   for (const href of bag.forum || []) add(linkLabel(href, t("community")), href);
-  for (const href of bag.github || []) add("GitHub", href);
+  for (const href of repos) add("GitHub", href);
   if (!rows.length) return null;
   return el("section", { class: "sn-sideblock", "data-sn": "links" }, [el("h3", { text: t("community") }), el("div", { class: "sn-links" }, rows)]);
 }
@@ -433,24 +458,26 @@ async function markets(panel, ctx, coin) {
         el("small", { text: pool.network || "" }),
       ])));
     }
-    let active = spot.length ? "cex" : dex.length ? "dex" : "cex";
+    const venues = [];
+    if (spot.length) venues.push("cex");
+    if (dex.length) venues.push("dex");
+    let active = venues[0] || "cex";
     const state = { cex: { page: 1, per: 20, paint() {} }, dex: { page: 1, per: 20, paint() {} } };
     const dexSource = rawDex[0] ? { source: "GeckoTerminal", sourceUrl: "https://www.geckoterminal.com/", attribution: t("gt"), fetchedAt: body.spot?.fetchedAt } : null;
     const paint = () => {
-      const cexEmpty = rawSpot.length ? t("noPairPrice") : t("noCex");
-      const dexEmpty = rawDex.length && !dex.length ? t("noPairPrice") : t("noDex");
+      if (!venues.length) {
+        const note = rawSpot.length || rawDex.length ? t("noPairPrice") : t("noCex");
+        setChildren(panel, [el("h3", { text: t("mkts") }), emptyBlock(note), sourceLine(body.spot)]);
+        return;
+      }
+      if (!venues.includes(active)) active = venues[0];
       const rows = active === "cex" ? spot : dex;
       const st = state[active];
       st.paint = paint;
       setChildren(panel, [
         el("h3", { text: t("mkts") }),
-        el("div", { class: "sn-tabs", role: "tablist", "data-sn": "market-tabs" }, [
-          marketTab("cex", t("cex")),
-          marketTab("dex", t("dex")),
-        ]),
-        rows.length
-          ? pagedBlock(rows, st, [10, 20], (slice) => (active === "cex" ? cexTable(slice) : dexList(slice)))
-          : emptyBlock(active === "cex" ? cexEmpty : dexEmpty),
+        venues.length > 1 ? el("div", { class: "sn-tabs", role: "tablist", "data-sn": "market-tabs" }, venues.map((id) => marketTab(id, t(id)))) : null,
+        pagedBlock(rows, st, [10, 20], (slice) => (active === "cex" ? cexTable(slice) : dexList(slice))),
         active === "cex" ? el("p", { class: "sn-note", text: t("liq") }) : null,
         sourceLine(active === "cex" ? body.spot : dexSource),
       ]);

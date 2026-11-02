@@ -1,6 +1,7 @@
 const DICT = {
   es: {
-    markets: "Mercados", search: "Buscar", watchlist: "Favoritos", portfolio: "Cartera", more: "Más",
+    markets: "Sonar Mercados", marketsShort: "Mercados", search: "Buscar", watchlist: "Favoritos", portfolio: "Cartera", more: "Más",
+    crumb: "Ruta",
     top: "Ranking", trending: "Tendencia", overview: "Vista general",
     price: "Precio", h1: "1 h", h24: "24 h", d7: "7 d", mcap: "Capitalización", volume: "Volumen 24 h", supply: "Oferta circulante",
     rank: "#", name: "Nombre", fdv: "FDV", total: "Oferta total", max: "Oferta máxima",
@@ -14,7 +15,7 @@ const DICT = {
     noPairPrice: "Ningún par coincide con el precio de esta moneda.",
     fear: "Fear & Greed", alt: "Índice altcoin", assets: "Activos en CoinGecko", marketsN: "Mercados", gas: "Gas ETH", fee: "Comisión BTC",
     btcDom: "Dominancia BTC", ethDom: "Dominancia ETH", cap: "Capitalización total",
-    source: "Fuente", stale: "datos de hace más de un minuto",
+    source: "Fuente", stale: "datos de hace más de un minuto", asOf: "datos de {time}",
     add: "Añadir", remove: "Quitar", export: "Exportar", import: "Importar", share: "Compartir", copy: "Copiar",
     buy: "Compra", sell: "Venta", transfer: "Transferencia", deposit: "Depósito", withdraw: "Retirada",
     avg: "Precio medio", pnl: "Beneficio/pérdida", allocation: "Distribución", history: "Histórico", value: "Valor",
@@ -46,7 +47,7 @@ const DICT = {
     chainNote: "Pools con más actividad en GeckoTerminal.",
     meanNote: "Media del cambio 24 h de las {n} primeras de esta categoría.",
     dominanceNote: "Capitalización de la categoría / capitalización total.",
-    classNote: "CEX/DEX solo donde CoinGecko publica el campo centralized.",
+    classNote: "Centralizado o descentralizado según un mapa revisado de los exchanges grandes y, si no está, el campo centralized de CoinGecko cuando ya está en caché. Si no hay ninguno de los dos, no se etiqueta.",
     custody: "Los fondos en custodia de los exchanges no tienen fuente gratuita fiable aquí.",
     liq: "Profundidad para mover el precio un 2 %. No es una puntuación.",
     volMissing: "Volumen no disponible en esta vela.",
@@ -169,6 +170,9 @@ const DICT = {
     refresh: "Actualizar",
     of: "de",
     loadedNote: "{n} monedas cargadas.",
+    listedN: "{n} monedas en el listado.",
+    pastEnd: "Esa página queda fuera del listado.",
+    spark7: "Variación 7 d",
     gridEmpty: "Nada que mostrar.",
     fearYest: "Ayer",
     gwei: "gwei",
@@ -181,7 +185,8 @@ const DICT = {
 };
 
 const EN = {
-  markets: "Markets", search: "Search", watchlist: "Watchlist", portfolio: "Portfolio", more: "More",
+  markets: "Sonar Markets", marketsShort: "Markets", search: "Search", watchlist: "Watchlist", portfolio: "Portfolio", more: "More",
+  crumb: "Breadcrumb",
   top: "Top", trending: "Trending", overview: "Overview",
   price: "Price", h1: "1h", h24: "24h", d7: "7d", mcap: "Market cap", volume: "Volume 24h", supply: "Circulating supply",
   rank: "#", name: "Name", fdv: "FDV", total: "Total supply", max: "Max supply",
@@ -195,7 +200,7 @@ const EN = {
   noPairPrice: "No pair matches this coin's price.",
   fear: "Fear & Greed", alt: "Altcoin index", assets: "Assets on CoinGecko", marketsN: "Markets", gas: "ETH gas", fee: "BTC fee",
   btcDom: "BTC dominance", ethDom: "ETH dominance", cap: "Total market cap",
-  source: "Source", stale: "data older than a minute",
+  source: "Source", stale: "data older than a minute", asOf: "data from {time}",
   add: "Add", remove: "Remove", export: "Export", import: "Import", share: "Share", copy: "Copy",
   buy: "Buy", sell: "Sell", transfer: "Transfer", deposit: "Deposit", withdraw: "Withdrawal",
   avg: "Average price", pnl: "Profit/loss", allocation: "Allocation", history: "History", value: "Value",
@@ -226,7 +231,7 @@ const EN = {
   chainNote: "Pools with the most activity on GeckoTerminal.",
   meanNote: "Average 24h change of the first {n} coins in this category.",
   dominanceNote: "Category market cap / total market cap.",
-  classNote: "CEX/DEX only where CoinGecko publishes the centralized field.",
+  classNote: "Centralized or decentralized from a reviewed map of the large exchanges, then CoinGecko's centralized field once it is cached. If neither is available, the venue stays unlabeled.",
   custody: "Exchange custody holdings have no reliable free source here.",
   liq: "Depth to move the price by 2%. Not a score.",
   volMissing: "Volume is not available on this candle.",
@@ -349,6 +354,9 @@ const EN = {
   refresh: "Refresh",
   of: "of",
   loadedNote: "{n} coins loaded.",
+  listedN: "{n} coins in the list.",
+  pastEnd: "That page is past the end of the list.",
+  spark7: "7d change",
   gridEmpty: "Nothing to show.",
   fearYest: "Yesterday",
   gwei: "gwei",
@@ -357,12 +365,16 @@ const EN = {
 
 const PT = {
   ...EN,
-  markets: "Mercados", search: "Buscar", watchlist: "Watchlist", portfolio: "Carteira", more: "Mais",
+  markets: "Sonar Mercados", marketsShort: "Mercados", search: "Buscar", watchlist: "Watchlist", portfolio: "Carteira", more: "Mais",
+  classNote: "Centralizado ou descentralizado segundo um mapa revisto das exchanges grandes e, se não estiver, o campo centralized da CoinGecko quando já está em cache. Sem os dois, sem etiqueta.",
+  listedN: "{n} moedas na lista.",
+  pastEnd: "Essa página fica fora da lista.",
+  spark7: "Variação 7 d",
   trending: "Em alta", overview: "Visão geral", price: "Preço", mcap: "Capitalização", volume: "Volume 24 h", supply: "Oferta circulante",
   name: "Nome", list: "Lista", grid: "Grade", filters: "Filtros", apply: "Aplicar", clear: "Limpar",
   loading: "Carregando", empty: "Nenhum resultado com estes filtros.", error: "Não foi possível carregar os dados.", retry: "Tentar de novo",
   unavailable: "Dado indisponível", currency: "Moeda", assets: "Ativos no CoinGecko", marketsN: "Mercados", fee: "Taxa BTC",
-  btcDom: "Dominância BTC", ethDom: "Dominância ETH", cap: "Capitalização total", source: "Fonte",
+  btcDom: "Dominância BTC", ethDom: "Dominância ETH", cap: "Capitalização total", source: "Fonte", asOf: "dados de {time}",
   add: "Adicionar", remove: "Remover", export: "Exportar", import: "Importar", share: "Compartilhar", copy: "Copiar",
   buy: "Compra", sell: "Venda", transfer: "Transferência", deposit: "Depósito", withdraw: "Retirada",
   avg: "Preço médio", pnl: "Lucro/prejuízo", allocation: "Alocação", history: "Histórico", value: "Valor",
@@ -389,7 +401,7 @@ const PT = {
 };
 const JA = {
   ...EN,
-  markets: "マーケット", search: "検索", watchlist: "ウォッチリスト", portfolio: "ポートフォリオ", more: "その他",
+  markets: "Sonar マーケット", marketsShort: "マーケット", search: "検索", watchlist: "ウォッチリスト", portfolio: "ポートフォリオ", more: "その他",
   trending: "トレンド", overview: "概要", price: "価格", mcap: "時価総額", volume: "出来高 24h", supply: "循環供給",
   name: "名前", list: "リスト", grid: "グリッド", filters: "絞り込み", apply: "適用", clear: "クリア",
   loading: "読み込み中", empty: "この条件では結果がありません。", error: "データを読み込めませんでした。", retry: "再試行",
@@ -418,7 +430,7 @@ const JA = {
 };
 const KO = {
   ...EN,
-  markets: "시장", search: "검색", watchlist: "관심목록", portfolio: "포트폴리오", more: "더보기",
+  markets: "Sonar 시장", marketsShort: "시장", search: "검색", watchlist: "관심목록", portfolio: "포트폴리오", more: "더보기",
   trending: "트렌드", overview: "개요", price: "가격", mcap: "시가총액", volume: "거래량 24시간", supply: "유통 공급량",
   name: "이름", list: "목록", grid: "격자", filters: "필터", apply: "적용", clear: "지우기",
   loading: "불러오는 중", empty: "이 필터로는 결과가 없습니다.", error: "데이터를 불러오지 못했습니다.", retry: "다시 시도",
@@ -469,6 +481,11 @@ export function t(key, vars) {
     for (const [name, value] of Object.entries(vars)) text = String(text).replaceAll(`{${name}}`, String(value ?? ""));
   }
   return text;
+}
+
+export function pageTitle(name) {
+  const section = t("markets");
+  return name ? `${name} · ${section}` : `${section} · ORVUPI`;
 }
 
 export function labelOf(group, value) {

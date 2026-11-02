@@ -37,7 +37,13 @@ const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://127.0.0.1:${port}`);
     if (url.pathname.startsWith("/api/sonar")) {
-      const response = await handle(new Request(url, { method: req.method, headers: req.headers }), process.env, {});
+      const response = await handle(new Request(url, { method: req.method, headers: req.headers }), process.env, {
+        waitUntil(promise) {
+          Promise.resolve(promise).catch((error) => {
+            console.error("sonar-dev-wait", error?.status || error?.code || "fail");
+          });
+        },
+      });
       res.writeHead(response.status, Object.fromEntries(response.headers));
       res.end(Buffer.from(await response.arrayBuffer()));
       return;

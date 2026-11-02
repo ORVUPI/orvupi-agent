@@ -1,4 +1,5 @@
 import { api, qs } from "../api.mjs";
+import { chartHost, drawChart } from "../chart.mjs";
 import { compact, day, money, plain, show } from "../format.mjs";
 import { t } from "../i18n.mjs";
 import { snapshot, uid, update } from "../store.mjs";
@@ -119,7 +120,7 @@ function allocation(slices, total) {
   svg.setAttribute("class", "sn-donut");
   svg.setAttribute("viewBox", "0 0 36 36");
   let cursor = 0;
-  const palette = ["#ff3070", "#7dcea0", "#9ecbff", "#ffd27a", "#d2b4ff", "#f0a0b0"];
+  const palette = ["#9ecbff", "#ffd27a", "#d2b4ff", "#f4a261", "#8ecae6", "#c5ced8"];
   slices.forEach((slice, index) => {
     const portion = ((slice.value || 0) / total) * 100;
     const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -333,6 +334,13 @@ async function loadHistory(box, rows) {
     if (!entries.length) {
       box.append(emptyBlock());
       return;
+    }
+    const known = entries.filter(([, bucket]) => !bucket.missing && Number.isFinite(bucket.sum));
+    if (known.length >= 2) {
+      const host = chartHost();
+      host.classList.add("sn-mini");
+      box.append(host);
+      await drawChart(host, { points: known.map(([key, bucket]) => [Date.parse(`${key}T12:00:00Z`), bucket.sum]) });
     }
     for (const [key, bucket] of entries) {
       list.append(el("li", { text: `${key}: ${bucket.missing ? t("unavailable") : show(compact(bucket.sum, snapshot().prefs.vs))}` }));

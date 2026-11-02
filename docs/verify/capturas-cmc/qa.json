@@ -7,7 +7,7 @@
   {
     "name": "logos",
     "ok": true,
-    "detail": "250,250,0"
+    "detail": "250,250,250"
   },
   {
     "name": "home-console",
@@ -20,6 +20,11 @@
     "detail": "0"
   },
   {
+    "name": "spark-colors",
+    "ok": true,
+    "detail": "40 #ea3943,#16c784"
+  },
+  {
     "name": "watchlist",
     "ok": true,
     "detail": ""
@@ -28,6 +33,16 @@
     "name": "chart",
     "ok": true,
     "detail": ""
+  },
+  {
+    "name": "chart-direction",
+    "ok": true,
+    "detail": "{\"up\":\"#16c784\",\"down\":\"#ea3943\",\"upStop\":\"#16c784\",\"downStop\":\"#ea3943\",\"upFill\":\"url(#sn-area-2)\",\"strokes\":[\"#16c784\",\"#9ecbff\",\"#9aa7b5\"],\"indicatorPoints\":\"10.0,300.0 165.0,230.0 320.0,160.0 475.0,90.0 630.0,20.0\",\"downSpark\":\"#ea3943\",\"upSpark\":\"#16c784\"}"
+  },
+  {
+    "name": "chart-live",
+    "ok": true,
+    "detail": "{\"1h\":\"down:#ea3943\",\"downShot\":\"1h\",\"24h\":\"up:#16c784\",\"upShot\":\"24h\",\"7d\":\"down:#ea3943\",\"30d\":\"down:#ea3943\",\"90d\":\"up:#16c784\",\"1y\":\"down:#ea3943\",\"ytd\":\"down:#ea3943\",\"all\":\"up:#16c784\"}"
   },
   {
     "name": "chart-7d",

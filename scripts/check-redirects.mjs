@@ -22,6 +22,10 @@ if (rules.some((line) => line.startsWith("/sonar") || line.includes("/sonar/")))
   console.error("quedan reglas de Sonar en _redirects");
   process.exit(1);
 }
+if (rules.some((line) => /pages\.dev/i.test(line))) {
+  console.error("una regla de _redirects manda pages.dev a otro sitio; los previews no deben redirigir");
+  process.exit(1);
+}
 const sources = rules.map((line) => line.split(/\s+/)[0]);
 const wasmAt = sources.findIndex((source) => source.startsWith("/work/assets/ort-wasm"));
 const broadAt = sources.findIndex((source) => source === "/work/:section/*");
