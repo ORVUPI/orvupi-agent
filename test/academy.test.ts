@@ -177,4 +177,33 @@ describe("ORVUPI Academy", () => {
       assert.equal(/holder|reserva/i.test(visible), false, path.relative(WEB, f));
     }
   });
+
+  test("rutas: cada ruta tiene su página, sus módulos y artículos, y ningún enlace interno roto", () => {
+    const datos = JSON.parse(readFileSync(path.join(AC, "datos.json"), "utf8"));
+    const preguntas = JSON.parse(readFileSync(path.join(repoRoot(), "academy/content/preguntas.json"), "utf8"));
+    assert.ok(datos.rutas.length >= 6, `${datos.rutas.length} rutas`);
+    const unidades = new Set<string>();
+    for (const r of datos.rutas) {
+      assert.match(r.u, /^\/academy\/rutas\/[a-z0-9-]+\/$/, r.slug);
+      const html = readFileSync(fileFor(r.u), "utf8");
+      assert.ok(r.unidades.length > 0, r.slug);
+      for (const id of r.unidades) {
+        assert.equal(unidades.has(id), false, `${id} en dos rutas`);
+        unidades.add(id);
+        const art = datos.unidades.find((a: { id: string }) => a.id === id);
+        if (art?.u) assert.ok(html.includes(`href="${art.u}"`), `${r.slug} enlaza ${id}`);
+        assert.ok(preguntas.unidades[id], `pregunta de ${id}`);
+        assert.equal(preguntas.unidades[id].opciones.filter((o: { correcta: boolean }) => o.correcta).length, 1, id);
+      }
+    }
+    for (const [n, qs] of Object.entries(preguntas.modulos) as [string, unknown[]][]) assert.equal(qs.length, 6, `módulo ${n}`);
+    for (const f of pages) {
+      const html = readFileSync(f, "utf8");
+      for (const [, href = ""] of html.matchAll(/href="(\/academy\/[^"#?]*)/g)) {
+        const target = fileFor(href.endsWith("/") || /\.[a-z]+$/.test(href) ? href : href + "/");
+        assert.ok(existsSync(target), `${path.relative(WEB, f)} → ${href}`);
+      }
+      assert.equal(/\[\[|\]\]/.test(html.replace(/<(script|style)[\s\S]*?<\/\1>/g, "")), false, `markdown sin convertir en ${path.relative(WEB, f)}`);
+    }
+  });
 });

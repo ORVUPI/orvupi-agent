@@ -26,7 +26,12 @@
     {"n": 3, "slug": "seguridad", "titulo": "Seguridad", "nivel": "Principiante", "resumen": "Custodia, copias, phishing y protección de accesos.", "unidades": ["OA-009", "OA-010", "OA-011", "OA-012"]},
     {"n": 4, "slug": "transacciones-y-permisos", "titulo": "Transacciones y permisos", "nivel": "Intermedio", "resumen": "Exploradores, comisiones, permisos, capas 2 y puentes.", "unidades": ["OA-013", "OA-014", "OA-015", "OA-016"]},
     {"n": 5, "slug": "aplicaciones-y-defi", "titulo": "Aplicaciones y DeFi", "nivel": "Intermedio", "resumen": "Contratos, intercambios, préstamos, staking y afirmaciones.", "unidades": ["OA-017", "OA-018", "OA-019", "OA-020"]},
-    {"n": 6, "slug": "leer-datos-con-orvupi", "titulo": "Leer datos con ORVUPI", "nivel": "Intermedio", "resumen": "Identidad de un token, permisos, suministro y lecturas fechadas.", "unidades": ["OA-021", "OA-022", "OA-023", "OA-024"]}
+    {"n": 6, "slug": "leer-datos-con-orvupi", "titulo": "Leer datos con ORVUPI", "nivel": "Intermedio", "resumen": "Identidad de un token, permisos, suministro y lecturas fechadas.", "unidades": ["OA-021", "OA-022", "OA-023", "OA-024"]},
+    {"n": 7, "ruta": "trading-basico", "slug": "mercados-y-ordenes", "titulo": "Mercados y órdenes", "nivel": "Principiante", "resumen": "Libro de órdenes, velas, apalancamiento y sesgos, sin recomendaciones.", "unidades": ["OA-025", "OA-026", "OA-027", "OA-028"]},
+    {"n": 8, "ruta": "tokens-y-memecoins", "slug": "memecoins-y-lanzamientos", "titulo": "Memecoins y lanzamientos", "nivel": "Intermedio", "resumen": "Memecoins, curvas de lanzamiento, concentración, liquidez y manipulación.", "unidades": ["OA-029", "OA-030", "OA-031", "OA-032"]},
+    {"n": 9, "ruta": "solana-por-dentro", "slug": "cuentas-tokens-y-firmas", "titulo": "Cuentas, tokens y firmas", "nivel": "Intermedio", "resumen": "El modelo de cuentas de Solana, sus tokens, sus comisiones y sus firmas.", "unidades": ["OA-033", "OA-034", "OA-035", "OA-036"]},
+    {"n": 10, "ruta": "estafas", "slug": "patrones-de-estafa", "titulo": "Patrones de estafa", "nivel": "Principiante", "resumen": "Inversiones milagro, falso soporte, estafas de confianza y trucos con tokens.", "unidades": ["OA-037", "OA-038", "OA-039", "OA-040"]},
+    {"n": 11, "ruta": "regulacion-ue", "slug": "mica-y-fiscalidad", "titulo": "MiCA y fiscalidad", "nivel": "Intermedio", "resumen": "Qué regula MiCA, la identificación del cliente, la fiscalidad en España y cómo comprobar un proveedor.", "unidades": ["OA-041", "OA-042", "OA-043", "OA-044"]}
   ],
   "unidades": [
     {"id": "OA-001", "slug": "que-es-el-dinero-digital", "imagen": 326},
@@ -52,7 +57,27 @@
     {"id": "OA-021", "slug": "identificar-un-token", "imagen": 176},
     {"id": "OA-022", "slug": "interpretar-permisos-de-un-token", "imagen": 332},
     {"id": "OA-023", "slug": "suministro-y-datos-ausentes", "imagen": 281},
-    {"id": "OA-024", "slug": "investigar-y-guardar-una-lectura", "imagen": 227}
+    {"id": "OA-024", "slug": "investigar-y-guardar-una-lectura", "imagen": 227},
+    {"id": "OA-025", "slug": "libro-de-ordenes-y-tipos-de-orden", "imagen": 429},
+    {"id": "OA-026", "slug": "como-leer-un-grafico-de-velas", "imagen": 157},
+    {"id": "OA-027", "slug": "apalancamiento-y-liquidacion", "imagen": 76},
+    {"id": "OA-028", "slug": "sesgos-y-promesas-en-el-trading", "imagen": 68},
+    {"id": "OA-029", "slug": "que-es-una-memecoin", "imagen": 82},
+    {"id": "OA-030", "slug": "lanzamientos-con-curva", "imagen": 91},
+    {"id": "OA-031", "slug": "concentracion-y-liquidez-de-un-token", "imagen": 430},
+    {"id": "OA-032", "slug": "manipulacion-de-mercado-en-tokens", "imagen": 80},
+    {"id": "OA-033", "slug": "cuentas-y-programas-en-solana", "imagen": 427},
+    {"id": "OA-034", "slug": "tokens-spl-y-token-2022", "imagen": 136},
+    {"id": "OA-035", "slug": "comisiones-y-prioridad-en-solana", "imagen": 431},
+    {"id": "OA-036", "slug": "firmar-con-cuidado-en-solana", "imagen": 96},
+    {"id": "OA-037", "slug": "esquemas-ponzi-y-empresas-no-autorizadas", "imagen": 77},
+    {"id": "OA-038", "slug": "falso-soporte-y-recuperacion-de-fondos", "imagen": 402},
+    {"id": "OA-039", "slug": "estafas-de-confianza", "imagen": 72},
+    {"id": "OA-040", "slug": "airdrops-falsos-y-envenenamiento-de-direcciones", "imagen": 165},
+    {"id": "OA-041", "slug": "que-regula-mica", "imagen": 146},
+    {"id": "OA-042", "slug": "identificacion-y-regla-de-viaje", "imagen": 163},
+    {"id": "OA-043", "slug": "fiscalidad-de-criptoactivos-en-espana", "imagen": 155},
+    {"id": "OA-044", "slug": "como-comprobar-un-proveedor", "imagen": 154}
   ],
   "practicas": [
     {"id": "P1", "slug": "mensajes-sospechosos", "unidad": "OA-011", "titulo": "Práctica: detecta los mensajes sospechosos", "resumen": "Seis mensajes inventados. Decide cuáles piden algo que nunca debes dar y señala la pista.", "nivel": "Principiante", "imagen": 406},
@@ -73,5 +98,94 @@
     ]
   },
   "imagenes": [1, 231, 257, 326, 332],
-  "cuadradas": [1, 231]
+  "cuadradas": [1, 231],
+  "rutas_extra": [
+    {
+      "slug": "trading-basico",
+      "titulo": "Trading básico, sin consejo de inversión",
+      "nivel": "Principiante",
+      "imagen": 277,
+      "resumen": "Cómo funcionan un libro de órdenes, una vela y el apalancamiento, y qué sesgos y promesas conviene reconocer. No te dice qué comprar ni cuándo.",
+      "descripcion": [
+        "La ruta explica la mecánica de un mercado de criptoactivos: quién pone los precios, qué ocurre cuando envías una orden y cómo se lee un gráfico. Usa ejemplos inventados con cifras redondas.",
+        "No es un curso para ganar dinero. No recomienda activos, estrategias ni momentos de entrada. Su objetivo es que entiendas lo que estás viendo y reconozcas cuándo te prometen algo que nadie puede garantizar."
+      ],
+      "aprenderas": [
+        "Qué son el precio de compra, el de venta y el diferencial, y por qué cambian.",
+        "En qué se diferencian una orden de mercado, una limitada y una de stop.",
+        "Qué muestra una vela y qué no puede mostrar un gráfico.",
+        "Cómo funciona el apalancamiento y por qué una posición se liquida.",
+        "Qué sesgos y promesas aparecen una y otra vez en los mensajes sobre trading."
+      ]
+    },
+    {
+      "slug": "tokens-y-memecoins",
+      "titulo": "Tokens y memecoins",
+      "nivel": "Intermedio",
+      "imagen": 85,
+      "resumen": "Qué es una memecoin, cómo se lanza con una curva de precios y qué datos públicos ayudan a entender su reparto y su liquidez.",
+      "descripcion": [
+        "Las memecoins se crean en minutos y se negocian desde el primer bloque. La ruta explica cómo se lanzan, cómo pasan de una curva a un pool de liquidez y qué datos públicos se pueden leer antes de decidir nada.",
+        "Ningún dato aislado dice si un token es seguro. La ruta enseña a anotar lo que se ve, lo que no se pudo comprobar y las señales de manipulación más repetidas."
+      ],
+      "aprenderas": [
+        "Qué distingue a una memecoin de un token con una función.",
+        "Cómo funciona un lanzamiento con curva y qué pasa al completarla.",
+        "Cómo leer la concentración entre cuentas con tokens y el estado de la liquidez.",
+        "Qué son el pump and dump, las operaciones ficticias y las compras agrupadas."
+      ]
+    },
+    {
+      "slug": "solana-por-dentro",
+      "titulo": "Solana por dentro",
+      "nivel": "Intermedio",
+      "imagen": 426,
+      "resumen": "Cuentas, programas, tokens SPL y Token-2022, comisiones y firmas: lo que conviene saber para leer Solana con criterio.",
+      "descripcion": [
+        "Solana organiza todo en cuentas: tu saldo, los programas y cada token. La ruta explica ese modelo con ejemplos y lo compara con lo que quizá conoces de otras redes.",
+        "Termina con lo más práctico: cuánto cuesta una transacción, por qué caduca y qué revisar antes de firmar una petición desconocida."
+      ],
+      "aprenderas": [
+        "Qué son una cuenta, un programa y su propietario en Solana.",
+        "Cómo se relacionan un mint, una cuenta de token y una cuenta de token asociada.",
+        "Qué cambian las extensiones de Token-2022 y qué autoridades conviene mirar.",
+        "Cómo se calculan la comisión base y la tarifa de prioridad.",
+        "Qué peticiones de firma pueden ceder el control de tus tokens."
+      ]
+    },
+    {
+      "slug": "estafas",
+      "titulo": "Estafas y cómo reconocerlas",
+      "nivel": "Principiante",
+      "imagen": 151,
+      "resumen": "Inversiones milagro, falso soporte, estafas de confianza y trucos con tokens y direcciones. Patrones, señales y qué hacer si ya ha pasado.",
+      "descripcion": [
+        "Las estafas con criptoactivos cambian de nombre, pero repiten pocas ideas: prisa, confianza prestada, rentabilidad garantizada y una petición que no tiene marcha atrás.",
+        "Cada artículo describe un patrón con un caso inventado, las señales que lo delatan y los pasos razonables si ya ha ocurrido, incluida la denuncia."
+      ],
+      "aprenderas": [
+        "Cómo funcionan los esquemas Ponzi y piramidales y cómo comprobar si una empresa está autorizada.",
+        "Por qué el soporte real nunca te pide el control de tu equipo ni tu frase de recuperación.",
+        "Cómo se construye una estafa de confianza y por qué te piden pagar para retirar.",
+        "Qué son el envenenamiento de direcciones, los airdrops falsos y los tokens trampa."
+      ]
+    },
+    {
+      "slug": "regulacion-ue",
+      "titulo": "Regulación y fiscalidad en la UE",
+      "nivel": "Intermedio",
+      "imagen": 18,
+      "resumen": "MiCA, la identificación del cliente, la regla de viaje y las obligaciones fiscales en España, explicadas con fuentes oficiales. Sin asesoramiento.",
+      "descripcion": [
+        "Desde 2024 la Unión Europea tiene un marco común para los criptoactivos. La ruta resume qué regula, a quién obliga y qué no garantiza, con enlaces a los textos oficiales.",
+        "La parte fiscal se centra en España y explica conceptos, no cuánto pagar. Para tu caso concreto, consulta la Agencia Tributaria o a un profesional."
+      ],
+      "aprenderas": [
+        "Qué regula el Reglamento MiCA y desde cuándo se aplica.",
+        "Por qué una plataforma pide identificarte y qué datos viajan con una transferencia.",
+        "Qué conceptos fiscales aparecen al vender o intercambiar criptoactivos en España.",
+        "Cómo comprobar si un proveedor está autorizado y qué significa esa autorización."
+      ]
+    }
+  ]
 }

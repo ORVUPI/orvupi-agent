@@ -75,12 +75,22 @@ const units = cur.unidades.map((u) => {
   return { ...u, titulo: data.titulo, resumen: data.resumen, nivel: data.nivel, terminos, claves: data.claves || [], fuentes, lab, body, mod };
 });
 const UNIT = new Map(units.map((u) => [u.id, u]));
-const ORDER = cur.modulos.flatMap((m) => m.unidades);
+// Rutas: la primera es cur.ruta (módulos sin campo «ruta»); el resto, cur.rutas_extra (módulos con «ruta»: slug).
+// Los números de módulo son globales y únicos: son la clave del progreso guardado (M{n}).
+const ROUTES = [{ ...cur.ruta, mods: cur.modulos.filter((m) => !m.ruta) }, ...(cur.rutas_extra || []).map((r) => ({ ...r, mods: cur.modulos.filter((m) => m.ruta === r.slug) }))];
+const ROUTE_OF = new Map(ROUTES.flatMap((r) => r.mods.map((m) => [m.n, r])));
+for (const m of cur.modulos) if (!ROUTE_OF.has(m.n)) throw new Error(`módulo sin ruta: ${m.n}`);
+for (const r of ROUTES) if (!r.mods.length) throw new Error(`ruta sin módulos: ${r.slug}`);
+const rOrder = (r) => r.mods.flatMap((m) => m.unidades);
+const ORDER = ROUTES.flatMap(rOrder);
+const plural = (n, a, b) => `${n} ${n === 1 ? a : b}`;
+const hm = (mins) => (mins >= 60 ? `${Math.floor(mins / 60)} h ${mins % 60} min` : `${mins} min`);
 const artUrl = (u) => `${BASE}articulos/${u.slug}/`;
 // «holder» es término del sector: su página usa el slug termino-holder, igual que la web.
 const termSlug = (id) => (id === "holder" ? "termino-holder" : id);
 const termUrl = (id) => `${BASE}glosario/${termSlug(id)}/`;
-const modUrl = (m) => `${BASE}rutas/${cur.ruta.slug}/${m.slug}/`;
+const routeUrl = (r) => `${BASE}rutas/${r.slug}/`;
+const modUrl = (m) => `${routeUrl(ROUTE_OF.get(m.n))}${m.slug}/`;
 const pracUrl = (p) => `${BASE}practicas/${p.slug}/`;
 
 function inline(s) {
@@ -92,6 +102,7 @@ function inline(s) {
     return `<a class="term" href="${termUrl(id)}">${text}</a>`;
   });
   out = out.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, (_, t, u) => `<a href="${u}" rel="noopener noreferrer">${t}</a>`);
+  out = out.replace(/\[([^\]]+)\]\((\/academy\/[a-z0-9\/#-]*)\)/g, (_, t, u) => `<a href="${u}">${t}</a>`);
   out = out.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<em>$2</em>");
   return out;
 }
@@ -109,7 +120,7 @@ function markdown(md) {
     }
     if (/^\|/.test(line)) {
       const rows = []; while (i < lines.length && /^\|/.test(lines[i])) rows.push(lines[i++]);
-      const cells = (r) => r.replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
+      const cells = (r) => r.replace(/^\||\|$/g, "").replace(/\[\[[^\]]*\]\]/g, (m) => m.replace(/\|/g, "\u0000")).split("|").map((c) => c.replace(/\u0000/g, "|").trim());
       const head = cells(rows[0]); const body = rows.slice(/^\|[\s:|-]+\|$/.test(rows[1] || "") ? 2 : 1);
       html.push(`<div class="ac-tablewrap"><table><thead><tr>${head.map((c) => `<th scope="col">${inline(c)}</th>`).join("")}</tr></thead><tbody>${body.map((r) => `<tr>${cells(r).map((c) => `<td>${inline(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
       continue;
@@ -252,7 +263,7 @@ const lcard = (u) => `<a class="ac-lcard" href="${artUrl(u)}" data-unit="${u.id}
 // ---------- actividades ----------
 function quizBlock(id, q, heading = "Comprueba lo que has aprendido") {
   const name = `q-${id}`;
-  const opts = q.opciones.map((o, i) => `<label class="ac-opt"><input type="radio" name="${name}" value="${i}"${o.correcta ? ' data-ok="1"' : ""} data-porque="${esc(o.porque)}"> <span>${inline(o.texto)}</span></label>`).join("");
+  const opts = seeded(q.opciones, name).map((o, i) => `<label class="ac-opt"><input type="radio" name="${name}" value="${i}"${o.correcta ? ' data-ok="1"' : ""} data-porque="${esc(o.porque)}"> <span>${inline(o.texto)}</span></label>`).join("");
   const ok = q.opciones.find((o) => o.correcta);
   return `<section class="ac-box ac-quiz" data-quiz="${id}" aria-labelledby="h-${name}">
 <h2 id="h-${name}">${heading}</h2>
@@ -286,12 +297,14 @@ const route = cur.ruta;
   const d = UNIT.get(cur.portada.destacado);
   const tiles = [["articulos/", I.art, "Artículos"], ["rutas/", I.route, "Rutas"], ["practicas/", I.prac, "Prácticas"], ["glosario/", I.gloss, "Glosario"], ["mi-aprendizaje/", I.me, "Mi aprendizaje"]];
   const secciones = cur.portada.secciones.map((s) => { const m = cur.modulos.find((x) => x.n === s.modulo); return `<section class="ac-sec ac-c" aria-labelledby="s-${m.slug}"><div class="ac-sec-h"><h2 id="s-${m.slug}">${esc(s.titulo)}</h2><a href="${modUrl(m)}">Ver todo ›</a></div><div class="ac-grid3">${m.unidades.slice(0, 3).map((id) => card(UNIT.get(id))).join("")}</div></section>`; }).join("\n");
+  const rcard = (r) => `<a class="ac-card" href="${routeUrl(r)}">${picture(r.imagen, "w")}<div class="b"><div class="ac-chips"><span class="ac-chip ${lvClass(r.nivel)}">${esc(r.nivel)}</span><span class="ac-chip">Ruta · ${plural(rOrder(r).length, "artículo", "artículos")}</span></div><h3>${esc(r.titulo)}</h3><p class="ac-meta">${esc(r.resumen)}</p></div></a>`;
+  const masRutas = ROUTES.length > 1 ? `<section class="ac-sec ac-c" aria-labelledby="s-rutas"><div class="ac-sec-h"><h2 id="s-rutas">Más rutas</h2><a href="${BASE}rutas/">Ver todo ›</a></div><div class="ac-grid3">${ROUTES.slice(1).map(rcard).join("")}</div></section>` : "";
   const nuevos = `<section class="ac-sec ac-c" aria-labelledby="s-ult"><div class="ac-sec-h"><h2 id="s-ult">Prácticas</h2><a href="${BASE}practicas/">Ver todo ›</a></div><div class="ac-grid3">${P.slice(0, 3).map((p) => `<a class="ac-card" href="${pracUrl(p)}" data-practica="${p.id}">${picture(p.imagen, "w")}<div class="b"><div class="ac-chips"><span class="ac-chip ${lvClass(p.nivel)}">${esc(p.nivel)}</span><span class="ac-chip">Práctica</span></div><h3>${esc(p.titulo.replace(/^Práctica: /, ""))}</h3><p class="ac-meta">${esc(p.resumen)}</p></div></a>`).join("")}</div></section>`;
   const t1 = TERM.get("frase-de-recuperacion") || glos.terminos[0]; const t2 = TERM.get("permiso") || glos.terminos[1];
   const gl = (t) => `<a href="${termUrl(t.id)}"><span class="q" aria-hidden="true">“</span><h3>${esc(t.termino)}</h3><p>${esc(t.definicion)}</p><span class="ac-btn">Leer la definición</span></a>`;
   const body = `<main id="contenido">
 <section class="ac-hero"><div class="ac-c"><div class="ac-hero-g">
-<div class="ac-hero-t"><h1>ORVUPI Academy</h1><p>Aprende cripto con calma, gratis y en español</p><p class="sub">${units.length} artículos, ${cur.modulos.length} módulos, ${P.length} prácticas y ${glos.terminos.length} términos. Sin cuenta, sin wallet y sin pagos.</p></div>
+<div class="ac-hero-t"><h1>ORVUPI Academy</h1><p>Aprende cripto con calma, gratis y en español</p><p class="sub">${units.length} artículos, ${ROUTES.length} rutas, ${cur.modulos.length} módulos, ${P.length} prácticas y ${glos.terminos.length} términos. Sin cuenta, sin wallet y sin pagos.</p></div>
 <a class="ac-feat" href="${artUrl(d)}">${picture(d.imagen, "w", "", false)}<span class="in"><span class="badge">Destacado</span><h2>${esc(d.titulo)}</h2><span class="meta">${I.clock} ${minutes(d)} min · ${esc(d.nivel)}</span></span></a>
 </div></div></section>
 <div class="ac-c"><nav class="ac-tiles" aria-label="Accesos rápidos">${tiles.map(([h, ic, t]) => `<a class="ac-tile" href="${BASE}${h}">${ic}<span>${t}</span></a>`).join("")}</nav>
@@ -299,6 +312,7 @@ const route = cur.ruta;
 <div class="ac-sug">${cur.portada.sugeridos.map((id) => { const u = UNIT.get(id); return `<a href="${artUrl(u)}" data-unit="${u.id}">${picture(u.imagen, "s")}<span>${esc(u.titulo)}</span></a>`; }).join("")}</div>
 <section class="ac-track" aria-labelledby="s-ruta">${picture(route.imagen, "w")}<div><h2 id="s-ruta">${esc(route.titulo)}</h2><p>${esc(route.resumen)}</p><a class="ac-btn pink mid" href="${BASE}rutas/${route.slug}/">Empezar la ruta</a></div></section>
 </div>
+${masRutas}
 ${secciones}
 ${nuevos}
 <section class="ac-sec ac-c" aria-labelledby="s-glo"><div class="ac-sec-h"><h2 id="s-glo">Glosario</h2><a href="${BASE}glosario/">Ver todo ›</a></div>
@@ -310,27 +324,27 @@ ${nuevos}
 
 // Artículos (lista)
 {
-  const mods = cur.modulos.map((m) => `<option value="${m.n}">${m.n}. ${esc(m.titulo)}</option>`).join("");
+  const mods = ROUTES.map((r) => `<optgroup label="${esc(r.titulo)}">${r.mods.map((m) => `<option value="${m.n}">${m.n}. ${esc(m.titulo)}</option>`).join("")}</optgroup>`).join("");
   const body = `<main id="contenido" class="ac-pg-lista">
-<div class="ac-head"><div class="ac-c-n"><h1>Artículos de ORVUPI Academy</h1><p>${units.length} artículos originales en ${cur.modulos.length} módulos.</p></div></div>
+<div class="ac-head"><div class="ac-c-n"><h1>Artículos de ORVUPI Academy</h1><p>${units.length} artículos originales en ${ROUTES.length} rutas y ${cur.modulos.length} módulos.</p></div></div>
 <div class="ac-filters"><div class="ac-c-n"><form data-ac-filter role="search" aria-label="Filtrar artículos">
 <label for="f-q">Buscar</label><input id="f-q" name="q" type="search" placeholder="Palabra o término">
 <label for="f-m">Módulo</label><select id="f-m" name="modulo"><option value="">Todos</option>${mods}</select>
 <label for="f-n">Nivel</label><select id="f-n" name="nivel"><option value="">Todos</option><option>Principiante</option><option>Intermedio</option></select>
 <button type="reset" class="ac-btn ghost">Limpiar filtros</button>
 </form></div></div>
-<div class="ac-c-n"><div class="ac-list-h"><h2 id="art-n" aria-live="polite">Artículos (${units.length})</h2><div class="ac-sort"><label class="ac-sr" for="f-o">Ordenar</label><select id="f-o" data-ac-sort><option value="ruta">Orden de la ruta</option><option value="az">De la A a la Z</option></select></div></div>
+<div class="ac-c-n"><div class="ac-list-h"><h2 id="art-n" aria-live="polite">Artículos (${units.length})</h2><div class="ac-sort"><label class="ac-sr" for="f-o">Ordenar</label><select id="f-o" data-ac-sort><option value="ruta">Orden de las rutas</option><option value="az">De la A a la Z</option></select></div></div>
 <div class="ac-grid-l" data-ac-list>${ORDER.map((id) => lcard(UNIT.get(id))).join("")}</div>
 <p class="ac-empty" hidden data-ac-none>Ningún artículo coincide. Prueba con otra palabra o <a href="${BASE}glosario/">busca en el glosario</a>.</p>
 </div></main>`;
-  add("articulos/index.html", { path: `${BASE}articulos/`, title: "Artículos · ORVUPI Academy", desc: "Todos los artículos de ORVUPI Academy: fundamentos, redes, seguridad, transacciones, DeFi y lectura de datos.", current: "articulos", promo: true, body });
+  add("articulos/index.html", { path: `${BASE}articulos/`, title: "Artículos · ORVUPI Academy", desc: "Todos los artículos de ORVUPI Academy: fundamentos, seguridad, DeFi, trading básico, memecoins, Solana, estafas y regulación en la UE.", current: "articulos", promo: true, body });
 }
 
 // Artículo
 const caso = stripEn(legacyMain("comparar/index.html")).replace(/<h1>/g, "<h3>").replace(/<\/h1>/g, "</h3>").replace(/<h2>/g, "<h4>").replace(/<\/h2>/g, "</h4>").replace(/<p class="lede">/g, "<p>");
 const LAB_TXT = { "mision-01": ["Misión 1 del laboratorio", "#mision-titulo"], "leccion-permisos": ["Lección: permisos de un token", "#lecciones"], "leccion-reparto": ["Lección: reparto de la oferta", "#lecciones"], "leccion-huecos": ["Lección: datos que faltan", "#lecciones"] };
 for (const u of units) {
-  const k = ORDER.indexOf(u.id); const prev = UNIT.get(ORDER[k - 1]); const next = UNIT.get(ORDER[k + 1]);
+  const RO = rOrder(ROUTE_OF.get(u.mod.n)); const k = RO.indexOf(u.id); const prev = UNIT.get(RO[k - 1]); const next = UNIT.get(RO[k + 1]);
   const { html, toc } = markdown(u.body);
   const extra = [];
   if (u.lab.includes("caso-curva")) { extra.push(`<section class="ac-box" id="ejemplo-de-curva" aria-labelledby="h-caso"><h2 id="h-caso">Ejemplo de curva</h2>${caso}<p><a class="ac-btn pink mid" href="${BASE}practicas/curva-en-vivo/">Abrir la curva en vivo</a></p></section>`); toc.push({ id: "ejemplo-de-curva", t: "Ejemplo de curva" }); }
@@ -375,35 +389,43 @@ ${fuentes}
 
 // Rutas
 {
-  const mins = units.reduce((s, u) => s + minutes(u), 0);
-  const body = `<main id="contenido"><div class="ac-head ac-head-xl"><div class="ac-c-n"><div><h1>Rutas de aprendizaje</h1><p>Itinerarios ordenados con evaluación por módulo.</p></div><img src="/assets/academy/img/1-q.webp" width="320" height="320" alt="Ilustración de ORVUPI: el pulpo rosa con su rizo"></div></div>
-<div class="ac-c-n ac-c-rutas"><div class="ac-list-h"><h2>Rutas (1)</h2></div><div class="ac-grid-l"><a class="ac-lcard" href="${BASE}rutas/${route.slug}/">${picture(route.imagen, "w")}<span class="b"><h3>${esc(route.titulo)}</h3><span>${esc(route.resumen)}</span><span class="foot"><span class="ac-chip ${lvClass(route.nivel)}">${esc(route.nivel)}</span><span>${cur.modulos.length} módulos</span><span>${I.clock} ${Math.floor(mins / 60)} h ${mins % 60} min</span></span></span></a></div></div></main>`;
-  add("rutas/index.html", { path: `${BASE}rutas/`, title: "Rutas · ORVUPI Academy", desc: "Rutas de aprendizaje de ORVUPI Academy.", current: "rutas", promo: true, body });
-  const rows = cur.modulos.map((m) => `<div class="ac-row" data-modulo="${m.n}"><span class="ck" aria-hidden="true">✓</span><details><summary><strong>${m.n}. ${esc(m.titulo)}</strong><span>${m.unidades.length} artículos · 6 preguntas</span></summary><p>${esc(m.resumen)}</p><ol>${m.unidades.map((id) => `<li><a href="${artUrl(UNIT.get(id))}" data-unit="${id}">${esc(UNIT.get(id).titulo)} <span class="ac-done">✓</span></a></li>`).join("")}<li><a href="${modUrl(m)}#evaluacion">Evaluación del módulo ${m.n}</a></li></ol></details></div>`).join("");
-  const body2 = `<main id="contenido"><section class="ac-th"><div class="ac-c"><div class="ac-th-g"><div>
+  const rmins = (r) => rOrder(r).reduce((s, id) => s + minutes(UNIT.get(id)), 0);
+  const rl = (r) => `<a class="ac-lcard" href="${routeUrl(r)}">${picture(r.imagen, "w")}<span class="b"><h3>${esc(r.titulo)}</h3><span>${esc(r.resumen)}</span><span class="foot"><span class="ac-chip ${lvClass(r.nivel)}">${esc(r.nivel)}</span><span>${plural(r.mods.length, "módulo", "módulos")}</span><span>${plural(rOrder(r).length, "artículo", "artículos")}</span><span>${I.clock} ${hm(rmins(r))}</span></span></span></a>`;
+  const body = `<main id="contenido"><div class="ac-head ac-head-xl"><div class="ac-c-n"><div><h1>Rutas de aprendizaje</h1><p>Itinerarios ordenados con evaluación por módulo. Empieza por la primera o elige un tema.</p></div><img src="/assets/academy/img/1-q.webp" width="320" height="320" alt="Ilustración de ORVUPI: el pulpo rosa con su rizo"></div></div>
+<div class="ac-c-n ac-c-rutas"><div class="ac-list-h"><h2>Rutas (${ROUTES.length})</h2></div><div class="ac-grid-l">${ROUTES.map(rl).join("")}</div></div></main>`;
+  add("rutas/index.html", { path: `${BASE}rutas/`, title: "Rutas · ORVUPI Academy", desc: `Rutas de aprendizaje de ORVUPI Academy: ${ROUTES.map((r) => r.titulo).join(", ")}.`, current: "rutas", promo: true, body });
+  for (const route of ROUTES) {
+    const mins = rmins(route); const RO = rOrder(route);
+    const rows = route.mods.map((m) => `<div class="ac-row" data-modulo="${m.n}"><span class="ck" aria-hidden="true">✓</span><details${route.mods.length === 1 ? " open" : ""}><summary><strong>${m.n}. ${esc(m.titulo)}</strong><span>${plural(m.unidades.length, "artículo", "artículos")} · ${preg.modulos[String(m.n)].length} preguntas</span></summary><p>${esc(m.resumen)}</p><ol>${m.unidades.map((id) => `<li><a href="${artUrl(UNIT.get(id))}" data-unit="${id}">${esc(UNIT.get(id).titulo)} <span class="ac-done">✓</span></a></li>`).join("")}<li><a href="${modUrl(m)}#evaluacion">Evaluación del módulo ${m.n}</a></li></ol></details></div>`).join("");
+    const otras = ROUTES.filter((r) => r !== route);
+    const body2 = `<main id="contenido"><section class="ac-th"><div class="ac-c"><div class="ac-th-g"><div>
 <p class="brand"><img src="/assets/academy/logo.png" width="28" height="28" alt="">ORVUPI ACADEMY</p>
 ${crumbs([[BASE, "Inicio"], [`${BASE}rutas/`, "Rutas"], ["", route.titulo]])}
 <h1>${esc(route.titulo)}</h1><p>${esc(route.resumen)}</p>
-<dl><div><dt>Nivel</dt><dd>${esc(route.nivel)}</dd></div><div><dt>Tiempo estimado</dt><dd>${Math.floor(mins / 60)} h ${mins % 60} min</dd></div><div><dt>Módulos superados</dt><dd data-ac-mods>Dato no disponible</dd></div></dl>
-<a class="ac-btn pink" href="${artUrl(UNIT.get(ORDER[0]))}" data-ac-continue>Empezar la ruta</a></div>
+<dl><div><dt>Nivel</dt><dd>${esc(route.nivel)}</dd></div><div><dt>Tiempo estimado</dt><dd>${hm(mins)}</dd></div><div><dt>Módulos superados</dt><dd data-ac-mods>Dato no disponible</dd></div></dl>
+<a class="ac-btn pink" href="${artUrl(UNIT.get(RO[0]))}" data-ac-continue>Empezar la ruta</a></div>
 ${picture(route.imagen, "q", "art", false).replace(`${route.imagen}-q.webp`, `${cur.cuadradas.includes(route.imagen) ? route.imagen + "-q" : route.imagen + "-w"}.webp`)}
 </div></div></section>
 <div class="ac-c"><section class="ac-tdesc"><h2>Descripción general</h2><h3>Más sobre esta ruta</h3>${route.descripcion.map((p) => `<p>${inline(p)}</p>`).join("")}<h3>Lo que vas a aprender</h3><ul>${route.aprenderas.map((p) => `<li>${inline(p)}</li>`).join("")}</ul>
-<h3>Constancia de progreso</h3><p>No emitimos certificados ni pedimos registro. Tu avance se guarda en este navegador y puedes exportarlo como archivo desde <a href="${BASE}mi-aprendizaje/">Mi aprendizaje</a>.</p></section>
-<section class="ac-prog"><h2>Programa</h2><p class="n">${cur.modulos.length} módulos</p>${rows}
+<h3>Constancia de progreso</h3><p>No emitimos certificados ni pedimos registro. Tu avance se guarda en este navegador y puedes exportarlo como archivo desde <a href="${BASE}mi-aprendizaje/">Mi aprendizaje</a>.</p>
+<h3>Otras rutas</h3><ul>${otras.map((r) => `<li><a href="${routeUrl(r)}">${esc(r.titulo)}</a></li>`).join("")}</ul></section>
+<section class="ac-prog"><h2>Programa</h2><p class="n">${plural(route.mods.length, "módulo", "módulos")}</p>${rows}
 <div class="ac-row cert"><span class="ck" aria-hidden="true">★</span><details open><summary><strong>Mi aprendizaje</strong><a class="ac-btn pink" href="${BASE}mi-aprendizaje/">Ver mi progreso</a></summary></details></div></section></div></main>`;
-  add(`rutas/${route.slug}/index.html`, { path: `${BASE}rutas/${route.slug}/`, title: `${route.titulo} · ORVUPI Academy`, desc: route.resumen, current: "rutas", body: body2 });
-  for (const m of cur.modulos) {
-    const qs = preg.modulos[String(m.n)];
-    const eva = `<section class="ac-box ac-exam" id="evaluacion" data-exam="M${m.n}" data-pass="${preg.aprobado_modulo}" aria-labelledby="h-eva"><h2 id="h-eva">Evaluación del módulo ${m.n}</h2><p>${qs.length} preguntas. Se supera con ${preg.aprobado_modulo} aciertos. Puedes repetirla.</p>
-${qs.map((q, i) => `<fieldset class="ac-quiz-q"><legend>${i + 1}. ${inline(q.pregunta)}</legend>${q.opciones.map((o, j) => `<label class="ac-opt"><input type="radio" name="m${m.n}-${i}" value="${j}"${o.correcta ? ' data-ok="1"' : ""} data-porque="${esc(o.porque)}"> <span>${inline(o.texto)}</span></label>`).join("")}<p class="ac-fb" aria-live="polite"></p></fieldset>`).join("")}
+    add(`rutas/${route.slug}/index.html`, { path: routeUrl(route), title: `${route.titulo} · ORVUPI Academy`, desc: route.resumen, current: "rutas", body: body2 });
+    route.mods.forEach((m, mi) => {
+      const qs = preg.modulos[String(m.n)];
+      if (!qs || qs.length !== 6) throw new Error(`módulo ${m.n} sin 6 preguntas`);
+      const eva = `<section class="ac-box ac-exam" id="evaluacion" data-exam="M${m.n}" data-pass="${preg.aprobado_modulo}" aria-labelledby="h-eva"><h2 id="h-eva">Evaluación del módulo ${m.n}</h2><p>${qs.length} preguntas. Se supera con ${preg.aprobado_modulo} aciertos. Puedes repetirla.</p>
+${qs.map((q, i) => `<fieldset class="ac-quiz-q"><legend>${i + 1}. ${inline(q.pregunta)}</legend>${seeded(q.opciones, `m${m.n}-${i}`).map((o, j) => `<label class="ac-opt"><input type="radio" name="m${m.n}-${i}" value="${j}"${o.correcta ? ' data-ok="1"' : ""} data-porque="${esc(o.porque)}"> <span>${inline(o.texto)}</span></label>`).join("")}<p class="ac-fb" aria-live="polite"></p></fieldset>`).join("")}
 <div class="ac-actions ac-js-only"><button type="button" class="ac-btn pink mid" data-check>Corregir</button></div><p class="ac-fb" data-total aria-live="polite"></p>
 <details class="ac-sol nojs"><summary>Ver las respuestas</summary><ol>${qs.map((q) => { const ok = q.opciones.find((o) => o.correcta); return `<li>${inline(ok.texto)}. ${inline(ok.porque)}</li>`; }).join("")}</ol></details></section>`;
-    const body3 = `<main id="contenido"><div class="ac-head"><div class="ac-c-n">${crumbs([[BASE, "Inicio"], [`${BASE}rutas/${route.slug}/`, route.titulo], ["", `Módulo ${m.n}`]])}<h1>Módulo ${m.n}. ${esc(m.titulo)}</h1><p>${esc(m.resumen)}</p></div></div>
+      const pm = route.mods[mi - 1]; const nm = route.mods[mi + 1];
+      const body3 = `<main id="contenido"><div class="ac-head"><div class="ac-c-n">${crumbs([[BASE, "Inicio"], [routeUrl(route), route.titulo], ["", `Módulo ${m.n}`]])}<h1>Módulo ${m.n}. ${esc(m.titulo)}</h1><p>${esc(m.resumen)}</p></div></div>
 <div class="ac-c-n"><div class="ac-list-h"><h2>Artículos (${m.unidades.length})</h2></div><div class="ac-grid-l">${m.unidades.map((id) => lcard(UNIT.get(id))).join("")}</div>
 <div class="ac-quizwrap ac-quiz">${eva}</div>
-<nav class="ac-pager" aria-label="Módulos">${m.n > 1 ? `<a href="${modUrl(cur.modulos[m.n - 2])}"><small>‹ Anterior</small>Módulo ${m.n - 1}</a>` : ""}${m.n < cur.modulos.length ? `<a class="next" href="${modUrl(cur.modulos[m.n])}"><small>Siguiente ›</small>Módulo ${m.n + 1}</a>` : `<a class="next" href="${BASE}mi-aprendizaje/"><small>Fin de la ruta ›</small>Mi aprendizaje</a>`}</nav></div></main>`;
-    add(`rutas/${route.slug}/${m.slug}/index.html`, { path: modUrl(m), title: `Módulo ${m.n}: ${m.titulo} · ORVUPI Academy`, desc: m.resumen, current: "rutas", body: body3 });
+<nav class="ac-pager" aria-label="Módulos">${pm ? `<a href="${modUrl(pm)}"><small>‹ Anterior</small>Módulo ${pm.n}</a>` : ""}${nm ? `<a class="next" href="${modUrl(nm)}"><small>Siguiente ›</small>Módulo ${nm.n}</a>` : `<a class="next" href="${BASE}mi-aprendizaje/"><small>Fin de la ruta ›</small>Mi aprendizaje</a>`}</nav></div></main>`;
+      add(`rutas/${route.slug}/${m.slug}/index.html`, { path: modUrl(m), title: `Módulo ${m.n}: ${m.titulo} · ORVUPI Academy`, desc: m.resumen, current: "rutas", body: body3 });
+    });
   }
 }
 
@@ -468,6 +490,7 @@ ${cur.herramientas.map((h) => tcard(h.id === "cuaderno" ? `${BASE}mi-aprendizaje
 <div class="ac-js-only" data-ac-me>
 <div class="ac-stats"><div class="ac-stat"><strong data-k="leidos">0</strong><span>de ${units.length} artículos leídos</span></div><div class="ac-stat"><strong data-k="preguntas">0</strong><span>preguntas acertadas</span></div><div class="ac-stat"><strong data-k="modulos">0</strong><span>de ${cur.modulos.length} módulos superados</span></div><div class="ac-stat"><strong data-k="practicas">0</strong><span>de ${P.length} prácticas hechas</span></div></div>
 <section class="ac-panel"><h2>Sigue donde lo dejaste</h2><p data-k="siguiente">Dato no disponible</p></section>
+<section class="ac-panel"><h2>Tus rutas</h2><ul class="ac-rutas-me" data-k="rutas">${ROUTES.map((r) => `<li><a href="${routeUrl(r)}">${esc(r.titulo)}</a> · ${plural(rOrder(r).length, "artículo", "artículos")} · leídos: <span data-ruta="${esc(r.slug)}">Dato no disponible</span></li>`).join("")}</ul></section>
 <section class="ac-panel"><h2>Tus notas</h2><div data-k="notas"><p>Aún no has escrito notas.</p></div></section>
 <section class="ac-panel"><h2>Laboratorio</h2><p data-k="lab">Dato no disponible</p><p><a href="${BASE}practicas/laboratorio/">Abrir el laboratorio</a></p></section>
 <section class="ac-panel"><h2>Cuaderno de fichas</h2><p data-k="cuaderno">Dato no disponible</p><p><a class="ac-btn pink mid" href="${BASE}mi-aprendizaje/cuaderno/">Abrir el cuaderno</a></p></section>
@@ -480,7 +503,7 @@ ${cur.herramientas.map((h) => tcard(h.id === "cuaderno" ? `${BASE}mi-aprendizaje
 }
 
 // Datos para academy.js (sin scripts en línea: JSON aparte)
-const data = { version: 1, unidades: ORDER.map((id) => { const u = UNIT.get(id); return { id, t: u.titulo, u: artUrl(u), m: u.mod.n }; }), modulos: cur.modulos.map((m) => ({ n: m.n, t: m.titulo, u: modUrl(m) })), practicas: P.map((p) => ({ id: p.id, t: p.titulo, u: pracUrl(p) })), glosario: glos.terminos.map((t) => ({ id: t.id, t: t.termino })) };
+const data = { version: 1, unidades: ORDER.map((id) => { const u = UNIT.get(id); return { id, t: u.titulo, u: artUrl(u), m: u.mod.n }; }), modulos: cur.modulos.map((m) => ({ n: m.n, t: m.titulo, u: modUrl(m), r: ROUTE_OF.get(m.n).slug })), rutas: ROUTES.map((r) => ({ slug: r.slug, t: r.titulo, u: routeUrl(r), unidades: rOrder(r) })), practicas: P.map((p) => ({ id: p.id, t: p.titulo, u: pracUrl(p) })), glosario: glos.terminos.map((t) => ({ id: t.id, t: t.termino })) };
 
 // ---------- escritura ----------
 for (const d of ["articulos", "rutas", "glosario", "practicas", "mi-aprendizaje"]) rmSync(join(OUT, d), { recursive: true, force: true });

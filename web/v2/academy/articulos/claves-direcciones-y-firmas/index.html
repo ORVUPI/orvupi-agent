@@ -19,7 +19,7 @@
 <link rel="apple-touch-icon" href="/academy/icon-192.png">
 <link rel="stylesheet" href="/assets/academy/academy.css?v=bb177bcc42">
 <script src="/assets/shell.js?v=ba3a858465"></script>
-<script src="/assets/academy/academy.js?v=601cd092e6" defer></script>
+<script src="/assets/academy/academy.js?v=51014aefd5" defer></script>
 </head>
 <body class="ac">
 <a class="ac-skip" href="#contenido">Saltar al contenido</a>
@@ -55,7 +55,7 @@
 <section class="claves"><h2 id="aspectos-clave">Aspectos clave</h2><ul><li>La clave privada es un número secreto que permite autorizar movimientos. Quien la tiene, controla los fondos.</li><li>La clave pública y la dirección se derivan de ella y se pueden compartir para recibir.</li><li>Una firma demuestra que el dueño de la clave aprobó un mensaje concreto, sin revelar la clave.</li><li>Una wallet no guarda monedas: guarda claves y te ayuda a firmar.</li></ul></section>
 <h2 id="tres-piezas-con-funciones-distintas">Tres piezas con funciones distintas</h2>
 <p>En casi todas las redes cripto hay tres elementos que conviene no confundir:</p>
-<div class="ac-tablewrap"><table><thead><tr><th scope="col">Pieza</th><th scope="col">Qué es</th><th scope="col">¿Se comparte?</th></tr></thead><tbody><tr><td>[[clave-privada</td><td>Clave privada]]</td><td>Un número secreto enorme, elegido al azar</td><td>Nunca</td></tr><tr><td>[[clave-publica</td><td>Clave pública]] y [[direccion-cuenta</td><td>dirección]]</td><td>Datos que se calculan a partir de la clave privada</td><td>Sí, para recibir</td></tr><tr><td>[[firma-digital</td><td>Firma]]</td><td>La prueba de que la clave privada aprobó un mensaje concreto</td><td>Viaja con cada operación</td></tr></tbody></table></div>
+<div class="ac-tablewrap"><table><thead><tr><th scope="col">Pieza</th><th scope="col">Qué es</th><th scope="col">¿Se comparte?</th></tr></thead><tbody><tr><td><a class="term" href="/academy/glosario/clave-privada/">Clave privada</a></td><td>Un número secreto enorme, elegido al azar</td><td>Nunca</td></tr><tr><td><a class="term" href="/academy/glosario/clave-publica/">Clave pública</a> y <a class="term" href="/academy/glosario/direccion-cuenta/">dirección</a></td><td>Datos que se calculan a partir de la clave privada</td><td>Sí, para recibir</td></tr><tr><td><a class="term" href="/academy/glosario/firma-digital/">Firma</a></td><td>La prueba de que la clave privada aprobó un mensaje concreto</td><td>Viaja con cada operación</td></tr></tbody></table></div>
 <p>El cálculo funciona en un solo sentido: de la clave privada se obtiene la pública, pero con la pública no se puede reconstruir la privada en la práctica. Por eso puedes publicar tu dirección sin riesgo para tus fondos.</p>
 <h2 id="que-hace-la-firma">Qué hace la firma</h2>
 <p>Cuando envías algo, tu <a class="term" href="/academy/glosario/wallet/">wallet</a> prepara un mensaje con los detalles: destino, cantidad, comisión. Después lo firma con la clave privada. Cualquier nodo puede comprobar con la clave pública que la firma es válida y que el mensaje no ha cambiado ni una cifra. La clave privada no sale de tu dispositivo.</p>
@@ -67,7 +67,7 @@
 
 <section class="ac-box ac-quiz" data-quiz="OA-003" aria-labelledby="h-q-OA-003">
 <h2 id="h-q-OA-003">Comprueba lo que has aprendido</h2>
-<fieldset><legend>¿Qué dato puedes compartir para que te envíen fondos?</legend><label class="ac-opt"><input type="radio" name="q-OA-003" value="0" data-porque="Con ella se reconstruyen todas tus claves."> <span>La frase de recuperación</span></label><label class="ac-opt"><input type="radio" name="q-OA-003" value="1" data-porque="Permite mover tus fondos."> <span>La clave privada</span></label><label class="ac-opt"><input type="radio" name="q-OA-003" value="2" data-ok="1" data-porque="Correcto: la dirección es pública y sirve para recibir."> <span>La dirección</span></label></fieldset>
+<fieldset><legend>¿Qué dato puedes compartir para que te envíen fondos?</legend><label class="ac-opt"><input type="radio" name="q-OA-003" value="0" data-ok="1" data-porque="Correcto: la dirección es pública y sirve para recibir."> <span>La dirección</span></label><label class="ac-opt"><input type="radio" name="q-OA-003" value="1" data-porque="Permite mover tus fondos."> <span>La clave privada</span></label><label class="ac-opt"><input type="radio" name="q-OA-003" value="2" data-porque="Con ella se reconstruyen todas tus claves."> <span>La frase de recuperación</span></label></fieldset>
 <div class="ac-actions ac-js-only"><button type="button" class="ac-btn pink mid" data-check>Comprobar</button></div>
 <p class="ac-fb" aria-live="polite"></p>
 <details class="ac-sol nojs"><summary>Ver la respuesta</summary><p><strong>Correcta:</strong> La dirección. Correcto: la dirección es pública y sirve para recibir.</p><ul><li>La frase de recuperación: Con ella se reconstruyen todas tus claves.</li><li>La clave privada: Permite mover tus fondos.</li></ul></details>

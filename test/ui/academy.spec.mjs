@@ -285,6 +285,45 @@ test("evaluación del módulo: aprobado con 5 de 6 y queda marcado en la ruta", 
   await expect(page.locator('.ac-row[data-modulo="1"]')).toHaveClass(/is-done/);
 });
 
+test("rutas nuevas: portada, página de ruta, paginación dentro de la ruta y «Tus rutas»", async ({ page }) => {
+  const errors = watchErrors(page);
+  const datos = JSON.parse(readFileSync(new URL("../../web/v2/academy/datos.json", import.meta.url), "utf8"));
+  expect(datos.rutas.length).toBeGreaterThanOrEqual(6);
+  await page.goto("/academy/");
+  for (const r of datos.rutas) await expect(page.locator(`main a[href="${r.u}"]`).first()).toBeAttached();
+  await page.goto("/academy/rutas/");
+  for (const r of datos.rutas) await expect(page.locator(`main a[href="${r.u}"]`).first()).toBeAttached();
+  for (const r of datos.rutas.slice(1)) {
+    await page.goto(r.u);
+    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator(".ac-row[data-modulo]")).toHaveCount(datos.modulos.filter((m) => m.r === r.slug).length);
+    await noOverflow(page, r.slug);
+  }
+  // Última lección de la ruta de estafas: la paginación no salta a otra ruta.
+  const estafas = datos.rutas.find((r) => r.slug === "estafas");
+  const last = datos.unidades.find((u) => u.id === estafas.unidades.at(-1));
+  await page.goto(last.u);
+  await noOverflow(page, "lección nueva");
+  const mod = datos.modulos.find((x) => x.r === "estafas");
+  await expect(page.locator(".ac-pager a.next")).toHaveAttribute("href", `${mod.u}#evaluacion`);
+  // Una lección leída cuenta en «Tus rutas».
+  await page.locator(`[data-read="${last.id}"]`).click();
+  await expect(page.locator(`[data-read="${last.id}"]`)).toHaveText("Leído ✓");
+  await page.goto("/academy/mi-aprendizaje/");
+  await expect(page.locator('[data-k="rutas"] [data-ruta="estafas"]')).toHaveText("1");
+  await expect(page.locator('[data-k="rutas"] [data-ruta="primeros-pasos"]')).toHaveText("0");
+  // Evaluación de un módulo nuevo: 6 preguntas, aprobado con 5.
+  const m = datos.modulos.find((x) => x.r === "regulacion-ue");
+  await page.goto(m.u + "#evaluacion");
+  const exam = page.locator("[data-exam]");
+  const sets = await exam.locator("fieldset").all();
+  expect(sets.length).toBe(6);
+  for (const [i, fs] of sets.entries()) await fs.locator(i === 0 ? "input:not([data-ok])" : "input[data-ok]").first().check({ force: true });
+  await exam.locator("[data-check]").click();
+  await expect(exam.locator("[data-total]")).toContainText("5 de 6 aciertos. Módulo superado.");
+  expect(errors).toEqual([]);
+});
+
 test("datos antiguos: Lab y Cuaderno guardados antes siguen en Academy", async ({ page }) => {
   // Se escriben datos como los dejaba la herramienta antigua (/lab/ y /cuaderno/: mismo origen, mismas claves).
   await page.goto("/lab/");

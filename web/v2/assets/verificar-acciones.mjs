@@ -2,11 +2,11 @@
  * Acciones de Verify hacia el cuaderno local.
  * La dirección no va en la consulta ni al servidor. Se guarda red y dirección en IndexedDB orvupi-cuaderno.
  */
-import { formatAmount } from "../shared/amount.js?v=e3734c4579";
-import { ENTENDER, entenderNav } from "../shared/entender.js?v=e3734c4579";
-import { notebookDbAll, notebookDbPut, openNotebookDb } from "../shared/notebook-db.js?v=e3734c4579";
-import { cardDecimals, compareRecords, comparedSideText, comparisonSummary, curveComparisonValue, pickPrevious, staleLine, stampIdentity, supplyDirection, validateCard, withinStoreLimit } from "../shared/notebook-model.js?v=e3734c4579";
-import { cardFromShown } from "../shared/solana-read.js?v=e3734c4579";
+import { formatAmount } from "../shared/amount.js?v=850a517e7c";
+import { ENTENDER, entenderNav } from "../shared/entender.js?v=850a517e7c";
+import { notebookDbAll, notebookDbPut, openNotebookDb } from "../shared/notebook-db.js?v=850a517e7c";
+import { cardDecimals, compareRecords, comparedSideText, comparisonSummary, curveComparisonValue, pickPrevious, staleLine, stampIdentity, supplyDirection, validateCard, withinStoreLimit } from "../shared/notebook-model.js?v=850a517e7c";
+import { cardFromShown } from "../shared/solana-read.js?v=850a517e7c";
 
 const DB_NAME = "orvupi-cuaderno";
 
@@ -134,7 +134,7 @@ function saySaved(incomplete) {
   if (incomplete) p.append(document.createTextNode(`${t("incomplete")} `));
   p.append(document.createTextNode(t("saved")));
   const link = document.createElement("a");
-  link.href = "/cuaderno/";
+  link.href = "/academy/mi-aprendizaje/cuaderno/";
   link.textContent = t("open");
   p.append(link);
   node.append(p);

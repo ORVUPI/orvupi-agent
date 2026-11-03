@@ -19,7 +19,7 @@
 <link rel="apple-touch-icon" href="/academy/icon-192.png">
 <link rel="stylesheet" href="/assets/academy/academy.css?v=bb177bcc42">
 <script src="/assets/shell.js?v=ba3a858465"></script>
-<script src="/assets/academy/academy.js?v=601cd092e6" defer></script>
+<script src="/assets/academy/academy.js?v=51014aefd5" defer></script>
 </head>
 <body class="ac">
 <a class="ac-skip" href="#contenido">Saltar al contenido</a>
@@ -60,14 +60,14 @@
 <p>Saber quién tiene un token es más difícil. Los nodos pueden devolver las cuentas con más saldo de un token, pero es una muestra limitada, no un <a class="term" href="/academy/glosario/censo/">censo</a> completo.</p>
 <p>Además, una cuenta no es una persona. Una de las cuentas más grandes puede ser una <a class="term" href="/academy/glosario/cuenta-tecnica/">cuenta técnica</a>: el pool de liquidez de un AMM, la cuenta de un puente o la de un contrato de bloqueo. Y una misma persona puede repartir su saldo en muchas cuentas. Por eso el <a class="term" href="/academy/glosario/titular/">titular</a> de una cuenta y la persona detrás no son lo mismo.</p>
 <h2 id="tres-maneras-de-no-tener-un-dato">Tres maneras de no tener un dato</h2>
-<div class="ac-tablewrap"><table><thead><tr><th scope="col">Tipo</th><th scope="col">Qué pasó</th><th scope="col">Cómo se anota</th></tr></thead><tbody><tr><td>[[consulta-fallida</td><td>Consulta fallida]]</td><td>Se pidió el dato y no llegó una respuesta usable (por ejemplo, un error HTTP 429 por exceso de peticiones)</td><td>Dato no disponible, con el motivo</td></tr><tr><td>[[ausente-comprobado</td><td>Ausente comprobado]]</td><td>Se pidió y la respuesta confirma que no existe</td><td>Ausente, con fecha</td></tr><tr><td>[[no-consultado</td><td>No consultado]]</td><td>Esta lectura no lo pidió</td><td>No consultado</td></tr></tbody></table></div>
+<div class="ac-tablewrap"><table><thead><tr><th scope="col">Tipo</th><th scope="col">Qué pasó</th><th scope="col">Cómo se anota</th></tr></thead><tbody><tr><td><a class="term" href="/academy/glosario/consulta-fallida/">Consulta fallida</a></td><td>Se pidió el dato y no llegó una respuesta usable (por ejemplo, un error HTTP 429 por exceso de peticiones)</td><td>Dato no disponible, con el motivo</td></tr><tr><td><a class="term" href="/academy/glosario/ausente-comprobado/">Ausente comprobado</a></td><td>Se pidió y la respuesta confirma que no existe</td><td>Ausente, con fecha</td></tr><tr><td><a class="term" href="/academy/glosario/no-consultado/">No consultado</a></td><td>Esta lectura no lo pidió</td><td>No consultado</td></tr></tbody></table></div>
 <p>Ninguno de los tres es un cero. Una muestra que no llegó no significa que nadie tenga el token, ni que esté bien repartido.</p>
 <h2 id="las-lecciones-del-lab">Las lecciones del Lab</h2>
 <p>Abajo tienes dos lecciones del antiguo Lab con fichas reales del 2026-10-16: «Reparto: suministro y cuentas» y «Cuando falta un dato».</p>
 <section class="ac-box" id="laboratorio" aria-labelledby="h-lab"><h2 id="h-lab">Practica en el laboratorio</h2><p>El laboratorio usa fichas reales guardadas y fechadas. No lee la cadena ni conecta wallets. Tu avance del laboratorio se conserva.</p><ul><li><a href="/academy/practicas/laboratorio/#lecciones">Lección: reparto de la oferta</a></li><li><a href="/academy/practicas/laboratorio/#lecciones">Lección: datos que faltan</a></li></ul></section>
 <section class="ac-box ac-quiz" data-quiz="OA-023" aria-labelledby="h-q-OA-023">
 <h2 id="h-q-OA-023">Comprueba lo que has aprendido</h2>
-<fieldset><legend>La muestra de cuentas de un token no llegó (HTTP 429). ¿Qué anotas?</legend><label class="ac-opt"><input type="radio" name="q-OA-023" value="0" data-porque="No es un cero."> <span>Cero cuentas</span></label><label class="ac-opt"><input type="radio" name="q-OA-023" value="1" data-ok="1" data-porque="Correcto: se pidió y no hubo respuesta usable."> <span>Consulta fallida: dato no disponible</span></label><label class="ac-opt"><input type="radio" name="q-OA-023" value="2" data-porque="No se sabe cómo está repartido."> <span>Bien repartido</span></label></fieldset>
+<fieldset><legend>La muestra de cuentas de un token no llegó (HTTP 429). ¿Qué anotas?</legend><label class="ac-opt"><input type="radio" name="q-OA-023" value="0" data-porque="No se sabe cómo está repartido."> <span>Bien repartido</span></label><label class="ac-opt"><input type="radio" name="q-OA-023" value="1" data-ok="1" data-porque="Correcto: se pidió y no hubo respuesta usable."> <span>Consulta fallida: dato no disponible</span></label><label class="ac-opt"><input type="radio" name="q-OA-023" value="2" data-porque="No es un cero."> <span>Cero cuentas</span></label></fieldset>
 <div class="ac-actions ac-js-only"><button type="button" class="ac-btn pink mid" data-check>Comprobar</button></div>
 <p class="ac-fb" aria-live="polite"></p>
 <details class="ac-sol nojs"><summary>Ver la respuesta</summary><p><strong>Correcta:</strong> Consulta fallida: dato no disponible. Correcto: se pidió y no hubo respuesta usable.</p><ul><li>Cero cuentas: No es un cero.</li><li>Bien repartido: No se sabe cómo está repartido.</li></ul></details>

@@ -463,6 +463,285 @@
    "id": "no-consultado",
    "nivel": "Avanzado",
    "tema": "Datos"
+  },
+  {
+   "id": "libro-de-ordenes",
+   "nivel": "Principiante",
+   "tema": "Mercados",
+   "termino": "Libro de órdenes",
+   "definicion": "Lista pública de las órdenes de compra y de venta que esperan en una plataforma, ordenadas por precio.",
+   "ejemplo": "En un libro inventado hay quien compra a 99,8 y quien vende a 100,2. Entre ambos precios no hay nadie.",
+   "noIndica": "No muestra todas las intenciones del mercado: muchas órdenes se cancelan antes de ejecutarse y algunas plataformas permiten órdenes ocultas."
+  },
+  {
+   "id": "orden-de-mercado",
+   "nivel": "Principiante",
+   "tema": "Mercados",
+   "termino": "Orden de mercado",
+   "definicion": "Orden que se ejecuta al momento contra las mejores órdenes disponibles del libro, al precio que haya.",
+   "ejemplo": "Compras con una orden de mercado y se cruza con las ventas más baratas hasta completar tu importe.",
+   "noIndica": "No garantiza el precio que viste en pantalla: si hay poca liquidez, la parte final puede llenarse bastante más cara."
+  },
+  {
+   "id": "orden-limitada",
+   "nivel": "Principiante",
+   "tema": "Mercados",
+   "termino": "Orden limitada",
+   "definicion": "Orden que fija el peor precio aceptable. Se ejecuta a ese precio o a uno mejor, o se queda esperando en el libro.",
+   "ejemplo": "Pones una compra limitada a 95. Si nadie vende a 95 o menos, la orden no se ejecuta.",
+   "noIndica": "No garantiza que la orden se llene, ni entera ni en parte."
+  },
+  {
+   "id": "orden-stop",
+   "nivel": "Intermedio",
+   "tema": "Mercados",
+   "termino": "Orden de stop",
+   "definicion": "Orden que se activa cuando el precio toca un nivel fijado. Al activarse, se convierte en una orden de mercado o limitada.",
+   "ejemplo": "Una orden de stop de venta a 90 se dispara si el precio cae a 90.",
+   "noIndica": "No garantiza vender a 90: en una caída brusca se puede ejecutar más abajo o, si es limitada, no ejecutarse."
+  },
+  {
+   "id": "diferencial",
+   "nivel": "Principiante",
+   "tema": "Mercados",
+   "termino": "Diferencial (spread)",
+   "definicion": "Diferencia entre el mejor precio de compra y el mejor precio de venta del libro en un momento dado.",
+   "ejemplo": "Si la mejor compra está en 99,8 y la mejor venta en 100,2, el diferencial es 0,4.",
+   "noIndica": "Un diferencial estrecho no indica que el precio vaya a subir o bajar; solo que, en ese instante, comprar y vender cuesta poco."
+  },
+  {
+   "id": "grafico-de-velas",
+   "nivel": "Principiante",
+   "tema": "Mercados",
+   "termino": "Gráfico de velas",
+   "definicion": "Gráfico en el que cada vela resume un intervalo con cuatro precios: apertura, máximo, mínimo y cierre.",
+   "ejemplo": "Una vela de una hora abre en 100, toca 104 y 97, y cierra en 102.",
+   "noIndica": "No explica por qué se movió el precio ni predice el siguiente intervalo."
+  },
+  {
+   "id": "apalancamiento",
+   "nivel": "Intermedio",
+   "tema": "Mercados",
+   "termino": "Apalancamiento",
+   "definicion": "Operar con una posición mayor que el dinero aportado como garantía, gracias a fondos prestados o a un contrato derivado.",
+   "ejemplo": "Con 100 de garantía y apalancamiento 5x abres una posición de 500.",
+   "noIndica": "No multiplica solo las ganancias: las pérdidas crecen en la misma proporción y pueden consumir toda la garantía."
+  },
+  {
+   "id": "liquidacion",
+   "nivel": "Intermedio",
+   "tema": "Mercados",
+   "termino": "Liquidación",
+   "definicion": "Cierre forzoso de una posición apalancada cuando la garantía ya no cubre el margen mínimo que exige la plataforma.",
+   "ejemplo": "Una posición 10x se liquida con una caída algo inferior al 10 %, porque la plataforma exige mantener un margen mínimo.",
+   "noIndica": "No es una decisión tuya ni espera a que el precio se recupere."
+  },
+  {
+   "id": "futuro-perpetuo",
+   "nivel": "Intermedio",
+   "tema": "Mercados",
+   "termino": "Futuro perpetuo",
+   "definicion": "Contrato derivado que sigue el precio de un activo sin fecha de vencimiento. Se mantiene cerca de ese precio con pagos periódicos entre las partes.",
+   "ejemplo": "Abres un perpetuo largo sobre un activo sin comprar el activo en sí.",
+   "noIndica": "No te da la propiedad del activo ni puedes retirarlo a tu wallet."
+  },
+  {
+   "id": "tasa-de-financiacion",
+   "nivel": "Intermedio",
+   "tema": "Mercados",
+   "termino": "Tasa de financiación",
+   "definicion": "Pago periódico entre quienes tienen posiciones largas y cortas en un futuro perpetuo, que acerca su precio al del activo.",
+   "ejemplo": "Si la tasa es positiva, las posiciones largas pagan a las cortas en cada periodo.",
+   "noIndica": "No es una comisión fija de la plataforma ni una señal fiable de hacia dónde irá el precio."
+  },
+  {
+   "id": "memecoin",
+   "nivel": "Principiante",
+   "tema": "Aplicaciones",
+   "termino": "Memecoin",
+   "definicion": "Token cuyo atractivo principal es una broma, un personaje o una comunidad, y no un producto o una función.",
+   "ejemplo": "Un token con la cara de un perro creado en una tarde y negociado desde el primer minuto.",
+   "noIndica": "Que sea popular no significa que tenga liquidez estable, un equipo identificable ni ningún derecho asociado."
+  },
+  {
+   "id": "pump-and-dump",
+   "nivel": "Principiante",
+   "tema": "Estafas",
+   "termino": "Pump and dump",
+   "definicion": "Manipulación en la que un grupo infla el precio de un activo con compras y propaganda para venderlo después a quienes llegan tarde.",
+   "ejemplo": "Un canal anuncia «la próxima x100» justo después de que sus organizadores hayan comprado.",
+   "noIndica": "Una subida rápida no prueba por sí sola que haya manipulación, pero tampoco es una señal de calidad."
+  },
+  {
+   "id": "operaciones-ficticias",
+   "nivel": "Intermedio",
+   "tema": "Estafas",
+   "termino": "Operaciones ficticias (wash trading)",
+   "definicion": "Compras y ventas entre cuentas controladas por la misma persona para aparentar actividad y volumen.",
+   "ejemplo": "Diez cuentas se pasan el mismo token entre ellas cientos de veces al día.",
+   "noIndica": "El volumen alto no siempre es ficticio; hay que mirar quién compra y quién vende."
+  },
+  {
+   "id": "rug-pull",
+   "nivel": "Principiante",
+   "tema": "Estafas",
+   "termino": "Rug pull",
+   "definicion": "Abandono de un proyecto en el que sus creadores retiran la liquidez o venden de golpe sus tokens y desaparecen.",
+   "ejemplo": "El creador retira el pool de liquidez y el token deja de poder venderse a un precio razonable.",
+   "noIndica": "Que la liquidez esté bloqueada no descarta otras formas de vaciado, como una emisión nueva o una venta masiva."
+  },
+  {
+   "id": "token-trampa",
+   "nivel": "Intermedio",
+   "tema": "Estafas",
+   "termino": "Token trampa (honeypot)",
+   "definicion": "Token programado para que se pueda comprar pero no vender, o vender solo con una comisión abusiva.",
+   "ejemplo": "Las compras funcionan, pero cada intento de venta falla o se queda casi todo en comisiones.",
+   "noIndica": "Una simulación de venta correcta en un momento no garantiza que el código no cambie después si alguien conserva permisos."
+  },
+  {
+   "id": "envenenamiento-de-direcciones",
+   "nivel": "Principiante",
+   "tema": "Estafas",
+   "termino": "Envenenamiento de direcciones",
+   "definicion": "Truco que deja en tu historial una dirección muy parecida a una que usas, con la esperanza de que la copies por error.",
+   "ejemplo": "Recibes un envío de 0 desde una dirección que empieza y termina igual que la de tu amigo.",
+   "noIndica": "Que una dirección aparezca en tu historial no significa que la hayas usado ni que sea de confianza."
+  },
+  {
+   "id": "esquema-ponzi",
+   "nivel": "Principiante",
+   "tema": "Estafas",
+   "termino": "Esquema Ponzi",
+   "definicion": "Fraude que paga supuestos rendimientos a los primeros participantes con el dinero de los nuevos, no con beneficios reales.",
+   "ejemplo": "Una plataforma promete un 2 % diario y paga a tiempo mientras entran personas nuevas.",
+   "noIndica": "Haber cobrado durante meses no demuestra que el negocio sea real."
+  },
+  {
+   "id": "chiringuito-financiero",
+   "nivel": "Principiante",
+   "tema": "Estafas",
+   "termino": "Chiringuito financiero",
+   "definicion": "Entidad que ofrece servicios de inversión sin la autorización necesaria. La CNMV publica advertencias sobre ellas.",
+   "ejemplo": "Una web con un número de teléfono español ofrece gestionar tus criptoactivos sin figurar en ningún registro.",
+   "noIndica": "Que una entidad no aparezca en la lista de advertencias no significa que esté autorizada."
+  },
+  {
+   "id": "cuenta-solana",
+   "nivel": "Intermedio",
+   "tema": "Redes",
+   "termino": "Cuenta (Solana)",
+   "definicion": "Unidad de almacenamiento de Solana. Cada cuenta tiene una dirección, un saldo en lamports, datos y un programa propietario.",
+   "ejemplo": "Tu wallet, el mint de un token y cada uno de tus saldos de ese token son cuentas distintas.",
+   "noIndica": "No equivale a un usuario: una persona puede controlar muchas cuentas y un programa también."
+  },
+  {
+   "id": "programa",
+   "nivel": "Intermedio",
+   "tema": "Redes",
+   "termino": "Programa (Solana)",
+   "definicion": "Código desplegado en Solana que procesa instrucciones. Guarda sus datos en cuentas aparte, de las que es propietario.",
+   "ejemplo": "El programa de tokens gestiona los saldos de muchísimos tokens distintos.",
+   "noIndica": "Que un programa sea muy usado no significa que no pueda actualizarse: depende de su autoridad de actualización."
+  },
+  {
+   "id": "lamport",
+   "nivel": "Intermedio",
+   "tema": "Redes",
+   "termino": "Lamport",
+   "definicion": "Unidad mínima de SOL. Un SOL son mil millones de lamports.",
+   "ejemplo": "La comisión base de una firma son 5.000 lamports, es decir, 0,000005 SOL.",
+   "noIndica": "No es un token aparte: es solo una forma de contar fracciones de SOL."
+  },
+  {
+   "id": "tarifa-de-prioridad",
+   "nivel": "Intermedio",
+   "tema": "Redes",
+   "termino": "Tarifa de prioridad",
+   "definicion": "Pago opcional en Solana que se suma a la comisión base para que los validadores tengan más incentivo a incluir tu transacción.",
+   "ejemplo": "Fijas un precio por unidad de cómputo y un límite; la tarifa es el producto de ambos.",
+   "noIndica": "No garantiza que la transacción entre ni que salga bien: solo la hace más atractiva para el validador."
+  },
+  {
+   "id": "cuenta-de-token-asociada",
+   "nivel": "Intermedio",
+   "tema": "Redes",
+   "termino": "Cuenta de token asociada",
+   "definicion": "Cuenta de token cuya dirección se deriva de tu wallet y del mint, de modo que cualquiera puede calcular dónde guardas ese token.",
+   "ejemplo": "Para enviarte un token, la wallet de otra persona calcula tu cuenta asociada a partir de tu dirección.",
+   "noIndica": "No es una dirección distinta de tu identidad: sigue dependiendo de la wallet que la controla."
+  },
+  {
+   "id": "delegacion-de-tokens",
+   "nivel": "Intermedio",
+   "tema": "Seguridad",
+   "termino": "Delegación de tokens",
+   "definicion": "Permiso que una cuenta de token concede a otra dirección para mover hasta cierta cantidad de ese token en su nombre.",
+   "ejemplo": "Una aplicación te pide aprobar a un delegado por todo tu saldo de un token.",
+   "noIndica": "No caduca sola: sigue activa hasta que se revoca o se gasta la cantidad aprobada."
+  },
+  {
+   "id": "mica",
+   "nivel": "Intermedio",
+   "tema": "Regulación",
+   "termino": "MiCA",
+   "definicion": "Reglamento (UE) 2023/1114 sobre los mercados de criptoactivos. Fija reglas comunes para emisores y proveedores de servicios en la Unión Europea.",
+   "ejemplo": "Una plataforma autorizada en un país de la UE puede ofrecer sus servicios en los demás.",
+   "noIndica": "No protege frente a la caída del precio ni convierte un criptoactivo en un depósito garantizado."
+  },
+  {
+   "id": "proveedor-servicios-criptoactivos",
+   "nivel": "Intermedio",
+   "tema": "Regulación",
+   "termino": "Proveedor de servicios de criptoactivos (CASP)",
+   "definicion": "Empresa autorizada según MiCA para custodiar, intercambiar o negociar criptoactivos por cuenta de clientes, entre otros servicios.",
+   "ejemplo": "Una plataforma que te permite comprar con euros y guardar tus criptoactivos.",
+   "noIndica": "La autorización no significa que la autoridad avale los activos que lista ni su precio."
+  },
+  {
+   "id": "identificacion-del-cliente",
+   "nivel": "Principiante",
+   "tema": "Regulación",
+   "termino": "Identificación del cliente (KYC)",
+   "definicion": "Comprobación de identidad que las entidades obligadas hacen antes de operar con un cliente, para prevenir el blanqueo y el fraude.",
+   "ejemplo": "Una plataforma te pide el documento de identidad y una foto antes de abrir la cuenta.",
+   "noIndica": "Pasar la verificación no significa que la plataforma sea fiable; verifícala tú también."
+  },
+  {
+   "id": "regla-de-viaje",
+   "nivel": "Intermedio",
+   "tema": "Regulación",
+   "termino": "Regla de viaje",
+   "definicion": "Obligación de que los datos de quien envía y de quien recibe acompañen a las transferencias de criptoactivos entre proveedores. En la UE la fija el Reglamento (UE) 2023/1113.",
+   "ejemplo": "Al retirar a otra plataforma, la tuya envía tu nombre y el del destinatario.",
+   "noIndica": "No hace pública esa información en la cadena: viaja entre las entidades."
+  },
+  {
+   "id": "dac8",
+   "nivel": "Intermedio",
+   "tema": "Regulación",
+   "termino": "DAC8",
+   "definicion": "Directiva (UE) 2023/2226, que obliga a los proveedores de servicios de criptoactivos a informar a Hacienda de las operaciones de sus clientes desde el 1 de enero de 2026.",
+   "ejemplo": "La plataforma comunica a la administración las ventas y permutas que hiciste durante el año.",
+   "noIndica": "No calcula tus impuestos ni sustituye tu propia declaración."
+  },
+  {
+   "id": "ganancia-patrimonial",
+   "nivel": "Intermedio",
+   "tema": "Regulación",
+   "termino": "Ganancia o pérdida patrimonial",
+   "definicion": "En el IRPF español, diferencia entre el valor de transmisión y el de adquisición de un bien. Es el concepto que se aplica al vender o permutar criptoactivos.",
+   "ejemplo": "Compras por 1.000 € y vendes por 1.300 €: la diferencia, menos los gastos, es la ganancia.",
+   "noIndica": "No depende de que pases el dinero a tu banco: un intercambio entre criptoactivos también la genera."
+  },
+  {
+   "id": "modelo-721",
+   "nivel": "Intermedio",
+   "tema": "Regulación",
+   "termino": "Modelo 721",
+   "definicion": "Declaración informativa de la Agencia Tributaria sobre monedas virtuales custodiadas en el extranjero, cuando su valor a 31 de diciembre supera 50.000 €.",
+   "ejemplo": "Quien guarda criptoactivos en una plataforma extranjera por encima de ese importe presenta el modelo entre enero y marzo.",
+   "noIndica": "Es informativo: no es un pago de impuestos ni sustituye a la declaración de la renta."
   }
  ]
 }

@@ -482,6 +482,406 @@
      "porque": "Una lectura no es una recomendación."
     }
    ]
+  },
+  "OA-025": {
+   "pregunta": "En un libro inventado, la mejor compra está en 99,8 y la mejor venta en 100,2. Si envías una compra de mercado pequeña, ¿a qué precio se ejecuta?",
+   "opciones": [
+    {
+     "texto": "Cerca de 100,2",
+     "correcta": true,
+     "porque": "Una compra de mercado se cruza con la venta más barata disponible."
+    },
+    {
+     "texto": "A 99,8",
+     "correcta": false,
+     "porque": "Ese es el precio de quien quiere comprar, no el de quien vende."
+    },
+    {
+     "texto": "A 100,0, el punto medio",
+     "correcta": false,
+     "porque": "El punto medio no es una orden: nadie vende a ese precio."
+    }
+   ]
+  },
+  "OA-026": {
+   "pregunta": "Una vela abre en 100, toca 104 y 97 y cierra en 102. ¿Qué indica su mecha inferior?",
+   "opciones": [
+    {
+     "texto": "Que durante el intervalo el precio llegó a 97",
+     "correcta": true,
+     "porque": "La mecha marca el mínimo alcanzado en ese intervalo."
+    },
+    {
+     "texto": "Que el precio bajará a 97 en la próxima vela",
+     "correcta": false,
+     "porque": "Una vela describe el pasado; no predice el siguiente intervalo."
+    },
+    {
+     "texto": "Que alguien vendió una cantidad grande a 97",
+     "correcta": false,
+     "porque": "El gráfico no dice quién operó ni cuánto."
+    }
+   ]
+  },
+  "OA-027": {
+   "pregunta": "Abres una posición 10x con 100 de garantía. ¿Qué ocurre si el activo cae algo menos de un 10 %?",
+   "opciones": [
+    {
+     "texto": "La posición puede liquidarse antes de llegar al 10 %",
+     "correcta": true,
+     "porque": "La plataforma exige un margen mínimo y cierra la posición antes de que la garantía llegue a cero."
+    },
+    {
+     "texto": "Nada, porque solo pierdes si cierras tú",
+     "correcta": false,
+     "porque": "Con apalancamiento, la plataforma puede cerrar la posición por su cuenta."
+    },
+    {
+     "texto": "Pierdes un 1 % de la garantía",
+     "correcta": false,
+     "porque": "Con 10x, una caída del 10 % equivale a perder casi toda la garantía."
+    }
+   ]
+  },
+  "OA-028": {
+   "pregunta": "Un canal vende señales y enseña capturas de beneficios cada semana. ¿Qué prueba eso?",
+   "opciones": [
+    {
+     "texto": "Nada por sí solo: las capturas se eligen o se editan",
+     "correcta": true,
+     "porque": "Sin datos verificables que incluyan pérdidas y comisiones, un historial no prueba nada."
+    },
+    {
+     "texto": "Que el método funciona",
+     "correcta": false,
+     "porque": "Mostrar solo lo que salió bien es la forma más fácil de convencer."
+    },
+    {
+     "texto": "Que el canal está autorizado",
+     "correcta": false,
+     "porque": "La autorización se comprueba en los registros oficiales, no en capturas."
+    }
+   ]
+  },
+  "OA-029": {
+   "pregunta": "¿Qué suele mover más el precio de una memecoin?",
+   "opciones": [
+    {
+     "texto": "La atención que recibe en cada momento",
+     "correcta": true,
+     "porque": "Normalmente no hay producto ni ingresos detrás; el precio sigue a la atención."
+    },
+    {
+     "texto": "Los ingresos del proyecto",
+     "correcta": false,
+     "porque": "La mayoría de memecoins no generan ingresos."
+    },
+    {
+     "texto": "Un precio fijado por su creador",
+     "correcta": false,
+     "porque": "El precio lo ponen las compras y ventas del mercado."
+    }
+   ]
+  },
+  "OA-030": {
+   "pregunta": "Una curva de lanzamiento marca un 80 % de avance. ¿Qué significa?",
+   "opciones": [
+    {
+     "texto": "Que se ha comprado en neto el 80 % de lo necesario para completarla",
+     "correcta": true,
+     "porque": "El avance mide compras netas, no calidad ni reparto."
+    },
+    {
+     "texto": "Que el 80 % de las cuentas confían en el token",
+     "correcta": false,
+     "porque": "El porcentaje no cuenta personas ni opiniones."
+    },
+    {
+     "texto": "Que el token ya está en un pool de liquidez",
+     "correcta": false,
+     "porque": "Eso ocurre al completarse la curva, no antes."
+    }
+   ]
+  },
+  "OA-031": {
+   "pregunta": "Un token anuncia que su liquidez está quemada. ¿Qué queda descartado?",
+   "opciones": [
+    {
+     "texto": "Que alguien retire esa liquidez concreta del pool",
+     "correcta": true,
+     "porque": "Quemar los tokens de participación impide retirar esa liquidez, nada más."
+    },
+    {
+     "texto": "Que el creador venda los tokens que tiene en otras cuentas",
+     "correcta": false,
+     "porque": "Esas ventas siguen siendo posibles."
+    },
+    {
+     "texto": "Que se emitan tokens nuevos",
+     "correcta": false,
+     "porque": "Eso depende de la autoridad de emisión, no de la liquidez."
+    }
+   ]
+  },
+  "OA-032": {
+   "pregunta": "Ves cientos de compras en el mismo bloque en que se creó un token, desde cuentas nuevas con saldos parecidos. ¿Qué es lo prudente?",
+   "opciones": [
+    {
+     "texto": "Anotarlo como una señal posible de compras agrupadas y buscar más datos",
+     "correcta": true,
+     "porque": "Una señal aislada no prueba manipulación, pero varias coincidencias piden prudencia."
+    },
+    {
+     "texto": "Concluir que el reparto es muy amplio",
+     "correcta": false,
+     "porque": "Muchas cuentas pueden ser de una sola persona."
+    },
+    {
+     "texto": "Ignorarlo, porque el volumen alto es buena señal",
+     "correcta": false,
+     "porque": "El volumen se puede fabricar."
+    }
+   ]
+  },
+  "OA-033": {
+   "pregunta": "En Solana, ¿quién puede cambiar los datos de una cuenta?",
+   "opciones": [
+    {
+     "texto": "Su programa propietario",
+     "correcta": true,
+     "porque": "Solo el programa propietario puede modificar los datos o restarle lamports."
+    },
+    {
+     "texto": "Cualquier programa que la reciba en una instrucción",
+     "correcta": false,
+     "porque": "Recibirla no basta: debe ser su propietario."
+    },
+    {
+     "texto": "Cualquiera que pague la comisión",
+     "correcta": false,
+     "porque": "Pagar la comisión no da permiso sobre cuentas ajenas."
+    }
+   ]
+  },
+  "OA-034": {
+   "pregunta": "¿Qué permite la extensión de delegado permanente de Token-2022?",
+   "opciones": [
+    {
+     "texto": "Que una dirección mueva o queme tokens de cualquier cuenta de ese mint",
+     "correcta": true,
+     "porque": "Es una de las extensiones con más efecto para quien tiene el token."
+    },
+    {
+     "texto": "Que el token no caduque nunca",
+     "correcta": false,
+     "porque": "Los tokens no caducan; la extensión trata de quién puede moverlos."
+    },
+    {
+     "texto": "Que tú delegues tus tokens una sola vez",
+     "correcta": false,
+     "porque": "Eso es una delegación normal de una cuenta de token, que puedes revocar."
+    }
+   ]
+  },
+  "OA-035": {
+   "pregunta": "¿Cómo se calcula la tarifa de prioridad en Solana?",
+   "opciones": [
+    {
+     "texto": "Precio por unidad de cómputo × límite de unidades de cómputo",
+     "correcta": true,
+     "porque": "Es la fórmula de la documentación; se paga sobre el límite fijado."
+    },
+    {
+     "texto": "5.000 lamports por firma",
+     "correcta": false,
+     "porque": "Esa es la comisión base, no la de prioridad."
+    },
+    {
+     "texto": "Un porcentaje del importe enviado",
+     "correcta": false,
+     "porque": "La comisión no depende del importe."
+    }
+   ]
+  },
+  "OA-036": {
+   "pregunta": "Una web a la que llegaste por un mensaje te pide firmar para «reclamar» y la simulación muestra un cambio de propietario de tu cuenta de token. ¿Qué haces?",
+   "opciones": [
+    {
+     "texto": "Cancelar: esa instrucción cede el control del saldo",
+     "correcta": true,
+     "porque": "Cambiar el propietario pasa la cuenta entera a otra dirección."
+    },
+    {
+     "texto": "Firmar, porque la simulación lo ha mostrado",
+     "correcta": false,
+     "porque": "La simulación enseña lo que pasará; no lo hace seguro."
+    },
+    {
+     "texto": "Firmar y revocar después",
+     "correcta": false,
+     "porque": "Tras un cambio de propietario ya no puedes revocar nada sobre esa cuenta."
+    }
+   ]
+  },
+  "OA-037": {
+   "pregunta": "Una plataforma paga un 1,5 % diario y te deja retirar 100 €. ¿Qué indica eso?",
+   "opciones": [
+    {
+     "texto": "Nada bueno: las retiradas pequeñas sirven para ganar confianza",
+     "correcta": true,
+     "porque": "En un esquema Ponzi, los primeros pagos salen del dinero de los nuevos."
+    },
+    {
+     "texto": "Que el negocio es real",
+     "correcta": false,
+     "porque": "Cobrar durante un tiempo no prueba que exista un negocio."
+    },
+    {
+     "texto": "Que está autorizada",
+     "correcta": false,
+     "porque": "La autorización se comprueba en los registros oficiales."
+    }
+   ]
+  },
+  "OA-038": {
+   "pregunta": "Tras preguntar en una red social, una cuenta con el logotipo de tu wallet te escribe por privado y te pide instalar un programa para ayudarte. ¿Qué es?",
+   "opciones": [
+    {
+     "texto": "Muy probablemente, una suplantación del soporte",
+     "correcta": true,
+     "porque": "El soporte real no escribe primero por privado ni necesita entrar en tu equipo."
+    },
+    {
+     "texto": "El soporte oficial, porque usa el logotipo",
+     "correcta": false,
+     "porque": "Copiar un logotipo cuesta segundos."
+    },
+    {
+     "texto": "Un procedimiento normal de verificación",
+     "correcta": false,
+     "porque": "Ninguna verificación legítima exige control remoto."
+    }
+   ]
+  },
+  "OA-039": {
+   "pregunta": "La plataforma que te recomendó un contacto te pide pagar un «impuesto» antes de retirar. ¿Qué significa?",
+   "opciones": [
+    {
+     "texto": "Es la señal típica de una plataforma falsa",
+     "correcta": true,
+     "porque": "Ninguna plataforma legítima te pide enviar más dinero para devolverte el tuyo."
+    },
+    {
+     "texto": "Que la retirada está a punto de llegar",
+     "correcta": false,
+     "porque": "Pagar suele llevar a una nueva petición."
+    },
+    {
+     "texto": "Que Hacienda lo exige así",
+     "correcta": false,
+     "porque": "Los impuestos no se pagan a la plataforma para desbloquear fondos."
+    }
+   ]
+  },
+  "OA-040": {
+   "pregunta": "En tu historial aparece un envío de 0 desde una dirección que empieza y termina igual que la de un contacto. ¿Qué haces?",
+   "opciones": [
+    {
+     "texto": "No copiar direcciones del historial y usar la libreta guardada",
+     "correcta": true,
+     "porque": "Es el patrón del envenenamiento de direcciones."
+    },
+    {
+     "texto": "Usarla, porque empieza y termina igual",
+     "correcta": false,
+     "porque": "El atacante genera direcciones que coinciden justo en esos tramos."
+    },
+    {
+     "texto": "Responder con otro envío para comprobarla",
+     "correcta": false,
+     "porque": "Interactuar no aporta nada y puede confundirte más."
+    }
+   ]
+  },
+  "OA-041": {
+   "pregunta": "¿Qué hace la autoridad con el libro blanco de un criptoactivo que no es una moneda estable, según MiCA?",
+   "opciones": [
+    {
+     "texto": "Lo recibe, pero no lo aprueba",
+     "correcta": true,
+     "porque": "El propio documento debe decir que no lo ha aprobado ninguna autoridad."
+    },
+    {
+     "texto": "Lo aprueba y garantiza su contenido",
+     "correcta": false,
+     "porque": "MiCA no prevé esa aprobación para los otros criptoactivos."
+    },
+    {
+     "texto": "Nada, porque no hace falta publicarlo",
+     "correcta": false,
+     "porque": "Publicar un libro blanco es obligatorio para ofrecerlo al público."
+    }
+   ]
+  },
+  "OA-042": {
+   "pregunta": "Retiras 2.000 € en criptoactivos de una plataforma de la UE a tu propia wallet. ¿Qué puede pedirte?",
+   "opciones": [
+    {
+     "texto": "Que demuestres que controlas esa dirección",
+     "correcta": true,
+     "porque": "Por encima de 1.000 €, la plataforma debe comprobarlo."
+    },
+    {
+     "texto": "Tu frase de recuperación",
+     "correcta": false,
+     "porque": "Nadie legítimo la pide; basta, por ejemplo, con firmar un mensaje."
+    },
+    {
+     "texto": "Nada, porque las wallets propias están fuera de la norma",
+     "correcta": false,
+     "porque": "El Reglamento 2023/1113 incluye esas transferencias."
+    }
+   ]
+  },
+  "OA-043": {
+   "pregunta": "Para un residente en España, ¿intercambiar un criptoactivo por otro sin pasar por euros tiene efectos en el IRPF?",
+   "opciones": [
+    {
+     "texto": "Sí: es una permuta que puede generar una ganancia o pérdida patrimonial",
+     "correcta": true,
+     "porque": "El manual de la Agencia Tributaria lo trata como transmisión."
+    },
+    {
+     "texto": "No, solo cuenta cuando pasas a euros",
+     "correcta": false,
+     "porque": "Es una confusión frecuente; el intercambio ya es una transmisión."
+    },
+    {
+     "texto": "Solo si supera 50.000 €",
+     "correcta": false,
+     "porque": "Ese importe es el umbral del modelo 721, que es informativo."
+    }
+   ]
+  },
+  "OA-044": {
+   "pregunta": "Una plataforma no aparece en el buscador de advertencias de la CNMV. ¿Qué puedes concluir?",
+   "opciones": [
+    {
+     "texto": "Nada por sí solo: hay que comprobar si figura como autorizada",
+     "correcta": true,
+     "porque": "Las advertencias van por detrás; la autorización se comprueba en el registro."
+    },
+    {
+     "texto": "Que está autorizada",
+     "correcta": false,
+     "porque": "Estar autorizada es otra cosa y se comprueba en otro registro."
+    },
+    {
+     "texto": "Que sus criptoactivos son seguros",
+     "correcta": false,
+     "porque": "Ni siquiera la autorización avala los activos."
+    }
+   ]
   }
  },
  "actividades": {
@@ -1124,6 +1524,615 @@
      "texto": "Escribir fecha, hora y zona horaria",
      "categoria": "Al guardar",
      "porque": "Permite comparar después."
+    }
+   ]
+  },
+  "OA-025": {
+   "tipo": "clasificar",
+   "enunciado": "Clasifica cada deseo según la orden que lo expresa.",
+   "categorias": [
+    "Orden de mercado",
+    "Orden limitada",
+    "Orden de stop"
+   ],
+   "items": [
+    {
+     "texto": "Comprar ahora mismo, al precio que haya",
+     "categoria": "Orden de mercado",
+     "porque": "Prioriza ejecutarse."
+    },
+    {
+     "texto": "Comprar solo si el precio baja a 95 o menos",
+     "categoria": "Orden limitada",
+     "porque": "Fija el peor precio aceptable."
+    },
+    {
+     "texto": "Vender si el precio toca 90",
+     "categoria": "Orden de stop",
+     "porque": "Se activa al tocar el nivel."
+    },
+    {
+     "texto": "Vender a 110 como mínimo",
+     "categoria": "Orden limitada",
+     "porque": "No se ejecuta por debajo de 110."
+    }
+   ]
+  },
+  "OA-026": {
+   "tipo": "clasificar",
+   "enunciado": "Decide si un gráfico de velas puede responder a cada pregunta.",
+   "categorias": [
+    "Lo muestra el gráfico",
+    "No lo muestra"
+   ],
+   "items": [
+    {
+     "texto": "Cuál fue el precio máximo de la hora",
+     "categoria": "Lo muestra el gráfico",
+     "porque": "Es uno de los cuatro precios de cada vela."
+    },
+    {
+     "texto": "Por qué cayó el precio a las 11:00",
+     "categoria": "No lo muestra",
+     "porque": "La causa necesita otras fuentes."
+    },
+    {
+     "texto": "Si la vela cerró por encima de la apertura",
+     "categoria": "Lo muestra el gráfico",
+     "porque": "Lo indica el cuerpo y su color."
+    },
+    {
+     "texto": "Qué hará el precio en la próxima vela",
+     "categoria": "No lo muestra",
+     "porque": "Un gráfico describe el pasado."
+    }
+   ]
+  },
+  "OA-027": {
+   "tipo": "ordenar",
+   "enunciado": "Ordena lo que ocurre en una posición apalancada inventada que va mal.",
+   "categorias": [
+    "Paso 1",
+    "Paso 2",
+    "Paso 3",
+    "Paso 4"
+   ],
+   "items": [
+    {
+     "texto": "Abres 500 de posición con 100 de garantía",
+     "categoria": "Paso 1",
+     "porque": "Es un apalancamiento 5x."
+    },
+    {
+     "texto": "El activo cae y las pérdidas reducen la garantía",
+     "categoria": "Paso 2",
+     "porque": "Cada caída del 1 % resta 5 de garantía."
+    },
+    {
+     "texto": "La garantía baja del margen mínimo",
+     "categoria": "Paso 3",
+     "porque": "La plataforma ya no acepta mantener la posición."
+    },
+    {
+     "texto": "La plataforma cierra la posición",
+     "categoria": "Paso 4",
+     "porque": "Es la liquidación; no espera a que el precio se recupere."
+    }
+   ]
+  },
+  "OA-028": {
+   "tipo": "clasificar",
+   "enunciado": "Clasifica cada mensaje inventado.",
+   "categorias": [
+    "Promesa que nadie puede garantizar",
+    "Información comprobable"
+   ],
+   "items": [
+    {
+     "texto": "«Nuestro bot gana un 3 % al día, sin pérdidas»",
+     "categoria": "Promesa que nadie puede garantizar",
+     "porque": "Ningún mercado libre garantiza rentabilidad."
+    },
+    {
+     "texto": "«Este es el historial de la plataforma con fechas y comisiones, descargable»",
+     "categoria": "Información comprobable",
+     "porque": "Se puede verificar, aunque no garantiza el futuro."
+    },
+    {
+     "texto": "«Entra ya o te quedarás fuera»",
+     "categoria": "Promesa que nadie puede garantizar",
+     "porque": "La urgencia sustituye a los datos."
+    },
+    {
+     "texto": "«La orden se ejecutó a 100,4 y la comisión fue de 0,1 %»",
+     "categoria": "Información comprobable",
+     "porque": "Es un dato concreto de una operación."
+    }
+   ]
+  },
+  "OA-029": {
+   "tipo": "clasificar",
+   "enunciado": "Clasifica cada pregunta según lo que ayuda a comprobar sobre una memecoin.",
+   "categorias": [
+    "Que es el token correcto",
+    "Cuánto depende de pocas manos"
+   ],
+   "items": [
+    {
+     "texto": "¿Coincide el mint con el de la fuente oficial?",
+     "categoria": "Que es el token correcto",
+     "porque": "Las copias usan el mismo nombre."
+    },
+    {
+     "texto": "¿Qué parte tienen las diez cuentas mayores?",
+     "categoria": "Cuánto depende de pocas manos",
+     "porque": "La concentración muestra el peso de pocas decisiones."
+    },
+    {
+     "texto": "¿El logotipo es el mismo que en la web oficial?",
+     "categoria": "Que es el token correcto",
+     "porque": "El logotipo se copia fácilmente, así que solo es una pista."
+    },
+    {
+     "texto": "¿Cuánto se podría vender sin hundir el precio?",
+     "categoria": "Cuánto depende de pocas manos",
+     "porque": "Con poca liquidez, una venta grande mueve todo."
+    }
+   ]
+  },
+  "OA-030": {
+   "tipo": "ordenar",
+   "enunciado": "Ordena la vida de un token lanzado con curva.",
+   "categorias": [
+    "Paso 1",
+    "Paso 2",
+    "Paso 3",
+    "Paso 4"
+   ],
+   "items": [
+    {
+     "texto": "Se crea el token y se abre su curva",
+     "categoria": "Paso 1",
+     "porque": "El precio lo marca la fórmula desde el primer segundo."
+    },
+    {
+     "texto": "Las compras netas suben el precio",
+     "categoria": "Paso 2",
+     "porque": "Cada compra saca tokens de la curva."
+    },
+    {
+     "texto": "La curva alcanza su meta y se cierra",
+     "categoria": "Paso 3",
+     "porque": "Es el momento de la graduación."
+    },
+    {
+     "texto": "El token pasa a un pool de un intercambio automático",
+     "categoria": "Paso 4",
+     "porque": "Desde ahí, el precio lo marca el pool."
+    }
+   ]
+  },
+  "OA-031": {
+   "tipo": "clasificar",
+   "enunciado": "Clasifica cada cuenta antes de medir la concentración.",
+   "categorias": [
+    "Cuenta técnica: apartar",
+    "Cuenta a contar"
+   ],
+   "items": [
+    {
+     "texto": "El pool de liquidez del intercambio",
+     "categoria": "Cuenta técnica: apartar",
+     "porque": "Representa la liquidez, no a una persona."
+    },
+    {
+     "texto": "La curva de lanzamiento ya cerrada",
+     "categoria": "Cuenta técnica: apartar",
+     "porque": "Es una cuenta del programa de lanzamiento."
+    },
+    {
+     "texto": "Una wallet con el 6 % del suministro",
+     "categoria": "Cuenta a contar",
+     "porque": "Puede vender cuando quiera."
+    },
+    {
+     "texto": "Una cuenta del creador con el 3 %",
+     "categoria": "Cuenta a contar",
+     "porque": "Su decisión afecta al precio."
+    }
+   ]
+  },
+  "OA-032": {
+   "tipo": "clasificar",
+   "enunciado": "Clasifica cada observación inventada.",
+   "categorias": [
+    "Señal de posible manipulación",
+    "No dice nada por sí sola"
+   ],
+   "items": [
+    {
+     "texto": "Treinta cuentas nuevas financiadas desde la misma dirección compran en el primer bloque",
+     "categoria": "Señal de posible manipulación",
+     "porque": "Apunta a compras agrupadas."
+    },
+    {
+     "texto": "El token tiene un logotipo divertido",
+     "categoria": "No dice nada por sí sola",
+     "porque": "El diseño no informa sobre el reparto."
+    },
+    {
+     "texto": "Diez cuentas se pasan el token entre ellas cientos de veces",
+     "categoria": "Señal de posible manipulación",
+     "porque": "Es el patrón de las operaciones ficticias."
+    },
+    {
+     "texto": "Una cuenta compra después de recibir fondos de una plataforma conocida",
+     "categoria": "No dice nada por sí sola",
+     "porque": "Muchas personas compran así."
+    }
+   ]
+  },
+  "OA-033": {
+   "tipo": "clasificar",
+   "enunciado": "Decide quién puede hacer cada cosa con una cuenta de Solana.",
+   "categorias": [
+    "Solo el programa propietario",
+    "Cualquiera"
+   ],
+   "items": [
+    {
+     "texto": "Cambiar los datos de la cuenta",
+     "categoria": "Solo el programa propietario",
+     "porque": "Es la regla básica del modelo de cuentas."
+    },
+    {
+     "texto": "Sumar lamports a la cuenta",
+     "categoria": "Cualquiera",
+     "porque": "Enviar SOL a una cuenta no requiere permiso."
+    },
+    {
+     "texto": "Restar lamports de la cuenta",
+     "categoria": "Solo el programa propietario",
+     "porque": "Y, si es una wallet, con la firma de su dueño."
+    },
+    {
+     "texto": "Leer los datos de la cuenta",
+     "categoria": "Cualquiera",
+     "porque": "Los datos de la cadena son públicos."
+    }
+   ]
+  },
+  "OA-034": {
+   "tipo": "clasificar",
+   "enunciado": "Clasifica cada elemento según dónde vive.",
+   "categorias": [
+    "En el mint",
+    "En la cuenta de token"
+   ],
+   "items": [
+    {
+     "texto": "La autoridad de emisión",
+     "categoria": "En el mint",
+     "porque": "Pertenece al token, no a cada saldo."
+    },
+    {
+     "texto": "Tu saldo de ese token",
+     "categoria": "En la cuenta de token",
+     "porque": "Cada saldo tiene su cuenta."
+    },
+    {
+     "texto": "Los decimales del token",
+     "categoria": "En el mint",
+     "porque": "Son comunes a todas las cuentas."
+    },
+    {
+     "texto": "Un delegado que tú aprobaste",
+     "categoria": "En la cuenta de token",
+     "porque": "La delegación se concede desde una cuenta de token concreta."
+    }
+   ]
+  },
+  "OA-035": {
+   "tipo": "clasificar",
+   "enunciado": "Clasifica cada coste de una transacción inventada.",
+   "categorias": [
+    "Comisión",
+    "Depósito recuperable"
+   ],
+   "items": [
+    {
+     "texto": "5.000 lamports por la firma",
+     "categoria": "Comisión",
+     "porque": "Es la comisión base."
+    },
+    {
+     "texto": "La tarifa de prioridad",
+     "categoria": "Comisión",
+     "porque": "La recibe el validador."
+    },
+    {
+     "texto": "El saldo mínimo para crear una cuenta de token",
+     "categoria": "Depósito recuperable",
+     "porque": "Se devuelve al cerrar la cuenta."
+    },
+    {
+     "texto": "El saldo que se devuelve al cerrar una cuenta vacía",
+     "categoria": "Depósito recuperable",
+     "porque": "Es el mismo depósito, de vuelta."
+    }
+   ]
+  },
+  "OA-036": {
+   "tipo": "clasificar",
+   "enunciado": "Clasifica cada instrucción que aparece en una simulación inventada.",
+   "categorias": [
+    "Puede ceder el control",
+    "Normal si coincide con lo que querías"
+   ],
+   "items": [
+    {
+     "texto": "Aprobar un delegado por todo tu saldo",
+     "categoria": "Puede ceder el control",
+     "porque": "El delegado puede moverlo hasta que lo revoques."
+    },
+    {
+     "texto": "Cambiar el propietario de tu cuenta de token",
+     "categoria": "Puede ceder el control",
+     "porque": "Pasas la cuenta entera a otra dirección."
+    },
+    {
+     "texto": "Pagar 5.000 lamports de comisión",
+     "categoria": "Normal si coincide con lo que querías",
+     "porque": "Es la comisión base."
+    },
+    {
+     "texto": "Enviar 1 token a la dirección que escribiste tú",
+     "categoria": "Normal si coincide con lo que querías",
+     "porque": "Es lo que pediste, con el destino que conoces."
+    }
+   ]
+  },
+  "OA-037": {
+   "tipo": "clasificar",
+   "enunciado": "Clasifica cada rasgo de una oferta inventada.",
+   "categorias": [
+    "Señal de esquema Ponzi",
+    "No es señal por sí solo"
+   ],
+   "items": [
+    {
+     "texto": "Rentabilidad fija del 1 % diario",
+     "categoria": "Señal de esquema Ponzi",
+     "porque": "Nadie puede garantizarla."
+    },
+    {
+     "texto": "Bonos por traer a otras personas",
+     "categoria": "Señal de esquema Ponzi",
+     "porque": "La captación pasa a ser el negocio."
+    },
+    {
+     "texto": "La web tiene un diseño profesional",
+     "categoria": "No es señal por sí solo",
+     "porque": "Una web cuidada cuesta poco."
+    },
+    {
+     "texto": "Presión para no retirar y reinvertir",
+     "categoria": "Señal de esquema Ponzi",
+     "porque": "Retrasa el momento en que falta dinero."
+    }
+   ]
+  },
+  "OA-038": {
+   "tipo": "clasificar",
+   "enunciado": "Clasifica cada petición del supuesto soporte.",
+   "categorias": [
+    "Nunca la hace el soporte real",
+    "Puede hacerla el soporte real"
+   ],
+   "items": [
+    {
+     "texto": "Que le digas tu frase de recuperación",
+     "categoria": "Nunca la hace el soporte real",
+     "porque": "Con ella se controla la wallet."
+    },
+    {
+     "texto": "Que instales un programa de control remoto",
+     "categoria": "Nunca la hace el soporte real",
+     "porque": "Daría acceso a todo tu equipo."
+    },
+    {
+     "texto": "Que abras una incidencia desde la aplicación oficial",
+     "categoria": "Puede hacerla el soporte real",
+     "porque": "Es el canal correcto."
+    },
+    {
+     "texto": "Que le dictes el código de verificación que te acaba de llegar",
+     "categoria": "Nunca la hace el soporte real",
+     "porque": "Ese código sirve para entrar en tu cuenta."
+    }
+   ]
+  },
+  "OA-039": {
+   "tipo": "ordenar",
+   "enunciado": "Ordena las fases habituales de una estafa de confianza.",
+   "categorias": [
+    "Paso 1",
+    "Paso 2",
+    "Paso 3",
+    "Paso 4"
+   ],
+   "items": [
+    {
+     "texto": "Un mensaje «equivocado» inicia la conversación",
+     "categoria": "Paso 1",
+     "porque": "Primero se busca el contacto."
+    },
+    {
+     "texto": "Semanas de conversación sin hablar de dinero",
+     "categoria": "Paso 2",
+     "porque": "Se construye la confianza."
+    },
+    {
+     "texto": "Te enseña una plataforma donde «gana» dinero",
+     "categoria": "Paso 3",
+     "porque": "Llega la propuesta de inversión."
+    },
+    {
+     "texto": "Te piden pagar para poder retirar",
+     "categoria": "Paso 4",
+     "porque": "Es el final típico, y la señal definitiva."
+    }
+   ]
+  },
+  "OA-040": {
+   "tipo": "clasificar",
+   "enunciado": "Clasifica cada situación inventada.",
+   "categorias": [
+    "Envenenamiento de direcciones",
+    "Airdrop falso",
+    "Token trampa"
+   ],
+   "items": [
+    {
+     "texto": "Un envío de 0 desde una dirección casi igual a la de un contacto",
+     "categoria": "Envenenamiento de direcciones",
+     "porque": "Busca que la copies del historial."
+    },
+    {
+     "texto": "Un token que aparece solo con el nombre «Visita esta web para reclamar»",
+     "categoria": "Airdrop falso",
+     "porque": "Lleva a una web que pide firmar."
+    },
+    {
+     "texto": "Un token con muchas compras y ventas que siempre fallan",
+     "categoria": "Token trampa",
+     "porque": "Deja comprar pero no vender."
+    },
+    {
+     "texto": "Un NFT regalado que enlaza a una web para conectar la wallet",
+     "categoria": "Airdrop falso",
+     "porque": "Es el mismo cebo con otro formato."
+    }
+   ]
+  },
+  "OA-041": {
+   "tipo": "clasificar",
+   "enunciado": "Clasifica cada afirmación sobre MiCA.",
+   "categorias": [
+    "Lo hace MiCA",
+    "No lo hace MiCA"
+   ],
+   "items": [
+    {
+     "texto": "Exige autorización a los proveedores de servicios",
+     "categoria": "Lo hace MiCA",
+     "porque": "Es una de sus bases."
+    },
+    {
+     "texto": "Compensa las caídas de precio",
+     "categoria": "No lo hace MiCA",
+     "porque": "No protege del riesgo de mercado."
+    },
+    {
+     "texto": "Pide publicar un libro blanco antes de ofrecer un criptoactivo",
+     "categoria": "Lo hace MiCA",
+     "porque": "Con información y riesgos del proyecto."
+    },
+    {
+     "texto": "Aprueba el libro blanco de cualquier token",
+     "categoria": "No lo hace MiCA",
+     "porque": "Para los otros criptoactivos, la autoridad no lo aprueba."
+    }
+   ]
+  },
+  "OA-042": {
+   "tipo": "clasificar",
+   "enunciado": "Clasifica cada dato según dónde queda.",
+   "categorias": [
+    "Viaja entre entidades",
+    "Es público en la cadena"
+   ],
+   "items": [
+    {
+     "texto": "Tu nombre como ordenante",
+     "categoria": "Viaja entre entidades",
+     "porque": "La regla de viaje lo manda por canales entre proveedores."
+    },
+    {
+     "texto": "La dirección de destino y el importe",
+     "categoria": "Es público en la cadena",
+     "porque": "Cualquier explorador lo muestra."
+    },
+    {
+     "texto": "El nombre del beneficiario",
+     "categoria": "Viaja entre entidades",
+     "porque": "No se escribe en la blockchain."
+    },
+    {
+     "texto": "La fecha y hora de la transacción",
+     "categoria": "Es público en la cadena",
+     "porque": "Forma parte del bloque."
+    }
+   ]
+  },
+  "OA-043": {
+   "tipo": "clasificar",
+   "enunciado": "Clasifica cada afirmación inventada sobre la fiscalidad en España.",
+   "categorias": [
+    "Concepto correcto",
+    "Confusión frecuente"
+   ],
+   "items": [
+    {
+     "texto": "Intercambiar un criptoactivo por otro puede generar una ganancia patrimonial",
+     "categoria": "Concepto correcto",
+     "porque": "Es una permuta."
+    },
+    {
+     "texto": "Si no pasas a euros, no hay nada que declarar",
+     "categoria": "Confusión frecuente",
+     "porque": "Las permutas cuentan."
+    },
+    {
+     "texto": "El modelo 721 es una declaración informativa",
+     "categoria": "Concepto correcto",
+     "porque": "No es un pago."
+    },
+    {
+     "texto": "La DAC8 calcula tus impuestos por ti",
+     "categoria": "Confusión frecuente",
+     "porque": "Solo obliga a los proveedores a informar."
+    }
+   ]
+  },
+  "OA-044": {
+   "tipo": "clasificar",
+   "enunciado": "Clasifica cada comprobación según la pregunta que responde.",
+   "categorias": [
+    "¿Está autorizada?",
+    "¿Hay advertencias?",
+    "¿Es quien dice ser?"
+   ],
+   "items": [
+    {
+     "texto": "Buscar el nombre legal en el registro provisional de ESMA",
+     "categoria": "¿Está autorizada?",
+     "porque": "Lista los proveedores autorizados según MiCA."
+    },
+    {
+     "texto": "Usar el buscador de advertencias de la CNMV",
+     "categoria": "¿Hay advertencias?",
+     "porque": "Recoge entidades no autorizadas."
+    },
+    {
+     "texto": "Comparar el dominio letra a letra con el del registro",
+     "categoria": "¿Es quien dice ser?",
+     "porque": "Los estafadores copian marcas reales."
+    },
+    {
+     "texto": "Comprobar que los servicios autorizados incluyen lo que te ofrecen",
+     "categoria": "¿Está autorizada?",
+     "porque": "Una autorización cubre servicios concretos."
     }
    ]
   }
@@ -1857,6 +2866,616 @@
       "texto": "Una recomendación",
       "correcta": false,
       "porque": "No."
+     }
+    ]
+   }
+  ],
+  "7": [
+   {
+    "pregunta": "¿Qué es el diferencial de un libro de órdenes?",
+    "opciones": [
+     {
+      "texto": "La distancia entre la mejor compra y la mejor venta",
+      "correcta": true,
+      "porque": "Mide cuánto cuesta entrar y salir en ese instante."
+     },
+     {
+      "texto": "La comisión de la plataforma",
+      "correcta": false,
+      "porque": "La comisión es aparte."
+     },
+     {
+      "texto": "La diferencia entre el máximo y el mínimo del día",
+      "correcta": false,
+      "porque": "Eso es el rango del día."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué orden prioriza el precio sobre la ejecución?",
+    "opciones": [
+     {
+      "texto": "La orden limitada",
+      "correcta": true,
+      "porque": "Fija el peor precio aceptable y puede no ejecutarse."
+     },
+     {
+      "texto": "La orden de mercado",
+      "correcta": false,
+      "porque": "Prioriza ejecutarse, al precio que haya."
+     },
+     {
+      "texto": "Ninguna; todas garantizan precio y ejecución",
+      "correcta": false,
+      "porque": "Ninguna garantiza ambas cosas."
+     }
+    ]
+   },
+   {
+    "pregunta": "En una caída brusca, ¿qué puede pasar con una orden de stop de venta a 90?",
+    "opciones": [
+     {
+      "texto": "Que se ejecute por debajo de 90",
+      "correcta": true,
+      "porque": "Al activarse se convierte en otra orden, y el precio puede haber saltado."
+     },
+     {
+      "texto": "Que se ejecute siempre exactamente a 90",
+      "correcta": false,
+      "porque": "Un stop no garantiza el precio."
+     },
+     {
+      "texto": "Que se cancele sola",
+      "correcta": false,
+      "porque": "Se activa al tocar el nivel."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué información no da un gráfico de velas?",
+    "opciones": [
+     {
+      "texto": "Por qué se movió el precio",
+      "correcta": true,
+      "porque": "La causa necesita otras fuentes con fecha."
+     },
+     {
+      "texto": "El precio de cierre de cada intervalo",
+      "correcta": false,
+      "porque": "Es uno de sus cuatro datos."
+     },
+     {
+      "texto": "El mínimo de cada intervalo",
+      "correcta": false,
+      "porque": "Lo marca la mecha inferior."
+     }
+    ]
+   },
+   {
+    "pregunta": "Con un futuro perpetuo, ¿tienes el activo?",
+    "opciones": [
+     {
+      "texto": "No: tienes un contrato con la plataforma",
+      "correcta": true,
+      "porque": "No puedes retirarlo a tu wallet."
+     },
+     {
+      "texto": "Sí, igual que si lo compras al contado",
+      "correcta": false,
+      "porque": "Un derivado no te da la propiedad."
+     },
+     {
+      "texto": "Sí, pero solo si la tasa de financiación es positiva",
+      "correcta": false,
+      "porque": "La tasa no cambia la naturaleza del contrato."
+     }
+    ]
+   },
+   {
+    "pregunta": "Alguien te ofrece un bot con «un 2 % diario garantizado». ¿Qué es lo más razonable?",
+    "opciones": [
+     {
+      "texto": "Desconfiar: nadie puede garantizar una rentabilidad así",
+      "correcta": true,
+      "porque": "Es una señal clásica de esquema Ponzi o de estafa."
+     },
+     {
+      "texto": "Probar con poco dinero para comprobarlo",
+      "correcta": false,
+      "porque": "Las primeras retiradas suelen funcionar para ganar confianza."
+     },
+     {
+      "texto": "Aceptar si enseña capturas de beneficios",
+      "correcta": false,
+      "porque": "Las capturas se eligen o se editan."
+     }
+    ]
+   }
+  ],
+  "8": [
+   {
+    "pregunta": "¿Qué distingue a una memecoin de otros tokens?",
+    "opciones": [
+     {
+      "texto": "Su atractivo principal es una broma, un personaje o una comunidad",
+      "correcta": true,
+      "porque": "No suele haber producto ni ingresos detrás."
+     },
+     {
+      "texto": "Que no se puede vender",
+      "correcta": false,
+      "porque": "Se puede vender; otra cosa es a qué precio."
+     },
+     {
+      "texto": "Que la emite un banco",
+      "correcta": false,
+      "porque": "La crea cualquiera, a menudo en minutos."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué ocurre cuando una curva de lanzamiento se completa?",
+    "opciones": [
+     {
+      "texto": "El token pasa a un pool de liquidez de un intercambio automático",
+      "correcta": true,
+      "porque": "Es la graduación; desde ahí el precio lo marca el pool."
+     },
+     {
+      "texto": "El precio queda fijo para siempre",
+      "correcta": false,
+      "porque": "El precio sigue cambiando con cada operación."
+     },
+     {
+      "texto": "El creador recibe todos los tokens",
+      "correcta": false,
+      "porque": "La graduación deposita SOL y tokens en un pool."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué cuenta la cifra de titulares de un token?",
+    "opciones": [
+     {
+      "texto": "Cuentas con saldo, no personas",
+      "correcta": true,
+      "porque": "Una persona puede repartir sus tokens en muchas cuentas."
+     },
+     {
+      "texto": "Personas distintas",
+      "correcta": false,
+      "porque": "Es el error más frecuente."
+     },
+     {
+      "texto": "Compradores que siguen confiando",
+      "correcta": false,
+      "porque": "No mide confianza."
+     }
+    ]
+   },
+   {
+    "pregunta": "Antes de medir la concentración, ¿qué cuentas se apartan?",
+    "opciones": [
+     {
+      "texto": "Las técnicas, como pools y curvas",
+      "correcta": true,
+      "porque": "No son personas que vendan por su cuenta del mismo modo."
+     },
+     {
+      "texto": "Las más grandes",
+      "correcta": false,
+      "porque": "Son justo las que importan para la concentración."
+     },
+     {
+      "texto": "Las más nuevas",
+      "correcta": false,
+      "porque": "Que sean nuevas no las hace técnicas."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿En qué consiste un pump and dump?",
+    "opciones": [
+     {
+      "texto": "Comprar en silencio, promocionar y vender a quien llega tarde",
+      "correcta": true,
+      "porque": "Los organizadores venden sobre los compradores atraídos por la subida."
+     },
+     {
+      "texto": "Comprar en una caída y esperar",
+      "correcta": false,
+      "porque": "Eso no es manipulación."
+     },
+     {
+      "texto": "Quemar tokens para reducir el suministro",
+      "correcta": false,
+      "porque": "Es otra cosa."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué prueba un volumen muy alto en un token pequeño?",
+    "opciones": [
+     {
+      "texto": "Nada por sí solo: puede ser fabricado",
+      "correcta": true,
+      "porque": "Las operaciones ficticias inflan el volumen."
+     },
+     {
+      "texto": "Que hay mucha demanda real",
+      "correcta": false,
+      "porque": "Hay que mirar cuántas cuentas distintas operan."
+     },
+     {
+      "texto": "Que el token está autorizado",
+      "correcta": false,
+      "porque": "El volumen no tiene relación con ninguna autorización."
+     }
+    ]
+   }
+  ],
+  "9": [
+   {
+    "pregunta": "¿Qué guarda una cuenta de Solana?",
+    "opciones": [
+     {
+      "texto": "Dirección, saldo en lamports, datos y programa propietario",
+      "correcta": true,
+      "porque": "Es la forma común de todas las cuentas."
+     },
+     {
+      "texto": "Solo un saldo de SOL",
+      "correcta": false,
+      "porque": "También guarda datos y propietario."
+     },
+     {
+      "texto": "El código de todos los programas",
+      "correcta": false,
+      "porque": "Solo las cuentas ejecutables contienen un programa."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Dónde guardan su estado los programas de Solana?",
+    "opciones": [
+     {
+      "texto": "En otras cuentas de las que son propietarios",
+      "correcta": true,
+      "porque": "Un programa no guarda su estado dentro de sí mismo."
+     },
+     {
+      "texto": "Dentro de su propio código",
+      "correcta": false,
+      "porque": "Así funcionan otras redes, no Solana."
+     },
+     {
+      "texto": "En la wallet de cada usuario",
+      "correcta": false,
+      "porque": "Cada estado tiene su cuenta."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Cómo se calcula la dirección de una cuenta de token asociada?",
+    "opciones": [
+     {
+      "texto": "A partir de la wallet y del mint",
+      "correcta": true,
+      "porque": "Por eso cualquiera puede enviarte un token sin preguntar."
+     },
+     {
+      "texto": "La elige el creador del token",
+      "correcta": false,
+      "porque": "Se deriva, no se elige."
+     },
+     {
+      "texto": "Es la misma dirección que la wallet",
+      "correcta": false,
+      "porque": "Es otra cuenta, derivada de la wallet."
+     }
+    ]
+   },
+   {
+    "pregunta": "Tienes ERC-20 en Ethereum y tokens SPL en Solana. ¿Las autoridades de emisión de Solana son tus permisos approve?",
+    "opciones": [
+     {
+      "texto": "No: pertenecen al mint y las controla quien lo creó",
+      "correcta": true,
+      "porque": "Los permisos ERC-20 los concedes tú; la autoridad de emisión es del token."
+     },
+     {
+      "texto": "Sí, son lo mismo con otro nombre",
+      "correcta": false,
+      "porque": "Mezclar ecosistemas lleva a lecturas erróneas."
+     },
+     {
+      "texto": "Sí, si usas la misma wallet",
+      "correcta": false,
+      "porque": "La wallet no cambia la naturaleza de cada mecanismo."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué pasa con la comisión base de 5.000 lamports por firma?",
+    "opciones": [
+     {
+      "texto": "La mitad se quema y la otra mitad la recibe el validador",
+      "correcta": true,
+      "porque": "Es el reparto de la documentación de Solana."
+     },
+     {
+      "texto": "La recibe entera la wallet",
+      "correcta": false,
+      "porque": "La wallet no cobra esa comisión."
+     },
+     {
+      "texto": "Se devuelve si la transacción falla",
+      "correcta": false,
+      "porque": "La comisión se cobra aunque falle la ejecución."
+     }
+    ]
+   },
+   {
+    "pregunta": "La wallet dice que tu transacción ha expirado. ¿Qué ha pasado?",
+    "opciones": [
+     {
+      "texto": "No entró antes de que caducara su blockhash, y no se ha cobrado",
+      "correcta": true,
+      "porque": "Hay que firmarla de nuevo si se quiere repetir."
+     },
+     {
+      "texto": "Se ejecutó, pero tarde",
+      "correcta": false,
+      "porque": "Una transacción expirada no se ejecuta."
+     },
+     {
+      "texto": "Se perdieron los fondos",
+      "correcta": false,
+      "porque": "No se movió nada."
+     }
+    ]
+   }
+  ],
+  "10": [
+   {
+    "pregunta": "¿De dónde salen los pagos de un esquema Ponzi?",
+    "opciones": [
+     {
+      "texto": "Del dinero de los nuevos participantes",
+      "correcta": true,
+      "porque": "No hay negocio real detrás."
+     },
+     {
+      "texto": "De operaciones de arbitraje",
+      "correcta": false,
+      "porque": "Es la excusa habitual."
+     },
+     {
+      "texto": "De un fondo de garantía",
+      "correcta": false,
+      "porque": "No existe ese fondo."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué significa que una entidad no aparezca en las advertencias de la CNMV?",
+    "opciones": [
+     {
+      "texto": "Nada por sí solo; hay que comprobar si está autorizada",
+      "correcta": true,
+      "porque": "Las listas van por detrás de las estafas."
+     },
+     {
+      "texto": "Que está autorizada",
+      "correcta": false,
+      "porque": "Es otra comprobación distinta."
+     },
+     {
+      "texto": "Que es una entidad pública",
+      "correcta": false,
+      "porque": "No tiene relación."
+     }
+    ]
+   },
+   {
+    "pregunta": "Alguien te ofrece recuperar criptoactivos robados a cambio de una tasa por adelantado. ¿Qué es lo más probable?",
+    "opciones": [
+     {
+      "texto": "Una segunda estafa",
+      "correcta": true,
+      "porque": "Quien ya fue estafado es un objetivo valioso."
+     },
+     {
+      "texto": "Un servicio policial",
+      "correcta": false,
+      "porque": "La policía no cobra por investigar."
+     },
+     {
+      "texto": "Un procedimiento normal de la blockchain",
+      "correcta": false,
+      "porque": "Una transacción confirmada no se deshace pagando."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué es la señal definitiva de una plataforma falsa en una estafa de confianza?",
+    "opciones": [
+     {
+      "texto": "Que te pidan pagar para poder retirar",
+      "correcta": true,
+      "porque": "Ninguna plataforma legítima lo pide así."
+     },
+     {
+      "texto": "Que el diseño sea profesional",
+      "correcta": false,
+      "porque": "Las webs falsas también lo son."
+     },
+     {
+      "texto": "Que te dejen retirar una cantidad pequeña",
+      "correcta": false,
+      "porque": "Forma parte del engaño, pero no lo delata por sí solo."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Cómo se evita el envenenamiento de direcciones?",
+    "opciones": [
+     {
+      "texto": "Copiando las direcciones desde la libreta guardada y comparándolas completas",
+      "correcta": true,
+      "porque": "El ataque se aprovecha de copiar del historial."
+     },
+     {
+      "texto": "Mirando solo el principio y el final",
+      "correcta": false,
+      "porque": "Son los tramos que el atacante imita."
+     },
+     {
+      "texto": "Usando siempre la última dirección del historial",
+      "correcta": false,
+      "porque": "Esa puede ser la del atacante."
+     }
+    ]
+   },
+   {
+    "pregunta": "En España, ¿a qué número puedes llamar para pedir ayuda gratuita en ciberseguridad?",
+    "opciones": [
+     {
+      "texto": "Al 017, de INCIBE",
+      "correcta": true,
+      "porque": "Es la línea de ayuda en ciberseguridad."
+     },
+     {
+      "texto": "Al número que te dio el supuesto soporte",
+      "correcta": false,
+      "porque": "Puede ser parte de la estafa."
+     },
+     {
+      "texto": "A ninguno; no existe ese servicio",
+      "correcta": false,
+      "porque": "Existe y es gratuito."
+     }
+    ]
+   }
+  ],
+  "11": [
+   {
+    "pregunta": "¿Desde cuándo se aplica MiCA a los proveedores de servicios de criptoactivos?",
+    "opciones": [
+     {
+      "texto": "Desde el 30 de diciembre de 2024",
+      "correcta": true,
+      "porque": "Las normas sobre monedas estables empezaron antes, el 30 de junio de 2024."
+     },
+     {
+      "texto": "Desde el 1 de enero de 2020",
+      "correcta": false,
+      "porque": "MiCA es de 2023."
+     },
+     {
+      "texto": "Todavía no se aplica",
+      "correcta": false,
+      "porque": "Ya se aplica en toda la UE."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué no hace MiCA?",
+    "opciones": [
+     {
+      "texto": "Proteger frente a la caída del precio",
+      "correcta": true,
+      "porque": "No compensa pérdidas de mercado."
+     },
+     {
+      "texto": "Exigir autorización a los proveedores",
+      "correcta": false,
+      "porque": "Sí la exige."
+     },
+     {
+      "texto": "Pedir un libro blanco",
+      "correcta": false,
+      "porque": "Sí lo pide."
+     }
+    ]
+   },
+   {
+    "pregunta": "Según la regla de viaje de la UE, ¿hay un importe mínimo para que los datos acompañen una transferencia entre proveedores?",
+    "opciones": [
+     {
+      "texto": "No",
+      "correcta": true,
+      "porque": "Se aplica a cualquier importe entre proveedores."
+     },
+     {
+      "texto": "Sí, 1.000 €",
+      "correcta": false,
+      "porque": "Ese umbral se refiere a la comprobación de wallets propias."
+     },
+     {
+      "texto": "Sí, 50.000 €",
+      "correcta": false,
+      "porque": "Ese es el umbral del modelo 721."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué es el modelo 721?",
+    "opciones": [
+     {
+      "texto": "Una declaración informativa sobre monedas virtuales en el extranjero",
+      "correcta": true,
+      "porque": "Se presenta si su valor a 31 de diciembre supera 50.000 €."
+     },
+     {
+      "texto": "Un impuesto sobre las criptomonedas",
+      "correcta": false,
+      "porque": "No es un pago."
+     },
+     {
+      "texto": "Un registro de proveedores autorizados",
+      "correcta": false,
+      "porque": "Eso lo publica ESMA."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué obliga a hacer la DAC8 desde 2026?",
+    "opciones": [
+     {
+      "texto": "Que los proveedores informen a Hacienda de las operaciones de sus clientes",
+      "correcta": true,
+      "porque": "Las administraciones intercambian esa información en la UE."
+     },
+     {
+      "texto": "Que los usuarios paguen un nuevo impuesto",
+      "correcta": false,
+      "porque": "No crea un impuesto."
+     },
+     {
+      "texto": "Que las plataformas calculen tu declaración",
+      "correcta": false,
+      "porque": "No sustituye tu declaración."
+     }
+    ]
+   },
+   {
+    "pregunta": "Una plataforma está autorizada según MiCA. ¿Qué significa?",
+    "opciones": [
+     {
+      "texto": "Que puede prestar los servicios autorizados, no que sus activos sean seguros",
+      "correcta": true,
+      "porque": "La autorización no avala los criptoactivos que ofrece."
+     },
+     {
+      "texto": "Que tu dinero está garantizado",
+      "correcta": false,
+      "porque": "No hay fondo de garantía de depósitos."
+     },
+     {
+      "texto": "Que la autoridad recomienda sus productos",
+      "correcta": false,
+      "porque": "No es asesoramiento."
      }
     ]
    }

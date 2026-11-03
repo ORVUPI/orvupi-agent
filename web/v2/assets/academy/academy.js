@@ -269,7 +269,11 @@
       var sig = k("siguiente"); sig.textContent = "";
       if (!units.length) sig.textContent = "Dato no disponible";
       else if (next) { sig.appendChild(doc.createTextNode("Siguiente artículo: ")); var a = doc.createElement("a"); a.href = next.u; a.textContent = next.t; sig.appendChild(a); }
-      else sig.textContent = "Has leído todos los artículos de la ruta.";
+      else sig.textContent = "Has leído todos los artículos de Academy.";
+      ((data && data.rutas) || []).forEach(function (r) {
+        var el = $('[data-ruta="' + r.slug + '"]', me);
+        if (el) say(el, String(r.unidades.filter(function (id) { return state.leidos[id]; }).length));
+      });
       var box = k("notas"), ids = Object.keys(state.notas).filter(function (i) { return (state.notas[i].texto || "").trim(); });
       if (ids.length) {
         box.textContent = ""; var ul = doc.createElement("ul");
