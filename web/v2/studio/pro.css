@@ -187,3 +187,5 @@
 .mas-tile-face.is-art .mini-slot { border-radius: 0; box-shadow: none; }
 .ia-tile .mini-slot { border-radius: 8px; box-shadow: 0 1px 2px rgba(64, 87, 109, 0.12), 0 2px 8px rgba(64, 87, 109, 0.1); }
 
+#studio-root .tpl-rail-row .tpl-rail-card:has(.is-art) { flex: 0 0 auto; width: auto; }
+#studio-root .tpl-rail-row .tpl-rail-card:has(.is-art) .tpl-open { width: auto; }
