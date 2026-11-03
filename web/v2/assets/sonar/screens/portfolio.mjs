@@ -1,10 +1,10 @@
-import { api, qs } from "../api.mjs?v=b7f729bb23";
-import { chartHost, drawChart } from "../chart.mjs?v=b7f729bb23";
-import { compact, day, money, plain, show } from "../format.mjs?v=b7f729bb23";
-import { t } from "../i18n.mjs?v=b7f729bb23";
-import { snapshot, uid, update } from "../store.mjs?v=b7f729bb23";
-import { el, emptyBlock, errorBlock, pagedBlock, skeleton } from "../ui.mjs?v=b7f729bb23";
-import { marketTabs } from "../rows.mjs?v=b7f729bb23";
+import { api, qs } from "../api.mjs?v=e3734c4579";
+import { chartHost, drawChart } from "../chart.mjs?v=e3734c4579";
+import { compact, day, money, plain, show } from "../format.mjs?v=e3734c4579";
+import { t } from "../i18n.mjs?v=e3734c4579";
+import { snapshot, uid, update } from "../store.mjs?v=e3734c4579";
+import { el, emptyBlock, errorBlock, pagedBlock, skeleton } from "../ui.mjs?v=e3734c4579";
+import { marketTabs } from "../rows.mjs?v=e3734c4579";
 
 export function positionOf(txs, price) {
   const ordered = txs.slice().sort((a, b) => String(a.at).localeCompare(String(b.at)));
@@ -378,7 +378,7 @@ async function ingest(event, host, ctx) {
   const file = event.target.files?.[0];
   if (!file) return;
   try {
-    const { importJson } = await import("../store.mjs?v=b7f729bb23");
+    const { importJson } = await import("../store.mjs?v=e3734c4579");
     await importJson(await file.text());
     paint(host, ctx);
   } catch {

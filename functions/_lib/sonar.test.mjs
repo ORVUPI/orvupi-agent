@@ -1092,8 +1092,10 @@ test("Velas de pool y búsqueda de pool pasan por /api/sonar (sin CORS de GeckoT
   const { readFileSync } = await import("node:fs");
   const { ohlcvFrameOk, ohlcvRow } = await import("./providers/geckoterminal.js");
   const market = readFileSync(new URL("../../web/v2/verify/net/market.mjs", import.meta.url), "utf8");
-  assert.doesNotMatch(market, /api\.geckoterminal\.com/);
   assert.match(market, /\/api\/sonar\/pool-ohlcv\?network=/);
+  // Proxy primero; lectura directa solo como respaldo único, con pausa tras un fallo.
+  assert.match(market, /geckoRead\(url, direct/);
+  assert.match(market, /gtDirectPausedUntil = Date\.now\(\) \+ 120000/);
   assert.equal(ohlcvFrameOk("15m"), true);
   assert.equal(ohlcvFrameOk("toString"), false);
   assert.deepEqual(ohlcvRow([1, "2", 3, 4, 5, "x"]), [1, 2, 3, 4, 5, null]);

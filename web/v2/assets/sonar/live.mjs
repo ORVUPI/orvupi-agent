@@ -1,4 +1,4 @@
-import { api } from "./api.mjs?v=b7f729bb23";
+import { api } from "./api.mjs?v=e3734c4579";
 
 const listeners = new Set();
 const last = new Map();

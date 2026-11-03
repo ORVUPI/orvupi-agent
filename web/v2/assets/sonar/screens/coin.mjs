@@ -1,11 +1,11 @@
-import { api, qs } from "../api.mjs?v=b7f729bb23";
-import { chartHost, chartNote, drawChart, rsi } from "../chart.mjs?v=b7f729bb23";
-import { btcPrice, compact, day, money, plain, show, when } from "../format.mjs?v=b7f729bb23";
-import { categoryName, pageTitle, t } from "../i18n.mjs?v=b7f729bb23";
-import { parseRoute, setCrumb } from "../shell.mjs?v=b7f729bb23";
-import { activeList, snapshot, uid, update } from "../store.mjs?v=b7f729bb23";
-import { el, emptyBlock, errorBlock, field, logo, missing, pagedBlock, pctNode, setChildren, skeleton, sourceLine } from "../ui.mjs?v=b7f729bb23";
-import { positionOf } from "./portfolio.mjs?v=b7f729bb23";
+import { api, qs } from "../api.mjs?v=e3734c4579";
+import { chartHost, chartNote, drawChart, rsi } from "../chart.mjs?v=e3734c4579";
+import { btcPrice, compact, day, money, plain, show, when } from "../format.mjs?v=e3734c4579";
+import { categoryName, pageTitle, t } from "../i18n.mjs?v=e3734c4579";
+import { parseRoute, setCrumb } from "../shell.mjs?v=e3734c4579";
+import { activeList, snapshot, uid, update } from "../store.mjs?v=e3734c4579";
+import { el, emptyBlock, errorBlock, field, logo, missing, pagedBlock, pctNode, setChildren, skeleton, sourceLine } from "../ui.mjs?v=e3734c4579";
+import { positionOf } from "./portfolio.mjs?v=e3734c4579";
 
 const TABS = ["resumen", "estadisticas", "mercados", "cartera", "acerca", "historico"];
 const PERIODS = [["1h", "1", "1h"], ["24h", "1", ""], ["7d", "7", ""], ["30d", "30", ""], ["90d", "90", ""], ["1y", "365", ""], ["ytd", "365", "ytd"], ["all", "max", ""]];
