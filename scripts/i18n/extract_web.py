@@ -4,7 +4,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from htmltools import lang_elements, text_segments
 
 ROOT = pathlib.Path(__file__).resolve().parents[2] / "web/v2"
-PAGES = sorted(p for p in ROOT.rglob("*.html") if not any(x in p.parts for x in ("work","content","en","pt-br","ja","ko")))
+PAGES = sorted(p for p in ROOT.rglob("*.html") if not any(x in p.relative_to(ROOT).parts for x in ("work","content","academy","en","pt-br","ja","ko")))
 ATTR = re.compile(r'\s(alt|aria-label|placeholder|title|data-title-en|content)="([^"]*)"')
 segs_en, segs_es = {}, {}
 inv = {}

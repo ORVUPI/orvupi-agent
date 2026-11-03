@@ -1,0 +1,81 @@
+import json
+# (id, termino, nivel, tema, definicion, ejemplo, noIndica)
+T=[
+("criptomoneda","Criptomoneda","Principiante","Fundamentos","Activo digital que se registra y transfiere en una blockchain mediante firmas criptográficas, sin un banco que lleve las cuentas.","Bitcoin y ether son las criptomonedas nativas de sus redes.","No es dinero de curso legal en la mayoría de países ni tiene un valor garantizado."),
+("blockchain","Blockchain (cadena de bloques)","Principiante","Fundamentos","Registro compartido formado por bloques enlazados en orden. Cada bloque incluye el hash del anterior, de modo que cambiar uno antiguo obliga a rehacer todos los siguientes.","Un nodo puede descargar la cadena completa y comprobar cada bloque desde el primero.","Que algo esté en una blockchain no lo hace verdadero ni legítimo: solo queda registrado."),
+("nodo","Nodo","Principiante","Fundamentos","Ordenador que ejecuta el software de una red, guarda una copia del registro, comprueba las reglas y retransmite transacciones y bloques.","Una wallet consulta saldos a un nodo, propio o de un proveedor.",None),
+("red","Red","Principiante","Redes","Conjunto de nodos que comparten las mismas reglas y el mismo registro. Cada red tiene su moneda nativa, su formato de direcciones y sus comisiones.","Ethereum, Solana y Bitcoin son redes distintas; un envío en una no aparece en otra.",None),
+("wallet","Wallet (cartera)","Principiante","Seguridad","Aplicación o dispositivo que guarda o gestiona tus claves y te permite firmar transacciones. Los fondos no están dentro de la wallet, sino registrados en la cadena.","Una wallet de móvil y una wallet física pueden controlar la misma dirección si comparten la frase de recuperación.",None),
+("bloque","Bloque","Principiante","Fundamentos","Paquete de transacciones que la red añade al registro de una vez. Incluye una referencia al bloque anterior.","En Bitcoin se produce de media un bloque cada diez minutos.",None),
+("hash","Hash","Principiante","Fundamentos","Huella de longitud fija que una función criptográfica calcula a partir de unos datos. Un cambio mínimo en los datos da un hash completamente distinto.","El identificador de una transacción en Ethereum es su hash, una cadena que empieza por 0x.","El hash no permite recuperar los datos originales."),
+("consenso","Consenso","Principiante","Fundamentos","Mecanismo con el que los nodos de una red acuerdan qué bloque es el siguiente y cuál es el estado válido del registro.","La prueba de trabajo y la prueba de participación son mecanismos de consenso.",None),
+("confirmacion","Confirmación","Intermedio","Transacciones","Cada bloque añadido después del que incluye tu transacción. Más confirmaciones hacen más difícil revertirla.","Muchos servicios esperan varias confirmaciones antes de dar por recibido un depósito.",None),
+("clave-privada","Clave privada","Principiante","Seguridad","Número secreto que permite firmar transacciones desde una dirección. Quien la tiene controla los fondos.","Una wallet deriva tus claves privadas de la frase de recuperación.","Nadie legítimo te la pedirá."),
+("clave-publica","Clave pública","Principiante","Seguridad","Valor que se calcula a partir de la clave privada y permite a cualquiera verificar tus firmas. De ella se obtiene la dirección.",None,None),
+("direccion-cuenta","Dirección de cuenta","Principiante","Fundamentos","Identificador público al que se envían fondos en una red. Cada red tiene su formato.","Las direcciones de Ethereum empiezan por 0x y tienen 40 caracteres hexadecimales.","Una dirección no dice quién es la persona que la controla."),
+("firma-digital","Firma digital","Principiante","Seguridad","Prueba criptográfica, hecha con una clave privada, de que el titular de una dirección autoriza un mensaje o una transacción.",None,"Firmar un mensaje no siempre es inofensivo: algunas firmas conceden permisos."),
+("transaccion","Transacción","Principiante","Transacciones","Instrucción firmada que cambia el estado de la red: enviar fondos, llamar a un contrato o aprobar un permiso.",None,None),
+("comision","Comisión","Intermedio","Transacciones","Pago que hace quien firma una transacción para que la red la procese. Depende de la red y de la demanda, y se paga aunque la operación falle.","En Ethereum la comisión se mide en gas; en Solana hay una comisión base por firma y una prioridad opcional.",None),
+("mineria","Minería","Principiante","Fundamentos","Proceso de una red de prueba de trabajo en el que los mineros gastan energía de cálculo para proponer bloques y reciben a cambio nuevas monedas y comisiones.",None,None),
+("prueba-de-trabajo","Prueba de trabajo","Principiante","Fundamentos","Mecanismo de consenso en el que proponer un bloque exige resolver un cálculo costoso. Bitcoin lo utiliza.",None,None),
+("prueba-de-participacion","Prueba de participación","Principiante","Fundamentos","Mecanismo de consenso en el que los validadores bloquean monedas como garantía y pueden perder parte si actúan mal. Ethereum lo usa desde 2022.",None,None),
+("validador","Validador","Intermedio","Fundamentos","Participante de una red de prueba de participación que propone y vota bloques a cambio de recompensas.",None,None),
+("contrato-inteligente","Contrato inteligente","Intermedio","Aplicaciones","Programa guardado en una blockchain que se ejecuta cuando alguien lo llama con una transacción. En Solana se llama programa.","Un AMM es un contrato que guarda dos saldos y aplica una fórmula de precio.","Que un contrato se ejecute de forma automática no significa que su código sea seguro."),
+("moneda-nativa","Moneda nativa","Principiante","Redes","Moneda propia de una red, con la que se pagan las comisiones.","ETH en Ethereum y SOL en Solana.",None),
+("token","Token","Principiante","Redes","Activo creado sobre una red ya existente mediante un contrato o un programa, distinto de la moneda nativa.","En Solana cada token tiene su propia cuenta de mint.","Crear un token es sencillo y barato; no indica nada sobre su valor."),
+("moneda-estable","Moneda estable (stablecoin)","Principiante","Redes",None,None,None),
+("emisor","Emisor","Intermedio","Redes","Entidad que crea un token y, en su caso, responde de él: por ejemplo, la empresa que respalda una moneda estable con reservas.",None,"Que haya un emisor identificado no garantiza que el token mantenga su valor."),
+("custodia","Custodia","Principiante","Seguridad","Situación en la que un tercero, como una plataforma, guarda las claves y tú tienes un saldo en su sistema.",None,None),
+("autocustodia","Autocustodia","Principiante","Seguridad","Situación en la que guardas tú las claves. Nadie puede bloquearte, pero nadie puede recuperarlas si las pierdes.",None,None),
+("frase-de-recuperacion","Frase de recuperación","Principiante","Seguridad","Lista de 12 o 24 palabras de la que se derivan todas las claves de una wallet. Permite restaurarla en otro dispositivo.",None,"Ningún soporte, web o aplicación legítima te la pedirá."),
+("copia-de-seguridad","Copia de seguridad","Principiante","Seguridad","Registro, fuera de línea y protegido, de lo necesario para recuperar el acceso a una wallet o a una cuenta.",None,None),
+("puente","Puente","Intermedio","Redes","Sistema que bloquea un activo en una red y emite una representación en otra. La representación depende del puente.",None,"El activo recibido por un puente puede no ser la versión oficial en la red de destino."),
+("capa-2","Capa 2","Intermedio","Redes","Red que procesa transacciones fuera de la red principal y publica en ella un resumen y los datos para comprobarlo.","Los rollups optimistas y los de conocimiento cero son capas 2 de Ethereum.",None),
+("rollup","Rollup","Avanzado","Redes","Tipo de capa 2 que agrupa transacciones y publica sus datos en la red principal, con pruebas de fraude o pruebas de validez.",None,None),
+("phishing","Phishing","Principiante","Seguridad","Engaño que suplanta a alguien de confianza para que entregues un secreto, firmes algo o envíes fondos.",None,None),
+("autenticacion-en-dos-pasos","Autenticación en dos pasos (2FA)","Principiante","Seguridad","Comprobación adicional a la contraseña: un código de una app, una llave física o un SMS.",None,"Un código de 2FA no protege si se lo dictas a quien te llama."),
+("explorador","Explorador de bloques","Intermedio","Transacciones","Web que lee los datos de una red y muestra transacciones, cuentas y bloques de forma legible.",None,"Las etiquetas y logotipos que añade un explorador son su interpretación, no parte de la cadena."),
+("permiso","Permiso (approve)","Intermedio","Transacciones","Autorización que das a otra dirección para gastar hasta cierta cantidad de un token tuyo.",None,"Un permiso ilimitado sigue vigente hasta que lo revocas."),
+("dapp","dApp","Intermedio","Aplicaciones","Aplicación descentralizada: una interfaz web que prepara transacciones para uno o varios contratos inteligentes.",None,None),
+("oraculo","Oráculo","Avanzado","Aplicaciones","Servicio que lleva a la cadena datos externos, como un precio, para que los contratos los usen.",None,None),
+("amm","AMM (creador de mercado automático)","Intermedio","Aplicaciones","Contrato que guarda dos saldos y fija el precio entre ellas con una fórmula, sin libro de órdenes.",None,None),
+("liquidez","Liquidez","Intermedio","Aplicaciones","Cantidad disponible en un pool o un mercado. Cuanto más profunda, menos se mueve el precio con cada operación.",None,None),
+("deslizamiento","Deslizamiento","Intermedio","Aplicaciones","Diferencia entre el precio mostrado antes de operar y el precio medio obtenido.",None,None),
+("prestamo-colateralizado","Préstamo colateralizado","Intermedio","Aplicaciones","Préstamo que exige depositar una garantía de mayor valor. Si la garantía baja demasiado, se liquida.",None,None),
+("staking","Staking","Intermedio","Aplicaciones","Bloqueo de la moneda nativa para participar en la validación de una red de prueba de participación a cambio de recompensas.",None,"La recompensa se paga en una moneda cuyo precio puede bajar."),
+("airdrop","Airdrop","Principiante","Seguridad","Reparto gratuito de tokens a varias direcciones. Muchos airdrops no solicitados son cebos para phishing.",None,None),
+("tokenomica","Tokenómica","Intermedio","Datos","Descripción de cómo se crea, reparte y libera un token según su proyecto.",None,"Lo que declara un proyecto no es una lectura de la cadena."),
+("suministro","Suministro","Intermedio","Datos","Número de unidades de un token que existen. En Solana se lee en la cuenta del mint junto con sus decimales.",None,"El suministro no dice quién tiene los tokens."),
+("dato-no-disponible","Dato no disponible","Principiante","Datos","Forma de anotar un dato que no se pudo obtener, en lugar de inventarlo o rellenarlo con cero.",None,None),
+("mint","Mint","Avanzado","Datos","Cuenta de Solana que define un token: su suministro, sus decimales y sus autoridades.",None,None),
+("extension-token-2022","Extensión de Token-2022","Avanzado","Datos","Función adicional del programa Token-2022 de Solana, como comisiones en cada transferencia o un delegado permanente.",None,"Una extensión no es buena ni mala por sí misma: hay que leer cuál es."),
+("direccion",None,"Avanzado","Datos",None,None,None),
+("registro",None,"Avanzado","Datos",None,None,None),
+("autoridad-emision",None,"Avanzado","Datos",None,None,None),
+("autoridad-congelacion",None,"Avanzado","Datos",None,None,None),
+("metadatos-mutables",None,"Avanzado","Datos",None,None,None),
+("desconocido",None,"Avanzado","Datos",None,None,None),
+("curva-pump",None,"Avanzado","Aplicaciones",None,None,None),
+("reserva-real",None,"Avanzado","Aplicaciones",None,None,None),
+("reserva-virtual",None,"Avanzado","Aplicaciones",None,None,None),
+("suplantacion",None,"Intermedio","Seguridad",None,None,None),
+("titular",None,"Avanzado","Datos",None,None,None),
+("holder",None,"Intermedio","Datos",None,None,None),
+("ficha",None,"Intermedio","Datos",None,None,None),
+("censo",None,"Avanzado","Datos",None,None,None),
+("cuenta-tecnica",None,"Avanzado","Datos",None,None,None),
+("consulta-fallida",None,"Avanzado","Datos",None,None,None),
+("ausente-comprobado",None,"Avanzado","Datos",None,None,None),
+("no-consultado",None,"Avanzado","Datos",None,None,None),
+]
+out=[]
+for i,t,n,tema,d,e,no in T:
+    o={"id":i,"nivel":n,"tema":tema}
+    if t:o["termino"]=t
+    if d:o["definicion"]=d
+    if e:o["ejemplo"]=e
+    if no:o["noIndica"]=no
+    out.append(o)
+ids=[o["id"] for o in out]; assert len(ids)==len(set(ids))
+json.dump({"version":1,"actualizado":"2026-11-03","nota":"Las entradas sin 'termino' o 'definicion' se completan desde lab/library/glossary.json (Lab de ORVUPI). Si hay 'definicion' y existe entrada del Lab, el texto del Lab se muestra como 'En las fichas de Verify'.","terminos":out},open('academy/content/glosario.json','w'),ensure_ascii=False,indent=1)
+print(len(out))

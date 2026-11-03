@@ -80,6 +80,43 @@ https://superb-horse-9036f5.netlify.app/*  https://orvupi.com/:splat  301!
 /ko/studio/recursos         /ko/studio/         200
 /ko/studio/marca            /ko/studio/         200
 
+# ORVUPI Academy vive en /academy/ (la genera web/v2/tools/build-academy.mjs).
+# Curva, Ejemplo de curva, Cuaderno, Lab y Aprender se unieron en Academy (03-11-2026).
+# Sus URL antiguas, también las de /en/, /pt-br/, /ja/ y /ko/, llevan a su sitio en Academy.
+# El ancla se conserva: /aprender/#termino cae en la misma ancla del glosario.
+# /lab/sw.js no se redirige: el service worker de Lab sigue respondiendo en su ámbito.
+/academy                     /academy/ 301
+/aprender                    /academy/glosario/ 301
+/aprender/                   /academy/glosario/ 301
+/aprender/index.html         /academy/glosario/ 301
+/lab                         /academy/practicas/laboratorio/ 301
+/lab/                        /academy/practicas/laboratorio/ 301
+/lab/index.html              /academy/practicas/laboratorio/ 301
+/pares                       /academy/practicas/curva-en-vivo/ 301
+/pares/                      /academy/practicas/curva-en-vivo/ 301
+/pares/index.html            /academy/practicas/curva-en-vivo/ 301
+/cuaderno                    /academy/mi-aprendizaje/cuaderno/ 301
+/cuaderno/                   /academy/mi-aprendizaje/cuaderno/ 301
+/cuaderno/index.html         /academy/mi-aprendizaje/cuaderno/ 301
+/comparar                    /academy/articulos/intercambios-y-liquidez/#ejemplo-de-curva 301
+/comparar/                   /academy/articulos/intercambios-y-liquidez/#ejemplo-de-curva 301
+/comparar/index.html         /academy/articulos/intercambios-y-liquidez/#ejemplo-de-curva 301
+/:lang/aprender              /academy/glosario/ 301
+/:lang/aprender/             /academy/glosario/ 301
+/:lang/aprender/index.html   /academy/glosario/ 301
+/:lang/lab                   /academy/practicas/laboratorio/ 301
+/:lang/lab/                  /academy/practicas/laboratorio/ 301
+/:lang/lab/index.html        /academy/practicas/laboratorio/ 301
+/:lang/pares                 /academy/practicas/curva-en-vivo/ 301
+/:lang/pares/                /academy/practicas/curva-en-vivo/ 301
+/:lang/pares/index.html      /academy/practicas/curva-en-vivo/ 301
+/:lang/cuaderno              /academy/mi-aprendizaje/cuaderno/ 301
+/:lang/cuaderno/             /academy/mi-aprendizaje/cuaderno/ 301
+/:lang/cuaderno/index.html   /academy/mi-aprendizaje/cuaderno/ 301
+/:lang/comparar              /academy/articulos/intercambios-y-liquidez/#ejemplo-de-curva 301
+/:lang/comparar/             /academy/articulos/intercambios-y-liquidez/#ejemplo-de-curva 301
+/:lang/comparar/index.html   /academy/articulos/intercambios-y-liquidez/#ejemplo-de-curva 301
+
 # El motor WASM de onnxruntime de Work (26,8 MB) supera el límite de 25 MiB por archivo de
 # Pages, así que no se sube; se redirige a la copia fijada en jsDelivr (misma versión que worker.ts).
 /work/assets/ort-wasm-simd-threaded.asyncify-*  https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/dist/ort-wasm-simd-threaded.asyncify.wasm  302

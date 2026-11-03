@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es" data-lang="es" data-locale="es" data-fixed-lang>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Comisiones y prioridad en Solana · ORVUPI Academy</title>
+<meta name="description" content="Cuánto cuesta una transacción en Solana, cómo se calcula la tarifa de prioridad y por qué una transacción caduca si tarda en entrar.">
+<link rel="canonical" href="https://orvupi.com/academy/articulos/comisiones-y-prioridad-en-solana/">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="theme-color" content="#ff3070">
+<meta property="og:site_name" content="ORVUPI Academy">
+<meta property="og:title" content="Comisiones y prioridad en Solana · ORVUPI Academy">
+<meta property="og:description" content="Cuánto cuesta una transacción en Solana, cómo se calcula la tarifa de prioridad y por qué una transacción caduca si tarda en entrar.">
+<meta property="og:url" content="https://orvupi.com/academy/articulos/comisiones-y-prioridad-en-solana/">
+<link rel="manifest" href="/academy/manifest.webmanifest">
+<link rel="icon" href="/assets/academy/academy.svg" type="image/svg+xml">
+<link rel="icon" href="/academy/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/academy/icon-192.png">
+<link rel="stylesheet" href="/assets/academy/academy.css?v=4b04bcb4b0">
+<script src="/assets/shell.js?v=ba3a858465"></script>
+<script src="/assets/academy/academy.js?v=f89dfe18ae" defer></script>
+</head>
+<body class="ac">
+<a class="ac-skip" href="#contenido">Saltar al contenido</a>
+<header class="site ac-nav">
+<a class="ac-home" href="/" aria-label="Inicio de ORVUPI"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" fill="currentColor"/></svg></a>
+<a class="ac-logo" href="/academy/" aria-label="ORVUPI Academy, portada"><img src="/assets/academy/logo.png" width="36" height="36" alt=""><span>ORVUPI<small>ACADEMY</small></span></a>
+<nav aria-label="Secciones de Academy"><ul class="ac-menu"><li><a href="/academy/articulos/" aria-current="page">Artículos</a></li><li><a href="/academy/rutas/">Rutas</a></li><li><a href="/academy/practicas/">Prácticas</a></li><li><a href="/academy/glosario/">Glosario</a></li></ul></nav>
+<div class="ac-right">
+<div class="ac-search" data-ac-search><button type="button" class="ac-icon" aria-expanded="false" aria-controls="ac-buscar" aria-label="Buscar en Academy"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="m16 16 4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+<form id="ac-buscar" role="search" action="/academy/articulos/" data-ac-goto><label class="ac-sr" for="ac-q">Buscar en Academy</label><input id="ac-q" name="q" type="search" placeholder="Buscar artículos y términos" autocomplete="off"><button type="submit" class="ac-btn pink">Buscar</button></form></div>
+<a class="ac-btn ghost" href="/academy/mi-aprendizaje/">Mi aprendizaje</a>
+<a class="ac-btn pink" href="/academy/rutas/primeros-pasos/">Empezar</a>
+<a class="ac-icon wide" href="/" aria-label="Volver a ORVUPI"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></a>
+<a class="ac-icon ac-burger" href="#ac-menu-movil" role="button" aria-expanded="false" aria-controls="ac-menu-movil" aria-label="Abrir el menú"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></a>
+</div>
+</header>
+<div class="ac-veil" data-ac-close></div>
+<div class="ac-drawer" id="ac-menu-movil" role="dialog" aria-modal="true" aria-label="Menú de ORVUPI Academy">
+<div class="ac-drawer-top"><a class="ac-icon" href="#" data-ac-close role="button" aria-label="Cerrar el menú"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></a></div>
+<a class="ac-btn soft" href="/academy/mi-aprendizaje/">Mi aprendizaje</a>
+<a class="ac-btn pink" href="/academy/rutas/primeros-pasos/">Empezar</a>
+<nav aria-label="Secciones de Academy (móvil)"><ul><li><a href="/academy/">Portada</a></li><li><a href="/academy/articulos/">Artículos</a></li><li><a href="/academy/rutas/">Rutas</a></li><li><a href="/academy/practicas/">Prácticas</a></li><li><a href="/academy/glosario/">Glosario</a></li><li><a href="/academy/articulos/">Buscar</a></li></ul>
+<h2>Herramientas ORVUPI</h2><ul><li><a href="/">Inicio de ORVUPI</a></li><li><a href="/sonar/">Sonar</a></li><li><a href="/work/">Work</a></li><li><a href="/studio/">Studio</a></li><li><a href="/arqiven/">ARQIVEN</a></li><li><a href="/tablero/">Tablero</a></li></ul></nav>
+</div>
+<div class="ac-promo"><p class="ac-promo-t">Academia gratuita: sin cuenta, sin wallet y sin pagos.<span class="ac-promo-x"> Tu progreso se guarda en este navegador.</span></p><a class="ac-btn pink" href="/academy/rutas/primeros-pasos/">Empieza la ruta</a></div>
+<main id="contenido"><div class="ac-art-g"><div class="ac-art-main">
+<div class="tags"><span>Módulo 9</span><span>Cuentas, tokens y firmas</span></div>
+<img class="ac-art-img" src="/assets/academy/img/431-w.webp" width="768" height="432" alt="Ilustración de ORVUPI: La red congestionada">
+<nav aria-label="Ruta de navegación"><ol class="ac-crumbs"><li><a href="/academy/">Inicio</a></li><li><a href="/academy/articulos/">Artículos</a></li><li><span aria-current="page">Comisiones y prioridad en Solana</span></li></ol></nav>
+<h1>Comisiones y prioridad en Solana</h1>
+<div class="ac-art-meta"><span class="ac-level lv-i">Intermedio</span><span>Actualizado 03-11-2026</span><span><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> 2 min</span><span class="ac-done" data-unit-done="OA-035">✓ Leído</span></div>
+<p class="ac-redes-l"><span>Redes</span><a class="ac-chip ac-red" href="/academy/redes/solana/">Solana</a></p>
+<article class="ac-article" data-article="OA-035">
+<section class="claves"><h2 id="aspectos-clave">Aspectos clave</h2><ul><li>La comisión base es de 5.000 lamports por firma; la mitad se quema y la otra mitad la recibe el validador.</li><li>La tarifa de prioridad es opcional y se calcula como precio por unidad de cómputo por el límite de unidades.</li><li>Una transacción lleva un blockhash reciente y caduca si no entra en unos 150 bloques, alrededor de un minuto.</li><li>Crear cuentas nuevas cuesta aparte: el depósito mínimo no es una comisión, se recupera al cerrarlas.</li></ul></section>
+<h2 id="la-comision-base">La comisión base</h2>
+<p>Cada transacción de Solana paga una <a class="term" href="/academy/glosario/comision/">comisión</a> base de <strong>5.000 <a class="term" href="/academy/glosario/lamport/">lamports</a> por firma</strong>. Una transacción con una sola firma cuesta 0,000005 SOL de base. De esa cantidad, la mitad se quema y la otra mitad la recibe el <a class="term" href="/academy/glosario/validador/">validador</a> que la procesa.</p>
+<p>Paga la primera cuenta firmante, que actúa como pagadora. Si no tiene saldo suficiente, la transacción no se procesa.</p>
+<h2 id="la-tarifa-de-prioridad">La tarifa de prioridad</h2>
+<p>Cuando la red está muy ocupada, los validadores eligen primero las transacciones que pagan más. Para eso existe la <a class="term" href="/academy/glosario/tarifa-de-prioridad/">tarifa de prioridad</a>, que se calcula así:</p>
+<p><strong>tarifa de prioridad = precio por unidad de cómputo × límite de unidades de cómputo</strong></p>
+<ul><li>El <strong>precio</strong> se fija en micro-lamports por unidad de cómputo.</li><li>El <strong>límite</strong> es el máximo de cómputo que puede gastar la transacción. Si no se indica, se aplica un valor por defecto por instrucción, con un techo por transacción.</li></ul>
+<p>Con números inventados: un límite de 200.000 unidades y un precio de 10.000 micro-lamports dan 2.000.000.000 micro-lamports, es decir, 2.000 lamports de prioridad. Es la cifra del límite, aunque la transacción gaste menos.</p>
+<p>Pagar más prioridad no garantiza nada. Solo hace la transacción más atractiva para el validador.</p>
+<h2 id="por-que-caduca-una-transaccion">Por qué caduca una transacción</h2>
+<p>Cada transacción incluye un <strong>blockhash reciente</strong>: la huella de un bloque de hace muy poco. Si no entra en la cadena antes de unos 150 bloques, alrededor de un minuto, deja de ser válida y hay que firmarla de nuevo.</p>
+<p>Eso tiene dos efectos útiles de conocer:</p>
+<ul><li>Si una wallet dice «la transacción expiró», no se ha cobrado nada por esa transacción.</li><li>Una firma antigua no se puede reutilizar más tarde para lo mismo.</li></ul>
+<h2 id="lo-que-no-es-una-comision">Lo que no es una comisión</h2>
+<p>Crear una <a class="term" href="/academy/glosario/cuenta-solana/">cuenta</a>, por ejemplo una cuenta de token para recibir un token nuevo, exige dejar un depósito mínimo. Ese dinero queda en la cuenta y se recupera si se cierra. No lo cobra nadie, pero sí sale de tu saldo en ese momento.</p>
+<h2 id="que-revisar-en-tu-wallet">Qué revisar en tu wallet</h2>
+<ol><li>La comisión total que muestra antes de firmar.</li><li>Si añade una tarifa de prioridad y de cuánto.</li><li>Si la transacción crea cuentas nuevas y cuánto depósito exigen.</li></ol>
+<p>Lo mismo en otras redes se explica en <a href="/academy/articulos/comisiones-y-confirmaciones/">Comisiones y confirmaciones</a>.</p>
+
+<section class="ac-box ac-quiz" data-quiz="OA-035" aria-labelledby="h-q-OA-035">
+<h2 id="h-q-OA-035">Comprueba lo que has aprendido</h2>
+<fieldset><legend>¿Cómo se calcula la tarifa de prioridad en Solana?</legend><label class="ac-opt"><input type="radio" name="q-OA-035" value="0" data-porque="La comisión no depende del importe."> <span>Un porcentaje del importe enviado</span></label><label class="ac-opt"><input type="radio" name="q-OA-035" value="1" data-ok="1" data-porque="Es la fórmula de la documentación; se paga sobre el límite fijado."> <span>Precio por unidad de cómputo × límite de unidades de cómputo</span></label><label class="ac-opt"><input type="radio" name="q-OA-035" value="2" data-porque="Esa es la comisión base, no la de prioridad."> <span>5.000 lamports por firma</span></label></fieldset>
+<div class="ac-actions ac-js-only"><button type="button" class="ac-btn pink mid" data-check>Comprobar</button></div>
+<p class="ac-fb" aria-live="polite"></p>
+<details class="ac-sol nojs"><summary>Ver la respuesta</summary><p><strong>Correcta:</strong> Precio por unidad de cómputo × límite de unidades de cómputo. Es la fórmula de la documentación; se paga sobre el límite fijado.</p><ul><li>5.000 lamports por firma: Esa es la comisión base, no la de prioridad.</li><li>Un porcentaje del importe enviado: La comisión no depende del importe.</li></ul></details>
+</section>
+<section class="ac-box ac-activity" data-activity="OA-035" aria-labelledby="h-a-OA-035">
+<h2 id="h-a-OA-035">Practica</h2>
+<p>Clasifica cada coste de una transacción inventada.</p>
+<ul class="ac-items"><li><span>El saldo mínimo para crear una cuenta de token</span><select aria-label="Clasifica: El saldo mínimo para crear una cuenta de token" data-ok="Depósito recuperable"><option value="">Elige…</option><option>Comisión</option><option>Depósito recuperable</option></select><span class="why" hidden>Se devuelve al cerrar la cuenta.</span></li><li><span>El saldo que se devuelve al cerrar una cuenta vacía</span><select aria-label="Clasifica: El saldo que se devuelve al cerrar una cuenta vacía" data-ok="Depósito recuperable"><option value="">Elige…</option><option>Comisión</option><option>Depósito recuperable</option></select><span class="why" hidden>Es el mismo depósito, de vuelta.</span></li><li><span>5.000 lamports por la firma</span><select aria-label="Clasifica: 5.000 lamports por la firma" data-ok="Comisión"><option value="">Elige…</option><option>Comisión</option><option>Depósito recuperable</option></select><span class="why" hidden>Es la comisión base.</span></li><li><span>La tarifa de prioridad</span><select aria-label="Clasifica: La tarifa de prioridad" data-ok="Comisión"><option value="">Elige…</option><option>Comisión</option><option>Depósito recuperable</option></select><span class="why" hidden>La recibe el validador.</span></li></ul>
+<div class="ac-actions ac-js-only"><button type="button" class="ac-btn pink mid" data-check>Comprobar</button></div>
+<p class="ac-fb" aria-live="polite"></p>
+<details class="ac-sol nojs"><summary>Ver la solución</summary><div class="ac-tablewrap"><table><thead><tr><th scope="col">Elemento</th><th scope="col">Respuesta</th><th scope="col">Por qué</th></tr></thead><tbody><tr><td>El saldo mínimo para crear una cuenta de token</td><td>Depósito recuperable</td><td>Se devuelve al cerrar la cuenta.</td></tr><tr><td>El saldo que se devuelve al cerrar una cuenta vacía</td><td>Depósito recuperable</td><td>Es el mismo depósito, de vuelta.</td></tr><tr><td>5.000 lamports por la firma</td><td>Comisión</td><td>Es la comisión base.</td></tr><tr><td>La tarifa de prioridad</td><td>Comisión</td><td>La recibe el validador.</td></tr></tbody></table></div></details>
+</section>
+
+<section class="ac-box ac-notes" aria-labelledby="h-notas-OA-035"><h2 id="h-notas-OA-035">Tus notas</h2><p class="ac-nojs">Las notas necesitan JavaScript. Se guardan solo en este navegador.</p><div class="ac-js-only"><label class="ac-sr" for="notas-OA-035">Notas sobre Comisiones y prioridad en Solana</label><textarea id="notas-OA-035" data-notes="OA-035" maxlength="4000" placeholder="Escribe lo que quieras recordar. Se guarda en este navegador."></textarea><div class="ac-actions"><button type="button" class="ac-btn pink mid" data-read="OA-035">Marcar como leído</button><a class="ac-btn soft mid" href="/academy/mi-aprendizaje/">Ver mi aprendizaje</a></div><p class="ac-status" aria-live="polite" data-status></p></div></section>
+<section class="ac-fuentes"><h2 id="fuentes">Fuentes</h2><ol><li><a href="https://solana.com/docs/core/fees/fee-structure" rel="noopener noreferrer">Estructura de comisiones (documentación de Solana)</a></li><li><a href="https://solana.com/docs/core/fees/compute-budget" rel="noopener noreferrer">Presupuesto de cómputo (documentación de Solana)</a></li><li><a href="https://solana.com/docs/core/fees" rel="noopener noreferrer">Comisiones (documentación de Solana)</a></li><li><a href="https://solana.com/docs/core/transactions" rel="noopener noreferrer">Transacciones (documentación de Solana)</a></li></ol><p>Términos: <a class="term" href="/academy/glosario/comision/">Comisión</a>, <a class="term" href="/academy/glosario/lamport/">Lamport</a>, <a class="term" href="/academy/glosario/tarifa-de-prioridad/">Tarifa de prioridad</a>, <a class="term" href="/academy/glosario/validador/">Validador</a>, <a class="term" href="/academy/glosario/cuenta-solana/">Cuenta (Solana)</a>.</p></section>
+</article>
+<nav class="ac-pager" aria-label="Artículos de la ruta"><a href="/academy/articulos/tokens-spl-y-token-2022/"><small>‹ Anterior</small>Tokens SPL y Token-2022</a><a class="next" href="/academy/articulos/firmar-con-cuidado-en-solana/"><small>Siguiente ›</small>Firmar con cuidado en Solana</a></nav>
+</div>
+<aside class="ac-side" aria-label="Más sobre este artículo">
+<div><h2>Compartir</h2><div class="ac-share"><a href="https://x.com/intent/post?url=https%3A%2F%2Forvupi.com%2Facademy%2Farticulos%2Fcomisiones-y-prioridad-en-solana%2F&amp;text=Comisiones%20y%20prioridad%20en%20Solana" rel="noopener noreferrer" aria-label="Compartir en X"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M17.8 3h3.1l-6.8 7.7L22 21h-6.2l-4.9-6.4L5.3 21H2.2l7.2-8.3L2 3h6.4l4.4 5.8zm-1.1 16.2h1.7L7.4 4.7H5.5z"/></svg></a><a href="https://t.me/share/url?url=https%3A%2F%2Forvupi.com%2Facademy%2Farticulos%2Fcomisiones-y-prioridad-en-solana%2F&amp;text=Comisiones%20y%20prioridad%20en%20Solana" rel="noopener noreferrer" aria-label="Compartir en Telegram"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M21.5 3.6 2.9 10.8c-1.3.5-1.3 1.2-.2 1.5l4.8 1.5 1.8 5.6c.2.6.4.8.9.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.8-1.4-1.5zM8.9 13.4l9.6-6c.5-.3.9-.1.5.2l-8 7.3-.3 3.4z"/></svg></a><button type="button" class="ac-js-only" data-copy="https://orvupi.com/academy/articulos/comisiones-y-prioridad-en-solana/" aria-label="Copiar el enlace"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div></div>
+<nav class="ac-toc" aria-label="En este artículo"><h2>En este artículo</h2><ol><li><a href="#aspectos-clave">Aspectos clave</a></li><li><a href="#la-comision-base">La comisión base</a></li><li><a href="#la-tarifa-de-prioridad">La tarifa de prioridad</a></li><li><a href="#por-que-caduca-una-transaccion">Por qué caduca una transacción</a></li><li><a href="#lo-que-no-es-una-comision">Lo que no es una comisión</a></li><li><a href="#que-revisar-en-tu-wallet">Qué revisar en tu wallet</a></li><li><a href="#h-q-OA-035">Pregunta</a></li><li><a href="#h-notas-OA-035">Tus notas</a></li><li><a href="#fuentes">Fuentes</a></li></ol></nav>
+<div><h2>Artículos relacionados</h2><div class="ac-rel"><a href="/academy/articulos/cuentas-y-programas-en-solana/"><img src="/assets/academy/img/427-s.webp" width="228" height="128" alt="Ilustración de ORVUPI: Nodos trabajando juntos" loading="lazy" decoding="async">Cuentas y programas en Solana</a><a href="/academy/articulos/tokens-spl-y-token-2022/"><img src="/assets/academy/img/136-s.webp" width="228" height="128" alt="Ilustración de ORVUPI: Conectar las piezas" loading="lazy" decoding="async">Tokens SPL y Token-2022</a><a href="/academy/articulos/firmar-con-cuidado-en-solana/"><img src="/assets/academy/img/96-s.webp" width="228" height="128" alt="Ilustración de ORVUPI: Lo reviso primero" loading="lazy" decoding="async">Firmar con cuidado en Solana</a></div></div>
+</aside></div></main>
+<footer class="ac-foot"><div class="ac-c"><div class="ac-foot-g">
+<div><h3>Comunidad</h3><div class="soc"><a href="https://github.com/ORVUPI/orvupi-agent" rel="noopener noreferrer" aria-label="GitHub de ORVUPI"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.6 2.4 1.1 3 .9.1-.7.4-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5a3.9 3.9 0 0 1 1-2.7 3.6 3.6 0 0 1 .1-2.7s.8-.3 2.8 1a9.6 9.6 0 0 1 5 0c1.9-1.3 2.8-1 2.8-1 .5 1.4.2 2.4.1 2.7a3.9 3.9 0 0 1 1 2.7c0 3.9-2.3 4.7-4.6 5 .4.3.7.9.7 1.9V21c0 .3.2.6.7.5A10 10 0 0 0 12 2"/></svg></a><a href="https://x.com/ORVUPI" rel="noopener noreferrer" aria-label="ORVUPI en X"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M17.8 3h3.1l-6.8 7.7L22 21h-6.2l-4.9-6.4L5.3 21H2.2l7.2-8.3L2 3h6.4l4.4 5.8zm-1.1 16.2h1.7L7.4 4.7H5.5z"/></svg></a><a href="https://t.me/orvupi" rel="noopener noreferrer" aria-label="ORVUPI en Telegram"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M21.5 3.6 2.9 10.8c-1.3.5-1.3 1.2-.2 1.5l4.8 1.5 1.8 5.6c.2.6.4.8.9.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.8-1.4-1.5zM8.9 13.4l9.6-6c.5-.3.9-.1.5.2l-8 7.3-.3 3.4z"/></svg></a><a href="https://www.tiktok.com/@orvupi" rel="noopener noreferrer" aria-label="ORVUPI en TikTok"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16.5 3c.3 2.3 1.7 3.8 4 4v3.1c-1.5.1-2.8-.4-4-1.2v6.4c0 3.8-3.2 6.2-6.4 5.6-3.9-.7-5.3-5.6-2.4-8.3 1.2-1.1 2.8-1.5 4.4-1.2v3.3c-1.4-.4-2.8.4-3 1.7-.3 1.9 1.6 3 3 2.4 1-.4 1.4-1.3 1.4-2.4V3z"/></svg></a></div>
+<h3>Idioma</h3><ul><li><a href="/academy/" lang="es">Español</a></li></ul></div>
+<div class="ac-foot-cols">
+<div><h3>Academy</h3><ul><li><a href="/academy/articulos/">Artículos</a></li><li><a href="/academy/rutas/">Rutas</a></li><li><a href="/academy/practicas/">Prácticas</a></li><li><a href="/academy/glosario/">Glosario</a></li><li><a href="/academy/mi-aprendizaje/">Mi aprendizaje</a></li><li><a href="/academy/mi-aprendizaje/cuaderno/">Cuaderno</a></li></ul></div>
+<div><h3>Herramientas ORVUPI</h3><ul><li><a href="/sonar/">Sonar</a></li><li><a href="/work/">Work</a></li><li><a href="/studio/">Studio</a></li><li><a href="/arqiven/">ARQIVEN</a></li><li><a href="/tablero/">Tablero</a></li><li><a href="/academy/practicas/curva-en-vivo/">Curva en vivo</a></li></ul></div>
+<div><h3>Acerca de ORVUPI</h3><ul><li><a href="/vision/">Visión</a></li><li><a href="/novedades/">Novedades</a></li><li><a href="/methodology/">Metodología</a></li><li><a href="/marca/">Marca</a></li><li><a href="/community/">Comunidad</a></li><li><a href="/contribuir/">Contribuir</a></li></ul></div>
+<div><h3>Legal y seguridad</h3><ul><li><a href="/legal/">Legal</a></li><li><a href="/security/">Seguridad</a></li><li><a href="/risks/">Riesgos</a></li><li><a href="/token/">Token</a></li></ul></div>
+</div></div>
+<p class="legal">ORVUPI Academy · contenido educativo propio, gratuito y sin publicidad. Actualizado el 03-11-2026. <a href="/risks/">Riesgos</a> · <a href="/legal/">Aviso legal</a></p>
+</div></footer>
+</body>
+</html>

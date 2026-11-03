@@ -56,7 +56,8 @@ describe("studio más", () => {
     assert.equal(/canva|creators|mi cuenta|my account|cerrar sesi[oó]n|sign out/i.test(labels), false);
     assert.equal(store.HUB_ROWS.every((row) => row.go.startsWith("mas/")), true);
     const hrefs = store.ORVUPI_APPS.map((item) => item.href);
-    for (const href of ["/work/", "/lab/", "/verify/", "/cuaderno/", "/aprender/", "/marca/"]) {
+    // Lab, Cuaderno, Curva y Aprender viven ahora dentro de ORVUPI Academy.
+    for (const href of ["/work/", "/academy/", "/verify/", "/marca/"]) {
       assert.equal(hrefs.includes(href), true, href);
     }
     assert.equal(store.SCHOOL.some((item) => item.href === "/methodology/"), true);

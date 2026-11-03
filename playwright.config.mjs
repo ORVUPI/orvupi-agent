@@ -44,5 +44,16 @@ export default defineConfig({
       name: "desktop",
       use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } },
     },
+    // Firefox solo para Academy (H2): el resto de la web aún no se prueba en Gecko.
+    {
+      name: "academy-firefox",
+      testMatch: /academy\.spec\.mjs$/,
+      use: { ...devices["Desktop Firefox"], viewport: { width: 1440, height: 900 } },
+    },
+    {
+      name: "academy-firefox-mobile",
+      testMatch: /academy\.spec\.mjs$/,
+      use: { ...devices["Desktop Firefox"], viewport: { width: 412, height: 915 } },
+    },
   ],
 });

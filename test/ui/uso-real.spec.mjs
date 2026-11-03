@@ -140,7 +140,7 @@ test("lectura, guardado y comparación en el uso real", async ({ page }, testInf
   await expect(saved).toContainText("Guardada en el Cuaderno de este navegador");
   const openNotebook = saved.getByRole("link", { name: "Abrir Cuaderno" });
   await expect(openNotebook).toBeVisible();
-  await expect(openNotebook).toHaveAttribute("href", "/cuaderno/");
+  await expect(openNotebook).toHaveAttribute("href", "/academy/mi-aprendizaje/cuaderno/");
   await expect(saved).toContainText("Lectura incompleta: se guardará marcando lo que falta");
   if (testInfo.project.name !== "desktop") {
     const covered = await page.evaluate(() => {

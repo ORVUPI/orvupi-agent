@@ -19,7 +19,11 @@ LOCALES = [("es", "", "Español", "es_ES"), ("en", "en", "English", "en_US"), ("
            ("ja", "ja", "日本語", "ja_JP"), ("ko", "ko", "한국어", "ko_KR")]
 PREFIXES = [p for _, p, _, _ in LOCALES if p]
 PAGES = sorted(p for p in ROOT.rglob("*.html")
-               if p.relative_to(ROOT).parts[0] not in ("work", "content", *PREFIXES))
+               if p.relative_to(ROOT).parts[0] not in ("work", "content", "academy", *PREFIXES))
+# ORVUPI Academy (/academy/) la genera web/v2/tools/build-academy.mjs, solo en español.
+# Las rutas antiguas que ahora redirigen a Academy salen del sitemap.
+RETIRED = ("/lab/", "/pares/", "/cuaderno/", "/comparar/", "/aprender/")
+ACADEMY = sorted((ROOT / "academy").rglob("index.html")) if (ROOT / "academy").exists() else []
 PAGE_DIRS = sorted({p.relative_to(ROOT).parts[0] for p in PAGES if len(p.relative_to(ROOT).parts) > 1})
 
 def url_path(page):
@@ -158,11 +162,13 @@ def sitemap():
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">']
     for page in PAGES:
         path = url_path(page)
-        if path == "/404": continue
+        if path == "/404" or path in RETIRED: continue
         alts = "".join('<xhtml:link rel="alternate" hreflang="%s" href="%s%s"/>' % (c, SITE, ("/" + p if p else "") + path) for c, p, _, _ in LOCALES)
         alts += '<xhtml:link rel="alternate" hreflang="x-default" href="%s/en%s"/>' % (SITE, path)
         for c, p, _, _ in LOCALES:
             rows.append('  <url><loc>%s%s</loc><lastmod>%s</lastmod>%s</url>' % (SITE, ("/" + p if p else "") + path, today, alts))
+    for page in ACADEMY:
+        rows.append('  <url><loc>%s%s</loc><lastmod>%s</lastmod></url>' % (SITE, url_path(page), today))
     rows.append("</urlset>")
     (ROOT / "sitemap.xml").write_text("\n".join(rows) + "\n")
 

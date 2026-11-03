@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es" data-lang="es" data-locale="es" data-fixed-lang>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Intercambios y liquidez: cómo funciona un AMM · ORVUPI Academy</title>
+<meta name="description" content="Un creador de mercado automático fija el precio con una fórmula sobre dos saldos. Cuanto menos profundas, más se mueve el precio con cada operación.">
+<link rel="canonical" href="https://orvupi.com/academy/articulos/intercambios-y-liquidez/">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="theme-color" content="#ff3070">
+<meta property="og:site_name" content="ORVUPI Academy">
+<meta property="og:title" content="Intercambios y liquidez: cómo funciona un AMM · ORVUPI Academy">
+<meta property="og:description" content="Un creador de mercado automático fija el precio con una fórmula sobre dos saldos. Cuanto menos profundas, más se mueve el precio con cada operación.">
+<meta property="og:url" content="https://orvupi.com/academy/articulos/intercambios-y-liquidez/">
+<link rel="manifest" href="/academy/manifest.webmanifest">
+<link rel="icon" href="/assets/academy/academy.svg" type="image/svg+xml">
+<link rel="icon" href="/academy/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/academy/icon-192.png">
+<link rel="stylesheet" href="/assets/academy/academy.css?v=4b04bcb4b0">
+<script src="/assets/shell.js?v=ba3a858465"></script>
+<script src="/assets/academy/academy.js?v=f89dfe18ae" defer></script>
+</head>
+<body class="ac">
+<a class="ac-skip" href="#contenido">Saltar al contenido</a>
+<header class="site ac-nav">
+<a class="ac-home" href="/" aria-label="Inicio de ORVUPI"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" fill="currentColor"/></svg></a>
+<a class="ac-logo" href="/academy/" aria-label="ORVUPI Academy, portada"><img src="/assets/academy/logo.png" width="36" height="36" alt=""><span>ORVUPI<small>ACADEMY</small></span></a>
+<nav aria-label="Secciones de Academy"><ul class="ac-menu"><li><a href="/academy/articulos/" aria-current="page">Artículos</a></li><li><a href="/academy/rutas/">Rutas</a></li><li><a href="/academy/practicas/">Prácticas</a></li><li><a href="/academy/glosario/">Glosario</a></li></ul></nav>
+<div class="ac-right">
+<div class="ac-search" data-ac-search><button type="button" class="ac-icon" aria-expanded="false" aria-controls="ac-buscar" aria-label="Buscar en Academy"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="m16 16 4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+<form id="ac-buscar" role="search" action="/academy/articulos/" data-ac-goto><label class="ac-sr" for="ac-q">Buscar en Academy</label><input id="ac-q" name="q" type="search" placeholder="Buscar artículos y términos" autocomplete="off"><button type="submit" class="ac-btn pink">Buscar</button></form></div>
+<a class="ac-btn ghost" href="/academy/mi-aprendizaje/">Mi aprendizaje</a>
+<a class="ac-btn pink" href="/academy/rutas/primeros-pasos/">Empezar</a>
+<a class="ac-icon wide" href="/" aria-label="Volver a ORVUPI"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></a>
+<a class="ac-icon ac-burger" href="#ac-menu-movil" role="button" aria-expanded="false" aria-controls="ac-menu-movil" aria-label="Abrir el menú"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></a>
+</div>
+</header>
+<div class="ac-veil" data-ac-close></div>
+<div class="ac-drawer" id="ac-menu-movil" role="dialog" aria-modal="true" aria-label="Menú de ORVUPI Academy">
+<div class="ac-drawer-top"><a class="ac-icon" href="#" data-ac-close role="button" aria-label="Cerrar el menú"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></a></div>
+<a class="ac-btn soft" href="/academy/mi-aprendizaje/">Mi aprendizaje</a>
+<a class="ac-btn pink" href="/academy/rutas/primeros-pasos/">Empezar</a>
+<nav aria-label="Secciones de Academy (móvil)"><ul><li><a href="/academy/">Portada</a></li><li><a href="/academy/articulos/">Artículos</a></li><li><a href="/academy/rutas/">Rutas</a></li><li><a href="/academy/practicas/">Prácticas</a></li><li><a href="/academy/glosario/">Glosario</a></li><li><a href="/academy/articulos/">Buscar</a></li></ul>
+<h2>Herramientas ORVUPI</h2><ul><li><a href="/">Inicio de ORVUPI</a></li><li><a href="/sonar/">Sonar</a></li><li><a href="/work/">Work</a></li><li><a href="/studio/">Studio</a></li><li><a href="/arqiven/">ARQIVEN</a></li><li><a href="/tablero/">Tablero</a></li></ul></nav>
+</div>
+<div class="ac-promo"><p class="ac-promo-t">Academia gratuita: sin cuenta, sin wallet y sin pagos.<span class="ac-promo-x"> Tu progreso se guarda en este navegador.</span></p><a class="ac-btn pink" href="/academy/rutas/primeros-pasos/">Empieza la ruta</a></div>
+<main id="contenido"><div class="ac-art-g"><div class="ac-art-main">
+<div class="tags"><span>Módulo 5</span><span>Aplicaciones y DeFi</span></div>
+<img class="ac-art-img" src="/assets/academy/img/276-w.webp" width="768" height="432" alt="Ilustración de ORVUPI: Entender una curva">
+<nav aria-label="Ruta de navegación"><ol class="ac-crumbs"><li><a href="/academy/">Inicio</a></li><li><a href="/academy/articulos/">Artículos</a></li><li><span aria-current="page">Intercambios y liquidez: cómo funciona un AMM</span></li></ol></nav>
+<h1>Intercambios y liquidez: cómo funciona un AMM</h1>
+<div class="ac-art-meta"><span class="ac-level lv-i">Intermedio</span><span>Actualizado 03-11-2026</span><span><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> 3 min</span><span class="ac-done" data-unit-done="OA-018">✓ Leído</span></div>
+<p class="ac-redes-l"><span>Redes</span><a class="ac-chip ac-red" href="/academy/redes/ethereum/">Ethereum</a><a class="ac-chip ac-red" href="/academy/redes/capas-2/">Capas 2</a><a class="ac-chip ac-red" href="/academy/redes/bnb-chain/">BNB Chain</a><a class="ac-chip ac-red" href="/academy/redes/solana/">Solana</a><a class="ac-chip ac-red" href="/academy/redes/tron/">Tron</a><a class="ac-chip ac-red" href="/academy/redes/ton/">TON</a></p>
+<article class="ac-article" data-article="OA-018">
+<section class="claves"><h2 id="aspectos-clave">Aspectos clave</h2><ul><li>Un AMM guarda dos saldos y calcula el precio a partir de su proporción.</li><li>Comprar uno de los activos lo hace escasear en el pool y sube su precio para la siguiente operación.</li><li>Con poca liquidez, una operación pequeña mueve mucho el precio: es el deslizamiento.</li><li>Una curva de lanzamiento usa cantidades virtuales; no es lo mismo que liquidez real disponible.</li></ul></section>
+<h2 id="dos-saldos-y-una-formula">Dos saldos y una fórmula</h2>
+<p>En un intercambio tradicional hay un libro de órdenes: personas que quieren comprar a un precio y otras que quieren vender a otro. Un <a class="term" href="/academy/glosario/amm/">creador de mercado automático</a> (AMM) funciona de otra manera. Un contrato guarda dos saldos, por ejemplo un token y una moneda estable, y una fórmula decide el precio.</p>
+<p>El diseño más conocido usa el producto constante: la cantidad de un activo multiplicada por la del otro debe mantenerse igual (antes de comisiones). Si alguien aporta moneda estable para llevarse tokens, el saldo de tokens baja, la de moneda sube y el siguiente token cuesta más.</p>
+<h2 id="precio-profundidad-y-liquidez">Precio, profundidad y liquidez</h2>
+<ul><li><strong>Precio.</strong> La proporción entre los dos saldos en ese momento.</li><li><strong><a class="term" href="/academy/glosario/liquidez/">Liquidez</a> o profundidad.</strong> El tamaño de los saldos. Cuanto mayores, menos se mueve el precio con cada operación.</li><li><strong><a class="term" href="/academy/glosario/deslizamiento/">Deslizamiento</a>.</strong> La diferencia entre el precio que ves antes de operar y el precio medio que acabas obteniendo.</li></ul>
+<p>Un ejemplo con números redondos y ficticios: un pool tiene 1 000 unidades de un token y 1 000 de una moneda estable. Si alguien compra 100 tokens, no paga 100: con la fórmula del producto constante paga unos 111, porque cada unidad retirada encarece la siguiente. En un pool diez veces mayor, la misma compra costaría algo más de 101.</p>
+<h2 id="los-amm-de-cada-red">Los AMM de cada red</h2>
+<p>La fórmula del producto constante se popularizó con Uniswap en Ethereum y se copió en otras redes. PancakeSwap empezó como una adaptación a BNB Smart Chain, y Raydium la usa en sus pools estándar de Solana.</p>
+<div class="ac-tablewrap"><table><thead><tr><th scope="col">Red</th><th scope="col">Intercambios automáticos conocidos</th><th scope="col">Agregador conocido</th></tr></thead><tbody><tr><td>Ethereum y sus capas 2</td><td>Uniswap, Curve, Balancer</td><td>1inch</td></tr><tr><td>BNB Smart Chain</td><td>PancakeSwap</td><td>1inch</td></tr><tr><td>Solana</td><td>Raydium, Orca, Meteora</td><td>Jupiter</td></tr><tr><td>Tron</td><td>SunSwap</td><td>Dato no disponible</td></tr><tr><td>TON</td><td>STON.fi, DeDust</td><td>Dato no disponible</td></tr></tbody></table></div>
+<p>Un agregador no tiene pools propios: busca el mejor precio repartiendo tu operación entre los pools de varios intercambios.</p>
+<h2 id="curvas-de-lanzamiento">Curvas de lanzamiento</h2>
+<p>Algunas plataformas de lanzamiento de tokens, como Pump.fun en Solana o Four.meme en BNB Smart Chain, usan una <a class="term" href="/academy/glosario/curva-pump/">curva</a> con <a class="term" href="/academy/glosario/reserva-virtual/">cantidades virtuales</a>: cantidades que no existen como fondos, pero que la fórmula usa para fijar un precio inicial. Las <a class="term" href="/academy/glosario/reserva-real/">cantidades reales</a> son lo que de verdad hay depositado. Por eso un precio calculado sobre la curva no indica cuánto se podría vender sin moverlo.</p>
+<p>El caso de abajo es el antiguo «Ejemplo de curva» de ORVUPI: cantidades redondas e hipotéticas, no leídas de la cadena.</p>
+<h2 id="lo-que-el-precio-no-dice">Lo que el precio no dice</h2>
+<p>Un precio alto con saldos pequeños puede desplomarse con unas pocas ventas. Quien aporta liquidez puede retirarla. Y el precio mostrado en una web puede venir de un solo pool poco profundo.</p>
+<h2 id="compara-escenarios">Compara escenarios</h2>
+<p>El ejercicio presenta dos pools inventados con el mismo precio y distinta profundidad. Decide en cuál una compra mueve más el precio y por qué.</p>
+<section class="ac-box" id="ejemplo-de-curva" aria-labelledby="h-caso"><h2 id="h-caso">Ejemplo de curva</h2><h3>Ejemplo de una curva</h3>
+<p><strong>Ejemplo educativo. No es una comparación de calidad, ni una recomendación, ni un aval. ORVUPI no tiene relación con ningún token de este ejemplo.</strong></p>
+<p>Ejemplo hipotético, no leído de la cadena. Fecha del ejemplo: 2026-10-10.</p>
+<p>Una curva abierta junta dos cantidades virtuales: la de la moneda del token y la de SOL. Si una se mueve, la otra se mueve en el sentido contrario. Esta página no calcula ese movimiento.</p>
+<p>Cuando la curva está completa, ese paso ya no cabe. Si no hay curva, no hay cantidades que mostrar. Aquí las cantidades son redondas y de ejemplo.</p>
+<h4>Cantidades del ejemplo</h4>
+<dl>
+<dt>Estado</dt><dd>abierta</dd>
+<dt>Moneda base</dt><dd>SOL</dd>
+<dt>Cantidad virtual de la moneda del token</dt><dd>1 000 000</dd>
+<dt>Cantidad virtual de SOL</dt><dd>30</dd>
+<dt>Cantidad real de la moneda del token</dt><dd>800 000</dd>
+<dt>Cantidad real de SOL</dt><dd>4</dd>
+</dl>
+<p>Estos números no salen de ninguna dirección. No son una cotización.</p>
+<p>No conecta carteras, no firma y no envía.</p><p><a class="ac-btn pink mid" href="/academy/practicas/curva-en-vivo/">Abrir la curva en vivo</a></p></section>
+<section class="ac-box ac-quiz" data-quiz="OA-018" aria-labelledby="h-q-OA-018">
+<h2 id="h-q-OA-018">Comprueba lo que has aprendido</h2>
+<fieldset><legend>Dos pools tienen el mismo precio, pero uno es diez veces más grande. ¿Dónde mueve más el precio una compra igual?</legend><label class="ac-opt"><input type="radio" name="q-OA-018" value="0" data-porque="Más profundidad significa menos movimiento."> <span>En la grande</span></label><label class="ac-opt"><input type="radio" name="q-OA-018" value="1" data-porque="La profundidad cambia el efecto."> <span>Igual en las dos</span></label><label class="ac-opt"><input type="radio" name="q-OA-018" value="2" data-ok="1" data-porque="Correcto: con menos liquidez, cada unidad retirada encarece más la siguiente."> <span>En la pequeña</span></label></fieldset>
+<div class="ac-actions ac-js-only"><button type="button" class="ac-btn pink mid" data-check>Comprobar</button></div>
+<p class="ac-fb" aria-live="polite"></p>
+<details class="ac-sol nojs"><summary>Ver la respuesta</summary><p><strong>Correcta:</strong> En la pequeña. Correcto: con menos liquidez, cada unidad retirada encarece más la siguiente.</p><ul><li>En la grande: Más profundidad significa menos movimiento.</li><li>Igual en las dos: La profundidad cambia el efecto.</li></ul></details>
+</section>
+<section class="ac-box ac-activity" data-activity="OA-018" aria-labelledby="h-a-OA-018">
+<h2 id="h-a-OA-018">Practica</h2>
+<p>Pools ficticios con el mismo precio: ¿qué describe cada frase?</p>
+<ul class="ac-items"><li><span>El deslizamiento de una operación pequeña es bajo</span><select aria-label="Clasifica: El deslizamiento de una operación pequeña es bajo" data-ok="Pool grande"><option value="">Elige…</option><option>Pool pequeño</option><option>Pool grande</option></select><span class="why" hidden>Hay más liquidez.</span></li><li><span>Comprar 100 tokens cuesta unos 111</span><select aria-label="Clasifica: Comprar 100 tokens cuesta unos 111" data-ok="Pool pequeño"><option value="">Elige…</option><option>Pool pequeño</option><option>Pool grande</option></select><span class="why" hidden>Con 1 000 y 1 000, el producto constante sube el precio.</span></li><li><span>Comprar 100 tokens cuesta algo más de 101</span><select aria-label="Clasifica: Comprar 100 tokens cuesta algo más de 101" data-ok="Pool grande"><option value="">Elige…</option><option>Pool pequeño</option><option>Pool grande</option></select><span class="why" hidden>Con 10 000 y 10 000, el efecto es menor.</span></li><li><span>Unas pocas ventas desploman el precio</span><select aria-label="Clasifica: Unas pocas ventas desploman el precio" data-ok="Pool pequeño"><option value="">Elige…</option><option>Pool pequeño</option><option>Pool grande</option></select><span class="why" hidden>Hay poca profundidad.</span></li></ul>
+<div class="ac-actions ac-js-only"><button type="button" class="ac-btn pink mid" data-check>Comprobar</button></div>
+<p class="ac-fb" aria-live="polite"></p>
+<details class="ac-sol nojs"><summary>Ver la solución</summary><div class="ac-tablewrap"><table><thead><tr><th scope="col">Elemento</th><th scope="col">Respuesta</th><th scope="col">Por qué</th></tr></thead><tbody><tr><td>El deslizamiento de una operación pequeña es bajo</td><td>Pool grande</td><td>Hay más liquidez.</td></tr><tr><td>Comprar 100 tokens cuesta unos 111</td><td>Pool pequeño</td><td>Con 1 000 y 1 000, el producto constante sube el precio.</td></tr><tr><td>Comprar 100 tokens cuesta algo más de 101</td><td>Pool grande</td><td>Con 10 000 y 10 000, el efecto es menor.</td></tr><tr><td>Unas pocas ventas desploman el precio</td><td>Pool pequeño</td><td>Hay poca profundidad.</td></tr></tbody></table></div></details>
+</section>
+
+<section class="ac-box ac-notes" aria-labelledby="h-notas-OA-018"><h2 id="h-notas-OA-018">Tus notas</h2><p class="ac-nojs">Las notas necesitan JavaScript. Se guardan solo en este navegador.</p><div class="ac-js-only"><label class="ac-sr" for="notas-OA-018">Notas sobre Intercambios y liquidez: cómo funciona un AMM</label><textarea id="notas-OA-018" data-notes="OA-018" maxlength="4000" placeholder="Escribe lo que quieras recordar. Se guarda en este navegador."></textarea><div class="ac-actions"><button type="button" class="ac-btn pink mid" data-read="OA-018">Marcar como leído</button><a class="ac-btn soft mid" href="/academy/mi-aprendizaje/">Ver mi aprendizaje</a></div><p class="ac-status" aria-live="polite" data-status></p></div></section>
+<section class="ac-fuentes"><h2 id="fuentes">Fuentes</h2><ol><li><a href="https://docs.uniswap.org/contracts/v2/concepts/protocol-overview/how-uniswap-works" rel="noopener noreferrer">Cómo funciona Uniswap v2 (documentación de Uniswap)</a></li><li><a href="https://ethereum.org/es/defi/" rel="noopener noreferrer">Finanzas descentralizadas (ethereum.org)</a></li><li><a href="https://docs.uniswap.org/contracts/v2/concepts/advanced-topics/pricing" rel="noopener noreferrer">Precio y deslizamiento en Uniswap v2</a></li><li><a href="https://docs.pancakeswap.finance/" rel="noopener noreferrer">Documentación de PancakeSwap</a></li><li><a href="https://docs.raydium.io/" rel="noopener noreferrer">Documentación de Raydium</a></li></ol><p>Términos: <a class="term" href="/academy/glosario/amm/">AMM (creador de mercado automático)</a>, <a class="term" href="/academy/glosario/liquidez/">Liquidez</a>, <a class="term" href="/academy/glosario/deslizamiento/">Deslizamiento</a>, <a class="term" href="/academy/glosario/curva-pump/">Curva (Pump.fun o Raydium LaunchLab)</a>, <a class="term" href="/academy/glosario/reserva-virtual/">Cantidad virtual de la curva</a>, <a class="term" href="/academy/glosario/reserva-real/">Cantidad real de la curva</a>.</p></section>
+</article>
+<nav class="ac-pager" aria-label="Artículos de la ruta"><a href="/academy/articulos/contratos-inteligentes-y-dapps/"><small>‹ Anterior</small>Contratos inteligentes y dApps</a><a class="next" href="/academy/articulos/prestamos-y-staking/"><small>Siguiente ›</small>Préstamos y staking: rendimiento y riesgos</a></nav>
+</div>
+<aside class="ac-side" aria-label="Más sobre este artículo">
+<div><h2>Compartir</h2><div class="ac-share"><a href="https://x.com/intent/post?url=https%3A%2F%2Forvupi.com%2Facademy%2Farticulos%2Fintercambios-y-liquidez%2F&amp;text=Intercambios%20y%20liquidez%3A%20c%C3%B3mo%20funciona%20un%20AMM" rel="noopener noreferrer" aria-label="Compartir en X"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M17.8 3h3.1l-6.8 7.7L22 21h-6.2l-4.9-6.4L5.3 21H2.2l7.2-8.3L2 3h6.4l4.4 5.8zm-1.1 16.2h1.7L7.4 4.7H5.5z"/></svg></a><a href="https://t.me/share/url?url=https%3A%2F%2Forvupi.com%2Facademy%2Farticulos%2Fintercambios-y-liquidez%2F&amp;text=Intercambios%20y%20liquidez%3A%20c%C3%B3mo%20funciona%20un%20AMM" rel="noopener noreferrer" aria-label="Compartir en Telegram"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M21.5 3.6 2.9 10.8c-1.3.5-1.3 1.2-.2 1.5l4.8 1.5 1.8 5.6c.2.6.4.8.9.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.8-1.4-1.5zM8.9 13.4l9.6-6c.5-.3.9-.1.5.2l-8 7.3-.3 3.4z"/></svg></a><button type="button" class="ac-js-only" data-copy="https://orvupi.com/academy/articulos/intercambios-y-liquidez/" aria-label="Copiar el enlace"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div></div>
+<nav class="ac-toc" aria-label="En este artículo"><h2>En este artículo</h2><ol><li><a href="#aspectos-clave">Aspectos clave</a></li><li><a href="#dos-saldos-y-una-formula">Dos saldos y una fórmula</a></li><li><a href="#precio-profundidad-y-liquidez">Precio, profundidad y liquidez</a></li><li><a href="#los-amm-de-cada-red">Los AMM de cada red</a></li><li><a href="#curvas-de-lanzamiento">Curvas de lanzamiento</a></li><li><a href="#lo-que-el-precio-no-dice">Lo que el precio no dice</a></li><li><a href="#compara-escenarios">Compara escenarios</a></li><li><a href="#ejemplo-de-curva">Ejemplo de curva</a></li><li><a href="#h-q-OA-018">Pregunta</a></li><li><a href="#h-notas-OA-018">Tus notas</a></li><li><a href="#fuentes">Fuentes</a></li></ol></nav>
+<div><h2>Artículos relacionados</h2><div class="ac-rel"><a href="/academy/articulos/contratos-inteligentes-y-dapps/"><img src="/assets/academy/img/186-s.webp" width="228" height="128" alt="Ilustración de ORVUPI: Abrir el mecanismo" loading="lazy" decoding="async">Contratos inteligentes y dApps</a><a href="/academy/articulos/prestamos-y-staking/"><img src="/assets/academy/img/279-s.webp" width="228" height="128" alt="Ilustración de ORVUPI: Escenarios distintos" loading="lazy" decoding="async">Préstamos y staking: rendimiento y riesgos</a><a href="/academy/articulos/evaluar-afirmaciones/"><img src="/assets/academy/img/180-s.webp" width="228" height="128" alt="Ilustración de ORVUPI: Resultado inesperado" loading="lazy" decoding="async">Cómo evaluar afirmaciones sobre un proyecto</a></div></div>
+</aside></div></main>
+<footer class="ac-foot"><div class="ac-c"><div class="ac-foot-g">
+<div><h3>Comunidad</h3><div class="soc"><a href="https://github.com/ORVUPI/orvupi-agent" rel="noopener noreferrer" aria-label="GitHub de ORVUPI"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.6 2.4 1.1 3 .9.1-.7.4-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5a3.9 3.9 0 0 1 1-2.7 3.6 3.6 0 0 1 .1-2.7s.8-.3 2.8 1a9.6 9.6 0 0 1 5 0c1.9-1.3 2.8-1 2.8-1 .5 1.4.2 2.4.1 2.7a3.9 3.9 0 0 1 1 2.7c0 3.9-2.3 4.7-4.6 5 .4.3.7.9.7 1.9V21c0 .3.2.6.7.5A10 10 0 0 0 12 2"/></svg></a><a href="https://x.com/ORVUPI" rel="noopener noreferrer" aria-label="ORVUPI en X"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M17.8 3h3.1l-6.8 7.7L22 21h-6.2l-4.9-6.4L5.3 21H2.2l7.2-8.3L2 3h6.4l4.4 5.8zm-1.1 16.2h1.7L7.4 4.7H5.5z"/></svg></a><a href="https://t.me/orvupi" rel="noopener noreferrer" aria-label="ORVUPI en Telegram"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M21.5 3.6 2.9 10.8c-1.3.5-1.3 1.2-.2 1.5l4.8 1.5 1.8 5.6c.2.6.4.8.9.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.8-1.4-1.5zM8.9 13.4l9.6-6c.5-.3.9-.1.5.2l-8 7.3-.3 3.4z"/></svg></a><a href="https://www.tiktok.com/@orvupi" rel="noopener noreferrer" aria-label="ORVUPI en TikTok"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16.5 3c.3 2.3 1.7 3.8 4 4v3.1c-1.5.1-2.8-.4-4-1.2v6.4c0 3.8-3.2 6.2-6.4 5.6-3.9-.7-5.3-5.6-2.4-8.3 1.2-1.1 2.8-1.5 4.4-1.2v3.3c-1.4-.4-2.8.4-3 1.7-.3 1.9 1.6 3 3 2.4 1-.4 1.4-1.3 1.4-2.4V3z"/></svg></a></div>
+<h3>Idioma</h3><ul><li><a href="/academy/" lang="es">Español</a></li></ul></div>
+<div class="ac-foot-cols">
+<div><h3>Academy</h3><ul><li><a href="/academy/articulos/">Artículos</a></li><li><a href="/academy/rutas/">Rutas</a></li><li><a href="/academy/practicas/">Prácticas</a></li><li><a href="/academy/glosario/">Glosario</a></li><li><a href="/academy/mi-aprendizaje/">Mi aprendizaje</a></li><li><a href="/academy/mi-aprendizaje/cuaderno/">Cuaderno</a></li></ul></div>
+<div><h3>Herramientas ORVUPI</h3><ul><li><a href="/sonar/">Sonar</a></li><li><a href="/work/">Work</a></li><li><a href="/studio/">Studio</a></li><li><a href="/arqiven/">ARQIVEN</a></li><li><a href="/tablero/">Tablero</a></li><li><a href="/academy/practicas/curva-en-vivo/">Curva en vivo</a></li></ul></div>
+<div><h3>Acerca de ORVUPI</h3><ul><li><a href="/vision/">Visión</a></li><li><a href="/novedades/">Novedades</a></li><li><a href="/methodology/">Metodología</a></li><li><a href="/marca/">Marca</a></li><li><a href="/community/">Comunidad</a></li><li><a href="/contribuir/">Contribuir</a></li></ul></div>
+<div><h3>Legal y seguridad</h3><ul><li><a href="/legal/">Legal</a></li><li><a href="/security/">Seguridad</a></li><li><a href="/risks/">Riesgos</a></li><li><a href="/token/">Token</a></li></ul></div>
+</div></div>
+<p class="legal">ORVUPI Academy · contenido educativo propio, gratuito y sin publicidad. Actualizado el 03-11-2026. <a href="/risks/">Riesgos</a> · <a href="/legal/">Aviso legal</a></p>
+</div></footer>
+</body>
+</html>

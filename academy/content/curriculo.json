@@ -1,0 +1,232 @@
+{
+  "version": 1,
+  "actualizado": "2026-11-03",
+  "ruta": {
+    "slug": "primeros-pasos",
+    "titulo": "Primeros pasos seguros en cripto",
+    "nivel": "Principiante",
+    "resumen": "Una ruta gratuita en seis módulos: de qué es el dinero digital a leer con calma los datos públicos de un token. Sin cuenta, sin wallet y sin pagos.",
+    "descripcion": [
+      "La ruta ordena 24 artículos cortos en seis módulos. Cada artículo explica una idea, la aplica a un caso inventado y termina con una pregunta que se corrige al momento.",
+      "Cada módulo cierra con una evaluación de seis preguntas. Se supera con cinco aciertos y puedes repetirla las veces que quieras. El progreso se guarda solo en este navegador."
+    ],
+    "aprenderas": [
+      "Qué es una blockchain, qué hace una red y qué límites tiene.",
+      "Qué diferencia hay entre una clave, una dirección y una firma, y qué no debes compartir nunca.",
+      "Cómo comprobar la red, la dirección, la comisión y el estado de un envío antes y después de hacerlo.",
+      "Qué autorizas cuando una aplicación te pide un permiso o una firma.",
+      "Cómo funcionan los intercambios automáticos, los préstamos y el staking, y qué puede salir mal.",
+      "Cómo leer la ficha fechada de un token y anotar lo que no se pudo comprobar."
+    ],
+    "imagen": 326
+  },
+  "modulos": [
+    {"n": 1, "slug": "fundamentos", "titulo": "Fundamentos", "nivel": "Principiante", "resumen": "Dinero digital, blockchain, claves y transacciones.", "unidades": ["OA-001", "OA-002", "OA-003", "OA-004"]},
+    {"n": 2, "slug": "redes-y-activos", "titulo": "Redes y activos", "nivel": "Principiante", "resumen": "Bitcoin, Ethereum, tokens, stablecoins y la red correcta.", "unidades": ["OA-005", "OA-006", "OA-007", "OA-008"]},
+    {"n": 3, "slug": "seguridad", "titulo": "Seguridad", "nivel": "Principiante", "resumen": "Custodia, copias, phishing y protección de accesos.", "unidades": ["OA-009", "OA-010", "OA-011", "OA-012"]},
+    {"n": 4, "slug": "transacciones-y-permisos", "titulo": "Transacciones y permisos", "nivel": "Intermedio", "resumen": "Exploradores, comisiones, permisos, capas 2 y puentes.", "unidades": ["OA-013", "OA-014", "OA-015", "OA-016"]},
+    {"n": 5, "slug": "aplicaciones-y-defi", "titulo": "Aplicaciones y DeFi", "nivel": "Intermedio", "resumen": "Contratos, intercambios, préstamos, staking y afirmaciones.", "unidades": ["OA-017", "OA-018", "OA-019", "OA-020"]},
+    {"n": 6, "slug": "leer-datos-con-orvupi", "titulo": "Leer datos con ORVUPI", "nivel": "Intermedio", "resumen": "Identidad de un token, permisos, suministro y lecturas fechadas.", "unidades": ["OA-021", "OA-022", "OA-023", "OA-024"]},
+    {"n": 7, "ruta": "trading-basico", "slug": "mercados-y-ordenes", "titulo": "Mercados y órdenes", "nivel": "Principiante", "resumen": "Libro de órdenes, velas, apalancamiento y sesgos, sin recomendaciones.", "unidades": ["OA-025", "OA-026", "OA-027", "OA-028"]},
+    {"n": 8, "ruta": "tokens-y-memecoins", "slug": "memecoins-y-lanzamientos", "titulo": "Memecoins y lanzamientos", "nivel": "Intermedio", "resumen": "Memecoins, curvas de lanzamiento, concentración, liquidez y manipulación.", "unidades": ["OA-029", "OA-030", "OA-031", "OA-032"]},
+    {"n": 9, "ruta": "solana-por-dentro", "slug": "cuentas-tokens-y-firmas", "titulo": "Cuentas, tokens y firmas", "nivel": "Intermedio", "resumen": "El modelo de cuentas de Solana, sus tokens, sus comisiones y sus firmas.", "unidades": ["OA-033", "OA-034", "OA-035", "OA-036"]},
+    {"n": 10, "ruta": "estafas", "slug": "patrones-de-estafa", "titulo": "Patrones de estafa", "nivel": "Principiante", "resumen": "Inversiones milagro, falso soporte, estafas de confianza y trucos con tokens.", "unidades": ["OA-037", "OA-038", "OA-039", "OA-040"]},
+    {"n": 11, "ruta": "regulacion-ue", "slug": "mica-y-fiscalidad", "titulo": "MiCA y fiscalidad", "nivel": "Intermedio", "resumen": "Qué regula MiCA, la identificación del cliente, la fiscalidad en España y cómo comprobar un proveedor.", "unidades": ["OA-041", "OA-042", "OA-043", "OA-044"]},
+    {"n": 12, "ruta": "blockchains-y-redes", "slug": "las-redes-de-referencia", "titulo": "Las redes de referencia", "nivel": "Intermedio", "resumen": "Bitcoin, Ethereum, sus capas 2 y BNB Chain por dentro: modelo, consenso, comisiones y tokens.", "unidades": ["OA-045", "OA-046", "OA-047", "OA-048"]},
+    {"n": 13, "ruta": "blockchains-y-redes", "slug": "mas-redes-y-conexiones", "titulo": "Más redes y conexiones", "nivel": "Intermedio", "resumen": "Solana, Avalanche, Polygon, Cardano, TON y Tron; los puentes entre redes y cómo compararlas.", "unidades": ["OA-049", "OA-050", "OA-051", "OA-052"]}
+  ],
+  "unidades": [
+    {"id": "OA-001", "slug": "que-es-el-dinero-digital", "imagen": 326},
+    {"id": "OA-002", "slug": "que-es-una-blockchain", "imagen": 327},
+    {"id": "OA-003", "slug": "claves-direcciones-y-firmas", "imagen": 329},
+    {"id": "OA-004", "slug": "como-se-valida-una-transaccion", "imagen": 331},
+    {"id": "OA-005", "slug": "que-es-bitcoin", "imagen": 330},
+    {"id": "OA-006", "slug": "que-es-ethereum", "imagen": 183},
+    {"id": "OA-007", "slug": "monedas-tokens-y-stablecoins", "imagen": 280},
+    {"id": "OA-008", "slug": "elegir-la-red-correcta", "imagen": 254},
+    {"id": "OA-009", "slug": "custodia-y-autocustodia", "imagen": 328},
+    {"id": "OA-010", "slug": "copias-de-seguridad-y-recuperacion", "imagen": 405},
+    {"id": "OA-011", "slug": "como-reconocer-el-phishing", "imagen": 403},
+    {"id": "OA-012", "slug": "proteger-tus-accesos", "imagen": 401},
+    {"id": "OA-013", "slug": "como-leer-un-explorador-de-bloques", "imagen": 190},
+    {"id": "OA-014", "slug": "comisiones-y-confirmaciones", "imagen": 252},
+    {"id": "OA-015", "slug": "permisos-de-contratos", "imagen": 404},
+    {"id": "OA-016", "slug": "capas-2-y-puentes", "imagen": 278},
+    {"id": "OA-017", "slug": "contratos-inteligentes-y-dapps", "imagen": 186},
+    {"id": "OA-018", "slug": "intercambios-y-liquidez", "imagen": 276},
+    {"id": "OA-019", "slug": "prestamos-y-staking", "imagen": 279},
+    {"id": "OA-020", "slug": "evaluar-afirmaciones", "imagen": 180},
+    {"id": "OA-021", "slug": "identificar-un-token", "imagen": 176},
+    {"id": "OA-022", "slug": "interpretar-permisos-de-un-token", "imagen": 332},
+    {"id": "OA-023", "slug": "suministro-y-datos-ausentes", "imagen": 281},
+    {"id": "OA-024", "slug": "investigar-y-guardar-una-lectura", "imagen": 227},
+    {"id": "OA-025", "slug": "libro-de-ordenes-y-tipos-de-orden", "imagen": 429},
+    {"id": "OA-026", "slug": "como-leer-un-grafico-de-velas", "imagen": 157},
+    {"id": "OA-027", "slug": "apalancamiento-y-liquidacion", "imagen": 76},
+    {"id": "OA-028", "slug": "sesgos-y-promesas-en-el-trading", "imagen": 68},
+    {"id": "OA-029", "slug": "que-es-una-memecoin", "imagen": 82},
+    {"id": "OA-030", "slug": "lanzamientos-con-curva", "imagen": 91},
+    {"id": "OA-031", "slug": "concentracion-y-liquidez-de-un-token", "imagen": 430},
+    {"id": "OA-032", "slug": "manipulacion-de-mercado-en-tokens", "imagen": 80},
+    {"id": "OA-033", "slug": "cuentas-y-programas-en-solana", "imagen": 427},
+    {"id": "OA-034", "slug": "tokens-spl-y-token-2022", "imagen": 136},
+    {"id": "OA-035", "slug": "comisiones-y-prioridad-en-solana", "imagen": 431},
+    {"id": "OA-036", "slug": "firmar-con-cuidado-en-solana", "imagen": 96},
+    {"id": "OA-037", "slug": "esquemas-ponzi-y-empresas-no-autorizadas", "imagen": 77},
+    {"id": "OA-038", "slug": "falso-soporte-y-recuperacion-de-fondos", "imagen": 402},
+    {"id": "OA-039", "slug": "estafas-de-confianza", "imagen": 72},
+    {"id": "OA-040", "slug": "airdrops-falsos-y-envenenamiento-de-direcciones", "imagen": 165},
+    {"id": "OA-041", "slug": "que-regula-mica", "imagen": 146},
+    {"id": "OA-042", "slug": "identificacion-y-regla-de-viaje", "imagen": 163},
+    {"id": "OA-043", "slug": "fiscalidad-de-criptoactivos-en-espana", "imagen": 155},
+    {"id": "OA-044", "slug": "como-comprobar-un-proveedor", "imagen": 154},
+    {"id": "OA-045", "slug": "bitcoin-por-dentro", "imagen": 428},
+    {"id": "OA-046", "slug": "ethereum-por-dentro", "imagen": 167},
+    {"id": "OA-047", "slug": "capas-2-de-ethereum", "imagen": 152},
+    {"id": "OA-048", "slug": "bnb-chain", "imagen": 356},
+    {"id": "OA-049", "slug": "solana-en-el-mapa", "imagen": 357},
+    {"id": "OA-050", "slug": "otras-capas-1", "imagen": 353},
+    {"id": "OA-051", "slug": "puentes-e-interoperabilidad", "imagen": 354},
+    {"id": "OA-052", "slug": "como-comparar-redes", "imagen": 170}
+  ],
+  "practicas": [
+    {"id": "P1", "slug": "mensajes-sospechosos", "unidad": "OA-011", "titulo": "Práctica: detecta los mensajes sospechosos", "resumen": "Seis mensajes inventados. Decide cuáles piden algo que nunca debes dar y señala la pista.", "nivel": "Principiante", "imagen": 406},
+    {"id": "P2", "slug": "revisar-un-envio", "unidad": "OA-014", "titulo": "Práctica: revisa un envío antes de confirmarlo", "resumen": "Una pantalla de envío simulada. Comprueba red, dirección, importe y comisión sin enviar nada.", "nivel": "Intermedio", "imagen": 177},
+    {"id": "P3", "slug": "leer-un-permiso", "unidad": "OA-015", "titulo": "Práctica: lee una autorización antes de firmar", "resumen": "Una petición de permiso simulada. Identifica quién recibe el permiso, sobre qué y hasta cuánto.", "nivel": "Intermedio", "imagen": 187},
+    {"id": "P4", "slug": "lectura-fechada", "unidad": "OA-024", "titulo": "Práctica: compara fichas fechadas y guarda tu lectura", "resumen": "Fichas reales del 2026-10-16, un caso de curva y tus notas: compara, justifica y guarda.", "nivel": "Intermedio", "imagen": 228}
+  ],
+  "herramientas": [
+    {"id": "curva", "slug": "curva-en-vivo", "titulo": "Curva en vivo", "resumen": "Lee en la cadena el estado de la curva de un token de Pump.fun o Raydium LaunchLab, solo cuando lo pides.", "imagen": 282},
+    {"id": "cuaderno", "slug": "cuaderno", "titulo": "Cuaderno de fichas", "resumen": "Guarda fichas y notas en este navegador. Exporta e importa un archivo JSON.", "imagen": 226}
+  ],
+  "portada": {
+    "destacado": "OA-011",
+    "sugeridos": ["OA-001", "OA-003", "OA-008", "OA-015"],
+    "secciones": [
+      {"titulo": "Seguridad desde cero", "modulo": 3},
+      {"titulo": "Blockchains y redes", "modulo": 12},
+      {"titulo": "Leer datos con ORVUPI", "modulo": 6}
+    ]
+  },
+  "imagenes": [1, 231, 257, 326, 332],
+  "cuadradas": [1, 231],
+  "rutas_extra": [
+    {
+      "slug": "blockchains-y-redes",
+      "titulo": "Blockchains y redes",
+      "nivel": "Intermedio",
+      "imagen": 351,
+      "resumen": "Bitcoin, Ethereum, las capas 2, BNB Chain, Solana y otras capas 1: cómo funciona cada una, cómo se conectan y cómo compararlas.",
+      "descripcion": [
+        "Cada red resuelve los mismos problemas de forma distinta: quién valida, cómo se pagan las comisiones, qué es un token y qué formato tiene una dirección. La ruta recorre las redes más usadas con el mismo esquema, para que puedas reconocer en qué se parecen y en qué cambian.",
+        "Termina con los puentes que las conectan y con un método para comparar redes con fuentes y fecha, sin eslóganes."
+      ],
+      "aprenderas": [
+        "Cómo funcionan las UTXO, la prueba de trabajo y Lightning en Bitcoin.",
+        "Qué son la EVM, el gas y la prueba de participación de Ethereum, y por qué se repiten en otras redes.",
+        "En qué se diferencian Arbitrum, OP Mainnet, Base y los zk-rollups, y qué aporta BNB Smart Chain.",
+        "Cómo encajan Solana, Avalanche, Polygon, Cardano, TON y Tron, cómo funcionan los puentes y cómo comparar redes."
+      ]
+    },
+    {
+      "slug": "trading-basico",
+      "titulo": "Trading básico",
+      "nivel": "Principiante",
+      "imagen": 277,
+      "resumen": "Cómo funcionan un libro de órdenes, una vela y el apalancamiento, y qué sesgos y promesas conviene reconocer.",
+      "descripcion": [
+        "La ruta explica la mecánica de un mercado de criptoactivos: quién pone los precios, qué ocurre cuando envías una orden y cómo se lee un gráfico. Usa ejemplos inventados con cifras redondas.",
+        "Su objetivo es que entiendas lo que ves en una plataforma de intercambio y reconozcas cuándo te prometen algo que nadie puede garantizar."
+      ],
+      "aprenderas": [
+        "Qué son el precio de compra, el de venta y el diferencial, y por qué cambian.",
+        "En qué se diferencian una orden de mercado, una limitada y una de stop.",
+        "Qué muestra una vela y qué no puede mostrar un gráfico.",
+        "Cómo funciona el apalancamiento y por qué una posición se liquida.",
+        "Qué sesgos y promesas aparecen una y otra vez en los mensajes sobre trading."
+      ]
+    },
+    {
+      "slug": "tokens-y-memecoins",
+      "titulo": "Tokens y memecoins",
+      "nivel": "Intermedio",
+      "imagen": 85,
+      "resumen": "Qué es una memecoin, cómo se lanza con una curva de precios y qué datos públicos ayudan a entender su reparto y su liquidez.",
+      "descripcion": [
+        "Las memecoins se crean en minutos y se negocian desde el primer bloque. La ruta explica cómo se lanzan, cómo pasan de una curva a un pool de liquidez y qué datos públicos se pueden leer antes de decidir nada.",
+        "Ningún dato aislado dice si un token es seguro. La ruta enseña a anotar lo que se ve, lo que no se pudo comprobar y las señales de manipulación más repetidas."
+      ],
+      "aprenderas": [
+        "Qué distingue a una memecoin de un token con una función.",
+        "Cómo funciona un lanzamiento con curva y qué pasa al completarla.",
+        "Cómo leer la concentración entre cuentas con tokens y el estado de la liquidez.",
+        "Qué son el pump and dump, las operaciones ficticias y las compras agrupadas."
+      ]
+    },
+    {
+      "slug": "solana-por-dentro",
+      "titulo": "Solana por dentro",
+      "nivel": "Intermedio",
+      "imagen": 426,
+      "resumen": "Cuentas, programas, tokens SPL y Token-2022, comisiones y firmas: lo que conviene saber para leer Solana con criterio.",
+      "descripcion": [
+        "Solana organiza todo en cuentas: tu saldo, los programas y cada token. La ruta explica ese modelo con ejemplos y lo compara con lo que quizá conoces de otras redes.",
+        "Termina con lo más práctico: cuánto cuesta una transacción, por qué caduca y qué revisar antes de firmar una petición desconocida."
+      ],
+      "aprenderas": [
+        "Qué son una cuenta, un programa y su propietario en Solana.",
+        "Cómo se relacionan un mint, una cuenta de token y una cuenta de token asociada.",
+        "Qué cambian las extensiones de Token-2022 y qué autoridades conviene mirar.",
+        "Cómo se calculan la comisión base y la tarifa de prioridad.",
+        "Qué peticiones de firma pueden ceder el control de tus tokens."
+      ]
+    },
+    {
+      "slug": "estafas",
+      "titulo": "Estafas y cómo reconocerlas",
+      "nivel": "Principiante",
+      "imagen": 151,
+      "resumen": "Inversiones milagro, falso soporte, estafas de confianza y trucos con tokens y direcciones. Patrones, señales y qué hacer si ya ha pasado.",
+      "descripcion": [
+        "Las estafas con criptoactivos cambian de nombre, pero repiten pocas ideas: prisa, confianza prestada, rentabilidad garantizada y una petición que no tiene marcha atrás.",
+        "Cada artículo describe un patrón con un caso inventado, las señales que lo delatan y los pasos razonables si ya ha ocurrido, incluida la denuncia."
+      ],
+      "aprenderas": [
+        "Cómo funcionan los esquemas Ponzi y piramidales y cómo comprobar si una empresa está autorizada.",
+        "Por qué el soporte real nunca te pide el control de tu equipo ni tu frase de recuperación.",
+        "Cómo se construye una estafa de confianza y por qué te piden pagar para retirar.",
+        "Qué son el envenenamiento de direcciones, los airdrops falsos y los tokens trampa."
+      ]
+    },
+    {
+      "slug": "regulacion-ue",
+      "titulo": "Regulación y fiscalidad en la UE",
+      "nivel": "Intermedio",
+      "imagen": 18,
+      "resumen": "MiCA, la identificación del cliente, la regla de viaje y las obligaciones fiscales en España, explicadas con fuentes oficiales.",
+      "descripcion": [
+        "Desde 2024 la Unión Europea tiene un marco común para los criptoactivos. La ruta resume qué regula, a quién obliga y qué no garantiza, con enlaces a los textos oficiales.",
+        "La parte fiscal se centra en España y explica conceptos, no cuánto pagar, con enlaces a la Agencia Tributaria."
+      ],
+      "aprenderas": [
+        "Qué regula el Reglamento MiCA y desde cuándo se aplica.",
+        "Por qué una plataforma pide identificarte y qué datos viajan con una transferencia.",
+        "Qué conceptos fiscales aparecen al vender o intercambiar criptoactivos en España.",
+        "Cómo comprobar si un proveedor está autorizado y qué significa esa autorización."
+      ]
+    }
+  ],
+  "redes": [
+    {"id": "bitcoin", "nombre": "Bitcoin", "resumen": "La primera red: UTXO, prueba de trabajo, emisión limitada y pagos con Lightning."},
+    {"id": "ethereum", "nombre": "Ethereum", "resumen": "Contratos en la EVM, gas, prueba de participación y el estándar ERC-20."},
+    {"id": "capas-2", "nombre": "Capas 2", "resumen": "Rollups sobre Ethereum como Arbitrum, OP Mainnet, Base y los zk-rollups."},
+    {"id": "bnb-chain", "nombre": "BNB Chain", "resumen": "BNB Smart Chain y opBNB: EVM, tokens BEP-20 y el explorador BscScan."},
+    {"id": "solana", "nombre": "Solana", "resumen": "Cuentas y programas, prueba de historia, lamports y tokens SPL."},
+    {"id": "avalanche", "nombre": "Avalanche", "resumen": "La C-Chain compatible con la EVM, AVAX y las Avalanche L1."},
+    {"id": "polygon", "nombre": "Polygon", "resumen": "Polygon PoS, el token POL y la tecnología de conocimiento cero."},
+    {"id": "cardano", "nombre": "Cardano", "resumen": "Ouroboros, el modelo eUTXO, Plutus y los tokens nativos."},
+    {"id": "ton", "nombre": "TON", "resumen": "Toncoin, contratos que se comunican con mensajes y tokens jetton."},
+    {"id": "tron", "nombre": "Tron", "resumen": "TRX, superrepresentantes, TRC-20 y comisiones con energía y ancho de banda."},
+    {"id": "multicadena", "nombre": "Multicadena", "resumen": "Lo que vale para varias redes a la vez: puentes, tokens envueltos y cómo comparar."}
+  ]
+}
