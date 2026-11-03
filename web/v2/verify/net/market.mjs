@@ -3,21 +3,19 @@
  * Cadena real: si una fuente falla, se prueba la siguiente. No se rellenan cifras.
  * Coinbase, Kraken, Tronscan, el archivo de Binance Vision y la API de Blockscout con clave no se llaman.
  */
-import { fetchJson, fetchText, withCache } from "./http.mjs?v=e1bb1dde90";
+import { fetchJson, fetchText, withCache } from "./http.mjs?v=b7f729bb23";
 import {
   BINANCE_INTERVALS,
   binanceKlineUrl,
   coingeckoOhlcUrl,
-  geckoOhlcvUrl,
   parseBinanceKlines,
   parseCoingeckoOhlc,
   parseGeckoOhlcv,
   stepLabel,
   timeframeById,
-} from "./ohlcv.mjs?v=e1bb1dde90";
+} from "./ohlcv.mjs?v=b7f729bb23";
 
 const JSON_HEADERS = { accept: "application/json" };
-const GECKO_HEADERS = { accept: "application/json;version=20230203" };
 const BINANCE_ORIGINS = ["https://data-api.binance.vision", "https://api.binance.com"];
 const BTC_APIS = ["https://mempool.space", "https://blockstream.info"];
 const OHLCV_NETWORKS = new Set(["eth", "solana", "base", "bsc", "arbitrum", "polygon_pos", "optimism", "avax"]);
@@ -51,23 +49,6 @@ function failed(provider, response, scope) {
     fetchedAt: response?.fetchedAt || new Date().toISOString(),
     scope,
     httpStatus: response?.status ?? 0,
-  };
-}
-
-function poolFromSearch(item) {
-  const address = item?.attributes?.address;
-  const id = String(item?.id || "");
-  if (!address || !id.endsWith(String(address))) return null;
-  const network = id.slice(0, id.length - String(address).length - 1);
-  if (!network) return null;
-  return {
-    name: String(item.attributes?.name || address),
-    address: String(address),
-    network,
-    reserveUsd: finite(item.attributes?.reserve_in_usd),
-    volumeH24: finite(item.attributes?.volume_usd?.h24),
-    changeH24: finite(item.attributes?.price_change_percentage?.h24),
-    provider: "GeckoTerminal",
   };
 }
 
@@ -163,11 +144,14 @@ export async function fetchTrendingPools() {
 
 export async function fetchPoolCandles(network, pool, timeframeId) {
   const frame = timeframeById(timeframeId);
-  const url = geckoOhlcvUrl(network, pool, timeframeId, 200);
+  // Vía nuestra función (caché 60 s): GeckoTerminal no envía CORS en sus 429 y el navegador lo bloquea.
+  const url = frame && network && pool && OHLCV_NETWORKS.has(network)
+    ? `/api/sonar/pool-ohlcv?network=${encodeURIComponent(network)}&pool=${encodeURIComponent(pool)}&tf=${encodeURIComponent(frame.id)}`
+    : "";
   if (!url) return { ok: false, state: "no-soportado", candles: [], provider: "GeckoTerminal", fetchedAt: new Date().toISOString(), scope: "Velas del pool" };
   return withCache(`ohlcv:${network}:${pool}:${timeframeId}`, async () => {
-    const response = await fetchJson(url, { headers: GECKO_HEADERS, attempts: 2 });
-    const parsed = parseGeckoOhlcv(response.body?.data?.attributes?.ohlcv_list);
+    const response = await fetchJson(url, { headers: JSON_HEADERS, attempts: 2 });
+    const parsed = parseGeckoOhlcv(response.body?.ohlcv_list);
     return {
       ok: response.ok && parsed.candles.length > 0,
       state: !response.ok ? (response.status === 429 ? "requiere-atencion" : "sin-datos") : parsed.candles.length ? "comprobado" : "sin-datos",
@@ -209,8 +193,10 @@ async function coingeckoCandles(coinId, days) {
 async function geckoCoinCandles(coinId, frameId) {
   const pair = COIN_SYMBOL[coinId];
   if (!pair) return { ok: false, state: "no-soportado", candles: [], provider: "GeckoTerminal", fetchedAt: new Date().toISOString() };
-  const response = await fetchJson(`https://api.geckoterminal.com/api/v2/search/pools?query=${encodeURIComponent(pair[0])}`, { headers: GECKO_HEADERS, attempts: 3 });
-  const pools = (response.body?.data || []).map(poolFromSearch).filter((pool) => pool && OHLCV_NETWORKS.has(pool.network));
+  const response = await fetchJson(`/api/sonar/search?q=${encodeURIComponent(pair[0])}`, { headers: JSON_HEADERS, attempts: 2 });
+  const pools = (response.body?.pools?.pools || [])
+    .filter((pool) => pool?.address && OHLCV_NETWORKS.has(pool.network))
+    .map((pool) => ({ address: String(pool.address), network: pool.network, reserveUsd: finite(pool.reserveUsd) }));
   pools.sort((a, b) => (b.reserveUsd ?? 0) - (a.reserveUsd ?? 0));
   const pool = pools[0];
   if (!pool) return failed("GeckoTerminal", response, "Pool de referencia");

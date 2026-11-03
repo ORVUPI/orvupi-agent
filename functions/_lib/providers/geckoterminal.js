@@ -130,3 +130,24 @@ export async function poolTrades(env, network, pool) {
   const data = (body?.data || []).map(tradeRow).filter(Boolean).slice(0, 100);
   return meta({ data, network, pool });
 }
+
+const OHLCV_FRAMES = { "1m": ["minute", 1], "5m": ["minute", 5], "15m": ["minute", 15], "1h": ["hour", 1], "4h": ["hour", 4], "1D": ["day", 1] };
+
+export function ohlcvFrameOk(frame) {
+  return Object.prototype.hasOwnProperty.call(OHLCV_FRAMES, frame);
+}
+
+export function ohlcvRow(row) {
+  if (!Array.isArray(row) || row.length < 5) return null;
+  const out = row.slice(0, 6).map((value) => (value == null || value === "" ? null : Number(value)));
+  if (out.slice(0, 5).some((value) => !Number.isFinite(value))) return null;
+  if (out.length > 5 && !Number.isFinite(out[5])) out[5] = null;
+  return out;
+}
+
+export async function poolOhlcv(env, network, pool, frame) {
+  const [path, aggregate] = OHLCV_FRAMES[frame];
+  const body = await gt(env, `/networks/${encodeURIComponent(network)}/pools/${encodeURIComponent(pool)}/ohlcv/${path}?aggregate=${aggregate}&limit=200&currency=usd`);
+  const list = (body?.data?.attributes?.ohlcv_list || []).map(ohlcvRow).filter(Boolean).slice(0, 1000);
+  return meta({ ohlcv_list: list, network, pool, frame });
+}

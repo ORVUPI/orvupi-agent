@@ -223,8 +223,12 @@ export function getSearch(env, ctx, q) {
 
 export const tradeNetworkOk = gt.tradeNetworkOk;
 export const poolAddressOk = gt.poolAddressOk;
+export const ohlcvFrameOk = gt.ohlcvFrameOk;
 export function getPoolTrades(env, ctx, network, pool) {
   return cached(`gt:trades:${network}:${pool}`, 60, 600, () => gt.poolTrades(env, network, pool), ctx);
+}
+export function getPoolOhlcv(env, ctx, network, pool, frame) {
+  return cached(`gt:ohlcv:${network}:${pool}:${frame}`, 60, 600, () => gt.poolOhlcv(env, network, pool, frame), ctx);
 }
 export function searchPools(env, ctx, q) {
   return cached(`gt:search:${q.toLowerCase()}`, 600, 3600, () => gt.searchPools(env, q), ctx);

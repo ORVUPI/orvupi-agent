@@ -104,6 +104,7 @@ export async function handle(request, env = {}, ctx = {}) {
     if (head === "new" && path.length === 1) return fresh();
     if (head === "search" && path.length === 1) return search(query);
     if (head === "trades" && path.length === 1) return trades(query);
+    if (head === "pool-ohlcv" && path.length === 1) return poolOhlcv(query);
     if (head === "suggest" && path.length === 1) return suggest();
     if (head === "calendar" && path.length === 1) return calendar(query);
     if (head === "unlocks" && path.length === 1) return unlocks(query);
@@ -512,6 +513,21 @@ export async function handle(request, env = {}, ctx = {}) {
       // Sin datos de GeckoTerminal: 200 vacío para que la vista muestre «Dato no disponible» sin errores de red.
       console.error("sonar-trades", error?.status || error?.code || "fail");
       return json(200, { ok: false, unavailable: true, data: [], source: "GeckoTerminal", fetchedAt: new Date().toISOString() }, { "cache-control": "public, max-age=30" });
+    }
+  }
+
+  async function poolOhlcv(query) {
+    const network = query.get("network") || "";
+    const pool = query.get("pool") || "";
+    const frame = query.get("tf") || "";
+    if (!data.tradeNetworkOk(network) || !data.poolAddressOk(pool) || !data.ohlcvFrameOk(frame)) return json(400, { ok: false, error: "invalid" });
+    try {
+      const payload = await data.getPoolOhlcv(env, ctx, network, pool, frame);
+      return json(200, { ok: true, ...payload }, cacheHeaders(60, 600, payload));
+    } catch (error) {
+      // Sin velas de GeckoTerminal: 200 vacío para que la vista muestre «Dato no disponible» sin errores de red.
+      console.error("sonar-ohlcv", error?.status || error?.code || "fail");
+      return json(200, { ok: false, unavailable: true, ohlcv_list: [], source: "GeckoTerminal", fetchedAt: new Date().toISOString() }, { "cache-control": "public, max-age=30" });
     }
   }
 
