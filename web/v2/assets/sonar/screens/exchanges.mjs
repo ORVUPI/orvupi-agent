@@ -1,9 +1,9 @@
-import { api, qs } from "../api.mjs";
-import { compact, countryName, plain, show } from "../format.mjs";
-import { pageTitle, t } from "../i18n.mjs";
-import { parseRoute, setCrumb } from "../shell.mjs";
-import { snapshot } from "../store.mjs";
-import { el, emptyBlock, errorBlock, logo, pagedBlock, skeleton, sourceLine } from "../ui.mjs";
+import { api, qs } from "../api.mjs?v=481cc4983a";
+import { compact, countryName, plain, show } from "../format.mjs?v=481cc4983a";
+import { pageTitle, t } from "../i18n.mjs?v=481cc4983a";
+import { parseRoute, setCrumb } from "../shell.mjs?v=481cc4983a";
+import { snapshot } from "../store.mjs?v=481cc4983a";
+import { el, emptyBlock, errorBlock, logo, pagedBlock, skeleton, sourceLine } from "../ui.mjs?v=481cc4983a";
 
 export async function mount(host, ctx) {
   host.replaceChildren(skeleton(8));

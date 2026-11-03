@@ -989,7 +989,7 @@ test("Sonar no se queda en el formulario por módulos de otro despliegue en cach
   const { join } = await import("node:path");
   const web = new URL("../../web/v2/", import.meta.url).pathname;
   const app = readFileSync(join(web, "assets/verify-app.mjs"), "utf8");
-  assert.match(app, /import\("\.\/sonar\/shell\.mjs"\)\.then\(\(mod\) => mod\.start\(\)\)\.catch\(healSonar\)/);
+  assert.match(app, /import\("\.\/sonar\/shell\.mjs\?v=\w{10}"\)\.then\(\(mod\) => mod\.start\(\)\)\.catch\(healSonar\)/);
   const listed = JSON.parse(app.match(/const SONAR_MODULES = (\[[^\]]*\]);/)[1]).sort();
   const files = [];
   (function walk(dir, rel) {
@@ -1040,4 +1040,33 @@ test("la 404 de Sonar pide la misma sonar.css versionada que shell.mjs", async (
   const seo = readFileSync(new URL("./seo.js", import.meta.url), "utf8");
   const v = shell.match(/\/assets\/sonar\.css\?v=[0-9a-f]{10}/)?.[0];
   assert.ok(v && seo.includes(`href="${v}"`));
+});
+
+test("Sonar Mercados y el verificador comparten la base orvupi-sonar sin romperse", async () => {
+  const { readFileSync } = await import("node:fs");
+  const web = new URL("../../web/v2/", import.meta.url).pathname;
+  for (const file of ["assets/sonar/store.mjs", "verify/net/http.mjs"]) {
+    const code = readFileSync(web + file, "utf8");
+    // Los dos crean los dos almacenes y suben de versión si a la base le falta alguno.
+    assert.match(code, /\["kv", "cache"\]/, file);
+    assert.match(code, /db\.version \+ 1/, file);
+    assert.match(code, /onversionchange/, file);
+  }
+  const store = readFileSync(web + "assets/sonar/store.mjs", "utf8");
+  assert.doesNotMatch(store, /indexedDB\.open\(DB, 1\)/);
+});
+
+test("Todos los módulos de Sonar llevan la misma versión", async () => {
+  const { readFileSync } = await import("node:fs");
+  const web = new URL("../../web/v2/", import.meta.url).pathname;
+  const html = readFileSync(web + "verify/index.html", "utf8");
+  const versions = new Set([...html.matchAll(/\/assets\/[\w-]+\.mjs\?v=(\w+)"/g)].map((m) => m[1]));
+  for (const file of ["assets/verify-app.mjs", "assets/sonar/shell.mjs", "assets/sonar/screens/markets.mjs"]) {
+    const code = readFileSync(web + file, "utf8");
+    for (const m of code.matchAll(/from "(\.{1,2}\/[^"]+\.m?js)(\?v=\w+)?"/g)) {
+      assert.ok(m[2], `${file}: ${m[1]} sin versión`);
+      versions.add(m[2].slice(3));
+    }
+  }
+  assert.equal(versions.size, 1);
 });

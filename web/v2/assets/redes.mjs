@@ -3,7 +3,7 @@
  * Solana sigue el camino de siempre. Base, Ethereum y BNB Chain
  * usan el lector genérico. La lista vive en networks.json.
  */
-import { EVM_MAX_BODY, normalizeEvmAddress, readCappedText, readEvmToken, resetEvmClientLimit } from "../shared/evm-read.js";
+import { EVM_MAX_BODY, normalizeEvmAddress, readCappedText, readEvmToken, resetEvmClientLimit } from "../shared/evm-read.js?v=481cc4983a";
 import {
   fillNetworkSelect,
   pageLede,
@@ -11,9 +11,9 @@ import {
   paintEvmResult,
   privacyText,
   syncNetworkLabels,
-} from "../shared/evm-view.js";
-import { openNotebookDb } from "../shared/notebook-db.js";
-import { stampIdentity, validateAnyCard, withinStoreLimit } from "../shared/notebook-model.js";
+} from "../shared/evm-view.js?v=481cc4983a";
+import { openNotebookDb } from "../shared/notebook-db.js?v=481cc4983a";
+import { stampIdentity, validateAnyCard, withinStoreLimit } from "../shared/notebook-model.js?v=481cc4983a";
 
 const CACHE_MS = 60_000;
 const cache = new Map();
@@ -226,8 +226,7 @@ async function consult(force) {
   const raw = input.value.trim();
   const out = document.getElementById("resultado");
   if (!raw) {
-    const error = document.getElementById("direccion-error") || document.getElementById("consulta-error");
-    if (error) error.hidden = false;
+    input.focus?.();
     return;
   }
   const fieldError = document.getElementById("direccion-error");

@@ -1,7 +1,7 @@
-import { api, qs } from "../api.mjs";
-import { compact, plain, show } from "../format.mjs";
-import { t } from "../i18n.mjs";
-import { el, emptyBlock, errorBlock, pagedBlock, skeleton, sourceLine } from "../ui.mjs";
+import { api, qs } from "../api.mjs?v=481cc4983a";
+import { compact, plain, show } from "../format.mjs?v=481cc4983a";
+import { t } from "../i18n.mjs?v=481cc4983a";
+import { el, emptyBlock, errorBlock, pagedBlock, skeleton, sourceLine } from "../ui.mjs?v=481cc4983a";
 
 export async function mountCalendar(host, ctx) {
   host.replaceChildren(skeleton(8));

@@ -5474,13 +5474,6 @@ function bootVerify() {
     if (title && title.focus) title.focus({ preventScroll: true });
   }
 
-  function showFieldError() {
-    if (fieldError) fieldError.hidden = false;
-    input.setAttribute("aria-invalid", "true");
-    input.setAttribute("aria-describedby", "direccion-error");
-    if (input.focus) input.focus();
-  }
-
   function hideFieldError() {
     if (fieldError) fieldError.hidden = true;
     input.removeAttribute("aria-describedby");
@@ -5599,8 +5592,11 @@ function bootVerify() {
   function run(force, forgetBlocked) {
     if (inFlight) return;
     if (input.value.trim() === "") {
+      // Sin texto no hay nada que validar: se lleva el foco al campo, sin error en rojo.
       apply(emptyView(), false);
-      showFieldError();
+      hideFieldError();
+      input.setAttribute("aria-invalid", "false");
+      if (input.focus) input.focus();
       return;
     }
     hideFieldError();

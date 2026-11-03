@@ -1,8 +1,8 @@
-import { fetchBitcoinQuote, fetchCoinOhlc, fetchDexSnapshot, fetchGlobalMarket, fetchLargeTransfers, fetchPoolCandles, fetchPoolTrades, fetchTopMarkets, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs";
-import { mountLiveChart } from "../verify/net/chart.mjs";
-import { COIN_FRAMES, POLL_MS, TIMEFRAMES, stepLabel } from "../verify/net/ohlcv.mjs";
-import { LIMITS, buildGraph, chainById, explorerHref, filterTransfers, formatUnits, groupSearch, identify, pager, slicePage, storageKeys, supportedIds, UNSUPPORTED } from "../verify/net/present.mjs";
-import { isOfficialAddress, OFFICIAL_ADDRESS } from "../shared/orvupi-contract.js";
+import { fetchBitcoinQuote, fetchCoinOhlc, fetchDexSnapshot, fetchGlobalMarket, fetchLargeTransfers, fetchPoolCandles, fetchPoolTrades, fetchTopMarkets, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs?v=481cc4983a";
+import { mountLiveChart } from "../verify/net/chart.mjs?v=481cc4983a";
+import { COIN_FRAMES, POLL_MS, TIMEFRAMES, stepLabel } from "../verify/net/ohlcv.mjs?v=481cc4983a";
+import { LIMITS, buildGraph, chainById, explorerHref, filterTransfers, formatUnits, groupSearch, identify, pager, slicePage, storageKeys, supportedIds, UNSUPPORTED } from "../verify/net/present.mjs?v=481cc4983a";
+import { isOfficialAddress, OFFICIAL_ADDRESS } from "../shared/orvupi-contract.js?v=481cc4983a";
 
 const KEYS = storageKeys();
 const PROJECT_WALLET = "GKpccLJwKArptzt9j897njXUx9RsV5NKL3Egu7bfMA6Q";
@@ -95,6 +95,11 @@ function markNav(screen) {
   });
 }
 function go(screen) {
+  // «Mercado» es Sonar Mercados: el mismo mercado que se ve en el móvil.
+  if (screen === "mercado" && /\/sonar(\/|$)/.test(location.pathname)) {
+    location.assign(location.pathname.replace(/\/sonar(\/.*)?$/, "/sonar/"));
+    return;
+  }
   state.screen = screen;
   document.querySelectorAll("details.vf-more").forEach((menu) => { menu.open = false; });
   history.replaceState(null, "", `#${screen}`);
@@ -841,7 +846,14 @@ function transfersPage() {
 }
 function ficha() {
   const card = state.dossier;
-  if (!card) return skeleton(4);
+  if (!card && state.busy === "read") return skeleton(4);
+  if (!card) {
+    return h("div", { class: "vf-empty" }, [
+      sonarMark(),
+      h("p", {}, t("Escribe una dirección o un token en el buscador de arriba para abrir su ficha.", "Type an address or token in the search box above to open its profile.")),
+      h("button", { type: "button", onclick: () => document.getElementById("direccion-token")?.focus() }, t("Ir al buscador", "Go to search")),
+    ]);
+  }
   if (card.ok === false) return failed(card.message || t("Esa lectura no salió.", "That read did not complete."), () => investigate(card.address || document.getElementById("direccion-token")?.value, card.chain || document.getElementById("red")?.value));
   const symbol = fact("symbol")?.value || fact("standard")?.value || card.kind;
   return h("div", {}, [
@@ -1035,10 +1047,48 @@ function openSearch() {
   render();
   document.getElementById("vf-modal-q")?.focus();
 }
-// Si el navegador mezcla módulos de dos despliegues, el import falla y la página
-// se quedaba en el formulario del verificador. Se piden de nuevo a la red y se recarga una vez.
+// Si Sonar Mercados no arranca (módulos de dos despliegues, almacenamiento local roto,
+// un bloqueo del navegador), se piden de nuevo los módulos a la red y se recarga una vez.
+// Si vuelve a fallar se muestra el motivo y un botón que reintenta de verdad.
 const SONAR_MODULES = ["api", "changes", "chart", "format", "i18n", "ia", "live", "price-color", "rows", "screens/boards", "screens/calendar", "screens/categories", "screens/coin", "screens/exchanges", "screens/markets", "screens/portfolio", "screens/watchlist", "shell", "store", "ui"];
 const SONAR_HEAL_KEY = "orvupi.sonar.heal";
+function sonarLoading(message) {
+  return h("div", { class: "vf-card sn-boot", role: "status", "aria-live": "polite" }, [
+    h("p", { class: "vf-meta" }, message || t("Cargando Sonar Mercados…", "Loading Sonar Markets…")),
+    skeleton(6),
+  ]);
+}
+async function refetchSonar() {
+  let version = "";
+  try {
+    version = new URL(import.meta.url).searchParams.get("v") || "";
+  } catch {
+    version = "";
+  }
+  const query = version ? `?v=${version}` : "";
+  const urls = [`/assets/verify-app.mjs${query}`, ...SONAR_MODULES.map((name) => `/assets/sonar/${name}.mjs${query}`)];
+  await Promise.allSettled(urls.map((url) => fetch(url, { cache: "reload", credentials: "same-origin" })));
+  try {
+    const regs = await navigator.serviceWorker?.getRegistrations?.() || [];
+    await Promise.allSettled(regs.filter((reg) => !/\/(lab|work)\/$/.test(new URL(reg.scope).pathname)).map((reg) => reg.unregister()));
+  } catch {
+    /* sin acceso a los service workers */
+  }
+}
+async function retrySonar(button) {
+  if (button) {
+    button.disabled = true;
+    button.textContent = t("Cargando…", "Loading…");
+  }
+  document.getElementById("vf-root")?.replaceChildren(sonarLoading());
+  try {
+    sessionStorage.removeItem(SONAR_HEAL_KEY);
+  } catch {
+    /* sin sessionStorage */
+  }
+  await refetchSonar();
+  location.reload();
+}
 async function healSonar(error) {
   console.error("Sonar Mercados no cargó", error);
   let canRetry = false;
@@ -1051,28 +1101,41 @@ async function healSonar(error) {
   } catch {
     canRetry = false;
   }
+  const root = document.getElementById("vf-root");
   if (canRetry) {
-    const urls = ["/assets/verify-app.mjs", ...SONAR_MODULES.map((name) => `/assets/sonar/${name}.mjs`)];
-    await Promise.allSettled(urls.map((url) => fetch(url, { cache: "reload", credentials: "same-origin" })));
+    root?.replaceChildren(sonarLoading(t("Actualizando Sonar Mercados…", "Updating Sonar Markets…")));
+    await refetchSonar();
     location.reload();
     return;
   }
   const form = document.getElementById("consulta");
   if (form) form.style.display = "none";
-  const root = document.getElementById("vf-root");
+  // La cabecera del verificador sigue funcionando aunque el mercado no arranque.
+  document.querySelectorAll("[data-vf-view]").forEach((button) => button.addEventListener("click", () => {
+    location.assign(`${location.pathname}#${button.getAttribute("data-vf-view")}`);
+    location.reload();
+  }));
   if (!root) return;
+  const detail = String(error?.name && error?.message ? `${error.name}: ${error.message}` : error?.message || error || "").slice(0, 160);
+  const retry = h("button", { type: "button", onclick: (event) => retrySonar(event.currentTarget) }, t("Recargar", "Reload"));
   root.replaceChildren(h("div", { class: "vf-card", role: "alert" }, [
     h("p", {}, t("Sonar Mercados no ha podido cargar. Recarga la página.", "Sonar Markets could not load. Reload the page.")),
-    h("button", { type: "button", onclick: () => location.reload() }, t("Recargar", "Reload")),
+    retry,
+    detail ? h("p", { class: "vf-meta" }, `${t("Detalle técnico", "Technical detail")}: ${detail}`) : null,
   ]));
 }
 function boot() {
-  const hash = location.hash.replace("#", "");
+  let hash = location.hash.replace("#", "");
+  if (hash === "mercado" && /\/sonar(\/|$)/.test(location.pathname)) {
+    history.replaceState(null, "", location.pathname + location.search);
+    hash = "";
+  }
   const verifyHashes = new Set(["home", "dex", "tracer", "visualizer", "alertas", "etiquetas", "paneles", "transfers", "mercado", "ficha", "token"]);
   const market = /\/sonar(\/|$)/.test(location.pathname) && !verifyHashes.has(hash);
   if (market) {
     document.body.classList.add("sonar-market");
-    import("./sonar/shell.mjs").then((mod) => mod.start()).catch(healSonar);
+    document.getElementById("vf-root")?.replaceChildren(sonarLoading());
+    import("./sonar/shell.mjs?v=481cc4983a").then((mod) => mod.start()).catch(healSonar);
     return;
   }
   const dock = document.createElement("nav");
