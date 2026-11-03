@@ -6,7 +6,8 @@ import { listPhotos, photoUrl } from "./lib/photos.mjs";
 import { PROJECT_CAP, libraryOf, listDesigns } from "./lib/projects.mjs";
 import { desktopRail, designsSub, marcaSub, printSub } from "./desktop.mjs";
 import { pathFromHash } from "./lib/route.mjs";
-import { thumbsIn } from "./lib/thumbs.mjs";
+import { proIn as thumbsIn } from "./lib/pro-templates.mjs";
+import { proArt } from "./views.mjs";
 import { sendIaPrompt } from "./ia.mjs";
 import {
   HUB_ROWS,
@@ -451,7 +452,7 @@ function renderMarca(ctx, path) {
       el("div", { class: "mas-grid" }, thumbs.map((item) => {
         const node = button("", { class: "mas-tile canva-plain", "data-thumb": item.id });
         node.append(
-          face("is-photo", [el("img", { src: asset(item.file), alt: "" })]),
+          face("is-photo is-art", [proArt(item.id)]),
           el("span", { class: "mas-tile-name", text: item.title }),
         );
         return node;

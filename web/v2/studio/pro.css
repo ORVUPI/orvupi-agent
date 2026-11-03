@@ -1,0 +1,189 @@
+/* ORVUPI Studio · capa profesional (plantillas pro, galería tipo Canva, editor móvil).
+   Fuentes locales con licencia OFL (assets/OFL-*.txt). */
+@font-face {
+  font-family: "Studio Poppins";
+  src: url("assets/Poppins-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio Poppins";
+  src: url("assets/Poppins-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio Poppins";
+  src: url("assets/Poppins-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio DM Serif";
+  src: url("assets/DMSerifDisplay-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio DM Serif";
+  src: url("assets/DMSerifDisplay-Regular.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio DM Serif";
+  src: url("assets/DMSerifDisplay-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio DM Serif";
+  src: url("assets/DMSerifDisplay-Italic.ttf") format("truetype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio Lato";
+  src: url("assets/Lato-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio Lato";
+  src: url("assets/Lato-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio Lato";
+  src: url("assets/Lato-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio Bebas";
+  src: url("assets/BebasNeue-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio Bebas";
+  src: url("assets/BebasNeue-Regular.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio Abril";
+  src: url("assets/AbrilFatface-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio Abril";
+  src: url("assets/AbrilFatface-Regular.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio Great Vibes";
+  src: url("assets/GreatVibes-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio Great Vibes";
+  src: url("assets/GreatVibes-Regular.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+
+/* ---------- Render compartido: miniatura = lienzo ---------- */
+.art-render .capa-img img,
+.canva-thumb .art-render .capa-img img,
+.tpl-card .canva-thumb .art-render .capa-img img,
+.tpl-rail-card.tpl-card .canva-thumb .art-render .capa-img img {
+  display: block;
+  max-width: none;
+  min-width: 0;
+  object-fit: fill;
+  aspect-ratio: auto;
+  border-radius: 0;
+}
+.art-render .capa { pointer-events: auto; }
+.mini-slot.art-slot .art-render .capa { pointer-events: none; }
+.mini-slot.art-slot { background: #fff; }
+
+/* ---------- Galería: proporciones reales, esquinas 8px, sombra Canva ---------- */
+.canva-thumb.is-art {
+  height: auto;
+  background: transparent;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(64, 87, 109, 0.12), 0 2px 8px rgba(64, 87, 109, 0.1);
+  transition: box-shadow 0.16s ease, transform 0.16s ease;
+}
+.canva-thumb.is-art .mini-slot {
+  border-radius: 0;
+  box-shadow: none;
+  height: auto;
+}
+.tpl-open:hover .canva-thumb.is-art,
+.tpl-open:focus-visible .canva-thumb.is-art {
+  box-shadow: 0 2px 4px rgba(64, 87, 109, 0.14), 0 10px 24px rgba(64, 87, 109, 0.2);
+}
+.tpl-masonry .tpl-card,
+.tpl-masonry .canva-thumb.is-art { border-radius: 8px; }
+.tpl-masonry {
+  background: transparent;
+  padding: 8px 0;
+}
+
+/* Carriles de altura fija: el ancho sale de la proporción real */
+.tpl-rail-card .canva-thumb.is-art,
+.canva-format .canva-thumb.is-art,
+.canva-port .canva-thumb.is-art,
+.canva-sq .canva-thumb.is-art {
+  width: max-content;
+  border-radius: 8px;
+}
+.tpl-rail-card .canva-thumb.is-art .mini-slot,
+.canva-format .canva-thumb.is-art .mini-slot,
+.canva-port .canva-thumb.is-art .mini-slot,
+.canva-sq .canva-thumb.is-art .mini-slot {
+  height: 100%;
+  width: auto;
+}
+#studio-root button.canva-format:has(.is-art),
+#studio-root button.canva-port:has(.is-art),
+.canva-sq:has(.is-art) { width: auto; flex: 0 0 auto; }
+.tpl-rail-card:has(.is-art) { width: auto; flex: 0 0 auto; }
+.canva-format .canva-thumb.is-art { height: 168px; }
+.canva-port .canva-thumb.is-art { height: 188px; }
+.canva-sq .canva-thumb.is-art { height: 210px; }
+.tpl-rail-card .canva-thumb.is-art { height: 188px; }
+.tpl-rail-row.is-wide .tpl-rail-card .canva-thumb.is-art { height: 200px; }
+.tpl-rail-row.is-pair .tpl-rail-card .canva-thumb.is-art { height: 228px; }
+.tpl-rail-row.is-feature .tpl-rail-card .canva-thumb.is-art { height: 176px; }
+.tpl-rail-row.is-hero .tpl-rail-card .canva-thumb.is-art { height: 210px; }
+
+/* Más e IA */
+.mas-tile-face.is-art { padding: 0; background: #fff; overflow: hidden; }
+.mas-tile-face.is-art .mini-slot { border-radius: 0; box-shadow: none; }
+.ia-tile .mini-slot { border-radius: 8px; box-shadow: 0 1px 2px rgba(64, 87, 109, 0.12), 0 2px 8px rgba(64, 87, 109, 0.1); }
+

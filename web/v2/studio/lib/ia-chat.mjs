@@ -7,7 +7,10 @@
  */
 
 import { queryFromHash } from "./route.mjs";
-import { THUMBS } from "./thumbs.mjs";
+import { PRO_TEMPLATES } from "./pro-templates.mjs";
+
+/** Plantillas que sugiere el asistente: las profesionales, pintadas desde su documento. */
+const SUGGEST = PRO_TEMPLATES.map((item) => ({ id: item.id, title: item.title, category: item.category, file: `pro/${item.id}` }));
 
 export const IA_KEY = "orvupi-studio-ia-v1";
 export const IA_THINK_MS = 1000;
@@ -101,7 +104,7 @@ function cleanTemplates(list) {
   const out = [];
   for (const item of list) {
     if (!item || typeof item.id !== "string") continue;
-    if (!/^thumbs\/[a-z0-9.-]+\.png$/i.test(item.file || "")) continue;
+    if (!/^thumbs\/[a-z0-9.-]+\.png$/i.test(item.file || "") && !/^pro\/pro-[a-z0-9-]+$/.test(item.file || "")) continue;
     out.push({
       id: item.id.slice(0, 80),
       title: clip(item.title, 80),
@@ -382,7 +385,7 @@ function fromCategories(cats, lang, thumbs, label) {
   };
 }
 
-export function localAnswer(text, lang, thumbs = THUMBS) {
+export function localAnswer(text, lang, thumbs = SUGGEST) {
   const folded = fold(text);
   const specific = refineHits(specificMatches(folded), folded);
   if (specific.some((item) => item.id === "curriculum")) {

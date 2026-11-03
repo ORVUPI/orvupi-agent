@@ -1,6 +1,7 @@
 /** ORVUPI IA: chat móvil sobre #/ia. El pulpo es el logo y el indicador de espera. */
 
 import { desktopRail } from "./desktop.mjs";
+import { proArt } from "./views.mjs";
 import {
   ABOUT_PRESETS,
   IA_THINK_MS,
@@ -554,7 +555,9 @@ function resultBlock(message, asset, text, floating) {
   const shown = message.templates.slice(0, message.shown || 4);
   const grid = el("div", { class: "ia-grid" }, shown.map((item, index) => {
     const node = button("", { class: "ia-tile", "data-thumb": item.id, "aria-label": item.title });
-    node.append(el("img", {
+    const art = String(item.file || "").startsWith("pro/") ? proArt(item.id) : null;
+    if (art) node.append(art);
+    else node.append(el("img", {
       src: asset(item.file),
       alt: "",
       width: "180",

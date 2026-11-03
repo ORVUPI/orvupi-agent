@@ -52,6 +52,7 @@ import { parseTableText } from "./lib/table-data.mjs";
 import { documentForOpen } from "./lib/open-target.mjs";
 import { documentForThumb } from "./lib/thumb-docs.mjs";
 import { thumbById } from "./lib/thumbs.mjs";
+import { isProTemplate, proDocument } from "./lib/pro-templates.mjs";
 import {
   adoptLegacyDraft,
   createContainer,
@@ -1020,7 +1021,7 @@ function shellRail(doc) {
 }
 
 function openThumb(id) {
-  const doc = documentForThumb(id);
+  const doc = isProTemplate(id) ? proDocument(id) : documentForThumb(id);
   if (!doc || doc.templateId !== id) return;
   openDoc(doc);
 }
@@ -2023,7 +2024,7 @@ function onRootClick(event) {
   }
   if (buttonNode.dataset.personalizar) {
     const id = buttonNode.dataset.personalizar;
-    if (thumbById(id)) openThumb(id);
+    if (thumbById(id) || isProTemplate(id)) openThumb(id);
     else {
       const opened = documentForOpen(id);
       if (opened && opened.templateId === id) openDoc(opened);
@@ -2689,7 +2690,7 @@ function bindStage() {
     if (resize) {
       event.preventDefault();
       event.stopPropagation();
-      startResize(resize.dataset.resize, event);
+      startResize(resize.dataset.resize, event, resize.dataset.handle || "se");
       return;
     }
     if (rotate) {
@@ -2822,18 +2823,49 @@ function startRotate(id, event) {
   }, { once: true });
 }
 
-function startResize(id, event) {
+function startResize(id, event, handle = "se") {
   snapshot();
   const layer = state.doc.layers.find((item) => item.id === id);
+  if (!layer) return;
   const startX = event.clientX;
   const startY = event.clientY;
-  const origin = { w: layer.w, h: layer.h };
+  const origin = { x: layer.x, y: layer.y, w: layer.w, h: layer.h, size: layer.props?.size };
+  const corner = handle.length === 2;
+  const west = handle.includes("w");
+  const north = handle.includes("n");
   const move = (ev) => {
-    const next = proportionalSize(origin, (ev.clientX - startX) / state.scale, (ev.clientY - startY) / state.scale, layer.type === "image" || ev.shiftKey);
-    layer.w = next.w;
-    layer.h = next.h;
+    const dx = (ev.clientX - startX) / state.scale;
+    const dy = (ev.clientY - startY) / state.scale;
+    if (corner) {
+      const sx = west ? -dx : dx;
+      const sy = north ? -dy : dy;
+      const keep = layer.type === "image" || layer.type === "text" || ev.shiftKey;
+      const next = proportionalSize({ w: origin.w, h: origin.h }, sx, sy, keep);
+      layer.w = next.w;
+      layer.h = next.h;
+      if (layer.type === "text" && origin.size) {
+        layer.props.size = Math.max(8, Math.min(400, Math.round(origin.size * (next.w / origin.w))));
+      }
+      layer.x = west ? origin.x + (origin.w - layer.w) : origin.x;
+      layer.y = north ? origin.y + (origin.h - layer.h) : origin.y;
+    } else if (handle === "e" || handle === "w") {
+      const w = Math.max(16, Math.round(origin.w + (handle === "w" ? -dx : dx)));
+      layer.w = w;
+      layer.x = handle === "w" ? origin.x + (origin.w - w) : origin.x;
+    } else {
+      const h = Math.max(8, Math.round(origin.h + (handle === "n" ? -dy : dy)));
+      layer.h = h;
+      layer.y = handle === "n" ? origin.y + (origin.h - h) : origin.y;
+    }
     const node = root.querySelector(`.capa[data-id="${id}"]`);
-    if (node) node.style.width = `${layer.w}px`, node.style.height = `${layer.h}px`;
+    if (node) {
+      node.style.width = `${layer.w}px`;
+      node.style.height = `${layer.h}px`;
+      node.style.left = `${layer.x}px`;
+      node.style.top = `${layer.y}px`;
+      const text = node.querySelector(".capa-texto");
+      if (text && layer.props?.size) text.style.fontSize = `${layer.props.size}px`;
+    }
   };
   window.addEventListener("pointermove", move);
   window.addEventListener("pointerup", () => {

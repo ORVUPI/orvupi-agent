@@ -5,7 +5,7 @@ import { aiPanelCopy, localPhrases } from "./lib/ai-optional.mjs";
 import { renderOrvupiIa } from "./ia.mjs";
 import { BRAND, FONTS, PRESETS, fontById, importProject, orderedLayers, overlappingIds } from "./lib/document.mjs";
 import { HISTORY_COST, listHistory } from "./lib/history.mjs";
-import { listPhotos, PHOTO_LICENSE_NOTE, photoById } from "./lib/photos.mjs";
+import { anyPhotoById, listPhotos, PHOTO_LICENSE_NOTE, photoById } from "./lib/photos.mjs";
 import { tablePlainText } from "./lib/table-data.mjs";
 import { piecesOf } from "./lib/text-style.mjs";
 import { IDEAS, PLANTILLAS, filterPlantillas, instantiate } from "./lib/plantillas.mjs";
@@ -13,9 +13,10 @@ import { desktopRail, designsSub } from "./desktop.mjs";
 import { designView } from "./mis-disenos.mjs";
 import { listDesigns } from "./lib/projects.mjs";
 import { loadMas } from "./lib/mas-store.mjs";
-import { documentForThumb } from "./lib/thumb-docs.mjs";
+import { documentForThumb as legacyDocumentForThumb } from "./lib/thumb-docs.mjs";
 import { documentForOpen, openKind, relatedOpenIds } from "./lib/open-target.mjs";
-import { THUMB_CATS, THUMB_GROUPS, thumbById, thumbCat, thumbCatsFor, thumbsForGrupo, thumbsIn } from "./lib/thumbs.mjs";
+import { THUMB_CATS, THUMB_GROUPS, thumbById as legacyThumbById, thumbCat, thumbCatsFor, thumbsIn as legacyThumbsIn } from "./lib/thumbs.mjs";
+import { isProTemplate, PRO_TEMPLATES, proById, proForCategories, proIn, proThumbDocument } from "./lib/pro-templates.mjs";
 import {
   browseAsset,
   browseElements,
@@ -25,6 +26,44 @@ import {
   filterBrowse,
   photoTopics,
 } from "./lib/library.mjs";
+
+
+/* Galerías: plantillas profesionales. Los ids antiguos (tpl-*) siguen abriendo su documento. */
+const GROUP_CATS_PRO = Object.fromEntries(THUMB_GROUPS.map((group) => [group.id, group.cats]));
+
+function thumbsIn(category) {
+  const pro = proIn(category);
+  return pro.length ? pro : legacyThumbsIn(category);
+}
+
+function thumbsForGrupo(grupo) {
+  const cats = GROUP_CATS_PRO[grupo];
+  return cats ? proForCategories(cats) : PRO_TEMPLATES;
+}
+
+function thumbById(id) {
+  return proById(id) || legacyThumbById(id);
+}
+
+function documentForThumb(id) {
+  return isProTemplate(id) ? proThumbDocument(id) : legacyDocumentForThumb(id);
+}
+
+/** Miniatura de una plantilla profesional para otros módulos (IA, Más). */
+export function proArt(id) {
+  const doc = isProTemplate(id) ? proThumbDocument(id) : null;
+  return doc ? miniStage(doc) : null;
+}
+
+/** Cara de una tarjeta: el diseño real pintado con el renderizador del editor. */
+function thumbArt(item) {
+  if (item && isProTemplate(item.id)) {
+    const doc = proThumbDocument(item.id);
+    if (doc) return miniStage(doc);
+  }
+  if (item?.file) return el("img", { src: studioAsset(item.file), alt: "", loading: "lazy", decoding: "async" });
+  return null;
+}
 
 const GROUPS = {
   "para-ti": ["square", "story", "x", "tiktok", "ig", "deck", "doc", "cv", "video", "flyer", "logo", "poster", "web", "board"],
@@ -385,9 +424,9 @@ function blankCardFor(uso, en) {
 }
 
 const THUMB_PARA = [
-  "tpl-presentacion-01", "tpl-post-instagram-01", "tpl-curriculum-01", "tpl-logo-01",
-  "tpl-flyer-01", "tpl-miniatura-youtube-01", "tpl-cartel-03", "tpl-story-03",
-  "tpl-invitacion-02", "tpl-video-01", "tpl-negocio-01", "tpl-documento-01",
+  "pro-presentacion-01", "pro-post-instagram-02", "pro-curriculum-01", "pro-logo-01",
+  "pro-flyer-01", "pro-miniatura-youtube-01", "pro-cartel-03", "pro-story-01",
+  "pro-invitacion-01", "pro-video-01", "pro-negocio-05", "pro-documento-01",
 ];
 
 function thumbLabel(item, lang) {
@@ -666,54 +705,66 @@ function templateCard(item, lang) {
   return node;
 }
 
-function miniStage(doc) {
-  const w = doc.format.width;
-  const h = doc.format.height;
-  const slot = el("span", { class: "mini-slot", style: `aspect-ratio:${w} / ${h}` });
-  let bg = `background-color:${doc.background?.fill || BRAND.cream}`;
+const THUMB_CTX = { state: { userImages: new Map(), selected: [] }, t: () => "", userUrl: () => "" };
+
+/**
+ * Fondo del lienzo. Lo usan el editor y todas las miniaturas: misma función, mismo resultado.
+ */
+function paintArtBackground(art, doc) {
+  art.style.backgroundColor = doc.background?.fill || BRAND.cream;
   if (doc.background?.type === "catalog" && doc.background.catalogId) {
     const item = catalogItem(doc.background.catalogId);
-    if (item) bg += `;background-image:url("${studioAsset(item.archivo)}")`;
+    if (item) art.style.backgroundImage = `url("${studioAsset(item.archivo)}")`;
   }
-  const art = el("span", { class: "mini-art", style: `width:${w}px;height:${h}px;--doc-w:${w}px;${bg}` });
+}
+
+/** Contenido de una capa. Única fuente para miniatura, vista previa y editor. */
+function layerContent(ctx, layer, editing, lazy) {
+  if (layer.type === "text") return textBlock(layer, editing);
+  if (layer.type === "image") return imageNode(ctx, layer, lazy);
+  if (layer.type === "chart") return chartNode(layer);
+  if (layer.type === "table") return tableNode(layer);
+  if (layer.type === "line") {
+    const bar = el("div", { class: "capa-linea" });
+    bar.style.background = layer.props.color;
+    bar.style.height = `${Math.max(2, layer.props.strokeWidth || layer.h)}px`;
+    return bar;
+  }
+  const shape = el("div", { class: `capa-forma${layer.props.shape === "ellipse" ? " elipse" : ""}` });
+  if (layer.props.fill) shape.style.background = layer.props.fill;
+  if (layer.props.gradient) shape.style.background = `linear-gradient(${layer.props.gradient.angle}deg, ${layer.props.gradient.from}, ${layer.props.gradient.to})`;
+  if (layer.props.radius && layer.props.shape !== "ellipse") shape.style.borderRadius = `${layer.props.radius}px`;
+  if (layer.props.stroke && layer.props.strokeWidth) shape.style.border = `${layer.props.strokeWidth}px solid ${layer.props.stroke}`;
+  return shape;
+}
+
+/**
+ * Pinta el diseño en `art` (fondo + capas). `decorate(node, layer)` añade lo propio del editor.
+ */
+export function paintArt(ctx, doc, art, { editingId = "", lazy = false, decorate = null } = {}) {
+  paintArtBackground(art, doc);
+  art.style.width = `${doc.format.width}px`;
+  art.style.height = `${doc.format.height}px`;
   for (const layer of orderedLayers(doc)) {
-    if (layer.visible === false) continue;
-    const node = el("span", { class: "mini-capa", style: layerStyle(layer) });
-    if (layer.type === "text") {
-      const text = el("span", { class: "mini-texto", text: layer.props.text });
-      text.style.fontFamily = fontById(layer.props.fontId).css;
-      text.style.fontSize = `${layer.props.size}px`;
-      text.style.color = layer.props.color;
-      text.style.textAlign = layer.props.align || "left";
-      text.style.lineHeight = String(layer.props.lineHeight || 1.15);
-      node.append(text);
-    } else if (layer.type === "image") {
-      const frameNode = el("span", { class: "mini-img" });
-      if (layer.src?.kind === "catalog") {
-        const item = catalogItem(layer.src.id);
-        if (item?.archivo) frameNode.append(el("img", { src: studioAsset(item.archivo), alt: "", draggable: "false", loading: "lazy", decoding: "async" }));
-        else {
-          const asset = browseAsset(layer.src.id);
-          if (asset?.scene) frameNode.append(mountScene(asset.scene, "capa-escena"));
-        }
-      } else if (layer.src?.kind === "library") {
-        frameNode.append(el("img", { src: studioAsset(`photos/${layer.src.id}.png`), alt: "", draggable: "false", loading: "lazy", decoding: "async" }));
-      }
-      node.append(frameNode);
-    } else if (layer.type === "chart") {
-      node.append(el("span", { class: "mini-forma", style: "background:linear-gradient(180deg,#FF3070 40%,#102032 40%)" }));
-    } else if (layer.type === "table") {
-      node.append(el("span", { class: "mini-forma", style: "background:#FFF8EC;border:2px solid #102032" }));
-    } else if (layer.type === "line") {
-      node.append(el("span", { class: "mini-forma", style: `background:${layer.props.color || BRAND.navy}` }));
-    } else {
-      const shape = el("span", { class: "mini-forma" });
-      if (layer.props?.fill) shape.style.background = layer.props.fill;
-      if (layer.props?.stroke && layer.props.strokeWidth) shape.style.border = `${layer.props.strokeWidth}px solid ${layer.props.stroke}`;
-      node.append(shape);
-    }
+    const node = el("div", { class: "capa", "data-id": layer.id, style: layerStyle(layer) });
+    if (layer.visible === false) node.style.visibility = "hidden";
+    node.append(layerContent(ctx, layer, editingId === layer.id, lazy));
+    if (decorate) decorate(node, layer);
     art.append(node);
   }
+  return art;
+}
+
+/**
+ * Miniatura: el mismo `paintArt` que el editor, escalado al ancho de la tarjeta.
+ * Así la miniatura y el lienzo que se abre son el mismo documento pintado igual.
+ */
+function miniStage(doc, ctx = THUMB_CTX) {
+  const w = doc.format.width;
+  const h = doc.format.height;
+  const slot = el("span", { class: "mini-slot art-slot", style: `aspect-ratio:${w} / ${h}`, "data-art-w": String(w), "data-art-h": String(h) });
+  const art = el("span", { class: "mini-art stage-art art-render", style: `--doc-w:${w}px` });
+  paintArt(ctx, doc, art, { lazy: true });
   slot.append(art);
   return slot;
 }
@@ -924,9 +975,7 @@ function seeAll(label, attrs) {
 }
 
 function thumbFace(item) {
-  return el("span", { class: "canva-thumb" }, [
-    el("img", { src: studioAsset(item.file), alt: "", loading: "lazy", decoding: "async" }),
-  ]);
+  return el("span", { class: `canva-thumb${isProTemplate(item.id) ? " is-art" : ""}` }, [thumbArt(item)]);
 }
 
 function moreMenu(label, actions) {
@@ -1102,7 +1151,7 @@ function usedHome(ctx) {
     const sample = thumbsIn(cat)[skip] || thumbsIn(cat)[0];
     const node = button("", { class: "canva-plain canva-format", "data-format": id });
     const face = el("span", { class: "canva-thumb" });
-    if (sample?.file) face.append(el("img", { src: studioAsset(sample.file), alt: "", loading: "lazy", decoding: "async" }));
+    if (sample) face.append(thumbArt(sample));
     node.append(face, el("span", { class: "canva-card-name", text: en ? labelEn : es }));
     return node;
   });
@@ -1184,7 +1233,7 @@ function categoriesHome(ctx) {
       "data-thumb-cat": cat.id,
       style: `background:${CAT_WASH[index % CAT_WASH.length]}`,
     });
-    if (sample?.file) node.append(el("img", { src: studioAsset(sample.file), alt: "", loading: "lazy", decoding: "async" }));
+    if (sample) node.append(thumbArt(sample));
     node.append(el("span", { text: en ? cat.en : cat.es }));
     return node;
   });
@@ -1278,7 +1327,7 @@ const VIDEO_CATS = new Set(["video", "miniatura-youtube", "portada"]);
 
 function plantillasPool(ctx) {
   const items = ctx.state.grupo ? thumbsForGrupo(ctx.state.grupo) : proThumbList();
-  return items.filter((item) => item?.file && item.category !== "meme");
+  return items.filter((item) => (item?.file || item?.pro) && item.category !== "meme");
 }
 
 function vividFirst(list) {
@@ -1382,7 +1431,8 @@ function previewCard(item, ctx, extra) {
     "aria-label": thumbLabel(item, ctx.lang),
   });
   const face = thumbFace(item);
-  const img = face.querySelector("img");
+  const img = item.pro ? null : face.querySelector("img");
+  if (item.pro) face.style.aspectRatio = `${item.width} / ${item.height}`;
   if (img && item.width && item.height) {
     img.setAttribute("width", String(item.width));
     img.setAttribute("height", String(item.height));
@@ -1477,7 +1527,7 @@ function glanceSection(ctx, picks) {
   const grid = el("div", { class: "tpl-glance" });
   glanceList(ctx).forEach(([id, es, labelEn], index) => {
     const sample = chosen.get(id);
-    if (!sample?.file) return;
+    if (!sample) return;
     const node = button("", {
       class: "tpl-tile canva-plain",
       "data-go": "plantillas",
@@ -1486,7 +1536,7 @@ function glanceSection(ctx, picks) {
     });
     node.append(
       el("span", { class: "tpl-tile-face", style: `background:${GLANCE_WASH[index % GLANCE_WASH.length]}` }, [
-        el("img", { src: studioAsset(sample.file), alt: "", loading: "lazy", decoding: "async" }),
+        thumbArt(sample),
       ]),
       el("span", { class: "tpl-tile-label", text: en ? labelEn : es }),
     );
@@ -1531,13 +1581,12 @@ function masonrySection(ctx, title, items) {
 function plantillasHub(ctx) {
   const pool = plantillasPool(ctx);
   const used = new Set();
-  const freshPool = () => pool.filter((item) => item?.file && !used.has(item.id) && !used.has(item.file));
+  const freshPool = () => pool.filter((item) => item && !used.has(item.id));
   const take = (list) => {
     const fresh = [];
     for (const item of list) {
-      if (!item?.file || used.has(item.id) || used.has(item.file)) continue;
+      if (!item || used.has(item.id)) continue;
       used.add(item.id);
-      used.add(item.file);
       fresh.push(item);
     }
     return fresh;
@@ -1585,7 +1634,7 @@ function plantillasCategory(ctx) {
   const cat = THUMB_CATS.find((item) => item.id === ctx.state.thumbCat);
   if (!cat) return plantillasHub(ctx);
   const en = ctx.lang === "en";
-  const items = thumbsIn(cat.id).filter((item) => item?.file && item.category !== "meme");
+  const items = thumbsIn(cat.id).filter((item) => item && (item.pro || item.file));
   return el("div", { class: "canva-feed tpl-feed" }, [
     el("section", { class: "canva-section", "data-section": "categoria" }, [
       canvaHead(en ? cat.en : cat.es, seeAll(ctx.t("verTodo"), { "data-go": "plantillas", "data-thumb-cat": "" })),
@@ -2142,13 +2191,14 @@ function tableNode(layer) {
   return table;
 }
 
-function imageNode(ctx, layer) {
+function imageNode(ctx, layer, lazy = false) {
   const frameNode = el("div", { class: "capa-img" });
+  if (layer.radius) frameNode.style.borderRadius = `${layer.radius}px`;
   if (layer.src?.kind === "user" && !ctx.state.userImages.has(layer.src.id)) {
     frameNode.append(el("p", { class: "pendiente", text: ctx.t("pendiente") }));
     return frameNode;
   }
-  const img = el("img", { alt: "", draggable: "false" });
+  const img = el("img", { alt: "", draggable: "false", decoding: "async", loading: lazy ? "lazy" : null });
   let natural = null;
   if (layer.src?.kind === "catalog") {
     const item = catalogItem(layer.src.id);
@@ -2163,8 +2213,9 @@ function imageNode(ctx, layer) {
       }
     }
   } else if (layer.src?.kind === "library") {
-    img.src = studioAsset(`photos/${layer.src.id}.png`);
-    natural = { w: 640, h: 480 };
+    const photo = anyPhotoById(layer.src.id);
+    img.src = studioAsset(photo?.archivo || `photos/${layer.src.id}.png`);
+    natural = { w: photo?.width || 640, h: photo?.height || 480 };
   } else if (layer.src?.kind === "user") {
     const image = ctx.state.userImages.get(layer.src.id);
     if (image) {
@@ -2193,52 +2244,36 @@ function stageNode(ctx) {
   const shell = shellOf(doc);
   const scroll = el("div", { class: `stage-scroll${shell === "whiteboard" ? " lienzo-pizarra" : ""}`, id: shell === "whiteboard" ? "lienzo-pizarra" : "lienzo" });
   const frameNode = el("div", { class: "stage-frame" });
-  const art = el("div", { class: `stage-art${state.grid ? " cuadricula" : ""}${state.guides ? " guias" : ""}` });
-  art.style.width = `${doc.format.width}px`;
-  art.style.height = `${doc.format.height}px`;
-  art.style.background = doc.background.fill || BRAND.cream;
+  const art = el("div", { class: `stage-art art-render${state.grid ? " cuadricula" : ""}${state.guides ? " guias" : ""}` });
   if (state.zoom === "100") state.scale = 1;
   else if (!state.scale) state.scale = 1;
   frameNode.style.width = `${Math.round(doc.format.width * state.scale)}px`;
   frameNode.style.height = `${Math.round(doc.format.height * state.scale)}px`;
   art.style.transform = `scale(${state.scale})`;
-  for (const layer of orderedLayers(doc)) {
-    const node = el("div", {
-      class: `capa${state.selected.includes(layer.id) ? " seleccionada" : ""}${layer.locked ? " bloqueada" : ""}${layer.anim ? ` anim-${layer.anim}` : ""}`,
-      "data-id": layer.id,
-      style: layerStyle(layer),
-    });
-    if (layer.visible === false) node.style.visibility = "hidden";
-    if (layer.type === "text") node.append(textBlock(layer, state.editingId === layer.id));
-    else if (layer.type === "image") node.append(imageNode(ctx, layer));
-    else if (layer.type === "chart") node.append(chartNode(layer));
-    else if (layer.type === "table") node.append(tableNode(layer));
-    else if (layer.type === "line") {
-      const bar = el("div", { class: "capa-linea" });
-      bar.style.background = layer.props.color;
-      bar.style.height = `${Math.max(2, layer.props.strokeWidth || layer.h)}px`;
-      node.append(bar);
-    } else {
-      const shape = el("div", { class: `capa-forma${layer.props.shape === "ellipse" ? " elipse" : ""}` });
-      if (layer.props.fill) shape.style.background = layer.props.fill;
-      if (layer.props.stroke && layer.props.strokeWidth) shape.style.border = `${layer.props.strokeWidth}px solid ${layer.props.stroke}`;
-      node.append(shape);
-    }
-    if (state.cropping && layer.type === "image" && state.selected.includes(layer.id)) {
-      node.append(el("div", { class: "recorte-visual" }, ["move", "n", "e", "s", "w"].map((edge) => button("", {
-        class: `asa-recorte ${edge}`,
-        "data-crop-edge": edge,
-        "aria-label": edge === "move" ? "Mover recorte" : `Recorte ${edge}`,
-      }))));
-    }
-    if (state.selected.includes(layer.id) && !layer.locked) {
-      for (const corner of ["nw", "ne", "sw", "se"]) {
-        node.append(el("span", { class: `asa asa-${corner}`, "data-resize": corner === "se" ? layer.id : null }));
+  paintArt(ctx, doc, art, {
+    editingId: state.editingId,
+    decorate(node, layer) {
+      if (state.selected.includes(layer.id)) node.classList.add("seleccionada");
+      if (layer.locked) node.classList.add("bloqueada");
+      if (layer.anim) node.classList.add(`anim-${layer.anim}`);
+      if (state.cropping && layer.type === "image" && state.selected.includes(layer.id)) {
+        node.append(el("div", { class: "recorte-visual" }, ["move", "n", "e", "s", "w"].map((edge) => button("", {
+          class: `asa-recorte ${edge}`,
+          "data-crop-edge": edge,
+          "aria-label": edge === "move" ? "Mover recorte" : `Recorte ${edge}`,
+        }))));
       }
-      node.append(el("span", { class: "asa-giro", "data-rotate": layer.id, "aria-hidden": "true" }));
-    }
-    art.append(node);
-  }
+      if (state.selected.includes(layer.id) && !layer.locked) {
+        for (const corner of ["nw", "ne", "sw", "se"]) {
+          node.append(el("span", { class: `asa asa-${corner}`, "data-resize": layer.id, "data-handle": corner }));
+        }
+        for (const side of ["n", "e", "s", "w"]) {
+          node.append(el("span", { class: `asa-lado asa-lado-${side}`, "data-resize": layer.id, "data-handle": side, "aria-hidden": "true" }));
+        }
+        node.append(el("span", { class: "asa-giro", "data-rotate": layer.id, "aria-hidden": "true" }));
+      }
+    },
+  });
   frameNode.append(art);
   if (doc.format.id === "trifold") {
     frameNode.append(el("div", { class: "guias-pliegue", "aria-hidden": "true" }, [
@@ -2874,7 +2909,7 @@ function relatedThumb(id, label) {
   const photo = photoById(id);
   const visual = catalogItem(id);
   const asset = browseAsset(id);
-  if (thumb?.file) node.append(el("img", { src: studioAsset(thumb.file), alt: "" }));
+  if (thumb) node.append(thumbArt(thumb));
   else if (photo?.archivo) node.append(el("img", { src: studioAsset(photo.archivo), alt: "" }));
   else if (visual?.archivo) node.append(el("img", { src: studioAsset(visual.archivo), alt: "" }));
   else if (asset?.scene) node.append(mountScene(asset.scene));

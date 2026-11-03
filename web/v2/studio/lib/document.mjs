@@ -82,6 +82,12 @@ export const BRAND = {
 };
 
 export const FONTS = [
+  { id: "poppins", file: "Poppins-Regular.ttf", css: '"Studio Poppins", sans-serif', es: "Poppins", en: "Poppins" },
+  { id: "dmserif", file: "DMSerifDisplay-Regular.ttf", css: '"Studio DM Serif", serif', es: "DM Serif Display", en: "DM Serif Display" },
+  { id: "lato", file: "Lato-Regular.ttf", css: '"Studio Lato", sans-serif', es: "Lato", en: "Lato" },
+  { id: "bebas", file: "BebasNeue-Regular.ttf", css: '"Studio Bebas", sans-serif', es: "Bebas Neue", en: "Bebas Neue" },
+  { id: "abril", file: "AbrilFatface-Regular.ttf", css: '"Studio Abril", serif', es: "Abril Fatface", en: "Abril Fatface" },
+  { id: "greatvibes", file: "GreatVibes-Regular.ttf", css: '"Studio Great Vibes", cursive', es: "Great Vibes", en: "Great Vibes" },
   { id: "anton", file: "Anton-Regular.ttf", css: '"Studio Anton", sans-serif', es: "Anton", en: "Anton" },
   { id: "bangers", file: "Bangers-Regular.ttf", css: '"Studio Bangers", sans-serif', es: "Bangers", en: "Bangers" },
   { id: "archivo", file: "ArchivoBlack-Regular.ttf", css: '"Studio Archivo", sans-serif', es: "Archivo Black", en: "Archivo Black" },
@@ -381,6 +387,17 @@ function normalizeBackground(background) {
   };
 }
 
+const HEX = /^#[0-9a-f]{3,8}$/i;
+
+/** Degradado lineal de dos colores para formas: {from, to, angle}. */
+export function cleanGradient(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const from = typeof raw.from === "string" && (HEX.test(raw.from) || /^rgba?\(/.test(raw.from)) ? raw.from : "";
+  const to = typeof raw.to === "string" && (HEX.test(raw.to) || /^rgba?\(/.test(raw.to)) ? raw.to : "";
+  if (!from || !to) return null;
+  return { from, to, angle: clamp(num(raw.angle, 180), 0, 360) };
+}
+
 function normalizeLayer(layer) {
   const raw = layer?.type === "shape" ? "rect" : layer?.type;
   const type = raw === "image" || raw === "rect" || raw === "line" || raw === "text" || raw === "chart" || raw === "table" ? raw : "text";
@@ -433,6 +450,7 @@ function normalizeLayer(layer) {
       : null;
     base.flipX = Boolean(layer?.flipX);
     base.flipY = Boolean(layer?.flipY);
+    base.radius = clamp(num(layer?.radius, 0), 0, 2000);
   } else if (type === "line") {
     const props = layer?.props || {};
     base.props = {
@@ -450,6 +468,8 @@ function normalizeLayer(layer) {
       stroke: typeof props.stroke === "string" ? props.stroke : "",
       strokeWidth: Math.max(0, num(props.strokeWidth, 0)),
       shape: props.shape === "ellipse" ? "ellipse" : "rect",
+      radius: clamp(num(props.radius, 0), 0, 2000),
+      gradient: cleanGradient(props.gradient),
     };
   }
   return base;
