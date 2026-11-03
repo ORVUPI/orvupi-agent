@@ -98,3 +98,35 @@ export async function tokenPools(env, network, address) {
   const body = await gt(env, `/networks/${encodeURIComponent(network)}/tokens/${encodeURIComponent(address)}/pools?page=1`);
   return meta({ pools: rowsOf(body).slice(0, 12), network });
 }
+
+const TRADE_NETWORKS = new Set(["eth", "solana", "base", "bsc", "arbitrum", "polygon_pos", "optimism", "avax"]);
+
+export function tradeNetworkOk(network) {
+  return TRADE_NETWORKS.has(network);
+}
+
+export function poolAddressOk(pool) {
+  return typeof pool === "string" && /^[A-Za-z0-9_]{20,100}$/.test(pool);
+}
+
+export function tradeRow(item) {
+  const attr = item?.attributes || {};
+  const hash = text(attr.tx_hash, 120);
+  if (!hash) return null;
+  return {
+    attributes: {
+      tx_hash: hash,
+      block_timestamp: text(attr.block_timestamp, 40),
+      tx_from_address: text(attr.tx_from_address, 120),
+      from_token_amount: text(attr.from_token_amount, 60),
+      kind: attr.kind === "buy" || attr.kind === "sell" ? attr.kind : "",
+      volume_in_usd: text(attr.volume_in_usd, 60),
+    },
+  };
+}
+
+export async function poolTrades(env, network, pool) {
+  const body = await gt(env, `/networks/${encodeURIComponent(network)}/pools/${encodeURIComponent(pool)}/trades`);
+  const data = (body?.data || []).map(tradeRow).filter(Boolean).slice(0, 100);
+  return meta({ data, network, pool });
+}
