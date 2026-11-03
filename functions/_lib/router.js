@@ -505,8 +505,14 @@ export async function handle(request, env = {}, ctx = {}) {
     const network = query.get("network") || "";
     const pool = query.get("pool") || "";
     if (!data.tradeNetworkOk(network) || !data.poolAddressOk(pool)) return json(400, { ok: false, error: "invalid" });
-    const payload = await data.getPoolTrades(env, ctx, network, pool);
-    return json(200, { ok: true, ...payload }, cacheHeaders(60, 600, payload));
+    try {
+      const payload = await data.getPoolTrades(env, ctx, network, pool);
+      return json(200, { ok: true, ...payload }, cacheHeaders(60, 600, payload));
+    } catch (error) {
+      // Sin datos de GeckoTerminal: 200 vacío para que la vista muestre «Dato no disponible» sin errores de red.
+      console.error("sonar-trades", error?.status || error?.code || "fail");
+      return json(200, { ok: false, unavailable: true, data: [], source: "GeckoTerminal", fetchedAt: new Date().toISOString() }, { "cache-control": "public, max-age=30" });
+    }
   }
 
   async function suggest() {
