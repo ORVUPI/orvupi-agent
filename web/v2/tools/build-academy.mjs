@@ -447,7 +447,7 @@ ${cur.herramientas.map((h) => tcard(h.id === "cuaderno" ? `${BASE}mi-aprendizaje
   }
   // Laboratorio (antiguo /lab/): se conserva entero, con sus anclas, claves de progreso y misión.
   const lab = fixLinks(legacyMain("lab/index.html"));
-  add("practicas/laboratorio/index.html", { path: `${BASE}practicas/laboratorio/`, title: "Laboratorio · ORVUPI Academy", desc: "Laboratorio de ORVUPI Academy: misión y lecciones con fichas reales guardadas.", current: "practicas", tool: "lab", scripts: `\n<script src="/assets/mission.js"></script>`,
+  add("practicas/laboratorio/index.html", { path: `${BASE}practicas/laboratorio/`, title: "Laboratorio · ORVUPI Academy", desc: "Laboratorio de ORVUPI Academy: misión y lecciones con fichas reales guardadas.", current: "practicas", tool: "lab", scripts: `\n<script src="/assets/mission.js" defer></script>`,
     body: `<main id="contenido" class="ac-tool"><div class="ac-c-n">${crumbs([[BASE, "Inicio"], [`${BASE}practicas/`, "Prácticas"], ["", "Laboratorio"]])}</div><div class="wrap estrecha ac-lab">${lab}</div></main>` });
   const pares = fixLinks(legacyMain("pares/index.html"));
   add("practicas/curva-en-vivo/index.html", { path: `${BASE}practicas/curva-en-vivo/`, title: "Curva en vivo · ORVUPI Academy", desc: "Lee el estado de la curva de un token de Pump.fun o Raydium LaunchLab, solo cuando lo pides.", current: "practicas", tool: "curva", csp: CSP_CURVA, scripts: `\n<script type="module" src="/assets/pares.mjs"></script>`,

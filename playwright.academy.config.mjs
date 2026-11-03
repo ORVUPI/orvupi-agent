@@ -1,10 +1,19 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// ORVUPI Academy en Chromium, Firefox y WebKit (móvil 390, tableta 768 y escritorio 1440).
+// ORVUPI Academy en Chromium y Firefox: ordenador 1280 y 1440, tableta 768, móvil 360 y 412.
+const sizes = [
+  ["1280", { width: 1280, height: 800 }],
+  ["1440", { width: 1440, height: 900 }],
+  ["768", { width: 768, height: 1024 }],
+  ["412", { width: 412, height: 915 }],
+  ["360", { width: 360, height: 800 }],
+];
+const browsers = [["chromium", devices["Desktop Chrome"]], ["firefox", devices["Desktop Firefox"]]];
 export default defineConfig({
   testDir: "test/ui",
   testMatch: "academy.spec.mjs",
   fullyParallel: true,
+  workers: 4,
   retries: 0,
   reporter: process.env.CI ? "line" : "list",
   use: { baseURL: "http://127.0.0.1:4180", trace: "retain-on-failure" },
@@ -14,12 +23,8 @@ export default defineConfig({
     port: 4180,
     reuseExistingServer: !process.env.CI,
   },
-  projects: [
-    { name: "chromium-1440", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } } },
-    { name: "chromium-390", use: { ...devices["Desktop Chrome"], viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } },
-    { name: "firefox-768", use: { ...devices["Desktop Firefox"], viewport: { width: 768, height: 1024 } } },
-    { name: "firefox-1440", use: { ...devices["Desktop Firefox"], viewport: { width: 1440, height: 900 } } },
-    { name: "webkit-390", use: { ...devices["iPhone 14"], defaultBrowserType: "webkit" } },
-    { name: "webkit-1440", use: { ...devices["Desktop Safari"], viewport: { width: 1440, height: 900 } } },
-  ],
+  projects: browsers.flatMap(([b, dev]) => sizes.map(([n, viewport]) => ({
+    name: `${b}-${n}`,
+    use: { ...dev, viewport, ...(b === "chromium" && viewport.width < 768 ? { isMobile: true, hasTouch: true } : {}) },
+  }))),
 });

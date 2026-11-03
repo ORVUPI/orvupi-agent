@@ -289,7 +289,7 @@
         for (var i = 0; i < localStorage.length; i++) {
           var key = localStorage.key(i);
           if (!key || key.indexOf("orvupi-lab-") !== 0 || key === "orvupi-lab-lang") continue;
-          try { var v = JSON.parse(localStorage.getItem(key)); if (v && typeof v === "object") { n++; solved += Array.isArray(v.solved) ? v.solved.length : 0; if (v.completed) done++; } } catch (e) { /* clave ajena */ }
+          try { var v = JSON.parse(localStorage.getItem(key)); if (v && typeof v === "object") { var s = Array.isArray(v.solved) ? v.solved.length : 0; if (!s && !v.completed) continue; n++; solved += s; if (v.completed) done++; } } catch (e) { /* clave ajena */ }
         }
       } catch (e) { return "Dato no disponible"; }
       return n ? n + " actividades del laboratorio empezadas, " + done + " completadas y " + solved + " pasos resueltos." : "Aún no has empezado el laboratorio en este navegador.";
