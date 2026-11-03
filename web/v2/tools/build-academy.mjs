@@ -30,6 +30,9 @@ for (const t of glos.terminos) {
   if (!t.noIndica) t.noIndica = l.doesNotConclude?.es;
 }
 for (const t of glos.terminos) if (!t.termino || !t.definicion) throw new Error(`término sin texto: ${t.id}`);
+// Palabras vetadas en texto visible de Academy: «holder» y «reserva». Los slugs heredados se mantienen.
+const VETADAS = /holder|reserva/i;
+for (const t of glos.terminos) if (t.verify && VETADAS.test(t.verify)) delete t.verify;
 
 // ---------- utilidades ----------
 const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -308,7 +311,7 @@ ${nuevos}
 // Artículos (lista)
 {
   const mods = cur.modulos.map((m) => `<option value="${m.n}">${m.n}. ${esc(m.titulo)}</option>`).join("");
-  const body = `<main id="contenido">
+  const body = `<main id="contenido" class="ac-pg-lista">
 <div class="ac-head"><div class="ac-c-n"><h1>Artículos de ORVUPI Academy</h1><p>${units.length} artículos originales en ${cur.modulos.length} módulos.</p></div></div>
 <div class="ac-filters"><div class="ac-c-n"><form data-ac-filter role="search" aria-label="Filtrar artículos">
 <label for="f-q">Buscar</label><input id="f-q" name="q" type="search" placeholder="Palabra o término">
@@ -374,7 +377,7 @@ ${fuentes}
 {
   const mins = units.reduce((s, u) => s + minutes(u), 0);
   const body = `<main id="contenido"><div class="ac-head ac-head-xl"><div class="ac-c-n"><div><h1>Rutas de aprendizaje</h1><p>Itinerarios ordenados con evaluación por módulo.</p></div><img src="/assets/academy/img/1-q.webp" width="320" height="320" alt="Ilustración de ORVUPI: el pulpo rosa con su rizo"></div></div>
-<div class="ac-c-n"><div class="ac-list-h"><h2>Rutas (1)</h2></div><div class="ac-grid-l"><a class="ac-lcard" href="${BASE}rutas/${route.slug}/">${picture(route.imagen, "w")}<span class="b"><h3>${esc(route.titulo)}</h3><span>${esc(route.resumen)}</span><span class="foot"><span class="ac-chip ${lvClass(route.nivel)}">${esc(route.nivel)}</span><span>${cur.modulos.length} módulos</span><span>${I.clock} ${Math.floor(mins / 60)} h ${mins % 60} min</span></span></span></a></div></div></main>`;
+<div class="ac-c-n ac-c-rutas"><div class="ac-list-h"><h2>Rutas (1)</h2></div><div class="ac-grid-l"><a class="ac-lcard" href="${BASE}rutas/${route.slug}/">${picture(route.imagen, "w")}<span class="b"><h3>${esc(route.titulo)}</h3><span>${esc(route.resumen)}</span><span class="foot"><span class="ac-chip ${lvClass(route.nivel)}">${esc(route.nivel)}</span><span>${cur.modulos.length} módulos</span><span>${I.clock} ${Math.floor(mins / 60)} h ${mins % 60} min</span></span></span></a></div></div></main>`;
   add("rutas/index.html", { path: `${BASE}rutas/`, title: "Rutas · ORVUPI Academy", desc: "Rutas de aprendizaje de ORVUPI Academy.", current: "rutas", promo: true, body });
   const rows = cur.modulos.map((m) => `<div class="ac-row" data-modulo="${m.n}"><span class="ck" aria-hidden="true">✓</span><details><summary><strong>${m.n}. ${esc(m.titulo)}</strong><span>${m.unidades.length} artículos · 6 preguntas</span></summary><p>${esc(m.resumen)}</p><ol>${m.unidades.map((id) => `<li><a href="${artUrl(UNIT.get(id))}" data-unit="${id}">${esc(UNIT.get(id).titulo)} <span class="ac-done">✓</span></a></li>`).join("")}<li><a href="${modUrl(m)}#evaluacion">Evaluación del módulo ${m.n}</a></li></ol></details></div>`).join("");
   const body2 = `<main id="contenido"><section class="ac-th"><div class="ac-c"><div class="ac-th-g"><div>
@@ -446,7 +449,9 @@ ${cur.herramientas.map((h) => tcard(h.id === "cuaderno" ? `${BASE}mi-aprendizaje
     add(`practicas/${p.slug}/index.html`, { path: pracUrl(p), title: `${p.titulo} · ORVUPI Academy`, desc: p.resumen, current: "practicas", promo: true, body: body2 });
   }
   // Laboratorio (antiguo /lab/): se conserva entero, con sus anclas, claves de progreso y misión.
-  const lab = fixLinks(legacyMain("lab/index.html"));
+  const lab = fixLinks(legacyMain("lab/index.html"))
+    .replace(/‘Holder’ \(término del sector\)/g, "Cuenta con tokens (término del sector)")
+    .replace(/‘Holder’ \(industry term\)/g, "Token-holding account (industry term)");
   add("practicas/laboratorio/index.html", { path: `${BASE}practicas/laboratorio/`, title: "Laboratorio · ORVUPI Academy", desc: "Laboratorio de ORVUPI Academy: misión y lecciones con fichas reales guardadas.", current: "practicas", tool: "lab", scripts: `\n<script src="/assets/mission.js" defer></script>`,
     body: `<main id="contenido" class="ac-tool"><div class="ac-c-n">${crumbs([[BASE, "Inicio"], [`${BASE}practicas/`, "Prácticas"], ["", "Laboratorio"]])}</div><div class="wrap estrecha ac-lab">${lab}</div></main>` });
   const pares = fixLinks(legacyMain("pares/index.html"));

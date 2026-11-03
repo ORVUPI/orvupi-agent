@@ -170,4 +170,11 @@ describe("ORVUPI Academy", () => {
     assert.match(src, /req\.onupgradeneeded = function \(e\) \{ e\.target\.transaction\.abort\(\); \}/);
     assert.match(src, /"readonly"/);
   });
+  test("el texto visible no usa las palabras vetadas «holder» ni «reserva»", () => {
+    for (const f of pages) {
+      const html = readFileSync(f, "utf8").replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<link[^>]*>|<meta property="og:url"[^>]*>/g, "");
+      const visible = html.replace(/<[^>]+>/g, " ") + " " + [...html.matchAll(/(?:alt|title|placeholder|aria-label|content)="([^"]*)"/g)].map((m) => m[1]).join(" ");
+      assert.equal(/holder|reserva/i.test(visible), false, path.relative(WEB, f));
+    }
+  });
 });

@@ -191,7 +191,7 @@
    "nivel": "Intermedio",
    "tema": "Redes",
    "termino": "Emisor",
-   "definicion": "Entidad que crea un token y, en su caso, responde de él: por ejemplo, la empresa que respalda una moneda estable con reservas.",
+   "definicion": "Entidad que crea un token y, en su caso, responde de él: por ejemplo, la empresa que respalda una moneda estable con activos de respaldo.",
    "noIndica": "Que haya un emisor identificado no garantiza que el token mantenga su valor."
   },
   {
@@ -429,6 +429,8 @@
   },
   {
    "id": "holder",
+   "termino": "Cuenta con tokens (término del sector)",
+   "definicion": "Cuenta que tiene tokens de una moneda concreta. No implica derechos ni comunidad de inversores.",
    "nivel": "Intermedio",
    "tema": "Datos"
   },
