@@ -191,7 +191,7 @@ function header(current) {
 <h2>Herramientas ORVUPI</h2><ul>${TOOLS.map(([h, t]) => `<li><a href="${h}">${t}</a></li>`).join("")}</ul></nav>
 </div>`;
 }
-const PROMO = `<div class="ac-promo"><p style="margin:0">Academia gratuita: sin cuenta, sin wallet y sin pagos. Tu progreso se guarda en este navegador.</p><a class="ac-btn pink" href="${BASE}rutas/${cur.ruta.slug}/">Empieza la ruta</a></div>`.replace(' style="margin:0"', ' class="ac-promo-t"');
+const PROMO = `<div class="ac-promo"><p style="margin:0">Academia gratuita: sin cuenta, sin wallet y sin pagos.<span class="ac-promo-x"> Tu progreso se guarda en este navegador.</span></p><a class="ac-btn pink" href="${BASE}rutas/${cur.ruta.slug}/">Empieza la ruta</a></div>`.replace(' style="margin:0"', ' class="ac-promo-t"');
 function footer() {
   const col = (t, links) => `<div><h3>${t}</h3><ul>${links.map(([h, l]) => `<li><a href="${h}">${l}</a></li>`).join("")}</ul></div>`;
   return `<footer class="ac-foot"><div class="ac-c"><div class="ac-foot-g">
@@ -373,7 +373,7 @@ ${fuentes}
 // Rutas
 {
   const mins = units.reduce((s, u) => s + minutes(u), 0);
-  const body = `<main id="contenido"><div class="ac-head"><div class="ac-c-n"><h1>Rutas de aprendizaje</h1><p>Itinerarios ordenados con evaluación por módulo.</p></div></div>
+  const body = `<main id="contenido"><div class="ac-head ac-head-xl"><div class="ac-c-n"><div><h1>Rutas de aprendizaje</h1><p>Itinerarios ordenados con evaluación por módulo.</p></div><img src="/assets/academy/img/1-q.webp" width="320" height="320" alt="Ilustración de ORVUPI: el pulpo rosa con su rizo"></div></div>
 <div class="ac-c-n"><div class="ac-list-h"><h2>Rutas (1)</h2></div><div class="ac-grid-l"><a class="ac-lcard" href="${BASE}rutas/${route.slug}/">${picture(route.imagen, "w")}<span class="b"><h3>${esc(route.titulo)}</h3><span>${esc(route.resumen)}</span><span class="foot"><span class="ac-chip ${lvClass(route.nivel)}">${esc(route.nivel)}</span><span>${cur.modulos.length} módulos</span><span>${I.clock} ${Math.floor(mins / 60)} h ${mins % 60} min</span></span></span></a></div></div></main>`;
   add("rutas/index.html", { path: `${BASE}rutas/`, title: "Rutas · ORVUPI Academy", desc: "Rutas de aprendizaje de ORVUPI Academy.", current: "rutas", promo: true, body });
   const rows = cur.modulos.map((m) => `<div class="ac-row" data-modulo="${m.n}"><span class="ck" aria-hidden="true">✓</span><details><summary><strong>${m.n}. ${esc(m.titulo)}</strong><span>${m.unidades.length} artículos · 6 preguntas</span></summary><p>${esc(m.resumen)}</p><ol>${m.unidades.map((id) => `<li><a href="${artUrl(UNIT.get(id))}" data-unit="${id}">${esc(UNIT.get(id).titulo)} <span class="ac-done">✓</span></a></li>`).join("")}<li><a href="${modUrl(m)}#evaluacion">Evaluación del módulo ${m.n}</a></li></ol></details></div>`).join("");
