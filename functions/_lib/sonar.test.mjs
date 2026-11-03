@@ -1087,3 +1087,21 @@ test("Tracer: operaciones del pool pasan por /api/sonar/trades", async () => {
   const bad = await handle(new Request("https://x/api/sonar/trades?network=eth&pool=..%2F..%2Fx"), {});
   assert.equal(bad.status, 400);
 });
+
+test("Velas de pool y búsqueda de pool pasan por /api/sonar (sin CORS de GeckoTerminal)", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { ohlcvFrameOk, ohlcvRow } = await import("./providers/geckoterminal.js");
+  const market = readFileSync(new URL("../../web/v2/verify/net/market.mjs", import.meta.url), "utf8");
+  assert.match(market, /\/api\/sonar\/pool-ohlcv\?network=/);
+  // Proxy primero; lectura directa solo como respaldo único, con pausa tras un fallo.
+  assert.match(market, /geckoRead\(url, direct/);
+  assert.match(market, /gtDirectPausedUntil = Date\.now\(\) \+ 120000/);
+  assert.equal(ohlcvFrameOk("15m"), true);
+  assert.equal(ohlcvFrameOk("toString"), false);
+  assert.deepEqual(ohlcvRow([1, "2", 3, 4, 5, "x"]), [1, 2, 3, 4, 5, null]);
+  assert.equal(ohlcvRow([1, "<b>", 3, 4, 5]), null);
+  const bad = await handle(new Request("https://x/api/sonar/pool-ohlcv?network=solana&pool=" + "a".repeat(40) + "&tf=2m"), {});
+  assert.equal(bad.status, 400);
+  const badPool = await handle(new Request("https://x/api/sonar/pool-ohlcv?network=solana&pool=..%2Fx&tf=15m"), {});
+  assert.equal(badPool.status, 400);
+});

@@ -1,4 +1,4 @@
-import { locale, t } from "./i18n.mjs?v=e1bb1dde90";
+import { locale, t } from "./i18n.mjs?v=e3734c4579";
 
 export function finite(value) {
   if (value == null || value === "" || typeof value === "boolean") return null; // Number(null) es 0: no inventar ceros

@@ -1,9 +1,9 @@
-import { api, qs } from "../api.mjs?v=e1bb1dde90";
-import { compact, show } from "../format.mjs?v=e1bb1dde90";
-import { t } from "../i18n.mjs?v=e1bb1dde90";
-import { coverageNote, marketTabs } from "../rows.mjs?v=e1bb1dde90";
-import { snapshot } from "../store.mjs?v=e1bb1dde90";
-import { el, emptyBlock, errorBlock, logo, pagedBlock, pctNode, skeleton, sourceLine } from "../ui.mjs?v=e1bb1dde90";
+import { api, qs } from "../api.mjs?v=e3734c4579";
+import { compact, show } from "../format.mjs?v=e3734c4579";
+import { t } from "../i18n.mjs?v=e3734c4579";
+import { coverageNote, marketTabs } from "../rows.mjs?v=e3734c4579";
+import { snapshot } from "../store.mjs?v=e3734c4579";
+import { el, emptyBlock, errorBlock, logo, pagedBlock, pctNode, skeleton, sourceLine } from "../ui.mjs?v=e3734c4579";
 
 export async function mountMovers(host, ctx) {
   const period = ctx.route.params.get("period") || "24h";

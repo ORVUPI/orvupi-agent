@@ -3,21 +3,22 @@
  * Cadena real: si una fuente falla, se prueba la siguiente. No se rellenan cifras.
  * Coinbase, Kraken, Tronscan, el archivo de Binance Vision y la API de Blockscout con clave no se llaman.
  */
-import { fetchJson, fetchText, withCache } from "./http.mjs?v=e1bb1dde90";
+import { fetchJson, fetchText, withCache } from "./http.mjs?v=e3734c4579";
 import {
   BINANCE_INTERVALS,
   binanceKlineUrl,
   coingeckoOhlcUrl,
-  geckoOhlcvUrl,
   parseBinanceKlines,
   parseCoingeckoOhlc,
   parseGeckoOhlcv,
   stepLabel,
   timeframeById,
-} from "./ohlcv.mjs?v=e1bb1dde90";
+} from "./ohlcv.mjs?v=e3734c4579";
 
 const JSON_HEADERS = { accept: "application/json" };
 const GECKO_HEADERS = { accept: "application/json;version=20230203" };
+const GT_DIRECT = "https://api.geckoterminal.com/api/v2";
+let gtDirectPausedUntil = 0;
 const BINANCE_ORIGINS = ["https://data-api.binance.vision", "https://api.binance.com"];
 const BTC_APIS = ["https://mempool.space", "https://blockstream.info"];
 const OHLCV_NETWORKS = new Set(["eth", "solana", "base", "bsc", "arbitrum", "polygon_pos", "optimism", "avax"]);
@@ -43,15 +44,22 @@ function finite(value) {
   return Number.isFinite(number) ? number : null;
 }
 
-function failed(provider, response, scope) {
-  return {
-    ok: false,
-    state: response?.status === 429 ? "requiere-atencion" : "sin-datos",
-    provider,
-    fetchedAt: response?.fetchedAt || new Date().toISOString(),
-    scope,
-    httpStatus: response?.status ?? 0,
-  };
+/**
+ * GeckoTerminal: primero nuestra función (caché, sin CORS). Si la fuente no contesta a nuestro servidor,
+ * una sola lectura directa desde el navegador; si también falla se pausa 2 min y la vista muestra «Dato no disponible».
+ */
+async function geckoRead(proxyUrl, directPath, pickProxy, pickDirect) {
+  const proxied = await fetchJson(proxyUrl, { headers: JSON_HEADERS, attempts: 2 });
+  const list = proxied.ok ? pickProxy(proxied.body) : null;
+  if (Array.isArray(list) && list.length) return { response: proxied, list };
+  if (Date.now() < gtDirectPausedUntil) return { response: proxied, list: [] };
+  const direct = await fetchJson(GT_DIRECT + directPath, { headers: GECKO_HEADERS, attempts: 1 });
+  if (!direct.ok) {
+    gtDirectPausedUntil = Date.now() + 120000;
+    return { response: proxied.ok ? proxied : direct, list: [] };
+  }
+  const items = pickDirect(direct.body);
+  return { response: direct, list: Array.isArray(items) ? items : [] };
 }
 
 function poolFromSearch(item) {
@@ -60,14 +68,17 @@ function poolFromSearch(item) {
   if (!address || !id.endsWith(String(address))) return null;
   const network = id.slice(0, id.length - String(address).length - 1);
   if (!network) return null;
+  return { address: String(address), network, reserveUsd: finite(item.attributes?.reserve_in_usd) };
+}
+
+function failed(provider, response, scope) {
   return {
-    name: String(item.attributes?.name || address),
-    address: String(address),
-    network,
-    reserveUsd: finite(item.attributes?.reserve_in_usd),
-    volumeH24: finite(item.attributes?.volume_usd?.h24),
-    changeH24: finite(item.attributes?.price_change_percentage?.h24),
-    provider: "GeckoTerminal",
+    ok: false,
+    state: response?.status === 429 ? "requiere-atencion" : "sin-datos",
+    provider,
+    fetchedAt: response?.fetchedAt || new Date().toISOString(),
+    scope,
+    httpStatus: response?.status ?? 0,
   };
 }
 
@@ -163,11 +174,15 @@ export async function fetchTrendingPools() {
 
 export async function fetchPoolCandles(network, pool, timeframeId) {
   const frame = timeframeById(timeframeId);
-  const url = geckoOhlcvUrl(network, pool, timeframeId, 200);
+  // Vía nuestra función (caché 60 s): GeckoTerminal no envía CORS en sus 429 y el navegador lo bloquea.
+  const url = frame && network && pool && OHLCV_NETWORKS.has(network)
+    ? `/api/sonar/pool-ohlcv?network=${encodeURIComponent(network)}&pool=${encodeURIComponent(pool)}&tf=${encodeURIComponent(frame.id)}`
+    : "";
   if (!url) return { ok: false, state: "no-soportado", candles: [], provider: "GeckoTerminal", fetchedAt: new Date().toISOString(), scope: "Velas del pool" };
   return withCache(`ohlcv:${network}:${pool}:${timeframeId}`, async () => {
-    const response = await fetchJson(url, { headers: GECKO_HEADERS, attempts: 2 });
-    const parsed = parseGeckoOhlcv(response.body?.data?.attributes?.ohlcv_list);
+    const direct = `/networks/${encodeURIComponent(network)}/pools/${encodeURIComponent(pool)}/ohlcv/${frame.path}?aggregate=${frame.aggregate}&limit=200&currency=usd`;
+    const { response, list } = await geckoRead(url, direct, (body) => body?.ohlcv_list, (body) => body?.data?.attributes?.ohlcv_list);
+    const parsed = parseGeckoOhlcv(list);
     return {
       ok: response.ok && parsed.candles.length > 0,
       state: !response.ok ? (response.status === 429 ? "requiere-atencion" : "sin-datos") : parsed.candles.length ? "comprobado" : "sin-datos",
@@ -209,8 +224,13 @@ async function coingeckoCandles(coinId, days) {
 async function geckoCoinCandles(coinId, frameId) {
   const pair = COIN_SYMBOL[coinId];
   if (!pair) return { ok: false, state: "no-soportado", candles: [], provider: "GeckoTerminal", fetchedAt: new Date().toISOString() };
-  const response = await fetchJson(`https://api.geckoterminal.com/api/v2/search/pools?query=${encodeURIComponent(pair[0])}`, { headers: GECKO_HEADERS, attempts: 3 });
-  const pools = (response.body?.data || []).map(poolFromSearch).filter((pool) => pool && OHLCV_NETWORKS.has(pool.network));
+  const { response, list } = await geckoRead(
+    `/api/sonar/search?q=${encodeURIComponent(pair[0])}`,
+    `/search/pools?query=${encodeURIComponent(pair[0])}`,
+    (body) => (body?.pools?.pools || []).map((pool) => pool?.address ? { address: String(pool.address), network: pool.network, reserveUsd: finite(pool.reserveUsd) } : null),
+    (body) => (body?.data || []).map(poolFromSearch),
+  );
+  const pools = list.filter((pool) => pool && OHLCV_NETWORKS.has(pool.network));
   pools.sort((a, b) => (b.reserveUsd ?? 0) - (a.reserveUsd ?? 0));
   const pool = pools[0];
   if (!pool) return failed("GeckoTerminal", response, "Pool de referencia");
@@ -316,9 +336,10 @@ export async function fetchPoolTrades(network, pool) {
   return withCache(`trades:${network}:${pool}`, async () => {
     // Vía nuestra función: GeckoTerminal no envía CORS en sus 429 y el navegador lo bloquea.
     const url = `/api/sonar/trades?network=${encodeURIComponent(network)}&pool=${encodeURIComponent(pool)}`;
-    const response = await fetchJson(url, { headers: JSON_HEADERS, attempts: 2 });
+    const direct = `/networks/${encodeURIComponent(network)}/pools/${encodeURIComponent(pool)}/trades`;
+    const { response, list } = await geckoRead(url, direct, (body) => body?.data, (body) => body?.data);
     const rows = [];
-    for (const item of response.body?.data || []) {
+    for (const item of list) {
       const attrs = item?.attributes || {};
       if (!attrs.tx_hash) continue;
       rows.push({

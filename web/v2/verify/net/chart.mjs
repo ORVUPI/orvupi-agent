@@ -3,7 +3,7 @@
  * Solo pinta la serie recibida. Si no hay velas, no crea el gráfico.
  */
 import { CandlestickSeries, ColorType, CrosshairMode, HistogramSeries, createChart } from "/assets/vendor/lightweight-charts-5.0.9.mjs";
-import { POLL_MS } from "./ohlcv.mjs?v=e1bb1dde90";
+import { POLL_MS } from "./ohlcv.mjs?v=e3734c4579";
 
 const UP = "#16c784";
 const DOWN = "#ea3943";
