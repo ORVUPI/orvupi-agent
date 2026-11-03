@@ -308,8 +308,8 @@ html.js .ac-nojs{display:none}
 .ac-row li{margin:0 0 8px;font-size:16px;line-height:24px}
 .ac-row li a{text-decoration:none}
 .ac-row li a:hover{color:var(--ac-pink-ink)}
-.ac-row.cert details{background:var(--ac-pink-2)}
-.ac-row.cert summary::after{content:none}
+.ac-row.cert .ac-cert{border-radius:8px;background:var(--ac-pink-2);border:1px solid var(--ac-line);padding:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:48px}
+.ac-row.cert .ac-cert strong{font:500 20px/28px var(--ac-font);flex:1}
 
 /* Mi aprendizaje y herramientas */
 .ac-main{padding:40px 0 0}

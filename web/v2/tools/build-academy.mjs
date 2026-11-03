@@ -410,7 +410,7 @@ ${picture(route.imagen, "q", "art", false).replace(`${route.imagen}-q.webp`, `${
 <h3>Constancia de progreso</h3><p>No emitimos certificados ni pedimos registro. Tu avance se guarda en este navegador y puedes exportarlo como archivo desde <a href="${BASE}mi-aprendizaje/">Mi aprendizaje</a>.</p>
 <h3>Otras rutas</h3><ul>${otras.map((r) => `<li><a href="${routeUrl(r)}">${esc(r.titulo)}</a></li>`).join("")}</ul></section>
 <section class="ac-prog"><h2>Programa</h2><p class="n">${plural(route.mods.length, "módulo", "módulos")}</p>${rows}
-<div class="ac-row cert"><span class="ck" aria-hidden="true">★</span><details open><summary><strong>Mi aprendizaje</strong><a class="ac-btn pink" href="${BASE}mi-aprendizaje/">Ver mi progreso</a></summary></details></div></section></div></main>`;
+<div class="ac-row cert"><span class="ck" aria-hidden="true">★</span><div class="ac-cert"><strong>Mi aprendizaje</strong><a class="ac-btn pink" href="${BASE}mi-aprendizaje/">Ver mi progreso</a></div></div></section></div></main>`;
     add(`rutas/${route.slug}/index.html`, { path: routeUrl(route), title: `${route.titulo} · ORVUPI Academy`, desc: route.resumen, current: "rutas", body: body2 });
     route.mods.forEach((m, mi) => {
       const qs = preg.modulos[String(m.n)];
