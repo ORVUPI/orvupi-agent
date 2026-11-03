@@ -534,7 +534,7 @@ ${cur.herramientas.map((h) => tcard(h.id === "cuaderno" ? `${BASE}mi-aprendizaje
 }
 
 // Datos para academy.js (sin scripts en línea: JSON aparte)
-const data = { version: 1, unidades: ORDER.map((id) => { const u = UNIT.get(id); return { id, t: u.titulo, u: artUrl(u), m: u.mod.n }; }), modulos: cur.modulos.map((m) => ({ n: m.n, t: m.titulo, u: modUrl(m), r: ROUTE_OF.get(m.n).slug })), rutas: ROUTES.map((r) => ({ slug: r.slug, t: r.titulo, u: routeUrl(r), unidades: rOrder(r) })), practicas: P.map((p) => ({ id: p.id, t: p.titulo, u: pracUrl(p) })), glosario: glos.terminos.map((t) => ({ id: t.id, t: t.termino })) };
+const data = { version: 1, unidades: ORDER.map((id) => { const u = UNIT.get(id); return { id, t: u.titulo, u: artUrl(u), m: u.mod.n }; }), modulos: cur.modulos.map((m) => ({ n: m.n, t: m.titulo, u: modUrl(m), r: ROUTE_OF.get(m.n).slug })), rutas: ROUTES.map((r) => ({ slug: r.slug, t: r.titulo, u: routeUrl(r), unidades: rOrder(r) })), practicas: P.map((p) => ({ id: p.id, t: p.titulo, u: pracUrl(p) })), glosario: glos.terminos.map((t) => ({ id: t.id, t: t.termino })), redes: REDES.map((r) => ({ id: r.id, t: r.nombre, u: redUrl(r.id), unidades: ORDER.filter((id) => UNIT.get(id).redes.includes(r.id)) })) };
 
 // ---------- escritura ----------
 for (const d of ["articulos", "rutas", "glosario", "practicas", "mi-aprendizaje", "redes"]) rmSync(join(OUT, d), { recursive: true, force: true });

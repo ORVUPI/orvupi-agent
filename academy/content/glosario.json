@@ -163,7 +163,7 @@
    "nivel": "Intermedio",
    "tema": "Fundamentos",
    "termino": "Validador",
-   "definicion": "Participante de una red de prueba de participación que propone y vota bloques a cambio de recompensas."
+   "definicion": "Participante de una red de prueba de participación que propone y vota bloques y cobra por ello en la moneda de la red."
   },
   {
    "id": "contrato-inteligente",
@@ -359,7 +359,7 @@
    "nivel": "Intermedio",
    "tema": "Aplicaciones",
    "termino": "Staking",
-   "definicion": "Bloqueo de la moneda nativa para participar en la validación de una red de prueba de participación a cambio de recompensas.",
+   "definicion": "Bloqueo de la moneda nativa para participar en la validación de una red de prueba de participación y cobrar por ello en la moneda de la red.",
    "noIndica": "La recompensa se paga en una moneda cuyo precio puede bajar."
   },
   {
@@ -851,7 +851,7 @@
    "nivel": "Principiante",
    "tema": "Redes",
    "termino": "Halving",
-   "definicion": "Reducción a la mitad de la recompensa por bloque de Bitcoin, que ocurre cada 210 000 bloques, unos cuatro años.",
+   "definicion": "Reducción a la mitad de los bitcoins nuevos que se emiten con cada bloque, que ocurre cada 210 000 bloques, unos cuatro años.",
    "ejemplo": "Tras el halving de abril de 2024, la recompensa pasó de 6,25 a 3,125 BTC por bloque.",
    "noIndica": "El halving cambia la emisión nueva; no fija el precio.",
    "redes": [

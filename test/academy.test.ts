@@ -206,4 +206,31 @@ describe("ORVUPI Academy", () => {
       assert.equal(/\[\[|\]\]/.test(html.replace(/<(script|style)[\s\S]*?<\/\1>/g, "")), false, `markdown sin convertir en ${path.relative(WEB, f)}`);
     }
   });
+
+  test("redes: cada red tiene su página con sus artículos, la lista filtra por red y la ruta Blockchains y redes existe", () => {
+    const datos = JSON.parse(readFileSync(path.join(AC, "datos.json"), "utf8"));
+    const ids = datos.redes.map((r: { id: string }) => r.id);
+    for (const id of ["bitcoin", "ethereum", "capas-2", "bnb-chain", "solana", "avalanche", "polygon", "cardano", "ton", "tron"]) assert.ok(ids.includes(id), id);
+    const indice = readFileSync(path.join(AC, "redes/index.html"), "utf8");
+    const lista = readFileSync(path.join(AC, "articulos/index.html"), "utf8");
+    for (const r of datos.redes) {
+      assert.ok(r.unidades.length > 0, `${r.id} sin artículos`);
+      assert.ok(indice.includes(`href="${r.u}"`), `índice enlaza ${r.id}`);
+      assert.ok(lista.includes(`<option value="${r.id}">`), `filtro ${r.id}`);
+      const html = readFileSync(fileFor(r.u), "utf8");
+      for (const id of r.unidades) {
+        const art = datos.unidades.find((a: { id: string }) => a.id === id);
+        assert.ok(html.includes(`href="${art.u}"`), `${r.id} enlaza ${id}`);
+        assert.ok(lista.includes(`data-unit="${id}"`) && new RegExp(`data-unit="${id}"[^>]*data-redes="[^"]*\\b${r.id}\\b`).test(lista), `${id} etiquetado ${r.id}`);
+      }
+    }
+    assert.ok(datos.rutas.some((r: { slug: string }) => r.slug === "blockchains-y-redes"));
+    // Lo genérico ya no es solo de Solana: los artículos de tokens, comisiones y exploradores citan varias redes.
+    for (const slug of ["monedas-tokens-y-stablecoins", "como-leer-un-explorador", "permisos-de-contratos", "intercambios-y-liquidez"]) {
+      const u = datos.unidades.find((a: { u: string }) => a.u.includes(`/${slug}`));
+      assert.ok(u, slug);
+      const html = readFileSync(fileFor(u.u), "utf8");
+      assert.ok(/Ethereum/.test(html) && /BNB/.test(html) && /Solana/.test(html), slug);
+    }
+  });
 });
