@@ -3,7 +3,7 @@
  * Cadena real: si una fuente falla, se prueba la siguiente. No se rellenan cifras.
  * Coinbase, Kraken, Tronscan, el archivo de Binance Vision y la API de Blockscout con clave no se llaman.
  */
-import { fetchJson, fetchText, withCache } from "./http.mjs?v=00765285e7";
+import { fetchJson, fetchText, withCache } from "./http.mjs?v=e1bb1dde90";
 import {
   BINANCE_INTERVALS,
   binanceKlineUrl,
@@ -14,7 +14,7 @@ import {
   parseGeckoOhlcv,
   stepLabel,
   timeframeById,
-} from "./ohlcv.mjs?v=00765285e7";
+} from "./ohlcv.mjs?v=e1bb1dde90";
 
 const JSON_HEADERS = { accept: "application/json" };
 const GECKO_HEADERS = { accept: "application/json;version=20230203" };
@@ -72,28 +72,30 @@ function poolFromSearch(item) {
 }
 
 async function geckoTrending() {
-  const response = await fetchJson("https://api.geckoterminal.com/api/v2/networks/trending_pools?page=1", { headers: GECKO_HEADERS, attempts: 2 });
-  if (!response.ok || !Array.isArray(response.body?.data)) return { ...failed("GeckoTerminal", response, "Pools en tendencia"), pools: [] };
+  // Vía nuestra función (caché 10 min): GeckoTerminal no envía CORS en sus 429.
+  const response = await fetchJson("/api/sonar/trending", { headers: JSON_HEADERS, attempts: 2 });
+  const list = response.body?.pools?.pools;
+  if (!response.ok || !Array.isArray(list)) return { ...failed("GeckoTerminal", response, "Pools en tendencia"), pools: [] };
+  const fetchedAt = response.body.pools.fetchedAt || response.fetchedAt;
   const pools = [];
-  for (const item of response.body.data) {
-    const attrs = item?.attributes || {};
-    if (!attrs.address || !attrs.name) continue;
+  for (const item of list) {
+    if (!item?.address || !item?.name || !item?.network) continue;
     pools.push({
-      name: String(attrs.name),
-      address: String(attrs.address),
-      network: String(item?.relationships?.network?.data?.id || ""),
-      reserveUsd: finite(attrs.reserve_in_usd),
-      volumeH24: finite(attrs.volume_usd?.h24),
-      changeH24: finite(attrs.price_change_percentage?.h24),
+      name: String(item.name),
+      address: String(item.address),
+      network: String(item.network),
+      reserveUsd: finite(item.reserveUsd),
+      volumeH24: finite(item.volume24h),
+      changeH24: finite(item.ch24h),
       provider: "GeckoTerminal",
-      fetchedAt: response.fetchedAt,
+      fetchedAt,
     });
   }
   return {
     ok: pools.length > 0,
     state: pools.length ? "comprobado" : "sin-datos",
     pools,
-    fetchedAt: response.fetchedAt,
+    fetchedAt,
     provider: "GeckoTerminal",
     scope: "Pools en tendencia",
   };

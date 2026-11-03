@@ -1077,6 +1077,7 @@ test("Tracer: operaciones del pool pasan por /api/sonar/trades", async () => {
   const market = readFileSync(new URL("../../web/v2/verify/net/market.mjs", import.meta.url), "utf8");
   assert.doesNotMatch(market, /api\.geckoterminal\.com[^`"]*\/trades/);
   assert.match(market, /\/api\/sonar\/trades\?network=/);
+  assert.doesNotMatch(market, /api\.geckoterminal\.com\/api\/v2\/networks\/trending_pools/);
   assert.equal(tradeNetworkOk("solana"), true);
   assert.equal(tradeNetworkOk("x/../y"), false);
   assert.equal(poolAddressOk("0x" + "a".repeat(40)), true);
