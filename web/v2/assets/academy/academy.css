@@ -469,3 +469,20 @@ body.ac .ac-gh img{width:100%;max-width:599px;height:318px;object-fit:contain}
 .ac-c-rutas .ac-grid-l{gap:12px}
 @media (min-width:768px) and (max-width:1199px){.ac-pg-lista .ac-c-n{padding:0 16px}.ac-pg-lista .ac-grid-l{gap:16px}}
 @media (min-width:1200px){.ac-c-rutas{max-width:1134px;padding:0;margin-left:max(0px,calc(50% - 544px))}}
+
+/* Redes (H2b) */
+.ac-lcard .tags{flex-wrap:wrap;right:16px}
+.ac-redes-l{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:16px 0 0}
+.ac-redes-l>span{font-size:14px;color:var(--ac-muted);margin-right:4px}
+a.ac-chip.ac-red{text-decoration:none;font-weight:500;height:28px;border-radius:8px}
+a.ac-chip.ac-red:hover{background:var(--ac-pink-ink);color:#fff}
+.ac-redes-nav{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px}
+.ac-redes-nav a{display:flex;flex-direction:column;gap:4px;padding:16px;border-radius:16px;background:#fff;border:1px solid var(--ac-line);text-decoration:none}
+.ac-redes-nav a:hover{border-color:var(--ac-pink)}
+.ac-redes-nav strong{font:700 18px/26px var(--ac-round)}
+.ac-redes-nav span{font-size:14px;line-height:20px;color:var(--ac-muted)}
+.ac-redes-nav.big{grid-template-columns:repeat(auto-fill,minmax(280px,1fr));margin-bottom:40px}
+.ac-redes-nav .n{margin-top:auto;padding-top:8px;font-weight:500}
+.ac-tcards.ac-tcards-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));padding-top:0}
+.ac-tcards.ac-tcards-g a{width:auto}
+@media (max-width:640px){.ac-redes-nav{grid-template-columns:repeat(2,1fr)}.ac-redes-nav.big{grid-template-columns:1fr}}

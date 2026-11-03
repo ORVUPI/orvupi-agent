@@ -96,15 +96,15 @@
   var flt = $("form[data-ac-filter]"), list = $("[data-ac-list]");
   if (flt && list) {
     var cards = $$(".ac-lcard", list), count = $("#art-n"), none = $("[data-ac-none]"), sort = $("[data-ac-sort]");
-    ["q", "modulo", "nivel"].forEach(function (k) { var v = params.get(k); if (v && flt.elements[k]) flt.elements[k].value = v; });
+    ["q", "modulo", "nivel", "red"].forEach(function (k) { var v = params.get(k); if (v && flt.elements[k]) flt.elements[k].value = v; });
     var apply = function () {
-      var q = norm(flt.elements.q.value.trim()), m = flt.elements.modulo.value, n = flt.elements.nivel.value, shown = 0;
+      var q = norm(flt.elements.q.value.trim()), m = flt.elements.modulo.value, n = flt.elements.nivel.value, r = flt.elements.red ? flt.elements.red.value : "", shown = 0;
       cards.forEach(function (c) {
-        var ok = (!q || norm(c.getAttribute("data-search")).indexOf(q) !== -1) && (!m || c.getAttribute("data-mod") === m) && (!n || c.getAttribute("data-nivel") === n);
+        var ok = (!q || norm(c.getAttribute("data-search")).indexOf(q) !== -1) && (!m || c.getAttribute("data-mod") === m) && (!n || c.getAttribute("data-nivel") === n) && (!r || (" " + (c.getAttribute("data-redes") || "") + " ").indexOf(" " + r + " ") !== -1);
         c.hidden = !ok; if (ok) shown++;
       });
       say(count, "Artículos (" + shown + ")"); if (none) none.hidden = shown !== 0;
-      var u = new URLSearchParams(); if (q) u.set("q", flt.elements.q.value.trim()); if (m) u.set("modulo", m); if (n) u.set("nivel", n);
+      var u = new URLSearchParams(); if (q) u.set("q", flt.elements.q.value.trim()); if (m) u.set("modulo", m); if (n) u.set("nivel", n); if (r) u.set("red", r);
       history.replaceState(null, "", location.pathname + (u.toString() ? "?" + u : ""));
     };
     flt.addEventListener("input", apply); flt.addEventListener("change", apply);

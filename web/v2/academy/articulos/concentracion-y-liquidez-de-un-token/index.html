@@ -17,9 +17,9 @@
 <link rel="icon" href="/assets/academy/academy.svg" type="image/svg+xml">
 <link rel="icon" href="/academy/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="/academy/icon-192.png">
-<link rel="stylesheet" href="/assets/academy/academy.css?v=5bd8a178b0">
+<link rel="stylesheet" href="/assets/academy/academy.css?v=4b04bcb4b0">
 <script src="/assets/shell.js?v=ba3a858465"></script>
-<script src="/assets/academy/academy.js?v=51014aefd5" defer></script>
+<script src="/assets/academy/academy.js?v=f89dfe18ae" defer></script>
 </head>
 <body class="ac">
 <a class="ac-skip" href="#contenido">Saltar al contenido</a>
@@ -50,17 +50,18 @@
 <img class="ac-art-img" src="/assets/academy/img/430-w.webp" width="768" height="432" alt="Ilustración de ORVUPI: Liquidez como profundidad">
 <nav aria-label="Ruta de navegación"><ol class="ac-crumbs"><li><a href="/academy/">Inicio</a></li><li><a href="/academy/articulos/">Artículos</a></li><li><span aria-current="page">Concentración y liquidez de un token</span></li></ol></nav>
 <h1>Concentración y liquidez de un token</h1>
-<div class="ac-art-meta"><span class="ac-level lv-i">Intermedio</span><span>Actualizado 03-11-2026</span><span><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> 2 min</span><span class="ac-done" data-unit-done="OA-031">✓ Leído</span></div>
+<div class="ac-art-meta"><span class="ac-level lv-i">Intermedio</span><span>Actualizado 03-11-2026</span><span><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> 3 min</span><span class="ac-done" data-unit-done="OA-031">✓ Leído</span></div>
+<p class="ac-redes-l"><span>Redes</span><a class="ac-chip ac-red" href="/academy/redes/solana/">Solana</a><a class="ac-chip ac-red" href="/academy/redes/ethereum/">Ethereum</a><a class="ac-chip ac-red" href="/academy/redes/bnb-chain/">BNB Chain</a></p>
 <article class="ac-article" data-article="OA-031">
 <section class="claves"><h2 id="aspectos-clave">Aspectos clave</h2><ul><li>La concentración se mide con las cuentas con tokens, apartando antes las cuentas técnicas como pools y curvas.</li><li>Muchas cuentas pequeñas pueden ser de la misma persona; la cifra de titulares no cuenta personas.</li><li>Liquidez quemada o bloqueada significa que esa parte no se puede retirar, no que el token sea seguro.</li><li>Anota siempre la fecha de la lectura: la concentración y la liquidez cambian con cada operación.</li></ul></section>
 <h2 id="quien-tiene-los-tokens">Quién tiene los tokens</h2>
-<p>En Solana, cada saldo de un token vive en una cuenta de token. Un explorador puede listar esas cuentas ordenadas por saldo. Esa lista es la base para hablar de <strong>concentración</strong>: qué parte del <a class="term" href="/academy/glosario/suministro/">suministro</a> tienen las cuentas más grandes.</p>
+<p>En Solana, cada saldo de un token vive en una cuenta de token. En las redes EVM, como Ethereum o BNB Smart Chain, es el propio contrato del token el que guarda el saldo de cada dirección. En los dos casos, un explorador puede listar los saldos ordenados de mayor a menor. Esa lista es la base para hablar de <strong>concentración</strong>: qué parte del <a class="term" href="/academy/glosario/suministro/">suministro</a> tienen las cuentas más grandes.</p>
 <p>Antes de calcular nada, hay que apartar las <a class="term" href="/academy/glosario/cuenta-tecnica/">cuentas técnicas</a>: el pool de un intercambio, la curva de lanzamiento, un contrato de bloqueo o el saldo de una plataforma. Esas cuentas no son personas que puedan vender por su cuenta de la misma forma.</p>
 <h2 id="lo-que-cuenta-y-lo-que-no">Lo que cuenta y lo que no</h2>
 <ul><li>Un <a class="term" href="/academy/glosario/titular/">titular</a> es una cuenta con saldo, no una persona. Una persona puede repartir sus tokens en cien cuentas.</li><li>Un <a class="term" href="/academy/glosario/censo/">censo</a> completo de cuentas lleva tiempo. Si solo se leyeron las veinte mayores, la ficha debe decirlo.</li><li>Que las diez mayores cuentas tengan el 40 % no es bueno ni malo por sí solo. Es un dato con fecha que te dice cuánto depende el precio de pocas decisiones.</li></ul>
 <h2 id="liquidez-cuanto-se-puede-vender">Liquidez: cuánto se puede vender</h2>
 <p>La <a class="term" href="/academy/glosario/liquidez/">liquidez</a> de un pool es lo que hay a ambos lados del par. Cuanto más pequeño es el pool respecto a lo que quieres vender, peor precio obtienes.</p>
-<p>Quien crea un pool recibe unos tokens que representan su parte. Con ellos puede retirar la liquidez. Por eso a veces se anuncia:</p>
+<p>Quien crea un pool recibe unos tokens que representan su parte (en Uniswap v2 o PancakeSwap v2, tokens LP; en Uniswap v3, un NFT por posición). Con ellos puede retirar la liquidez. Por eso a veces se anuncia:</p>
 <ul><li><strong>Liquidez quemada.</strong> Esos tokens se enviaron a una dirección de la que nadie puede sacarlos.</li><li><strong>Liquidez bloqueada.</strong> Están en un contrato que no deja retirarlos hasta una fecha.</li></ul>
 <p>Eso cierra una puerta: retirar esa liquidez. No cierra otras. El creador puede seguir vendiendo tokens que tenga en otras cuentas, puede quedar una <a class="term" href="/academy/glosario/autoridad-emision/">autoridad de emisión</a> activa o el bloqueo puede vencer. Un <a class="term" href="/academy/glosario/rug-pull/">rug pull</a> no siempre consiste en retirar la liquidez.</p>
 <h2 id="como-anotarlo">Cómo anotarlo</h2>

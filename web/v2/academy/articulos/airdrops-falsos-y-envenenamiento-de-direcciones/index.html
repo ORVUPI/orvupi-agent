@@ -17,9 +17,9 @@
 <link rel="icon" href="/assets/academy/academy.svg" type="image/svg+xml">
 <link rel="icon" href="/academy/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="/academy/icon-192.png">
-<link rel="stylesheet" href="/assets/academy/academy.css?v=5bd8a178b0">
+<link rel="stylesheet" href="/assets/academy/academy.css?v=4b04bcb4b0">
 <script src="/assets/shell.js?v=ba3a858465"></script>
-<script src="/assets/academy/academy.js?v=51014aefd5" defer></script>
+<script src="/assets/academy/academy.js?v=f89dfe18ae" defer></script>
 </head>
 <body class="ac">
 <a class="ac-skip" href="#contenido">Saltar al contenido</a>
@@ -51,10 +51,11 @@
 <nav aria-label="Ruta de navegación"><ol class="ac-crumbs"><li><a href="/academy/">Inicio</a></li><li><a href="/academy/articulos/">Artículos</a></li><li><span aria-current="page">Airdrops falsos, envenenamiento de direcciones y tokens trampa</span></li></ol></nav>
 <h1>Airdrops falsos, envenenamiento de direcciones y tokens trampa</h1>
 <div class="ac-art-meta"><span class="ac-level lv-i">Intermedio</span><span>Actualizado 03-11-2026</span><span><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> 2 min</span><span class="ac-done" data-unit-done="OA-040">✓ Leído</span></div>
+<p class="ac-redes-l"><span>Redes</span><a class="ac-chip ac-red" href="/academy/redes/ethereum/">Ethereum</a><a class="ac-chip ac-red" href="/academy/redes/tron/">Tron</a><a class="ac-chip ac-red" href="/academy/redes/solana/">Solana</a></p>
 <article class="ac-article" data-article="OA-040">
 <section class="claves"><h2 id="aspectos-clave">Aspectos clave</h2><ul><li>Un token que aparece sin pedirlo con una web para «reclamar» es casi siempre un cebo.</li><li>El envenenamiento de direcciones deja en tu historial una dirección parecida para que la copies por error.</li><li>Comprueba la dirección completa, no solo el principio y el final.</li><li>Un token trampa se puede comprar pero no vender; una venta simulada puede no bastar para descartarlo.</li></ul></section>
 <h2 id="el-regalo-que-no-pediste">El regalo que no pediste</h2>
-<p>Un <a class="term" href="/academy/glosario/airdrop/">airdrop</a> legítimo existe: proyectos que reparten tokens a ciertos usuarios. El falso imita esa idea. Aparece en tu wallet un token o un NFT con un nombre como «Recompensa: visita esta web». La web pide conectar la wallet y firmar para «reclamar». Lo que firmas entrega tus tokens, como en <a href="/academy/articulos/firmar-con-cuidado-en-solana/">Firmar con cuidado en Solana</a>.</p>
+<p>Un <a class="term" href="/academy/glosario/airdrop/">airdrop</a> legítimo existe: proyectos que reparten tokens a ciertos usuarios. El falso imita esa idea. Aparece en tu wallet un token o un NFT con un nombre como «Recompensa: visita esta web». La web pide conectar la wallet y firmar para «reclamar». Lo que firmas entrega tus tokens, como en <a href="/academy/articulos/firmar-con-cuidado-en-solana/">Firmar con cuidado en Solana</a>, o concede un permiso, como en <a href="/academy/articulos/permisos-de-contratos/">Permisos de contratos</a>.</p>
 <p>Qué hacer: no visites la web, no intentes venderlo y no interactúes con él. Muchas wallets permiten ocultarlo.</p>
 <h2 id="una-direccion-casi-igual">Una dirección casi igual</h2>
 <p>El <a class="term" href="/academy/glosario/envenenamiento-de-direcciones/">envenenamiento de direcciones</a> aprovecha una costumbre: copiar la dirección desde el historial.</p>
@@ -62,6 +63,7 @@
 <p>Las direcciones de este ejemplo están recortadas a propósito: no son direcciones reales.</p>
 <p>Cómo evitarlo:</p>
 <ul><li>Guarda las <a class="term" href="/academy/glosario/direccion-cuenta/">direcciones</a> que usas en la libreta de la wallet y cópialas desde ahí.</li><li>Compara la dirección completa o, al menos, varios tramos del medio.</li><li>Para importes grandes, haz antes un envío pequeño y confirma con la otra persona.</li></ul>
+<p>El ataque se ve en todas las redes, sobre todo donde se mueven muchas monedas estables con comisiones bajas, como Tron o las redes EVM. En Ethereum y redes compatibles hay una variante: transferencias de cero unidades, o de un token falso con el mismo símbolo, que aparecen en tu historial sin que tú hayas hecho nada.</p>
 <h2 id="tokens-que-no-se-pueden-vender">Tokens que no se pueden vender</h2>
 <p>Un <a class="term" href="/academy/glosario/token-trampa/">token trampa</a> deja comprar pero bloquea o grava las ventas. En redes EVM suele hacerse con código en el contrato del token. En Solana puede lograrse, por ejemplo, con una <a class="term" href="/academy/glosario/autoridad-congelacion/">autoridad de congelación</a> activa o con extensiones de Token-2022 como un gancho de transferencia o una comisión alta, explicadas en <a href="/academy/articulos/tokens-spl-y-token-2022/">Tokens SPL y Token-2022</a>.</p>
 <p>Señales:</p>

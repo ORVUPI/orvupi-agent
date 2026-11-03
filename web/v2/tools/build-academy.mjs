@@ -66,14 +66,20 @@ function frontMatter(src) {
   return { data, body: m[2] };
 }
 const TERM = new Map(glos.terminos.map((t) => [t.id, t]));
+// Redes: etiquetas para filtrar artículos y términos por blockchain (curriculo.json → redes).
+const REDES = cur.redes || [];
+const RED = new Map(REDES.map((r) => [r.id, r]));
 const units = cur.unidades.map((u) => {
   const { data, body } = frontMatter(readFileSync(join(CONTENT, "unidades", `${u.id}.md`), "utf8"));
   const mod = cur.modulos.find((m) => m.unidades.includes(u.id));
   const terminos = (data.terminos || "").split(",").map((s) => s.trim()).filter(Boolean);
   const fuentes = (data.fuentes || []).map((f) => { const i = f.lastIndexOf(" | "); return { texto: f.slice(0, i), url: f.slice(i + 3) }; });
   const lab = (data.laboratorio || "").split(",").map((s) => s.trim()).filter(Boolean);
-  return { ...u, titulo: data.titulo, resumen: data.resumen, nivel: data.nivel, terminos, claves: data.claves || [], fuentes, lab, body, mod };
+  const redes = (data.redes || "").split(",").map((s) => s.trim()).filter(Boolean);
+  for (const r of redes) if (!RED.has(r)) throw new Error(`red desconocida en ${u.id}: ${r}`);
+  return { ...u, titulo: data.titulo, resumen: data.resumen, nivel: data.nivel, terminos, claves: data.claves || [], fuentes, lab, redes, body, mod };
 });
+for (const t of glos.terminos) for (const r of t.redes || []) if (!RED.has(r)) throw new Error(`red desconocida en el término ${t.id}: ${r}`);
 const UNIT = new Map(units.map((u) => [u.id, u]));
 // Rutas: la primera es cur.ruta (módulos sin campo «ruta»); el resto, cur.rutas_extra (módulos con «ruta»: slug).
 // Los números de módulo son globales y únicos: son la clave del progreso guardado (M{n}).
@@ -92,6 +98,9 @@ const termUrl = (id) => `${BASE}glosario/${termSlug(id)}/`;
 const routeUrl = (r) => `${BASE}rutas/${r.slug}/`;
 const modUrl = (m) => `${routeUrl(ROUTE_OF.get(m.n))}${m.slug}/`;
 const pracUrl = (p) => `${BASE}practicas/${p.slug}/`;
+const redUrl = (id) => `${BASE}redes/${id}/`;
+const redTag = (u) => (u.redes.length === 1 ? RED.get(u.redes[0]).nombre : u.redes.length ? "Varias redes" : "");
+const redLinks = (ids) => ids.map((r) => `<a class="ac-chip ac-red" href="${redUrl(r)}">${esc(RED.get(r).nombre)}</a>`).join("");
 
 function inline(s) {
   let out = esc(s);
@@ -258,7 +267,7 @@ const crumbs = (items) => `<nav aria-label="Ruta de navegación"><ol class="ac-c
 const chips = (u) => `<div class="ac-chips"><span class="ac-chip lv ${lvClass(u.nivel)}">${esc(u.nivel)}</span><span class="ac-chip">${esc(u.mod.titulo)}</span></div>`;
 const meta = (u) => `<p class="ac-meta">${fecha(ACT)} · ${I.clock} ${minutes(u)} min <span class="ac-done">· ✓ Leído</span></p>`;
 const card = (u) => `<a class="ac-card" href="${artUrl(u)}" data-unit="${u.id}">${picture(u.imagen, "w")}<div class="b">${chips(u)}<h3>${esc(u.titulo)}</h3>${meta(u)}</div></a>`;
-const lcard = (u) => `<a class="ac-lcard" href="${artUrl(u)}" data-unit="${u.id}" data-mod="${u.mod.n}" data-nivel="${esc(u.nivel)}" data-orden="${ORDER.indexOf(u.id)}" data-search="${esc((u.titulo + " " + u.resumen + " " + u.terminos.map((t) => TERM.get(t)?.termino || "").join(" ")))}">${picture(u.imagen, "w")}<span class="tags"><span>${esc(u.mod.titulo)}</span></span><span class="b"><h3>${esc(u.titulo)}</h3><span class="foot"><span class="ac-chip ${lvClass(u.nivel)}">${esc(u.nivel)}</span><span>${fecha(ACT)}</span><span>${I.clock} ${minutes(u)} min</span><span class="ac-done">✓ Leído</span></span></span></a>`;
+const lcard = (u) => `<a class="ac-lcard" href="${artUrl(u)}" data-unit="${u.id}" data-mod="${u.mod.n}" data-nivel="${esc(u.nivel)}" data-redes="${u.redes.join(" ")}" data-orden="${ORDER.indexOf(u.id)}" data-search="${esc((u.titulo + " " + u.resumen + " " + u.terminos.map((t) => TERM.get(t)?.termino || "").join(" ") + " " + u.redes.map((r) => RED.get(r).nombre).join(" ")))}">${picture(u.imagen, "w")}<span class="tags"><span>${esc(u.mod.titulo)}</span>${redTag(u) ? `<span>${esc(redTag(u))}</span>` : ""}</span><span class="b"><h3>${esc(u.titulo)}</h3><span class="foot"><span class="ac-chip ${lvClass(u.nivel)}">${esc(u.nivel)}</span><span>${fecha(ACT)}</span><span>${I.clock} ${minutes(u)} min</span><span class="ac-done">✓ Leído</span></span></span></a>`;
 
 // ---------- actividades ----------
 function quizBlock(id, q, heading = "Comprueba lo que has aprendido") {
@@ -302,6 +311,7 @@ const route = cur.ruta;
   const nuevos = `<section class="ac-sec ac-c" aria-labelledby="s-ult"><div class="ac-sec-h"><h2 id="s-ult">Prácticas</h2><a href="${BASE}practicas/">Ver todo ›</a></div><div class="ac-grid3">${P.slice(0, 3).map((p) => `<a class="ac-card" href="${pracUrl(p)}" data-practica="${p.id}">${picture(p.imagen, "w")}<div class="b"><div class="ac-chips"><span class="ac-chip ${lvClass(p.nivel)}">${esc(p.nivel)}</span><span class="ac-chip">Práctica</span></div><h3>${esc(p.titulo.replace(/^Práctica: /, ""))}</h3><p class="ac-meta">${esc(p.resumen)}</p></div></a>`).join("")}</div></section>`;
   const t1 = TERM.get("frase-de-recuperacion") || glos.terminos[0]; const t2 = TERM.get("permiso") || glos.terminos[1];
   const gl = (t) => `<a href="${termUrl(t.id)}"><span class="q" aria-hidden="true">“</span><h3>${esc(t.termino)}</h3><p>${esc(t.definicion)}</p><span class="ac-btn">Leer la definición</span></a>`;
+  const porRed = REDES.length ? `<section class="ac-sec ac-c" aria-labelledby="s-redes"><div class="ac-sec-h"><h2 id="s-redes">Explora por red</h2><a href="${BASE}redes/">Ver todo ›</a></div><nav class="ac-redes-nav" aria-label="Redes">${REDES.map((r) => `<a href="${redUrl(r.id)}"><strong>${esc(r.nombre)}</strong><span>${plural(units.filter((u) => u.redes.includes(r.id)).length, "artículo", "artículos")}</span></a>`).join("")}</nav></section>` : "";
   const body = `<main id="contenido">
 <section class="ac-hero"><div class="ac-c"><div class="ac-hero-g">
 <div class="ac-hero-t"><h1>ORVUPI Academy</h1><p>Aprende cripto con calma, gratis y en español</p><p class="sub">${units.length} artículos, ${ROUTES.length} rutas, ${cur.modulos.length} módulos, ${P.length} prácticas y ${glos.terminos.length} términos. Sin cuenta, sin wallet y sin pagos.</p></div>
@@ -313,6 +323,7 @@ const route = cur.ruta;
 <section class="ac-track" aria-labelledby="s-ruta">${picture(route.imagen, "w")}<div><h2 id="s-ruta">${esc(route.titulo)}</h2><p>${esc(route.resumen)}</p><a class="ac-btn pink mid" href="${BASE}rutas/${route.slug}/">Empezar la ruta</a></div></section>
 </div>
 ${masRutas}
+${porRed}
 ${secciones}
 ${nuevos}
 <section class="ac-sec ac-c" aria-labelledby="s-glo"><div class="ac-sec-h"><h2 id="s-glo">Glosario</h2><a href="${BASE}glosario/">Ver todo ›</a></div>
@@ -330,14 +341,15 @@ ${nuevos}
 <div class="ac-filters"><div class="ac-c-n"><form data-ac-filter role="search" aria-label="Filtrar artículos">
 <label for="f-q">Buscar</label><input id="f-q" name="q" type="search" placeholder="Palabra o término">
 <label for="f-m">Módulo</label><select id="f-m" name="modulo"><option value="">Todos</option>${mods}</select>
-<label for="f-n">Nivel</label><select id="f-n" name="nivel"><option value="">Todos</option><option>Principiante</option><option>Intermedio</option></select>
+<label for="f-n">Nivel</label><select id="f-n" name="nivel"><option value="">Todos</option><option>Principiante</option><option>Intermedio</option><option>Avanzado</option></select>
+<label for="f-r">Red</label><select id="f-r" name="red"><option value="">Todas</option>${REDES.map((r) => `<option value="${r.id}">${esc(r.nombre)}</option>`).join("")}</select>
 <button type="reset" class="ac-btn ghost">Limpiar filtros</button>
 </form></div></div>
 <div class="ac-c-n"><div class="ac-list-h"><h2 id="art-n" aria-live="polite">Artículos (${units.length})</h2><div class="ac-sort"><label class="ac-sr" for="f-o">Ordenar</label><select id="f-o" data-ac-sort><option value="ruta">Orden de las rutas</option><option value="az">De la A a la Z</option></select></div></div>
 <div class="ac-grid-l" data-ac-list>${ORDER.map((id) => lcard(UNIT.get(id))).join("")}</div>
 <p class="ac-empty" hidden data-ac-none>Ningún artículo coincide. Prueba con otra palabra o <a href="${BASE}glosario/">busca en el glosario</a>.</p>
 </div></main>`;
-  add("articulos/index.html", { path: `${BASE}articulos/`, title: "Artículos · ORVUPI Academy", desc: "Todos los artículos de ORVUPI Academy: fundamentos, seguridad, DeFi, trading básico, memecoins, Solana, estafas y regulación en la UE.", current: "articulos", promo: true, body });
+  add("articulos/index.html", { path: `${BASE}articulos/`, title: "Artículos · ORVUPI Academy", desc: `Todos los artículos de ORVUPI Academy por ruta, módulo, nivel y red: ${ROUTES.map((r) => r.titulo).join(", ")}.`, current: "articulos", promo: true, body });
 }
 
 // Artículo
@@ -369,6 +381,7 @@ ${picture(u.imagen, "w", "ac-art-img", false)}
 ${crumbs([[BASE, "Inicio"], [`${BASE}articulos/`, "Artículos"], ["", u.titulo]])}
 <h1>${esc(u.titulo)}</h1>
 <div class="ac-art-meta"><span class="ac-level ${lvClass(u.nivel)}">${esc(u.nivel)}</span><span>Actualizado ${fecha(ACT)}</span><span>${I.clock} ${minutes(u)} min</span><span class="ac-done" data-unit-done="${u.id}">✓ Leído</span></div>
+${u.redes.length ? `<p class="ac-redes-l"><span>Redes</span>${redLinks(u.redes)}</p>` : ""}
 <article class="ac-article" data-article="${u.id}">
 <section class="claves"><h2 id="aspectos-clave">Aspectos clave</h2><ul>${u.claves.map((c) => `<li>${inline(c)}</li>`).join("")}</ul></section>
 ${html}
@@ -429,6 +442,24 @@ ${qs.map((q, i) => `<fieldset class="ac-quiz-q"><legend>${i + 1}. ${inline(q.pre
   }
 }
 
+// Redes
+if (REDES.length) {
+  const count = (id) => units.filter((u) => u.redes.includes(id)).length;
+  const body = `<main id="contenido"><div class="ac-head"><div class="ac-c-n">${crumbs([[BASE, "Inicio"], ["", "Redes"]])}<h1>Blockchains y redes</h1><p>${REDES.length} etiquetas para encontrar artículos y términos de cada red. Empieza por la ruta <a href="${routeUrl(ROUTES.find((r) => r.slug === "blockchains-y-redes") || ROUTES[0])}">Blockchains y redes</a> si quieres verlas en orden.</p></div></div>
+<div class="ac-c-n"><div class="ac-list-h"><h2>Redes (${REDES.length})</h2></div><nav class="ac-redes-nav big" aria-label="Redes">${REDES.map((r) => `<a href="${redUrl(r.id)}"><strong>${esc(r.nombre)}</strong><span>${esc(r.resumen)}</span><span class="n">${plural(count(r.id), "artículo", "artículos")} · ${plural(glos.terminos.filter((t) => (t.redes || []).includes(r.id)).length, "término", "términos")}</span></a>`).join("")}</nav></div></main>`;
+  add("redes/index.html", { path: `${BASE}redes/`, title: "Redes · ORVUPI Academy", desc: `Artículos y términos por blockchain: ${REDES.map((r) => r.nombre).join(", ")}.`, current: "articulos", promo: true, body });
+  for (const r of REDES) {
+    const us = ORDER.map((id) => UNIT.get(id)).filter((u) => u.redes.includes(r.id));
+    const ts = glos.terminos.filter((t) => (t.redes || []).includes(r.id)).sort((a, b) => a.termino.localeCompare(b.termino, "es"));
+    const otras = REDES.filter((x) => x.id !== r.id);
+    const body2 = `<main id="contenido"><div class="ac-head"><div class="ac-c-n">${crumbs([[BASE, "Inicio"], [`${BASE}redes/`, "Redes"], ["", r.nombre]])}<h1>${esc(r.nombre)}</h1><p>${esc(r.resumen)}</p><p><a href="${BASE}articulos/?red=${r.id}">Filtrar la lista de artículos por ${esc(r.nombre)}</a></p></div></div>
+<div class="ac-c-n"><div class="ac-list-h"><h2>Artículos (${us.length})</h2></div><div class="ac-grid-l">${us.map(lcard).join("")}</div>
+${ts.length ? `<section class="ac-sec" aria-labelledby="h-rt"><div class="ac-list-h"><h2 id="h-rt">Términos (${ts.length})</h2></div><div class="ac-tcards ac-tcards-g">${ts.map((x) => `<a href="${termUrl(x.id)}"><strong>${esc(x.termino)}</strong><span>${esc(x.definicion)}</span></a>`).join("")}</div></section>` : ""}
+<section class="ac-sec" aria-labelledby="h-or"><div class="ac-list-h"><h2 id="h-or">Otras redes</h2></div><p class="ac-redes-l">${redLinks(otras.map((x) => x.id))}</p></section></div></main>`;
+    add(`redes/${r.id}/index.html`, { path: redUrl(r.id), title: `${r.nombre} · Redes · ORVUPI Academy`, desc: `Artículos y términos de ORVUPI Academy sobre ${r.nombre}. ${r.resumen}`, current: "articulos", promo: true, body: body2 });
+  }
+}
+
 // Glosario
 {
   const sorted = [...glos.terminos].sort((a, b) => a.termino.localeCompare(b.termino, "es"));
@@ -445,7 +476,7 @@ ${qs.map((q, i) => `<fieldset class="ac-quiz-q"><legend>${i + 1}. ${inline(q.pre
     const same = glos.terminos.filter((x) => x.tema === t.tema && x.id !== t.id).slice(0, 3);
     const body2 = `<main id="contenido" class="ac-term"><div class="ac-term-g"><div>
 ${crumbs([[BASE, "Inicio"], [`${BASE}glosario/`, "Glosario"], ["", t.termino]])}
-<h1>${esc(t.termino)}</h1><p><span class="ac-level ${lvClass(t.nivel)}">${esc(t.nivel)}</span></p>
+<h1>${esc(t.termino)}</h1><p><span class="ac-level ${lvClass(t.nivel)}">${esc(t.nivel)}</span></p>${(t.redes || []).length ? `<p class="ac-redes-l"><span>Redes</span>${redLinks(t.redes)}</p>` : ""}
 <div class="body"><p>${inline(t.definicion)}</p>${t.verify ? `<h2>En las fichas de Verify</h2><p>${inline(t.verify)}</p>` : ""}<h2>Ejemplo</h2><p>${inline(t.ejemplo || "Dato no disponible")}</p><h2>Lo que no indica</h2><p>${inline(t.noIndica || "Dato no disponible")}</p>
 ${usedIn.length ? `<h2>Aparece en</h2><ul>${usedIn.map((u) => `<li><a href="${artUrl(u)}">${esc(u.titulo)}</a></li>`).join("")}</ul>` : ""}</div></div>
 <aside class="ac-tcards" aria-label="Términos relacionados">${same.map((x) => `<a href="${termUrl(x.id)}"><strong>${esc(x.termino)}</strong><span>${esc(x.definicion)}</span></a>`).join("")}</aside></div></main>`;
@@ -506,7 +537,7 @@ ${cur.herramientas.map((h) => tcard(h.id === "cuaderno" ? `${BASE}mi-aprendizaje
 const data = { version: 1, unidades: ORDER.map((id) => { const u = UNIT.get(id); return { id, t: u.titulo, u: artUrl(u), m: u.mod.n }; }), modulos: cur.modulos.map((m) => ({ n: m.n, t: m.titulo, u: modUrl(m), r: ROUTE_OF.get(m.n).slug })), rutas: ROUTES.map((r) => ({ slug: r.slug, t: r.titulo, u: routeUrl(r), unidades: rOrder(r) })), practicas: P.map((p) => ({ id: p.id, t: p.titulo, u: pracUrl(p) })), glosario: glos.terminos.map((t) => ({ id: t.id, t: t.termino })) };
 
 // ---------- escritura ----------
-for (const d of ["articulos", "rutas", "glosario", "practicas", "mi-aprendizaje"]) rmSync(join(OUT, d), { recursive: true, force: true });
+for (const d of ["articulos", "rutas", "glosario", "practicas", "mi-aprendizaje", "redes"]) rmSync(join(OUT, d), { recursive: true, force: true });
 for (const [rel, html] of pages) {
   if (/<script>(?!\s*<\/script>)|<script(?![^>]*\b(src|type="application\/json")=)[^>]*>|\son[a-z]+="|style="/.test(html)) throw new Error(`HTML con script o estilo en línea: ${rel}`);
   write(rel, html);
