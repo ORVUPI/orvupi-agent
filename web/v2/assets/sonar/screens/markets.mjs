@@ -1,10 +1,10 @@
-import { api, qs } from "../api.mjs";
-import { t } from "../i18n.mjs";
-import { applyLocalFilters, coverageNote, marketTabs, paintRanking, sortRows } from "../rows.mjs";
-import { snapshot, update } from "../store.mjs";
-import { el, emptyBlock, errorBlock, pager, setChildren, skeleton, sourceLine } from "../ui.mjs";
-import { compact, money, plain, show } from "../format.mjs";
-import { pctNode } from "../ui.mjs";
+import { api, qs } from "../api.mjs?v=82434ce211";
+import { t } from "../i18n.mjs?v=82434ce211";
+import { applyLocalFilters, coverageNote, marketTabs, paintRanking, sortRows } from "../rows.mjs?v=82434ce211";
+import { snapshot, update } from "../store.mjs?v=82434ce211";
+import { el, emptyBlock, errorBlock, pager, setChildren, skeleton, sourceLine } from "../ui.mjs?v=82434ce211";
+import { compact, money, plain, show } from "../format.mjs?v=82434ce211";
+import { pctNode } from "../ui.mjs?v=82434ce211";
 
 const PRESETS = [
   ["stablecoins", "stable"],

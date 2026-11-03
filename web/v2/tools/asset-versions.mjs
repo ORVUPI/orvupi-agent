@@ -20,4 +20,22 @@ const mods=[];(function walk(d){for(const n of readdirSync(d)){const p=join(d,n)
 for(const f of mods){const s=readFileSync(f,'utf8');
  const t=s.replace(/(["'`])(\/assets\/[^"'`?#]+\.css)(?:\?v=[\w]*)?\1/g,(m,q,p)=>existsSync(join(root,p))?`${q}${p}?v=${h(p.slice(1))}${q}`:m);
  if(t!==s){stale++;if(!check)writeFileSync(f,t);}}
+// Módulos ES (/assets/**/*.mjs y verify/net/*.mjs). Antes iban sin versión y, con importaciones
+// circulares y carga diferida, el navegador podía mezclar módulos de dos despliegues y Sonar
+// Mercados no arrancaba. Todo el grafo lleva una única versión V (hash del contenido de todos
+// los módulos sin sus propios ?v=), así un despliegue nuevo cambia todas las URL a la vez.
+const graph=[];(function walk(d){if(!existsSync(d))return;for(const n of readdirSync(d)){const p=join(d,n);if(statSync(p).isDirectory())walk(p);else if(n.endsWith('.mjs')&&!n.endsWith('.test.mjs'))graph.push(p);}})(join(root,'assets'));
+{const net=join(root,'verify','net');if(existsSync(net))for(const n of readdirSync(net))if(n.endsWith('.mjs')&&!n.endsWith('.test.mjs'))graph.push(join(net,n));}
+const spec=/(["'])(\.{1,2}\/[^"'?#\s]+\.m?js)(?:\?v=[\w]*)?\1/g;
+const norm=s=>s.replace(spec,(m,q,p)=>`${q}${p}${q}`).replace(/(\/assets\/[^"'?#\s]+\.mjs)\?v=[\w]*/g,'$1');
+const gh=createHash('sha256');const deps=new Set();
+for(const f of graph.sort()){const s=readFileSync(f,'utf8');gh.update(f.slice(root.length)+'\n'+norm(s));for(const m of s.matchAll(spec)){const d=join(dirname(f),m[2]);if(m[2].endsWith('.js')&&existsSync(d))deps.add(d);}}
+for(const d of [...deps].sort())gh.update(d.slice(root.length)+'\n'+readFileSync(d,'utf8'));
+const V=gh.digest('hex').slice(0,10);
+for(const f of graph){const s=readFileSync(f,'utf8');
+ const t=s.replace(spec,(m,q,p)=>existsSync(join(dirname(f),p))?`${q}${p}?v=${V}${q}`:m);
+ if(t!==s){stale++;if(!check)writeFileSync(f,t);}}
+for(const f of pages){const s=readFileSync(f,'utf8');
+ const t=s.replace(/(src=")(\/assets\/[^"?#]+\.mjs)(?:\?v=[\w]*)?"/g,(m,a,p)=>existsSync(join(root,p))?`${a}${p}?v=${V}"`:m);
+ if(t!==s){stale++;if(!check)writeFileSync(f,t);}}
 console.log(`${pages.length} páginas, ${stale} ${check?'desactualizadas':'actualizadas'}`);if(check&&stale)process.exit(1);

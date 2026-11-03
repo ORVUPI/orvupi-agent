@@ -3,7 +3,7 @@
  * Cadena real: si una fuente falla, se prueba la siguiente. No se rellenan cifras.
  * Coinbase, Kraken, Tronscan, el archivo de Binance Vision y la API de Blockscout con clave no se llaman.
  */
-import { fetchJson, fetchText, withCache } from "./http.mjs";
+import { fetchJson, fetchText, withCache } from "./http.mjs?v=82434ce211";
 import {
   BINANCE_INTERVALS,
   binanceKlineUrl,
@@ -14,7 +14,7 @@ import {
   parseGeckoOhlcv,
   stepLabel,
   timeframeById,
-} from "./ohlcv.mjs";
+} from "./ohlcv.mjs?v=82434ce211";
 
 const JSON_HEADERS = { accept: "application/json" };
 const GECKO_HEADERS = { accept: "application/json;version=20230203" };

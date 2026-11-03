@@ -26,42 +26,96 @@ function readLocal() {
 }
 
 function writeLocal(data) {
-  localStorage.setItem(KEY, JSON.stringify(data));
+  try {
+    localStorage.setItem(KEY, JSON.stringify(data));
+  } catch {
+    /* cuota llena o almacenamiento bloqueado: queda la copia en IndexedDB */
+  }
+}
+
+// La base "orvupi-sonar" la comparten este almacén ("kv") y la caché de lecturas
+// del verificador ("cache"). Si una de las dos partes la creó antes sin el almacén
+// de la otra, se abre una versión nueva que añade los que falten.
+const STORES = ["kv", "cache"];
+let dbPromise = null;
+
+function openDb(version) {
+  return new Promise((resolve) => {
+    let request;
+    try {
+      request = version ? indexedDB.open(DB, version) : indexedDB.open(DB);
+    } catch {
+      resolve(null);
+      return;
+    }
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      for (const name of STORES) if (!db.objectStoreNames.contains(name)) db.createObjectStore(name);
+    };
+    request.onsuccess = () => {
+      const db = request.result;
+      db.onversionchange = () => {
+        db.close();
+        dbPromise = null;
+      };
+      resolve(db);
+    };
+    request.onerror = () => resolve(null);
+    request.onblocked = () => resolve(null);
+  });
+}
+
+function withTimeout(promise, ms, fallback) {
+  return Promise.race([promise, new Promise((resolve) => setTimeout(() => resolve(fallback), ms))]);
 }
 
 function idb() {
-  return new Promise((resolve) => {
-    if (!globalThis.indexedDB) return resolve(null);
-    const request = indexedDB.open(DB, 1);
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains("kv")) db.createObjectStore("kv");
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => resolve(null);
-  });
+  if (!globalThis.indexedDB) return Promise.resolve(null);
+  if (!dbPromise) {
+    dbPromise = withTimeout((async () => {
+      const db = await openDb(0);
+      if (!db) return null;
+      if (STORES.every((name) => db.objectStoreNames.contains(name))) return db;
+      const next = db.version + 1;
+      db.close();
+      return openDb(next);
+    })(), 2500, null).then((db) => {
+      if (!db) dbPromise = null;
+      return db;
+    });
+  }
+  return dbPromise;
 }
 
 async function readIdb() {
   const db = await idb();
   if (!db) return null;
-  return new Promise((resolve) => {
-    const tx = db.transaction("kv", "readonly");
-    const request = tx.objectStore("kv").get(KEY);
-    request.onsuccess = () => resolve(request.result || null);
-    request.onerror = () => resolve(null);
-  });
+  return withTimeout(new Promise((resolve) => {
+    try {
+      const tx = db.transaction("kv", "readonly");
+      const request = tx.objectStore("kv").get(KEY);
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => resolve(null);
+    } catch {
+      resolve(null);
+    }
+  }), 2500, null);
 }
 
 async function writeIdb(data) {
   const db = await idb();
   if (!db) return;
-  await new Promise((resolve) => {
-    const tx = db.transaction("kv", "readwrite");
-    tx.objectStore("kv").put(data, KEY);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => resolve();
-  });
+  await withTimeout(new Promise((resolve) => {
+    try {
+      const tx = db.transaction("kv", "readwrite");
+      tx.objectStore("kv").put(data, KEY);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+      tx.onabort = () => resolve();
+    } catch {
+      resolve();
+    }
+  }), 2500, null);
 }
 
 let state = empty();
@@ -71,12 +125,18 @@ export function loadStore() {
   if (!ready) {
     ready = (async () => {
       const local = readLocal();
-      const remote = await readIdb();
+      let remote = null;
+      try {
+        remote = await readIdb();
+      } catch {
+        remote = null;
+      }
       const localAt = Date.parse(local?.savedAt || 0);
       const remoteAt = Date.parse(remote?.savedAt || 0);
       state = remoteAt > localAt ? { ...empty(), ...remote } : local || remote || empty();
-      if (!state.lists.length) state.lists = empty().lists;
-      if (!state.portfolios.length) state.portfolios = empty().portfolios;
+      if (!state || typeof state !== "object") state = empty();
+      if (!Array.isArray(state.lists) || !state.lists.length) state.lists = empty().lists;
+      if (!Array.isArray(state.portfolios) || !state.portfolios.length) state.portfolios = empty().portfolios;
       writeLocal(state);
       return state;
     })();

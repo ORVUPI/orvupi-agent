@@ -62,21 +62,44 @@ export function cacheSet(key, value) {
   return entry;
 }
 
+// Misma base que el almacén de Sonar Mercados ("kv"): se crean los dos almacenes
+// y, si la base ya existía sin alguno, se abre una versión nueva que lo añade.
+const DB_STORES = ["kv", "cache"];
 let dbPromise;
+function openDb(version) {
+  return new Promise((resolve) => {
+    try {
+      const request = version ? indexedDB.open("orvupi-sonar", version) : indexedDB.open("orvupi-sonar");
+      request.onupgradeneeded = () => {
+        for (const name of DB_STORES) if (!request.result.objectStoreNames.contains(name)) request.result.createObjectStore(name);
+      };
+      request.onsuccess = () => {
+        const db = request.result;
+        db.onversionchange = () => {
+          db.close();
+          dbPromise = undefined;
+        };
+        resolve(db);
+      };
+      request.onerror = () => resolve(null);
+      request.onblocked = () => resolve(null);
+    } catch {
+      resolve(null);
+    }
+  });
+}
 function idb() {
   if (!globalThis.indexedDB) return null;
   if (!dbPromise) {
-    dbPromise = new Promise((resolve) => {
-      try {
-        const request = indexedDB.open("orvupi-sonar", 1);
-        request.onupgradeneeded = () => {
-          if (!request.result.objectStoreNames.contains("cache")) request.result.createObjectStore("cache");
-        };
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => resolve(null);
-      } catch {
-        resolve(null);
-      }
+    dbPromise = Promise.race([(async () => {
+      const db = await openDb(0);
+      if (!db || DB_STORES.every((name) => db.objectStoreNames.contains(name))) return db;
+      const next = db.version + 1;
+      db.close();
+      return openDb(next);
+    })(), new Promise((resolve) => setTimeout(() => resolve(null), 2500))]).then((db) => {
+      if (!db) dbPromise = undefined;
+      return db;
     });
   }
   return dbPromise;
