@@ -102,13 +102,13 @@
   "rutas_extra": [
     {
       "slug": "trading-basico",
-      "titulo": "Trading básico, sin consejo de inversión",
+      "titulo": "Trading básico",
       "nivel": "Principiante",
       "imagen": 277,
-      "resumen": "Cómo funcionan un libro de órdenes, una vela y el apalancamiento, y qué sesgos y promesas conviene reconocer. No te dice qué comprar ni cuándo.",
+      "resumen": "Cómo funcionan un libro de órdenes, una vela y el apalancamiento, y qué sesgos y promesas conviene reconocer.",
       "descripcion": [
         "La ruta explica la mecánica de un mercado de criptoactivos: quién pone los precios, qué ocurre cuando envías una orden y cómo se lee un gráfico. Usa ejemplos inventados con cifras redondas.",
-        "No es un curso para ganar dinero. No recomienda activos, estrategias ni momentos de entrada. Su objetivo es que entiendas lo que estás viendo y reconozcas cuándo te prometen algo que nadie puede garantizar."
+        "Su objetivo es que entiendas lo que ves en una plataforma de intercambio y reconozcas cuándo te prometen algo que nadie puede garantizar."
       ],
       "aprenderas": [
         "Qué son el precio de compra, el de venta y el diferencial, y por qué cambian.",
