@@ -882,6 +882,166 @@
      "porque": "Ni siquiera la autorización avala los activos."
     }
    ]
+  },
+  "OA-045": {
+   "pregunta": "Tu wallet de Bitcoin muestra 0,8 BTC formados por 40 UTXO pequeñas. ¿Qué pasa si las gastas todas en un pago?",
+   "opciones": [
+    {
+     "texto": "La transacción ocupa más bytes y paga más comisión",
+     "correcta": true,
+     "porque": "La comisión depende del tamaño en bytes virtuales, y cada entrada añade tamaño."
+    },
+    {
+     "texto": "La comisión es la misma, porque depende del importe",
+     "correcta": false,
+     "porque": "En Bitcoin la comisión no depende del importe, sino del tamaño."
+    },
+    {
+     "texto": "No se puede: solo se gasta una UTXO por transacción",
+     "correcta": false,
+     "porque": "Una transacción puede tener muchas entradas."
+    }
+   ]
+  },
+  "OA-046": {
+   "pregunta": "Una transacción en Ethereum se queda sin gas a mitad de ejecución. ¿Qué ocurre?",
+   "opciones": [
+    {
+     "texto": "Falla, sus cambios se deshacen y el gas consumido se paga",
+     "correcta": true,
+     "porque": "El trabajo de los validadores ya se hizo; por eso se cobra aunque falle."
+    },
+    {
+     "texto": "Se completa y el resto del gas se cobra después",
+     "correcta": false,
+     "porque": "Sin gas suficiente la ejecución se detiene."
+    },
+    {
+     "texto": "Falla y no se cobra nada",
+     "correcta": false,
+     "porque": "El gas consumido se paga igualmente."
+    }
+   ]
+  },
+  "OA-047": {
+   "pregunta": "Retiras ETH de OP Mainnet a Ethereum por el puente nativo. ¿Por qué puede tardar unos siete días?",
+   "opciones": [
+    {
+     "texto": "Porque un rollup optimista deja un plazo para presentar pruebas de fraude",
+     "correcta": true,
+     "porque": "La retirada espera a que acabe el plazo de impugnación."
+    },
+    {
+     "texto": "Porque el secuenciador revisa cada retirada a mano",
+     "correcta": false,
+     "porque": "El plazo lo marca el diseño del rollup, no una revisión manual."
+    },
+    {
+     "texto": "Porque Ethereum solo produce bloques una vez al día",
+     "correcta": false,
+     "porque": "Ethereum produce un bloque cada 12 segundos."
+    }
+   ]
+  },
+  "OA-048": {
+   "pregunta": "Tienes la misma dirección 0x en Ethereum y en BNB Smart Chain. ¿Qué es cierto?",
+   "opciones": [
+    {
+     "texto": "Controlas las dos, pero los saldos y los tokens de cada red son independientes",
+     "correcta": true,
+     "porque": "La clave es la misma; los registros son distintos."
+    },
+    {
+     "texto": "Tu saldo de ETH aparece también en BSC",
+     "correcta": false,
+     "porque": "Cada red lleva su propio registro."
+    },
+    {
+     "texto": "Un USDT BEP-20 y un USDT ERC-20 son el mismo contrato",
+     "correcta": false,
+     "porque": "Son contratos distintos en redes distintas."
+    }
+   ]
+  },
+  "OA-049": {
+   "pregunta": "¿Qué identifica de forma única a un token en Solana?",
+   "opciones": [
+    {
+     "texto": "La dirección de su mint",
+     "correcta": true,
+     "porque": "El nombre y el símbolo se pueden copiar; la dirección del mint no."
+    },
+    {
+     "texto": "Su símbolo",
+     "correcta": false,
+     "porque": "Varios tokens pueden usar el mismo símbolo."
+    },
+    {
+     "texto": "La dirección de un contrato 0x",
+     "correcta": false,
+     "porque": "Eso es propio de las redes EVM; Solana usa direcciones base58."
+    }
+   ]
+  },
+  "OA-050": {
+   "pregunta": "Una plataforma te ofrece depositar USDT por «TRC-20». ¿En qué red se hará el envío?",
+   "opciones": [
+    {
+     "texto": "En Tron",
+     "correcta": true,
+     "porque": "TRC-20 es el estándar de token de Tron; sus direcciones empiezan por T."
+    },
+    {
+     "texto": "En TON",
+     "correcta": false,
+     "porque": "Los tokens de TON son jettons."
+    },
+    {
+     "texto": "En cualquier red compatible con la EVM",
+     "correcta": false,
+     "porque": "Tron no usa direcciones 0x."
+    }
+   ]
+  },
+  "OA-051": {
+   "pregunta": "Recibes en otra red un token «envuelto» a cambio de un activo bloqueado en origen. ¿De qué depende su valor?",
+   "opciones": [
+    {
+     "texto": "Del respaldo que mantiene el puente o el custodio en la red de origen",
+     "correcta": true,
+     "porque": "Un token envuelto es una promesa sobre lo bloqueado."
+    },
+    {
+     "texto": "Solo de la red de destino",
+     "correcta": false,
+     "porque": "La red de destino no ve lo que hay en origen."
+    },
+    {
+     "texto": "De nada: es idéntico al original",
+     "correcta": false,
+     "porque": "Es una representación, no el original."
+    }
+   ]
+  },
+  "OA-052": {
+   "pregunta": "Un anuncio dice que una red procesa 100 000 transacciones por segundo. ¿Qué haces antes de compararla?",
+   "opciones": [
+    {
+     "texto": "Buscar lo medido en la red real, con fuente y fecha",
+     "correcta": true,
+     "porque": "Las cifras de marketing suelen ser máximos teóricos."
+    },
+    {
+     "texto": "Aceptar la cifra, porque es la oficial",
+     "correcta": false,
+     "porque": "Una cifra anunciada no es una medición."
+    },
+    {
+     "texto": "Compararla con el precio de su moneda",
+     "correcta": false,
+     "porque": "El precio no mide el rendimiento de la red."
+    }
+   ]
   }
  },
  "actividades": {
@@ -2133,6 +2293,250 @@
      "texto": "Comprobar que los servicios autorizados incluyen lo que te ofrecen",
      "categoria": "¿Está autorizada?",
      "porque": "Una autorización cubre servicios concretos."
+    }
+   ]
+  },
+  "OA-045": {
+   "tipo": "clasificar",
+   "enunciado": "Clasifica dónde queda registrado cada dato.",
+   "categorias": [
+    "En la cadena de Bitcoin",
+    "Solo dentro del canal de Lightning"
+   ],
+   "items": [
+    {
+     "texto": "La transacción que abre el canal",
+     "categoria": "En la cadena de Bitcoin",
+     "porque": "Bloquea bitcoin bajo una firma conjunta."
+    },
+    {
+     "texto": "Cada pago entre las dos partes del canal",
+     "categoria": "Solo dentro del canal de Lightning",
+     "porque": "Se actualiza el reparto firmado, sin bloque."
+    },
+    {
+     "texto": "La transacción que cierra el canal",
+     "categoria": "En la cadena de Bitcoin",
+     "porque": "Publica el último reparto."
+    },
+    {
+     "texto": "Una factura que empieza por lnbc",
+     "categoria": "Solo dentro del canal de Lightning",
+     "porque": "Es una petición de pago de Lightning, no una dirección."
+    }
+   ]
+  },
+  "OA-046": {
+   "tipo": "clasificar",
+   "enunciado": "Clasifica cada concepto de Ethereum.",
+   "categorias": [
+    "Ejecución (EVM y gas)",
+    "Consenso (validadores)"
+   ],
+   "items": [
+    {
+     "texto": "Una transferencia simple de ETH usa 21 000 unidades",
+     "categoria": "Ejecución (EVM y gas)",
+     "porque": "Es el coste en gas de la operación."
+    },
+    {
+     "texto": "Depositar 32 ETH para activar un validador",
+     "categoria": "Consenso (validadores)",
+     "porque": "Es el requisito para validar."
+    },
+    {
+     "texto": "La tarifa base que se quema",
+     "categoria": "Ejecución (EVM y gas)",
+     "porque": "Forma parte del precio del gas."
+    },
+    {
+     "texto": "Ranuras de 12 segundos",
+     "categoria": "Consenso (validadores)",
+     "porque": "Marcan el turno de cada proponente."
+    }
+   ]
+  },
+  "OA-047": {
+   "tipo": "ordenar",
+   "enunciado": "Ordena una retirada inventada de un rollup optimista a Ethereum por el puente nativo.",
+   "categorias": [
+    "Paso 1",
+    "Paso 2",
+    "Paso 3",
+    "Paso 4"
+   ],
+   "items": [
+    {
+     "texto": "Inicias la retirada en la capa 2",
+     "categoria": "Paso 1",
+     "porque": "La transacción queda en un lote del secuenciador."
+    },
+    {
+     "texto": "El lote se publica en Ethereum",
+     "categoria": "Paso 2",
+     "porque": "Los datos quedan disponibles para comprobarlos."
+    },
+    {
+     "texto": "Pasa el plazo de impugnación sin pruebas de fraude",
+     "categoria": "Paso 3",
+     "porque": "Unos siete días en Arbitrum One y OP Mainnet."
+    },
+    {
+     "texto": "Reclamas los fondos en Ethereum",
+     "categoria": "Paso 4",
+     "porque": "Ya se pueden liberar en la capa 1."
+    }
+   ]
+  },
+  "OA-048": {
+   "tipo": "clasificar",
+   "enunciado": "Clasifica cada rasgo de BNB Smart Chain.",
+   "categorias": [
+    "Lo comparte con Ethereum",
+    "Es propio de BSC"
+   ],
+   "items": [
+    {
+     "texto": "Direcciones 0x de 40 caracteres hexadecimales",
+     "categoria": "Lo comparte con Ethereum",
+     "porque": "Ambas son redes EVM."
+    },
+    {
+     "texto": "El gas se paga en BNB",
+     "categoria": "Es propio de BSC",
+     "porque": "En Ethereum se paga en ETH."
+    },
+    {
+     "texto": "Permisos de tokens con approve",
+     "categoria": "Lo comparte con Ethereum",
+     "porque": "BEP-20 replica ERC-20."
+    },
+    {
+     "texto": "Identificador de red 56",
+     "categoria": "Es propio de BSC",
+     "porque": "Ethereum es la red 1."
+    }
+   ]
+  },
+  "OA-049": {
+   "tipo": "clasificar",
+   "enunciado": "Clasifica cada rasgo según la red en la que se cumple.",
+   "categorias": [
+    "Solana",
+    "Redes EVM"
+   ],
+   "items": [
+    {
+     "texto": "Un token es un mint del programa de tokens",
+     "categoria": "Solana",
+     "porque": "Todos comparten el mismo programa."
+    },
+    {
+     "texto": "Un token es un contrato con su propio código",
+     "categoria": "Redes EVM",
+     "porque": "Cada ERC-20 o BEP-20 es un contrato."
+    },
+    {
+     "texto": "La comisión base es de 5000 lamports por firma",
+     "categoria": "Solana",
+     "porque": "No depende del gas usado."
+    },
+    {
+     "texto": "La comisión es gas usado por precio del gas",
+     "categoria": "Redes EVM",
+     "porque": "Se mide en gwei."
+    }
+   ]
+  },
+  "OA-050": {
+   "tipo": "clasificar",
+   "enunciado": "Asigna cada rasgo a su red.",
+   "categorias": [
+    "Cardano",
+    "TON",
+    "Tron"
+   ],
+   "items": [
+    {
+     "texto": "Modelo eUTXO y tokens nativos sin contrato",
+     "categoria": "Cardano",
+     "porque": "Amplía las UTXO de Bitcoin."
+    },
+    {
+     "texto": "Tokens llamados jettons y wallets dentro de Telegram",
+     "categoria": "TON",
+     "porque": "Es el ecosistema de Toncoin."
+    },
+    {
+     "texto": "Comisiones con energía y ancho de banda",
+     "categoria": "Tron",
+     "porque": "Se obtienen al poner TRX en staking."
+    },
+    {
+     "texto": "27 superrepresentantes producen los bloques",
+     "categoria": "Tron",
+     "porque": "Es su prueba de participación delegada."
+    }
+   ]
+  },
+  "OA-051": {
+   "tipo": "clasificar",
+   "enunciado": "Decide qué modelo de puente usa cada movimiento inventado.",
+   "categorias": [
+    "Bloquear y emitir una copia",
+    "Quemar y emitir el original",
+    "Intercambio contra liquidez"
+   ],
+   "items": [
+    {
+     "texto": "Un custodio guarda bitcoins y emite su equivalente en Ethereum",
+     "categoria": "Bloquear y emitir una copia",
+     "porque": "Es el modelo de WBTC."
+    },
+    {
+     "texto": "El emisor de una moneda estable la quema en una red y la emite en otra",
+     "categoria": "Quemar y emitir el original",
+     "porque": "Es lo que hace CCTP con USDC."
+    },
+    {
+     "texto": "Un proveedor te paga en destino a cambio de tu depósito en origen",
+     "categoria": "Intercambio contra liquidez",
+     "porque": "Recibes un token equivalente que ya estaba en destino."
+    },
+    {
+     "texto": "Un contrato bloquea tu ETH y emite una versión en otra red",
+     "categoria": "Bloquear y emitir una copia",
+     "porque": "Recibes un token envuelto."
+    }
+   ]
+  },
+  "OA-052": {
+   "tipo": "clasificar",
+   "enunciado": "Clasifica cada afirmación inventada sobre una red.",
+   "categorias": [
+    "Se puede comprobar con una fuente",
+    "Es un eslogan"
+   ],
+   "items": [
+    {
+     "texto": "«Es la red más rápida del mundo»",
+     "categoria": "Es un eslogan",
+     "porque": "No dice qué se midió ni cuándo."
+    },
+    {
+     "texto": "«Según L2BEAT, a fecha de hoy esta capa 2 está en Stage 1»",
+     "categoria": "Se puede comprobar con una fuente",
+     "porque": "Tiene fuente y fecha."
+    },
+    {
+     "texto": "«Nunca será cara»",
+     "categoria": "Es un eslogan",
+     "porque": "Las comisiones cambian con la demanda."
+    },
+    {
+     "texto": "«Su explorador muestra hoy una comisión media de una cifra concreta»",
+     "categoria": "Se puede comprobar con una fuente",
+     "porque": "Es un dato fechado de una fuente."
     }
    ]
   }
@@ -3476,6 +3880,250 @@
       "texto": "Que la autoridad recomienda sus productos",
       "correcta": false,
       "porque": "La autorización permite operar; no es una opinión sobre sus productos."
+     }
+    ]
+   }
+  ],
+  "12": [
+   {
+    "pregunta": "¿Cómo lleva Bitcoin la cuenta de lo que tiene cada uno?",
+    "opciones": [
+     {
+      "texto": "Con salidas sin gastar (UTXO) que se consumen enteras",
+      "correcta": true,
+      "porque": "Tu saldo es la suma de las UTXO que puedes firmar."
+     },
+     {
+      "texto": "Con un saldo por dirección, como un banco",
+      "correcta": false,
+      "porque": "Ese es el modelo de cuentas de Ethereum."
+     },
+     {
+      "texto": "Con un contrato que guarda todos los saldos",
+      "correcta": false,
+      "porque": "Bitcoin no tiene contratos generales."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Cada cuántos bloques se reduce a la mitad la recompensa de Bitcoin?",
+    "opciones": [
+     {
+      "texto": "Cada 210 000 bloques",
+      "correcta": true,
+      "porque": "Es el halving; tras el de abril de 2024 quedó en 3,125 BTC."
+     },
+     {
+      "texto": "Cada 2016 bloques",
+      "correcta": false,
+      "porque": "Ese es el intervalo del ajuste de dificultad."
+     },
+     {
+      "texto": "Nunca cambia",
+      "correcta": false,
+      "porque": "La emisión está programada para disminuir."
+     }
+    ]
+   },
+   {
+    "pregunta": "En Ethereum, ¿qué parte de la comisión se quema?",
+    "opciones": [
+     {
+      "texto": "La tarifa base",
+      "correcta": true,
+      "porque": "Lo introdujo EIP-1559 en agosto de 2021; la propina va al validador."
+     },
+     {
+      "texto": "La propina",
+      "correcta": false,
+      "porque": "La propina la recibe el validador."
+     },
+     {
+      "texto": "Ninguna",
+      "correcta": false,
+      "porque": "La tarifa base se quema."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué necesita un validador de Ethereum para activarse?",
+    "opciones": [
+     {
+      "texto": "Un depósito de 32 ETH",
+      "correcta": true,
+      "porque": "Es el requisito de la prueba de participación."
+     },
+     {
+      "texto": "Un equipo de minería",
+      "correcta": false,
+      "porque": "Ethereum dejó la minería en septiembre de 2022."
+     },
+     {
+      "texto": "Permiso de la Fundación Ethereum",
+      "correcta": false,
+      "porque": "No hace falta permiso de nadie."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué diferencia un zk-rollup de un rollup optimista?",
+    "opciones": [
+     {
+      "texto": "El zk-rollup adjunta una prueba de validez a cada lote",
+      "correcta": true,
+      "porque": "El optimista supone que el lote es correcto y deja un plazo para impugnarlo."
+     },
+     {
+      "texto": "El zk-rollup no publica nada en Ethereum",
+      "correcta": false,
+      "porque": "Los dos publican en Ethereum."
+     },
+     {
+      "texto": "El optimista no tiene secuenciador",
+      "correcta": false,
+      "porque": "Ambos suelen tenerlo."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué estándar de token usa BNB Smart Chain?",
+    "opciones": [
+     {
+      "texto": "BEP-20, que replica ERC-20",
+      "correcta": true,
+      "porque": "Tiene las mismas funciones y permisos con approve."
+     },
+     {
+      "texto": "SPL",
+      "correcta": false,
+      "porque": "Es el de Solana."
+     },
+     {
+      "texto": "TRC-20",
+      "correcta": false,
+      "porque": "Es el de Tron."
+     }
+    ]
+   }
+  ],
+  "13": [
+   {
+    "pregunta": "¿Qué es la prueba de historia de Solana?",
+    "opciones": [
+     {
+      "texto": "Una secuencia de hashes que sirve de reloj verificable",
+      "correcta": true,
+      "porque": "Ordena los eventos antes del consenso, que es de participación."
+     },
+     {
+      "texto": "Un registro de todas las wallets antiguas",
+      "correcta": false,
+      "porque": "No guarda wallets; ordena eventos."
+     },
+     {
+      "texto": "Un sustituto completo del consenso",
+      "correcta": false,
+      "porque": "Solana usa además prueba de participación."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué cadena de Avalanche ejecuta los contratos compatibles con la EVM?",
+    "opciones": [
+     {
+      "texto": "La C-Chain",
+      "correcta": true,
+      "porque": "Usa direcciones 0x y tokens ERC-20."
+     },
+     {
+      "texto": "La X-Chain",
+      "correcta": false,
+      "porque": "Sirve para intercambiar activos."
+     },
+     {
+      "texto": "La P-Chain",
+      "correcta": false,
+      "porque": "Coordina a los validadores."
+     }
+    ]
+   },
+   {
+    "pregunta": "Desde septiembre de 2024, ¿qué token se usa para el gas en Polygon PoS?",
+    "opciones": [
+     {
+      "texto": "POL",
+      "correcta": true,
+      "porque": "Sustituyó a MATIC."
+     },
+     {
+      "texto": "MATIC, sin cambios",
+      "correcta": false,
+      "porque": "MATIC se migró a POL."
+     },
+     {
+      "texto": "ETH",
+      "correcta": false,
+      "porque": "Polygon PoS tiene su propio token."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué distingue a los tokens nativos de Cardano?",
+    "opciones": [
+     {
+      "texto": "Viven en el libro mayor sin necesitar un contrato por token",
+      "correcta": true,
+      "porque": "Se identifican por un identificador de política."
+     },
+     {
+      "texto": "Son contratos ERC-20",
+      "correcta": false,
+      "porque": "Cardano no usa la EVM."
+     },
+     {
+      "texto": "Solo existen dentro de Telegram",
+      "correcta": false,
+      "porque": "Eso confunde Cardano con TON."
+     }
+    ]
+   },
+   {
+    "pregunta": "En un puente con firmantes externos, ¿qué es lo más importante revisar?",
+    "opciones": [
+     {
+      "texto": "Quiénes firman y cuántas firmas hacen falta",
+      "correcta": true,
+      "porque": "Si suficientes firmantes se ponen de acuerdo, o se roban sus claves, pueden autorizar retiradas."
+     },
+     {
+      "texto": "El color del logotipo",
+      "correcta": false,
+      "porque": "No dice nada de la seguridad."
+     },
+     {
+      "texto": "El precio de la moneda de destino",
+      "correcta": false,
+      "porque": "No dice quién verifica."
+     }
+    ]
+   },
+   {
+    "pregunta": "Comparas el coste de dos redes. ¿Qué dato necesitas anotar con cada cifra?",
+    "opciones": [
+     {
+      "texto": "La fuente y la fecha de la consulta",
+      "correcta": true,
+      "porque": "Las comisiones cambian con la demanda."
+     },
+     {
+      "texto": "Nada: las comisiones son fijas",
+      "correcta": false,
+      "porque": "Cambian en todas las redes."
+     },
+     {
+      "texto": "El precio máximo histórico de su moneda",
+      "correcta": false,
+      "porque": "No mide el coste de usar la red."
      }
     ]
    }

@@ -35,7 +35,7 @@
    "tema": "Redes",
    "termino": "Red",
    "definicion": "Conjunto de nodos que comparten las mismas reglas y el mismo registro. Cada red tiene su moneda nativa, su formato de direcciones y sus comisiones.",
-   "ejemplo": "Ethereum, Solana y Bitcoin son redes distintas; un envío en una no aparece en otra."
+   "ejemplo": "Bitcoin, Ethereum, BNB Smart Chain, Solana y Tron son redes distintas; un envío en una no aparece en otra."
   },
   {
    "id": "wallet",
@@ -100,7 +100,7 @@
    "tema": "Fundamentos",
    "termino": "Dirección de cuenta",
    "definicion": "Identificador público al que se envían fondos en una red. Cada red tiene su formato.",
-   "ejemplo": "Las direcciones de Ethereum empiezan por 0x y tienen 40 caracteres hexadecimales.",
+   "ejemplo": "En Ethereum y otras redes EVM empiezan por 0x y tienen 40 caracteres hexadecimales; en Bitcoin suelen empezar por bc1; en Solana están en base58; en Tron empiezan por T.",
    "noIndica": "Una dirección no dice quién es la persona que la controla."
   },
   {
@@ -124,28 +124,39 @@
    "tema": "Transacciones",
    "termino": "Comisión",
    "definicion": "Pago que hace quien firma una transacción para que la red la procese. Depende de la red y de la demanda, y se paga aunque la operación falle.",
-   "ejemplo": "En Ethereum la comisión se mide en gas; en Solana hay una comisión base por firma y una prioridad opcional."
+   "ejemplo": "En Bitcoin se mide en satoshis por byte virtual; en Ethereum y BNB Smart Chain, en gas; en Solana hay una comisión base por firma y una prioridad opcional; en Tron se paga con energía y ancho de banda."
   },
   {
    "id": "mineria",
    "nivel": "Principiante",
    "tema": "Fundamentos",
    "termino": "Minería",
-   "definicion": "Proceso de una red de prueba de trabajo en el que los mineros gastan energía de cálculo para proponer bloques y reciben a cambio nuevas monedas y comisiones."
+   "definicion": "Proceso de una red de prueba de trabajo en el que los mineros gastan energía de cálculo para proponer bloques y reciben a cambio nuevas monedas y comisiones.",
+   "redes": [
+    "bitcoin"
+   ]
   },
   {
    "id": "prueba-de-trabajo",
    "nivel": "Principiante",
    "tema": "Fundamentos",
    "termino": "Prueba de trabajo",
-   "definicion": "Mecanismo de consenso en el que proponer un bloque exige resolver un cálculo costoso. Bitcoin lo utiliza."
+   "definicion": "Mecanismo de consenso en el que proponer un bloque exige resolver un cálculo costoso. Bitcoin lo utiliza.",
+   "redes": [
+    "bitcoin"
+   ]
   },
   {
    "id": "prueba-de-participacion",
    "nivel": "Principiante",
    "tema": "Fundamentos",
    "termino": "Prueba de participación",
-   "definicion": "Mecanismo de consenso en el que los validadores bloquean monedas como garantía y pueden perder parte si actúan mal. Ethereum lo usa desde 2022."
+   "definicion": "Mecanismo de consenso en el que los validadores bloquean monedas como garantía y pueden perder parte si actúan mal. Ethereum lo usa desde 2022.",
+   "redes": [
+    "ethereum",
+    "solana",
+    "cardano"
+   ]
   },
   {
    "id": "validador",
@@ -161,7 +172,12 @@
    "termino": "Contrato inteligente",
    "definicion": "Programa guardado en una blockchain que se ejecuta cuando alguien lo llama con una transacción. En Solana se llama programa.",
    "ejemplo": "Un AMM es un contrato que guarda dos saldos y aplica una fórmula de precio.",
-   "noIndica": "Que un contrato se ejecute de forma automática no significa que su código sea seguro."
+   "noIndica": "Que un contrato se ejecute de forma automática no significa que su código sea seguro.",
+   "redes": [
+    "ethereum",
+    "bnb-chain",
+    "solana"
+   ]
   },
   {
    "id": "moneda-nativa",
@@ -169,7 +185,7 @@
    "tema": "Redes",
    "termino": "Moneda nativa",
    "definicion": "Moneda propia de una red, con la que se pagan las comisiones.",
-   "ejemplo": "ETH en Ethereum y SOL en Solana."
+   "ejemplo": "BTC en Bitcoin, ETH en Ethereum y en sus capas 2, BNB en BNB Smart Chain, SOL en Solana y TRX en Tron."
   },
   {
    "id": "token",
@@ -177,7 +193,7 @@
    "tema": "Redes",
    "termino": "Token",
    "definicion": "Activo creado sobre una red ya existente mediante un contrato o un programa, distinto de la moneda nativa.",
-   "ejemplo": "En Solana cada token tiene su propia cuenta de mint.",
+   "ejemplo": "En Ethereum un token es un contrato ERC-20; en BNB Smart Chain, BEP-20; en Solana, un mint del programa de tokens; en TON, un jetton.",
    "noIndica": "Crear un token es sencillo y barato; no indica nada sobre su valor."
   },
   {
@@ -229,7 +245,10 @@
    "tema": "Redes",
    "termino": "Puente",
    "definicion": "Sistema que bloquea un activo en una red y emite una representación en otra. La representación depende del puente.",
-   "noIndica": "El activo recibido por un puente puede no ser la versión oficial en la red de destino."
+   "noIndica": "El activo recibido por un puente puede no ser la versión oficial en la red de destino.",
+   "redes": [
+    "multicadena"
+   ]
   },
   {
    "id": "capa-2",
@@ -237,14 +256,22 @@
    "tema": "Redes",
    "termino": "Capa 2",
    "definicion": "Red que procesa transacciones fuera de la red principal y publica en ella un resumen y los datos para comprobarlo.",
-   "ejemplo": "Los rollups optimistas y los de conocimiento cero son capas 2 de Ethereum."
+   "ejemplo": "Arbitrum One, OP Mainnet y Base son rollups optimistas; zkSync Era, Starknet y Linea, de conocimiento cero. opBNB es una capa 2 de BNB Smart Chain.",
+   "redes": [
+    "capas-2",
+    "ethereum"
+   ]
   },
   {
    "id": "rollup",
    "nivel": "Avanzado",
    "tema": "Redes",
    "termino": "Rollup",
-   "definicion": "Tipo de capa 2 que agrupa transacciones y publica sus datos en la red principal, con pruebas de fraude o pruebas de validez."
+   "definicion": "Tipo de capa 2 que agrupa transacciones y publica sus datos en la red principal, con pruebas de fraude o pruebas de validez.",
+   "redes": [
+    "capas-2",
+    "ethereum"
+   ]
   },
   {
    "id": "phishing",
@@ -267,7 +294,8 @@
    "tema": "Transacciones",
    "termino": "Explorador de bloques",
    "definicion": "Web que lee los datos de una red y muestra transacciones, cuentas y bloques de forma legible.",
-   "noIndica": "Las etiquetas y logotipos que añade un explorador son su interpretación, no parte de la cadena."
+   "noIndica": "Las etiquetas y logotipos que añade un explorador son su interpretación, no parte de la cadena.",
+   "ejemplo": "mempool.space para Bitcoin, Etherscan para Ethereum, BscScan para BNB Smart Chain, Basescan para Base, Solscan para Solana y Tronscan para Tron."
   },
   {
    "id": "permiso",
@@ -275,7 +303,14 @@
    "tema": "Transacciones",
    "termino": "Permiso (approve)",
    "definicion": "Autorización que das a otra dirección para gastar hasta cierta cantidad de un token tuyo.",
-   "noIndica": "Un permiso ilimitado sigue vigente hasta que lo revocas."
+   "noIndica": "Un permiso ilimitado sigue vigente hasta que lo revocas.",
+   "ejemplo": "En cualquier red EVM (Ethereum, BNB Smart Chain, Polygon, capas 2) y en Tron, approve autoriza a un contrato a mover tus tokens; en Solana, el equivalente es delegar una cuenta de token.",
+   "redes": [
+    "ethereum",
+    "bnb-chain",
+    "capas-2",
+    "tron"
+   ]
   },
   {
    "id": "dapp",
@@ -347,7 +382,7 @@
    "nivel": "Intermedio",
    "tema": "Datos",
    "termino": "Suministro",
-   "definicion": "Número de unidades de un token que existen. En Solana se lee en la cuenta del mint junto con sus decimales.",
+   "definicion": "Número de unidades de un token que existen. En redes EVM se lee en la función totalSupply del contrato; en Solana, en la cuenta del mint, junto con sus decimales.",
    "noIndica": "El suministro no dice quién tiene los tokens."
   },
   {
@@ -362,7 +397,10 @@
    "nivel": "Avanzado",
    "tema": "Datos",
    "termino": "Mint",
-   "definicion": "Cuenta de Solana que define un token: su suministro, sus decimales y sus autoridades."
+   "definicion": "Cuenta de Solana que define un token: su suministro, sus decimales y sus autoridades. En las redes EVM, su equivalente es el propio contrato del token.",
+   "redes": [
+    "solana"
+   ]
   },
   {
    "id": "extension-token-2022",
@@ -370,7 +408,10 @@
    "tema": "Datos",
    "termino": "Extensión de Token-2022",
    "definicion": "Función adicional del programa Token-2022 de Solana, como comisiones en cada transferencia o un delegado permanente.",
-   "noIndica": "Una extensión no es buena ni mala por sí misma: hay que leer cuál es."
+   "noIndica": "Una extensión no es buena ni mala por sí misma: hay que leer cuál es.",
+   "redes": [
+    "solana"
+   ]
   },
   {
    "id": "direccion",
@@ -385,12 +426,18 @@
   {
    "id": "autoridad-emision",
    "nivel": "Avanzado",
-   "tema": "Datos"
+   "tema": "Datos",
+   "redes": [
+    "solana"
+   ]
   },
   {
    "id": "autoridad-congelacion",
    "nivel": "Avanzado",
-   "tema": "Datos"
+   "tema": "Datos",
+   "redes": [
+    "solana"
+   ]
   },
   {
    "id": "metadatos-mutables",
@@ -405,7 +452,10 @@
   {
    "id": "curva-pump",
    "nivel": "Avanzado",
-   "tema": "Aplicaciones"
+   "tema": "Aplicaciones",
+   "redes": [
+    "solana"
+   ]
   },
   {
    "id": "reserva-real",
@@ -633,7 +683,10 @@
    "termino": "Cuenta (Solana)",
    "definicion": "Unidad de almacenamiento de Solana. Cada cuenta tiene una dirección, un saldo en lamports, datos y un programa propietario.",
    "ejemplo": "Tu wallet, el mint de un token y cada uno de tus saldos de ese token son cuentas distintas.",
-   "noIndica": "No equivale a un usuario: una persona puede controlar muchas cuentas y un programa también."
+   "noIndica": "No equivale a un usuario: una persona puede controlar muchas cuentas y un programa también.",
+   "redes": [
+    "solana"
+   ]
   },
   {
    "id": "programa",
@@ -642,7 +695,10 @@
    "termino": "Programa (Solana)",
    "definicion": "Código desplegado en Solana que procesa instrucciones. Guarda sus datos en cuentas aparte, de las que es propietario.",
    "ejemplo": "El programa de tokens gestiona los saldos de muchísimos tokens distintos.",
-   "noIndica": "Que un programa sea muy usado no significa que no pueda actualizarse: depende de su autoridad de actualización."
+   "noIndica": "Que un programa sea muy usado no significa que no pueda actualizarse: depende de su autoridad de actualización.",
+   "redes": [
+    "solana"
+   ]
   },
   {
    "id": "lamport",
@@ -651,7 +707,10 @@
    "termino": "Lamport",
    "definicion": "Unidad mínima de SOL. Un SOL son mil millones de lamports.",
    "ejemplo": "La comisión base de una firma son 5.000 lamports, es decir, 0,000005 SOL.",
-   "noIndica": "No es un token aparte: es solo una forma de contar fracciones de SOL."
+   "noIndica": "No es un token aparte: es solo una forma de contar fracciones de SOL.",
+   "redes": [
+    "solana"
+   ]
   },
   {
    "id": "tarifa-de-prioridad",
@@ -660,7 +719,10 @@
    "termino": "Tarifa de prioridad",
    "definicion": "Pago opcional en Solana que se suma a la comisión base para que los validadores tengan más incentivo a incluir tu transacción.",
    "ejemplo": "Fijas un precio por unidad de cómputo y un límite; la tarifa es el producto de ambos.",
-   "noIndica": "No garantiza que la transacción entre ni que salga bien: solo la hace más atractiva para el validador."
+   "noIndica": "No garantiza que la transacción entre ni que salga bien: solo la hace más atractiva para el validador.",
+   "redes": [
+    "solana"
+   ]
   },
   {
    "id": "cuenta-de-token-asociada",
@@ -669,7 +731,10 @@
    "termino": "Cuenta de token asociada",
    "definicion": "Cuenta de token cuya dirección se deriva de tu wallet y del mint, de modo que cualquiera puede calcular dónde guardas ese token.",
    "ejemplo": "Para enviarte un token, la wallet de otra persona calcula tu cuenta asociada a partir de tu dirección.",
-   "noIndica": "No es una dirección distinta de tu identidad: sigue dependiendo de la wallet que la controla."
+   "noIndica": "No es una dirección distinta de tu identidad: sigue dependiendo de la wallet que la controla.",
+   "redes": [
+    "solana"
+   ]
   },
   {
    "id": "delegacion-de-tokens",
@@ -678,7 +743,10 @@
    "termino": "Delegación de tokens",
    "definicion": "Permiso que una cuenta de token concede a otra dirección para mover hasta cierta cantidad de ese token en su nombre.",
    "ejemplo": "Una aplicación te pide aprobar a un delegado por todo tu saldo de un token.",
-   "noIndica": "No caduca sola: sigue activa hasta que se revoca o se gasta la cantidad aprobada."
+   "noIndica": "No caduca sola: sigue activa hasta que se revoca o se gasta la cantidad aprobada.",
+   "redes": [
+    "solana"
+   ]
   },
   {
    "id": "mica",
@@ -742,6 +810,331 @@
    "definicion": "Declaración informativa de la Agencia Tributaria sobre monedas virtuales custodiadas en el extranjero, cuando su valor a 31 de diciembre supera 50.000 €.",
    "ejemplo": "Quien guarda criptoactivos en una plataforma extranjera por encima de ese importe presenta el modelo entre enero y marzo.",
    "noIndica": "Es informativo: no es un pago de impuestos ni sustituye a la declaración de la renta."
+  },
+  {
+   "id": "capa-1",
+   "nivel": "Principiante",
+   "tema": "Redes",
+   "termino": "Capa 1",
+   "definicion": "Red principal que registra y asegura sus propias transacciones con su propio consenso, sin depender de otra red.",
+   "ejemplo": "Bitcoin, Ethereum, BNB Smart Chain, Solana, Cardano y TON son capas 1.",
+   "noIndica": "Ser capa 1 no dice cuántos validadores tiene ni lo distribuido que está su control.",
+   "redes": []
+  },
+  {
+   "id": "utxo",
+   "nivel": "Intermedio",
+   "tema": "Redes",
+   "termino": "UTXO (salida sin gastar)",
+   "definicion": "Cantidad de una moneda que una transacción anterior dejó asignada a una condición de gasto y que aún no se ha usado. Bitcoin lleva el registro así, no con saldos por dirección.",
+   "ejemplo": "Con UTXO de 0,3 y 0,5 BTC puedes pagar 0,6: se gastan las dos, se crea la salida del pago y otra de cambio.",
+   "noIndica": "Que tu wallet muestre un saldo no indica cuántas UTXO lo forman ni cuánto costará gastarlas.",
+   "redes": [
+    "bitcoin",
+    "cardano"
+   ]
+  },
+  {
+   "id": "satoshi",
+   "nivel": "Principiante",
+   "tema": "Redes",
+   "termino": "Satoshi",
+   "definicion": "Unidad mínima de bitcoin: la cien millonésima parte de un BTC (0,00000001).",
+   "ejemplo": "Las comisiones de Bitcoin se suelen expresar en satoshis por byte virtual (sat/vB).",
+   "noIndica": "Expresar un importe en satoshis no cambia su valor: solo es otra unidad.",
+   "redes": [
+    "bitcoin"
+   ]
+  },
+  {
+   "id": "halving",
+   "nivel": "Principiante",
+   "tema": "Redes",
+   "termino": "Halving",
+   "definicion": "Reducción a la mitad de la recompensa por bloque de Bitcoin, que ocurre cada 210 000 bloques, unos cuatro años.",
+   "ejemplo": "Tras el halving de abril de 2024, la recompensa pasó de 6,25 a 3,125 BTC por bloque.",
+   "noIndica": "El halving cambia la emisión nueva; no fija el precio.",
+   "redes": [
+    "bitcoin"
+   ]
+  },
+  {
+   "id": "mempool",
+   "nivel": "Intermedio",
+   "tema": "Transacciones",
+   "termino": "Mempool",
+   "definicion": "Lista de transacciones válidas que un nodo ha recibido y que todavía no están en un bloque.",
+   "ejemplo": "En mempool.space puedes ver cuántas transacciones de Bitcoin esperan y qué comisión por byte pagan.",
+   "noIndica": "Cada nodo tiene su propio mempool; que una transacción esté en uno no garantiza que vaya a entrar en el siguiente bloque.",
+   "redes": [
+    "bitcoin",
+    "ethereum"
+   ]
+  },
+  {
+   "id": "lightning-network",
+   "nivel": "Intermedio",
+   "tema": "Redes",
+   "termino": "Lightning Network",
+   "definicion": "Red de canales de pago sobre Bitcoin. Los pagos se mueven fuera de la cadena y solo la apertura y el cierre de cada canal se registran en Bitcoin.",
+   "ejemplo": "Una factura de Lightning empieza por lnbc y no es una dirección de Bitcoin.",
+   "noIndica": "Que una wallet admita Bitcoin no significa que admita Lightning.",
+   "redes": [
+    "bitcoin"
+   ]
+  },
+  {
+   "id": "evm",
+   "nivel": "Intermedio",
+   "tema": "Redes",
+   "termino": "EVM (máquina virtual de Ethereum)",
+   "definicion": "Entorno que ejecuta los contratos inteligentes de Ethereum. Todos los nodos ejecutan el mismo código y obtienen el mismo resultado.",
+   "ejemplo": "Ethereum, Arbitrum, Base, BNB Smart Chain, Polygon PoS y la C-Chain de Avalanche ejecutan la EVM.",
+   "noIndica": "Que dos redes usen la EVM no significa que compartan saldos ni contratos.",
+   "redes": [
+    "ethereum",
+    "capas-2",
+    "bnb-chain",
+    "polygon",
+    "avalanche"
+   ]
+  },
+  {
+   "id": "gas",
+   "nivel": "Intermedio",
+   "tema": "Transacciones",
+   "termino": "Gas",
+   "definicion": "Unidad que mide el trabajo de cálculo de una transacción en la EVM. La comisión es el gas usado multiplicado por el precio del gas.",
+   "ejemplo": "Una transferencia simple de ETH usa 21 000 unidades de gas; un intercambio en un contrato, bastantes más.",
+   "noIndica": "El gas no depende del importe enviado: mover mucho o poco cuesta lo mismo si la operación es igual.",
+   "redes": [
+    "ethereum",
+    "capas-2",
+    "bnb-chain",
+    "polygon",
+    "avalanche"
+   ]
+  },
+  {
+   "id": "gwei",
+   "nivel": "Intermedio",
+   "tema": "Transacciones",
+   "termino": "Gwei",
+   "definicion": "Milmillonésima parte de un ETH (10⁻⁹). Es la unidad habitual para expresar el precio del gas en redes EVM.",
+   "ejemplo": "Un precio de 2 gwei por unidad de gas en una transferencia de 21 000 unidades cuesta 42 000 gwei, es decir, 0,000042 ETH.",
+   "noIndica": "Un precio en gwei bajo no asegura que la transacción entre pronto: depende de la demanda del momento.",
+   "redes": [
+    "ethereum",
+    "capas-2",
+    "bnb-chain"
+   ]
+  },
+  {
+   "id": "erc-20",
+   "nivel": "Intermedio",
+   "tema": "Redes",
+   "termino": "ERC-20",
+   "definicion": "Estándar de token intercambiable de Ethereum. Define funciones comunes como balanceOf, transfer, approve, totalSupply y decimals.",
+   "ejemplo": "USDC y USDT existen como tokens ERC-20 en Ethereum, cada uno con su dirección de contrato.",
+   "noIndica": "Cumplir el estándar no dice nada de quién controla el contrato ni de qué funciones extra tiene.",
+   "redes": [
+    "ethereum",
+    "capas-2",
+    "polygon",
+    "avalanche"
+   ]
+  },
+  {
+   "id": "bep-20",
+   "nivel": "Intermedio",
+   "tema": "Redes",
+   "termino": "BEP-20",
+   "definicion": "Estándar de token de BNB Smart Chain. Replica ERC-20, con las mismas funciones y permisos con approve.",
+   "ejemplo": "USDT BEP-20 y USDT ERC-20 son contratos distintos en redes distintas, aunque tengan el mismo nombre.",
+   "noIndica": "Que un token sea BEP-20 no indica que lo haya emitido BNB Chain ni Binance.",
+   "redes": [
+    "bnb-chain"
+   ]
+  },
+  {
+   "id": "token-spl",
+   "nivel": "Intermedio",
+   "tema": "Redes",
+   "termino": "Token SPL",
+   "definicion": "Token de Solana gestionado por el programa de tokens común (SPL Token) o por su versión ampliada, Token-2022. Se define con una cuenta de mint.",
+   "ejemplo": "USDC en Solana es un token SPL; su identidad es la dirección de su mint, en base58.",
+   "noIndica": "Que un token use el programa oficial no dice nada de sus autoridades ni de su reparto.",
+   "redes": [
+    "solana"
+   ]
+  },
+  {
+   "id": "trc-20",
+   "nivel": "Intermedio",
+   "tema": "Redes",
+   "termino": "TRC-20",
+   "definicion": "Estándar de token de Tron, parecido a ERC-20, con transferencias y permisos con approve.",
+   "ejemplo": "Muchas pantallas de depósito ofrecen «USDT TRC-20» junto a «USDT ERC-20».",
+   "noIndica": "Una dirección de Tron (empieza por T) no sirve para recibir en una red EVM.",
+   "redes": [
+    "tron"
+   ]
+  },
+  {
+   "id": "jetton",
+   "nivel": "Intermedio",
+   "tema": "Redes",
+   "termino": "Jetton",
+   "definicion": "Estándar de token de TON. Cada token tiene un contrato maestro y cada cuenta con saldo tiene su propio contrato de wallet de ese jetton.",
+   "ejemplo": "USDT en TON es un jetton; muchos depósitos en TON piden además un comentario o memo.",
+   "noIndica": "Que un jetton aparezca en tu wallet no indica que sea el oficial: compara la dirección del contrato maestro.",
+   "redes": [
+    "ton"
+   ]
+  },
+  {
+   "id": "compatible-evm",
+   "nivel": "Intermedio",
+   "tema": "Redes",
+   "termino": "Compatible con la EVM",
+   "definicion": "Red que ejecuta los mismos contratos y usa el mismo formato de dirección que Ethereum, de modo que sirven las mismas wallets y herramientas.",
+   "ejemplo": "BNB Smart Chain, Polygon PoS, la C-Chain de Avalanche, Arbitrum y Base son compatibles con la EVM.",
+   "noIndica": "La misma dirección 0x en dos redes compatibles tiene saldos independientes en cada una.",
+   "redes": [
+    "ethereum",
+    "capas-2",
+    "bnb-chain",
+    "polygon",
+    "avalanche"
+   ]
+  },
+  {
+   "id": "chain-id",
+   "nivel": "Avanzado",
+   "tema": "Redes",
+   "termino": "Identificador de red (chain ID)",
+   "definicion": "Número que identifica una red EVM y se incluye en cada transacción firmada, para que no pueda reutilizarse en otra red.",
+   "ejemplo": "1 es Ethereum, 56 es BNB Smart Chain, 137 es Polygon PoS, 8453 es Base y 42161 es Arbitrum One.",
+   "noIndica": "El identificador no dice nada de la seguridad de la red; también lo tienen las redes de prueba y las copias.",
+   "redes": [
+    "ethereum",
+    "capas-2",
+    "bnb-chain",
+    "polygon",
+    "avalanche"
+   ]
+  },
+  {
+   "id": "rollup-optimista",
+   "nivel": "Avanzado",
+   "tema": "Redes",
+   "termino": "Rollup optimista",
+   "definicion": "Rollup que publica sus lotes suponiendo que son correctos y abre un plazo para que cualquiera presente una prueba de fraude.",
+   "ejemplo": "Arbitrum One, OP Mainnet y Base son rollups optimistas; la retirada nativa a Ethereum espera unos siete días.",
+   "noIndica": "Que sea optimista no dice si las pruebas de fraude están ya abiertas a cualquiera: depende de cada red.",
+   "redes": [
+    "capas-2",
+    "ethereum"
+   ]
+  },
+  {
+   "id": "zk-rollup",
+   "nivel": "Avanzado",
+   "tema": "Redes",
+   "termino": "Rollup de conocimiento cero (zk-rollup)",
+   "definicion": "Rollup que adjunta a cada lote una prueba criptográfica de validez que un contrato de la capa 1 verifica.",
+   "ejemplo": "zkSync Era, Starknet, Scroll y Linea son zk-rollups.",
+   "noIndica": "Una prueba de validez no elimina otras dependencias, como el secuenciador o quién puede actualizar los contratos.",
+   "redes": [
+    "capas-2",
+    "ethereum"
+   ]
+  },
+  {
+   "id": "secuenciador",
+   "nivel": "Avanzado",
+   "tema": "Redes",
+   "termino": "Secuenciador",
+   "definicion": "Operador de una capa 2 que recibe las transacciones, decide su orden y publica los lotes en la capa 1.",
+   "ejemplo": "En muchas capas 2 hay un único secuenciador gestionado por el equipo que la lanzó.",
+   "noIndica": "Una confirmación rápida del secuenciador no es todavía la finalidad en la capa 1.",
+   "redes": [
+    "capas-2"
+   ]
+  },
+  {
+   "id": "finalidad",
+   "nivel": "Intermedio",
+   "tema": "Transacciones",
+   "termino": "Finalidad",
+   "definicion": "Momento a partir del cual una transacción ya no se puede revertir sin un coste enorme o sin romper las reglas de la red.",
+   "ejemplo": "En Ethereum un bloque se finaliza en unos 13 minutos; en Bitcoin la seguridad crece con cada confirmación, sin un punto fijo.",
+   "noIndica": "Que una wallet muestre «confirmada» no siempre significa que la transacción sea final.",
+   "redes": []
+  },
+  {
+   "id": "slashing",
+   "nivel": "Avanzado",
+   "tema": "Redes",
+   "termino": "Slashing",
+   "definicion": "Penalización que destruye parte del depósito de un validador que incumple las reglas, por ejemplo al firmar dos bloques contradictorios.",
+   "ejemplo": "En Ethereum, un validador penalizado pierde parte de sus 32 ETH y es expulsado.",
+   "noIndica": "No todas las redes de prueba de participación aplican slashing, ni con las mismas reglas.",
+   "redes": [
+    "ethereum"
+   ]
+  },
+  {
+   "id": "cadena-lateral",
+   "nivel": "Avanzado",
+   "tema": "Redes",
+   "termino": "Cadena lateral",
+   "definicion": "Red independiente conectada a otra mediante un puente, con sus propios validadores y su propia seguridad.",
+   "ejemplo": "Polygon PoS se ha descrito como cadena lateral de Ethereum: publica puntos de control en Ethereum, pero la validan sus propios validadores.",
+   "noIndica": "Publicar datos en otra red no significa heredar su seguridad.",
+   "redes": [
+    "polygon",
+    "ethereum"
+   ]
+  },
+  {
+   "id": "token-envuelto",
+   "nivel": "Intermedio",
+   "tema": "Redes",
+   "termino": "Token envuelto",
+   "definicion": "Representación en una red de un activo que vive en otra o de una moneda nativa, respaldada por lo que guarda un contrato o un custodio.",
+   "ejemplo": "WBTC representa bitcoins en Ethereum; WETH es ETH en formato ERC-20; en BNB Smart Chain hay tokens «Binance-Peg».",
+   "noIndica": "Un token envuelto no es el original: su valor depende del respaldo y de quien lo controla.",
+   "redes": [
+    "multicadena",
+    "ethereum",
+    "bnb-chain",
+    "solana"
+   ]
+  },
+  {
+   "id": "interoperabilidad",
+   "nivel": "Intermedio",
+   "tema": "Redes",
+   "termino": "Interoperabilidad",
+   "definicion": "Capacidad de una red para actuar según lo que ocurre en otra, mediante puentes o protocolos de mensajes entre cadenas.",
+   "ejemplo": "IBC conecta cadenas de Cosmos con clientes ligeros; CCTP mueve USDC quemándolo en origen y emitiéndolo en destino.",
+   "noIndica": "Que dos redes estén conectadas no dice quién verifica los mensajes entre ellas.",
+   "redes": [
+    "multicadena"
+   ]
+  },
+  {
+   "id": "prueba-de-historia",
+   "nivel": "Avanzado",
+   "tema": "Redes",
+   "termino": "Prueba de historia",
+   "definicion": "Secuencia de hashes de Solana, cada uno calculado sobre el anterior, que sirve de reloj verificable para ordenar los eventos antes del consenso.",
+   "ejemplo": "Los validadores de Solana colocan las transacciones en esa secuencia y después votan los bloques con prueba de participación.",
+   "noIndica": "No es un mecanismo de consenso por sí solo: Solana usa también prueba de participación.",
+   "redes": [
+    "solana"
+   ]
   }
  ]
 }

@@ -31,7 +31,9 @@
     {"n": 8, "ruta": "tokens-y-memecoins", "slug": "memecoins-y-lanzamientos", "titulo": "Memecoins y lanzamientos", "nivel": "Intermedio", "resumen": "Memecoins, curvas de lanzamiento, concentración, liquidez y manipulación.", "unidades": ["OA-029", "OA-030", "OA-031", "OA-032"]},
     {"n": 9, "ruta": "solana-por-dentro", "slug": "cuentas-tokens-y-firmas", "titulo": "Cuentas, tokens y firmas", "nivel": "Intermedio", "resumen": "El modelo de cuentas de Solana, sus tokens, sus comisiones y sus firmas.", "unidades": ["OA-033", "OA-034", "OA-035", "OA-036"]},
     {"n": 10, "ruta": "estafas", "slug": "patrones-de-estafa", "titulo": "Patrones de estafa", "nivel": "Principiante", "resumen": "Inversiones milagro, falso soporte, estafas de confianza y trucos con tokens.", "unidades": ["OA-037", "OA-038", "OA-039", "OA-040"]},
-    {"n": 11, "ruta": "regulacion-ue", "slug": "mica-y-fiscalidad", "titulo": "MiCA y fiscalidad", "nivel": "Intermedio", "resumen": "Qué regula MiCA, la identificación del cliente, la fiscalidad en España y cómo comprobar un proveedor.", "unidades": ["OA-041", "OA-042", "OA-043", "OA-044"]}
+    {"n": 11, "ruta": "regulacion-ue", "slug": "mica-y-fiscalidad", "titulo": "MiCA y fiscalidad", "nivel": "Intermedio", "resumen": "Qué regula MiCA, la identificación del cliente, la fiscalidad en España y cómo comprobar un proveedor.", "unidades": ["OA-041", "OA-042", "OA-043", "OA-044"]},
+    {"n": 12, "ruta": "blockchains-y-redes", "slug": "las-redes-de-referencia", "titulo": "Las redes de referencia", "nivel": "Intermedio", "resumen": "Bitcoin, Ethereum, sus capas 2 y BNB Chain por dentro: modelo, consenso, comisiones y tokens.", "unidades": ["OA-045", "OA-046", "OA-047", "OA-048"]},
+    {"n": 13, "ruta": "blockchains-y-redes", "slug": "mas-redes-y-conexiones", "titulo": "Más redes y conexiones", "nivel": "Intermedio", "resumen": "Solana, Avalanche, Polygon, Cardano, TON y Tron; los puentes entre redes y cómo compararlas.", "unidades": ["OA-049", "OA-050", "OA-051", "OA-052"]}
   ],
   "unidades": [
     {"id": "OA-001", "slug": "que-es-el-dinero-digital", "imagen": 326},
@@ -77,7 +79,15 @@
     {"id": "OA-041", "slug": "que-regula-mica", "imagen": 146},
     {"id": "OA-042", "slug": "identificacion-y-regla-de-viaje", "imagen": 163},
     {"id": "OA-043", "slug": "fiscalidad-de-criptoactivos-en-espana", "imagen": 155},
-    {"id": "OA-044", "slug": "como-comprobar-un-proveedor", "imagen": 154}
+    {"id": "OA-044", "slug": "como-comprobar-un-proveedor", "imagen": 154},
+    {"id": "OA-045", "slug": "bitcoin-por-dentro", "imagen": 428},
+    {"id": "OA-046", "slug": "ethereum-por-dentro", "imagen": 167},
+    {"id": "OA-047", "slug": "capas-2-de-ethereum", "imagen": 152},
+    {"id": "OA-048", "slug": "bnb-chain", "imagen": 356},
+    {"id": "OA-049", "slug": "solana-en-el-mapa", "imagen": 357},
+    {"id": "OA-050", "slug": "otras-capas-1", "imagen": 353},
+    {"id": "OA-051", "slug": "puentes-e-interoperabilidad", "imagen": 354},
+    {"id": "OA-052", "slug": "como-comparar-redes", "imagen": 170}
   ],
   "practicas": [
     {"id": "P1", "slug": "mensajes-sospechosos", "unidad": "OA-011", "titulo": "Práctica: detecta los mensajes sospechosos", "resumen": "Seis mensajes inventados. Decide cuáles piden algo que nunca debes dar y señala la pista.", "nivel": "Principiante", "imagen": 406},
@@ -94,12 +104,30 @@
     "sugeridos": ["OA-001", "OA-003", "OA-008", "OA-015"],
     "secciones": [
       {"titulo": "Seguridad desde cero", "modulo": 3},
+      {"titulo": "Blockchains y redes", "modulo": 12},
       {"titulo": "Leer datos con ORVUPI", "modulo": 6}
     ]
   },
   "imagenes": [1, 231, 257, 326, 332],
   "cuadradas": [1, 231],
   "rutas_extra": [
+    {
+      "slug": "blockchains-y-redes",
+      "titulo": "Blockchains y redes",
+      "nivel": "Intermedio",
+      "imagen": 351,
+      "resumen": "Bitcoin, Ethereum, las capas 2, BNB Chain, Solana y otras capas 1: cómo funciona cada una, cómo se conectan y cómo compararlas.",
+      "descripcion": [
+        "Cada red resuelve los mismos problemas de forma distinta: quién valida, cómo se pagan las comisiones, qué es un token y qué formato tiene una dirección. La ruta recorre las redes más usadas con el mismo esquema, para que puedas reconocer en qué se parecen y en qué cambian.",
+        "Termina con los puentes que las conectan y con un método para comparar redes con fuentes y fecha, sin eslóganes."
+      ],
+      "aprenderas": [
+        "Cómo funcionan las UTXO, la prueba de trabajo y Lightning en Bitcoin.",
+        "Qué son la EVM, el gas y la prueba de participación de Ethereum, y por qué se repiten en otras redes.",
+        "En qué se diferencian Arbitrum, OP Mainnet, Base y los zk-rollups, y qué aporta BNB Smart Chain.",
+        "Cómo encajan Solana, Avalanche, Polygon, Cardano, TON y Tron, cómo funcionan los puentes y cómo comparar redes."
+      ]
+    },
     {
       "slug": "trading-basico",
       "titulo": "Trading básico",
@@ -187,5 +215,18 @@
         "Cómo comprobar si un proveedor está autorizado y qué significa esa autorización."
       ]
     }
+  ],
+  "redes": [
+    {"id": "bitcoin", "nombre": "Bitcoin", "resumen": "La primera red: UTXO, prueba de trabajo, emisión limitada y pagos con Lightning."},
+    {"id": "ethereum", "nombre": "Ethereum", "resumen": "Contratos en la EVM, gas, prueba de participación y el estándar ERC-20."},
+    {"id": "capas-2", "nombre": "Capas 2", "resumen": "Rollups sobre Ethereum como Arbitrum, OP Mainnet, Base y los zk-rollups."},
+    {"id": "bnb-chain", "nombre": "BNB Chain", "resumen": "BNB Smart Chain y opBNB: EVM, tokens BEP-20 y el explorador BscScan."},
+    {"id": "solana", "nombre": "Solana", "resumen": "Cuentas y programas, prueba de historia, lamports y tokens SPL."},
+    {"id": "avalanche", "nombre": "Avalanche", "resumen": "La C-Chain compatible con la EVM, AVAX y las Avalanche L1."},
+    {"id": "polygon", "nombre": "Polygon", "resumen": "Polygon PoS, el token POL y la tecnología de conocimiento cero."},
+    {"id": "cardano", "nombre": "Cardano", "resumen": "Ouroboros, el modelo eUTXO, Plutus y los tokens nativos."},
+    {"id": "ton", "nombre": "TON", "resumen": "Toncoin, contratos que se comunican con mensajes y tokens jetton."},
+    {"id": "tron", "nombre": "Tron", "resumen": "TRX, superrepresentantes, TRC-20 y comisiones con energía y ancho de banda."},
+    {"id": "multicadena", "nombre": "Multicadena", "resumen": "Lo que vale para varias redes a la vez: puentes, tokens envueltos y cómo comparar."}
   ]
 }
