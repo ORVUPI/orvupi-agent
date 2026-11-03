@@ -1,8 +1,8 @@
-import { fetchBitcoinQuote, fetchCoinOhlc, fetchDexSnapshot, fetchGlobalMarket, fetchLargeTransfers, fetchPoolCandles, fetchPoolTrades, fetchTopMarkets, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs?v=82434ce211";
-import { mountLiveChart } from "../verify/net/chart.mjs?v=82434ce211";
-import { COIN_FRAMES, POLL_MS, TIMEFRAMES, stepLabel } from "../verify/net/ohlcv.mjs?v=82434ce211";
-import { LIMITS, buildGraph, chainById, explorerHref, filterTransfers, formatUnits, groupSearch, identify, pager, slicePage, storageKeys, supportedIds, UNSUPPORTED } from "../verify/net/present.mjs?v=82434ce211";
-import { isOfficialAddress, OFFICIAL_ADDRESS } from "../shared/orvupi-contract.js?v=82434ce211";
+import { fetchBitcoinQuote, fetchCoinOhlc, fetchDexSnapshot, fetchGlobalMarket, fetchLargeTransfers, fetchPoolCandles, fetchPoolTrades, fetchTopMarkets, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs?v=00765285e7";
+import { mountLiveChart } from "../verify/net/chart.mjs?v=00765285e7";
+import { COIN_FRAMES, POLL_MS, TIMEFRAMES, stepLabel } from "../verify/net/ohlcv.mjs?v=00765285e7";
+import { LIMITS, buildGraph, chainById, explorerHref, filterTransfers, formatUnits, groupSearch, identify, pager, slicePage, storageKeys, supportedIds, UNSUPPORTED } from "../verify/net/present.mjs?v=00765285e7";
+import { isOfficialAddress, OFFICIAL_ADDRESS } from "../shared/orvupi-contract.js?v=00765285e7";
 
 const KEYS = storageKeys();
 const PROJECT_WALLET = "GKpccLJwKArptzt9j897njXUx9RsV5NKL3Egu7bfMA6Q";
@@ -1138,7 +1138,7 @@ function boot() {
   if (market) {
     document.body.classList.add("sonar-market");
     document.getElementById("vf-root")?.replaceChildren(sonarLoading());
-    import("./sonar/shell.mjs?v=82434ce211").then((mod) => mod.start()).catch(healSonar);
+    import("./sonar/shell.mjs?v=00765285e7").then((mod) => mod.start()).catch(healSonar);
     return;
   }
   const dock = document.createElement("nav");

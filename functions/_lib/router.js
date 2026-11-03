@@ -103,6 +103,7 @@ export async function handle(request, env = {}, ctx = {}) {
     if (head === "trending" && path.length === 1) return trending();
     if (head === "new" && path.length === 1) return fresh();
     if (head === "search" && path.length === 1) return search(query);
+    if (head === "trades" && path.length === 1) return trades(query);
     if (head === "suggest" && path.length === 1) return suggest();
     if (head === "calendar" && path.length === 1) return calendar(query);
     if (head === "unlocks" && path.length === 1) return unlocks(query);
@@ -498,6 +499,14 @@ export async function handle(request, env = {}, ctx = {}) {
       data.searchPools(env, ctx, text).catch((error) => { console.error("sonar-search-pool", error?.status || "fail"); return null; }),
     ]);
     return json(200, { ok: true, coins, pools }, cacheHeaders(data.CACHE_FRESH.search, 86400, coins || {}));
+  }
+
+  async function trades(query) {
+    const network = query.get("network") || "";
+    const pool = query.get("pool") || "";
+    if (!data.tradeNetworkOk(network) || !data.poolAddressOk(pool)) return json(400, { ok: false, error: "invalid" });
+    const payload = await data.getPoolTrades(env, ctx, network, pool);
+    return json(200, { ok: true, ...payload }, cacheHeaders(60, 600, payload));
   }
 
   async function suggest() {

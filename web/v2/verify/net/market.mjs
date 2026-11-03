@@ -3,7 +3,7 @@
  * Cadena real: si una fuente falla, se prueba la siguiente. No se rellenan cifras.
  * Coinbase, Kraken, Tronscan, el archivo de Binance Vision y la API de Blockscout con clave no se llaman.
  */
-import { fetchJson, fetchText, withCache } from "./http.mjs?v=82434ce211";
+import { fetchJson, fetchText, withCache } from "./http.mjs?v=00765285e7";
 import {
   BINANCE_INTERVALS,
   binanceKlineUrl,
@@ -14,7 +14,7 @@ import {
   parseGeckoOhlcv,
   stepLabel,
   timeframeById,
-} from "./ohlcv.mjs?v=82434ce211";
+} from "./ohlcv.mjs?v=00765285e7";
 
 const JSON_HEADERS = { accept: "application/json" };
 const GECKO_HEADERS = { accept: "application/json;version=20230203" };
@@ -312,8 +312,9 @@ export async function fetchPoolTrades(network, pool) {
     return { ok: false, state: "no-soportado", rows: [], provider: "GeckoTerminal", fetchedAt: new Date().toISOString(), scope: "Operaciones del pool" };
   }
   return withCache(`trades:${network}:${pool}`, async () => {
-    const url = `https://api.geckoterminal.com/api/v2/networks/${encodeURIComponent(network)}/pools/${encodeURIComponent(pool)}/trades`;
-    const response = await fetchJson(url, { headers: GECKO_HEADERS, attempts: 2 });
+    // Vía nuestra función: GeckoTerminal no envía CORS en sus 429 y el navegador lo bloquea.
+    const url = `/api/sonar/trades?network=${encodeURIComponent(network)}&pool=${encodeURIComponent(pool)}`;
+    const response = await fetchJson(url, { headers: JSON_HEADERS, attempts: 2 });
     const rows = [];
     for (const item of response.body?.data || []) {
       const attrs = item?.attributes || {};
