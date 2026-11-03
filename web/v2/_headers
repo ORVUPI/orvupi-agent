@@ -194,6 +194,26 @@
 /i18n/*
   Cache-Control: public, max-age=0, must-revalidate
 
+# ORVUPI Academy: Curva en vivo y el Cuaderno repiten la CSP de /pares/ y /cuaderno/* (mismos RPC).
+# El resto de /academy/ usa la política global.
+/academy/practicas/curva-en-vivo/
+  ! Content-Security-Policy
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://coin-images.coingecko.com https://assets.coingecko.com https://assets.geckoterminal.com https://static.coinpaprika.com; font-src 'self'; connect-src 'self' wss://data-stream.binance.vision https://solana-rpc.publicnode.com https://api.mainnet-beta.solana.com; manifest-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests
+/academy/practicas/curva-en-vivo/*
+  ! Content-Security-Policy
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://coin-images.coingecko.com https://assets.coingecko.com https://assets.geckoterminal.com https://static.coinpaprika.com; font-src 'self'; connect-src 'self' wss://data-stream.binance.vision https://solana-rpc.publicnode.com https://api.mainnet-beta.solana.com; manifest-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests
+/academy/mi-aprendizaje/cuaderno/
+  ! Content-Security-Policy
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://coin-images.coingecko.com https://assets.coingecko.com https://assets.geckoterminal.com https://static.coinpaprika.com; font-src 'self'; connect-src 'self' wss://data-stream.binance.vision https://solana-rpc.publicnode.com https://api.mainnet-beta.solana.com https://mainnet.base.org https://ethereum-rpc.publicnode.com https://bsc-rpc.publicnode.com https://api.dexscreener.com; manifest-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests
+/academy/mi-aprendizaje/cuaderno/*
+  ! Content-Security-Policy
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://coin-images.coingecko.com https://assets.coingecko.com https://assets.geckoterminal.com https://static.coinpaprika.com; font-src 'self'; connect-src 'self' wss://data-stream.binance.vision https://solana-rpc.publicnode.com https://api.mainnet-beta.solana.com https://mainnet.base.org https://ethereum-rpc.publicnode.com https://bsc-rpc.publicnode.com https://api.dexscreener.com; manifest-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests
+/academy/manifest.webmanifest
+  Content-Type: application/manifest+json; charset=utf-8
+/academy/datos.json
+  X-Robots-Tag: noindex, nofollow
+# academy.css y academy.js llevan ?v=<hash> (asset-versions.mjs).
+
 # ORVUPI Sonar: /sonar/ reescribe a /verify/ pero las cabeceras se aplican por la ruta pedida, así que repite la CSP de /verify/.
 /sonar
   ! Content-Security-Policy

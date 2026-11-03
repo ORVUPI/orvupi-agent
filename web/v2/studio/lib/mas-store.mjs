@@ -47,22 +47,19 @@ export const HUB_ROWS = [
 
 export const ORVUPI_APPS = [
   { id: "work", href: "/work/", es: "Work", en: "Work", esBlurb: "Documentos y presentaciones en este navegador.", enBlurb: "Docs and decks in this browser.", cat: "crear", featured: true },
-  { id: "lab", href: "/lab/", es: "Lab", en: "Lab", esBlurb: "Lecciones y pruebas del laboratorio.", enBlurb: "Lab lessons and drills.", cat: "aprender", featured: true },
+  { id: "academy", href: "/academy/", es: "Academy", en: "Academy", esBlurb: "Artículos, prácticas, glosario y tu progreso.", enBlurb: "Articles, practice, glossary and your progress.", cat: "aprender", featured: true },
   { id: "verify", href: "/verify/", es: "Verify", en: "Verify", esBlurb: "Comprueba archivos y registros en local.", enBlurb: "Check files and records locally.", cat: "crear" },
-  { id: "cuaderno", href: "/cuaderno/", es: "Cuaderno", en: "Notebook", esBlurb: "Notas que se quedan en el navegador.", enBlurb: "Notes that stay in the browser.", cat: "crear" },
   { id: "tablero", href: "/tablero/", es: "Tablero", en: "Board", esBlurb: "Un tablero para ordenar ideas.", enBlurb: "A board for sorting ideas.", cat: "crear" },
-  { id: "curva", href: "/pares/", es: "Curva", en: "Curve", esBlurb: "La curva de pares de ORVUPI.", enBlurb: "The ORVUPI pairs curve.", cat: "comunidad" },
   { id: "memes", href: "/memes/", es: "Memes", en: "Memes", esBlurb: "Piezas de la comunidad.", enBlurb: "Community pieces.", cat: "comunidad" },
   { id: "comunidad", href: "/community/", es: "Comunidad", en: "Community", esBlurb: "El espacio de la comunidad.", enBlurb: "The community space.", cat: "comunidad" },
-  { id: "aprender", href: "/aprender/", es: "Aprender", en: "Learn", esBlurb: "Guías para empezar.", enBlurb: "Guides to get started.", cat: "aprender" },
   { id: "metodologia", href: "/methodology/", es: "Metodología", en: "Methodology", esBlurb: "Cómo está armado ORVUPI.", enBlurb: "How ORVUPI is put together.", cat: "aprender" },
   { id: "marca", href: "/marca/", es: "Marca", en: "Brand", esBlurb: "Pulpo, colores y recursos.", enBlurb: "Octopus, colors, and assets.", cat: "crear" },
   { id: "novedades", href: "/novedades/", es: "Novedades", en: "What's new", esBlurb: "Lo último publicado en el sitio.", enBlurb: "The latest notes on the site.", cat: "para-ti" },
 ];
 
 export const SCHOOL = [
-  { id: "aprender", href: "/aprender/", es: "Quiero aprender", en: "I want to learn", esBody: "Guías cortas para usar ORVUPI.", enBody: "Short guides for using ORVUPI." },
-  { id: "lab", href: "/lab/", es: "Lecciones de Lab", en: "Lab lessons", esBody: "Practica en el laboratorio.", enBody: "Practice in the lab." },
+  { id: "academy", href: "/academy/", es: "Quiero aprender", en: "I want to learn", esBody: "Artículos y rutas en ORVUPI Academy.", enBody: "Articles and paths in ORVUPI Academy." },
+  { id: "practicas", href: "/academy/practicas/", es: "Prácticas", en: "Practice", esBody: "Laboratorio y curva en vivo dentro de Academy.", enBody: "Lab and live curve inside Academy." },
   { id: "metodologia", href: "/methodology/", es: "Metodología", en: "Methodology", esBody: "El método detrás de las herramientas.", enBody: "The method behind the tools." },
   { id: "marca", href: "/marca/", es: "Kit de marca", en: "Brand kit", esBody: "Colores, pulpo y recursos públicos.", enBody: "Colors, octopus, and public assets." },
   { id: "plantillas", go: "plantillas", es: "Plantillas de Studio", en: "Studio templates", esBody: "Abre una plantilla y edítala aquí.", enBody: "Open a template and edit it here." },
@@ -427,5 +424,7 @@ export function localePrefix() {
 export function localHref(path) {
   const clean = String(path || "/");
   if (clean === "/work" || clean.startsWith("/work/")) return "/work/";
+  // ORVUPI Academy solo existe en /academy/, sin prefijo de idioma.
+  if (clean === "/academy" || clean.startsWith("/academy/")) return clean === "/academy" ? "/academy/" : clean;
   return `${localePrefix()}${clean}`;
 }

@@ -652,7 +652,7 @@ function renderDream(ctx) {
     subhead(ctx, "Dream Lab", "mas"),
     lead(tr(lang, "El laboratorio creativo de ORVUPI: lecciones, IA y pruebas en este sitio.", "ORVUPI’s creative lab: lessons, AI, and drills on this site.")),
     el("div", { class: "mas-features" }, [
-      el("a", { class: "mas-feature is-lab", href: localHref("/lab/") }, [
+      el("a", { class: "mas-feature is-lab", href: localHref("/academy/practicas/laboratorio/") }, [
         el("strong", { text: "Lab" }),
         el("span", { text: tr(lang, "Abrir lecciones", "Open lessons") }),
       ]),
@@ -663,7 +663,7 @@ function renderDream(ctx) {
       })(),
     ]),
     cta("Catálogo", null, "ia"),
-    el("a", { class: "mas-cta mas-cta-secondary", href: localHref("/aprender/"), text: tr(lang, "Abrir Aprender", "Open Learn") }),
+    el("a", { class: "mas-cta mas-cta-secondary", href: localHref("/academy/"), text: tr(lang, "Abrir Academy", "Open Academy") }),
   ]);
 }
 

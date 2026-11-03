@@ -1,0 +1,2047 @@
+{
+ "version": 1,
+ "actualizado": "2026-11-03",
+ "aprobado_modulo": 5,
+ "unidades": {
+  "OA-001": {
+   "pregunta": "Ana compra una criptomoneda en una plataforma y la deja allí. ¿Quién guarda las claves?",
+   "opciones": [
+    {
+     "texto": "Ana, porque el saldo está a su nombre",
+     "correcta": false,
+     "porque": "Ver un saldo a tu nombre no implica tener las claves; la plataforma las guarda."
+    },
+    {
+     "texto": "La plataforma",
+     "correcta": true,
+     "porque": "Correcto: mientras el saldo esté en la plataforma, ella controla las claves y Ana depende de ella."
+    },
+    {
+     "texto": "Nadie: en una blockchain no hay claves",
+     "correcta": false,
+     "porque": "Toda dirección se controla con una clave privada."
+    }
+   ]
+  },
+  "OA-002": {
+   "pregunta": "«Nuestro token está en blockchain, así que no puedes perder dinero». ¿Qué parte se sostiene?",
+   "opciones": [
+    {
+     "texto": "Las dos partes",
+     "correcta": false,
+     "porque": "Estar en una cadena no protege del valor ni del engaño."
+    },
+    {
+     "texto": "Solo que está registrado en una blockchain",
+     "correcta": true,
+     "porque": "Correcto: la cadena registra movimientos; no garantiza el valor ni la honradez."
+    },
+    {
+     "texto": "Ninguna: los tokens no están en blockchains",
+     "correcta": false,
+     "porque": "Los tokens sí se registran en una blockchain."
+    }
+   ]
+  },
+  "OA-003": {
+   "pregunta": "¿Qué dato puedes compartir para que te envíen fondos?",
+   "opciones": [
+    {
+     "texto": "La frase de recuperación",
+     "correcta": false,
+     "porque": "Con ella se reconstruyen todas tus claves."
+    },
+    {
+     "texto": "La clave privada",
+     "correcta": false,
+     "porque": "Permite mover tus fondos."
+    },
+    {
+     "texto": "La dirección",
+     "correcta": true,
+     "porque": "Correcto: la dirección es pública y sirve para recibir."
+    }
+   ]
+  },
+  "OA-004": {
+   "pregunta": "Tu wallet dice «enviado». ¿Qué te confirma que la red lo incluyó?",
+   "opciones": [
+    {
+     "texto": "El mensaje de la wallet",
+     "correcta": false,
+     "porque": "La wallet sabe que firmaste y envió la transacción, no si se incluyó."
+    },
+    {
+     "texto": "El estado en un explorador de bloques",
+     "correcta": true,
+     "porque": "Correcto: el explorador muestra si está en un bloque y su resultado."
+    },
+    {
+     "texto": "Que el destinatario te dé las gracias",
+     "correcta": false,
+     "porque": "No es una comprobación del estado de la red."
+    }
+   ]
+  },
+  "OA-005": {
+   "pregunta": "¿Quién decide las reglas de Bitcoin?",
+   "opciones": [
+    {
+     "texto": "Los mineros, porque crean los bloques",
+     "correcta": false,
+     "porque": "Proponen bloques, pero los nodos rechazan los que rompen las reglas."
+    },
+    {
+     "texto": "Los nodos que comprueban cada bloque, con el software que eligen ejecutar",
+     "correcta": true,
+     "porque": "Correcto: las reglas las aplican los nodos que validan."
+    },
+    {
+     "texto": "Una empresa llamada Bitcoin",
+     "correcta": false,
+     "porque": "No hay una empresa que controle la red."
+    }
+   ]
+  },
+  "OA-006": {
+   "pregunta": "Cambias un token por otro en Ethereum. ¿En qué se paga la comisión?",
+   "opciones": [
+    {
+     "texto": "En el token que entregas",
+     "correcta": false,
+     "porque": "La comisión de red se paga en ETH."
+    },
+    {
+     "texto": "En ETH, la moneda nativa",
+     "correcta": true,
+     "porque": "Correcto: la red cobra el gas en su moneda nativa."
+    },
+    {
+     "texto": "No hay comisión al cambiar tokens",
+     "correcta": false,
+     "porque": "Toda transacción en Ethereum paga gas."
+    }
+   ]
+  },
+  "OA-007": {
+   "pregunta": "¿Qué diferencia una moneda nativa de un token?",
+   "opciones": [
+    {
+     "texto": "El token se crea sobre una red existente; la nativa es la de la propia red",
+     "correcta": true,
+     "porque": "Correcto: la moneda nativa paga las comisiones de su red."
+    },
+    {
+     "texto": "Los tokens siempre valen menos",
+     "correcta": false,
+     "porque": "El precio no define qué es cada cosa."
+    },
+    {
+     "texto": "Las monedas nativas no se pueden enviar",
+     "correcta": false,
+     "porque": "Se envían igual que los tokens."
+    }
+   ]
+  },
+  "OA-008": {
+   "pregunta": "Una plataforma ofrece retirar USDC por varias redes. ¿Qué compruebas?",
+   "opciones": [
+    {
+     "texto": "Solo el importe",
+     "correcta": false,
+     "porque": "Si la red no coincide, el importe no basta."
+    },
+    {
+     "texto": "Que la red elegida sea la misma en la que tu wallet espera recibir",
+     "correcta": true,
+     "porque": "Correcto: origen y destino deben estar en la misma red."
+    },
+    {
+     "texto": "Que el símbolo sea USDC",
+     "correcta": false,
+     "porque": "El símbolo es igual en todas las redes."
+    }
+   ]
+  },
+  "OA-009": {
+   "pregunta": "En autocustodia pierdes la frase de recuperación y el móvil. ¿Quién puede devolverte el acceso?",
+   "opciones": [
+    {
+     "texto": "La empresa de la wallet",
+     "correcta": false,
+     "porque": "No tiene tus claves."
+    },
+    {
+     "texto": "Nadie",
+     "correcta": true,
+     "porque": "Correcto: sin la frase, nadie puede reconstruir las claves."
+    },
+    {
+     "texto": "La red, si demuestras tu identidad",
+     "correcta": false,
+     "porque": "La red no conoce identidades."
+    }
+   ]
+  },
+  "OA-010": {
+   "pregunta": "Una web pide tu frase de recuperación para «sincronizar» la wallet. ¿Qué haces?",
+   "opciones": [
+    {
+     "texto": "La escribo, porque la web parece oficial",
+     "correcta": false,
+     "porque": "Ninguna web legítima la necesita."
+    },
+    {
+     "texto": "No la doy y abro la wallet oficial por mi cuenta",
+     "correcta": true,
+     "porque": "Correcto: la frase solo se usa para restaurar en tu dispositivo."
+    },
+    {
+     "texto": "Solo escribo la mitad de las palabras",
+     "correcta": false,
+     "porque": "Con parte de la frase se reduce mucho la dificultad de adivinarla."
+    }
+   ]
+  },
+  "OA-011": {
+   "pregunta": "Aparece en tu wallet un token que no compraste con un enlace para «reclamar». ¿Qué es más prudente?",
+   "opciones": [
+    {
+     "texto": "Abrir el enlace y conectar la wallet",
+     "correcta": false,
+     "porque": "Puede pedirte una firma que entregue tus tokens."
+    },
+    {
+     "texto": "Ignorarlo y no interactuar con él",
+     "correcta": true,
+     "porque": "Correcto: los airdrops no pedidos son un cebo común."
+    },
+    {
+     "texto": "Enviarlo a otra dirección para limpiarlo",
+     "correcta": false,
+     "porque": "Interactuar con él puede pedir firmas o costar comisiones."
+    }
+   ]
+  },
+  "OA-012": {
+   "pregunta": "¿Qué segundo factor resiste mejor el phishing?",
+   "opciones": [
+    {
+     "texto": "SMS",
+     "correcta": false,
+     "porque": "Puede interceptarse o desviarse con un duplicado de SIM."
+    },
+    {
+     "texto": "Un código de app que dictas por teléfono",
+     "correcta": false,
+     "porque": "Si lo dictas, el atacante lo usa."
+    },
+    {
+     "texto": "Una llave física o passkey",
+     "correcta": true,
+     "porque": "Correcto: solo responde al dominio real."
+    }
+   ]
+  },
+  "OA-013": {
+   "pregunta": "Buscas un hash y el explorador no encuentra nada. ¿Qué compruebas primero?",
+   "opciones": [
+    {
+     "texto": "Que estás en el explorador de la red correcta",
+     "correcta": true,
+     "porque": "Correcto: cada red tiene sus exploradores."
+    },
+    {
+     "texto": "Que el envío se perdió para siempre",
+     "correcta": false,
+     "porque": "No se puede concluir sin mirar en la red correcta."
+    },
+    {
+     "texto": "Que el explorador está roto",
+     "correcta": false,
+     "porque": "Es menos probable que una red equivocada."
+    }
+   ]
+  },
+  "OA-014": {
+   "pregunta": "Una transacción en Ethereum falla. ¿Qué pasa con la comisión?",
+   "opciones": [
+    {
+     "texto": "Se devuelve entera",
+     "correcta": false,
+     "porque": "La red hizo trabajo y lo cobra."
+    },
+    {
+     "texto": "Se cobra igualmente",
+     "correcta": true,
+     "porque": "Correcto: la comisión se paga aunque falle."
+    },
+    {
+     "texto": "Se cobra el doble",
+     "correcta": false,
+     "porque": "No hay recargo por fallar."
+    }
+   ]
+  },
+  "OA-015": {
+   "pregunta": "Una dApp pide aprobar un permiso ilimitado sobre tu USDC. ¿Qué significa?",
+   "opciones": [
+    {
+     "texto": "Que la dApp ve tu saldo",
+     "correcta": false,
+     "porque": "Eso lo hace conectar."
+    },
+    {
+     "texto": "Que el contrato podrá mover todo tu USDC hasta que lo revoques",
+     "correcta": true,
+     "porque": "Correcto: el permiso sigue vigente."
+    },
+    {
+     "texto": "Que pierdes el USDC al instante",
+     "correcta": false,
+     "porque": "No se mueve nada hasta que el contrato lo use."
+    }
+   ]
+  },
+  "OA-016": {
+   "pregunta": "Un puente bloquea tu activo en la red A y te da una representación en la red B. ¿De qué depende su respaldo?",
+   "opciones": [
+    {
+     "texto": "Solo de la red B",
+     "correcta": false,
+     "porque": "El respaldo está en el contrato de la red A."
+    },
+    {
+     "texto": "Del contrato del puente en la red A y de quién valida los mensajes",
+     "correcta": true,
+     "porque": "Correcto: si se vacía ese contrato, la representación pierde respaldo."
+    },
+    {
+     "texto": "De nada: es el mismo activo",
+     "correcta": false,
+     "porque": "Es una representación, no el original."
+    }
+   ]
+  },
+  "OA-017": {
+   "pregunta": "La web de una dApp cae, pero su contrato sigue en la cadena. ¿Qué ocurre?",
+   "opciones": [
+    {
+     "texto": "Los fondos desaparecen",
+     "correcta": false,
+     "porque": "El contrato y sus fondos siguen en la cadena."
+    },
+    {
+     "texto": "El contrato sigue funcionando y se puede usar por otra vía",
+     "correcta": true,
+     "porque": "Correcto: solo la interfaz dejó de estar disponible."
+    },
+    {
+     "texto": "El contrato se borra automáticamente",
+     "correcta": false,
+     "porque": "Los contratos no dependen de la web."
+    }
+   ]
+  },
+  "OA-018": {
+   "pregunta": "Dos pools tienen el mismo precio, pero uno es diez veces más grande. ¿Dónde mueve más el precio una compra igual?",
+   "opciones": [
+    {
+     "texto": "En la grande",
+     "correcta": false,
+     "porque": "Más profundidad significa menos movimiento."
+    },
+    {
+     "texto": "En la pequeña",
+     "correcta": true,
+     "porque": "Correcto: con menos liquidez, cada unidad retirada encarece más la siguiente."
+    },
+    {
+     "texto": "Igual en las dos",
+     "correcta": false,
+     "porque": "La profundidad cambia el efecto."
+    }
+   ]
+  },
+  "OA-019": {
+   "pregunta": "¿Qué es una liquidación en un préstamo DeFi?",
+   "opciones": [
+    {
+     "texto": "La devolución normal del préstamo",
+     "correcta": false,
+     "porque": "Esa es la amortización."
+    },
+    {
+     "texto": "La venta de tu garantía cuando su valor cae por debajo del umbral",
+     "correcta": true,
+     "porque": "Correcto: otros la compran con descuento para cubrir la deuda."
+    },
+    {
+     "texto": "Un premio por pedir prestado",
+     "correcta": false,
+     "porque": "No es un premio."
+    }
+   ]
+  },
+  "OA-020": {
+   "pregunta": "«El suministro total es de 1 000 millones». ¿Qué tipo de afirmación es?",
+   "opciones": [
+    {
+     "texto": "Hecho comprobable",
+     "correcta": true,
+     "porque": "Correcto: se puede contrastar en la cadena con fecha."
+    },
+    {
+     "texto": "Hipótesis",
+     "correcta": false,
+     "porque": "No depende del futuro."
+    },
+    {
+     "texto": "Promoción",
+     "correcta": false,
+     "porque": "Es un dato, no un intento de convencer."
+    }
+   ]
+  },
+  "OA-021": {
+   "pregunta": "Dos tokens se llaman «USD Coin» y usan el mismo logotipo. ¿Qué los distingue?",
+   "opciones": [
+    {
+     "texto": "El nombre",
+     "correcta": false,
+     "porque": "El nombre lo elige quien crea el token."
+    },
+    {
+     "texto": "La dirección del mint",
+     "correcta": true,
+     "porque": "Correcto: cada mint es único."
+    },
+    {
+     "texto": "Nada: son el mismo token",
+     "correcta": false,
+     "porque": "Pueden ser tokens distintos."
+    }
+   ]
+  },
+  "OA-022": {
+   "pregunta": "Una copia tiene la emisión y la congelación revocadas. ¿Qué puedes concluir?",
+   "opciones": [
+    {
+     "texto": "Que es segura",
+     "correcta": false,
+     "porque": "Revocado no es una garantía."
+    },
+    {
+     "texto": "Que esos permisos no están asignados en esa lectura",
+     "correcta": true,
+     "porque": "Correcto: describe la cuenta, no la legitimidad."
+    },
+    {
+     "texto": "Que es la versión oficial",
+     "correcta": false,
+     "porque": "La dirección sigue siendo otra."
+    }
+   ]
+  },
+  "OA-023": {
+   "pregunta": "La muestra de cuentas de un token no llegó (HTTP 429). ¿Qué anotas?",
+   "opciones": [
+    {
+     "texto": "Cero cuentas",
+     "correcta": false,
+     "porque": "No es un cero."
+    },
+    {
+     "texto": "Consulta fallida: dato no disponible",
+     "correcta": true,
+     "porque": "Correcto: se pidió y no hubo respuesta usable."
+    },
+    {
+     "texto": "Bien repartido",
+     "correcta": false,
+     "porque": "No se sabe cómo está repartido."
+    }
+   ]
+  },
+  "OA-024": {
+   "pregunta": "¿Qué debe incluir una lectura guardada?",
+   "opciones": [
+    {
+     "texto": "Solo los datos que salieron bien",
+     "correcta": false,
+     "porque": "Lo que faltó también es información."
+    },
+    {
+     "texto": "Fuente, fecha con zona horaria, dato y lo que no se pudo comprobar",
+     "correcta": true,
+     "porque": "Correcto: así otra persona puede repetirla."
+    },
+    {
+     "texto": "Una recomendación de compra",
+     "correcta": false,
+     "porque": "Una lectura no es una recomendación."
+    }
+   ]
+  }
+ },
+ "actividades": {
+  "OA-001": {
+   "tipo": "clasificar",
+   "enunciado": "Clasifica cada situación inventada según quién mantiene el registro.",
+   "categorias": [
+    "Lo anota un banco o una plataforma",
+    "Lo anota la red"
+   ],
+   "items": [
+    {
+     "texto": "Pagar un café con tarjeta",
+     "categoria": "Lo anota un banco o una plataforma",
+     "porque": "El banco registra el cargo y puede revisarlo."
+    },
+    {
+     "texto": "Enviar una criptomoneda desde tu wallet a otra dirección",
+     "categoria": "Lo anota la red",
+     "porque": "La red incluye la transacción firmada en un bloque."
+    },
+    {
+     "texto": "Ver el saldo de una criptomoneda comprada y dejada en una plataforma",
+     "categoria": "Lo anota un banco o una plataforma",
+     "porque": "El saldo es un apunte interno de la plataforma hasta que retiras."
+    },
+    {
+     "texto": "Retirar desde una plataforma a tu propia wallet",
+     "categoria": "Lo anota la red",
+     "porque": "La retirada es una transacción en la red hacia tu dirección."
+    }
+   ]
+  },
+  "OA-002": {
+   "tipo": "clasificar",
+   "enunciado": "¿Qué aporta la cadena y qué no?",
+   "categorias": [
+    "Lo garantiza el registro",
+    "No lo garantiza el registro"
+   ],
+   "items": [
+    {
+     "texto": "Que un bloque antiguo no se pueda cambiar sin rehacer los siguientes",
+     "categoria": "Lo garantiza el registro",
+     "porque": "Cada bloque incluye el hash del anterior."
+    },
+    {
+     "texto": "Que un token valga algo",
+     "categoria": "No lo garantiza el registro",
+     "porque": "El precio depende de quién quiera comprarlo."
+    },
+    {
+     "texto": "Que cualquiera pueda comprobar una transacción",
+     "categoria": "Lo garantiza el registro",
+     "porque": "El registro es público y verificable."
+    },
+    {
+     "texto": "Que quien promociona un proyecto diga la verdad",
+     "categoria": "No lo garantiza el registro",
+     "porque": "La cadena no comprueba afirmaciones externas."
+    }
+   ]
+  },
+  "OA-003": {
+   "tipo": "clasificar",
+   "enunciado": "Clasifica cada dato inventado sin escribir ningún secreto real.",
+   "categorias": [
+    "Secreto",
+    "Público"
+   ],
+   "items": [
+    {
+     "texto": "Las 12 palabras que mostró la wallet al crearla",
+     "categoria": "Secreto",
+     "porque": "Es la frase de recuperación: reconstruye las claves."
+    },
+    {
+     "texto": "La cadena que empieza por 0x y que pegas en un formulario de cobro",
+     "categoria": "Público",
+     "porque": "Es una dirección: sirve para recibir."
+    },
+    {
+     "texto": "La clave privada exportada desde la configuración",
+     "categoria": "Secreto",
+     "porque": "Permite firmar desde esa dirección."
+    },
+    {
+     "texto": "El hash de una transacción que ya hiciste",
+     "categoria": "Público",
+     "porque": "Solo identifica una operación pública."
+    }
+   ]
+  },
+  "OA-004": {
+   "tipo": "ordenar",
+   "enunciado": "Ordena los pasos de un envío inventado.",
+   "categorias": [
+    "Paso 1",
+    "Paso 2",
+    "Paso 3",
+    "Paso 4"
+   ],
+   "items": [
+    {
+     "texto": "Preparas el envío: dirección, red e importe",
+     "categoria": "Paso 1",
+     "porque": "Primero se define qué se quiere hacer."
+    },
+    {
+     "texto": "Firmas con tu wallet",
+     "categoria": "Paso 2",
+     "porque": "La firma autoriza la transacción."
+    },
+    {
+     "texto": "Los nodos la reciben y la incluyen en un bloque",
+     "categoria": "Paso 3",
+     "porque": "La red la valida y la añade al registro."
+    },
+    {
+     "texto": "Compruebas el estado en un explorador",
+     "categoria": "Paso 4",
+     "porque": "Solo después se puede ver el resultado en la cadena."
+    }
+   ]
+  },
+  "OA-005": {
+   "tipo": "clasificar",
+   "enunciado": "Separa lo correcto de la confusión en la frase «los mineros deciden las reglas porque crean los bloques».",
+   "categorias": [
+    "Correcto",
+    "Confusión"
+   ],
+   "items": [
+    {
+     "texto": "Los mineros proponen bloques",
+     "categoria": "Correcto",
+     "porque": "Es su función en la prueba de trabajo."
+    },
+    {
+     "texto": "Si un bloque rompe las reglas, los nodos lo aceptan igualmente",
+     "categoria": "Confusión",
+     "porque": "Los nodos lo rechazan."
+    },
+    {
+     "texto": "El suministro máximo es de 21 millones",
+     "categoria": "Correcto",
+     "porque": "Está fijado en las reglas que comprueban los nodos."
+    },
+    {
+     "texto": "Proponer un bloque equivale a cambiar las reglas",
+     "categoria": "Confusión",
+     "porque": "Proponer y decidir las reglas son cosas distintas."
+    }
+   ]
+  },
+  "OA-006": {
+   "tipo": "clasificar",
+   "enunciado": "¿Qué interviene en cada situación inventada?",
+   "categorias": [
+    "Solo la red y la moneda nativa",
+    "Un contrato además de la red"
+   ],
+   "items": [
+    {
+     "texto": "Enviar ETH a un amigo",
+     "categoria": "Solo la red y la moneda nativa",
+     "porque": "Es una transferencia de la moneda nativa."
+    },
+    {
+     "texto": "Cambiar un token por otro en un AMM",
+     "categoria": "Un contrato además de la red",
+     "porque": "El cambio lo ejecuta un contrato."
+    },
+    {
+     "texto": "Enviar un token ERC-20",
+     "categoria": "Un contrato además de la red",
+     "porque": "Los saldos del token los guarda su contrato."
+    },
+    {
+     "texto": "Pagar la comisión de una transacción",
+     "categoria": "Solo la red y la moneda nativa",
+     "porque": "El gas se paga en ETH a la red."
+    }
+   ]
+  },
+  "OA-007": {
+   "tipo": "clasificar",
+   "enunciado": "Clasifica cada descripción ficticia.",
+   "categorias": [
+    "Moneda nativa",
+    "Token común",
+    "Stablecoin"
+   ],
+   "items": [
+    {
+     "texto": "Se usa para pagar las comisiones de su red",
+     "categoria": "Moneda nativa",
+     "porque": "Es la definición de moneda nativa."
+    },
+    {
+     "texto": "Un emisor dice mantener reservas para que valga un euro",
+     "categoria": "Stablecoin",
+     "porque": "Busca seguir una moneda de curso."
+    },
+    {
+     "texto": "Creado por un proyecto para votar en su aplicación",
+     "categoria": "Token común",
+     "porque": "Es un token sin referencia a una moneda."
+    },
+    {
+     "texto": "Su emisor puede congelar saldos de direcciones concretas",
+     "categoria": "Stablecoin",
+     "porque": "Muchas stablecoins con emisor incluyen esta capacidad."
+    }
+   ]
+  },
+  "OA-008": {
+   "tipo": "clasificar",
+   "enunciado": "¿Coinciden origen y destino en estas transferencias ficticias?",
+   "categorias": [
+    "Compatible",
+    "Incompatible"
+   ],
+   "items": [
+    {
+     "texto": "Retiras USDC por Solana a una wallet de Solana",
+     "categoria": "Compatible",
+     "porque": "Misma red en los dos extremos."
+    },
+    {
+     "texto": "Pegas una dirección que empieza por 0x en un envío por Solana",
+     "categoria": "Incompatible",
+     "porque": "El formato 0x es de redes tipo Ethereum."
+    },
+    {
+     "texto": "Envías ETH por una capa 2 a un depósito que solo acepta la red principal",
+     "categoria": "Incompatible",
+     "porque": "La plataforma no verá el depósito en la red que espera."
+    },
+    {
+     "texto": "Depositas SOL desde una wallet de Solana a una dirección de Solana de tu plataforma",
+     "categoria": "Compatible",
+     "porque": "La red y el activo coinciden."
+    }
+   ]
+  },
+  "OA-009": {
+   "tipo": "clasificar",
+   "enunciado": "Dos personas inventadas: Lía usa una plataforma (custodia) y Bruno su propia wallet (autocustodia). ¿A quién afecta cada problema?",
+   "categorias": [
+    "A Lía (custodia)",
+    "A Bruno (autocustodia)"
+   ],
+   "items": [
+    {
+     "texto": "La empresa suspende las retiradas",
+     "categoria": "A Lía (custodia)",
+     "porque": "Su saldo depende de la plataforma."
+    },
+    {
+     "texto": "Pierde el papel con la frase de recuperación",
+     "categoria": "A Bruno (autocustodia)",
+     "porque": "Solo él guarda la clave."
+    },
+    {
+     "texto": "Un tercero sufre un ataque y pierde fondos de clientes",
+     "categoria": "A Lía (custodia)",
+     "porque": "Los fondos los guardaba el tercero."
+    },
+    {
+     "texto": "Firma una transacción maliciosa sin leerla",
+     "categoria": "A Bruno (autocustodia)",
+     "porque": "Él firma directamente cada operación."
+    }
+   ]
+  },
+  "OA-010": {
+   "tipo": "clasificar",
+   "enunciado": "Elige qué responder a estas peticiones inventadas.",
+   "categorias": [
+    "No lo doy",
+    "Se puede compartir"
+   ],
+   "items": [
+    {
+     "texto": "«Soporte» te escribe primero y pide tus 12 palabras",
+     "categoria": "No lo doy",
+     "porque": "Ningún soporte las pide."
+    },
+    {
+     "texto": "Un amigo te pide tu dirección para devolverte un pago",
+     "categoria": "Se puede compartir",
+     "porque": "La dirección es pública."
+    },
+    {
+     "texto": "Una app promete recuperar fondos si le das la frase",
+     "categoria": "No lo doy",
+     "porque": "Es un cebo habitual."
+    },
+    {
+     "texto": "Un formulario pide la clave privada para «verificar la cuenta»",
+     "categoria": "No lo doy",
+     "porque": "La clave privada mueve tus fondos."
+    }
+   ]
+  },
+  "OA-011": {
+   "tipo": "clasificar",
+   "enunciado": "Mensajes ficticios: ¿cuál es la pista principal?",
+   "categorias": [
+    "Urgencia",
+    "Regalo inesperado",
+    "Remitente o enlace parecido",
+    "Petición fuera de lugar"
+   ],
+   "items": [
+    {
+     "texto": "«Tu cuenta se cerrará en 24 horas si no verificas»",
+     "categoria": "Urgencia",
+     "porque": "Te empuja a actuar sin pensar."
+    },
+    {
+     "texto": "«Has ganado 500 tokens: conéctate para reclamarlos»",
+     "categoria": "Regalo inesperado",
+     "porque": "No participaste en nada."
+    },
+    {
+     "texto": "Un enlace a un dominio con una letra cambiada",
+     "categoria": "Remitente o enlace parecido",
+     "porque": "Imita la web oficial."
+    },
+    {
+     "texto": "Un «moderador» te escribe por privado y pide compartir pantalla",
+     "categoria": "Petición fuera de lugar",
+     "porque": "El soporte real no inicia así."
+    }
+   ]
+  },
+  "OA-012": {
+   "tipo": "clasificar",
+   "enunciado": "Configuración de una persona ficticia: ¿qué capa falla?",
+   "categorias": [
+    "Contraseña",
+    "Segundo factor",
+    "Dispositivo",
+    "Correo"
+   ],
+   "items": [
+    {
+     "texto": "Usa la misma contraseña en cinco servicios",
+     "categoria": "Contraseña",
+     "porque": "Una filtración abre las demás."
+    },
+    {
+     "texto": "Solo tiene 2FA por SMS en su plataforma",
+     "categoria": "Segundo factor",
+     "porque": "Es el tipo más débil."
+    },
+    {
+     "texto": "Instaló una extensión de navegador desde un enlace de un chat",
+     "categoria": "Dispositivo",
+     "porque": "Puede ser software malicioso."
+    },
+    {
+     "texto": "Su correo no tiene segundo factor",
+     "categoria": "Correo",
+     "porque": "El correo recupera las demás cuentas."
+    }
+   ]
+  },
+  "OA-013": {
+   "tipo": "clasificar",
+   "enunciado": "Ficha simulada: ¿este dato permite concluir algo por sí solo?",
+   "categorias": [
+    "Se puede leer directamente",
+    "Necesita contexto"
+   ],
+   "items": [
+    {
+     "texto": "Estado: correcta",
+     "categoria": "Se puede leer directamente",
+     "porque": "Indica que la ejecución se completó."
+    },
+    {
+     "texto": "Hora: 23:30 UTC",
+     "categoria": "Necesita contexto",
+     "porque": "Hay que convertirla a tu zona."
+    },
+    {
+     "texto": "Destino: un contrato",
+     "categoria": "Necesita contexto",
+     "porque": "Los tokens pueden ir a otra cuenta; mira las transferencias."
+    },
+    {
+     "texto": "Etiqueta «token verificado» del explorador",
+     "categoria": "Necesita contexto",
+     "porque": "Es una interpretación del explorador."
+    }
+   ]
+  },
+  "OA-014": {
+   "tipo": "clasificar",
+   "enunciado": "Pantalla de un envío inventado: ¿qué es cada cifra?",
+   "categorias": [
+    "Importe",
+    "Comisión de red",
+    "Comisión de la plataforma"
+   ],
+   "items": [
+    {
+     "texto": "0,5 SOL que recibirá el destino",
+     "categoria": "Importe",
+     "porque": "Es lo que llega."
+    },
+    {
+     "texto": "0,000005 SOL por la firma",
+     "categoria": "Comisión de red",
+     "porque": "Es la comisión base de Solana."
+    },
+    {
+     "texto": "1 USDC fijo por retirar",
+     "categoria": "Comisión de la plataforma",
+     "porque": "La fija la plataforma, no la red."
+    },
+    {
+     "texto": "Propina de prioridad",
+     "categoria": "Comisión de red",
+     "porque": "Es una comisión opcional de la red."
+    }
+   ]
+  },
+  "OA-015": {
+   "tipo": "clasificar",
+   "enunciado": "¿Qué hace cada acción?",
+   "categorias": [
+    "No mueve fondos",
+    "Puede mover fondos o autorizar a otro"
+   ],
+   "items": [
+    {
+     "texto": "Conectar la wallet a una web",
+     "categoria": "No mueve fondos",
+     "porque": "Solo comparte tu dirección."
+    },
+    {
+     "texto": "Aprobar un permiso sobre un token",
+     "categoria": "Puede mover fondos o autorizar a otro",
+     "porque": "Autoriza a otra dirección a gastar."
+    },
+    {
+     "texto": "Firmar un mensaje de inicio de sesión",
+     "categoria": "No mueve fondos",
+     "porque": "Demuestra que controlas la dirección."
+    },
+    {
+     "texto": "Firmar un permiso fuera de la cadena",
+     "categoria": "Puede mover fondos o autorizar a otro",
+     "porque": "Parece un mensaje, pero concede permisos."
+    }
+   ]
+  },
+  "OA-016": {
+   "tipo": "clasificar",
+   "enunciado": "Movimiento inventado entre dos redes: ¿de qué depende cada riesgo?",
+   "categorias": [
+    "Red de origen",
+    "Puente",
+    "Red de destino"
+   ],
+   "items": [
+    {
+     "texto": "Un ataque vacía el contrato donde se bloqueó el activo",
+     "categoria": "Puente",
+     "porque": "Ese contrato es del puente."
+    },
+    {
+     "texto": "La red de destino deja de producir bloques",
+     "categoria": "Red de destino",
+     "porque": "Ahí está tu representación."
+    },
+    {
+     "texto": "Un grupo de firmantes valida los mensajes entre redes",
+     "categoria": "Puente",
+     "porque": "Es un supuesto de confianza del puente."
+    },
+    {
+     "texto": "Las comisiones suben en la red donde bloqueas",
+     "categoria": "Red de origen",
+     "porque": "Pagas la operación de bloqueo en esa red."
+    }
+   ]
+  },
+  "OA-017": {
+   "tipo": "clasificar",
+   "enunciado": "Aplicación inventada: ¿dónde ocurre cada fallo?",
+   "categorias": [
+    "Interfaz",
+    "Proveedor",
+    "Contrato"
+   ],
+   "items": [
+    {
+     "texto": "Alguien cambia el código de la web para pedir firmas a otro contrato",
+     "categoria": "Interfaz",
+     "porque": "La web prepara las transacciones."
+    },
+    {
+     "texto": "Los saldos tardan en cargarse porque el servicio de lectura está saturado",
+     "categoria": "Proveedor",
+     "porque": "Conecta la web con la red."
+    },
+    {
+     "texto": "Un error en el código permite retirar más de lo depositado",
+     "categoria": "Contrato",
+     "porque": "Es la lógica en la cadena."
+    },
+    {
+     "texto": "El administrador puede pausar retiradas",
+     "categoria": "Contrato",
+     "porque": "Es una función administrativa del contrato."
+    }
+   ]
+  },
+  "OA-018": {
+   "tipo": "clasificar",
+   "enunciado": "Pools ficticios con el mismo precio: ¿qué describe cada frase?",
+   "categorias": [
+    "Pool pequeño",
+    "Pool grande"
+   ],
+   "items": [
+    {
+     "texto": "Comprar 100 tokens cuesta unos 111",
+     "categoria": "Pool pequeño",
+     "porque": "Con 1 000 y 1 000, el producto constante sube el precio."
+    },
+    {
+     "texto": "Comprar 100 tokens cuesta algo más de 101",
+     "categoria": "Pool grande",
+     "porque": "Con 10 000 y 10 000, el efecto es menor."
+    },
+    {
+     "texto": "Unas pocas ventas desploman el precio",
+     "categoria": "Pool pequeño",
+     "porque": "Hay poca profundidad."
+    },
+    {
+     "texto": "El deslizamiento de una operación pequeña es bajo",
+     "categoria": "Pool grande",
+     "porque": "Hay más liquidez."
+    }
+   ]
+  },
+  "OA-019": {
+   "tipo": "clasificar",
+   "enunciado": "Frases inventadas: ¿describen el mecanismo o esconden un riesgo?",
+   "categorias": [
+    "Describe el mecanismo",
+    "Esconde un riesgo"
+   ],
+   "items": [
+    {
+     "texto": "Depositas más valor del que pides prestado",
+     "categoria": "Describe el mecanismo",
+     "porque": "Es un préstamo colateralizado."
+    },
+    {
+     "texto": "«Rendimiento fijo garantizado del 2 % diario»",
+     "categoria": "Esconde un riesgo",
+     "porque": "Sin fuente explicable, no es sostenible."
+    },
+    {
+     "texto": "Las recompensas de staking se pagan en la moneda bloqueada",
+     "categoria": "Describe el mecanismo",
+     "porque": "Así funcionan en prueba de participación."
+    },
+    {
+     "texto": "«Puedes retirar al instante siempre»",
+     "categoria": "Esconde un riesgo",
+     "porque": "Muchos sistemas tienen plazos de retirada."
+    }
+   ]
+  },
+  "OA-020": {
+   "tipo": "clasificar",
+   "enunciado": "Anuncio ficticio: clasifica cada frase.",
+   "categorias": [
+    "Hecho comprobable",
+    "Hipótesis",
+    "Promoción"
+   ],
+   "items": [
+    {
+     "texto": "«El contrato tiene la emisión revocada»",
+     "categoria": "Hecho comprobable",
+     "porque": "Se lee en la cadena."
+    },
+    {
+     "texto": "«Con la versión 2 el uso se multiplicará»",
+     "categoria": "Hipótesis",
+     "porque": "Depende de algo futuro."
+    },
+    {
+     "texto": "«Es la oportunidad del año, solo hoy»",
+     "categoria": "Promoción",
+     "porque": "Busca una reacción."
+    },
+    {
+     "texto": "«Hay 4 200 cuentas con saldo según el explorador a fecha de hoy»",
+     "categoria": "Hecho comprobable",
+     "porque": "Se puede repetir la lectura con fecha."
+    }
+   ]
+  },
+  "OA-024": {
+   "tipo": "clasificar",
+   "enunciado": "¿En qué fase de una lectura va cada paso?",
+   "categorias": [
+    "Antes de leer",
+    "Durante la lectura",
+    "Al guardar"
+   ],
+   "items": [
+    {
+     "texto": "Conseguir la dirección del mint en una fuente de confianza",
+     "categoria": "Antes de leer",
+     "porque": "Sin dirección correcta, todo lo demás falla."
+    },
+    {
+     "texto": "Leer permisos, suministro y reparto",
+     "categoria": "Durante la lectura",
+     "porque": "Son los datos de la ficha."
+    },
+    {
+     "texto": "Anotar lo que no llegó como «Dato no disponible»",
+     "categoria": "Al guardar",
+     "porque": "Los huecos forman parte de la lectura."
+    },
+    {
+     "texto": "Escribir fecha, hora y zona horaria",
+     "categoria": "Al guardar",
+     "porque": "Permite comparar después."
+    }
+   ]
+  }
+ },
+ "modulos": {
+  "1": [
+   {
+    "pregunta": "¿Qué controla quien tiene la clave privada?",
+    "opciones": [
+     {
+      "texto": "Toda la red",
+      "correcta": false,
+      "porque": "Solo su dirección."
+     },
+     {
+      "texto": "Los fondos de esa dirección",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "Las reglas",
+      "correcta": false,
+      "porque": "Las aplican los nodos."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué incluye cada bloque para enlazarse al anterior?",
+    "opciones": [
+     {
+      "texto": "Su hash",
+      "correcta": true,
+      "porque": "Correcto: la huella del bloque anterior."
+     },
+     {
+      "texto": "Su precio",
+      "correcta": false,
+      "porque": "No hay precio en el bloque."
+     },
+     {
+      "texto": "Un nombre",
+      "correcta": false,
+      "porque": "No se enlazan por nombre."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué hace la prueba de participación?",
+    "opciones": [
+     {
+      "texto": "Exige resolver un cálculo costoso",
+      "correcta": false,
+      "porque": "Eso es prueba de trabajo."
+     },
+     {
+      "texto": "Exige bloquear monedas como garantía",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "Elimina las comisiones",
+      "correcta": false,
+      "porque": "No las elimina."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Puede revertirse un envío confirmado en la cadena?",
+    "opciones": [
+     {
+      "texto": "Sí, llamando a la red",
+      "correcta": false,
+      "porque": "No hay servicio de atención."
+     },
+     {
+      "texto": "Sí, en 24 horas",
+      "correcta": false,
+      "porque": "No existe ese plazo."
+     },
+     {
+      "texto": "No por regla general",
+      "correcta": true,
+      "porque": "Correcto: no hay a quién reclamar."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué hace un nodo?",
+    "opciones": [
+     {
+      "texto": "Comprueba reglas y guarda el registro",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "Custodia tus claves",
+      "correcta": false,
+      "porque": "Eso lo hace la wallet."
+     },
+     {
+      "texto": "Fija los precios",
+      "correcta": false,
+      "porque": "No fija precios."
+     }
+    ]
+   },
+   {
+    "pregunta": "Tu wallet dice «enviado». ¿Dónde compruebas el resultado?",
+    "opciones": [
+     {
+      "texto": "En un explorador de bloques",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "En la propia wallet, sin más",
+      "correcta": false,
+      "porque": "Solo sabe que firmaste."
+     },
+     {
+      "texto": "En un chat del proyecto",
+      "correcta": false,
+      "porque": "No es una fuente de la cadena."
+     }
+    ]
+   }
+  ],
+  "2": [
+   {
+    "pregunta": "¿En qué se paga la comisión de red?",
+    "opciones": [
+     {
+      "texto": "En cualquier token",
+      "correcta": false,
+      "porque": "Las comisiones van en la nativa."
+     },
+     {
+      "texto": "En euros",
+      "correcta": false,
+      "porque": "No."
+     },
+     {
+      "texto": "En la moneda nativa",
+      "correcta": true,
+      "porque": "Correcto."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué es un token?",
+    "opciones": [
+     {
+      "texto": "Un activo creado sobre una red existente",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "La moneda de la red",
+      "correcta": false,
+      "porque": "Esa es la nativa."
+     },
+     {
+      "texto": "Una red nueva",
+      "correcta": false,
+      "porque": "No."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué busca una moneda estable?",
+    "opciones": [
+     {
+      "texto": "Subir de precio",
+      "correcta": false,
+      "porque": "No es su objetivo."
+     },
+     {
+      "texto": "Seguir el valor de una referencia",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "Pagar comisiones en todas las redes",
+      "correcta": false,
+      "porque": "No."
+     }
+    ]
+   },
+   {
+    "pregunta": "Pegas una dirección 0x en un envío por Solana. ¿Qué pasa?",
+    "opciones": [
+     {
+      "texto": "Llega igual",
+      "correcta": false,
+      "porque": "No."
+     },
+     {
+      "texto": "Se convierte sola",
+      "correcta": false,
+      "porque": "No."
+     },
+     {
+      "texto": "Es incompatible",
+      "correcta": true,
+      "porque": "Correcto: formatos distintos."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué añade un puente?",
+    "opciones": [
+     {
+      "texto": "Sus propios supuestos de confianza",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "Seguridad gratuita",
+      "correcta": false,
+      "porque": "No."
+     },
+     {
+      "texto": "Nada",
+      "correcta": false,
+      "porque": "Añade riesgos."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Por qué existen las capas 2?",
+    "opciones": [
+     {
+      "texto": "Para eliminar la red principal",
+      "correcta": false,
+      "porque": "No."
+     },
+     {
+      "texto": "Para ocultar transacciones",
+      "correcta": false,
+      "porque": "No es su objetivo."
+     },
+     {
+      "texto": "Para abaratar procesando fuera y publicando un resumen",
+      "correcta": true,
+      "porque": "Correcto."
+     }
+    ]
+   }
+  ],
+  "3": [
+   {
+    "pregunta": "¿Quién puede pedirte la frase de recuperación?",
+    "opciones": [
+     {
+      "texto": "Nadie legítimo",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "El soporte técnico",
+      "correcta": false,
+      "porque": "Nunca."
+     },
+     {
+      "texto": "La red",
+      "correcta": false,
+      "porque": "No."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Dónde guardar la frase?",
+    "opciones": [
+     {
+      "texto": "Fuera de línea, en un lugar seguro",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "En una foto en la nube",
+      "correcta": false,
+      "porque": "Quien entre en la cuenta la verá."
+     },
+     {
+      "texto": "En un correo a ti mismo",
+      "correcta": false,
+      "porque": "No."
+     }
+    ]
+   },
+   {
+    "pregunta": "Señal típica de phishing:",
+    "opciones": [
+     {
+      "texto": "Urgencia y regalo inesperado",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "Un mensaje que no pide nada",
+      "correcta": false,
+      "porque": "No es la señal."
+     },
+     {
+      "texto": "Una web que escribes tú",
+      "correcta": false,
+      "porque": "No."
+     }
+    ]
+   },
+   {
+    "pregunta": "2FA más resistente al phishing:",
+    "opciones": [
+     {
+      "texto": "SMS",
+      "correcta": false,
+      "porque": "Es el más débil."
+     },
+     {
+      "texto": "Llave física o passkey",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "Ninguno",
+      "correcta": false,
+      "porque": "Sí hay diferencias."
+     }
+    ]
+   },
+   {
+    "pregunta": "En autocustodia, si pierdes la frase:",
+    "opciones": [
+     {
+      "texto": "La empresa de la wallet la repone",
+      "correcta": false,
+      "porque": "No la tiene."
+     },
+     {
+      "texto": "Nadie puede recuperar el acceso",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "La red la reenvía",
+      "correcta": false,
+      "porque": "No."
+     }
+    ]
+   },
+   {
+    "pregunta": "Ante un mensaje dudoso:",
+    "opciones": [
+     {
+      "texto": "Abre el servicio por el camino que ya conoces",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "Pulsa el enlace para comprobarlo",
+      "correcta": false,
+      "porque": "Es lo que busca el atacante."
+     },
+     {
+      "texto": "Responde con tus datos",
+      "correcta": false,
+      "porque": "No."
+     }
+    ]
+   }
+  ],
+  "4": [
+   {
+    "pregunta": "¿Se paga comisión si la transacción falla?",
+    "opciones": [
+     {
+      "texto": "Sí",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "No",
+      "correcta": false,
+      "porque": "Se cobra."
+     },
+     {
+      "texto": "Solo en Bitcoin",
+      "correcta": false,
+      "porque": "No."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Por qué sube la comisión?",
+    "opciones": [
+     {
+      "texto": "Por la demanda de espacio en los bloques",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "Por el importe enviado",
+      "correcta": false,
+      "porque": "En Bitcoin depende del tamaño en bytes, no del importe."
+     },
+     {
+      "texto": "Por la hora",
+      "correcta": false,
+      "porque": "Indirectamente, solo si hay más demanda."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué hace conectar la wallet a una web?",
+    "opciones": [
+     {
+      "texto": "Mueve tus fondos",
+      "correcta": false,
+      "porque": "No."
+     },
+     {
+      "texto": "Da permiso ilimitado",
+      "correcta": false,
+      "porque": "No."
+     },
+     {
+      "texto": "Muestra tu dirección",
+      "correcta": true,
+      "porque": "Correcto."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué autoriza un approve?",
+    "opciones": [
+     {
+      "texto": "Ver tu saldo",
+      "correcta": false,
+      "porque": "No."
+     },
+     {
+      "texto": "Que otra dirección gaste hasta un límite de un token",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "Nada",
+      "correcta": false,
+      "porque": "Autoriza gasto."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Cómo se quita un permiso?",
+    "opciones": [
+     {
+      "texto": "Revocándolo con otra transacción",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "Desconectando la web",
+      "correcta": false,
+      "porque": "No basta."
+     },
+     {
+      "texto": "Borrando la app",
+      "correcta": false,
+      "porque": "No."
+     }
+    ]
+   },
+   {
+    "pregunta": "Hora de un explorador en UTC 23:30 en noviembre. En Madrid es:",
+    "opciones": [
+     {
+      "texto": "23:30",
+      "correcta": false,
+      "porque": "Hay que convertir."
+     },
+     {
+      "texto": "22:30",
+      "correcta": false,
+      "porque": "Al revés."
+     },
+     {
+      "texto": "00:30 del día siguiente",
+      "correcta": true,
+      "porque": "Correcto: UTC+1."
+     }
+    ]
+   }
+  ],
+  "5": [
+   {
+    "pregunta": "¿Qué parte de una dApp vive en la cadena?",
+    "opciones": [
+     {
+      "texto": "El contrato",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "La web",
+      "correcta": false,
+      "porque": "No."
+     },
+     {
+      "texto": "El proveedor",
+      "correcta": false,
+      "porque": "No."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué fija el precio en un AMM?",
+    "opciones": [
+     {
+      "texto": "La proporción entre sus saldos",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "Un libro de órdenes",
+      "correcta": false,
+      "porque": "No en un AMM."
+     },
+     {
+      "texto": "El equipo",
+      "correcta": false,
+      "porque": "No."
+     }
+    ]
+   },
+   {
+    "pregunta": "Deslizamiento es:",
+    "opciones": [
+     {
+      "texto": "Una comisión fija",
+      "correcta": false,
+      "porque": "No."
+     },
+     {
+      "texto": "Un tipo de token",
+      "correcta": false,
+      "porque": "No."
+     },
+     {
+      "texto": "La diferencia entre el precio mostrado y el obtenido",
+      "correcta": true,
+      "porque": "Correcto."
+     }
+    ]
+   },
+   {
+    "pregunta": "Cantidades virtuales en una curva:",
+    "opciones": [
+     {
+      "texto": "Fondos reales",
+      "correcta": false,
+      "porque": "Esas son las reales."
+     },
+     {
+      "texto": "Un error",
+      "correcta": false,
+      "porque": "No."
+     },
+     {
+      "texto": "Cantidades de la fórmula que no son fondos depositados",
+      "correcta": true,
+      "porque": "Correcto."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué provoca una liquidación?",
+    "opciones": [
+     {
+      "texto": "Pagar a tiempo",
+      "correcta": false,
+      "porque": "No."
+     },
+     {
+      "texto": "El staking",
+      "correcta": false,
+      "porque": "No."
+     },
+     {
+      "texto": "Que la garantía caiga bajo el umbral",
+      "correcta": true,
+      "porque": "Correcto."
+     }
+    ]
+   },
+   {
+    "pregunta": "Ante un rendimiento, la pregunta clave es:",
+    "opciones": [
+     {
+      "texto": "¿Quién lo paga y por qué?",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "¿Es alto?",
+      "correcta": false,
+      "porque": "No basta."
+     },
+     {
+      "texto": "¿Lo recomiendan famosos?",
+      "correcta": false,
+      "porque": "Es una señal de promoción."
+     }
+    ]
+   }
+  ],
+  "6": [
+   {
+    "pregunta": "¿Qué identifica a un token en Solana?",
+    "opciones": [
+     {
+      "texto": "El nombre",
+      "correcta": false,
+      "porque": "No."
+     },
+     {
+      "texto": "El logotipo",
+      "correcta": false,
+      "porque": "No."
+     },
+     {
+      "texto": "La dirección del mint",
+      "correcta": true,
+      "porque": "Correcto."
+     }
+    ]
+   },
+   {
+    "pregunta": "Emisión activa en una moneda estable:",
+    "opciones": [
+     {
+      "texto": "Es una acusación",
+      "correcta": false,
+      "porque": "No."
+     },
+     {
+      "texto": "Es imposible",
+      "correcta": false,
+      "porque": "No."
+     },
+     {
+      "texto": "Es la forma normal de crear unidades",
+      "correcta": true,
+      "porque": "Correcto."
+     }
+    ]
+   },
+   {
+    "pregunta": "Una muestra de cuentas es:",
+    "opciones": [
+     {
+      "texto": "La lista completa",
+      "correcta": false,
+      "porque": "No."
+     },
+     {
+      "texto": "Una parte de las cuentas, no un censo",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "La lista de personas",
+      "correcta": false,
+      "porque": "Una cuenta no es una persona."
+     }
+    ]
+   },
+   {
+    "pregunta": "HTTP 429 al pedir un dato:",
+    "opciones": [
+     {
+      "texto": "Consulta fallida",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "Ausente comprobado",
+      "correcta": false,
+      "porque": "No: no hubo respuesta usable."
+     },
+     {
+      "texto": "Cero",
+      "correcta": false,
+      "porque": "No."
+     }
+    ]
+   },
+   {
+    "pregunta": "«Afirmación sobre el futuro» es:",
+    "opciones": [
+     {
+      "texto": "Hipótesis",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "Hecho comprobable",
+      "correcta": false,
+      "porque": "No."
+     },
+     {
+      "texto": "Dato de la cadena",
+      "correcta": false,
+      "porque": "No."
+     }
+    ]
+   },
+   {
+    "pregunta": "¿Qué debe llevar una lectura guardada?",
+    "opciones": [
+     {
+      "texto": "Fecha con zona, fuente y huecos",
+      "correcta": true,
+      "porque": "Correcto."
+     },
+     {
+      "texto": "Solo el precio",
+      "correcta": false,
+      "porque": "No."
+     },
+     {
+      "texto": "Una recomendación",
+      "correcta": false,
+      "porque": "No."
+     }
+    ]
+   }
+  ]
+ },
+ "practicas": {
+  "P1": {
+   "titulo": "Mensajes sospechosos",
+   "unidad": "OA-011",
+   "enunciado": "Seis mensajes inventados. Decide si cada uno es sospechoso o normal. Ninguno usa marcas ni personas reales.",
+   "actividad": {
+    "tipo": "clasificar",
+    "enunciado": "¿Sospechoso o normal?",
+    "categorias": [
+     "Sospechoso",
+     "Normal"
+    ],
+    "items": [
+     {
+      "texto": "«Soporte de tu wallet: valida tus 12 palabras en este formulario antes de las 18:00»",
+      "categoria": "Sospechoso",
+      "porque": "Pide la frase y mete prisa."
+     },
+     {
+      "texto": "Tu app oficial muestra una actualización disponible en la tienda de aplicaciones",
+      "categoria": "Normal",
+      "porque": "Llega por un canal que ya usabas."
+     },
+     {
+      "texto": "Un perfil con el avatar del proyecto, pero otro nombre de usuario, anuncia un airdrop",
+      "categoria": "Sospechoso",
+      "porque": "Perfil copiado y regalo inesperado."
+     },
+     {
+      "texto": "Un amigo te pide por voz tu dirección para devolverte dinero",
+      "categoria": "Normal",
+      "porque": "La dirección es pública."
+     },
+     {
+      "texto": "«Envía 1 y te devolvemos 2 en una hora»",
+      "categoria": "Sospechoso",
+      "porque": "Promesa de multiplicar."
+     },
+     {
+      "texto": "Un enlace a un dominio con una letra cambiada respecto al oficial",
+      "categoria": "Sospechoso",
+      "porque": "Imita la web real."
+     }
+    ]
+   }
+  },
+  "P2": {
+   "titulo": "Revisar un envío",
+   "unidad": "OA-014",
+   "enunciado": "La pantalla de un envío inventado. Revisa cada dato y decide si es correcto o hay que parar. No se envía nada.",
+   "actividad": {
+    "tipo": "clasificar",
+    "enunciado": "¿Correcto o hay que parar?",
+    "categorias": [
+     "Correcto",
+     "Hay que parar"
+    ],
+    "items": [
+     {
+      "texto": "Red: Solana, igual que la de la wallet de destino",
+      "categoria": "Correcto",
+      "porque": "Origen y destino coinciden."
+     },
+     {
+      "texto": "Dirección de destino que empieza por 0x",
+      "categoria": "Hay que parar",
+      "porque": "Formato de otra red."
+     },
+     {
+      "texto": "Importe: 0,5 SOL, el acordado",
+      "categoria": "Correcto",
+      "porque": "Coincide con lo previsto."
+     },
+     {
+      "texto": "Comisión de retirada de la plataforma: el 50 % del importe",
+      "categoria": "Hay que parar",
+      "porque": "Desproporcionada: revisa antes."
+     },
+     {
+      "texto": "Dirección copiada de un mensaje privado de alguien que dice ser el destinatario",
+      "categoria": "Hay que parar",
+      "porque": "Confírmala por otro canal."
+     },
+     {
+      "texto": "Resumen final que muestra el total a debitar",
+      "categoria": "Correcto",
+      "porque": "Es la pantalla que hay que leer antes de firmar."
+     }
+    ]
+   }
+  },
+  "P3": {
+   "titulo": "Leer un permiso",
+   "unidad": "OA-015",
+   "enunciado": "Una petición de permiso inventada. Lee cada campo y decide qué te dice.",
+   "actividad": {
+    "tipo": "clasificar",
+    "enunciado": "¿Qué indica cada campo?",
+    "categorias": [
+     "Información útil",
+     "Señal para no firmar"
+    ],
+    "items": [
+     {
+      "texto": "Token: USDC en la red que esperabas",
+      "categoria": "Información útil",
+      "porque": "Sabes qué token se ve afectado."
+     },
+     {
+      "texto": "Cantidad: ilimitada",
+      "categoria": "Señal para no firmar",
+      "porque": "Puedes fijar un límite igual a lo que vas a usar."
+     },
+     {
+      "texto": "Spender: una dirección que no coincide con la del contrato oficial",
+      "categoria": "Señal para no firmar",
+      "porque": "Una web falsa pide permiso para su propio contrato."
+     },
+     {
+      "texto": "Web a la que llegaste escribiendo tú la dirección",
+      "categoria": "Información útil",
+      "porque": "Reduce el riesgo de suplantación."
+     },
+     {
+      "texto": "Mensaje «firma ahora o pierdes la recompensa»",
+      "categoria": "Señal para no firmar",
+      "porque": "Urgencia."
+     },
+     {
+      "texto": "La wallet muestra que es una aprobación, no un envío",
+      "categoria": "Información útil",
+      "porque": "Sabes qué tipo de acción es."
+     }
+    ]
+   }
+  },
+  "P4": {
+   "titulo": "Lectura fechada",
+   "unidad": "OA-024",
+   "enunciado": "Notas inventadas de una lectura de un token. Decide si cada una está bien registrada o le falta algo para poder compararla después.",
+   "actividad": {
+    "tipo": "clasificar",
+    "enunciado": "¿Bien registrada o incompleta?",
+    "categorias": [
+     "Bien registrada",
+     "Incompleta"
+    ],
+    "items": [
+     {
+      "texto": "Suministro leído del mint el 03-11-2026 a las 10:40 (hora de Madrid)",
+      "categoria": "Bien registrada",
+      "porque": "Dice qué, de dónde y cuándo."
+     },
+     {
+      "texto": "«El token es de USD Coin» porque así se llama",
+      "categoria": "Incompleta",
+      "porque": "El nombre no identifica: falta la dirección completa del mint."
+     },
+     {
+      "texto": "Autoridad de congelación: Dato no disponible (la consulta falló)",
+      "categoria": "Bien registrada",
+      "porque": "Separa un hueco de un «no tiene»."
+     },
+     {
+      "texto": "Liquidez: 0",
+      "categoria": "Incompleta",
+      "porque": "Si no se leyó, no es cero: hay que decir que falta y por qué."
+     },
+     {
+      "texto": "Reparto: muestra de 20 cuentas; la mayor es una cuenta técnica de la curva",
+      "categoria": "Bien registrada",
+      "porque": "Indica el tamaño de la muestra y qué cuenta es."
+     },
+     {
+      "texto": "Captura sin fecha de una web del proyecto",
+      "categoria": "Incompleta",
+      "porque": "Sin fecha ni fuente no se puede comparar después."
+     }
+    ]
+   }
+  }
+ }
+}

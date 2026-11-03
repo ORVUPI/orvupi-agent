@@ -1,0 +1,17 @@
+{
+  "name": "ORVUPI Academy",
+  "short_name": "Academy",
+  "description": "Academia gratuita de ORVUPI: artículos, rutas, prácticas y glosario cripto. Sin cuenta, sin wallet y sin pagos.",
+  "start_url": "/academy/",
+  "scope": "/academy/",
+  "display": "standalone",
+  "background_color": "#fff8ec",
+  "theme_color": "#ff3070",
+  "lang": "es",
+  "icons": [
+    { "src": "/assets/academy/academy.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/academy/favicon-32.png", "sizes": "32x32", "type": "image/png", "purpose": "any" },
+    { "src": "/academy/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/academy/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

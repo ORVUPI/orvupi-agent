@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "actualizado": "2026-11-03",
+  "ruta": {
+    "slug": "primeros-pasos",
+    "titulo": "Primeros pasos seguros en cripto",
+    "nivel": "Principiante",
+    "resumen": "Una ruta gratuita en seis módulos: de qué es el dinero digital a leer con calma los datos públicos de un token. Sin cuenta, sin wallet y sin pagos.",
+    "descripcion": [
+      "La ruta ordena 24 artículos cortos en seis módulos. Cada artículo explica una idea, la aplica a un caso inventado y termina con una pregunta que se corrige al momento.",
+      "Cada módulo cierra con una evaluación de seis preguntas. Se supera con cinco aciertos y puedes repetirla las veces que quieras. El progreso se guarda solo en este navegador."
+    ],
+    "aprenderas": [
+      "Qué es una blockchain, qué hace una red y qué límites tiene.",
+      "Qué diferencia hay entre una clave, una dirección y una firma, y qué no debes compartir nunca.",
+      "Cómo comprobar la red, la dirección, la comisión y el estado de un envío antes y después de hacerlo.",
+      "Qué autorizas cuando una aplicación te pide un permiso o una firma.",
+      "Cómo funcionan los intercambios automáticos, los préstamos y el staking, y qué puede salir mal.",
+      "Cómo leer la ficha fechada de un token y anotar lo que no se pudo comprobar."
+    ],
+    "imagen": 326
+  },
+  "modulos": [
+    {"n": 1, "slug": "fundamentos", "titulo": "Fundamentos", "nivel": "Principiante", "resumen": "Dinero digital, blockchain, claves y transacciones.", "unidades": ["OA-001", "OA-002", "OA-003", "OA-004"]},
+    {"n": 2, "slug": "redes-y-activos", "titulo": "Redes y activos", "nivel": "Principiante", "resumen": "Bitcoin, Ethereum, tokens, stablecoins y la red correcta.", "unidades": ["OA-005", "OA-006", "OA-007", "OA-008"]},
+    {"n": 3, "slug": "seguridad", "titulo": "Seguridad", "nivel": "Principiante", "resumen": "Custodia, copias, phishing y protección de accesos.", "unidades": ["OA-009", "OA-010", "OA-011", "OA-012"]},
+    {"n": 4, "slug": "transacciones-y-permisos", "titulo": "Transacciones y permisos", "nivel": "Intermedio", "resumen": "Exploradores, comisiones, permisos, capas 2 y puentes.", "unidades": ["OA-013", "OA-014", "OA-015", "OA-016"]},
+    {"n": 5, "slug": "aplicaciones-y-defi", "titulo": "Aplicaciones y DeFi", "nivel": "Intermedio", "resumen": "Contratos, intercambios, préstamos, staking y afirmaciones.", "unidades": ["OA-017", "OA-018", "OA-019", "OA-020"]},
+    {"n": 6, "slug": "leer-datos-con-orvupi", "titulo": "Leer datos con ORVUPI", "nivel": "Intermedio", "resumen": "Identidad de un token, permisos, suministro y lecturas fechadas.", "unidades": ["OA-021", "OA-022", "OA-023", "OA-024"]}
+  ],
+  "unidades": [
+    {"id": "OA-001", "slug": "que-es-el-dinero-digital", "imagen": 326},
+    {"id": "OA-002", "slug": "que-es-una-blockchain", "imagen": 327},
+    {"id": "OA-003", "slug": "claves-direcciones-y-firmas", "imagen": 329},
+    {"id": "OA-004", "slug": "como-se-valida-una-transaccion", "imagen": 331},
+    {"id": "OA-005", "slug": "que-es-bitcoin", "imagen": 330},
+    {"id": "OA-006", "slug": "que-es-ethereum", "imagen": 183},
+    {"id": "OA-007", "slug": "monedas-tokens-y-stablecoins", "imagen": 280},
+    {"id": "OA-008", "slug": "elegir-la-red-correcta", "imagen": 254},
+    {"id": "OA-009", "slug": "custodia-y-autocustodia", "imagen": 328},
+    {"id": "OA-010", "slug": "copias-de-seguridad-y-recuperacion", "imagen": 405},
+    {"id": "OA-011", "slug": "como-reconocer-el-phishing", "imagen": 403},
+    {"id": "OA-012", "slug": "proteger-tus-accesos", "imagen": 401},
+    {"id": "OA-013", "slug": "como-leer-un-explorador-de-bloques", "imagen": 190},
+    {"id": "OA-014", "slug": "comisiones-y-confirmaciones", "imagen": 252},
+    {"id": "OA-015", "slug": "permisos-de-contratos", "imagen": 404},
+    {"id": "OA-016", "slug": "capas-2-y-puentes", "imagen": 278},
+    {"id": "OA-017", "slug": "contratos-inteligentes-y-dapps", "imagen": 186},
+    {"id": "OA-018", "slug": "intercambios-y-liquidez", "imagen": 276},
+    {"id": "OA-019", "slug": "prestamos-y-staking", "imagen": 279},
+    {"id": "OA-020", "slug": "evaluar-afirmaciones", "imagen": 180},
+    {"id": "OA-021", "slug": "identificar-un-token", "imagen": 176},
+    {"id": "OA-022", "slug": "interpretar-permisos-de-un-token", "imagen": 332},
+    {"id": "OA-023", "slug": "suministro-y-datos-ausentes", "imagen": 281},
+    {"id": "OA-024", "slug": "investigar-y-guardar-una-lectura", "imagen": 227}
+  ],
+  "practicas": [
+    {"id": "P1", "slug": "mensajes-sospechosos", "unidad": "OA-011", "titulo": "Práctica: detecta los mensajes sospechosos", "resumen": "Seis mensajes inventados. Decide cuáles piden algo que nunca debes dar y señala la pista.", "nivel": "Principiante", "imagen": 406},
+    {"id": "P2", "slug": "revisar-un-envio", "unidad": "OA-014", "titulo": "Práctica: revisa un envío antes de confirmarlo", "resumen": "Una pantalla de envío simulada. Comprueba red, dirección, importe y comisión sin enviar nada.", "nivel": "Intermedio", "imagen": 177},
+    {"id": "P3", "slug": "leer-un-permiso", "unidad": "OA-015", "titulo": "Práctica: lee una autorización antes de firmar", "resumen": "Una petición de permiso simulada. Identifica quién recibe el permiso, sobre qué y hasta cuánto.", "nivel": "Intermedio", "imagen": 187},
+    {"id": "P4", "slug": "lectura-fechada", "unidad": "OA-024", "titulo": "Práctica: compara fichas fechadas y guarda tu lectura", "resumen": "Fichas reales del 2026-10-16, un caso de curva y tus notas: compara, justifica y guarda.", "nivel": "Intermedio", "imagen": 228}
+  ],
+  "herramientas": [
+    {"id": "curva", "slug": "curva-en-vivo", "titulo": "Curva en vivo", "resumen": "Lee en la cadena el estado de la curva de un token de Pump.fun o Raydium LaunchLab, solo cuando lo pides.", "imagen": 282},
+    {"id": "cuaderno", "slug": "cuaderno", "titulo": "Cuaderno de fichas", "resumen": "Guarda fichas y notas en este navegador. Exporta e importa un archivo JSON.", "imagen": 226}
+  ],
+  "portada": {
+    "destacado": "OA-011",
+    "sugeridos": ["OA-001", "OA-003", "OA-008", "OA-015"],
+    "secciones": [
+      {"titulo": "Seguridad desde cero", "modulo": 3},
+      {"titulo": "Leer datos con ORVUPI", "modulo": 6}
+    ]
+  },
+  "imagenes": [1, 231, 257, 326, 332],
+  "cuadradas": [1, 231]
+}

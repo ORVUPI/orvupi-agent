@@ -1291,7 +1291,8 @@ describe("lector y cuaderno", () => {
     assert.match(verify, /draft-address\.js/);
     const learn = readFileSync(path.join(root, "web/v2/aprender/index.html"), "utf8");
     assert.match(learn, /draft-address\.js/);
-    assert.match(verify, /href="\/aprender\/#direccion"/);
+    // La ayuda de Verify enlaza al glosario de ORVUPI Academy; /aprender/ redirige allí.
+    assert.match(verify, /href="\/academy\/glosario\/#direccion"/);
     const mission = readFileSync(path.join(root, "lab/client/ui.js"), "utf8");
     assert.match(mission, /\/aprender\/\?from=lab#/);
   });
