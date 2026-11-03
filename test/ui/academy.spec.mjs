@@ -378,3 +378,32 @@ test("redirecciones: cada ruta antigua apunta a una página de Academy que exist
     await expect(page.locator(`[id="${id}"]`), `#${id}`).toBeAttached();
   }
 });
+
+test("redes: filtro por red en Artículos, páginas de cada red y etiquetas en el artículo", async ({ page }) => {
+  const errors = watchErrors(page);
+  const datos = JSON.parse(readFileSync(new URL("../../web/v2/academy/datos.json", import.meta.url), "utf8"));
+  const eth = datos.redes.find((r) => r.id === "ethereum");
+  await page.goto("/academy/articulos/?red=ethereum");
+  await expect(page.locator("#f-r")).toHaveValue("ethereum");
+  await expect(page.locator("[data-ac-list] .ac-lcard:not([hidden])")).toHaveCount(eth.unidades.length);
+  await page.locator("#f-r").selectOption("bitcoin");
+  await expect(page).toHaveURL(/[?&]red=bitcoin\b/);
+  const btc = datos.redes.find((r) => r.id === "bitcoin");
+  await expect(page.locator("[data-ac-list] .ac-lcard:not([hidden])")).toHaveCount(btc.unidades.length);
+  await page.locator("#f-r").selectOption("");
+  await expect(page.locator("[data-ac-list] .ac-lcard:not([hidden])")).toHaveCount(datos.unidades.length);
+  await noOverflow(page, "artículos");
+  await page.goto("/academy/redes/");
+  await expect(page.locator("h1")).toHaveText("Blockchains y redes");
+  for (const r of datos.redes) await expect(page.locator(`main a[href="${r.u}"]`).first()).toBeAttached();
+  await noOverflow(page, "redes");
+  await page.goto(eth.u);
+  await expect(page.locator("main .ac-lcard")).toHaveCount(eth.unidades.length);
+  await noOverflow(page, "red ethereum");
+  const art = datos.unidades.find((u) => u.id === eth.unidades[0]);
+  await page.goto(art.u);
+  await expect(page.locator(`.ac-redes-l a[href="${eth.u}"]`)).toBeVisible();
+  await page.locator(`.ac-redes-l a[href="${eth.u}"]`).click();
+  await expect(page).toHaveURL(new RegExp(eth.u.replace(/\//g, "\\/") + "$"));
+  expect(errors).toEqual([]);
+});
