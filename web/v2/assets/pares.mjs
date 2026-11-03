@@ -1,4 +1,4 @@
-import { canonicalJson, describePair, launchlabLines, drawSnapshot, evidenceRecord, FEE_CAVEAT, GLOBAL_FEE_ACCOUNT, PUBLIC_WARNING, readWithinLimit, sha256Hex, snapshotLines } from "../modules/pair-report.mjs?v=481cc4983a";
+import { canonicalJson, describePair, launchlabLines, drawSnapshot, evidenceRecord, FEE_CAVEAT, GLOBAL_FEE_ACCOUNT, PUBLIC_WARNING, readWithinLimit, sha256Hex, snapshotLines } from "../modules/pair-report.mjs?v=82434ce211";
 // Generado por web/v2/tools/bundle-pares.mjs. La fuente está en pares/.
 /**
  * Lectura pública y cerrada. Solo los métodos de verify/policy/limits.json.

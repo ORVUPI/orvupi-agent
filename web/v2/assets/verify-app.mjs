@@ -1,8 +1,8 @@
-import { fetchBitcoinQuote, fetchCoinOhlc, fetchDexSnapshot, fetchGlobalMarket, fetchLargeTransfers, fetchPoolCandles, fetchPoolTrades, fetchTopMarkets, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs?v=481cc4983a";
-import { mountLiveChart } from "../verify/net/chart.mjs?v=481cc4983a";
-import { COIN_FRAMES, POLL_MS, TIMEFRAMES, stepLabel } from "../verify/net/ohlcv.mjs?v=481cc4983a";
-import { LIMITS, buildGraph, chainById, explorerHref, filterTransfers, formatUnits, groupSearch, identify, pager, slicePage, storageKeys, supportedIds, UNSUPPORTED } from "../verify/net/present.mjs?v=481cc4983a";
-import { isOfficialAddress, OFFICIAL_ADDRESS } from "../shared/orvupi-contract.js?v=481cc4983a";
+import { fetchBitcoinQuote, fetchCoinOhlc, fetchDexSnapshot, fetchGlobalMarket, fetchLargeTransfers, fetchPoolCandles, fetchPoolTrades, fetchTopMarkets, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs?v=82434ce211";
+import { mountLiveChart } from "../verify/net/chart.mjs?v=82434ce211";
+import { COIN_FRAMES, POLL_MS, TIMEFRAMES, stepLabel } from "../verify/net/ohlcv.mjs?v=82434ce211";
+import { LIMITS, buildGraph, chainById, explorerHref, filterTransfers, formatUnits, groupSearch, identify, pager, slicePage, storageKeys, supportedIds, UNSUPPORTED } from "../verify/net/present.mjs?v=82434ce211";
+import { isOfficialAddress, OFFICIAL_ADDRESS } from "../shared/orvupi-contract.js?v=82434ce211";
 
 const KEYS = storageKeys();
 const PROJECT_WALLET = "GKpccLJwKArptzt9j897njXUx9RsV5NKL3Egu7bfMA6Q";
@@ -1109,7 +1109,10 @@ async function healSonar(error) {
     return;
   }
   const form = document.getElementById("consulta");
-  if (form) form.style.display = "none";
+  if (form) {
+    form.hidden = true;
+    form.style.setProperty("display", "none", "important");
+  }
   // La cabecera del verificador sigue funcionando aunque el mercado no arranque.
   document.querySelectorAll("[data-vf-view]").forEach((button) => button.addEventListener("click", () => {
     location.assign(`${location.pathname}#${button.getAttribute("data-vf-view")}`);
@@ -1135,7 +1138,7 @@ function boot() {
   if (market) {
     document.body.classList.add("sonar-market");
     document.getElementById("vf-root")?.replaceChildren(sonarLoading());
-    import("./sonar/shell.mjs?v=481cc4983a").then((mod) => mod.start()).catch(healSonar);
+    import("./sonar/shell.mjs?v=82434ce211").then((mod) => mod.start()).catch(healSonar);
     return;
   }
   const dock = document.createElement("nav");
