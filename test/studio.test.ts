@@ -1221,7 +1221,10 @@ describe("studio", () => {
 
   test("no hay hosts externos en el editor y la navegación y el CSP de Studio están puestos", () => {
     const allowed = new Set(["github.com", "orvupi.com", "www.orvupi.com", "x.com", "t.me", "www.tiktok.com"]);
-    const oflHosts = new Set(["github.com", "scripts.sil.org"]);
+    // Las licencias OFL citan sus webs como texto; www.w3.org solo es el espacio de nombres SVG (no se descarga);
+    // unsplash.com solo aparece en el catálogo de créditos de las fotos (photos/pro/catalog.json), que no se carga como recurso.
+    const oflHosts = new Set(["github.com", "scripts.sil.org", "www.adobe.com", "openfontlicense.org"]);
+    allowed.add("www.w3.org");
     const walk = (dir: string, out: string[] = []): string[] => {
       for (const name of readdirSync(dir)) {
         const full = path.join(dir, name);
@@ -1237,6 +1240,7 @@ describe("studio", () => {
       for (const match of text.matchAll(/https?:\/\/([^/\s"'<>)]+)/g)) {
         const host = (match[1] ?? "").toLowerCase();
         if (rel.endsWith(".txt")) assert.ok(oflHosts.has(host), `${host} en ${rel}`);
+        else if (rel === path.join("photos", "pro", "catalog.json")) assert.ok(host === "unsplash.com", `${host} en ${rel}`);
         else assert.ok(allowed.has(host), `${host} en ${rel}`);
       }
     }
