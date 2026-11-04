@@ -372,8 +372,6 @@
   #editor-app .stage-frame { box-shadow: 0 1px 3px rgba(17, 24, 39, .12), 0 8px 24px rgba(17, 24, 39, .08); }
   #editor-app .tira { display: none; }
   /* Pizarra en el móvil: como en Canva, el lienzo centrado en la pantalla, sin el campo infinito del escritorio. */
-  #editor-app .stage-scroll.lienzo-pizarra { max-height: none; border-radius: 0; background-image: none; }
-  #editor-app .campo-pizarra { min-width: 0; min-height: 0; padding: 0; display: flex; align-items: center; justify-content: center; }
 }
 
 /* Cromo Canva compartido: en móvil, barra superior, botón + y barra inferior; en escritorio solo los paneles
@@ -596,6 +594,11 @@
   .orv-frame.editando #editor-app .tira button { background: #fff; border: 1px solid #e3e5ea; }
   .orv-frame.editando #editor-app .barra-texto { border: 0; border-radius: 8px; box-shadow: 0 2px 10px rgba(17, 24, 39, .12), 0 0 0 1px rgba(17, 24, 39, .05); }
   .orv-frame.editando #editor-app .pastilla-seleccion { border: 0; border-radius: 8px; box-shadow: 0 2px 10px rgba(17, 24, 39, .14), 0 0 0 1px rgba(17, 24, 39, .05); }
-  .orv-frame.editando #editor-app .escenario:has(> .barra-texto) { padding-top: 64px; }
+  /* Hueco fijo para la barra contextual: el lienzo no salta ni cambia de zoom al seleccionar (como en Canva). */
+  .orv-frame.editando #editor-app .escenario { padding-top: 64px; }
 }
 #editor-app .barra-texto #tamano-texto { width: 46px; text-align: center; }
+
+/* Pizarra: se abre ajustada y centrada como su miniatura (en ordenador y móvil), no en una esquina del campo. */
+#editor-app .stage-scroll.lienzo-pizarra { max-height: none; border-radius: 0; background-image: none; background-color: transparent; }
+#editor-app .campo-pizarra { min-width: 0; min-height: 0; padding: 0; display: flex; align-items: center; justify-content: center; }

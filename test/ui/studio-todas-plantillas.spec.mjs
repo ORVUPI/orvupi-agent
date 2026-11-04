@@ -17,7 +17,7 @@ const OUT = path.resolve("test-results");
 
 test.describe.configure({ mode: "parallel" });
 test.setTimeout(20 * 60 * 1000);
-test.use({ actionTimeout: 10000 });
+test.use({ actionTimeout: 10000, bypassCSP: true });
 
 async function boot(page) {
   await page.goto("/studio/#/plantillas");
@@ -170,7 +170,8 @@ for (let chunk = 0; chunk < CHUNKS; chunk += 1) {
       await openTemplate(page, id);
       const frame = page.locator(".stage-frame").first();
       const box = await frame.boundingBox();
-      const editor = await frame.screenshot({ animations: "disabled" });
+      // Solo el lienzo: se ocultan (sin mover nada) el cromo y las barras que flotan encima.
+      const editor = await frame.screenshot({ animations: "disabled", style: "body *{visibility:hidden!important}.stage-frame .stage-art,.stage-frame .stage-art *{visibility:visible!important}" });
       const editorGeometry = await layout(page, ".stage-frame .stage-art");
       const { shot: thumb, geometry } = await thumbShot(page, id, box.width);
       const result = await diffRatio(page, editor, thumb);
@@ -205,7 +206,9 @@ for (let chunk = 0; chunk < CHUNKS; chunk += 1) {
             const x = r.left + r.width * fx;
             const y = r.top + r.height * fy;
             const hit = document.elementFromPoint(x, y)?.closest(".capa");
-            if (hit === node) { found.push({ id: node.dataset.id, x, y, area: r.width * r.height }); break; }
+            // Una foto bajo un velo o degradado decorativo también es «visible» (el toque la atraviesa).
+            const veil = k === "imagen" && hit && hit !== node && !hit.querySelector(".capa-texto, img");
+            if (hit === node || veil) { found.push({ id: node.dataset.id, x, y, area: r.width * r.height }); break; }
           }
         }
         found.sort((p, q) => q.area - p.area);

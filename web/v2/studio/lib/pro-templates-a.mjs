@@ -285,7 +285,7 @@ function proposal(v) {
   const steps = [["01", "Descubrimiento", "Entrevistas y análisis"], ["02", "Diseño", "Concepto y piezas"], ["03", "Lanzamiento", "Campaña y medición"]];
   const L = [
     rect(0, 0, 794, 1123, p.bg, { name: "Fondo" }),
-    rect(0, 0, 300, 1123, p.accent, { gradient: { from: p.accent, to: p.dark, angle: 180 }, name: "Banda" }),
+    rect(0, 0, 24, 1123, p.accent, { gradient: { from: p.accent, to: p.dark, angle: 180 }, name: "Banda" }),
     photo(v.ph, 60, 120, 480, 360, { fx: v.fx ?? 0.5, radius: 16, name: "Foto" }),
     text(v.c.tag, 60, 540, 674, { size: 13, bold: true, ls: 3, color: p.accent }),
     text(v.c.k, 60, 575, 674, { font: "poppins", bold: true, size: 44, lh: 1.1, color: p.ink }),

@@ -1350,6 +1350,9 @@ function stageRoom() {
   let extra = 0;
   for (const child of host.children) {
     if (child === scroll) continue;
+    // Las barras flotantes (barra contextual, pastilla) no ocupan sitio: el zoom no cambia al seleccionar.
+    const position = getComputedStyle(child).position;
+    if (position === "absolute" || position === "fixed") continue;
     extra += child.getBoundingClientRect().height;
   }
   const pad = getComputedStyle(host);
@@ -1416,8 +1419,13 @@ function placeSelectionPill() {
   const width = pill.offsetWidth || 280;
   const height = pill.offsetHeight || 40;
   let left = box.left - hostBox.left;
+  // Como en Canva: encima del elemento, pero nunca tapando la barra contextual; si no cabe, debajo.
+  const bar = root.querySelector(".barra-texto");
+  const barBox = bar instanceof HTMLElement && bar.offsetParent ? bar.getBoundingClientRect() : null;
+  const minTop = Math.max(8, barBox && barBox.bottom > hostBox.top ? barBox.bottom - hostBox.top + 8 : 8);
   let top = box.top - hostBox.top - height - 10;
-  if (top < 8) top = box.bottom - hostBox.top + 8;
+  if (top < minTop) top = box.bottom - hostBox.top + 8;
+  if (top + height > hostBox.height - 8) top = Math.max(minTop, Math.min(top, hostBox.height - height - 8));
   left = Math.max(8, Math.min(left, Math.max(8, hostBox.width - width - 8)));
   pill.style.left = `${Math.round(left)}px`;
   pill.style.top = `${Math.round(top)}px`;
@@ -2794,7 +2802,7 @@ function bindStage() {
   root.addEventListener("pointerdown", (event) => {
     const resize = event.target.closest?.("[data-resize]");
     const cropEdge = event.target.closest?.("[data-crop-edge]");
-    const capa = event.target.closest?.(".capa");
+    let capa = event.target.closest?.(".capa");
     const art = event.target.closest?.(".stage-art") || (event.target.closest?.(".stage-sel") ? root.querySelector(".stage-frame .stage-art") : null);
     if (!state.doc || !art) return;
     if (event.target.closest?.("[data-edit]")) return;
@@ -2846,6 +2854,7 @@ function bindStage() {
       startRotate(rotate.dataset.rotate, event);
       return;
     }
+    if (capa) capa = throughVeil(capa, event);
     if (capa) {
       const hit = state.doc.layers.find((item) => item.id === capa.dataset.id);
       if (state.painter && hit?.type === "text" && state.painter.id !== hit.id) {
@@ -2891,6 +2900,34 @@ function bindStage() {
     else state.selected = [];
     if (state.tool === "select") render();
   });
+}
+
+/** Velo, degradado o aro encima de una foto: como en Canva, el toque llega a la foto (el velo sigue en Posición). */
+function isVeil(layer) {
+  if (!layer || layer.type !== "rect" || layer.locked) return false;
+  const props = layer.props || {};
+  const alpha = (color) => {
+    const match = /rgba\([^)]*,\s*([\d.]+)\s*\)/i.exec(String(color || ""));
+    return match ? Number(match[1]) : 1;
+  };
+  if (props.gradient) return alpha(props.gradient.from) < 0.95 || alpha(props.gradient.to) < 0.95;
+  if (!props.fill || props.fill === "transparent") return true;
+  return alpha(props.fill) < 0.95 || Number(layer.opacity ?? 1) < 0.95;
+}
+
+function throughVeil(capa, event) {
+  if (state.selected.includes(capa.dataset.id)) return capa;
+  const layer = state.doc?.layers.find((item) => item.id === capa.dataset.id);
+  if (!isVeil(layer)) return capa;
+  const stack = document.elementsFromPoint(event.clientX, event.clientY);
+  for (const node of stack) {
+    const below = node.closest?.(".stage-art > .capa");
+    if (!below || below === capa) continue;
+    const under = state.doc.layers.find((item) => item.id === below.dataset.id);
+    if (under?.type === "image") return below;
+    if (under && !isVeil(under)) return capa;
+  }
+  return capa;
 }
 
 function stagePoint(art, event) {
