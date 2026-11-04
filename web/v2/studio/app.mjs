@@ -1351,9 +1351,14 @@ function stageRoom() {
   for (const child of host.children) {
     if (child === scroll) continue;
     // Las barras flotantes (barra contextual, pastilla) no ocupan sitio: el zoom no cambia al seleccionar.
-    const position = getComputedStyle(child).position;
-    if (position === "absolute" || position === "fixed") continue;
-    extra += child.getBoundingClientRect().height;
+    const style = getComputedStyle(child);
+    if (style.position === "absolute" || style.position === "fixed" || style.display === "none") continue;
+    // Con márgenes: si no, en «Sitio» (botón + nota) el lienzo se pasaba ~24 px y su borde inferior quedaba cortado.
+    extra += child.getBoundingClientRect().height + (parseFloat(style.marginTop) || 0) + (parseFloat(style.marginBottom) || 0);
+  }
+  if (scroll) {
+    const own = getComputedStyle(scroll);
+    extra += (parseFloat(own.paddingTop) || 0) + (parseFloat(own.paddingBottom) || 0) + (parseFloat(own.borderTopWidth) || 0) + (parseFloat(own.borderBottomWidth) || 0);
   }
   const pad = getComputedStyle(host);
   const padX = (parseFloat(pad.paddingLeft) || 0) + (parseFloat(pad.paddingRight) || 0);

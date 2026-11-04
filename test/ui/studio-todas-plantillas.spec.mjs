@@ -9,7 +9,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { PRO_TEMPLATES } from "../../web/v2/studio/lib/pro-templates.mjs";
 
-const IDS = PRO_TEMPLATES.map((item) => item.id);
+// STUDIO_IDS=a,b,c para repetir solo unas plantillas.
+const ONLY = (process.env.STUDIO_IDS || "").split(",").filter(Boolean);
+const IDS = PRO_TEMPLATES.map((item) => item.id).filter((id) => !ONLY.length || ONLY.includes(id));
 const CHUNKS = Number(process.env.STUDIO_CHUNKS || 8);
 const MAX_DIFF = Number(process.env.STUDIO_MAX_DIFF || 0.01); // 1 % de píxeles distintos como máximo
 const chunkOf = (index) => IDS.filter((_, i) => i % CHUNKS === index);
@@ -18,6 +20,10 @@ const OUT = path.resolve("test-results");
 test.describe.configure({ mode: "parallel" });
 test.setTimeout(20 * 60 * 1000);
 test.use({ actionTimeout: 10000, bypassCSP: true });
+
+// Puntos donde una persona tocaría: centro primero y después una rejilla 5×5 (fotos de cabecera con títulos encima).
+const SPOTS = [[0.5, 0.5], [0.3, 0.5], [0.7, 0.5], [0.5, 0.3], [0.5, 0.7]];
+for (const fy of [0.1, 0.3, 0.5, 0.7, 0.9]) for (const fx of [0.1, 0.3, 0.5, 0.7, 0.9]) SPOTS.push([fx, fy]);
 
 async function boot(page) {
   await page.goto("/studio/#/plantillas");
@@ -134,13 +140,18 @@ function layoutDiff(a, b) {
 
 // Recorte en píxeles enteros DENTRO del rectángulo (el lienzo suele caer en y = 125,59…):
 // así ni el editor ni la miniatura arrastran una fila del fondo de alrededor.
-async function innerClip(page, sel) {
-  return page.evaluate((s) => {
-    const r = document.querySelector(s).getBoundingClientRect();
-    const x = Math.ceil(r.left);
-    const y = Math.ceil(r.top);
-    return { x, y, width: Math.floor(r.right) - x, height: Math.floor(r.bottom) - y };
-  }, sel);
+// Con varios selectores se usa la intersección (el diseño escalado ∩ su marco visible).
+async function innerClip(page, ...sels) {
+  return page.evaluate((list) => {
+    const rects = list.map((s) => document.querySelector(s).getBoundingClientRect());
+    const left = Math.max(...rects.map((r) => r.left));
+    const top = Math.max(...rects.map((r) => r.top));
+    const right = Math.min(...rects.map((r) => r.right));
+    const bottom = Math.min(...rects.map((r) => r.bottom));
+    const x = Math.ceil(left);
+    const y = Math.ceil(top);
+    return { x, y, width: Math.floor(right) - x, height: Math.floor(bottom) - y };
+  }, sels);
 }
 
 async function thumbShot(page, id, width, phase = { x: 0, y: 0 }) {
@@ -163,7 +174,7 @@ async function thumbShot(page, id, width, phase = { x: 0, y: 0 }) {
     document.body.append(host);
   }, [id, width, phase]);
   await settle(page, "#prueba-miniatura");
-  const shot = await page.screenshot({ animations: "disabled", clip: await innerClip(page, "#prueba-miniatura .mini-slot") });
+  const shot = await page.screenshot({ animations: "disabled", clip: await innerClip(page, "#prueba-miniatura .mini-slot", "#prueba-miniatura .mini-art") });
   const geometry = await layout(page, "#prueba-miniatura .mini-art");
   await page.evaluate(() => document.querySelector("#prueba-miniatura")?.remove());
   return { shot, geometry };
@@ -180,12 +191,12 @@ for (let chunk = 0; chunk < CHUNKS; chunk += 1) {
     const rows = [];
     for (const id of chunkOf(chunk)) {
       await openTemplate(page, id);
-      const frame = page.locator(".stage-frame").first();
-      const box = await frame.boundingBox();
       // Solo el lienzo: se ocultan (sin mover nada) el cromo y las barras que flotan encima.
-      const editor = await page.screenshot({ animations: "disabled", clip: await innerClip(page, ".stage-frame"), style: "body *:not(:has(.stage-art)):not(.stage-art):not(.stage-art *){visibility:hidden!important}" });
+      const editor = await page.screenshot({ animations: "disabled", clip: await innerClip(page, ".stage-frame", ".stage-frame .stage-art"), style: "body *:not(:has(.stage-art)):not(.stage-art):not(.stage-art *){visibility:hidden!important}" });
       const editorGeometry = await layout(page, ".stage-frame .stage-art");
-      const { shot: thumb, geometry } = await thumbShot(page, id, box.width, { x: box.x % 1, y: box.y % 1 });
+      // Miniatura al ancho exacto del diseño escalado (el marco va redondeado a px enteros).
+      const artBox = await page.locator(".stage-frame .stage-art").first().boundingBox();
+      const { shot: thumb, geometry } = await thumbShot(page, id, artBox.width, { x: artBox.x % 1, y: artBox.y % 1 });
       const result = await diffRatio(page, editor, thumb);
       const geo = layoutDiff(editorGeometry, geometry);
       rows.push({ id, ...result, capas: editorGeometry.length, geometria: geo || "ok", ok: !geo && result.ratio <= MAX_DIFF && Math.abs(result.aspectA - result.aspectB) < 0.02 });
@@ -207,14 +218,14 @@ for (let chunk = 0; chunk < CHUNKS; chunk += 1) {
       const row = { id, texto: false, imagen: false, paso: "abrir" };
       await openTemplate(page, id);
       // Busca, como haría una persona, un texto y una foto visibles y no tapados por otra capa.
-      const pick = async (kind) => page.evaluate((k) => {
+      const pick = async (kind) => page.evaluate(([k, SPOTS]) => {
         const art = document.querySelector(".stage-frame .stage-art");
         const nodes = [...art.querySelectorAll(`:scope > .capa:has(${k === "texto" ? ".capa-texto" : ".capa-img img"})`)];
         const found = [];
         for (const node of nodes) {
           const r = node.getBoundingClientRect();
           if (r.width < 6 || r.height < 6) continue;
-          for (const [fx, fy] of [[0.5, 0.5], [0.3, 0.5], [0.7, 0.5], [0.5, 0.3], [0.5, 0.7], [0.2, 0.2]]) {
+          for (const [fx, fy] of SPOTS) {
             const x = r.left + r.width * fx;
             const y = r.top + r.height * fy;
             const hit = document.elementFromPoint(x, y)?.closest(".capa");
@@ -225,7 +236,7 @@ for (let chunk = 0; chunk < CHUNKS; chunk += 1) {
         }
         found.sort((p, q) => q.area - p.area);
         return found[0] || null;
-      }, kind);
+      }, [kind, SPOTS]);
       // Texto: doble clic → contenteditable → escribir cambia el texto.
       row.paso = "texto";
       const text = await pick("texto");
