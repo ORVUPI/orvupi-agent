@@ -602,3 +602,6 @@
 /* Pizarra: se abre ajustada y centrada como su miniatura (en ordenador y móvil), no en una esquina del campo. */
 #editor-app .stage-scroll.lienzo-pizarra { max-height: none; border-radius: 0; background-image: none; background-color: transparent; }
 #editor-app .campo-pizarra { min-width: 0; min-height: 0; padding: 0; display: flex; align-items: center; justify-content: center; }
+
+/* Barra de imagen: «Animar» y «Posición» con la misma letra que el resto de botones. */
+#editor-app .barra-texto .tb-pop { font: 600 13px/1 "Inter Studio", system-ui, sans-serif; white-space: nowrap; }

@@ -132,15 +132,27 @@ function layoutDiff(a, b) {
   return "";
 }
 
-async function thumbShot(page, id, width) {
-  await page.evaluate(async ([tid, w]) => {
+// Recorte en píxeles enteros DENTRO del rectángulo (el lienzo suele caer en y = 125,59…):
+// así ni el editor ni la miniatura arrastran una fila del fondo de alrededor.
+async function innerClip(page, sel) {
+  return page.evaluate((s) => {
+    const r = document.querySelector(s).getBoundingClientRect();
+    const x = Math.ceil(r.left);
+    const y = Math.ceil(r.top);
+    return { x, y, width: Math.floor(r.right) - x, height: Math.floor(r.bottom) - y };
+  }, sel);
+}
+
+async function thumbShot(page, id, width, phase = { x: 0, y: 0 }) {
+  await page.evaluate(async ([tid, w, ph]) => {
     const views = await import("/studio/views.mjs");
     document.querySelector("#prueba-miniatura")?.remove();
     const host = document.createElement("div");
     host.id = "prueba-miniatura";
     host.style.position = "fixed";
-    host.style.left = "0";
-    host.style.top = "0";
+    // Misma fase subpíxel que el lienzo del editor, para que el suavizado caiga igual.
+    host.style.left = `${ph.x}px`;
+    host.style.top = `${ph.y}px`;
     host.style.zIndex = "2147483647";
     host.style.width = `${w}px`;
     host.style.background = "#fff";
@@ -149,9 +161,9 @@ async function thumbShot(page, id, width) {
     slot.style.boxShadow = "none";
     host.append(slot);
     document.body.append(host);
-  }, [id, width]);
+  }, [id, width, phase]);
   await settle(page, "#prueba-miniatura");
-  const shot = await page.locator("#prueba-miniatura .mini-slot").screenshot({ animations: "disabled" });
+  const shot = await page.screenshot({ animations: "disabled", clip: await innerClip(page, "#prueba-miniatura .mini-slot") });
   const geometry = await layout(page, "#prueba-miniatura .mini-art");
   await page.evaluate(() => document.querySelector("#prueba-miniatura")?.remove());
   return { shot, geometry };
@@ -171,9 +183,9 @@ for (let chunk = 0; chunk < CHUNKS; chunk += 1) {
       const frame = page.locator(".stage-frame").first();
       const box = await frame.boundingBox();
       // Solo el lienzo: se ocultan (sin mover nada) el cromo y las barras que flotan encima.
-      const editor = await frame.screenshot({ animations: "disabled", style: "body *{visibility:hidden!important}.stage-frame .stage-art,.stage-frame .stage-art *{visibility:visible!important}" });
+      const editor = await page.screenshot({ animations: "disabled", clip: await innerClip(page, ".stage-frame"), style: "body *:not(:has(.stage-art)):not(.stage-art):not(.stage-art *){visibility:hidden!important}" });
       const editorGeometry = await layout(page, ".stage-frame .stage-art");
-      const { shot: thumb, geometry } = await thumbShot(page, id, box.width);
+      const { shot: thumb, geometry } = await thumbShot(page, id, box.width, { x: box.x % 1, y: box.y % 1 });
       const result = await diffRatio(page, editor, thumb);
       const geo = layoutDiff(editorGeometry, geometry);
       rows.push({ id, ...result, capas: editorGeometry.length, geometria: geo || "ok", ok: !geo && result.ratio <= MAX_DIFF && Math.abs(result.aspectA - result.aspectB) < 0.02 });
