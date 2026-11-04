@@ -1423,6 +1423,20 @@ function placeSelectionPill() {
   pill.style.top = `${Math.round(top)}px`;
 }
 
+/** Sale de la edición de texto sin re-render intermedio (el texto ya se guarda en cada input). */
+function stopEditing() {
+  const node = root.querySelector(`[data-edit="${CSS.escape(state.editingId)}"]`);
+  state.editingId = "";
+  if (node instanceof HTMLElement && document.activeElement === node) {
+    rendering = true;
+    try {
+      node.blur();
+    } finally {
+      rendering = false;
+    }
+  }
+}
+
 function focusEditing() {
   const node = state.editingId ? root.querySelector(`[data-edit="${state.editingId}"]`) : null;
   if (node instanceof HTMLElement && document.activeElement !== node) {
@@ -2784,6 +2798,9 @@ function bindStage() {
     const art = event.target.closest?.(".stage-art") || (event.target.closest?.(".stage-sel") ? root.querySelector(".stage-frame .stage-art") : null);
     if (!state.doc || !art) return;
     if (event.target.closest?.("[data-edit]")) return;
+    // Como en Canva: tocar otra capa o el lienzo termina la edición del texto (si no, el foco vuelve al texto
+    // y el siguiente botón de la barra se pierde en el re-render del focusout).
+    if (state.editingId) stopEditing();
     if (state.tool === "erase") {
       event.preventDefault();
       snapshot();
@@ -3534,6 +3551,11 @@ function onKey(event) {
   }
   if (event.key === "Escape" && state.designSheet) {
     state.designSheet = "";
+    render();
+    return;
+  }
+  if (event.key === "Escape" && state.editingId) {
+    stopEditing();
     render();
     return;
   }

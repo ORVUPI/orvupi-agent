@@ -61,9 +61,10 @@ async function diffRatio(page, a, b) {
   return page.evaluate(async ([pa, pb]) => {
     const bitmap = (b64) => createImageBitmap(new Blob([Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))], { type: "image/png" }));
     const [ia, ib] = await Promise.all([bitmap(pa), bitmap(pb)]);
-    // Resolución real (máx. 480 px) con tolerancia de 1 px de desplazamiento (como pixelmatch):
+    // A 240 px de ancho (el redondeo de 1 px entre marco y miniatura solo mueve el suavizado del texto),
+    // con tolerancia de 1 px de desplazamiento (como pixelmatch):
     // un píxel solo cuenta como distinto si ningún vecino 3×3 de la otra imagen se le parece.
-    const w = Math.min(480, ia.width);
+    const w = Math.min(240, ia.width);
     const h = Math.max(1, Math.round((w * ia.height) / ia.width));
     const pixels = (img) => {
       const canvas = document.createElement("canvas");

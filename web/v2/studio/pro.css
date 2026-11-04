@@ -371,6 +371,9 @@
   }
   #editor-app .stage-frame { box-shadow: 0 1px 3px rgba(17, 24, 39, .12), 0 8px 24px rgba(17, 24, 39, .08); }
   #editor-app .tira { display: none; }
+  /* Pizarra en el móvil: como en Canva, el lienzo centrado en la pantalla, sin el campo infinito del escritorio. */
+  #editor-app .stage-scroll.lienzo-pizarra { max-height: none; border-radius: 0; background-image: none; }
+  #editor-app .campo-pizarra { min-width: 0; min-height: 0; padding: 0; display: flex; align-items: center; justify-content: center; }
 }
 
 /* Cromo Canva compartido: en móvil, barra superior, botón + y barra inferior; en escritorio solo los paneles
