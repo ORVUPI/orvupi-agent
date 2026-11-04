@@ -759,6 +759,26 @@ export function paintArt(ctx, doc, art, { editingId = "", lazy = false, decorate
  * Miniatura: el mismo `paintArt` que el editor, escalado al ancho de la tarjeta.
  * Así la miniatura y el lienzo que se abre son el mismo documento pintado igual.
  */
+// La miniatura se escala con `scale(calc(100cqi / var(--doc-w)))` (longitud ÷ longitud).
+// Firefox y Safari antiguos no dividen longitudes y dejarían el diseño a tamaño real:
+// en ellos la escala la pone un único ResizeObserver compartido.
+const MINI_CSS_SCALE = typeof CSS !== "undefined" && CSS.supports?.("transform", "scale(calc(100px / 50px))");
+let miniObserver = null;
+function watchMini(slot, art) {
+  if (MINI_CSS_SCALE || typeof ResizeObserver === "undefined") return;
+  miniObserver ||= new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      const node = entry.target;
+      const inner = node.firstElementChild;
+      const docW = Number(node.dataset.artW) || 1;
+      const width = entry.contentBoxSize?.[0]?.inlineSize ?? node.clientWidth;
+      if (inner && width) inner.style.transform = `scale(${width / docW})`;
+    }
+  });
+  art.style.transform = "scale(0)";
+  miniObserver.observe(slot);
+}
+
 function miniStage(doc, ctx = THUMB_CTX) {
   const w = doc.format.width;
   const h = doc.format.height;
@@ -766,6 +786,7 @@ function miniStage(doc, ctx = THUMB_CTX) {
   const art = el("span", { class: "mini-art stage-art art-render", style: `--doc-w:${w}px` });
   paintArt(ctx, doc, art, { lazy: true });
   slot.append(art);
+  watchMini(slot, art);
   return slot;
 }
 
