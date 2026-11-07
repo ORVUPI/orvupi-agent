@@ -7,7 +7,8 @@
 import { expect, test } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
-import { PRO_TEMPLATES } from "../../web/v2/studio/lib/pro-templates.mjs";
+import { PRO_TEMPLATES, proDocument } from "../../web/v2/studio/lib/pro-templates.mjs";
+import { photoExists } from "../../web/v2/studio/lib/pro-kit.mjs";
 
 // STUDIO_IDS=a,b,c para repetir solo unas plantillas.
 const ONLY = (process.env.STUDIO_IDS || "").split(",").filter(Boolean);
@@ -184,6 +185,16 @@ function record(kind, project, chunk, rows) {
   fs.mkdirSync(OUT, { recursive: true });
   fs.writeFileSync(path.join(OUT, `studio-todas-${kind}-${project}-${chunk}.json`), JSON.stringify(rows, null, 1));
 }
+
+test("todas las fotos de las plantillas existen en el catálogo", () => {
+  const missing = [];
+  for (const id of IDS) {
+    for (const match of JSON.stringify(proDocument(id)).matchAll(/"kind":"library","id":"([^"]+)"/g)) {
+      if (!photoExists(match[1])) missing.push(`${id}: ${match[1]}`);
+    }
+  }
+  expect(missing).toEqual([]);
+});
 
 for (let chunk = 0; chunk < CHUNKS; chunk += 1) {
   test(`miniatura = editor en todas las plantillas (${chunk + 1}/${CHUNKS})`, async ({ page }, info) => {
