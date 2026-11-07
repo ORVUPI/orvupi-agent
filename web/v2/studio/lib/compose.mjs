@@ -6,7 +6,7 @@ import { paintChart } from "./chart-data.mjs";
 import { PNG_COMMENT } from "./copy.mjs";
 import { fontById, orderedLayers } from "./document.mjs";
 import { drawFace, lineBox, loadFace, wrapFace } from "./draw.mjs";
-import { photoById } from "./photos.mjs";
+import { anyPhotoById } from "./photos.mjs";
 import { decodePng, encodePng } from "./png.mjs";
 import { paintTableGrid } from "./table-data.mjs";
 import { piecesOf } from "./text-style.mjs";
@@ -101,15 +101,31 @@ async function catalogImage(id) {
   }
 }
 
+async function decodeJpegInBrowser(rel) {
+  if (typeof createImageBitmap !== "function" || typeof fetch !== "function") return null;
+  const response = await fetch(new URL(`../${rel}`, import.meta.url));
+  if (!response.ok) return null;
+  const bitmap = await createImageBitmap(await response.blob());
+  const canvas = typeof OffscreenCanvas === "function"
+    ? new OffscreenCanvas(bitmap.width, bitmap.height)
+    : Object.assign(document.createElement("canvas"), { width: bitmap.width, height: bitmap.height });
+  const context = canvas.getContext("2d");
+  context.drawImage(bitmap, 0, 0);
+  const data = context.getImageData(0, 0, bitmap.width, bitmap.height);
+  return { width: bitmap.width, height: bitmap.height, rgba: data.data };
+}
+
 async function libraryImage(id) {
   if (libraryCache.has(id)) return libraryCache.get(id);
-  const item = photoById(id);
+  const item = anyPhotoById(id);
   if (!item?.archivo) {
     libraryCache.set(id, null);
     return null;
   }
   try {
-    const image = await decodePng(await loadPngFile(item.archivo));
+    const image = /\.jpe?g$/i.test(item.archivo)
+      ? await decodeJpegInBrowser(item.archivo)
+      : await decodePng(await loadPngFile(item.archivo));
     libraryCache.set(id, image);
     return image;
   } catch {
@@ -192,6 +208,52 @@ function paintEllipse(local, w, h, layer) {
   }
 }
 
+function colorAlpha(value) {
+  const text = String(value || "");
+  const m = text.match(/^rgba?\(([^)]+)\)$/i);
+  if (m) {
+    const parts = m[1].split(",").map((part) => Number(part.trim()));
+    return [parts[0] || 0, parts[1] || 0, parts[2] || 0, Number.isFinite(parts[3]) ? Math.round(parts[3] * 255) : 255];
+  }
+  const rgb = hexColor(text);
+  const alpha = /^#[0-9a-f]{8}$/i.test(text) ? parseInt(text.slice(7, 9), 16) : 255;
+  return [rgb[0], rgb[1], rgb[2], alpha];
+}
+
+/** Esquina redondeada: true si el píxel queda fuera del radio. */
+export function outsideRound(x, y, w, h, r) {
+  if (r <= 0) return false;
+  const rr = Math.min(r, w / 2, h / 2);
+  const cx = x + 0.5 < rr ? rr : x + 0.5 > w - rr ? w - rr : null;
+  const cy = y + 0.5 < rr ? rr : y + 0.5 > h - rr ? h - rr : null;
+  if (cx == null || cy == null) return false;
+  const dx = x + 0.5 - cx;
+  const dy = y + 0.5 - cy;
+  return dx * dx + dy * dy > rr * rr;
+}
+
+function paintRoundGradient(local, w, h, props) {
+  const r = Math.max(0, Number(props.radius) || 0);
+  const g = props.gradient;
+  const a = colorAlpha(g ? g.from : props.fill);
+  const b = g ? colorAlpha(g.to) : a;
+  const rad = ((g ? g.angle : 180) - 90) * Math.PI / 180;
+  const ux = Math.cos(rad);
+  const uy = Math.sin(rad);
+  const half = Math.abs(w * ux) / 2 + Math.abs(h * uy) / 2 || 1;
+  for (let y = 0; y < h; y += 1) {
+    for (let x = 0; x < w; x += 1) {
+      if (outsideRound(x, y, w, h, r)) continue;
+      const t = Math.min(1, Math.max(0, (((x - w / 2) * ux + (y - h / 2) * uy) / half + 1) / 2));
+      const i = (y * w + x) * 4;
+      local[i] = Math.round(a[0] + (b[0] - a[0]) * t);
+      local[i + 1] = Math.round(a[1] + (b[1] - a[1]) * t);
+      local[i + 2] = Math.round(a[2] + (b[2] - a[2]) * t);
+      local[i + 3] = Math.round(a[3] + (b[3] - a[3]) * t);
+    }
+  }
+}
+
 function paintShape(local, w, h, layer) {
   if (layer.type === "line") {
     const color = hexColor(layer.props?.color);
@@ -202,6 +264,10 @@ function paintShape(local, w, h, layer) {
   }
   if (layer.props?.shape === "ellipse") {
     paintEllipse(local, w, h, layer);
+    return;
+  }
+  if ((layer.props?.radius || 0) > 0 || layer.props?.gradient) {
+    paintRoundGradient(local, w, h, layer.props);
     return;
   }
   const fill = layer.props?.fill ? hexColor(layer.props.fill) : null;
@@ -422,7 +488,12 @@ export async function renderDocument(doc, options = {}) {
         fillRect(local, w, h, 0, h - 4, w, 4, hexColor("#FF3070"), 255);
         fillRect(local, w, h, 0, 0, 4, h, hexColor("#FF3070"), 255);
         fillRect(local, w, h, w - 4, 0, 4, h, hexColor("#FF3070"), 255);
-      } else paintImage(local, w, h, image, layer.crop);
+      } else {
+        paintImage(local, w, h, image, layer.crop);
+        if ((layer.radius || 0) > 0) {
+          for (let y = 0; y < h; y += 1) for (let x = 0; x < w; x += 1) if (outsideRound(x, y, w, h, layer.radius)) local[(y * w + x) * 4 + 3] = 0;
+        }
+      }
     } else if (layer.type === "chart") {
       paintChart(local, w, h, layer.props);
     } else if (layer.type === "table") {

@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const PORT = Number(process.env.PW_PORT || 4173);
+
 export default defineConfig({
   testDir: "test/ui",
   fullyParallel: true,
@@ -7,13 +9,13 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "line" : "list",
   use: {
-    baseURL: "http://127.0.0.1:4173",
+    baseURL: `http://127.0.0.1:${PORT}`,
     trace: "retain-on-failure",
   },
   webServer: {
-    command: "python3 -m http.server 4173 --bind 127.0.0.1",
+    command: `python3 -m http.server ${PORT} --bind 127.0.0.1`,
     cwd: "web/v2",
-    port: 4173,
+    port: PORT,
     reuseExistingServer: !process.env.CI,
   },
   projects: [
@@ -53,6 +55,17 @@ export default defineConfig({
     {
       name: "academy-firefox-mobile",
       testMatch: /academy\.spec\.mjs$/,
+      use: { ...devices["Desktop Firefox"], viewport: { width: 412, height: 915 } },
+    },
+    // Firefox también para Studio (escritorio y móvil).
+    {
+      name: "studio-firefox",
+      testMatch: /studio-.*\.spec\.mjs$/,
+      use: { ...devices["Desktop Firefox"], viewport: { width: 1440, height: 900 } },
+    },
+    {
+      name: "studio-firefox-mobile",
+      testMatch: /studio-.*\.spec\.mjs$/,
       use: { ...devices["Desktop Firefox"], viewport: { width: 412, height: 915 } },
     },
   ],

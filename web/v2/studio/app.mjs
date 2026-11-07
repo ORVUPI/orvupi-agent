@@ -45,13 +45,14 @@ import { LOGO_MAX_BYTES, readLogoPng } from "./lib/logo.mjs";
 import { localPhrases } from "./lib/ai-optional.mjs";
 import { packDesign, unpackDesign, userImageIds } from "./lib/package.mjs";
 import { pdfFromPages } from "./lib/pdf-raster.mjs";
-import { photoById } from "./lib/photos.mjs";
+import { anyPhotoById, photoById } from "./lib/photos.mjs";
 import { IDEAS, filterPlantillas, instantiate } from "./lib/plantillas.mjs";
 import { parseSeriesText } from "./lib/chart-data.mjs";
 import { parseTableText } from "./lib/table-data.mjs";
 import { documentForOpen } from "./lib/open-target.mjs";
 import { documentForThumb } from "./lib/thumb-docs.mjs";
 import { thumbById } from "./lib/thumbs.mjs";
+import { isProTemplate, proDocument } from "./lib/pro-templates.mjs";
 import {
   adoptLegacyDraft,
   createContainer,
@@ -687,6 +688,8 @@ const state = {
   imageFailed: false,
   pageNote: "",
   cropping: false,
+  cropZoom: 1,
+  mSheet: "",
   clip: null,
   photoQuery: "",
   historyNote: "",
@@ -931,6 +934,7 @@ function openDoc(doc, options = {}) {
   state.notesOpen = false;
   state.editingId = "";
   state.cropping = false;
+  state.mSheet = "";
   state.pageNote = "";
   state.workNote = false;
   state.workRoute = "";
@@ -1020,7 +1024,7 @@ function shellRail(doc) {
 }
 
 function openThumb(id) {
-  const doc = documentForThumb(id);
+  const doc = isProTemplate(id) ? proDocument(id) : documentForThumb(id);
   if (!doc || doc.templateId !== id) return;
   openDoc(doc);
 }
@@ -1346,11 +1350,22 @@ function stageRoom() {
   let extra = 0;
   for (const child of host.children) {
     if (child === scroll) continue;
-    extra += child.getBoundingClientRect().height;
+    // Las barras flotantes (barra contextual, pastilla) no ocupan sitio: el zoom no cambia al seleccionar.
+    const style = getComputedStyle(child);
+    if (style.position === "absolute" || style.position === "fixed" || style.display === "none") continue;
+    // Con márgenes: si no, en «Sitio» (botón + nota) el lienzo se pasaba ~24 px y su borde inferior quedaba cortado.
+    extra += child.getBoundingClientRect().height + (parseFloat(style.marginTop) || 0) + (parseFloat(style.marginBottom) || 0);
   }
+  if (scroll) {
+    const own = getComputedStyle(scroll);
+    extra += (parseFloat(own.paddingTop) || 0) + (parseFloat(own.paddingBottom) || 0) + (parseFloat(own.borderTopWidth) || 0) + (parseFloat(own.borderBottomWidth) || 0);
+  }
+  const pad = getComputedStyle(host);
+  const padX = (parseFloat(pad.paddingLeft) || 0) + (parseFloat(pad.paddingRight) || 0);
+  const padY = (parseFloat(pad.paddingTop) || 0) + (parseFloat(pad.paddingBottom) || 0);
   return {
-    w: Math.max(120, host.clientWidth - 8),
-    h: Math.max(120, host.clientHeight - extra - 8),
+    w: Math.max(120, host.clientWidth - padX - 8),
+    h: Math.max(120, host.clientHeight - padY - extra - 8),
   };
 }
 
@@ -1385,6 +1400,12 @@ function applyStageFit() {
   frame.style.width = `${Math.round(state.doc.format.width * state.scale)}px`;
   frame.style.height = `${Math.round(state.doc.format.height * state.scale)}px`;
   art.style.transform = `scale(${state.scale})`;
+  art.style.setProperty("--inv", String(1 / Math.max(0.05, state.scale)));
+  const selLayer = root.querySelector(".stage-sel");
+  if (selLayer) {
+    selLayer.style.transform = `scale(${state.scale})`;
+    selLayer.style.setProperty("--inv", String(1 / Math.max(0.05, state.scale)));
+  }
   const pct = Math.round(state.scale * 100);
   const zoom = root.querySelector("#zoom-indicador");
   if (zoom) zoom.textContent = `${pct}%`;
@@ -1403,11 +1424,30 @@ function placeSelectionPill() {
   const width = pill.offsetWidth || 280;
   const height = pill.offsetHeight || 40;
   let left = box.left - hostBox.left;
+  // Como en Canva: encima del elemento, pero nunca tapando la barra contextual; si no cabe, debajo.
+  const bar = root.querySelector(".barra-texto");
+  const barBox = bar instanceof HTMLElement && bar.offsetParent ? bar.getBoundingClientRect() : null;
+  const minTop = Math.max(8, barBox && barBox.bottom > hostBox.top ? barBox.bottom - hostBox.top + 8 : 8);
   let top = box.top - hostBox.top - height - 10;
-  if (top < 8) top = box.bottom - hostBox.top + 8;
+  if (top < minTop) top = box.bottom - hostBox.top + 8;
+  if (top + height > hostBox.height - 8) top = Math.max(minTop, Math.min(top, hostBox.height - height - 8));
   left = Math.max(8, Math.min(left, Math.max(8, hostBox.width - width - 8)));
   pill.style.left = `${Math.round(left)}px`;
   pill.style.top = `${Math.round(top)}px`;
+}
+
+/** Sale de la edición de texto sin re-render intermedio (el texto ya se guarda en cada input). */
+function stopEditing() {
+  const node = root.querySelector(`[data-edit="${CSS.escape(state.editingId)}"]`);
+  state.editingId = "";
+  if (node instanceof HTMLElement && document.activeElement === node) {
+    rendering = true;
+    try {
+      node.blur();
+    } finally {
+      rendering = false;
+    }
+  }
 }
 
 function focusEditing() {
@@ -1887,9 +1927,122 @@ function handleDesignClick(buttonNode) {
   return true;
 }
 
+/** Editor móvil: hojas, barra contextual y acciones propias. Devuelve true si consumió el clic. */
+function handleMobileClick(buttonNode) {
+  if (!state.doc) return false;
+  const sheetHost = buttonNode.closest(".m-sheet");
+  if ("mSheet" in buttonNode.dataset) {
+    const next = buttonNode.dataset.mSheet;
+    state.mSheet = state.mSheet === next ? "" : next;
+    if (next) state.pop = "";
+    render();
+    return true;
+  }
+  const m = buttonNode.dataset.m;
+  if (m === "teclado") {
+    const layer = primary();
+    if (layer?.type === "text") {
+      state.mSheet = "";
+      if (state.editingId === layer.id) state.editingId = "";
+      else {
+        snapshot();
+        state.editingId = layer.id;
+      }
+      render();
+    }
+    return true;
+  }
+  if (m === "ajustar") {
+    toggleAdjust();
+    return true;
+  }
+  if (m === "ajuste-reset") {
+    const layer = primary();
+    if (layer?.type === "image") {
+      snapshot();
+      layer.crop = coverCrop(layer, 1);
+      state.cropZoom = 1;
+      scheduleSave();
+      render();
+    }
+    return true;
+  }
+  if (m === "descargar") {
+    state.mSheet = "";
+    render();
+    descargar?.click();
+    return true;
+  }
+  if (m === "compartir") {
+    state.mSheet = "";
+    render();
+    if (compartir && !compartir.hidden) compartir.click();
+    else descargar?.click();
+    return true;
+  }
+  if (m === "subir") {
+    state.mSheet = "";
+    fileMode = "image";
+    if (logoInput) {
+      logoInput.accept = "image/png,image/jpeg,image/webp";
+      logoInput.click();
+    }
+    return true;
+  }
+  if (buttonNode.dataset.mSize) {
+    const layer = primary();
+    if (layer?.type === "text") {
+      snapshot();
+      const pt = Math.round((Number(layer.props.size) || 32) * 0.75) + (buttonNode.dataset.mSize === "up" ? 1 : -1);
+      layer.props.size = Math.min(400, Math.max(8, Math.round(Math.max(6, pt) / 0.75)));
+      scheduleSave();
+      render();
+    }
+    return true;
+  }
+  if (buttonNode.dataset.mColor) {
+    applyMobileColor(buttonNode.dataset.mColor, buttonNode.dataset.mTarget);
+    return true;
+  }
+  if (buttonNode.dataset.mReplace) {
+    state.mSheet = "";
+    replaceImage(buttonNode.dataset.mReplace);
+    return true;
+  }
+  if (buttonNode.dataset.mAddPhoto) {
+    state.mSheet = "";
+    addLibraryPhoto(buttonNode.dataset.mAddPhoto);
+    return true;
+  }
+  if (buttonNode.dataset.mPick) {
+    state.mSheet = "";
+    state.cropping = false;
+    state.editingId = "";
+    state.selected = [buttonNode.dataset.mPick];
+    render();
+    return true;
+  }
+  // Acciones existentes lanzadas desde una hoja: se cierra la hoja salvo en color y herramientas.
+  if (sheetHost && !sheetHost.classList.contains("m-sheet-herramientas") && !sheetHost.classList.contains("m-sheet-color") && !sheetHost.classList.contains("m-sheet-fondo")) state.mSheet = "";
+  return false;
+}
+
+function applyMobileColor(hex, target) {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
+  if (target === "fondo") {
+    snapshot();
+    state.doc.background = { type: "solid", catalogId: "", fill: hex };
+    scheduleSave();
+    render();
+    return;
+  }
+  applyColor(hex);
+}
+
 function onRootClick(event) {
   const buttonNode = event.target.closest("button");
   if (!buttonNode || !root.contains(buttonNode)) return;
+  if (handleMobileClick(buttonNode)) return;
   if (buttonNode.dataset.ia) {
     handleIaClick(buttonNode);
     return;
@@ -2023,7 +2176,7 @@ function onRootClick(event) {
   }
   if (buttonNode.dataset.personalizar) {
     const id = buttonNode.dataset.personalizar;
-    if (thumbById(id)) openThumb(id);
+    if (thumbById(id) || isProTemplate(id)) openThumb(id);
     else {
       const opened = documentForOpen(id);
       if (opened && opened.templateId === id) openDoc(opened);
@@ -2130,10 +2283,7 @@ function onRootClick(event) {
     state.guides = !state.guides;
     render();
   }
-  if (buttonNode.id === "modo-recorte") {
-    state.cropping = !state.cropping;
-    render();
-  }
+  if (buttonNode.id === "modo-recorte") toggleAdjust();
   if (buttonNode.id === "anadir-seccion") addSection();
   if (buttonNode.id === "imprimir") window.print();
   if (buttonNode.id === "vista-previa") {
@@ -2480,14 +2630,22 @@ function addFromTool(kind) {
 }
 
 function addLibraryPhoto(id) {
-  const item = photoById(id);
+  const item = anyPhotoById(id);
   if (!item) return;
+  const fmt = state.doc?.format || { width: 1080, height: 1080 };
+  const ratio = item.width && item.height ? item.width / item.height : 4 / 3;
+  let w = Math.round(Math.min(fmt.width * 0.6, 480 * Math.max(1, ratio)));
+  let h = Math.round(w / ratio);
+  if (h > fmt.height * 0.6) {
+    h = Math.round(fmt.height * 0.6);
+    w = Math.round(h * ratio);
+  }
   addLayer(imageLayer({
     name: (item.nombre?.[lang] || item.nombre?.es || item.id).slice(0, 40),
-    x: 80,
-    y: 80,
-    w: 480,
-    h: 360,
+    x: Math.round((fmt.width - w) / 2),
+    y: Math.round((fmt.height - h) / 2),
+    w,
+    h,
     src: { kind: "library", id: item.id },
   }));
 }
@@ -2649,10 +2807,13 @@ function bindStage() {
   root.addEventListener("pointerdown", (event) => {
     const resize = event.target.closest?.("[data-resize]");
     const cropEdge = event.target.closest?.("[data-crop-edge]");
-    const capa = event.target.closest?.(".capa");
-    const art = event.target.closest?.(".stage-art");
+    let capa = event.target.closest?.(".capa");
+    const art = event.target.closest?.(".stage-art") || (event.target.closest?.(".stage-sel") ? root.querySelector(".stage-frame .stage-art") : null);
     if (!state.doc || !art) return;
     if (event.target.closest?.("[data-edit]")) return;
+    // Como en Canva: tocar otra capa o el lienzo termina la edición del texto (si no, el foco vuelve al texto
+    // y el siguiente botón de la barra se pierde en el re-render del focusout).
+    if (state.editingId) stopEditing();
     if (state.tool === "erase") {
       event.preventDefault();
       snapshot();
@@ -2689,7 +2850,7 @@ function bindStage() {
     if (resize) {
       event.preventDefault();
       event.stopPropagation();
-      startResize(resize.dataset.resize, event);
+      startResize(resize.dataset.resize, event, resize.dataset.handle || "se");
       return;
     }
     if (rotate) {
@@ -2698,6 +2859,7 @@ function bindStage() {
       startRotate(rotate.dataset.rotate, event);
       return;
     }
+    if (capa) capa = throughVeil(capa, event);
     if (capa) {
       const hit = state.doc.layers.find((item) => item.id === capa.dataset.id);
       if (state.painter && hit?.type === "text" && state.painter.id !== hit.id) {
@@ -2745,6 +2907,34 @@ function bindStage() {
   });
 }
 
+/** Velo, degradado o aro encima de una foto: como en Canva, el toque llega a la foto (el velo sigue en Posición). */
+function isVeil(layer) {
+  if (!layer || layer.type !== "rect" || layer.locked) return false;
+  const props = layer.props || {};
+  const alpha = (color) => {
+    const match = /rgba\([^)]*,\s*([\d.]+)\s*\)/i.exec(String(color || ""));
+    return match ? Number(match[1]) : 1;
+  };
+  if (props.gradient) return alpha(props.gradient.from) < 0.95 || alpha(props.gradient.to) < 0.95;
+  if (!props.fill || props.fill === "transparent") return true;
+  return alpha(props.fill) < 0.95 || Number(layer.opacity ?? 1) < 0.95;
+}
+
+function throughVeil(capa, event) {
+  if (state.selected.includes(capa.dataset.id)) return capa;
+  const layer = state.doc?.layers.find((item) => item.id === capa.dataset.id);
+  if (!isVeil(layer)) return capa;
+  const stack = document.elementsFromPoint(event.clientX, event.clientY);
+  for (const node of stack) {
+    const below = node.closest?.(".stage-art > .capa");
+    if (!below || below === capa) continue;
+    const under = state.doc.layers.find((item) => item.id === below.dataset.id);
+    if (under?.type === "image") return below;
+    if (under && !isVeil(under)) return capa;
+  }
+  return capa;
+}
+
 function stagePoint(art, event) {
   const rect = art.getBoundingClientRect();
   return {
@@ -2776,6 +2966,7 @@ function startDrag(id, event) {
       item.y = origin.y + dy;
       const node = root.querySelector(`.capa[data-id="${item.id}"]`);
       if (node) node.style.left = `${item.x}px`, node.style.top = `${item.y}px`;
+      syncSel(item);
     }
   };
   const up = () => {
@@ -2813,6 +3004,7 @@ function startRotate(id, event) {
     const fx = layer.flipX ? -1 : 1;
     const fy = layer.flipY ? -1 : 1;
     node.style.transform = `rotate(${layer.rotation}deg) scale(${fx}, ${fy})`;
+    syncSel(layer);
   };
   window.addEventListener("pointermove", move);
   window.addEventListener("pointerup", () => {
@@ -2822,18 +3014,50 @@ function startRotate(id, event) {
   }, { once: true });
 }
 
-function startResize(id, event) {
+function startResize(id, event, handle = "se") {
   snapshot();
   const layer = state.doc.layers.find((item) => item.id === id);
+  if (!layer) return;
   const startX = event.clientX;
   const startY = event.clientY;
-  const origin = { w: layer.w, h: layer.h };
+  const origin = { x: layer.x, y: layer.y, w: layer.w, h: layer.h, size: layer.props?.size };
+  const corner = handle.length === 2;
+  const west = handle.includes("w");
+  const north = handle.includes("n");
   const move = (ev) => {
-    const next = proportionalSize(origin, (ev.clientX - startX) / state.scale, (ev.clientY - startY) / state.scale, layer.type === "image" || ev.shiftKey);
-    layer.w = next.w;
-    layer.h = next.h;
+    const dx = (ev.clientX - startX) / state.scale;
+    const dy = (ev.clientY - startY) / state.scale;
+    if (corner) {
+      const sx = west ? -dx : dx;
+      const sy = north ? -dy : dy;
+      const keep = layer.type === "image" || layer.type === "text" || ev.shiftKey;
+      const next = proportionalSize({ w: origin.w, h: origin.h }, sx, sy, keep);
+      layer.w = next.w;
+      layer.h = next.h;
+      if (layer.type === "text" && origin.size) {
+        layer.props.size = Math.max(8, Math.min(400, Math.round(origin.size * (next.w / origin.w))));
+      }
+      layer.x = west ? origin.x + (origin.w - layer.w) : origin.x;
+      layer.y = north ? origin.y + (origin.h - layer.h) : origin.y;
+    } else if (handle === "e" || handle === "w") {
+      const w = Math.max(16, Math.round(origin.w + (handle === "w" ? -dx : dx)));
+      layer.w = w;
+      layer.x = handle === "w" ? origin.x + (origin.w - w) : origin.x;
+    } else {
+      const h = Math.max(8, Math.round(origin.h + (handle === "n" ? -dy : dy)));
+      layer.h = h;
+      layer.y = handle === "n" ? origin.y + (origin.h - h) : origin.y;
+    }
     const node = root.querySelector(`.capa[data-id="${id}"]`);
-    if (node) node.style.width = `${layer.w}px`, node.style.height = `${layer.h}px`;
+    if (node) {
+      node.style.width = `${layer.w}px`;
+      node.style.height = `${layer.h}px`;
+      node.style.left = `${layer.x}px`;
+      node.style.top = `${layer.y}px`;
+      const text = node.querySelector(".capa-texto");
+      if (text && layer.props?.size) text.style.fontSize = `${layer.props.size}px`;
+    }
+    syncSel(layer);
   };
   window.addEventListener("pointermove", move);
   window.addEventListener("pointerup", () => {
@@ -2888,6 +3112,19 @@ function bindInputs() {
   root.addEventListener("input", (event) => {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
+    if (target.id === "m-zoom" && state.doc) {
+      const layer = primary();
+      if (layer?.type === "image") {
+        setCropZoom(layer, Number(target.value) / 100);
+        paintCropLive(layer);
+        scheduleSave();
+      }
+      return;
+    }
+    if (target.id === "m-color-input" && state.doc) {
+      applyMobileColor(target.value, target.dataset.mTarget);
+      return;
+    }
     if (target.id.startsWith("ia-")) {
       if (!handleIaInput(target)) return;
       render();
@@ -3156,6 +3393,7 @@ function bindInputs() {
       else layer[key] = key === "w" || key === "h" ? Math.max(8, value) : value;
       const node = root.querySelector(`.capa[data-id="${layer.id}"]`);
       if (node) node.style.cssText = layerStyle(layer) + (layer.visible === false ? "visibility:hidden;" : "");
+      syncSel(layer);
       scheduleSave();
     }
     if (target.dataset.crop) {
@@ -3228,7 +3466,96 @@ function naturalOf(layer) {
   }
   const item = layer.src?.kind === "catalog" ? catalogItem(layer.src.id) : null;
   if (item?.width && item?.height) return { w: item.width, h: item.height };
+  if (layer.src?.kind === "library") {
+    const photo = anyPhotoById(layer.src.id);
+    return { w: photo?.width || 640, h: photo?.height || 480 };
+  }
   return { w: Math.max(1, layer.w), h: Math.max(1, layer.h) };
+}
+
+/** Recorte «cover» centrado: lo mismo que object-fit: cover, expresado como crop. */
+function coverCrop(layer, zoom = 1) {
+  const natural = naturalOf(layer);
+  const base = Math.max(layer.w / natural.w, layer.h / natural.h);
+  const w = Math.min(natural.w, layer.w / base / Math.max(1, zoom));
+  const h = Math.min(natural.h, layer.h / base / Math.max(1, zoom));
+  return { x: (natural.w - w) / 2, y: (natural.h - h) / 2, w, h };
+}
+
+function clampCrop(layer, crop) {
+  const natural = naturalOf(layer);
+  const w = Math.min(natural.w, Math.max(1, crop.w));
+  const h = Math.min(natural.h, Math.max(1, crop.h));
+  return { x: Math.min(natural.w - w, Math.max(0, crop.x)), y: Math.min(natural.h - h, Math.max(0, crop.y)), w, h };
+}
+
+function cropZoomOf(layer) {
+  if (!layer?.crop) return 1;
+  const base = coverCrop(layer, 1);
+  return Math.max(1, Math.min(4, base.w / Math.max(1, layer.crop.w)));
+}
+
+/** Ajustar (Canva): entra/sale del modo de encuadre; al entrar fija un crop cover si no lo hay. */
+function toggleAdjust(force) {
+  const layer = primary();
+  const next = typeof force === "boolean" ? force : !state.cropping;
+  if (next && layer?.type === "image") {
+    if (!layer.crop) layer.crop = coverCrop(layer, 1);
+    state.cropZoom = cropZoomOf(layer);
+  }
+  state.cropping = next && layer?.type === "image";
+  state.mSheet = "";
+  render();
+}
+
+function setCropZoom(layer, zoom) {
+  const z = Math.max(1, Math.min(4, Number(zoom) || 1));
+  const current = layer.crop || coverCrop(layer, 1);
+  const cx = current.x + current.w / 2;
+  const cy = current.y + current.h / 2;
+  const fresh = coverCrop(layer, z);
+  layer.crop = clampCrop(layer, { x: cx - fresh.w / 2, y: cy - fresh.h / 2, w: fresh.w, h: fresh.h });
+  state.cropZoom = z;
+}
+
+function replaceImage(id) {
+  const layer = primary();
+  const photo = anyPhotoById(id);
+  if (!photo) return;
+  snapshot();
+  if (layer?.type === "image") {
+    layer.src = { kind: "library", id: photo.id };
+    layer.crop = null;
+    layer.name = (photo.nombre?.[lang] || photo.nombre?.es || photo.id).slice(0, 40);
+  } else {
+    addLibraryPhoto(photo.id);
+    return;
+  }
+  state.cropping = false;
+  scheduleSave();
+  render();
+}
+
+/** Repinta solo la imagen recortada (y su fantasma) durante el arrastre, sin re-render completo. */
+function syncSel(layer) {
+  const box = root.querySelector(`.stage-sel .sel-box[data-sel="${CSS.escape(layer.id)}"]`);
+  if (box) box.style.cssText = `${layerStyle(layer)}opacity:1;`;
+}
+
+function paintCropLive(layer) {
+  const node = root.querySelector(`.stage-art .capa[data-id="${CSS.escape(layer.id)}"]`);
+  if (!node || !layer.crop) return;
+  const natural = naturalOf(layer);
+  const scale = Math.max(layer.w / layer.crop.w, layer.h / layer.crop.h);
+  const box = root.querySelector(`.stage-sel .sel-box[data-sel="${CSS.escape(layer.id)}"]`);
+  const imgs = [...node.querySelectorAll(".capa-img img"), ...(box ? box.querySelectorAll(".recorte-fantasma-img") : [])];
+  for (const img of imgs) {
+    img.style.width = `${natural.w * scale}px`;
+    img.style.height = `${natural.h * scale}px`;
+    img.style.marginLeft = `${-layer.crop.x * scale}px`;
+    img.style.marginTop = `${-layer.crop.y * scale}px`;
+    img.style.objectFit = "";
+  }
 }
 
 function startCrop(edge, event) {
@@ -3243,7 +3570,11 @@ function startCrop(edge, event) {
   const move = (ev) => {
     const dx = ((ev.clientX - startX) / state.scale) * (origin.w / Math.max(1, layer.w));
     const dy = ((ev.clientY - startY) / state.scale) * (origin.h / Math.max(1, layer.h));
-    layer.crop = shiftCrop(origin, edge, dx, dy);
+    // «pan»: la imagen sigue al dedo dentro del marco (el recorte se mueve al revés).
+    layer.crop = edge === "pan"
+      ? clampCrop(layer, { ...origin, x: origin.x - dx, y: origin.y - dy })
+      : shiftCrop(origin, edge, dx, dy);
+    if (edge === "pan") paintCropLive(layer);
   };
   window.addEventListener("pointermove", move);
   window.addEventListener("pointerup", () => {
@@ -3262,6 +3593,11 @@ function onKey(event) {
   }
   if (event.key === "Escape" && state.designSheet) {
     state.designSheet = "";
+    render();
+    return;
+  }
+  if (event.key === "Escape" && state.editingId) {
+    stopEditing();
     render();
     return;
   }
@@ -3398,6 +3734,9 @@ async function onLogo() {
       state.selected = [layer.id];
     }
     layer.src = { kind: "user", id: layer.id };
+    layer.crop = null;
+    state.cropping = false;
+    state.mSheet = "";
     state.userImages.set(layer.id, image);
     urlCache.delete(layer.id);
     const stored = await images.put(state.doc.id, layer.id, image);

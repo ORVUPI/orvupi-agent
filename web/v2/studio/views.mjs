@@ -5,7 +5,7 @@ import { aiPanelCopy, localPhrases } from "./lib/ai-optional.mjs";
 import { renderOrvupiIa } from "./ia.mjs";
 import { BRAND, FONTS, PRESETS, fontById, importProject, orderedLayers, overlappingIds } from "./lib/document.mjs";
 import { HISTORY_COST, listHistory } from "./lib/history.mjs";
-import { listPhotos, PHOTO_LICENSE_NOTE, photoById } from "./lib/photos.mjs";
+import { anyPhotoById, listPhotos, PHOTO_LICENSE_NOTE, photoById, PRO_PHOTOS } from "./lib/photos.mjs";
 import { tablePlainText } from "./lib/table-data.mjs";
 import { piecesOf } from "./lib/text-style.mjs";
 import { IDEAS, PLANTILLAS, filterPlantillas, instantiate } from "./lib/plantillas.mjs";
@@ -13,9 +13,10 @@ import { desktopRail, designsSub } from "./desktop.mjs";
 import { designView } from "./mis-disenos.mjs";
 import { listDesigns } from "./lib/projects.mjs";
 import { loadMas } from "./lib/mas-store.mjs";
-import { documentForThumb } from "./lib/thumb-docs.mjs";
+import { documentForThumb as legacyDocumentForThumb } from "./lib/thumb-docs.mjs";
 import { documentForOpen, openKind, relatedOpenIds } from "./lib/open-target.mjs";
-import { THUMB_CATS, THUMB_GROUPS, thumbById, thumbCat, thumbCatsFor, thumbsForGrupo, thumbsIn } from "./lib/thumbs.mjs";
+import { THUMB_CATS, THUMB_GROUPS, thumbById as legacyThumbById, thumbCat, thumbCatsFor, thumbsIn as legacyThumbsIn } from "./lib/thumbs.mjs";
+import { isProTemplate, PRO_TEMPLATES, proById, proForCategories, proIn, proThumbDocument } from "./lib/pro-templates.mjs";
 import {
   browseAsset,
   browseElements,
@@ -25,6 +26,44 @@ import {
   filterBrowse,
   photoTopics,
 } from "./lib/library.mjs";
+
+
+/* Galerías: plantillas profesionales. Los ids antiguos (tpl-*) siguen abriendo su documento. */
+const GROUP_CATS_PRO = Object.fromEntries(THUMB_GROUPS.map((group) => [group.id, group.cats]));
+
+function thumbsIn(category) {
+  const pro = proIn(category);
+  return pro.length ? pro : legacyThumbsIn(category);
+}
+
+function thumbsForGrupo(grupo) {
+  const cats = GROUP_CATS_PRO[grupo];
+  return cats ? proForCategories(cats) : PRO_TEMPLATES;
+}
+
+function thumbById(id) {
+  return proById(id) || legacyThumbById(id);
+}
+
+function documentForThumb(id) {
+  return isProTemplate(id) ? proThumbDocument(id) : legacyDocumentForThumb(id);
+}
+
+/** Miniatura de una plantilla profesional para otros módulos (IA, Más). */
+export function proArt(id) {
+  const doc = isProTemplate(id) ? proThumbDocument(id) : null;
+  return doc ? miniStage(doc) : null;
+}
+
+/** Cara de una tarjeta: el diseño real pintado con el renderizador del editor. */
+function thumbArt(item) {
+  if (item && isProTemplate(item.id)) {
+    const doc = proThumbDocument(item.id);
+    if (doc) return miniStage(doc);
+  }
+  if (item?.file) return el("img", { src: studioAsset(item.file), alt: "", loading: "lazy", decoding: "async" });
+  return null;
+}
 
 const GROUPS = {
   "para-ti": ["square", "story", "x", "tiktok", "ig", "deck", "doc", "cv", "video", "flyer", "logo", "poster", "web", "board"],
@@ -385,9 +424,9 @@ function blankCardFor(uso, en) {
 }
 
 const THUMB_PARA = [
-  "tpl-presentacion-01", "tpl-post-instagram-01", "tpl-curriculum-01", "tpl-logo-01",
-  "tpl-flyer-01", "tpl-miniatura-youtube-01", "tpl-cartel-03", "tpl-story-03",
-  "tpl-invitacion-02", "tpl-video-01", "tpl-negocio-01", "tpl-documento-01",
+  "pro-presentacion-01", "pro-post-instagram-02", "pro-curriculum-01", "pro-logo-01",
+  "pro-flyer-01", "pro-miniatura-youtube-01", "pro-cartel-03", "pro-story-01",
+  "pro-invitacion-01", "pro-video-01", "pro-negocio-05", "pro-documento-01",
 ];
 
 function thumbLabel(item, lang) {
@@ -666,55 +705,88 @@ function templateCard(item, lang) {
   return node;
 }
 
-function miniStage(doc) {
-  const w = doc.format.width;
-  const h = doc.format.height;
-  const slot = el("span", { class: "mini-slot", style: `aspect-ratio:${w} / ${h}` });
-  let bg = `background-color:${doc.background?.fill || BRAND.cream}`;
+const THUMB_CTX = { state: { userImages: new Map(), selected: [] }, t: () => "", userUrl: () => "" };
+
+/**
+ * Fondo del lienzo. Lo usan el editor y todas las miniaturas: misma función, mismo resultado.
+ */
+function paintArtBackground(art, doc) {
+  art.style.backgroundColor = doc.background?.fill || BRAND.cream;
   if (doc.background?.type === "catalog" && doc.background.catalogId) {
     const item = catalogItem(doc.background.catalogId);
-    if (item) bg += `;background-image:url("${studioAsset(item.archivo)}")`;
+    if (item) art.style.backgroundImage = `url("${studioAsset(item.archivo)}")`;
   }
-  const art = el("span", { class: "mini-art", style: `width:${w}px;height:${h}px;--doc-w:${w}px;${bg}` });
+}
+
+/** Contenido de una capa. Única fuente para miniatura, vista previa y editor. */
+function layerContent(ctx, layer, editing, lazy) {
+  if (layer.type === "text") return textBlock(layer, editing);
+  if (layer.type === "image") return imageNode(ctx, layer, lazy);
+  if (layer.type === "chart") return chartNode(layer);
+  if (layer.type === "table") return tableNode(layer);
+  if (layer.type === "line") {
+    const bar = el("div", { class: "capa-linea" });
+    bar.style.background = layer.props.color;
+    bar.style.height = `${Math.max(2, layer.props.strokeWidth || layer.h)}px`;
+    return bar;
+  }
+  const shape = el("div", { class: `capa-forma${layer.props.shape === "ellipse" ? " elipse" : ""}` });
+  if (layer.props.fill) shape.style.background = layer.props.fill;
+  if (layer.props.gradient) shape.style.background = `linear-gradient(${layer.props.gradient.angle}deg, ${layer.props.gradient.from}, ${layer.props.gradient.to})`;
+  if (layer.props.radius && layer.props.shape !== "ellipse") shape.style.borderRadius = `${layer.props.radius}px`;
+  if (layer.props.stroke && layer.props.strokeWidth) shape.style.border = `${layer.props.strokeWidth}px solid ${layer.props.stroke}`;
+  return shape;
+}
+
+/**
+ * Pinta el diseño en `art` (fondo + capas). `decorate(node, layer)` añade lo propio del editor.
+ */
+export function paintArt(ctx, doc, art, { editingId = "", lazy = false, decorate = null } = {}) {
+  paintArtBackground(art, doc);
+  art.style.width = `${doc.format.width}px`;
+  art.style.height = `${doc.format.height}px`;
   for (const layer of orderedLayers(doc)) {
-    if (layer.visible === false) continue;
-    const node = el("span", { class: "mini-capa", style: layerStyle(layer) });
-    if (layer.type === "text") {
-      const text = el("span", { class: "mini-texto", text: layer.props.text });
-      text.style.fontFamily = fontById(layer.props.fontId).css;
-      text.style.fontSize = `${layer.props.size}px`;
-      text.style.color = layer.props.color;
-      text.style.textAlign = layer.props.align || "left";
-      text.style.lineHeight = String(layer.props.lineHeight || 1.15);
-      node.append(text);
-    } else if (layer.type === "image") {
-      const frameNode = el("span", { class: "mini-img" });
-      if (layer.src?.kind === "catalog") {
-        const item = catalogItem(layer.src.id);
-        if (item?.archivo) frameNode.append(el("img", { src: studioAsset(item.archivo), alt: "", draggable: "false", loading: "lazy", decoding: "async" }));
-        else {
-          const asset = browseAsset(layer.src.id);
-          if (asset?.scene) frameNode.append(mountScene(asset.scene, "capa-escena"));
-        }
-      } else if (layer.src?.kind === "library") {
-        frameNode.append(el("img", { src: studioAsset(`photos/${layer.src.id}.png`), alt: "", draggable: "false", loading: "lazy", decoding: "async" }));
-      }
-      node.append(frameNode);
-    } else if (layer.type === "chart") {
-      node.append(el("span", { class: "mini-forma", style: "background:linear-gradient(180deg,#FF3070 40%,#102032 40%)" }));
-    } else if (layer.type === "table") {
-      node.append(el("span", { class: "mini-forma", style: "background:#FFF8EC;border:2px solid #102032" }));
-    } else if (layer.type === "line") {
-      node.append(el("span", { class: "mini-forma", style: `background:${layer.props.color || BRAND.navy}` }));
-    } else {
-      const shape = el("span", { class: "mini-forma" });
-      if (layer.props?.fill) shape.style.background = layer.props.fill;
-      if (layer.props?.stroke && layer.props.strokeWidth) shape.style.border = `${layer.props.strokeWidth}px solid ${layer.props.stroke}`;
-      node.append(shape);
-    }
+    const node = el("div", { class: "capa", "data-id": layer.id, style: layerStyle(layer) });
+    if (layer.visible === false) node.style.visibility = "hidden";
+    node.append(layerContent(ctx, layer, editingId === layer.id, lazy));
+    if (decorate) decorate(node, layer);
     art.append(node);
   }
+  return art;
+}
+
+/**
+ * Miniatura: el mismo `paintArt` que el editor, escalado al ancho de la tarjeta.
+ * Así la miniatura y el lienzo que se abre son el mismo documento pintado igual.
+ */
+// La miniatura se escala con `scale(calc(100cqi / var(--doc-w)))` (longitud ÷ longitud).
+// Firefox y Safari antiguos no dividen longitudes y dejarían el diseño a tamaño real:
+// en ellos la escala la pone un único ResizeObserver compartido.
+const MINI_CSS_SCALE = typeof CSS !== "undefined" && CSS.supports?.("transform", "scale(calc(100px / 50px))");
+let miniObserver = null;
+function watchMini(slot, art) {
+  if (MINI_CSS_SCALE || typeof ResizeObserver === "undefined") return;
+  miniObserver ||= new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      const node = entry.target;
+      const inner = node.firstElementChild;
+      const docW = Number(node.dataset.artW) || 1;
+      const width = entry.contentBoxSize?.[0]?.inlineSize ?? node.clientWidth;
+      if (inner && width) inner.style.transform = `scale(${width / docW})`;
+    }
+  });
+  art.style.transform = "scale(0)";
+  miniObserver.observe(slot);
+}
+
+function miniStage(doc, ctx = THUMB_CTX) {
+  const w = doc.format.width;
+  const h = doc.format.height;
+  const slot = el("span", { class: "mini-slot art-slot", style: `aspect-ratio:${w} / ${h}`, "data-art-w": String(w), "data-art-h": String(h) });
+  const art = el("span", { class: "mini-art stage-art art-render", style: `--doc-w:${w}px` });
+  paintArt(ctx, doc, art, { lazy: true });
   slot.append(art);
+  watchMini(slot, art);
   return slot;
 }
 
@@ -924,9 +996,7 @@ function seeAll(label, attrs) {
 }
 
 function thumbFace(item) {
-  return el("span", { class: "canva-thumb" }, [
-    el("img", { src: studioAsset(item.file), alt: "", loading: "lazy", decoding: "async" }),
-  ]);
+  return el("span", { class: `canva-thumb${isProTemplate(item.id) ? " is-art" : ""}` }, [thumbArt(item)]);
 }
 
 function moreMenu(label, actions) {
@@ -1102,7 +1172,7 @@ function usedHome(ctx) {
     const sample = thumbsIn(cat)[skip] || thumbsIn(cat)[0];
     const node = button("", { class: "canva-plain canva-format", "data-format": id });
     const face = el("span", { class: "canva-thumb" });
-    if (sample?.file) face.append(el("img", { src: studioAsset(sample.file), alt: "", loading: "lazy", decoding: "async" }));
+    if (sample) face.append(thumbArt(sample));
     node.append(face, el("span", { class: "canva-card-name", text: en ? labelEn : es }));
     return node;
   });
@@ -1184,7 +1254,7 @@ function categoriesHome(ctx) {
       "data-thumb-cat": cat.id,
       style: `background:${CAT_WASH[index % CAT_WASH.length]}`,
     });
-    if (sample?.file) node.append(el("img", { src: studioAsset(sample.file), alt: "", loading: "lazy", decoding: "async" }));
+    if (sample) node.append(thumbArt(sample));
     node.append(el("span", { text: en ? cat.en : cat.es }));
     return node;
   });
@@ -1278,7 +1348,7 @@ const VIDEO_CATS = new Set(["video", "miniatura-youtube", "portada"]);
 
 function plantillasPool(ctx) {
   const items = ctx.state.grupo ? thumbsForGrupo(ctx.state.grupo) : proThumbList();
-  return items.filter((item) => item?.file && item.category !== "meme");
+  return items.filter((item) => (item?.file || item?.pro) && item.category !== "meme");
 }
 
 function vividFirst(list) {
@@ -1382,7 +1452,8 @@ function previewCard(item, ctx, extra) {
     "aria-label": thumbLabel(item, ctx.lang),
   });
   const face = thumbFace(item);
-  const img = face.querySelector("img");
+  const img = item.pro ? null : face.querySelector("img");
+  if (item.pro) face.style.aspectRatio = `${item.width} / ${item.height}`;
   if (img && item.width && item.height) {
     img.setAttribute("width", String(item.width));
     img.setAttribute("height", String(item.height));
@@ -1477,7 +1548,7 @@ function glanceSection(ctx, picks) {
   const grid = el("div", { class: "tpl-glance" });
   glanceList(ctx).forEach(([id, es, labelEn], index) => {
     const sample = chosen.get(id);
-    if (!sample?.file) return;
+    if (!sample) return;
     const node = button("", {
       class: "tpl-tile canva-plain",
       "data-go": "plantillas",
@@ -1486,7 +1557,7 @@ function glanceSection(ctx, picks) {
     });
     node.append(
       el("span", { class: "tpl-tile-face", style: `background:${GLANCE_WASH[index % GLANCE_WASH.length]}` }, [
-        el("img", { src: studioAsset(sample.file), alt: "", loading: "lazy", decoding: "async" }),
+        thumbArt(sample),
       ]),
       el("span", { class: "tpl-tile-label", text: en ? labelEn : es }),
     );
@@ -1531,13 +1602,12 @@ function masonrySection(ctx, title, items) {
 function plantillasHub(ctx) {
   const pool = plantillasPool(ctx);
   const used = new Set();
-  const freshPool = () => pool.filter((item) => item?.file && !used.has(item.id) && !used.has(item.file));
+  const freshPool = () => pool.filter((item) => item && !used.has(item.id));
   const take = (list) => {
     const fresh = [];
     for (const item of list) {
-      if (!item?.file || used.has(item.id) || used.has(item.file)) continue;
+      if (!item || used.has(item.id)) continue;
       used.add(item.id);
-      used.add(item.file);
       fresh.push(item);
     }
     return fresh;
@@ -1585,7 +1655,7 @@ function plantillasCategory(ctx) {
   const cat = THUMB_CATS.find((item) => item.id === ctx.state.thumbCat);
   if (!cat) return plantillasHub(ctx);
   const en = ctx.lang === "en";
-  const items = thumbsIn(cat.id).filter((item) => item?.file && item.category !== "meme");
+  const items = thumbsIn(cat.id).filter((item) => item && (item.pro || item.file));
   return el("div", { class: "canva-feed tpl-feed" }, [
     el("section", { class: "canva-section", "data-section": "categoria" }, [
       canvaHead(en ? cat.en : cat.es, seeAll(ctx.t("verTodo"), { "data-go": "plantillas", "data-thumb-cat": "" })),
@@ -2142,13 +2212,14 @@ function tableNode(layer) {
   return table;
 }
 
-function imageNode(ctx, layer) {
+function imageNode(ctx, layer, lazy = false) {
   const frameNode = el("div", { class: "capa-img" });
+  if (layer.radius) frameNode.style.borderRadius = `${layer.radius}px`;
   if (layer.src?.kind === "user" && !ctx.state.userImages.has(layer.src.id)) {
     frameNode.append(el("p", { class: "pendiente", text: ctx.t("pendiente") }));
     return frameNode;
   }
-  const img = el("img", { alt: "", draggable: "false" });
+  const img = el("img", { alt: "", draggable: "false", decoding: "async", loading: lazy ? "lazy" : null });
   let natural = null;
   if (layer.src?.kind === "catalog") {
     const item = catalogItem(layer.src.id);
@@ -2163,8 +2234,9 @@ function imageNode(ctx, layer) {
       }
     }
   } else if (layer.src?.kind === "library") {
-    img.src = studioAsset(`photos/${layer.src.id}.png`);
-    natural = { w: 640, h: 480 };
+    const photo = anyPhotoById(layer.src.id);
+    img.src = studioAsset(photo?.archivo || `photos/${layer.src.id}.png`);
+    natural = { w: photo?.width || 640, h: photo?.height || 480 };
   } else if (layer.src?.kind === "user") {
     const image = ctx.state.userImages.get(layer.src.id);
     if (image) {
@@ -2193,53 +2265,65 @@ function stageNode(ctx) {
   const shell = shellOf(doc);
   const scroll = el("div", { class: `stage-scroll${shell === "whiteboard" ? " lienzo-pizarra" : ""}`, id: shell === "whiteboard" ? "lienzo-pizarra" : "lienzo" });
   const frameNode = el("div", { class: "stage-frame" });
-  const art = el("div", { class: `stage-art${state.grid ? " cuadricula" : ""}${state.guides ? " guias" : ""}` });
-  art.style.width = `${doc.format.width}px`;
-  art.style.height = `${doc.format.height}px`;
-  art.style.background = doc.background.fill || BRAND.cream;
+  const art = el("div", { class: `stage-art art-render${state.grid ? " cuadricula" : ""}${state.guides ? " guias" : ""}` });
   if (state.zoom === "100") state.scale = 1;
   else if (!state.scale) state.scale = 1;
   frameNode.style.width = `${Math.round(doc.format.width * state.scale)}px`;
   frameNode.style.height = `${Math.round(doc.format.height * state.scale)}px`;
   art.style.transform = `scale(${state.scale})`;
-  for (const layer of orderedLayers(doc)) {
-    const node = el("div", {
-      class: `capa${state.selected.includes(layer.id) ? " seleccionada" : ""}${layer.locked ? " bloqueada" : ""}${layer.anim ? ` anim-${layer.anim}` : ""}`,
-      "data-id": layer.id,
-      style: layerStyle(layer),
-    });
-    if (layer.visible === false) node.style.visibility = "hidden";
-    if (layer.type === "text") node.append(textBlock(layer, state.editingId === layer.id));
-    else if (layer.type === "image") node.append(imageNode(ctx, layer));
-    else if (layer.type === "chart") node.append(chartNode(layer));
-    else if (layer.type === "table") node.append(tableNode(layer));
-    else if (layer.type === "line") {
-      const bar = el("div", { class: "capa-linea" });
-      bar.style.background = layer.props.color;
-      bar.style.height = `${Math.max(2, layer.props.strokeWidth || layer.h)}px`;
-      node.append(bar);
-    } else {
-      const shape = el("div", { class: `capa-forma${layer.props.shape === "ellipse" ? " elipse" : ""}` });
-      if (layer.props.fill) shape.style.background = layer.props.fill;
-      if (layer.props.stroke && layer.props.strokeWidth) shape.style.border = `${layer.props.strokeWidth}px solid ${layer.props.stroke}`;
-      node.append(shape);
-    }
-    if (state.cropping && layer.type === "image" && state.selected.includes(layer.id)) {
-      node.append(el("div", { class: "recorte-visual" }, ["move", "n", "e", "s", "w"].map((edge) => button("", {
-        class: `asa-recorte ${edge}`,
-        "data-crop-edge": edge,
-        "aria-label": edge === "move" ? "Mover recorte" : `Recorte ${edge}`,
-      }))));
-    }
-    if (state.selected.includes(layer.id) && !layer.locked) {
-      for (const corner of ["nw", "ne", "sw", "se"]) {
-        node.append(el("span", { class: `asa asa-${corner}`, "data-resize": corner === "se" ? layer.id : null }));
+  art.style.setProperty("--inv", String(1 / Math.max(0.05, state.scale)));
+  // Capa de selección fuera del recorte del lienzo: marco, asas y «Ajustar» se ven enteros, como en Canva.
+  const sel = el("div", { class: "stage-sel", "aria-hidden": "false" });
+  sel.style.width = `${doc.format.width}px`;
+  sel.style.height = `${doc.format.height}px`;
+  sel.style.transform = `scale(${state.scale})`;
+  sel.style.setProperty("--inv", String(1 / Math.max(0.05, state.scale)));
+  paintArt(ctx, doc, art, {
+    editingId: state.editingId,
+    decorate(node, layer) {
+      const picked = state.selected.includes(layer.id);
+      if (picked) node.classList.add("seleccionada");
+      if (layer.locked) node.classList.add("bloqueada");
+      if (layer.anim) node.classList.add(`anim-${layer.anim}`);
+      if (!picked) return;
+      const box = el("div", { class: `sel-box${layer.locked ? " bloqueada" : ""}${state.editingId === layer.id ? " editando" : ""}`, "data-sel": layer.id, style: `${layerStyle(layer)}opacity:1;` });
+      if (layer.type === "text") box.classList.add("sel-texto");
+      if (layer.w * state.scale < 64 || layer.h * state.scale < 40) box.classList.add("sel-chica");
+      if (state.cropping && layer.type === "image") {
+        const source = node.querySelector(".capa-img img");
+        if (source) {
+          const ghost = source.cloneNode(false);
+          ghost.removeAttribute("loading");
+          ghost.className = "recorte-fantasma-img";
+          const inner = source.cloneNode(false);
+          inner.removeAttribute("loading");
+          inner.className = "recorte-fantasma-img recorte-dentro-img";
+          box.append(
+            el("div", { class: "recorte-fantasma", "aria-hidden": "true" }, [ghost]),
+            el("div", { class: "recorte-dentro", "aria-hidden": "true" }, [inner]),
+          );
+          box.classList.add("ajustando");
+          node.classList.add("ajustando");
+        }
+        box.append(button("", { class: "recorte-pan", "data-crop-edge": "pan", "aria-label": "Mover la imagen dentro del marco" }));
+        box.append(el("div", { class: "recorte-visual" }, ["move", "n", "e", "s", "w"].map((edge) => button("", {
+          class: `asa-recorte ${edge}`,
+          "data-crop-edge": edge,
+          "aria-label": edge === "move" ? "Mover recorte" : `Recorte ${edge}`,
+        }))));
+      } else if (!layer.locked) {
+        for (const corner of ["nw", "ne", "sw", "se"]) {
+          box.append(el("span", { class: `asa asa-${corner}`, "data-resize": layer.id, "data-handle": corner }));
+        }
+        for (const side of ["n", "e", "s", "w"]) {
+          box.append(el("span", { class: `asa-lado asa-lado-${side}`, "data-resize": layer.id, "data-handle": side, "aria-hidden": "true" }));
+        }
+        box.append(el("span", { class: "asa-giro", "data-rotate": layer.id, "aria-hidden": "true" }));
       }
-      node.append(el("span", { class: "asa-giro", "data-rotate": layer.id, "aria-hidden": "true" }));
-    }
-    art.append(node);
-  }
-  frameNode.append(art);
+      sel.append(box);
+    },
+  });
+  frameNode.append(art, sel);
   if (doc.format.id === "trifold") {
     frameNode.append(el("div", { class: "guias-pliegue", "aria-hidden": "true" }, [
       el("span", { class: "guia", style: "left:33.33%" }),
@@ -2601,6 +2685,12 @@ function iconBtn(label, attrs, paths) {
   return node;
 }
 
+function tbLabeled(label, attrs, paths) {
+  const node = iconBtn(label, attrs, paths);
+  node.append(el("span", { class: "tb-lbl", text: label }));
+  return node;
+}
+
 function textBar(ctx) {
   const { state, t, lang } = ctx;
   const shell = shellOf(state.doc);
@@ -2687,6 +2777,12 @@ function textBar(ctx) {
     }
   }
   const subject = layer || target;
+  if (layer?.type === "image" && !target) {
+    kids.push(tbLabeled(en ? "Replace" : "Reemplazar", { "data-m-sheet": "reemplazar", class: "tb-pop tb-img", "aria-pressed": state.mSheet === "reemplazar" ? "true" : "false" }, ["M4 8h13l-3-3", "M20 16H7l3 3"]));
+    kids.push(tbLabeled(en ? "Adjust" : "Ajustar", { "data-m": "ajustar", class: "tb-pop tb-img", "aria-pressed": state.cropping ? "true" : "false" }, ["M6 2v14a2 2 0 0 0 2 2h14", "M18 22V8a2 2 0 0 0-2-2H2"]));
+    kids.push(tbLabeled(en ? "Flip" : "Voltear", { "data-flip": "x", class: "tb-pop tb-img" }, ["M12 3v18", "M8 7l-5 5 5 5z", "M16 7l5 5-5 5z"]));
+    kids.push(tbLabeled(en ? "Tools" : "Herramientas", { "data-m-sheet": "herramientas", class: "tb-pop tb-img", "aria-pressed": state.mSheet === "herramientas" ? "true" : "false" }, ["M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"]));
+  }
   if (subject) {
     kids.push(popButton(en ? "Animate" : "Animar", "anim", state.pop === "anim"));
     if (state.pop === "anim") {
@@ -2874,7 +2970,7 @@ function relatedThumb(id, label) {
   const photo = photoById(id);
   const visual = catalogItem(id);
   const asset = browseAsset(id);
-  if (thumb?.file) node.append(el("img", { src: studioAsset(thumb.file), alt: "" }));
+  if (thumb) node.append(thumbArt(thumb));
   else if (photo?.archivo) node.append(el("img", { src: studioAsset(photo.archivo), alt: "" }));
   else if (visual?.archivo) node.append(el("img", { src: studioAsset(visual.archivo), alt: "" }));
   else if (asset?.scene) node.append(mountScene(asset.scene));
@@ -2905,6 +3001,288 @@ function selectionPill(ctx) {
     ]));
   }
   return el("div", { id: "pastilla-seleccion", class: "pastilla-seleccion" }, kids);
+}
+
+/* ── Editor móvil (Canva): barra superior compacta, + flotante, barra contextual inferior y hojas. ── */
+const M_ICONS = {
+  home: ["M4 11 12 4l8 7", "M6 10.5V20h12v-9.5"],
+  undo: ["M9 14 4 9l5-5", "M4 9h10.5a5.5 5.5 0 0 1 0 11H11"],
+  redo: ["M15 14l5-5-5-5", "M20 9H9.5a5.5 5.5 0 0 0 0 11H13"],
+  download: ["M12 4v11", "M7 10l5 5 5-5", "M5 20h14"],
+  share: ["M12 15V4", "M8 8l4-4 4 4", "M5 13v7h14v-7"],
+  plus: ["M12 5v14", "M5 12h14"],
+  keyboard: ["M3 6h18v12H3z", "M7 10h.01", "M11 10h.01", "M15 10h.01", "M7 14h10"],
+  font: ["M5 19 10.5 5h1L17 19", "M7.5 14h7"],
+  color: ["M12 3a9 9 0 1 0 0 18c1.1 0 1.5-.8 1.5-1.6 0-1.3-1-1.4-1-2.4 0-.8.6-1.5 1.6-1.5H17a4 4 0 0 0 4-4C21 6.8 17 3 12 3z", "M7.5 11h.01", "M10 7.5h.01", "M14.5 7.5h.01"],
+  alignleft: ["M4 6h16", "M4 10h10", "M4 14h16", "M4 18h10"],
+  aligncenter: ["M4 6h16", "M7 10h10", "M4 14h16", "M7 18h10"],
+  alignright: ["M4 6h16", "M10 10h10", "M4 14h16", "M10 18h10"],
+  alignjustify: ["M4 6h16", "M4 10h16", "M4 14h16", "M4 18h16"],
+  replace: ["M4 7h11l-3-3", "M20 17H9l3 3", "M4 7v4", "M20 17v-4"],
+  select: ["M5 3l12 7-5 1.5L9.5 17z", "M13 13l5 5"],
+  adjust: ["M7 3v14h14", "M3 7h14v14"],
+  tools: ["M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"],
+  copy: ["M8 8h11v11H8z", "M5 16V5h11"],
+  trash: ["M5 7h14", "M10 11v6", "M14 11v6", "M7 7l1 13h8l1-13", "M9 7V4h6v3"],
+  text: ["M5 6h14", "M12 6v12", "M8 18h8"],
+  photo: ["M4 5h16v14H4z", "M4 16l5-5 4 4 3-3 4 4", "M15 9h.01"],
+  upload: ["M12 16V6", "M8 9l4-4 4 4", "M5 19h14"],
+  shape: ["M4 4h7v7H4z", "M17.5 7.5m-3.5 0a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0-7 0", "M12 20l4-7 4 7z"],
+  layers: ["M12 3 3 8l9 5 9-5z", "M3 13l9 5 9-5"],
+  done: ["M5 12l5 5L20 7"],
+  flipx: ["M12 3v18", "M8 7 4 12l4 5V7z", "M16 7l4 5-4 5V7z"],
+  flipy: ["M3 12h18", "M7 8l5-4 5 4H7z", "M7 16l5 4 5-4H7z"],
+  front: ["M8 8h12v12H8z", "M4 4h12v2", "M4 4v12h2"],
+  back: ["M4 4h12v12H4z", "M20 8v12H8v-2"],
+  lock: ["M8 11V8a4 4 0 0 1 8 0v3", "M6 11h12v9H6z"],
+  close: ["M6 6l12 12", "M18 6 6 18"],
+  dots: "dots",
+};
+
+const M_COLORS = ["#000000", "#ffffff", "#545454", "#a6a6a6", "#ff3131", "#ff5757", "#ff66c4", "#cb6ce6", "#8c52ff", "#5e17eb", "#0097b2", "#0cc0df", "#5ce1e6", "#38b6ff", "#5170ff", "#004aad", "#00bf63", "#7ed957", "#c1ff72", "#ffde59", "#ffbd59", "#ff914d", "#102032", "#f5efe6"];
+
+function mIcon(name) {
+  return M_ICONS[name] === "dots" ? dotsIcon() : svgIcon(M_ICONS[name]);
+}
+
+function mBtn(label, attrs, iconName, opts = {}) {
+  const node = button("", { ...attrs, class: `m-btn${attrs.class ? ` ${attrs.class}` : ""}`, "aria-label": opts.aria || label });
+  if (iconName) node.append(mIcon(iconName));
+  if (!opts.iconOnly) node.append(el("span", { class: "m-lbl", text: label }));
+  return node;
+}
+
+function mTopBtn(label, attrs, iconName) {
+  const node = button("", { ...attrs, class: `m-top-btn${attrs.class ? ` ${attrs.class}` : ""}`, "aria-label": label, title: label });
+  node.append(mIcon(iconName));
+  return node;
+}
+
+function mTextBar(ctx, layer) {
+  const { state, lang } = ctx;
+  const en = lang === "en";
+  const font = fontById(layer.props.fontId);
+  const pt = Math.round((Number(layer.props.size) || 32) * 0.75);
+  const color = /^#[0-9a-fA-F]{6}$/.test(layer.props.color) ? layer.props.color : "#102032";
+  const align = ["left", "center", "right", "justify"].includes(layer.props.align) ? layer.props.align : "left";
+  const nextAlign = { left: "center", center: "right", right: "justify", justify: "left" }[align];
+  const fontBtn = button("", { class: "m-btn m-font", "data-m-sheet": "fuente", "aria-label": en ? "Font" : "Fuente" });
+  fontBtn.append(el("span", { class: "m-font-name", text: font ? (font[lang] || font.es) : "Inter", style: `font-family:${font?.css || "inherit"}` }), el("span", { class: "m-lbl", text: en ? "Font" : "Fuente" }));
+  const sizeBox = el("div", { class: "m-size", role: "group", "aria-label": en ? "Font size (pt)" : "Tamaño de letra (pt)" }, [
+    button("−", { class: "m-size-step", "data-m-size": "down", "aria-label": en ? "Smaller" : "Más pequeño" }),
+    el("span", { class: "m-size-val", id: "m-size-val", text: String(pt) }),
+    button("+", { class: "m-size-step", "data-m-size": "up", "aria-label": en ? "Bigger" : "Más grande" }),
+  ]);
+  const colorBtn = button("", { class: "m-btn", "data-m-sheet": "color", "aria-label": en ? "Text color" : "Color del texto" });
+  colorBtn.append(el("span", { class: "m-swatch-a", text: "A", style: `border-bottom-color:${color}` }), el("span", { class: "m-lbl", text: en ? "Color" : "Color" }));
+  const styleBtn = (key, glyph, label) => button(glyph, { class: `m-btn m-style m-style-${key}`, "data-style": key, "aria-label": label, "aria-pressed": layer.props[key] ? "true" : "false" });
+  return [
+    mBtn(en ? "Add" : "Añadir", { "data-m-sheet": "anadir" }, "plus"),
+    mBtn(en ? "Keyboard" : "Teclado", { "data-m": "teclado", "aria-pressed": state.editingId === layer.id ? "true" : "false" }, "keyboard"),
+    fontBtn,
+    sizeBox,
+    colorBtn,
+    styleBtn("bold", "B", en ? "Bold" : "Negrita"),
+    styleBtn("italic", "I", en ? "Italic" : "Cursiva"),
+    styleBtn("underline", "U", en ? "Underline" : "Subrayado"),
+    mBtn(en ? "Align" : "Alinear", { "data-text-align": nextAlign, "data-m-align": align }, `align${align}`),
+    mBtn(en ? "Effects" : "Efectos", { "data-m-sheet": "herramientas" }, "tools"),
+    mBtn(en ? "Duplicate" : "Duplicar", { "data-action": "duplicate" }, "copy"),
+    mBtn(en ? "Delete" : "Eliminar", { "data-action": "remove" }, "trash"),
+  ];
+}
+
+function mImageBar(ctx) {
+  const en = ctx.lang === "en";
+  return [
+    mBtn(en ? "Replace" : "Reemplazar", { "data-m-sheet": "reemplazar" }, "replace"),
+    mBtn(en ? "Select" : "Seleccionar", { "data-m-sheet": "capas" }, "select"),
+    mBtn(en ? "Adjust" : "Ajustar", { "data-m": "ajustar", "aria-pressed": ctx.state.cropping ? "true" : "false" }, "adjust"),
+    mBtn(en ? "Tools" : "Herramientas", { "data-m-sheet": "herramientas" }, "tools"),
+    mBtn(en ? "Duplicate" : "Duplicar", { "data-action": "duplicate" }, "copy"),
+    mBtn(en ? "Delete" : "Eliminar", { "data-action": "remove" }, "trash"),
+  ];
+}
+
+function mCropBar(ctx, layer) {
+  const en = ctx.lang === "en";
+  const zoom = Math.round((Number(ctx.state.cropZoom) || 1) * 100);
+  return [
+    el("label", { class: "m-zoom" }, [
+      el("span", { class: "m-lbl", text: en ? "Zoom" : "Zoom" }),
+      el("input", { type: "range", min: "100", max: "400", step: "1", value: String(zoom), id: "m-zoom", "data-m-zoom": layer.id, "aria-label": en ? "Zoom inside the frame" : "Zoom dentro del marco" }),
+    ]),
+    mBtn(en ? "Reset" : "Restablecer", { "data-m": "ajuste-reset" }, "replace"),
+    mBtn(en ? "Done" : "Listo", { "data-m": "ajustar", class: "m-done" }, "done"),
+  ];
+}
+
+function mIdleBar(ctx) {
+  const en = ctx.lang === "en";
+  const bg = /^#[0-9a-fA-F]{6}$/.test(ctx.state.doc.background?.fill || "") ? ctx.state.doc.background.fill : "#ffffff";
+  const bgBtn = button("", { class: "m-btn", "data-m-sheet": "fondo", "aria-label": en ? "Background" : "Fondo" });
+  bgBtn.append(el("span", { class: "m-swatch", style: `background:${bg}` }), el("span", { class: "m-lbl", text: en ? "Background" : "Fondo" }));
+  return [
+    mBtn(en ? "Text" : "Texto", { "data-add": "texto" }, "text"),
+    mBtn(en ? "Photos" : "Fotos", { "data-m-sheet": "fotos" }, "photo"),
+    mBtn(en ? "Uploads" : "Subir", { id: "m-subir", "data-m": "subir" }, "upload"),
+    mBtn(en ? "Elements" : "Elementos", { "data-m-sheet": "elementos" }, "shape"),
+    bgBtn,
+    mBtn(en ? "Layers" : "Capas", { "data-m-sheet": "capas" }, "layers"),
+  ];
+}
+
+function mOtherBar(ctx) {
+  const en = ctx.lang === "en";
+  return [
+    mBtn(en ? "Color" : "Color", { "data-m-sheet": "color" }, "color"),
+    mBtn(en ? "Select" : "Seleccionar", { "data-m-sheet": "capas" }, "select"),
+    mBtn(en ? "Tools" : "Herramientas", { "data-m-sheet": "herramientas" }, "tools"),
+    mBtn(en ? "Duplicate" : "Duplicar", { "data-action": "duplicate" }, "copy"),
+    mBtn(en ? "Delete" : "Eliminar", { "data-action": "remove" }, "trash"),
+  ];
+}
+
+function photoTile(item, attrs) {
+  const node = button("", { class: "m-photo", ...attrs, "aria-label": item.nombre?.es || item.id, title: item.autor ? `${item.autor} · Unsplash` : (item.nombre?.es || item.id) });
+  node.append(el("img", { src: studioAsset(item.archivo), alt: "", loading: "lazy", decoding: "async" }));
+  return node;
+}
+
+function mSheet(ctx) {
+  const { state, lang, t } = ctx;
+  const en = lang === "en";
+  const name = state.mSheet;
+  if (!name) return null;
+  const layer = primary(state);
+  const titles = {
+    fuente: en ? "Font" : "Fuente", color: en ? "Color" : "Color", fondo: en ? "Background color" : "Color de fondo",
+    reemplazar: en ? "Replace image" : "Reemplazar imagen", fotos: en ? "Photos" : "Fotos", anadir: en ? "Add" : "Añadir",
+    elementos: en ? "Elements" : "Elementos", herramientas: en ? "Tools" : "Herramientas", capas: en ? "Select a layer" : "Seleccionar capa",
+    mas: en ? "More" : "Más",
+  };
+  let body = [];
+  const photos = () => el("div", { class: "m-photo-grid" }, [...PRO_PHOTOS, ...listPhotos("", lang)].slice(0, 160).map((item) => photoTile(item, name === "reemplazar" ? { "data-m-replace": item.id } : { "data-m-add-photo": item.id })));
+  if (name === "fuente") {
+    body = [el("div", { class: "m-list" }, FONTS.map((item) => button(item[lang] || item.es, {
+      class: "m-row", "data-font": item.id, style: `font-family:${item.css}`,
+      "aria-pressed": layer?.type === "text" && layer.props.fontId === item.id ? "true" : "false",
+    })))];
+  } else if (name === "color" || name === "fondo") {
+    const current = name === "fondo" ? state.doc.background?.fill : (layer?.type === "text" ? layer.props.color : layer?.props?.fill || layer?.props?.color);
+    body = [
+      el("div", { class: "m-colors" }, M_COLORS.map((hex) => button("", {
+        class: "m-color", style: `background:${hex}`, "data-m-color": hex, "data-m-target": name, "aria-label": hex,
+        "aria-pressed": String(current || "").toLowerCase() === hex ? "true" : "false",
+      }))),
+      el("label", { class: "m-color-pick" }, [el("span", { text: en ? "Custom color" : "Color personalizado" }), el("input", { type: "color", id: "m-color-input", "data-m-target": name, value: /^#[0-9a-fA-F]{6}$/.test(current || "") ? current : "#8c52ff" })]),
+    ];
+  } else if (name === "reemplazar") {
+    body = [
+      el("div", { class: "m-actions" }, [
+        mBtn(en ? "Upload from device" : "Subir desde el dispositivo", { id: "cambiar-imagen", class: "m-wide" }, "upload"),
+      ]),
+      el("p", { class: "m-note", text: en ? "Gallery · Unsplash License and CC0 photos" : "Galería · fotos con Licencia Unsplash y CC0" }),
+      photos(),
+    ];
+  } else if (name === "fotos") {
+    body = [el("p", { class: "m-note", text: en ? "Unsplash License and CC0 photos" : "Fotos con Licencia Unsplash y CC0" }), photos()];
+  } else if (name === "anadir") {
+    body = [
+      el("div", { class: "m-actions" }, [
+        button(en ? "Add a heading" : "Añadir un título", { class: "m-row m-add-h", "data-add": "titulo" }),
+        button(en ? "Add body text" : "Añadir texto", { class: "m-row", "data-add": "texto" }),
+        mBtn(en ? "Upload" : "Subir", { "data-m": "subir", class: "m-wide" }, "upload"),
+        mBtn(en ? "Shape" : "Forma", { "data-add": "rect", class: "m-wide" }, "shape"),
+        mBtn(en ? "Circle" : "Círculo", { "data-add": "ellipse", class: "m-wide" }, "shape"),
+        mBtn(en ? "Line" : "Línea", { "data-add": "line", class: "m-wide" }, "shape"),
+      ]),
+      el("p", { class: "m-note", text: en ? "Photos" : "Fotos" }),
+      photos(),
+    ];
+  } else if (name === "elementos") {
+    body = [el("div", { class: "m-actions" }, [
+      mBtn(en ? "Rectangle" : "Rectángulo", { "data-add": "rect", class: "m-wide" }, "shape"),
+      mBtn(en ? "Circle" : "Círculo", { "data-add": "ellipse", class: "m-wide" }, "shape"),
+      mBtn(en ? "Line" : "Línea", { "data-add": "line", class: "m-wide" }, "shape"),
+      mBtn(en ? "Table" : "Tabla", { "data-add": "tabla", class: "m-wide" }, "shape"),
+      mBtn(en ? "Bar chart" : "Gráfico de barras", { "data-add": "barra", class: "m-wide" }, "shape"),
+    ])];
+  } else if (name === "herramientas") {
+    const kids = [];
+    if (layer?.type === "image") {
+      kids.push(mBtn(en ? "Flip horizontal" : "Voltear horizontal", { "data-flip": "x", class: "m-wide" }, "flipx"));
+      kids.push(mBtn(en ? "Flip vertical" : "Voltear vertical", { "data-flip": "y", class: "m-wide" }, "flipy"));
+      kids.push(mBtn(en ? "Adjust / crop" : "Ajustar / recortar", { "data-m": "ajustar", class: "m-wide" }, "adjust"));
+    }
+    if (layer?.type === "text") {
+      kids.push(button(en ? "Aa · Change case" : "Aa · Mayúsculas", { class: "m-row", "data-case": "cycle" }));
+      kids.push(button(en ? "• List" : "• Lista", { class: "m-row", "data-list": "bullet" }));
+    }
+    if (layer) {
+      kids.push(mBtn(t("alFrente"), { "data-action": "front", class: "m-wide" }, "front"));
+      kids.push(mBtn(t("alFondo"), { "data-action": "back", class: "m-wide" }, "back"));
+      kids.push(mBtn(layer.locked ? (en ? "Unlock" : "Desbloquear") : t("bloquear"), { "data-action": "lock", class: "m-wide" }, "lock"));
+      kids.push(el("label", { class: "m-range" }, [el("span", { text: en ? "Transparency" : "Transparencia" }), el("input", { type: "range", min: "0", max: "1", step: "0.05", "data-opacidad": "1", value: String(layer.opacity ?? 1), "aria-label": t("opacidad") })]));
+    }
+    body = [el("div", { class: "m-actions" }, kids)];
+  } else if (name === "capas") {
+    const ordered = [...state.doc.layers].sort((a, b) => b.z - a.z);
+    body = [el("div", { class: "m-list" }, ordered.map((item) => {
+      const label = item.type === "text" ? String(item.props.text || "").replace(/\s+/g, " ").slice(0, 40) || item.name : item.name || item.type;
+      const kind = { text: en ? "Text" : "Texto", image: en ? "Image" : "Imagen", rect: en ? "Shape" : "Forma", line: en ? "Line" : "Línea" }[item.type] || item.type;
+      const node = button("", { class: "m-row m-layer", "data-m-pick": item.id, "aria-pressed": state.selected.includes(item.id) ? "true" : "false" });
+      node.append(el("span", { class: "m-layer-kind", text: kind }), el("span", { class: "m-layer-name", text: label }));
+      return node;
+    }))];
+  } else if (name === "mas") {
+    body = [el("div", { class: "m-actions" }, [
+      mBtn(en ? "Download PNG" : "Descargar PNG", { "data-m": "descargar", class: "m-wide" }, "download"),
+      mBtn(en ? "Share" : "Compartir", { "data-m": "compartir", class: "m-wide" }, "share"),
+      mBtn(en ? "Resize" : "Redimensionar", { id: "redimensionar", class: "m-wide" }, "adjust"),
+      mBtn(en ? "Save a copy (JSON)" : "Guardar copia (JSON)", { "data-export": state.doc.id, class: "m-wide" }, "copy"),
+      mBtn(en ? "Layers" : "Capas", { "data-m-sheet": "capas", class: "m-wide" }, "layers"),
+      mBtn(en ? "Help" : "Ayuda", { id: "ayuda", class: "m-wide" }, "dots"),
+    ])];
+  }
+  return el("div", { class: "m-sheet-wrap" }, [
+    button("", { class: "m-scrim", "data-m-sheet": "", "aria-label": en ? "Close" : "Cerrar" }),
+    el("section", { class: `m-sheet m-sheet-${name}`, role: "dialog", "aria-label": titles[name] || name }, [
+      el("div", { class: "m-grab", "aria-hidden": "true" }),
+      el("header", { class: "m-sheet-head" }, [
+        el("h2", { text: titles[name] || name }),
+        mTopBtn(en ? "Close" : "Cerrar", { "data-m-sheet": "" }, "close"),
+      ]),
+      el("div", { class: "m-sheet-body" }, body),
+    ]),
+  ]);
+}
+
+function mobileChrome(ctx) {
+  const { state, lang, t } = ctx;
+  const en = lang === "en";
+  const layer = primary(state);
+  let bar;
+  let mode = "idle";
+  if (layer?.type === "image" && state.cropping) { bar = mCropBar(ctx, layer); mode = "crop"; }
+  else if (layer?.type === "text") { bar = mTextBar(ctx, layer); mode = "text"; }
+  else if (layer?.type === "image") { bar = mImageBar(ctx); mode = "image"; }
+  else if (layer) { bar = mOtherBar(ctx); mode = "other"; }
+  else bar = mIdleBar(ctx);
+  return el("div", { class: "m-chrome", "data-m-mode": mode }, [
+    el("div", { class: "m-top", role: "toolbar", "aria-label": en ? "Editor" : "Editor" }, [
+      mTopBtn(t("inicio"), { "data-go": "inicio" }, "home"),
+      mTopBtn(t("deshacer"), { "data-action": "undo" }, "undo"),
+      mTopBtn(en ? "Redo" : "Rehacer", { "data-action": "redo" }, "redo"),
+      el("span", { class: "m-top-gap" }),
+      mTopBtn(en ? "More" : "Más opciones", { "data-m-sheet": "mas" }, "dots"),
+      mTopBtn(en ? "Download" : "Descargar", { "data-m": "descargar" }, "download"),
+      mTopBtn(en ? "Share" : "Compartir", { "data-m": "compartir", class: "m-share" }, "share"),
+    ]),
+    mode === "crop" ? null : mTopBtn(en ? "Add" : "Añadir", { "data-m-sheet": "anadir", class: "m-fab" }, "plus"),
+    el("div", { class: "m-bar", role: "toolbar", "aria-label": en ? "Edit tools" : "Herramientas de edición" }, [el("div", { class: "m-bar-track" }, bar)]),
+    mSheet(ctx),
+  ]);
 }
 
 export function templatePreview(ctx) {
@@ -3056,6 +3434,7 @@ export function renderEditor(ctx) {
         ]) : null,
       ]),
       bottomBar(ctx),
+      mobileChrome(ctx),
       state.fileMenu ? null : el("div", { id: "muelle-acciones", class: "sr" }),
       state.helpOpen ? el("dialog", { id: "dialogo-ayuda", open: "open" }, [
         el("h2", { text: en ? "ORVUPI Studio" : "ORVUPI Studio" }),

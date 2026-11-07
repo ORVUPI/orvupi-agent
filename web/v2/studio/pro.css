@@ -1,0 +1,607 @@
+/* ORVUPI Studio · capa profesional (plantillas pro, galería tipo Canva, editor móvil).
+   Fuentes locales con licencia OFL (assets/OFL-*.txt). */
+@font-face {
+  font-family: "Studio Poppins";
+  src: url("assets/Poppins-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio Poppins";
+  src: url("assets/Poppins-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio Poppins";
+  src: url("assets/Poppins-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio DM Serif";
+  src: url("assets/DMSerifDisplay-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio DM Serif";
+  src: url("assets/DMSerifDisplay-Regular.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio DM Serif";
+  src: url("assets/DMSerifDisplay-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio DM Serif";
+  src: url("assets/DMSerifDisplay-Italic.ttf") format("truetype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio Lato";
+  src: url("assets/Lato-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio Lato";
+  src: url("assets/Lato-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio Lato";
+  src: url("assets/Lato-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio Bebas";
+  src: url("assets/BebasNeue-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio Bebas";
+  src: url("assets/BebasNeue-Regular.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio Abril";
+  src: url("assets/AbrilFatface-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio Abril";
+  src: url("assets/AbrilFatface-Regular.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio Great Vibes";
+  src: url("assets/GreatVibes-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Studio Great Vibes";
+  src: url("assets/GreatVibes-Regular.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+
+/* ---------- Render compartido: miniatura = lienzo ---------- */
+.art-render .capa-img img,
+.canva-thumb .art-render .capa-img img,
+.tpl-card .canva-thumb .art-render .capa-img img,
+.tpl-rail-card.tpl-card .canva-thumb .art-render .capa-img img {
+  display: block;
+  max-width: none;
+  min-width: 0;
+  object-fit: fill;
+  aspect-ratio: auto;
+  border-radius: 0;
+}
+.art-render .capa { pointer-events: auto; }
+.mini-slot.art-slot .art-render .capa { pointer-events: none; }
+.mini-slot.art-slot { background: #fff; }
+
+/* ---------- Galería: proporciones reales, esquinas 8px, sombra Canva ---------- */
+.canva-thumb.is-art {
+  height: auto;
+  background: transparent;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(64, 87, 109, 0.12), 0 2px 8px rgba(64, 87, 109, 0.1);
+  transition: box-shadow 0.16s ease, transform 0.16s ease;
+}
+.canva-thumb.is-art .mini-slot {
+  border-radius: 0;
+  box-shadow: none;
+  height: auto;
+}
+.tpl-open:hover .canva-thumb.is-art,
+.tpl-open:focus-visible .canva-thumb.is-art {
+  box-shadow: 0 2px 4px rgba(64, 87, 109, 0.14), 0 10px 24px rgba(64, 87, 109, 0.2);
+}
+.tpl-masonry .tpl-card,
+.tpl-masonry .canva-thumb.is-art { border-radius: 8px; }
+.tpl-masonry {
+  background: transparent;
+  padding: 8px 0;
+}
+
+/* Carriles de altura fija: el ancho sale de la proporción real */
+.tpl-rail-card .canva-thumb.is-art,
+.canva-format .canva-thumb.is-art,
+.canva-port .canva-thumb.is-art,
+.canva-sq .canva-thumb.is-art {
+  width: max-content;
+  border-radius: 8px;
+}
+.tpl-rail-card .canva-thumb.is-art .mini-slot,
+.canva-format .canva-thumb.is-art .mini-slot,
+.canva-port .canva-thumb.is-art .mini-slot,
+.canva-sq .canva-thumb.is-art .mini-slot {
+  height: 100%;
+  width: auto;
+}
+#studio-root button.canva-format:has(.is-art),
+#studio-root button.canva-port:has(.is-art),
+.canva-sq:has(.is-art) { width: auto; flex: 0 0 auto; }
+.tpl-rail-card:has(.is-art) { width: auto; flex: 0 0 auto; }
+.canva-format .canva-thumb.is-art { height: 168px; }
+.canva-port .canva-thumb.is-art { height: 188px; }
+.canva-sq .canva-thumb.is-art { height: 210px; }
+.tpl-rail-card .canva-thumb.is-art { height: 188px; }
+.tpl-rail-row.is-wide .tpl-rail-card .canva-thumb.is-art { height: 200px; }
+.tpl-rail-row.is-pair .tpl-rail-card .canva-thumb.is-art { height: 228px; }
+.tpl-rail-row.is-feature .tpl-rail-card .canva-thumb.is-art { height: 176px; }
+.tpl-rail-row.is-hero .tpl-rail-card .canva-thumb.is-art { height: 210px; }
+
+/* Más e IA */
+.mas-tile-face.is-art { padding: 0; background: #fff; overflow: hidden; }
+.mas-tile-face.is-art .mini-slot { border-radius: 0; box-shadow: none; }
+.ia-tile .mini-slot { border-radius: 8px; box-shadow: 0 1px 2px rgba(64, 87, 109, 0.12), 0 2px 8px rgba(64, 87, 109, 0.1); }
+
+#studio-root .tpl-rail-row .tpl-rail-card:has(.is-art) { flex: 0 0 auto; width: auto; }
+#studio-root .tpl-rail-row .tpl-rail-card:has(.is-art) .tpl-open { width: auto; }
+
+/* ── Selección estilo Canva: marco morado, asas de esquina redondas y laterales en píldora.
+   Las asas viven dentro del lienzo escalado; --inv (1/escala) mantiene su tamaño en pantalla. ── */
+#editor-app .stage-art, #editor-app .stage-sel { --inv: 1; --sel: #8b3dff; }
+#editor-app .stage-frame { overflow: visible; }
+#editor-app .stage-frame > .stage-art { overflow: hidden; }
+#editor-app .stage-art .sel-box { outline: none; }
+#editor-app .stage-sel { position: absolute; top: 0; left: 0; transform-origin: top left; pointer-events: none; z-index: 3; }
+#editor-app .sel-box { position: absolute; box-sizing: border-box; pointer-events: none; outline: calc(2px * var(--inv)) solid var(--sel); outline-offset: 0; }
+#editor-app .sel-box.editando { outline-style: solid; }
+#editor-app .capa-texto[data-edit]:focus,
+#editor-app .capa-texto[data-edit]:focus-visible { outline: none; box-shadow: none; caret-color: #8b3dff; }
+#editor-app .sel-box .asa, #editor-app .sel-box .asa-lado, #editor-app .sel-box .asa-giro,
+#editor-app .sel-box .recorte-pan, #editor-app .sel-box .asa-recorte { pointer-events: auto; }
+#editor-app .sel-box.sel-chica .asa-lado { display: none; }
+#editor-app .sel-box.sel-texto .asa-lado-n, #editor-app .sel-box.sel-texto .asa-lado-s { display: none; }
+#editor-app .sel-box .asa {
+  width: calc(14px * var(--inv));
+  height: calc(14px * var(--inv));
+  border: calc(1px * var(--inv)) solid #d4d4dc;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 calc(1px * var(--inv)) calc(4px * var(--inv)) rgba(17, 24, 39, .28);
+  z-index: 3;
+}
+#editor-app .sel-box .asa-nw { left: calc(-7px * var(--inv)); top: calc(-7px * var(--inv)); }
+#editor-app .sel-box .asa-ne { right: calc(-7px * var(--inv)); top: calc(-7px * var(--inv)); }
+#editor-app .sel-box .asa-sw { left: calc(-7px * var(--inv)); bottom: calc(-7px * var(--inv)); }
+#editor-app .sel-box .asa-se { right: calc(-7px * var(--inv)); bottom: calc(-7px * var(--inv)); }
+#editor-app .sel-box .asa-lado {
+  position: absolute;
+  box-sizing: border-box;
+  background: #fff;
+  border: calc(1px * var(--inv)) solid #d4d4dc;
+  border-radius: 999px;
+  box-shadow: 0 calc(1px * var(--inv)) calc(4px * var(--inv)) rgba(17, 24, 39, .28);
+  z-index: 3;
+}
+#editor-app .sel-box .asa-lado-n,
+#editor-app .sel-box .asa-lado-s { left: 50%; width: calc(22px * var(--inv)); height: calc(7px * var(--inv)); transform: translateX(-50%); }
+#editor-app .sel-box .asa-lado-n { top: calc(-3.5px * var(--inv)); }
+#editor-app .sel-box .asa-lado-s { bottom: calc(-3.5px * var(--inv)); }
+#editor-app .sel-box .asa-lado-e,
+#editor-app .sel-box .asa-lado-w { top: 50%; width: calc(7px * var(--inv)); height: calc(22px * var(--inv)); transform: translateY(-50%); }
+#editor-app .sel-box .asa-lado-e { right: calc(-3.5px * var(--inv)); }
+#editor-app .sel-box .asa-lado-w { left: calc(-3.5px * var(--inv)); }
+#editor-app .sel-box .asa-giro {
+  top: auto;
+  bottom: calc(-40px * var(--inv));
+  width: calc(26px * var(--inv));
+  height: calc(26px * var(--inv));
+  margin-left: calc(-13px * var(--inv));
+  border: calc(1px * var(--inv)) solid #d4d4dc;
+  box-shadow: 0 calc(1px * var(--inv)) calc(4px * var(--inv)) rgba(17, 24, 39, .28);
+  background: #fff;
+  z-index: 3;
+}
+#editor-app .sel-box .asa-giro::after {
+  top: 50%;
+  left: 50%;
+  width: calc(10px * var(--inv));
+  height: calc(10px * var(--inv));
+  background: transparent;
+  border: calc(1.6px * var(--inv)) solid #3c3c46;
+  border-left-color: transparent;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-sizing: border-box;
+}
+/* Área táctil ampliada sin cambiar el dibujo de las asas. */
+#editor-app .sel-box .asa::before,
+#editor-app .sel-box .asa-lado::before,
+#editor-app .sel-box .asa-giro::before {
+  content: "";
+  position: absolute;
+  inset: calc(-10px * var(--inv));
+}
+#editor-app .sel-box.bloqueada .asa,
+#editor-app .sel-box.bloqueada .asa-lado { display: none; }
+
+/* ── Ajustar (recorte Canva): imagen completa atenuada fuera del marco, arrastre y zoom dentro. ── */
+#editor-app .recorte-dentro { position: absolute; inset: 0; z-index: 2; overflow: hidden; pointer-events: none; }
+#editor-app .recorte-dentro .recorte-dentro-img { opacity: 1; filter: none; }
+#editor-app .recorte-fantasma { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+#editor-app .recorte-fantasma-img {
+  display: block;
+  max-width: none;
+  opacity: .42;
+  filter: saturate(.85);
+}
+#editor-app .recorte-pan {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+}
+#editor-app .recorte-pan:active { cursor: grabbing; }
+#editor-app .sel-box.ajustando .recorte-visual { z-index: 5; }
+#editor-app .sel-box.ajustando .asa,
+#editor-app .sel-box.ajustando .asa-lado,
+#editor-app .sel-box.ajustando .asa-giro { display: none; }
+#editor-app .sel-box.ajustando .asa-recorte {
+  width: calc(26px * var(--inv));
+  height: calc(26px * var(--inv));
+  min-height: 0;
+  background: #fff;
+  border: calc(1px * var(--inv)) solid #d4d4dc;
+  border-radius: 50%;
+  box-shadow: 0 calc(1px * var(--inv)) calc(4px * var(--inv)) rgba(17, 24, 39, .3);
+}
+#editor-app .sel-box.ajustando .asa-recorte.move { display: none; }
+#editor-app .sel-box.ajustando { outline: calc(2px * var(--inv)) solid #fff; box-shadow: 0 0 0 calc(1px * var(--inv)) var(--sel); }
+
+/* ── Editor móvil (< 900px): el editor ocupa la pantalla y lleva su propio cromo Canva. ── */
+.m-chrome { display: none; }
+@media (max-width: 899px) {
+  body:has(.orv-frame.editando) { overflow: hidden; }
+  body:has(.orv-frame.editando) .langsuggest,
+  body:has(.orv-frame.editando) header.site { display: none; }
+  .orv-frame.editando > .orv-side { display: none; }
+  #editor-app.orv-editor {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    background: #ebecf0;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+  }
+  #editor-app > .editor-bar,
+  #editor-app > .barra-inferior,
+  #editor-app > .nota,
+  #editor-app .riel,
+  #editor-app #panel-riel,
+  #editor-app #inspector,
+  #editor-app .pastilla-seleccion,
+  #editor-app .escenario > .tb-wrap,
+  #editor-app .escenario > .text-bar,
+  #editor-app .escenario > .barra-texto { display: none !important; }
+  #editor-app > .editor {
+    order: 2;
+    flex: 1 1 auto;
+    display: flex;
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+    grid-template-columns: none;
+    background: transparent;
+  }
+  #editor-app .escenario {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    padding: 18px 18px 14px;
+    margin: 0;
+    background: transparent;
+    border: 0;
+    overflow: hidden;
+  }
+  #editor-app .stage-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+    background: transparent;
+    padding: 0;
+  }
+  #editor-app .stage-frame { box-shadow: 0 1px 3px rgba(17, 24, 39, .12), 0 8px 24px rgba(17, 24, 39, .08); }
+  #editor-app .tira { display: none; }
+  /* Pizarra en el móvil: como en Canva, el lienzo centrado en la pantalla, sin el campo infinito del escritorio. */
+}
+
+/* Cromo Canva compartido: en móvil, barra superior, botón + y barra inferior; en escritorio solo los paneles
+   (Reemplazar, Herramientas, Color…) se abren como panel flotante junto al lienzo. */
+#editor-app .m-chrome { display: contents; }
+#editor-app .m-chrome button { border: 0; box-shadow: none; background: transparent; color: inherit; min-height: 0; transform: none; text-shadow: none; }
+#editor-app .m-chrome .m-top {
+  order: 1;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 52px;
+  padding: 0 6px;
+  padding-top: env(safe-area-inset-top);
+  background: linear-gradient(90deg, #00c4cc 0%, #6420ff 55%, #7d2ae8 100%);
+  color: #fff;
+  box-sizing: content-box;
+}
+#editor-app .m-chrome .m-top-gap { flex: 1 1 auto; }
+#editor-app .m-chrome .m-top-btn {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
+  margin: 0;
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+#editor-app .m-chrome .m-top-btn svg { width: 22px; height: 22px; }
+#editor-app .m-chrome .m-top-btn:active { background: rgba(255, 255, 255, .18); }
+#editor-app .m-chrome .m-top .m-share { background: rgba(255, 255, 255, .2); }
+#editor-app .m-chrome .m-fab {
+  position: fixed;
+  right: 16px;
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  z-index: 70;
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  border-radius: 50%;
+  background: #8b3dff;
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(100, 32, 255, .4);
+}
+#editor-app .m-chrome .m-fab svg { width: 26px; height: 26px; stroke-width: 2.2; }
+#editor-app .m-chrome .m-fab:active { background: #7428e0; }
+#editor-app .m-chrome .m-bar {
+  order: 3;
+  flex: 0 0 auto;
+  background: #fff;
+  border-top: 1px solid #e3e4e8;
+  box-shadow: 0 -2px 10px rgba(17, 24, 39, .06);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+#editor-app .m-chrome .m-bar-track {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  height: 68px;
+  padding: 0 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+#editor-app .m-chrome .m-bar-track::-webkit-scrollbar { display: none; }
+#editor-app .m-chrome .m-btn {
+  flex: 0 0 auto;
+  min-width: 62px;
+  min-height: 0;
+  height: auto;
+  padding: 8px 6px 6px;
+  margin: 0;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #2a2e36;
+  font: 500 11px/1.1 "Inter Studio", system-ui, sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+}
+#editor-app .m-chrome .m-btn svg { width: 22px; height: 22px; }
+#editor-app .m-chrome .m-btn:active, #editor-app .m-chrome .m-btn[aria-pressed="true"] { background: #f1eaff; color: #6420ff; }
+#editor-app .m-chrome .m-lbl { display: block; font-size: 11px; }
+#editor-app .m-chrome .m-style { min-width: 44px; font-size: 19px; line-height: 1; padding-top: 4px; }
+#editor-app .m-chrome .m-style-bold { font-weight: 800; }
+#editor-app .m-chrome .m-style-italic { font-style: italic; font-family: Georgia, serif; }
+#editor-app .m-chrome .m-style-underline { text-decoration: underline; }
+#editor-app .m-chrome .m-font { min-width: 96px; max-width: 132px; }
+#editor-app .m-chrome .m-font-name { max-width: 120px; overflow: hidden; text-overflow: ellipsis; font-size: 16px; line-height: 22px; }
+#editor-app .m-chrome .m-size {
+  flex: 0 0 auto;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  margin: 0 4px;
+  border: 1px solid #d9dbe1;
+  border-radius: 8px;
+  overflow: hidden;
+}
+#editor-app .m-chrome .m-size-step {
+  width: 34px;
+  height: 40px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: #fff;
+  color: #2a2e36;
+  font: 500 20px/1 system-ui, sans-serif;
+}
+#editor-app .m-chrome .m-size-val { min-width: 34px; text-align: center; font: 600 15px/40px "Inter Studio", system-ui, sans-serif; border-inline: 1px solid #d9dbe1; }
+#editor-app .m-chrome .m-swatch-a { font: 700 18px/1 Georgia, serif; border-bottom: 4px solid; padding: 0 2px 1px; }
+#editor-app .m-chrome .m-swatch { width: 22px; height: 22px; border-radius: 6px; border: 1px solid rgba(0, 0, 0, .15); }
+#editor-app .m-chrome .m-zoom { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 0 8px; min-width: 150px; color: #2a2e36; }
+#editor-app .m-chrome .m-zoom input { width: 100%; accent-color: #8b3dff; }
+#editor-app .m-chrome .m-done { color: #6420ff; font-weight: 700; }
+#editor-app .m-chrome .m-sheet-wrap { position: fixed; inset: 0; z-index: 80; }
+#editor-app .m-chrome .m-scrim { position: absolute; inset: 0; width: 100%; min-height: 0; border: 0; background: rgba(17, 24, 39, .32); padding: 0; }
+#editor-app .m-chrome .m-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 72vh;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -8px 30px rgba(17, 24, 39, .2);
+  padding-bottom: env(safe-area-inset-bottom);
+  animation: m-sheet-in .18s ease-out;
+}
+@keyframes m-sheet-in { from { transform: translateY(24px); opacity: .6; } to { transform: none; opacity: 1; } }
+#editor-app .m-chrome .m-grab { width: 36px; height: 4px; border-radius: 4px; background: #d0d2d8; margin: 8px auto 0; }
+#editor-app .m-chrome .m-sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 4px 8px 4px 16px; }
+#editor-app .m-chrome .m-sheet-head h2 { margin: 0; font: 700 16px/1.2 "Inter Studio", system-ui, sans-serif; color: #111827; }
+#editor-app .m-chrome .m-sheet-head .m-top-btn { color: #4b5160; }
+#editor-app .m-chrome .m-sheet-body { overflow: auto; padding: 4px 12px 16px; }
+#editor-app .m-chrome .m-list { display: flex; flex-direction: column; }
+#editor-app .m-chrome .m-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #111827;
+  text-align: left;
+  font-size: 18px;
+}
+#editor-app .m-chrome .m-row[aria-pressed="true"] { background: #f1eaff; color: #6420ff; }
+#editor-app .m-chrome .m-add-h { font-size: 22px; font-weight: 700; }
+#editor-app .m-chrome .m-layer-kind { flex: 0 0 64px; font: 600 11px/1 "Inter Studio", system-ui, sans-serif; color: #6b7280; text-transform: uppercase; letter-spacing: .04em; }
+#editor-app .m-chrome .m-layer-name { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#editor-app .m-chrome .m-actions { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+#editor-app .m-chrome .m-actions .m-row { grid-column: 1 / -1; background: #f4f5f7; }
+#editor-app .m-chrome .m-btn.m-wide { flex-direction: row; justify-content: flex-start; gap: 10px; min-height: 48px; padding: 10px 12px; background: #f4f5f7; font-size: 14px; }
+#editor-app .m-chrome .m-btn.m-wide .m-lbl { font-size: 14px; }
+#editor-app .m-chrome .m-range { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; padding: 8px 4px; font-size: 14px; color: #2a2e36; }
+#editor-app .m-chrome .m-range input { accent-color: #8b3dff; }
+#editor-app .m-chrome .m-note { margin: 14px 2px 8px; font: 600 12px/1.3 "Inter Studio", system-ui, sans-serif; color: #6b7280; }
+#editor-app .m-chrome .m-photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+#editor-app .m-chrome .m-photo { aspect-ratio: 1; padding: 0; min-height: 0; border: 0; border-radius: 8px; overflow: hidden; background: #eef0f3; }
+#editor-app .m-chrome .m-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+#editor-app .m-chrome .m-colors { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; padding: 4px 2px; }
+#editor-app .m-chrome .m-color { aspect-ratio: 1; min-height: 0; padding: 0; border-radius: 50%; border: 1px solid rgba(0, 0, 0, .14); }
+#editor-app .m-chrome .m-color[aria-pressed="true"] { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #8b3dff; }
+#editor-app .m-chrome .m-color-pick { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; padding: 8px 10px; border-radius: 8px; background: #f4f5f7; font-size: 14px; }
+#editor-app .m-chrome .m-color-pick input { width: 48px; height: 32px; border: 0; padding: 0; background: none; }
+@media (min-width: 900px) {
+  #editor-app .m-chrome > .m-top,
+  #editor-app .m-chrome > .m-fab,
+  #editor-app .m-chrome > .m-bar { display: none; }
+  #editor-app .m-chrome .m-scrim { background: transparent; }
+  #editor-app .m-chrome .m-sheet {
+    left: auto;
+    right: 24px;
+    top: 72px;
+    bottom: auto;
+    width: 360px;
+    max-height: calc(100vh - 140px);
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(17, 24, 39, .22), 0 0 0 1px rgba(17, 24, 39, .06);
+  }
+  #editor-app .m-chrome .m-grab { display: none; }
+}
+
+/* Barra contextual de escritorio: botones planos con icono y texto, como la de Canva. */
+#editor-app .barra-texto .tb-img { display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; white-space: nowrap; }
+#editor-app .barra-texto .tb-img .tb-lbl { font: 600 13px/1 "Inter Studio", system-ui, sans-serif; }
+#editor-app .barra-texto .tb-opacity { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; font-size: 13px; padding: 0 6px; }
+#editor-app .barra-texto .tb-opacity input { width: 96px; accent-color: #8b3dff; }
+
+/* Escritorio: cromo plano estilo Canva (sin sombras de bloque) y hueco para la barra contextual sobre el lienzo. */
+@media (min-width: 900px) {
+  .orv-frame.editando #editor-app button { box-shadow: none; transform: none; }
+  .orv-frame.editando #editor-app :is(.editor-bar, .riel, .barra-texto, .pastilla-seleccion, .barra-inferior, .tira) button {
+    border-color: transparent;
+    border-radius: 6px;
+  }
+  .orv-frame.editando #editor-app :is(.riel, .barra-texto, .pastilla-seleccion, .barra-inferior, .tira) button:hover { background: rgba(17, 24, 39, .06); }
+  .orv-frame.editando #editor-app .editor-bar button:hover { background: rgba(255, 255, 255, .16); }
+  .orv-frame.editando #editor-app .tira button { background: #fff; border: 1px solid #e3e5ea; }
+  .orv-frame.editando #editor-app .barra-texto { border: 0; border-radius: 8px; box-shadow: 0 2px 10px rgba(17, 24, 39, .12), 0 0 0 1px rgba(17, 24, 39, .05); }
+  .orv-frame.editando #editor-app .pastilla-seleccion { border: 0; border-radius: 8px; box-shadow: 0 2px 10px rgba(17, 24, 39, .14), 0 0 0 1px rgba(17, 24, 39, .05); }
+  /* Hueco fijo para la barra contextual: el lienzo no salta ni cambia de zoom al seleccionar (como en Canva). */
+  .orv-frame.editando #editor-app .escenario { padding-top: 64px; }
+}
+#editor-app .barra-texto #tamano-texto { width: 46px; text-align: center; }
+
+/* Pizarra: se abre ajustada y centrada como su miniatura (en ordenador y móvil), no en una esquina del campo. */
+#editor-app .stage-scroll.lienzo-pizarra { max-height: none; border-radius: 0; background-image: none; background-color: transparent; }
+#editor-app .campo-pizarra { min-width: 0; min-height: 0; padding: 0; display: flex; align-items: center; justify-content: center; }
+
+/* Barra de imagen: «Animar» y «Posición» con la misma letra que el resto de botones. */
+#editor-app .barra-texto .tb-pop { font: 600 13px/1 "Inter Studio", system-ui, sans-serif; white-space: nowrap; }

@@ -10,6 +10,7 @@ import { browseAsset, browseElements, browsePhotos } from "./library.mjs";
 import { listPhotos, photoById } from "./photos.mjs";
 import { PLANTILLAS, instantiate, plantillaById } from "./plantillas.mjs";
 import { documentForThumb } from "./thumb-docs.mjs";
+import { isProTemplate, PRO_TEMPLATES, proById, proDocument, proIn } from "./pro-templates.mjs";
 import { THUMBS, thumbById, thumbsIn } from "./thumbs.mjs";
 
 function catalogVisual(id) {
@@ -107,6 +108,7 @@ function catalogDocument(item) {
 export function documentForOpen(id) {
   const key = String(id || "");
   if (!key) return null;
+  if (isProTemplate(key)) return proDocument(key);
   const thumb = documentForThumb(key);
   if (thumb) return thumb.templateId === key ? thumb : null;
   if (plantillaById(key)) {
@@ -123,6 +125,7 @@ export function documentForOpen(id) {
 }
 
 export function openKind(id) {
+  if (isProTemplate(id)) return "pro";
   if (thumbById(id)) return "thumb";
   if (plantillaById(id)) return "plantilla";
   const asset = browseAsset(id);
@@ -134,6 +137,8 @@ export function openKind(id) {
 }
 
 export function relatedOpenIds(id, limit = 8) {
+  const pro = proById(id);
+  if (pro) return proIn(pro.category).filter((item) => item.id !== id).slice(0, limit).map((item) => item.id);
   const thumb = thumbById(id);
   if (thumb) return thumbsIn(thumb.category).filter((item) => item.id !== id).slice(0, limit).map((item) => item.id);
   const plantilla = plantillaById(id);
@@ -161,6 +166,7 @@ export function inventoryCounts() {
   const visuals = (catalog.items || []).filter((item) => item.tipo === "avatar" || item.tipo === "fondo");
   return {
     thumbs: THUMBS.length,
+    pro: PRO_TEMPLATES.length,
     plantillas: PLANTILLAS.length,
     fotos: browsePhotos().length,
     elementos: browseElements().length,
