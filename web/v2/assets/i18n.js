@@ -102,8 +102,9 @@
     close.addEventListener("click", function () { store("orvupi-lang-suggest-closed", "1"); box.remove(); });
     box.appendChild(link); box.appendChild(close);
     // En el flujo de la página (no flotante): no tapa botones ni formularios.
-    var header = document.querySelector("header");
-    if (header && header.parentNode) header.parentNode.insertBefore(box, header.nextSibling); else document.body.insertBefore(box, document.body.firstChild);
+    var main = document.querySelector("main");
+    if (main) main.insertBefore(box, main.firstChild);
+    else document.body.appendChild(box);
   }
 
   // Textos que los scripts escriben en inglés: diccionario del idioma activo, descargado solo aquí.

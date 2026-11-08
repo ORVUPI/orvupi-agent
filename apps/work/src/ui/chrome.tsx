@@ -35,7 +35,7 @@ export function Sidebar({
   return (
     <aside className={`ow-sidebar ${open ? "is-open" : ""}`} data-tool="files">
       <div className="ow-brand">
-        <img src={withBase("/avatar.png")} alt={brandAlt} width={48} height={48} />
+        <img src="/assets/orvupi/brand/logotipo-empresarial.png" alt={brandAlt} width={148} height={48} />
         <strong>{brand}</strong>
         <IconButton label={closeLabel} className="ow-only-mobile" onClick={onClose}>
           <Icon name="close" />

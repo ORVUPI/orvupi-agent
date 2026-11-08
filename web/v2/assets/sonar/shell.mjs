@@ -1,24 +1,24 @@
-import { api, qs } from "./api.mjs?v=850a517e7c";
-import { compact, money, pct, plain, show } from "./format.mjs?v=850a517e7c";
-import { iaButton } from "./ia.mjs?v=850a517e7c";
-import { labelOf, locale, pageTitle, t } from "./i18n.mjs?v=850a517e7c";
-import { onTick, patchNodes, startLive, status } from "./live.mjs?v=850a517e7c";
-import { loadStore, remember, snapshot, update } from "./store.mjs?v=850a517e7c";
-import { el, errorBlock, pctNode, setChildren, skeleton, sourceLine } from "./ui.mjs?v=850a517e7c";
+import { api, qs } from "./api.mjs?v=cf7b7e0296";
+import { compact, money, pct, plain, show } from "./format.mjs?v=cf7b7e0296";
+import { iaButton } from "./ia.mjs?v=cf7b7e0296";
+import { labelOf, locale, pageTitle, t } from "./i18n.mjs?v=cf7b7e0296";
+import { onTick, patchNodes, startLive, status } from "./live.mjs?v=cf7b7e0296";
+import { loadStore, remember, snapshot, update } from "./store.mjs?v=cf7b7e0296";
+import { el, errorBlock, pctNode, setChildren, skeleton, sourceLine } from "./ui.mjs?v=cf7b7e0296";
 
 const screens = {
-  home: () => import("./screens/markets.mjs?v=850a517e7c"),
-  crypto: () => import("./screens/coin.mjs?v=850a517e7c"),
-  exchanges: () => import("./screens/exchanges.mjs?v=850a517e7c"),
-  categories: () => import("./screens/categories.mjs?v=850a517e7c"),
-  movers: () => import("./screens/boards.mjs?v=850a517e7c").then((mod) => ({ mount: mod.mountMovers })),
-  trending: () => import("./screens/boards.mjs?v=850a517e7c").then((mod) => ({ mount: mod.mountTrending })),
-  new: () => import("./screens/boards.mjs?v=850a517e7c").then((mod) => ({ mount: mod.mountNew })),
-  news: () => import("./screens/boards.mjs?v=850a517e7c").then((mod) => ({ mount: mod.mountNews })),
-  watchlist: () => import("./screens/watchlist.mjs?v=850a517e7c"),
-  portfolio: () => import("./screens/portfolio.mjs?v=850a517e7c"),
-  calendar: () => import("./screens/calendar.mjs?v=850a517e7c").then((mod) => ({ mount: mod.mountCalendar })),
-  unlocks: () => import("./screens/calendar.mjs?v=850a517e7c").then((mod) => ({ mount: mod.mountUnlocks })),
+  home: () => import("./screens/markets.mjs?v=cf7b7e0296"),
+  crypto: () => import("./screens/coin.mjs?v=cf7b7e0296"),
+  exchanges: () => import("./screens/exchanges.mjs?v=cf7b7e0296"),
+  categories: () => import("./screens/categories.mjs?v=cf7b7e0296"),
+  movers: () => import("./screens/boards.mjs?v=cf7b7e0296").then((mod) => ({ mount: mod.mountMovers })),
+  trending: () => import("./screens/boards.mjs?v=cf7b7e0296").then((mod) => ({ mount: mod.mountTrending })),
+  new: () => import("./screens/boards.mjs?v=cf7b7e0296").then((mod) => ({ mount: mod.mountNew })),
+  news: () => import("./screens/boards.mjs?v=cf7b7e0296").then((mod) => ({ mount: mod.mountNews })),
+  watchlist: () => import("./screens/watchlist.mjs?v=cf7b7e0296"),
+  portfolio: () => import("./screens/portfolio.mjs?v=cf7b7e0296"),
+  calendar: () => import("./screens/calendar.mjs?v=cf7b7e0296").then((mod) => ({ mount: mod.mountCalendar })),
+  unlocks: () => import("./screens/calendar.mjs?v=cf7b7e0296").then((mod) => ({ mount: mod.mountUnlocks })),
 };
 
 let drawTicket = 0;
@@ -43,7 +43,7 @@ export async function start() {
   await loadStore();
   const link = document.createElement("link");
   link.rel = "stylesheet";
-  link.href = "/assets/sonar.css?v=1c2a6267a5";
+  link.href = "/assets/sonar.css?v=c406f3675b";
   link.dataset.sonar = "1";
   if (!document.querySelector("link[data-sonar]")) document.head.append(link);
   document.body.classList.add("sonar-market");

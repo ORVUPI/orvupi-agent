@@ -8,8 +8,8 @@ body.verify-app {
   padding-right: env(safe-area-inset-right);
 }
 body.verify-app header.site {
-  background: #102032;
-  color: #fff8ec;
+  background: #fffcf7;
+  color: #0d1628;
   position: sticky;
   top: 0;
   z-index: 30;
@@ -27,10 +27,10 @@ body.verify-app header.site > .wrap {
 body.verify-app header.site .topbar { display: contents; }
 body.verify-app header.site nav.site,
 body.verify-app header.site details.mapa { display: none; }
-body.verify-app header.site .brand { display: inline-flex; align-items: center; gap: 8px; color: #fff8ec; text-decoration: none; min-height: 44px; }
-body.verify-app header.site .brand strong { color: #fff8ec; font-size: 1rem; }
-body.verify-app header.site .brand img { width: 32px; height: 32px; }
-body.verify-app .langpick summary { color: #fff8ec; border-color: #fff8ec; min-height: 44px; }
+body.verify-app header.site .brand { display: inline-flex; align-items: center; gap: 8px; color: #0d1628; text-decoration: none; min-height: 44px; }
+body.verify-app header.site .brand strong { color: #0d1628; font-size: 1rem; }
+body.verify-app header.site .brand img { width: auto; height: 36px; max-width: 148px; object-fit: contain; border-radius: 0; }
+body.verify-app .langpick summary { color: #0d1628; border-color: rgba(13, 22, 40, 0.25); min-height: 44px; }
 body.verify-app .vf-nav { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; min-width: 0; }
 body.verify-app .vf-nav button,
 body.verify-app .vf-more summary,
@@ -54,7 +54,7 @@ body.verify-app .vf-icon {
   border: 0;
   border-radius: 999px;
   background: transparent;
-  color: #fff8ec;
+  color: #0d1628;
   font-weight: 700;
   padding: 8px 12px;
   cursor: pointer;
@@ -275,7 +275,7 @@ body.verify-app {
   --text-3: #aeb8c4;
 }
 body.verify-app:not(.sonar-market) button { color: #e7edf4; background: #10161d; border-color: #2a3544; }
-body.verify-app header.site { background: #0c1016; border-bottom: 1px solid #243041; }
+body.verify-app header.site { background: #fffcf7; border-bottom: 1px solid rgba(13, 22, 40, 0.12); color: #0d1628; }
 body.verify-app header.site > .wrap {
   max-width: 1280px;
   padding: 6px 12px;

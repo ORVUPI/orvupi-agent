@@ -45,13 +45,13 @@ function hashPath() {
     .split(/[?&]/)[0];
 }
 
-const AVATAR = new URL("./assets/orvupi-avatar.png", import.meta.url).href;
+const WORDMARK = "/assets/orvupi/brand/logotipo-empresarial.png";
 
 const RAIL = [
-  ["ia", "Catálogo", "Catalog", "ia", null, true],
+  ["plantillas", "Catálogo", "Catalog", "plantillas", ["M4 4h7v7H4z", "M13 4h7v7h-7z", "M4 13h7v7H4z", "M13 13h7v7h-7z"]],
   ["inicio", "Inicio", "Home", "inicio", ["M4 11 12 4l8 7", "M6 10.5V20h12v-9.5"]],
   ["disenos", "Mis diseños", "My designs", "disenos", ["M4 7h6l2 2h8v10H4z"]],
-  ["plantillas", "Plantillas", "Templates", "plantillas", ["M4 4h7v7H4z", "M13 4h7v7h-7z", "M4 13h7v7H4z", "M13 13h7v7h-7z"]],
+  ["ia", "Ayuda", "Help", "ia", ["M12 3l1.2 4.2L17.5 8.5 13.2 9.8 12 14l-1.2-4.2L6.5 8.5l4.3-1.3z"]],
   ["marca", "Marca", "Brand", "mas/marca", ["M12 3l2.2 5.2L20 9l-4 3.6.8 5.4L12 15.4 7.2 18l.8-5.4L4 9l5.8-.8z"]],
   ["apps", "Apps", "Apps", "mas/apps", ["M5 5h6v6H5z", "M13 5h6v6h-6z", "M5 13h6v6H5z", "M13 13h6v6h-6z"]],
   ["print", "Impresión", "Print", "mas/imprime", ["M6 9h12v7H6z", "M8 9V5h8v4", "M8 16v3h8v-3"]],
@@ -143,7 +143,10 @@ export function desktopRail(ctx, tab) {
       el("span", { text: "Work" }),
     ]),
   ]);
-  const kids = [crearButton(ctx), nav, foot];
+  const brand = el("a", { class: "desk-brand", href: "/" }, [
+    el("img", { src: WORDMARK, alt: "ORVUPI", width: "2172", height: "724" }),
+  ]);
+  const kids = [brand, crearButton(ctx), nav, foot];
   return el("aside", { class: "desk-rail", "aria-label": tr(ctx, "Navegación", "Navigation") }, kids);
 }
 
