@@ -15,7 +15,7 @@ body.sonar-market .sn-topnav a {
   white-space: nowrap; flex: 0 0 auto; overflow-wrap: normal;
 }
 body.sonar-market .sn-topnav a:hover { background: #1c2530; }
-body.sonar-market .sn-topnav a[aria-current="page"] { background: #241018; box-shadow: inset 0 0 0 2px #ff3070; }
+body.sonar-market .sn-topnav a[aria-current="page"] { background: #fff0f5; color: #0d1628; box-shadow: inset 0 0 0 2px #de1862; }
 body.sonar-market #vf-root { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 body.sonar-market #vf-root h2,
 body.sonar-market #vf-root h3 { font-family: Inter, system-ui, sans-serif; letter-spacing: 0; font-weight: 700; color: #0d1628; margin: 0; }

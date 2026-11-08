@@ -1,8 +1,8 @@
-import { fetchBitcoinQuote, fetchCoinOhlc, fetchDexSnapshot, fetchGlobalMarket, fetchLargeTransfers, fetchPoolCandles, fetchPoolTrades, fetchTopMarkets, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs?v=cf7b7e0296";
-import { mountLiveChart } from "../verify/net/chart.mjs?v=cf7b7e0296";
-import { COIN_FRAMES, POLL_MS, TIMEFRAMES, stepLabel } from "../verify/net/ohlcv.mjs?v=cf7b7e0296";
-import { LIMITS, buildGraph, chainById, explorerHref, filterTransfers, formatUnits, groupSearch, identify, pager, slicePage, storageKeys, supportedIds, UNSUPPORTED } from "../verify/net/present.mjs?v=cf7b7e0296";
-import { isOfficialAddress, OFFICIAL_ADDRESS } from "../shared/orvupi-contract.js?v=cf7b7e0296";
+import { fetchBitcoinQuote, fetchCoinOhlc, fetchDexSnapshot, fetchGlobalMarket, fetchLargeTransfers, fetchPoolCandles, fetchPoolTrades, fetchTopMarkets, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs?v=9f09541910";
+import { mountLiveChart } from "../verify/net/chart.mjs?v=9f09541910";
+import { COIN_FRAMES, POLL_MS, TIMEFRAMES, stepLabel } from "../verify/net/ohlcv.mjs?v=9f09541910";
+import { LIMITS, buildGraph, chainById, explorerHref, filterTransfers, formatUnits, groupSearch, identify, pager, slicePage, storageKeys, supportedIds, UNSUPPORTED } from "../verify/net/present.mjs?v=9f09541910";
+import { isOfficialAddress, OFFICIAL_ADDRESS } from "../shared/orvupi-contract.js?v=9f09541910";
 
 const KEYS = storageKeys();
 const PROJECT_WALLET = "GKpccLJwKArptzt9j897njXUx9RsV5NKL3Egu7bfMA6Q";
@@ -972,7 +972,10 @@ async function investigate(raw, chainId) {
   state.screen = "ficha";
   render();
   try {
-    const card = await readAddress(chain, text);
+    const card = await Promise.race([
+      readAddress(chain, text),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 18000)),
+    ]);
     if (ticket !== readTicket) return;
     state.dossier = card;
     if (!state.dossier?.ok && state.dossier?.state !== "comprobado" && state.dossier?.state !== "sin-datos") {
@@ -1021,7 +1024,10 @@ async function openTrace(address, chain = "solana") {
   state.trace = null;
   if (previous) render();
   try {
-    const card = await readAddress(chain, target);
+    const card = await Promise.race([
+      readAddress(chain, target),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 18000)),
+    ]);
     if (ticket !== traceTicket) return;
     state.trace = card ? { ...card, address: card.address || target, chain: card.chain || chain, transfers: card.transfers || [] } : { ok: false, address: target, chain, transfers: [], facts: [], largest: [] };
   } catch {
@@ -1138,7 +1144,7 @@ function boot() {
   if (market) {
     document.body.classList.add("sonar-market");
     document.getElementById("vf-root")?.replaceChildren(sonarLoading());
-    import("./sonar/shell.mjs?v=cf7b7e0296").then((mod) => mod.start()).catch(healSonar);
+    import("./sonar/shell.mjs?v=9f09541910").then((mod) => mod.start()).catch(healSonar);
     return;
   }
   const dock = document.createElement("nav");

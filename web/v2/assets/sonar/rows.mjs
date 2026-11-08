@@ -1,9 +1,9 @@
-import { api } from "./api.mjs?v=cf7b7e0296";
-import { changeOver } from "./changes.mjs?v=cf7b7e0296";
-import { compact, money, plain, show } from "./format.mjs?v=cf7b7e0296";
-import { t } from "./i18n.mjs?v=cf7b7e0296";
-import { hasCoin } from "./store.mjs?v=cf7b7e0296";
-import { coinLink, el, logo, missing, pctNode, spark } from "./ui.mjs?v=cf7b7e0296";
+import { api } from "./api.mjs?v=9f09541910";
+import { changeOver } from "./changes.mjs?v=9f09541910";
+import { compact, money, plain, show } from "./format.mjs?v=9f09541910";
+import { t } from "./i18n.mjs?v=9f09541910";
+import { hasCoin } from "./store.mjs?v=9f09541910";
+import { coinLink, el, logo, missing, pctNode, spark } from "./ui.mjs?v=9f09541910";
 
 export function changeKey(period) {
   if (period === "1h") return "ch1h";

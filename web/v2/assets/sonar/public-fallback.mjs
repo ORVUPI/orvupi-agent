@@ -4,6 +4,7 @@
 const CG = "https://api.coingecko.com/api/v3";
 const HOME = "https://www.coingecko.com/";
 const ATTR = "Data provided by CoinGecko";
+const PATTERN = "https://pattern.plus/api/v1";
 
 function num(value) {
   const n = Number(value);
@@ -43,14 +44,18 @@ function rowFrom(raw) {
   };
 }
 
-async function cg(path) {
-  const response = await fetch(`${CG}${path}`, { headers: { accept: "application/json" } });
+async function readJson(url) {
+  const response = await fetch(url, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(12000) });
   if (!response.ok) {
-    const error = new Error("coingecko");
+    const error = new Error("upstream");
     error.status = response.status;
     throw error;
   }
   return response.json();
+}
+
+async function cg(path) {
+  return readJson(`${CG}${path}`);
 }
 
 async function markets(params) {
@@ -137,6 +142,48 @@ async function movers(params) {
   return { ok: true, vs, ...stamp({ gainers, losers, period }) };
 }
 
+async function calendar() {
+  const body = await readJson(`${PATTERN}/calendar.json`);
+  const rows = (Array.isArray(body?.data) ? body.data : []).map((row) => ({
+    date: row.date || "",
+    kind: row.kind || "",
+    coinId: row.token || "",
+    symbol: row.symbol || "",
+    name: row.name || "",
+    title: row.title || "",
+  })).filter((row) => row.date && row.title);
+  return {
+    ok: true,
+    source: "PatternPlus",
+    sourceUrl: "https://pattern.plus",
+    attribution: body?.attribution?.text || "Data: PatternPlus",
+    fetchedAt: new Date().toISOString(),
+    rows,
+  };
+}
+
+async function unlocks() {
+  const body = await readJson(`${PATTERN}/unlocks.json`);
+  const rows = (Array.isArray(body?.data) ? body.data : []).map((row) => ({
+    date: row.date || "",
+    coinId: row.token || "",
+    symbol: row.symbol || "",
+    name: row.name || "",
+    amount: num(row.amount),
+    pctCirc: num(row.pct_circulating),
+    valueUsd: num(row.value_usd),
+    basis: Array.isArray(row.basis) ? row.basis.filter((item) => typeof item === "string") : [],
+  })).filter((row) => row.date);
+  return {
+    ok: true,
+    source: "PatternPlus",
+    sourceUrl: "https://pattern.plus",
+    attribution: body?.attribution?.text || "Data: PatternPlus",
+    fetchedAt: new Date().toISOString(),
+    rows,
+  };
+}
+
 export async function publicSonar(path) {
   const url = new URL(path, "https://orvupi.local");
   const parts = url.pathname.replace(/\/+$/, "").split("/").filter(Boolean);
@@ -147,6 +194,8 @@ export async function publicSonar(path) {
     if (head === "global" && rest.length === 1) return await global(url.searchParams);
     if (head === "trending" && rest.length === 1) return await trending();
     if (head === "movers" && rest.length === 1) return await movers(url.searchParams);
+    if (head === "calendar" && rest.length === 1) return await calendar();
+    if (head === "unlocks" && rest.length === 1) return await unlocks();
   } catch {
     return null;
   }

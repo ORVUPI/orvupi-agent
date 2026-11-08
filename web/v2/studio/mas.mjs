@@ -575,8 +575,12 @@ function renderPrint(ctx) {
       "data-format": item.format || null,
       "data-mas-jump": item.jump || null,
     });
+    const face = el("span", { class: `mas-product-face is-${item.id}` }, [
+      el("strong", { text: label }),
+      el("small", { text: item.format ? tr(lang, "Plantilla", "Template") : tr(lang, "Descarga", "Download") }),
+    ]);
     node.append(
-      el("span", { class: `mas-product-face is-${item.id}` }),
+      face,
       el("span", { class: "mas-tile-name", text: label }),
       el("small", { text: price }),
     );

@@ -1,7 +1,7 @@
-import { publicSonar } from "./public-fallback.mjs?v=cf7b7e0296";
+import { publicSonar } from "./public-fallback.mjs?v=9f09541910";
 
 export async function api(path) {
-  const response = await fetch(path, { headers: { accept: "application/json" } });
+  const response = await fetch(path, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(8000) });
   const type = response.headers.get("content-type") || "";
   let body = null;
   if (type.includes("json")) {
