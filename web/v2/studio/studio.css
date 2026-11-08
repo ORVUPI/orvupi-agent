@@ -286,15 +286,23 @@ body.studio-standalone header.site {
   border-bottom: 0;
   box-shadow: none;
 }
-body.studio-standalone header.site nav.site,
-body.studio-standalone header.site details.mapa,
-body.studio-standalone header.site .brand,
-body.studio-standalone main.studio-app > h1,
-body.studio-standalone main.studio-app > p.lede,
-body.studio-standalone main.studio-app > p:not(.aviso),
-body.studio-standalone main.studio-app > details,
-body.studio-standalone main.studio-app > #studio-acciones {
+/* El cromo estático se oculta solo cuando el módulo ya pintó #studio-root.
+   Si el módulo no arranca, quedan el título y los controles, no una página en blanco. */
+body.studio-standalone:has(#studio-root:not(:empty)) header.site nav.site,
+body.studio-standalone:has(#studio-root:not(:empty)) header.site details.mapa,
+body.studio-standalone:has(#studio-root:not(:empty)) header.site .brand,
+body.studio-standalone:has(#studio-root:not(:empty)) main.studio-app > h1,
+body.studio-standalone:has(#studio-root:not(:empty)) main.studio-app > p.lede,
+body.studio-standalone:has(#studio-root:not(:empty)) main.studio-app > p:not(.aviso),
+body.studio-standalone:has(#studio-root:not(:empty)) main.studio-app > details,
+body.studio-standalone:has(#studio-root:not(:empty)) main.studio-app > #studio-acciones {
   display: none;
+}
+#studio-root:empty {
+  display: none;
+  padding: 0;
+  margin: 0;
+  background: transparent;
 }
 body.studio-standalone main.studio-app {
   max-width: none;
