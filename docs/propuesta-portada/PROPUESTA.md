@@ -1,6 +1,6 @@
 # Propuesta de portada ORVUPI
 
-Revisión del 8 de noviembre de 2026. Cristian no autorizó aplicar la primera versión. Esta sigue siendo una propuesta: no toca `web/v2` ni orvupi.com.
+Revisión del 8 de noviembre de 2026. Cristian autorizó después aplicar este diseño a la web del repositorio (`web/v2`), sin fusionar y sin publicar en orvupi.com. La maqueta de esta carpeta sigue siendo la referencia visual.
 
 La página es `docs/propuesta-portada/index.html`. El saludo está en `marca/saludo.mp4`. Los enlaces «Abrir» salen de la propuesta y abren el producto actual.
 
