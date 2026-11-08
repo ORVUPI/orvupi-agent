@@ -1,17 +1,24 @@
+import { publicSonar } from "./public-fallback.mjs?v=9f09541910";
+
 export async function api(path) {
-  const response = await fetch(path, { headers: { accept: "application/json" } });
+  const response = await fetch(path, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(8000) });
+  const type = response.headers.get("content-type") || "";
   let body = null;
-  try {
-    body = await response.json();
-  } catch {
-    body = null;
+  if (type.includes("json")) {
+    try {
+      body = await response.json();
+    } catch {
+      body = null;
+    }
   }
-  if (!response.ok || !body || body.ok === false) {
-    const error = new Error(body?.error || "unavailable");
-    error.status = response.status;
-    throw error;
+  if (response.ok && body && body.ok !== false) return body;
+  if (response.status === 404 || !type.includes("json")) {
+    const fallback = await publicSonar(path);
+    if (fallback) return fallback;
   }
-  return body;
+  const error = new Error(body?.error || "unavailable");
+  error.status = response.status;
+  throw error;
 }
 
 export function qs(params) {

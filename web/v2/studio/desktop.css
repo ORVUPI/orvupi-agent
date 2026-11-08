@@ -23,7 +23,7 @@
   }
 
   .canva-home {
-    --desk-rail: 92px;
+    --desk-rail: 112px;
     --desk-sub: 252px;
     width: 100%;
     max-width: none;
@@ -47,7 +47,7 @@
     left: 0;
     top: 0;
     bottom: 0;
-    width: var(--desk-rail, 92px);
+    width: var(--desk-rail, 112px);
     padding: 12px 6px 10px;
     background: #fff;
     border-right: 1px solid rgba(22, 16, 40, 0.08);
@@ -83,9 +83,23 @@
     font: inherit;
     min-width: 0;
   }
+  .desk-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 4px 8px;
+    min-height: 44px;
+  }
+  .desk-brand img {
+    width: 96px;
+    height: auto;
+    border-radius: 0;
+    object-fit: contain;
+    background: #fff8ec;
+  }
   #studio-root .desk-rail button.desk-item,
   #studio-root .desk-rail button.desk-util {
-    width: 80px;
+    width: 100px;
     min-height: 58px;
     padding: 6px 2px 4px;
     border-radius: 12px;
@@ -107,9 +121,10 @@
   }
   #studio-root .desk-rail button span {
     display: block;
-    max-width: 76px;
-    font-size: 11px;
-    font-weight: 650;
+    max-width: 96px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #0d1628;
     line-height: 1.15;
     letter-spacing: -0.01em;
   }

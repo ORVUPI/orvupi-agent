@@ -957,7 +957,7 @@ const SHORTCUTS = [
   ["graficos", "Gráficos", "Charts", "#10B981", "M5 19V5M9 19v-6M13 19V9M17 19v-9"],
   ["fondo", "Fondo", "Background", "#A855F7", "M4 6h16v12H4zM8 14l2-2 2 2 3-3 3 3"],
   ["subidos", "Subidos", "Uploads", "#64748B", "M12 16V6M8 10l4-4 4 4M5 18h14"],
-  ["ia", "Catálogo", "Catalog", "#6D28D9", "M12 3l1.2 4.2L17.5 8.5 13.2 9.8 12 14l-1.2-4.2L6.5 8.5l4.3-1.3z"],
+  ["ia", "Ayuda", "Help", "#6D28D9", "M12 3l1.2 4.2L17.5 8.5 13.2 9.8 12 14l-1.2-4.2L6.5 8.5l4.3-1.3z"],
   ["elementos", "Elementos", "Elements", "#EC4899", "M12 4l2 5h5l-4 3 2 5-5-3-5 3 2-5-4-3h5z"],
   ["marca", "Marca", "Brand", "#102032", "M12 3l2.2 5.2L20 9l-4 3.6L17.2 18 12 15.4 6.8 18 8 12.6 4 9l5.8-.8z"],
 ];

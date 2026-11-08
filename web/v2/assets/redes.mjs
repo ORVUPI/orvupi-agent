@@ -3,7 +3,7 @@
  * Solana sigue el camino de siempre. Base, Ethereum y BNB Chain
  * usan el lector genérico. La lista vive en networks.json.
  */
-import { EVM_MAX_BODY, normalizeEvmAddress, readCappedText, readEvmToken, resetEvmClientLimit } from "../shared/evm-read.js?v=850a517e7c";
+import { EVM_MAX_BODY, normalizeEvmAddress, readCappedText, readEvmToken, resetEvmClientLimit } from "../shared/evm-read.js?v=9f09541910";
 import {
   fillNetworkSelect,
   pageLede,
@@ -11,9 +11,9 @@ import {
   paintEvmResult,
   privacyText,
   syncNetworkLabels,
-} from "../shared/evm-view.js?v=850a517e7c";
-import { openNotebookDb } from "../shared/notebook-db.js?v=850a517e7c";
-import { stampIdentity, validateAnyCard, withinStoreLimit } from "../shared/notebook-model.js?v=850a517e7c";
+} from "../shared/evm-view.js?v=9f09541910";
+import { openNotebookDb } from "../shared/notebook-db.js?v=9f09541910";
+import { stampIdentity, validateAnyCard, withinStoreLimit } from "../shared/notebook-model.js?v=9f09541910";
 
 const CACHE_MS = 60_000;
 const cache = new Map();

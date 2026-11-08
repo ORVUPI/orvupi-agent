@@ -424,7 +424,7 @@ function renderHelp(ctx) {
     lead(tr(lang, "El catálogo responde con las plantillas de Studio en este navegador.", "The catalog answers from Studio templates in this browser.")),
     el("div", { class: "mas-actions" }, prompts.map((text) => button(text, { class: "mas-chip canva-plain", "data-mas-help": text }))),
     el("a", { class: "mas-cta", href: "mailto:orvupi.hq@gmail.com", text: "orvupi.hq@gmail.com" }),
-    cta(tr(lang, "Abrir catálogo", "Open catalog"), null, "ia"),
+    cta(tr(lang, "Abrir catálogo", "Open catalog"), null, "plantillas"),
   ]);
 }
 
@@ -575,8 +575,12 @@ function renderPrint(ctx) {
       "data-format": item.format || null,
       "data-mas-jump": item.jump || null,
     });
+    const face = el("span", { class: `mas-product-face is-${item.id}` }, [
+      el("strong", { text: label }),
+      el("small", { text: item.format ? tr(lang, "Plantilla", "Template") : tr(lang, "Descarga", "Download") }),
+    ]);
     node.append(
-      el("span", { class: `mas-product-face is-${item.id}` }),
+      face,
       el("span", { class: "mas-tile-name", text: label }),
       el("small", { text: price }),
     );
@@ -659,11 +663,11 @@ function renderDream(ctx) {
       ]),
       (() => {
         const node = button("", { class: "mas-feature is-ia canva-plain", "data-go": "ia" });
-        node.append(el("strong", { text: "Catálogo" }), el("span", { text: tr(lang, "Diseñar con el chat", "Design with the chat") }));
+        node.append(el("strong", { text: tr(lang, "Ayuda", "Help") }), el("span", { text: tr(lang, "Diseñar con el chat", "Design with the chat") }));
         return node;
       })(),
     ]),
-    cta("Catálogo", null, "ia"),
+    cta(tr(lang, "Catálogo", "Catalog"), null, "plantillas"),
     el("a", { class: "mas-cta mas-cta-secondary", href: localHref("/academy/"), text: tr(lang, "Abrir Academy", "Open Academy") }),
   ]);
 }
@@ -737,7 +741,7 @@ const PREF_ROWS = [
   ["avisos", "Notificaciones", "Notifications", "bell"],
   ["privacidad", "Privacidad en este navegador", "Privacy on this browser", "lock"],
   ["datos", "Datos y almacenamiento", "Data and storage", "db"],
-  ["ia", "Catálogo", "Catalog", "spark"],
+  ["ia", "Ayuda", "Help", "spark"],
   ["work", "Work en este navegador", "Work in this browser", "doc"],
 ];
 

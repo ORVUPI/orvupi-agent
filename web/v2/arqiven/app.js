@@ -18,7 +18,8 @@ const UI = {
     cancel: "Cancelar",
     preparing: "Descargando un modelo de terceros. Puedes seguir escribiendo.",
     checking: "Comprobando que el modelo de terceros responde en este navegador.",
-    idle: "Sin modelo",
+    idle: "IA de ORVUPI",
+    who: "ARQIVEN es la IA de ORVUPI. Si descargas un modelo para que responda, es de terceros y se nombra aparte.",
     queued: "Preparando modelo de terceros… Puedes seguir escribiendo. Este aviso se sustituye cuando haya texto.",
     cancelled: "Cancelado. No hay respuesta generada.",
     error: "El modelo de terceros no se ha preparado.",
@@ -43,7 +44,8 @@ const UI = {
     cancel: "Cancel",
     preparing: "Downloading a third-party model. You can keep typing.",
     checking: "Checking that the third-party model answers in this browser.",
-    idle: "No model",
+    idle: "ORVUPI AI",
+    who: "ARQIVEN is ORVUPI's AI. If you download a model so it can answer, that model belongs to someone else and is named separately.",
     queued: "Preparing a third-party model… You can keep typing. This notice is replaced when there is text.",
     cancelled: "Cancelled. There is no generated answer.",
     error: "The third-party model was not prepared.",
@@ -68,7 +70,7 @@ const UI = {
     cancel: "Cancelar",
     preparing: "Baixando um modelo de terceiros. Você pode continuar escrevendo.",
     checking: "Conferindo se o modelo de terceiros responde neste navegador.",
-    idle: "Sem modelo",
+    idle: "IA da ORVUPI",
     queued: "Preparando modelo de terceiros… Você pode continuar escrevendo. Este aviso é trocado quando houver texto.",
     cancelled: "Cancelado. Não há resposta gerada.",
     error: "O modelo de terceiros não foi preparado.",
@@ -93,7 +95,7 @@ const UI = {
     cancel: "キャンセル",
     preparing: "第三者モデルをダウンロードしています。入力は続けられます。",
     checking: "このブラウザで第三者モデルが応答するか確認しています。",
-    idle: "モデルなし",
+    idle: "ORVUPIのAI",
     queued: "第三者モデルを準備しています… 入力は続けられます。テキストができたらこの表示を置き換えます。",
     cancelled: "キャンセルしました。生成された回答はありません。",
     error: "第三者モデルを準備できませんでした。",
@@ -118,7 +120,7 @@ const UI = {
     cancel: "취소",
     preparing: "제3자 모델을 받는 중입니다. 계속 입력할 수 있습니다.",
     checking: "이 브라우저에서 제3자 모델이 응답하는지 확인하는 중입니다.",
-    idle: "모델 없음",
+    idle: "ORVUPI AI",
     queued: "제3자 모델을 준비하는 중… 계속 입력할 수 있습니다. 텍스트가 생기면 이 안내를 바꿉니다.",
     cancelled: "취소했습니다. 생성된 답은 없습니다.",
     error: "제3자 모델을 준비하지 못했습니다.",
@@ -208,7 +210,16 @@ const progress = document.createElement("p");
 progress.id = "engine-progress";
 progress.className = "engine-progress";
 progress.setAttribute("role", "status");
-engineBar.append(modelPick, prepare, cancel, progress);
+const meter = document.createElement("span");
+meter.className = "engine-meter";
+meter.hidden = true;
+meter.append(document.createElement("i"));
+engineBar.append(modelPick, prepare, cancel, meter, progress);
+const who = document.createElement("p");
+who.className = "arq-who";
+who.textContent = ui.who || "";
+if (!ui.who) who.hidden = true;
+document.getElementById("welcome")?.append(who);
 document.querySelector(".chips")?.insertAdjacentElement("afterend", engineBar);
 
 const editorToggle = document.createElement("button");
@@ -299,19 +310,17 @@ function setEditor(open) {
 function updateEngineUi() {
   const snap = state.snap;
   const pct = snap.progress.total > 0 ? Math.min(100, Math.round((snap.progress.loaded / snap.progress.total) * 100)) : 0;
-  if (pill) {
-    if (snap.phase === "ready") pill.textContent = `${ui.third} · ${snap.modelId}`;
-    else if (snap.phase === "preparing") pill.textContent = snap.modelVersion || snap.modelId || ui.third;
-    else if (snap.phase === "error") pill.textContent = ui.error;
-    else pill.textContent = ui.idle;
-  }
+  if (pill) pill.textContent = ui.idle;
   prepare.textContent = snap.phase === "ready" ? ui.again : ui.prepare;
   prepare.disabled = snap.phase === "preparing" || snap.phase === "ready" && modelPick.value === snap.modelId;
   cancel.hidden = snap.phase !== "preparing" && !state.queue.some((item) => item.running);
+  meter.hidden = snap.phase !== "preparing";
+  meter.classList.toggle("is-known", snap.progress.total > 0);
+  meter.querySelector("i").style.width = snap.progress.total > 0 ? `${Math.max(pct, 4)}%` : "";
   if (snap.phase === "preparing") {
     const file = snap.progress.file ? ` ${snap.progress.file}` : "";
     const ratio = snap.progress.total > 0 ? ` ${pct}%` : "";
-    progress.textContent = `${snap.probe ? ui.checking : ui.preparing}${ratio}${file}`;
+    progress.textContent = `${snap.probe ? ui.checking : ui.preparing}${ratio || " …"}${file}`;
   } else if (snap.phase === "error") progress.textContent = `${ui.error} ${snap.error}`.trim();
   else if (snap.phase === "ready") progress.textContent = `${ui.ready} · ${snap.modelId} · ${snap.modelVersion}`;
   else progress.textContent = "";
