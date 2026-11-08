@@ -55,23 +55,17 @@
   var escena = document.getElementById("escena");
   var video = document.getElementById("saludo");
   if (!escena || !video) return;
-  var estado = document.getElementById("estado-escena");
-  var reproducir = document.getElementById("reproducir");
-  var pausar = document.getElementById("pausar");
-  var fija = document.getElementById("fija");
-  var reducido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var quiere = false;
-  var pausaUsuario = false;
+  var reducido = window.matchMedia("(prefers-reduced-motion: reduce)");
   var visible = true;
   var fallo = false;
-  function decir(texto) { if (estado) estado.textContent = texto; }
+  function quieto() { return reducido.matches || fallo; }
   function cargar() {
     if (video.getAttribute("src")) return;
     video.src = video.getAttribute("data-src");
     video.load();
   }
   function puede() {
-    return quiere && !pausaUsuario && visible && !document.hidden && !fallo;
+    return !quieto() && visible && !document.hidden;
   }
   function aplicar() {
     video.muted = true;
@@ -86,60 +80,22 @@
         intento.catch(function (err) {
           if (!puede()) return;
           if (err && err.name === "AbortError") return;
+          fallo = true;
+          video.pause();
           escena.classList.remove("is-playing");
-          decir(document.documentElement.getAttribute("data-lang") === "en"
-            ? "Still image. Press Play greeting to watch it."
-            : "Imagen fija. Pulsa Reproducir saludo para verlo.");
-          if (reproducir) reproducir.setAttribute("aria-pressed", "false");
         });
       }
       escena.classList.add("is-playing");
-      decir(document.documentElement.getAttribute("data-lang") === "en"
-        ? "Greeting playing, with no sound. You can pause it."
-        : "Saludo en reproducción, sin sonido. Puedes pausarlo.");
-      if (reproducir) reproducir.setAttribute("aria-pressed", "true");
     } else {
       video.pause();
       escena.classList.remove("is-playing");
-      if (reproducir) reproducir.setAttribute("aria-pressed", "false");
-      if (fallo) {
-        decir(document.documentElement.getAttribute("data-lang") === "en"
-          ? "Still image. The video could not be played."
-          : "Imagen fija. El vídeo no se ha podido reproducir.");
-      } else if (reducido && !quiere) {
-        decir(document.documentElement.getAttribute("data-lang") === "en"
-          ? "Still image. Reduced motion is on; you can play the greeting if you want."
-          : "Imagen fija. El movimiento reducido está activo; puedes ver el saludo si quieres.");
-      } else {
-        decir(document.documentElement.getAttribute("data-lang") === "en"
-          ? "Still image. The greeting is not playing."
-          : "Imagen fija. El saludo no está en marcha.");
-      }
     }
   }
   video.addEventListener("error", function () {
     fallo = true;
     escena.classList.remove("is-playing");
-    decir(document.documentElement.getAttribute("data-lang") === "en"
-      ? "Still image. The video could not be played."
-      : "Imagen fija. El vídeo no se ha podido reproducir.");
-    if (reproducir) reproducir.setAttribute("aria-pressed", "false");
   });
-  if (reproducir) reproducir.addEventListener("click", function () {
-    fallo = false;
-    quiere = true;
-    pausaUsuario = false;
-    aplicar();
-  });
-  if (pausar) pausar.addEventListener("click", function () {
-    pausaUsuario = true;
-    aplicar();
-  });
-  if (fija) fija.addEventListener("click", function () {
-    quiere = false;
-    pausaUsuario = true;
-    aplicar();
-  });
+  if (reducido.addEventListener) reducido.addEventListener("change", aplicar);
   document.addEventListener("visibilitychange", aplicar);
   if ("IntersectionObserver" in window) {
     var obs = new IntersectionObserver(function (entries) {
@@ -149,12 +105,5 @@
     var placa = document.querySelector(".placa");
     if (placa) obs.observe(placa);
   }
-  if (!reducido) {
-    quiere = true;
-    aplicar();
-  } else {
-    decir(document.documentElement.getAttribute("data-lang") === "en"
-      ? "Still image. Reduced motion is on; you can play the greeting if you want."
-      : "Imagen fija. El movimiento reducido está activo; puedes ver el saludo si quieres.");
-  }
+  aplicar();
 })();

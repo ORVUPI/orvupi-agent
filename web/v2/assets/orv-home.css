@@ -284,9 +284,6 @@ body.orv-home .placa video {
 }
 body.orv-home .placa video { opacity: 0; }
 body.orv-home #escena.is-playing .placa video { opacity: 1; }
-body.orv-home figcaption { margin-top: 0.75rem; }
-body.orv-home .scene-tools { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.55rem; }
-body.orv-home #estado-escena { margin: 0; color: #d7deea; font-size: 0.88rem; }
 body.orv-home .tareas {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -485,8 +482,7 @@ body.orv-home .legal { margin-top: 2rem; padding-top: 1rem; border-top: 1px soli
   body.orv-home .tareas { grid-template-columns: 1fr; }
   body.orv-home .orv-hero h1 { font-size: 2.9rem; }
   body.orv-home .rutas li { grid-template-columns: 1fr; gap: 0.2rem; }
-  body.orv-home .actions .btn,
-  body.orv-home .scene-tools .btn { width: 100%; }
+  body.orv-home .actions .btn { width: 100%; }
   body.orv-home section { padding: 3rem 0; }
 }
 @media (prefers-reduced-motion: reduce) {
