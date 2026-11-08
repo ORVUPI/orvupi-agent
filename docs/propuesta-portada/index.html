@@ -15,6 +15,7 @@
     --line: rgba(13, 22, 40, 0.14);
     --fuchsia: #de1862;
     --fuchsia-text: #b81452;
+    --mist: #d7deea;
     --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
     --sans: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", sans-serif;
     --header: 4.5rem;
@@ -30,7 +31,7 @@
     font-size: 1.0625rem;
     line-height: 1.55;
   }
-  img { max-width: 100%; height: auto; }
+  img, video { max-width: 100%; }
   a { color: inherit; }
   :focus { outline: none; }
   :focus-visible { outline: 3px solid var(--fuchsia); outline-offset: 3px; }
@@ -52,7 +53,6 @@
     color: var(--paper);
     text-align: center;
     font-size: 0.82rem;
-    letter-spacing: 0.01em;
     padding: 0.55rem 1rem;
   }
   .flag a { color: #fff; }
@@ -89,7 +89,9 @@
     cursor: pointer;
     border-radius: 999px;
   }
-  .nav-desk summary::-webkit-details-marker, .lang summary::-webkit-details-marker, .mobile-panel summary::-webkit-details-marker { display: none; }
+  .nav-desk summary::-webkit-details-marker,
+  .lang summary::-webkit-details-marker,
+  .mobile-panel summary::-webkit-details-marker { display: none; }
   .nav-desk summary::after, .mobile-panel summary::after {
     content: "";
     width: 0.4rem;
@@ -100,7 +102,7 @@
     transform: translateY(-0.1rem) rotate(45deg);
     flex: none;
   }
-  .nav-desk details { position: relative; }
+  .nav-desk details, .lang { position: relative; }
   .panel {
     position: absolute;
     top: calc(100% + 0.35rem);
@@ -108,12 +110,12 @@
     width: 18.5rem;
     margin: 0;
     padding: 0.4rem;
-    list-style: none;
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 0.9rem;
     box-shadow: 0 16px 40px rgba(13, 22, 40, 0.08);
   }
+  .lang .panel { left: auto; right: 0; width: 15rem; }
   .panel a, .mobile-panel a.row {
     display: block;
     padding: 0.7rem 0.75rem;
@@ -122,10 +124,8 @@
     min-height: 2.75rem;
   }
   .panel a:hover, .mobile-panel a.row:hover, .nav-desk summary:hover, .nav-desk > a:hover { background: rgba(13, 22, 40, 0.05); }
-  .panel small, .row small { display: block; color: var(--ink-soft); font-weight: 450; font-size: 0.82rem; margin-top: 0.1rem; }
+  .panel small, .row small, .tareas small { display: block; color: var(--ink-soft); font-weight: 500; font-size: 0.82rem; margin-top: 0.1rem; }
   .bar-end { margin-left: auto; display: flex; align-items: center; gap: 0.4rem; }
-  .lang { position: relative; }
-  .lang .panel { left: auto; right: 0; width: 15rem; }
   .btn {
     display: inline-flex;
     align-items: center;
@@ -143,8 +143,12 @@
   }
   .btn-ink { background: var(--ink); color: #fff; }
   .btn-ink:hover { background: #1b2740; }
-  .btn-line { border-color: var(--ink); background: transparent; }
+  .btn-line { border-color: var(--ink); }
   .btn-line:hover { background: rgba(13, 22, 40, 0.05); }
+  .btn-paper { background: var(--paper); color: var(--ink); }
+  .btn-paper:hover { background: #fff; }
+  .btn-ghost { border-color: rgba(244, 241, 235, 0.75); color: var(--paper); }
+  .btn-ghost:hover { background: rgba(244, 241, 235, 0.08); }
   .menu-btn { display: none; }
   .btn-block { width: 100%; margin-top: 0.8rem; }
   #menu-movil[hidden] { display: none; }
@@ -165,80 +169,109 @@
     cursor: pointer;
     list-style: none;
   }
-  .mobile-panel summary::-webkit-details-marker { display: none; }
-  .mobile-panel a.row { padding-left: 0.2rem; }
-  .hero { padding: 3.25rem 0 1rem; }
+  .mobile-panel:not([hidden]) { display: none; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; letter-spacing: -0.03em; line-height: 1.05; margin: 0; }
+  h1 { font-size: clamp(3.1rem, 6vw, 5.15rem); max-width: 12ch; color: #fff; }
+  h1 span { display: block; }
+  h2 { font-size: clamp(2rem, 4vw, 3rem); max-width: 16ch; }
+  .hero {
+    background:
+      radial-gradient(ellipse 42% 70% at 82% 38%, rgba(222, 24, 98, 0.34), transparent 62%),
+      radial-gradient(ellipse 36% 42% at 74% 100%, rgba(255, 186, 140, 0.16), transparent 70%),
+      #0d1628;
+    color: var(--paper);
+    padding: 3.4rem 0 2.6rem;
+  }
   .hero-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.85fr);
-    gap: 2.5rem 3rem;
-    align-items: end;
+    grid-template-columns: minmax(0, 1.05fr) minmax(16rem, 0.9fr);
+    gap: 2rem 3rem;
+    align-items: center;
   }
   .kicker {
-    display: flex;
-    align-items: center;
-    gap: 0.7rem;
-    margin: 0 0 1.1rem;
-    color: var(--ink-soft);
-    font-size: 0.92rem;
+    margin: 0 0 1rem;
+    color: #f6d5e2;
+    font-size: 0.95rem;
     font-weight: 650;
   }
-  .kicker img { width: 2.4rem; height: 2.4rem; object-fit: cover; border-radius: 0.45rem; flex: none; }
-  h1, h2, h3 { font-family: var(--serif); font-weight: 600; letter-spacing: -0.03em; line-height: 1.05; margin: 0; }
-  h1 { font-size: clamp(3.1rem, 6vw, 5.1rem); max-width: 12ch; }
-  h1 span { display: block; }
-  .rule { width: 3.5rem; height: 3px; background: var(--fuchsia); border: 0; margin: 1.15rem 0 1.15rem; }
-  .lede { max-width: 36rem; margin: 0; font-size: 1.12rem; color: var(--ink-soft); }
+  .rule { width: 3.5rem; height: 3px; background: var(--fuchsia); border: 0; margin: 1.15rem 0; }
+  .lede { max-width: 34rem; margin: 0; font-size: 1.12rem; color: var(--mist); }
   .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.6rem; }
-  .scene { margin: 0; }
+  .scene { margin: 0; justify-self: end; width: min(100%, 32rem); }
   .placa {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 1rem;
-    overflow: hidden;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
   }
-  .placa img { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; }
-  .scene.is-on .placa { animation: presencia 6.5s ease-in-out infinite; }
-  @keyframes presencia {
-    0%, 100% { box-shadow: 0 10px 28px rgba(13, 22, 40, 0.08); }
-    50% { box-shadow: 0 18px 36px rgba(13, 22, 40, 0.16); }
+  .placa img, .placa video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center bottom;
   }
+  .placa video { opacity: 0; }
+  #escena.is-playing .placa video { opacity: 1; }
   figcaption { margin-top: 0.75rem; }
   .scene-tools { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.55rem; }
-  .scene-tools button { font-size: 0.85rem; min-height: 2.75rem; }
-  #estado-escena { margin: 0.45rem 0 0; color: var(--ink-soft); font-size: 0.85rem; }
-  .indice { list-style: none; margin: 2.25rem 0 0; padding: 0; border-top: 1px solid var(--line); }
-  .indice li {
+  #estado-escena { margin: 0; color: var(--mist); font-size: 0.88rem; }
+  .tareas {
     display: grid;
-    grid-template-columns: 2.5rem minmax(0, 1fr) auto;
-    gap: 0.8rem;
-    align-items: center;
-    padding: 0.85rem 0;
-    border-bottom: 1px solid var(--line);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-top: 2.4rem;
   }
-  .num { font-family: var(--serif); color: var(--fuchsia-text); font-size: 1.15rem; font-weight: 650; }
-  .indice a.name { font-weight: 700; text-decoration: none; }
-  .indice a.name:hover { text-decoration: underline; }
-  .indice p { margin: 0.1rem 0 0; color: var(--ink-soft); font-size: 0.92rem; }
-  .indice .abrir { font-weight: 650; text-underline-offset: 0.2em; white-space: nowrap; }
+  .tareas a {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 4.4rem;
+    padding: 0.75rem 0.9rem;
+    background: var(--card);
+    color: var(--ink);
+    border-radius: 0.9rem;
+    text-decoration: none;
+    font-weight: 700;
+  }
+  .tareas a:hover { background: #fff; }
+  .tareas small { color: var(--fuchsia-text); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.72rem; margin: 0 0 0.15rem; }
   section { padding: 4.25rem 0; scroll-margin-top: calc(var(--header) + 0.75rem); }
   .sec-head { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 1.5rem 2.5rem; align-items: end; margin-bottom: 1.75rem; }
   .sec-head p { margin: 0; color: var(--ink-soft); }
-  h2 { font-size: clamp(2rem, 4vw, 3rem); max-width: 16ch; }
   .eyebrow { margin: 0 0 0.55rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fuchsia-text); }
   .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
   .card {
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 1rem;
-    padding: 1.25rem 1.25rem 1.1rem;
     display: flex;
     flex-direction: column;
-    gap: 0.7rem;
     min-height: 100%;
+    overflow: hidden;
   }
-  .card h3 { font-size: 1.7rem; }
-  .card p { margin: 0; color: var(--ink-soft); }
+  .card-face {
+    min-height: 7.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 0.3rem;
+    padding: 1.1rem 1.2rem;
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .card-face span { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #f6d5e2; }
+  .card-face strong { font-family: var(--serif); font-size: 1.85rem; font-weight: 600; letter-spacing: -0.03em; }
+  .face-studio { background: linear-gradient(165deg, #4a2436 0%, #0d1628 72%); }
+  .face-sonar { background: #15243f; }
+  .face-academy { background: #f6e4ea; color: var(--ink); }
+  .face-academy span { color: var(--fuchsia-text); }
+  .face-arqiven { background: #1c2638; }
+  .face-verify { background: #243044; }
+  .card-body { padding: 1rem 1.2rem 1.15rem; display: flex; flex-direction: column; gap: 0.7rem; flex: 1; }
+  .card-body h3 { font-size: 1.45rem; }
+  .card-body .uso { margin: 0; font-weight: 650; }
+  .card-body p { margin: 0; color: var(--ink-soft); }
   .estado {
     display: inline-flex;
     align-self: flex-start;
@@ -249,7 +282,6 @@
     padding: 0.2rem 0.65rem;
     font-size: 0.78rem;
     font-weight: 650;
-    letter-spacing: 0.01em;
   }
   .estado i {
     width: 0.45rem;
@@ -259,8 +291,9 @@
     display: inline-block;
   }
   .estado.limite i { background: transparent; box-shadow: inset 0 0 0 1.5px var(--ink); }
-  .card .links { margin-top: auto; display: flex; flex-wrap: wrap; gap: 0.8rem 1rem; padding-top: 0.4rem; }
-  .card .links a { font-weight: 650; }
+  .links { margin-top: auto; display: flex; flex-wrap: wrap; gap: 0.8rem 1rem; padding-top: 0.35rem; }
+  .links a { font-weight: 700; }
+  .later { margin-top: 1rem; }
   .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin: 0; padding: 0; list-style: none; }
   .steps li { background: var(--card); border: 1px solid var(--line); border-radius: 1rem; padding: 1.2rem; }
   .steps strong { display: block; font-family: var(--serif); font-size: 1.8rem; color: var(--fuchsia-text); font-weight: 600; }
@@ -271,16 +304,10 @@
   .door span { color: var(--ink-soft); }
   .door b { font-family: var(--serif); font-size: 1.8rem; font-weight: 600; }
   .split { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 1.25rem; }
-  .plain {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 1rem;
-    padding: 1.4rem;
-  }
+  .plain { background: var(--card); border: 1px solid var(--line); border-radius: 1rem; padding: 1.4rem; }
   .plain h3 { font-size: 1.6rem; margin-bottom: 0.45rem; }
   .plain p { color: var(--ink-soft); }
-  .plain ul { margin: 0.6rem 0 0; padding-left: 1.1rem; }
-  .plain li { margin: 0.35rem 0; }
+  .more { margin: 1.25rem 0 0; }
   .addr {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 0.92rem;
@@ -311,16 +338,16 @@
     .nav-desk, .bar > .bar-end > .btn-ink { display: none; }
     .menu-btn { display: inline-flex; }
     .mobile-panel:not([hidden]) { display: block; }
-    .hero-grid, .sec-head, .split, .foot-grid { grid-template-columns: 1fr; }
+    .hero-grid, .sec-head, .split, .foot-grid, .tareas { grid-template-columns: 1fr; }
     .cards, .doors, .steps { grid-template-columns: 1fr 1fr; }
+    .tareas { grid-template-columns: 1fr 1fr; }
+    .scene { justify-self: stretch; width: min(100%, 28rem); margin-inline: auto; }
   }
   @media (max-width: 720px) {
     .wrap, .bar { width: min(var(--wrap), calc(100% - 1.5rem)); }
     .hero { padding-top: 2rem; }
-    .hero-grid, .cards, .steps, .doors { grid-template-columns: 1fr; }
-    h1 { font-size: 3rem; }
-    .indice li { grid-template-columns: 2rem minmax(0, 1fr); }
-    .indice .abrir { grid-column: 2; justify-self: start; }
+    .hero-grid, .cards, .steps, .doors, .tareas { grid-template-columns: 1fr; }
+    h1 { font-size: 2.9rem; }
     .rutas li { grid-template-columns: 1fr; gap: 0.2rem; }
     .actions .btn, .scene-tools .btn { width: 100%; }
     section { padding: 3rem 0; }
@@ -340,11 +367,12 @@
       <details>
         <summary>Herramientas</summary>
         <div class="panel">
-          <a href="#ficha-work">Work<small>Documentos en este navegador</small></a>
-          <a href="#ficha-studio">Studio<small>Diseño y plantillas</small></a>
-          <a href="#ficha-sonar">Sonar<small>Mercados públicos</small></a>
-          <a href="#ficha-academy">Academy<small>Aprender por tareas</small></a>
-          <a href="#ficha-arqiven">ARQIVEN<small>Escritura en esta pestaña</small></a>
+          <a href="#ficha-work">Work<small>Crear documentos</small></a>
+          <a href="#ficha-studio">Studio<small>Diseñar</small></a>
+          <a href="#ficha-sonar">Sonar<small>Explorar mercados</small></a>
+          <a href="#ficha-verify">Verify<small>Verificar una dirección</small></a>
+          <a href="#ficha-academy">Academy<small>Aprender</small></a>
+          <a href="#ficha-arqiven">ARQIVEN<small>Escribir en esta pestaña</small></a>
         </div>
       </details>
       <details>
@@ -387,11 +415,12 @@
   <nav class="mobile-panel" id="menu-movil" hidden aria-label="Menú">
     <details open>
       <summary>Herramientas</summary>
-      <a class="row" href="#ficha-work">Work<small>Documentos en este navegador</small></a>
-      <a class="row" href="#ficha-studio">Studio<small>Diseño y plantillas</small></a>
-      <a class="row" href="#ficha-sonar">Sonar<small>Mercados públicos</small></a>
-      <a class="row" href="#ficha-academy">Academy<small>Aprender por tareas</small></a>
-      <a class="row" href="#ficha-arqiven">ARQIVEN<small>Escritura en esta pestaña</small></a>
+      <a class="row" href="#ficha-work">Work<small>Crear documentos</small></a>
+      <a class="row" href="#ficha-studio">Studio<small>Diseñar</small></a>
+      <a class="row" href="#ficha-sonar">Sonar<small>Explorar mercados</small></a>
+      <a class="row" href="#ficha-verify">Verify<small>Verificar una dirección</small></a>
+      <a class="row" href="#ficha-academy">Academy<small>Aprender</small></a>
+      <a class="row" href="#ficha-arqiven">ARQIVEN<small>Escribir en esta pestaña</small></a>
     </details>
     <details>
       <summary>Comunidad</summary>
@@ -417,40 +446,43 @@
 </header>
 
 <main id="contenido">
-  <div class="wrap hero">
-    <div class="hero-grid">
+  <section class="hero" aria-labelledby="titulo">
+    <div class="wrap hero-grid">
       <div>
-        <p class="kicker"><img src="marca/simbolo-fucsia.jpg" width="1536" height="1536" alt="">Cultura, herramientas y comunidad</p>
-        <h1>Ocho brazos.<span>Mil ideas.</span></h1>
+        <p class="kicker">Cultura, herramientas y comunidad</p>
+        <h1 id="titulo">Ocho brazos.<span>Mil ideas.</span></h1>
         <hr class="rule">
-        <p class="lede">Herramientas para crear, aprender y explorar Web3. El pulpo acompaña. El trabajo empieza en la herramienta que elijas.</p>
+        <p class="lede">Herramientas para crear, aprender y explorar Web3. El pulpo saluda. El trabajo empieza en la herramienta que elijas.</p>
         <div class="actions">
-          <a class="btn btn-ink" href="https://orvupi.com/work/">Abrir Work</a>
-          <a class="btn btn-line" href="#herramientas">Ver herramientas</a>
+          <a class="btn btn-paper" href="https://orvupi.com/work/">Abrir Work</a>
+          <a class="btn btn-ghost" href="#herramientas">Ver herramientas</a>
         </div>
       </div>
       <figure class="scene" id="escena">
         <div class="placa">
           <img src="marca/avatar-3d.png" width="1254" height="1254" alt="ORVUPI, pulpo rosa de un solo rizo, ojos azules y ventosas claras.">
+          <video id="saludo" muted loop playsinline preload="none" poster="marca/avatar-3d.png" data-src="marca/saludo.mp4" width="480" height="480" aria-hidden="true"></video>
         </div>
         <figcaption>
-          <p id="estado-escena" role="status">Imagen fija. No hay un vídeo aprobado.</p>
+          <p id="estado-escena" role="status">Imagen fija.</p>
           <div class="scene-tools">
-            <button class="btn btn-line" type="button" id="mover" aria-pressed="false" aria-controls="escena">Movimiento suave</button>
-            <button class="btn btn-line" type="button" id="pausar" aria-controls="escena">Pausar</button>
-            <button class="btn btn-line" type="button" id="fija" aria-controls="escena">Imagen fija</button>
+            <button class="btn btn-ghost" type="button" id="reproducir" aria-pressed="false" aria-controls="escena">Reproducir saludo</button>
+            <button class="btn btn-ghost" type="button" id="pausar" aria-controls="escena">Pausar</button>
+            <button class="btn btn-ghost" type="button" id="fija" aria-controls="escena">Imagen fija</button>
           </div>
         </figcaption>
       </figure>
     </div>
-    <ol class="indice" aria-label="Acceso directo a las herramientas">
-      <li><span class="num">01</span><div><a class="name" href="#ficha-work">Work</a><p>Documentos, hojas, presentaciones, formularios, dibujos, notas y PDF.</p></div><a class="abrir" href="https://orvupi.com/work/">Abrir Work</a></li>
-      <li><span class="num">02</span><div><a class="name" href="#ficha-studio">Studio</a><p>Plantillas y diseños en este navegador. Tu marca, no la de ORVUPI.</p></div><a class="abrir" href="https://orvupi.com/studio/">Abrir Studio</a></li>
-      <li><span class="num">03</span><div><a class="name" href="#ficha-sonar">Sonar</a><p>Mercados públicos. La verificación on-chain está en Verify, aparte del ranking.</p></div><a class="abrir" href="https://orvupi.com/sonar/">Abrir Sonar</a></li>
-      <li><span class="num">04</span><div><a class="name" href="#ficha-academy">Academy</a><p>Artículos, rutas, prácticas, glosario y tu progreso. Sin cuenta.</p></div><a class="abrir" href="https://orvupi.com/academy/">Abrir Academy</a></li>
-      <li><span class="num">05</span><div><a class="name" href="#ficha-arqiven">ARQIVEN</a><p>Escribes en esta pestaña. No hay un modelo propio conectado.</p></div><a class="abrir" href="https://orvupi.com/arqiven/">Abrir ARQIVEN</a></li>
-    </ol>
-  </div>
+    <div class="wrap">
+      <nav class="tareas" aria-label="Entrar por la tarea">
+        <a href="#ficha-work"><small>Crear</small>Work y Studio</a>
+        <a href="#ficha-sonar"><small>Explorar</small>Sonar y Verify</a>
+        <a href="#ficha-academy"><small>Aprender</small>Academy</a>
+        <a href="#ficha-arqiven"><small>Escribir</small>ARQIVEN</a>
+        <a href="#comunidad"><small>Participar</small>Comunidad</a>
+      </nav>
+    </div>
+  </section>
 
   <section id="herramientas">
     <div class="wrap">
@@ -463,40 +495,58 @@
       </div>
       <div class="cards">
         <article class="card" id="ficha-work">
-          <h3>Work</h3>
-          <p class="estado"><i aria-hidden="true"></i> Disponible en este navegador</p>
-          <p>Docs, Sheets, Slides, Formularios, Dibujos, Notas y PDF. Los archivos se quedan en el dispositivo. Abrir Work entra en su inicio: no lanza un editor vacío desde la portada.</p>
-          <div class="links"><a href="https://orvupi.com/work/">Abrir Work</a></div>
+          <div class="card-face"><span>Crear</span><strong>Work</strong></div>
+          <div class="card-body">
+            <p class="uso">Documentos, hojas y presentaciones en este navegador.</p>
+            <p class="estado"><i aria-hidden="true"></i> Disponible en este navegador</p>
+            <p>Docs, Sheets, Slides, Formularios, Dibujos, Notas y PDF. Los archivos se quedan en el dispositivo. Abrir Work entra en su inicio: no lanza un editor vacío desde la portada.</p>
+            <div class="links"><a href="https://orvupi.com/work/">Abrir Work</a></div>
+          </div>
         </article>
         <article class="card" id="ficha-studio">
-          <h3>Studio</h3>
-          <p class="estado"><i aria-hidden="true"></i> Disponible en este navegador</p>
-          <p>Catálogo, plantillas, diseños locales y exportación. Las plantillas siguen neutras: esta propuesta no mete el logotipo dentro de los diseños.</p>
-          <div class="links"><a href="https://orvupi.com/studio/">Abrir Studio</a></div>
+          <div class="card-face face-studio"><span>Diseñar</span><strong>Studio</strong></div>
+          <div class="card-body">
+            <p class="uso">Plantillas y diseños. Tu marca, no la de ORVUPI.</p>
+            <p class="estado"><i aria-hidden="true"></i> Disponible en este navegador</p>
+            <p>Catálogo, plantillas, diseños locales y exportación. Las plantillas siguen neutras: esta propuesta no mete el logotipo dentro de los diseños.</p>
+            <div class="links"><a href="https://orvupi.com/studio/">Abrir Studio</a></div>
+          </div>
         </article>
         <article class="card" id="ficha-sonar">
-          <h3>Sonar</h3>
-          <p class="estado"><i aria-hidden="true"></i> Lectura pública</p>
-          <p>Ranking, categorías, favoritos y el resto de la lectura de mercados. Una consulta puede fallar. Aquí no hay cotizaciones: los números viven en Sonar, con su fuente.</p>
-          <div class="links"><a href="https://orvupi.com/sonar/">Abrir Sonar</a><a href="https://orvupi.com/verify/">Abrir Verify</a></div>
+          <div class="card-face face-sonar"><span>Explorar</span><strong>Sonar</strong></div>
+          <div class="card-body">
+            <p class="uso">Mercados públicos. Verify es otra tarea.</p>
+            <p class="estado"><i aria-hidden="true"></i> Lectura pública</p>
+            <p>Ranking, categorías y favoritos. Una consulta puede fallar. Aquí no hay cotizaciones: los números viven en Sonar, con su fuente.</p>
+            <div class="links"><a href="https://orvupi.com/sonar/">Abrir Sonar</a><a href="https://orvupi.com/verify/">Abrir Verify</a></div>
+          </div>
         </article>
         <article class="card" id="ficha-academy">
-          <h3>Academy</h3>
-          <p class="estado"><i aria-hidden="true"></i> Disponible, sin cuenta</p>
-          <p>Artículos, rutas, prácticas, glosario y progreso local. Las rutas antiguas de Lab, Cuaderno, Pares, Comparar y Aprender siguen llevando a Academy.</p>
-          <div class="links"><a href="https://orvupi.com/academy/">Abrir Academy</a><a href="#aprender">Ver tareas</a></div>
+          <div class="card-face face-academy"><span>Aprender</span><strong>Academy</strong></div>
+          <div class="card-body">
+            <p class="uso">Artículos, rutas, prácticas y glosario. Sin cuenta.</p>
+            <p class="estado"><i aria-hidden="true"></i> Disponible, sin cuenta</p>
+            <p>El progreso se queda en el dispositivo. Las rutas antiguas de Lab, Cuaderno, Pares, Comparar y Aprender siguen llevando a Academy.</p>
+            <div class="links"><a href="https://orvupi.com/academy/">Abrir Academy</a><a href="#aprender">Ver tareas</a></div>
+          </div>
         </article>
         <article class="card" id="ficha-arqiven">
-          <h3>ARQIVEN</h3>
-          <p class="estado limite"><i aria-hidden="true"></i> Sin modelo propio</p>
-          <p>Puedes escribir en esta pestaña. No hay un modelo propio conectado. El texto se queda ahí hasta que lo guardes en Work. Proyectos sigue pendiente en la herramienta.</p>
-          <div class="links"><a href="https://orvupi.com/arqiven/">Abrir ARQIVEN</a></div>
+          <div class="card-face face-arqiven"><span>Escribir</span><strong>ARQIVEN</strong></div>
+          <div class="card-body">
+            <p class="uso">Una pestaña para escribir. Sin modelo propio.</p>
+            <p class="estado limite"><i aria-hidden="true"></i> Sin modelo propio</p>
+            <p>Puedes escribir en esta pestaña. No hay un modelo propio conectado. El texto se queda ahí hasta que lo guardes en Work. Proyectos sigue pendiente.</p>
+            <div class="links"><a href="https://orvupi.com/arqiven/">Abrir ARQIVEN</a></div>
+          </div>
         </article>
         <article class="card" id="ficha-verify">
-          <h3>Verify</h3>
-          <p class="estado"><i aria-hidden="true"></i> Entrada de Sonar</p>
-          <p>Verificación de una dirección. No es el ranking de mercados. Misma familia que Sonar, otra tarea.</p>
-          <div class="links"><a href="https://orvupi.com/verify/">Abrir Verify</a></div>
+          <div class="card-face face-verify"><span>Verificar</span><strong>Verify</strong></div>
+          <div class="card-body">
+            <p class="uso">Una dirección. No es el ranking de Sonar.</p>
+            <p class="estado"><i aria-hidden="true"></i> Entrada de Sonar</p>
+            <p>Misma familia que Sonar, otra tarea: comprobar una dirección, no recorrer el mercado.</p>
+            <div class="links"><a href="https://orvupi.com/verify/">Abrir Verify</a></div>
+          </div>
         </article>
       </div>
     </div>
@@ -512,14 +562,23 @@
         <p>Si quieres entender un concepto antes de usarlo, Academy está al lado. No hace falta comprar nada para abrir una herramienta local.</p>
       </div>
       <ol class="steps">
-        <li><strong>01</strong><h3>Elige</h3><p>Work, Studio, Sonar, Academy o ARQIVEN. El índice de arriba ya nombra cada una.</p></li>
+        <li><strong>01</strong><h3>Elige</h3><p>Crear, explorar, aprender o escribir. Las fichas de arriba nombran cada herramienta.</p></li>
         <li><strong>02</strong><h3>Abre</h3><p>Entras en la herramienta actual. Lo que guardes sigue en este navegador.</p></li>
         <li><strong>03</strong><h3>Aprende la tarea</h3><p>Una ruta, un término o una práctica. El progreso de Academy se queda en el dispositivo.</p></li>
       </ol>
-      <div class="cards" style="margin-top:1rem">
-        <article class="card"><h3>Ruta</h3><p>Primeros pasos, en orden.</p><div class="links"><a href="https://orvupi.com/academy/rutas/primeros-pasos/">Abrir la ruta</a></div></article>
-        <article class="card"><h3>Glosario</h3><p>Un término, con su definición.</p><div class="links"><a href="https://orvupi.com/academy/glosario/">Abrir el glosario</a></div></article>
-        <article class="card"><h3>Práctica</h3><p>El laboratorio distingue el ejercicio de una operación real.</p><div class="links"><a href="https://orvupi.com/academy/practicas/laboratorio/">Abrir el laboratorio</a></div></article>
+      <div class="cards later">
+        <article class="card">
+          <div class="card-face face-academy"><span>Tarea</span><strong>Ruta</strong></div>
+          <div class="card-body"><p class="uso">Primeros pasos, en orden.</p><div class="links"><a href="https://orvupi.com/academy/rutas/primeros-pasos/">Abrir la ruta</a></div></div>
+        </article>
+        <article class="card">
+          <div class="card-face face-academy"><span>Tarea</span><strong>Glosario</strong></div>
+          <div class="card-body"><p class="uso">Un término, con su definición.</p><div class="links"><a href="https://orvupi.com/academy/glosario/">Abrir el glosario</a></div></div>
+        </article>
+        <article class="card">
+          <div class="card-face face-academy"><span>Tarea</span><strong>Práctica</strong></div>
+          <div class="card-body"><p class="uso">El laboratorio distingue el ejercicio de una operación real.</p><div class="links"><a href="https://orvupi.com/academy/practicas/laboratorio/">Abrir el laboratorio</a></div></div>
+        </article>
       </div>
     </div>
   </section>
@@ -562,7 +621,7 @@
           <div class="links"><a href="https://orvupi.com/tablero/">Abrir Tablero</a></div>
         </article>
       </div>
-      <p style="margin:1.25rem 0 0"><a href="https://orvupi.com/vision/">Visión</a> · <a href="https://orvupi.com/methodology/">Metodología</a> · <a href="https://orvupi.com/marca/">Marca</a> · <a href="https://orvupi.com/security/">Seguridad</a> · <a href="https://orvupi.com/contribuir/">Contribuir</a></p>
+      <p class="more"><a href="https://orvupi.com/vision/">Visión</a> · <a href="https://orvupi.com/methodology/">Metodología</a> · <a href="https://orvupi.com/marca/">Marca</a> · <a href="https://orvupi.com/security/">Seguridad</a> · <a href="https://orvupi.com/contribuir/">Contribuir</a></p>
     </div>
   </section>
 
@@ -598,7 +657,7 @@
         <li><code>/work/</code><span>Work, con sus rutas profundas y los archivos locales.</span></li>
         <li><code>/studio/</code><span>Studio, catálogo, editor y exportaciones.</span></li>
         <li><code>/sonar/</code><span>Sonar, mercados y lectura pública.</span></li>
-        <li><code>/verify/</code><span>Verificación. Alias de entrada, no el ranking.</span></li>
+        <li><code>/verify/</code><span>Verificación. Entrada distinta del ranking.</span></li>
         <li><code>/academy/</code><span>Artículos, rutas, prácticas, glosario y progreso.</span></li>
         <li><code>/aprender/</code><span>Sigue hacia el glosario de Academy.</span></li>
         <li><code>/lab/</code><span>Sigue hacia la práctica de laboratorio.</span></li>
@@ -670,7 +729,7 @@
         </ul>
       </div>
     </div>
-    <p class="legal">© 2026 ORVUPI. Propuesta visual del 8 de noviembre de 2026. El producto publicado permanece como está hasta que Cristian autorice una versión concreta. Sin cuenta y sin conexión de cartera para usar las herramientas locales.</p>
+    <p class="legal">© 2026 ORVUPI. Propuesta visual revisada el 8 de noviembre de 2026. El producto publicado permanece como está hasta que Cristian autorice una versión concreta. Sin cuenta y sin conexión de cartera para usar las herramientas locales.</p>
   </div>
 </footer>
 <script>
@@ -720,34 +779,91 @@
   });
 
   var escena = document.getElementById("escena");
+  var video = document.getElementById("saludo");
   var estado = document.getElementById("estado-escena");
-  var mover = document.getElementById("mover");
+  var reproducir = document.getElementById("reproducir");
   var pausar = document.getElementById("pausar");
   var fija = document.getElementById("fija");
-  var quiere = false;
-  var pausaUsuario = true;
-  var visible = true;
   var reducido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  function pintar() {
-    var activo = quiere && !pausaUsuario && visible && !document.hidden;
-    escena.classList.toggle("is-on", activo);
-    if (activo) estado.textContent = "Movimiento suave: solo cambia la sombra del marco. No es un vídeo ni un saludo.";
-    else if (reducido && !quiere) estado.textContent = "Imagen fija. El movimiento reducido está activo; puedes activarlo si quieres.";
-    else estado.textContent = "Imagen fija. No hay un vídeo aprobado.";
-    mover.setAttribute("aria-pressed", activo ? "true" : "false");
+  var quiere = false;
+  var pausaUsuario = false;
+  var visible = true;
+  var fallo = false;
+
+  function decir(texto) { estado.textContent = texto; }
+  function cargar() {
+    if (video.getAttribute("src")) return;
+    video.src = video.getAttribute("data-src");
+    video.load();
   }
-  mover.addEventListener("click", function () { quiere = true; pausaUsuario = false; pintar(); });
-  pausar.addEventListener("click", function () { pausaUsuario = true; pintar(); });
-  fija.addEventListener("click", function () { quiere = false; pausaUsuario = true; pintar(); });
-  document.addEventListener("visibilitychange", pintar);
+  function puede() {
+    return quiere && !pausaUsuario && visible && !document.hidden && !fallo;
+  }
+  function aplicar() {
+    video.muted = true;
+    video.defaultMuted = true;
+    video.loop = true;
+    video.playsInline = true;
+    if (puede()) {
+      cargar();
+      video.autoplay = true;
+      var intento = video.play();
+      if (intento && intento.catch) {
+        intento.catch(function (err) {
+          if (!puede()) return;
+          if (err && err.name === "AbortError") return;
+          escena.classList.remove("is-playing");
+          decir("Imagen fija. Pulsa Reproducir saludo para verlo.");
+          reproducir.setAttribute("aria-pressed", "false");
+        });
+      }
+      escena.classList.add("is-playing");
+      decir("Saludo en reproducción, sin sonido. Puedes pausarlo.");
+      reproducir.setAttribute("aria-pressed", "true");
+    } else {
+      video.pause();
+      escena.classList.remove("is-playing");
+      reproducir.setAttribute("aria-pressed", "false");
+      if (fallo) decir("Imagen fija. El vídeo no se ha podido reproducir.");
+      else if (reducido && !quiere) decir("Imagen fija. El movimiento reducido está activo; puedes ver el saludo si quieres.");
+      else decir("Imagen fija. El saludo no está en marcha.");
+    }
+  }
+  video.addEventListener("error", function () {
+    fallo = true;
+    escena.classList.remove("is-playing");
+    decir("Imagen fija. El vídeo no se ha podido reproducir.");
+    reproducir.setAttribute("aria-pressed", "false");
+  });
+  reproducir.addEventListener("click", function () {
+    fallo = false;
+    quiere = true;
+    pausaUsuario = false;
+    aplicar();
+  });
+  pausar.addEventListener("click", function () {
+    pausaUsuario = true;
+    aplicar();
+  });
+  fija.addEventListener("click", function () {
+    quiere = false;
+    pausaUsuario = true;
+    aplicar();
+  });
+  document.addEventListener("visibilitychange", aplicar);
   if ("IntersectionObserver" in window) {
     var obs = new IntersectionObserver(function (entries) {
       visible = entries[0].isIntersecting;
-      pintar();
-    }, { threshold: 0.2 });
-    obs.observe(escena);
+      aplicar();
+    }, { threshold: 0 });
+    obs.observe(document.querySelector(".placa"));
   }
-  pintar();
+  if (!reducido) {
+    quiere = true;
+    aplicar();
+  } else {
+    decir("Imagen fija. El movimiento reducido está activo; puedes ver el saludo si quieres.");
+  }
 })();
 </script>
 </body>
