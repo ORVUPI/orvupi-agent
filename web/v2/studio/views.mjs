@@ -1347,8 +1347,18 @@ const CHIP_ICON = {
 const VIDEO_CATS = new Set(["video", "miniatura-youtube", "portada"]);
 
 function plantillasPool(ctx) {
-  const items = ctx.state.grupo ? thumbsForGrupo(ctx.state.grupo) : proThumbList();
-  return items.filter((item) => (item?.file || item?.pro) && item.category !== "meme");
+  if (ctx.state.grupo) {
+    return thumbsForGrupo(ctx.state.grupo).filter((item) => (item?.file || item?.pro) && item.category !== "meme");
+  }
+  // La cuadrícula usa las miniaturas con archivo (una imagen por pieza). Si una
+  // categoría no tiene archivo, entran las plantillas profesionales.
+  const items = [];
+  for (const cat of THUMB_CATS) {
+    if (cat.id === "meme") continue;
+    const files = legacyThumbsIn(cat.id).filter((item) => item?.file);
+    items.push(...(files.length ? files : proIn(cat.id)));
+  }
+  return items;
 }
 
 function vividFirst(list) {

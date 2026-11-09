@@ -1241,8 +1241,22 @@ function makeCtx() {
 
 let rendering = false;
 
+function parkDownload() {
+  const btn = document.getElementById("descargar");
+  const home = document.getElementById("studio-acciones");
+  if (btn && home && !home.contains(btn)) home.prepend(btn);
+}
+
+function showDownloadInMenu() {
+  if (!state.fileMenu) return;
+  const menu = document.getElementById("menu-archivo");
+  const btn = document.getElementById("descargar");
+  if (menu && btn) menu.prepend(btn);
+}
+
 function render() {
   rendering = true;
+  parkDownload();
   syncRouteFromHash();
   const path = location.pathname.replace(/\/+$/, "");
   if (routeFromHash(location.hash) === "creators" || path.endsWith("/creators")) {
@@ -1303,6 +1317,7 @@ function render() {
     if (dialog && !dialog.open) dialog.showModal();
   }
   syncChrome();
+  showDownloadInMenu();
   document.body?.classList.toggle("lib-sheet-open", Boolean(state.librarySheet || state.filterSheet || state.viewSheet || state.designSheet));
   rendering = false;
 }
@@ -2808,8 +2823,8 @@ function bindStage() {
     const resize = event.target.closest?.("[data-resize]");
     const cropEdge = event.target.closest?.("[data-crop-edge]");
     let capa = event.target.closest?.(".capa");
-    const art = event.target.closest?.(".stage-art") || (event.target.closest?.(".stage-sel") ? root.querySelector(".stage-frame .stage-art") : null);
-    if (!state.doc || !art) return;
+    const art = event.target.closest?.("#editor-app .stage-art") || (event.target.closest?.("#editor-app .stage-sel") ? root.querySelector(".stage-frame .stage-art") : null);
+    if (!state.doc || viewName() !== "editor" || !art) return;
     if (event.target.closest?.("[data-edit]")) return;
     // Tocar otra capa o el lienzo termina la edición del texto (si no, el foco vuelve al texto
     // y el siguiente botón de la barra se pierde en el re-render del focusout).

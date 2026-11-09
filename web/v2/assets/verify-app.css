@@ -91,7 +91,6 @@ body.verify-app main h1 { font-size: clamp(1.6rem, 3vw, 2.2rem); margin: 8px 0 1
 body.verify-app main > p.muted,
 body.verify-app main > p.aviso-fijo,
 body.verify-app details.como,
-body.verify-app details.tecnico,
 body.verify-app #ver-lectura-caida,
 body.verify-app p.source { display: none; }
 body.verify-app form.consulta {

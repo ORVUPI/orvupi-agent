@@ -241,7 +241,16 @@ jobs:
         run: |
           set -euo pipefail
           cd apps/work
-          npm ci
+          # onnxruntime-node descarga su binario en el postinstall. Un corte de red
+          # (ETIMEDOUT) tumba el job antes de las pruebas: se reintenta la instalación.
+          ok=0
+          for i in 1 2 3; do
+            if npm ci; then ok=1; break; fi
+            echo "npm ci intento $i fallido"
+            rm -rf node_modules
+            sleep 5
+          done
+          test "$ok" = 1
           npx vite build --base /work/ --outDir ../../web/v2/work --emptyOutDir
 
       - name: Install browsers
@@ -281,7 +290,18 @@ jobs:
           cache-dependency-path: apps/work/package-lock.json
 
       - name: Install
-        run: npm ci
+        run: |
+          set -euo pipefail
+          # onnxruntime-node descarga su binario en el postinstall. Un corte de red
+          # (ETIMEDOUT) tumba el job antes de las pruebas: se reintenta la instalación.
+          ok=0
+          for i in 1 2 3; do
+            if npm ci; then ok=1; break; fi
+            echo "npm ci intento $i fallido"
+            rm -rf node_modules
+            sleep 5
+          done
+          test "$ok" = 1
 
       - name: Typecheck
         run: npm run typecheck

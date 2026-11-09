@@ -326,16 +326,23 @@
     margin: 0;
     overflow: hidden;
   }
-  #editor-app > .editor-bar,
+  #editor-app > .editor-bar > :not(#abrir-archivo):not(#menu-archivo),
   #editor-app > .barra-inferior,
   #editor-app > .nota,
-  #editor-app .riel,
   #editor-app #panel-riel,
   #editor-app #inspector,
   #editor-app .pastilla-seleccion,
   #editor-app .escenario > .tb-wrap,
   #editor-app .escenario > .text-bar,
   #editor-app .escenario > .barra-texto { display: none !important; }
+  #editor-app > .editor-bar {
+    display: flex !important;
+    position: relative;
+    z-index: 70;
+    flex: 0 0 auto;
+    background: #fff;
+  }
+  #editor-app > .editor-bar > #menu-archivo { position: absolute; top: 44px; left: 8px; z-index: 71; }
   #editor-app > .editor {
     order: 2;
     flex: 1 1 auto;

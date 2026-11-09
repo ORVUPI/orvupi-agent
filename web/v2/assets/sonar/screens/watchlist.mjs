@@ -1,8 +1,8 @@
-import { api, qs } from "../api.mjs?v=bb985cb796";
-import { t } from "../i18n.mjs?v=bb985cb796";
-import { marketTabs, paintRanking } from "../rows.mjs?v=bb985cb796";
-import { activeList, exportJson, importJson, snapshot, uid, update } from "../store.mjs?v=bb985cb796";
-import { el, emptyBlock, errorBlock, pagedBlock, skeleton } from "../ui.mjs?v=bb985cb796";
+import { api, qs } from "../api.mjs?v=8ab0a08c1a";
+import { t } from "../i18n.mjs?v=8ab0a08c1a";
+import { marketTabs, paintRanking } from "../rows.mjs?v=8ab0a08c1a";
+import { activeList, exportJson, importJson, snapshot, uid, update } from "../store.mjs?v=8ab0a08c1a";
+import { el, emptyBlock, errorBlock, pagedBlock, skeleton } from "../ui.mjs?v=8ab0a08c1a";
 
 export async function mount(host, ctx) {
   const shared = (ctx.route.params.get("ids") || "").split(",").filter((id) => /^(?!.*\.\.)[A-Za-z0-9_-][A-Za-z0-9_.-]{0,119}$/.test(id));

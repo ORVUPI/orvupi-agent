@@ -3,7 +3,7 @@
  * Cadena real: si una fuente falla, se prueba la siguiente. No se rellenan cifras.
  * Coinbase, Kraken, Tronscan, el archivo de Binance Vision y la API de Blockscout con clave no se llaman.
  */
-import { fetchJson, fetchText, withCache } from "./http.mjs?v=bb985cb796";
+import { fetchJson, fetchText, withCache } from "./http.mjs?v=8ab0a08c1a";
 import {
   BINANCE_INTERVALS,
   binanceKlineUrl,
@@ -13,7 +13,7 @@ import {
   parseGeckoOhlcv,
   stepLabel,
   timeframeById,
-} from "./ohlcv.mjs?v=bb985cb796";
+} from "./ohlcv.mjs?v=8ab0a08c1a";
 
 const JSON_HEADERS = { accept: "application/json" };
 const GECKO_HEADERS = { accept: "application/json;version=20230203" };
@@ -82,12 +82,7 @@ function failed(provider, response, scope) {
   };
 }
 
-async function geckoTrending() {
-  // Vía nuestra función (caché 10 min): GeckoTerminal no envía CORS en sus 429.
-  const response = await fetchJson("/api/sonar/trending", { headers: JSON_HEADERS, attempts: 2 });
-  const list = response.body?.pools?.pools;
-  if (!response.ok || !Array.isArray(list)) return { ...failed("GeckoTerminal", response, "Pools en tendencia"), pools: [] };
-  const fetchedAt = response.body.pools.fetchedAt || response.fetchedAt;
+function packPools(list, fetchedAt) {
   const pools = [];
   for (const item of list) {
     if (!item?.address || !item?.name || !item?.network) continue;
@@ -96,8 +91,8 @@ async function geckoTrending() {
       address: String(item.address),
       network: String(item.network),
       reserveUsd: finite(item.reserveUsd),
-      volumeH24: finite(item.volume24h),
-      changeH24: finite(item.ch24h),
+      volumeH24: finite(item.volumeH24 ?? item.volume24h),
+      changeH24: finite(item.ch24h ?? item.changeH24),
       provider: "GeckoTerminal",
       fetchedAt,
     });
@@ -110,6 +105,42 @@ async function geckoTrending() {
     provider: "GeckoTerminal",
     scope: "Pools en tendencia",
   };
+}
+
+function poolFromGecko(row, fetchedAt) {
+  const attr = row?.attributes || {};
+  const address = attr.address;
+  const name = attr.name;
+  const network = row?.relationships?.network?.data?.id || String(row?.id || "").split("_")[0];
+  if (!address || !name || !network) return null;
+  return {
+    name: String(name),
+    address: String(address),
+    network: String(network),
+    reserveUsd: finite(attr.reserve_in_usd),
+    volumeH24: finite(attr.volume_usd?.h24),
+    changeH24: finite(attr.price_change_percentage?.h24),
+    fetchedAt,
+  };
+}
+
+async function geckoTrending() {
+  // Primero nuestra función. Si no está (la vista previa estática responde 404),
+  // una lectura directa a GeckoTerminal. No se usa DEX Screener aquí: esa fuente
+  // solo entra cuando alguien pide los pares de una dirección.
+  const response = await fetchJson("/api/sonar/trending", { headers: JSON_HEADERS, attempts: 2 });
+  const list = response.body?.pools?.pools;
+  if (response.ok && Array.isArray(list) && list.length) {
+    return packPools(list, response.body.pools.fetchedAt || response.fetchedAt);
+  }
+  if (Date.now() < gtDirectPausedUntil) return { ...failed("GeckoTerminal", response, "Pools en tendencia"), pools: [] };
+  const direct = await fetchJson(`${GT_DIRECT}/networks/trending_pools?page=1`, { headers: GECKO_HEADERS, attempts: 1 });
+  if (!direct.ok) {
+    gtDirectPausedUntil = Date.now() + 120000;
+    return { ...failed("GeckoTerminal", direct.ok ? response : direct, "Pools en tendencia"), pools: [] };
+  }
+  const pools = (direct.body?.data || []).slice(0, 20).map((row) => poolFromGecko(row, direct.fetchedAt)).filter(Boolean);
+  return packPools(pools, direct.fetchedAt);
 }
 
 function pairRow(pair, fetchedAt) {
@@ -161,15 +192,7 @@ async function dexProfiles() {
 }
 
 export async function fetchTrendingPools() {
-  return withCache("pools:trending", async () => {
-    const gecko = await geckoTrending();
-    if (gecko.ok) return gecko;
-    const search = await dexSearch();
-    if (search.ok) return search;
-    const profiles = await dexProfiles();
-    if (profiles.ok) return profiles;
-    return gecko.pools ? gecko : search;
-  });
+  return withCache("pools:trending", async () => geckoTrending());
 }
 
 export async function fetchPoolCandles(network, pool, timeframeId) {
