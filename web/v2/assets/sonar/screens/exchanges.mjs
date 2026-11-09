@@ -1,9 +1,9 @@
-import { api, qs } from "../api.mjs?v=8ab0a08c1a";
-import { compact, countryName, plain, show } from "../format.mjs?v=8ab0a08c1a";
-import { pageTitle, t } from "../i18n.mjs?v=8ab0a08c1a";
-import { parseRoute, setCrumb } from "../shell.mjs?v=8ab0a08c1a";
-import { snapshot } from "../store.mjs?v=8ab0a08c1a";
-import { el, emptyBlock, errorBlock, logo, pagedBlock, skeleton, sourceLine } from "../ui.mjs?v=8ab0a08c1a";
+import { api, qs } from "../api.mjs?v=b37c5e4e1c";
+import { compact, countryName, plain, show } from "../format.mjs?v=b37c5e4e1c";
+import { pageTitle, t } from "../i18n.mjs?v=b37c5e4e1c";
+import { parseRoute, setCrumb } from "../shell.mjs?v=b37c5e4e1c";
+import { snapshot } from "../store.mjs?v=b37c5e4e1c";
+import { el, emptyBlock, errorBlock, logo, pagedBlock, skeleton, sourceLine } from "../ui.mjs?v=b37c5e4e1c";
 
 export async function mount(host, ctx) {
   host.replaceChildren(skeleton(8));

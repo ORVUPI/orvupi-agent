@@ -1,7 +1,7 @@
-import { localeTag, priceNumber, when } from "./format.mjs?v=8ab0a08c1a";
-import { t } from "./i18n.mjs?v=8ab0a08c1a";
-import { PRICE_COMPARE, PRICE_DOWN, PRICE_INDICATOR, PRICE_UP, priceColor, seriesUp } from "./price-color.mjs?v=8ab0a08c1a";
-import { el } from "./ui.mjs?v=8ab0a08c1a";
+import { localeTag, priceNumber, when } from "./format.mjs?v=b37c5e4e1c";
+import { t } from "./i18n.mjs?v=b37c5e4e1c";
+import { PRICE_COMPARE, PRICE_DOWN, PRICE_INDICATOR, PRICE_UP, priceColor, seriesUp } from "./price-color.mjs?v=b37c5e4e1c";
+import { el } from "./ui.mjs?v=b37c5e4e1c";
 
 const SVG = "http://www.w3.org/2000/svg";
 let areaSeq = 0;
