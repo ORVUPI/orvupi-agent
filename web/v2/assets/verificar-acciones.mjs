@@ -2,11 +2,11 @@
  * Acciones de Verify hacia el cuaderno local.
  * La dirección no va en la consulta ni al servidor. Se guarda red y dirección en IndexedDB orvupi-cuaderno.
  */
-import { formatAmount } from "../shared/amount.js?v=b37c5e4e1c";
-import { ENTENDER, entenderNav } from "../shared/entender.js?v=b37c5e4e1c";
-import { notebookDbAll, notebookDbPut, openNotebookDb } from "../shared/notebook-db.js?v=b37c5e4e1c";
-import { cardDecimals, compareRecords, comparedSideText, comparisonSummary, curveComparisonValue, pickPrevious, staleLine, stampIdentity, supplyDirection, validateCard, withinStoreLimit } from "../shared/notebook-model.js?v=b37c5e4e1c";
-import { cardFromShown } from "../shared/solana-read.js?v=b37c5e4e1c";
+import { formatAmount } from "../shared/amount.js?v=63059e8a34";
+import { ENTENDER, entenderNav } from "../shared/entender.js?v=63059e8a34";
+import { notebookDbAll, notebookDbPut, openNotebookDb } from "../shared/notebook-db.js?v=63059e8a34";
+import { cardDecimals, compareRecords, comparedSideText, comparisonSummary, curveComparisonValue, pickPrevious, staleLine, stampIdentity, supplyDirection, validateCard, withinStoreLimit } from "../shared/notebook-model.js?v=63059e8a34";
+import { cardFromShown } from "../shared/solana-read.js?v=63059e8a34";
 
 const DB_NAME = "orvupi-cuaderno";
 

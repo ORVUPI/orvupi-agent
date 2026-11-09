@@ -3,7 +3,7 @@
  * Cadena real: si una fuente falla, se prueba la siguiente. No se rellenan cifras.
  * Coinbase, Kraken, Tronscan, el archivo de Binance Vision y la API de Blockscout con clave no se llaman.
  */
-import { fetchJson, fetchText, withCache } from "./http.mjs?v=b37c5e4e1c";
+import { fetchJson, fetchText, withCache } from "./http.mjs?v=63059e8a34";
 import {
   BINANCE_INTERVALS,
   binanceKlineUrl,
@@ -13,7 +13,7 @@ import {
   parseGeckoOhlcv,
   stepLabel,
   timeframeById,
-} from "./ohlcv.mjs?v=b37c5e4e1c";
+} from "./ohlcv.mjs?v=63059e8a34";
 
 const JSON_HEADERS = { accept: "application/json" };
 const GECKO_HEADERS = { accept: "application/json;version=20230203" };
@@ -130,21 +130,35 @@ function poolFromGecko(row, fetchedAt) {
   };
 }
 
+function pause(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function geckoTrending() {
   // Primero nuestra función. Si no está (la vista previa estática responde 404),
   // una lectura directa a GeckoTerminal. No se usa DEX Screener aquí: esa fuente
   // solo entra cuando alguien pide los pares de una dirección.
+  // Un 429 de GeckoTerminal llega sin CORS y el navegador lo ve como fallo de red.
+  // Se reintenta esa misma URL: la pausa de otra lectura no puede dejar los pools vacíos.
+  // Un tiempo límite agotado no se reintenta. Sin filas no se inventan pools.
   const response = await fetchJson("/api/sonar/trending", { headers: JSON_HEADERS, attempts: 2 });
   const list = response.body?.pools?.pools;
   if (response.ok && Array.isArray(list) && list.length) {
     return packPools(list, response.body.pools.fetchedAt || response.fetchedAt);
   }
-  if (Date.now() < gtDirectPausedUntil || !directGeckoOk()) return { ...failed("GeckoTerminal", response, "Pools en tendencia"), pools: [] };
-  const direct = await fetchJson(`${GT_DIRECT}/networks/trending_pools?page=1`, { headers: GECKO_HEADERS, attempts: 1 });
-  if (!direct.ok) {
-    gtDirectPausedUntil = Date.now() + 120000;
-    return { ...failed("GeckoTerminal", direct.ok ? response : direct, "Pools en tendencia"), pools: [] };
+  if (!directGeckoOk()) return { ...failed("GeckoTerminal", response, "Pools en tendencia"), pools: [] };
+  const url = `${GT_DIRECT}/networks/trending_pools?page=1`;
+  let direct = null;
+  for (const wait of [0, 1500, 4000]) {
+    if (wait) await pause(wait);
+    direct = await fetchJson(url, { headers: GECKO_HEADERS, attempts: 1 });
+    if (direct.ok || direct.error === "timeout") break;
   }
+  if (!direct?.ok) {
+    gtDirectPausedUntil = Date.now() + 120000;
+    return { ...failed("GeckoTerminal", direct || response, "Pools en tendencia"), pools: [] };
+  }
+  gtDirectPausedUntil = 0;
   const pools = (direct.body?.data || []).slice(0, 20).map((row) => poolFromGecko(row, direct.fetchedAt)).filter(Boolean);
   return packPools(pools, direct.fetchedAt);
 }
@@ -301,10 +315,12 @@ export async function fetchCoinOhlc(coinId, days = "1", frameId = "30m") {
   return withCache(`ohlc:${id}:${frame}:${days}`, async () => {
     const geckoPrice = await coingeckoCandles(id, days);
     if (geckoPrice.ok) return geckoPrice;
-    const pool = await geckoCoinCandles(id, frame === "30m" ? "15m" : frame);
-    if (pool.ok) return pool;
+    // Binance antes que GeckoTerminal: un 429 de GeckoTerminal no trae CORS y, si se
+    // pide primero, deja en pausa la lectura de pools que el recorrido de Sonar necesita.
     const exchange = await binanceCandles(id, frame);
     if (exchange.ok) return exchange;
+    const pool = await geckoCoinCandles(id, frame === "30m" ? "15m" : frame);
+    if (pool.ok) return pool;
     return geckoPrice.candles ? geckoPrice : exchange;
   });
 }

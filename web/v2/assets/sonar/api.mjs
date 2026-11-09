@@ -1,4 +1,4 @@
-import { publicSonar } from "./public-fallback.mjs?v=b37c5e4e1c";
+import { publicSonar } from "./public-fallback.mjs?v=63059e8a34";
 
 export async function api(path) {
   const response = await fetch(path, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(8000) });

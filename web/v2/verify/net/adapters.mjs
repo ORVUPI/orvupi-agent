@@ -1,10 +1,10 @@
 /**
  * Lecturas de red. El mercado vive en market.mjs. Sin claves, sin relleno y sin DeFiLlama.
  */
-import { fetchJson, withCache } from "./http.mjs?v=b37c5e4e1c";
-import { fetchEthereumActivity } from "./market.mjs?v=b37c5e4e1c";
-import { CHAINS, LIMITS, chainById, identify } from "./present.mjs?v=b37c5e4e1c";
-import { bondingCurvePda, decodeCurveAccount, decodeMintAccount } from "../../shared/solana-read.js?v=b37c5e4e1c";
+import { fetchJson, withCache } from "./http.mjs?v=63059e8a34";
+import { fetchEthereumActivity } from "./market.mjs?v=63059e8a34";
+import { CHAINS, LIMITS, chainById, identify } from "./present.mjs?v=63059e8a34";
+import { bondingCurvePda, decodeCurveAccount, decodeMintAccount } from "../../shared/solana-read.js?v=63059e8a34";
 
 export {
   fetchBitcoinOhlc,
@@ -17,7 +17,7 @@ export {
   fetchPoolTrades,
   fetchTopMarkets,
   fetchTrendingPools,
-} from "./market.mjs?v=b37c5e4e1c";
+} from "./market.mjs?v=63059e8a34";
 
 const TIMEOUT_MS = 8_000;
 const BROWSER = typeof window !== "undefined" && typeof document !== "undefined";

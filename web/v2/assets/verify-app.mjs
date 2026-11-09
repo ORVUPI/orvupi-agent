@@ -1,8 +1,8 @@
-import { fetchBitcoinQuote, fetchCoinOhlc, fetchDexSnapshot, fetchGlobalMarket, fetchLargeTransfers, fetchPoolCandles, fetchPoolTrades, fetchTopMarkets, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs?v=b37c5e4e1c";
-import { mountLiveChart } from "../verify/net/chart.mjs?v=b37c5e4e1c";
-import { COIN_FRAMES, POLL_MS, TIMEFRAMES, stepLabel } from "../verify/net/ohlcv.mjs?v=b37c5e4e1c";
-import { LIMITS, buildGraph, chainById, explorerHref, filterTransfers, formatUnits, groupSearch, identify, pager, slicePage, storageKeys, supportedIds, UNSUPPORTED } from "../verify/net/present.mjs?v=b37c5e4e1c";
-import { isOfficialAddress, OFFICIAL_ADDRESS } from "../shared/orvupi-contract.js?v=b37c5e4e1c";
+import { fetchBitcoinQuote, fetchCoinOhlc, fetchDexSnapshot, fetchGlobalMarket, fetchLargeTransfers, fetchPoolCandles, fetchPoolTrades, fetchTopMarkets, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs?v=63059e8a34";
+import { mountLiveChart } from "../verify/net/chart.mjs?v=63059e8a34";
+import { COIN_FRAMES, POLL_MS, TIMEFRAMES, stepLabel } from "../verify/net/ohlcv.mjs?v=63059e8a34";
+import { LIMITS, buildGraph, chainById, explorerHref, filterTransfers, formatUnits, groupSearch, identify, pager, slicePage, storageKeys, supportedIds, UNSUPPORTED } from "../verify/net/present.mjs?v=63059e8a34";
+import { isOfficialAddress, OFFICIAL_ADDRESS } from "../shared/orvupi-contract.js?v=63059e8a34";
 
 const KEYS = storageKeys();
 const PROJECT_WALLET = "GKpccLJwKArptzt9j897njXUx9RsV5NKL3Egu7bfMA6Q";
@@ -1039,12 +1039,27 @@ async function openTrace(address, chain = "solana") {
 function render() {
   const root = document.getElementById("vf-root");
   if (!root) return;
-  stopChart();
+  // Cada render recrea la vista. Si el gráfico sigue en la misma clave, se conserva
+  // el nodo: parar y montar de nuevo relanzaba la lectura de velas y la red no quedaba
+  // en reposo (la prueba de idioma espera networkidle).
+  const previous = document.getElementById("vf-chart-host");
+  const previousKey = previous && chartHandle ? chartKey() : "";
+  if (previous) previous.remove();
   const screens = { home, dex, tracer, visualizer, alertas: alerts, etiquetas: labels, paneles: panels, transfers: transfersPage, mercado: market, ficha, token: tokenView };
   const view = screens[state.screen] || home;
   const dialog = searchDialog();
   root.replaceChildren(view());
   if (dialog) root.append(dialog);
+  const slot = document.getElementById("vf-chart-host");
+  if (!slot) {
+    stopChart();
+    return;
+  }
+  if (previous && previousKey && previousKey === chartKey()) {
+    slot.replaceWith(previous);
+    return;
+  }
+  stopChart();
   ensureChart();
 }
 function openSearch() {
@@ -1144,7 +1159,7 @@ function boot() {
   if (market) {
     document.body.classList.add("sonar-market");
     document.getElementById("vf-root")?.replaceChildren(sonarLoading());
-    import("./sonar/shell.mjs?v=b37c5e4e1c").then((mod) => mod.start()).catch(healSonar);
+    import("./sonar/shell.mjs?v=63059e8a34").then((mod) => mod.start()).catch(healSonar);
     return;
   }
   const dock = document.createElement("nav");
