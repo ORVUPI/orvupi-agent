@@ -78,7 +78,7 @@ test("Nuevo abre otra pestaña y el doble clic de Drive también", async ({ page
   const doc = await opened;
   await expect(doc).toHaveURL(/\/document\/d\/[^/]+\/edit$/);
   await expect(doc).toHaveTitle(/ORVUPI Docs/);
-  await expect(doc.locator("link[rel='icon']")).toHaveAttribute("href", /favicons\/docs\.svg/);
+  await expect(doc.locator("link[rel='icon'][type='image/svg+xml']")).toHaveAttribute("href", /favicons\/docs\.svg/);
   await expect(page.getByRole("button", { name: /Sin título/ }).first()).toBeVisible();
   await page.getByRole("navigation", { name: "Secciones" }).getByRole("button", { name: "Mi unidad" }).click();
   const second = page.waitForEvent("popup");

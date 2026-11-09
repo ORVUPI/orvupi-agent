@@ -48,28 +48,29 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } },
     },
     // Firefox solo para Academy (H2): el resto de la web aún no se prueba en Gecko.
+    // La traza con capturas deja los elementos inestables en Firefox y los clics no terminan.
     {
       name: "academy-firefox",
       testMatch: /academy\.spec\.mjs$/,
-      use: { ...devices["Desktop Firefox"], viewport: { width: 1440, height: 900 } },
+      use: { ...devices["Desktop Firefox"], viewport: { width: 1440, height: 900 }, trace: "off" },
     },
     {
       name: "academy-firefox-mobile",
       testMatch: /academy\.spec\.mjs$/,
-      use: { ...devices["Desktop Firefox"], viewport: { width: 412, height: 915 } },
+      use: { ...devices["Desktop Firefox"], viewport: { width: 412, height: 915 }, trace: "off" },
     },
     // Firefox también para Studio (escritorio y móvil).
     {
       name: "studio-firefox",
       testMatch: /studio-.*\.spec\.mjs$/,
       testIgnore: /studio-todas-plantillas\.spec\.mjs$/,
-      use: { ...devices["Desktop Firefox"], viewport: { width: 1440, height: 900 } },
+      use: { ...devices["Desktop Firefox"], viewport: { width: 1440, height: 900 }, trace: "off" },
     },
     {
       name: "studio-firefox-mobile",
       testMatch: /studio-.*\.spec\.mjs$/,
       testIgnore: /studio-todas-plantillas\.spec\.mjs$/,
-      use: { ...devices["Desktop Firefox"], viewport: { width: 412, height: 915 } },
+      use: { ...devices["Desktop Firefox"], viewport: { width: 412, height: 915 }, trace: "off" },
     },
   ],
 });
