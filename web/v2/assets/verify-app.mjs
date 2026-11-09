@@ -1,8 +1,8 @@
-import { fetchBitcoinQuote, fetchCoinOhlc, fetchDexSnapshot, fetchGlobalMarket, fetchLargeTransfers, fetchPoolCandles, fetchPoolTrades, fetchTopMarkets, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs?v=e18c09d68b";
-import { mountLiveChart } from "../verify/net/chart.mjs?v=e18c09d68b";
-import { COIN_FRAMES, POLL_MS, TIMEFRAMES, stepLabel } from "../verify/net/ohlcv.mjs?v=e18c09d68b";
-import { LIMITS, buildGraph, chainById, explorerHref, filterTransfers, formatUnits, groupSearch, identify, pager, slicePage, storageKeys, supportedIds, UNSUPPORTED } from "../verify/net/present.mjs?v=e18c09d68b";
-import { isOfficialAddress, OFFICIAL_ADDRESS } from "../shared/orvupi-contract.js?v=e18c09d68b";
+import { fetchBitcoinQuote, fetchCoinOhlc, fetchDexSnapshot, fetchGlobalMarket, fetchLargeTransfers, fetchPoolCandles, fetchPoolTrades, fetchTopMarkets, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs?v=68f164cacb";
+import { mountLiveChart } from "../verify/net/chart.mjs?v=68f164cacb";
+import { COIN_FRAMES, POLL_MS, TIMEFRAMES, stepLabel } from "../verify/net/ohlcv.mjs?v=68f164cacb";
+import { LIMITS, buildGraph, chainById, explorerHref, filterTransfers, formatUnits, groupSearch, identify, pager, slicePage, storageKeys, supportedIds, UNSUPPORTED } from "../verify/net/present.mjs?v=68f164cacb";
+import { isOfficialAddress, OFFICIAL_ADDRESS } from "../shared/orvupi-contract.js?v=68f164cacb";
 
 const KEYS = storageKeys();
 const PROJECT_WALLET = "GKpccLJwKArptzt9j897njXUx9RsV5NKL3Egu7bfMA6Q";
@@ -1056,7 +1056,7 @@ function openSearch() {
 // Si Sonar Mercados no arranca (módulos de dos despliegues, almacenamiento local roto,
 // un bloqueo del navegador), se piden de nuevo los módulos a la red y se recarga una vez.
 // Si vuelve a fallar se muestra el motivo y un botón que reintenta de verdad.
-const SONAR_MODULES = ["api", "changes", "chart", "format", "i18n", "ia", "live", "price-color", "rows", "screens/boards", "screens/calendar", "screens/categories", "screens/coin", "screens/exchanges", "screens/markets", "screens/portfolio", "screens/watchlist", "shell", "store", "ui"];
+const SONAR_MODULES = ["api", "changes", "chart", "format", "i18n", "ia", "live", "price-color", "public-fallback", "rows", "screens/boards", "screens/calendar", "screens/categories", "screens/coin", "screens/exchanges", "screens/markets", "screens/portfolio", "screens/watchlist", "shell", "store", "ui"];
 const SONAR_HEAL_KEY = "orvupi.sonar.heal";
 function sonarLoading(message) {
   return h("div", { class: "vf-card sn-boot", role: "status", "aria-live": "polite" }, [
@@ -1144,7 +1144,7 @@ function boot() {
   if (market) {
     document.body.classList.add("sonar-market");
     document.getElementById("vf-root")?.replaceChildren(sonarLoading());
-    import("./sonar/shell.mjs?v=e18c09d68b").then((mod) => mod.start()).catch(healSonar);
+    import("./sonar/shell.mjs?v=68f164cacb").then((mod) => mod.start()).catch(healSonar);
     return;
   }
   const dock = document.createElement("nav");
@@ -1194,6 +1194,9 @@ function boot() {
   markNav(state.screen);
   const read = h("button", { type: "button", id: "vf-leer", onclick: () => investigate(document.getElementById("direccion-token")?.value, document.getElementById("red")?.value || "solana") }, t("Ficha", "Profile"));
   document.querySelector(".consulta-barra")?.append(read);
+  const mainEl = document.querySelector("main");
+  const siteHeader = document.querySelector("header.site");
+  if (mainEl && siteHeader && siteHeader.parentElement !== mainEl) mainEl.prepend(siteHeader);
   const slot = document.createElement("div");
   slot.id = "vf-search-slot";
   slot.className = "vf-search-slot";
@@ -1255,7 +1258,6 @@ function boot() {
     if (red && chain && [...red.options].some((option) => option.value === chain)) red.value = chain;
     investigate(address, chain || red?.value || "solana");
   }
-  loadLive();
 }
 function paintSheet() {
   let sheet = document.getElementById("vf-sheet");

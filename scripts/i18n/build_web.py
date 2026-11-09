@@ -143,7 +143,7 @@ def local_page(page, locale, prefix, cat, en_attrs, missing):
     def relink(m):
         href = m.group(2)
         first = href.lstrip("/").split("/")[0].split("#")[0].split("?")[0]
-        if href == "/" or href.startswith("/#") or href.startswith("/?") or first in PAGE_DIRS:
+        if href == "/" or href.startswith("/#") or href.startswith("/?") or first in PAGE_DIRS or first == "academy":
             return m.group(1) + "/" + prefix + href + m.group(3)
         return m.group(0)
     html = re.sub(r'(<a\s[^>]*href=")(/[^"]*)(")', relink, html)
@@ -186,6 +186,12 @@ def rewrites():
                 src = "/%s/%s/%s%s" % (pre, d, f.name, tail)
                 dst = "/%s/%s%s" % (d, f.name, "/:splat" if tail else "")
                 rules.append("%-48s %s 200" % (src, dst))
+    # Academy solo existe en español. La URL de cada idioma la sirve el mismo árbol
+    # para que el enlace del menú se quede en ese idioma.
+    for pre in PREFIXES:
+        rules.append("%-48s %s 200" % ("/%s/academy" % pre, "/academy/index.html"))
+        rules.append("%-48s %s 200" % ("/%s/academy/" % pre, "/academy/index.html"))
+        rules.append("%-48s %s 200" % ("/%s/academy/*" % pre, "/academy/:splat"))
     red = ROOT / "_redirects"
     txt = red.read_text()
     txt = re.sub(re.escape(RW_A) + r".*?" + re.escape(RW_B) + r"\n?", "", txt, flags=re.S)

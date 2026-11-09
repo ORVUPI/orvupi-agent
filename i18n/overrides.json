@@ -1669,5 +1669,15 @@
   "Fechar ARQIVEN",
   "ARQIVEN を閉じる",
   "ARQIVEN 닫기"
+ ],
+ "Download": [
+  "Exportar",
+  "ダウンロード",
+  "다운로드"
+ ],
+ "Plain text (.txt)": [
+  "TXT",
+  "Plain text (.txt)",
+  "Plain text (.txt)"
  ]
 }

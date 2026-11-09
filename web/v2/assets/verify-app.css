@@ -79,7 +79,9 @@ body.verify-app .vf-more button { color: #102032; width: 100%; text-align: left;
 body.verify-app .vf-jump { display: none; }
 body.verify-app .vf-dock { display: none; }
 body.verify-app main.wrap,
-body.verify-app main.wrap.estrecha { max-width: min(1180px, 100%); display: flex; flex-direction: column; }
+body.verify-app main.wrap.estrecha { max-width: none; width: 100%; display: flex; flex-direction: column; padding-left: 0; padding-right: 0; padding-top: 0; }
+body.verify-app main.wrap > header.site { width: 100%; margin: 0; }
+body.verify-app main.wrap > :not(header.site) { width: min(1180px, calc(100% - 24px)); margin-left: auto; margin-right: auto; }
 body.verify-app main > .aviso { order: 1; }
 body.verify-app main > h1 { order: 2; }
 body.verify-app .herramienta { display: contents; }

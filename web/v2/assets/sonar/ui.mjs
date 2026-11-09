@@ -1,6 +1,6 @@
-import { clock, clsPct, pct, show, when } from "./format.mjs?v=e18c09d68b";
-import { t } from "./i18n.mjs?v=e18c09d68b";
-import { finiteSeries, priceColor, seriesUp } from "./price-color.mjs?v=e18c09d68b";
+import { clock, clsPct, pct, show, when } from "./format.mjs?v=68f164cacb";
+import { t } from "./i18n.mjs?v=68f164cacb";
+import { finiteSeries, priceColor, seriesUp } from "./price-color.mjs?v=68f164cacb";
 
 export function el(tag, attrs, children) {
   const node = document.createElement(tag);

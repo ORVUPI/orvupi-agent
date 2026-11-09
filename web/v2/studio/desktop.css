@@ -18,9 +18,7 @@
   body.studio-standalone:has(.canva-home) {
     background: #fff;
   }
-  body.studio-standalone:has(.canva-home) header.site {
-    display: none !important;
-  }
+  /* El selector de idioma del sitio sigue en la cabecera: el escritorio no tiene otro. */
 
   .canva-home {
     --desk-rail: 112px;

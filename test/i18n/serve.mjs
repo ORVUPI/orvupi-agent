@@ -17,6 +17,13 @@ function rewrite(path) {
 }
 createServer(async (req, res) => {
   let path = rewrite(decodeURIComponent(new URL(req.url, "http://x").pathname));
+  // La vista previa estática no ejecuta las Pages Functions. Sonar ya cae a las
+  // fuentes públicas cuando esta respuesta no trae datos; no se inventan cifras.
+  if (path === "/api/sonar" || path.startsWith("/api/sonar/")) {
+    res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
+    res.end(JSON.stringify({ ok: false, error: "unavailable" }));
+    return;
+  }
   if (/^\/work\/(document|spreadsheets|presentation|forms|drawings|notes)\//.test(path)) path = "/work/";
   let f = await file(join(root, path));
   let status = 200;
