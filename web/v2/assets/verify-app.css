@@ -1,5 +1,5 @@
 /* ORVUPI Verify. Escritorio tipo Arkham; tablet y móvil con navegación propia. */
-html:has(body.verify-app) { overflow-x: clip; }
+html:has(body.verify-app) { overflow-x: clip; scroll-behavior: auto; }
 body.verify-app {
   background: #fff8ec;
   color: #102032;

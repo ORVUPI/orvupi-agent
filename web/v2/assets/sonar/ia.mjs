@@ -1,8 +1,8 @@
-import { api, qs } from "./api.mjs?v=63059e8a34";
-import { compact, money, pct, show, when } from "./format.mjs?v=63059e8a34";
-import { t } from "./i18n.mjs?v=63059e8a34";
-import { snapshot } from "./store.mjs?v=63059e8a34";
-import { el } from "./ui.mjs?v=63059e8a34";
+import { api, qs } from "./api.mjs?v=1ebc36b874";
+import { compact, money, pct, show, when } from "./format.mjs?v=1ebc36b874";
+import { t } from "./i18n.mjs?v=1ebc36b874";
+import { snapshot } from "./store.mjs?v=1ebc36b874";
+import { el } from "./ui.mjs?v=1ebc36b874";
 
 const facts = { screen: null, coin: null };
 

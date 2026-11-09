@@ -3,6 +3,7 @@
 @font-face{font-family:Inter;src:url(/fonts/Inter-SemiBold.woff2) format("woff2");font-weight:500 900;font-display:swap}
 :root{--ac-pink:#ff3070;--ac-pink-ink:#ad1645;--ac-pink-soft:#ffe7ef;--ac-pink-2:#fff0f5;--ac-cream:#fff8ec;--ac-ink:#102032;--ac-muted:#465365;--ac-line:#e3dccf;--ac-line-2:#cfc6b6;--ac-card:#fff;--ac-band:#fff0f5;--ac-hero:#ffe7ef;--ac-ok:#0b5d36;--ac-ok-bg:#dff3e8;--ac-mid:#7a4a00;--ac-mid-bg:#fff1d6;--ac-gem:#007960;--ac-round:"Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;--ac-font:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
 html[data-lang=es] .lang.en{display:none}
+html:has(body.ac){scroll-behavior:auto}
 body.ac{margin:0;background:var(--ac-cream);color:var(--ac-ink);font:400 16px/1.5 var(--ac-font);-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body.ac *,body.ac *::before,body.ac *::after{box-sizing:border-box}
 body.ac img{max-width:100%;height:auto;display:block}
@@ -352,8 +353,11 @@ body.ac .ac-lab h3{font-size:22px;line-height:30px;margin:24px 0 8px}
 }
 @media (max-width:767px){
  header.site.ac-nav{padding:0 16px;gap:8px}
- .ac-right{gap:4px}
+ .ac-right{gap:4px;min-width:0}
  .ac-right .ac-search{display:none}
+ header.site.ac-nav .langpick summary{padding:0 8px;min-height:36px}
+ header.site.ac-nav .langpick summary span[lang]{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+ .ac-right:has(.langpick) .ac-btn.pink{display:none}
  .ac-c,.ac-c-n{padding:0 16px}
  .ac-promo{flex-direction:column;gap:8px;min-height:98px;padding:12px 16px}
  .ac-hero{padding:20px 0 40px}

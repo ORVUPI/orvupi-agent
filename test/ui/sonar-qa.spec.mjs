@@ -171,7 +171,11 @@ test("recorre Sonar sin errores de la aplicación", async ({ page }, info) => {
     await page.mouse.down();
     await page.mouse.move(box.x + 80, box.y + 70);
     await page.mouse.up();
-    await page.mouse.wheel(0, -120);
+    if (info.project.name === "mobile-webkit") {
+      await graph.dispatchEvent("wheel", { deltaY: -120, bubbles: true, cancelable: true });
+    } else {
+      await page.mouse.wheel(0, -120);
+    }
     await graph.evaluate((el) => {
       const down = (id, x, y) => el.dispatchEvent(new PointerEvent("pointerdown", { pointerId: id, clientX: x, clientY: y, bubbles: true }));
       const move = (id, x, y) => el.dispatchEvent(new PointerEvent("pointermove", { pointerId: id, clientX: x, clientY: y, bubbles: true }));

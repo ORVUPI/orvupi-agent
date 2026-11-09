@@ -1,8 +1,8 @@
-import { fetchBitcoinQuote, fetchCoinOhlc, fetchDexSnapshot, fetchGlobalMarket, fetchLargeTransfers, fetchPoolCandles, fetchPoolTrades, fetchTopMarkets, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs?v=63059e8a34";
-import { mountLiveChart } from "../verify/net/chart.mjs?v=63059e8a34";
-import { COIN_FRAMES, POLL_MS, TIMEFRAMES, stepLabel } from "../verify/net/ohlcv.mjs?v=63059e8a34";
-import { LIMITS, buildGraph, chainById, explorerHref, filterTransfers, formatUnits, groupSearch, identify, pager, slicePage, storageKeys, supportedIds, UNSUPPORTED } from "../verify/net/present.mjs?v=63059e8a34";
-import { isOfficialAddress, OFFICIAL_ADDRESS } from "../shared/orvupi-contract.js?v=63059e8a34";
+import { fetchBitcoinQuote, fetchCoinOhlc, fetchDexSnapshot, fetchGlobalMarket, fetchLargeTransfers, fetchPoolCandles, fetchPoolTrades, fetchTopMarkets, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs?v=1ebc36b874";
+import { mountLiveChart } from "../verify/net/chart.mjs?v=1ebc36b874";
+import { COIN_FRAMES, POLL_MS, TIMEFRAMES, stepLabel } from "../verify/net/ohlcv.mjs?v=1ebc36b874";
+import { LIMITS, buildGraph, chainById, explorerHref, filterTransfers, formatUnits, groupSearch, identify, pager, slicePage, storageKeys, supportedIds, UNSUPPORTED } from "../verify/net/present.mjs?v=1ebc36b874";
+import { isOfficialAddress, OFFICIAL_ADDRESS } from "../shared/orvupi-contract.js?v=1ebc36b874";
 
 const KEYS = storageKeys();
 const PROJECT_WALLET = "GKpccLJwKArptzt9j897njXUx9RsV5NKL3Egu7bfMA6Q";
@@ -770,7 +770,7 @@ function dex() {
   const rows = state.pools.filter((pool) => !state.query || `${pool.name} ${pool.address}`.toLowerCase().includes(state.query.toLowerCase()));
   const window = slicePage(rows, pageOf("dex"));
   return h("section", { class: "vf-card" }, [
-    h("div", { class: "vf-row" }, [h("h2", {}, "DEX"), window.total ? pagerBar("dex", window) : null]),
+    h("div", { class: "vf-row" }, [h("h2", {}, "DEX"), state.quote?.network ? networkCell(state.quote.network) : null, window.total ? pagerBar("dex", window) : null]),
     poolTable(window.rows.length ? window.rows : state.pools),
     sourceLine(state.poolMeta?.provider, state.poolMeta?.fetchedAt, state.poolMeta?.scope, state.poolMeta?.stale),
   ]);
@@ -1036,6 +1036,10 @@ async function openTrace(address, chain = "solana") {
   }
   render();
 }
+function renderLive() {
+  if (state.screen === "alertas" || state.screen === "etiquetas") return;
+  render();
+}
 function render() {
   const root = document.getElementById("vf-root");
   if (!root) return;
@@ -1159,7 +1163,7 @@ function boot() {
   if (market) {
     document.body.classList.add("sonar-market");
     document.getElementById("vf-root")?.replaceChildren(sonarLoading());
-    import("./sonar/shell.mjs?v=63059e8a34").then((mod) => mod.start()).catch(healSonar);
+    import("./sonar/shell.mjs?v=1ebc36b874").then((mod) => mod.start()).catch(healSonar);
     return;
   }
   const dock = document.createElement("nav");
@@ -1303,7 +1307,7 @@ async function loadLive() {
   } catch {
     state.markets = { ok: false, coins: [], provider: "CoinGecko", fetchedAt: new Date().toISOString() };
   }
-  render();
+  renderLive();
   try {
     state.poolMeta = await fetchTrendingPools();
     state.pools = state.poolMeta.pools || [];
@@ -1312,7 +1316,7 @@ async function loadLive() {
     state.poolMeta = { ok: false, pools: [], provider: "GeckoTerminal", fetchedAt: new Date().toISOString() };
     state.pools = [];
   }
-  render();
+  renderLive();
   try {
     for (const pool of (state.pools || []).slice(0, 6)) {
       if (!pool?.address) continue;
@@ -1331,21 +1335,21 @@ async function loadLive() {
   } catch {
     state.liveTrades = state.liveTrades || { ok: false, rows: [], provider: "", fetchedAt: new Date().toISOString() };
   }
-  render();
+  renderLive();
   try {
     state.global = await fetchGlobalMarket();
     if (!state.quote?.ok) state.quote = await fetchBitcoinQuote();
   } catch {
     state.global = state.global || { ok: false };
   }
-  render();
+  renderLive();
   await traceJob;
   try {
     if (!state.dossier || state.dossier.address !== OFFICIAL_ADDRESS) state.dossier = await readAddress("solana", OFFICIAL_ADDRESS, { activity: false });
   } catch {
     state.dossier = { ok: false, address: OFFICIAL_ADDRESS, chain: "solana", facts: [], transfers: [], largest: [], message: t("La lectura no salió.", "The read did not complete.") };
   }
-  render();
+  renderLive();
 }
 
 if (document.body.classList.contains("verify-app")) boot();
