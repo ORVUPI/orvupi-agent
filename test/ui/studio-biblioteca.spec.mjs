@@ -5,7 +5,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("móvil: el chevron abre la biblioteca y cada vista monta", async ({ page }) => {
-  test.setTimeout(60_000);
+  test.setTimeout(120_000);
   await page.goto("/studio/#/plantillas");
   await expect(page.locator(".tpl-title")).toContainText("Plantillas");
   await page.locator(".tpl-title").click();

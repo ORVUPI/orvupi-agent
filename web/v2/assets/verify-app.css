@@ -462,6 +462,10 @@ body.verify-app .vf-more > summary {
   transition: none;
   background: transparent;
 }
+body.verify-app .vf-nav button,
+body.verify-app .vf-more > summary {
+  color: #0d1628;
+}
 body.verify-app .vf-nav button:hover,
 body.verify-app .vf-dock button:hover,
 body.verify-app .vf-more > summary:hover { background: #1c2530; color: #fff; }
