@@ -3,7 +3,7 @@
  * Solana sigue el camino de siempre. Base, Ethereum y BNB Chain
  * usan el lector genérico. La lista vive en networks.json.
  */
-import { EVM_MAX_BODY, normalizeEvmAddress, readCappedText, readEvmToken, resetEvmClientLimit } from "../shared/evm-read.js?v=8ab0a08c1a";
+import { EVM_MAX_BODY, normalizeEvmAddress, readCappedText, readEvmToken, resetEvmClientLimit } from "../shared/evm-read.js?v=b37c5e4e1c";
 import {
   fillNetworkSelect,
   pageLede,
@@ -11,9 +11,9 @@ import {
   paintEvmResult,
   privacyText,
   syncNetworkLabels,
-} from "../shared/evm-view.js?v=8ab0a08c1a";
-import { openNotebookDb } from "../shared/notebook-db.js?v=8ab0a08c1a";
-import { stampIdentity, validateAnyCard, withinStoreLimit } from "../shared/notebook-model.js?v=8ab0a08c1a";
+} from "../shared/evm-view.js?v=b37c5e4e1c";
+import { openNotebookDb } from "../shared/notebook-db.js?v=b37c5e4e1c";
+import { stampIdentity, validateAnyCard, withinStoreLimit } from "../shared/notebook-model.js?v=b37c5e4e1c";
 
 const CACHE_MS = 60_000;
 const cache = new Map();
@@ -131,7 +131,7 @@ function saySaved(card) {
     ? "Saved in this browser's Notebook · "
     : "Guardada en el Cuaderno de este navegador · ";
   const link = document.createElement("a");
-  link.href = "/cuaderno/";
+  link.href = "/academy/mi-aprendizaje/cuaderno/";
   link.textContent = lang() === "en" ? "Open Notebook" : "Abrir Cuaderno";
   p.append(lead, link);
   node.append(p);

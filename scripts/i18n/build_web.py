@@ -187,11 +187,13 @@ def rewrites():
             src = "/:lang/%s/%s%s" % (d, f.name, tail)
             dst = "/%s/%s%s" % (d, f.name, "/:splat" if tail else "")
             rules.append("%-48s %s 200" % (src, dst))
-    # Academy solo existe en español. La URL de cada idioma la sirve el mismo árbol
-    # para que el enlace del menú se quede en ese idioma.
-    rules.append("%-48s %s 200" % ("/:lang/academy", "/academy/index.html"))
-    rules.append("%-48s %s 200" % ("/:lang/academy/", "/academy/index.html"))
-    rules.append("%-48s %s 200" % ("/:lang/academy/*", "/academy/:splat"))
+    # Academy solo existe en español. Cada idioma sirve ese mismo árbol.
+    # Las reglas van por idioma concreto: una destino «:splat» sin sustituir
+    # no es una página y la prueba de redirecciones la pediría tal cual.
+    for pre in PREFIXES:
+        rules.append("%-48s %s 200" % ("/%s/academy" % pre, "/academy/index.html"))
+        rules.append("%-48s %s 200" % ("/%s/academy/" % pre, "/academy/index.html"))
+        rules.append("%-48s %s 200" % ("/%s/academy/*" % pre, "/academy/:splat"))
     red = ROOT / "_redirects"
     txt = red.read_text()
     txt = re.sub(re.escape(RW_A) + r".*?" + re.escape(RW_B) + r"\n?", "", txt, flags=re.S)

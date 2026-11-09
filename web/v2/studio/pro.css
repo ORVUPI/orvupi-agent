@@ -337,12 +337,31 @@
   #editor-app .escenario > .barra-texto { display: none !important; }
   #editor-app > .editor-bar {
     display: flex !important;
-    position: relative;
+    position: absolute;
     z-index: 70;
-    flex: 0 0 auto;
-    background: #fff;
+    top: 0;
+    left: 0;
+    background: transparent;
+    pointer-events: none;
   }
+  #editor-app > .editor-bar > #abrir-archivo,
+  #editor-app > .editor-bar > #menu-archivo { pointer-events: auto; }
   #editor-app > .editor-bar > #menu-archivo { position: absolute; top: 44px; left: 8px; z-index: 71; }
+  #editor-app .riel {
+    position: absolute;
+    z-index: 4;
+    left: 0;
+    right: 0;
+    top: auto;
+    bottom: 78px;
+    height: 56px;
+    width: auto;
+    display: flex;
+    flex-direction: row;
+    overflow: auto;
+  }
+  #editor-app .m-chrome .m-bar,
+  #editor-app .m-chrome .m-top { position: relative; z-index: 20; }
   #editor-app > .editor {
     order: 2;
     flex: 1 1 auto;

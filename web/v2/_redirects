@@ -153,7 +153,16 @@ https://superb-horse-9036f5.netlify.app/*  https://orvupi.com/:splat  301!
 /:lang/verify/favicon-32.png                     /verify/favicon-32.png 200
 /:lang/verify/manifest.webmanifest               /verify/manifest.webmanifest 200
 /:lang/verify/net/*                              /verify/net/:splat 200
-/:lang/academy                                   /academy/index.html 200
-/:lang/academy/                                  /academy/index.html 200
-/:lang/academy/*                                 /academy/:splat 200
+/en/academy                                      /academy/index.html 200
+/en/academy/                                     /academy/index.html 200
+/en/academy/*                                    /academy/:splat 200
+/pt-br/academy                                   /academy/index.html 200
+/pt-br/academy/                                  /academy/index.html 200
+/pt-br/academy/*                                 /academy/:splat 200
+/ja/academy                                      /academy/index.html 200
+/ja/academy/                                     /academy/index.html 200
+/ja/academy/*                                    /academy/:splat 200
+/ko/academy                                      /academy/index.html 200
+/ko/academy/                                     /academy/index.html 200
+/ko/academy/*                                    /academy/:splat 200
 # /i18n:rewrites

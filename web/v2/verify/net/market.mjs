@@ -3,7 +3,7 @@
  * Cadena real: si una fuente falla, se prueba la siguiente. No se rellenan cifras.
  * Coinbase, Kraken, Tronscan, el archivo de Binance Vision y la API de Blockscout con clave no se llaman.
  */
-import { fetchJson, fetchText, withCache } from "./http.mjs?v=8ab0a08c1a";
+import { fetchJson, fetchText, withCache } from "./http.mjs?v=b37c5e4e1c";
 import {
   BINANCE_INTERVALS,
   binanceKlineUrl,
@@ -13,11 +13,17 @@ import {
   parseGeckoOhlcv,
   stepLabel,
   timeframeById,
-} from "./ohlcv.mjs?v=8ab0a08c1a";
+} from "./ohlcv.mjs?v=b37c5e4e1c";
 
 const JSON_HEADERS = { accept: "application/json" };
 const GECKO_HEADERS = { accept: "application/json;version=20230203" };
 const GT_DIRECT = "https://api.geckoterminal.com/api/v2";
+// WebKit convierte un fallo de CORS en un error de página. La vista previa estática
+// no tiene /api/sonar; en ese navegador no se llama a GeckoTerminal en directo.
+function directGeckoOk() {
+  const ua = typeof navigator === "undefined" ? "" : navigator.userAgent || "";
+  return !/WebKit/i.test(ua) || /Chrome|Chromium/i.test(ua);
+}
 let gtDirectPausedUntil = 0;
 const BINANCE_ORIGINS = ["https://data-api.binance.vision", "https://api.binance.com"];
 const BTC_APIS = ["https://mempool.space", "https://blockstream.info"];
@@ -52,7 +58,7 @@ async function geckoRead(proxyUrl, directPath, pickProxy, pickDirect) {
   const proxied = await fetchJson(proxyUrl, { headers: JSON_HEADERS, attempts: 2 });
   const list = proxied.ok ? pickProxy(proxied.body) : null;
   if (Array.isArray(list) && list.length) return { response: proxied, list };
-  if (Date.now() < gtDirectPausedUntil) return { response: proxied, list: [] };
+  if (Date.now() < gtDirectPausedUntil || !directGeckoOk()) return { response: proxied, list: [] };
   const direct = await fetchJson(GT_DIRECT + directPath, { headers: GECKO_HEADERS, attempts: 1 });
   if (!direct.ok) {
     gtDirectPausedUntil = Date.now() + 120000;
@@ -133,7 +139,7 @@ async function geckoTrending() {
   if (response.ok && Array.isArray(list) && list.length) {
     return packPools(list, response.body.pools.fetchedAt || response.fetchedAt);
   }
-  if (Date.now() < gtDirectPausedUntil) return { ...failed("GeckoTerminal", response, "Pools en tendencia"), pools: [] };
+  if (Date.now() < gtDirectPausedUntil || !directGeckoOk()) return { ...failed("GeckoTerminal", response, "Pools en tendencia"), pools: [] };
   const direct = await fetchJson(`${GT_DIRECT}/networks/trending_pools?page=1`, { headers: GECKO_HEADERS, attempts: 1 });
   if (!direct.ok) {
     gtDirectPausedUntil = Date.now() + 120000;

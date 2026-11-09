@@ -1,8 +1,8 @@
-import { fetchBitcoinQuote, fetchCoinOhlc, fetchDexSnapshot, fetchGlobalMarket, fetchLargeTransfers, fetchPoolCandles, fetchPoolTrades, fetchTopMarkets, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs?v=8ab0a08c1a";
-import { mountLiveChart } from "../verify/net/chart.mjs?v=8ab0a08c1a";
-import { COIN_FRAMES, POLL_MS, TIMEFRAMES, stepLabel } from "../verify/net/ohlcv.mjs?v=8ab0a08c1a";
-import { LIMITS, buildGraph, chainById, explorerHref, filterTransfers, formatUnits, groupSearch, identify, pager, slicePage, storageKeys, supportedIds, UNSUPPORTED } from "../verify/net/present.mjs?v=8ab0a08c1a";
-import { isOfficialAddress, OFFICIAL_ADDRESS } from "../shared/orvupi-contract.js?v=8ab0a08c1a";
+import { fetchBitcoinQuote, fetchCoinOhlc, fetchDexSnapshot, fetchGlobalMarket, fetchLargeTransfers, fetchPoolCandles, fetchPoolTrades, fetchTopMarkets, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs?v=b37c5e4e1c";
+import { mountLiveChart } from "../verify/net/chart.mjs?v=b37c5e4e1c";
+import { COIN_FRAMES, POLL_MS, TIMEFRAMES, stepLabel } from "../verify/net/ohlcv.mjs?v=b37c5e4e1c";
+import { LIMITS, buildGraph, chainById, explorerHref, filterTransfers, formatUnits, groupSearch, identify, pager, slicePage, storageKeys, supportedIds, UNSUPPORTED } from "../verify/net/present.mjs?v=b37c5e4e1c";
+import { isOfficialAddress, OFFICIAL_ADDRESS } from "../shared/orvupi-contract.js?v=b37c5e4e1c";
 
 const KEYS = storageKeys();
 const PROJECT_WALLET = "GKpccLJwKArptzt9j897njXUx9RsV5NKL3Egu7bfMA6Q";
@@ -431,7 +431,7 @@ function home() {
     h("div", { class: "vf-stack" }, [
       chartCard(),
       h("section", { class: "vf-card" }, [
-        h("div", { class: "vf-row" }, [h("h2", {}, t("Mercado", "Market"))]),
+        h("div", { class: "vf-row" }, [h("h2", {}, t("Mercado", "Market")), state.quote?.network ? networkCell(state.quote.network) : null]),
         coinCards(),
         sourceLine(state.markets?.provider, state.markets?.fetchedAt, state.markets?.scope, state.markets?.stale),
       ]),
@@ -1144,7 +1144,7 @@ function boot() {
   if (market) {
     document.body.classList.add("sonar-market");
     document.getElementById("vf-root")?.replaceChildren(sonarLoading());
-    import("./sonar/shell.mjs?v=8ab0a08c1a").then((mod) => mod.start()).catch(healSonar);
+    import("./sonar/shell.mjs?v=b37c5e4e1c").then((mod) => mod.start()).catch(healSonar);
     return;
   }
   const dock = document.createElement("nav");
