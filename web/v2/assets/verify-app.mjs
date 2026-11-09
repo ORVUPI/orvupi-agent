@@ -1,8 +1,8 @@
-import { fetchBitcoinQuote, fetchCoinOhlc, fetchDexSnapshot, fetchGlobalMarket, fetchLargeTransfers, fetchPoolCandles, fetchPoolTrades, fetchTopMarkets, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs?v=9f09541910";
-import { mountLiveChart } from "../verify/net/chart.mjs?v=9f09541910";
-import { COIN_FRAMES, POLL_MS, TIMEFRAMES, stepLabel } from "../verify/net/ohlcv.mjs?v=9f09541910";
-import { LIMITS, buildGraph, chainById, explorerHref, filterTransfers, formatUnits, groupSearch, identify, pager, slicePage, storageKeys, supportedIds, UNSUPPORTED } from "../verify/net/present.mjs?v=9f09541910";
-import { isOfficialAddress, OFFICIAL_ADDRESS } from "../shared/orvupi-contract.js?v=9f09541910";
+import { fetchBitcoinQuote, fetchCoinOhlc, fetchDexSnapshot, fetchGlobalMarket, fetchLargeTransfers, fetchPoolCandles, fetchPoolTrades, fetchTopMarkets, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs?v=e18c09d68b";
+import { mountLiveChart } from "../verify/net/chart.mjs?v=e18c09d68b";
+import { COIN_FRAMES, POLL_MS, TIMEFRAMES, stepLabel } from "../verify/net/ohlcv.mjs?v=e18c09d68b";
+import { LIMITS, buildGraph, chainById, explorerHref, filterTransfers, formatUnits, groupSearch, identify, pager, slicePage, storageKeys, supportedIds, UNSUPPORTED } from "../verify/net/present.mjs?v=e18c09d68b";
+import { isOfficialAddress, OFFICIAL_ADDRESS } from "../shared/orvupi-contract.js?v=e18c09d68b";
 
 const KEYS = storageKeys();
 const PROJECT_WALLET = "GKpccLJwKArptzt9j897njXUx9RsV5NKL3Egu7bfMA6Q";
@@ -1144,7 +1144,7 @@ function boot() {
   if (market) {
     document.body.classList.add("sonar-market");
     document.getElementById("vf-root")?.replaceChildren(sonarLoading());
-    import("./sonar/shell.mjs?v=9f09541910").then((mod) => mod.start()).catch(healSonar);
+    import("./sonar/shell.mjs?v=e18c09d68b").then((mod) => mod.start()).catch(healSonar);
     return;
   }
   const dock = document.createElement("nav");
@@ -1203,6 +1203,8 @@ function boot() {
   document.addEventListener("submit", (event) => {
     const form = event.target;
     if (!form || form.id !== "consulta") return;
+    // En /verify/ el formulario sigue siendo la lectura clásica. Sonar solo lo toma en /sonar/.
+    if (!/\/sonar(\/|$)/.test(location.pathname)) return;
     event.preventDefault();
     event.stopPropagation();
     investigate(document.getElementById("direccion-token")?.value, document.getElementById("red")?.value || "solana");

@@ -57,11 +57,11 @@
     if (!input.value && fromFragment) input.value = fromFragment;
     if (asked && EVM.test(fromFragment)) window.orvupiRedPedida = asked;
     scrubAddress();
-    document.querySelectorAll('a[href^="/aprender/"]').forEach(function (link) {
+    document.querySelectorAll('a[href^="/aprender/"], a[href^="/academy/glosario/"]').forEach(function (link) {
       link.addEventListener("click", function () {
         var value = String(input.value || "").trim();
         if (!BASE58.test(value)) return;
-        link.setAttribute("href", withAddress(link.getAttribute("href") || "/aprender/", value));
+        link.setAttribute("href", withAddress(link.getAttribute("href") || "/academy/glosario/", value));
       });
     });
     return;

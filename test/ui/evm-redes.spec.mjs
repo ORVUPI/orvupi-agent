@@ -172,7 +172,7 @@ async function choose(page, network) {
   await page.goto("/verify/");
   await expect(page.locator("#red")).toHaveValue("solana");
   const values = await page.locator("#red option").evaluateAll((nodes) => nodes.map((node) => node.value));
-  expect(values).toEqual(["solana", "base", "ethereum", "bnb"]);
+  expect(values).toEqual(["solana", "base", "ethereum", "bnb", "arbitrum", "polygon", "optimism", "avalanche", "bitcoin", "tron"]);
   await page.locator("#red").selectOption(network);
   await expectNotice(page, network, "es");
   await expect(page.locator("main .lede .lang.es")).toHaveText(LEDE[network].es);

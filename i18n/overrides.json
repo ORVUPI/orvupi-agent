@@ -1,235 +1,1673 @@
 {
-"_nota": "Traducciones escritas a mano para los términos más visibles. Prevalecen sobre el borrador automático. Formato: inglés -> [pt-BR, ja, ko]. Pendientes de revisión por hablante nativo.",
-"Collections": ["Coleções", "コレクション", "컬렉션"],
-"Collection": ["Coleção", "コレクション", "컬렉션"],
-"Explore all 250 images": ["Explore as 250 imagens", "250枚すべての画像を見る", "이미지 250개 모두 보기"],
-"IMAGES": ["IMAGENS", "画像", "이미지"],
-"Home": ["Início", "ホーム", "홈"],
-"Tools": ["Ferramentas", "ツール", "도구"],
-"Work": ["Work", "Work", "Work"],
-"Memes": ["Memes", "ミーム", "밈"],
-"Community": ["Comunidade", "コミュニティ", "커뮤니티"],
-"Vision": ["Visão", "ビジョン", "비전"],
-"ORVUPI token": ["Token ORVUPI", "ORVUPI トークン", "ORVUPI 토큰"],
-"Explore everything": ["Explorar tudo", "すべて見る", "전체 둘러보기"],
-"Verify": ["Verify", "Verify", "Verify"],
-"Lab": ["Lab", "Lab", "Lab"],
-"Studio": ["Studio", "Studio", "Studio"],
-"Notebook": ["Caderno", "ノート", "노트"],
-"Board": ["Painel", "ボード", "보드"],
-"Curve": ["Curva", "カーブ", "커브"],
-"Curve example": ["Exemplo de curva", "カーブの例", "커브 예시"],
-"Contribute": ["Contribuir", "貢献する", "기여하기"],
-"Learn": ["Aprender", "学ぶ", "배우기"],
-"Methodology": ["Metodologia", "方法論", "방법론"],
-"Brand": ["Marca", "ブランド", "브랜드"],
-"Security": ["Segurança", "セキュリティ", "보안"],
-"Risks": ["Riscos", "リスク", "위험"],
-"Legal": ["Jurídico", "法的情報", "법적 고지"],
-"Skip to content": ["Pular para o conteúdo", "本文へスキップ", "본문으로 건너뛰기"],
-"Privacy and contact": ["Privacidade e contato", "プライバシーとお問い合わせ", "개인정보 및 연락처"],
-"Privacy": ["Privacidade", "プライバシー", "개인정보"],
-"Eight arms.": ["Oito braços.", "8本の腕。", "여덟 개의 팔."],
-"Endless ideas.": ["Ideias sem fim.", "アイデアは無限。", "끝없는 아이디어."],
-"Explore tools": ["Explorar ferramentas", "ツールを見る", "도구 둘러보기"],
-"Find your meme": ["Encontre seu meme", "あなたのミームを探そう", "나만의 밈 찾기"],
-"COMMUNITY · HUMOUR · WEB3": ["COMUNIDADE · HUMOR · WEB3", "コミュニティ · ユーモア · WEB3", "커뮤니티 · 유머 · WEB3"],
-"CURIOSITY WITHOUT COMPLICATIONS": ["CURIOSIDADE SEM COMPLICAÇÃO", "むずかしくない好奇心", "복잡하지 않은 호기심"],
-"More humour. More curiosity.": ["Mais humor. Mais curiosidade.", "もっとユーモアを。もっと好奇心を。", "더 많은 유머. 더 많은 호기심."],
-"Open tool": ["Abrir ferramenta", "ツールを開く", "도구 열기"],
-"Back home": ["Voltar ao início", "ホームに戻る", "홈으로 돌아가기"],
-"ERROR 404": ["ERRO 404", "エラー 404", "오류 404"],
-"Close": ["Fechar", "閉じる", "닫기"],
-"Cancel": ["Cancelar", "キャンセル", "취소"],
-"Yes, delete": ["Sim, excluir", "はい、削除します", "예, 삭제합니다"],
-"Reload": ["Recarregar", "再読み込み", "새로고침"],
-"Copy address": ["Copiar endereço", "アドレスをコピー", "주소 복사"],
-"Copied": ["Copiado", "コピーしました", "복사했습니다"],
-"Could not copy": ["Não foi possível copiar", "コピーできませんでした", "복사하지 못했습니다"],
-"Copy blocked": ["Cópia bloqueada", "コピーがブロックされました", "복사가 차단되었습니다"],
-"Download PNG": ["Baixar PNG", "PNG をダウンロード", "PNG 다운로드"],
-"Share": ["Compartilhar", "共有", "공유"],
-"Clear": ["Limpar", "クリア", "지우기"],
-"Stop": ["Parar", "停止", "중지"],
-"Save all": ["Salvar tudo", "すべて保存", "모두 저장"],
-"Before": ["Antes", "変更前", "이전"],
-"Now": ["Agora", "現在", "현재"],
-"Export JSON": ["Exportar JSON", "JSON を書き出す", "JSON 내보내기"],
-"Start here": ["Comece aqui", "ここから始める", "여기서 시작"],
-"Details": ["Detalhes", "詳細", "세부 정보"],
-"More detail": ["Mais detalhes", "さらに詳しく", "자세히 보기"],
-"History": ["Histórico", "履歴", "기록"],
-"Evidence": ["Evidências", "根拠", "근거"],
-"Review": ["Revisão", "レビュー", "검토"],
-"In review": ["Em revisão", "レビュー中", "검토 중"],
-"In progress": ["Em andamento", "進行中", "진행 중"],
-"Owner": ["Responsável", "担当", "담당"],
-"Network": ["Rede", "ネットワーク", "네트워크"],
-"Networks": ["Redes", "ネットワーク", "네트워크"],
-"Check": ["Verificar", "確認する", "확인"],
-"Read": ["Ler", "読む", "읽기"],
-"Title": ["Título", "タイトル", "제목"],
-"Body": ["Corpo", "本文", "본문"],
-"Text": ["Texto", "テキスト", "텍스트"],
-"Name": ["Nome", "名前", "이름"],
-"Format": ["Formato", "形式", "형식"],
-"Background": ["Fundo", "背景", "배경"],
-"Avatar": ["Avatar", "アバター", "아바타"],
-"Headline": ["Título principal", "見出し", "헤드라인"],
-"Glossary": ["Glossário", "用語集", "용어집"],
-"Guides": ["Guias", "ガイド", "가이드"],
-"Library": ["Biblioteca", "ライブラリ", "라이브러리"],
-"Welcome": ["Boas-vindas", "ようこそ", "환영합니다"],
-"Learning": ["Aprendizado", "学習", "학습"],
-"Official channels": ["Canais oficiais", "公式チャンネル", "공식 채널"],
-"Anti-scam warnings": ["Alertas contra golpes", "詐欺への注意", "사기 주의 안내"],
-"Community rules": ["Regras da comunidade", "コミュニティルール", "커뮤니티 규칙"],
-"Join Telegram": ["Entrar no Telegram", "Telegram に参加", "Telegram 참여하기"],
-"All collections": ["Todas as coleções", "すべてのコレクション", "모든 컬렉션"],
-"Selected collection": ["Coleção selecionada", "選択したコレクション", "선택한 컬렉션"],
-"Download PNG ↓": ["Baixar PNG ↓", "PNG をダウンロード ↓", "PNG 다운로드 ↓"],
-"COLLECTIONS": ["COLEÇÕES", "コレクション", "컬렉션"],
-"Mint address": ["Endereço do mint", "ミントアドレス", "민트 주소"],
-"Token address": ["Endereço do token", "トークンアドレス", "토큰 주소"],
-"Total supply": ["Fornecimento total", "総供給量", "총 공급량"],
-"Mint authority": ["Autoridade de mint", "ミント権限", "민트 권한"],
-"Freeze authority": ["Autoridade de congelamento", "凍結権限", "동결 권한"],
-"Metadata": ["Metadados", "メタデータ", "메타데이터"],
-"Mutable metadata": ["Metadados mutáveis", "変更可能なメタデータ", "변경 가능한 메타데이터"],
-"Mutable": ["Mutável", "変更可能", "변경 가능"],
-"Possible impersonation": ["Possível imitação", "なりすましの可能性", "사칭 가능성"],
-"Impersonation signal": ["Sinal de imitação", "なりすましのシグナル", "사칭 신호"],
-"Curated registry": ["Registro curado", "キュレーション済みレジストリ", "선별 레지스트리"],
-"In the curated registry": ["No registro curado", "キュレーション済みレジストリに掲載", "선별 레지스트리에 있음"],
-"Unknown and unavailable": ["Desconhecido e indisponível", "不明・取得不可", "알 수 없음 · 사용 불가"],
-"unavailable": ["indisponível", "取得不可", "사용 불가"],
-"not applicable": ["não se aplica", "該当なし", "해당 없음"],
-"yes": ["sim", "はい", "예"],
-"no": ["não", "いいえ", "아니요"],
-"open": ["aberto", "開く", "열기"],
-"or": ["ou", "または", "또는"],
-"Fact": ["Dado", "項目", "항목"],
-"Value": ["Valor", "値", "값"],
-"Creator wallet": ["Carteira do criador", "クリエイターのウォレット", "크리에이터 지갑"],
-"Creation transaction": ["Transação de criação", "作成トランザクション", "생성 트랜잭션"],
-"Transfer tax": ["Taxa de transferência", "送金税", "전송 세금"],
-"None (0%)": ["Nenhuma (0%)", "なし (0%)", "없음 (0%)"],
-"Pump.fun curve": ["Curva do Pump.fun", "Pump.fun のカーブ", "Pump.fun 커브"],
-"Curve reading": ["Leitura da curva", "カーブの読み取り", "커브 조회"],
-"Personal notebook": ["Caderno pessoal", "個人ノート", "개인 노트"],
-"Brand resources": ["Recursos da marca", "ブランド素材", "브랜드 자료"],
-"Future vision": ["Visão de futuro", "将来のビジョン", "미래 비전"],
-"Preparing the image…": ["Preparando a imagem…", "画像を準備しています…", "이미지를 준비하는 중…"],
-"Language": ["Idioma", "言語", "언어"],
-"English": ["English", "English", "English"],
-"Español": ["Español", "Español", "Español"],
-"Docs": ["Docs", "ドキュメント", "문서"],
-"Sheets": ["Planilhas", "スプレッドシート", "시트"],
-"Slides": ["Apresentações", "スライド", "슬라이드"],
-"PDF": ["PDF", "PDF", "PDF"],
-"My Drive": ["Meu Drive", "マイドライブ", "내 드라이브"],
-"AI": ["IA", "AI", "AI"],
-"Templates": ["Modelos", "テンプレート", "템플릿"],
-"Settings": ["Configurações", "設定", "설정"],
-"Search files": ["Pesquisar arquivos", "ファイルを検索", "파일 검색"],
-"Results": ["Resultados", "検索結果", "검색 결과"],
-"Saved": ["Salvo", "保存済み", "저장됨"],
-"Unsaved changes": ["Alterações não salvas", "未保存の変更", "저장되지 않은 변경 사항"],
-"Import": ["Importar", "インポート", "가져오기"],
-"Export": ["Exportar", "エクスポート", "내보내기"],
-"New document": ["Novo documento", "新しいドキュメント", "새 문서"],
-"New sheet": ["Nova planilha", "新しいスプレッドシート", "새 시트"],
-"New presentation": ["Nova apresentação", "新しいプレゼンテーション", "새 프레젠테이션"],
-"Open PDF": ["Abrir PDF", "PDF を開く", "PDF 열기"],
-"Quick actions": ["Ações rápidas", "クイック操作", "빠른 작업"],
-"Recent files": ["Arquivos recentes", "最近のファイル", "최근 파일"],
-"Use template": ["Usar modelo", "テンプレートを使う", "템플릿 사용"],
-"Retry": ["Tentar novamente", "再試行", "다시 시도"],
-"Open the menu": ["Abrir o menu", "メニューを開く", "메뉴 열기"],
-"Close the menu": ["Fechar o menu", "メニューを閉じる", "메뉴 닫기"],
-"Sections": ["Seções", "セクション", "섹션"],
-"File name": ["Nome do arquivo", "ファイル名", "파일 이름"],
-"Close document": ["Fechar documento", "ドキュメントを閉じる", "문서 닫기"],
-"Delete": ["Excluir", "削除", "삭제"],
-"Rename": ["Renomear", "名前を変更", "이름 바꾸기"],
-"Duplicate": ["Duplicar", "複製", "복제"],
-"Undo": ["Desfazer", "元に戻す", "실행 취소"],
-"Redo": ["Refazer", "やり直す", "다시 실행"],
-"Bold": ["Negrito", "太字", "굵게"],
-"Italic": ["Itálico", "斜体", "기울임꼴"],
-"Underline": ["Sublinhado", "下線", "밑줄"],
-"Insert table": ["Inserir tabela", "表を挿入", "표 삽입"],
-"Trash": ["Lixeira", "ゴミ箱", "휴지통"],
-"Starred": ["Com estrela", "スター付き", "별표"],
-"Open": ["Abrir", "開く", "열기"],
-"Save": ["Salvar", "保存", "저장"],
-"Send": ["Enviar", "送信", "보내기"],
-"Comments": ["Comentários", "コメント", "댓글"],
-"You": ["Você", "あなた", "나"],
-"Make a copy": ["Fazer uma cópia", "コピーを作成", "사본 만들기"],
-"Full name": ["Nome completo", "氏名", "이름"],
-"Letter": ["Carta", "手紙", "편지"],
-"Notes": ["Notas", "メモ", "메모"],
-"Today": ["Hoje", "今日", "오늘"],
-"Report": ["Relatório", "レポート", "보고서"],
-"Summary": ["Resumo", "概要", "요약"],
-"Quote": ["Orçamento", "見積書", "견적서"],
-"Invoice": ["Fatura", "請求書", "청구서"],
-"Inventory": ["Inventário", "在庫表", "재고"],
-"Expense tracker": ["Controle de despesas", "経費管理", "지출 관리"],
-"Business plan": ["Plano de negócios", "事業計画", "사업 계획"],
-"Meeting": ["Reunião", "会議", "회의"],
-"Agenda": ["Pauta", "議題", "안건"],
-"Checklist": ["Checklist", "チェックリスト", "체크리스트"],
-"Open (task)": ["Pendente", "未完了", "미완료"],
-"What's new": ["Novidades", "最新情報", "새 소식"],
-"WHAT'S NEW": ["NOVIDADES", "最新情報", "새 소식"],
-"What's new at ORVUPI.": ["Novidades do ORVUPI.", "ORVUPIの最新情報。", "ORVUPI의 새 소식."],
-"Released changes and what comes next. Update of 23 October 2026.": ["Mudanças publicadas e o que vem a seguir. Atualização de 23 de outubro de 2026.", "公開済みの変更と今後の予定。2026年10月23日更新。", "공개된 변경 사항과 다음 계획. 2026년 10월 23일 업데이트."],
-"23 October 2026": ["23 de outubro de 2026", "2026年10月23日", "2026년 10월 23일"],
-"Live": ["Publicado", "公開中", "공개됨"],
-"Coming soon": ["Em breve", "近日公開", "곧 공개"],
-"ORVUPI Work 0.9.4: faithful Word import": ["ORVUPI Work 0.9.4: importação fiel do Word", "ORVUPI Work 0.9.4：Wordを忠実に取り込み", "ORVUPI Work 0.9.4: Word 문서 정확한 가져오기"],
-"Tables fit the page width, with no horizontal scroll bar.": ["As tabelas se ajustam à largura da página, sem barra de rolagem horizontal.", "表はページ幅に収まり、横スクロールバーは出ません。", "표가 페이지 너비에 맞춰지며 가로 스크롤 막대가 없습니다."],
-"Symbols such as ●, margins, borders and images are preserved.": ["Símbolos como ●, margens, bordas e imagens são preservados.", "●などの記号、余白、罫線、画像を保持します。", "● 같은 기호, 여백, 테두리, 이미지가 유지됩니다."],
-"Tested in Chrome, Firefox and Safari, on desktop and mobile.": ["Testado no Chrome, Firefox e Safari, no computador e no celular.", "Chrome、Firefox、Safariのデスクトップとモバイルでテスト済み。", "Chrome, Firefox, Safari의 데스크톱과 모바일에서 테스트했습니다."],
-"Open ORVUPI Work": ["Abrir o ORVUPI Work", "ORVUPI Workを開く", "ORVUPI Work 열기"],
-"The website and Work in 5 languages": ["O site e o Work em 5 idiomas", "サイトとWorkが5言語に対応", "웹사이트와 Work를 5개 언어로"],
-"Spanish, English, Brazilian Portuguese, Japanese and Korean.": ["Espanhol, inglês, português do Brasil, japonês e coreano.", "スペイン語、英語、ブラジルポルトガル語、日本語、韓国語。", "스페인어, 영어, 브라질 포르투갈어, 일본어, 한국어."],
-"Choose your language with the 🌐 selector at the top.": ["Escolha o idioma no seletor 🌐 no topo.", "上部の🌐から言語を選べます。", "상단의 🌐 선택기에서 언어를 고르세요."],
-"Meme gallery: 250 images": ["Galeria de memes: 250 imagens", "ミームギャラリー：250枚の画像", "밈 갤러리: 이미지 250개"],
-"250 images organised in 20 collections.": ["250 imagens organizadas em 20 coleções.", "250枚の画像を20のコレクションに整理。", "이미지 250개를 20개 컬렉션으로 정리했습니다."],
-"Collection filters and search, on mobile too.": ["Filtros por coleção e busca, também no celular.", "コレクション別の絞り込みと検索。モバイルでも使えます。", "컬렉션 필터와 검색, 모바일에서도 가능합니다."],
-"View the gallery": ["Ver a galeria", "ギャラリーを見る", "갤러리 보기"],
-"ORVUPI Work assistant 0.9.6": ["Assistente do ORVUPI Work 0.9.6", "ORVUPI Workアシスタント 0.9.6", "ORVUPI Work 어시스턴트 0.9.6"],
-"Faster responses.": ["Respostas mais rápidas.", "より速い応答。", "더 빠른 응답."],
-"No freezes on mobile when summarising text.": ["Sem travamentos no celular ao resumir textos.", "モバイルで要約しても固まりません。", "모바일에서 요약할 때 멈추지 않습니다."],
-"Presentations 0.9.5: new slide editor": ["Apresentações 0.9.5: novo editor de slides", "プレゼンテーション 0.9.5：新しいスライドエディター", "프레젠테이션 0.9.5: 새 슬라이드 편집기"],
-"Formatting applied to just the selected words.": ["Formatação aplicada só às palavras selecionadas.", "選択した語句だけに書式を適用。", "선택한 단어에만 서식을 적용합니다."],
-"PowerPoint export with editable charts and embedded video.": ["Exportação para PowerPoint com gráficos editáveis e vídeo incorporado.", "編集可能なグラフと埋め込み動画付きのPowerPoint書き出し。", "편집 가능한 차트와 삽입된 동영상을 포함한 PowerPoint 내보내기."],
-"A dedicated tablet view.": ["Visualização própria para tablet.", "タブレット専用の表示。", "태블릿 전용 화면."],
-"Try Presentations": ["Experimentar Apresentações", "プレゼンテーションを試す", "프레젠테이션 사용해 보기"],
-"© 2026 ORVUPI. Name, octopus and visual resources: all rights reserved. Original code: MIT license. Official channels:": ["© 2026 ORVUPI. Nome, polvo e recursos visuais: todos os direitos reservados. Código original: licença MIT. Canais oficiais:", "© 2026 ORVUPI. 名称、タコおよびビジュアル素材：無断転載を禁じます。オリジナルのコード：MIT ライセンス。公式チャンネル：", "© 2026 ORVUPI. 이름, 문어 및 시각 자료: 모든 권리 보유. 원본 코드: MIT 라이선스. 공식 채널:"],
-"Web:": ["Web:", "Web:", "웹:"],
-"The only official token address is on": ["O único endereço oficial do token está em", "トークンの唯一の公式アドレスは次のページにあります", "토큰의 유일한 공식 주소는 다음 페이지에 있습니다"],
-"the token page": ["a página do token", "トークンのページ", "토큰 페이지"],
-". Warnings for checking channels are on": [". Os avisos para conferir canais estão em", "。チャンネルを確認する注意は次のページにあります", ". 채널을 확인하는 안내는 다음 페이지에 있습니다"],
-"Community license": ["Licença da comunidade", "コミュニティ・ライセンス", "커뮤니티 라이선스"],
-"The ORVUPI name, the octopus and the visual resources belong to ORVUPI. All rights reserved. Not CC0, MIT or CC-BY.": ["O nome ORVUPI, o polvo e os recursos visuais pertencem à ORVUPI. Todos os direitos reservados. Não é CC0, nem MIT, nem CC-BY.", "ORVUPI の名称、タコおよびビジュアル素材は ORVUPI のものです。無断転載を禁じます。CC0、MIT、CC-BY のいずれでもありません。", "ORVUPI 이름, 문어 및 시각 자료는 ORVUPI의 것입니다. 모든 권리를 보유합니다. CC0, MIT 또는 CC-BY가 아닙니다."],
-"You may use the octopus and the visual resources in community pieces only if you meet every condition below.": ["Você pode usar o polvo e os recursos visuais em peças da comunidade somente se cumprir todas as condições abaixo.", "次の条件をすべて守る場合に限り、コミュニティの作品でタコとビジュアル素材を使えます。", "아래 조건을 모두 지킬 때만 커뮤니티 작품에서 문어와 시각 자료를 쓸 수 있습니다."],
-"Credit the piece to ORVUPI and link to orvupi.com.": ["Atribua a peça à ORVUPI e enlace orvupi.com.", "作品に ORVUPI と表示し、orvupi.com へリンクしてください。", "작품에 ORVUPI를 표기하고 orvupi.com으로 링크하세요."],
-"Do not impersonate ORVUPI or an official channel.": ["Não se passe por ORVUPI nem por um canal oficial.", "ORVUPI や公式チャンネルになりすまさないでください。", "ORVUPI나 공식 채널인 척하지 마세요."],
-"Do not use the octopus or the name as another token's mark.": ["Não use o polvo nem o nome como marca de outro token.", "タコや名称を別のトークンの標章として使わないでください。", "문어나 이름을 다른 토큰의 상표로 쓰지 마세요."],
-"Do not make deceptive edits.": ["Não faça edições enganosas.", "誤解を招く改変をしないでください。", "속이는 편집을 하지 마세요."],
-"Nothing illegal or hateful.": ["Nada ilegal nem discurso de ódio.", "違法な内容やヘイトは禁止です。", "불법이거나 혐오에 해당하는 내용은 금지입니다."],
-"Tool code is separate and stays under the MIT license. This community license does not cover that code.": ["O código das ferramentas é separado e continua sob a licença MIT. Esta licença da comunidade não cobre esse código.", "ツールのコードは別で、MIT ライセンスのままです。このコミュニティ・ライセンスはそのコードを含みません。", "도구 코드는 별도이며 MIT 라이선스를 유지합니다. 이 커뮤니티 라이선스는 그 코드를 포함하지 않습니다."],
-"Contact:": ["Contato:", "連絡先:", "연락처:"],
-"orvupi.com": ["orvupi.com", "orvupi.com", "orvupi.com"],
-"Create community memes and posts, without an account. ORVUPI assets are included.": ["Crie memes e publicações da comunidade, sem conta. Os recursos da ORVUPI vêm incluídos.", "アカウントなしで、コミュニティのミームや投稿を作れます。ORVUPIの素材が含まれています。", "계정 없이 커뮤니티 밈과 게시물을 만드세요. ORVUPI 자료가 포함되어 있습니다."],
-"Create a meme, a post, or a story with the ORVUPI brand. No account and no wallet. The design stays in this browser.": ["Crie um meme, uma publicação ou uma história com a marca ORVUPI. Sem conta e sem carteira. O desenho fica neste navegador.", "ORVUPIのブランドでミーム、投稿、ストーリーを作れます。アカウントもウォレットも不要です。デザインはこのブラウザに残ります。", "ORVUPI 브랜드로 밈, 게시물, 스토리를 만드세요. 계정과 지갑이 필요 없습니다. 디자인은 이 브라우저에 남습니다."],
-"Download JPG": ["Baixar JPG", "JPGをダウンロード", "JPG 다운로드"],
-"About images you add": ["Sobre as imagens que você adiciona", "追加する画像について", "추가하는 이미지에 대해"],
-"Academy": ["Academy", "Academy", "Academy"],
-"Articles, learning paths, practice, a glossary and your progress in one place. Free, no account.": ["Artigos, trilhas, práticas, glossário e o seu progresso num só lugar. Grátis e sem conta.", "記事、学習ルート、練習、用語集、進捗をひとつの場所に。無料、アカウント不要。", "글, 학습 경로, 연습, 용어집, 진행 상황을 한곳에서. 무료이며 계정이 필요 없습니다."],
-"Five tools, one journey: look up, understand, save, compare and share.": ["Cinco ferramentas, um mesmo percurso: consultar, entender, guardar, comparar e compartilhar.", "5つのツール、ひとつの流れ：調べる、理解する、保存する、比べる、共有する。", "다섯 가지 도구, 하나의 흐름: 조회하고, 이해하고, 저장하고, 비교하고, 공유하기."]
+ "_nota": "Traducciones escritas a mano para los términos más visibles. Prevalecen sobre el borrador automático. Formato: inglés -> [pt-BR, ja, ko]. Pendientes de revisión por hablante nativo.",
+ "Collections": [
+  "Coleções",
+  "コレクション",
+  "컬렉션"
+ ],
+ "Collection": [
+  "Coleção",
+  "コレクション",
+  "컬렉션"
+ ],
+ "Explore all 250 images": [
+  "Explore as 250 imagens",
+  "250枚すべての画像を見る",
+  "이미지 250개 모두 보기"
+ ],
+ "IMAGES": [
+  "IMAGENS",
+  "画像",
+  "이미지"
+ ],
+ "Home": [
+  "Início",
+  "ホーム",
+  "홈"
+ ],
+ "Tools": [
+  "Ferramentas",
+  "ツール",
+  "도구"
+ ],
+ "Work": [
+  "Work",
+  "Work",
+  "Work"
+ ],
+ "Memes": [
+  "Memes",
+  "ミーム",
+  "밈"
+ ],
+ "Community": [
+  "Comunidade",
+  "コミュニティ",
+  "커뮤니티"
+ ],
+ "Vision": [
+  "Visão",
+  "ビジョン",
+  "비전"
+ ],
+ "ORVUPI token": [
+  "Token ORVUPI",
+  "ORVUPI トークン",
+  "ORVUPI 토큰"
+ ],
+ "Explore everything": [
+  "Explorar tudo",
+  "すべて見る",
+  "전체 둘러보기"
+ ],
+ "Verify": [
+  "Verify",
+  "Verify",
+  "Verify"
+ ],
+ "Lab": [
+  "Lab",
+  "Lab",
+  "Lab"
+ ],
+ "Studio": [
+  "Studio",
+  "Studio",
+  "Studio"
+ ],
+ "Notebook": [
+  "Caderno",
+  "ノート",
+  "노트"
+ ],
+ "Board": [
+  "Painel",
+  "ボード",
+  "보드"
+ ],
+ "Curve": [
+  "Curva",
+  "カーブ",
+  "커브"
+ ],
+ "Curve example": [
+  "Exemplo de curva",
+  "カーブの例",
+  "커브 예시"
+ ],
+ "Contribute": [
+  "Contribuir",
+  "貢献する",
+  "기여하기"
+ ],
+ "Learn": [
+  "Aprender",
+  "学ぶ",
+  "배우기"
+ ],
+ "Methodology": [
+  "Metodologia",
+  "方法論",
+  "방법론"
+ ],
+ "Brand": [
+  "Marca",
+  "ブランド",
+  "브랜드"
+ ],
+ "Security": [
+  "Segurança",
+  "セキュリティ",
+  "보안"
+ ],
+ "Risks": [
+  "Riscos",
+  "リスク",
+  "위험"
+ ],
+ "Legal": [
+  "Jurídico",
+  "法的情報",
+  "법적 고지"
+ ],
+ "Skip to content": [
+  "Pular para o conteúdo",
+  "本文へスキップ",
+  "본문으로 건너뛰기"
+ ],
+ "Privacy and contact": [
+  "Privacidade e contato",
+  "プライバシーとお問い合わせ",
+  "개인정보 및 연락처"
+ ],
+ "Privacy": [
+  "Privacidade",
+  "プライバシー",
+  "개인정보"
+ ],
+ "Eight arms.": [
+  "Oito braços.",
+  "8本の腕。",
+  "여덟 개의 팔."
+ ],
+ "Endless ideas.": [
+  "Ideias sem fim.",
+  "アイデアは無限。",
+  "끝없는 아이디어."
+ ],
+ "Explore tools": [
+  "Explorar ferramentas",
+  "ツールを見る",
+  "도구 둘러보기"
+ ],
+ "Find your meme": [
+  "Encontre seu meme",
+  "あなたのミームを探そう",
+  "나만의 밈 찾기"
+ ],
+ "COMMUNITY · HUMOUR · WEB3": [
+  "COMUNIDADE · HUMOR · WEB3",
+  "コミュニティ · ユーモア · WEB3",
+  "커뮤니티 · 유머 · WEB3"
+ ],
+ "CURIOSITY WITHOUT COMPLICATIONS": [
+  "CURIOSIDADE SEM COMPLICAÇÃO",
+  "むずかしくない好奇心",
+  "복잡하지 않은 호기심"
+ ],
+ "More humour. More curiosity.": [
+  "Mais humor. Mais curiosidade.",
+  "もっとユーモアを。もっと好奇心を。",
+  "더 많은 유머. 더 많은 호기심."
+ ],
+ "Open tool": [
+  "Abrir ferramenta",
+  "ツールを開く",
+  "도구 열기"
+ ],
+ "Back home": [
+  "Voltar ao início",
+  "ホームに戻る",
+  "홈으로 돌아가기"
+ ],
+ "ERROR 404": [
+  "ERRO 404",
+  "エラー 404",
+  "오류 404"
+ ],
+ "Close": [
+  "Fechar",
+  "閉じる",
+  "닫기"
+ ],
+ "Cancel": [
+  "Cancelar",
+  "キャンセル",
+  "취소"
+ ],
+ "Yes, delete": [
+  "Sim, excluir",
+  "はい、削除します",
+  "예, 삭제합니다"
+ ],
+ "Reload": [
+  "Recarregar",
+  "再読み込み",
+  "새로고침"
+ ],
+ "Copy address": [
+  "Copiar endereço",
+  "アドレスをコピー",
+  "주소 복사"
+ ],
+ "Copied": [
+  "Copiado",
+  "コピーしました",
+  "복사했습니다"
+ ],
+ "Could not copy": [
+  "Não foi possível copiar",
+  "コピーできませんでした",
+  "복사하지 못했습니다"
+ ],
+ "Copy blocked": [
+  "Cópia bloqueada",
+  "コピーがブロックされました",
+  "복사가 차단되었습니다"
+ ],
+ "Download PNG": [
+  "Baixar PNG",
+  "PNG をダウンロード",
+  "PNG 다운로드"
+ ],
+ "Share": [
+  "Compartilhar",
+  "共有",
+  "공유"
+ ],
+ "Clear": [
+  "Limpar",
+  "クリア",
+  "지우기"
+ ],
+ "Stop": [
+  "Parar",
+  "停止",
+  "중지"
+ ],
+ "Save all": [
+  "Salvar tudo",
+  "すべて保存",
+  "모두 저장"
+ ],
+ "Before": [
+  "Antes",
+  "変更前",
+  "이전"
+ ],
+ "Now": [
+  "Agora",
+  "現在",
+  "현재"
+ ],
+ "Export JSON": [
+  "Exportar JSON",
+  "JSON を書き出す",
+  "JSON 내보내기"
+ ],
+ "Start here": [
+  "Comece aqui",
+  "ここから始める",
+  "여기서 시작"
+ ],
+ "Details": [
+  "Detalhes",
+  "詳細",
+  "세부 정보"
+ ],
+ "More detail": [
+  "Mais detalhes",
+  "さらに詳しく",
+  "자세히 보기"
+ ],
+ "History": [
+  "Histórico",
+  "履歴",
+  "기록"
+ ],
+ "Evidence": [
+  "Evidências",
+  "根拠",
+  "근거"
+ ],
+ "Review": [
+  "Revisão",
+  "レビュー",
+  "검토"
+ ],
+ "In review": [
+  "Em revisão",
+  "レビュー中",
+  "검토 중"
+ ],
+ "In progress": [
+  "Em andamento",
+  "進行中",
+  "진행 중"
+ ],
+ "Owner": [
+  "Responsável",
+  "担当",
+  "담당"
+ ],
+ "Network": [
+  "Rede",
+  "ネットワーク",
+  "네트워크"
+ ],
+ "Networks": [
+  "Redes",
+  "ネットワーク",
+  "네트워크"
+ ],
+ "Check": [
+  "Verificar",
+  "確認する",
+  "확인"
+ ],
+ "Read": [
+  "Ler",
+  "読む",
+  "읽기"
+ ],
+ "Title": [
+  "Título",
+  "タイトル",
+  "제목"
+ ],
+ "Body": [
+  "Corpo",
+  "本文",
+  "본문"
+ ],
+ "Text": [
+  "Texto",
+  "テキスト",
+  "텍스트"
+ ],
+ "Name": [
+  "Nome",
+  "名前",
+  "이름"
+ ],
+ "Format": [
+  "Formato",
+  "形式",
+  "형식"
+ ],
+ "Background": [
+  "Fundo",
+  "背景",
+  "배경"
+ ],
+ "Avatar": [
+  "Avatar",
+  "アバター",
+  "아바타"
+ ],
+ "Headline": [
+  "Título principal",
+  "見出し",
+  "헤드라인"
+ ],
+ "Glossary": [
+  "Glossário",
+  "用語集",
+  "용어집"
+ ],
+ "Guides": [
+  "Guias",
+  "ガイド",
+  "가이드"
+ ],
+ "Library": [
+  "Biblioteca",
+  "ライブラリ",
+  "라이브러리"
+ ],
+ "Welcome": [
+  "Boas-vindas",
+  "ようこそ",
+  "환영합니다"
+ ],
+ "Learning": [
+  "Aprendizado",
+  "学習",
+  "학습"
+ ],
+ "Official channels": [
+  "Canais oficiais",
+  "公式チャンネル",
+  "공식 채널"
+ ],
+ "Anti-scam warnings": [
+  "Alertas contra golpes",
+  "詐欺への注意",
+  "사기 주의 안내"
+ ],
+ "Community rules": [
+  "Regras da comunidade",
+  "コミュニティルール",
+  "커뮤니티 규칙"
+ ],
+ "Join Telegram": [
+  "Entrar no Telegram",
+  "Telegram に参加",
+  "Telegram 참여하기"
+ ],
+ "All collections": [
+  "Todas as coleções",
+  "すべてのコレクション",
+  "모든 컬렉션"
+ ],
+ "Selected collection": [
+  "Coleção selecionada",
+  "選択したコレクション",
+  "선택한 컬렉션"
+ ],
+ "Download PNG ↓": [
+  "Baixar PNG ↓",
+  "PNG をダウンロード ↓",
+  "PNG 다운로드 ↓"
+ ],
+ "COLLECTIONS": [
+  "COLEÇÕES",
+  "コレクション",
+  "컬렉션"
+ ],
+ "Mint address": [
+  "Endereço do mint",
+  "ミントアドレス",
+  "민트 주소"
+ ],
+ "Token address": [
+  "Endereço do token",
+  "トークンアドレス",
+  "토큰 주소"
+ ],
+ "Total supply": [
+  "Fornecimento total",
+  "総供給量",
+  "총 공급량"
+ ],
+ "Mint authority": [
+  "Autoridade de mint",
+  "ミント権限",
+  "민트 권한"
+ ],
+ "Freeze authority": [
+  "Autoridade de congelamento",
+  "凍結権限",
+  "동결 권한"
+ ],
+ "Metadata": [
+  "Metadados",
+  "メタデータ",
+  "메타데이터"
+ ],
+ "Mutable metadata": [
+  "Metadados mutáveis",
+  "変更可能なメタデータ",
+  "변경 가능한 메타데이터"
+ ],
+ "Mutable": [
+  "Mutável",
+  "変更可能",
+  "변경 가능"
+ ],
+ "Possible impersonation": [
+  "Possível imitação",
+  "なりすましの可能性",
+  "사칭 가능성"
+ ],
+ "Impersonation signal": [
+  "Sinal de imitação",
+  "なりすましのシグナル",
+  "사칭 신호"
+ ],
+ "Curated registry": [
+  "Registro curado",
+  "キュレーション済みレジストリ",
+  "선별 레지스트리"
+ ],
+ "In the curated registry": [
+  "No registro curado",
+  "キュレーション済みレジストリに掲載",
+  "선별 레지스트리에 있음"
+ ],
+ "Unknown and unavailable": [
+  "Desconhecido e indisponível",
+  "不明・取得不可",
+  "알 수 없음 · 사용 불가"
+ ],
+ "unavailable": [
+  "indisponível",
+  "取得不可",
+  "사용 불가"
+ ],
+ "not applicable": [
+  "não se aplica",
+  "該当なし",
+  "해당 없음"
+ ],
+ "yes": [
+  "sim",
+  "はい",
+  "예"
+ ],
+ "no": [
+  "não",
+  "いいえ",
+  "아니요"
+ ],
+ "open": [
+  "aberto",
+  "開く",
+  "열기"
+ ],
+ "or": [
+  "ou",
+  "または",
+  "또는"
+ ],
+ "Fact": [
+  "Dado",
+  "項目",
+  "항목"
+ ],
+ "Value": [
+  "Valor",
+  "値",
+  "값"
+ ],
+ "Creator wallet": [
+  "Carteira do criador",
+  "クリエイターのウォレット",
+  "크리에이터 지갑"
+ ],
+ "Creation transaction": [
+  "Transação de criação",
+  "作成トランザクション",
+  "생성 트랜잭션"
+ ],
+ "Transfer tax": [
+  "Taxa de transferência",
+  "送金税",
+  "전송 세금"
+ ],
+ "None (0%)": [
+  "Nenhuma (0%)",
+  "なし (0%)",
+  "없음 (0%)"
+ ],
+ "Pump.fun curve": [
+  "Curva do Pump.fun",
+  "Pump.fun のカーブ",
+  "Pump.fun 커브"
+ ],
+ "Curve reading": [
+  "Leitura da curva",
+  "カーブの読み取り",
+  "커브 조회"
+ ],
+ "Personal notebook": [
+  "Caderno pessoal",
+  "個人ノート",
+  "개인 노트"
+ ],
+ "Brand resources": [
+  "Recursos da marca",
+  "ブランド素材",
+  "브랜드 자료"
+ ],
+ "Future vision": [
+  "Visão de futuro",
+  "将来のビジョン",
+  "미래 비전"
+ ],
+ "Preparing the image…": [
+  "Preparando a imagem…",
+  "画像を準備しています…",
+  "이미지를 준비하는 중…"
+ ],
+ "Language": [
+  "Idioma",
+  "言語",
+  "언어"
+ ],
+ "English": [
+  "English",
+  "English",
+  "English"
+ ],
+ "Español": [
+  "Español",
+  "Español",
+  "Español"
+ ],
+ "Docs": [
+  "Docs",
+  "ドキュメント",
+  "문서"
+ ],
+ "Sheets": [
+  "Planilhas",
+  "スプレッドシート",
+  "시트"
+ ],
+ "Slides": [
+  "Apresentações",
+  "スライド",
+  "슬라이드"
+ ],
+ "PDF": [
+  "PDF",
+  "PDF",
+  "PDF"
+ ],
+ "My Drive": [
+  "Meu Drive",
+  "マイドライブ",
+  "내 드라이브"
+ ],
+ "AI": [
+  "IA",
+  "AI",
+  "AI"
+ ],
+ "Templates": [
+  "Modelos",
+  "テンプレート",
+  "템플릿"
+ ],
+ "Settings": [
+  "Configurações",
+  "設定",
+  "설정"
+ ],
+ "Search files": [
+  "Pesquisar arquivos",
+  "ファイルを検索",
+  "파일 검색"
+ ],
+ "Results": [
+  "Resultados",
+  "検索結果",
+  "검색 결과"
+ ],
+ "Saved": [
+  "Salvo",
+  "保存済み",
+  "저장됨"
+ ],
+ "Unsaved changes": [
+  "Alterações não salvas",
+  "未保存の変更",
+  "저장되지 않은 변경 사항"
+ ],
+ "Import": [
+  "Importar",
+  "インポート",
+  "가져오기"
+ ],
+ "Export": [
+  "Exportar",
+  "エクスポート",
+  "내보내기"
+ ],
+ "New document": [
+  "Novo documento",
+  "新しいドキュメント",
+  "새 문서"
+ ],
+ "New sheet": [
+  "Nova planilha",
+  "新しいスプレッドシート",
+  "새 시트"
+ ],
+ "New presentation": [
+  "Nova apresentação",
+  "新しいプレゼンテーション",
+  "새 프레젠테이션"
+ ],
+ "Open PDF": [
+  "Abrir PDF",
+  "PDF を開く",
+  "PDF 열기"
+ ],
+ "Quick actions": [
+  "Ações rápidas",
+  "クイック操作",
+  "빠른 작업"
+ ],
+ "Recent files": [
+  "Arquivos recentes",
+  "最近のファイル",
+  "최근 파일"
+ ],
+ "Use template": [
+  "Usar modelo",
+  "テンプレートを使う",
+  "템플릿 사용"
+ ],
+ "Retry": [
+  "Tentar novamente",
+  "再試行",
+  "다시 시도"
+ ],
+ "Open the menu": [
+  "Abrir o menu",
+  "メニューを開く",
+  "메뉴 열기"
+ ],
+ "Close the menu": [
+  "Fechar o menu",
+  "メニューを閉じる",
+  "메뉴 닫기"
+ ],
+ "Sections": [
+  "Seções",
+  "セクション",
+  "섹션"
+ ],
+ "File name": [
+  "Nome do arquivo",
+  "ファイル名",
+  "파일 이름"
+ ],
+ "Close document": [
+  "Fechar documento",
+  "ドキュメントを閉じる",
+  "문서 닫기"
+ ],
+ "Delete": [
+  "Excluir",
+  "削除",
+  "삭제"
+ ],
+ "Rename": [
+  "Renomear",
+  "名前を変更",
+  "이름 바꾸기"
+ ],
+ "Duplicate": [
+  "Duplicar",
+  "複製",
+  "복제"
+ ],
+ "Undo": [
+  "Desfazer",
+  "元に戻す",
+  "실행 취소"
+ ],
+ "Redo": [
+  "Refazer",
+  "やり直す",
+  "다시 실행"
+ ],
+ "Bold": [
+  "Negrito",
+  "太字",
+  "굵게"
+ ],
+ "Italic": [
+  "Itálico",
+  "斜体",
+  "기울임꼴"
+ ],
+ "Underline": [
+  "Sublinhado",
+  "下線",
+  "밑줄"
+ ],
+ "Insert table": [
+  "Inserir tabela",
+  "表を挿入",
+  "표 삽입"
+ ],
+ "Trash": [
+  "Lixeira",
+  "ゴミ箱",
+  "휴지통"
+ ],
+ "Starred": [
+  "Com estrela",
+  "スター付き",
+  "별표"
+ ],
+ "Open": [
+  "Abrir",
+  "開く",
+  "열기"
+ ],
+ "Save": [
+  "Salvar",
+  "保存",
+  "저장"
+ ],
+ "Send": [
+  "Enviar",
+  "送信",
+  "보내기"
+ ],
+ "Comments": [
+  "Comentários",
+  "コメント",
+  "댓글"
+ ],
+ "You": [
+  "Você",
+  "あなた",
+  "나"
+ ],
+ "Make a copy": [
+  "Fazer uma cópia",
+  "コピーを作成",
+  "사본 만들기"
+ ],
+ "Full name": [
+  "Nome completo",
+  "氏名",
+  "이름"
+ ],
+ "Letter": [
+  "Carta",
+  "手紙",
+  "편지"
+ ],
+ "Notes": [
+  "Notas",
+  "メモ",
+  "메모"
+ ],
+ "Today": [
+  "Hoje",
+  "今日",
+  "오늘"
+ ],
+ "Report": [
+  "Relatório",
+  "レポート",
+  "보고서"
+ ],
+ "Summary": [
+  "Resumo",
+  "概要",
+  "요약"
+ ],
+ "Quote": [
+  "Orçamento",
+  "見積書",
+  "견적서"
+ ],
+ "Invoice": [
+  "Fatura",
+  "請求書",
+  "청구서"
+ ],
+ "Inventory": [
+  "Inventário",
+  "在庫表",
+  "재고"
+ ],
+ "Expense tracker": [
+  "Controle de despesas",
+  "経費管理",
+  "지출 관리"
+ ],
+ "Business plan": [
+  "Plano de negócios",
+  "事業計画",
+  "사업 계획"
+ ],
+ "Meeting": [
+  "Reunião",
+  "会議",
+  "회의"
+ ],
+ "Agenda": [
+  "Pauta",
+  "議題",
+  "안건"
+ ],
+ "Checklist": [
+  "Checklist",
+  "チェックリスト",
+  "체크리스트"
+ ],
+ "Open (task)": [
+  "Pendente",
+  "未完了",
+  "미완료"
+ ],
+ "What's new": [
+  "Novidades",
+  "最新情報",
+  "새 소식"
+ ],
+ "WHAT'S NEW": [
+  "NOVIDADES",
+  "最新情報",
+  "새 소식"
+ ],
+ "What's new at ORVUPI.": [
+  "Novidades do ORVUPI.",
+  "ORVUPIの最新情報。",
+  "ORVUPI의 새 소식."
+ ],
+ "Released changes and what comes next. Update of 23 October 2026.": [
+  "Mudanças publicadas e o que vem a seguir. Atualização de 23 de outubro de 2026.",
+  "公開済みの変更と今後の予定。2026年10月23日更新。",
+  "공개된 변경 사항과 다음 계획. 2026년 10월 23일 업데이트."
+ ],
+ "23 October 2026": [
+  "23 de outubro de 2026",
+  "2026年10月23日",
+  "2026년 10월 23일"
+ ],
+ "Live": [
+  "Publicado",
+  "公開中",
+  "공개됨"
+ ],
+ "Coming soon": [
+  "Em breve",
+  "近日公開",
+  "곧 공개"
+ ],
+ "ORVUPI Work 0.9.4: faithful Word import": [
+  "ORVUPI Work 0.9.4: importação fiel do Word",
+  "ORVUPI Work 0.9.4：Wordを忠実に取り込み",
+  "ORVUPI Work 0.9.4: Word 문서 정확한 가져오기"
+ ],
+ "Tables fit the page width, with no horizontal scroll bar.": [
+  "As tabelas se ajustam à largura da página, sem barra de rolagem horizontal.",
+  "表はページ幅に収まり、横スクロールバーは出ません。",
+  "표가 페이지 너비에 맞춰지며 가로 스크롤 막대가 없습니다."
+ ],
+ "Symbols such as ●, margins, borders and images are preserved.": [
+  "Símbolos como ●, margens, bordas e imagens são preservados.",
+  "●などの記号、余白、罫線、画像を保持します。",
+  "● 같은 기호, 여백, 테두리, 이미지가 유지됩니다."
+ ],
+ "Tested in Chrome, Firefox and Safari, on desktop and mobile.": [
+  "Testado no Chrome, Firefox e Safari, no computador e no celular.",
+  "Chrome、Firefox、Safariのデスクトップとモバイルでテスト済み。",
+  "Chrome, Firefox, Safari의 데스크톱과 모바일에서 테스트했습니다."
+ ],
+ "Open ORVUPI Work": [
+  "Abrir o ORVUPI Work",
+  "ORVUPI Workを開く",
+  "ORVUPI Work 열기"
+ ],
+ "The website and Work in 5 languages": [
+  "O site e o Work em 5 idiomas",
+  "サイトとWorkが5言語に対応",
+  "웹사이트와 Work를 5개 언어로"
+ ],
+ "Spanish, English, Brazilian Portuguese, Japanese and Korean.": [
+  "Espanhol, inglês, português do Brasil, japonês e coreano.",
+  "スペイン語、英語、ブラジルポルトガル語、日本語、韓国語。",
+  "스페인어, 영어, 브라질 포르투갈어, 일본어, 한국어."
+ ],
+ "Choose your language with the 🌐 selector at the top.": [
+  "Escolha o idioma no seletor 🌐 no topo.",
+  "上部の🌐から言語を選べます。",
+  "상단의 🌐 선택기에서 언어를 고르세요."
+ ],
+ "Meme gallery: 250 images": [
+  "Galeria de memes: 250 imagens",
+  "ミームギャラリー：250枚の画像",
+  "밈 갤러리: 이미지 250개"
+ ],
+ "250 images organised in 20 collections.": [
+  "250 imagens organizadas em 20 coleções.",
+  "250枚の画像を20のコレクションに整理。",
+  "이미지 250개를 20개 컬렉션으로 정리했습니다."
+ ],
+ "Collection filters and search, on mobile too.": [
+  "Filtros por coleção e busca, também no celular.",
+  "コレクション別の絞り込みと検索。モバイルでも使えます。",
+  "컬렉션 필터와 검색, 모바일에서도 가능합니다."
+ ],
+ "View the gallery": [
+  "Ver a galeria",
+  "ギャラリーを見る",
+  "갤러리 보기"
+ ],
+ "ORVUPI Work assistant 0.9.6": [
+  "Assistente do ORVUPI Work 0.9.6",
+  "ORVUPI Workアシスタント 0.9.6",
+  "ORVUPI Work 어시스턴트 0.9.6"
+ ],
+ "Faster responses.": [
+  "Respostas mais rápidas.",
+  "より速い応答。",
+  "더 빠른 응답."
+ ],
+ "No freezes on mobile when summarising text.": [
+  "Sem travamentos no celular ao resumir textos.",
+  "モバイルで要約しても固まりません。",
+  "모바일에서 요약할 때 멈추지 않습니다."
+ ],
+ "Presentations 0.9.5: new slide editor": [
+  "Apresentações 0.9.5: novo editor de slides",
+  "プレゼンテーション 0.9.5：新しいスライドエディター",
+  "프레젠테이션 0.9.5: 새 슬라이드 편집기"
+ ],
+ "Formatting applied to just the selected words.": [
+  "Formatação aplicada só às palavras selecionadas.",
+  "選択した語句だけに書式を適用。",
+  "선택한 단어에만 서식을 적용합니다."
+ ],
+ "PowerPoint export with editable charts and embedded video.": [
+  "Exportação para PowerPoint com gráficos editáveis e vídeo incorporado.",
+  "編集可能なグラフと埋め込み動画付きのPowerPoint書き出し。",
+  "편집 가능한 차트와 삽입된 동영상을 포함한 PowerPoint 내보내기."
+ ],
+ "A dedicated tablet view.": [
+  "Visualização própria para tablet.",
+  "タブレット専用の表示。",
+  "태블릿 전용 화면."
+ ],
+ "Try Presentations": [
+  "Experimentar Apresentações",
+  "プレゼンテーションを試す",
+  "프레젠테이션 사용해 보기"
+ ],
+ "© 2026 ORVUPI. Name, octopus and visual resources: all rights reserved. Original code: MIT license. Official channels:": [
+  "© 2026 ORVUPI. Nome, polvo e recursos visuais: todos os direitos reservados. Código original: licença MIT. Canais oficiais:",
+  "© 2026 ORVUPI. 名称、タコおよびビジュアル素材：無断転載を禁じます。オリジナルのコード：MIT ライセンス。公式チャンネル：",
+  "© 2026 ORVUPI. 이름, 문어 및 시각 자료: 모든 권리 보유. 원본 코드: MIT 라이선스. 공식 채널:"
+ ],
+ "Web:": [
+  "Web:",
+  "Web:",
+  "웹:"
+ ],
+ "The only official token address is on": [
+  "O único endereço oficial do token está em",
+  "トークンの唯一の公式アドレスは次のページにあります",
+  "토큰의 유일한 공식 주소는 다음 페이지에 있습니다"
+ ],
+ "the token page": [
+  "a página do token",
+  "トークンのページ",
+  "토큰 페이지"
+ ],
+ ". Warnings for checking channels are on": [
+  ". Os avisos para conferir canais estão em",
+  "。チャンネルを確認する注意は次のページにあります",
+  ". 채널을 확인하는 안내는 다음 페이지에 있습니다"
+ ],
+ "Community license": [
+  "Licença da comunidade",
+  "コミュニティ・ライセンス",
+  "커뮤니티 라이선스"
+ ],
+ "The ORVUPI name, the octopus and the visual resources belong to ORVUPI. All rights reserved. Not CC0, MIT or CC-BY.": [
+  "O nome ORVUPI, o polvo e os recursos visuais pertencem à ORVUPI. Todos os direitos reservados. Não é CC0, nem MIT, nem CC-BY.",
+  "ORVUPI の名称、タコおよびビジュアル素材は ORVUPI のものです。無断転載を禁じます。CC0、MIT、CC-BY のいずれでもありません。",
+  "ORVUPI 이름, 문어 및 시각 자료는 ORVUPI의 것입니다. 모든 권리를 보유합니다. CC0, MIT 또는 CC-BY가 아닙니다."
+ ],
+ "You may use the octopus and the visual resources in community pieces only if you meet every condition below.": [
+  "Você pode usar o polvo e os recursos visuais em peças da comunidade somente se cumprir todas as condições abaixo.",
+  "次の条件をすべて守る場合に限り、コミュニティの作品でタコとビジュアル素材を使えます。",
+  "아래 조건을 모두 지킬 때만 커뮤니티 작품에서 문어와 시각 자료를 쓸 수 있습니다."
+ ],
+ "Credit the piece to ORVUPI and link to orvupi.com.": [
+  "Atribua a peça à ORVUPI e enlace orvupi.com.",
+  "作品に ORVUPI と表示し、orvupi.com へリンクしてください。",
+  "작품에 ORVUPI를 표기하고 orvupi.com으로 링크하세요."
+ ],
+ "Do not impersonate ORVUPI or an official channel.": [
+  "Não se passe por ORVUPI nem por um canal oficial.",
+  "ORVUPI や公式チャンネルになりすまさないでください。",
+  "ORVUPI나 공식 채널인 척하지 마세요."
+ ],
+ "Do not use the octopus or the name as another token's mark.": [
+  "Não use o polvo nem o nome como marca de outro token.",
+  "タコや名称を別のトークンの標章として使わないでください。",
+  "문어나 이름을 다른 토큰의 상표로 쓰지 마세요."
+ ],
+ "Do not make deceptive edits.": [
+  "Não faça edições enganosas.",
+  "誤解を招く改変をしないでください。",
+  "속이는 편집을 하지 마세요."
+ ],
+ "Nothing illegal or hateful.": [
+  "Nada ilegal nem discurso de ódio.",
+  "違法な内容やヘイトは禁止です。",
+  "불법이거나 혐오에 해당하는 내용은 금지입니다."
+ ],
+ "Tool code is separate and stays under the MIT license. This community license does not cover that code.": [
+  "O código das ferramentas é separado e continua sob a licença MIT. Esta licença da comunidade não cobre esse código.",
+  "ツールのコードは別で、MIT ライセンスのままです。このコミュニティ・ライセンスはそのコードを含みません。",
+  "도구 코드는 별도이며 MIT 라이선스를 유지합니다. 이 커뮤니티 라이선스는 그 코드를 포함하지 않습니다."
+ ],
+ "Contact:": [
+  "Contato:",
+  "連絡先:",
+  "연락처:"
+ ],
+ "orvupi.com": [
+  "orvupi.com",
+  "orvupi.com",
+  "orvupi.com"
+ ],
+ "Create community memes and posts, without an account. ORVUPI assets are included.": [
+  "Crie memes e publicações da comunidade, sem conta. Os recursos da ORVUPI vêm incluídos.",
+  "アカウントなしで、コミュニティのミームや投稿を作れます。ORVUPIの素材が含まれています。",
+  "계정 없이 커뮤니티 밈과 게시물을 만드세요. ORVUPI 자료가 포함되어 있습니다."
+ ],
+ "Create a meme, a post, or a story with the ORVUPI brand. No account and no wallet. The design stays in this browser.": [
+  "Crie um meme, uma publicação ou uma história com a marca ORVUPI. Sem conta e sem carteira. O desenho fica neste navegador.",
+  "ORVUPIのブランドでミーム、投稿、ストーリーを作れます。アカウントもウォレットも不要です。デザインはこのブラウザに残ります。",
+  "ORVUPI 브랜드로 밈, 게시물, 스토리를 만드세요. 계정과 지갑이 필요 없습니다. 디자인은 이 브라우저에 남습니다."
+ ],
+ "Download JPG": [
+  "Baixar JPG",
+  "JPGをダウンロード",
+  "JPG 다운로드"
+ ],
+ "About images you add": [
+  "Sobre as imagens que você adiciona",
+  "追加する画像について",
+  "추가하는 이미지에 대해"
+ ],
+ "Academy": [
+  "Academy",
+  "Academy",
+  "Academy"
+ ],
+ "Articles, learning paths, practice, a glossary and your progress in one place. Free, no account.": [
+  "Artigos, trilhas, práticas, glossário e o seu progresso num só lugar. Grátis e sem conta.",
+  "記事、学習ルート、練習、用語集、進捗をひとつの場所に。無料、アカウント不要。",
+  "글, 학습 경로, 연습, 용어집, 진행 상황을 한곳에서. 무료이며 계정이 필요 없습니다."
+ ],
+ "Five tools, one journey: look up, understand, save, compare and share.": [
+  "Cinco ferramentas, um mesmo percurso: consultar, entender, guardar, comparar e compartilhar.",
+  "5つのツール、ひとつの流れ：調べる、理解する、保存する、比べる、共有する。",
+  "다섯 가지 도구, 하나의 흐름: 조회하고, 이해하고, 저장하고, 비교하고, 공유하기."
+ ],
+ "A path, a term or a practice. Academy progress stays on the device.": [
+  "Uma rota, um termo ou uma prática. O progresso da Academy fica no dispositivo.",
+  "ルート、用語、または練習。Academyの進捗はこの端末に残ります。",
+  "경로, 용어, 또는 연습. Academy 진행은 기기에 남습니다."
+ ],
+ "A pink octopus with countless ways to express what is happening. The full gallery stays in Memes.": [
+  "Um polvo rosa com mil maneiras de expressar o que acontece. A galeria completa continua em Memes.",
+  "起きていることを表す方法がいくつもあるピンクのタコ。ギャラリー全体はMemesにあります。",
+  "지금 일을 표현하는 방법이 많은 분홍 문어. 전체 갤러리는 Memes에 있습니다."
+ ],
+ "A tab for writing. No model of our own.": [
+  "Uma aba para escrever. Sem modelo próprio.",
+  "書くためのタブ。自前のモデルはありません。",
+  "글을 쓰는 탭. 자체 모델은 없습니다."
+ ],
+ "Articles, paths, practice and a glossary. No account.": [
+  "Artigos, rotas, práticas e glossário. Sem conta.",
+  "記事、ルート、練習、用語集。アカウント不要。",
+  "글, 경로, 연습, 용어집. 계정 없음."
+ ],
+ "Articles, paths, practice, glossary and progress.": [
+  "Artigos, rotas, práticas, glossário e progresso.",
+  "記事、ルート、練習、用語集、進捗。",
+  "글, 경로, 연습, 용어집, 진행."
+ ],
+ "Available in this browser": [
+  "Disponível neste navegador",
+  "このブラウザで使えます",
+  "이 브라우저에서 사용 가능"
+ ],
+ "Available, no account": [
+  "Disponível, sem conta",
+  "使えます。アカウント不要",
+  "사용 가능, 계정 없음"
+ ],
+ "Building": [
+  "Construção",
+  "構築",
+  "만드는 과정"
+ ],
+ "Catalogue, templates, local designs and export. Templates stay neutral: this homepage does not place the logo inside designs.": [
+  "Catálogo, modelos, desenhos locais e exportação. Os modelos continuam neutros: esta página não coloca o logotipo dentro dos desenhos.",
+  "カタログ、テンプレート、ローカルのデザイン、書き出し。テンプレートは中立のままです。このページはデザインにロゴを入れません。",
+  "카탈로그, 템플릿, 기기의 디자인, 내보내기. 템플릿은 중립입니다. 이 페이지는 디자인 안에 로고를 넣지 않습니다."
+ ],
+ "Channels and participation": [
+  "Canais e participação",
+  "チャネルと参加",
+  "채널과 참여"
+ ],
+ "Choose": [
+  "Escolha",
+  "選ぶ",
+  "고르기"
+ ],
+ "Community and channels.": [
+  "Comunidade e canais.",
+  "コミュニティとチャネル。",
+  "커뮤니티와 채널."
+ ],
+ "Configured address": [
+  "Endereço configurado",
+  "設定されたアドレス",
+  "설정된 주소"
+ ],
+ "Create": [
+  "Criar",
+  "作る",
+  "만들기"
+ ],
+ "Create documents": [
+  "Criar documentos",
+  "文書を作る",
+  "문서 만들기"
+ ],
+ "Create, explore, learn or write. The cards above name each tool.": [
+  "Criar, explorar, aprender ou escrever. Os cartões acima nomeiam cada ferramenta.",
+  "作る、探す、学ぶ、書く。上のカードが各ツールの名前です。",
+  "만들기, 살펴보기, 배우기, 쓰기. 위 카드가 각 도구의 이름입니다."
+ ],
+ "Culture": [
+  "Cultura",
+  "文化",
+  "문화"
+ ],
+ "Culture and memes": [
+  "Cultura e memes",
+  "文化とミーム",
+  "문화와 밈"
+ ],
+ "Culture, tools and community": [
+  "Cultura, ferramentas e comunidade",
+  "文化、ツール、コミュニティ",
+  "문화, 도구, 커뮤니티"
+ ],
+ "Design": [
+  "Desenhar",
+  "デザインする",
+  "디자인"
+ ],
+ "Development notes, with the date they already have.": [
+  "Notas de desenvolvimento, com a data que já têm.",
+  "開発メモ。すでにある日付のまま。",
+  "개발 메모. 이미 있는 날짜 그대로."
+ ],
+ "Docs, Sheets, Slides, Forms, Drawings, Notes and PDF. Files stay on the device. Open Work enters its home: it does not launch an empty editor from the homepage.": [
+  "Docs, Sheets, Slides, Formulários, Desenhos, Notas e PDF. Os arquivos ficam no dispositivo. Abrir Work entra no início: não abre um editor vazio a partir da página inicial.",
+  "Docs、Sheets、Slides、フォーム、図、メモ、PDF。ファイルはこの端末に残ります。Workを開くとそのホームに入り、空のエディタは開きません。",
+  "Docs, Sheets, Slides, 양식, 그림, 메모, PDF. 파일은 기기에 남습니다. Work를 열면 홈으로 들어가며, 빈 편집기는 열리지 않습니다."
+ ],
+ "Documents, sheets and presentations in this browser.": [
+  "Documentos, planilhas e apresentações neste navegador.",
+  "このブラウザの文書、表、プレゼンテーション。",
+  "이 브라우저의 문서, 시트, 프레젠테이션."
+ ],
+ "Each one has a name, a use and a door.": [
+  "Cada uma tem um nome, um uso e uma porta.",
+  "それぞれに名前と用途と入口があります。",
+  "각각 이름, 용도, 입구가 있습니다."
+ ],
+ "Explore": [
+  "Explorar",
+  "探す",
+  "살펴보기"
+ ],
+ "Explore markets": [
+  "Explorar mercados",
+  "市場を見る",
+  "시장 살펴보기"
+ ],
+ "First steps": [
+  "Primeiros passos",
+  "最初の手順",
+  "첫 단계"
+ ],
+ "First steps, in order.": [
+  "Primeiros passos, em ordem.",
+  "最初の手順を順番に。",
+  "첫 단계를 순서대로."
+ ],
+ "Gallery, search and collections.": [
+  "Galeria, busca e coleções.",
+  "ギャラリー、検索、コレクション。",
+  "갤러리, 검색, 모음."
+ ],
+ "Ideas and bugs": [
+  "Ideias e falhas",
+  "アイデアと不具合",
+  "아이디어와 오류"
+ ],
+ "If you want to understand a concept before using it, Academy is next to it. You do not need to buy anything to open a local tool.": [
+  "Se quiser entender um conceito antes de usar, a Academy está ao lado. Não é preciso comprar nada para abrir uma ferramenta local.",
+  "使う前に概念を理解したいときはAcademyが隣にあります。ローカルのツールを開くのに購入は不要です。",
+  "쓰기 전에 개념을 알고 싶다면 Academy가 옆에 있습니다. 로컬 도구를 여는 데 구매는 필요 없습니다."
+ ],
+ "It is the address published by the token page and the repository configuration. The root README still says no verified address has been published: that contradiction stays open and is not resolved here.": [
+  "É o endereço publicado pela página do token e pela configuração do repositório. O README da raiz ainda diz que não há um endereço verificado publicado: essa contradição continua aberta e não se resolve aqui.",
+  "トークンのページとリポジトリの設定が公開しているアドレスです。ルートのREADMEは、検証済みアドレスは公開されていないとまだ書いています。その矛盾はここでは解消しません。",
+  "토큰 페이지와 저장소 설정이 공개한 주소입니다. 루트 README는 검증된 주소가 공개되지 않았다고 아직 말합니다. 그 모순은 여기서 풀지 않습니다."
+ ],
+ "Learn the task": [
+  "Aprenda a tarefa",
+  "タスクを学ぶ",
+  "과제를 배우기"
+ ],
+ "Look up, create and save. Curiosity can be checked too.": [
+  "Consulte, crie e guarde. A curiosidade também pode ser conferida.",
+  "調べて、作って、保存する。好奇心も確かめられます。",
+  "조회하고, 만들고, 저장합니다. 호기심도 확인할 수 있습니다."
+ ],
+ "Map": [
+  "Mapa",
+  "地図",
+  "지도"
+ ],
+ "Meme gallery": [
+  "Galeria de memes",
+  "ミームギャラリー",
+  "밈 갤러리"
+ ],
+ "Menu": [
+  "Menu",
+  "メニュー",
+  "메뉴"
+ ],
+ "No model of our own": [
+  "Sem modelo próprio",
+  "自前のモデルなし",
+  "자체 모델 없음"
+ ],
+ "Nothing already built drops off the list.": [
+  "Nada do que já foi construído sai da lista.",
+  "すでに作ったものは一覧から落ちません。",
+  "이미 만든 것은 목록에서 빠지지 않습니다."
+ ],
+ "One address. It is not the Sonar ranking.": [
+  "Um endereço. Não é o ranking do Sonar.",
+  "一つのアドレス。Sonarのランキングではありません。",
+  "주소 하나. Sonar 순위가 아닙니다."
+ ],
+ "One identity. Three doors.": [
+  "Uma identidade. Três portas.",
+  "一つのアイデンティティ。三つの入口。",
+  "하나의 정체성. 세 개의 문."
+ ],
+ "One term, with its definition.": [
+  "Um termo, com a definição.",
+  "一つの用語と、その定義。",
+  "용어 하나와 그 정의."
+ ],
+ "Open ARQIVEN": [
+  "Abrir ARQIVEN",
+  "ARQIVENを開く",
+  "ARQIVEN 열기"
+ ],
+ "Open Academy": [
+  "Abrir Academy",
+  "Academyを開く",
+  "Academy 열기"
+ ],
+ "Open Board": [
+  "Abrir Quadro",
+  "ボードを開く",
+  "보드 열기"
+ ],
+ "Open Risks": [
+  "Abrir Riscos",
+  "リスクを開く",
+  "위험 열기"
+ ],
+ "Open Sonar": [
+  "Abrir Sonar",
+  "Sonarを開く",
+  "Sonar 열기"
+ ],
+ "Open Studio": [
+  "Abrir Studio",
+  "Studioを開く",
+  "Studio 열기"
+ ],
+ "Open Verify": [
+  "Abrir Verify",
+  "Verifyを開く",
+  "Verify 열기"
+ ],
+ "Open What's new": [
+  "Abrir Novidades",
+  "最新情報を開く",
+  "새 소식 열기"
+ ],
+ "Open Work": [
+  "Abrir Work",
+  "Workを開く",
+  "Work 열기"
+ ],
+ "Open links leave this page and enter the tool. This homepage does not replace the editor, the canvas or the tables.": [
+  "Os links Abrir saem desta página e entram na ferramenta. Esta página não substitui o editor, a tela nem as tabelas.",
+  "「開く」はページを離れてツールに入ります。このページはエディタ、キャンバス、表の代わりにはなりません。",
+  "열기는 이 페이지를 떠나 도구로 들어갑니다. 이 페이지는 편집기, 캔버스, 표를 대신하지 않습니다."
+ ],
+ "Open the glossary": [
+  "Abrir o glossário",
+  "用語集を開く",
+  "용어집 열기"
+ ],
+ "Open the lab": [
+  "Abrir o laboratório",
+  "ラボを開く",
+  "실험실 열기"
+ ],
+ "Open the path": [
+  "Abrir a rota",
+  "ルートを開く",
+  "경로 열기"
+ ],
+ "Open the token page": [
+  "Abrir a página do token",
+  "トークンのページを開く",
+  "토큰 페이지 열기"
+ ],
+ "Path": [
+  "Rota",
+  "ルート",
+  "경로"
+ ],
+ "Pause": [
+  "Pausar",
+  "一時停止",
+  "일시정지"
+ ],
+ "Play greeting": [
+  "Reproduzir saudação",
+  "挨拶を再生",
+  "인사 재생"
+ ],
+ "Practice": [
+  "Prática",
+  "練習",
+  "연습"
+ ],
+ "Progress stays on the device. The old Lab, Notebook, Pairs, Compare and Learn routes still lead to Academy.": [
+  "O progresso fica no dispositivo. As rotas antigas de Lab, Caderno, Pares, Comparar e Aprender continuam levando à Academy.",
+  "進捗はこの端末に残ります。以前のLab、ノート、ペア、比較、学習の経路は今もAcademyに続きます。",
+  "진행은 기기에 남습니다. 예전 Lab, 공책, 페어, 비교, 학습 경로는 계속 Academy로 갑니다."
+ ],
+ "Project": [
+  "Projeto",
+  "プロジェクト",
+  "프로젝트"
+ ],
+ "Public markets. Verify is a different task.": [
+  "Mercados públicos. Verify é outra tarefa.",
+  "公開市場。Verifyは別の作業です。",
+  "공개 시장. Verify는 다른 작업입니다."
+ ],
+ "Public reading": [
+  "Leitura pública",
+  "公開データの読み取り",
+  "공개 데이터 조회"
+ ],
+ "Ranking, categories and favourites. A lookup can fail. There are no quotes here: the figures live in Sonar, with their source.": [
+  "Ranking, categorias e favoritos. Uma consulta pode falhar. Aqui não há cotações: os números ficam no Sonar, com a fonte.",
+  "ランキング、カテゴリ、お気に入り。照会は失敗することがあります。ここには価格はありません。数字は出典とともにSonarにあります。",
+  "순위, 분류, 즐겨찾기. 조회는 실패할 수 있습니다. 여기에는 시세가 없습니다. 숫자는 출처와 함께 Sonar에 있습니다."
+ ],
+ "Routes of the current product. Languages stay on their URLs.": [
+  "Rotas do produto atual. Os idiomas continuam nas suas URL.",
+  "今の製品の経路。言語はそれぞれのURLのままです。",
+  "현재 제품의 경로. 언어는 각 URL에 남습니다."
+ ],
+ "Same family as Sonar, a different task: check an address, not browse the market.": [
+  "A mesma família do Sonar, outra tarefa: conferir um endereço, não percorrer o mercado.",
+  "Sonarと同じ系統の、別の作業です。市場を眺めるのではなく、アドレスを確認します。",
+  "Sonar와 같은 계열의 다른 작업입니다. 시장을 둘러보는 것이 아니라 주소를 확인합니다."
+ ],
+ "See the tasks": [
+  "Ver as tarefas",
+  "タスクを見る",
+  "과제 보기"
+ ],
+ "See the tools": [
+  "Ver as ferramentas",
+  "ツールを見る",
+  "도구 보기"
+ ],
+ "Sonar and Verify": [
+  "Sonar e Verify",
+  "SonarとVerify",
+  "Sonar와 Verify"
+ ],
+ "Sonar entry": [
+  "Entrada do Sonar",
+  "Sonarの入口",
+  "Sonar 입구"
+ ],
+ "Sonar, markets and public reading.": [
+  "Sonar, mercados e leitura pública.",
+  "Sonar。市場と公開データの読み取り。",
+  "Sonar. 시장과 공개 조회."
+ ],
+ "Status, evidence and tests. An idea is not a release.": [
+  "Estado, evidências e testes. Uma ideia não é uma entrega.",
+  "状態、証拠、テスト。アイデアはリリースではありません。",
+  "상태, 근거, 시험. 아이디어는 출시가 아닙니다."
+ ],
+ "Still image": [
+  "Imagem fixa",
+  "静止画",
+  "정지 이미지"
+ ],
+ "Still image.": [
+  "Imagem fixa.",
+  "静止画。",
+  "정지 이미지."
+ ],
+ "Still leads to the Academy glossary.": [
+  "Continua levando ao glossário da Academy.",
+  "今もAcademyの用語集に続きます。",
+  "계속 Academy 용어집으로 갑니다."
+ ],
+ "Still leads to the Academy notebook.": [
+  "Continua levando ao caderno da Academy.",
+  "今もAcademyのノートに続きます。",
+  "계속 Academy 공책으로 갑니다."
+ ],
+ "Still leads to the exchanges and liquidity article.": [
+  "Continua levando ao artigo de trocas e liquidez.",
+  "今も取引と流動性の記事に続きます。",
+  "계속 거래와 유동성 글로 갑니다."
+ ],
+ "Still leads to the lab practice.": [
+  "Continua levando à prática de laboratório.",
+  "今もラボの練習に続きます。",
+  "계속 실험실 연습으로 갑니다."
+ ],
+ "Still leads to the live curve.": [
+  "Continua levando à curva ao vivo.",
+  "今もライブの曲線に続きます。",
+  "계속 실시간 곡선으로 갑니다."
+ ],
+ "Studio, catalogue, editor and exports.": [
+  "Studio, catálogo, editor e exportações.",
+  "Studio。カタログ、エディタ、書き出し。",
+  "Studio. 카탈로그, 편집기, 내보내기."
+ ],
+ "Take part": [
+  "Participar",
+  "参加する",
+  "참여하기"
+ ],
+ "Templates and designs. Your brand, not ORVUPI's.": [
+  "Modelos e desenhos. A sua marca, não a da ORVUPI.",
+  "テンプレートとデザイン。ORVUPIのマークではなく、あなたのマークです。",
+  "템플릿과 디자인. ORVUPI가 아니라 당신의 브랜드."
+ ],
+ "The five languages of the current site.": [
+  "Os cinco idiomas do site atual.",
+  "今のサイトの五つの言語。",
+  "현재 사이트의 다섯 언어."
+ ],
+ "The lab distinguishes the exercise from a real operation.": [
+  "O laboratório distingue o exercício de uma operação real.",
+  "ラボは練習と実際の操作を区別します。",
+  "실험실은 연습과 실제 조작을 구분합니다."
+ ],
+ "The published address lives on its page.": [
+  "O endereço publicado vive na página dele.",
+  "公開されたアドレスは専用のページにあります。",
+  "공개된 주소는 그 페이지에 있습니다."
+ ],
+ "This homepage does not certify on-chain status and does not add a new address. The limits are on Risks, not here.": [
+  "Esta página não certifica o estado on-chain nem acrescenta um endereço novo. Os limites estão em Riscos, não aqui.",
+  "このページはオンチェーンの状態を証明せず、新しいアドレスも加えません。限界はリスクのページにあります。",
+  "이 페이지는 온체인 상태를 증명하지 않고, 새 주소도 더하지 않습니다. 한계는 위험 페이지에 있습니다."
+ ],
+ "Three steps. None of them asks for a wallet.": [
+  "Três passos. Nenhum pede uma carteira.",
+  "3つの手順。どれもウォレットは要りません。",
+  "세 단계. 어느 것도 지갑을 요구하지 않습니다."
+ ],
+ "Token": [
+  "Token",
+  "トークン",
+  "토큰"
+ ],
+ "Tools to create, learn and explore Web3. The octopus waves. The work starts in the tool you choose.": [
+  "Ferramentas para criar, aprender e explorar a Web3. O polvo cumprimenta. O trabalho começa na ferramenta que você escolher.",
+  "作る、学ぶ、Web3を探るためのツール。タコが挨拶します。作業は選んだツールから始まります。",
+  "만들고, 배우고, Web3를 살펴보는 도구. 문어가 인사합니다. 일은 고른 도구에서 시작됩니다."
+ ],
+ "Verification. A different entry from the ranking.": [
+  "Verificação. Uma entrada diferente do ranking.",
+  "検証。ランキングとは別の入口。",
+  "검증. 순위와는 다른 입구."
+ ],
+ "What changes is read where it lives.": [
+  "O que muda se lê no lugar em que está.",
+  "変わったことは、その場所で読みます。",
+  "바뀐 내용은 그 자리에서 읽습니다."
+ ],
+ "What is ORVUPI": [
+  "O que é a ORVUPI",
+  "ORVUPIとは",
+  "ORVUPI란"
+ ],
+ "What's new and the Board keep the published record. This homepage does not invent dates, users or audits.": [
+  "Novidades e o Quadro conservam o histórico publicado. Esta página não inventa datas, usuários nem auditorias.",
+  "最新情報とボードは公開済みの記録を保ちます。このページは日付も利用者数も監査も作りません。",
+  "새 소식과 보드는 공개된 기록을 유지합니다. 이 페이지는 날짜, 사용자 수, 감사를 만들지 않습니다."
+ ],
+ "Work and Studio": [
+  "Work e Studio",
+  "WorkとStudio",
+  "Work와 Studio"
+ ],
+ "Work, with its deep routes and local files.": [
+  "Work, com as rotas profundas e os arquivos locais.",
+  "Work。深い経路とローカルのファイル。",
+  "Work. 깊은 경로와 기기의 파일."
+ ],
+ "Write": [
+  "Escrever",
+  "書く",
+  "쓰기"
+ ],
+ "Write in this tab": [
+  "Escrever nesta aba",
+  "このタブで書く",
+  "이 탭에서 쓰기"
+ ],
+ "Writing in the tab, with no model of our own.": [
+  "Escrita na aba, sem modelo próprio.",
+  "タブでの執筆。自前のモデルはありません。",
+  "탭에서 쓰기. 자체 모델은 없습니다."
+ ],
+ "You can write in this tab. No model of our own is connected. The text stays there until you save it in Work. Projects is still pending.": [
+  "Você pode escrever nesta aba. Não há um modelo próprio conectado. O texto fica aí até você salvar no Work. Projetos continua pendente.",
+  "このタブに書けます。自前のモデルは接続されていません。Workに保存するまで文はこのタブに残ります。プロジェクトは未実装です。",
+  "이 탭에 쓸 수 있습니다. 자체 모델은 연결되어 있지 않습니다. Work에 저장하기 전까지 글은 이 탭에 남습니다. 프로젝트는 아직입니다."
+ ],
+ "You enter the current tool. What you save stays in this browser.": [
+  "Você entra na ferramenta atual. O que salvar fica neste navegador.",
+  "今のツールに入ります。保存したものはこのブラウザに残ります。",
+  "현재 도구로 들어갑니다. 저장한 것은 이 브라우저에 남습니다."
+ ],
+ "Close ARQIVEN": [
+  "Fechar ARQIVEN",
+  "ARQIVEN を閉じる",
+  "ARQIVEN 닫기"
+ ]
 }

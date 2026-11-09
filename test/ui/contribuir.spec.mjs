@@ -13,7 +13,7 @@ test.beforeAll(() => {
 test("contribuciones abre GitHub y cambia de idioma", async ({ page }, info) => {
   const project = info.project.name;
   await page.goto("/");
-  await expect(page.locator('main a.or-button[href="/contribuir/"]').first()).toBeVisible();
+  await expect(page.locator('main a[href="/contribuir/"]').first()).toBeVisible();
   await page.goto("/contribuir/");
   await expect(page.locator("h1")).toContainText("Contribuir");
   await expect(page.getByRole("link", { name: "Informar un fallo" })).toHaveAttribute(

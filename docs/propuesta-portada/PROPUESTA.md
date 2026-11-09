@@ -1,6 +1,6 @@
 # Propuesta de portada ORVUPI
 
-Revisión del 8 de noviembre de 2026. Cristian autorizó después aplicar este diseño a la web del repositorio (`web/v2`), sin fusionar y sin publicar en orvupi.com. La maqueta de esta carpeta sigue siendo la referencia visual.
+Revisión del 8 de noviembre de 2026. Después se autorizó aplicar este diseño a la web del repositorio (`web/v2`), sin fusionar y sin publicar en orvupi.com. La maqueta de esta carpeta sigue siendo la referencia visual.
 
 La página es `docs/propuesta-portada/index.html`. El saludo está en `marca/saludo.mp4`. Los enlaces «Abrir» salen de la propuesta y abren el producto actual.
 
@@ -24,7 +24,7 @@ Fuente: el informe de escritorio del 8 de noviembre de 2026 y sus capturas. No c
 
 Cabecera ciruela, logotipo a la izquierda, navegación corta y un botón ACCESS $BONK. El hero es un campo naranja con el titular blanco a la izquierda y el personaje a la derecha, delante de un sol. Debajo hay una tira de logos. El DOM tiene dos vídeos con `autoplay`, `loop`, `muted` y `playsinline`, sin controles. Entre capturas cambia la postura: es un bucle, no un modelo 3D que responda al cursor.
 
-En esas capturas de escritorio no se vio con claridad un saludo de pata levantada. El informe lo dice así, y no lo contradigo. El saludo que Cristian pidió está en la grabación móvil anterior del paquete, en los primeros segundos. Para ORVUPI uso nuestro clip, no el de BONK.
+En esas capturas de escritorio no se vio con claridad un saludo de pata levantada. El informe lo dice así, y no lo contradigo. El saludo pedido está en la grabación móvil anterior del paquete, en los primeros segundos. Para ORVUPI uso nuestro clip, no el de BONK.
 
 Descarto el boletín, la tira de socios, el naranja y el botón de acceso al token como acción principal.
 
@@ -78,7 +78,7 @@ En esta pasada el vídeo se reproducía pero no se veía: la regla de opacidad a
 
 ## Pendiente
 
-- Autorización de Cristian antes de tocar la web publicada.
+- Autorización explícita antes de tocar la web publicada.
 - El clip no es transparente: su fondo viaja dentro del cuadro. No se recorta para disimularlo.
 - Los ojos del arranque no coinciden del todo con la foto oficial.
 - Safari, Firefox, Edge y un dispositivo real no están probados. En un móvil estrecho el saludo empieza bajo los botones; la cara y el tentáculo no se recortan, pero no caben todos a la vez en 390 px de alto junto al titular.

@@ -189,8 +189,11 @@ describe("web ORVUPI", () => {
     for (const rel of ROUTES) {
       const html = read(rel);
       assert.match(html, /<html lang="es"/, rel);
-      assert.match(html, /<strong>ORVUPI<\/strong>/, rel);
-      assert.match(html, /\/assets\/orvupi\/avatar\.png/, rel);
+      const header = html.match(/<header class="site[\s\S]*?<\/header>/)?.[0] ?? "";
+      const wordmark = /<strong>ORVUPI<\/strong>/.test(header);
+      const logo = /logotipo-empresarial\.png/.test(header) && /alt="ORVUPI"/.test(header);
+      assert.ok(wordmark || logo, rel);
+      assert.ok(/\/assets\/orvupi\/avatar\.png/.test(html) || /logotipo-empresarial\.png/.test(html), rel);
       const es = (html.match(/class="lang es"/g) ?? []).length;
       const en = (html.match(/class="lang en"/g) ?? []).length;
       assert.ok(es > 0 && Math.abs(es - en) <= 2, `${rel} es=${es} en=${en}`);
@@ -626,6 +629,8 @@ test("las palabras prohibidas no salen en el texto visible, y token.json queda f
   for (const file of walkFiles(root)) {
     const rel = path.relative(root, file);
     if (rel.startsWith("tools/") || rel.startsWith("content/")) continue;
+    // pdf.js mide cajas con la propiedad reserve. No es texto de la página.
+    if (/^work\/assets\/pdf\.worker\.min-.*\.mjs$/.test(rel)) continue;
     if (rel === "studio/blocklist.json") continue;
     if (!/\.(html|json|md|js|mjs)$/.test(rel)) continue;
     const text = readFileSync(file, "utf8");

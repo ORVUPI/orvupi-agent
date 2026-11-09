@@ -1424,7 +1424,7 @@ function placeSelectionPill() {
   const width = pill.offsetWidth || 280;
   const height = pill.offsetHeight || 40;
   let left = box.left - hostBox.left;
-  // Como en Canva: encima del elemento, pero nunca tapando la barra contextual; si no cabe, debajo.
+  // Encima del elemento, pero nunca tapando la barra contextual; si no cabe, debajo.
   const bar = root.querySelector(".barra-texto");
   const barBox = bar instanceof HTMLElement && bar.offsetParent ? bar.getBoundingClientRect() : null;
   const minTop = Math.max(8, barBox && barBox.bottom > hostBox.top ? barBox.bottom - hostBox.top + 8 : 8);
@@ -2146,7 +2146,7 @@ function onRootClick(event) {
     if (!buttonNode.dataset.go && !buttonNode.dataset.thumb) render();
   }
   if (buttonNode.dataset.railDir) {
-    const scroller = buttonNode.closest(".tpl-rail-wrap, .tpl-glance-wrap, .desk-carousel")?.querySelector(".tpl-rail-row, .tpl-glance, .canva-row, .canva-start");
+    const scroller = buttonNode.closest(".tpl-rail-wrap, .tpl-glance-wrap, .desk-carousel")?.querySelector(".tpl-rail-row, .tpl-glance, .cv-row, .cv-start");
     if (scroller) {
       const dir = buttonNode.dataset.railDir === "prev" ? -1 : 1;
       scroller.scrollBy({ left: dir * Math.max(160, Math.round(scroller.clientWidth * 0.72)), behavior: "smooth" });
@@ -2811,7 +2811,7 @@ function bindStage() {
     const art = event.target.closest?.(".stage-art") || (event.target.closest?.(".stage-sel") ? root.querySelector(".stage-frame .stage-art") : null);
     if (!state.doc || !art) return;
     if (event.target.closest?.("[data-edit]")) return;
-    // Como en Canva: tocar otra capa o el lienzo termina la edición del texto (si no, el foco vuelve al texto
+    // Tocar otra capa o el lienzo termina la edición del texto (si no, el foco vuelve al texto
     // y el siguiente botón de la barra se pierde en el re-render del focusout).
     if (state.editingId) stopEditing();
     if (state.tool === "erase") {
@@ -2907,7 +2907,7 @@ function bindStage() {
   });
 }
 
-/** Velo, degradado o aro encima de una foto: como en Canva, el toque llega a la foto (el velo sigue en Posición). */
+/** Velo, degradado o aro encima de una foto: el toque llega a la foto (el velo sigue en Posición). */
 function isVeil(layer) {
   if (!layer || layer.type !== "rect" || layer.locked) return false;
   const props = layer.props || {};
@@ -3495,7 +3495,7 @@ function cropZoomOf(layer) {
   return Math.max(1, Math.min(4, base.w / Math.max(1, layer.crop.w)));
 }
 
-/** Ajustar (Canva): entra/sale del modo de encuadre; al entrar fija un crop cover si no lo hay. */
+/** Ajustar: entra/sale del modo de encuadre; al entrar fija un crop cover si no lo hay. */
 function toggleAdjust(force) {
   const layer = primary();
   const next = typeof force === "boolean" ? force : !state.cropping;
@@ -4153,7 +4153,7 @@ function boot() {
   bindLayersDrag();
   document.addEventListener("keydown", onKey);
   window.addEventListener("scroll", () => {
-    const home = root.querySelector(".canva-plantillas, .canva-disenos");
+    const home = root.querySelector(".cv-plantillas, .cv-disenos");
     if (!home) return;
     home.classList.toggle("is-scrolled", window.scrollY > 12);
   }, { passive: true });

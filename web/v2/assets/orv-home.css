@@ -449,6 +449,13 @@ body.orv-home .foot-grid { display: grid; grid-template-columns: 1.3fr repeat(3,
 body.orv-home footer.site h2 { color: #fff; font-size: 2rem; }
 body.orv-home footer.site p,
 body.orv-home footer.site li { color: #d5dbe4; font-size: 0.92rem; }
+body.orv-home footer.site p {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0;
+}
 body.orv-home footer.site ul { list-style: none; margin: 0; padding: 0; }
 body.orv-home footer.site li { margin: 0.35rem 0; }
 body.orv-home footer.site h3 {

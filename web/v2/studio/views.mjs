@@ -1141,7 +1141,7 @@ function seguirHome(ctx) {
   }
   return el("section", { class: "canva-section desk-carousel", id: "seguir" }, [
     canvaHead(t("seguir"), seeAll(t("verTodo"), { "data-go": "disenos" })),
-    el("div", { class: "canva-row" }, projects.map((item) => recentHomeCard(item, t))),
+    el("div", { class: "cv-row" }, projects.map((item) => recentHomeCard(item, t))),
     arrowButton(t("anterior"), "prev"),
     arrowButton(t("siguiente"), "next"),
   ]);
@@ -1149,7 +1149,7 @@ function seguirHome(ctx) {
 
 function startHome(ctx) {
   const en = ctx.lang === "en";
-  const row = el("div", { class: "canva-start" }, START_HOW.map(([kind, id, es, labelEn, tone, d]) => {
+  const row = el("div", { class: "cv-start" }, START_HOW.map(([kind, id, es, labelEn, tone, d]) => {
     const attrs = kind === "cat" ? { "data-cat": id } : { "data-format": id };
     const node = button("", { class: "canva-plain canva-bubble-btn", ...attrs });
     node.append(
@@ -1178,7 +1178,7 @@ function usedHome(ctx) {
   });
   return el("section", { class: "canva-section", "data-home": "used" }, [
     canvaHead(ctx.t("masUsadas")),
-    el("div", { class: "canva-row" }, cards),
+    el("div", { class: "cv-row" }, cards),
   ]);
 }
 
@@ -1192,13 +1192,13 @@ function popularHome(ctx) {
   const items = proThumbList().filter((item) => item.height >= item.width).slice(0, 10);
   return el("section", { class: "canva-section", "data-home": "popular" }, [
     canvaHead(ctx.t("populares")),
-    el("div", { class: "canva-row" }, items.map((item) => portraitCard(item, ctx.lang))),
+    el("div", { class: "cv-row" }, items.map((item) => portraitCard(item, ctx.lang))),
   ]);
 }
 
 function shortcutsHome(ctx) {
   const en = ctx.lang === "en";
-  const row = el("div", { class: "canva-start" }, SHORTCUTS.map(([rail, es, labelEn, tone, d]) => {
+  const row = el("div", { class: "cv-start" }, SHORTCUTS.map(([rail, es, labelEn, tone, d]) => {
     const node = button("", { class: "canva-plain canva-bubble-btn", "data-start-rail": rail });
     node.append(
       el("span", { class: "canva-bubble", style: `background:${tone}` }, [svgIcon([d])]),
@@ -1237,7 +1237,7 @@ function interestHome(ctx) {
   }
   return el("section", { class: "canva-section desk-carousel", "data-home": "interest" }, [
     canvaHead(ctx.t("interes"), seeAll(ctx.t("verTodo"), { "data-go": "plantillas", "data-thumb-cat": "" }), ctx.t("paraTi")),
-    el("div", { class: "canva-row" }, items.map((item) => interestCard(item, ctx))),
+    el("div", { class: "cv-row" }, items.map((item) => interestCard(item, ctx))),
     arrowButton(ctx.t("anterior"), "prev"),
     arrowButton(ctx.t("siguiente"), "next"),
   ]);
@@ -1255,12 +1255,12 @@ function categoriesHome(ctx) {
       style: `background:${CAT_WASH[index % CAT_WASH.length]}`,
     });
     if (sample) node.append(thumbArt(sample));
-    node.append(el("span", { text: en ? cat.en : cat.es }));
+    node.append(el("span", { class: "cat-label", text: en ? cat.en : cat.es }));
     return node;
   });
   return el("section", { class: "canva-section", "data-home": "categories" }, [
     canvaHead(ctx.t("exploraPlantillas")),
-    el("div", { class: "canva-row" }, cards),
+    el("div", { class: "cv-row" }, cards),
   ]);
 }
 
@@ -1273,13 +1273,13 @@ function homeResults(ctx) {
   if (thumbs.length) {
     kids.push(el("section", { class: "canva-section" }, [
       canvaHead(t("plantillas")),
-      el("div", { class: "canva-row" }, thumbs.map((item) => interestCard(item, ctx))),
+      el("div", { class: "cv-row" }, thumbs.map((item) => interestCard(item, ctx))),
     ]));
   }
   if (templates.length) {
     kids.push(el("section", { class: "canva-section" }, [
       canvaHead(t("piezas")),
-      el("div", { class: "canva-row" }, templates.map((item) => templateCard(item, lang))),
+      el("div", { class: "cv-row" }, templates.map((item) => templateCard(item, lang))),
     ]));
   }
   if (!kids.length) kids.push(el("p", { id: "vacio-plantillas", class: "canva-empty", text: t("vacio") }));
@@ -1668,7 +1668,7 @@ function plantillasCategory(ctx) {
 }
 
 function plantillasShell(ctx, body) {
-  const node = el("div", { class: "canva-home canva-plantillas", "data-tab": "plantillas" }, [
+  const node = el("div", { class: "canva-home cv-plantillas", "data-tab": "plantillas" }, [
     desktopRail(ctx, "plantillas"),
     el("div", { class: "desk-only desk-tpl-hero" }, [
       el("h1", { text: ctx.t("hero") }),
@@ -2040,7 +2040,7 @@ function favoritesBody(ctx) {
 function mountLibrary(ctx, chrome, body) {
   const view = ctx.viewName();
   const node = el("div", {
-    class: `canva-home canva-plantillas canva-library is-${view}`,
+    class: `canva-home cv-plantillas canva-library is-${view}`,
     "data-tab": "plantillas",
     "data-library": view,
   }, [desktopRail(ctx, "plantillas"), chrome, body, canvaNav(ctx, "plantillas")]);
@@ -2272,7 +2272,7 @@ function stageNode(ctx) {
   frameNode.style.height = `${Math.round(doc.format.height * state.scale)}px`;
   art.style.transform = `scale(${state.scale})`;
   art.style.setProperty("--inv", String(1 / Math.max(0.05, state.scale)));
-  // Capa de selección fuera del recorte del lienzo: marco, asas y «Ajustar» se ven enteros, como en Canva.
+  // Capa de selección fuera del recorte del lienzo: marco, asas y «Ajustar» se ven enteros.
   const sel = el("div", { class: "stage-sel", "aria-hidden": "false" });
   sel.style.width = `${doc.format.width}px`;
   sel.style.height = `${doc.format.height}px`;

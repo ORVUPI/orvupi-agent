@@ -2,7 +2,7 @@
 
 El nombre de la herramienta es ORVUPI Sonar, con el subtítulo «Sonar · verify on-chain». `/sonar/` aliasa la misma app y `/verify/` se mantiene. El motivo es el pulpo rosa emitiendo ondas que llegan a otras redes.
 
-Fecha: 31 de octubre de 2026. Material usado: instrucciones del repositorio, la grabación descrita en el análisis de vídeo (16 fotogramas, sin probar cada botón), la revisión de Cristian en dos partes con capturas (solo observación, con su cuenta) y documentación pública de proveedores. No se entró en Arkham, Dune, DeFiLlama ni Bubblemaps para copiar la interfaz ni sus datos.
+Fecha: 31 de octubre de 2026. Material usado: instrucciones del repositorio, la grabación descrita en el análisis de vídeo (16 fotogramas, sin probar cada botón), la revisión en dos partes con capturas (solo observación, con cuenta propia) y documentación pública de proveedores. No se entró en Arkham, Dune, DeFiLlama ni Bubblemaps para copiar la interfaz ni sus datos.
 
 ## Qué se vio y qué no
 

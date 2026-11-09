@@ -13,7 +13,7 @@ Estados: comprobado (hay prueba en esta corrida), pendiente, no aplicable.
 | Barra lateral | comprobado | Nuevo chat, Chat, Proyectos, Documentos, historial de la pestaña, enlaces a Work y Studio. Contraer deja el icono y el desbordamiento horizontal sigue en 0 (1366). |
 | Colores | comprobado | El botón de enviar usa `#fc2d63`, medido en la hoja del logotipo. No se recolorea el PNG. La cabecera de ORVUPI sigue en su CSS (`#FF3070` / `#102032`). |
 | 360, 390, 768, 1366 y zoom 200 % | comprobado | `scrollWidth - clientWidth = 0` en 360, 390, 768 y 1366, y con `zoom: 2` a 1366. En 360 y 390 el menú abre la barra (`display: flex`) y Escape la cierra. Chrome headless. No es un teléfono físico. |
-| Sin datos personales de la maqueta | comprobado | No está «Espacio de Cristian» ni las respuestas fijas («Podríamos organizar tu idea», «RESUMEN DE EJEMPLO»). Test `arqiven-public`. |
+| Sin datos personales de la maqueta | comprobado | No está el rótulo personal de la maqueta ni las respuestas fijas («Podríamos organizar tu idea», «RESUMEN DE EJEMPLO»). Test `arqiven-public`. |
 | Lo no hecho se dice | comprobado | Proyectos y Documentos siguen en «pendiente de implementación». «Programar» avisa que no crea un programa. La voz no llama a `getUserMedia`. |
 | Nav tras Work y mapa | comprobado | Inicio, Herramientas, Work, ARQIVEN, Memes… en la home. 110 barras ya existentes más el mapa tras Studio. `aria-current="page"` en las cinco páginas de ARQIVEN. |
 | La home no es la página de funciones de la maqueta | comprobado | La vista inicial es el saludo y la caja. |

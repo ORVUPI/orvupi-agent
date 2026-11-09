@@ -270,17 +270,17 @@ test("un checksum mal no comparte caché con USDC", async ({ page }) => {
 test("en Base la entradilla no habla de SPL y se ocultan Permiso de emisión y Curva", async ({ page }) => {
   await page.goto("/verify/");
   await expect(page.locator("main .lede .lang.es")).toContainText("Cualquier token SPL o Token-2022");
-  await expect(page.locator('a[href="/aprender/#autoridad-emision"]')).toBeVisible();
-  await expect(page.locator('a[href="/aprender/#curva-pump"]')).toBeVisible();
-  await expect(page.locator('a[href="/aprender/#direccion"]')).toBeVisible();
+  await expect(page.locator('a[href="/academy/glosario/#autoridad-emision"]')).toBeVisible();
+  await expect(page.locator('a[href="/academy/glosario/#curva-pump"]')).toBeVisible();
+  await expect(page.locator('a[href="/academy/glosario/#direccion"]')).toBeVisible();
   await page.locator("#red").selectOption("base");
   await expect(page.locator("main .lede .lang.es")).toHaveText(LEDE_BASE_ES);
   await expect(page.locator("main .lede")).not.toContainText("SPL");
   await expect(page.locator("main .lede")).not.toContainText("Token-2022");
-  await expect(page.locator('a[href="/aprender/#autoridad-emision"]')).toBeHidden();
-  await expect(page.locator('a[href="/aprender/#curva-pump"]')).toBeHidden();
-  await expect(page.locator('a[href="/aprender/#direccion"]')).toBeVisible();
-  await expect(page.locator('a[href="/aprender/#guia-identificar"]')).toBeVisible();
+  await expect(page.locator('a[href="/academy/glosario/#autoridad-emision"]')).toBeHidden();
+  await expect(page.locator('a[href="/academy/glosario/#curva-pump"]')).toBeHidden();
+  await expect(page.locator('a[href="/academy/glosario/#direccion"]')).toBeVisible();
+  await expect(page.locator('a[href="/academy/articulos/identificar-un-token/"]')).toBeVisible();
   await switchLang(page, "en");
   await expect(page.locator("main .lede .lang.en")).toHaveText(LEDE_BASE_EN);
   await page.locator("#direccion-token").fill(ZERO);
@@ -304,8 +304,8 @@ test("en Base la entradilla no habla de SPL y se ocultan Permiso de emisión y C
   await expect(page.locator("#resultado")).toContainText(CHECK_ES);
   await page.locator("#red").selectOption("solana");
   await expect(page.locator("main .lede .lang.es")).toContainText("Cualquier token SPL o Token-2022");
-  await expect(page.locator('a[href="/aprender/#autoridad-emision"]')).toBeVisible();
-  await expect(page.locator('a[href="/aprender/#curva-pump"]')).toBeVisible();
+  await expect(page.locator('a[href="/academy/glosario/#autoridad-emision"]')).toBeVisible();
+  await expect(page.locator('a[href="/academy/glosario/#curva-pump"]')).toBeVisible();
 });
 
 test("el cuaderno guarda la red y la dirección de Base", async ({ page }) => {

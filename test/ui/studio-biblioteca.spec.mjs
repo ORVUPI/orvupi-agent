@@ -120,10 +120,10 @@ test("móvil: el chevron abre la biblioteca y cada vista monta", async ({ page }
 });
 
 test("móvil: el hash de plantillas conserva la consulta", async ({ page }) => {
-  await page.goto("/studio/#/plantillas?text=Estrategia");
-  await expect(page.locator(".canva-plantillas")).toBeVisible();
-  await expect(page.locator("#buscar")).toHaveValue("Estrategia");
-  await expect(page.locator(".tpl-masonry .tpl-open[aria-label*='Estrategia']").first()).toBeVisible();
+  await page.goto("/studio/#/plantillas?text=CV");
+  await expect(page.locator(".cv-plantillas")).toBeVisible();
+  await expect(page.locator("#buscar")).toHaveValue("CV");
+  await expect(page.locator(".tpl-masonry .tpl-open[aria-label*='CV']").first()).toBeVisible();
 
   await page.goto("/studio/#/plantillas&grupo=negocios");
   await expect(page.locator(".tpl-chip", { hasText: "Negocios" })).toHaveAttribute("aria-pressed", "true");

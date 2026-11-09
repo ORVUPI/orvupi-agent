@@ -812,7 +812,7 @@ body.studio-standalone footer.or-footer {
   padding: 0;
   text-align: left;
 }
-.plantilla-nombre { font-size: 0.92rem; font-weight: 650; line-height: 1.25; }
+.plantilla-nombre, .cat-label { position: relative; z-index: 1; background: #fff; color: #1c1c1f; font-size: 0.92rem; font-weight: 650; line-height: 1.25; }
 .plantilla-meta { font-size: 0.75rem; opacity: 0.72; }
 .mini-slot {
   display: block;
@@ -1279,22 +1279,22 @@ body.studio-standalone:has(.canva-home) main.studio-app {
 }
 .canva-empty { margin: 0 18px 8px; color: #4b5563; font-size: 14px; }
 .canva-section { min-width: 0; max-width: 100%; }
-.canva-row,
-.canva-start {
+.cv-row,
+.cv-start {
   width: 100%;
   min-width: 0;
   max-width: 100%;
   scrollbar-width: none;
 }
-.canva-row::-webkit-scrollbar,
-.canva-start::-webkit-scrollbar { display: none; }
-.canva-row {
+.cv-row::-webkit-scrollbar,
+.cv-start::-webkit-scrollbar { display: none; }
+.cv-row {
   display: flex;
   gap: 14px;
   overflow-x: auto;
   padding: 2px 18px 12px;
 }
-.canva-start {
+.cv-start {
   display: grid;
   grid-auto-flow: column;
   grid-template-rows: auto auto;
@@ -1469,7 +1469,7 @@ body.studio-standalone:has(.canva-home) main.studio-app {
   min-height: 40px;
   width: 100%;
 }
-.canva-home .canva-row .plantilla {
+.canva-home .cv-row .plantilla {
   flex: 0 0 180px;
   width: 180px;
 }
@@ -1650,8 +1650,8 @@ body.studio-standalone:has(.canva-home) main.studio-app {
 }
 
 /* Plantillas móvil: mismo shell que Inicio, feed al estilo de la referencia. */
-body.studio-standalone:has(.canva-plantillas) { background: #fff; }
-.canva-home.canva-plantillas {
+body.studio-standalone:has(.cv-plantillas) { background: #fff; }
+.canva-home.cv-plantillas {
   background-color: #fff;
   background-image: linear-gradient(180deg, #E8D9FE 0px, #f6f0ff 150px, #ffffff 250px);
   background-repeat: no-repeat;
@@ -1663,7 +1663,7 @@ body.studio-standalone:has(.canva-plantillas) { background: #fff; }
   padding: calc(10px + env(safe-area-inset-top)) 8px 2px 16px;
   background: transparent;
 }
-.canva-plantillas.is-scrolled .tpl-top {
+.cv-plantillas.is-scrolled .tpl-top {
   background: #fff;
   box-shadow: 0 1px 0 rgba(16, 32, 50, 0.06);
 }
@@ -1707,8 +1707,8 @@ body.studio-standalone:has(.canva-plantillas) { background: #fff; }
   display: grid;
   place-items: center;
 }
-.canva-plantillas:not(.is-scrolled) #studio-root button.tpl-search-btn,
-#studio-root .canva-plantillas:not(.is-scrolled) button.tpl-search-btn {
+.cv-plantillas:not(.is-scrolled) #studio-root button.tpl-search-btn,
+#studio-root .cv-plantillas:not(.is-scrolled) button.tpl-search-btn {
   visibility: hidden;
 }
 #studio-root button.tpl-search-btn svg { width: 22px; height: 22px; }
@@ -1741,7 +1741,7 @@ body.studio-standalone:has(.canva-plantillas) { background: #fff; }
   color: #8B3DFF;
 }
 .tpl-search-wrap { padding: 8px 16px 0; }
-.canva-plantillas #buscar {
+.cv-plantillas #buscar {
   min-height: 48px;
   background: #fff;
   box-shadow: 0 8px 24px rgba(80, 40, 140, 0.08);
@@ -1785,9 +1785,9 @@ body.studio-standalone:has(.canva-plantillas) { background: #fff; }
   color: #fff;
 }
 #studio-root button.tpl-chip[aria-pressed="true"] svg { color: #fff; }
-.canva-plantillas .canva-feed { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
-.canva-plantillas .canva-head { padding: 28px 16px 10px; }
-.canva-plantillas .canva-head h2 {
+.cv-plantillas .canva-feed { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+.cv-plantillas .canva-head { padding: 28px 16px 10px; }
+.cv-plantillas .canva-head h2 {
   font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -1841,6 +1841,8 @@ body.studio-standalone:has(.canva-plantillas) { background: #fff; }
 .tpl-tile-label {
   display: block;
   max-width: 104px;
+  background: #fff;
+  color: #1c1c1f;
   font-size: 12px;
   font-weight: 500;
   line-height: 1.25;
@@ -1976,39 +1978,39 @@ body.studio-standalone:has(.canva-plantillas) { background: #fff; }
 
 /* Plantillas: el cromo global (summary/button con borde #102032) no puede
    volver a pintar el título, el tab Más ni los «…» como píldoras. */
-.canva-home.canva-plantillas {
+.canva-home.cv-plantillas {
   background-image: radial-gradient(125% 72% at 100% -12%, #E8D9FE 0%, #f6f0ff 32%, #ffffff 68%);
   font-family: "Inter Studio", Inter, system-ui, sans-serif;
 }
-.canva-home.canva-plantillas h1,
-.canva-home.canva-plantillas h2,
-.canva-home.canva-plantillas h3,
-.canva-home.canva-plantillas button,
-.canva-home.canva-plantillas summary,
-.canva-home.canva-plantillas input,
+.canva-home.cv-plantillas h1,
+.canva-home.cv-plantillas h2,
+.canva-home.cv-plantillas h3,
+.canva-home.cv-plantillas button,
+.canva-home.cv-plantillas summary,
+.canva-home.cv-plantillas input,
 .canva-home .canva-nav,
 .canva-home .canva-nav button,
 .canva-home .canva-tab-menu > summary {
   font-family: "Inter Studio", Inter, system-ui, sans-serif;
 }
-html:has(.canva-plantillas),
-body.studio-standalone:has(.canva-plantillas) {
+html:has(.cv-plantillas),
+body.studio-standalone:has(.cv-plantillas) {
   scrollbar-width: none;
 }
-html:has(.canva-plantillas)::-webkit-scrollbar,
-body.studio-standalone:has(.canva-plantillas)::-webkit-scrollbar,
-.canva-plantillas .tpl-feed::-webkit-scrollbar {
+html:has(.cv-plantillas)::-webkit-scrollbar,
+body.studio-standalone:has(.cv-plantillas)::-webkit-scrollbar,
+.cv-plantillas .tpl-feed::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;
 }
-.canva-plantillas .tpl-feed { scrollbar-width: none; }
-#studio-root .canva-plantillas details.tpl-drop {
+.cv-plantillas .tpl-feed { scrollbar-width: none; }
+#studio-root .cv-plantillas details.tpl-drop {
   width: max-content;
   max-width: calc(100% - 48px);
 }
-#studio-root .canva-plantillas button.tpl-title,
-#studio-root .canva-plantillas summary.tpl-title {
+#studio-root .cv-plantillas button.tpl-title,
+#studio-root .cv-plantillas summary.tpl-title {
   display: inline-flex;
   flex-flow: row nowrap;
   align-items: center;
@@ -2032,11 +2034,11 @@ body.studio-standalone:has(.canva-plantillas)::-webkit-scrollbar,
   line-height: 1.1;
   list-style: none;
 }
-#studio-root .canva-plantillas button.tpl-title::-webkit-details-marker,
-#studio-root .canva-plantillas summary.tpl-title::-webkit-details-marker { display: none; }
-#studio-root .canva-plantillas button.tpl-title::marker,
-#studio-root .canva-plantillas summary.tpl-title::marker { content: none; font-size: 0; }
-#studio-root .canva-plantillas .tpl-chevron {
+#studio-root .cv-plantillas button.tpl-title::-webkit-details-marker,
+#studio-root .cv-plantillas summary.tpl-title::-webkit-details-marker { display: none; }
+#studio-root .cv-plantillas button.tpl-title::marker,
+#studio-root .cv-plantillas summary.tpl-title::marker { content: none; font-size: 0; }
+#studio-root .cv-plantillas .tpl-chevron {
   width: 22px;
   height: 22px;
   min-width: 22px;
@@ -2053,7 +2055,7 @@ body.studio-standalone:has(.canva-plantillas)::-webkit-scrollbar,
   display: grid;
   place-items: center;
 }
-#studio-root .canva-plantillas .tpl-chevron svg {
+#studio-root .cv-plantillas .tpl-chevron svg {
   width: 14px;
   height: 14px;
   min-width: 14px;
@@ -2062,13 +2064,13 @@ body.studio-standalone:has(.canva-plantillas)::-webkit-scrollbar,
   max-height: 14px;
   display: block;
 }
-.canva-plantillas .canva-head h2 {
+.cv-plantillas .canva-head h2 {
   font-size: 21px;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: #1a1a1e;
 }
-.canva-plantillas #buscar {
+.cv-plantillas #buscar {
   min-height: 46px;
   border: 0;
   box-shadow: 0 4px 16px rgba(80, 40, 140, 0.06);
@@ -2181,7 +2183,7 @@ body.studio-standalone:has(.canva-plantillas)::-webkit-scrollbar,
   box-shadow: 0 1px 4px rgba(16, 32, 50, 0.14);
 }
 @media (max-width: 720px) {
-  #studio-root .canva-plantillas button.tpl-arrow { display: none; }
+  #studio-root .cv-plantillas button.tpl-arrow { display: none; }
 }
 .tpl-play,
 .tpl-mute {
@@ -2647,18 +2649,18 @@ body.studio-standalone:has(.canva-plantillas)::-webkit-scrollbar,
 body.lib-sheet-open { overflow: hidden; }
 
 /* Mis diseños: referencia móvil, identidad ORVUPI. */
-body.studio-standalone:has(.canva-disenos) { background: #fff; }
-.canva-home.canva-disenos {
+body.studio-standalone:has(.cv-disenos) { background: #fff; }
+.canva-home.cv-disenos {
   background-color: #fff;
   background-image: linear-gradient(180deg, #d9ccff 0px, #d5e4ff 110px, #f8d5ea 210px, #ffffff 320px);
   background-repeat: no-repeat;
 }
-.canva-home.canva-disenos.is-create,
-.canva-home.canva-disenos.is-folder {
+.canva-home.cv-disenos.is-create,
+.canva-home.cv-disenos.is-folder {
   background-image: none;
   background: #fff;
 }
-.canva-disenos.is-scrolled .md-top {
+.cv-disenos.is-scrolled .md-top {
   background: #fff;
   box-shadow: 0 1px 0 rgba(16, 32, 50, 0.06);
 }
@@ -2735,15 +2737,15 @@ body.studio-standalone:has(.canva-disenos) { background: #fff; }
 #studio-root button.md-more svg,
 #studio-root button.md-pencil svg,
 #studio-root button.md-checkbtn svg { width: 22px; height: 22px; }
-.canva-disenos .md-search { margin: 10px 16px 0; }
-.canva-home.canva-disenos #buscar,
-.canva-home.canva-disenos #md-crear-buscar {
+.cv-disenos .md-search { margin: 10px 16px 0; }
+.canva-home.cv-disenos #buscar,
+.canva-home.cv-disenos #md-crear-buscar {
   min-height: 44px;
   background: #f2f3f5;
   box-shadow: none;
   border: 0;
 }
-#studio-root .canva-disenos button.canva-clear {
+#studio-root .cv-disenos button.canva-clear {
   min-width: 32px;
   min-height: 32px;
 }
@@ -2787,8 +2789,8 @@ body.studio-standalone:has(.canva-disenos) { background: #fff; }
   font-size: 16px;
   color: #8b3dff;
 }
-.md-feed, .canva-disenos { padding-bottom: 0; }
-.canva-disenos .md-block { min-width: 0; }
+.md-feed, .cv-disenos { padding-bottom: 0; }
+.cv-disenos .md-block { min-width: 0; }
 .md-section-head {
   display: flex;
   align-items: center;
@@ -3246,9 +3248,9 @@ body.studio-standalone:has(.canva-disenos) { background: #fff; }
   font-size: 14px;
   font-weight: 650;
 }
-.canva-disenos .md-block:last-child,
-.canva-disenos { padding-bottom: 0; }
-.canva-home.canva-disenos { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+.cv-disenos .md-block:last-child,
+.cv-disenos { padding-bottom: 0; }
+.canva-home.cv-disenos { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
 @media (max-width: 480px) {
   .md-selectbar, .md-notice { left: 8px; right: 8px; width: auto; transform: none; }
 }

@@ -14,6 +14,9 @@ const ALLOWED = new Set([
   "verify/test/security.test.ts",
   "web/v2/studio/blocklist.json",
   "test/studio.test.ts",
+  "functions/_lib/preview-host.js",
+  "functions/_lib/sonar.test.mjs",
+  "web/v2/_redirects",
 ]);
 
 const SKIP = new Set([".git", "node_modules", "dist", "test-results", "coverage", "test-report.json", "test-reporter-out.txt"]);

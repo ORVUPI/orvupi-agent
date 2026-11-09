@@ -88,8 +88,6 @@ body.verify-app #vf-root { order: 4; }
 body.verify-app #comprobaciones-red { order: 8; }
 body.verify-app #resultado { order: 9; }
 body.verify-app main h1 { font-size: clamp(1.6rem, 3vw, 2.2rem); margin: 8px 0 12px; text-align: center; }
-body.verify-app .lede,
-body.verify-app .ayuda-terminos,
 body.verify-app main > p.muted,
 body.verify-app main > p.aviso-fijo,
 body.verify-app details.como,
@@ -349,8 +347,6 @@ body.verify-app main > h1,
 body.verify-app #resultado[data-state="vacio"],
 body.verify-app #ver-lectura-caida,
 body.verify-app p.source,
-body.verify-app .lede,
-body.verify-app .ayuda-terminos,
 body.verify-app main > p.aviso-fijo,
 body.verify-app details.como,
 body.verify-app details.tecnico { display: none !important; }
@@ -384,7 +380,7 @@ body.verify-app .vf-coin strong,
 body.verify-app .vf-coin span { white-space: nowrap; }
 body.verify-app .vf-coin strong { font-size: 0.95rem; }
 body.verify-app .vf-up { color: #16c784; }
-body.verify-app .vf-down { color: #ea3943; }
+body.verify-app .vf-down { color: #eb3a43; }
 body.verify-app .vf-meta,
 body.verify-app .vf-live { color: #aeb8c4; }
 body.verify-app .vf-table th,
@@ -445,7 +441,7 @@ body.verify-app .vf-wordmark { display: flex; align-items: baseline; white-space
 body.verify-app header.site .brand strong,
 body.verify-app .vf-product { font-size: 0.95rem; letter-spacing: -0.02em; white-space: nowrap; font-weight: 700; }
 body.verify-app .vf-product { margin-left: 0.35em; }
-body.verify-app header.site .vf-tagline { margin: 1px 0 0; color: #aeb8c4; font-size: 0.68rem; font-weight: 560; letter-spacing: 0.01em; white-space: nowrap; }
+body.verify-app header.site .vf-tagline { margin: 1px 0 0; color: #243044; font-size: 0.68rem; font-weight: 560; letter-spacing: 0.01em; white-space: nowrap; }
 body.verify-app .vf-slash {
   display: inline-grid;
   place-items: center;

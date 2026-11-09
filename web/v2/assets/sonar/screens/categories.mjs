@@ -1,10 +1,10 @@
-import { api, qs } from "../api.mjs?v=9f09541910";
-import { compact, plain, show } from "../format.mjs?v=9f09541910";
-import { categoryName, pageTitle, t } from "../i18n.mjs?v=9f09541910";
-import { parseRoute, setCrumb } from "../shell.mjs?v=9f09541910";
-import { paintRanking } from "../rows.mjs?v=9f09541910";
-import { snapshot, update } from "../store.mjs?v=9f09541910";
-import { el, emptyBlock, errorBlock, pagedBlock, pctNode, skeleton, sourceLine } from "../ui.mjs?v=9f09541910";
+import { api, qs } from "../api.mjs?v=e18c09d68b";
+import { compact, plain, show } from "../format.mjs?v=e18c09d68b";
+import { categoryName, pageTitle, t } from "../i18n.mjs?v=e18c09d68b";
+import { parseRoute, setCrumb } from "../shell.mjs?v=e18c09d68b";
+import { paintRanking } from "../rows.mjs?v=e18c09d68b";
+import { snapshot, update } from "../store.mjs?v=e18c09d68b";
+import { el, emptyBlock, errorBlock, pagedBlock, pctNode, skeleton, sourceLine } from "../ui.mjs?v=e18c09d68b";
 
 export async function mount(host, ctx) {
   host.replaceChildren(skeleton(8));

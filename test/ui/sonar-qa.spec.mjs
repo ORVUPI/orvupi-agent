@@ -63,7 +63,7 @@ async function openScreen(page, id, label, mobile) {
 
 test("recorre Sonar sin errores de la aplicación", async ({ page }, info) => {
   const problems = watch(page);
-  const mobile = info.project.name.endsWith("390");
+  const mobile = info.project.name.includes("mobile") || info.project.name.endsWith("390");
   const shots = info.project.name.startsWith("chromium");
   await page.goto("/verify/");
   await expect(page).toHaveTitle(/ORVUPI Sonar/);

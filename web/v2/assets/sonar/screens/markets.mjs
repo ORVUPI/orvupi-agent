@@ -1,10 +1,10 @@
-import { api, qs } from "../api.mjs?v=9f09541910";
-import { t } from "../i18n.mjs?v=9f09541910";
-import { applyLocalFilters, coverageNote, marketTabs, paintRanking, sortRows } from "../rows.mjs?v=9f09541910";
-import { snapshot, update } from "../store.mjs?v=9f09541910";
-import { el, emptyBlock, errorBlock, pager, setChildren, skeleton, sourceLine } from "../ui.mjs?v=9f09541910";
-import { compact, money, plain, show } from "../format.mjs?v=9f09541910";
-import { pctNode } from "../ui.mjs?v=9f09541910";
+import { api, qs } from "../api.mjs?v=e18c09d68b";
+import { t } from "../i18n.mjs?v=e18c09d68b";
+import { applyLocalFilters, coverageNote, marketTabs, paintRanking, sortRows } from "../rows.mjs?v=e18c09d68b";
+import { snapshot, update } from "../store.mjs?v=e18c09d68b";
+import { el, emptyBlock, errorBlock, pager, setChildren, skeleton, sourceLine } from "../ui.mjs?v=e18c09d68b";
+import { compact, money, plain, show } from "../format.mjs?v=e18c09d68b";
+import { pctNode } from "../ui.mjs?v=e18c09d68b";
 
 const PRESETS = [
   ["stablecoins", "stable"],

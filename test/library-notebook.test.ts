@@ -1337,7 +1337,7 @@ describe("lector y cuaderno", () => {
           getElementById: (id: string) => (id === "direccion-token" ? input : null),
           querySelectorAll: (selector: string) => {
             const matched = links.filter((link) => {
-              if (selector === 'a[href^="/aprender/"]') return link.href.startsWith("/aprender/");
+              if (selector === 'a[href^="/aprender/"], a[href^="/academy/glosario/"]') return link.href.startsWith("/aprender/") || link.href.startsWith("/academy/glosario/");
               if (selector === 'a[href="/verify/"], a[href^="/verify/?"]') return link.href === "/verify/" || link.href.startsWith("/verify/?");
               return false;
             });
@@ -1363,6 +1363,9 @@ describe("lector y cuaderno", () => {
     filled.links[0]?.click();
     assert.equal(filled.links[0]?.href, `/aprender/#a=${CA}`);
     assert.equal(filled.links[0]?.href.includes("?"), false);
+    const glossary = run("https://orvupi.com/verify/", { value: CA, links: ["/academy/glosario/#direccion"] });
+    glossary.links[0]?.click();
+    assert.equal(glossary.links[0]?.href, `/academy/glosario/#a=${CA}`);
 
     const typed = run("https://orvupi.com/verify/#direccion", { value: CA, links: ["/aprender/?from=lab#direccion"] });
     assert.equal(typed.input?.value, CA);
