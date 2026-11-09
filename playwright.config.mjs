@@ -15,8 +15,7 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: `python3 -m http.server ${PORT} --bind 127.0.0.1`,
-    cwd: "web/v2",
+    command: `node test/ui/static-server.mjs web/v2 ${PORT}`,
     port: PORT,
     reuseExistingServer: !process.env.CI,
   },
