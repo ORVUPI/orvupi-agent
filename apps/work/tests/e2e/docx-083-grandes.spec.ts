@@ -92,7 +92,7 @@ for (const mb of SIZES) {
       if (await more.isVisible().catch(() => false)) await more.click();
       await fileMenu.click();
       await doc.getByRole("menuitem", { name: /^(Exportar|Descargar)/ }).filter({ visible: true }).first().click();
-      await doc.getByRole("menuitem", { name: /DOCX/ }).filter({ visible: true }).first().click();
+      await doc.getByRole("menuitem", { name: /Microsoft Word \(\.docx\)/i }).filter({ visible: true }).first().click();
       const file = await download;
       const out = await readFile((await file.path())!);
       times.exportMs = Date.now() - t2;

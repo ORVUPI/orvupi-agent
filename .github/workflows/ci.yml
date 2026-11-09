@@ -176,9 +176,13 @@ jobs:
         run: npm run test:browser
 
   ui:
-    name: playwright
+    name: playwright (${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -210,7 +214,7 @@ jobs:
           npx playwright install firefox
 
       - name: Playwright
-        run: npx playwright test
+        run: npx playwright test --shard=${{ matrix.shard }}/4
 
   i18n:
     name: idiomas (5)
@@ -311,21 +315,54 @@ jobs:
       - name: Test
         run: npm test
 
+  work-e2e:
+    name: orvupi work e2e (${{ matrix.shard }}/3)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    defaults:
+      run:
+        working-directory: apps/work
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22.14.0"
+          cache: npm
+          cache-dependency-path: apps/work/package-lock.json
+
+      - name: Install
+        run: |
+          set -euo pipefail
+          ok=0
+          for i in 1 2 3; do
+            if npm ci; then ok=1; break; fi
+            echo "npm ci intento $i fallido"
+            rm -rf node_modules
+            sleep 5
+          done
+          test "$ok" = 1
+
       - name: Install browser
-        # El espejo apt del runner a veces se queda parado: apt con reintentos y tiempo límite, y 3 intentos de 6 min
-        # (si un intento se corta, se mata su apt-get para liberar el bloqueo de dpkg).
         run: |
           printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' | sudo tee /etc/apt/apt.conf.d/99red >/dev/null
           for i in 1 2 3; do
             timeout 360 npx playwright install --with-deps chromium webkit firefox && exit 0
             echo "intento $i fallido"; sudo pkill -9 -x apt-get || true; sudo pkill -9 -x dpkg || true; sleep 3; sudo dpkg --configure -a || true
-            # El espejo de Azure es el que se atasca: los siguientes intentos usan el de Ubuntu.
             printf 'http://archive.ubuntu.com/ubuntu/\tpriority:1\nhttp://azure.archive.ubuntu.com/ubuntu/\tpriority:2\n' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
           done
           exit 1
 
       - name: End to end
-        run: npm run test:e2e
+        run: npx playwright test --shard=${{ matrix.shard }}/3
 
   secrets:
     name: gitleaks

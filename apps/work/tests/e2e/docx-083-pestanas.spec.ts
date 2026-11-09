@@ -206,7 +206,7 @@ test("pestañas: crear, subpestañas, menú, renombrar, emoji, mover, duplicar, 
   const download = doc.waitForEvent("download");
   await openFileMenu(doc);
   await doc.getByRole("menuitem", { name: /^(Exportar|Descargar)/ }).filter({ visible: true }).first().click();
-  await doc.getByRole("menuitem", { name: /DOCX/ }).filter({ visible: true }).first().click();
+  await doc.getByRole("menuitem", { name: /Microsoft Word \(\.docx\)/i }).filter({ visible: true }).first().click();
   const file = await (await download).path();
   const xml = await (await JSZip.loadAsync(await readFile(file!))).file("word/document.xml")!.async("string");
   for (const text of ["Pestaña 1", "🚀 Anexo", "Pestaña 2", "Texto de la primera", "Sub tres", "Contenido dos"]) expect(xml).toContain(text);

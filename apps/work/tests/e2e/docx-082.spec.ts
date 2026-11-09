@@ -222,7 +222,7 @@ test("en el editor se crean, editan y exportan formas, notas, secciones, comenta
   if (await fileMenu.isVisible().catch(() => false)) {
     await fileMenu.click();
     await doc.getByRole("menuitem", { name: /^(Exportar|Descargar)/ }).filter({ visible: true }).first().click();
-    await doc.getByRole("menuitem", { name: /DOCX/ }).filter({ visible: true }).first().click();
+    await doc.getByRole("menuitem", { name: /Microsoft Word \(\.docx\)/i }).filter({ visible: true }).first().click();
     const file = await download;
     const bytes = await readFile((await file.path())!);
     expect(bytes.subarray(0, 2).toString()).toBe("PK");
