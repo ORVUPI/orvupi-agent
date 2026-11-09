@@ -153,7 +153,7 @@ test("recorre Sonar sin errores de la aplicación", async ({ page }, info) => {
 
   await openScreen(page, "transfers", "Transfers", mobile);
   await page.locator("#vf-root").getByRole("button", { name: "Entradas" }).click();
-  await page.locator("#vf-root").getByRole("button", { name: "Salidas" }).click();
+  await page.locator("#vf-root").getByRole("button", { name: "Salidas", exact: true }).click();
   await page.locator("#vf-root").getByRole("button", { name: "Todas" }).click();
   await page.locator("#vf-root").getByRole("button", { name: "USD ≥ 1" }).click();
   const next = page.locator("#vf-root").getByRole("button", { name: "›" });
