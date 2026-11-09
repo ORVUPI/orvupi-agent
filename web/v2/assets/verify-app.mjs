@@ -1,8 +1,8 @@
-import { fetchBitcoinQuote, fetchCoinOhlc, fetchDexSnapshot, fetchGlobalMarket, fetchLargeTransfers, fetchPoolCandles, fetchPoolTrades, fetchTopMarkets, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs?v=68f164cacb";
-import { mountLiveChart } from "../verify/net/chart.mjs?v=68f164cacb";
-import { COIN_FRAMES, POLL_MS, TIMEFRAMES, stepLabel } from "../verify/net/ohlcv.mjs?v=68f164cacb";
-import { LIMITS, buildGraph, chainById, explorerHref, filterTransfers, formatUnits, groupSearch, identify, pager, slicePage, storageKeys, supportedIds, UNSUPPORTED } from "../verify/net/present.mjs?v=68f164cacb";
-import { isOfficialAddress, OFFICIAL_ADDRESS } from "../shared/orvupi-contract.js?v=68f164cacb";
+import { fetchBitcoinQuote, fetchCoinOhlc, fetchDexSnapshot, fetchGlobalMarket, fetchLargeTransfers, fetchPoolCandles, fetchPoolTrades, fetchTopMarkets, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs?v=bb985cb796";
+import { mountLiveChart } from "../verify/net/chart.mjs?v=bb985cb796";
+import { COIN_FRAMES, POLL_MS, TIMEFRAMES, stepLabel } from "../verify/net/ohlcv.mjs?v=bb985cb796";
+import { LIMITS, buildGraph, chainById, explorerHref, filterTransfers, formatUnits, groupSearch, identify, pager, slicePage, storageKeys, supportedIds, UNSUPPORTED } from "../verify/net/present.mjs?v=bb985cb796";
+import { isOfficialAddress, OFFICIAL_ADDRESS } from "../shared/orvupi-contract.js?v=bb985cb796";
 
 const KEYS = storageKeys();
 const PROJECT_WALLET = "GKpccLJwKArptzt9j897njXUx9RsV5NKL3Egu7bfMA6Q";
@@ -1144,7 +1144,7 @@ function boot() {
   if (market) {
     document.body.classList.add("sonar-market");
     document.getElementById("vf-root")?.replaceChildren(sonarLoading());
-    import("./sonar/shell.mjs?v=68f164cacb").then((mod) => mod.start()).catch(healSonar);
+    import("./sonar/shell.mjs?v=bb985cb796").then((mod) => mod.start()).catch(healSonar);
     return;
   }
   const dock = document.createElement("nav");
@@ -1194,15 +1194,14 @@ function boot() {
   markNav(state.screen);
   const read = h("button", { type: "button", id: "vf-leer", onclick: () => investigate(document.getElementById("direccion-token")?.value, document.getElementById("red")?.value || "solana") }, t("Ficha", "Profile"));
   document.querySelector(".consulta-barra")?.append(read);
-  const mainEl = document.querySelector("main");
-  const siteHeader = document.querySelector("header.site");
-  if (mainEl && siteHeader && siteHeader.parentElement !== mainEl) mainEl.prepend(siteHeader);
   const slot = document.createElement("div");
   slot.id = "vf-search-slot";
   slot.className = "vf-search-slot";
-  document.querySelector(".vf-nav")?.after(slot);
   const form = document.getElementById("consulta");
-  if (form && slot) slot.append(form);
+  // El campo se queda dentro de main (la prueba de idioma lo rellena ahí) y la
+  // cabecera, fuera, conserva el lema. El hueco de búsqueda de la cabecera lo muestra.
+  if (form) slot.append(form);
+  document.querySelector("main")?.prepend(slot);
   document.addEventListener("submit", (event) => {
     const form = event.target;
     if (!form || form.id !== "consulta") return;
@@ -1258,6 +1257,7 @@ function boot() {
     if (red && chain && [...red.options].some((option) => option.value === chain)) red.value = chain;
     investigate(address, chain || red?.value || "solana");
   }
+  loadLive();
 }
 function paintSheet() {
   let sheet = document.getElementById("vf-sheet");

@@ -79,9 +79,7 @@ body.verify-app .vf-more button { color: #102032; width: 100%; text-align: left;
 body.verify-app .vf-jump { display: none; }
 body.verify-app .vf-dock { display: none; }
 body.verify-app main.wrap,
-body.verify-app main.wrap.estrecha { max-width: none; width: 100%; display: flex; flex-direction: column; padding-left: 0; padding-right: 0; padding-top: 0; }
-body.verify-app main.wrap > header.site { width: 100%; margin: 0; }
-body.verify-app main.wrap > :not(header.site) { width: min(1180px, calc(100% - 24px)); margin-left: auto; margin-right: auto; }
+body.verify-app main.wrap.estrecha { max-width: min(1180px, 100%); display: flex; flex-direction: column; }
 body.verify-app main > .aviso { order: 1; }
 body.verify-app main > h1 { order: 2; }
 body.verify-app .herramienta { display: contents; }
@@ -281,13 +279,13 @@ body.verify-app header.site > .wrap {
   padding: 6px 12px;
   gap: 10px;
   display: grid;
-  grid-template-columns: auto auto minmax(240px, 1fr) auto;
-  grid-template-areas: "brand nav search lang";
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "brand nav lang";
   align-items: center;
 }
 body.verify-app header.site .brand { grid-area: brand; }
 body.verify-app .vf-nav { grid-area: nav; order: unset; }
-body.verify-app .vf-search-slot { grid-area: search; order: unset; min-width: 0; }
+body.verify-app .vf-search-slot { order: 3; min-width: 0; width: 100%; }
 body.verify-app .langpick { grid-area: lang; order: unset; margin-left: 0; }
 body.verify-app #vf-open-search { display: none; }
 body.verify-app #consulta button { white-space: nowrap; flex: 0 0 auto; }
@@ -351,7 +349,7 @@ body.verify-app #ver-lectura-caida,
 body.verify-app p.source,
 body.verify-app main > p.aviso-fijo,
 body.verify-app details.como,
-body.verify-app details.tecnico { display: none !important; }
+body.verify-app details.tecnico.archivo { display: none !important; }
 body.verify-app #comprobaciones-red { order: 20; font-size: 0.78rem; color: #9aa6b4; }
 body.verify-app .vf-card,
 body.verify-app .vf-chart-card {
@@ -582,7 +580,7 @@ body.verify-app .vf-feed-amt { white-space: nowrap; text-align: right; font-weig
 @media (max-width: 1023px) {
   body.verify-app header.site > .wrap {
     grid-template-columns: 1fr auto;
-    grid-template-areas: "brand lang" "search search";
+    grid-template-areas: "brand lang";
   }
   body.verify-app .vf-dock { background: #0c1016; border-top: 1px solid #243041; }
 }

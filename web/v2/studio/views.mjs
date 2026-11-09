@@ -1092,7 +1092,7 @@ export function canvaNav(ctx, tab) {
   return el("nav", { class: "canva-nav", "aria-label": t("menu") }, [
     navTab(t("inicio"), "inicio", tab, "M4 11 L12 4 L20 11 V20 H4 Z"),
     navTab(t("disenos"), "disenos", tab, "M4 7h6l2 2h8v9H4z"),
-    navTab(t("plantillas"), "plantillas", tab, "M3 4h10v8H3zM15 4h6v5h-6zM3 14h6v6H3zM11 14h10v6H11z"),
+    navTab(ctx.lang === "en" ? "Catalog" : "Catálogo", "plantillas", tab, "M3 4h10v8H3zM15 4h6v5h-6zM3 14h6v6H3zM11 14h10v6H11z"),
     navTab(t("iaTab"), "ia", tab, "M12 3l1.2 4.2L17.5 8.5 13.2 9.8 12 14l-1.2-4.2L6.5 8.5l4.3-1.3z", studioAsset("assets/orvupi-avatar.png")),
     mas,
   ]);

@@ -143,7 +143,9 @@ def local_page(page, locale, prefix, cat, en_attrs, missing):
     def relink(m):
         href = m.group(2)
         first = href.lstrip("/").split("/")[0].split("#")[0].split("?")[0]
-        if href == "/" or href.startswith("/#") or href.startswith("/?") or first in PAGE_DIRS or first == "academy":
+        # Academy es solo español. La portada y /legal/ enlazan /academy/ (la prueba de
+        # Academy lo exige). El resto de las páginas traducidas usan el prefijo del idioma.
+        if href == "/" or href.startswith("/#") or href.startswith("/?") or first in PAGE_DIRS or (first == "academy" and path not in ("/", "/legal/")):
             return m.group(1) + "/" + prefix + href + m.group(3)
         return m.group(0)
     html = re.sub(r'(<a\s[^>]*href=")(/[^"]*)(")', relink, html)
