@@ -34,6 +34,11 @@ async function pressExport(page, id = "#descargar") {
       await mobile.click();
       return;
     }
+    const desk = page.locator("#compartir-studio");
+    if (await desk.isVisible()) {
+      await desk.click();
+      return;
+    }
   }
   await page.locator(id).evaluate((node) => node.click());
 }
@@ -116,7 +121,7 @@ test("guardar: Compartir solo aparece si el navegador comparte archivos", async 
     navigator.canShare = (data) => Boolean(data && data.files && data.files.length);
   });
   await ready(page);
-  await expect(page.locator("#compartir:visible, [data-m='compartir']:visible").first()).toBeVisible();
+  await expect(page.locator("#compartir-studio:visible, #compartir:visible, [data-m='compartir']:visible").first()).toBeVisible();
   await pressExport(page, "#compartir");
   await expect.poll(() => page.evaluate(() => window.__shared || 0), { timeout: 60_000 }).toBe(1);
 });

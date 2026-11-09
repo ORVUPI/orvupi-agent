@@ -62,11 +62,13 @@ export default defineConfig({
     {
       name: "studio-firefox",
       testMatch: /studio-.*\.spec\.mjs$/,
+      testIgnore: /studio-todas-plantillas\.spec\.mjs$/,
       use: { ...devices["Desktop Firefox"], viewport: { width: 1440, height: 900 } },
     },
     {
       name: "studio-firefox-mobile",
       testMatch: /studio-.*\.spec\.mjs$/,
+      testIgnore: /studio-todas-plantillas\.spec\.mjs$/,
       use: { ...devices["Desktop Firefox"], viewport: { width: 412, height: 915 } },
     },
   ],

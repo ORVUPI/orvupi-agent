@@ -199,13 +199,15 @@ jobs:
         # (si un intento se corta, se mata su apt-get para liberar el bloqueo de dpkg).
         run: |
           printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' | sudo tee /etc/apt/apt.conf.d/99red >/dev/null
+          ok=0
           for i in 1 2 3; do
-            timeout 360 npx playwright install --with-deps chromium webkit && exit 0
+            timeout 360 npx playwright install --with-deps chromium webkit && ok=1 && break
             echo "intento $i fallido"; sudo pkill -9 -x apt-get || true; sudo pkill -9 -x dpkg || true; sleep 3; sudo dpkg --configure -a || true
             # El espejo de Azure es el que se atasca: los siguientes intentos usan el de Ubuntu.
             printf 'http://archive.ubuntu.com/ubuntu/\tpriority:1\nhttp://azure.archive.ubuntu.com/ubuntu/\tpriority:2\n' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
           done
-          exit 1
+          test "$ok" = 1
+          npx playwright install firefox
 
       - name: Playwright
         run: npx playwright test

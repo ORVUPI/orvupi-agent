@@ -39,7 +39,7 @@ test("pizarra: once pestañas, lienzo de puntos y barra inferior", async ({ page
   await page.locator("#abrir-notas").click();
   await expect(page.locator("#notas-pizarra")).toBeVisible();
   await page.locator("#cuadricula").click();
-  await expect(page.locator(".stage-art")).toHaveClass(/cuadricula/);
+  await expect(page.locator(".stage-frame .stage-art")).toHaveClass(/cuadricula/);
 });
 
 test("sitio: doce pestañas, vista previa, exportar y sección", async ({ page }) => {
@@ -56,7 +56,7 @@ test("sitio: doce pestañas, vista previa, exportar y sección", async ({ page }
   await expect(page.locator("#anadir-seccion")).toHaveText(/\+ Añadir una sección/);
   await expect(page.locator("#tira-paginas")).toBeVisible();
   await expect(page.locator("#anadir-pagina")).toHaveCount(0);
-  const heightOf = () => page.locator(".stage-art").evaluate((node) => Number.parseFloat(node.style.height));
+  const heightOf = () => page.locator(".stage-frame .stage-art").evaluate((node) => Number.parseFloat(node.style.height));
   const before = await heightOf();
   await page.locator("#anadir-seccion").click();
   await expect(page.locator(".capa-texto", { hasText: /^Sección$/ })).toBeVisible();
@@ -123,8 +123,8 @@ test("cada ficha abre su diseño: miniatura, foto, archivo y fondo", async ({ pa
   await expect(page.locator("#editor-app")).toHaveAttribute("data-template-id", "tpl-curriculum-01");
   await expect(page.locator("#nombre-diseno")).toHaveValue("CV Ejecutivo Navy");
   await expect(page.locator(".capa-texto", { hasText: "HABILIDADES" })).toBeVisible();
-  await expect(page.locator(".stage-art")).toHaveCSS("width", "794px");
-  await expect(page.locator(".stage-art")).toHaveCSS("height", "1123px");
+  await expect(page.locator(".stage-frame .stage-art")).toHaveCSS("width", "794px");
+  await expect(page.locator(".stage-frame .stage-art")).toHaveCSS("height", "1123px");
 
   await page.goto("/studio/#/fotos");
   await page.locator("#buscar").fill("Papel rayado 1");
@@ -136,7 +136,7 @@ test("cada ficha abre su diseño: miniatura, foto, archivo y fondo", async ({ pa
   await expect(modal.locator(".tpl-modal-hero .capa-escena")).toBeVisible();
   await modal.locator("[data-personalizar]").click();
   await expect(page.locator("#editor-app")).toHaveAttribute("data-template-id", "lib-papel-01");
-  await expect(page.locator(".stage-art .capa-escena")).toBeVisible();
+  await expect(page.locator(".stage-frame .stage-art .capa-escena")).toBeVisible();
 
   await page.goto("/studio/#/fotos");
   await page.locator("#buscar").fill("foto-crema");
@@ -164,7 +164,7 @@ test("cada ficha abre su diseño: miniatura, foto, archivo y fondo", async ({ pa
   await modal.locator("[data-personalizar]").click();
   await expect(page.locator("#editor-app")).toHaveAttribute("data-template-id", "fondo-solana");
   await expect(page.locator("#nombre-diseno")).toHaveValue("Red digital");
-  await expect(page.locator(".stage-art")).toHaveCSS("width", "1080px");
-  await expect(page.locator(".stage-art")).toHaveCSS("height", "1080px");
-  await expect(page.locator(".stage-art")).toHaveCSS("background-color", "rgb(7, 4, 24)");
+  await expect(page.locator(".stage-frame .stage-art")).toHaveCSS("width", "1080px");
+  await expect(page.locator(".stage-frame .stage-art")).toHaveCSS("height", "1080px");
+  await expect(page.locator(".stage-frame .stage-art")).toHaveCSS("background-color", "rgb(7, 4, 24)");
 });
