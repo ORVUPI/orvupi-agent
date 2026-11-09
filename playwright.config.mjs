@@ -7,6 +7,8 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
+  // El runner tiene 4 núcleos. Con 2, la suite no cabe en los 20 minutos del job.
+  workers: process.env.CI ? 4 : undefined,
   reporter: process.env.CI ? "line" : "list",
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,

@@ -4689,4 +4689,6 @@ html[data-reduce-motion="1"] .canva-home * { animation: none !important; transit
   .tpl-modal-side { padding: 16px; }
   .tpl-modal-side h2 { font-size: 22px; }
 }
+/* orvupi.css pide scroll suave y llega después. En WebKit el clic no se asienta mientras la página se mueve. */
+html { scroll-behavior: auto !important; }
 
