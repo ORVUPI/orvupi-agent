@@ -127,6 +127,7 @@ https://superb-horse-9036f5.netlify.app/*  https://orvupi.com/:splat  301!
 /:lang/arqiven/engine-worker.mjs                 /arqiven/engine-worker.mjs 200
 /:lang/arqiven/favicon-32.png                    /arqiven/favicon-32.png 200
 /:lang/arqiven/icon-192.png                      /arqiven/icon-192.png 200
+/:lang/arqiven/knowledge-index.json              /arqiven/knowledge-index.json 200
 /:lang/contribuir/plantilla.md                   /contribuir/plantilla.md 200
 /:lang/lab/sw.js                                 /lab/sw.js 200
 /:lang/studio/CONTINUIDAD.md                     /studio/CONTINUIDAD.md 200
