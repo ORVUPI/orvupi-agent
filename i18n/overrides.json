@@ -1,5 +1,60 @@
 {
  "_nota": "Traducciones escritas a mano para los términos más visibles. Prevalecen sobre el borrador automático. Formato: inglés -> [pt-BR, ja, ko]. Pendientes de revisión por hablante nativo.",
+ "Published changes and repository notes as of 10 November 2026. The dark homepage was published on orvupi.com on 8 November 2026.": [
+  "Mudanças publicadas e notas do repositório em 10 de novembro de 2026. A página inicial escura foi publicada em orvupi.com em 8 de novembro de 2026.",
+  "2026年11月10日時点の公開済みの変更とリポジトリの記録です。暗いトップページは2026年11月8日に orvupi.com で公開されました。",
+  "2026년 11월 10일 기준의 공개된 변경과 저장소 기록입니다. 어두운 첫 화면은 2026년 11월 8일 orvupi.com에 공개되었습니다."
+ ],
+ "That day the dark homepage was published on orvupi.com (PR #159), with the looping octopus greeting and the tool cards. The rest of this note was already in the repository.": [
+  "Nesse dia a página inicial escura foi publicada em orvupi.com (PR #159), com a saudação do polvo em repetição e os cartões das ferramentas. O restante desta nota já estava no repositório.",
+  "その日、暗いトップページが orvupi.com で公開されました（PR #159）。タコのあいさつはループし、ツールのカードが並びます。この注記の残りは、すでにリポジトリにありました。",
+  "그날 어두운 첫 화면이 orvupi.com에 공개되었습니다(PR #159). 문어 인사는 반복되고 도구 카드가 있습니다. 이 기록의 나머지는 이미 저장소에 있었습니다."
+ ],
+ "10 November 2026": [
+  "10 de novembro de 2026",
+  "2026年11月10日",
+  "2026년 11월 10일"
+ ],
+ "Repository facts. The footer redesign is not on orvupi.com yet.": [
+  "Fatos do repositório. O novo rodapé ainda não está em orvupi.com.",
+  "リポジトリの事実です。フッターの作り直しは、まだ orvupi.com にはありません。",
+  "저장소의 사실입니다. 바닥글 개편은 아직 orvupi.com에 없습니다."
+ ],
+ "Main CI": [
+  "CI do main",
+  "main の CI",
+  "main CI"
+ ],
+ "In the repository": [
+  "No repositório",
+  "リポジトリ内",
+  "저장소에 있음"
+ ],
+ "PR #160 is still a draft. Its CI went green on 9 November 2026, without changing the published homepage.": [
+  "O PR #160 continua em rascunho. A CI ficou verde em 9 de novembro de 2026, sem mudar a página inicial publicada.",
+  "PR #160 は下書きのままです。2026年11月9日に CI が成功し、公開中のトップページは変えていません。",
+  "PR #160은 아직 초안입니다. 2026년 11월 9일 CI가 통과했고, 공개된 첫 화면은 바꾸지 않았습니다."
+ ],
+ "Site footer": [
+  "Rodapé do site",
+  "サイトのフッター",
+  "사이트 바닥글"
+ ],
+ "The pink and green dotted stripe is removed across the site.": [
+  "A faixa de pontos rosa e verde sai de todo o site.",
+  "ピンクと緑の点線は、サイト全体から消えます。",
+  "분홍과 초록 점선은 사이트 전체에서 빠집니다."
+ ],
+ "The footer uses the corporate logo on the dark homepage background.": [
+  "O rodapé usa o logotipo empresarial sobre o fundo escuro da página inicial.",
+  "フッターは、暗いトップページの背景に企業ロゴを載せます。",
+  "바닥글은 어두운 첫 화면 배경 위에 기업 로고를 둡니다."
+ ],
+ "It is in draft PR #161 and is not published.": [
+  "Está no PR #161, em rascunho, e não está publicado.",
+  "PR #161 の下書きにあり、未公開です。",
+  "PR #161 초안에 있으며 공개되지 않았습니다."
+ ],
  "Collections": [
   "Coleções",
   "コレクション",

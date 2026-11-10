@@ -1,6 +1,6 @@
 {
  "pt-BR": {
-  "manual": 354,
+  "manual": 365,
   "auto": 1599,
   "fallback_en": [
    ". CoinGecko does not sponsor or endorse ORVUPI. ORVUPI releases CoinGecko from liability for the use of that data in Sonar. GeckoTerminal (on-chain data), Alternative.me (Fear &amp; Greed, attributed next to the value), PatternPlus (unlocks and calendar, CC BY 4.0) and Binance public market data are also used. Watchlists and the portfolio stay in this browser. There is no account.",
@@ -11,13 +11,11 @@
    "As of 8 November 2026 the repository also includes Academy, Sonar, Studio and ARQIVEN. The table below is still the 11 October record: no statuses were invented.",
    "CoinGecko",
    "Development notes.",
-   "Facts already in the repository. This is not an announcement that the new homepage is on orvupi.com.",
    "Home.",
    "How to read the tools.",
    "How to suggest an improvement or a bug.",
    "Ideas and bugs, with the same brand as the rest of ORVUPI.",
    "Identity and terms of use.",
-   "In the repository",
    "Its own tool: articles, paths, practice and a glossary.",
    "Legal reviews this fixed educational example. Any version with real data will need a new review. Still absent from this website.",
    "Library and notebook.",
@@ -44,7 +42,6 @@
    "Privacy and contact.",
    "Profile",
    "Published address and its sources.",
-   "Released changes and what comes next. Repository notes as of 8 November 2026. The new homepage is still in review and is not published on orvupi.com.",
    "SHA-256 of token.json: 6b21145b7482cc649bc687e1a7b7794a3b946fd83c995c1abd6c66ea556b5f0c. securityNotice is still the 2026-10-05 text.",
    "Sonar",
    "Sonar shows prices, market caps and asset pages with data from",
@@ -114,7 +111,7 @@
   ]
  },
  "ja": {
-  "manual": 354,
+  "manual": 365,
   "auto": 1626,
   "fallback_en": [
    ". CoinGecko does not sponsor or endorse ORVUPI. ORVUPI releases CoinGecko from liability for the use of that data in Sonar. GeckoTerminal (on-chain data), Alternative.me (Fear &amp; Greed, attributed next to the value), PatternPlus (unlocks and calendar, CC BY 4.0) and Binance public market data are also used. Watchlists and the portfolio stay in this browser. There is no account.",
@@ -125,13 +122,11 @@
    "As of 8 November 2026 the repository also includes Academy, Sonar, Studio and ARQIVEN. The table below is still the 11 October record: no statuses were invented.",
    "CoinGecko",
    "Development notes.",
-   "Facts already in the repository. This is not an announcement that the new homepage is on orvupi.com.",
    "Home.",
    "How to read the tools.",
    "How to suggest an improvement or a bug.",
    "Ideas and bugs, with the same brand as the rest of ORVUPI.",
    "Identity and terms of use.",
-   "In the repository",
    "Its own tool: articles, paths, practice and a glossary.",
    "Limits and risks. The only place for those notices.",
    "Loading…",
@@ -146,7 +141,6 @@
    "Privacy and contact.",
    "Profile",
    "Published address and its sources.",
-   "Released changes and what comes next. Repository notes as of 8 November 2026. The new homepage is still in review and is not published on orvupi.com.",
    "SHA-256 of token.json: 6b21145b7482cc649bc687e1a7b7794a3b946fd83c995c1abd6c66ea556b5f0c. securityNotice is still the 2026-10-05 text.",
    "Sonar",
    "Sonar shows prices, market caps and asset pages with data from",
@@ -201,7 +195,7 @@
   ]
  },
  "ko": {
-  "manual": 354,
+  "manual": 365,
   "auto": 1591,
   "fallback_en": [
    ". CoinGecko does not sponsor or endorse ORVUPI. ORVUPI releases CoinGecko from liability for the use of that data in Sonar. GeckoTerminal (on-chain data), Alternative.me (Fear &amp; Greed, attributed next to the value), PatternPlus (unlocks and calendar, CC BY 4.0) and Binance public market data are also used. Watchlists and the portfolio stay in this browser. There is no account.",
@@ -212,14 +206,12 @@
    "As of 8 November 2026 the repository also includes Academy, Sonar, Studio and ARQIVEN. The table below is still the 11 October record: no statuses were invented.",
    "CoinGecko",
    "Development notes.",
-   "Facts already in the repository. This is not an announcement that the new homepage is on orvupi.com.",
    "Help",
    "Home.",
    "How to read the tools.",
    "How to suggest an improvement or a bug.",
    "Ideas and bugs, with the same brand as the rest of ORVUPI.",
    "Identity and terms of use.",
-   "In the repository",
    "Its own tool: articles, paths, practice and a glossary.",
    "Limits and risks. The only place for those notices.",
    "Loading…",
@@ -233,7 +225,6 @@
    "Privacy and contact.",
    "Profile",
    "Published address and its sources.",
-   "Released changes and what comes next. Repository notes as of 8 November 2026. The new homepage is still in review and is not published on orvupi.com.",
    "SHA-256 of token.json: 6b21145b7482cc649bc687e1a7b7794a3b946fd83c995c1abd6c66ea556b5f0c. securityNotice is still the 2026-10-05 text.",
    "Search",
    "Sonar",
