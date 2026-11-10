@@ -32,6 +32,7 @@ drill-report.md
 drill-SHA256SUMS
 verify-report.json
 verify-report.md
+train/arqiven/out/
 web/v2/assets/orvupi/album/**
 !web/v2/assets/orvupi/album/**/
 !web/v2/assets/orvupi/album/**/*.png

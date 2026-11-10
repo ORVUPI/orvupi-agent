@@ -100,10 +100,12 @@ describe("motor de terceros de ARQIVEN", () => {
     const globalBlock = headers.slice(headers.indexOf("\n/*\n"), headers.indexOf("\n/verify/\n"));
     assert.match(globalBlock, /connect-src 'self'/);
     assert.equal(globalBlock.includes("huggingface"), false);
+    assert.equal(globalBlock.includes("wikipedia"), false);
     assert.equal(globalBlock.includes("wasm-unsafe-eval"), false);
     const arqiven = headers.split("/arqiven/\n")[1]?.split("/arqiven/*")[0] ?? "";
     assert.match(arqiven, /https:\/\/huggingface\.co/);
     assert.match(arqiven, /https:\/\/cdn\.jsdelivr\.net/);
+    assert.match(arqiven, /https:\/\/\*\.wikipedia\.org/);
     assert.equal(arqiven.includes("unsafe-inline"), false);
     assert.equal(arqiven.includes("youtube"), false);
     assert.equal(arqiven.includes("'unsafe-eval'"), false);
@@ -111,6 +113,7 @@ describe("motor de terceros de ARQIVEN", () => {
       const meta = read(rel).match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? "";
       assert.match(meta, /huggingface\.co/, rel);
       assert.match(meta, /cdn\.jsdelivr\.net/, rel);
+      assert.match(meta, /wikipedia\.org/, rel);
       assert.match(meta, /wasm-unsafe-eval/, rel);
       assert.equal(meta.includes("unsafe-inline"), false, rel);
       assert.equal(meta.includes("youtube"), false, rel);

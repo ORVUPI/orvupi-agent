@@ -1,8 +1,11 @@
 import { arqivenEngine } from "/shared/ia/engine-client.mjs";
-import { badgeOf, defaultModel, THIRD_PARTY_MODELS } from "/shared/ia/models.mjs";
+import { badgeOf, defaultModel, modelById, THIRD_PARTY_MODELS } from "/shared/ia/models.mjs";
 import { createRequest, honestResult } from "/shared/ia/contract.mjs";
 import { saveWorkBytes, loadWorkBytes } from "/studio/lib/work-store.mjs";
 import { sanitizePlain } from "/shared/ia/plain.mjs";
+import { buildIndex } from "/shared/ia/retrieve.mjs";
+import { excerptAnswer, finishModelAnswer, planTurn } from "/shared/ia/turn.mjs";
+import { exportPayload, listVotes, openFeedbackDb, saveVote } from "/shared/ia/feedback.mjs";
 
 const root = document.querySelector(".arq-app");
 if (!root) throw new Error("ARQIVEN");
@@ -36,6 +39,13 @@ const UI = {
     shortcut: "Atajo de tarea. No ejecuta un modelo ni promete esa capacidad.",
     notBuilt: "Programar no está implementado. El chip no crea un programa.",
     retries: "Se ha reintentado tres veces. No hay otra descarga automática.",
+    excerptBadge: "extracto de la fuente · no es el modelo",
+    usesSources: "usa fuentes y las cita",
+    sourcesLabel: "Fuentes",
+    useful: "Útil",
+    notUseful: "No útil",
+    exportVotes: "Exportar votos de este dispositivo",
+    wikiDisclosure: "ARQIVEN es la IA de ORVUPI y no tiene un modelo propio. El modelo de terceros que elijas responde en este navegador. Las páginas de ORVUPI (MIT) se consultan aquí. Si la pregunta no está cubierta, se consulta Wikipedia en tu idioma (CC BY-SA): esa consulta envía solo la pregunta, nunca un documento de Work.",
   },
   en: {
     prepare: "Retry",
@@ -62,12 +72,20 @@ const UI = {
     shortcut: "Task shortcut. It does not run a model or promise that ability.",
     notBuilt: "Coding is not implemented. This chip does not create a program.",
     retries: "Retried three times. There is no further automatic download.",
+    excerptBadge: "source excerpt · not the model",
+    usesSources: "uses sources and cites them",
+    sourcesLabel: "Sources",
+    useful: "Useful",
+    notUseful: "Not useful",
+    exportVotes: "Export votes from this device",
+    wikiDisclosure: "ARQIVEN is ORVUPI's AI and has no model of its own. The third-party model you choose answers in this browser. ORVUPI pages (MIT) are searched here. If the question is not covered, Wikipedia is queried in your language (CC BY-SA): that query sends only the question, never a Work document.",
   },
   pt: {
     prepare: "Tentar de novo",
     ready: "Modelo de terceiros pronto",
     again: "Usar este modelo",
     cancel: "Cancelar",
+    who: "ARQIVEN é a IA da ORVUPI. Se você baixar um modelo para ele responder, esse modelo é de terceiros e aparece com o nome dele.",
     preparing: "Baixando um modelo de terceiros. Você pode continuar escrevendo.",
     checking: "Conferindo se o modelo de terceiros responde neste navegador.",
     idle: "IA da ORVUPI",
@@ -87,12 +105,20 @@ const UI = {
     shortcut: "Atalho de tarefa. Não executa um modelo nem promete essa capacidade.",
     notBuilt: "Programar não está implementado. O atalho não cria um programa.",
     retries: "Houve três tentativas. Não há outra descarga automática.",
+    excerptBadge: "trecho da fonte · não é o modelo",
+    usesSources: "usa fontes e cita",
+    sourcesLabel: "Fontes",
+    useful: "Útil",
+    notUseful: "Não útil",
+    exportVotes: "Exportar votos deste dispositivo",
+    wikiDisclosure: "ARQIVEN é a IA da ORVUPI e não tem um modelo próprio. O modelo de terceiros que você escolher responde neste navegador. As páginas da ORVUPI (MIT) são consultadas aqui. Se a pergunta não estiver coberta, consulta-se a Wikipedia no seu idioma (CC BY-SA): essa consulta envia só a pergunta, nunca um documento do Work.",
   },
   ja: {
     prepare: "再試行",
     ready: "第三者モデルの準備ができました",
     again: "このモデルを使う",
     cancel: "キャンセル",
+    who: "ARQIVEN は ORVUPI の AI です。応答させるためにモデルをダウンロードする場合、それは第三者のもので、名前は別に示します。",
     preparing: "第三者モデルをダウンロードしています。入力は続けられます。",
     checking: "このブラウザで第三者モデルが応答するか確認しています。",
     idle: "ORVUPIのAI",
@@ -112,12 +138,20 @@ const UI = {
     shortcut: "タスクの近道です。モデルは実行せず、その能力も約束しません。",
     notBuilt: "プログラミングは未実装です。このチップはプログラムを作りません。",
     retries: "3回試しました。これ以上は自動では受けません。",
+    excerptBadge: "出典の抜粋 · モデルの文章ではない",
+    usesSources: "出典を使い、出典を示します",
+    sourcesLabel: "出典",
+    useful: "役に立った",
+    notUseful: "役に立たなかった",
+    exportVotes: "この端末の投票を書き出す",
+    wikiDisclosure: "ARQIVEN は ORVUPI の AI で、独自モデルはありません。選んだ第三者モデルがこのブラウザで答えます。ORVUPI のページ（MIT）はここで検索します。質問がページにないときだけ、あなたの言語の Wikipedia（CC BY-SA）に問い合わせます。送るのは質問だけで、Work の文書は送りません。",
   },
   ko: {
     prepare: "다시 시도",
     ready: "제3자 모델이 준비되었습니다",
     again: "이 모델 사용",
     cancel: "취소",
+    who: "ARQIVEN은 ORVUPI의 AI입니다. 답을 받으려고 모델을 받으면 그 모델은 제3자이고, 이름은 따로 표시합니다.",
     preparing: "제3자 모델을 받는 중입니다. 계속 입력할 수 있습니다.",
     checking: "이 브라우저에서 제3자 모델이 응답하는지 확인하는 중입니다.",
     idle: "ORVUPI AI",
@@ -137,6 +171,13 @@ const UI = {
     shortcut: "작업 바로가기입니다. 모델을 실행하지 않고, 그 능력을 약속하지도 않습니다.",
     notBuilt: "프로그래밍은 구현되지 않았습니다. 이 칩은 프로그램을 만들지 않습니다.",
     retries: "세 번 시도했습니다. 더 이상 자동으로 받지 않습니다.",
+    excerptBadge: "출처 발췌 · 모델의 글이 아님",
+    usesSources: "출처를 쓰고 출처를 밝힙니다",
+    sourcesLabel: "출처",
+    useful: "도움 됨",
+    notUseful: "도움 안 됨",
+    exportVotes: "이 기기의 투표 내보내기",
+    wikiDisclosure: "ARQIVEN은 ORVUPI의 AI이고 자체 모델은 없습니다. 고른 제3자 모델이 이 브라우저에서 답합니다. ORVUPI 페이지(MIT)는 여기서 찾습니다. 질문이 페이지에 없을 때만 당신 언어의 Wikipedia(CC BY-SA)에 묻습니다. 질문만 보내고 Work 문서는 보내지 않습니다.",
   },
 };
 const ui = UI[uiLang];
@@ -163,6 +204,7 @@ const state = {
   snap: { phase: "idle", ready: false, modelId: "", modelVersion: "", progress: { loaded: 0, total: 0, file: "" }, error: "" },
   queue: [],
   painting: 0,
+  knowledge: null,
 };
 
 const app = document.getElementById("app");
@@ -215,6 +257,19 @@ meter.className = "engine-meter";
 meter.hidden = true;
 meter.append(document.createElement("i"));
 engineBar.append(modelPick, prepare, cancel, meter, progress);
+const indicator = document.createElement("p");
+indicator.id = "model-indicator";
+indicator.className = "model-indicator";
+const sourceNote = document.createElement("p");
+sourceNote.id = "source-note";
+sourceNote.className = "source-note";
+sourceNote.textContent = ui.wikiDisclosure;
+const exportVotes = document.createElement("button");
+exportVotes.type = "button";
+exportVotes.id = "export-feedback";
+exportVotes.className = "prepare";
+exportVotes.textContent = ui.exportVotes;
+engineBar.append(indicator, sourceNote, exportVotes);
 const who = document.createElement("p");
 who.className = "arq-who";
 who.textContent = ui.who || "";
@@ -262,6 +317,82 @@ editor.append(editorHead, editorNote, paper, editorFoot);
 app?.append(editor);
 
 const CHIP_TASK = ["generate", "analyze", "explain", null];
+
+function sourceList(sources) {
+  const list = document.createElement("ul");
+  list.className = "sources";
+  const caption = document.createElement("li");
+  caption.className = "sources-label";
+  caption.textContent = ui.sourcesLabel;
+  list.append(caption);
+  for (const source of sources) {
+    if (!source?.url) continue;
+    const item = document.createElement("li");
+    const link = document.createElement("a");
+    link.href = source.url;
+    const origin = source.origin === "wikipedia" ? "Wikipedia" : "ORVUPI";
+    link.textContent = `${source.title || source.url} · ${origin} · ${source.license || ""}`.trim();
+    if (/^https?:/i.test(source.url)) {
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+    }
+    item.append(link);
+    list.append(item);
+  }
+  return list;
+}
+
+function voteButton(item, vote) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "vote";
+  button.dataset.vote = vote;
+  button.setAttribute("aria-pressed", item.vote === vote ? "true" : "false");
+  button.setAttribute("aria-label", vote === "up" ? ui.useful : ui.notUseful);
+  button.textContent = vote === "up" ? "👍" : "👎";
+  button.addEventListener("click", () => { void rememberVote(item, vote, button); });
+  return button;
+}
+
+async function rememberVote(item, vote, button) {
+  item.vote = vote;
+  const db = await openFeedbackDb();
+  await saveVote(db, {
+    id: `${item.id}:${vote}`,
+    vote,
+    lang,
+    modelId: item.modelId,
+    modelVersion: item.modelVersion,
+    task: state.tool,
+    sourceCount: item.sources?.length || 0,
+  });
+  button.setAttribute("aria-pressed", "true");
+  const sibling = button.parentElement?.querySelector(`[data-vote="${vote === "up" ? "down" : "up"}"]`);
+  sibling?.setAttribute("aria-pressed", "false");
+}
+
+async function downloadVotes() {
+  const db = await openFeedbackDb();
+  const votes = await listVotes(db);
+  const blob = new Blob([exportPayload(votes)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "arqiven-votos.json";
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function knowledgeIndex() {
+  if (state.knowledge) return state.knowledge;
+  const response = await fetch("/arqiven/knowledge-index.json");
+  if (!response.ok) return null;
+  const payload = await response.json();
+  state.knowledge = buildIndex(payload.chunks || []);
+  return state.knowledge;
+}
 
 function startPrepare(modelId) {
   if (state.prepareFailures >= 3) {
@@ -321,9 +452,11 @@ function updateEngineUi() {
     const file = snap.progress.file ? ` ${snap.progress.file}` : "";
     const ratio = snap.progress.total > 0 ? ` ${pct}%` : "";
     progress.textContent = `${snap.probe ? ui.checking : ui.preparing}${ratio || " …"}${file}`;
-  } else if (snap.phase === "error") progress.textContent = `${ui.error} ${snap.error}`.trim();
-  else if (snap.phase === "ready") progress.textContent = `${ui.ready} · ${snap.modelId} · ${snap.modelVersion}`;
+  } else if (snap.phase === "error") progress.textContent = ui.error;
+  else   if (snap.phase === "ready") progress.textContent = `${ui.ready} · ${snap.modelId} · ${snap.modelVersion}`;
   else progress.textContent = "";
+  const chosen = modelById(modelPick.value) || defaultModel();
+  indicator.textContent = `${chosen.version} · ${ui.third} · ${ui.usesSources}`;
 }
 
 function paintSoon() {
@@ -364,13 +497,14 @@ function paint() {
         meta.className = "meta";
         const badge = document.createElement("span");
         badge.className = "badge";
-        badge.textContent = item.pending ? `${ui.queued.split("…")[0]}… · ${ui.third} · ${defaultModel().id}` : badgeOf(item);
+        badge.textContent = item.mode === "extractive" ? ui.excerptBadge : (item.pending ? `${ui.queued.split("…")[0]}… · ${ui.third} · ${defaultModel().id}` : badgeOf(item));
         meta.append(badge);
         node.append(meta);
       }
       const body = document.createElement("p");
       body.textContent = item.content;
       node.append(body);
+      if (item.role === "assistant" && item.sources?.length) node.append(sourceList(item.sources));
       if (item.role === "assistant" && !item.pending && item.content) {
         const actions = document.createElement("div");
         actions.className = "answer-actions";
@@ -378,7 +512,9 @@ function paint() {
         edit.type = "button";
         edit.textContent = ui.edit;
         edit.addEventListener("click", () => openEditorWith(item.content, true));
-        actions.append(edit);
+        const up = voteButton(item, "up");
+        const down = voteButton(item, "down");
+        actions.append(edit, up, down);
         node.append(actions);
       }
       messages.append(node);
@@ -451,15 +587,36 @@ async function streamInto(item, request) {
     const result = await engine.run(request, (token) => {
       item.content += token;
       paintSoon();
-    }, lang);
+    }, lang, item.promptSources || []);
+    const guarded = finishModelAnswer(result.text, lang);
+    if (guarded.blocked) {
+      item.running = false;
+      state.queue = state.queue.filter((entry) => entry !== item);
+      item.content = guarded.text;
+      item.mode = "rules";
+      item.provider = "none";
+      item.modelId = "none";
+      item.modelVersion = "";
+      item.blocked = guarded.blocked;
+      paint();
+      return;
+    }
     item.running = false;
     state.queue = state.queue.filter((entry) => entry !== item);
     if (!result.text || result.provider !== "third-party") {
-      item.content = result.provider === "third-party" ? ui.emptyModel : (result.text || honest);
+      const excerpt = item.sources?.[0] ? excerptAnswer(lang, item.sources[0]) : "";
+      item.content = result.provider === "third-party" ? (excerpt || ui.emptyModel) : (result.text || honest);
+      if (excerpt && result.provider === "third-party") {
+        item.mode = "extractive";
+        item.provider = "none";
+        item.modelId = "none";
+        item.modelVersion = "";
+      } else {
       item.mode = result.mode;
       item.provider = result.provider;
       item.modelId = result.modelId;
       item.modelVersion = result.modelVersion || "";
+      }
     } else {
       item.content = sanitizePlain(result.text);
       item.mode = result.mode;
@@ -496,11 +653,20 @@ function failQueue(message) {
     if (!item.pending) continue;
     item.pending = false;
     item.request = null;
-    item.content = `${ui.error} ${message || ""}`.trim();
-    item.mode = "rules";
-    item.provider = "none";
-    item.modelId = "none";
-    item.modelVersion = "";
+    const excerpt = item.sources?.[0] ? excerptAnswer(lang, item.sources[0]) : "";
+    if (excerpt) {
+      item.content = excerpt;
+      item.mode = "extractive";
+      item.provider = "none";
+      item.modelId = "none";
+      item.modelVersion = "";
+    } else {
+      item.content = `${ui.error} ${message || ""}`.trim();
+      item.mode = "rules";
+      item.provider = "none";
+      item.modelId = "none";
+      item.modelVersion = "";
+    }
   }
   state.queue = state.queue.filter((item) => item.running);
 }
@@ -525,6 +691,14 @@ async function send() {
   }
   const visible = [text, state.attachment ? state.attachment.name : "", local && !state.attachment ? ui.editorTitle : ""].filter(Boolean).join("\n");
   const modelText = [text, state.attachment?.text || "", local].filter(Boolean).join("\n\n").slice(0, 8000);
+  const index = await knowledgeIndex().catch(() => null);
+  const plan = await planTurn({
+    question: text,
+    lang,
+    index,
+    model: modelById(modelPick.value) || defaultModel(),
+    fetchImpl: text && !state.attachment ? globalThis.fetch.bind(globalThis) : null,
+  });
   const user = { id: `m-${state.messages.length}-u`, role: "user", content: visible, modelContent: modelText };
   state.messages.push(user);
   const request = createRequest({
@@ -541,15 +715,28 @@ async function send() {
   state.attachment = null;
   const chip = document.getElementById("file-chip");
   if (chip) chip.textContent = "";
+  if (plan.skipModel) {
+    assistant({ content: plan.text, mode: "rules", provider: "none", modelId: "none", sources: plan.sources });
+    paint();
+    field?.focus();
+    return;
+  }
+  const excerpt = plan.sources[0] ? excerptAnswer(lang, plan.sources[0]) : "";
   if (!state.snap.ready) {
     if (state.snap.phase !== "preparing") startPrepare(modelPick.value || defaultModel().id);
-    const item = assistant({ content: ui.queued, pending: true, request });
+    const item = assistant({
+      content: excerpt ? `${ui.queued}\n\n${excerpt}` : ui.queued,
+      pending: true,
+      request,
+      sources: plan.sources,
+      promptSources: plan.promptSources,
+    });
     state.queue.push(item);
     paint();
     field?.focus();
     return;
   }
-  const item = assistant({});
+  const item = assistant({ sources: plan.sources, promptSources: plan.promptSources });
   await streamInto(item, request);
   field?.focus();
 }
@@ -651,6 +838,8 @@ document.addEventListener("keydown", (event) => {
 
 document.getElementById("voice")?.addEventListener("click", () => setStatus(copy.voice));
 prepare.addEventListener("click", () => { startPrepare(modelPick.value || defaultModel().id); });
+modelPick.addEventListener("change", () => paint());
+exportVotes.addEventListener("click", () => { void downloadVotes(); });
 cancel.addEventListener("click", () => { engine.cancel(); });
 editorToggle.addEventListener("click", () => setEditor(editor.hidden));
 editorClose.addEventListener("click", () => setEditor(false));

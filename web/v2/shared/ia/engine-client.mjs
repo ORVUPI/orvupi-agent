@@ -146,10 +146,15 @@ export function createEngineClient() {
     return snapshot();
   }
 
-  function run(request, onToken = () => undefined, lang = "es") {
+  function run(request, onToken = () => undefined, lang = "es", sources = []) {
     if (phase !== "ready" || !worker || !model) return Promise.reject(new Error("not-ready"));
     if (pending) return Promise.reject(new Error("busy"));
     const id = ++nextId;
+    const promptSources = (Array.isArray(sources) ? sources : []).slice(0, 4).map((item) => ({
+      title: String(item?.title || "").slice(0, 140),
+      url: String(item?.url || "").slice(0, 200),
+      excerpt: String(item?.excerpt || "").slice(0, 500),
+    }));
     return new Promise((resolve, reject) => {
       pending = { id, request, onToken, resolve, reject, lang };
       worker.postMessage({
@@ -158,6 +163,7 @@ export function createEngineClient() {
         task: request?.task || "chat",
         messages: Array.isArray(request?.messages) ? request.messages : [],
         maxTokens: 256,
+        sources: promptSources,
       });
     });
   }

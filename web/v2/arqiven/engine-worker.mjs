@@ -100,11 +100,16 @@ async function handle(msg) {
       const { TextStreamer } = await lib();
       stopper?.reset();
       const hint = TASK[msg.task] || "";
+      const cited = Array.isArray(msg.sources) ? msg.sources.flatMap((item) => {
+        if (!item || typeof item.excerpt !== "string" || !item.excerpt) return [];
+        return [`[${item.title || item.url || "fuente"}] ${item.url || ""}\n${item.excerpt}`];
+      }).slice(0, 4) : [];
+      const sourceNote = cited.length ? `\n\nFuentes recuperadas. Si las usas, cita el título. Si no responden, di que no consta.\n${cited.join("\n\n")}` : "";
       const history = Array.isArray(msg.messages) ? msg.messages.flatMap((item) => {
         if (!item || (item.role !== "user" && item.role !== "assistant") || typeof item.content !== "string") return [];
         return [{ role: item.role, content: item.content.slice(0, 8000) }];
       }).slice(-12) : [];
-      const messages = [{ role: "system", content: hint ? `${SYSTEM} ${hint}` : SYSTEM }, ...history];
+      const messages = [{ role: "system", content: `${hint ? `${SYSTEM} ${hint}` : SYSTEM}${sourceNote}` }, ...history];
       let acc = "";
       let broken = false;
       const streamer = new TextStreamer(generator.tokenizer, {
