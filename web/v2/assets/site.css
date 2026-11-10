@@ -1046,8 +1046,7 @@ main h1::after {
 .aviso,
 .nota,
 .risk-block,
-.aviso-fijo,
-footer.site p {
+.aviso-fijo {
   color: var(--text);
   font-size: max(1rem, 14px);
   background: var(--abyss);
@@ -1060,7 +1059,6 @@ footer.site p {
 }
 footer.site .wrap { display: grid; gap: 0.8rem; }
 footer.site p { margin: 0; }
-footer.site p:first-child,
 .risk-block { border-left-color: var(--risk); }
 .aviso { border-left-color: var(--accent); box-shadow: inset 0 1px 0 rgba(249, 230, 208, 0.16), 0 12px 28px rgba(4, 13, 31, 0.28); }
 .nota,
@@ -1270,16 +1268,11 @@ main > article > h2::before,
 .tareas > section > h2::before,
 #mision-app h2::before,
 .leccion-app h2::before {
-  content: "";
-  display: block;
-  height: 14px;
-  margin: 0 0 0.7rem;
-  background-image:
-    radial-gradient(circle, var(--gem) 3px, transparent 3.4px),
-    radial-gradient(circle, var(--pink) 3px, transparent 3.4px);
-  background-size: 18px 14px, 18px 14px;
-  background-position: 0 center, 9px center;
-  background-repeat: repeat-x;
+  content: none;
+  display: none;
+  height: 0;
+  margin: 0;
+  background: none;
 }
 .ficha, .tarea, .paso, .senal, .feedback, #mision-app section, .leccion-app section {
   border-radius: 1rem;
@@ -1508,17 +1501,13 @@ footer.site {
     radial-gradient(ellipse 36% 70% at 100% 100%, rgba(27, 235, 145, 0.12), transparent 58%),
     var(--abyss);
 }
-footer.site::before {
-  content: "";
-  display: block;
-  height: 16px;
-  background-color: var(--bg);
-  background-image:
-    radial-gradient(circle, var(--gem) 3px, transparent 3.5px),
-    radial-gradient(circle, var(--pink) 3px, transparent 3.5px);
-  background-size: 18px 16px, 18px 16px;
-  background-position: 0 center, 9px center;
-  background-repeat: repeat-x;
+footer.site::before,
+footer.or-footer::before {
+  content: none;
+  display: none;
+  height: 0;
+  margin: 0;
+  background: none;
 }
 @media (min-width: 900px) {
   footer.site .wrap {
@@ -2296,4 +2285,139 @@ article[id] { scroll-margin-top: 1rem; }
     margin: 0.85rem 0 0 !important; box-shadow: none;
   }
   body:has(#aviso-guardar) { padding-bottom: calc(8.5rem + env(safe-area-inset-bottom)); }
+}
+
+/* Pie compartido. La especificidad gana a orvupi.css y a body.orv-home h2. */
+body footer.site,
+body footer.or-footer {
+  display: block;
+  background: #0d1628;
+  color: #f4f1eb;
+  margin: 0;
+  padding: 2.6rem 0 1.6rem;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+body footer.site .wrap,
+body footer.or-footer .wrap {
+  width: min(72rem, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 0;
+  display: block;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+body footer.site h2,
+body footer.or-footer h2 {
+  position: relative;
+  display: block;
+  width: 13.5rem;
+  max-width: 13.5rem;
+  height: 3.5rem;
+  margin: 0 0 0.9rem;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 0.8rem;
+  background: #fffcf7;
+  color: transparent;
+  font-size: 0;
+  line-height: 0;
+  box-shadow: none;
+  border: 0;
+}
+body footer.site h2::after,
+body footer.or-footer h2::after {
+  content: "";
+  position: absolute;
+  inset: 0.45rem 0.7rem;
+  background: url("/assets/orvupi/brand/logotipo-empresarial.png") left center / contain no-repeat;
+}
+body footer.site p,
+body footer.or-footer p,
+body footer.site li,
+body footer.or-footer li {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  color: #d7deea;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+body footer.site .foot-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) repeat(3, minmax(0, 1fr));
+  gap: 1.75rem 1.5rem;
+  align-items: start;
+}
+body footer.site h3,
+body footer.or-footer h3 {
+  margin: 0 0 0.65rem;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  color: #fff;
+  font-family: system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+body footer.site ul,
+body footer.or-footer ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+body footer.site li,
+body footer.or-footer li { margin: 0.2rem 0; }
+body footer.site a,
+body footer.or-footer a,
+body footer.site a:link,
+body footer.or-footer a:link,
+body footer.site a:visited,
+body footer.or-footer a:visited {
+  color: #f7f4ee;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  display: inline;
+  min-height: 0;
+  padding: 0;
+  font-weight: 550;
+  text-decoration: none;
+}
+body footer.site a:hover,
+body footer.or-footer a:hover { color: #ff8ab3; }
+body footer.site .legal,
+body footer.or-footer .wrap > p:last-child {
+  margin-top: 1.6rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  color: #b7c0ce;
+  font-size: 0.88rem;
+}
+body footer.or-footer .or-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.9rem;
+  margin: 0.9rem 0 1rem;
+}
+@media (max-width: 900px) {
+  body footer.site .foot-grid { grid-template-columns: 1fr 1fr; }
+  body footer.site .foot-grid > :first-child { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  body footer.site,
+  body footer.or-footer { padding: 2rem 0 1.4rem; }
+  body footer.site .wrap,
+  body footer.or-footer .wrap { width: min(72rem, calc(100% - 1.5rem)); }
+  body footer.site .foot-grid { grid-template-columns: 1fr; gap: 1.25rem; }
+  body footer.site h2,
+  body footer.or-footer h2 { width: 10.4rem; max-width: 10.4rem; height: 2.85rem; }
 }
