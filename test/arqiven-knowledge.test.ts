@@ -92,6 +92,83 @@ describe("conocimiento y evaluación de ARQIVEN", () => {
     assert.equal(trap.text.includes("11111111111111111111111111111111111111111111"), false);
   });
 
+  test("Wikipedia y el índice no mezclan a Marie Curie con páginas de ORVUPI", async () => {
+    const wiki = await import(href("web/v2/shared/ia/wikipedia.mjs")) as {
+      wikiQuery: (question: string) => string;
+      rankWikiHits: (query: string, hits: Array<{ title: string }>) => Array<{ title: string; confidence: number }>;
+      lookupWikipedia: (lang: string, query: string, fetchImpl: (url: string) => Promise<{ ok: boolean; json: () => Promise<unknown> }>) => Promise<{ title: string; url: string } | null>;
+    };
+    const retrieve = await import(href("web/v2/shared/ia/retrieve.mjs")) as {
+      buildIndex: (chunks: unknown[]) => unknown;
+      search: (index: unknown, query: string, limit: number, lang: string) => Array<{ url: string }>;
+    };
+    const turn = await import(href("web/v2/shared/ia/turn.mjs")) as {
+      planTurn: (options: { question: string; lang: string; index: unknown; model: { id: string; version: string }; fetchImpl: (url: string) => Promise<{ ok: boolean; json: () => Promise<unknown> }> }) => Promise<{ sources: Array<{ origin?: string; title?: string; url: string }> }>;
+    };
+    const quality = await import(href("web/v2/shared/ia/quality.mjs")) as {
+      isDegenerate: (text: string) => boolean;
+      needsExtract: (answer: string, sources: Array<{ title: string; excerpt: string }>) => boolean;
+    };
+    assert.equal(wiki.wikiQuery("¿Quién fue Marie Curie?"), "Marie Curie");
+    assert.equal(wiki.wikiQuery("Who was Marie Curie?"), "Marie Curie");
+    assert.equal(wiki.wikiQuery("Quem foi Marie Curie?"), "Marie Curie");
+    assert.equal(wiki.wikiQuery("マリー・キュリーは誰ですか。"), "マリー・キュリー");
+    assert.equal(wiki.wikiQuery("마리 퀴리는 누구인가요?"), "마리 퀴리");
+    assert.equal(wiki.wikiQuery("¿Qué es ORVUPI?"), "ORVUPI");
+    const ranked = wiki.rankWikiHits("Marie Curie", [{ title: "Curia romana" }, { title: "Marie Curie" }, { title: "Universidad Pierre y Marie Curie" }]);
+    assert.equal(ranked[0]?.title, "Marie Curie");
+    assert.ok((ranked[0]?.confidence ?? 0) >= 0.72);
+    assert.ok((ranked.find((item) => item.title === "Curia romana")?.confidence ?? 1) < 0.72);
+    const payload = JSON.parse(readFileSync(path.join(root, "web/v2/arqiven/knowledge-index.json"), "utf8")) as { chunks: unknown[] };
+    const index = retrieve.buildIndex(payload.chunks);
+    assert.equal(retrieve.search(index, "Marie Curie", 4, "es").length, 0);
+    assert.equal(retrieve.search(index, "¿Qué es ORVUPI?", 1, "es")[0]?.url, "/");
+    const fetchImpl = async (url: string) => {
+      if (url.includes("list=search")) {
+        return { ok: true, json: async () => ({ query: { search: [{ title: "Curia romana" }, { title: "Marie Curie" }] } }) };
+      }
+      return {
+        ok: true,
+        json: async () => ({
+          type: "standard",
+          title: "Marie Curie",
+          extract: "Marie Curie fue una física y química polaca, pionera en el estudio de la radiactividad.",
+          content_urls: { desktop: { page: "https://es.wikipedia.org/wiki/Marie_Curie" } },
+        }),
+      };
+    };
+    const plan = await turn.planTurn({
+      question: "¿Quién fue Marie Curie?",
+      lang: "es",
+      index,
+      model: { id: "smol135-cpu", version: "SmolLM2-135M-Instruct" },
+      fetchImpl,
+    });
+    assert.equal(plan.sources.some((source) => /claves|custodia|\/marca\//i.test(`${source.title} ${source.url}`)), false);
+    assert.equal(plan.sources.some((source) => source.origin === "orvupi"), false);
+    assert.equal(plan.sources[0]?.title, "Marie Curie");
+    assert.match(plan.sources[0]?.url ?? "", /Marie_Curie/);
+    const loop = "Es ORVUPI. Es una serie de información sobre la versión de la versión de la versión de la versión de la versión.";
+    assert.equal(quality.isDegenerate(loop), true);
+    const invented = "El nombre de Marie Curie es Marie Antoine Carême. El nombre de Marie Curie es Nicole Antoine Carême.";
+    assert.equal(quality.needsExtract(invented, [{ title: "Marie Curie", excerpt: "Marie Curie fue una física y química polaca, pionera en el estudio de la radiactividad." }]), true);
+  });
+
+  test("el dispositivo elige Qwen con WebGPU y deja SmolLM2 para la CPU", async () => {
+    const models = await import(href("web/v2/shared/ia/models.mjs")) as {
+      defaultModel: () => { id: string };
+      modelForDevice: (hints: { webgpu?: boolean; memory?: number; wide?: boolean }) => { id: string };
+      stepDown: (id: string, webgpu: boolean) => string | null;
+    };
+    assert.equal(models.defaultModel().id, "smol135-cpu");
+    assert.equal(models.modelForDevice({ webgpu: false }).id, "smol135-cpu");
+    assert.equal(models.modelForDevice({ webgpu: true, memory: 4 }).id, "qwen05-gpu");
+    assert.equal(models.modelForDevice({ webgpu: true, memory: 8 }).id, "qwen15-gpu");
+    assert.equal(models.stepDown("qwen15-gpu", true), "qwen05-gpu");
+    assert.equal(models.stepDown("qwen05-gpu", true), "smol135-cpu");
+    assert.equal(models.stepDown("smol135-cpu", false), null);
+  });
+
   test("el voto no guarda el texto y no sale del dispositivo", async () => {
     const feedback = await import(href("web/v2/shared/ia/feedback.mjs")) as {
       exportPayload: (votes: unknown[]) => string;

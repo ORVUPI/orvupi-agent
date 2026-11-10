@@ -374,10 +374,73 @@ function ragItems() {
   }))).flat();
 }
 
+const FIGURES = [
+  ["Marie Curie", "Marie Curie", "Marie Curie", "マリ・キュリー", "마리 퀴리"],
+  ["Albert Einstein", "Albert Einstein", "Albert Einstein", "アルベルト・アインシュタイン", "알베르트 아인슈타인"],
+  ["Ada Lovelace", "Ada Lovelace", "Ada Lovelace", "エイダ・ラブレス", "에이다 러브레이스"],
+  ["el agua", "water", "a água", "水", "물"],
+  ["Tokio", "Tokyo", "Tóquio", "東京", "도쿄"],
+];
+
+function figureItems() {
+  return FIGURES.map((names, index) => LANGS.map(([lang, key]) => {
+    const name = names[["es", "en", "pt", "ja", "ko"].indexOf(key)];
+    const who = index < 3;
+    const question = who ? {
+      es: `¿Quién fue ${name}?`,
+      en: `Who was ${name}?`,
+      pt: `Quem foi ${name}?`,
+      ja: `${name}は誰ですか。`,
+      ko: `${name}는 누구인가요?`,
+    }[key] : {
+      es: `¿Qué es ${name}?`,
+      en: `What is ${name}?`,
+      pt: `O que é ${name}?`,
+      ja: `${name}とは何ですか。`,
+      ko: `${name}은 무엇인가요?`,
+    }[key];
+    return {
+      id: `general-figure-${String(index + 1).padStart(3, "0")}-${lang}`,
+      lang,
+      block: "general",
+      domain: "figure",
+      score: "citation",
+      critical: false,
+      question: key === "es" && index === 0 ? "¿Quién fue Marie Curie?" : question,
+      expect: name,
+      wikiTitle: name,
+      rubric: "",
+    };
+  })).flat();
+}
+
+function orvupiDefinition() {
+  const questions = {
+    es: "¿Qué es ORVUPI?",
+    en: "What is ORVUPI?",
+    pt: "O que é a ORVUPI?",
+    ja: "ORVUPI とは何ですか。",
+    ko: "ORVUPI는 무엇인가요?",
+  };
+  return LANGS.map(([lang, key]) => ({
+    id: `orvupi-def-${lang}`,
+    lang,
+    block: "orvupi",
+    domain: "orvupi",
+    score: "contains",
+    critical: false,
+    question: questions[key],
+    expect: "ORVUPI",
+    expectAny: ["herramientas", "tools", "ferramentas", "ツール", "도구", "ORVUPI"],
+  }));
+}
+
 export function buildBank() {
   return [
     ...fromRows(general, "general"),
+    ...figureItems(),
     ...orvupiItems(),
+    ...orvupiDefinition(),
     ...caItems(),
     ...financeItems(),
     ...identityItems(),

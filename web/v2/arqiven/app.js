@@ -1,10 +1,11 @@
 import { arqivenEngine } from "/shared/ia/engine-client.mjs";
-import { badgeOf, defaultModel, modelById, THIRD_PARTY_MODELS } from "/shared/ia/models.mjs";
+import { badgeOf, defaultModel, modelById, modelForDevice, stepDown, THIRD_PARTY_MODELS } from "/shared/ia/models.mjs";
 import { createRequest, honestResult } from "/shared/ia/contract.mjs";
 import { saveWorkBytes, loadWorkBytes } from "/studio/lib/work-store.mjs";
 import { sanitizePlain } from "/shared/ia/plain.mjs";
 import { buildIndex } from "/shared/ia/retrieve.mjs";
 import { excerptAnswer, finishModelAnswer, planTurn } from "/shared/ia/turn.mjs";
+import { citedExcerpt, extractiveFromSources } from "/shared/ia/quality.mjs";
 import { exportPayload, listVotes, openFeedbackDb, saveVote } from "/shared/ia/feedback.mjs";
 
 const root = document.querySelector(".arq-app");
@@ -205,6 +206,7 @@ const state = {
   queue: [],
   painting: 0,
   knowledge: null,
+  webgpu: false,
 };
 
 const app = document.getElementById("app");
@@ -588,7 +590,7 @@ async function streamInto(item, request) {
       item.content += token;
       paintSoon();
     }, lang, item.promptSources || []);
-    const guarded = finishModelAnswer(result.text, lang);
+    const guarded = finishModelAnswer(result.text, lang, item.sources, item.question);
     if (guarded.blocked) {
       item.running = false;
       state.queue = state.queue.filter((entry) => entry !== item);
@@ -603,8 +605,11 @@ async function streamInto(item, request) {
     }
     item.running = false;
     state.queue = state.queue.filter((entry) => entry !== item);
-    if (!result.text || result.provider !== "third-party") {
-      const excerpt = item.sources?.[0] ? excerptAnswer(lang, item.sources[0]) : "";
+    const usable = String(result.text || "").trim();
+    if (guarded.extractive || usable.length < 24 || result.provider !== "third-party") {
+      const excerpt = guarded.extractive && guarded.text.trim().length >= 24
+        ? guarded.text
+        : (extractiveFromSources(lang, item.sources, item.question) || citedExcerpt(lang, item.sources, item.question));
       item.content = result.provider === "third-party" ? (excerpt || ui.emptyModel) : (result.text || honest);
       if (excerpt && result.provider === "third-party") {
         item.mode = "extractive";
@@ -653,7 +658,7 @@ function failQueue(message) {
     if (!item.pending) continue;
     item.pending = false;
     item.request = null;
-    const excerpt = item.sources?.[0] ? excerptAnswer(lang, item.sources[0]) : "";
+    const excerpt = citedExcerpt(lang, item.sources, item.question) || (item.sources?.[0] ? excerptAnswer(lang, item.sources[0], item.question) : "");
     if (excerpt) {
       item.content = excerpt;
       item.mode = "extractive";
@@ -721,7 +726,7 @@ async function send() {
     field?.focus();
     return;
   }
-  const excerpt = plan.sources[0] ? excerptAnswer(lang, plan.sources[0]) : "";
+  const excerpt = citedExcerpt(lang, plan.sources, text);
   if (!state.snap.ready) {
     if (state.snap.phase !== "preparing") startPrepare(modelPick.value || defaultModel().id);
     const item = assistant({
@@ -730,13 +735,14 @@ async function send() {
       request,
       sources: plan.sources,
       promptSources: plan.promptSources,
+      question: text,
     });
     state.queue.push(item);
     paint();
     field?.focus();
     return;
   }
-  const item = assistant({ sources: plan.sources, promptSources: plan.promptSources });
+  const item = assistant({ sources: plan.sources, promptSources: plan.promptSources, question: text });
   await streamInto(item, request);
   field?.focus();
 }
@@ -746,6 +752,14 @@ engine.subscribe((snap) => {
   state.snap = snap;
   if (snap.phase === "idle" && was === "preparing") markCancelled();
   if (snap.phase === "error" && was !== "error") {
+    const next = stepDown(modelPick.value, state.webgpu);
+    if (next && state.prepareFailures < 2) {
+      state.prepareFailures += 1;
+      modelPick.value = next;
+      startPrepare(next);
+      paint();
+      return;
+    }
     state.prepareFailures += 1;
     failQueue(snap.error);
     if (state.prepareFailures >= 3) setStatus(ui.retries);
@@ -918,5 +932,30 @@ save?.addEventListener("click", () => {
 
 search?.addEventListener("input", () => paint());
 if (selected) selected.textContent = `${ui.task}: ${selected.textContent || ""}`;
-startPrepare(defaultModel().id);
+async function bootModel() {
+  try {
+    const adapter = navigator.gpu?.requestAdapter
+      ? await Promise.race([
+        navigator.gpu.requestAdapter(),
+        new Promise((resolve) => setTimeout(() => resolve(null), 800)),
+      ])
+      : null;
+    state.webgpu = Boolean(adapter);
+  } catch {
+    state.webgpu = false;
+  }
+  const chosen = modelForDevice({
+    webgpu: state.webgpu,
+    memory: Number(navigator.deviceMemory) || 0,
+    wide: window.matchMedia("(min-width: 1100px)").matches,
+  });
+  if (!state.webgpu) {
+    modelPick.value = defaultModel().id;
+    startPrepare(defaultModel().id);
+    return;
+  }
+  modelPick.value = chosen.id;
+  startPrepare(chosen.id);
+}
+void bootModel();
 paint();

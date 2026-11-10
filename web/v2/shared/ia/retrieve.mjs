@@ -2,7 +2,14 @@
  * Los n-gramas de caracteres cubren japonés y coreano, donde no hay espacios.
  */
 
-const STOP = new Set("el la los las un una unos unas de del al y o u a en que qué es por con para como su sus lo le se te mi tu the of and to in is are was be it this that for on a an or do how what who which o os um uma de da do das dos e em que é para com como no na se umas the".split(/\s+/));
+const STOP = new Set(("el la los las un una unos unas de del al y o u a en que qué es por con para como su sus lo le se te mi tu fue era son soy eres esta este esto " +
+  "the of and to in is are was were be it this that for on a an or do how what who which was " +
+  "o os um uma de da do das dos e em que é para com como no na se umas foi era são sao quem qual " +
+  "quien quién fue").split(/\s+/));
+
+function fold(value) {
+  return String(value || "").toLowerCase().normalize("NFD").replace(/\p{M}/gu, "").replace(/[^\p{L}\p{N}]+/gu, "");
+}
 
 export function tokenize(text) {
   const value = String(text || "").toLowerCase().normalize("NFKC");
@@ -50,18 +57,27 @@ export function search(index, query, limit = 4, lang = "") {
       const idf = Math.log(1 + (n - docsWith + 0.5) / (docsWith + 0.5));
       const norm = freq * (k1 + 1) / (freq + k1 * (1 - b + b * doc.len / index.avg));
       score += idf * norm;
-      if (titleTokens.has(token)) titleHits += 1;
+      if (titleTokens.has(token)) {
+        titleHits += 1;
+        score += 5;
+      }
     }
     if (score <= 0) continue;
     if (titleHits) score *= 1 + titleHits * 0.35;
     if (doc.chunk.curated) score *= 1.8;
     if (wanted && doc.chunk.lang === wanted) score *= 1.45;
     else if (wanted && doc.chunk.lang !== wanted) score *= 0.72;
+    const asked = fold(query);
+    const titled = fold(doc.chunk.title);
+    if (asked.length > 4 && titled && (titled === asked || titled.includes(asked))) score += 8;
     scored.push({ ...doc.chunk, score });
   }
   scored.sort((a, b2) => b2.score - a.score || String(a.id).localeCompare(String(b2.id)));
-  const preferred = wanted ? scored.filter((item) => item.lang === wanted) : [];
-  return (preferred.length ? preferred : scored).slice(0, limit);
+  const best = scored[0]?.score || 0;
+  const floor = Math.max(3.5, best * 0.28);
+  const strong = scored.filter((item) => item.score >= floor);
+  const preferred = wanted ? strong.filter((item) => item.lang === wanted) : [];
+  return (preferred.length ? preferred : strong).slice(0, limit);
 }
 
 export function looksLikeOrvupi(query) {

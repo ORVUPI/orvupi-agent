@@ -12,6 +12,41 @@ test.beforeEach(async ({ page }) => {
   await page.route(/huggingface\.co|cdn\.jsdelivr\.net|wikipedia\.org/, (route) => route.abort());
 });
 
+test("una pregunta general no arrastra páginas de ORVUPI y elige el título de Wikipedia", async ({ page }) => {
+  await page.route(/wikipedia\.org/, async (route) => {
+    const url = route.request().url();
+    if (url.includes("list=search")) {
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ query: { search: [{ title: "Curia romana" }, { title: "Marie Curie" }] } }),
+      });
+      return;
+    }
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        type: "standard",
+        title: "Marie Curie",
+        extract: "Marie Curie fue una física y química polaca, pionera en el estudio de la radiactividad.",
+        content_urls: { desktop: { page: "https://es.wikipedia.org/wiki/Marie_Curie" } },
+      }),
+    });
+  });
+  await page.goto("/arqiven/");
+  await page.locator("#prompt").fill("¿Quién fue Marie Curie?");
+  await page.locator("#send").click();
+  const answer = page.locator(".assistant").last();
+  await expect(answer.locator(".sources a")).toHaveCount(1);
+  await expect(answer.locator(".sources a")).toHaveAttribute("href", /Marie_Curie/);
+  await expect(answer).not.toContainText(/claves|custodia/i);
+  await page.locator("#prompt").fill("¿Qué es ORVUPI?");
+  await page.locator("#send").click();
+  const about = page.locator(".assistant").last();
+  await expect(about.locator(".sources a").first()).toBeVisible();
+  await expect(about).toContainText("ORVUPI");
+  await expect(about).not.toContainText("versión de la versión");
+});
+
 for (const item of pages) {
   test(`${item.path} cita la fuente, nombra al tercero y rechaza el consejo`, async ({ page }) => {
     const posts = [];

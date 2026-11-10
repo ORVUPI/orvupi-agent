@@ -162,8 +162,9 @@ export function createEngineClient() {
         id,
         task: request?.task || "chat",
         messages: Array.isArray(request?.messages) ? request.messages : [],
-        maxTokens: 256,
+        maxTokens: 120,
         sources: promptSources,
+        lang,
       });
     });
   }

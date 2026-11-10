@@ -189,6 +189,11 @@ export async function collectChunks(root = repoRoot) {
 export function curatedFacts() {
   const address = OFFICIAL_ADDRESS;
   const rows = [
+    ["es", "/", "Qué es ORVUPI", "ORVUPI es el proyecto de orvupi.com: comunidad, humor y herramientas para explorar la web. Esas herramientas son Work, Studio, Sonar, Verify, Academy y ARQIVEN. El único contrato oficial está en Solana."],
+    ["en", "/en/", "What ORVUPI is", "ORVUPI is the project at orvupi.com: a community, humor and tools for exploring the web. Those tools are Work, Studio, Sonar, Verify, Academy and ARQIVEN. The only official contract is on Solana."],
+    ["pt-BR", "/pt-br/", "O que é a ORVUPI", "ORVUPI é o projeto de orvupi.com: comunidade, humor e ferramentas para explorar a web. Essas ferramentas são Work, Studio, Sonar, Verify, Academy e ARQIVEN. O único contrato oficial está na Solana."],
+    ["ja", "/ja/", "ORVUPI とは", "ORVUPI は orvupi.com のプロジェクトです。コミュニティとユーモアと、ウェブを探るツールです。ツールは Work、Studio、Sonar、Verify、Academy、ARQIVEN です。公式コントラクトは Solana 上に一つだけです。"],
+    ["ko", "/ko/", "ORVUPI란", "ORVUPI는 orvupi.com의 프로젝트입니다. 커뮤니티와 유머, 웹을 살펴보는 도구입니다. 도구는 Work, Studio, Sonar, Verify, Academy, ARQIVEN입니다. 공식 컨트랙트는 Solana에 하나뿐입니다."],
     ["es", "/token/", "Contrato oficial de ORVUPI", `El único contrato oficial de ORVUPI está en Solana y es ${address}. Cualquier otra dirección no es ORVUPI. ORVUPI no pide la frase de recuperación ni escribe primero por mensaje privado.`],
     ["en", "/en/token/", "Official ORVUPI contract", `The only official ORVUPI contract is on Solana: ${address}. Any other address is not ORVUPI. ORVUPI never asks for a recovery phrase and never messages first.`],
     ["pt-BR", "/pt-br/token/", "Contrato oficial da ORVUPI", `O único contrato oficial da ORVUPI está na Solana e é ${address}. Qualquer outro endereço não é ORVUPI. A ORVUPI não pede a frase de recuperação nem escreve primeiro.`],
