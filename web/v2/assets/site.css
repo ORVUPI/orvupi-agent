@@ -2409,15 +2409,41 @@ body footer.or-footer .or-footer-links {
   margin: 0.9rem 0 1rem;
 }
 @media (max-width: 900px) {
-  body footer.site .foot-grid { grid-template-columns: 1fr 1fr; }
+  body footer.site .foot-grid { grid-template-columns: 1fr 1fr 1fr; }
   body footer.site .foot-grid > :first-child { grid-column: 1 / -1; }
 }
 @media (max-width: 640px) {
   body footer.site,
-  body footer.or-footer { padding: 2rem 0 1.4rem; }
+  body footer.or-footer { padding: 1.7rem 0 1.3rem; }
   body footer.site .wrap,
   body footer.or-footer .wrap { width: min(72rem, calc(100% - 1.5rem)); }
-  body footer.site .foot-grid { grid-template-columns: 1fr; gap: 1.25rem; }
+  body footer.site .foot-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.7rem 1.25rem;
+  }
+  body footer.site .foot-grid > :first-child { grid-column: 1 / -1; margin-bottom: .2rem; }
+  body footer.site .foot-grid > :nth-child(4) { grid-column: 1 / -1; }
+  body footer.site .foot-grid > :nth-child(4) ul {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .4rem 1.15rem;
+  }
+  body footer.or-footer .or-footer-links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .85rem 1.2rem;
+  }
+  body footer.or-footer .or-footer-links a[href^="mailto:"] { grid-column: 1 / -1; }
   body footer.site h2,
-  body footer.or-footer h2 { width: 10.4rem; max-width: 10.4rem; height: 2.85rem; }
+  body footer.or-footer h2 {
+    width: 7.5rem;
+    max-width: 7.5rem;
+    height: 2.15rem;
+    margin-bottom: .55rem;
+    border-radius: .4rem;
+  }
+  body footer.site h2::after,
+  body footer.or-footer h2::after { inset: .22rem .38rem; }
+  body footer.site .legal,
+  body footer.or-footer .wrap > p:last-child { margin-top: 1.7rem; }
 }

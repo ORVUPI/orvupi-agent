@@ -79,12 +79,19 @@
     if (typeof data.y === "number") window.scrollTo(0, data.y);
   }
 
+  function hasTranslation(locale) {
+    var links = document.querySelectorAll('link[rel="alternate"][hreflang]');
+    for (var i = 0; i < links.length; i++) if (links[i].getAttribute("hreflang") === locale) return true;
+    return false;
+  }
   function suggest() {
     if (saved || read("orvupi-lang-suggest-closed")) return;
     var list = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
     var want = null;
     for (var i = 0; i < list.length && !want; i++) want = match(list[i]);
-    if (!want || want === current) return;
+    // Solo si el navegador pide otro idioma y esta página tiene esa traducción.
+    // El texto va en el idioma del navegador, no en el de la página.
+    if (!want || want === current || !SUGGEST[want] || !hasTranslation(want)) return;
     var box = document.createElement("div");
     box.className = "langsuggest";
     box.setAttribute("role", "region");
@@ -97,14 +104,13 @@
     link.textContent = SUGGEST[want];
     var close = document.createElement("button");
     close.type = "button";
-    close.setAttribute("aria-label", CLOSE[current] || "Close");
+    close.setAttribute("aria-label", CLOSE[want] || "Close");
     close.textContent = "×";
     close.addEventListener("click", function () { store("orvupi-lang-suggest-closed", "1"); box.remove(); });
     box.appendChild(link); box.appendChild(close);
-    // En el flujo de la página (no flotante): no tapa botones ni formularios.
-    var main = document.querySelector("main");
-    if (main) main.insertBefore(box, main.firstChild);
-    else document.body.appendChild(box);
+    var header = document.querySelector("header.site");
+    if (header && header.parentNode) header.insertAdjacentElement("afterend", box);
+    else document.body.insertBefore(box, document.body.firstChild);
   }
 
   // Textos que los scripts escriben en inglés: diccionario del idioma activo, descargado solo aquí.
