@@ -14,7 +14,8 @@ for (const scheme of ["light", "dark"]) {
       await page.addInitScript((l) => { try { localStorage.setItem("orvupi-lab-lang", l); } catch {} }, lang);
       const problems = [];
       for (const path of PAGES) {
-        await page.goto(path, { waitUntil: "networkidle" }).catch(() => page.goto(path));
+        await page.goto(path, { waitUntil: "domcontentloaded" });
+        await page.waitForLoadState("networkidle", { timeout: 4000 }).catch(() => {});
         await page.evaluate(() => document.querySelectorAll("details").forEach((d) => { d.open = true; }));
         await page.waitForTimeout(150);
         if (SHOTS) await page.screenshot({ path: `${SHOTS}/${info.project.name}-${scheme}-${lang}${path.replace(/\W+/g, "_")}.png`, fullPage: true });

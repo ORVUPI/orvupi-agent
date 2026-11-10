@@ -48,13 +48,12 @@ test("ORVUPI IA móvil: landing, cajón, currículum y proyecto de empresa", asy
   await prompt.fill("Quiero plantillas de currículum");
   await page.getByRole("button", { name: "Enviar" }).click();
   await expect(page.locator(".ia-count")).toContainText("resultados", { timeout: 5000 });
-  await expect(page.locator(".ia-grid img").first()).toHaveAttribute("src", /curriculum/);
-  await expect(page.locator(".ia-grid img")).toHaveCount(4);
+  await expect(page.locator(".ia-grid [data-thumb*='curriculum']")).toHaveCount(4);
   await expect(page.getByRole("button", { name: "Mostrar más plantillas" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Generar" })).toBeVisible();
-  const before = await page.locator(".ia-grid img").count();
+  const before = await page.locator(".ia-grid .ia-tile").count();
   await page.getByRole("button", { name: "Mostrar más plantillas" }).click();
-  await expect.poll(async () => page.locator(".ia-grid img").count()).toBeGreaterThan(before);
+  await expect.poll(async () => page.locator(".ia-grid .ia-tile").count()).toBeGreaterThan(before);
 
   await page.goto("/studio/#/ia");
   const empresa = page.locator("#ia-prompt");
@@ -68,10 +67,10 @@ test("ORVUPI IA móvil: landing, cajón, currículum y proyecto de empresa", asy
   await page.getByRole("button", { name: "Enviar" }).click();
   await expect(page.locator(".ia-assistant")).toContainText("proyecto de empresa", { timeout: 5000 });
   await expect(page.locator(".ia-assistant")).not.toContainText(/currículum/i);
-  await expect(page.locator(".ia-grid img")).toHaveCount(4);
-  const srcs = await page.locator(".ia-grid img").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("src") || ""));
-  expect(srcs.some((src) => /curriculum/.test(src))).toBe(false);
-  expect(srcs.some((src) => /presentacion|propuesta|negocio|documento|informe/.test(src))).toBe(true);
+  await expect(page.locator(".ia-grid .ia-tile")).toHaveCount(4);
+  const ids = await page.locator(".ia-grid [data-thumb]").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-thumb") || ""));
+  expect(ids.some((id) => /curriculum/.test(id))).toBe(false);
+  expect(ids.some((id) => /presentacion|propuesta|negocio|documento|informe/.test(id))).toBe(true);
 
   await page.goto("/studio/#/");
   await expect(page.getByRole("heading", { name: "Elige cómo empezar" })).toBeVisible();

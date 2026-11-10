@@ -67,7 +67,7 @@ La pantalla ARQIVEN no se copia a `web/v2/arqiven/` en el paso 3, y el ítem no 
 - Herramientas dentro de la caja. La acción elegida queda visible.
 - Sugerencias «Crear un texto», «Analizar un documento», «Aprender algo» y «Programar» como atajos de tarea, con un texto que no promete que el modelo sepa hacerlas.
 - Voz marcada como propuesta. No se llama a `getUserMedia`.
-- Sin «Espacio de Cristian» y sin respuestas fijas presentadas como generación.
+- Sin el rótulo personal de la maqueta y sin respuestas fijas presentadas como generación.
 - Estado del motor: no preparado, preparando, listo, o sin modelo. El diagnóstico puede mostrar la ficha (Arqiven-N, o el repositorio del tercero). El título de la página no cambia a Arqiven-1. Si el modelo es Qwen, LFM2 o SmolLM2, se dice que es de un tercero y no se le llama Arqiven-N.
 - El usuario escribe aunque la preparación no haya terminado.
 

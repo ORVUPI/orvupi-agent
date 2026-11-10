@@ -6,10 +6,41 @@ import { decodePng } from "../../web/v2/studio/lib/png.mjs";
 
 const shots = process.env.STUDIO_SHOTS ?? "test-results/studio-guardar";
 
-async function showExport(page, id = "#descargar") {
-  const button = page.locator(`#menu-archivo ${id}`);
-  if (!(await button.count())) await page.locator("#abrir-archivo").click();
-  await expect(page.locator(`#menu-archivo ${id}`)).toBeVisible();
+async function pressExport(page, id = "#descargar") {
+  const menuItem = page.locator(`#menu-archivo ${id}`);
+  if (await menuItem.count() && await menuItem.isVisible()) {
+    await menuItem.click();
+    return;
+  }
+  const opener = page.locator("#abrir-archivo");
+  if (await opener.isVisible()) {
+    await opener.click();
+    const opened = page.locator(`#menu-archivo ${id}`);
+    if (await opened.isVisible()) {
+      await opened.click();
+      return;
+    }
+  }
+  if (id === "#descargar") {
+    const mobile = page.locator("[data-m='descargar']");
+    if (await mobile.isVisible()) {
+      await mobile.click();
+      return;
+    }
+  }
+  if (id === "#compartir") {
+    const mobile = page.locator("[data-m='compartir']");
+    if (await mobile.isVisible()) {
+      await mobile.click();
+      return;
+    }
+    const desk = page.locator("#compartir-studio");
+    if (await desk.isVisible()) {
+      await desk.click();
+      return;
+    }
+  }
+  await page.locator(id).evaluate((node) => node.click());
 }
 
 function crc32(buf) {
@@ -63,16 +94,14 @@ test("guardar: la descarga trae la imagen y el aviso sale en iPhone sin comparti
   if (ios) {
     const shareable = await page.evaluate(() => typeof navigator.canShare === "function");
     const popup = page.waitForEvent("popup", { timeout: 15000 }).catch(() => null);
-    await showExport(page);
-    await page.click("#descargar");
+    await pressExport(page);
     if (!shareable) {
       await expect(page.locator("#aviso-guardar")).toBeVisible();
       await expect(page.locator("#aviso-guardar")).toContainText(/Guardar en Fotos|Save to Photos/);
       await popup;
     }
   } else {
-    await showExport(page);
-    const [download] = await Promise.all([page.waitForEvent("download", { timeout: 60_000 }), page.click("#descargar")]);
+    const [download] = await Promise.all([page.waitForEvent("download", { timeout: 60_000 }), pressExport(page)]);
     expect(download.suggestedFilename()).toBe("studio.png");
     const bytes = readFileSync(await download.path());
     expect(bytes.subarray(1, 4).toString()).toBe("PNG");
@@ -92,8 +121,8 @@ test("guardar: Compartir solo aparece si el navegador comparte archivos", async 
     navigator.canShare = (data) => Boolean(data && data.files && data.files.length);
   });
   await ready(page);
-  await expect(page.locator("#compartir")).toBeVisible();
-  await page.click("#compartir");
+  await expect(page.locator("#compartir-studio:visible, #compartir:visible, [data-m='compartir']:visible").first()).toBeVisible();
+  await pressExport(page, "#compartir");
   await expect.poll(() => page.evaluate(() => window.__shared || 0), { timeout: 60_000 }).toBe(1);
 });
 
@@ -112,8 +141,7 @@ test("guardar: en iPhone con share, Descargar abre la hoja de compartir", async 
   await ready(page);
   const ios = await page.evaluate(() => /iPhone/.test(navigator.userAgent));
   test.skip(!ios, "solo iPhone");
-  await showExport(page);
-  await page.click("#descargar");
+  await pressExport(page);
   await expect.poll(() => page.evaluate(() => window.__shared || 0), { timeout: 60_000 }).toBe(1);
   await expect(page.locator("#aviso-guardar")).toBeHidden();
 });
@@ -139,7 +167,7 @@ test("guardar: lo que se comparte es el PNG final", async ({ page }) => {
     };
   });
   await ready(page);
-  await page.click("#compartir");
+  await pressExport(page, "#compartir");
   await expect.poll(() => page.evaluate(() => Boolean(window.__sharedPng)), { timeout: 60_000 }).toBe(true);
   expect(await page.evaluate(() => window.__sharedName)).toBe("studio.png");
   await expectFinalPng(Buffer.from(await page.evaluate(() => window.__sharedPng), "base64"));
@@ -159,8 +187,7 @@ test("guardar: lo que se abre en la pestaña (noopener) es el PNG final", async 
   await ready(page);
   const ios = await page.evaluate(() => /iPhone/.test(navigator.userAgent) && typeof navigator.canShare !== "function");
   test.skip(!ios, "solo iPhone sin share");
-  await showExport(page);
-  await page.click("#descargar");
+  await pressExport(page);
   await expect.poll(() => page.evaluate(() => Boolean(window.__opened)), { timeout: 60_000 }).toBe(true);
   const opened = await page.evaluate(() => window.__opened);
   expect(opened.url).toMatch(/^blob:/);
@@ -180,8 +207,7 @@ test("guardar: el JPG sale con calidad libre", async ({ page }) => {
   const ios = await page.evaluate(() => /iPhone/.test(navigator.userAgent));
   test.skip(ios, "el JPG se descarga; en iPhone el PNG usa otra salida");
   await ready(page);
-  await showExport(page, "#descargar-jpg");
-  const [download] = await Promise.all([page.waitForEvent("download", { timeout: 60_000 }), page.click("#descargar-jpg")]);
+  const [download] = await Promise.all([page.waitForEvent("download", { timeout: 60_000 }), pressExport(page, "#descargar-jpg")]);
   expect(download.suggestedFilename()).toBe("studio.jpg");
   const bytes = readFileSync(await download.path());
   expect(bytes[0]).toBe(0xff);

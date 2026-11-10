@@ -1,6 +1,6 @@
 # ARQIVEN — Fase 0
 
-Auditoría y diseño técnico del encargo 1.0 (27 de octubre de 2026). Propietario: Cristian Pardo Camacho.
+Auditoría y diseño técnico del encargo 1.0 (27 de octubre de 2026). Propietario: el encargo de ORVUPI.
 
 El paquete de encargo llama al trabajo «ORVUPI IA». La marca visible del producto es **ARQIVEN**. ORVUPI sigue siendo el sitio y el ecosistema (Work, Studio, la cabecera). Esta carpeta conserva el nombre del paquete; no es el nombre de la interfaz.
 

@@ -1,19 +1,195 @@
 {
-"_nota": "Atributos y metadatos que solo existían en español. Traducción manual: español -> [en, pt-BR, ja, ko].",
-"Avatar maestro ORVUPI": ["ORVUPI master avatar", "Avatar principal do ORVUPI", "ORVUPI マスターアバター", "ORVUPI 마스터 아바타"],
-"Cerrar el aviso de privacidad": ["Close the privacy notice", "Fechar o aviso de privacidade", "プライバシーのお知らせを閉じる", "개인정보 안내 닫기"],
-"Comunidad, humor y herramientas para explorar Web3 con ORVUPI.": ["Community, humour and tools to explore Web3 with ORVUPI.", "Comunidade, humor e ferramentas para explorar a Web3 com o ORVUPI.", "ORVUPI と一緒に Web3 を探検するためのコミュニティ、ユーモア、ツール。", "ORVUPI와 함께 Web3를 탐험하는 커뮤니티, 유머, 도구."],
-"ORVUPI conecta ideas a través del mundo": ["ORVUPI connects ideas around the world", "ORVUPI conecta ideias pelo mundo", "ORVUPI は世界中のアイデアをつなぎます", "ORVUPI는 전 세계의 아이디어를 연결합니다"],
-"ORVUPI · 404": ["ORVUPI · 404", "ORVUPI · 404", "ORVUPI · 404", "ORVUPI · 404"],
-"ORVUPI · Comunidad": ["ORVUPI · Community", "ORVUPI · Comunidade", "ORVUPI · コミュニティ", "ORVUPI · 커뮤니티"],
-"ORVUPI · Galería de memes": ["ORVUPI · Meme gallery", "ORVUPI · Galeria de memes", "ORVUPI · ミームギャラリー", "ORVUPI · 밈 갤러리"],
-"ORVUPI · Identidad y recursos": ["ORVUPI · Identity and resources", "ORVUPI · Identidade e recursos", "ORVUPI · アイデンティティと素材", "ORVUPI · 아이덴티티와 자료"],
-"ORVUPI · Ocho brazos. Mil ideas.": ["ORVUPI · Eight arms. Endless ideas.", "ORVUPI · Oito braços. Ideias sem fim.", "ORVUPI · 8本の腕。アイデアは無限。", "ORVUPI · 여덟 개의 팔. 끝없는 아이디어."],
-"ORVUPI · Reglas y procedencia de Studio": ["ORVUPI · Studio rules and provenance", "ORVUPI · Regras e procedência do Studio", "ORVUPI · Studio のルールと出典", "ORVUPI · Studio 규칙과 출처"],
-"ORVUPI · Token": ["ORVUPI · Token", "ORVUPI · Token", "ORVUPI · トークン", "ORVUPI · 토큰"],
-"ORVUPI · Visión del proyecto": ["ORVUPI · Project vision", "ORVUPI · Visão do projeto", "ORVUPI · プロジェクトのビジョン", "ORVUPI · 프로젝트 비전"],
-"ORVUPI, pulpo rosa de ojos expresivos y un rizo superior.": ["ORVUPI, a pink octopus with expressive eyes and a curl on top.", "ORVUPI, um polvo rosa de olhos expressivos e um cachinho no alto.", "ORVUPI。表情豊かな目と頭のてっぺんのカールが特徴のピンクのタコ。", "ORVUPI, 표정이 풍부한 눈과 머리 위 곱슬이 있는 분홍 문어."],
-"ORVUPI: comunidad, humor, creación y herramientas para explorar Web3.": ["ORVUPI: community, humour, creativity and tools to explore Web3.", "ORVUPI: comunidade, humor, criação e ferramentas para explorar a Web3.", "ORVUPI：Web3 を探検するためのコミュニティ、ユーモア、創作、ツール。", "ORVUPI: Web3를 탐험하는 커뮤니티, 유머, 창작, 도구."],
-"ORVUPI: pulpo rosa curioso, comunidad y herramientas Web3.": ["ORVUPI: a curious pink octopus, community and Web3 tools.", "ORVUPI: um polvo rosa curioso, comunidade e ferramentas Web3.", "ORVUPI：好奇心旺盛なピンクのタコ、コミュニティ、Web3 ツール。", "ORVUPI: 호기심 많은 분홍 문어, 커뮤니티, Web3 도구."],
-"ORVUPI · Novedades": ["ORVUPI · What's new", "ORVUPI · Novidades", "ORVUPI · 最新情報", "ORVUPI · 새 소식"]
+ "_nota": "Atributos y metadatos que solo existían en español. Traducción manual: español -> [en, pt-BR, ja, ko].",
+ "Avatar maestro ORVUPI": [
+  "ORVUPI master avatar",
+  "Avatar principal do ORVUPI",
+  "ORVUPI マスターアバター",
+  "ORVUPI 마스터 아바타"
+ ],
+ "Cerrar el aviso de privacidad": [
+  "Close the privacy notice",
+  "Fechar o aviso de privacidade",
+  "プライバシーのお知らせを閉じる",
+  "개인정보 안내 닫기"
+ ],
+ "Comunidad, humor y herramientas para explorar Web3 con ORVUPI.": [
+  "Community, humour and tools to explore Web3 with ORVUPI.",
+  "Comunidade, humor e ferramentas para explorar a Web3 com o ORVUPI.",
+  "ORVUPI と一緒に Web3 を探検するためのコミュニティ、ユーモア、ツール。",
+  "ORVUPI와 함께 Web3를 탐험하는 커뮤니티, 유머, 도구."
+ ],
+ "ORVUPI conecta ideas a través del mundo": [
+  "ORVUPI connects ideas around the world",
+  "ORVUPI conecta ideias pelo mundo",
+  "ORVUPI は世界中のアイデアをつなぎます",
+  "ORVUPI는 전 세계의 아이디어를 연결합니다"
+ ],
+ "ORVUPI · 404": [
+  "ORVUPI · 404",
+  "ORVUPI · 404",
+  "ORVUPI · 404",
+  "ORVUPI · 404"
+ ],
+ "ORVUPI · Comunidad": [
+  "ORVUPI · Community",
+  "ORVUPI · Comunidade",
+  "ORVUPI · コミュニティ",
+  "ORVUPI · 커뮤니티"
+ ],
+ "ORVUPI · Galería de memes": [
+  "ORVUPI · Meme gallery",
+  "ORVUPI · Galeria de memes",
+  "ORVUPI · ミームギャラリー",
+  "ORVUPI · 밈 갤러리"
+ ],
+ "ORVUPI · Identidad y recursos": [
+  "ORVUPI · Identity and resources",
+  "ORVUPI · Identidade e recursos",
+  "ORVUPI · アイデンティティと素材",
+  "ORVUPI · 아이덴티티와 자료"
+ ],
+ "ORVUPI · Ocho brazos. Mil ideas.": [
+  "ORVUPI · Eight arms. Endless ideas.",
+  "ORVUPI · Oito braços. Ideias sem fim.",
+  "ORVUPI · 8本の腕。アイデアは無限。",
+  "ORVUPI · 여덟 개의 팔. 끝없는 아이디어."
+ ],
+ "ORVUPI · Reglas y procedencia de Studio": [
+  "ORVUPI · Studio rules and provenance",
+  "ORVUPI · Regras e procedência do Studio",
+  "ORVUPI · Studio のルールと出典",
+  "ORVUPI · Studio 규칙과 출처"
+ ],
+ "ORVUPI · Token": [
+  "ORVUPI · Token",
+  "ORVUPI · Token",
+  "ORVUPI · トークン",
+  "ORVUPI · 토큰"
+ ],
+ "ORVUPI · Visión del proyecto": [
+  "ORVUPI · Project vision",
+  "ORVUPI · Visão do projeto",
+  "ORVUPI · プロジェクトのビジョン",
+  "ORVUPI · 프로젝트 비전"
+ ],
+ "ORVUPI, pulpo rosa de ojos expresivos y un rizo superior.": [
+  "ORVUPI, a pink octopus with expressive eyes and a curl on top.",
+  "ORVUPI, um polvo rosa de olhos expressivos e um cachinho no alto.",
+  "ORVUPI。表情豊かな目と頭のてっぺんのカールが特徴のピンクのタコ。",
+  "ORVUPI, 표정이 풍부한 눈과 머리 위 곱슬이 있는 분홍 문어."
+ ],
+ "ORVUPI: comunidad, humor, creación y herramientas para explorar Web3.": [
+  "ORVUPI: community, humour, creativity and tools to explore Web3.",
+  "ORVUPI: comunidade, humor, criação e ferramentas para explorar a Web3.",
+  "ORVUPI：Web3 を探検するためのコミュニティ、ユーモア、創作、ツール。",
+  "ORVUPI: Web3를 탐험하는 커뮤니티, 유머, 창작, 도구."
+ ],
+ "ORVUPI: pulpo rosa curioso, comunidad y herramientas Web3.": [
+  "ORVUPI: a curious pink octopus, community and Web3 tools.",
+  "ORVUPI: um polvo rosa curioso, comunidade e ferramentas Web3.",
+  "ORVUPI：好奇心旺盛なピンクのタコ、コミュニティ、Web3 ツール。",
+  "ORVUPI: 호기심 많은 분홍 문어, 커뮤니티, Web3 도구."
+ ],
+ "ORVUPI · Novedades": [
+  "ORVUPI · What's new",
+  "ORVUPI · Novidades",
+  "ORVUPI · 最新情報",
+  "ORVUPI · 새 소식"
+ ],
+ "Menú": [
+  "Menu",
+  "Menu",
+  "メニュー",
+  "메뉴"
+ ],
+ "Entrar por la tarea": [
+  "Enter by task",
+  "Entrar pela tarefa",
+  "作業から入る",
+  "작업으로 들어가기"
+ ],
+ "ORVUPI, pulpo rosa de un solo rizo, ojos azules y ventosas claras.": [
+  "ORVUPI, a pink octopus with one curl, blue eyes and light suckers.",
+  "ORVUPI, um polvo rosa com um único cacho, olhos azuis e ventosas claras.",
+  "ORVUPI。カールが一つ、青い目、明るい吸盤のピンクのタコ。",
+  "ORVUPI. 고리 하나, 파란 눈, 밝은 빨판의 분홍 문어."
+ ],
+ "ARQIVEN": [
+  "ARQIVEN",
+  "ARQIVEN",
+  "ARQIVEN",
+  "ARQIVEN"
+ ],
+ "ARQIVEN en ORVUPI. Puedes escribir en este navegador. No hay un modelo propio conectado.": [
+  "ARQIVEN on ORVUPI. You can write in this browser. No model of our own is connected.",
+  "ARQIVEN na ORVUPI. Você pode escrever neste navegador. Não há um modelo próprio conectado.",
+  "ORVUPIのARQIVEN。このブラウザで書けます。自前のモデルは接続されていません。",
+  "ORVUPI의 ARQIVEN. 이 브라우저에서 쓸 수 있습니다. 자체 모델은 연결되어 있지 않습니다."
+ ],
+ "Abrir menú": [
+  "Open menu",
+  "Abrir menu",
+  "メニューを開く",
+  "메뉴 열기"
+ ],
+ "Adjuntar un archivo de texto": [
+  "Attach a text file",
+  "Anexar um arquivo de texto",
+  "テキストファイルを添付",
+  "텍스트 파일 첨부"
+ ],
+ "Buscar en esta pestaña…": [
+  "Search in this tab…",
+  "Buscar nesta aba…",
+  "このタブを検索…",
+  "이 탭에서 검색…"
+ ],
+ "Buscar en los mensajes de esta pestaña": [
+  "Search the messages in this tab",
+  "Buscar nas mensagens desta aba",
+  "このタブのメッセージを検索",
+  "이 탭의 메시지 검색"
+ ],
+ "Contraer barra lateral": [
+  "Collapse the sidebar",
+  "Recolher a barra lateral",
+  "サイドバーを折りたたむ",
+  "사이드바 접기"
+ ],
+ "Enviar": [
+  "Send",
+  "Enviar",
+  "送信",
+  "보내기"
+ ],
+ "La voz es una propuesta. No hay micrófono conectado.": [
+  "Voice is a proposal. No microphone is connected.",
+  "A voz é uma proposta. Não há microfone conectado.",
+  "音声は提案です。マイクは接続されていません。",
+  "음성은 제안입니다. 마이크는 연결되어 있지 않습니다."
+ ],
+ "ORVUPI Sonar. Sonar · verify on-chain. Lectura pública de direcciones y mercado, sin cartera.": [
+  "ORVUPI Sonar. Sonar · verify on-chain. Public reading of addresses and the market, with no wallet.",
+  "ORVUPI Sonar. Sonar · verify on-chain. Leitura pública de endereços e do mercado, sem carteira.",
+  "ORVUPI Sonar。Sonar · verify on-chain。アドレスと市場の公開読み取り。ウォレットなし。",
+  "ORVUPI Sonar. Sonar · verify on-chain. 주소와 시장의 공개 조회. 지갑 없음."
+ ],
+ "ORVUPI Sonar: pulpo rosa y ondas que rastrean redes.": [
+  "ORVUPI Sonar: a pink octopus and waves that track networks.",
+  "ORVUPI Sonar: polvo rosa e ondas que rastreiam redes.",
+  "ORVUPI Sonar：ネットワークを追うピンクのタコと波。",
+  "ORVUPI Sonar: 네트워크를 따라가는 분홍 문어와 파도."
+ ],
+ "Pregunta lo que quieras": [
+  "Ask whatever you want",
+  "Pergunte o que quiser",
+  "何でも聞いてください",
+  "무엇이든 물어보세요"
+ ],
+ "Sonar": [
+  "Sonar",
+  "Sonar",
+  "Sonar",
+  "Sonar"
+ ]
 }

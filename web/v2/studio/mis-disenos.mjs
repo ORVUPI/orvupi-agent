@@ -1068,7 +1068,7 @@ export function designView(ctx) {
   const folder = !create && ctx.state.designFolder ? ctx.state.designFolder : "";
   const mode = create ? "create" : folder ? "folder" : "library";
   const screen = el("div", {
-    class: `canva-home canva-disenos is-${mode}`,
+    class: `canva-home cv-disenos is-${mode}`,
     "data-tab": "disenos",
     "data-design-mode": mode,
     "data-design-view": ctx.state.designView || "todos",

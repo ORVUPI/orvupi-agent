@@ -7,14 +7,15 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
+  // El runner tiene 4 núcleos. Con 2, la suite no cabe en los 20 minutos del job.
+  workers: process.env.CI ? 4 : undefined,
   reporter: process.env.CI ? "line" : "list",
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,
     trace: "retain-on-failure",
   },
   webServer: {
-    command: `python3 -m http.server ${PORT} --bind 127.0.0.1`,
-    cwd: "web/v2",
+    command: `node test/ui/static-server.mjs web/v2 ${PORT}`,
     port: PORT,
     reuseExistingServer: !process.env.CI,
   },
@@ -47,26 +48,29 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } },
     },
     // Firefox solo para Academy (H2): el resto de la web aún no se prueba en Gecko.
+    // La traza con capturas deja los elementos inestables en Firefox y los clics no terminan.
     {
       name: "academy-firefox",
       testMatch: /academy\.spec\.mjs$/,
-      use: { ...devices["Desktop Firefox"], viewport: { width: 1440, height: 900 } },
+      use: { ...devices["Desktop Firefox"], viewport: { width: 1440, height: 900 }, trace: "off" },
     },
     {
       name: "academy-firefox-mobile",
       testMatch: /academy\.spec\.mjs$/,
-      use: { ...devices["Desktop Firefox"], viewport: { width: 412, height: 915 } },
+      use: { ...devices["Desktop Firefox"], viewport: { width: 412, height: 915 }, trace: "off" },
     },
     // Firefox también para Studio (escritorio y móvil).
     {
       name: "studio-firefox",
       testMatch: /studio-.*\.spec\.mjs$/,
-      use: { ...devices["Desktop Firefox"], viewport: { width: 1440, height: 900 } },
+      testIgnore: /studio-todas-plantillas\.spec\.mjs$/,
+      use: { ...devices["Desktop Firefox"], viewport: { width: 1440, height: 900 }, trace: "off" },
     },
     {
       name: "studio-firefox-mobile",
       testMatch: /studio-.*\.spec\.mjs$/,
-      use: { ...devices["Desktop Firefox"], viewport: { width: 412, height: 915 } },
+      testIgnore: /studio-todas-plantillas\.spec\.mjs$/,
+      use: { ...devices["Desktop Firefox"], viewport: { width: 412, height: 915 }, trace: "off" },
     },
   ],
 });

@@ -2,40 +2,42 @@
 <html lang="ja" data-lang="en" data-locale="ja" data-fixed-lang>
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="referrer" content="no-referrer">
-<meta name="description" content="ORVUPI Sonar。Sonar · verify on-chain。アドレスと市場の公開データ。ウォレットは使いません。">
+<meta name="description" content="ORVUPI Sonar。Sonar · verify on-chain。アドレスと市場の公開読み取り。ウォレットなし。">
 <link rel="canonical" href="https://orvupi.com/ja/verify/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ORVUPI">
 <meta property="og:locale" content="ja_JP">
 <meta property="og:url" content="https://orvupi.com/ja/verify/">
 <meta property="og:title" content="ORVUPI Sonar">
-<meta property="og:description" content="ORVUPI Sonar。Sonar · verify on-chain。アドレスと市場の公開データ。ウォレットは使いません。">
+<meta property="og:description" content="ORVUPI Sonar。Sonar · verify on-chain。アドレスと市場の公開読み取り。ウォレットなし。">
 <meta property="og:image" content="https://orvupi.com/assets/orvupi/social.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1254">
 <meta property="og:image:height" content="1254">
-<meta property="og:image:alt" content="ORVUPI Sonar">
+<meta property="og:image:alt" content="ORVUPI Sonar：ネットワークを追うピンクのタコと波。">
 <meta name="twitter:card" content="summary_large_image">
 
 <meta name="twitter:title" content="ORVUPI Sonar">
-<meta name="twitter:description" content="ORVUPI Sonar。Sonar · verify on-chain。アドレスと市場の公開データ。ウォレットは使いません。">
+<meta name="twitter:description" content="ORVUPI Sonar。Sonar · verify on-chain。アドレスと市場の公開読み取り。ウォレットなし。">
 <meta name="twitter:image" content="https://orvupi.com/assets/orvupi/social.png">
 <meta property="og:image:alt" content="ORVUPI：好奇心旺盛なピンクのタコ、コミュニティ、Web3 ツール。">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-hashes' 'sha256-3pRED1tOXas1FXFoPb9TGCjmYe9XQsmO9OV23khV2nY='; img-src 'self' https://coin-images.coingecko.com https://assets.coingecko.com https://assets.geckoterminal.com https://static.coinpaprika.com; font-src 'self'; connect-src 'self' wss://data-stream.binance.vision https://solana-rpc.publicnode.com https://public.rpc.solanavibestation.com https://public.rpc.atl1.solanavibestation.com https://public.rpc.ams1.solanavibestation.com https://api.mainnet-beta.solana.com https://mainnet.base.org https://ethereum-rpc.publicnode.com https://bsc-rpc.publicnode.com https://api.dexscreener.com https://arbitrum-one-rpc.publicnode.com https://polygon-bor-rpc.publicnode.com https://optimism-rpc.publicnode.com https://avalanche-c-chain-rpc.publicnode.com https://api.geckoterminal.com https://api.coingecko.com https://mempool.space https://api.trongrid.io https://data-api.binance.vision https://api.binance.com https://blockstream.info https://base-rpc.publicnode.com https://bsc-dataseed.binance.org https://arb1.arbitrum.io https://polygon-rpc.com https://mainnet.optimism.io https://api.avax.network https://cloudflare-eth.com https://eth.blockscout.com; manifest-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
 <title>ORVUPI Sonar</title>
-<meta name="theme-color" content="#071422">
+<meta name="theme-color" content="#102032">
 
 
 
-<link rel="manifest" href="/site.webmanifest">
-<link rel="stylesheet" href="/assets/site.css?v=ea0de2980d">
+<link rel="manifest" href="/verify/manifest.webmanifest">
+<link rel="stylesheet" href="/assets/site.css?v=22926ee2ea">
 <script src="/assets/shell.js?v=ba3a858465"></script>
 
 <link rel="stylesheet" href="/assets/orvupi.css?v=2f2b1316f2">
 
-<link rel="icon" href="/assets/orvupi/sonar.svg" type="image/svg+xml"><!-- i18n:alternates -->
+<link rel="icon" href="/assets/orvupi/sonar.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/verify-app.css?v=d142a757ab">
+<!-- i18n:alternates -->
 <link rel="alternate" hreflang="es" href="https://orvupi.com/verify/">
 <link rel="alternate" hreflang="en" href="https://orvupi.com/en/verify/">
 <link rel="alternate" hreflang="pt-BR" href="https://orvupi.com/pt-br/verify/">
@@ -47,10 +49,10 @@
 <link rel="stylesheet" href="/fonts/noto/noto-sans-jp.css">
 <!-- /i18n:alternates -->
 </head>
-<body>
+<body class="verify-app">
 
 <a class="skip lang en" href="#contenido">本文へスキップ</a>
-<header class="site"><div class="wrap"><div class="topbar"><a class="brand" href="/ja/"><img src="/assets/orvupi/brand/logotipo-empresarial.png" alt="ORVUPI" width="2172" height="724"><span class="vf-brandcopy"><span class="vf-wordmark"><strong>ORVUPI</strong><span class="vf-product"> Sonar</span></span><span class="vf-tagline">Sonar · verify on-chain</span></span></a><nav class="langpick" aria-label="Language · Idioma · 言語 · 언어"><details><summary><span class="langpick-icon" aria-hidden="true">🌐</span> <span lang="ja">日本語</span></summary><ul><li><a href="/verify/" hreflang="es" lang="es" data-lang-link="es">Español</a></li><li><a href="/en/verify/" hreflang="en" lang="en" data-lang-link="en">English</a></li><li><a href="/pt-br/verify/" hreflang="pt-BR" lang="pt-BR" data-lang-link="pt-BR">Português (Brasil)</a></li><li><a href="/ja/verify/" hreflang="ja" lang="ja" data-lang-link="ja" aria-current="true">日本語</a></li><li><a href="/ko/verify/" hreflang="ko" lang="ko" data-lang-link="ko">한국어</a></li></ul></details></nav></div><nav class="site" aria-label="スタッフ"><ul><li><a href="/ja/"><span class="lang en" lang="ja">ホーム</span></a></li><li><a href="/ja/#herramientas"><span class="lang en" lang="ja">ツール</span></a></li><li><a href="/work/"><span class="lang en" lang="ja">Work</span></a></li><li><a href="/ja/sonar/"><span class="lang en" lang="ja">Sonar</span></a></li><li><a href="/academy/"><span class="lang en" lang="ja">Academy</span></a></li><li><a href="/ja/arqiven/"><span class="lang en" lang="ja">ARQIVEN</span></a></li><li><a href="/ja/memes/"><span class="lang en" lang="ja">ミーム</span></a></li><li><a href="/ja/novedades/"><span class="lang en" lang="ja">最新情報</span></a></li><li><a href="/ja/community/"><span class="lang en" lang="ja">コミュニティ</span></a></li><li><a href="/ja/vision/"><span class="lang en" lang="ja">ビジョン</span></a></li><li><a href="/ja/token/"><span class="lang en" lang="ja">ORVUPI トークン</span></a></li></ul></nav><details class="mapa"><summary><span class="lang en" lang="ja">すべて見る</span></summary><nav aria-label="サイトマップ"><ul><li><a href="/ja/sonar/"><span class="lang en" lang="ja">Sonar</span></a></li><li><a href="/academy/"><span class="lang en" lang="ja">Academy</span></a></li><li><a href="/ja/studio/"><span class="lang en" lang="ja">Studio</span></a></li><li><a href="/ja/arqiven/"><span class="lang en" lang="ja">ARQIVEN</span></a></li><li><a href="/ja/tablero/"><span class="lang en" lang="ja">ボード</span></a></li><li><a href="/ja/contribuir/"><span class="lang en" lang="ja">貢献する</span></a></li><li><a href="/ja/methodology/"><span class="lang en" lang="ja">方法論</span></a></li><li><a href="/ja/marca/"><span class="lang en" lang="ja">ブランド</span></a></li><li><a href="/ja/security/"><span class="lang en" lang="ja">セキュリティ</span></a></li><li><a href="/ja/risks/"><span class="lang en" lang="ja">リスク</span></a></li><li><a href="/ja/legal/"><span class="lang en" lang="ja">法的情報</span></a></li></ul></nav></details></div></header>
+<header class="site"><div class="wrap"><div class="topbar"><a class="brand" href="/ja/"><img src="/assets/orvupi/brand/logotipo-empresarial.png" alt="ORVUPI" width="2172" height="724"><span class="vf-brandcopy"><span class="vf-wordmark"><strong>ORVUPI</strong><span class="vf-product"> Sonar</span></span><span class="vf-tagline">Sonar · verify on-chain</span></span></a><nav class="langpick" aria-label="Language · Idioma · 言語 · 언어"><details><summary><span class="langpick-icon" aria-hidden="true">🌐</span> <span lang="ja">日本語</span></summary><ul><li><a href="/verify/" hreflang="es" lang="es" data-lang-link="es">Español</a></li><li><a href="/en/verify/" hreflang="en" lang="en" data-lang-link="en">English</a></li><li><a href="/pt-br/verify/" hreflang="pt-BR" lang="pt-BR" data-lang-link="pt-BR">Português (Brasil)</a></li><li><a href="/ja/verify/" hreflang="ja" lang="ja" data-lang-link="ja" aria-current="true">日本語</a></li><li><a href="/ko/verify/" hreflang="ko" lang="ko" data-lang-link="ko">한국어</a></li></ul></details></nav></div><nav class="vf-nav" aria-label="Sonar"><button type="button" data-vf-view="home" aria-current="page"><span class="lang en" lang="ja">探す</span></button><button type="button" data-vf-view="dex">DEX</button><button type="button" data-vf-view="tracer">Tracer</button><button type="button" data-vf-view="visualizer">Visualizer</button><button type="button" data-vf-view="alertas"><span class="lang en" lang="ja">Alerts</span></button><button type="button" data-vf-view="etiquetas"><span class="lang en" lang="ja">ラベル</span></button><details class="vf-more"><summary><span class="lang en" lang="ja">もっと詳しく</span></summary><ul><li><button type="button" data-vf-view="ficha"><span class="lang en" lang="ja">Profile</span></button></li><li><button type="button" data-vf-view="paneles"><span class="lang en" lang="ja">Panels</span></button></li><li><button type="button" data-vf-view="transfers">Transfers</button></li><li><button type="button" data-vf-view="mercado"><span class="lang en" lang="ja">Market</span></button></li></ul></details></nav><label class="vf-jump"><span class="vf-sr"><span class="lang en" lang="ja">セクション</span></span><select id="vf-jump" aria-label="セクション"><option value="home">Explorar</option><option value="dex">DEX</option><option value="tracer">Tracer</option><option value="visualizer">Visualizer</option><option value="alertas">Alertas</option><option value="etiquetas">Etiquetas</option><option value="paneles">Paneles</option><option value="transfers">Transfers</option><option value="ficha">Ficha</option><option value="mercado">Mercado</option></select></label><button type="button" class="vf-icon" id="vf-open-search"><span class="lang en" lang="ja">おすすめ商品</span> <kbd>/</kbd></button><nav class="site" aria-label="スタッフ"><ul><li><a href="/ja/"><span class="lang en" lang="ja">ホーム</span></a></li><li><a href="/ja/#herramientas"><span class="lang en" lang="ja">ツール</span></a></li><li><a href="/work/"><span class="lang en" lang="ja">Work</span></a></li><li><a href="/ja/sonar/"><span class="lang en" lang="ja">Sonar</span></a></li><li><a href="/ja/academy/"><span class="lang en" lang="ja">Academy</span></a></li><li><a href="/ja/arqiven/"><span class="lang en" lang="ja">ARQIVEN</span></a></li><li><a href="/ja/memes/"><span class="lang en" lang="ja">ミーム</span></a></li><li><a href="/ja/novedades/"><span class="lang en" lang="ja">最新情報</span></a></li><li><a href="/ja/community/"><span class="lang en" lang="ja">コミュニティ</span></a></li><li><a href="/ja/vision/"><span class="lang en" lang="ja">ビジョン</span></a></li><li><a href="/ja/token/"><span class="lang en" lang="ja">ORVUPI トークン</span></a></li></ul></nav><details class="mapa"><summary><span class="lang en" lang="ja">すべて見る</span></summary><nav aria-label="サイトマップ"><ul><li><a href="/ja/sonar/"><span class="lang en" lang="ja">Sonar</span></a></li><li><a href="/ja/academy/"><span class="lang en" lang="ja">Academy</span></a></li><li><a href="/ja/studio/"><span class="lang en" lang="ja">Studio</span></a></li><li><a href="/ja/arqiven/"><span class="lang en" lang="ja">ARQIVEN</span></a></li><li><a href="/ja/tablero/"><span class="lang en" lang="ja">ボード</span></a></li><li><a href="/ja/contribuir/"><span class="lang en" lang="ja">貢献する</span></a></li><li><a href="/ja/methodology/"><span class="lang en" lang="ja">方法論</span></a></li><li><a href="/ja/marca/"><span class="lang en" lang="ja">ブランド</span></a></li><li><a href="/ja/security/"><span class="lang en" lang="ja">セキュリティ</span></a></li><li><a href="/ja/risks/"><span class="lang en" lang="ja">リスク</span></a></li><li><a href="/ja/legal/"><span class="lang en" lang="ja">法的情報</span></a></li></ul></nav></details></div></header>
 <main id="contenido" class="wrap estrecha">
 
 <div class="aviso" data-disclaimer="si"><p><span class="lang en" lang="ja">情報、読み取り専用ビュー。 監査、承認、勧告ではありません。</span></p>
@@ -60,13 +62,13 @@
 </details></div>
 <p id="aviso-red" class="nota" hidden><span class="lang en" lang="ja">静的コピー。 オフラインで読み取れます。チェーンを更新しません。</span></p>
 <p id="aviso-version" class="nota" hidden><span class="lang en" lang="ja">これらのページの別のコピーが利用可能です。 再読み込みはローカルの進捗を削除しません。</span> <button type="button" id="recargar"><span class="lang en" lang="ja">再読み込み</span></button></p>
-<h1>ORVUPI Sonar</h1>
+<h1><span class="lang en" lang="ja">ORVUPI Sonar</span></h1><div id="vf-root"><p class="vf-meta" role="status"><span class="lang en" lang="ja">Loading…</span></p></div>
 <p class="lede"><span class="lang en" lang="ja">SPL または Token-2022 トークンは、ライブと読み取り専用を読み込みます。 以下のカードは、完全なリストではなく、日付例です。 ネットワークを選択します。 このページが開くと、ネットワークはSolanaになります。 Baseでは、読み込みも読み取り専用です。ウォレットや署名はありません。</span></p>
 <nav class="ayuda-terminos" aria-label="お問い合わせ">
-<a href="/academy/glosario/#direccion"><span class="lang en" lang="ja">アドレスとは</span></a>
-<a href="/academy/glosario/#autoridad-emision"><span class="lang en" lang="ja">ミント権限</span></a>
-<a href="/academy/glosario/#curva-pump"><span class="lang en" lang="ja">カーブ</span></a>
-<a href="/academy/articulos/identificar-un-token/"><span class="lang en" lang="ja">トークンを識別するためのガイド</span></a>
+<a href="/ja/academy/glosario/#direccion"><span class="lang en" lang="ja">アドレスとは</span></a>
+<a href="/ja/academy/glosario/#autoridad-emision"><span class="lang en" lang="ja">ミント権限</span></a>
+<a href="/ja/academy/glosario/#curva-pump"><span class="lang en" lang="ja">カーブ</span></a>
+<a href="/ja/academy/articulos/identificar-un-token/"><span class="lang en" lang="ja">トークンを識別するためのガイド</span></a>
 </nav>
 <p class="muted"><span class="lang en" lang="ja">ライブラリを開くと、入力したアドレスが消去されません。 戻ってくると、フィールドは、まだ同じです</span></p>
 <p class="aviso-fijo"><span class="lang en" lang="ja">パブリックブロックチェーンデータのライブ読み込み。 監査、勧告、または承認ではありません。 ORVUPIは、このトークンと関係がありません。 シグナル表示がすべてチェックされていないわけではありません。</span></p>
@@ -104,10 +106,11 @@
 
 </main>
 <footer class="or-footer"><div class="wrap"><h2>ORVUPI.</h2><p><span class="lang en" lang="ja">1つの好奇心。 8つの触手。 多くのアイデア。</span></p><div class="or-footer-links"><a href="/ja/novedades/"><span class="lang en" lang="ja">最新情報</span></a><a href="/ja/marca/"><span class="lang en" lang="ja">ブランド素材</span></a><a href="/ja/legal/"><span class="lang en" lang="ja">プライバシーとお問い合わせ</span></a><!--email_off--><a href="mailto:orvupi.hq@gmail.com">orvupi.hq@gmail.com</a><!--/email_off--><a href="/ja/risks/"><span class="lang en" lang="ja">リスク</span></a><a href="https://github.com/ORVUPI/orvupi-agent">GitHub ↗</a></div><p><span class="lang en" lang="ja">・アカウントkyotoまたは必須ウォレットの接続はありません。 必要となるのペースは、Labの進捗、Studioのドラフト、ノートブック、もし彼らが使用している場合は、このブラウザに滞在してください。</span></p><p><span class="lang en" lang="ja">© 2026 ORVUPI. 名称、タコおよびビジュアル素材：無断転載を禁じます。オリジナルのコード：MIT ライセンス。公式チャンネル： <a href="https://orvupi.com/">orvupi.com</a> · <a href="https://x.com/ORVUPI">x.com/ORVUPI</a> · <a href="https://t.me/orvupi">t.me/orvupi</a> · <a href="https://www.tiktok.com/@orvupi">tiktok.com/@orvupi</a> · <!--email_off--><a href="mailto:orvupi.hq@gmail.com">orvupi.hq@gmail.com</a><!--/email_off--></span></p></div></footer>
-<script src="/assets/draft-address.js?v=111ded3fbe"></script>
-<script src="/assets/verify.js?v=981ebae866"></script>
+<script src="/assets/draft-address.js?v=3b622bd25d"></script>
+<script src="/assets/verify.js?v=5cf7377849"></script>
 <script src="/assets/aviso-privacidad.js?v=def48d80e1"></script>
-<script type="module" src="/assets/redes.mjs?v=9f09541910"></script>
-<script type="module" src="/assets/verificar-acciones.mjs?v=9f09541910"></script>
+<script type="module" src="/assets/redes.mjs?v=1ebc36b874"></script>
+<script type="module" src="/assets/verificar-acciones.mjs?v=1ebc36b874"></script>
+<script type="module" src="/assets/verify-app.mjs?v=1ebc36b874"></script>
 </body>
 </html>

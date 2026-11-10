@@ -40,7 +40,14 @@ for (const loc of LOCALES) {
       page.on("response", (r) => { if (r.status() >= 400 && !r.url().includes("/assets/orvupi/album/") && new URL(r.url()).origin === new URL(page.url() || r.url()).origin) broken.push(r.status() + " " + new URL(r.url()).pathname); });
       const res = await page.goto(loc.pre + path);
       expect(res.status()).toBe(200);
-      await page.waitForLoadState("networkidle");
+      // La portada reproduce el saludo en bucle: networkidle no llega a cumplirse.
+      // El resto de comprobaciones (idioma, SEO, texto, selector) siguen igual.
+      if (path === "/") {
+        await page.waitForLoadState("load");
+        await expect(page.locator("#saludo")).toBeVisible();
+      } else {
+        await page.waitForLoadState("networkidle");
+      }
       expect(broken, "recursos rotos").toEqual([]);
       await expect(page.locator("html")).toHaveAttribute("lang", loc.code);
       expect((await page.title()).length).toBeGreaterThan(3);
@@ -131,15 +138,19 @@ test("el selector funciona con teclado", async ({ page }) => {
 test("carga perezosa: solo se descarga el idioma activo", async ({ page }) => {
   const urls = [];
   page.on("request", (r) => urls.push(new URL(r.url()).pathname));
+  const catalog = page.waitForResponse((response) => response.url().includes("/i18n/web/dyn-ja.json"));
   await page.goto("/ja/");
-  await page.waitForLoadState("networkidle");
+  await catalog;
+  await page.waitForLoadState("load");
+  await expect(page.locator("#saludo")).toBeVisible();
   expect(urls).toContain("/i18n/web/dyn-ja.json");
   expect(urls.some((u) => /dyn-(ko|pt-BR)\.json/.test(u))).toBeFalsy();
   expect(urls).toContain("/fonts/noto/noto-sans-jp.css");
   expect(urls.some((u) => u.includes("noto-sans-kr"))).toBeFalsy();
   urls.length = 0;
   await page.goto("/en/");
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("load");
+  await expect(page.locator("#saludo")).toBeVisible();
   expect(urls.some((u) => u.includes("/i18n/") || u.includes("/fonts/noto/"))).toBeFalsy();
 });
 

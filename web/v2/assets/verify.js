@@ -5469,7 +5469,7 @@ function bootVerify() {
 
   function revealVerdict() {
     out.style.scrollMarginTop = coverHeight() + "px";
-    out.scrollIntoView({ block: "start", inline: "nearest" });
+    out.scrollIntoView({ block: "start", inline: "nearest", behavior: "instant" });
     var title = out.querySelector("h2");
     if (title && title.focus) title.focus({ preventScroll: true });
   }

@@ -1991,6 +1991,7 @@ article[id] { scroll-margin-top: 1rem; }
 @media (max-width: 48rem) {
   body:has(a[href="/cuaderno/"][aria-current="page"]):has(#resultado:not(:empty)) form.consulta,
   body:has(a[href="/cuaderno/"][aria-current="page"]):has(#comparacion:not(:empty)) form.consulta,
+  body:has(#comparacion:not(:empty)) form.consulta,
   body:has(a[href="/cuaderno/"][aria-current="page"]):has(#resultado-seguimiento:not(:empty)) form.consulta {
     position: static;
     left: auto;

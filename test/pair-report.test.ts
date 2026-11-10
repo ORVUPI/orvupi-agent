@@ -204,7 +204,9 @@ describe("informe de pares", () => {
     const bundleUrl = pathToFileURL(path.join(repoRoot(), "web/v2/tools/bundle-pares.mjs")).href;
     const { bundlePares } = await import(bundleUrl);
     const published = path.join(repoRoot(), "web/v2/assets/pares.mjs");
-    assert.equal(readFileSync(published, "utf8"), bundlePares());
+    // asset-versions.mjs añade ?v= al import después de generar el paquete. El contrato es el código, no la clave de caché.
+    const strip = (source: string) => source.replaceAll(/\?v=[0-9a-f]+/g, "");
+    assert.equal(strip(readFileSync(published, "utf8")), strip(bundlePares()));
     assert.equal(existsSync(path.join(repoRoot(), "web/v2/modules/chain-read.mjs")), false);
     assert.equal(existsSync(path.join(repoRoot(), "web/v2/modules/curve-math.mjs")), false);
     const source = readFileSync(published, "utf8");

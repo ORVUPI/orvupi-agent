@@ -10,6 +10,16 @@ async function file(p) { try { const s = await stat(p); if (s.isDirectory()) ret
 const rules = (await readFile(join(root, "_redirects"), "utf8")).split("\n").map((l) => l.trim().split(/\s+/)).filter((p) => p.length === 3 && p[2] === "200" && p[0].startsWith("/"));
 function rewrite(path) {
   for (const [from, to] of rules) {
+    if (from.includes(":lang")) {
+      const pattern = from
+        .replace(/[.+?^${}()|[\]\\]/g, "\\$&")
+        .replaceAll("*", "(.*)")
+        .replaceAll(":lang", "(en|pt-br|ja|ko)");
+      const match = path.match(new RegExp("^" + pattern + "$"));
+      if (!match) continue;
+      const splat = from.includes("*") ? match[match.length - 1] : "";
+      return to.replace(":splat", splat);
+    }
     if (from.endsWith("/*") && path.startsWith(from.slice(0, -1))) return to.replace(":splat", path.slice(from.length - 1));
     if (from === path) return to;
   }
@@ -17,6 +27,13 @@ function rewrite(path) {
 }
 createServer(async (req, res) => {
   let path = rewrite(decodeURIComponent(new URL(req.url, "http://x").pathname));
+  // La vista previa estática no ejecuta las Pages Functions. Sonar ya cae a las
+  // fuentes públicas cuando esta respuesta no trae datos; no se inventan cifras.
+  if (path === "/api/sonar" || path.startsWith("/api/sonar/")) {
+    res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
+    res.end(JSON.stringify({ ok: false, error: "unavailable" }));
+    return;
+  }
   if (/^\/work\/(document|spreadsheets|presentation|forms|drawings|notes)\//.test(path)) path = "/work/";
   let f = await file(join(root, path));
   let status = 200;

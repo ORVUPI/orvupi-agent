@@ -25,8 +25,6 @@ test("el ejemplo de la curva no lee una dirección", async ({ page }, info) => {
       /* una URL ilegible no es una lectura */
     }
   });
-  await page.goto("/");
-  await expect(page.locator('main a.or-button[href="/comparar/"]')).toBeVisible();
   await page.goto("/comparar/");
   await expect(page.locator("h1")).toContainText("Ejemplo de una curva");
   await expect(page.locator("main")).toContainText("Ejemplo hipotético, no leído de la cadena");

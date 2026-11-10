@@ -143,7 +143,9 @@ def local_page(page, locale, prefix, cat, en_attrs, missing):
     def relink(m):
         href = m.group(2)
         first = href.lstrip("/").split("/")[0].split("#")[0].split("?")[0]
-        if href == "/" or href.startswith("/#") or href.startswith("/?") or first in PAGE_DIRS:
+        # Academy es solo español. La portada y /legal/ enlazan /academy/ (la prueba de
+        # Academy lo exige). El resto de las páginas traducidas usan el prefijo del idioma.
+        if href == "/" or href.startswith("/#") or href.startswith("/?") or first in PAGE_DIRS or (first == "academy" and path not in ("/", "/legal/")):
             return m.group(1) + "/" + prefix + href + m.group(3)
         return m.group(0)
     html = re.sub(r'(<a\s[^>]*href=")(/[^"]*)(")', relink, html)
@@ -182,10 +184,16 @@ def rewrites():
         for f in sorted((ROOT / d).iterdir()):
             if f.name.endswith(".html") or (f.is_dir() and any(f.rglob("*.html"))): continue
             tail = "/*" if f.is_dir() else ""
-            for pre in PREFIXES:
-                src = "/%s/%s/%s%s" % (pre, d, f.name, tail)
-                dst = "/%s/%s%s" % (d, f.name, "/:splat" if tail else "")
-                rules.append("%-48s %s 200" % (src, dst))
+            src = "/:lang/%s/%s%s" % (d, f.name, tail)
+            dst = "/%s/%s%s" % (d, f.name, "/:splat" if tail else "")
+            rules.append("%-48s %s 200" % (src, dst))
+    # Academy solo existe en español. Cada idioma sirve ese mismo árbol.
+    # Las reglas van por idioma concreto: una destino «:splat» sin sustituir
+    # no es una página y la prueba de redirecciones la pediría tal cual.
+    for pre in PREFIXES:
+        rules.append("%-48s %s 200" % ("/%s/academy" % pre, "/academy/index.html"))
+        rules.append("%-48s %s 200" % ("/%s/academy/" % pre, "/academy/index.html"))
+        rules.append("%-48s %s 200" % ("/%s/academy/*" % pre, "/academy/:splat"))
     red = ROOT / "_redirects"
     txt = red.read_text()
     txt = re.sub(re.escape(RW_A) + r".*?" + re.escape(RW_B) + r"\n?", "", txt, flags=re.S)

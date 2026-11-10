@@ -122,24 +122,47 @@ https://superb-horse-9036f5.netlify.app/*  https://orvupi.com/:splat  301!
 /work/assets/ort-wasm-simd-threaded.asyncify-*  https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/dist/ort-wasm-simd-threaded.asyncify.wasm  302
 
 # i18n:rewrites
-# Un placeholder por recurso. Cubre en, pt-br, ja y ko sin repetir la regla.
-/:lang/contribuir/plantilla.md            /contribuir/plantilla.md 200
-/:lang/lab/sw.js                          /lab/sw.js 200
-/:lang/studio/CONTINUIDAD.md              /studio/CONTINUIDAD.md 200
-/:lang/studio/_redirects                  /studio/_redirects 200
-/:lang/studio/app.mjs                     /studio/app.mjs 200
-/:lang/studio/assets/*                    /studio/assets/:splat 200
-/:lang/studio/blocklist.json              /studio/blocklist.json 200
-/:lang/studio/catalog.json                /studio/catalog.json 200
-/:lang/studio/lib/*                       /studio/lib/:splat 200
-/:lang/studio/photos/*                    /studio/photos/:splat 200
-/:lang/studio/studio-boot.js              /studio/studio-boot.js 200
-/:lang/studio/studio-nomodule.js          /studio/studio-nomodule.js 200
-/:lang/studio/studio.css                  /studio/studio.css 200
-/:lang/studio/templates.json              /studio/templates.json 200
-/:lang/studio/thumbs/*                    /studio/thumbs/:splat 200
-/:lang/studio/views.mjs                   /studio/views.mjs 200
-/:lang/token/metadata.json                /token/metadata.json 200
+/:lang/arqiven/app.css                           /arqiven/app.css 200
+/:lang/arqiven/app.js                            /arqiven/app.js 200
+/:lang/arqiven/engine-worker.mjs                 /arqiven/engine-worker.mjs 200
+/:lang/arqiven/favicon-32.png                    /arqiven/favicon-32.png 200
+/:lang/arqiven/icon-192.png                      /arqiven/icon-192.png 200
+/:lang/contribuir/plantilla.md                   /contribuir/plantilla.md 200
+/:lang/lab/sw.js                                 /lab/sw.js 200
+/:lang/studio/CONTINUIDAD.md                     /studio/CONTINUIDAD.md 200
+/:lang/studio/_redirects                         /studio/_redirects 200
+/:lang/studio/app.mjs                            /studio/app.mjs 200
+/:lang/studio/assets/*                           /studio/assets/:splat 200
+/:lang/studio/blocklist.json                     /studio/blocklist.json 200
+/:lang/studio/catalog.json                       /studio/catalog.json 200
+/:lang/studio/desktop.css                        /studio/desktop.css 200
+/:lang/studio/desktop.mjs                        /studio/desktop.mjs 200
+/:lang/studio/ia.mjs                             /studio/ia.mjs 200
+/:lang/studio/lib/*                              /studio/lib/:splat 200
+/:lang/studio/mas.mjs                            /studio/mas.mjs 200
+/:lang/studio/mis-disenos.mjs                    /studio/mis-disenos.mjs 200
+/:lang/studio/photos/*                           /studio/photos/:splat 200
+/:lang/studio/pro.css                            /studio/pro.css 200
+/:lang/studio/studio-boot.js                     /studio/studio-boot.js 200
+/:lang/studio/studio-nomodule.js                 /studio/studio-nomodule.js 200
+/:lang/studio/studio.css                         /studio/studio.css 200
+/:lang/studio/templates.json                     /studio/templates.json 200
+/:lang/studio/thumbs/*                           /studio/thumbs/:splat 200
+/:lang/studio/views.mjs                          /studio/views.mjs 200
+/:lang/token/metadata.json                       /token/metadata.json 200
+/:lang/verify/favicon-32.png                     /verify/favicon-32.png 200
+/:lang/verify/manifest.webmanifest               /verify/manifest.webmanifest 200
+/:lang/verify/net/*                              /verify/net/:splat 200
+/en/academy                                      /academy/index.html 200
+/en/academy/                                     /academy/index.html 200
+/en/academy/*                                    /academy/:splat 200
+/pt-br/academy                                   /academy/index.html 200
+/pt-br/academy/                                  /academy/index.html 200
+/pt-br/academy/*                                 /academy/:splat 200
+/ja/academy                                      /academy/index.html 200
+/ja/academy/                                     /academy/index.html 200
+/ja/academy/*                                    /academy/:splat 200
+/ko/academy                                      /academy/index.html 200
+/ko/academy/                                     /academy/index.html 200
+/ko/academy/*                                    /academy/:splat 200
 # /i18n:rewrites
-
-

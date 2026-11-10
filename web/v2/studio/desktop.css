@@ -18,9 +18,7 @@
   body.studio-standalone:has(.canva-home) {
     background: #fff;
   }
-  body.studio-standalone:has(.canva-home) header.site {
-    display: none !important;
-  }
+  /* El selector de idioma del sitio sigue en la cabecera: el escritorio no tiene otro. */
 
   .canva-home {
     --desk-rail: 112px;
@@ -287,13 +285,13 @@
     color: #6d28d9;
   }
   .canva-home[data-tab="inicio"] .canva-search,
-  .canva-plantillas .tpl-search-wrap .canva-search {
+  .cv-plantillas .tpl-search-wrap .canva-search {
     width: min(860px, 100%);
     margin-left: auto;
     margin-right: auto;
   }
   .canva-home[data-tab="inicio"] #buscar,
-  .canva-plantillas #buscar {
+  .cv-plantillas #buscar {
     min-height: 52px;
     border: 1.5px solid #ddcff5;
     box-shadow: 0 10px 28px rgba(80, 40, 140, 0.08);
@@ -312,8 +310,8 @@
   .canva-home[data-tab="inicio"] [data-home="categories"] { display: none; }
   .canva-home[data-tab="inicio"] [data-home="start"] .canva-head { display: none; }
   .canva-home[data-tab="inicio"] .canva-head,
-  .canva-plantillas .canva-head { padding: 28px 32px 12px; }
-  .canva-home[data-tab="inicio"] .canva-start {
+  .cv-plantillas .canva-head { padding: 28px 32px 12px; }
+  .canva-home[data-tab="inicio"] .cv-start {
     display: flex;
     grid-template-rows: none;
     grid-auto-flow: unset;
@@ -321,7 +319,7 @@
     overflow-x: auto;
     padding: 4px 32px 12px;
   }
-  .canva-home[data-tab="inicio"] .canva-row { padding: 2px 32px 16px; gap: 16px; }
+  .canva-home[data-tab="inicio"] .cv-row { padding: 2px 32px 16px; gap: 16px; }
   .canva-home[data-tab="inicio"] .canva-empty { margin-left: 32px; margin-right: 32px; }
   #studio-root .canva-home[data-tab="inicio"] button.canva-bubble-btn { width: 92px; }
   .canva-home[data-tab="inicio"] .canva-bubble { width: 56px; height: 56px; }
@@ -350,11 +348,11 @@
   .desk-carousel > .tpl-arrow.is-next { right: 12px; }
 
   /* Plantillas */
-  .canva-plantillas {
+  .cv-plantillas {
     background-image: linear-gradient(180deg, #e5f6ff 0px, #efe3ff 220px, #ffffff 460px);
     background-size: 100% 480px;
   }
-  .canva-plantillas .tpl-top { display: none; }
+  .cv-plantillas .tpl-top { display: none; }
   .desk-tpl-hero {
     padding: 32px 32px 0;
     text-align: center;
@@ -366,52 +364,52 @@
     letter-spacing: -0.04em;
     color: #5b21b6;
   }
-  .canva-plantillas .tpl-search-wrap { padding: 4px 32px 0; }
-  .canva-plantillas .tpl-chips {
+  .cv-plantillas .tpl-search-wrap { padding: 4px 32px 0; }
+  .cv-plantillas .tpl-chips {
     justify-content: center;
     flex-wrap: wrap;
     overflow: visible;
     padding: 16px 32px 4px;
     gap: 8px;
   }
-  .canva-plantillas .canva-feed { padding-bottom: 48px; }
-  .canva-plantillas .tpl-glance {
+  .cv-plantillas .canva-feed { padding-bottom: 48px; }
+  .cv-plantillas .tpl-glance {
     grid-auto-columns: 150px;
     padding: 4px 32px 12px;
   }
-  .canva-plantillas .tpl-rail-row { padding: 0 32px 12px; gap: 16px; }
-  .canva-plantillas .tpl-rail-card,
-  .canva-plantillas .tpl-rail-row.is-pair .tpl-rail-card,
-  .canva-plantillas .tpl-rail-row.is-feature .tpl-rail-card,
-  .canva-plantillas .tpl-rail-row.is-wide .tpl-rail-card {
+  .cv-plantillas .tpl-rail-row { padding: 0 32px 12px; gap: 16px; }
+  .cv-plantillas .tpl-rail-card,
+  .cv-plantillas .tpl-rail-row.is-pair .tpl-rail-card,
+  .cv-plantillas .tpl-rail-row.is-feature .tpl-rail-card,
+  .cv-plantillas .tpl-rail-row.is-wide .tpl-rail-card {
     flex: 0 0 220px;
     width: 220px;
   }
-  .canva-plantillas .tpl-rail-row.is-hero .tpl-rail-card { flex-basis: 300px; width: 300px; }
-  .canva-plantillas .tpl-masonry {
+  .cv-plantillas .tpl-rail-row.is-hero .tpl-rail-card { flex-basis: 300px; width: 300px; }
+  .cv-plantillas .tpl-masonry {
     column-count: 5;
     column-gap: 14px;
     padding: 0 32px 32px;
   }
 
   /* Mis diseños */
-  .canva-disenos {
+  .cv-disenos {
     background-image: none;
     background: #fff;
   }
-  .canva-disenos .md-top { padding: 22px 32px 0; }
-  #studio-root .canva-disenos.is-library button.md-title {
+  .cv-disenos .md-top { padding: 22px 32px 0; }
+  #studio-root .cv-disenos.is-library button.md-title {
     pointer-events: none;
     font-size: 32px;
     font-weight: 750;
     letter-spacing: -0.03em;
   }
-  .canva-disenos.is-library .md-chevron { display: none; }
-  .canva-disenos .md-chips,
-  .canva-disenos .md-search,
-  .canva-disenos .md-block,
-  .canva-disenos .md-recent-row { padding-left: 32px; padding-right: 32px; }
-  .canva-home.canva-disenos { padding-bottom: 32px; }
+  .cv-disenos.is-library .md-chevron { display: none; }
+  .cv-disenos .md-chips,
+  .cv-disenos .md-search,
+  .cv-disenos .md-block,
+  .cv-disenos .md-recent-row { padding-left: 32px; padding-right: 32px; }
+  .canva-home.cv-disenos { padding-bottom: 32px; }
   .canva-home.has-sub .md-selectbar,
   .canva-home.has-sub .md-notice {
     left: calc(var(--desk-rail) + var(--desk-sub) + 24px);

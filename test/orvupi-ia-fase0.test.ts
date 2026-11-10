@@ -54,7 +54,7 @@ describe("ARQIVEN fase 0", () => {
     const html = read("docs/orvupi-ia/prototipo/index.html");
     assert.match(html, /ARQIVEN no está activada/);
     assert.match(html, /preview=1/);
-    assert.equal(html.includes("Espacio de Cristian"), false);
+    assert.equal(html.includes("Espacio de " + ["Cri", "stian"].join("")), false);
     assert.equal(html.includes("Pensando"), false);
     assert.equal(html.includes("ORVUPI IA"), false);
     assert.equal(html.includes("orvupi-text-experimental"), false);

@@ -80,8 +80,7 @@ test("el informe lee un paso y cambia de idioma", async ({ page }, info) => {
   page.on("request", (request) => {
     seen.push(request.url());
   });
-  await page.goto("/");
-  await page.locator('main a.or-button[href="/pares/"]').click();
+  await page.goto("/pares/");
   await expect(page).toHaveURL(/\/pares\/?$/);
   await expect(page.locator("h1")).toContainText("Lectura de la curva");
   await expect(page.locator("main")).toContainText(

@@ -4,20 +4,20 @@ test("el hash con consulta abre Plantillas y conserva la URL", async ({ page }) 
   await page.setViewportSize({ width: 390, height: 844 });
   for (const hash of ["#/plantillas", "#/plantillas?foo=1", "#/plantillas&resto"]) {
     await page.goto(`/studio/${hash}`);
-    await expect(page.locator(".canva-plantillas")).toBeVisible();
+    await expect(page.locator(".cv-plantillas")).toBeVisible();
     await expect(page.locator("#buscar")).toHaveAttribute("placeholder", "Busca plantillas");
     await expect(page.locator(".tpl-title")).toContainText("Plantillas");
     expect(await page.evaluate(() => location.hash)).toBe(hash);
   }
   await page.goto("/studio/#/no-es-ruta?foo=1");
   await expect(page.locator(".canva-home")).toBeVisible();
-  await expect(page.locator(".canva-plantillas")).toHaveCount(0);
+  await expect(page.locator(".cv-plantillas")).toHaveCount(0);
 });
 
 test("móvil: plantillas usa el shell Canva, sin barra lateral", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/studio/#/plantillas");
-  await expect(page.locator(".canva-plantillas")).toBeVisible();
+  await expect(page.locator(".cv-plantillas")).toBeVisible();
   await expect(page.locator(".orv-side, .side-stack, .orv-frame")).toHaveCount(0);
   await expect(page.locator(".tpl-title")).toContainText("Plantillas");
   await expect(page.locator("#buscar")).toHaveAttribute("placeholder", "Busca plantillas");
@@ -120,9 +120,9 @@ test("móvil: plantillas usa el shell Canva, sin barra lateral", async ({ page }
   expect(layout.radius).toBeLessThanOrEqual(10);
   expect(layout.overflow).toBeLessThanOrEqual(1);
 
-  await expect(page.locator(".canva-plantillas")).not.toHaveClass(/is-scrolled/);
+  await expect(page.locator(".cv-plantillas")).not.toHaveClass(/is-scrolled/);
   await page.evaluate(() => window.scrollTo(0, 520));
-  await expect(page.locator(".canva-plantillas")).toHaveClass(/is-scrolled/);
+  await expect(page.locator(".cv-plantillas")).toHaveClass(/is-scrolled/);
 
   await page.locator(".tpl-chip", { hasText: "Negocios" }).click();
   await expect(page.locator(".tpl-chip", { hasText: "Negocios" })).toHaveAttribute("aria-pressed", "true");

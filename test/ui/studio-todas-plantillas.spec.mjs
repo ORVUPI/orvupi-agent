@@ -28,7 +28,7 @@ for (const fy of [0.1, 0.3, 0.5, 0.7, 0.9]) for (const fx of [0.1, 0.3, 0.5, 0.7
 
 async function boot(page) {
   await page.goto("/studio/#/plantillas");
-  await expect(page.locator(".canva-plantillas")).toBeVisible();
+  await expect(page.locator(".cv-plantillas")).toBeVisible();
 }
 
 async function openTemplate(page, id) {

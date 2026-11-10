@@ -41,6 +41,8 @@ for i, lang in enumerate(LANGS):
             v = None
         if v and BANNED.search(v):
             v = None
+        if v and v.strip() and not re.search(r"\w", v):
+            v = None
         if v and v.strip():
             st["auto"] += 1; return v
         st["fallback_en"].append(key_hint or en_text); return en_text

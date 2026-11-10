@@ -336,8 +336,8 @@ try {
   });
   await verify.goto(`${base}/verify/`, { waitUntil: "domcontentloaded" });
   await verify.locator("#direccion-token").fill(official);
-  await verify.locator('a[href="/aprender/#direccion"]').click();
-  await verify.waitForFunction((mint) => location.pathname === "/aprender/" && !location.href.includes(mint), official);
+  await verify.locator('a[href="/academy/glosario/#direccion"]').click();
+  await verify.waitForFunction((mint) => location.pathname === "/academy/glosario/" && !location.href.includes(mint), official);
   const learned = await verify.evaluate(() => location.pathname + location.search + location.hash);
   if (learned.includes("a=") || learned.includes(official)) failures.push(`la biblioteca dejó la dirección en la URL: ${learned}`);
   const stored = await verify.evaluate(() => ({
@@ -361,7 +361,7 @@ try {
   if (storedAfter.session || storedAfter.local) failures.push("Verify guardó la dirección al volver");
   await shot(verify, "verify-direccion-conservada.png");
   await verify.goBack();
-  await verify.waitForFunction((mint) => location.pathname === "/aprender/" && !location.href.includes(mint), official);
+  await verify.waitForFunction((mint) => location.pathname === "/academy/glosario/" && !location.href.includes(mint), official);
   if (documentUrls.some((url) => url.includes(official) || url.includes("a="))) {
     failures.push(`la dirección llegó al servidor: ${documentUrls.filter((url) => url.includes(official) || url.includes("a=")).join(" ")}`);
   }

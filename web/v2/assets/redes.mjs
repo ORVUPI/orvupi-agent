@@ -3,7 +3,7 @@
  * Solana sigue el camino de siempre. Base, Ethereum y BNB Chain
  * usan el lector genérico. La lista vive en networks.json.
  */
-import { EVM_MAX_BODY, normalizeEvmAddress, readCappedText, readEvmToken, resetEvmClientLimit } from "../shared/evm-read.js?v=9f09541910";
+import { EVM_MAX_BODY, normalizeEvmAddress, readCappedText, readEvmToken, resetEvmClientLimit } from "../shared/evm-read.js?v=1ebc36b874";
 import {
   fillNetworkSelect,
   pageLede,
@@ -11,9 +11,9 @@ import {
   paintEvmResult,
   privacyText,
   syncNetworkLabels,
-} from "../shared/evm-view.js?v=9f09541910";
-import { openNotebookDb } from "../shared/notebook-db.js?v=9f09541910";
-import { stampIdentity, validateAnyCard, withinStoreLimit } from "../shared/notebook-model.js?v=9f09541910";
+} from "../shared/evm-view.js?v=1ebc36b874";
+import { openNotebookDb } from "../shared/notebook-db.js?v=1ebc36b874";
+import { stampIdentity, validateAnyCard, withinStoreLimit } from "../shared/notebook-model.js?v=1ebc36b874";
 
 const CACHE_MS = 60_000;
 const cache = new Map();
@@ -62,7 +62,7 @@ function syncSolanaHelp(id) {
   const hide = id !== "solana";
   for (const link of document.querySelectorAll(".ayuda-terminos a")) {
     const href = link.getAttribute("href") || "";
-    if (href !== "/aprender/#autoridad-emision" && href !== "/aprender/#curva-pump") continue;
+    if (href !== "/academy/glosario/#autoridad-emision" && href !== "/academy/glosario/#curva-pump" && href !== "/aprender/#autoridad-emision" && href !== "/aprender/#curva-pump") continue;
     link.hidden = hide;
   }
 }

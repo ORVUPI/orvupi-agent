@@ -63,7 +63,7 @@ async function openScreen(page, id, label, mobile) {
 
 test("recorre Sonar sin errores de la aplicación", async ({ page }, info) => {
   const problems = watch(page);
-  const mobile = info.project.name.endsWith("390");
+  const mobile = info.project.name.includes("mobile") || info.project.name.endsWith("390");
   const shots = info.project.name.startsWith("chromium");
   await page.goto("/verify/");
   await expect(page).toHaveTitle(/ORVUPI Sonar/);
@@ -153,7 +153,7 @@ test("recorre Sonar sin errores de la aplicación", async ({ page }, info) => {
 
   await openScreen(page, "transfers", "Transfers", mobile);
   await page.locator("#vf-root").getByRole("button", { name: "Entradas" }).click();
-  await page.locator("#vf-root").getByRole("button", { name: "Salidas" }).click();
+  await page.locator("#vf-root").getByRole("button", { name: "Salidas", exact: true }).click();
   await page.locator("#vf-root").getByRole("button", { name: "Todas" }).click();
   await page.locator("#vf-root").getByRole("button", { name: "USD ≥ 1" }).click();
   const next = page.locator("#vf-root").getByRole("button", { name: "›" });
@@ -171,7 +171,11 @@ test("recorre Sonar sin errores de la aplicación", async ({ page }, info) => {
     await page.mouse.down();
     await page.mouse.move(box.x + 80, box.y + 70);
     await page.mouse.up();
-    await page.mouse.wheel(0, -120);
+    if (info.project.name === "mobile-webkit") {
+      await graph.dispatchEvent("wheel", { deltaY: -120, bubbles: true, cancelable: true });
+    } else {
+      await page.mouse.wheel(0, -120);
+    }
     await graph.evaluate((el) => {
       const down = (id, x, y) => el.dispatchEvent(new PointerEvent("pointerdown", { pointerId: id, clientX: x, clientY: y, bubbles: true }));
       const move = (id, x, y) => el.dispatchEvent(new PointerEvent("pointermove", { pointerId: id, clientX: x, clientY: y, bubbles: true }));

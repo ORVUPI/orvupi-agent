@@ -23,7 +23,7 @@ const CHAR = {
 };
 
 export const PALETTES = {
-  terracota: { bg: "#F6F1EA", ink: "#1E1B18", muted: "#6B625A", accent: "#C8553D", soft: "#EADFD2", dark: "#2F2A26", light: "#FFFFFF" },
+  terracota: { bg: "#F6F1EA", ink: "#1E1B18", muted: "#6B625A", accent: "#B84330", soft: "#EADFD2", dark: "#2A2521", light: "#FFFFFF" },
   noche: { bg: "#0F172A", ink: "#F8FAFC", muted: "#94A3B8", accent: "#38BDF8", soft: "#1E293B", dark: "#020617", light: "#FFFFFF" },
   violeta: { bg: "#FFFFFF", ink: "#1F1235", muted: "#6B6380", accent: "#7C3AED", soft: "#F1EAFE", dark: "#2E1065", light: "#FFFFFF" },
   salvia: { bg: "#F1F4EE", ink: "#1F3B2D", muted: "#5D7266", accent: "#2F855A", soft: "#DCE7DE", dark: "#183026", light: "#FFFFFF" },

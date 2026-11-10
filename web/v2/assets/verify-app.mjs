@@ -1,8 +1,8 @@
-import { fetchBitcoinQuote, fetchCoinOhlc, fetchDexSnapshot, fetchGlobalMarket, fetchLargeTransfers, fetchPoolCandles, fetchPoolTrades, fetchTopMarkets, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs?v=9f09541910";
-import { mountLiveChart } from "../verify/net/chart.mjs?v=9f09541910";
-import { COIN_FRAMES, POLL_MS, TIMEFRAMES, stepLabel } from "../verify/net/ohlcv.mjs?v=9f09541910";
-import { LIMITS, buildGraph, chainById, explorerHref, filterTransfers, formatUnits, groupSearch, identify, pager, slicePage, storageKeys, supportedIds, UNSUPPORTED } from "../verify/net/present.mjs?v=9f09541910";
-import { isOfficialAddress, OFFICIAL_ADDRESS } from "../shared/orvupi-contract.js?v=9f09541910";
+import { fetchBitcoinQuote, fetchCoinOhlc, fetchDexSnapshot, fetchGlobalMarket, fetchLargeTransfers, fetchPoolCandles, fetchPoolTrades, fetchTopMarkets, fetchTrendingPools, readAddress } from "../verify/net/adapters.mjs?v=1ebc36b874";
+import { mountLiveChart } from "../verify/net/chart.mjs?v=1ebc36b874";
+import { COIN_FRAMES, POLL_MS, TIMEFRAMES, stepLabel } from "../verify/net/ohlcv.mjs?v=1ebc36b874";
+import { LIMITS, buildGraph, chainById, explorerHref, filterTransfers, formatUnits, groupSearch, identify, pager, slicePage, storageKeys, supportedIds, UNSUPPORTED } from "../verify/net/present.mjs?v=1ebc36b874";
+import { isOfficialAddress, OFFICIAL_ADDRESS } from "../shared/orvupi-contract.js?v=1ebc36b874";
 
 const KEYS = storageKeys();
 const PROJECT_WALLET = "GKpccLJwKArptzt9j897njXUx9RsV5NKL3Egu7bfMA6Q";
@@ -431,7 +431,7 @@ function home() {
     h("div", { class: "vf-stack" }, [
       chartCard(),
       h("section", { class: "vf-card" }, [
-        h("div", { class: "vf-row" }, [h("h2", {}, t("Mercado", "Market"))]),
+        h("div", { class: "vf-row" }, [h("h2", {}, t("Mercado", "Market")), state.quote?.network ? networkCell(state.quote.network) : null]),
         coinCards(),
         sourceLine(state.markets?.provider, state.markets?.fetchedAt, state.markets?.scope, state.markets?.stale),
       ]),
@@ -770,7 +770,7 @@ function dex() {
   const rows = state.pools.filter((pool) => !state.query || `${pool.name} ${pool.address}`.toLowerCase().includes(state.query.toLowerCase()));
   const window = slicePage(rows, pageOf("dex"));
   return h("section", { class: "vf-card" }, [
-    h("div", { class: "vf-row" }, [h("h2", {}, "DEX"), window.total ? pagerBar("dex", window) : null]),
+    h("div", { class: "vf-row" }, [h("h2", {}, "DEX"), state.quote?.network ? networkCell(state.quote.network) : null, window.total ? pagerBar("dex", window) : null]),
     poolTable(window.rows.length ? window.rows : state.pools),
     sourceLine(state.poolMeta?.provider, state.poolMeta?.fetchedAt, state.poolMeta?.scope, state.poolMeta?.stale),
   ]);
@@ -1036,15 +1036,34 @@ async function openTrace(address, chain = "solana") {
   }
   render();
 }
+function renderLive() {
+  if (state.screen === "alertas" || state.screen === "etiquetas") return;
+  render();
+}
 function render() {
   const root = document.getElementById("vf-root");
   if (!root) return;
-  stopChart();
+  // Cada render recrea la vista. Si el gráfico sigue en la misma clave, se conserva
+  // el nodo: parar y montar de nuevo relanzaba la lectura de velas y la red no quedaba
+  // en reposo (la prueba de idioma espera networkidle).
+  const previous = document.getElementById("vf-chart-host");
+  const previousKey = previous && chartHandle ? chartKey() : "";
+  if (previous) previous.remove();
   const screens = { home, dex, tracer, visualizer, alertas: alerts, etiquetas: labels, paneles: panels, transfers: transfersPage, mercado: market, ficha, token: tokenView };
   const view = screens[state.screen] || home;
   const dialog = searchDialog();
   root.replaceChildren(view());
   if (dialog) root.append(dialog);
+  const slot = document.getElementById("vf-chart-host");
+  if (!slot) {
+    stopChart();
+    return;
+  }
+  if (previous && previousKey && previousKey === chartKey()) {
+    slot.replaceWith(previous);
+    return;
+  }
+  stopChart();
   ensureChart();
 }
 function openSearch() {
@@ -1056,7 +1075,7 @@ function openSearch() {
 // Si Sonar Mercados no arranca (módulos de dos despliegues, almacenamiento local roto,
 // un bloqueo del navegador), se piden de nuevo los módulos a la red y se recarga una vez.
 // Si vuelve a fallar se muestra el motivo y un botón que reintenta de verdad.
-const SONAR_MODULES = ["api", "changes", "chart", "format", "i18n", "ia", "live", "price-color", "rows", "screens/boards", "screens/calendar", "screens/categories", "screens/coin", "screens/exchanges", "screens/markets", "screens/portfolio", "screens/watchlist", "shell", "store", "ui"];
+const SONAR_MODULES = ["api", "changes", "chart", "format", "i18n", "ia", "live", "price-color", "public-fallback", "rows", "screens/boards", "screens/calendar", "screens/categories", "screens/coin", "screens/exchanges", "screens/markets", "screens/portfolio", "screens/watchlist", "shell", "store", "ui"];
 const SONAR_HEAL_KEY = "orvupi.sonar.heal";
 function sonarLoading(message) {
   return h("div", { class: "vf-card sn-boot", role: "status", "aria-live": "polite" }, [
@@ -1144,7 +1163,7 @@ function boot() {
   if (market) {
     document.body.classList.add("sonar-market");
     document.getElementById("vf-root")?.replaceChildren(sonarLoading());
-    import("./sonar/shell.mjs?v=9f09541910").then((mod) => mod.start()).catch(healSonar);
+    import("./sonar/shell.mjs?v=1ebc36b874").then((mod) => mod.start()).catch(healSonar);
     return;
   }
   const dock = document.createElement("nav");
@@ -1197,12 +1216,16 @@ function boot() {
   const slot = document.createElement("div");
   slot.id = "vf-search-slot";
   slot.className = "vf-search-slot";
-  document.querySelector(".vf-nav")?.after(slot);
   const form = document.getElementById("consulta");
-  if (form && slot) slot.append(form);
+  // El campo se queda dentro de main (la prueba de idioma lo rellena ahí) y la
+  // cabecera, fuera, conserva el lema. El hueco de búsqueda de la cabecera lo muestra.
+  if (form) slot.append(form);
+  document.querySelector("main")?.prepend(slot);
   document.addEventListener("submit", (event) => {
     const form = event.target;
     if (!form || form.id !== "consulta") return;
+    // En /verify/ el formulario sigue siendo la lectura clásica. Sonar solo lo toma en /sonar/.
+    if (!/\/sonar(\/|$)/.test(location.pathname)) return;
     event.preventDefault();
     event.stopPropagation();
     investigate(document.getElementById("direccion-token")?.value, document.getElementById("red")?.value || "solana");
@@ -1284,7 +1307,7 @@ async function loadLive() {
   } catch {
     state.markets = { ok: false, coins: [], provider: "CoinGecko", fetchedAt: new Date().toISOString() };
   }
-  render();
+  renderLive();
   try {
     state.poolMeta = await fetchTrendingPools();
     state.pools = state.poolMeta.pools || [];
@@ -1293,7 +1316,7 @@ async function loadLive() {
     state.poolMeta = { ok: false, pools: [], provider: "GeckoTerminal", fetchedAt: new Date().toISOString() };
     state.pools = [];
   }
-  render();
+  renderLive();
   try {
     for (const pool of (state.pools || []).slice(0, 6)) {
       if (!pool?.address) continue;
@@ -1312,21 +1335,21 @@ async function loadLive() {
   } catch {
     state.liveTrades = state.liveTrades || { ok: false, rows: [], provider: "", fetchedAt: new Date().toISOString() };
   }
-  render();
+  renderLive();
   try {
     state.global = await fetchGlobalMarket();
     if (!state.quote?.ok) state.quote = await fetchBitcoinQuote();
   } catch {
     state.global = state.global || { ok: false };
   }
-  render();
+  renderLive();
   await traceJob;
   try {
     if (!state.dossier || state.dossier.address !== OFFICIAL_ADDRESS) state.dossier = await readAddress("solana", OFFICIAL_ADDRESS, { activity: false });
   } catch {
     state.dossier = { ok: false, address: OFFICIAL_ADDRESS, chain: "solana", facts: [], transfers: [], largest: [], message: t("La lectura no salió.", "The read did not complete.") };
   }
-  render();
+  renderLive();
 }
 
 if (document.body.classList.contains("verify-app")) boot();

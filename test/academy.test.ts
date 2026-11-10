@@ -85,7 +85,7 @@ describe("ORVUPI Academy", () => {
   test("tiene su entrada en el menú de herramientas, en el mapa y en la portada", () => {
     for (const rel of ["index.html", "token/index.html", "risks/index.html", "verify/index.html", "en/index.html", "ja/legal/index.html"]) {
       const html = readFileSync(path.join(WEB, rel), "utf8");
-      const nav = html.match(/<nav class="site"[\s\S]*?<\/nav>/)?.[0] ?? html.match(/<header class="site"[\s\S]*?<\/header>/)?.[0] ?? "";
+      const nav = html.match(/<nav class="site(?: [^"]*)?"[\s\S]*?<\/nav>/)?.[0] ?? html.match(/<header class="site(?: [^"]*)?"[\s\S]*?<\/header>/)?.[0] ?? "";
       assert.match(nav, /href="\/academy\/"/, rel);
       for (const old of Object.keys(OLD)) assert.equal(new RegExp(`href="(/[a-z-]+)?/${old}/`).test(html), false, `${rel} ${old}`);
     }
