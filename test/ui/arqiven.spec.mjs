@@ -94,6 +94,67 @@ for (const item of pages) {
   });
 }
 
+test("la bienvenida queda centrada en pantallas anchas", async ({ page }) => {
+  await page.goto("/arqiven/");
+  for (const width of [1280, 1440, 1920, 2560]) {
+    await page.setViewportSize({ width, height: 900 });
+    const title = await page.locator("#welcome h2").boundingBox();
+    const area = await page.locator(".workspace").boundingBox();
+    expect(title && area).toBeTruthy();
+    const delta = Math.abs((title.x + title.width / 2) - (area.x + area.width / 2));
+    expect(delta).toBeLessThan(40);
+  }
+  await expect(page.locator("#crumb")).toHaveCount(0);
+  await expect(page.locator(".arq-who")).toHaveCount(0);
+  await expect(page.locator("#new-chat-side")).toContainText(/Nuevo chat|New chat|Novo chat|新しいチャット|새 채팅/);
+});
+
+test("chats, proyectos e imágenes siguen en este navegador", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/arqiven/");
+  await page.locator("#prompt").fill("Nota de prueba del chat");
+  await page.locator("#send").click();
+  await expect(page.locator("#recent").getByRole("button", { name: "Nota de prueba del chat" })).toBeVisible();
+  await page.locator("#recent .recent-more").click();
+  await page.getByRole("button", { name: "Renombrar" }).click();
+  await page.locator("#ask-input").fill("Chat renombrado");
+  await page.locator("#ask-ok").click();
+  await page.locator("#search").fill("renombrado");
+  await expect(page.locator("#recent").getByRole("button", { name: "Chat renombrado" })).toBeVisible();
+  await page.locator("#search").fill("");
+  await page.getByRole("button", { name: "Proyectos" }).click();
+  await page.locator("#project-name").fill("Carpeta alfa");
+  await page.locator("#project-create").click();
+  await page.getByRole("button", { name: "Chats" }).click();
+  await page.locator("#recent .recent-more").click();
+  await page.getByRole("button", { name: "Mover a proyecto" }).click();
+  await page.locator("#ask-input").fill("Carpeta alfa");
+  await page.locator("#ask-ok").click();
+  await page.getByRole("button", { name: "Proyectos" }).click();
+  await page.getByRole("button", { name: "Carpeta alfa" }).click();
+  await expect(page.locator("#recent").getByRole("button", { name: "Chat renombrado" })).toBeVisible();
+  await page.getByRole("button", { name: "Proyectos" }).click();
+  await page.getByRole("button", { name: "Eliminar" }).click();
+  await page.locator("#ask-ok").click();
+  await page.getByRole("button", { name: "Chats" }).click();
+  await expect(page.locator("#recent").getByRole("button", { name: "Chat renombrado" })).toBeVisible();
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
+  await page.locator("#file-input").setInputFiles({ name: "punto.png", mimeType: "image/png", buffer: png });
+  await page.getByRole("button", { name: "Biblioteca" }).click();
+  await expect(page.locator(".library-card")).toHaveCount(1);
+  await page.locator(".library-card").click();
+  await expect(page.locator("#viewer-img")).toBeVisible();
+  await page.locator("#viewer-delete").click();
+  await page.locator("#ask-ok").click();
+  await expect(page.locator(".library-card")).toHaveCount(0);
+  await page.reload();
+  await expect(page.locator("#recent").getByRole("button", { name: "Chat renombrado" })).toBeVisible();
+  await page.locator("#recent .recent-more").click();
+  await page.getByRole("button", { name: "Eliminar" }).click();
+  await page.locator("#ask-ok").click();
+  await expect(page.locator("#recent").getByRole("button", { name: "Chat renombrado" })).toHaveCount(0);
+});
+
 test("la ventana simulada no recorta el cuadro ni abre scroll horizontal", async ({ page }) => {
   const sizes = [
     { width: 1440, height: 900 },

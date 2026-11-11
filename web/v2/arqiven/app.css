@@ -93,7 +93,8 @@ body > .langsuggest { display: none !important; }
   gap: .85rem;
   min-width: 0;
   min-height: 0;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 .brandrow { display: flex; align-items: center; justify-content: space-between; gap: .35rem; }
 .brand { display: flex; align-items: center; gap: .55rem; text-decoration: none; color: var(--ink); min-width: 0; min-height: 44px; }
@@ -120,7 +121,7 @@ body > .langsuggest { display: none !important; }
 }
 .nav { display: grid; gap: .2rem; }
 .search-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-.history { display: flex; flex-direction: column; min-height: 0; gap: .35rem; }
+.history { display: flex; flex-direction: column; flex: 1; min-height: 0; gap: .35rem; overflow: auto; }
 .history h2 { font-size: .75rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: .2rem 0; }
 .history input, .sidebar > input {
   width: 100%;
@@ -131,7 +132,7 @@ body > .langsuggest { display: none !important; }
   padding: .55rem .7rem;
   min-height: 44px;
 }
-.recent { display: grid; gap: .15rem; overflow: auto; min-height: 0; }
+.recent { display: grid; gap: .15rem; min-height: 0; }
 .recent button {
   border: 0;
   background: transparent;
@@ -164,11 +165,11 @@ body > .langsuggest { display: none !important; }
 .topbar h1 { font-size: 1.05rem; font-weight: 600; margin: 0; letter-spacing: -.02em; }
 .top-actions { display: flex; align-items: center; gap: .35rem; flex: 0 0 auto; }
 .iconbtn.menu { display: none; }
-.view { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; padding: .5rem 1rem calc(.6rem + env(safe-area-inset-bottom)); }
+.view { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; padding: .5rem 1rem calc(.6rem + env(safe-area-inset-bottom)); }
 .view.is-thread { justify-content: flex-end; }
-.welcome { width: min(47.5rem, 100%); margin: auto 0; min-height: 0; }
+.welcome { width: min(47.5rem, 100%); margin: auto 0 1.5rem; min-height: 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .welcome h2 { font-size: clamp(1.7rem, 4vw, 2.15rem); font-weight: 600; letter-spacing: -.03em; margin: 0; color: var(--ink); }
-.welcome-mark { display: block; margin: 0 0 .8rem; }
+.welcome-mark { display: block; margin: 0 auto .8rem; }
 .arq-who { margin: .55rem 0 0; color: var(--muted); font-size: 1rem; max-width: 40rem; }
 .messages { width: min(47.5rem, 100%); margin: 0 auto; display: flex; flex-direction: column; gap: 1.1rem; overflow: auto; min-height: 0; flex: 1; padding: .4rem 0 1rem; }
 .view:not(.is-thread) .messages:empty { display: none; }
@@ -190,6 +191,28 @@ body > .langsuggest { display: none !important; }
 .badge.is-wait, .badge.is-run { background: #fff0f4; color: var(--action); }
 .badge.is-error { background: #fde8e8; color: #8a1c1c; }
 .composer-area { width: min(47.5rem, 100%); margin: 0 auto; flex: 0 0 auto; }
+.panel-view { width: min(47.5rem, 100%); overflow: auto; flex: 1; }
+.project-row, .recent-row { display: flex; align-items: center; gap: .25rem; position: relative; min-width: 0; max-width: 100%; }
+.project-row > button:first-child, .recent-open { flex: 1; min-width: 0; }
+.project-row > button { border: 1px solid var(--line); background: #fff; border-radius: .55rem; text-align: left; padding: .45rem .7rem; }
+#project-list > button { width: 100%; text-align: left; min-height: 44px; margin-bottom: .35rem; border: 1px solid var(--line); background: #fff; border-radius: .55rem; padding: .45rem .7rem; }
+#project-form { display: flex; gap: .4rem; margin: .7rem 0; }
+#project-name { flex: 1; min-width: 0; min-height: 44px; border: 1px solid var(--line); border-radius: .65rem; padding: .55rem .7rem; }
+.recent-open, .project-row > button, .dialog-actions button, .dialog-actions a { min-height: 44px; }
+.recent-open { flex: 1; border: 0; background: transparent; text-align: left; border-radius: .55rem; padding: .45rem .6rem; }
+.row-menu { position: fixed; z-index: 40; display: grid; width: 13rem; background: #fff; border: 1px solid var(--line); border-radius: .7rem; padding: .3rem; box-shadow: 0 8px 24px #1020331a; }
+.row-menu button, .library-filters button, .library-filters select { min-height: 44px; }
+.row-menu button { overflow: visible; text-overflow: unset; white-space: normal; }
+.library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: .7rem; }
+.library-card { border: 1px solid var(--line); background: #fff; padding: 0; border-radius: .6rem; overflow: hidden; min-height: 44px; }
+.library-card img { width: 100%; height: 8.5rem; object-fit: cover; display: block; }
+dialog { border: 1px solid var(--line); border-radius: .9rem; padding: 1rem; max-width: min(42rem, calc(100% - 2rem)); }
+dialog::backdrop { background: #10203366; }
+#viewer { width: 100vw; height: 100dvh; max-width: 100vw; max-height: 100dvh; margin: 0; border: 0; border-radius: 0; padding: 1rem; box-sizing: border-box; }
+#viewer form { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+#viewer img { max-width: min(100%, 72rem); max-height: calc(100dvh - 6rem); object-fit: contain; }
+.dialog-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .7rem; }
+.recent h3 { margin: .6rem 0 .15rem; font-size: .75rem; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
 .composer {
   border: 1px solid #e4e7ec;
   border-radius: 1.1rem;

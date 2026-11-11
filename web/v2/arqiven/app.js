@@ -8,7 +8,7 @@ import { excerptAnswer, finishModelAnswer, planTurn } from "/shared/ia/turn.mjs"
 import { citedExcerpt, extractiveFromSources } from "/shared/ia/quality.mjs";
 import { exportPayload, listVotes, openFeedbackDb, saveVote } from "/shared/ia/feedback.mjs";
 import { clipHistory } from "/shared/ia/history.mjs";
-import { listConversations, openChatDb, readConversation, saveConversation } from "/shared/ia/chats.mjs";
+import { dateGroup, deleteConversation, deleteImage, deleteProject, listConversations, listImages, listProjects, matchesQuery, openChatDb, readConversation, saveConversation, saveImage, saveProject } from "/shared/ia/chats.mjs";
 
 const root = document.querySelector(".arq-app");
 if (!root) throw new Error("ARQIVEN");
@@ -188,11 +188,11 @@ const UI = {
 };
 const ui = UI[uiLang];
 const CHROME = {
-  es: { newChat: "Nueva conversación", settings: "Ajustes", conversations: "Conversaciones", recent: "Recientes", search: "Buscar", welcome: "¿En qué puedo ayudarte?", note: "ARQIVEN es la IA de ORVUPI y funciona con modelos de terceros. Puede cometer errores; revisa la información importante. Lo que escribes se guarda en este navegador.", generating: "Generando", waiting: "En espera", done: "Listo", failed: "Error", copy: "Copiar", copied: "Copiado en este navegador.", copyFail: "No se pudo copiar.", againReply: "Volver a preguntar", attach: "Adjuntar", more: "Más", details: "Detalles", originRules: "Esta respuesta sale de las reglas de ARQIVEN, sin un modelo.", originExtract: "Es un extracto de las fuentes citadas. No lo escribió el modelo.", originModel: "Lo escribió un modelo de terceros" },
-  en: { newChat: "New conversation", settings: "Settings", conversations: "Conversations", recent: "Recent", search: "Search", welcome: "How can I help?", note: "ARQIVEN is ORVUPI's AI and runs on third-party models. It can make mistakes; check anything that matters. What you write stays in this browser.", generating: "Generating", waiting: "Waiting", done: "Done", failed: "Error", copy: "Copy", copied: "Copied on this device.", copyFail: "Could not copy.", againReply: "Ask again", attach: "Attach", more: "More", details: "Details", originRules: "This answer comes from ARQIVEN's rules, without a model.", originExtract: "This is an excerpt from the cited sources. The model did not write it.", originModel: "A third-party model wrote this" },
-  pt: { newChat: "Nova conversa", settings: "Ajustes", conversations: "Conversas", recent: "Recentes", search: "Buscar", welcome: "Como posso ajudar?", note: "ARQIVEN é a IA da ORVUPI e funciona com modelos de terceiros. Pode errar; confira a informação importante. O que você escreve fica neste navegador.", generating: "Gerando", waiting: "Em espera", done: "Pronto", failed: "Erro", copy: "Copiar", copied: "Copiado neste navegador.", copyFail: "Não foi possível copiar.", againReply: "Perguntar de novo", attach: "Anexar", more: "Mais", details: "Detalhes", originRules: "Esta resposta vem das regras da ARQIVEN, sem um modelo.", originExtract: "É um trecho das fontes citadas. O modelo não escreveu.", originModel: "Um modelo de terceiros escreveu isto" },
-  ja: { newChat: "新しい会話", settings: "設定", conversations: "会話", recent: "最近", search: "検索", welcome: "何をお手伝いしましょうか。", note: "ARQIVEN は ORVUPI の AI で、第三者モデルで動きます。間違えることがあります。重要な情報は確認してください。書いた内容はこのブラウザに保存されます。", generating: "生成中", waiting: "待機", done: "完了", failed: "エラー", copy: "コピー", copied: "このブラウザにコピーしました。", copyFail: "コピーできませんでした。", againReply: "もう一度聞く", attach: "添付", more: "その他", details: "詳細", originRules: "この回答は ARQIVEN のルールによるもので、モデルは使っていません。", originExtract: "引用した出典からの抜粋です。モデルが書いた文章ではありません。", originModel: "第三者が作ったモデルが書きました" },
-  ko: { newChat: "새 대화", settings: "설정", conversations: "대화", recent: "최근", search: "검색", welcome: "무엇을 도와드릴까요?", note: "ARQIVEN은 ORVUPI의 AI이고 제3자 모델로 동작합니다. 틀릴 수 있으니 중요한 정보는 확인하세요. 쓴 내용은 이 브라우저에 저장됩니다.", generating: "생성 중", waiting: "대기", done: "완료", failed: "오류", copy: "복사", copied: "이 브라우저에 복사했습니다.", copyFail: "복사하지 못했습니다.", againReply: "다시 묻기", attach: "첨부", more: "더보기", details: "세부 정보", originRules: "이 답은 ARQIVEN의 규칙에서 나왔고, 모델은 쓰지 않았습니다.", originExtract: "인용한 출처의 발췌입니다. 모델이 쓴 글이 아닙니다.", originModel: "제3자 모델이 썼습니다" },
+  es: { newChat: "Nuevo chat", settings: "Ajustes", conversations: "Chats", recent: "Chats", search: "Buscar", welcome: "¿En qué puedo ayudarte?", note: "ARQIVEN es la IA de ORVUPI y funciona con modelos de terceros. Puede cometer errores; revisa la información importante. Lo que escribes se guarda en este navegador.", generating: "Generando", waiting: "En espera", done: "Listo", failed: "Error", copy: "Copiar", copied: "Copiado en este navegador.", copyFail: "No se pudo copiar.", againReply: "Volver a preguntar", attach: "Adjuntar", more: "Más", details: "Detalles", today: "Hoy", yesterday: "Ayer", week: "7 días", older: "Anteriores", projects: "Proyectos", projectHint: "Si eliminas un proyecto, sus chats vuelven al historial general.", library: "Biblioteca", create: "Crear", rename: "Renombrar", move: "Mover a proyecto", remove: "Eliminar", cancel: "Cancelar", confirm: "Confirmar", general: "Historial general", fav: "Favoritas", download: "Descargar", close: "Cerrar", openChat: "Abrir chat", savedImage: "Imagen guardada en la biblioteca de este navegador.", imageBig: "La imagen pasa de 4 MB. No se ha guardado.", deleteChat: "¿Eliminar este chat de este navegador?", deleteProject: "¿Eliminar este proyecto? Sus chats vuelven al historial general.", deleteImage: "¿Eliminar esta imagen de este navegador?", projectName: "Nombre del proyecto", chatName: "Nombre del chat", imageOff: "Generar imágenes no está activo. Se enciende con Workers AI (flux-1-schnell) en el plan gratis de Cloudflare: tiene un tope diario de neuronas y la imagen se guarda solo en este navegador. Mientras tanto puedes adjuntar una imagen.", originRules: "Esta respuesta sale de las reglas de ARQIVEN, sin un modelo.", originExtract: "Es un extracto de las fuentes citadas. No lo escribió el modelo.", originModel: "Lo escribió un modelo de terceros" },
+  en: { newChat: "New chat", settings: "Settings", conversations: "Chats", recent: "Chats", search: "Search", welcome: "How can I help?", note: "ARQIVEN is ORVUPI's AI and runs on third-party models. It can make mistakes; check anything that matters. What you write stays in this browser.", generating: "Generating", waiting: "Waiting", done: "Done", failed: "Error", copy: "Copy", copied: "Copied on this device.", copyFail: "Could not copy.", againReply: "Ask again", attach: "Attach", more: "More", details: "Details", today: "Today", yesterday: "Yesterday", week: "7 days", older: "Older", projects: "Projects", projectHint: "Deleting a project returns its chats to the general history.", library: "Library", create: "Create", rename: "Rename", move: "Move to project", remove: "Delete", cancel: "Cancel", confirm: "Confirm", general: "General history", fav: "Favorites", download: "Download", close: "Close", openChat: "Open chat", savedImage: "Image saved in this browser's library.", imageBig: "The image is over 4 MB. It was not saved.", deleteChat: "Delete this chat from this browser?", deleteProject: "Delete this project? Its chats return to the general history.", deleteImage: "Delete this image from this browser?", projectName: "Project name", chatName: "Chat name", imageOff: "Image generation is off. It turns on with Workers AI (flux-1-schnell) on Cloudflare's free plan: there is a daily neuron cap and the image stays in this browser. You can still attach an image.", originRules: "This answer comes from ARQIVEN's rules, without a model.", originExtract: "This is an excerpt from the cited sources. The model did not write it.", originModel: "A third-party model wrote this" },
+  pt: { newChat: "Novo chat", settings: "Ajustes", conversations: "Chats", recent: "Chats", search: "Buscar", welcome: "Como posso ajudar?", note: "ARQIVEN é a IA da ORVUPI e funciona com modelos de terceiros. Pode errar; confira a informação importante. O que você escreve fica neste navegador.", generating: "Gerando", waiting: "Em espera", done: "Pronto", failed: "Erro", copy: "Copiar", copied: "Copiado neste navegador.", copyFail: "Não foi possível copiar.", againReply: "Perguntar de novo", attach: "Anexar", more: "Mais", details: "Detalhes", today: "Hoje", yesterday: "Ontem", week: "7 dias", older: "Anteriores", projects: "Projetos", projectHint: "Se excluir um projeto, os chats voltam ao histórico geral.", library: "Biblioteca", create: "Criar", rename: "Renomear", move: "Mover para projeto", remove: "Excluir", cancel: "Cancelar", confirm: "Confirmar", general: "Histórico geral", fav: "Favoritas", download: "Baixar", close: "Fechar", openChat: "Abrir chat", savedImage: "Imagem guardada na biblioteca deste navegador.", imageBig: "A imagem passa de 4 MB. Não foi guardada.", deleteChat: "Excluir este chat deste navegador?", deleteProject: "Excluir este projeto? Os chats voltam ao histórico geral.", deleteImage: "Excluir esta imagem deste navegador?", projectName: "Nome do projeto", chatName: "Nome do chat", imageOff: "Gerar imagens está desligado. Liga com Workers AI (flux-1-schnell) no plano grátis da Cloudflare: há um teto diário de neurônios e a imagem fica só neste navegador. Você ainda pode anexar uma imagem.", originRules: "Esta resposta vem das regras da ARQIVEN, sem um modelo.", originExtract: "É um trecho das fontes citadas. O modelo não escreveu.", originModel: "Um modelo de terceiros escreveu isto" },
+  ja: { newChat: "新しいチャット", settings: "設定", conversations: "チャット", recent: "チャット", search: "検索", welcome: "何をお手伝いしましょうか。", note: "ARQIVEN は ORVUPI の AI で、第三者モデルで動きます。間違えることがあります。重要な情報は確認してください。書いた内容はこのブラウザに保存されます。", generating: "生成中", waiting: "待機", done: "完了", failed: "エラー", copy: "コピー", copied: "このブラウザにコピーしました。", copyFail: "コピーできませんでした。", againReply: "もう一度聞く", attach: "添付", more: "その他", details: "詳細", today: "今日", yesterday: "昨日", week: "7日", older: "それ以前", projects: "プロジェクト", projectHint: "プロジェクトを削除すると、そのチャットは全体の履歴に戻ります。", library: "ライブラリ", create: "作成", rename: "名前を変更", move: "プロジェクトへ移動", remove: "削除", cancel: "キャンセル", confirm: "確認", general: "全体の履歴", fav: "お気に入り", download: "ダウンロード", close: "閉じる", openChat: "チャットを開く", savedImage: "画像をこのブラウザのライブラリに保存しました。", imageBig: "画像が 4 MB を超えています。保存していません。", deleteChat: "このチャットをこのブラウザから削除しますか？", deleteProject: "このプロジェクトを削除しますか？チャットは全体の履歴に戻ります。", deleteImage: "この画像をこのブラウザから削除しますか？", projectName: "プロジェクト名", chatName: "チャット名", imageOff: "画像生成はオフです。Cloudflare の無料プランの Workers AI（flux-1-schnell）でオンにできます。1 日のニューロン上限があり、画像はこのブラウザだけに残ります。画像の添付はできます。", originRules: "この回答は ARQIVEN のルールによるもので、モデルは使っていません。", originExtract: "引用した出典からの抜粋です。モデルが書いた文章ではありません。", originModel: "第三者が作ったモデルが書きました" },
+  ko: { newChat: "새 채팅", settings: "설정", conversations: "채팅", recent: "채팅", search: "검색", welcome: "무엇을 도와드릴까요?", note: "ARQIVEN은 ORVUPI의 AI이고 제3자 모델로 동작합니다. 틀릴 수 있으니 중요한 정보는 확인하세요. 쓴 내용은 이 브라우저에 저장됩니다.", generating: "생성 중", waiting: "대기", done: "완료", failed: "오류", copy: "복사", copied: "이 브라우저에 복사했습니다.", copyFail: "복사하지 못했습니다.", againReply: "다시 묻기", attach: "첨부", more: "더보기", details: "세부 정보", today: "오늘", yesterday: "어제", week: "7일", older: "이전", projects: "프로젝트", projectHint: "프로젝트를 삭제하면 채팅은 일반 기록으로 돌아갑니다.", library: "라이브러리", create: "만들기", rename: "이름 바꾸기", move: "프로젝트로 옮기기", remove: "삭제", cancel: "취소", confirm: "확인", general: "일반 기록", fav: "즐겨찾기", download: "다운로드", close: "닫기", openChat: "채팅 열기", savedImage: "이미지를 이 브라우저의 라이브러리에 저장했습니다.", imageBig: "이미지가 4 MB를 넘습니다. 저장하지 않았습니다.", deleteChat: "이 채팅을 이 브라우저에서 삭제할까요?", deleteProject: "이 프로젝트를 삭제할까요? 채팅은 일반 기록으로 돌아갑니다.", deleteImage: "이 이미지를 이 브라우저에서 삭제할까요?", projectName: "프로젝트 이름", chatName: "채팅 이름", imageOff: "이미지 생성은 꺼져 있습니다. Cloudflare 무료 요금제의 Workers AI(flux-1-schnell)로 켤 수 있습니다. 하루 뉴런 한도가 있고 이미지는 이 브라우저에만 남습니다. 이미지 첨부는 가능합니다.", originRules: "이 답은 ARQIVEN의 규칙에서 나왔고, 모델은 쓰지 않았습니다.", originExtract: "인용한 출처의 발췌입니다. 모델이 쓴 글이 아닙니다.", originModel: "제3자 모델이 썼습니다" },
 };
 const chrome = CHROME[uiLang];
 const copy = {
@@ -214,6 +214,14 @@ const state = {
   localText: "",
   conversationId: "",
   conversations: [],
+  projects: [],
+  images: [],
+  activeProject: "",
+  chatProject: "",
+  chatTitle: "",
+  chatRenamed: false,
+  favOnly: false,
+  imagesOn: false,
   chatDb: null,
   contextRefs: [],
   prepareFailures: 0,
@@ -286,11 +294,6 @@ exportVotes.id = "export-feedback";
 exportVotes.className = "prepare";
 exportVotes.textContent = ui.exportVotes;
 engineBar.append(indicator, sourceNote, exportVotes);
-const who = document.createElement("p");
-who.className = "arq-who";
-who.textContent = ui.who || "";
-if (!ui.who) who.hidden = true;
-document.getElementById("welcome")?.append(who);
 document.getElementById("engine-slot")?.append(engineBar);
 applyChrome();
 
@@ -351,9 +354,19 @@ function applyChrome() {
   const navChat = document.querySelector("[data-nav='chat'] .hide-collapsed");
   if (navChat) navChat.textContent = chrome.conversations;
   const hist = document.getElementById("hist-label");
-  if (hist) hist.textContent = chrome.recent;
-  const crumb = document.getElementById("crumb");
-  if (crumb) crumb.textContent = chrome.conversations;
+  if (hist) hist.textContent = state.activeProject ? (state.projects.find((item) => item.id === state.activeProject)?.name || chrome.projects) : chrome.conversations;
+  document.querySelector("[data-nav='projects'] .hide-collapsed").textContent = chrome.projects;
+  document.querySelector("[data-nav='library'] .hide-collapsed").textContent = chrome.library;
+  const projectTitle = document.getElementById("project-title");
+  if (projectTitle) projectTitle.textContent = chrome.projects;
+  const libraryTitle = document.getElementById("library-title");
+  if (libraryTitle) libraryTitle.textContent = chrome.library;
+  const create = document.getElementById("project-create");
+  if (create) create.textContent = chrome.create;
+  const imageFav = document.getElementById("image-fav");
+  if (imageFav) imageFav.textContent = chrome.fav;
+  const projectName = document.getElementById("project-name");
+  if (projectName) projectName.setAttribute("aria-label", chrome.projectName);
   if (search instanceof HTMLInputElement) search.placeholder = chrome.search;
   const attachLabel = document.querySelector("#attach span");
   if (attachLabel) attachLabel.textContent = chrome.attach;
@@ -389,20 +402,37 @@ function slimMessage(item) {
 }
 
 let saveTimer = 0;
+const removedIds = new Set();
 function remember() {
   if (!state.messages.length || !state.chatDb) return;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => { void persist(); }, 180);
 }
 
+function liveTitle() {
+  if (state.chatRenamed && state.chatTitle) return state.chatTitle;
+  return currentTitle();
+}
+
 async function persist() {
   if (!state.chatDb || !state.messages.some((item) => item.content)) return;
-  const title = state.messages.find((item) => item.role === "user")?.content.replace(/\s+/g, " ").trim().slice(0, 80) || chrome.newChat;
-  await saveConversation(state.chatDb, { id: state.conversationId, title, messages: state.messages.map(slimMessage) });
+  const title = liveTitle() || chrome.newChat;
+  const savedId = state.conversationId;
+  await saveConversation(state.chatDb, {
+    id: savedId,
+    title,
+    renamed: state.chatRenamed,
+    projectId: state.chatProject,
+    messages: state.messages.map(slimMessage),
+  });
+  if (removedIds.has(savedId)) {
+    await deleteConversation(state.chatDb, savedId);
+    removedIds.delete(savedId);
+  }
   state.conversations = await listConversations(state.chatDb);
   paintList();
   const heading = document.getElementById("thread-title");
-  if (heading) heading.textContent = title;
+  if (heading && state.view === "chat") heading.textContent = title;
   document.title = `${title} · ARQIVEN`;
 }
 
@@ -411,6 +441,9 @@ async function openConversation(id) {
   const row = await readConversation(state.chatDb, id);
   state.conversationId = id;
   state.messages = row?.messages ? row.messages.map((item) => ({ ...item })) : [];
+  state.chatProject = row?.projectId || "";
+  state.chatRenamed = row?.renamed === true;
+  state.chatTitle = row?.renamed ? row.title : "";
   state.view = "chat";
   state.queue = [];
   setHash(id);
@@ -664,26 +697,133 @@ function currentTitle() {
   return state.messages.find((item) => item.role === "user")?.content.replace(/\s+/g, " ").trim().slice(0, 80) || "";
 }
 
+function scopedChats() {
+  const query = search instanceof HTMLInputElement ? search.value : "";
+  const merged = new Map(state.conversations.map((item) => [item.id, item]));
+  const title = liveTitle();
+  if (title && state.conversationId) {
+    const prev = merged.get(state.conversationId);
+    merged.set(state.conversationId, {
+      id: state.conversationId,
+      title,
+      renamed: state.chatRenamed,
+      projectId: state.chatProject,
+      updated: prev?.updated || new Date().toISOString(),
+      messages: state.messages.length ? state.messages : (prev?.messages || []),
+    });
+  }
+  return [...merged.values()]
+    .filter((item) => (state.activeProject ? item.projectId === state.activeProject : !item.projectId))
+    .filter((item) => matchesQuery(item, query))
+    .sort((a, b) => (a.updated < b.updated ? 1 : -1));
+}
+
+function chatRow(item) {
+  const row = document.createElement("div");
+  row.className = "recent-row";
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "recent-open";
+  button.textContent = item.title || chrome.newChat;
+  button.title = item.title || chrome.newChat;
+  if (item.id === state.conversationId) button.setAttribute("aria-current", "true");
+  button.addEventListener("click", () => { void openConversation(item.id); });
+  const more = document.createElement("button");
+  more.type = "button";
+  more.className = "iconbtn recent-more";
+  more.textContent = "⋯";
+  more.setAttribute("aria-label", chrome.more);
+  more.setAttribute("aria-expanded", "false");
+  const menu = document.createElement("div");
+  menu.className = "row-menu";
+  menu.hidden = true;
+  for (const [key, label] of [["rename", chrome.rename], ["move", chrome.move], ["remove", chrome.remove]]) {
+    const action = document.createElement("button");
+    action.type = "button";
+    action.textContent = label;
+    action.addEventListener("click", () => { void chatAction(key, item); });
+    menu.append(action);
+  }
+  more.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const willOpen = menu.hidden;
+    document.querySelectorAll(".row-menu").forEach((node) => { node.hidden = true; });
+    document.querySelectorAll(".recent-more").forEach((node) => node.setAttribute("aria-expanded", "false"));
+    menu.hidden = !willOpen;
+    more.setAttribute("aria-expanded", menu.hidden ? "false" : "true");
+    if (!menu.hidden) {
+      const box = more.getBoundingClientRect();
+      const width = 208;
+      menu.style.top = `${Math.round(box.bottom + 4)}px`;
+      menu.style.left = `${Math.round(Math.max(8, Math.min(box.right - width, window.innerWidth - width - 8)))}px`;
+    }
+  });
+  row.append(button, more, menu);
+  return row;
+}
+
+async function chatAction(action, item) {
+  if (!state.chatDb) return;
+  if (action === "rename") {
+    const name = await askUser(chrome.chatName, item.title);
+    if (!name) return;
+    const row = state.conversations.find((chat) => chat.id === item.id) || item;
+    if (item.id === state.conversationId) {
+      state.chatRenamed = true;
+      state.chatTitle = name;
+      await persist();
+    } else {
+      await saveConversation(state.chatDb, { ...row, title: name, renamed: true });
+    }
+  }
+  if (action === "move") {
+    const choice = await askUser(`${chrome.move}\n${chrome.general}`, item.projectId || "");
+    if (choice == null) return;
+    const projectId = state.projects.some((project) => project.id === choice || project.name === choice) ? (state.projects.find((project) => project.id === choice || project.name === choice)?.id || "") : "";
+    const row = state.conversations.find((chat) => chat.id === item.id) || item;
+    if (item.id === state.conversationId) {
+      state.chatProject = projectId;
+      await persist();
+    } else {
+      await saveConversation(state.chatDb, { ...row, projectId });
+    }
+  }
+  if (action === "remove") {
+    const ok = await askUser(chrome.deleteChat, "", chrome.remove);
+    if (ok == null) return;
+    removedIds.add(item.id);
+    await deleteConversation(state.chatDb, item.id);
+    if (item.id === state.conversationId) {
+      state.messages = [];
+      state.conversationId = newId();
+      state.chatProject = state.activeProject;
+      state.chatRenamed = false;
+      state.chatTitle = "";
+      setHash(state.conversationId);
+    }
+  }
+  state.conversations = await listConversations(state.chatDb);
+  paint();
+}
+
 function paintList() {
-  const query = (search instanceof HTMLInputElement ? search.value : "").trim().toLowerCase();
-  const title = currentTitle();
-  const saved = state.conversations.filter((item) => item.id !== state.conversationId);
-  const list = (title ? [{ id: state.conversationId, title }] : []).concat(saved).filter((item) => !query || item.title.toLowerCase().includes(query));
   if (!recent) return;
   recent.replaceChildren();
+  const list = scopedChats();
   if (!list.length) {
     const note = document.createElement("p");
     note.textContent = copy.empty;
     recent.append(note);
     return;
   }
-  for (const item of list) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = item.title || chrome.newChat;
-    if (item.id === state.conversationId) button.setAttribute("aria-current", "true");
-    button.addEventListener("click", () => { void openConversation(item.id); });
-    recent.append(button);
+  const labels = { today: chrome.today, yesterday: chrome.yesterday, week: chrome.week, older: chrome.older };
+  for (const key of ["today", "yesterday", "week", "older"]) {
+    const group = list.filter((item) => dateGroup(item.updated) === key);
+    if (!group.length) continue;
+    const heading = document.createElement("h3");
+    heading.textContent = labels[key];
+    recent.append(heading);
+    for (const item of group) recent.append(chatRow(item));
   }
 }
 
@@ -769,15 +909,25 @@ function paint() {
   const threaded = state.messages.length > 0 && state.view === "chat";
   welcome?.toggleAttribute("hidden", state.view !== "chat" || state.messages.length > 0);
   view?.classList.toggle("is-thread", threaded);
+  const chatting = state.view === "chat";
+  if (welcome) welcome.hidden = !chatting || state.messages.length > 0;
+  if (messages) messages.hidden = !chatting;
+  const composer = document.querySelector(".composer-area");
+  if (composer) composer.hidden = !chatting;
+  const projectsPanel = document.getElementById("project-view");
+  if (projectsPanel) projectsPanel.hidden = state.view !== "projects";
+  const libraryPanel = document.getElementById("library-view");
+  if (libraryPanel) libraryPanel.hidden = state.view !== "library";
   if (view) view.hidden = state.view === "settings";
   const settings = document.getElementById("settings");
   if (settings) settings.hidden = state.view !== "settings";
+  if (state.view === "projects") paintProjects();
   if (save) save.hidden = state.messages.length === 0 && !state.localText.trim();
   if (status && (running || status.textContent === ui.queued || status.textContent === chrome.generating)) {
     status.textContent = running ? (state.messages.some((item) => item.running) ? chrome.generating : ui.queued) : "";
   }
   const heading = document.getElementById("thread-title");
-  const title = currentTitle();
+  const title = liveTitle();
   if (heading && state.view === "chat") heading.textContent = title || "ARQIVEN";
   if (title) document.title = `${title} · ARQIVEN`;
   remember();
@@ -790,8 +940,10 @@ function paint() {
 }
 
 function showView(name) {
-  state.view = name === "settings" ? "settings" : "chat";
+  if (name === "chat") state.activeProject = "";
+  state.view = name === "settings" || name === "projects" || name === "library" ? name : "chat";
   paint();
+  if (name === "library") void paintLibrary();
   openMenu(false);
 }
 
@@ -1026,6 +1178,9 @@ document.querySelectorAll("#new-chat, #new-chat-side").forEach((button) => butto
   state.localText = "";
   state.queue = [];
   state.view = "chat";
+  state.chatProject = state.activeProject;
+  state.chatRenamed = false;
+  state.chatTitle = "";
   state.conversationId = newId();
   setHash(state.conversationId);
   if (prompt instanceof HTMLTextAreaElement) prompt.value = "";
@@ -1118,11 +1273,31 @@ editorToggle.addEventListener("click", () => setEditor(editor.hidden));
 editorClose.addEventListener("click", () => setEditor(false));
 editorText.addEventListener("input", () => { state.localText = editorText.value; });
 
+document.getElementById("project-form")?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const input = document.getElementById("project-name");
+  const name = input instanceof HTMLInputElement ? input.value.trim() : "";
+  if (!name || !state.chatDb) return;
+  await saveProject(state.chatDb, { id: newId(), name });
+  input.value = "";
+  state.projects = await listProjects(state.chatDb);
+  paint();
+});
+document.getElementById("image-filter")?.addEventListener("change", () => { void paintLibrary(); });
+document.getElementById("image-fav")?.addEventListener("click", () => {
+  state.favOnly = !state.favOnly;
+  document.getElementById("image-fav")?.setAttribute("aria-pressed", state.favOnly ? "true" : "false");
+  void paintLibrary();
+});
 document.getElementById("attach")?.addEventListener("click", () => fileInput?.click());
 fileInput?.addEventListener("change", () => {
   const input = fileInput instanceof HTMLInputElement ? fileInput : null;
   const file = input?.files?.[0];
   if (!file) return;
+  if (file.type.startsWith("image/") || /\.(png|jpe?g|webp|gif)$/i.test(file.name)) {
+    void storeAttachedImage(file).finally(() => { if (input) input.value = ""; });
+    return;
+  }
   const allowed = /\.(txt|md)$/i.test(file.name) || file.type.startsWith("text/");
   if (!allowed) {
     setStatus(copy.fileBad);
@@ -1200,16 +1375,211 @@ window.addEventListener("hashchange", () => {
   if (id && id !== state.conversationId) void openConversation(id);
 });
 
+function askUser(text, value = "", okLabel = chrome.confirm) {
+  const dialog = document.getElementById("ask-dialog");
+  if (!(dialog instanceof HTMLDialogElement)) return Promise.resolve(null);
+  const input = document.getElementById("ask-input");
+  document.getElementById("ask-text").textContent = text;
+  if (input instanceof HTMLInputElement) {
+    input.hidden = value === "" && okLabel === chrome.remove;
+    input.value = value;
+    input.placeholder = text;
+  }
+  document.getElementById("ask-ok").textContent = okLabel;
+  document.getElementById("ask-cancel").textContent = chrome.cancel;
+  dialog.showModal();
+  return new Promise((resolve) => {
+    dialog.addEventListener("close", () => {
+      resolve(dialog.returnValue === "ok" ? (input instanceof HTMLInputElement ? input.value.trim() : "ok") : null);
+    }, { once: true });
+  });
+}
+
+function paintProjects() {
+  const list = document.getElementById("project-list");
+  const note = document.getElementById("project-note");
+  if (note) note.textContent = chrome.projectHint;
+  if (!list) return;
+  list.replaceChildren();
+  const general = document.createElement("button");
+  general.type = "button";
+  general.textContent = chrome.general;
+  general.addEventListener("click", () => { state.activeProject = ""; state.view = "chat"; paint(); });
+  list.append(general);
+  for (const project of state.projects) {
+    const row = document.createElement("div");
+    row.className = "project-row";
+    const open = document.createElement("button");
+    open.type = "button";
+    open.textContent = project.name;
+    if (project.id === state.activeProject) open.setAttribute("aria-current", "true");
+    open.addEventListener("click", () => { state.activeProject = project.id; state.view = "chat"; paint(); });
+    const rename = document.createElement("button");
+    rename.type = "button";
+    rename.textContent = chrome.rename;
+    rename.addEventListener("click", async () => {
+      const name = await askUser(chrome.projectName, project.name);
+      if (!name || !state.chatDb) return;
+      await saveProject(state.chatDb, { ...project, name });
+      state.projects = await listProjects(state.chatDb);
+      paint();
+    });
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.textContent = chrome.remove;
+    remove.addEventListener("click", async () => {
+      const ok = await askUser(chrome.deleteProject, "", chrome.remove);
+      if (ok == null || !state.chatDb) return;
+      await deleteProject(state.chatDb, project.id);
+      if (state.activeProject === project.id) state.activeProject = "";
+      if (state.chatProject === project.id) state.chatProject = "";
+      state.projects = await listProjects(state.chatDb);
+      state.conversations = await listConversations(state.chatDb);
+      paint();
+    });
+    row.append(open, rename, remove);
+    list.append(row);
+  }
+}
+
+function revokeImages() {
+  for (const url of state.imageUrls || []) URL.revokeObjectURL(url);
+  state.imageUrls = [];
+}
+
+async function paintLibrary() {
+  const grid = document.getElementById("library-grid");
+  const note = document.getElementById("library-note");
+  const filter = document.getElementById("image-filter");
+  if (note) note.textContent = state.imagesOn ? "" : chrome.imageOff;
+  if (!grid || !state.chatDb) return;
+  state.images = await listImages(state.chatDb);
+  if (filter instanceof HTMLSelectElement) {
+    const current = filter.value;
+    const options = [["", chrome.library], ["today", chrome.today], ["yesterday", chrome.yesterday], ["week", chrome.week], ["older", chrome.older]];
+    for (const project of state.projects) options.push([`project:${project.id}`, project.name]);
+    for (const chat of state.conversations) if (chat.title) options.push([`chat:${chat.id}`, chat.title]);
+    filter.replaceChildren();
+    for (const [value, label] of options) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = label;
+      filter.append(option);
+    }
+    if ([...filter.options].some((option) => option.value === current)) filter.value = current;
+  }
+  const group = filter instanceof HTMLSelectElement ? filter.value : "";
+  revokeImages();
+  grid.replaceChildren();
+  const rows = state.images.filter((item) => {
+    if (state.favOnly && item.favorite !== true) return false;
+    if (!group) return true;
+    if (group.startsWith("project:")) return item.projectId === group.slice(8);
+    if (group.startsWith("chat:")) return item.chatId === group.slice(5);
+    return dateGroup(item.created) === group;
+  });
+  for (const item of rows) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "library-card";
+    const img = document.createElement("img");
+    const blob = item.bytes instanceof Blob ? item.bytes : new Blob([item.bytes], { type: item.mime || "image/png" });
+    const url = URL.createObjectURL(blob);
+    state.imageUrls.push(url);
+    img.src = url;
+    img.alt = item.name || chrome.library;
+    button.append(img);
+    button.addEventListener("click", () => openViewer(item, url));
+    grid.append(button);
+  }
+}
+
+function openViewer(item, url) {
+  const dialog = document.getElementById("viewer");
+  const img = document.getElementById("viewer-img");
+  const download = document.getElementById("viewer-download");
+  const open = document.getElementById("viewer-open");
+  if (!(dialog instanceof HTMLDialogElement) || !(img instanceof HTMLImageElement)) return;
+  img.src = url;
+  img.alt = item.name || chrome.library;
+  if (download instanceof HTMLAnchorElement) {
+    download.href = url;
+    download.download = item.name || "arqiven.png";
+    download.textContent = chrome.download;
+  }
+  if (open instanceof HTMLAnchorElement) {
+    open.href = item.chatId ? `#c/${item.chatId}` : "/arqiven/";
+    open.textContent = chrome.openChat;
+  }
+  document.getElementById("viewer-delete").textContent = chrome.remove;
+  let favBtn = document.getElementById("viewer-fav");
+  if (!favBtn) {
+    favBtn = document.createElement("button");
+    favBtn.type = "button";
+    favBtn.id = "viewer-fav";
+    document.getElementById("viewer-delete")?.before(favBtn);
+  }
+  favBtn.textContent = chrome.fav;
+  favBtn.setAttribute("aria-pressed", item.favorite === true ? "true" : "false");
+  favBtn.onclick = async () => {
+    item.favorite = item.favorite !== true;
+    if (state.chatDb) await saveImage(state.chatDb, item);
+    favBtn.setAttribute("aria-pressed", item.favorite === true ? "true" : "false");
+  };
+  document.getElementById("viewer-delete").onclick = async () => {
+    const ok = await askUser(chrome.deleteImage, "", chrome.remove);
+    if (ok == null || !state.chatDb) return;
+    await deleteImage(state.chatDb, item.id);
+    dialog.close();
+    void paintLibrary();
+  };
+  dialog.showModal();
+}
+
+async function storeAttachedImage(file) {
+  if (!state.chatDb) return;
+  if (file.size > 4000000) {
+    setStatus(chrome.imageBig);
+    return;
+  }
+  const bytes = await file.arrayBuffer();
+  await saveImage(state.chatDb, {
+    id: newId(),
+    name: file.name,
+    mime: file.type || "image/png",
+    bytes,
+    chatId: state.conversationId,
+    projectId: state.chatProject,
+  });
+  const chip = document.getElementById("file-chip");
+  if (chip) chip.textContent = file.name;
+  setStatus(chrome.savedImage);
+}
+
 async function bootChats() {
   state.conversationId = hashId() || newId();
+  state.chatProject = state.activeProject;
   setHash(state.conversationId);
   try {
     state.chatDb = await openChatDb();
     state.conversations = await listConversations(state.chatDb);
+    state.projects = await listProjects(state.chatDb);
     const saved = await readConversation(state.chatDb, state.conversationId);
-    if (saved?.messages?.length) state.messages = saved.messages.map((item) => ({ ...item }));
+    if (saved?.messages?.length) {
+      state.messages = saved.messages.map((item) => ({ ...item }));
+      state.chatProject = saved.projectId || "";
+      state.chatRenamed = saved.renamed === true;
+      state.chatTitle = saved.renamed ? saved.title : "";
+    }
   } catch {
     state.chatDb = null;
+  }
+  try {
+    const response = await fetch("/api/arqiven/image");
+    const payload = response.ok ? await response.json() : { enabled: false };
+    state.imagesOn = payload.enabled === true;
+  } catch {
+    state.imagesOn = false;
   }
   paint();
 }
