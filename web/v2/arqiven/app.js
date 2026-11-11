@@ -242,6 +242,13 @@ const messages = document.getElementById("messages");
 const welcome = document.getElementById("welcome");
 const view = document.getElementById("chat-view");
 const recent = document.getElementById("recent");
+const chatMenu = document.createElement("div");
+chatMenu.className = "row-menu";
+chatMenu.hidden = true;
+chatMenu.setAttribute("role", "menu");
+document.body.append(chatMenu);
+let listHold = 0;
+let listSig = "";
 const search = document.getElementById("search");
 const status = document.getElementById("status");
 const selected = document.getElementById("selected-tool");
@@ -739,32 +746,38 @@ function chatRow(item) {
   more.textContent = "⋯";
   more.setAttribute("aria-label", chrome.more);
   more.setAttribute("aria-expanded", "false");
-  const menu = document.createElement("div");
-  menu.className = "row-menu";
-  menu.hidden = true;
+  more.setAttribute("aria-haspopup", "menu");
+  more.addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleChatMenu(item, more);
+  });
+  row.append(button, more);
+  return row;
+}
+
+function toggleChatMenu(item, anchor) {
+  const same = !chatMenu.hidden && chatMenu.dataset.chat === item.id;
+  closeRowMenus();
+  if (same) return;
+  chatMenu.dataset.chat = item.id;
+  chatMenu.replaceChildren();
   for (const [key, label] of [["rename", chrome.rename], ["move", chrome.move], ["remove", chrome.remove]]) {
     const action = document.createElement("button");
     action.type = "button";
+    action.setAttribute("role", "menuitem");
     action.textContent = label;
-    action.addEventListener("click", () => { void chatAction(key, item); });
-    menu.append(action);
+    action.addEventListener("click", (event) => {
+      event.stopPropagation();
+      void chatAction(key, item);
+    });
+    chatMenu.append(action);
   }
-  more.addEventListener("click", (event) => {
-    event.stopPropagation();
-    const willOpen = menu.hidden;
-    document.querySelectorAll(".row-menu").forEach((node) => { node.hidden = true; });
-    document.querySelectorAll(".recent-more").forEach((node) => node.setAttribute("aria-expanded", "false"));
-    menu.hidden = !willOpen;
-    more.setAttribute("aria-expanded", menu.hidden ? "false" : "true");
-    if (!menu.hidden) {
-      const box = more.getBoundingClientRect();
-      const width = 208;
-      menu.style.top = `${Math.round(box.bottom + 4)}px`;
-      menu.style.left = `${Math.round(Math.max(8, Math.min(box.right - width, window.innerWidth - width - 8)))}px`;
-    }
-  });
-  row.append(button, more, menu);
-  return row;
+  const box = anchor.getBoundingClientRect();
+  const width = 208;
+  chatMenu.style.top = `${Math.round(box.bottom + 4)}px`;
+  chatMenu.style.left = `${Math.round(Math.max(8, Math.min(box.right - width, window.innerWidth - width - 8)))}px`;
+  chatMenu.hidden = false;
+  anchor.setAttribute("aria-expanded", "true");
 }
 
 async function chatAction(action, item) {
@@ -813,14 +826,22 @@ async function chatAction(action, item) {
 }
 
 function closeRowMenus() {
-  document.querySelectorAll(".row-menu").forEach((node) => { node.hidden = true; });
+  chatMenu.hidden = true;
+  delete chatMenu.dataset.chat;
   document.querySelectorAll(".recent-more").forEach((node) => node.setAttribute("aria-expanded", "false"));
 }
 
+function listLocked() {
+  return listHold > 0 || !chatMenu.hidden;
+}
+
 function paintList() {
-  if (!recent || recent.querySelector(".row-menu:not([hidden])")) return;
-  recent.replaceChildren();
+  if (!recent || listLocked()) return;
   const list = scopedChats();
+  const sig = `${state.conversationId}\n${state.activeProject}\n` + list.map((item) => `${item.id}\t${item.title}\t${item.projectId}`).join("\n");
+  if (sig === listSig) return;
+  listSig = sig;
+  recent.replaceChildren();
   if (!list.length) {
     const note = document.createElement("p");
     note.textContent = chrome.emptyChats;
@@ -1269,8 +1290,31 @@ prompt?.addEventListener("keydown", (event) => {
   void send();
 });
 
+recent?.addEventListener("pointerdown", () => { listHold += 1; });
+recent?.addEventListener("pointerup", () => {
+  setTimeout(() => {
+    listHold = Math.max(0, listHold - 1);
+    if (!listLocked()) paintList();
+  }, 0);
+});
+recent?.addEventListener("pointercancel", () => {
+  listHold = Math.max(0, listHold - 1);
+});
+document.addEventListener("click", (event) => {
+  if (chatMenu.hidden) return;
+  const target = event.target;
+  if (target instanceof Element && (chatMenu.contains(target) || target.closest(".recent-more"))) return;
+  closeRowMenus();
+  paintList();
+});
+
 document.addEventListener("keydown", (event) => {
   if (!(event instanceof KeyboardEvent) || event.key !== "Escape") return;
+  if (!chatMenu.hidden) {
+    closeRowMenus();
+    paintList();
+    return;
+  }
   if (toolsMenu instanceof HTMLDetailsElement && toolsMenu.open) {
     toolsMenu.open = false;
     return;

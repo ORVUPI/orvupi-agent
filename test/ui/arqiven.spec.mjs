@@ -115,14 +115,24 @@ test("la bienvenida queda centrada en pantallas anchas", async ({ page }) => {
   await expect(page.locator("#new-chat-side")).toContainText(/Nuevo chat|New chat|Novo chat|新しいチャット|새 채팅/);
 });
 
+async function openChatMenu(page) {
+  await page.locator("#recent .recent-more").click();
+  const menu = page.locator(".row-menu");
+  await expect(menu).toBeVisible();
+  return menu;
+}
+
+async function chatMenuItem(page, name) {
+  return (await openChatMenu(page)).getByRole("menuitem", { name });
+}
+
 test("chats, proyectos e imágenes siguen en este navegador", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/arqiven/");
   await page.locator("#prompt").fill("Nota de prueba del chat");
   await page.locator("#send").click();
   await expect(page.locator("#recent").getByRole("button", { name: "Nota de prueba del chat" })).toBeVisible();
-  await page.locator("#recent .recent-more").click();
-  await page.getByRole("button", { name: "Renombrar" }).click();
+  await (await chatMenuItem(page, "Renombrar")).click();
   await page.locator("#ask-input").fill("Chat renombrado");
   await page.locator("#ask-ok").click();
   await page.locator("#search").fill("renombrado");
@@ -132,8 +142,7 @@ test("chats, proyectos e imágenes siguen en este navegador", async ({ page }) =
   await page.locator("#project-name").fill("Carpeta alfa");
   await page.locator("#project-create").click();
   await page.getByRole("button", { name: "Chats" }).click();
-  await page.locator("#recent .recent-more").click();
-  await page.getByRole("button", { name: "Mover a proyecto" }).click();
+  await (await chatMenuItem(page, "Mover a proyecto")).click();
   await page.locator("#ask-input").fill("Carpeta alfa");
   await page.locator("#ask-ok").click();
   await page.getByRole("button", { name: "Proyectos" }).click();
@@ -155,8 +164,7 @@ test("chats, proyectos e imágenes siguen en este navegador", async ({ page }) =
   await expect(page.locator(".library-card")).toHaveCount(0);
   await page.reload();
   await expect(page.locator("#recent").getByRole("button", { name: "Chat renombrado" })).toBeVisible();
-  await page.locator("#recent .recent-more").click();
-  await page.getByRole("button", { name: "Eliminar" }).click();
+  await (await chatMenuItem(page, "Eliminar")).click();
   await page.locator("#ask-ok").click();
   await expect(page.locator("#recent").getByRole("button", { name: "Chat renombrado" })).toHaveCount(0);
 });
