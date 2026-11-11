@@ -70,6 +70,8 @@ for (const item of pages) {
     const answer = page.locator(".assistant").last();
     await expect(answer).toContainText(item.marker);
     await expect(answer).not.toContainText("Este aviso se sustituye");
+    await expect(answer).not.toContainText("none · none");
+    await expect(answer).not.toContainText("rules ·");
     await expect(page.locator("#recent button").first()).toContainText(item.ask.slice(0, 24));
     await expect(answer.locator(".sources a").first()).toHaveAttribute("href", /token/);
 

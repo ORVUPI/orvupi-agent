@@ -273,6 +273,9 @@ body > .langsuggest { display: none !important; }
   align-items: center;
 }
 .vote[aria-pressed="true"] { background: #fff0f4; border-color: #f3c3d0; color: var(--action); }
+.provenance { margin-top: .2rem; }
+.provenance summary { cursor: pointer; color: var(--muted); min-height: 44px; display: flex; align-items: center; width: fit-content; }
+.provenance p { margin: 0 0 .35rem; color: var(--muted); font-size: .85rem; }
 .sources { list-style: none; margin: .4rem 0 0; padding: 0; display: grid; gap: .2rem; }
 .sources-label { font-size: .75rem; color: var(--muted); }
 .sources a { color: var(--action); }

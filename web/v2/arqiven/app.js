@@ -1,5 +1,5 @@
 import { arqivenEngine } from "/shared/ia/engine-client.mjs";
-import { badgeOf, defaultModel, modelById, modelForDevice, stepDown, THIRD_PARTY_MODELS } from "/shared/ia/models.mjs";
+import { defaultModel, modelById, modelForDevice, stepDown, THIRD_PARTY_MODELS } from "/shared/ia/models.mjs";
 import { createRequest, honestResult } from "/shared/ia/contract.mjs";
 import { saveWorkBytes, loadWorkBytes } from "/studio/lib/work-store.mjs";
 import { sanitizePlain } from "/shared/ia/plain.mjs";
@@ -188,11 +188,11 @@ const UI = {
 };
 const ui = UI[uiLang];
 const CHROME = {
-  es: { newChat: "Nueva conversación", settings: "Ajustes", conversations: "Conversaciones", recent: "Recientes", search: "Buscar", welcome: "¿En qué puedo ayudarte?", note: "ARQIVEN es la IA de ORVUPI y funciona con modelos de terceros. Puede cometer errores; revisa la información importante. Lo que escribes se guarda en este navegador.", generating: "Generando", waiting: "En espera", done: "Listo", failed: "Error", copy: "Copiar", copied: "Copiado en este navegador.", copyFail: "No se pudo copiar.", againReply: "Volver a preguntar", attach: "Adjuntar", more: "Más" },
-  en: { newChat: "New conversation", settings: "Settings", conversations: "Conversations", recent: "Recent", search: "Search", welcome: "How can I help?", note: "ARQIVEN is ORVUPI's AI and runs on third-party models. It can make mistakes; check anything that matters. What you write stays in this browser.", generating: "Generating", waiting: "Waiting", done: "Done", failed: "Error", copy: "Copy", copied: "Copied on this device.", copyFail: "Could not copy.", againReply: "Ask again", attach: "Attach", more: "More" },
-  pt: { newChat: "Nova conversa", settings: "Ajustes", conversations: "Conversas", recent: "Recentes", search: "Buscar", welcome: "Como posso ajudar?", note: "ARQIVEN é a IA da ORVUPI e funciona com modelos de terceiros. Pode errar; confira a informação importante. O que você escreve fica neste navegador.", generating: "Gerando", waiting: "Em espera", done: "Pronto", failed: "Erro", copy: "Copiar", copied: "Copiado neste navegador.", copyFail: "Não foi possível copiar.", againReply: "Perguntar de novo", attach: "Anexar", more: "Mais" },
-  ja: { newChat: "新しい会話", settings: "設定", conversations: "会話", recent: "最近", search: "検索", welcome: "何をお手伝いしましょうか。", note: "ARQIVEN は ORVUPI の AI で、第三者モデルで動きます。間違えることがあります。重要な情報は確認してください。書いた内容はこのブラウザに保存されます。", generating: "生成中", waiting: "待機", done: "完了", failed: "エラー", copy: "コピー", copied: "このブラウザにコピーしました。", copyFail: "コピーできませんでした。", againReply: "もう一度聞く", attach: "添付", more: "その他" },
-  ko: { newChat: "새 대화", settings: "설정", conversations: "대화", recent: "최근", search: "검색", welcome: "무엇을 도와드릴까요?", note: "ARQIVEN은 ORVUPI의 AI이고 제3자 모델로 동작합니다. 틀릴 수 있으니 중요한 정보는 확인하세요. 쓴 내용은 이 브라우저에 저장됩니다.", generating: "생성 중", waiting: "대기", done: "완료", failed: "오류", copy: "복사", copied: "이 브라우저에 복사했습니다.", copyFail: "복사하지 못했습니다.", againReply: "다시 묻기", attach: "첨부", more: "더보기" },
+  es: { newChat: "Nueva conversación", settings: "Ajustes", conversations: "Conversaciones", recent: "Recientes", search: "Buscar", welcome: "¿En qué puedo ayudarte?", note: "ARQIVEN es la IA de ORVUPI y funciona con modelos de terceros. Puede cometer errores; revisa la información importante. Lo que escribes se guarda en este navegador.", generating: "Generando", waiting: "En espera", done: "Listo", failed: "Error", copy: "Copiar", copied: "Copiado en este navegador.", copyFail: "No se pudo copiar.", againReply: "Volver a preguntar", attach: "Adjuntar", more: "Más", details: "Detalles", originRules: "Esta respuesta sale de las reglas de ARQIVEN, sin un modelo.", originExtract: "Es un extracto de las fuentes citadas. No lo escribió el modelo.", originModel: "Lo escribió un modelo de terceros" },
+  en: { newChat: "New conversation", settings: "Settings", conversations: "Conversations", recent: "Recent", search: "Search", welcome: "How can I help?", note: "ARQIVEN is ORVUPI's AI and runs on third-party models. It can make mistakes; check anything that matters. What you write stays in this browser.", generating: "Generating", waiting: "Waiting", done: "Done", failed: "Error", copy: "Copy", copied: "Copied on this device.", copyFail: "Could not copy.", againReply: "Ask again", attach: "Attach", more: "More", details: "Details", originRules: "This answer comes from ARQIVEN's rules, without a model.", originExtract: "This is an excerpt from the cited sources. The model did not write it.", originModel: "A third-party model wrote this" },
+  pt: { newChat: "Nova conversa", settings: "Ajustes", conversations: "Conversas", recent: "Recentes", search: "Buscar", welcome: "Como posso ajudar?", note: "ARQIVEN é a IA da ORVUPI e funciona com modelos de terceiros. Pode errar; confira a informação importante. O que você escreve fica neste navegador.", generating: "Gerando", waiting: "Em espera", done: "Pronto", failed: "Erro", copy: "Copiar", copied: "Copiado neste navegador.", copyFail: "Não foi possível copiar.", againReply: "Perguntar de novo", attach: "Anexar", more: "Mais", details: "Detalhes", originRules: "Esta resposta vem das regras da ARQIVEN, sem um modelo.", originExtract: "É um trecho das fontes citadas. O modelo não escreveu.", originModel: "Um modelo de terceiros escreveu isto" },
+  ja: { newChat: "新しい会話", settings: "設定", conversations: "会話", recent: "最近", search: "検索", welcome: "何をお手伝いしましょうか。", note: "ARQIVEN は ORVUPI の AI で、第三者モデルで動きます。間違えることがあります。重要な情報は確認してください。書いた内容はこのブラウザに保存されます。", generating: "生成中", waiting: "待機", done: "完了", failed: "エラー", copy: "コピー", copied: "このブラウザにコピーしました。", copyFail: "コピーできませんでした。", againReply: "もう一度聞く", attach: "添付", more: "その他", details: "詳細", originRules: "この回答は ARQIVEN のルールによるもので、モデルは使っていません。", originExtract: "引用した出典からの抜粋です。モデルが書いた文章ではありません。", originModel: "第三者が作ったモデルが書きました" },
+  ko: { newChat: "새 대화", settings: "설정", conversations: "대화", recent: "최근", search: "검색", welcome: "무엇을 도와드릴까요?", note: "ARQIVEN은 ORVUPI의 AI이고 제3자 모델로 동작합니다. 틀릴 수 있으니 중요한 정보는 확인하세요. 쓴 내용은 이 브라우저에 저장됩니다.", generating: "생성 중", waiting: "대기", done: "완료", failed: "오류", copy: "복사", copied: "이 브라우저에 복사했습니다.", copyFail: "복사하지 못했습니다.", againReply: "다시 묻기", attach: "첨부", more: "더보기", details: "세부 정보", originRules: "이 답은 ARQIVEN의 규칙에서 나왔고, 모델은 쓰지 않았습니다.", originExtract: "인용한 출처의 발췌입니다. 모델이 쓴 글이 아닙니다.", originModel: "제3자 모델이 썼습니다" },
 };
 const chrome = CHROME[uiLang];
 const copy = {
@@ -492,6 +492,25 @@ function renderRich(parent, text) {
   });
 }
 
+function originLine(item) {
+  if (item.mode === "extractive") return chrome.originExtract;
+  if (item.provider === "third-party" && item.mode === "model") {
+    return item.modelVersion ? `${chrome.originModel}: ${item.modelVersion}.` : `${chrome.originModel}.`;
+  }
+  return chrome.originRules;
+}
+
+function provenance(item) {
+  const details = document.createElement("details");
+  details.className = "provenance";
+  const summary = document.createElement("summary");
+  summary.textContent = chrome.details;
+  const note = document.createElement("p");
+  note.textContent = originLine(item);
+  details.append(summary, note);
+  return details;
+}
+
 function sourceList(sources) {
   const list = document.createElement("ul");
   list.className = "sources";
@@ -694,17 +713,16 @@ function paint() {
         const who = document.createElement("span");
         who.className = "who";
         who.textContent = "ARQIVEN";
-        const badge = document.createElement("span");
-        badge.className = "badge";
-        if (item.failed) badge.classList.add("is-error");
-        if (item.running) badge.classList.add("is-run");
         meta.append(avatar, who);
-        if (!item.running) {
-          badge.textContent = item.failed ? chrome.failed : item.mode === "extractive" ? ui.excerptBadge : badgeOf(item);
+        if (item.failed) {
+          const badge = document.createElement("span");
+          badge.className = "badge is-error";
+          badge.textContent = chrome.failed;
           meta.append(badge);
         }
         column.append(meta);
         renderRich(column, item.content);
+        if (!item.running && item.content) column.append(provenance(item));
         if (item.sources?.length) column.append(sourceList(item.sources));
         if (item.content && !item.running) {
           const actions = document.createElement("div");
