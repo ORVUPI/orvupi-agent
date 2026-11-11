@@ -188,11 +188,11 @@ const UI = {
 };
 const ui = UI[uiLang];
 const CHROME = {
-  es: { newChat: "Nueva conversación", settings: "Ajustes", conversations: "Conversaciones", recent: "Recientes", search: "Buscar", welcome: "¿En qué puedo ayudarte?", note: "Sin modelo propio. ARQIVEN es la IA de ORVUPI. Lo escrito se queda en este navegador hasta que pulses Guardar en Work.", generating: "Generando", waiting: "En espera", done: "Listo", failed: "Error", copy: "Copiar", copied: "Copiado en este navegador.", copyFail: "No se pudo copiar.", againReply: "Volver a preguntar", attach: "Adjuntar" },
-  en: { newChat: "New conversation", settings: "Settings", conversations: "Conversations", recent: "Recent", search: "Search", welcome: "How can I help?", note: "No model of its own. ARQIVEN is ORVUPI's AI. What you write stays in this browser until you press Save to Work.", generating: "Generating", waiting: "Waiting", done: "Done", failed: "Error", copy: "Copy", copied: "Copied on this device.", copyFail: "Could not copy.", againReply: "Ask again", attach: "Attach" },
-  pt: { newChat: "Nova conversa", settings: "Ajustes", conversations: "Conversas", recent: "Recentes", search: "Buscar", welcome: "Como posso ajudar?", note: "Sem modelo próprio. ARQIVEN é a IA da ORVUPI. O que você escreve fica neste navegador até tocar em Guardar no Work.", generating: "Gerando", waiting: "Em espera", done: "Pronto", failed: "Erro", copy: "Copiar", copied: "Copiado neste navegador.", copyFail: "Não foi possível copiar.", againReply: "Perguntar de novo", attach: "Anexar" },
-  ja: { newChat: "新しい会話", settings: "設定", conversations: "会話", recent: "最近", search: "検索", welcome: "何をお手伝いしましょうか。", note: "独自モデルはありません。ARQIVEN は ORVUPI の AI です。入力した内容は、Work に保存するまでこのブラウザに残ります。", generating: "生成中", waiting: "待機", done: "完了", failed: "エラー", copy: "コピー", copied: "このブラウザにコピーしました。", copyFail: "コピーできませんでした。", againReply: "もう一度聞く", attach: "添付" },
-  ko: { newChat: "새 대화", settings: "설정", conversations: "대화", recent: "최근", search: "검색", welcome: "무엇을 도와드릴까요?", note: "자체 모델은 없습니다. ARQIVEN은 ORVUPI의 AI입니다. 쓴 내용은 Work에 저장하기 전까지 이 브라우저에 남습니다.", generating: "생성 중", waiting: "대기", done: "완료", failed: "오류", copy: "복사", copied: "이 브라우저에 복사했습니다.", copyFail: "복사하지 못했습니다.", againReply: "다시 묻기", attach: "첨부" },
+  es: { newChat: "Nueva conversación", settings: "Ajustes", conversations: "Conversaciones", recent: "Recientes", search: "Buscar", welcome: "¿En qué puedo ayudarte?", note: "ARQIVEN es la IA de ORVUPI y funciona con modelos de terceros. Puede cometer errores; revisa la información importante. Lo que escribes se guarda en este navegador.", generating: "Generando", waiting: "En espera", done: "Listo", failed: "Error", copy: "Copiar", copied: "Copiado en este navegador.", copyFail: "No se pudo copiar.", againReply: "Volver a preguntar", attach: "Adjuntar", more: "Más" },
+  en: { newChat: "New conversation", settings: "Settings", conversations: "Conversations", recent: "Recent", search: "Search", welcome: "How can I help?", note: "ARQIVEN is ORVUPI's AI and runs on third-party models. It can make mistakes; check anything that matters. What you write stays in this browser.", generating: "Generating", waiting: "Waiting", done: "Done", failed: "Error", copy: "Copy", copied: "Copied on this device.", copyFail: "Could not copy.", againReply: "Ask again", attach: "Attach", more: "More" },
+  pt: { newChat: "Nova conversa", settings: "Ajustes", conversations: "Conversas", recent: "Recentes", search: "Buscar", welcome: "Como posso ajudar?", note: "ARQIVEN é a IA da ORVUPI e funciona com modelos de terceiros. Pode errar; confira a informação importante. O que você escreve fica neste navegador.", generating: "Gerando", waiting: "Em espera", done: "Pronto", failed: "Erro", copy: "Copiar", copied: "Copiado neste navegador.", copyFail: "Não foi possível copiar.", againReply: "Perguntar de novo", attach: "Anexar", more: "Mais" },
+  ja: { newChat: "新しい会話", settings: "設定", conversations: "会話", recent: "最近", search: "検索", welcome: "何をお手伝いしましょうか。", note: "ARQIVEN は ORVUPI の AI で、第三者モデルで動きます。間違えることがあります。重要な情報は確認してください。書いた内容はこのブラウザに保存されます。", generating: "生成中", waiting: "待機", done: "完了", failed: "エラー", copy: "コピー", copied: "このブラウザにコピーしました。", copyFail: "コピーできませんでした。", againReply: "もう一度聞く", attach: "添付", more: "その他" },
+  ko: { newChat: "새 대화", settings: "설정", conversations: "대화", recent: "최근", search: "검색", welcome: "무엇을 도와드릴까요?", note: "ARQIVEN은 ORVUPI의 AI이고 제3자 모델로 동작합니다. 틀릴 수 있으니 중요한 정보는 확인하세요. 쓴 내용은 이 브라우저에 저장됩니다.", generating: "생성 중", waiting: "대기", done: "완료", failed: "오류", copy: "복사", copied: "이 브라우저에 복사했습니다.", copyFail: "복사하지 못했습니다.", againReply: "다시 묻기", attach: "첨부", more: "더보기" },
 };
 const chrome = CHROME[uiLang];
 const copy = {
@@ -300,7 +300,7 @@ editorToggle.id = "editor-toggle";
 editorToggle.className = "editor-toggle";
 editorToggle.textContent = ui.editor;
 editorToggle.setAttribute("aria-pressed", "false");
-document.querySelector(".workspace .topbar")?.append(editorToggle);
+document.getElementById("more-pop")?.append(editorToggle);
 
 const editor = document.createElement("aside");
 editor.id = "local-editor";
@@ -343,6 +343,7 @@ function applyChrome() {
   const fresh = document.querySelector("#new-chat-side .hide-collapsed");
   if (fresh) fresh.textContent = chrome.newChat;
   document.getElementById("new-chat")?.setAttribute("aria-label", chrome.newChat);
+  document.getElementById("more-toggle")?.setAttribute("aria-label", chrome.more);
   const settingsButton = document.getElementById("open-settings");
   const settingsLabel = settingsButton?.querySelector("span");
   if (settingsLabel) settingsLabel.textContent = chrome.settings;
@@ -640,9 +641,15 @@ function paintSoon() {
   });
 }
 
+function currentTitle() {
+  return state.messages.find((item) => item.role === "user")?.content.replace(/\s+/g, " ").trim().slice(0, 80) || "";
+}
+
 function paintList() {
   const query = (search instanceof HTMLInputElement ? search.value : "").trim().toLowerCase();
-  const list = state.conversations.filter((item) => !query || item.title.toLowerCase().includes(query));
+  const title = currentTitle();
+  const saved = state.conversations.filter((item) => item.id !== state.conversationId);
+  const list = (title ? [{ id: state.conversationId, title }] : []).concat(saved).filter((item) => !query || item.title.toLowerCase().includes(query));
   if (!recent) return;
   recent.replaceChildren();
   if (!list.length) {
@@ -689,17 +696,17 @@ function paint() {
         who.textContent = "ARQIVEN";
         const badge = document.createElement("span");
         badge.className = "badge";
-        if (item.pending) badge.classList.add("is-wait");
-        if (item.running) badge.classList.add("is-run");
         if (item.failed) badge.classList.add("is-error");
-        badge.textContent = item.mode === "extractive"
-          ? ui.excerptBadge
-          : (item.pending ? chrome.waiting : item.running ? chrome.generating : item.failed ? chrome.failed : badgeOf(item));
-        meta.append(who, badge);
+        if (item.running) badge.classList.add("is-run");
+        meta.append(avatar, who);
+        if (!item.running) {
+          badge.textContent = item.failed ? chrome.failed : item.mode === "extractive" ? ui.excerptBadge : badgeOf(item);
+          meta.append(badge);
+        }
         column.append(meta);
         renderRich(column, item.content);
         if (item.sources?.length) column.append(sourceList(item.sources));
-        if (!item.pending && item.content) {
+        if (item.content && !item.running) {
           const actions = document.createElement("div");
           actions.className = "answer-actions";
           const edit = document.createElement("button");
@@ -717,7 +724,7 @@ function paint() {
           const up = voteButton(item, "up");
           const down = voteButton(item, "down");
           actions.append(copyButton, edit, up, down);
-          if (!running) {
+          if (!item.running) {
             const again = document.createElement("button");
             again.type = "button";
             again.textContent = chrome.againReply;
@@ -733,7 +740,7 @@ function paint() {
           }
           column.append(actions);
         }
-        node.append(avatar, column);
+        node.append(column);
       } else {
         node.textContent = item.content;
       }
@@ -748,8 +755,11 @@ function paint() {
   const settings = document.getElementById("settings");
   if (settings) settings.hidden = state.view !== "settings";
   if (save) save.hidden = state.messages.length === 0 && !state.localText.trim();
+  if (status && (running || status.textContent === ui.queued || status.textContent === chrome.generating)) {
+    status.textContent = running ? (state.messages.some((item) => item.running) ? chrome.generating : ui.queued) : "";
+  }
   const heading = document.getElementById("thread-title");
-  const title = state.messages.find((item) => item.role === "user")?.content.replace(/\s+/g, " ").trim().slice(0, 80);
+  const title = currentTitle();
   if (heading && state.view === "chat") heading.textContent = title || "ARQIVEN";
   if (title) document.title = `${title} · ARQIVEN`;
   remember();
@@ -951,13 +961,15 @@ async function send() {
   if (!state.snap.ready) {
     if (state.snap.phase !== "preparing") startPrepare(modelPick.value || defaultModel().id);
     const item = assistant({
-      content: excerpt ? `${ui.queued}\n\n${excerpt}` : ui.queued,
+      content: excerpt,
       pending: true,
+      mode: excerpt ? "extractive" : "rules",
       request,
       sources: plan.sources,
       promptSources: plan.promptSources,
       question: text,
     });
+    setStatus(ui.queued);
     state.queue.push(item);
     paint();
     field?.focus();
@@ -1011,6 +1023,11 @@ document.getElementById("collapse")?.addEventListener("click", () => {
 });
 
 menu?.addEventListener("click", () => openMenu(!sidebar?.classList.contains("open")));
+document.getElementById("more-toggle")?.addEventListener("click", () => {
+  const pop = document.getElementById("more-pop");
+  const open = pop?.classList.toggle("is-open");
+  document.getElementById("more-toggle")?.setAttribute("aria-expanded", open ? "true" : "false");
+});
 backdrop?.addEventListener("click", () => openMenu(false));
 
 document.querySelectorAll("[data-nav]").forEach((button) => {

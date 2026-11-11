@@ -313,6 +313,14 @@ describe("conocimiento y evaluación de ARQIVEN", () => {
       listConversations: (db: unknown) => Promise<Array<{ id: string; title: string }>>;
       readConversation: (db: unknown, id: string) => Promise<{ messages: unknown[] } | null>;
     };
+    const quality = await import(href("web/v2/shared/ia/quality.mjs")) as {
+      citedExcerpt: (lang: string, sources: Array<{ excerpt: string; origin?: string }>, question: string) => string;
+    };
+    const excerpt = quality.citedExcerpt("es", [
+      { origin: "orvupi", excerpt: "El único contrato oficial de ORVUPI está en Solana y es Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU." },
+      { origin: "orvupi", excerpt: "El único contrato oficial está en Solana." },
+    ], "contrato oficial");
+    assert.equal(excerpt.includes("El único contrato oficial está en Solana."), false);
     assert.equal(chats.CHAT_DB, "orvupi-arqiven-chats");
     const db = await chats.openChatDb(`arqiven-chats-${crypto.randomUUID()}`);
     await chats.saveConversation(db, { id: "c-1", messages: [{ role: "user", content: "Hola desde esta pestaña" }, { role: "assistant", content: "Respuesta" }] });

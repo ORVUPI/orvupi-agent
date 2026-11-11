@@ -64,17 +64,21 @@
 <section class="workspace">
 <header class="topbar">
 <button type="button" class="iconbtn menu" id="menu" aria-label="Abrir menu" aria-expanded="false"><svg aria-hidden="true"><use href="#icon-menu"/></svg></button>
+<a class="head-logo" href="/pt-br/arqiven/"><span class="crop crop-icon" aria-hidden="true"><img src="/assets/arqiven/logo-oficial.png" alt=""></span></a>
 <div class="titleblock">
 <p class="crumb" id="crumb">Conversaciones</p>
 <h1 id="thread-title">ARQIVEN</h1>
 </div>
-<div class="top-actions">
 <button type="button" class="iconbtn" id="new-chat"><svg aria-hidden="true"><use href="#plus"/></svg></button>
+<div class="more" id="more">
+<button type="button" class="iconbtn" id="more-toggle" aria-expanded="false">⋯</button>
+<div class="more-pop" id="more-pop">
 <button type="button" class="save" id="save-work" hidden>Guardar en Work</button>
+</div>
 </div>
 </header>
 <div class="view" id="chat-view">
-<div class="welcome" id="welcome"><h2>¿En qué puedo ayudarte?</h2></div>
+<div class="welcome" id="welcome"><span class="crop crop-icon welcome-mark" aria-hidden="true"><img src="/assets/arqiven/logo-oficial.png" alt=""></span><h2>¿En qué puedo ayudarte?</h2></div>
 <div class="messages" id="messages" aria-live="polite"></div>
 <div class="composer-area">
 <div class="composer">
@@ -105,7 +109,7 @@
 </div>
 </div>
 </div>
-<p class="note">Sin modelo propio. ARQIVEN es la IA de ORVUPI. Lo escrito se queda en este navegador hasta que pulses Guardar en Work.</p>
+<p class="note">ARQIVEN es la IA de ORVUPI y funciona con modelos de terceros. Puede cometer errores; revisa la información importante. Lo que escribes se guarda en este navegador.</p>
 <p class="status" id="status" role="status"></p>
 </div>
 </div>
