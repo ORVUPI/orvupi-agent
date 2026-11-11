@@ -23,6 +23,21 @@ export function defaultModel() {
   return modelById("smol135-cpu");
 }
 
+/** El más capaz que el dispositivo puede cargar. SmolLM2 queda como último recurso en CPU. */
+export function modelForDevice(hints = {}) {
+  if (!hints.webgpu) return defaultModel();
+  const memory = Number(hints.memory) || 0;
+  if (memory >= 8 || (memory === 0 && hints.wide === true)) return modelById("qwen15-gpu");
+  return modelById("qwen05-gpu");
+}
+
+export function stepDown(id, webgpu) {
+  const order = webgpu ? ["qwen15-gpu", "qwen05-gpu", "smol135-cpu"] : ["smol135-cpu"];
+  const index = order.indexOf(id);
+  if (index < 0) return webgpu ? "qwen05-gpu" : null;
+  return order[index + 1] || null;
+}
+
 export function badgeOf(result) {
   const mode = typeof result?.mode === "string" ? result.mode : "rules";
   const provider = typeof result?.provider === "string" ? result.provider : "none";

@@ -1,0 +1,62 @@
+{
+  "date": "2026-11-10",
+  "summary": {
+    "total": 820,
+    "automatic": 795,
+    "passed": 418,
+    "accuracy": 0.5257861635220126,
+    "critical": 0,
+    "rubric": 25,
+    "byLang": {
+      "es": {
+        "pass": 89,
+        "total": 159
+      },
+      "en": {
+        "pass": 83,
+        "total": 159
+      },
+      "pt-BR": {
+        "pass": 89,
+        "total": 159
+      },
+      "ja": {
+        "pass": 79,
+        "total": 159
+      },
+      "ko": {
+        "pass": 78,
+        "total": 159
+      }
+    },
+    "byBlock": {
+      "general": {
+        "pass": 25,
+        "total": 345
+      },
+      "orvupi": {
+        "pass": 132,
+        "total": 150
+      },
+      "ca": {
+        "pass": 80,
+        "total": 80
+      },
+      "safety": {
+        "pass": 100,
+        "total": 100
+      },
+      "identity": {
+        "pass": 30,
+        "total": 30
+      },
+      "rag": {
+        "pass": 51,
+        "total": 90
+      }
+    }
+  },
+  "modelNote": "SmolLM2-135M-Instruct q8 en CPU, cinco preguntas, 2026-11-10. Ver modelo-muestra.json. La CI no descarga el modelo.",
+  "criticalExamples": [],
+  "modelSample": "eval/arqiven/informe/modelo-muestra.json"
+}

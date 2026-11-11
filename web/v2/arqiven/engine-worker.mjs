@@ -1,8 +1,19 @@
 /** Worker del mismo motor que Work (Transformers.js + ONNX). Los id son de terceros. */
 
 import { ONNX_WASM, TRANSFORMERS_ESM, modelById } from "/shared/ia/models.mjs";
+import { isDegenerate } from "/shared/ia/quality.mjs";
+import { clipHistory } from "/shared/ia/history.mjs";
 
-const SYSTEM = "Trabajas dentro del navegador, con un modelo de terceros. Escribes de forma clara y breve. No digas que eres Arqiven-N ni que ARQIVEN entrenó este modelo.";
+const SYSTEM = [
+  "Eres un modelo de terceros dentro del navegador. ARQIVEN es la IA de ORVUPI y no entrenó estos pesos. No digas que eres Arqiven-N.",
+  "Lee la última pregunta y el historial reciente. Identifica la intención: informar, resolver, corregir lo ya dicho o pedir un paso práctico.",
+  "Si la pregunta es ambigua, haz una sola pregunta de aclaración. No adivines.",
+  "Si no consta en las fuentes ni en lo ya dicho, di que no lo sabes. No contradigas el historial ni inventes cifras.",
+  "Responde en el idioma del usuario, con tono natural y profesional: qué has entendido, la respuesta y, si cabe, un paso concreto.",
+  "En un problema de varios pasos, cierra con una línea que empiece por «Respuesta final:».",
+].join(" ");
+
+const LANG_NAME = { es: "español", en: "English", pt: "português", ja: "日本語", ko: "한국어" };
 
 const TASK = {
   summarize: "Resume el mensaje en el idioma del usuario, sin inventar datos.",
@@ -25,8 +36,8 @@ let stopper = null;
 const post = (data) => self.postMessage(data);
 
 function looksBroken(text) {
-  const slice = String(text || "").slice(-160);
-  return slice.length > 24 && (/!\[/.test(slice) || /([^\p{L}\p{N}\s])\1{7,}/u.test(slice));
+  const slice = String(text || "");
+  return isDegenerate(slice) || (slice.length > 24 && /!\[/.test(slice.slice(-160)));
 }
 
 async function lib() {
@@ -100,11 +111,14 @@ async function handle(msg) {
       const { TextStreamer } = await lib();
       stopper?.reset();
       const hint = TASK[msg.task] || "";
-      const history = Array.isArray(msg.messages) ? msg.messages.flatMap((item) => {
-        if (!item || (item.role !== "user" && item.role !== "assistant") || typeof item.content !== "string") return [];
-        return [{ role: item.role, content: item.content.slice(0, 8000) }];
-      }).slice(-12) : [];
-      const messages = [{ role: "system", content: hint ? `${SYSTEM} ${hint}` : SYSTEM }, ...history];
+      const cited = Array.isArray(msg.sources) ? msg.sources.flatMap((item) => {
+        if (!item || typeof item.excerpt !== "string" || !item.excerpt) return [];
+        return [`[${item.title || item.url || "fuente"}] ${item.url || ""}\n${item.excerpt}`];
+      }).slice(0, 4) : [];
+      const language = LANG_NAME[msg.lang] || LANG_NAME[msg.lang === "pt-BR" ? "pt" : ""] || "español";
+      const sourceNote = cited.length ? `\n\nFuentes. Apóyate solo en ellas y cita el título. Si no responden, di que no consta.\n${cited.join("\n\n")}` : "";
+      const history = clipHistory(msg.messages, { turns: 4, maxChars: 3200 });
+      const messages = [{ role: "system", content: `${SYSTEM} Responde en ${language}. ${hint}${sourceNote}` }, ...history];
       let acc = "";
       let broken = false;
       const streamer = new TextStreamer(generator.tokenizer, {
@@ -120,9 +134,10 @@ async function handle(msg) {
         },
       });
       const output = await generator(messages, {
-        max_new_tokens: Math.min(256, Number(msg.maxTokens) || 256),
+        max_new_tokens: Math.min(120, Number(msg.maxTokens) || 120),
         do_sample: false,
-        repetition_penalty: 1.12,
+        repetition_penalty: 1.22,
+        no_repeat_ngram_size: 5,
         streamer,
         stopping_criteria: stopper,
       });

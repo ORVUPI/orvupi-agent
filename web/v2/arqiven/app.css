@@ -106,6 +106,12 @@
 .engine-meter i { display: block; height: 100%; width: 28%; background: #de1862; animation: arq-meter 1.1s ease-in-out infinite; }
 .engine-meter.is-known i { animation: none; }
 .arq-who { margin: .35rem 0 0; color: #3a4658; font-size: .95rem; }
+.model-indicator, .source-note { flex-basis: 100%; margin: 0; color: #3a4658; font-size: .82rem; overflow-wrap: anywhere; }
+.source-note { color: var(--muted); }
+.sources { list-style: none; margin: .45rem 0 0; padding: 0; display: grid; gap: .2rem; }
+.sources-label { font-size: .75rem; color: var(--muted); }
+.sources a { color: #9d2348; overflow-wrap: anywhere; }
+.vote[aria-pressed="true"] { background: #fff0f5; border-color: #e7b3c4; }
 @keyframes arq-meter { 0% { transform: translateX(-120%); } 100% { transform: translateX(380%); } }
 .editor-toggle { margin-left: auto; }
 .local-editor { min-width: 0; background: #f4efe7; display: flex; flex-direction: column; gap: 0; padding: 0; border-left: 1px solid #e3dbce; }

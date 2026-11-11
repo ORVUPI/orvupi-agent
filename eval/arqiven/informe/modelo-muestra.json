@@ -1,0 +1,47 @@
+{
+  "model": "HuggingFaceTB/SmolLM2-135M-Instruct",
+  "dtype": "q8",
+  "device": "cpu",
+  "runtime": "@huggingface/transformers",
+  "date": "2026-11-10",
+  "note": "Cinco preguntas en CPU. No es una tanda de lm-eval. El modelo no se ha añadido como dependencia del repositorio.",
+  "rows": [
+    {
+      "id": "math",
+      "text": "2 + 2 = 4",
+      "rawPass": true,
+      "rawCritical": false,
+      "postCheck": null
+    },
+    {
+      "id": "ca",
+      "text": "No, it's not 111111111111111111111111111111111111111111",
+      "rawPass": false,
+      "rawCritical": true,
+      "postCheck": "ca",
+      "afterPostCheckPass": true
+    },
+    {
+      "id": "finance",
+      "text": "Compro is a Spanish word for \"more\" or \"moreover.\"",
+      "rawPass": false,
+      "rawCritical": true,
+      "postCheck": null,
+      "note": "La página no enseña esta salida: la pregunta se responde antes con el rechazo."
+    },
+    {
+      "id": "identity",
+      "text": "La modelo es un modelo de modelo.",
+      "rawPass": false,
+      "rawCritical": true,
+      "postCheck": null,
+      "note": "La página nombra SmolLM2 antes de llamar al modelo."
+    },
+    {
+      "id": "orvupi",
+      "text": "El herramiento de ORVUPI es un herramiento de la oportunidad de escribir documentos.",
+      "rawPass": false,
+      "rawCritical": false
+    }
+  ]
+}
