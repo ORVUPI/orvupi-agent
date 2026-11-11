@@ -40,7 +40,7 @@
 </head>
 <body>
 <a class="skip" href="#contenido"><span class="lang en" lang="ja">本文へスキップ</span></a>
-<main id="contenido" class="arq-app" data-lang="es" data-honest="No hay respuesta generada. ARQIVEN no tiene un checkpoint de Arqiven-1. Los modelos de Work (Qwen, LFM2 y SmolLM2) son de terceros y no se llaman Arqiven-N. Puedes seguir escribiendo." data-voice="La voz es una propuesta. No hay micrófono conectado." data-file-read="Archivo leído en este navegador. No se ha enviado a ningún servidor." data-file-bad="Este archivo no es TXT ni MD. No se ha leído." data-saved="Nota nueva en Work. No se ha sustituido ninguna nota anterior." data-save-fail="No se pudo guardar en este navegador." data-empty="Todavía no hay mensajes.">
+<main id="contenido" class="arq-app" data-lang="es" data-honest="No hay respuesta generada. ARQIVEN no tiene un checkpoint de Arqiven-1. Los modelos de Work (Qwen, LFM2 y SmolLM2) son de terceros y no se llaman Arqiven-N. Puedes seguir escribiendo." data-voice="La voz es una propuesta. No hay micrófono conectado." data-file-read="Archivo leído en este navegador. No se ha enviado a ningún servidor." data-file-bad="Este archivo no es TXT ni MD. No se ha leído." data-saved="Nota nueva en Work. No se ha sustituido ninguna nota anterior." data-save-fail="No se pudo guardar en este navegador." data-empty="Todavía no hay chats.">
 <div class="backdrop" id="backdrop"></div>
 <div class="arq-shell" id="app">
 <aside class="sidebar" id="sidebar" aria-label="ARQIVEN">
@@ -58,7 +58,7 @@
 </nav>
 <section class="history hide-collapsed" aria-labelledby="hist-label">
 <h2 id="hist-label">Recientes</h2>
-<div class="recent" id="recent"><p>Todavía no hay mensajes.</p></div>
+<div class="recent" id="recent"><p>Todavía no hay chats.</p></div>
 </section>
 <div class="sidebar-bottom hide-collapsed">
 <button type="button" class="nav-settings" id="open-settings" data-nav="settings"><svg aria-hidden="true"><use href="#gear"/></svg><span>Ajustes</span></button>
@@ -79,23 +79,26 @@
 </div>
 </div>
 </header>
-<div class="view" id="chat-view">
+<div class="view is-welcome" id="chat-view">
 <div class="welcome" id="welcome"><span class="crop crop-icon welcome-mark" aria-hidden="true"><img src="/assets/arqiven/logo-oficial.png" alt=""></span><h2>¿En qué puedo ayudarte?</h2></div>
 <div class="messages" id="messages" aria-live="polite"></div>
 <section id="project-view" class="panel-view" hidden>
-<h2 id="project-title">Proyectos</h2>
-<p id="project-note"></p>
-<form id="project-form"><input id="project-name" maxlength="80"><button type="submit" id="project-create">Crear</button></form>
+<header class="panel-head"><h2 id="project-title">Proyectos</h2><p id="project-count" class="panel-count"></p></header>
+<p id="project-note" class="panel-lead"></p>
+<form id="project-form"><input id="project-name" maxlength="80"><button type="submit" class="btn-primary" id="project-create">Crear</button></form>
 <div id="project-list"></div>
+<p id="project-empty" class="empty-line" hidden></p>
 </section>
 <section id="library-view" class="panel-view" hidden>
-<h2 id="library-title">Biblioteca</h2>
-<p id="library-note"></p>
-<div class="library-filters">
-<select id="image-filter"></select>
-<button type="button" id="image-fav">Favoritas</button>
-</div>
+<header class="panel-head"><h2 id="library-title">Biblioteca</h2><p id="library-count" class="panel-count"></p></header>
+<p id="library-note" class="panel-lead"></p>
+<div class="chip-row" id="library-filters" role="toolbar"></div>
 <div id="library-grid" class="library-grid"></div>
+<div id="library-empty" class="empty-state">
+<svg class="empty-icon" aria-hidden="true"><use href="#image"/></svg>
+<p id="library-empty-text"></p>
+<button type="button" class="btn-primary" id="library-attach">Adjuntar imagen</button>
+</div>
 </section>
 <div class="composer-area">
 <div class="composer">
@@ -118,7 +121,7 @@
 <button type="button" data-chip="Aprender algo">Aprender algo</button>
 </div>
 </details>
-<span class="selected" id="selected-tool">Conversar</span>
+<span class="selected" id="selected-tool" hidden>Conversar</span>
 <span id="file-chip"></span>
 </div>
 <div class="right">
@@ -158,7 +161,7 @@
 <symbol id="copy" viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="12" rx="1"/><path d="M5 15V5h10"/></symbol>
 </svg>
 <dialog id="ask-dialog"><form method="dialog"><p id="ask-text"></p><input id="ask-input" maxlength="80"><div class="dialog-actions"><button value="cancel" id="ask-cancel">Cancelar</button><button value="ok" id="ask-ok">Aceptar</button></div></form></dialog>
-<dialog id="viewer"><form method="dialog"><img id="viewer-img" alt=""><div class="dialog-actions"><a id="viewer-open" href="/ja/arqiven/">Chat</a><a id="viewer-download" download="arqiven.png">Descargar</a><button type="button" id="viewer-delete">Eliminar</button><button value="close">Cerrar</button></div></form></dialog>
+<dialog id="viewer"><form method="dialog"><img id="viewer-img" alt=""><p id="viewer-caption"></p><div class="dialog-actions"><a id="viewer-open" href="/ja/arqiven/">Chat</a><a id="viewer-download" download="arqiven.png">Descargar</a><button type="button" id="viewer-fav">Favoritas</button><button type="button" id="viewer-delete">Eliminar</button><button value="close">Cerrar</button></div></form></dialog>
 </main>
 </body>
 </html>

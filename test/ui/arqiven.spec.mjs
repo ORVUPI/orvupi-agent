@@ -103,6 +103,12 @@ test("la bienvenida queda centrada en pantallas anchas", async ({ page }) => {
     expect(title && area).toBeTruthy();
     const delta = Math.abs((title.x + title.width / 2) - (area.x + area.width / 2));
     expect(delta).toBeLessThan(40);
+    const welcome = await page.locator("#welcome").boundingBox();
+    const note = await page.locator(".composer-area .note").boundingBox();
+    const view = await page.locator(".view").boundingBox();
+    expect(welcome && note && view).toBeTruthy();
+    const mid = (welcome.y + note.y + note.height) / 2;
+    expect(Math.abs(mid - (view.y + view.height / 2))).toBeLessThan(70);
   }
   await expect(page.locator("#crumb")).toHaveCount(0);
   await expect(page.locator(".arq-who")).toHaveCount(0);

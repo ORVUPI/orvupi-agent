@@ -188,11 +188,11 @@ const UI = {
 };
 const ui = UI[uiLang];
 const CHROME = {
-  es: { newChat: "Nuevo chat", settings: "Ajustes", conversations: "Chats", recent: "Chats", search: "Buscar", welcome: "¿En qué puedo ayudarte?", note: "ARQIVEN es la IA de ORVUPI y funciona con modelos de terceros. Puede cometer errores; revisa la información importante. Lo que escribes se guarda en este navegador.", generating: "Generando", waiting: "En espera", done: "Listo", failed: "Error", copy: "Copiar", copied: "Copiado en este navegador.", copyFail: "No se pudo copiar.", againReply: "Volver a preguntar", attach: "Adjuntar", more: "Más", details: "Detalles", today: "Hoy", yesterday: "Ayer", week: "7 días", older: "Anteriores", projects: "Proyectos", projectHint: "Si eliminas un proyecto, sus chats vuelven al historial general.", library: "Biblioteca", create: "Crear", rename: "Renombrar", move: "Mover a proyecto", remove: "Eliminar", cancel: "Cancelar", confirm: "Confirmar", general: "Historial general", fav: "Favoritas", download: "Descargar", close: "Cerrar", openChat: "Abrir chat", savedImage: "Imagen guardada en la biblioteca de este navegador.", imageBig: "La imagen pasa de 4 MB. No se ha guardado.", deleteChat: "¿Eliminar este chat de este navegador?", deleteProject: "¿Eliminar este proyecto? Sus chats vuelven al historial general.", deleteImage: "¿Eliminar esta imagen de este navegador?", projectName: "Nombre del proyecto", chatName: "Nombre del chat", imageOff: "Generar imágenes no está activo. Se enciende con Workers AI (flux-1-schnell) en el plan gratis de Cloudflare: tiene un tope diario de neuronas y la imagen se guarda solo en este navegador. Mientras tanto puedes adjuntar una imagen.", originRules: "Esta respuesta sale de las reglas de ARQIVEN, sin un modelo.", originExtract: "Es un extracto de las fuentes citadas. No lo escribió el modelo.", originModel: "Lo escribió un modelo de terceros" },
-  en: { newChat: "New chat", settings: "Settings", conversations: "Chats", recent: "Chats", search: "Search", welcome: "How can I help?", note: "ARQIVEN is ORVUPI's AI and runs on third-party models. It can make mistakes; check anything that matters. What you write stays in this browser.", generating: "Generating", waiting: "Waiting", done: "Done", failed: "Error", copy: "Copy", copied: "Copied on this device.", copyFail: "Could not copy.", againReply: "Ask again", attach: "Attach", more: "More", details: "Details", today: "Today", yesterday: "Yesterday", week: "7 days", older: "Older", projects: "Projects", projectHint: "Deleting a project returns its chats to the general history.", library: "Library", create: "Create", rename: "Rename", move: "Move to project", remove: "Delete", cancel: "Cancel", confirm: "Confirm", general: "General history", fav: "Favorites", download: "Download", close: "Close", openChat: "Open chat", savedImage: "Image saved in this browser's library.", imageBig: "The image is over 4 MB. It was not saved.", deleteChat: "Delete this chat from this browser?", deleteProject: "Delete this project? Its chats return to the general history.", deleteImage: "Delete this image from this browser?", projectName: "Project name", chatName: "Chat name", imageOff: "Image generation is off. It turns on with Workers AI (flux-1-schnell) on Cloudflare's free plan: there is a daily neuron cap and the image stays in this browser. You can still attach an image.", originRules: "This answer comes from ARQIVEN's rules, without a model.", originExtract: "This is an excerpt from the cited sources. The model did not write it.", originModel: "A third-party model wrote this" },
-  pt: { newChat: "Novo chat", settings: "Ajustes", conversations: "Chats", recent: "Chats", search: "Buscar", welcome: "Como posso ajudar?", note: "ARQIVEN é a IA da ORVUPI e funciona com modelos de terceiros. Pode errar; confira a informação importante. O que você escreve fica neste navegador.", generating: "Gerando", waiting: "Em espera", done: "Pronto", failed: "Erro", copy: "Copiar", copied: "Copiado neste navegador.", copyFail: "Não foi possível copiar.", againReply: "Perguntar de novo", attach: "Anexar", more: "Mais", details: "Detalhes", today: "Hoje", yesterday: "Ontem", week: "7 dias", older: "Anteriores", projects: "Projetos", projectHint: "Se excluir um projeto, os chats voltam ao histórico geral.", library: "Biblioteca", create: "Criar", rename: "Renomear", move: "Mover para projeto", remove: "Excluir", cancel: "Cancelar", confirm: "Confirmar", general: "Histórico geral", fav: "Favoritas", download: "Baixar", close: "Fechar", openChat: "Abrir chat", savedImage: "Imagem guardada na biblioteca deste navegador.", imageBig: "A imagem passa de 4 MB. Não foi guardada.", deleteChat: "Excluir este chat deste navegador?", deleteProject: "Excluir este projeto? Os chats voltam ao histórico geral.", deleteImage: "Excluir esta imagem deste navegador?", projectName: "Nome do projeto", chatName: "Nome do chat", imageOff: "Gerar imagens está desligado. Liga com Workers AI (flux-1-schnell) no plano grátis da Cloudflare: há um teto diário de neurônios e a imagem fica só neste navegador. Você ainda pode anexar uma imagem.", originRules: "Esta resposta vem das regras da ARQIVEN, sem um modelo.", originExtract: "É um trecho das fontes citadas. O modelo não escreveu.", originModel: "Um modelo de terceiros escreveu isto" },
-  ja: { newChat: "新しいチャット", settings: "設定", conversations: "チャット", recent: "チャット", search: "検索", welcome: "何をお手伝いしましょうか。", note: "ARQIVEN は ORVUPI の AI で、第三者モデルで動きます。間違えることがあります。重要な情報は確認してください。書いた内容はこのブラウザに保存されます。", generating: "生成中", waiting: "待機", done: "完了", failed: "エラー", copy: "コピー", copied: "このブラウザにコピーしました。", copyFail: "コピーできませんでした。", againReply: "もう一度聞く", attach: "添付", more: "その他", details: "詳細", today: "今日", yesterday: "昨日", week: "7日", older: "それ以前", projects: "プロジェクト", projectHint: "プロジェクトを削除すると、そのチャットは全体の履歴に戻ります。", library: "ライブラリ", create: "作成", rename: "名前を変更", move: "プロジェクトへ移動", remove: "削除", cancel: "キャンセル", confirm: "確認", general: "全体の履歴", fav: "お気に入り", download: "ダウンロード", close: "閉じる", openChat: "チャットを開く", savedImage: "画像をこのブラウザのライブラリに保存しました。", imageBig: "画像が 4 MB を超えています。保存していません。", deleteChat: "このチャットをこのブラウザから削除しますか？", deleteProject: "このプロジェクトを削除しますか？チャットは全体の履歴に戻ります。", deleteImage: "この画像をこのブラウザから削除しますか？", projectName: "プロジェクト名", chatName: "チャット名", imageOff: "画像生成はオフです。Cloudflare の無料プランの Workers AI（flux-1-schnell）でオンにできます。1 日のニューロン上限があり、画像はこのブラウザだけに残ります。画像の添付はできます。", originRules: "この回答は ARQIVEN のルールによるもので、モデルは使っていません。", originExtract: "引用した出典からの抜粋です。モデルが書いた文章ではありません。", originModel: "第三者が作ったモデルが書きました" },
-  ko: { newChat: "새 채팅", settings: "설정", conversations: "채팅", recent: "채팅", search: "검색", welcome: "무엇을 도와드릴까요?", note: "ARQIVEN은 ORVUPI의 AI이고 제3자 모델로 동작합니다. 틀릴 수 있으니 중요한 정보는 확인하세요. 쓴 내용은 이 브라우저에 저장됩니다.", generating: "생성 중", waiting: "대기", done: "완료", failed: "오류", copy: "복사", copied: "이 브라우저에 복사했습니다.", copyFail: "복사하지 못했습니다.", againReply: "다시 묻기", attach: "첨부", more: "더보기", details: "세부 정보", today: "오늘", yesterday: "어제", week: "7일", older: "이전", projects: "프로젝트", projectHint: "프로젝트를 삭제하면 채팅은 일반 기록으로 돌아갑니다.", library: "라이브러리", create: "만들기", rename: "이름 바꾸기", move: "프로젝트로 옮기기", remove: "삭제", cancel: "취소", confirm: "확인", general: "일반 기록", fav: "즐겨찾기", download: "다운로드", close: "닫기", openChat: "채팅 열기", savedImage: "이미지를 이 브라우저의 라이브러리에 저장했습니다.", imageBig: "이미지가 4 MB를 넘습니다. 저장하지 않았습니다.", deleteChat: "이 채팅을 이 브라우저에서 삭제할까요?", deleteProject: "이 프로젝트를 삭제할까요? 채팅은 일반 기록으로 돌아갑니다.", deleteImage: "이 이미지를 이 브라우저에서 삭제할까요?", projectName: "프로젝트 이름", chatName: "채팅 이름", imageOff: "이미지 생성은 꺼져 있습니다. Cloudflare 무료 요금제의 Workers AI(flux-1-schnell)로 켤 수 있습니다. 하루 뉴런 한도가 있고 이미지는 이 브라우저에만 남습니다. 이미지 첨부는 가능합니다.", originRules: "이 답은 ARQIVEN의 규칙에서 나왔고, 모델은 쓰지 않았습니다.", originExtract: "인용한 출처의 발췌입니다. 모델이 쓴 글이 아닙니다.", originModel: "제3자 모델이 썼습니다" },
+  es: { newChat: "Nuevo chat", settings: "Ajustes", conversations: "Chats", recent: "Recientes", emptyChats: "Todavía no hay chats.", emptyProjects: "Todavía no hay proyectos.", projectOne: "1 proyecto", projectMany: "{n} proyectos", emptyLibrary: "Todavía no hay imágenes.", attachImage: "Adjuntar imagen", allImages: "Todas", imageOne: "1 imagen", imageMany: "{n} imágenes", filterBy: "Filtrar", search: "Buscar", welcome: "¿En qué puedo ayudarte?", note: "ARQIVEN es la IA de ORVUPI y funciona con modelos de terceros. Puede cometer errores; revisa la información importante. Lo que escribes se guarda en este navegador.", generating: "Generando", waiting: "En espera", done: "Listo", failed: "Error", copy: "Copiar", copied: "Copiado en este navegador.", copyFail: "No se pudo copiar.", againReply: "Volver a preguntar", attach: "Adjuntar", more: "Más", details: "Detalles", today: "Hoy", yesterday: "Ayer", week: "7 días", older: "Anteriores", projects: "Proyectos", projectHint: "Si eliminas un proyecto, sus chats vuelven al historial general.", library: "Biblioteca", create: "Crear", rename: "Renombrar", move: "Mover a proyecto", remove: "Eliminar", cancel: "Cancelar", confirm: "Confirmar", general: "Historial general", fav: "Favoritas", download: "Descargar", close: "Cerrar", openChat: "Abrir chat", savedImage: "Imagen guardada en la biblioteca de este navegador.", imageBig: "La imagen pasa de 4 MB. No se ha guardado.", deleteChat: "¿Eliminar este chat de este navegador?", deleteProject: "¿Eliminar este proyecto? Sus chats vuelven al historial general.", deleteImage: "¿Eliminar esta imagen de este navegador?", projectName: "Nombre del proyecto", chatName: "Nombre del chat", imageOff: "La generación de imágenes llegará pronto. Por ahora puedes guardar aquí las imágenes que adjuntes en tus chats.", originRules: "Esta respuesta sale de las reglas de ARQIVEN, sin un modelo.", originExtract: "Es un extracto de las fuentes citadas. No lo escribió el modelo.", originModel: "Lo escribió un modelo de terceros" },
+  en: { newChat: "New chat", settings: "Settings", conversations: "Chats", recent: "Recent", emptyChats: "No chats yet.", emptyProjects: "No projects yet.", projectOne: "1 project", projectMany: "{n} projects", emptyLibrary: "No images yet.", attachImage: "Attach an image", allImages: "All", imageOne: "1 image", imageMany: "{n} images", filterBy: "Filter", search: "Search", welcome: "How can I help?", note: "ARQIVEN is ORVUPI's AI and runs on third-party models. It can make mistakes; check anything that matters. What you write stays in this browser.", generating: "Generating", waiting: "Waiting", done: "Done", failed: "Error", copy: "Copy", copied: "Copied on this device.", copyFail: "Could not copy.", againReply: "Ask again", attach: "Attach", more: "More", details: "Details", today: "Today", yesterday: "Yesterday", week: "7 days", older: "Older", projects: "Projects", projectHint: "Deleting a project returns its chats to the general history.", library: "Library", create: "Create", rename: "Rename", move: "Move to project", remove: "Delete", cancel: "Cancel", confirm: "Confirm", general: "General history", fav: "Favorites", download: "Download", close: "Close", openChat: "Open chat", savedImage: "Image saved in this browser's library.", imageBig: "The image is over 4 MB. It was not saved.", deleteChat: "Delete this chat from this browser?", deleteProject: "Delete this project? Its chats return to the general history.", deleteImage: "Delete this image from this browser?", projectName: "Project name", chatName: "Chat name", imageOff: "Image generation is coming soon. For now you can keep the images you attach in your chats here.", originRules: "This answer comes from ARQIVEN's rules, without a model.", originExtract: "This is an excerpt from the cited sources. The model did not write it.", originModel: "A third-party model wrote this" },
+  pt: { newChat: "Novo chat", settings: "Ajustes", conversations: "Chats", recent: "Recentes", emptyChats: "Ainda não há chats.", emptyProjects: "Ainda não há projetos.", projectOne: "1 projeto", projectMany: "{n} projetos", emptyLibrary: "Ainda não há imagens.", attachImage: "Anexar imagem", allImages: "Todas", imageOne: "1 imagem", imageMany: "{n} imagens", filterBy: "Filtrar", search: "Buscar", welcome: "Como posso ajudar?", note: "ARQIVEN é a IA da ORVUPI e funciona com modelos de terceiros. Pode errar; confira a informação importante. O que você escreve fica neste navegador.", generating: "Gerando", waiting: "Em espera", done: "Pronto", failed: "Erro", copy: "Copiar", copied: "Copiado neste navegador.", copyFail: "Não foi possível copiar.", againReply: "Perguntar de novo", attach: "Anexar", more: "Mais", details: "Detalhes", today: "Hoje", yesterday: "Ontem", week: "7 dias", older: "Anteriores", projects: "Projetos", projectHint: "Se excluir um projeto, os chats voltam ao histórico geral.", library: "Biblioteca", create: "Criar", rename: "Renomear", move: "Mover para projeto", remove: "Excluir", cancel: "Cancelar", confirm: "Confirmar", general: "Histórico geral", fav: "Favoritas", download: "Baixar", close: "Fechar", openChat: "Abrir chat", savedImage: "Imagem guardada na biblioteca deste navegador.", imageBig: "A imagem passa de 4 MB. Não foi guardada.", deleteChat: "Excluir este chat deste navegador?", deleteProject: "Excluir este projeto? Os chats voltam ao histórico geral.", deleteImage: "Excluir esta imagem deste navegador?", projectName: "Nome do projeto", chatName: "Nome do chat", imageOff: "A geração de imagens chega em breve. Por enquanto você pode guardar aqui as imagens que anexar nos seus chats.", originRules: "Esta resposta vem das regras da ARQIVEN, sem um modelo.", originExtract: "É um trecho das fontes citadas. O modelo não escreveu.", originModel: "Um modelo de terceiros escreveu isto" },
+  ja: { newChat: "新しいチャット", settings: "設定", conversations: "チャット", recent: "最近", emptyChats: "まだチャットがありません。", emptyProjects: "まだプロジェクトがありません。", projectOne: "1 件", projectMany: "{n} 件", emptyLibrary: "まだ画像がありません。", attachImage: "画像を添付", allImages: "すべて", imageOne: "1 枚", imageMany: "{n} 枚", filterBy: "絞り込み", search: "検索", welcome: "何をお手伝いしましょうか。", note: "ARQIVEN は ORVUPI の AI で、第三者モデルで動きます。間違えることがあります。重要な情報は確認してください。書いた内容はこのブラウザに保存されます。", generating: "生成中", waiting: "待機", done: "完了", failed: "エラー", copy: "コピー", copied: "このブラウザにコピーしました。", copyFail: "コピーできませんでした。", againReply: "もう一度聞く", attach: "添付", more: "その他", details: "詳細", today: "今日", yesterday: "昨日", week: "7日", older: "それ以前", projects: "プロジェクト", projectHint: "プロジェクトを削除すると、そのチャットは全体の履歴に戻ります。", library: "ライブラリ", create: "作成", rename: "名前を変更", move: "プロジェクトへ移動", remove: "削除", cancel: "キャンセル", confirm: "確認", general: "全体の履歴", fav: "お気に入り", download: "ダウンロード", close: "閉じる", openChat: "チャットを開く", savedImage: "画像をこのブラウザのライブラリに保存しました。", imageBig: "画像が 4 MB を超えています。保存していません。", deleteChat: "このチャットをこのブラウザから削除しますか？", deleteProject: "このプロジェクトを削除しますか？チャットは全体の履歴に戻ります。", deleteImage: "この画像をこのブラウザから削除しますか？", projectName: "プロジェクト名", chatName: "チャット名", imageOff: "画像の生成はもうすぐです。今はチャットに添付した画像をここに保存できます。", originRules: "この回答は ARQIVEN のルールによるもので、モデルは使っていません。", originExtract: "引用した出典からの抜粋です。モデルが書いた文章ではありません。", originModel: "第三者が作ったモデルが書きました" },
+  ko: { newChat: "새 채팅", settings: "설정", conversations: "채팅", recent: "최근", emptyChats: "아직 채팅이 없습니다.", emptyProjects: "아직 프로젝트가 없습니다.", projectOne: "1개", projectMany: "{n}개", emptyLibrary: "아직 이미지가 없습니다.", attachImage: "이미지 첨부", allImages: "전체", imageOne: "1장", imageMany: "{n}장", filterBy: "필터", search: "검색", welcome: "무엇을 도와드릴까요?", note: "ARQIVEN은 ORVUPI의 AI이고 제3자 모델로 동작합니다. 틀릴 수 있으니 중요한 정보는 확인하세요. 쓴 내용은 이 브라우저에 저장됩니다.", generating: "생성 중", waiting: "대기", done: "완료", failed: "오류", copy: "복사", copied: "이 브라우저에 복사했습니다.", copyFail: "복사하지 못했습니다.", againReply: "다시 묻기", attach: "첨부", more: "더보기", details: "세부 정보", today: "오늘", yesterday: "어제", week: "7일", older: "이전", projects: "프로젝트", projectHint: "프로젝트를 삭제하면 채팅은 일반 기록으로 돌아갑니다.", library: "라이브러리", create: "만들기", rename: "이름 바꾸기", move: "프로젝트로 옮기기", remove: "삭제", cancel: "취소", confirm: "확인", general: "일반 기록", fav: "즐겨찾기", download: "다운로드", close: "닫기", openChat: "채팅 열기", savedImage: "이미지를 이 브라우저의 라이브러리에 저장했습니다.", imageBig: "이미지가 4 MB를 넘습니다. 저장하지 않았습니다.", deleteChat: "이 채팅을 이 브라우저에서 삭제할까요?", deleteProject: "이 프로젝트를 삭제할까요? 채팅은 일반 기록으로 돌아갑니다.", deleteImage: "이 이미지를 이 브라우저에서 삭제할까요?", projectName: "프로젝트 이름", chatName: "채팅 이름", imageOff: "이미지 생성은 곧 제공됩니다. 지금은 채팅에 첨부한 이미지를 여기에 보관할 수 있습니다.", originRules: "이 답은 ARQIVEN의 규칙에서 나왔고, 모델은 쓰지 않았습니다.", originExtract: "인용한 출처의 발췌입니다. 모델이 쓴 글이 아닙니다.", originModel: "제3자 모델이 썼습니다" },
 };
 const chrome = CHROME[uiLang];
 const copy = {
@@ -221,6 +221,7 @@ const state = {
   chatTitle: "",
   chatRenamed: false,
   favOnly: false,
+  imageFilter: "",
   imagesOn: false,
   chatDb: null,
   contextRefs: [],
@@ -354,7 +355,11 @@ function applyChrome() {
   const navChat = document.querySelector("[data-nav='chat'] .hide-collapsed");
   if (navChat) navChat.textContent = chrome.conversations;
   const hist = document.getElementById("hist-label");
-  if (hist) hist.textContent = state.activeProject ? (state.projects.find((item) => item.id === state.activeProject)?.name || chrome.projects) : chrome.conversations;
+  if (hist) hist.textContent = state.activeProject ? (state.projects.find((item) => item.id === state.activeProject)?.name || chrome.projects) : chrome.recent;
+  const libraryAttach = document.getElementById("library-attach");
+  if (libraryAttach) libraryAttach.textContent = chrome.attachImage;
+  const libraryEmpty = document.getElementById("library-empty-text");
+  if (libraryEmpty) libraryEmpty.textContent = chrome.emptyLibrary;
   document.querySelector("[data-nav='projects'] .hide-collapsed").textContent = chrome.projects;
   document.querySelector("[data-nav='library'] .hide-collapsed").textContent = chrome.library;
   const projectTitle = document.getElementById("project-title");
@@ -812,7 +817,7 @@ function paintList() {
   const list = scopedChats();
   if (!list.length) {
     const note = document.createElement("p");
-    note.textContent = copy.empty;
+    note.textContent = chrome.emptyChats;
     recent.append(note);
     return;
   }
@@ -910,6 +915,7 @@ function paint() {
   welcome?.toggleAttribute("hidden", state.view !== "chat" || state.messages.length > 0);
   view?.classList.toggle("is-thread", threaded);
   const chatting = state.view === "chat";
+  view?.classList.toggle("is-welcome", chatting && state.messages.length === 0);
   if (welcome) welcome.hidden = !chatting || state.messages.length > 0;
   if (messages) messages.hidden = !chatting;
   const composer = document.querySelector(".composer-area");
@@ -928,7 +934,10 @@ function paint() {
   }
   const heading = document.getElementById("thread-title");
   const title = liveTitle();
-  if (heading && state.view === "chat") heading.textContent = title || "ARQIVEN";
+  const projectLabel = state.projects.find((item) => item.id === state.activeProject)?.name || "";
+  const hist = document.getElementById("hist-label");
+  if (hist) hist.textContent = projectLabel || chrome.recent;
+  if (heading && state.view === "chat") heading.textContent = title || projectLabel || "ARQIVEN";
   if (title) document.title = `${title} · ARQIVEN`;
   remember();
   document.querySelectorAll("[data-nav]").forEach((button) => {
@@ -1283,12 +1292,7 @@ document.getElementById("project-form")?.addEventListener("submit", async (event
   state.projects = await listProjects(state.chatDb);
   paint();
 });
-document.getElementById("image-filter")?.addEventListener("change", () => { void paintLibrary(); });
-document.getElementById("image-fav")?.addEventListener("click", () => {
-  state.favOnly = !state.favOnly;
-  document.getElementById("image-fav")?.setAttribute("aria-pressed", state.favOnly ? "true" : "false");
-  void paintLibrary();
-});
+document.getElementById("library-attach")?.addEventListener("click", () => fileInput?.click());
 document.getElementById("attach")?.addEventListener("click", () => fileInput?.click());
 fileInput?.addEventListener("change", () => {
   const input = fileInput instanceof HTMLInputElement ? fileInput : null;
@@ -1398,14 +1402,16 @@ function askUser(text, value = "", okLabel = chrome.confirm) {
 function paintProjects() {
   const list = document.getElementById("project-list");
   const note = document.getElementById("project-note");
-  if (note) note.textContent = chrome.projectHint;
+  const count = document.getElementById("project-count");
+  const empty = document.getElementById("project-empty");
+  if (note) note.textContent = state.projects.length ? chrome.projectHint : "";
+  if (count) count.textContent = state.projects.length === 0 ? "" : state.projects.length === 1 ? chrome.projectOne : chrome.projectMany.replace("{n}", String(state.projects.length));
+  if (empty) {
+    empty.hidden = state.projects.length > 0;
+    empty.textContent = chrome.emptyProjects;
+  }
   if (!list) return;
   list.replaceChildren();
-  const general = document.createElement("button");
-  general.type = "button";
-  general.textContent = chrome.general;
-  general.addEventListener("click", () => { state.activeProject = ""; state.view = "chat"; paint(); });
-  list.append(general);
   for (const project of state.projects) {
     const row = document.createElement("div");
     row.className = "project-row";
@@ -1413,7 +1419,20 @@ function paintProjects() {
     open.type = "button";
     open.textContent = project.name;
     if (project.id === state.activeProject) open.setAttribute("aria-current", "true");
-    open.addEventListener("click", () => { state.activeProject = project.id; state.view = "chat"; paint(); });
+    open.addEventListener("click", async () => {
+      if (state.chatProject !== project.id) {
+        await persist();
+        state.messages = [];
+        state.conversationId = newId();
+        state.chatProject = project.id;
+        state.chatRenamed = false;
+        state.chatTitle = "";
+        setHash(state.conversationId);
+      }
+      state.activeProject = project.id;
+      state.view = "chat";
+      paint();
+    });
     const rename = document.createElement("button");
     rename.type = "button";
     rename.textContent = chrome.rename;
@@ -1447,37 +1466,84 @@ function revokeImages() {
   state.imageUrls = [];
 }
 
+function imageMatches(item) {
+  if (state.favOnly && item.favorite !== true) return false;
+  const group = state.imageFilter;
+  if (!group) return true;
+  if (group.startsWith("project:")) return item.projectId === group.slice(8);
+  if (group.startsWith("chat:")) return item.chatId === group.slice(5);
+  return dateGroup(item.created) === group;
+}
+
+function chatTitleFor(id) {
+  return state.conversations.find((chat) => chat.id === id)?.title || "";
+}
+
+function shortDate(iso) {
+  const date = new Date(iso || 0);
+  if (Number.isNaN(date.getTime())) return "";
+  const lang = document.documentElement.lang || "es";
+  return new Intl.DateTimeFormat(lang, { day: "numeric", month: "short" }).format(date);
+}
+
+function filterChip(label, pressed, onClick) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "chip";
+  button.textContent = label;
+  button.setAttribute("aria-pressed", pressed ? "true" : "false");
+  button.addEventListener("click", onClick);
+  return button;
+}
+
 async function paintLibrary() {
   const grid = document.getElementById("library-grid");
   const note = document.getElementById("library-note");
-  const filter = document.getElementById("image-filter");
-  if (note) note.textContent = state.imagesOn ? "" : chrome.imageOff;
+  const count = document.getElementById("library-count");
+  const filters = document.getElementById("library-filters");
+  const empty = document.getElementById("library-empty");
   if (!grid || !state.chatDb) return;
   state.images = await listImages(state.chatDb);
-  if (filter instanceof HTMLSelectElement) {
-    const current = filter.value;
-    const options = [["", chrome.library], ["today", chrome.today], ["yesterday", chrome.yesterday], ["week", chrome.week], ["older", chrome.older]];
-    for (const project of state.projects) options.push([`project:${project.id}`, project.name]);
-    for (const chat of state.conversations) if (chat.title) options.push([`chat:${chat.id}`, chat.title]);
-    filter.replaceChildren();
-    for (const [value, label] of options) {
-      const option = document.createElement("option");
-      option.value = value;
-      option.textContent = label;
-      filter.append(option);
+  const total = state.images.length;
+  if (note) note.textContent = total || state.imagesOn ? "" : chrome.imageOff;
+  if (count) count.textContent = total === 0 ? "" : total === 1 ? chrome.imageOne : chrome.imageMany.replace("{n}", String(total));
+  if (filters) {
+    filters.replaceChildren();
+    filters.hidden = total === 0;
+    const dates = [["", chrome.allImages], ["today", chrome.today], ["yesterday", chrome.yesterday], ["week", chrome.week], ["older", chrome.older]];
+    for (const [value, label] of dates) {
+      filters.append(filterChip(label, state.imageFilter === value, () => { state.imageFilter = value; void paintLibrary(); }));
     }
-    if ([...filter.options].some((option) => option.value === current)) filter.value = current;
+    filters.append(filterChip(chrome.fav, state.favOnly, () => { state.favOnly = !state.favOnly; void paintLibrary(); }));
+    const choices = [
+      ...state.projects.map((project) => [`project:${project.id}`, project.name]),
+      ...state.conversations.filter((chat) => chat.title).map((chat) => [`chat:${chat.id}`, chat.title]),
+    ];
+    if (choices.length) {
+      const menu = document.createElement("details");
+      menu.className = "chip-menu";
+      const summary = document.createElement("summary");
+      const current = choices.find(([value]) => value === state.imageFilter);
+      summary.textContent = current ? current[1] : chrome.filterBy;
+      const pop = document.createElement("div");
+      pop.className = "menu-pop";
+      for (const [value, label] of choices) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = label;
+        if (value === state.imageFilter) button.setAttribute("aria-current", "true");
+        button.addEventListener("click", () => { state.imageFilter = value; menu.open = false; void paintLibrary(); });
+        pop.append(button);
+      }
+      menu.append(summary, pop);
+      filters.append(menu);
+    }
   }
-  const group = filter instanceof HTMLSelectElement ? filter.value : "";
   revokeImages();
   grid.replaceChildren();
-  const rows = state.images.filter((item) => {
-    if (state.favOnly && item.favorite !== true) return false;
-    if (!group) return true;
-    if (group.startsWith("project:")) return item.projectId === group.slice(8);
-    if (group.startsWith("chat:")) return item.chatId === group.slice(5);
-    return dateGroup(item.created) === group;
-  });
+  const rows = state.images.filter(imageMatches);
+  if (empty) empty.hidden = total > 0;
+  grid.hidden = rows.length === 0;
   for (const item of rows) {
     const button = document.createElement("button");
     button.type = "button";
@@ -1487,8 +1553,18 @@ async function paintLibrary() {
     const url = URL.createObjectURL(blob);
     state.imageUrls.push(url);
     img.src = url;
-    img.alt = item.name || chrome.library;
-    button.append(img);
+    const name = chatTitleFor(item.chatId) || item.name || chrome.library;
+    img.alt = name;
+    const meta = document.createElement("span");
+    meta.className = "library-meta";
+    const title = document.createElement("span");
+    title.className = "library-name";
+    title.textContent = name;
+    const when = document.createElement("span");
+    when.className = "library-date";
+    when.textContent = shortDate(item.created);
+    meta.append(title, when);
+    button.append(img, meta);
     button.addEventListener("click", () => openViewer(item, url));
     grid.append(button);
   }
@@ -1501,7 +1577,9 @@ function openViewer(item, url) {
   const open = document.getElementById("viewer-open");
   if (!(dialog instanceof HTMLDialogElement) || !(img instanceof HTMLImageElement)) return;
   img.src = url;
-  img.alt = item.name || chrome.library;
+  img.alt = chatTitleFor(item.chatId) || item.name || chrome.library;
+  const caption = document.getElementById("viewer-caption");
+  if (caption) caption.textContent = [chatTitleFor(item.chatId) || item.name || "", shortDate(item.created)].filter(Boolean).join(" · ");
   if (download instanceof HTMLAnchorElement) {
     download.href = url;
     download.download = item.name || "arqiven.png";
