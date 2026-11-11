@@ -807,12 +807,18 @@ async function chatAction(action, item) {
       setHash(state.conversationId);
     }
   }
+  closeRowMenus();
   state.conversations = await listConversations(state.chatDb);
   paint();
 }
 
+function closeRowMenus() {
+  document.querySelectorAll(".row-menu").forEach((node) => { node.hidden = true; });
+  document.querySelectorAll(".recent-more").forEach((node) => node.setAttribute("aria-expanded", "false"));
+}
+
 function paintList() {
-  if (!recent) return;
+  if (!recent || recent.querySelector(".row-menu:not([hidden])")) return;
   recent.replaceChildren();
   const list = scopedChats();
   if (!list.length) {
