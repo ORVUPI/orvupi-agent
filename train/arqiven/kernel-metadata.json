@@ -1,0 +1,16 @@
+{
+  "id": "OWNER/arqiven-lora",
+  "title": "ARQIVEN LoRA",
+  "code_file": "lora-qwen35.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": "true",
+  "enable_gpu": "true",
+  "enable_tpu": "false",
+  "enable_internet": "true",
+  "dataset_sources": ["OWNER/arqiven-sft"],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": [],
+  "machine_shape": "NvidiaTeslaT4"
+}

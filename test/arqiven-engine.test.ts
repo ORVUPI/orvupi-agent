@@ -84,6 +84,7 @@ describe("motor de terceros de ARQIVEN", () => {
     assert.match(worker, /numThreads = 1/);
     assert.equal(worker.includes("arqiven-1"), false);
     assert.equal(worker.includes("Eres ORVUPI AI"), false);
+    assert.match(app, /documentElement\.lang/);
     assert.match(app, /honestResult/);
     assert.match(app, /startPrepare\(defaultModel\(\)\.id\)/);
     assert.match(app, /Preparando modelo de terceros/);

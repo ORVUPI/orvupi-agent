@@ -2,8 +2,16 @@
 
 import { ONNX_WASM, TRANSFORMERS_ESM, modelById } from "/shared/ia/models.mjs";
 import { isDegenerate } from "/shared/ia/quality.mjs";
+import { clipHistory } from "/shared/ia/history.mjs";
 
-const SYSTEM = "Eres un modelo de terceros dentro del navegador. Responde en pocas frases, sin repetir la misma idea. No inventes personas ni datos que no estén en las fuentes. Si no alcanzan, di que no consta. No digas que eres Arqiven-N ni que ARQIVEN entrenó este modelo.";
+const SYSTEM = [
+  "Eres un modelo de terceros dentro del navegador. ARQIVEN es la IA de ORVUPI y no entrenó estos pesos. No digas que eres Arqiven-N.",
+  "Lee la última pregunta y el historial reciente. Identifica la intención: informar, resolver, corregir lo ya dicho o pedir un paso práctico.",
+  "Si la pregunta es ambigua, haz una sola pregunta de aclaración. No adivines.",
+  "Si no consta en las fuentes ni en lo ya dicho, di que no lo sabes. No contradigas el historial ni inventes cifras.",
+  "Responde en el idioma del usuario, con tono natural y profesional: qué has entendido, la respuesta y, si cabe, un paso concreto.",
+  "En un problema de varios pasos, cierra con una línea que empiece por «Respuesta final:».",
+].join(" ");
 
 const LANG_NAME = { es: "español", en: "English", pt: "português", ja: "日本語", ko: "한국어" };
 
@@ -109,10 +117,7 @@ async function handle(msg) {
       }).slice(0, 4) : [];
       const language = LANG_NAME[msg.lang] || LANG_NAME[msg.lang === "pt-BR" ? "pt" : ""] || "español";
       const sourceNote = cited.length ? `\n\nFuentes. Apóyate solo en ellas y cita el título. Si no responden, di que no consta.\n${cited.join("\n\n")}` : "";
-      const history = Array.isArray(msg.messages) ? msg.messages.flatMap((item) => {
-        if (!item || (item.role !== "user" && item.role !== "assistant") || typeof item.content !== "string") return [];
-        return [{ role: item.role, content: item.content.slice(0, 8000) }];
-      }).slice(-12) : [];
+      const history = clipHistory(msg.messages, { turns: 4, maxChars: 3200 });
       const messages = [{ role: "system", content: `${SYSTEM} Responde en ${language}. ${hint}${sourceNote}` }, ...history];
       let acc = "";
       let broken = false;

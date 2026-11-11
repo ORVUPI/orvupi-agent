@@ -4,24 +4,48 @@
 
 export const ALLOWED_LICENSES = ["apache-2.0", "mit", "odc-by"];
 
+const SMOLTALK2 = {
+  dataset: "HuggingFaceTB/smoltalk2",
+  config: "SFT",
+  license: "apache-2.0",
+  url: "https://huggingface.co/datasets/HuggingFaceTB/smoltalk2",
+};
+
 export const SOURCES = [
   {
-    id: "smoltalk2-new",
-    dataset: "HuggingFaceTB/smoltalk2",
-    config: "SFT",
-    splits: [
-      "aya_dataset_Qwen3_32B_think",
-      "multi_turn_reasoning_if_think",
-      "smolagents_toolcalling_traces_think",
-      "smoltalk_everyday_convs_reasoning_Qwen3_32B_think",
-      "smoltalk_multilingual8_Qwen3_32B_think",
-      "smoltalk_systemchats_Qwen3_32B_think",
-      "table_gpt_Qwen3_32B_think",
-    ],
-    license: "apache-2.0",
+    ...SMOLTALK2,
+    id: "smoltalk2-multiturn",
+    splits: ["multi_turn_reasoning_if_think", "smoltalk_systemchats_Qwen3_32B_think"],
+    block: "multiturn",
+    note: "Diálogos de varios turnos. Solo subconjuntos nuevos con Apache-2.0 en la ficha.",
+  },
+  {
+    ...SMOLTALK2,
+    id: "smoltalk2-reasoning",
+    splits: ["smoltalk_everyday_convs_reasoning_Qwen3_32B_think"],
+    block: "reasoning",
+    note: "Razonamiento con el hilo visible y un cierre. Apache-2.0.",
+  },
+  {
+    ...SMOLTALK2,
+    id: "smoltalk2-multilingual",
+    splits: ["smoltalk_multilingual8_Qwen3_32B_think"],
+    block: "multilingual",
+    note: "Charla multilingüe del subconjunto nuevo. Apache-2.0.",
+  },
+  {
+    ...SMOLTALK2,
+    id: "smoltalk2-code",
+    splits: ["smolagents_toolcalling_traces_think"],
+    block: "code",
+    note: "Trazas de herramientas. Apache-2.0.",
+  },
+  {
+    ...SMOLTALK2,
+    id: "smoltalk2-general",
+    splits: ["aya_dataset_Qwen3_32B_think", "table_gpt_Qwen3_32B_think"],
     block: "general",
-    note: "Solo los subconjuntos nuevos que la ficha declara Apache-2.0. Los heredados quedan fuera: hay que mirar cada licencia original.",
-    url: "https://huggingface.co/datasets/HuggingFaceTB/smoltalk2",
+    note: "Tablas y reformulaciones Aya del subconjunto nuevo. Apache-2.0. Los heredados quedan fuera.",
   },
   {
     id: "aya",
@@ -40,8 +64,8 @@ export const SOURCES = [
     config: "default",
     splits: ["train"],
     license: "apache-2.0",
-    block: "math",
-    note: "La ficha AI-MO/NuminaMath-TIR apunta a este id. Apache-2.0.",
+    block: "reasoning",
+    note: "Matemáticas con solución y respuesta final. Apache-2.0.",
     url: "https://huggingface.co/datasets/project-numina/NuminaMath-TIR",
   },
   {
@@ -50,8 +74,8 @@ export const SOURCES = [
     config: "default",
     splits: ["train"],
     license: "odc-by",
-    block: "math",
-    note: "ODC-BY en la ficha. No se usa la mezcla tulu-3-sft-mixture entera: incluye subconjuntos no comerciales.",
+    block: "reasoning",
+    note: "ODC-BY. Matemáticas de personas, con el paso a paso. No se usa la mezcla tulu-3-sft-mixture entera.",
     url: "https://huggingface.co/datasets/allenai/tulu-3-sft-personas-math",
   },
   {
@@ -72,6 +96,14 @@ export const SOURCES = [
     note: "Páginas y documentación del propio repositorio. No copia las preguntas del banco de evaluación.",
     url: "https://orvupi.com",
   },
+  {
+    id: "dialogue-mit",
+    dataset: "local",
+    license: "mit",
+    block: "clarify",
+    note: "Preguntas ambiguas que piden una aclaración, y abstenciones honestas. Escritas en el repositorio. No copian el banco.",
+    url: "https://orvupi.com",
+  },
 ];
 
 export const EXCLUDED = [
@@ -81,8 +113,21 @@ export const EXCLUDED = [
   { id: "coconot", reason: "La ficha pide respetar licencias de las partes (impact-lr). Queda fuera hasta esa revisión." },
 ];
 
+/** Proporciones del primer LoRA. Suman 1.
+ * Varios turnos y razonamiento con respuesta final pesan más que la charla suelta.
+ * ORVUPI y seguridad juntos son el 15 %: el resto es conocimiento general.
+ */
 export const MIX = {
   target: 50000,
   seed: 42,
-  parts: { general: 0.4, multilingual: 0.2, math: 0.15, code: 0.1, orvupi: 0.1, safety: 0.05 },
+  parts: {
+    multiturn: 0.22,
+    reasoning: 0.18,
+    multilingual: 0.15,
+    code: 0.1,
+    general: 0.15,
+    clarify: 0.05,
+    orvupi: 0.1,
+    safety: 0.05,
+  },
 };

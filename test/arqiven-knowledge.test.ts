@@ -222,5 +222,86 @@ describe("conocimiento y evaluación de ARQIVEN", () => {
     assert.equal(broken.reasons.some((reason) => reason.includes("críticos")), true);
     const unapproved = gate.evaluateGate(fine, better, { improvedTarget: true, approvedBy: "otra persona" });
     assert.equal(unapproved.ok, false);
+    const dialogueDrop = gate.evaluateGate(
+      { ...fine, byBlock: { ...fine.byBlock, dialogue: { pass: 8, total: 10 } } },
+      { ...better, byBlock: { ...better.byBlock, dialogue: { pass: 7, total: 10 } } },
+      { improvedTarget: true, approvedBy: "propietario" },
+    );
+    assert.equal(dialogueDrop.ok, false);
+    assert.equal(dialogueDrop.reasons.some((reason) => reason.includes("dialogue")), true);
+  });
+
+  test("la mezcla sube los diálogos y el razonamiento, con licencia comercial", async () => {
+    const sources = await import(href("train/arqiven/sources.mjs")) as {
+      ALLOWED_LICENSES: string[];
+      MIX: { target: number; parts: Record<string, number> };
+      SOURCES: Array<{ license: string; block: string }>;
+    };
+    const mix = await import(href("train/arqiven/mix.mjs")) as {
+      planCounts: (target: number, parts: Record<string, number>) => Record<string, number>;
+      dialogueExamples: () => Array<{ block: string; license: string; text: string }>;
+      cleanExamples: (examples: Array<{ text: string }>, questions: string[]) => { dropped: number; kept: unknown[] };
+    };
+    const parts = sources.MIX.parts;
+    const weight = Object.values(parts).reduce((sum, value) => sum + value, 0);
+    assert.ok(Math.abs(weight - 1) < 1e-9);
+    assert.ok((parts.multiturn ?? 0) + (parts.reasoning ?? 0) >= 0.4);
+    assert.ok((parts.clarify ?? 0) >= 0.05);
+    const counts = mix.planCounts(sources.MIX.target, parts);
+    assert.equal(Object.values(counts).reduce((sum, value) => sum + value, 0), sources.MIX.target);
+    for (const source of sources.SOURCES) {
+      assert.equal(sources.ALLOWED_LICENSES.includes(source.license), true, source.license);
+      assert.equal(Object.hasOwn(parts, source.block), true, source.block);
+    }
+    const bank = await import(href("eval/arqiven/bank/generate.mjs")) as { buildBank: () => Array<{ question: string }> };
+    const cleaned = mix.cleanExamples(mix.dialogueExamples(), bank.buildBank().map((item) => item.question));
+    assert.equal(cleaned.dropped, 0);
+    assert.ok(cleaned.kept.length >= 10);
+  });
+
+  test("el banco de diálogo puntúa turnos, aclaración, contradicción y consistencia", async () => {
+    const bank = await import(href("eval/arqiven/bank/generate.mjs")) as { buildBank: () => Array<{ block: string; lang: string; domain?: string; score: string; group?: string }> };
+    const score = await import(href("eval/arqiven/score.mjs")) as {
+      scoreItem: (item: { id: string; lang: string; block: string; score: string; expect?: string; falseClaim?: string }, output: string) => { pass: boolean | null };
+      sameConclusion: (a: string, b: string) => boolean;
+    };
+    const history = await import(href("web/v2/shared/ia/history.mjs")) as {
+      clipHistory: (messages: Array<{ role: string; content: string }>, options?: { turns?: number; maxChars?: number }) => Array<{ role: string; content: string }>;
+    };
+    const dialogue = bank.buildBank().filter((item) => item.block === "dialogue");
+    const domains = new Set(dialogue.map((item) => item.domain));
+    assert.deepEqual([...domains].sort(), ["ambiguous", "consistency", "contradiction", "correction", "followup", "multistep"]);
+    for (const lang of ["es", "en", "pt-BR", "ja", "ko"]) {
+      assert.ok(dialogue.filter((item) => item.lang === lang).length >= 7, lang);
+    }
+    assert.equal(score.scoreItem({ id: "c", lang: "es", block: "dialogue", score: "clarify" }, "¿Qué texto quieres acortar?").pass, true);
+    assert.equal(score.scoreItem({ id: "c2", lang: "es", block: "dialogue", score: "clarify" }, "Ya lo dejé en una línea.").pass, false);
+    assert.equal(score.scoreItem({ id: "h", lang: "es", block: "dialogue", score: "hold", expect: "12", falseClaim: "30" }, "No, es 12.").pass, true);
+    assert.equal(score.scoreItem({ id: "h2", lang: "es", block: "dialogue", score: "hold", expect: "12", falseClaim: "30" }, "Sí, es 30.").pass, false);
+    assert.equal(score.sameConclusion("Son 60 minutos.", "60"), true);
+    assert.equal(score.sameConclusion("azul", "verde"), false);
+    const long = Array.from({ length: 20 }, (_, index) => ({ role: index % 2 ? "assistant" : "user", content: `turno ${index} ${"x".repeat(500)}` }));
+    const clipped = history.clipHistory(long, { turns: 4, maxChars: 3200 });
+    assert.ok(clipped.length <= 8);
+    assert.ok(clipped.reduce((sum, item) => sum + item.content.length, 0) <= 3200);
+    assert.equal(clipped.at(-1)?.content.includes("turno 19"), true);
+    const worker = readFileSync(path.join(root, "web/v2/arqiven/engine-worker.mjs"), "utf8");
+    const app = readFileSync(path.join(root, "web/v2/arqiven/app.js"), "utf8");
+    assert.match(worker, /clipHistory/);
+    assert.match(worker, /Respuesta final/);
+    assert.match(app, /clipHistory/);
+    const notebook = JSON.parse(readFileSync(path.join(root, "train/arqiven/lora-qwen35.ipynb"), "utf8")) as { cells: Array<{ source: string[] }> };
+    const joined = notebook.cells.map((cell) => cell.source.join("")).join("\n");
+    assert.match(joined, /KAGGLE_KERNEL_RUN_TYPE/);
+    assert.match(joined, /trainer\.train\(\)/);
+    assert.equal(joined.includes("KAGGLE_KEY"), false);
+    const launch = await import(href("train/arqiven/kaggle-push.mjs")) as {
+      planLaunch: (input: { username: string }) => { accelerator: string; enableGpu: boolean; kernelId: string; commands: string[][] };
+    };
+    const plan = launch.planLaunch({ username: "orvupi" });
+    assert.equal(plan.accelerator, "NvidiaTeslaT4");
+    assert.equal(plan.enableGpu, true);
+    assert.equal(plan.kernelId, "orvupi/arqiven-lora");
+    assert.equal(JSON.stringify(plan).includes("KAGGLE_KEY"), false);
   });
 });

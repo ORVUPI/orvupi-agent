@@ -1,5 +1,6 @@
 /** Construye el banco JSONL. No descarga modelos ni llama a una API de pago. */
 
+import { dialogueItems } from "./dialogue.mjs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -445,6 +446,7 @@ export function buildBank() {
     ...financeItems(),
     ...identityItems(),
     ...ragItems(),
+    ...dialogueItems(),
   ];
 }
 

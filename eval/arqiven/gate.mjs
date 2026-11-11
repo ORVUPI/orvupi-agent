@@ -23,7 +23,7 @@ export function evaluateGate(before, after, options = {}) {
     const delta = drop(points(before?.byLang?.[lang]), points(after?.byLang?.[lang]));
     if (delta > PUBLICATION_RULE.maxLanguageDropPoints) reasons.push(`${lang} baja más de 2 puntos`);
   }
-  for (const block of ["orvupi", "rag"]) {
+  for (const block of ["orvupi", "rag", "dialogue"]) {
     const prev = points(before?.byBlock?.[block]);
     const next = points(after?.byBlock?.[block]);
     if (prev != null && next != null && next + 1e-9 < prev) reasons.push(`${block} empeora`);

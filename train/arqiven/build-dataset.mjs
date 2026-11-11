@@ -6,7 +6,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { cleanExamples, exampleFromRow, localOrvupiExamples, safetyExamples } from "./mix.mjs";
+import { cleanExamples, dialogueExamples, exampleFromRow, localOrvupiExamples, safetyExamples, sampleToMix } from "./mix.mjs";
 import { EXCLUDED, MIX, SOURCES } from "./sources.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -54,7 +54,7 @@ async function main() {
   const limit = Number(arg("--limit", "20"));
   const questions = await bankQuestions();
   const index = JSON.parse(await readFile(path.join(repo, "web/v2/arqiven/knowledge-index.json"), "utf8"));
-  let examples = localOrvupiExamples(index.chunks.filter((chunk) => chunk.curated)).concat(safetyExamples());
+  let examples = localOrvupiExamples(index.chunks.filter((chunk) => chunk.curated)).concat(safetyExamples(), dialogueExamples());
   if (fetchRemote) {
     for (const source of SOURCES) {
       if (source.dataset === "local") continue;
@@ -64,6 +64,9 @@ async function main() {
     }
   }
   const cleaned = cleanExamples(examples, questions);
+  const mixed = sampleToMix(cleaned.kept, MIX.parts, MIX.target, MIX.seed);
+  const byBlock = {};
+  for (const item of mixed.examples) byBlock[item.block] = (byBlock[item.block] || 0) + 1;
   const outDir = path.join(here, "out");
   await mkdir(outDir, { recursive: true });
   const manifest = {
@@ -72,15 +75,18 @@ async function main() {
     target: MIX.target,
     seed: MIX.seed,
     parts: MIX.parts,
-    kept: cleaned.kept.length,
+    quotas: mixed.quotas,
+    short: mixed.short,
+    byBlock,
+    kept: mixed.examples.length,
     droppedContamination: cleaned.dropped,
     sources: SOURCES.map((source) => ({ id: source.id, url: source.url, license: source.license, note: source.note })),
     excluded: EXCLUDED,
-    note: "Esto no es el dataset de 40–60 mil. Es la mezcla local, o una muestra si se pasó --fetch. El cuaderno de Kaggle/Colab completa el objetivo sin ejecutarse aquí.",
+    note: "Las cuotas son el objetivo de 50 000. Si un bloque no llega (sobre todo aclaraciones locales), short lo dice y no se rellena con otro bloque. El cuaderno de Kaggle completa la descarga pública y entrena; este script no lo lanza.",
   };
   await writeFile(path.join(outDir, "manifest.json"), JSON.stringify(manifest, null, 2));
-  await writeFile(path.join(outDir, "sample.jsonl"), cleaned.kept.map((item) => JSON.stringify({ messages: item.messages, source: item.source, license: item.license, block: item.block })).join("\n") + "\n");
-  console.log(`kept ${cleaned.kept.length} dropped ${cleaned.dropped}`);
+  await writeFile(path.join(outDir, "sample.jsonl"), mixed.examples.map((item) => JSON.stringify({ messages: item.messages, source: item.source, license: item.license, block: item.block })).join("\n") + "\n");
+  console.log(`kept ${mixed.examples.length} dropped ${cleaned.dropped}`);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

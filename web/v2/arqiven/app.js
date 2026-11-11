@@ -7,11 +7,13 @@ import { buildIndex } from "/shared/ia/retrieve.mjs";
 import { excerptAnswer, finishModelAnswer, planTurn } from "/shared/ia/turn.mjs";
 import { citedExcerpt, extractiveFromSources } from "/shared/ia/quality.mjs";
 import { exportPayload, listVotes, openFeedbackDb, saveVote } from "/shared/ia/feedback.mjs";
+import { clipHistory } from "/shared/ia/history.mjs";
 
 const root = document.querySelector(".arq-app");
 if (!root) throw new Error("ARQIVEN");
 
-const lang = root.getAttribute("data-lang") || "es";
+const declared = (document.documentElement.lang || root.getAttribute("data-lang") || "es").trim();
+const lang = declared === "pt" ? "pt-BR" : declared;
 const honest = root.getAttribute("data-honest") || honestResult(createRequest({ source: "central" }), lang).text;
 const uiLang = lang === "en" ? "en" : lang === "pt" || lang === "pt-BR" ? "pt" : lang === "ja" ? "ja" : lang === "ko" ? "ko" : "es";
 const UI = {
@@ -711,10 +713,10 @@ async function send() {
     task: state.tool,
     conversationId: state.conversationId,
     contextRefs: state.contextRefs,
-    messages: state.messages.filter((item) => item.role === "user" || item.role === "assistant").map((item) => ({
+    messages: clipHistory(state.messages.filter((item) => item.role === "user" || item.role === "assistant").map((item) => ({
       role: item.role,
       content: item.modelContent || item.content,
-    })),
+    }))),
   });
   if (field) field.value = "";
   state.attachment = null;

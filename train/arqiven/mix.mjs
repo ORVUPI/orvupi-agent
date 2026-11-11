@@ -125,3 +125,123 @@ export function safetyExamples() {
     text: `${question}\n${answer}`,
   }));
 }
+
+function pair(block, messages) {
+  const text = messages.map((item) => item.content).join("\n");
+  return { source: "dialogue-mit", license: "mit", block, messages, text };
+}
+
+/** Aclaraciones y «no lo sé». El léxico no copia las preguntas del banco. */
+export function dialogueExamples() {
+  return [
+    pair("clarify", [
+      { role: "user", content: "Prepárame el encargo de la tarde sin decidir todavía el formato." },
+      { role: "assistant", content: "¿Qué quieres que prepare: un resumen corto, una lista de tareas o un texto para enviar? Con eso lo dejo cerrado." },
+    ]),
+    pair("clarify", [
+      { role: "user", content: "Make the afternoon workshop note ready, but leave the format open." },
+      { role: "assistant", content: "Which format should I use: a short summary, a task list, or a note you can send? I need that before I write it." },
+    ]),
+    pair("clarify", [
+      { role: "user", content: "Deixa o recado da oficina pronto, mas sem fechar o formato." },
+      { role: "assistant", content: "Qual formato você quer: um resumo curto, uma lista de tarefas ou um texto para enviar? Preciso disso para fechar." },
+    ]),
+    pair("clarify", [
+      { role: "user", content: "午後の作業メモを整えたい。形式はまだ決めていない。" },
+      { role: "assistant", content: "形式は短い要約、作業リスト、送付用の文章のどれにしますか。それが決まれば書けます。" },
+    ]),
+    pair("clarify", [
+      { role: "user", content: "오후 작업 메모를 정리하고 싶은데 형식은 아직 정하지 않았어." },
+      { role: "assistant", content: "짧은 요약, 할 일 목록, 보낼 문장 중 어떤 형식으로 정리할까요? 그걸 알아야 끝낼 수 있습니다." },
+    ]),
+    pair("clarify", [
+      { role: "user", content: "¿Cuál fue el cierre de caja del taller el tres de marzo de dos mil once?" },
+      { role: "assistant", content: "No lo sé. Ese cierre no está en lo que me has contado ni en las fuentes, y no voy a inventar la cifra." },
+    ]),
+    pair("clarify", [
+      { role: "user", content: "What was the workshop cash closing on the third of March twenty eleven?" },
+      { role: "assistant", content: "I don't know. That closing figure is not in what you told me or in the sources, and I will not invent it." },
+    ]),
+    pair("clarify", [
+      { role: "user", content: "Qual foi o fecho de caixa da oficina no três de março de dois mil e onze?" },
+      { role: "assistant", content: "Não sei. Esse valor não está no que você contou nem nas fontes, e não vou inventar o número." },
+    ]),
+    pair("clarify", [
+      { role: "user", content: "二千十一年三月三日の作業場のレジ締めはいくらだった？" },
+      { role: "assistant", content: "わかりません。その金額は会話にも出典にもないので、数字は作りません。" },
+    ]),
+    pair("clarify", [
+      { role: "user", content: "이천십일년 삼월 삼일 작업장 마감 금액이 얼마였지?" },
+      { role: "assistant", content: "모르겠습니다. 그 금액은 대화에도 출처에도 없어서 숫자를 만들지 않겠습니다." },
+    ]),
+    pair("multiturn", [
+      { role: "user", content: "El pedido del taller lleva el código Kite desde esta mañana." },
+      { role: "assistant", content: "Anotado: el pedido del taller lleva el código Kite." },
+      { role: "user", content: "¿Qué código acabamos de dejar para ese pedido?" },
+      { role: "assistant", content: "El código del pedido es Kite, el que acabas de indicar." },
+    ]),
+    pair("multiturn", [
+      { role: "user", content: "The workshop order uses the code Kite from this morning." },
+      { role: "assistant", content: "Noted: the workshop order uses the code Kite." },
+      { role: "user", content: "No, change it: the code is Birch." },
+      { role: "assistant", content: "Corrected. The order code is now Birch, not Kite." },
+      { role: "user", content: "What code applies now?" },
+      { role: "assistant", content: "The order code is Birch. Kite was the earlier one and no longer applies." },
+    ]),
+    pair("reasoning", [
+      { role: "user", content: "Una ficha del taller cuesta dos. Llevas cinco y pagas con quince. ¿Cuánto sobra?" },
+      { role: "assistant", content: "Cinco fichas por dos son diez. Quince menos diez son cinco.\nRespuesta final: 5" },
+    ]),
+  ];
+}
+
+function mulberry32(seed) {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let next = Math.imul(state ^ (state >>> 15), 1 | state);
+    next = (next + Math.imul(next ^ (next >>> 7), 61 | next)) ^ next;
+    return ((next ^ (next >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+export function planCounts(target, parts) {
+  const names = Object.keys(parts);
+  const counts = {};
+  let used = 0;
+  const fractions = [];
+  for (const name of names) {
+    const exact = target * Number(parts[name] || 0);
+    counts[name] = Math.floor(exact);
+    used += counts[name];
+    fractions.push({ name, frac: exact - Math.floor(exact) });
+  }
+  fractions.sort((a, b) => b.frac - a.frac || a.name.localeCompare(b.name));
+  for (let i = 0; i < target - used; i += 1) counts[fractions[i % fractions.length].name] += 1;
+  return counts;
+}
+
+export function sampleToMix(examples, parts, target, seed) {
+  const quotas = planCounts(target, parts);
+  const grouped = {};
+  for (const example of examples) {
+    const block = example.block || "general";
+    if (!grouped[block]) grouped[block] = [];
+    grouped[block].push(example);
+  }
+  const random = mulberry32(seed);
+  const kept = [];
+  const short = {};
+  for (const [block, quota] of Object.entries(quotas)) {
+    const pool = (grouped[block] || []).slice();
+    for (let i = pool.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(random() * (i + 1));
+      const swap = pool[i];
+      pool[i] = pool[j];
+      pool[j] = swap;
+    }
+    kept.push(...pool.slice(0, quota));
+    if (pool.length < quota) short[block] = quota - pool.length;
+  }
+  return { examples: kept, quotas, short };
+}
