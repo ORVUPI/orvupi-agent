@@ -37,8 +37,12 @@ describe("ARQIVEN público", () => {
     assert.match(page, /Pregunta lo que quieras/);
     assert.match(page, /id="tools"/);
     assert.match(page, /data-chip="Crear un texto"/);
-    assert.match(page, /Sin modelo propio/);
+    assert.match(page, /funciona con modelos de terceros/);
     assert.match(page, /href="\/arqiven\/" aria-current="page"/);
+    assert.equal(page.includes("<header class=\"site\""), false);
+    assert.equal(page.includes("or-footer"), false);
+    assert.match(page, /interactive-widget=resizes-content/);
+    assert.match(page, /logo-oficial\.png/);
     assert.equal(page.includes("ORVUPI IA"), false);
     assert.equal(page.includes("Espacio de " + ["Cri", "stian"].join("")), false);
     assert.equal(page.includes("Pensando"), false);

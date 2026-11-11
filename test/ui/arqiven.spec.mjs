@@ -54,9 +54,13 @@ for (const item of pages) {
       if (request.method() === "POST") posts.push(request.url());
     });
     await page.goto(item.path);
-    await expect(page.locator("header.site .brand img")).toHaveAttribute("src", /logotipo-empresarial\.png/);
+    await expect(page.locator("header.site")).toHaveCount(0);
+    await expect(page.locator("footer.or-footer")).toHaveCount(0);
     await expect(page.locator(".arq-app .brand img")).toHaveAttribute("src", /\/assets\/arqiven\/logo-oficial\.png/);
     await expect(page.locator("body")).not.toContainText("STUBX");
+    await expect(page.locator("#new-chat")).toBeVisible();
+    await expect(page.locator("#send")).toBeVisible();
+    await expect(page.locator("#prompt")).toBeVisible();
     await expect(page.locator("#source-note")).toContainText(item.note);
     await expect(page.locator("#model-indicator")).toContainText("SmolLM2-135M-Instruct");
     await expect(page.locator("#model-indicator")).toContainText(/tercero|third party|terceiro|第三者|제3자/);
@@ -65,6 +69,10 @@ for (const item of pages) {
     await page.locator("#send").click();
     const answer = page.locator(".assistant").last();
     await expect(answer).toContainText(item.marker);
+    await expect(answer).not.toContainText("Este aviso se sustituye");
+    await expect(answer).not.toContainText("none · none");
+    await expect(answer).not.toContainText("rules ·");
+    await expect(page.locator("#recent button").first()).toContainText(item.ask.slice(0, 24));
     await expect(answer.locator(".sources a").first()).toHaveAttribute("href", /token/);
 
     await page.locator("#prompt").fill(item.buy);
@@ -73,6 +81,8 @@ for (const item of pages) {
 
     await page.locator(".vote[data-vote='up']").first().click();
     await expect(page.locator(".vote[data-vote='up']").first()).toHaveAttribute("aria-pressed", "true");
+    if (await page.locator("#menu").isVisible()) await page.locator("#menu").click();
+    await page.locator("#open-settings").click();
     const download = page.waitForEvent("download");
     await page.locator("#export-feedback").click();
     const file = await download;
@@ -83,3 +93,102 @@ for (const item of pages) {
     expect(overflow).toBeLessThanOrEqual(1);
   });
 }
+
+test("la bienvenida queda centrada en pantallas anchas", async ({ page }) => {
+  await page.goto("/arqiven/");
+  for (const width of [1280, 1440, 1920, 2560]) {
+    await page.setViewportSize({ width, height: 900 });
+    const title = await page.locator("#welcome h2").boundingBox();
+    const area = await page.locator(".workspace").boundingBox();
+    expect(title && area).toBeTruthy();
+    const delta = Math.abs((title.x + title.width / 2) - (area.x + area.width / 2));
+    expect(delta).toBeLessThan(40);
+    const welcome = await page.locator("#welcome").boundingBox();
+    const note = await page.locator(".composer-area .note").boundingBox();
+    const view = await page.locator(".view").boundingBox();
+    expect(welcome && note && view).toBeTruthy();
+    const mid = (welcome.y + note.y + note.height) / 2;
+    expect(Math.abs(mid - (view.y + view.height / 2))).toBeLessThan(70);
+  }
+  await expect(page.locator("#crumb")).toHaveCount(0);
+  await expect(page.locator(".arq-who")).toHaveCount(0);
+  await expect(page.locator("#new-chat-side")).toContainText(/Nuevo chat|New chat|Novo chat|新しいチャット|새 채팅/);
+});
+
+async function openChatMenu(page) {
+  await page.locator("#recent .recent-more").click();
+  const menu = page.locator(".row-menu");
+  await expect(menu).toBeVisible();
+  return menu;
+}
+
+async function chatMenuItem(page, name) {
+  return (await openChatMenu(page)).getByRole("menuitem", { name });
+}
+
+test("chats, proyectos e imágenes siguen en este navegador", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/arqiven/");
+  await page.locator("#prompt").fill("Nota de prueba del chat");
+  await page.locator("#send").click();
+  await expect(page.locator("#recent").getByRole("button", { name: "Nota de prueba del chat" })).toBeVisible();
+  await (await chatMenuItem(page, "Renombrar")).click();
+  await page.locator("#ask-input").fill("Chat renombrado");
+  await page.locator("#ask-ok").click();
+  await page.locator("#search").fill("renombrado");
+  await expect(page.locator("#recent").getByRole("button", { name: "Chat renombrado" })).toBeVisible();
+  await page.locator("#search").fill("");
+  await page.getByRole("button", { name: "Proyectos" }).click();
+  await page.locator("#project-name").fill("Carpeta alfa");
+  await page.locator("#project-create").click();
+  await page.getByRole("button", { name: "Chats" }).click();
+  await (await chatMenuItem(page, "Mover a proyecto")).click();
+  await page.locator("#ask-input").fill("Carpeta alfa");
+  await page.locator("#ask-ok").click();
+  await page.getByRole("button", { name: "Proyectos" }).click();
+  await page.getByRole("button", { name: "Carpeta alfa" }).click();
+  await expect(page.locator("#recent").getByRole("button", { name: "Chat renombrado" })).toBeVisible();
+  await page.getByRole("button", { name: "Proyectos" }).click();
+  await page.getByRole("button", { name: "Eliminar" }).click();
+  await page.locator("#ask-ok").click();
+  await page.getByRole("button", { name: "Chats" }).click();
+  await expect(page.locator("#recent").getByRole("button", { name: "Chat renombrado" })).toBeVisible();
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
+  await page.locator("#file-input").setInputFiles({ name: "punto.png", mimeType: "image/png", buffer: png });
+  await page.getByRole("button", { name: "Biblioteca" }).click();
+  await expect(page.locator(".library-card")).toHaveCount(1);
+  await page.locator(".library-card").click();
+  await expect(page.locator("#viewer-img")).toBeVisible();
+  await page.locator("#viewer-delete").click();
+  await page.locator("#ask-ok").click();
+  await expect(page.locator(".library-card")).toHaveCount(0);
+  await page.reload();
+  await expect(page.locator("#recent").getByRole("button", { name: "Chat renombrado" })).toBeVisible();
+  await (await chatMenuItem(page, "Eliminar")).click();
+  await page.locator("#ask-ok").click();
+  await expect(page.locator("#recent").getByRole("button", { name: "Chat renombrado" })).toHaveCount(0);
+});
+
+test("la ventana simulada no recorta el cuadro ni abre scroll horizontal", async ({ page }) => {
+  const sizes = [
+    { width: 1440, height: 900 },
+    { width: 1280, height: 800 },
+    { width: 1024, height: 768 },
+    { width: 768, height: 1024 },
+    { width: 390, height: 844 },
+    { width: 844, height: 390 },
+  ];
+  await page.goto("/arqiven/");
+  for (const size of sizes) {
+    await page.setViewportSize(size);
+    const box = await page.locator("#send").boundingBox();
+    expect(box && box.y + box.height <= size.height + 1).toBeTruthy();
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(1);
+  }
+  await page.setViewportSize({ width: 390, height: 500 });
+  await page.locator("#menu").click();
+  await expect(page.locator("#sidebar")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#sidebar")).toBeHidden();
+});

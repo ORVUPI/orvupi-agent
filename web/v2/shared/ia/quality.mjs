@@ -53,6 +53,18 @@ export function needsExtract(answer, sources) {
   return isDegenerate(answer) || lacksSupport(answer, sources);
 }
 
+function claimWords(sentence) {
+  return String(sentence || "").toLowerCase().normalize("NFD").replace(/\p{M}/gu, "").replace(/[^a-z0-9]+/g, " ").split(" ").filter((word) => word.length > 3);
+}
+
+function sameClaim(a, b) {
+  const left = claimWords(a);
+  const right = claimWords(b);
+  if (left.length < 4 || right.length < 4) return a.trim() === b.trim();
+  const [small, big] = left.length <= right.length ? [left, new Set(right)] : [right, new Set(left)];
+  return small.every((word) => big.has(word));
+}
+
 function sentencesOf(text) {
   return String(text || "").replace(/\s+/g, " ").split(/(?<=[.。！？!?])\s+/).map((part) => part.trim()).filter((part) => part.length >= 40 && part.length <= 320);
 }
@@ -92,7 +104,13 @@ function pickSentences(sources, question) {
   const picked = [];
   for (const item of ranked) {
     if (picked.length && item.score < best - 3) break;
-    if (picked.some((prev) => prev.sentence === item.sentence)) continue;
+    if (picked.some((prev) => sameClaim(prev.sentence, item.sentence))) {
+      if (item.sentence.length > picked.find((prev) => sameClaim(prev.sentence, item.sentence)).sentence.length) {
+        const index = picked.findIndex((prev) => sameClaim(prev.sentence, item.sentence));
+        picked[index] = item;
+      }
+      continue;
+    }
     picked.push(item);
     if (picked.length === 2) break;
   }

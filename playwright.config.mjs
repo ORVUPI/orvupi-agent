@@ -47,6 +47,16 @@ export default defineConfig({
       name: "desktop",
       use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } },
     },
+    {
+      name: "arqiven-firefox",
+      testMatch: /arqiven\.spec\.mjs$/,
+      use: { ...devices["Desktop Firefox"], viewport: { width: 1280, height: 800 }, trace: "off" },
+    },
+    {
+      name: "arqiven-webkit",
+      testMatch: /arqiven\.spec\.mjs$/,
+      use: { ...devices["Desktop Safari"], viewport: { width: 1280, height: 800 }, trace: "off" },
+    },
     // Firefox solo para Academy (H2): el resto de la web aún no se prueba en Gecko.
     // La traza con capturas deja los elementos inestables en Firefox y los clics no terminan.
     {

@@ -304,4 +304,78 @@ describe("conocimiento y evaluación de ARQIVEN", () => {
     assert.equal(plan.kernelId, "orvupi/arqiven-lora");
     assert.equal(JSON.stringify(plan).includes("KAGGLE_KEY"), false);
   });
+
+  test("las conversaciones se guardan en IndexedDB sin tocar los votos", async () => {
+    const chats = await import(href("web/v2/shared/ia/chats.mjs")) as {
+      CHAT_DB: string;
+      openChatDb: (name?: string) => Promise<{ close: () => void }>;
+      saveConversation: (db: unknown, input: { id: string; messages: Array<{ role: string; content: string }> }) => Promise<{ title: string }>;
+      listConversations: (db: unknown) => Promise<Array<{ id: string; title: string }>>;
+      readConversation: (db: unknown, id: string) => Promise<{ messages: unknown[] } | null>;
+    };
+    const quality = await import(href("web/v2/shared/ia/quality.mjs")) as {
+      citedExcerpt: (lang: string, sources: Array<{ excerpt: string; origin?: string }>, question: string) => string;
+    };
+    const excerpt = quality.citedExcerpt("es", [
+      { origin: "orvupi", excerpt: "El único contrato oficial de ORVUPI está en Solana y es Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU." },
+      { origin: "orvupi", excerpt: "El único contrato oficial está en Solana." },
+    ], "contrato oficial");
+    assert.equal(excerpt.includes("El único contrato oficial está en Solana."), false);
+    assert.equal(chats.CHAT_DB, "orvupi-arqiven-chats");
+    const db = await chats.openChatDb(`arqiven-chats-${crypto.randomUUID()}`);
+    await chats.saveConversation(db, { id: "c-1", messages: [{ role: "user", content: "Hola desde esta pestaña" }, { role: "assistant", content: "Respuesta" }] });
+    const listed = await chats.listConversations(db);
+    assert.equal(listed[0]?.title, "Hola desde esta pestaña");
+    const again = await chats.readConversation(db, "c-1");
+    assert.equal(again?.messages.length, 2);
+    db.close();
+  });
+
+  test("la versión 2 conserva los chats y devuelve los de un proyecto al historial", async () => {
+    const chats = await import(href("web/v2/shared/ia/chats.mjs")) as {
+      openChatDb: (name?: string) => Promise<{ close: () => void; transaction: (name: string, mode: string) => { objectStore: (name: string) => { put: (value: unknown) => void }; oncomplete: (() => void) | null; onerror: (() => void) | null } }>;
+      listConversations: (db: unknown) => Promise<Array<{ id: string; title: string; projectId: string }>>;
+      saveConversation: (db: unknown, input: { id: string; title?: string; projectId?: string; messages: Array<{ role: string; content: string }> }) => Promise<unknown>;
+      saveProject: (db: unknown, input: { id: string; name: string }) => Promise<unknown>;
+      deleteProject: (db: unknown, id: string) => Promise<number>;
+      saveImage: (db: unknown, input: { id: string; bytes: Blob; chatId?: string }) => Promise<unknown>;
+      listImages: (db: unknown) => Promise<Array<{ id: string }>>;
+      deleteImage: (db: unknown, id: string) => Promise<unknown>;
+      dateGroup: (iso: string, now?: Date) => string;
+    };
+    const name = `arqiven-mig-${crypto.randomUUID()}`;
+    await new Promise<void>((resolve, reject) => {
+      const request = (globalThis as unknown as { indexedDB: { open: (base: string, version: number) => { result: { createObjectStore: (store: string, options: { keyPath: string }) => void; close: () => void; transaction: (store: string, mode: string) => { objectStore: (store: string) => { put: (value: unknown) => void }; oncomplete: (() => void) | null; onerror: (() => void) | null; error: unknown } }; onupgradeneeded: (() => void) | null; onsuccess: (() => void) | null; onerror: (() => void) | null; error: unknown } } }).indexedDB.open(name, 1);
+      request.onupgradeneeded = () => {
+        request.result.createObjectStore("conversations", { keyPath: "id" });
+      };
+      request.onsuccess = () => {
+        const db = request.result;
+        const tx = db.transaction("conversations", "readwrite");
+        tx.objectStore("conversations").put({ id: "viejo-chat", title: "Chat guardado", updated: "2026-11-10T12:00:00.000Z", messages: [{ id: "m", role: "user", content: "Hola antiguo" }] });
+        tx.oncomplete = () => { db.close(); resolve(); };
+        tx.onerror = () => reject(tx.error);
+      };
+      request.onerror = () => reject(request.error);
+    });
+    const db = await chats.openChatDb(name);
+    const kept = await chats.listConversations(db);
+    assert.equal(kept[0]?.title, "Chat guardado");
+    assert.equal(kept[0]?.projectId, "");
+    await chats.saveProject(db, { id: "proy-1", name: "Carpeta" });
+    await chats.saveConversation(db, { id: "viejo-chat", projectId: "proy-1", messages: [{ role: "user", content: "Hola antiguo" }] });
+    await chats.deleteProject(db, "proy-1");
+    const back = await chats.listConversations(db);
+    assert.equal(back[0]?.projectId, "");
+    await chats.saveImage(db, { id: "img-1", bytes: new Blob(["png"], { type: "image/png" }), chatId: "viejo-chat" });
+    assert.equal((await chats.listImages(db)).length, 1);
+    await chats.deleteImage(db, "img-1");
+    assert.equal((await chats.listImages(db)).length, 0);
+    const now = new Date("2026-11-11T15:00:00");
+    assert.equal(chats.dateGroup("2026-11-11T10:00:00", now), "today");
+    assert.equal(chats.dateGroup("2026-11-10T10:00:00", now), "yesterday");
+    assert.equal(chats.dateGroup("2026-11-06T10:00:00", now), "week");
+    assert.equal(chats.dateGroup("2026-10-01T10:00:00", now), "older");
+    db.close();
+  });
 });
