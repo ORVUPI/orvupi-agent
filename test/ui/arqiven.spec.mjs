@@ -126,6 +126,39 @@ async function chatMenuItem(page, name) {
   return (await openChatMenu(page)).getByRole("menuitem", { name });
 }
 
+test("el menú del chat desaparece al cerrarlo", async ({ page }) => {
+  await page.goto("/arqiven/");
+  await page.locator("#prompt").fill("Nota para cerrar el menú");
+  await page.locator("#send").click();
+  const drawer = page.locator("#menu");
+  if (await drawer.isVisible()) await drawer.click();
+  await expect(page.locator("#recent").getByRole("button", { name: "Nota para cerrar el menú" })).toBeVisible();
+  const menu = page.locator(".row-menu");
+  const more = page.locator("#recent .recent-more");
+
+  await test.step("escape", async () => {
+    await more.click();
+    await expect(menu).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(menu).toBeHidden();
+  });
+
+  await test.step("fuera", async () => {
+    await more.click();
+    await expect(menu).toBeVisible();
+    await page.locator("#search").click();
+    await expect(menu).toBeHidden();
+  });
+
+  await test.step("acción", async () => {
+    await more.click();
+    await expect(menu).toBeVisible();
+    await menu.getByRole("menuitem", { name: "Renombrar" }).click();
+    await page.locator("#ask-ok").click();
+    await expect(menu).toBeHidden();
+  });
+});
+
 test("chats, proyectos e imágenes siguen en este navegador", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/arqiven/");

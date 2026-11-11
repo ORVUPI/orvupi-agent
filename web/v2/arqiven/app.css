@@ -222,6 +222,7 @@ body > .langsuggest { display: none !important; }
 .recent-open, .project-row > button, .dialog-actions button, .dialog-actions a { min-height: 44px; }
 .recent-open { flex: 1; border: 0; background: transparent; text-align: left; border-radius: .55rem; padding: .45rem .6rem; }
 .row-menu { position: fixed; z-index: 40; display: grid; width: 13rem; background: #fff; border: 1px solid var(--line); border-radius: .7rem; padding: .3rem; box-shadow: 0 8px 24px #1020331a; }
+.row-menu[hidden] { display: none !important; }
 .row-menu button { min-height: 44px; overflow: visible; text-overflow: unset; white-space: normal; }
 .library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr)); gap: 1rem; margin-top: .8rem; }
 .library-card { display: flex; flex-direction: column; align-items: stretch; gap: .4rem; border: 0; background: transparent; padding: 0; min-height: 44px; text-align: left; cursor: pointer; }
