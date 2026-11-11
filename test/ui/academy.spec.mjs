@@ -16,6 +16,8 @@ function watchErrors(page) {
   page.on("console", (m) => {
     if (m.type() !== "error" || /favicon|Failed to load resource.*(404|net::ERR)/i.test(m.text())) return;
     if (webkit && WEBKIT_SELECT.test(m.text())) return;
+    // Firefox cancela la fuente al cambiar de página (NS_BINDING_ABORTED). El archivo sí se sirve.
+    if (/downloadable font: download failed/.test(m.text()) && /2152398850/.test(m.text())) return;
     errors.push(`console: ${m.text()}`);
   });
   return errors;
