@@ -26,13 +26,13 @@ export function langOf(url) {
 
 export function htmlToText(html) {
   return decode(String(html || "")
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, " ")
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi, " ")
-    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
-    .replace(/<svg[\s\S]*?<\/svg>/gi, " ")
-    .replace(/<header[\s\S]*?<\/header>/gi, " ")
-    .replace(/<footer[\s\S]*?<\/footer>/gi, " ")
-    .replace(/<nav[\s\S]*?<\/nav>/gi, " ")
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script[^>]*>/gi, " ")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style[^>]*>/gi, " ")
+    .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript[^>]*>/gi, " ")
+    .replace(/<svg\b[^>]*>[\s\S]*?<\/svg[^>]*>/gi, " ")
+    .replace(/<header\b[^>]*>[\s\S]*?<\/header[^>]*>/gi, " ")
+    .replace(/<footer\b[^>]*>[\s\S]*?<\/footer[^>]*>/gi, " ")
+    .replace(/<nav\b[^>]*>[\s\S]*?<\/nav[^>]*>/gi, " ")
     .replace(/<[^>]+>/g, " "));
 }
 
