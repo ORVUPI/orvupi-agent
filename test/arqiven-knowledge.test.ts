@@ -304,4 +304,22 @@ describe("conocimiento y evaluación de ARQIVEN", () => {
     assert.equal(plan.kernelId, "orvupi/arqiven-lora");
     assert.equal(JSON.stringify(plan).includes("KAGGLE_KEY"), false);
   });
+
+  test("las conversaciones se guardan en IndexedDB sin tocar los votos", async () => {
+    const chats = await import(href("web/v2/shared/ia/chats.mjs")) as {
+      CHAT_DB: string;
+      openChatDb: (name?: string) => Promise<{ close: () => void }>;
+      saveConversation: (db: unknown, input: { id: string; messages: Array<{ role: string; content: string }> }) => Promise<{ title: string }>;
+      listConversations: (db: unknown) => Promise<Array<{ id: string; title: string }>>;
+      readConversation: (db: unknown, id: string) => Promise<{ messages: unknown[] } | null>;
+    };
+    assert.equal(chats.CHAT_DB, "orvupi-arqiven-chats");
+    const db = await chats.openChatDb(`arqiven-chats-${crypto.randomUUID()}`);
+    await chats.saveConversation(db, { id: "c-1", messages: [{ role: "user", content: "Hola desde esta pestaña" }, { role: "assistant", content: "Respuesta" }] });
+    const listed = await chats.listConversations(db);
+    assert.equal(listed[0]?.title, "Hola desde esta pestaña");
+    const again = await chats.readConversation(db, "c-1");
+    assert.equal(again?.messages.length, 2);
+    db.close();
+  });
 });

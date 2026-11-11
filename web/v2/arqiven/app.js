@@ -8,13 +8,16 @@ import { excerptAnswer, finishModelAnswer, planTurn } from "/shared/ia/turn.mjs"
 import { citedExcerpt, extractiveFromSources } from "/shared/ia/quality.mjs";
 import { exportPayload, listVotes, openFeedbackDb, saveVote } from "/shared/ia/feedback.mjs";
 import { clipHistory } from "/shared/ia/history.mjs";
+import { listConversations, openChatDb, readConversation, saveConversation } from "/shared/ia/chats.mjs";
 
 const root = document.querySelector(".arq-app");
 if (!root) throw new Error("ARQIVEN");
 
 const declared = (document.documentElement.lang || root.getAttribute("data-lang") || "es").trim();
 const lang = declared === "pt" ? "pt-BR" : declared;
-const honest = root.getAttribute("data-honest") || honestResult(createRequest({ source: "central" }), lang).text;
+const honest = (document.documentElement.lang || "es") === "es"
+  ? (root.getAttribute("data-honest") || honestResult(createRequest({ source: "central" }), "es").text)
+  : honestResult(createRequest({ source: "central" }), lang).text;
 const uiLang = lang === "en" ? "en" : lang === "pt" || lang === "pt-BR" ? "pt" : lang === "ja" ? "ja" : lang === "ko" ? "ko" : "es";
 const UI = {
   es: {
@@ -184,6 +187,14 @@ const UI = {
   },
 };
 const ui = UI[uiLang];
+const CHROME = {
+  es: { newChat: "Nueva conversación", settings: "Ajustes", conversations: "Conversaciones", recent: "Recientes", search: "Buscar", welcome: "¿En qué puedo ayudarte?", note: "Sin modelo propio. ARQIVEN es la IA de ORVUPI. Lo escrito se queda en este navegador hasta que pulses Guardar en Work.", generating: "Generando", waiting: "En espera", done: "Listo", failed: "Error", copy: "Copiar", copied: "Copiado en este navegador.", copyFail: "No se pudo copiar.", againReply: "Volver a preguntar", attach: "Adjuntar" },
+  en: { newChat: "New conversation", settings: "Settings", conversations: "Conversations", recent: "Recent", search: "Search", welcome: "How can I help?", note: "No model of its own. ARQIVEN is ORVUPI's AI. What you write stays in this browser until you press Save to Work.", generating: "Generating", waiting: "Waiting", done: "Done", failed: "Error", copy: "Copy", copied: "Copied on this device.", copyFail: "Could not copy.", againReply: "Ask again", attach: "Attach" },
+  pt: { newChat: "Nova conversa", settings: "Ajustes", conversations: "Conversas", recent: "Recentes", search: "Buscar", welcome: "Como posso ajudar?", note: "Sem modelo próprio. ARQIVEN é a IA da ORVUPI. O que você escreve fica neste navegador até tocar em Guardar no Work.", generating: "Gerando", waiting: "Em espera", done: "Pronto", failed: "Erro", copy: "Copiar", copied: "Copiado neste navegador.", copyFail: "Não foi possível copiar.", againReply: "Perguntar de novo", attach: "Anexar" },
+  ja: { newChat: "新しい会話", settings: "設定", conversations: "会話", recent: "最近", search: "検索", welcome: "何をお手伝いしましょうか。", note: "独自モデルはありません。ARQIVEN は ORVUPI の AI です。入力した内容は、Work に保存するまでこのブラウザに残ります。", generating: "生成中", waiting: "待機", done: "完了", failed: "エラー", copy: "コピー", copied: "このブラウザにコピーしました。", copyFail: "コピーできませんでした。", againReply: "もう一度聞く", attach: "添付" },
+  ko: { newChat: "새 대화", settings: "설정", conversations: "대화", recent: "최근", search: "검색", welcome: "무엇을 도와드릴까요?", note: "자체 모델은 없습니다. ARQIVEN은 ORVUPI의 AI입니다. 쓴 내용은 Work에 저장하기 전까지 이 브라우저에 남습니다.", generating: "생성 중", waiting: "대기", done: "완료", failed: "오류", copy: "복사", copied: "이 브라우저에 복사했습니다.", copyFail: "복사하지 못했습니다.", againReply: "다시 묻기", attach: "첨부" },
+};
+const chrome = CHROME[uiLang];
 const copy = {
   voice: root.getAttribute("data-voice") || "",
   fileRead: root.getAttribute("data-file-read") || "",
@@ -201,7 +212,9 @@ const state = {
   messages: [],
   attachment: null,
   localText: "",
-  conversationId: "tab",
+  conversationId: "",
+  conversations: [],
+  chatDb: null,
   contextRefs: [],
   prepareFailures: 0,
   snap: { phase: "idle", ready: false, modelId: "", modelVersion: "", progress: { loaded: 0, total: 0, file: "" }, error: "" },
@@ -224,7 +237,6 @@ const search = document.getElementById("search");
 const status = document.getElementById("status");
 const selected = document.getElementById("selected-tool");
 const fileInput = document.getElementById("file-input");
-const panel = document.getElementById("panel");
 const save = document.getElementById("save-work");
 const pill = document.querySelector(".workspace .pill");
 const engine = arqivenEngine();
@@ -279,7 +291,8 @@ who.className = "arq-who";
 who.textContent = ui.who || "";
 if (!ui.who) who.hidden = true;
 document.getElementById("welcome")?.append(who);
-document.querySelector(".chips")?.insertAdjacentElement("afterend", engineBar);
+document.getElementById("engine-slot")?.append(engineBar);
+applyChrome();
 
 const editorToggle = document.createElement("button");
 editorToggle.type = "button";
@@ -321,6 +334,162 @@ editor.append(editorHead, editorNote, paper, editorFoot);
 app?.append(editor);
 
 const CHIP_TASK = ["generate", "analyze", "explain", null];
+
+function applyChrome() {
+  const welcomeTitle = document.querySelector("#welcome h2");
+  if (welcomeTitle) welcomeTitle.textContent = chrome.welcome;
+  const note = document.querySelector(".composer-area .note");
+  if (note) note.textContent = chrome.note;
+  const fresh = document.querySelector("#new-chat-side .hide-collapsed");
+  if (fresh) fresh.textContent = chrome.newChat;
+  document.getElementById("new-chat")?.setAttribute("aria-label", chrome.newChat);
+  const settingsButton = document.getElementById("open-settings");
+  const settingsLabel = settingsButton?.querySelector("span");
+  if (settingsLabel) settingsLabel.textContent = chrome.settings;
+  settingsButton?.setAttribute("aria-label", chrome.settings);
+  const navChat = document.querySelector("[data-nav='chat'] .hide-collapsed");
+  if (navChat) navChat.textContent = chrome.conversations;
+  const hist = document.getElementById("hist-label");
+  if (hist) hist.textContent = chrome.recent;
+  const crumb = document.getElementById("crumb");
+  if (crumb) crumb.textContent = chrome.conversations;
+  if (search instanceof HTMLInputElement) search.placeholder = chrome.search;
+  const attachLabel = document.querySelector("#attach span");
+  if (attachLabel) attachLabel.textContent = chrome.attach;
+  const settingsTitle = document.getElementById("settings-title");
+  if (settingsTitle) settingsTitle.textContent = chrome.settings;
+}
+
+function newId() {
+  return globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : `c-${Date.now()}`;
+}
+
+function hashId() {
+  const match = location.hash.match(/^#c\/([A-Za-z0-9-]{8,80})$/);
+  return match ? match[1] : "";
+}
+
+function setHash(id) {
+  const next = `#c/${id}`;
+  if (location.hash !== next) history.replaceState(null, "", `${location.pathname}${location.search}${next}`);
+}
+
+function slimMessage(item) {
+  return {
+    id: item.id,
+    role: item.role,
+    content: item.content,
+    mode: item.mode,
+    provider: item.provider,
+    modelId: item.modelId,
+    modelVersion: item.modelVersion,
+    sources: item.sources,
+  };
+}
+
+let saveTimer = 0;
+function remember() {
+  if (!state.messages.length || !state.chatDb) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { void persist(); }, 180);
+}
+
+async function persist() {
+  if (!state.chatDb || !state.messages.some((item) => item.content)) return;
+  const title = state.messages.find((item) => item.role === "user")?.content.replace(/\s+/g, " ").trim().slice(0, 80) || chrome.newChat;
+  await saveConversation(state.chatDb, { id: state.conversationId, title, messages: state.messages.map(slimMessage) });
+  state.conversations = await listConversations(state.chatDb);
+  paintList();
+  const heading = document.getElementById("thread-title");
+  if (heading) heading.textContent = title;
+  document.title = `${title} · ARQIVEN`;
+}
+
+async function openConversation(id) {
+  if (!state.chatDb || !id) return;
+  const row = await readConversation(state.chatDb, id);
+  state.conversationId = id;
+  state.messages = row?.messages ? row.messages.map((item) => ({ ...item })) : [];
+  state.view = "chat";
+  state.queue = [];
+  setHash(id);
+  paint();
+  openMenu(false);
+}
+
+function fitViewport() {
+  const viewport = window.visualViewport;
+  const height = viewport?.height || window.innerHeight;
+  const offset = viewport?.offsetTop || 0;
+  document.documentElement.style.setProperty("--vv-height", `${Math.round(height)}px`);
+  document.documentElement.style.setProperty("--vv-offset", `${Math.round(offset)}px`);
+}
+
+function addText(parent, value) {
+  const paragraph = document.createElement("p");
+  paragraph.textContent = value;
+  parent.append(paragraph);
+}
+
+function addCode(parent, value) {
+  const pre = document.createElement("pre");
+  const code = document.createElement("code");
+  code.textContent = value.replace(/\n$/, "");
+  pre.append(code);
+  parent.append(pre);
+}
+
+function addTable(parent, rows) {
+  const wrap = document.createElement("div");
+  wrap.className = "table-wrap";
+  const table = document.createElement("table");
+  rows.forEach((row, index) => {
+    const cells = row.split("|").slice(1, -1).map((cell) => cell.trim());
+    if (!cells.length || cells.every((cell) => /^:?-+:?$/.test(cell))) return;
+    const line = document.createElement("tr");
+    for (const cell of cells) {
+      const node = document.createElement(index === 0 ? "th" : "td");
+      node.textContent = cell;
+      line.append(node);
+    }
+    table.append(line);
+  });
+  wrap.append(table);
+  parent.append(wrap);
+}
+
+function renderRich(parent, text) {
+  const chunks = String(text || "").split(/```/);
+  chunks.forEach((chunk, index) => {
+    if (index % 2 === 1) {
+      addCode(parent, chunk.replace(/^[^\n]*\n/, ""));
+      return;
+    }
+    const lines = chunk.split("\n");
+    let buffer = [];
+    let table = [];
+    const flushText = () => {
+      const value = buffer.join("\n").trim();
+      buffer = [];
+      if (value) addText(parent, value);
+    };
+    const flushTable = () => {
+      if (table.length) addTable(parent, table);
+      table = [];
+    };
+    for (const line of lines) {
+      if (line.trim().startsWith("|") && line.trim().endsWith("|")) {
+        flushText();
+        table.push(line.trim());
+      } else {
+        flushTable();
+        buffer.push(line);
+      }
+    }
+    flushTable();
+    flushText();
+  });
+}
 
 function sourceList(sources) {
   const list = document.createElement("ul");
@@ -471,25 +640,32 @@ function paintSoon() {
   });
 }
 
-function paint() {
+function paintList() {
   const query = (search instanceof HTMLInputElement ? search.value : "").trim().toLowerCase();
-  const list = state.messages.filter((item) => item.role === "user" && (!query || item.content.toLowerCase().includes(query)));
-  if (recent) {
-    recent.replaceChildren();
-    if (!list.length) {
-      const note = document.createElement("p");
-      note.textContent = copy.empty;
-      recent.append(note);
-    } else {
-      for (const item of list) {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.textContent = item.content.slice(0, 80);
-        button.addEventListener("click", () => document.getElementById(item.id)?.scrollIntoView({ block: "nearest" }));
-        recent.append(button);
-      }
-    }
+  const list = state.conversations.filter((item) => !query || item.title.toLowerCase().includes(query));
+  if (!recent) return;
+  recent.replaceChildren();
+  if (!list.length) {
+    const note = document.createElement("p");
+    note.textContent = copy.empty;
+    recent.append(note);
+    return;
   }
+  for (const item of list) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = item.title || chrome.newChat;
+    if (item.id === state.conversationId) button.setAttribute("aria-current", "true");
+    button.addEventListener("click", () => { void openConversation(item.id); });
+    recent.append(button);
+  }
+}
+
+function paint() {
+  paintList();
+  const running = state.queue.some((item) => item.running) || state.messages.some((item) => item.pending);
+  const failed = state.messages.some((item) => item.failed);
+  root.dataset.state = running ? "generating" : failed ? "error" : state.messages.length ? "done" : "ready";
   if (messages) {
     messages.replaceChildren();
     for (const item of state.messages) {
@@ -497,38 +673,86 @@ function paint() {
       node.id = item.id;
       node.className = item.role === "user" ? "user" : "assistant";
       if (item.role === "assistant") {
+        const avatar = document.createElement("span");
+        avatar.className = "avatar crop crop-icon";
+        avatar.setAttribute("aria-hidden", "true");
+        const mark = document.createElement("img");
+        mark.src = "/assets/arqiven/logo-oficial.png";
+        mark.alt = "";
+        avatar.append(mark);
+        const column = document.createElement("div");
+        column.className = "body";
         const meta = document.createElement("p");
         meta.className = "meta";
+        const who = document.createElement("span");
+        who.className = "who";
+        who.textContent = "ARQIVEN";
         const badge = document.createElement("span");
         badge.className = "badge";
-        badge.textContent = item.mode === "extractive" ? ui.excerptBadge : (item.pending ? `${ui.queued.split("…")[0]}… · ${ui.third} · ${defaultModel().id}` : badgeOf(item));
-        meta.append(badge);
-        node.append(meta);
-      }
-      const body = document.createElement("p");
-      body.textContent = item.content;
-      node.append(body);
-      if (item.role === "assistant" && item.sources?.length) node.append(sourceList(item.sources));
-      if (item.role === "assistant" && !item.pending && item.content) {
-        const actions = document.createElement("div");
-        actions.className = "answer-actions";
-        const edit = document.createElement("button");
-        edit.type = "button";
-        edit.textContent = ui.edit;
-        edit.addEventListener("click", () => openEditorWith(item.content, true));
-        const up = voteButton(item, "up");
-        const down = voteButton(item, "down");
-        actions.append(edit, up, down);
-        node.append(actions);
+        if (item.pending) badge.classList.add("is-wait");
+        if (item.running) badge.classList.add("is-run");
+        if (item.failed) badge.classList.add("is-error");
+        badge.textContent = item.mode === "extractive"
+          ? ui.excerptBadge
+          : (item.pending ? chrome.waiting : item.running ? chrome.generating : item.failed ? chrome.failed : badgeOf(item));
+        meta.append(who, badge);
+        column.append(meta);
+        renderRich(column, item.content);
+        if (item.sources?.length) column.append(sourceList(item.sources));
+        if (!item.pending && item.content) {
+          const actions = document.createElement("div");
+          actions.className = "answer-actions";
+          const edit = document.createElement("button");
+          edit.type = "button";
+          edit.textContent = ui.edit;
+          edit.addEventListener("click", () => openEditorWith(item.content, true));
+          const copyButton = document.createElement("button");
+          copyButton.type = "button";
+          copyButton.textContent = chrome.copy;
+          copyButton.addEventListener("click", () => {
+            const done = navigator.clipboard?.writeText(item.content);
+            if (!done) { setStatus(chrome.copyFail); return; }
+            void done.then(() => setStatus(chrome.copied)).catch(() => setStatus(chrome.copyFail));
+          });
+          const up = voteButton(item, "up");
+          const down = voteButton(item, "down");
+          actions.append(copyButton, edit, up, down);
+          if (!running) {
+            const again = document.createElement("button");
+            again.type = "button";
+            again.textContent = chrome.againReply;
+            again.addEventListener("click", () => {
+              const index = state.messages.indexOf(item);
+              const prior = [...state.messages.slice(0, index)].reverse().find((entry) => entry.role === "user");
+              if (prior && prompt instanceof HTMLTextAreaElement) {
+                prompt.value = prior.content;
+                void send();
+              }
+            });
+            actions.append(again);
+          }
+          column.append(actions);
+        }
+        node.append(avatar, column);
+      } else {
+        node.textContent = item.content;
       }
       messages.append(node);
     }
+    messages.scrollTop = messages.scrollHeight;
   }
   const threaded = state.messages.length > 0 && state.view === "chat";
   welcome?.toggleAttribute("hidden", state.view !== "chat" || state.messages.length > 0);
   view?.classList.toggle("is-thread", threaded);
-  if (panel) panel.hidden = state.view === "chat";
+  if (view) view.hidden = state.view === "settings";
+  const settings = document.getElementById("settings");
+  if (settings) settings.hidden = state.view !== "settings";
   if (save) save.hidden = state.messages.length === 0 && !state.localText.trim();
+  const heading = document.getElementById("thread-title");
+  const title = state.messages.find((item) => item.role === "user")?.content.replace(/\s+/g, " ").trim().slice(0, 80);
+  if (heading && state.view === "chat") heading.textContent = title || "ARQIVEN";
+  if (title) document.title = `${title} · ARQIVEN`;
+  remember();
   document.querySelectorAll("[data-nav]").forEach((button) => {
     const on = button.getAttribute("data-nav") === state.view;
     if (on) button.setAttribute("aria-current", "page");
@@ -538,13 +762,7 @@ function paint() {
 }
 
 function showView(name) {
-  state.view = name;
-  if (panel) {
-    const title = panel.querySelector("h2");
-    const body = panel.querySelector("p");
-    if (title) title.textContent = name === "docs" ? (root.getAttribute("data-docs-title") || "") : (root.getAttribute("data-projects-title") || "");
-    if (body) body.textContent = name === "docs" ? copy.docs : copy.projects;
-  }
+  state.view = name === "settings" ? "settings" : "chat";
   paint();
   openMenu(false);
 }
@@ -646,6 +864,7 @@ async function streamInto(item, request) {
       }
     } else {
       item.content = `${ui.error} ${message}`.trim();
+      item.failed = true;
       item.mode = "rules";
       item.provider = "none";
       item.modelId = "none";
@@ -770,18 +989,21 @@ engine.subscribe((snap) => {
   if (snap.phase === "ready") void flushQueue();
 });
 
-document.getElementById("new-chat")?.addEventListener("click", () => {
+document.querySelectorAll("#new-chat, #new-chat-side").forEach((button) => button.addEventListener("click", async () => {
+  await persist();
   state.messages = [];
   state.attachment = null;
   state.localText = "";
   state.queue = [];
   state.view = "chat";
-  state.conversationId = "tab";
+  state.conversationId = newId();
+  setHash(state.conversationId);
   if (prompt instanceof HTMLTextAreaElement) prompt.value = "";
   editorText.value = "";
   setStatus("");
+  document.title = "ARQIVEN";
   paint();
-});
+}));
 
 document.getElementById("collapse")?.addEventListener("click", () => {
   const collapsed = app?.classList.toggle("is-collapsed");
@@ -934,6 +1156,29 @@ save?.addEventListener("click", () => {
 
 search?.addEventListener("input", () => paint());
 if (selected) selected.textContent = `${ui.task}: ${selected.textContent || ""}`;
+fitViewport();
+window.visualViewport?.addEventListener("resize", fitViewport);
+window.visualViewport?.addEventListener("scroll", fitViewport);
+window.addEventListener("resize", fitViewport);
+window.addEventListener("hashchange", () => {
+  const id = hashId();
+  if (id && id !== state.conversationId) void openConversation(id);
+});
+
+async function bootChats() {
+  state.conversationId = hashId() || newId();
+  setHash(state.conversationId);
+  try {
+    state.chatDb = await openChatDb();
+    state.conversations = await listConversations(state.chatDb);
+    const saved = await readConversation(state.chatDb, state.conversationId);
+    if (saved?.messages?.length) state.messages = saved.messages.map((item) => ({ ...item }));
+  } catch {
+    state.chatDb = null;
+  }
+  paint();
+}
+
 async function bootModel() {
   try {
     const adapter = navigator.gpu?.requestAdapter
@@ -959,5 +1204,4 @@ async function bootModel() {
   modelPick.value = chosen.id;
   startPrepare(chosen.id);
 }
-void bootModel();
-paint();
+void bootChats().then(() => bootModel());

@@ -54,9 +54,13 @@ for (const item of pages) {
       if (request.method() === "POST") posts.push(request.url());
     });
     await page.goto(item.path);
-    await expect(page.locator("header.site .brand img")).toHaveAttribute("src", /logotipo-empresarial\.png/);
+    await expect(page.locator("header.site")).toHaveCount(0);
+    await expect(page.locator("footer.or-footer")).toHaveCount(0);
     await expect(page.locator(".arq-app .brand img")).toHaveAttribute("src", /\/assets\/arqiven\/logo-oficial\.png/);
     await expect(page.locator("body")).not.toContainText("STUBX");
+    await expect(page.locator("#new-chat")).toBeVisible();
+    await expect(page.locator("#send")).toBeVisible();
+    await expect(page.locator("#prompt")).toBeVisible();
     await expect(page.locator("#source-note")).toContainText(item.note);
     await expect(page.locator("#model-indicator")).toContainText("SmolLM2-135M-Instruct");
     await expect(page.locator("#model-indicator")).toContainText(/tercero|third party|terceiro|第三者|제3자/);
@@ -73,6 +77,8 @@ for (const item of pages) {
 
     await page.locator(".vote[data-vote='up']").first().click();
     await expect(page.locator(".vote[data-vote='up']").first()).toHaveAttribute("aria-pressed", "true");
+    if (await page.locator("#menu").isVisible()) await page.locator("#menu").click();
+    await page.locator("#open-settings").click();
     const download = page.waitForEvent("download");
     await page.locator("#export-feedback").click();
     const file = await download;
@@ -83,3 +89,27 @@ for (const item of pages) {
     expect(overflow).toBeLessThanOrEqual(1);
   });
 }
+
+test("la ventana simulada no recorta el cuadro ni abre scroll horizontal", async ({ page }) => {
+  const sizes = [
+    { width: 1440, height: 900 },
+    { width: 1280, height: 800 },
+    { width: 1024, height: 768 },
+    { width: 768, height: 1024 },
+    { width: 390, height: 844 },
+    { width: 844, height: 390 },
+  ];
+  await page.goto("/arqiven/");
+  for (const size of sizes) {
+    await page.setViewportSize(size);
+    const box = await page.locator("#send").boundingBox();
+    expect(box && box.y + box.height <= size.height + 1).toBeTruthy();
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(1);
+  }
+  await page.setViewportSize({ width: 390, height: 500 });
+  await page.locator("#menu").click();
+  await expect(page.locator("#sidebar")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#sidebar")).toBeHidden();
+});
