@@ -4,6 +4,7 @@ import { ONNX_WASM, ORT_WASM_MJS, TRANSFORMERS_ESM, modelById } from "/shared/ia
 import { profileById } from "/shared/ia/profile.mjs";
 import { isDegenerate, trimRepetition } from "/shared/ia/quality.mjs";
 import { clipHistory } from "/shared/ia/history.mjs";
+import { formatNumber, resolveCalculation, verifiedAnswer } from "/shared/ia/calc.mjs";
 
 const SYSTEM_LEGACY = [
   "Eres un modelo de terceros dentro del navegador. ARQIVEN es la IA de ORVUPI y no entrenó estos pesos. No digas que eres Arqiven-N.",
@@ -40,6 +41,7 @@ const TASK = {
 };
 
 let toolkit = null;
+let wasmThreadCount = 1;
 let generator = null;
 let loadedKey = "";
 let loadedModel = null;
@@ -79,7 +81,10 @@ async function lib() {
   const wasm = env.backends?.onnx?.wasm;
   if (wasm) {
     wasm.wasmPaths = ONNX_WASM;
-    wasm.numThreads = 1;
+    const cores = Number(navigator.hardwareConcurrency) || 1;
+    const isolated = typeof crossOriginIsolated === "boolean" && crossOriginIsolated;
+    wasmThreadCount = isolated ? Math.max(1, Math.min(4, cores)) : 1;
+    wasm.numThreads = wasmThreadCount;
   }
   stopper = new InterruptableStoppingCriteria();
   return toolkit;
@@ -161,15 +166,18 @@ async function handle(msg) {
         pinFirst: profile.pinFirst,
       });
       const promptText = profile.id === "v1" ? SYSTEM_V1 : SYSTEM_LEGACY;
-      const messages = [{ role: "system", content: `${promptText} Responde en ${language}. ${hint}${sourceNote}` }, ...history];
+      const calc = resolveCalculation(history);
+      const verified = calc ? `\n\nCálculo verificado. No lo recalcules. ${calc.display}. La respuesta numérica es ${formatNumber(calc.value)}. Responde en una frase y no des otro número.` : "";
+      const messages = [{ role: "system", content: `${promptText} Responde en ${language}. ${hint}${sourceNote}${verified}` }, ...history];
       let acc = "";
       let broken = false;
+      const shown = calc ? formatNumber(calc.value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : "";
       const streamer = new TextStreamer(generator.tokenizer, {
         skip_prompt: true,
         skip_special_tokens: true,
         callback_function: (text) => {
           acc += text;
-          if (!broken && looksBroken(acc)) {
+          if (!broken && (looksBroken(acc) || (shown && new RegExp(`(?:^|\\D)${shown}(?:\\D|$)`).test(acc) && /[.!?。]\s*$/.test(acc.trim())))) {
             broken = true;
             stopper?.interrupt();
           }
@@ -177,8 +185,9 @@ async function handle(msg) {
         },
       });
       const cap = profile.maxTokensCap > 0 ? profile.maxTokensCap : (model?.maxTokens || Number(msg.maxTokens) || 320);
+      const started = Date.now();
       const output = await generator(messages, {
-        max_new_tokens: cap,
+        max_new_tokens: calc ? Math.min(cap, 24) : cap,
         do_sample: false,
         repetition_penalty: profile.repetitionPenalty,
         ...(profile.noRepeatNgram ? { no_repeat_ngram_size: profile.noRepeatNgram } : {}),
@@ -188,8 +197,10 @@ async function handle(msg) {
       });
       const last = output?.[0]?.generated_text;
       const raw = Array.isArray(last) ? (last.at(-1)?.content ?? acc) : String(last ?? acc);
-      const trimmed = stripThinking(trimRepetition(broken ? acc : raw));
-      post({ type: "done", id: msg.id, text: trimmed, broken: broken && trimmed.trim().length < 60 });
+      const trimmed = verifiedAnswer(stripThinking(trimRepetition(broken ? acc : raw)), calc);
+      const ms = Date.now() - started;
+      const tokens = Math.max(1, generator.tokenizer.encode(String(trimmed || acc)).length);
+      post({ type: "done", id: msg.id, text: trimmed, broken: broken && trimmed.trim().length < 60, tokens, ms, threads: wasmThreadCount });
     }
   } catch (error) {
     generator = null;

@@ -902,6 +902,11 @@ function paint() {
       const node = document.createElement("article");
       node.id = item.id;
       node.className = item.role === "user" ? "user" : "assistant";
+      if (item.genTokens) {
+        node.dataset.genTokens = String(item.genTokens);
+        node.dataset.genMs = String(item.genMs || 0);
+        node.dataset.genThreads = String(item.genThreads || 1);
+      }
       if (item.role === "assistant") {
         const avatar = document.createElement("span");
         avatar.className = "avatar crop crop-icon";
@@ -1058,6 +1063,9 @@ async function streamInto(item, request) {
       item.content += token;
       paintSoon();
     }, lang, item.promptSources || []);
+    item.genMs = result.genMs || 0;
+    item.genTokens = result.genTokens || 0;
+    item.genThreads = result.genThreads || 1;
     const prior = state.messages.filter((entry) => entry !== item).map((entry) => ({ role: entry.role, content: entry.content, mode: entry.mode }));
     const guarded = finishModelAnswer(result.text, lang, item.sources, item.question, prior);
     const followUp = isFollowUp(item.question, prior);
@@ -1098,7 +1106,6 @@ async function streamInto(item, request) {
       item.provider = result.provider;
       item.modelId = result.modelId;
       item.modelVersion = result.modelVersion || "";
-      openEditorWith(item.content, false);
     }
   } catch (error) {
     item.running = false;

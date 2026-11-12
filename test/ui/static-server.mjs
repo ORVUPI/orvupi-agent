@@ -34,6 +34,19 @@ function inside(file) {
   return abs === root || abs.startsWith(root + sep);
 }
 
+function isolated(pathname) {
+  return /\/arqiven(?:\/|$)/.test(pathname);
+}
+
+function headers(pathname, extra) {
+  if (!isolated(pathname)) return extra;
+  return {
+    ...extra,
+    "cross-origin-opener-policy": "same-origin",
+    "cross-origin-embedder-policy": "credentialless",
+  };
+}
+
 createServer((req, res) => {
   try {
     const url = new URL(req.url || "/", "http://127.0.0.1");
@@ -71,14 +84,14 @@ createServer((req, res) => {
         res.end("File not found");
         return;
       }
-      res.writeHead(200, { "content-type": types[".html"], "cache-control": "no-store" });
+      res.writeHead(200, headers(pathname, { "content-type": types[".html"], "cache-control": "no-store" }));
       createReadStream(index).pipe(res);
       return;
     }
-    res.writeHead(200, {
+    res.writeHead(200, headers(pathname, {
       "content-type": types[extname(file)] || "application/octet-stream",
       "cache-control": "no-store",
-    });
+    }));
     createReadStream(file).pipe(res);
   } catch {
     res.writeHead(500);

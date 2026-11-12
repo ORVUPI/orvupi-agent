@@ -84,7 +84,11 @@ describe("motor de terceros de ARQIVEN", () => {
     assert.match(worker, /wasmPaths = ONNX_WASM/);
     assert.match(read("web/v2/shared/ia/engine-client.mjs"), /function discardWorker/);
     assert.match(read("apps/work/src/ai/worker.ts"), /onnxruntime-web@1\.31\.0-dev\.20260914-8d85527a0/);
-    assert.match(worker, /numThreads = 1/);
+    assert.match(worker, /crossOriginIsolated/);
+    assert.match(worker, /Math\.min\(4, cores\)/);
+    assert.match(worker, /: 1;/);
+    assert.match(headers, /Cross-Origin-Embedder-Policy: credentialless/);
+    assert.equal(app.includes("openEditorWith(item.content, false)"), false);
     assert.equal(worker.includes("arqiven-1"), false);
     assert.equal(worker.includes("Eres ORVUPI AI"), false);
     assert.match(app, /documentElement\.lang/);

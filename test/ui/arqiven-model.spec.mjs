@@ -34,7 +34,23 @@ test("si Qwen no carga, SmolLM2 sí responde", async ({ page }) => {
   expect(overflow).toBeLessThanOrEqual(1);
 });
 
-async function expectTwelveBySeven(page, size) {
+async function measured(page, question, marker, forbidden) {
+  const started = Date.now();
+  const answer = await ask(page, question);
+  await expect(answer).toContainText(marker, { timeout: 45000 });
+  await expect(answer).toHaveAttribute("data-gen-ms", /[1-9]/, { timeout: 20000 });
+  const ms = Number(await answer.getAttribute("data-gen-ms"));
+  const tokens = Number(await answer.getAttribute("data-gen-tokens"));
+  const threads = Number(await answer.getAttribute("data-gen-threads"));
+  const isolated = await page.evaluate(() => crossOriginIsolated);
+  console.log(JSON.stringify({ question, marker, ms, tokens, threads, perSecond: Number((tokens / (ms / 1000)).toFixed(1)), isolated, wall: Date.now() - started }));
+  await expect(answer).not.toContainText(forbidden);
+  await expect(page.locator("#local-editor")).toBeHidden();
+  expect(ms).toBeLessThan(30000);
+  return answer;
+}
+
+async function expectProduct(page, size) {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "gpu", { configurable: true, get: () => undefined });
   });
@@ -43,18 +59,18 @@ async function expectTwelveBySeven(page, size) {
   await expect(page.locator("#engine-progress")).toContainText("Modelo de terceros listo", { timeout: 420000 });
   await expect(page.locator("#engine-progress")).toContainText("qwen35-cpu");
   await expect(page.locator("#model-indicator")).toContainText("Qwen3.5-0.8B");
-  const answer = await ask(page, "¿Cuánto es 12 por 7?");
-  await expect(answer).toContainText("84", { timeout: 180000 });
+  await measured(page, "¿Cuánto es 12 por 7?", "84", "96");
+  await measured(page, "¿Y si le sumo 16?", "100", "112");
 }
 
 test("Chromium sin WebGPU responde 12 por 7 en escritorio", async ({ page }) => {
   test.setTimeout(600000);
-  await expectTwelveBySeven(page, { width: 1280, height: 800 });
+  await expectProduct(page, { width: 1440, height: 900 });
 });
 
 test("Chromium sin WebGPU responde 12 por 7 en móvil", async ({ page }) => {
   test.setTimeout(600000);
-  await expectTwelveBySeven(page, { width: 390, height: 844 });
+  await expectProduct(page, { width: 390, height: 844 });
   const box = await page.locator("#send").boundingBox();
   expect(box && box.y >= 0 && box.y + box.height <= 845).toBeTruthy();
 });

@@ -61,6 +61,7 @@ for (const item of pages) {
     await expect(page.locator("#new-chat")).toBeVisible();
     await expect(page.locator("#send")).toBeVisible();
     await expect(page.locator("#prompt")).toBeVisible();
+    await expect(page.locator("#local-editor")).toBeHidden();
     await expect(page.locator("#source-note")).toContainText(item.note);
     await expect(page.locator("#model-pick option[value='qwen35-cpu']")).toHaveText(/Qwen3\.5-0\.8B/);
     await expect(page.locator("#model-pick option[value='smol135-cpu']")).toHaveText(/SmolLM2-135M-Instruct/);
@@ -81,6 +82,7 @@ for (const item of pages) {
     await page.locator("#prompt").fill(item.buy);
     await page.locator("#send").click();
     await expect(page.locator(".assistant").last()).toContainText(item.refusal);
+    await expect(page.locator("#local-editor")).toBeHidden();
 
     await page.locator(".vote[data-vote='up']").first().click();
     await expect(page.locator(".vote[data-vote='up']").first()).toHaveAttribute("aria-pressed", "true");

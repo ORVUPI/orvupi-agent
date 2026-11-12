@@ -468,6 +468,41 @@ describe("conocimiento y evaluación de ARQIVEN", () => {
     assert.equal(row.messages[0]?.modelContent, "");
   });
 
+  test("el cálculo local resuelve la operación y el seguimiento", async () => {
+    const calc = await import(href("web/v2/shared/ia/calc.mjs")) as {
+      resolveCalculation: (messages: Array<{ role: string; content: string }>) => { value: number; display: string; parts: string[] } | null;
+      verifiedAnswer: (text: string, solved: { value: number; display: string; parts: string[] }) => string;
+    };
+    const cases: Array<{ ask: string; value: number; before?: string }> = [
+      { ask: "¿Cuánto es 12 por 7?", value: 84 },
+      { ask: "12 más 7", value: 19 },
+      { ask: "20 entre 4", value: 5 },
+      { ask: "20 menos 4", value: 16 },
+      { ask: "(2 + 3) × 4", value: 20 },
+      { ask: "12,5 por 2", value: 25 },
+      { ask: "25% de 80", value: 20 },
+      { ask: "80 + 10%", value: 88 },
+      { ask: "200 - 15%", value: 170 },
+      { ask: "How much is 12 times 7?", value: 84 },
+      { ask: "Quanto é 12 vezes 7?", value: 84 },
+      { ask: "Tengo 120 € y gasto el 25 %", value: 90 },
+      { ask: "¿Y si le sumo 16?", value: 100, before: "¿Cuánto es 12 por 7?" },
+      { ask: "What if I add 16?", value: 100, before: "How much is 12 times 7?" },
+      { ask: "E se eu somar 16?", value: 100, before: "Quanto é 12 vezes 7?" },
+    ];
+    for (const item of cases) {
+      const messages = item.before ? [{ role: "user", content: item.before }, { role: "user", content: item.ask }] : [{ role: "user", content: item.ask }];
+      const solved = calc.resolveCalculation(messages);
+      assert.ok(solved, item.ask);
+      assert.equal(solved?.value, item.value, item.ask);
+    }
+    assert.equal(calc.resolveCalculation([{ role: "user", content: "Hola" }]), null);
+    assert.equal(calc.resolveCalculation([{ role: "user", content: "12 entre 0" }]), null);
+    const solved = calc.resolveCalculation([{ role: "user", content: "¿Cuánto es 12 por 7?" }]);
+    assert.equal(calc.verifiedAnswer("12 × 7 = 84 y luego 96", solved!), solved?.display);
+    assert.match(calc.verifiedAnswer("12 por 7 es 84.", solved!), /84/);
+  });
+
   test("la elección de modelo se guarda sin tocar los chats", async () => {
     const chats = await import(href("web/v2/shared/ia/chats.mjs")) as {
       openPrefDb: (name?: string) => Promise<{ close: () => void }>;

@@ -78,13 +78,17 @@ export function createEngineClient() {
     if (msg.type === "done" && pending && msg.id === pending.id) {
       const job = pending;
       pending = null;
-      job.resolve(thirdPartyResult(job.request, {
+      const result = thirdPartyResult(job.request, {
         text: String(msg.text || ""),
         modelId: model.id,
         provider: "third-party",
         mode: "model",
         lang: job.lang,
-      }));
+      });
+      result.genMs = Number(msg.ms) || 0;
+      result.genTokens = Number(msg.tokens) || 0;
+      result.genThreads = Number(msg.threads) || 1;
+      job.resolve(result);
       return;
     }
     if (msg.type === "error") {

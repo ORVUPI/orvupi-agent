@@ -78,6 +78,21 @@ Repetición del arnés en esta máquina, CPU, 4 hilos, el mismo q4 y el perfil `
 
 Las categorías siguen igual que la tabla de Qwen3.5 de arriba. La mediana en Node varía entre corridas (4487 ms, 6206 ms y 8993 ms) sin cambiar los aciertos.
 
+## Navegador, después de cargar
+
+Sin COOP/COEP la página no queda aislada (`crossOriginIsolated` es falso) y WASM se queda en 1 hilo. Una respuesta de 320 tokens a ese ritmo tarda varios minutos: en la vista previa, «¿Cuánto es 12 por 7?» tardó unos 390 s. `/arqiven/*` ahora envía `Cross-Origin-Opener-Policy: same-origin` y `Cross-Origin-Embedder-Policy: credentialless`, para poder usar hilos sin bloquear Hugging Face ni jsDelivr. Con aislamiento, el worker usa hasta 4 hilos; si no hay aislamiento, se queda en 1. El pensamiento de Qwen3 sigue apagado (`enable_thinking: false`) y el tope del modelo se respeta. Una cuenta verificada se corta en 24 tokens.
+
+Medición en Chromium, sin WebGPU, con el modelo ya cargado, 4 hilos y `crossOriginIsolated` verdadero:
+
+| Pantalla | Pregunta | Tiempo de generación | Tokens | Tokens/s |
+| --- | --- | ---: | ---: | ---: |
+| 1440×900 | ¿Cuánto es 12 por 7? | 10,4 s | 16 | 1,5 |
+| 1440×900 | ¿Y si le sumo 16? | 23,3 s | 22 | 0,9 |
+| 390×844 | ¿Cuánto es 12 por 7? | 9,1 s | 16 | 1,8 |
+| 390×844 | ¿Y si le sumo 16? | 22,2 s | 22 | 1,0 |
+
+Las dos respuestas dicen 84 y 100. El cálculo lo resuelve el navegador y, si el modelo añade otro número, se sustituye por el resultado verificado. Enviar un mensaje no abre el editor local.
+
 `qwen05-cpu-q4` sigue fuera del selector. q8 de Qwen2.5 dio texto sin sentido en Node durante la auditoría y no se ha comprobado en el navegador. La generación de imágenes sigue apagada.
 
 `?perfil=legacy` o `ACTIVE_PROFILE = "legacy"` en `web/v2/shared/ia/profile.mjs` vuelve a los límites anteriores. IndexedDB solo añade `modelContent` opcional: los chats viejos se leen igual.
