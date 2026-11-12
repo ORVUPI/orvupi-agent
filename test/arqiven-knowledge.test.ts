@@ -503,6 +503,34 @@ describe("conocimiento y evaluación de ARQIVEN", () => {
     assert.match(calc.verifiedAnswer("12 por 7 es 84.", solved!), /84/);
   });
 
+  test("una respuesta breve de Sonar se queda si cita la fuente", async () => {
+    const prompt = await import(href("web/v2/shared/ia/prompt.mjs")) as {
+      compactSources: (sources: Array<{ title: string; excerpt: string }>) => Array<{ excerpt: string }>;
+      sourcedTurn: (question: string, sources: Array<{ excerpt: string }>) => boolean;
+      sourceNote: (sources: Array<{ title: string; excerpt: string }>) => string;
+    };
+    const quality = await import(href("web/v2/shared/ia/quality.mjs")) as {
+      needsExtract: (answer: string, sources: Array<{ title: string; excerpt: string; origin: string }>, question: string) => boolean;
+    };
+    const sources = [
+      { title: "ORVUPI Sonar", url: "/sonar/", excerpt: "ORVUPI Sonar muestra datos de mercado. La ruta en español es /sonar/. Auditoría larga que no debe entrar entera en el modelo. ".repeat(8), origin: "orvupi" },
+      { title: "Auditoría de ORVUPI Sonar", url: "/sonar/", excerpt: "Sonar · verify on chain. Este segundo fragmento no debe entrar en el modelo.", origin: "orvupi" },
+    ];
+    const compact = prompt.compactSources(sources);
+    assert.equal(compact.length, 2);
+    assert.ok(compact.every((item) => (item.excerpt.length || 0) <= 160));
+    assert.equal(prompt.sourcedTurn("¿Qué es ORVUPI Sonar?", sources), true);
+    assert.equal(prompt.sourcedTurn("¿Qué es un faro?", sources), false);
+    const note = prompt.sourceNote(sources);
+    assert.ok(note.length < 400);
+    assert.match(note, /datos de mercado/);
+    assert.doesNotMatch(note, /verify on chain/);
+    const grounded = "ORVUPI Sonar muestra datos de mercado. La ruta es /sonar/ (ORVUPI Sonar).";
+    assert.equal(quality.needsExtract(grounded, sources, "¿Qué es ORVUPI Sonar?"), false);
+    const invented = "ORVUPI Sonar es un cohete privado que viaja a Marte cada martes por la noche.";
+    assert.equal(quality.needsExtract(invented, sources, "¿Qué es ORVUPI Sonar?"), true);
+  });
+
   test("la elección de modelo se guarda sin tocar los chats", async () => {
     const chats = await import(href("web/v2/shared/ia/chats.mjs")) as {
       openPrefDb: (name?: string) => Promise<{ close: () => void }>;

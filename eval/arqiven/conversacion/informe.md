@@ -93,6 +93,31 @@ Medición en Chromium, sin WebGPU, con el modelo ya cargado, 4 hilos y `crossOri
 
 Las dos respuestas dicen 84 y 100. El cálculo lo resuelve el navegador y, si el modelo añade otro número, se sustituye por el resultado verificado. Enviar un mensaje no abre el editor local.
 
+## Preguntas sobre ORVUPI y prefill
+
+Una pregunta como «¿Qué es ORVUPI Sonar?» tardaba unos 62 s (63 tokens) y la interfaz la sustituía por el extracto: el modelo no usaba las fuentes. El prefill metía el sistema largo y hasta cuatro extractos de 700 caracteres, y el segundo fragmento de Sonar («verify on chain») empujaba al modelo a inventar una verificación de contratos.
+
+Ahora una pregunta de ORVUPI lleva un sistema corto y un solo fragmento, recortado a 160 caracteres. El sistema de las demás preguntas no cambia, así que la puntuación de 16/21 sigue medida con el mismo `SYSTEM_V1`. La respuesta se pinta token a token, se corta al tercer inicio de frase y no pasa de 40 tokens. Si cita un dato de la fuente, se conserva; si se inventa otra cosa, sigue el extracto citado.
+
+Medición nueva, CPU, 4 hilos, q4, 5 preguntas generales y 5 de ORVUPI en es, en, pt-BR, ja y ko (50 en total). Carga del pipeline: 1357 ms.
+
+| Grupo | n | Mediana hasta la primera palabra | Mediana de la respuesta | Mediana de tokens de entrada |
+| --- | ---: | ---: | ---: | ---: |
+| Generales | 25 | 409 ms | 3869 ms | 134 |
+| ORVUPI | 25 | 290 ms | 1273 ms | 79 |
+
+| Idioma | General, primera palabra | General, total | General, tokens | ORVUPI, primera palabra | ORVUPI, total | ORVUPI, tokens |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| es | 446 ms | 4328 ms | 135 | 286 ms | 1073 ms | 72 |
+| en | 393 ms | 4184 ms | 134 | 288 ms | 1987 ms | 75 |
+| pt-BR | 388 ms | 4119 ms | 135 | 281 ms | 1387 ms | 78 |
+| ja | 336 ms | 1469 ms | 135 | 421 ms | 1323 ms | 84 |
+| ko | 414 ms | 1643 ms | 134 | 399 ms | 1080 ms | 82 |
+
+En esa corrida, «¿Qué es ORVUPI Sonar?» respondió «ORVUPI Sonar muestra datos de mercado con su ruta oficial en español.» en 1210 ms, con 84 tokens de entrada y la primera palabra a los 379 ms. En japonés el primer fragmento pasa a ser la ficha de Sonar, no la página general de ORVUPI. El filtro financiero no se ha tocado.
+
+Estas medianas son de Node. En Chromium, con 4 hilos, la generación iba a unos 1,3 tokens/s: dos frases no llegan a 30 s, y un prefill de menos de 90 tokens deja la primera palabra por debajo de 5 s.
+
 `qwen05-cpu-q4` sigue fuera del selector. q8 de Qwen2.5 dio texto sin sentido en Node durante la auditoría y no se ha comprobado en el navegador. La generación de imágenes sigue apagada.
 
 `?perfil=legacy` o `ACTIVE_PROFILE = "legacy"` en `web/v2/shared/ia/profile.mjs` vuelve a los límites anteriores. IndexedDB solo añade `modelContent` opcional: los chats viejos se leen igual.
@@ -100,6 +125,7 @@ Las dos respuestas dicen 84 y 100. El cálculo lo resuelve el navegador y, si el
 Para repetir:
 
 ```bash
+node eval/arqiven/conversacion/latencia.mjs onnx-community/Qwen3.5-0.8B-Text-ONNX q4
 node eval/arqiven/conversacion/run.mjs onnx-community/Qwen3.5-0.8B-Text-ONNX q4 v1 4
 node eval/arqiven/conversacion/run.mjs onnx-community/Qwen2.5-1.5B-Instruct q4 v1 4
 node eval/arqiven/conversacion/rescore.mjs

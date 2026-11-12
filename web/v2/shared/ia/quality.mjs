@@ -42,8 +42,31 @@ function contentWords(text) {
 
 const COMMON = new Set("esta este esto para como donde cuando sobre entre desde hasta tiene tenido sido fueron seria sería donde that with from have been were this your about into also solo cada muy mais essa este para como quando sobre entre desde".split(/\s+/));
 
+function citesGroundedSource(answer, sources) {
+  const text = String(answer || "").toLowerCase().normalize("NFKC");
+  const flatAnswer = text.replace(/\s+/g, "");
+  for (const source of sources || []) {
+    const titleWords = String(source?.title || "").toLowerCase().split(/[^\p{L}\p{N}]+/u).filter((word) => word.length > 3 && word !== "orvupi" && word !== "arqiven");
+    const excerpt = String(source?.excerpt || source?.text || "").toLowerCase().normalize("NFKC");
+    const facts = contentWords(excerpt).filter((word) => word.length > 4 && !titleWords.includes(word) && word !== "orvupi" && word !== "arqiven");
+    const titleHit = titleWords.some((word) => text.includes(word));
+    const factHit = facts.some((word) => new RegExp(`(?:^|[^\\p{L}\\p{N}])${word}(?:[^\\p{L}\\p{N}]|$)`, "u").test(` ${text} `));
+    if (titleHit && factHit) return true;
+    let body = excerpt;
+    for (const word of titleWords) body = body.replaceAll(word, " ");
+    const flat = body.replace(/[^\p{L}\p{N}]+/gu, "");
+    for (let i = 0; i + 8 <= flat.length; i += 4) {
+      if (flatAnswer.includes(flat.slice(i, i + 8))) return true;
+      const cjk = flat.slice(i, i + 4);
+      if (/^[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]+$/u.test(cjk) && flatAnswer.includes(cjk)) return true;
+    }
+  }
+  return false;
+}
+
 export function lacksSupport(answer, sources, question) {
   const list = Array.isArray(sources) ? sources : [];
+  if (citesGroundedSource(answer, list)) return false;
   if (question !== undefined) {
     const aboutOrvupi = looksLikeOrvupi(question || "");
     const fromOrvupi = list.length > 0 && list.every((source) => !source?.origin || source.origin === "orvupi");

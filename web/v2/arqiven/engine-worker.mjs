@@ -5,6 +5,7 @@ import { profileById } from "/shared/ia/profile.mjs";
 import { isDegenerate, trimRepetition } from "/shared/ia/quality.mjs";
 import { clipHistory } from "/shared/ia/history.mjs";
 import { formatNumber, resolveCalculation, verifiedAnswer } from "/shared/ia/calc.mjs";
+import { lastUserText, sourceNote, sourcedSystem, sourcedTurn } from "/shared/ia/prompt.mjs";
 
 const SYSTEM_LEGACY = [
   "Eres un modelo de terceros dentro del navegador. ARQIVEN es la IA de ORVUPI y no entrenó estos pesos. No digas que eres Arqiven-N.",
@@ -154,7 +155,6 @@ async function handle(msg) {
         return [`[${item.title || item.url || "fuente"}] ${item.url || ""}\n${item.excerpt}`];
       }).slice(0, 4) : [];
       const language = LANG_NAME[msg.lang] || LANG_NAME[msg.lang === "pt-BR" ? "pt" : ""] || "español";
-      const sourceNote = cited.length ? `\n\nFuentes. Apóyate solo en ellas y cita el título. Si no responden, di que no consta.\n${cited.join("\n\n")}` : "";
       const profile = profileById(msg.profile);
       const model = loadedModel || modelById(msg.modelId);
       const history = clipHistory(msg.messages, {
@@ -165,7 +165,10 @@ async function handle(msg) {
         dropNonModel: profile.dropNonModel,
         pinFirst: profile.pinFirst,
       });
-      const promptText = profile.id === "v1" ? SYSTEM_V1 : SYSTEM_LEGACY;
+      const question = lastUserText(history);
+      const sourced = sourcedTurn(question, msg.sources);
+      const promptText = sourced ? sourcedSystem(language) : (profile.id === "v1" ? SYSTEM_V1 : SYSTEM_LEGACY);
+      const note = sourced ? sourceNote(msg.sources) : (cited.length ? `\n\nFuentes. Apóyate solo en ellas y cita el título. Si no responden, di que no consta.\n${cited.join("\n\n")}` : "");
       const calc = resolveCalculation(history);
       if (calc?.follow) {
         const started = Date.now();
@@ -181,7 +184,7 @@ async function handle(msg) {
         return;
       }
       const verified = calc ? `\n\nCálculo verificado. No lo recalcules. ${calc.display}. La respuesta numérica es ${formatNumber(calc.value)}. Responde en una frase y no des otro número.` : "";
-      const messages = [{ role: "system", content: `${promptText} Responde en ${language}. ${hint}${sourceNote}${verified}` }, ...history];
+      const messages = [{ role: "system", content: `${promptText}${sourced ? "" : ` Responde en ${language}. ${hint}`}${note}${verified}` }, ...history];
       let acc = "";
       let broken = false;
       const shown = calc ? formatNumber(calc.value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : "";
@@ -190,7 +193,8 @@ async function handle(msg) {
         skip_special_tokens: true,
         callback_function: (text) => {
           acc += text;
-          if (!broken && (looksBroken(acc) || (shown && new RegExp(`(?:^|\\D)${shown}(?:\\D|$)`).test(acc)))) {
+          const sentences = acc.split(/[.!?。！？]+/).filter((part) => part.trim().length > 8).length;
+          if (!broken && (looksBroken(acc) || (shown && new RegExp(`(?:^|\\D)${shown}(?:\\D|$)`).test(acc)) || (sourced && sentences >= 3))) {
             broken = true;
             stopper?.interrupt();
           }
@@ -200,7 +204,7 @@ async function handle(msg) {
       const cap = profile.maxTokensCap > 0 ? profile.maxTokensCap : (model?.maxTokens || Number(msg.maxTokens) || 320);
       const started = Date.now();
       const output = await generator(messages, {
-        max_new_tokens: calc ? Math.min(cap, 12) : cap,
+        max_new_tokens: calc ? Math.min(cap, 12) : (sourced ? Math.min(cap, 40) : cap),
         do_sample: false,
         repetition_penalty: profile.repetitionPenalty,
         ...(profile.noRepeatNgram ? { no_repeat_ngram_size: profile.noRepeatNgram } : {}),
@@ -213,7 +217,8 @@ async function handle(msg) {
       const trimmed = verifiedAnswer(stripThinking(trimRepetition(broken ? acc : raw)), calc);
       const ms = Date.now() - started;
       const tokens = Math.max(1, generator.tokenizer.encode(String(trimmed || acc)).length);
-      post({ type: "done", id: msg.id, text: trimmed, broken: broken && trimmed.trim().length < 60, tokens, ms, threads: wasmThreadCount });
+      const promptTokens = messages.reduce((sum, item) => sum + generator.tokenizer.encode(String(item.content || "")).length, 0);
+      post({ type: "done", id: msg.id, text: trimmed, broken: broken && trimmed.trim().length < 60, tokens, promptTokens, ms, threads: wasmThreadCount });
     }
   } catch (error) {
     generator = null;
