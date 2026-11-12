@@ -167,6 +167,19 @@ async function handle(msg) {
       });
       const promptText = profile.id === "v1" ? SYSTEM_V1 : SYSTEM_LEGACY;
       const calc = resolveCalculation(history);
+      if (calc?.follow) {
+        const started = Date.now();
+        post({
+          type: "done",
+          id: msg.id,
+          text: calc.display,
+          broken: false,
+          tokens: 1,
+          ms: Math.max(1, Date.now() - started),
+          threads: wasmThreadCount,
+        });
+        return;
+      }
       const verified = calc ? `\n\nCálculo verificado. No lo recalcules. ${calc.display}. La respuesta numérica es ${formatNumber(calc.value)}. Responde en una frase y no des otro número.` : "";
       const messages = [{ role: "system", content: `${promptText} Responde en ${language}. ${hint}${sourceNote}${verified}` }, ...history];
       let acc = "";
@@ -177,7 +190,7 @@ async function handle(msg) {
         skip_special_tokens: true,
         callback_function: (text) => {
           acc += text;
-          if (!broken && (looksBroken(acc) || (shown && new RegExp(`(?:^|\\D)${shown}(?:\\D|$)`).test(acc) && /[.!?。]\s*$/.test(acc.trim())))) {
+          if (!broken && (looksBroken(acc) || (shown && new RegExp(`(?:^|\\D)${shown}(?:\\D|$)`).test(acc)))) {
             broken = true;
             stopper?.interrupt();
           }
@@ -187,7 +200,7 @@ async function handle(msg) {
       const cap = profile.maxTokensCap > 0 ? profile.maxTokensCap : (model?.maxTokens || Number(msg.maxTokens) || 320);
       const started = Date.now();
       const output = await generator(messages, {
-        max_new_tokens: calc ? Math.min(cap, 24) : cap,
+        max_new_tokens: calc ? Math.min(cap, 12) : cap,
         do_sample: false,
         repetition_penalty: profile.repetitionPenalty,
         ...(profile.noRepeatNgram ? { no_repeat_ngram_size: profile.noRepeatNgram } : {}),

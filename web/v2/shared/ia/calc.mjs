@@ -166,7 +166,7 @@ function solveFollowUp(text, previous) {
     const value = apply(item.op, previous, amount);
     if (value == null) return null;
     const expression = `${formatNumber(previous)}${item.op}${formatNumber(amount)}`;
-    return { value, expression, display: pretty(expression, value), parts: partsOf(expression, value) };
+    return { value, expression, display: pretty(expression, value), parts: partsOf(expression, value), follow: true };
   }
   return null;
 }

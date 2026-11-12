@@ -80,16 +80,16 @@ Las categorías siguen igual que la tabla de Qwen3.5 de arriba. La mediana en No
 
 ## Navegador, después de cargar
 
-Sin COOP/COEP la página no queda aislada (`crossOriginIsolated` es falso) y WASM se queda en 1 hilo. Una respuesta de 320 tokens a ese ritmo tarda varios minutos: en la vista previa, «¿Cuánto es 12 por 7?» tardó unos 390 s. `/arqiven/*` ahora envía `Cross-Origin-Opener-Policy: same-origin` y `Cross-Origin-Embedder-Policy: credentialless`, para poder usar hilos sin bloquear Hugging Face ni jsDelivr. Con aislamiento, el worker usa hasta 4 hilos; si no hay aislamiento, se queda en 1. El pensamiento de Qwen3 sigue apagado (`enable_thinking: false`) y el tope del modelo se respeta. Una cuenta verificada se corta en 24 tokens.
+Sin aislamiento WASM se queda en 1 hilo. `/*` ya envía COOP, y repetirlo en `/arqiven/` y `/arqiven/*` hacía que Cloudflare mandara el valor dos o tres veces; Chromium lo leía como inválido y no aislaba. Cada ruta de ARQIVEN suelta primero la cabecera heredada (`! Cross-Origin-Opener-Policy`, `! Cross-Origin-Embedder-Policy`) y pone una sola: COOP `same-origin` y COEP `credentialless`. El resto del sitio no lleva COEP. Con aislamiento, el worker usa hasta 4 hilos; si no hay aislamiento, se queda en 1. El pensamiento de Qwen3 sigue apagado (`enable_thinking: false`). Una cuenta se corta al aparecer el número, con tope de 12 tokens. El seguimiento no espera al modelo: la frase es el resultado verificado.
 
 Medición en Chromium, sin WebGPU, con el modelo ya cargado, 4 hilos y `crossOriginIsolated` verdadero:
 
 | Pantalla | Pregunta | Tiempo de generación | Tokens | Tokens/s |
 | --- | --- | ---: | ---: | ---: |
-| 1440×900 | ¿Cuánto es 12 por 7? | 10,4 s | 16 | 1,5 |
-| 1440×900 | ¿Y si le sumo 16? | 23,3 s | 22 | 0,9 |
-| 390×844 | ¿Cuánto es 12 por 7? | 9,1 s | 16 | 1,8 |
-| 390×844 | ¿Y si le sumo 16? | 22,2 s | 22 | 1,0 |
+| 1440×900 | ¿Cuánto es 12 por 7? | 12,0 s | 16 | 1,3 |
+| 1440×900 | ¿Y si le sumo 16? | 1 ms | frase local | — |
+| 390×844 | ¿Cuánto es 12 por 7? | 9,4 s | 16 | 1,7 |
+| 390×844 | ¿Y si le sumo 16? | 1 ms | frase local | — |
 
 Las dos respuestas dicen 84 y 100. El cálculo lo resuelve el navegador y, si el modelo añade otro número, se sustituye por el resultado verificado. Enviar un mensaje no abre el editor local.
 

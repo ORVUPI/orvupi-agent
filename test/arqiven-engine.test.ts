@@ -8,6 +8,44 @@ import { repoRoot } from "../src/paths.js";
 const root = repoRoot();
 const read = (rel: string) => readFileSync(path.join(root, rel), "utf8");
 
+function headerRules(text: string) {
+  const rules: Array<{ path: string; items: Array<{ detach?: string; name?: string; value?: string }> }> = [];
+  let current: (typeof rules)[number] | null = null;
+  for (const line of text.split("\n")) {
+    if (!line.trim() || line.startsWith("#")) continue;
+    if (!/^\s/.test(line)) {
+      current = { path: line.trim(), items: [] };
+      rules.push(current);
+      continue;
+    }
+    const body = line.trim();
+    if (!current) continue;
+    if (body.startsWith("! ")) current.items.push({ detach: body.slice(2).trim() });
+    else {
+      const split = body.indexOf(":");
+      current.items.push({ name: body.slice(0, split).trim(), value: body.slice(split + 1).trim() });
+    }
+  }
+  return rules;
+}
+
+function headerValues(text: string, urlPath: string, name: string) {
+  const matched = headerRules(text).filter((rule) => new RegExp(`^${rule.path.split("*").map((part) => part.replace(/[.+?^${}()|[\]\\]/g, "\\$&")).join(".*")}$`).test(urlPath));
+  matched.sort((a, b) => {
+    const stars = (path: string) => (path.match(/\*/g) ?? []).length;
+    const literal = (path: string) => path.replace(/\*/g, "").length;
+    return stars(b.path) - stars(a.path) || literal(a.path) - literal(b.path);
+  });
+  const values = new Map<string, string[]>();
+  for (const rule of matched) {
+    for (const item of rule.items) {
+      if (item.detach) values.delete(item.detach);
+      else if (item.name) values.set(item.name, [...(values.get(item.name) ?? []), item.value ?? ""]);
+    }
+  }
+  return values.get(name) ?? [];
+}
+
 describe("motor de terceros de ARQIVEN", () => {
   test("el catálogo nombra terceros y el contrato no acepta Arqiven-N sin checkpoint", async () => {
     const models = await import(pathToFileURL(path.join(root, "web/v2/shared/ia/models.mjs")).href) as {
@@ -37,6 +75,19 @@ describe("motor de terceros de ARQIVEN", () => {
     assert.match(blocked.text, /No hay respuesta generada/);
     const unknown = models.thirdPartyResult(request, { text: "x", modelId: "inventado", provider: "third-party" });
     assert.equal(unknown.provider, "none");
+  });
+
+  test("cada ruta de ARQIVEN recibe COOP y COEP una sola vez", () => {
+    const headers = read("web/v2/_headers");
+    const pages = ["/arqiven/", "/arqiven/index.html", "/arqiven/engine-worker.mjs", "/en/arqiven/", "/en/arqiven/app.js", "/pt-br/arqiven/", "/pt-br/arqiven/index.html", "/ja/arqiven/", "/ja/arqiven/engine-worker.mjs", "/ko/arqiven/", "/ko/arqiven/app.js"];
+    for (const urlPath of pages) {
+      assert.deepEqual(headerValues(headers, urlPath, "Cross-Origin-Opener-Policy"), ["same-origin"], urlPath);
+      assert.deepEqual(headerValues(headers, urlPath, "Cross-Origin-Embedder-Policy"), ["credentialless"], urlPath);
+    }
+    for (const urlPath of ["/", "/work/", "/work/index.html", "/verify/", "/studio/index.html"]) {
+      assert.deepEqual(headerValues(headers, urlPath, "Cross-Origin-Opener-Policy"), ["same-origin"], urlPath);
+      assert.deepEqual(headerValues(headers, urlPath, "Cross-Origin-Embedder-Policy"), [], urlPath);
+    }
   });
 
   test("Studio usa el motor solo si está listo y si no deja el catálogo", async () => {
@@ -87,6 +138,8 @@ describe("motor de terceros de ARQIVEN", () => {
     assert.match(worker, /crossOriginIsolated/);
     assert.match(worker, /Math\.min\(4, cores\)/);
     assert.match(worker, /: 1;/);
+    assert.match(headers, /! Cross-Origin-Opener-Policy/);
+    assert.match(headers, /! Cross-Origin-Embedder-Policy/);
     assert.match(headers, /Cross-Origin-Embedder-Policy: credentialless/);
     assert.equal(app.includes("openEditorWith(item.content, false)"), false);
     assert.equal(worker.includes("arqiven-1"), false);
