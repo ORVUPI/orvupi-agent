@@ -1,10 +1,9 @@
 import { expect, test } from "@playwright/test";
 
-test.use({
-  launchOptions: { args: ["--disable-webgpu", "--disable-gpu"] },
+test.beforeEach(({ }, testInfo) => {
+  test.skip(testInfo.project.use.defaultBrowserType === "webkit", "Esta prueba carga el modelo en Chromium.");
+  test.skip(!process.env.ARQIVEN_BROWSER_MODEL, "Descarga los pesos. ARQIVEN_BROWSER_MODEL=1 para ejecutarla.");
 });
-
-const heavy = !process.env.ARQIVEN_BROWSER_MODEL;
 
 async function ask(page, question) {
   await page.locator("#prompt").fill(question);
@@ -13,7 +12,6 @@ async function ask(page, question) {
 }
 
 test("si Qwen no carga, SmolLM2 sí responde", async ({ page }) => {
-  test.skip(heavy, "Descarga SmolLM2. ARQIVEN_BROWSER_MODEL=1 para ejecutarla.");
   test.setTimeout(300000);
   await page.route(/huggingface\.co|hf\.co/, (route) => {
     if (route.request().url().includes("Qwen3.5-0.8B")) return route.abort();
@@ -50,13 +48,11 @@ async function expectTwelveBySeven(page, size) {
 }
 
 test("Chromium sin WebGPU responde 12 por 7 en escritorio", async ({ page }) => {
-  test.skip(heavy, "Descarga Qwen3.5-0.8B q4. ARQIVEN_BROWSER_MODEL=1 para ejecutarla.");
   test.setTimeout(600000);
   await expectTwelveBySeven(page, { width: 1280, height: 800 });
 });
 
 test("Chromium sin WebGPU responde 12 por 7 en móvil", async ({ page }) => {
-  test.skip(heavy, "Descarga Qwen3.5-0.8B q4. ARQIVEN_BROWSER_MODEL=1 para ejecutarla.");
   test.setTimeout(600000);
   await expectTwelveBySeven(page, { width: 390, height: 844 });
   const box = await page.locator("#send").boundingBox();
