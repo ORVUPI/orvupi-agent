@@ -2,7 +2,7 @@
 
 Fecha: 2026-11-12. Coste: 0 €. No se ha entrenado ni publicado.
 
-ARQIVEN es la IA de ORVUPI. No hay un modelo propio. El catálogo sigue siendo de terceros y el de por defecto es SmolLM2-135M-Instruct (`smol135-cpu`).
+ARQIVEN es la IA de ORVUPI. No hay un modelo propio. El catálogo sigue siendo de terceros y el de por defecto es Qwen3.5-0.8B q4 (`qwen35-cpu`). SmolLM2-135M queda si el dispositivo no puede cargar Qwen.
 
 ## Capa que ya responde sin el modelo
 

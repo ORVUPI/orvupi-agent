@@ -1,5 +1,5 @@
 import { arqivenEngine } from "/shared/ia/engine-client.mjs";
-import { defaultModel, modelById, modelForDevice, stepDown, THIRD_PARTY_MODELS } from "/shared/ia/models.mjs";
+import { canUseModel, defaultModel, downloadProgress, modelById, modelForDevice, stepDown, THIRD_PARTY_MODELS } from "/shared/ia/models.mjs";
 import { createRequest, honestResult } from "/shared/ia/contract.mjs";
 import { saveWorkBytes, loadWorkBytes } from "/studio/lib/work-store.mjs";
 import { sanitizePlain } from "/shared/ia/plain.mjs";
@@ -9,7 +9,7 @@ import { citedExcerpt, extractiveFromSources } from "/shared/ia/quality.mjs";
 import { exportPayload, listVotes, openFeedbackDb, saveVote } from "/shared/ia/feedback.mjs";
 import { clipHistory } from "/shared/ia/history.mjs";
 void clipHistory;
-import { dateGroup, deleteConversation, deleteImage, deleteProject, listConversations, listImages, listProjects, matchesQuery, openChatDb, readConversation, saveConversation, saveImage, saveProject } from "/shared/ia/chats.mjs";
+import { dateGroup, deleteConversation, deleteImage, deleteProject, listConversations, listImages, listProjects, matchesQuery, openChatDb, openPrefDb, readConversation, readSetting, saveConversation, saveImage, saveProject, saveSetting } from "/shared/ia/chats.mjs";
 
 const root = document.querySelector(".arq-app");
 if (!root) throw new Error("ARQIVEN");
@@ -46,6 +46,8 @@ const UI = {
     shortcut: "Atajo de tarea. No ejecuta un modelo ni promete esa capacidad.",
     notBuilt: "Programar no está implementado. El chip no crea un programa.",
     retries: "Se ha reintentado tres veces. No hay otra descarga automática.",
+    fallbackLoad: "Qwen3.5-0.8B no se ha podido cargar. En su lugar se usa SmolLM2, que es más pequeño.",
+    fallbackMemory: "Este navegador tiene poca memoria para Qwen3.5-0.8B. Se usa SmolLM2, que es más pequeño.",
     excerptBadge: "extracto de la fuente · no es el modelo",
     usesSources: "usa fuentes y las cita",
     sourcesLabel: "Fuentes",
@@ -79,6 +81,8 @@ const UI = {
     shortcut: "Task shortcut. It does not run a model or promise that ability.",
     notBuilt: "Coding is not implemented. This chip does not create a program.",
     retries: "Retried three times. There is no further automatic download.",
+    fallbackLoad: "Qwen3.5-0.8B could not be loaded. SmolLM2 is used instead. It is smaller.",
+    fallbackMemory: "This browser does not have enough memory for Qwen3.5-0.8B. SmolLM2 is used instead. It is smaller.",
     excerptBadge: "source excerpt · not the model",
     usesSources: "uses sources and cites them",
     sourcesLabel: "Sources",
@@ -112,6 +116,8 @@ const UI = {
     shortcut: "Atalho de tarefa. Não executa um modelo nem promete essa capacidade.",
     notBuilt: "Programar não está implementado. O atalho não cria um programa.",
     retries: "Houve três tentativas. Não há outra descarga automática.",
+    fallbackLoad: "Não foi possível carregar o Qwen3.5-0.8B. No lugar dele usa-se o SmolLM2, que é menor.",
+    fallbackMemory: "Este navegador tem pouca memória para o Qwen3.5-0.8B. Usa-se o SmolLM2, que é menor.",
     excerptBadge: "trecho da fonte · não é o modelo",
     usesSources: "usa fontes e cita",
     sourcesLabel: "Fontes",
@@ -145,6 +151,8 @@ const UI = {
     shortcut: "タスクの近道です。モデルは実行せず、その能力も約束しません。",
     notBuilt: "プログラミングは未実装です。このチップはプログラムを作りません。",
     retries: "3回試しました。これ以上は自動では受けません。",
+    fallbackLoad: "Qwen3.5-0.8B を読み込めませんでした。代わりに、より小さい SmolLM2 を使います。",
+    fallbackMemory: "このブラウザのメモリでは Qwen3.5-0.8B が入りません。より小さい SmolLM2 を使います。",
     excerptBadge: "出典の抜粋 · モデルの文章ではない",
     usesSources: "出典を使い、出典を示します",
     sourcesLabel: "出典",
@@ -178,6 +186,8 @@ const UI = {
     shortcut: "작업 바로가기입니다. 모델을 실행하지 않고, 그 능력을 약속하지도 않습니다.",
     notBuilt: "프로그래밍은 구현되지 않았습니다. 이 칩은 프로그램을 만들지 않습니다.",
     retries: "세 번 시도했습니다. 더 이상 자동으로 받지 않습니다.",
+    fallbackLoad: "Qwen3.5-0.8B를 불러오지 못했습니다. 더 작은 SmolLM2를 대신 사용합니다.",
+    fallbackMemory: "이 브라우저에는 Qwen3.5-0.8B를 위한 메모리가 부족합니다. 더 작은 SmolLM2를 사용합니다.",
     excerptBadge: "출처 발췌 · 모델의 글이 아님",
     usesSources: "출처를 쓰고 출처를 밝힙니다",
     sourcesLabel: "출처",
@@ -227,6 +237,8 @@ const state = {
   chatDb: null,
   contextRefs: [],
   prepareFailures: 0,
+  fallbackNote: "",
+  prefDb: null,
   snap: { phase: "idle", ready: false, modelId: "", modelVersion: "", progress: { loaded: 0, total: 0, file: "" }, error: "" },
   queue: [],
   painting: 0,
@@ -679,23 +691,40 @@ function setEditor(open) {
   if (open) editorText.value = state.localText;
 }
 
+let engineStatus = "";
+
+function showEngineStatus(line) {
+  const current = status?.textContent || "";
+  if (line === engineStatus) return;
+  if (engineStatus && current && current !== engineStatus) {
+    engineStatus = line;
+    return;
+  }
+  engineStatus = line;
+  setStatus(line);
+}
+
 function updateEngineUi() {
   const snap = state.snap;
-  const pct = snap.progress.total > 0 ? Math.min(100, Math.round((snap.progress.loaded / snap.progress.total) * 100)) : 0;
+  const meterState = downloadProgress(snap.progress);
+  const pct = meterState.pct;
   if (pill) pill.textContent = ui.idle;
   prepare.textContent = snap.phase === "ready" ? ui.again : ui.prepare;
   prepare.disabled = snap.phase === "preparing" || snap.phase === "ready" && modelPick.value === snap.modelId;
   cancel.hidden = snap.phase !== "preparing" && !state.queue.some((item) => item.running);
   meter.hidden = snap.phase !== "preparing";
-  meter.classList.toggle("is-known", snap.progress.total > 0);
-  meter.querySelector("i").style.width = snap.progress.total > 0 ? `${Math.max(pct, 4)}%` : "";
+  meter.classList.toggle("is-known", meterState.known);
+  meter.querySelector("i").style.width = meterState.known ? `${Math.max(pct, 4)}%` : "";
+  let line = "";
   if (snap.phase === "preparing") {
     const file = snap.progress.file ? ` ${snap.progress.file}` : "";
-    const ratio = snap.progress.total > 0 ? ` ${pct}%` : "";
-    progress.textContent = `${snap.probe ? ui.checking : ui.preparing}${ratio || " …"}${file}`;
-  } else if (snap.phase === "error") progress.textContent = ui.error;
-  else   if (snap.phase === "ready") progress.textContent = `${ui.ready} · ${snap.modelId} · ${snap.modelVersion}`;
-  else progress.textContent = "";
+    const ratio = meterState.known ? ` ${pct}%` : " …";
+    line = `${snap.probe ? ui.checking : ui.preparing}${ratio}${file}`;
+  } else if (snap.phase === "error") line = ui.error;
+  else if (snap.phase === "ready") line = `${ui.ready} · ${snap.modelId} · ${snap.modelVersion}`;
+  if (state.fallbackNote) line = line ? `${line} ${state.fallbackNote}` : state.fallbackNote;
+  progress.textContent = line;
+  if (line && (snap.phase === "preparing" || state.fallbackNote)) showEngineStatus(line);
   const chosen = modelById(modelPick.value) || defaultModel();
   indicator.textContent = `${chosen.version} · ${ui.third} · ${ui.usesSources}`;
 }
@@ -1203,6 +1232,7 @@ engine.subscribe((snap) => {
     const next = stepDown(modelPick.value, state.webgpu);
     if (next && state.prepareFailures < 2) {
       state.prepareFailures += 1;
+      if (next === "smol135-cpu") state.fallbackNote = ui.fallbackLoad;
       modelPick.value = next;
       startPrepare(next);
       paint();
@@ -1334,7 +1364,11 @@ document.addEventListener("keydown", (event) => {
 
 document.getElementById("voice")?.addEventListener("click", () => setStatus(copy.voice));
 prepare.addEventListener("click", () => { startPrepare(modelPick.value || defaultModel().id); });
-modelPick.addEventListener("change", () => paint());
+modelPick.addEventListener("change", () => {
+  state.fallbackNote = "";
+  void rememberModel(modelPick.value);
+  paint();
+});
 exportVotes.addEventListener("click", () => { void downloadVotes(); });
 cancel.addEventListener("click", () => { engine.cancel(); });
 editorToggle.addEventListener("click", () => setEditor(editor.hidden));
@@ -1721,6 +1755,26 @@ async function bootChats() {
   paint();
 }
 
+async function rememberModel(id) {
+  const model = modelById(id);
+  if (!model || model.listed === false) return;
+  try {
+    if (!state.prefDb) state.prefDb = await openPrefDb();
+    await saveSetting(state.prefDb, "model", model.id);
+  } catch {
+    /* La elección sigue valiendo en esta visita. */
+  }
+}
+
+async function savedModelId() {
+  try {
+    if (!state.prefDb) state.prefDb = await openPrefDb();
+    return await readSetting(state.prefDb, "model");
+  } catch {
+    return "";
+  }
+}
+
 async function bootModel() {
   try {
     const adapter = navigator.gpu?.requestAdapter
@@ -1733,17 +1787,19 @@ async function bootModel() {
   } catch {
     state.webgpu = false;
   }
-  const chosen = modelForDevice({
+  const hints = {
     webgpu: state.webgpu,
     memory: Number(navigator.deviceMemory) || 0,
     wide: window.matchMedia("(min-width: 1100px)").matches,
-  });
-  if (!state.webgpu) {
-    modelPick.value = defaultModel().id;
-    startPrepare(defaultModel().id);
-    return;
-  }
+  };
+  const saved = await savedModelId();
+  const remembered = modelById(saved);
+  let chosen = modelForDevice(hints);
+  if (remembered && canUseModel(remembered, hints)) chosen = remembered;
+  else if (remembered) state.fallbackNote = ui.fallbackMemory;
+  else if (!hints.webgpu && chosen.id === "smol135-cpu") state.fallbackNote = ui.fallbackMemory;
   modelPick.value = chosen.id;
-  startPrepare(chosen.id);
+  if (chosen.id === defaultModel().id) startPrepare(defaultModel().id);
+  else startPrepare(chosen.id);
 }
 void bootChats().then(() => bootModel());

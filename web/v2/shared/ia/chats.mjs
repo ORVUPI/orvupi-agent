@@ -197,6 +197,38 @@ export function deleteImage(db, id) {
   return finish(tx, true);
 }
 
+export const PREF_DB = "orvupi-arqiven-settings";
+export const PREF_STORE = "settings";
+
+export function openPrefDb(name = PREF_DB) {
+  return new Promise((resolve, reject) => {
+    const request = globalThis.indexedDB.open(name, 1);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(PREF_STORE)) db.createObjectStore(PREF_STORE, { keyPath: "id" });
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+export function saveSetting(db, id, value) {
+  const record = { id: String(id || "").slice(0, 40), value: String(value ?? "").slice(0, 80) };
+  if (!record.id) throw new Error("setting");
+  const tx = db.transaction(PREF_STORE, "readwrite");
+  tx.objectStore(PREF_STORE).put(record);
+  return finish(tx, record);
+}
+
+export function readSetting(db, id) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(PREF_STORE, "readonly");
+    const request = tx.objectStore(PREF_STORE).get(String(id || ""));
+    request.onsuccess = () => resolve(typeof request.result?.value === "string" ? request.result.value : "");
+    request.onerror = () => reject(request.error);
+  });
+}
+
 export function matchesQuery(row, query) {
   const needle = String(query || "").trim().toLowerCase();
   if (!needle) return true;

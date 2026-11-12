@@ -154,19 +154,36 @@ describe("conocimiento y evaluación de ARQIVEN", () => {
     assert.equal(quality.needsExtract(invented, [{ title: "Marie Curie", excerpt: "Marie Curie fue una física y química polaca, pionera en el estudio de la radiactividad." }]), true);
   });
 
-  test("el dispositivo elige Qwen con WebGPU y deja SmolLM2 para la CPU", async () => {
+  test("el dispositivo elige Qwen3.5 en CPU y SmolLM2 si hay poca memoria", async () => {
     const models = await import(href("web/v2/shared/ia/models.mjs")) as {
-      defaultModel: () => { id: string };
+      defaultModel: () => { id: string; repo: string; dtype: string; device: string; maxTokens: number };
       modelForDevice: (hints: { webgpu?: boolean; memory?: number; wide?: boolean }) => { id: string };
+      canUseModel: (model: { id: string; device: string; sizeMb: number; listed?: boolean }, hints: { webgpu?: boolean; memory?: number }) => boolean;
       stepDown: (id: string, webgpu: boolean) => string | null;
+      downloadProgress: (progress: { loaded?: number; total?: number }) => { known: boolean; pct: number };
+      THIRD_PARTY_MODELS: Array<{ id: string; listed?: boolean }>;
     };
-    assert.equal(models.defaultModel().id, "smol135-cpu");
-    assert.equal(models.modelForDevice({ webgpu: false }).id, "smol135-cpu");
+    const chosen = models.defaultModel();
+    assert.equal(chosen.id, "qwen35-cpu");
+    assert.equal(chosen.repo, "onnx-community/Qwen3.5-0.8B-Text-ONNX");
+    assert.equal(chosen.dtype, "q4");
+    assert.equal(chosen.device, "wasm");
+    assert.equal(chosen.maxTokens, 320);
+    assert.equal(models.modelForDevice({ webgpu: false }).id, "qwen35-cpu");
+    assert.equal(models.modelForDevice({ webgpu: false, memory: 8 }).id, "qwen35-cpu");
+    assert.equal(models.modelForDevice({ webgpu: false, memory: 2 }).id, "smol135-cpu");
     assert.equal(models.modelForDevice({ webgpu: true, memory: 4 }).id, "qwen05-gpu");
     assert.equal(models.modelForDevice({ webgpu: true, memory: 8 }).id, "qwen15-gpu");
+    assert.equal(models.stepDown("qwen35-cpu", false), "smol135-cpu");
     assert.equal(models.stepDown("qwen15-gpu", true), "qwen05-gpu");
     assert.equal(models.stepDown("qwen05-gpu", true), "smol135-cpu");
     assert.equal(models.stepDown("smol135-cpu", false), null);
+    assert.equal(models.THIRD_PARTY_MODELS.some((item) => item.id === "smol135-cpu" && item.listed !== false), true);
+    const heavy = { id: "qwen35-cpu", device: "wasm", sizeMb: 526 };
+    assert.equal(models.canUseModel(heavy, { webgpu: false, memory: 2 }), false);
+    assert.equal(models.canUseModel(heavy, { webgpu: false, memory: 8 }), true);
+    assert.deepEqual(models.downloadProgress({ loaded: 263, total: 526 }), { known: true, pct: 50 });
+    assert.deepEqual(models.downloadProgress({}), { known: false, pct: 0 });
   });
 
   test("el voto no guarda el texto y no sale del dispositivo", async () => {
@@ -449,5 +466,26 @@ describe("conocimiento y evaluación de ARQIVEN", () => {
     const row = chats.conversationRecord({ id: "viejo-chat", messages: [{ role: "user", content: "Hola antiguo" }] });
     assert.equal(row.messages[0]?.content, "Hola antiguo");
     assert.equal(row.messages[0]?.modelContent, "");
+  });
+
+  test("la elección de modelo se guarda sin tocar los chats", async () => {
+    const chats = await import(href("web/v2/shared/ia/chats.mjs")) as {
+      openPrefDb: (name?: string) => Promise<{ close: () => void }>;
+      saveSetting: (db: unknown, id: string, value: string) => Promise<{ value: string }>;
+      readSetting: (db: unknown, id: string) => Promise<string>;
+      openChatDb: (name?: string) => Promise<{ close: () => void }>;
+      listConversations: (db: unknown) => Promise<unknown[]>;
+    };
+    const name = `arqiven-pref-${crypto.randomUUID()}`;
+    const db = await chats.openPrefDb(name);
+    await chats.saveSetting(db, "model", "qwen35-cpu");
+    assert.equal(await chats.readSetting(db, "model"), "qwen35-cpu");
+    await chats.saveSetting(db, "model", "smol135-cpu");
+    assert.equal(await chats.readSetting(db, "model"), "smol135-cpu");
+    assert.equal(await chats.readSetting(db, "otro"), "");
+    db.close();
+    const chatsDb = await chats.openChatDb(`arqiven-chats-${crypto.randomUUID()}`);
+    assert.deepEqual(await chats.listConversations(chatsDb), []);
+    chatsDb.close();
   });
 });

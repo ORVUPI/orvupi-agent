@@ -22,8 +22,8 @@ describe("motor de terceros de ARQIVEN", () => {
     };
     const request = contract.createRequest({ source: "central" });
     assert.deepEqual(contract.capabilities().models, []);
-    assert.equal(models.defaultModel().id, "smol135-cpu");
-    assert.equal(models.defaultModel().repo, "HuggingFaceTB/SmolLM2-135M-Instruct");
+    assert.equal(models.defaultModel().id, "qwen35-cpu");
+    assert.equal(models.defaultModel().repo, "onnx-community/Qwen3.5-0.8B-Text-ONNX");
     assert.equal(models.THIRD_PARTY_MODELS.some((item) => item.id.startsWith("arqiven-")), false);
     const third = models.thirdPartyResult(request, { text: "azul", modelId: "smol135-cpu", provider: "third-party", mode: "model", lang: "es" });
     assert.equal(third.provider, "third-party");

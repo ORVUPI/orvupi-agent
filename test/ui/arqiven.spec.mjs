@@ -62,6 +62,9 @@ for (const item of pages) {
     await expect(page.locator("#send")).toBeVisible();
     await expect(page.locator("#prompt")).toBeVisible();
     await expect(page.locator("#source-note")).toContainText(item.note);
+    await expect(page.locator("#model-pick option[value='qwen35-cpu']")).toHaveText(/Qwen3\.5-0\.8B/);
+    await expect(page.locator("#model-pick option[value='smol135-cpu']")).toHaveText(/SmolLM2-135M-Instruct/);
+    await expect(page.locator("#engine-progress")).toContainText(/SmolLM2/);
     await expect(page.locator("#model-indicator")).toContainText("SmolLM2-135M-Instruct");
     await expect(page.locator("#model-indicator")).toContainText(/tercero|third party|terceiro|第三者|제3자/);
 
@@ -200,6 +203,66 @@ test("chats, proyectos e imágenes siguen en este navegador", async ({ page }) =
   await (await chatMenuItem(page, "Eliminar")).click();
   await page.locator("#ask-ok").click();
   await expect(page.locator("#recent").getByRole("button", { name: "Chat renombrado" })).toHaveCount(0);
+});
+
+test("en el móvil, si el modelo no carga, el chat sigue y el aviso no entra en el historial", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/arqiven/");
+  const notice = page.locator("#engine-progress");
+  await expect(notice).toContainText("Qwen3.5-0.8B no se ha podido cargar");
+  await expect(notice).toContainText("SmolLM2");
+  await expect(page.locator("#status")).toContainText("SmolLM2");
+  await expect(page.locator("#prompt")).toBeVisible();
+  await expect(page.locator("#send")).toBeVisible();
+  await expect(page.locator(".assistant")).toHaveCount(0);
+  await page.locator("#prompt").fill("¿Compro ORVUPI ahora?");
+  await page.locator("#send").click();
+  const answer = page.locator(".assistant").last();
+  await expect(answer).toContainText("consejo financiero");
+  await expect(answer).not.toContainText("no se ha podido cargar");
+  await expect(notice).toContainText("SmolLM2");
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
+  const box = await page.locator("#send").boundingBox();
+  expect(box && box.y >= 0 && box.y + box.height <= 845).toBeTruthy();
+});
+
+test("la elección de modelo queda guardada en este navegador", async ({ page }) => {
+  await page.goto("/arqiven/");
+  await expect(page.locator("#model-pick")).toBeAttached();
+  if (await page.locator("#menu").isVisible()) await page.locator("#menu").click();
+  await page.locator("#open-settings").click();
+  await page.locator("#model-pick").selectOption("qwen05-cpu");
+  await page.waitForFunction(async () => {
+    const value = await new Promise((resolve) => {
+      const request = indexedDB.open("orvupi-arqiven-settings");
+      request.onsuccess = () => {
+        const db = request.result;
+        const get = db.transaction("settings", "readonly").objectStore("settings").get("model");
+        get.onsuccess = () => {
+          db.close();
+          resolve(get.result?.value || "");
+        };
+      };
+    });
+    return value === "qwen05-cpu";
+  });
+  await page.reload();
+  await page.waitForFunction(async () => {
+    const value = await new Promise((resolve) => {
+      const request = indexedDB.open("orvupi-arqiven-settings");
+      request.onsuccess = () => {
+        const db = request.result;
+        const get = db.transaction("settings", "readonly").objectStore("settings").get("model");
+        get.onsuccess = () => {
+          db.close();
+          resolve(get.result?.value || "");
+        };
+      };
+    });
+    return value === "qwen05-cpu";
+  });
+  await expect(page.locator("#model-pick option[value='smol135-cpu']")).toHaveCount(1);
 });
 
 test("la ventana simulada no recorta el cuadro ni abre scroll horizontal", async ({ page }) => {

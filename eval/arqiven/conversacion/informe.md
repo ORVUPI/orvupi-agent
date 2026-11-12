@@ -13,7 +13,7 @@ Medición en esta máquina, CPU, 4 hilos, cuantización q4, Transformers.js 4.3.
 | Qwen2.5-1.5B q4 | legacy | 7/21 | 7/19 | 10752 ms | 12 | 1 | 0 |
 | Qwen2.5-1.5B q4 | v1 | 17/21 | 16/19 | 7277 ms | 0 | 1 | 1 |
 
-Qwen3.5-0.8B `v1` llega a 16/21. Ninguna categoría baja respecto de `legacy` en el mismo modelo. La mediana baja de 7708 ms a 4487 ms.
+Qwen3.5-0.8B `v1` llega a 16/21. Ninguna categoría baja respecto de `legacy` en el mismo modelo. En la corrida emparejada la mediana baja de 7708 ms a 4487 ms. Una repetición posterior del mismo `v1` midió 2534 ms de carga y 6206 ms de mediana, otra vez 16/21 y 0 truncadas.
 
 Qwen2.5-1.5B `v1` llega a 17/21. La mediana baja de 10752 ms a 7277 ms. Aclaración baja de 1/1 a 0/1: la pregunta ambigua salió vacía. El resto de categorías sube o se mantiene. El suelo pedido para este modelo era 15/21.
 
@@ -61,9 +61,22 @@ En esta corrida, «calculo-1» llega al modelo en los dos perfiles. Con `v1`, 1.
 4. **intencion-correo, Qwen2.5-1.5B.** Correo completo, sin cortar, pidiendo el viernes por una cita médica. En 0.8B la respuesta tampoco se corta, pero pide más datos y no menciona la cita, así que no cuenta como acierto.
 5. **detalle-entrevista, Qwen3.5-0.8B.** Lista de pasos (perfil del puesto, competencias, preguntas, ejemplos) por encima de 300 caracteres y sin llegar al tope de tokens.
 
-## Qué no se ha cambiado
+## Modelo por defecto
 
-El modelo por defecto en CPU sigue siendo SmolLM2-135M (`CPU_DEFAULT`). `qwen05-cpu-q4` está en el catálogo y no sale en el selector. q8 de Qwen2.5 dio texto sin sentido en Node durante la auditoría y no se ha comprobado en el navegador. La generación de imágenes sigue apagada.
+En CPU, también sin WebGPU, el modelo por defecto es Qwen3.5-0.8B q4 (`qwen35-cpu`) con el perfil `v1`. SmolLM2-135M sigue en el selector. Si el navegador declara menos de 4 GB, o si Qwen no llega a cargarse, se usa SmolLM2 y el aviso queda en la barra de estado: no se guarda como mensaje del chat. La elección manual se guarda en IndexedDB `orvupi-arqiven-settings`. El porcentaje de la descarga se muestra en Ajustes y en esa misma barra. Con WebGPU se mantiene el modelo de GPU que ya elegía el dispositivo.
+
+Repetición en esta máquina, CPU, 4 hilos, q4, perfil `v1`, pesos de 526 MB:
+
+| | |
+| --- | ---: |
+| Carga del pipeline | 2534 ms |
+| Mediana de respuesta | 6206 ms |
+| Tareas | 16/21 |
+| Truncadas | 0 |
+
+Las categorías coinciden con la tabla de Qwen3.5 de arriba. La corrida emparejada con `legacy` midió 4487 ms de mediana y 7053 ms de carga; esta repetición solo vuelve a medir `v1`.
+
+`qwen05-cpu-q4` sigue fuera del selector. q8 de Qwen2.5 dio texto sin sentido en Node durante la auditoría y no se ha comprobado en el navegador. La generación de imágenes sigue apagada.
 
 `?perfil=legacy` o `ACTIVE_PROFILE = "legacy"` en `web/v2/shared/ia/profile.mjs` vuelve a los límites anteriores. IndexedDB solo añade `modelContent` opcional: los chats viejos se leen igual.
 
