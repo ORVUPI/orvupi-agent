@@ -23,6 +23,7 @@ function cleanMessage(item) {
     role: item.role,
     content,
     mode: String(item.mode || "rules").slice(0, 32),
+    modelContent: typeof item.modelContent === "string" ? item.modelContent.slice(0, 8000) : "",
     provider: String(item.provider || "none").slice(0, 32),
     modelId: String(item.modelId || "none").slice(0, 80),
     modelVersion: String(item.modelVersion || "").slice(0, 80),

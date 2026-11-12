@@ -4,10 +4,11 @@ import { createRequest, honestResult } from "/shared/ia/contract.mjs";
 import { saveWorkBytes, loadWorkBytes } from "/studio/lib/work-store.mjs";
 import { sanitizePlain } from "/shared/ia/plain.mjs";
 import { buildIndex } from "/shared/ia/retrieve.mjs";
-import { excerptAnswer, finishModelAnswer, planTurn } from "/shared/ia/turn.mjs";
+import { excerptAnswer, finishModelAnswer, isFollowUp, planTurn } from "/shared/ia/turn.mjs";
 import { citedExcerpt, extractiveFromSources } from "/shared/ia/quality.mjs";
 import { exportPayload, listVotes, openFeedbackDb, saveVote } from "/shared/ia/feedback.mjs";
 import { clipHistory } from "/shared/ia/history.mjs";
+void clipHistory;
 import { dateGroup, deleteConversation, deleteImage, deleteProject, listConversations, listImages, listProjects, matchesQuery, openChatDb, readConversation, saveConversation, saveImage, saveProject } from "/shared/ia/chats.mjs";
 
 const root = document.querySelector(".arq-app");
@@ -263,6 +264,7 @@ const modelPick = document.createElement("select");
 modelPick.id = "model-pick";
 modelPick.setAttribute("aria-label", ui.third);
 for (const item of THIRD_PARTY_MODELS) {
+  if (item.listed === false) continue;
   const option = document.createElement("option");
   option.value = item.id;
   option.textContent = `${item.version} · ${ui.third} · ${item.device} · ${item.sizeMb} MB`;
@@ -406,6 +408,7 @@ function slimMessage(item) {
     role: item.role,
     content: item.content,
     mode: item.mode,
+    modelContent: item.modelContent,
     provider: item.provider,
     modelId: item.modelId,
     modelVersion: item.modelVersion,
@@ -1026,7 +1029,9 @@ async function streamInto(item, request) {
       item.content += token;
       paintSoon();
     }, lang, item.promptSources || []);
-    const guarded = finishModelAnswer(result.text, lang, item.sources, item.question);
+    const prior = state.messages.filter((entry) => entry !== item).map((entry) => ({ role: entry.role, content: entry.content, mode: entry.mode }));
+    const guarded = finishModelAnswer(result.text, lang, item.sources, item.question, prior);
+    const followUp = isFollowUp(item.question, prior);
     if (guarded.blocked) {
       item.running = false;
       state.queue = state.queue.filter((entry) => entry !== item);
@@ -1041,8 +1046,8 @@ async function streamInto(item, request) {
     }
     item.running = false;
     state.queue = state.queue.filter((entry) => entry !== item);
-    const usable = String(result.text || "").trim();
-    if (guarded.extractive || usable.length < 24 || result.provider !== "third-party") {
+    const usable = String(guarded.text || result.text || "").trim();
+    if (!followUp && (guarded.extractive || usable.length < 24 || result.provider !== "third-party")) {
       const excerpt = guarded.extractive && guarded.text.trim().length >= 24
         ? guarded.text
         : (extractiveFromSources(lang, item.sources, item.question) || citedExcerpt(lang, item.sources, item.question));
@@ -1059,7 +1064,7 @@ async function streamInto(item, request) {
       item.modelVersion = result.modelVersion || "";
       }
     } else {
-      item.content = sanitizePlain(result.text);
+      item.content = sanitizePlain(usable);
       item.mode = result.mode;
       item.provider = result.provider;
       item.modelId = result.modelId;
@@ -1138,20 +1143,24 @@ async function send() {
     question: text,
     lang,
     index,
+    history: state.messages.map((item) => ({ role: item.role, content: item.content, mode: item.mode })),
+    attachment: Boolean(state.attachment || local),
     model: modelById(modelPick.value) || defaultModel(),
     fetchImpl: text && !state.attachment ? globalThis.fetch.bind(globalThis) : null,
   });
-  const user = { id: `m-${state.messages.length}-u`, role: "user", content: visible, modelContent: modelText };
+  const user = { id: `m-${state.messages.length}-u`, role: "user", content: visible, modelContent: modelText, mode: "model" };
   state.messages.push(user);
   const request = createRequest({
     source: "central",
     task: state.tool,
     conversationId: state.conversationId,
     contextRefs: state.contextRefs,
-    messages: clipHistory(state.messages.filter((item) => item.role === "user" || item.role === "assistant").map((item) => ({
+    messages: state.messages.filter((item) => item.role === "user" || item.role === "assistant").map((item) => ({
       role: item.role,
       content: item.modelContent || item.content,
-    }))),
+      modelContent: item.modelContent,
+      mode: item.mode,
+    })),
   });
   if (field) field.value = "";
   state.attachment = null;

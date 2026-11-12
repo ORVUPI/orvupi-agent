@@ -1,6 +1,7 @@
 /** Cliente del worker de terceros. No descarga nada hasta prepare(). */
 
 import { defaultModel, modelById, thirdPartyResult } from "./models.mjs";
+import { activeProfile } from "./profile.mjs";
 
 const WORKER_URL = "/arqiven/engine-worker.mjs";
 
@@ -157,12 +158,15 @@ export function createEngineClient() {
     }));
     return new Promise((resolve, reject) => {
       pending = { id, request, onToken, resolve, reject, lang };
+      const profile = activeProfile(globalThis.location?.search || "");
       worker.postMessage({
         type: "generate",
         id,
         task: request?.task || "chat",
         messages: Array.isArray(request?.messages) ? request.messages : [],
-        maxTokens: 120,
+        maxTokens: profile.maxTokensCap > 0 ? profile.maxTokensCap : (model.maxTokens || 320),
+        profile: profile.id,
+        modelId: model.id,
         sources: promptSources,
         lang,
       });

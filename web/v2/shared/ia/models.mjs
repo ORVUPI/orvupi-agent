@@ -5,14 +5,17 @@ import { honestResult, settleResult } from "./contract.mjs";
 export const TRANSFORMERS_ESM = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.1/+esm";
 export const ONNX_WASM = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/dist/";
 
+export const CPU_DEFAULT = "smol135-cpu";
+
 export const THIRD_PARTY_MODELS = [
-  { id: "smol135-cpu", repo: "HuggingFaceTB/SmolLM2-135M-Instruct", version: "SmolLM2-135M-Instruct", device: "wasm", dtype: "q8", sizeMb: 140 },
-  { id: "qwen05-cpu", repo: "onnx-community/Qwen2.5-0.5B-Instruct", version: "Qwen2.5-0.5B-Instruct", device: "wasm", dtype: "q8", sizeMb: 520 },
-  { id: "qwen05-gpu", repo: "onnx-community/Qwen2.5-0.5B-Instruct", version: "Qwen2.5-0.5B-Instruct", device: "webgpu", dtype: "q4f16", sizeMb: 490 },
-  { id: "qwen15-cpu", repo: "onnx-community/Qwen2.5-1.5B-Instruct", version: "Qwen2.5-1.5B-Instruct", device: "wasm", dtype: "q8", sizeMb: 1580 },
-  { id: "qwen15-gpu", repo: "onnx-community/Qwen2.5-1.5B-Instruct", version: "Qwen2.5-1.5B-Instruct", device: "webgpu", dtype: "q4f16", sizeMb: 1240 },
-  { id: "lfm350-gpu", repo: "onnx-community/LFM2-350M-ONNX", version: "LFM2-350M", device: "webgpu", dtype: "q4f16", sizeMb: 255 },
-  { id: "lfm350-gpu32", repo: "onnx-community/LFM2-350M-ONNX", version: "LFM2-350M", device: "webgpu", dtype: "q4", sizeMb: 295 },
+  { id: "smol135-cpu", repo: "HuggingFaceTB/SmolLM2-135M-Instruct", version: "SmolLM2-135M-Instruct", device: "wasm", dtype: "q8", sizeMb: 140, contextChars: 3200, contextTurns: 4, maxTokens: 160 },
+  { id: "qwen05-cpu", repo: "onnx-community/Qwen2.5-0.5B-Instruct", version: "Qwen2.5-0.5B-Instruct", device: "wasm", dtype: "q8", sizeMb: 520, contextChars: 8000, contextTurns: 8, maxTokens: 320 },
+  { id: "qwen05-cpu-q4", repo: "onnx-community/Qwen2.5-0.5B-Instruct", version: "Qwen2.5-0.5B-Instruct", device: "wasm", dtype: "q4", sizeMb: 400, contextChars: 8000, contextTurns: 8, maxTokens: 320, listed: false },
+  { id: "qwen05-gpu", repo: "onnx-community/Qwen2.5-0.5B-Instruct", version: "Qwen2.5-0.5B-Instruct", device: "webgpu", dtype: "q4f16", sizeMb: 490, contextChars: 8000, contextTurns: 8, maxTokens: 320 },
+  { id: "qwen15-cpu", repo: "onnx-community/Qwen2.5-1.5B-Instruct", version: "Qwen2.5-1.5B-Instruct", device: "wasm", dtype: "q8", sizeMb: 1580, contextChars: 12000, contextTurns: 12, maxTokens: 512 },
+  { id: "qwen15-gpu", repo: "onnx-community/Qwen2.5-1.5B-Instruct", version: "Qwen2.5-1.5B-Instruct", device: "webgpu", dtype: "q4f16", sizeMb: 1240, contextChars: 12000, contextTurns: 12, maxTokens: 512 },
+  { id: "lfm350-gpu", repo: "onnx-community/LFM2-350M-ONNX", version: "LFM2-350M", device: "webgpu", dtype: "q4f16", sizeMb: 255, contextChars: 8000, contextTurns: 8, maxTokens: 320 },
+  { id: "lfm350-gpu32", repo: "onnx-community/LFM2-350M-ONNX", version: "LFM2-350M", device: "webgpu", dtype: "q4", sizeMb: 295, contextChars: 8000, contextTurns: 8, maxTokens: 320 },
 ];
 
 export function modelById(id) {
@@ -20,7 +23,7 @@ export function modelById(id) {
 }
 
 export function defaultModel() {
-  return modelById("smol135-cpu");
+  return modelById(CPU_DEFAULT);
 }
 
 /** El más capaz que el dispositivo puede cargar. SmolLM2 queda como último recurso en CPU. */

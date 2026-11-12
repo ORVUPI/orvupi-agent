@@ -1,10 +1,11 @@
 /** Worker del mismo motor que Work (Transformers.js + ONNX). Los id son de terceros. */
 
 import { ONNX_WASM, TRANSFORMERS_ESM, modelById } from "/shared/ia/models.mjs";
-import { isDegenerate } from "/shared/ia/quality.mjs";
+import { profileById } from "/shared/ia/profile.mjs";
+import { isDegenerate, trimRepetition } from "/shared/ia/quality.mjs";
 import { clipHistory } from "/shared/ia/history.mjs";
 
-const SYSTEM = [
+const SYSTEM_LEGACY = [
   "Eres un modelo de terceros dentro del navegador. ARQIVEN es la IA de ORVUPI y no entrenó estos pesos. No digas que eres Arqiven-N.",
   "Lee la última pregunta y el historial reciente. Identifica la intención: informar, resolver, corregir lo ya dicho o pedir un paso práctico.",
   "Si la pregunta es ambigua, haz una sola pregunta de aclaración. No adivines.",
@@ -12,6 +13,16 @@ const SYSTEM = [
   "Responde en el idioma del usuario, con tono natural y profesional: qué has entendido, la respuesta y, si cabe, un paso concreto.",
   "En un problema de varios pasos, cierra con una línea que empiece por «Respuesta final:».",
 ].join(" ");
+
+const SYSTEM_V1 = [
+  "Eres un modelo de terceros. ARQIVEN es la IA de ORVUPI y no entrenó estos pesos. No digas que eres Arqiven-N.",
+  "Responde a la última pregunta. Respeta las correcciones del historial. Si no lo sabes, dilo y no inventes cifras.",
+  "Si la pregunta es ambigua, haz una sola aclaración.",
+  "Ejemplo: «El presupuesto es 800, no 500.» Usa 800.",
+  "Ejemplo: «Acórtalo.» sin un texto claro antes: «¿Qué quieres que acorte?»",
+].join(" ");
+
+const SYSTEM = SYSTEM_LEGACY;
 
 const LANG_NAME = { es: "español", en: "English", pt: "português", ja: "日本語", ko: "한국어" };
 
@@ -31,7 +42,16 @@ const TASK = {
 let toolkit = null;
 let generator = null;
 let loadedKey = "";
+let loadedModel = null;
 let stopper = null;
+
+function stripThinking(text) {
+  return String(text || "").replace(/<think>[\s\S]*?<\/think>/gi, "").replace(/<think>[\s\S]*$/i, "").trim();
+}
+
+function qwen3(model) {
+  return /qwen3/i.test(`${model?.repo || ""} ${model?.id || ""}`);
+}
 
 const post = (data) => self.postMessage(data);
 
@@ -80,6 +100,7 @@ async function handle(msg) {
       }
       const { pipeline } = await lib();
       let last = 0;
+      loadedModel = known;
       generator = await pipeline("text-generation", known.repo, {
         device: known.device,
         dtype: known.dtype,
@@ -117,8 +138,18 @@ async function handle(msg) {
       }).slice(0, 4) : [];
       const language = LANG_NAME[msg.lang] || LANG_NAME[msg.lang === "pt-BR" ? "pt" : ""] || "español";
       const sourceNote = cited.length ? `\n\nFuentes. Apóyate solo en ellas y cita el título. Si no responden, di que no consta.\n${cited.join("\n\n")}` : "";
-      const history = clipHistory(msg.messages, { turns: 4, maxChars: 3200 });
-      const messages = [{ role: "system", content: `${SYSTEM} Responde en ${language}. ${hint}${sourceNote}` }, ...history];
+      const profile = profileById(msg.profile);
+      const model = loadedModel || modelById(msg.modelId);
+      const history = clipHistory(msg.messages, {
+        profile: profile.id,
+        turns: profile.id === "legacy" ? 4 : model?.contextTurns,
+        maxChars: profile.id === "legacy" ? 3200 : model?.contextChars,
+        perMessage: profile.perMessage,
+        dropNonModel: profile.dropNonModel,
+        pinFirst: profile.pinFirst,
+      });
+      const promptText = profile.id === "v1" ? SYSTEM_V1 : SYSTEM_LEGACY;
+      const messages = [{ role: "system", content: `${promptText} Responde en ${language}. ${hint}${sourceNote}` }, ...history];
       let acc = "";
       let broken = false;
       const streamer = new TextStreamer(generator.tokenizer, {
@@ -133,17 +164,20 @@ async function handle(msg) {
           post({ type: "token", id: msg.id, text });
         },
       });
+      const cap = profile.maxTokensCap > 0 ? profile.maxTokensCap : (model?.maxTokens || Number(msg.maxTokens) || 320);
       const output = await generator(messages, {
-        max_new_tokens: Math.min(120, Number(msg.maxTokens) || 120),
+        max_new_tokens: cap,
         do_sample: false,
-        repetition_penalty: 1.22,
-        no_repeat_ngram_size: 5,
+        repetition_penalty: profile.repetitionPenalty,
+        ...(profile.noRepeatNgram ? { no_repeat_ngram_size: profile.noRepeatNgram } : {}),
+        ...(profile.disableThinking && qwen3(model) ? { chat_template_kwargs: { enable_thinking: false } } : {}),
         streamer,
         stopping_criteria: stopper,
       });
       const last = output?.[0]?.generated_text;
-      const text = Array.isArray(last) ? (last.at(-1)?.content ?? acc) : String(last ?? acc);
-      post({ type: "done", id: msg.id, text: broken ? "" : text, broken });
+      const raw = Array.isArray(last) ? (last.at(-1)?.content ?? acc) : String(last ?? acc);
+      const trimmed = stripThinking(trimRepetition(broken ? acc : raw));
+      post({ type: "done", id: msg.id, text: trimmed, broken: broken && trimmed.trim().length < 60 });
     }
   } catch (error) {
     const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);

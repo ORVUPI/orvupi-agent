@@ -378,4 +378,76 @@ describe("conocimiento y evaluación de ARQIVEN", () => {
     assert.equal(chats.dateGroup("2026-10-01T10:00:00", now), "older");
     db.close();
   });
+
+  test("el perfil v1 conserva el dato, el adjunto y deja fuera los avisos", async () => {
+    const history = await import(href("web/v2/shared/ia/history.mjs")) as {
+      clipHistory: (messages: Array<{ role: string; content?: string; modelContent?: string; mode?: string }>, options?: { profile?: string; turns?: number; maxChars?: number }) => Array<{ role: string; content: string }>;
+    };
+    const fact = "Mi empresa se llama Velatia y vendemos software de logística.";
+    const messages: Array<{ role: string; content?: string; modelContent?: string; mode?: string }> = [
+      { role: "user", content: fact },
+      { role: "assistant", content: "Entendido.", mode: "model" },
+    ];
+    for (let i = 0; i < 6; i += 1) {
+      messages.push({ role: "user", content: `relleno ${i}` });
+      messages.push({ role: "assistant", content: "Vale.", mode: "model" });
+    }
+    const far = history.clipHistory(messages, { profile: "v1", turns: 12, maxChars: 12000 });
+    assert.match(far.map((item) => item.content).join("\n"), /Velatia/);
+    const notice = history.clipHistory([
+      { role: "user", content: "Necesito ideas para una cafetería." },
+      { role: "assistant", content: "El modelo de terceros se repitió. Extracto citado.", mode: "extractive" },
+      { role: "user", content: "¿Me das tres ideas?" },
+    ], { profile: "v1" });
+    assert.equal(notice.some((item) => /extracto citado/i.test(item.content)), false);
+    const doc = `${"a".repeat(2600)} KX-4471 ${"b".repeat(590)}`;
+    const attached = history.clipHistory([{ role: "user", content: "documento", modelContent: doc }], { profile: "v1", maxChars: 12000 });
+    assert.match(attached.at(-1)?.content || "", /KX-4471/);
+    assert.ok((attached.at(-1)?.content.length || 0) > 2600);
+  });
+
+  test("el filtro financiero deja pasar las preguntas normales y bloquea el activo", async () => {
+    const guard = await import(href("web/v2/shared/ia/guard.mjs")) as { asksFinancialAdvice: (text: string) => boolean };
+    const benign = [
+      "Compro 4 lápices a 3 € y pago con 20 €. ¿Cuánto me devuelven?",
+      "Voy a comprar un portátil para la universidad, ¿qué características miro?",
+      "¿Cómo vendo mi bici usada por internet de forma segura?",
+      "Quiero vender más en mi tienda online, ¿ideas de marketing?",
+      "¿Me conviene estudiar por la mañana o por la noche?",
+      "¿Va a subir la temperatura este fin de semana en Madrid?",
+      "Explícame qué es una inversión térmica en meteorología.",
+      "How do I sell my old phone safely?",
+      "I want to buy a gift for my mother, any ideas?",
+      "Quero comprar um presente para minha mãe, alguma ideia?",
+      "서울에서 사는 곳을 추천해 줘",
+      "재정 계획표를 엑셀로 만드는 방법을 알려줘",
+      "プレゼントを買うならどんな物がいい？",
+      "¿Debería comprar pan integral o blanco para la dieta?",
+      "¿Cuánto cuesta el transporte público en Madrid?",
+      "Redacta un correo para vender nuestro servicio a un cliente.",
+    ];
+    assert.equal(benign.filter((item) => guard.asksFinancialAdvice(item)).length, 0);
+    assert.equal(guard.asksFinancialAdvice("¿Compro ORVUPI ahora?"), true);
+    assert.equal(guard.asksFinancialAdvice("Should I buy ORVUPI?"), true);
+    assert.equal(guard.asksFinancialAdvice("今 ORVUPI を買うべきですか"), true);
+    assert.equal(guard.asksFinancialAdvice("지금 ORVUPI를 사야 할까요?"), true);
+  });
+
+  test("una repetición se recorta y no se vacía", async () => {
+    const quality = await import(href("web/v2/shared/ia/quality.mjs")) as { trimRepetition: (text: string) => string };
+    const prefix = "Preparo la entrevista leyendo la oferta y ensayando respuestas concretas. ";
+    const loop = `${prefix}${"y otra vez ".repeat(12)}`;
+    const kept = quality.trimRepetition(loop);
+    assert.ok(kept.length >= 60);
+    assert.equal(kept.includes("y otra vez y otra vez y otra vez"), false);
+  });
+
+  test("un registro antiguo se lee aunque no traiga el texto del adjunto", async () => {
+    const chats = await import(href("web/v2/shared/ia/chats.mjs")) as {
+      conversationRecord: (input: { id: string; messages: Array<{ role: string; content: string }> }) => { messages: Array<{ content: string; modelContent: string; mode: string }> };
+    };
+    const row = chats.conversationRecord({ id: "viejo-chat", messages: [{ role: "user", content: "Hola antiguo" }] });
+    assert.equal(row.messages[0]?.content, "Hola antiguo");
+    assert.equal(row.messages[0]?.modelContent, "");
+  });
 });

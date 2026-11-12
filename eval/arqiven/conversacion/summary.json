@@ -1,0 +1,210 @@
+[
+  {
+    "run": "Qwen2.5-1.5B-Instruct-q4-legacy-t4",
+    "pass": 7,
+    "total": 21,
+    "esPass": 7,
+    "esTotal": 19,
+    "medianMs": 10752,
+    "p90Ms": 13701,
+    "truncated": 12,
+    "extractive": 1,
+    "empty": 0,
+    "medTps": 10,
+    "loadMs": 8015,
+    "cats": {
+      "contexto": [
+        2,
+        5
+      ],
+      "correccion": [
+        0,
+        3
+      ],
+      "instrucciones": [
+        1,
+        2
+      ],
+      "incertidumbre": [
+        2,
+        2
+      ],
+      "aclaracion": [
+        1,
+        1
+      ],
+      "razonamiento": [
+        0,
+        2
+      ],
+      "comprension": [
+        0,
+        2
+      ],
+      "documento": [
+        0,
+        2
+      ],
+      "fuentes": [
+        1,
+        2
+      ]
+    }
+  },
+  {
+    "run": "Qwen2.5-1.5B-Instruct-q4-v1-t4",
+    "pass": 17,
+    "total": 21,
+    "esPass": 16,
+    "esTotal": 19,
+    "medianMs": 7277,
+    "p90Ms": 21005,
+    "truncated": 0,
+    "extractive": 1,
+    "empty": 1,
+    "medTps": 8.9,
+    "loadMs": 28147,
+    "cats": {
+      "contexto": [
+        4,
+        5
+      ],
+      "correccion": [
+        1,
+        3
+      ],
+      "instrucciones": [
+        2,
+        2
+      ],
+      "incertidumbre": [
+        2,
+        2
+      ],
+      "aclaracion": [
+        0,
+        1
+      ],
+      "razonamiento": [
+        2,
+        2
+      ],
+      "comprension": [
+        2,
+        2
+      ],
+      "documento": [
+        2,
+        2
+      ],
+      "fuentes": [
+        2,
+        2
+      ]
+    }
+  },
+  {
+    "run": "Qwen3.5-0.8B-Text-ONNX-q4-legacy-t4",
+    "pass": 9,
+    "total": 21,
+    "esPass": 8,
+    "esTotal": 19,
+    "medianMs": 7708,
+    "p90Ms": 9933,
+    "truncated": 13,
+    "extractive": 1,
+    "empty": 0,
+    "medTps": 13.9,
+    "loadMs": 1304,
+    "cats": {
+      "contexto": [
+        3,
+        5
+      ],
+      "correccion": [
+        1,
+        3
+      ],
+      "instrucciones": [
+        1,
+        2
+      ],
+      "incertidumbre": [
+        2,
+        2
+      ],
+      "aclaracion": [
+        1,
+        1
+      ],
+      "razonamiento": [
+        0,
+        2
+      ],
+      "comprension": [
+        0,
+        2
+      ],
+      "documento": [
+        0,
+        2
+      ],
+      "fuentes": [
+        1,
+        2
+      ]
+    }
+  },
+  {
+    "run": "Qwen3.5-0.8B-Text-ONNX-q4-v1-t4",
+    "pass": 16,
+    "total": 21,
+    "esPass": 14,
+    "esTotal": 19,
+    "medianMs": 4487,
+    "p90Ms": 10606,
+    "truncated": 0,
+    "extractive": 1,
+    "empty": 0,
+    "medTps": 14.3,
+    "loadMs": 7053,
+    "cats": {
+      "contexto": [
+        4,
+        5
+      ],
+      "correccion": [
+        2,
+        3
+      ],
+      "instrucciones": [
+        2,
+        2
+      ],
+      "incertidumbre": [
+        2,
+        2
+      ],
+      "aclaracion": [
+        1,
+        1
+      ],
+      "razonamiento": [
+        1,
+        2
+      ],
+      "comprension": [
+        1,
+        2
+      ],
+      "documento": [
+        2,
+        2
+      ],
+      "fuentes": [
+        1,
+        2
+      ]
+    }
+  }
+]

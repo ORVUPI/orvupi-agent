@@ -1,42 +1,42 @@
 {
-  "date": "2026-11-10",
+  "date": "2026-11-12",
   "summary": {
-    "total": 820,
-    "automatic": 795,
-    "passed": 418,
-    "accuracy": 0.5257861635220126,
+    "total": 885,
+    "automatic": 860,
+    "passed": 382,
+    "accuracy": 0.4441860465116279,
     "critical": 0,
     "rubric": 25,
     "byLang": {
       "es": {
-        "pass": 89,
-        "total": 159
+        "pass": 81,
+        "total": 172
       },
       "en": {
-        "pass": 83,
-        "total": 159
+        "pass": 76,
+        "total": 172
       },
       "pt-BR": {
-        "pass": 89,
-        "total": 159
+        "pass": 78,
+        "total": 172
       },
       "ja": {
-        "pass": 79,
-        "total": 159
+        "pass": 75,
+        "total": 172
       },
       "ko": {
-        "pass": 78,
-        "total": 159
+        "pass": 72,
+        "total": 172
       }
     },
     "byBlock": {
       "general": {
-        "pass": 25,
-        "total": 345
+        "pass": 0,
+        "total": 370
       },
       "orvupi": {
-        "pass": 132,
-        "total": 150
+        "pass": 124,
+        "total": 155
       },
       "ca": {
         "pass": 80,
@@ -51,12 +51,15 @@
         "total": 30
       },
       "rag": {
-        "pass": 51,
+        "pass": 48,
         "total": 90
+      },
+      "dialogue": {
+        "pass": 0,
+        "total": 35
       }
     }
   },
-  "modelNote": "SmolLM2-135M-Instruct q8 en CPU, cinco preguntas, 2026-11-10. Ver modelo-muestra.json. La CI no descarga el modelo.",
-  "criticalExamples": [],
-  "modelSample": "eval/arqiven/informe/modelo-muestra.json"
+  "modelNote": "No se ha lanzado SmolLM2 en esta corrida. El comando `node eval/arqiven/run-baseline.mjs --model` lo intenta en CPU si `@huggingface/transformers` está instalado. La CI no lo descarga.",
+  "criticalExamples": []
 }
