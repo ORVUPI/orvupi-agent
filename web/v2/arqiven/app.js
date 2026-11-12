@@ -1247,6 +1247,7 @@ engine.subscribe((snap) => {
 });
 
 document.querySelectorAll("#new-chat, #new-chat-side").forEach((button) => button.addEventListener("click", async () => {
+  engine.interrupt();
   await persist();
   state.messages = [];
   state.attachment = null;

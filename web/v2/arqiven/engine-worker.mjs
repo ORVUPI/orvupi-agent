@@ -1,6 +1,6 @@
 /** Worker del mismo motor que Work (Transformers.js + ONNX). Los id son de terceros. */
 
-import { ONNX_WASM, TRANSFORMERS_ESM, modelById } from "/shared/ia/models.mjs";
+import { ONNX_WASM, ORT_WASM_MJS, TRANSFORMERS_ESM, modelById } from "/shared/ia/models.mjs";
 import { profileById } from "/shared/ia/profile.mjs";
 import { isDegenerate, trimRepetition } from "/shared/ia/quality.mjs";
 import { clipHistory } from "/shared/ia/history.mjs";
@@ -62,7 +62,17 @@ function looksBroken(text) {
 
 async function lib() {
   if (toolkit) return toolkit;
-  toolkit = await import(TRANSFORMERS_ESM);
+  const response = await fetch(TRANSFORMERS_ESM);
+  if (!response.ok) throw new Error("transformers");
+  let source = await response.text();
+  source = source.replace(
+    "/npm/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/webgpu/+esm",
+    ORT_WASM_MJS,
+  );
+  source = source.replaceAll("from\"/npm/", "from\"https://cdn.jsdelivr.net/npm/");
+  if (!source.includes("onnxruntime-web@1.31.1/dist/ort.wasm.min.mjs")) throw new Error("runtime");
+  const url = URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
+  toolkit = await import(url);
   const { env, InterruptableStoppingCriteria } = toolkit;
   env.allowLocalModels = false;
   env.useBrowserCache = true;
@@ -75,6 +85,8 @@ async function lib() {
   return toolkit;
 }
 
+let turn = Promise.resolve();
+
 self.addEventListener("message", (event) => {
   const msg = event.data;
   if (!msg || typeof msg !== "object") return;
@@ -82,7 +94,7 @@ self.addEventListener("message", (event) => {
     stopper?.interrupt();
     return;
   }
-  void handle(msg);
+  turn = turn.then(() => handle(msg)).catch(() => {});
 });
 
 async function handle(msg) {
@@ -180,6 +192,9 @@ async function handle(msg) {
       post({ type: "done", id: msg.id, text: trimmed, broken: broken && trimmed.trim().length < 60 });
     }
   } catch (error) {
+    generator = null;
+    loadedKey = "";
+    loadedModel = null;
     const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
     let kind = "other";
     if (/allocat|out of memory|OOM|memory access out of bounds/i.test(message)) kind = "memory";

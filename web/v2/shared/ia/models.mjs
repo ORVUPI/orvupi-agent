@@ -3,7 +3,8 @@
 import { honestResult, settleResult } from "./contract.mjs";
 
 export const TRANSFORMERS_ESM = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.1/+esm";
-export const ONNX_WASM = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/dist/";
+export const ORT_WASM_MJS = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.1/dist/ort.wasm.min.mjs";
+export const ONNX_WASM = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.1/dist/";
 
 export const CPU_DEFAULT = "qwen35-cpu";
 export const CPU_FALLBACK = "smol135-cpu";

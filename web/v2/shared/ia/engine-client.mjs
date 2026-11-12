@@ -99,6 +99,15 @@ export function createEngineClient() {
     }
   }
 
+  function discardWorker() {
+    if (!worker) return;
+    const dead = worker;
+    worker = null;
+    dead.onmessage = () => {};
+    dead.onerror = () => {};
+    dead.terminate();
+  }
+
   function ensureWorker() {
     if (worker) return worker;
     worker = new Worker(WORKER_URL, { type: "module" });
@@ -115,6 +124,8 @@ export function createEngineClient() {
   function prepare(modelId) {
     const next = modelById(modelId) || defaultModel();
     if (!next) return snapshot();
+    if (worker && phase === "ready" && model?.id === next.id) return emit();
+    discardWorker();
     model = next;
     error = "";
     probe = false;
@@ -128,6 +139,13 @@ export function createEngineClient() {
       device: next.device,
       dtype: next.dtype,
     });
+    return snapshot();
+  }
+
+  function interrupt() {
+    if (!worker || phase !== "ready") return snapshot();
+    worker.postMessage({ type: "stop" });
+    failPending(new Error("cancelled"));
     return snapshot();
   }
 
@@ -179,7 +197,7 @@ export function createEngineClient() {
     return () => listeners.delete(listener);
   }
 
-  return { prepare, cancel, run, subscribe, snapshot };
+  return { prepare, cancel, interrupt, run, subscribe, snapshot };
 }
 
 let singleton = null;

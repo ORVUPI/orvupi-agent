@@ -161,13 +161,13 @@
     "total": 21,
     "esPass": 14,
     "esTotal": 19,
-    "medianMs": 6206,
-    "p90Ms": 15398,
+    "medianMs": 8993,
+    "p90Ms": 15542,
     "truncated": 0,
     "extractive": 1,
     "empty": 0,
-    "medTps": 10.1,
-    "loadMs": 2534,
+    "medTps": 8.1,
+    "loadMs": 1808,
     "cats": {
       "contexto": [
         4,
