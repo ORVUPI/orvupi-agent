@@ -124,7 +124,7 @@ export function generationPlan(question, sources, profileId = "v1") {
   if (profileId === "legacy") return { sourced, detail: false, list: false, maxTokens: sourced ? 72 : 120, extra: "" };
   const detail = !sourced && wantsDetail(question);
   const list = !sourced && !detail && wantsList(question);
-  const maxTokens = sourced ? 72 : detail ? 180 : 104;
+  const maxTokens = sourced ? 36 : detail ? 180 : 104;
   const extra = sourced
     ? ""
     : detail

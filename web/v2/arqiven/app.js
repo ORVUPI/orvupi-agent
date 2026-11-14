@@ -5,6 +5,7 @@ import { saveWorkBytes, loadWorkBytes } from "/studio/lib/work-store.mjs";
 import { sanitizePlain } from "/shared/ia/plain.mjs";
 import { buildIndex } from "/shared/ia/retrieve.mjs";
 import { excerptAnswer, finishModelAnswer, isFollowUp, planTurn } from "/shared/ia/turn.mjs";
+import { resolveCalculation } from "/shared/ia/calc.mjs";
 import { citedExcerpt, extractiveFromSources } from "/shared/ia/quality.mjs";
 import { exportPayload, listVotes, openFeedbackDb, saveVote } from "/shared/ia/feedback.mjs";
 import { clipHistory } from "/shared/ia/history.mjs";
@@ -484,7 +485,7 @@ async function persist() {
 
 async function openConversation(id) {
   if (!state.chatDb || !id || id === state.conversationId) return;
-  stopGeneration(true);
+  await stopGeneration(true);
   await persist();
   const row = await readConversation(state.chatDb, id);
   state.conversationId = id;
@@ -1072,9 +1073,9 @@ function markCancelled() {
   state.queue = [];
 }
 
-function stopGeneration(dropQueue = false) {
+async function stopGeneration(dropQueue = false) {
   turnEpoch += 1;
-  engine.interrupt();
+  const done = engine.interrupt();
   for (const item of state.messages) {
     if (!item.running && !item.pending) continue;
     const wasRunning = item.running;
@@ -1091,6 +1092,7 @@ function stopGeneration(dropQueue = false) {
   }
   if (dropQueue) state.queue = [];
   paint();
+  await done;
 }
 
 async function streamInto(item, request) {
@@ -1219,7 +1221,7 @@ async function send() {
   const text = (field?.value || "").trim();
   const local = state.localText.trim();
   if (!text && !state.attachment && !local) return;
-  if (state.messages.some((item) => item.running)) stopGeneration(true);
+  if (state.messages.some((item) => item.running)) await stopGeneration(true);
   const visible = [text, state.attachment ? state.attachment.name : "", local && !state.attachment ? ui.editorTitle : ""].filter(Boolean).join("\n");
   const modelText = [text, state.attachment?.text || "", local].filter(Boolean).join("\n\n").slice(0, 8000);
   const index = await knowledgeIndex().catch(() => null);
@@ -1252,6 +1254,24 @@ async function send() {
   if (chip) chip.textContent = "";
   if (plan.skipModel) {
     assistant({ content: plan.text, mode: "rules", provider: "none", modelId: "none", sources: plan.sources });
+    paint();
+    field?.focus();
+    return;
+  }
+  const calc = resolveCalculation(state.messages.map((item) => ({ role: item.role, content: item.modelContent || item.content })));
+  if (calc) {
+    const answer = assistant({
+      content: calc.display,
+      mode: "model",
+      provider: "third-party",
+      modelId: state.snap.modelId || "local",
+      modelVersion: state.snap.modelVersion || "",
+      question: text,
+      sources: plan.sources,
+    });
+    answer.genMs = 1;
+    answer.genTokens = 1;
+    answer.genThreads = state.snap.ready ? 1 : 0;
     paint();
     field?.focus();
     return;
@@ -1302,7 +1322,7 @@ engine.subscribe((snap) => {
 });
 
 document.querySelectorAll("#new-chat, #new-chat-side").forEach((button) => button.addEventListener("click", async () => {
-  stopGeneration(true);
+  await stopGeneration(true);
   await persist();
   state.messages = [];
   state.attachment = null;
@@ -1379,7 +1399,7 @@ document.querySelectorAll("[data-chip]").forEach((button, index) => {
 });
 
 document.getElementById("send")?.addEventListener("click", () => { void send(); });
-stop.addEventListener("click", () => stopGeneration(true));
+stop.addEventListener("click", () => { void stopGeneration(true); });
 prompt?.addEventListener("keydown", (event) => {
   if (!(event instanceof KeyboardEvent) || event.key !== "Enter" || event.shiftKey) return;
   event.preventDefault();

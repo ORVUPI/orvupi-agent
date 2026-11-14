@@ -125,7 +125,9 @@ Las cuatro preguntas de la vista previa, en la misma corrida:
 | Dame 3 consejos para una entrevista | 3659 ms | 453 ms | Tres puntos, sin descargo. |
 | Explica con más detalle una entrevista | 9895 ms | 394 ms | Texto más largo, por debajo de 30 s. |
 
-Estas cifras son de Node con 4 hilos. En Chromium la generación iba a unos 1,3 tokens/s: una lista de tres frases o dos frases de Sonar siguen por debajo de 30 s.
+Estas cifras son de Node con 4 hilos. En Chromium real la decodificación va a unos 1,1–1,2 tokens/s: el prefill ya cabe en menos de 5 s, y el tiempo largo es cada token. El motor ya vive en un worker, así que ORT no abre otro proxy; SIMD queda activo y, con la página aislada, usa hasta 4 hilos. Guardar la caché de claves entre turnos no acorta esa decodificación. q4 se mantiene. Con ese ritmo, unos 35 tokens caben en 30 s, así que la respuesta de ORVUPI se corta ahí y el texto sigue pintándose token a token.
+
+Detener escribe un 1 en una memoria compartida que el bucle de generación mira en cada token. Si el worker no confirma en 1 s, se cierra y se vuelve a abrir con el modelo de la caché. «¿Cuánto es 5 por 8?» lo resuelve la calculadora de la página y no espera a ese worker.
 
 `qwen05-cpu-q4` sigue fuera del selector. q8 de Qwen2.5 dio texto sin sentido en Node durante la auditoría y no se ha comprobado en el navegador. La generación de imágenes sigue apagada.
 

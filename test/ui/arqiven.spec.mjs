@@ -290,3 +290,58 @@ test("la ventana simulada no recorta el cuadro ni abre scroll horizontal", async
   await page.keyboard.press("Escape");
   await expect(page.locator("#sidebar")).toBeHidden();
 });
+
+const SLOW_WORKER = `
+const haltBuffer = new SharedArrayBuffer(4);
+const haltFlag = new Int32Array(haltBuffer);
+let count = 0;
+self.postMessage({ type: "control", halt: haltBuffer });
+self.onmessage = (event) => {
+  const msg = event.data;
+  if (!msg || typeof msg !== "object") return;
+  if (msg.type === "stop") {
+    Atomics.store(haltFlag, 0, 1);
+    return;
+  }
+  if (msg.type === "load") {
+    self.postMessage({ type: "ready" });
+    return;
+  }
+  if (msg.type !== "generate") return;
+  Atomics.store(haltFlag, 0, 0);
+  count += 1;
+  const slow = count === 1;
+  self.postMessage({ type: "token", id: msg.id, text: slow ? "Empiezo " : "Listo: el motor ya está libre." });
+  const started = Date.now();
+  if (slow) {
+    while (Date.now() - started < 5000 && Atomics.load(haltFlag, 0) !== 1) {}
+  }
+  self.postMessage({ type: "done", id: msg.id, text: slow ? "Empiezo la mudanza con calma y sin prisa." : "Listo: el motor ya está libre para otra pregunta.", tokens: 8, ms: Math.max(1, Date.now() - started), threads: 1 });
+  self.postMessage({ type: "settled", id: msg.id });
+};
+`;
+
+test("detener suelta el motor y 5 por 8 no espera al modelo", async ({ page }) => {
+  await page.route("**/engine-worker.mjs*", (route) => route.fulfill({
+    status: 200,
+    contentType: "text/javascript",
+    headers: {
+      "cross-origin-opener-policy": "same-origin",
+      "cross-origin-embedder-policy": "credentialless",
+    },
+    body: SLOW_WORKER,
+  }));
+  await page.goto("/arqiven/");
+  await expect(page.locator("#engine-progress")).toContainText("Modelo de terceros listo", { timeout: 15000 });
+  await page.locator("#prompt").fill("Explica con detalle, paso a paso, cómo organizar una mudanza internacional");
+  await page.locator("#send").click();
+  await expect(page.locator(".assistant").last()).toContainText("Empiezo");
+  await expect(page.locator("#stop")).toBeVisible();
+  await page.locator("#stop").click();
+  await page.locator("#prompt").fill("¿Cuánto es 5 por 8?");
+  await page.locator("#send").click();
+  await expect(page.locator(".assistant").last()).toContainText("40", { timeout: 3000 });
+  await page.locator("#prompt").fill("Di hola");
+  await page.locator("#send").click();
+  await expect(page.locator(".assistant").last()).toContainText("ya está libre", { timeout: 5000 });
+});

@@ -84,17 +84,30 @@ async function lib() {
     const isolated = typeof crossOriginIsolated === "boolean" && crossOriginIsolated;
     wasmThreadCount = isolated ? Math.max(1, Math.min(4, cores)) : 1;
     wasm.numThreads = wasmThreadCount;
+    wasm.simd = true;
+    wasm.proxy = false;
   }
   stopper = new InterruptableStoppingCriteria();
+  post({ type: "control", halt: haltFlag.buffer });
   return toolkit;
 }
 
 let turn = Promise.resolve();
+const haltFlag = new Int32Array(new SharedArrayBuffer(4));
+
+function haltRequested() {
+  return Atomics.load(haltFlag, 0) === 1;
+}
+
+function clearHalt() {
+  Atomics.store(haltFlag, 0, 0);
+}
 
 self.addEventListener("message", (event) => {
   const msg = event.data;
   if (!msg || typeof msg !== "object") return;
   if (msg.type === "stop") {
+    Atomics.store(haltFlag, 0, 1);
     stopper?.interrupt();
     return;
   }
@@ -146,6 +159,7 @@ async function handle(msg) {
     if (msg.type === "generate") {
       if (!generator) throw new Error("not-loaded");
       const { TextStreamer } = await lib();
+      clearHalt();
       stopper?.reset();
       const hint = TASK[msg.task] || "";
       const cited = Array.isArray(msg.sources) ? msg.sources.flatMap((item) => {
@@ -180,6 +194,7 @@ async function handle(msg) {
           ms: Math.max(1, Date.now() - started),
           threads: wasmThreadCount,
         });
+        post({ type: "settled", id: msg.id });
         return;
       }
       const verified = calc ? `\n\nCálculo verificado. No lo recalcules. ${calc.display}. La respuesta numérica es ${formatNumber(calc.value)}. Responde en una frase y no des otro número.` : "";
@@ -193,6 +208,10 @@ async function handle(msg) {
         skip_prompt: true,
         skip_special_tokens: true,
         callback_function: (text) => {
+          if (haltRequested()) {
+            broken = true;
+            stopper?.interrupt();
+          }
           acc += text;
           const sentences = acc.split(/[.!?。！？]+/).filter((part) => part.trim().length > 8).length;
           const bullets = acc.split("\n").filter((line) => /^\s*(?:[-*•]|\d+[.)])\s+\S/.test(line)).length;
@@ -225,8 +244,10 @@ async function handle(msg) {
       const tokens = Math.max(1, generator.tokenizer.encode(String(trimmed || acc)).length);
       const promptTokens = messages.reduce((sum, item) => sum + generator.tokenizer.encode(String(item.content || "")).length, 0);
       post({ type: "done", id: msg.id, text: trimmed, broken: broken && trimmed.trim().length < 60, tokens, promptTokens, ms, threads: wasmThreadCount });
+      post({ type: "settled", id: msg.id });
     }
   } catch (error) {
+    post({ type: "settled", id: msg?.id });
     generator = null;
     loadedKey = "";
     loadedModel = null;

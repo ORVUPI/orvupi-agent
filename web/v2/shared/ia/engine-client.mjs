@@ -14,6 +14,8 @@ export function createEngineClient() {
   let error = "";
   let nextId = 0;
   let pending = null;
+  let halt = null;
+  let settle = null;
   const listeners = new Set();
 
   function snapshot() {
@@ -69,6 +71,15 @@ export function createEngineClient() {
       probe = false;
       error = "";
       emit();
+      return;
+    }
+    if (msg.type === "control" && msg.halt) {
+      halt = new Int32Array(msg.halt);
+      return;
+    }
+    if (msg.type === "settled") {
+      settle?.();
+      settle = null;
       return;
     }
     if (msg.type === "token" && pending && msg.id === pending.id) {
@@ -146,11 +157,31 @@ export function createEngineClient() {
     return snapshot();
   }
 
+  function forceRestart() {
+    const id = model?.id;
+    halt = null;
+    settle = null;
+    discardWorker();
+    phase = "idle";
+    if (id) prepare(id);
+  }
+
   function interrupt() {
-    if (!worker || phase !== "ready") return snapshot();
-    worker.postMessage({ type: "stop" });
+    if (!worker || phase !== "ready") return Promise.resolve(snapshot());
+    if (halt) Atomics.store(halt, 0, 1);
+    const current = worker;
+    try { current.postMessage({ type: "stop" }); } catch { /* el worker ya no acepta mensajes */ }
     failPending(new Error("cancelled"));
-    return snapshot();
+    return new Promise((resolve) => {
+      const timer = setTimeout(() => {
+        if (worker === current) forceRestart();
+        resolve(snapshot());
+      }, 1000);
+      settle = () => {
+        clearTimeout(timer);
+        resolve(snapshot());
+      };
+    });
   }
 
   function cancel() {
@@ -164,9 +195,7 @@ export function createEngineClient() {
       progress = { loaded: 0, total: 0, file: "" };
       return emit();
     }
-    worker?.postMessage({ type: "stop" });
-    failPending(new Error("cancelled"));
-    return snapshot();
+    return interrupt();
   }
 
   function run(request, onToken = () => undefined, lang = "es", sources = []) {

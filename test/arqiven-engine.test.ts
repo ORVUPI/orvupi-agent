@@ -137,6 +137,11 @@ describe("motor de terceros de ARQIVEN", () => {
     assert.match(read("apps/work/src/ai/worker.ts"), /onnxruntime-web@1\.31\.0-dev\.20260914-8d85527a0/);
     assert.match(worker, /crossOriginIsolated/);
     assert.match(worker, /Math\.min\(4, cores\)/);
+    assert.match(worker, /wasm\.proxy = false/);
+    assert.match(worker, /Atomics\.store\(haltFlag, 0, 1\)/);
+    assert.match(worker, /type: "settled"/);
+    assert.match(read("web/v2/shared/ia/engine-client.mjs"), /forceRestart/);
+    assert.match(read("web/v2/arqiven/app.js"), /resolveCalculation/);
     assert.match(worker, /: 1;/);
     assert.match(headers, /! Cross-Origin-Opener-Policy/);
     assert.match(headers, /! Cross-Origin-Embedder-Policy/);

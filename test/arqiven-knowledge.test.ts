@@ -475,6 +475,7 @@ describe("conocimiento y evaluación de ARQIVEN", () => {
     };
     const cases: Array<{ ask: string; value: number; before?: string }> = [
       { ask: "¿Cuánto es 12 por 7?", value: 84 },
+      { ask: "¿Cuánto es 5 por 8?", value: 40 },
       { ask: "12 más 7", value: 19 },
       { ask: "20 entre 4", value: 5 },
       { ask: "20 menos 4", value: 16 },
