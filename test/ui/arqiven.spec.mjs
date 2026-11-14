@@ -292,15 +292,13 @@ test("la ventana simulada no recorta el cuadro ni abre scroll horizontal", async
 });
 
 const SLOW_WORKER = `
-const haltBuffer = new SharedArrayBuffer(4);
-const haltFlag = new Int32Array(haltBuffer);
+let stopped = false;
 let count = 0;
-self.postMessage({ type: "control", halt: haltBuffer });
-self.onmessage = (event) => {
+self.onmessage = async (event) => {
   const msg = event.data;
   if (!msg || typeof msg !== "object") return;
   if (msg.type === "stop") {
-    Atomics.store(haltFlag, 0, 1);
+    stopped = true;
     return;
   }
   if (msg.type === "load") {
@@ -308,13 +306,13 @@ self.onmessage = (event) => {
     return;
   }
   if (msg.type !== "generate") return;
-  Atomics.store(haltFlag, 0, 0);
+  stopped = false;
   count += 1;
   const slow = count === 1;
   self.postMessage({ type: "token", id: msg.id, text: slow ? "Empiezo " : "Listo: el motor ya está libre." });
   const started = Date.now();
-  if (slow) {
-    while (Date.now() - started < 5000 && Atomics.load(haltFlag, 0) !== 1) {}
+  while (slow && Date.now() - started < 5000 && !stopped) {
+    await new Promise((resolve) => setTimeout(resolve, 20));
   }
   self.postMessage({ type: "done", id: msg.id, text: slow ? "Empiezo la mudanza con calma y sin prisa." : "Listo: el motor ya está libre para otra pregunta.", tokens: 8, ms: Math.max(1, Date.now() - started), threads: 1 });
   self.postMessage({ type: "settled", id: msg.id });

@@ -139,6 +139,7 @@ describe("motor de terceros de ARQIVEN", () => {
     assert.match(worker, /Math\.min\(4, cores\)/);
     assert.match(worker, /wasm\.proxy = false/);
     assert.match(worker, /Atomics\.store\(haltFlag, 0, 1\)/);
+    assert.match(worker, /new SharedArrayBuffer\(4\)/);
     assert.match(worker, /type: "settled"/);
     assert.match(read("web/v2/shared/ia/engine-client.mjs"), /forceRestart/);
     assert.match(read("web/v2/arqiven/app.js"), /resolveCalculation/);

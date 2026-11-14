@@ -88,26 +88,31 @@ async function lib() {
     wasm.proxy = false;
   }
   stopper = new InterruptableStoppingCriteria();
-  post({ type: "control", halt: haltFlag.buffer });
+  if (haltFlag) post({ type: "control", halt: haltFlag.buffer });
   return toolkit;
 }
 
 let turn = Promise.resolve();
-const haltFlag = new Int32Array(new SharedArrayBuffer(4));
+let haltFlag = null;
+try {
+  haltFlag = new Int32Array(new SharedArrayBuffer(4));
+} catch {
+  haltFlag = null;
+}
 
 function haltRequested() {
-  return Atomics.load(haltFlag, 0) === 1;
+  return Boolean(haltFlag) && Atomics.load(haltFlag, 0) === 1;
 }
 
 function clearHalt() {
-  Atomics.store(haltFlag, 0, 0);
+  if (haltFlag) Atomics.store(haltFlag, 0, 0);
 }
 
 self.addEventListener("message", (event) => {
   const msg = event.data;
   if (!msg || typeof msg !== "object") return;
   if (msg.type === "stop") {
-    Atomics.store(haltFlag, 0, 1);
+    if (haltFlag) Atomics.store(haltFlag, 0, 1);
     stopper?.interrupt();
     return;
   }
