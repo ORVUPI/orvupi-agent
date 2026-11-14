@@ -11,6 +11,7 @@ import {
   normLang,
 } from "./guard.mjs";
 import { extractiveFromSources, needsExtract, trimRepetition } from "./quality.mjs";
+import { replyLanguage } from "./prompt.mjs";
 import { looksLikeOrvupi, search } from "./retrieve.mjs";
 import { lookupWikipedia, wikiQuery } from "./wikipedia.mjs";
 
@@ -54,10 +55,11 @@ export function shouldConsultWikipedia(question, localHits, options = {}) {
 
 export async function planTurn(options) {
   const question = String(options.question || "").trim();
-  const lang = normLang(options.lang);
   const pageLang = options.lang === "pt" ? "pt-BR" : (options.lang || "es");
+  const reply = replyLanguage(question, pageLang);
+  const lang = normLang(reply);
   const index = options.index;
-  const localHits = index ? search(index, question, 4, pageLang) : [];
+  const localHits = index ? search(index, question, 4, reply) : [];
   const local = localHits.map((hit) => toSource(hit, "orvupi"));
   if (foreignAddresses(question).length) {
     return { skipModel: true, critical: "ca", text: caWarning(lang), sources: local.slice(0, 2), promptSources: [] };
@@ -74,13 +76,20 @@ export async function planTurn(options) {
     wiki = await lookupWikipedia(lang, question, options.fetchImpl);
   }
   const usefulLocal = looksLikeOrvupi(question) ? local : [];
-  const sources = wiki ? usefulLocal.slice(0, 2).concat([toSource(wiki, "wikipedia")]) : usefulLocal.slice(0, 4);
+  const namedTool = /\b(sonar|studio|verify|academy|work)\b/i.test(question);
+  const aboutOrvupi = /\borvupi\b/i.test(question) && !namedTool;
+  const focused = aboutOrvupi
+    ? usefulLocal.filter((source) => !/\b(academy|studio|sonar|verify|work)\b/i.test(`${source.title} ${source.url}`))
+    : usefulLocal;
+  const picked = focused.length ? focused : usefulLocal;
+  const sources = wiki ? picked.slice(0, 2).concat([toSource(wiki, "wikipedia")]) : picked.slice(0, 4);
   return {
     skipModel: false,
     critical: null,
     text: "",
     sources,
     promptSources: sources.map((item) => ({ title: item.title, url: item.url, excerpt: item.excerpt })),
+    replyLang: reply,
   };
 }
 

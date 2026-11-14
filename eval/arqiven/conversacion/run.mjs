@@ -7,10 +7,12 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { clipHistory } from "../../../web/v2/shared/ia/history.mjs";
+import { resolveCalculation, verifiedAnswer } from "../../../web/v2/shared/ia/calc.mjs";
 import { planTurn, finishModelAnswer, isFollowUp } from "../../../web/v2/shared/ia/turn.mjs";
 import { citedExcerpt, extractiveFromSources, isDegenerate } from "../../../web/v2/shared/ia/quality.mjs";
 import { buildIndex } from "../../../web/v2/shared/ia/retrieve.mjs";
 import { profileById } from "../../../web/v2/shared/ia/profile.mjs";
+import { closeClean, directExtra, generationPlan, languageName, replyLanguage, sourceNote, sourcedSystem } from "../../../web/v2/shared/ia/prompt.mjs";
 import { TASKS } from "./tasks.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -74,9 +76,15 @@ for (const task of TASKS) {
   if (plan.skipModel) out = plan.text;
   else {
     const cited = (plan.promptSources || []).filter((source) => source.excerpt).slice(0, 4);
-    const sourceNote = cited.length ? `\n\nFuentes. Apóyate solo en ellas y cita el título. Si no responden, di que no consta.\n${cited.map((source) => `[${source.title || "fuente"}] ${source.url || ""}\n${source.excerpt}`).join("\n\n")}` : "";
-    const language = LANG_NAME[task.lang] || "español";
-    const messages = [{ role: "system", content: `${SYSTEM} Responde en ${language}. ${sourceNote}` }, ...history];
+    const longNote = cited.length ? `\n\nFuentes. Apóyate solo en ellas y cita el título. Si no responden, di que no consta.\n${cited.map((source) => `[${source.title || "fuente"}] ${source.url || ""}\n${source.excerpt}`).join("\n\n")}` : "";
+    const reply = replyLanguage(task.ask, task.lang);
+    const language = languageName(reply);
+    const shape = generationPlan(task.ask, plan.promptSources, profile.id);
+    const shaped = profile.id === "v1";
+    const promptText = shaped && shape.sourced ? sourcedSystem(language) : `${SYSTEM} Responde en ${language}.`;
+    const note = shaped && shape.sourced ? sourceNote(plan.promptSources) : longNote;
+    const messages = [{ role: "system", content: `${promptText}${shaped ? shape.extra : ""}${shaped && !shape.sourced ? directExtra(task.ask, Boolean(task.attachment)) : ""}${note}` }, ...history];
+    const maxNew = shaped ? (task.attachment ? Math.max(shape.maxTokens, 280) : shape.maxTokens) : budget.maxNew;
     const stopper = new InterruptableStoppingCriteria();
     let acc = "";
     const streamer = new TextStreamer(gen.tokenizer, {
@@ -93,7 +101,7 @@ for (const task of TASKS) {
     });
     const started = Date.now();
     const generated = await gen(messages, {
-      max_new_tokens: budget.maxNew,
+      max_new_tokens: maxNew,
       do_sample: false,
       repetition_penalty: profile.repetitionPenalty,
       ...(profile.noRepeatNgram ? { no_repeat_ngram_size: profile.noRepeatNgram } : {}),
@@ -106,8 +114,9 @@ for (const task of TASKS) {
     const text = Array.isArray(raw) ? raw.at(-1)?.content ?? acc : String(raw ?? acc);
     const ids = gen.tokenizer.encode(acc);
     toks = ids.length;
-    truncated = !broken && toks >= budget.maxNew - 2 && !/[.!?。！？»)\]]\s*$/.test(text.trim());
-    const finished = finishModelAnswer(broken ? acc : text, task.lang, plan.sources, task.ask, prior);
+    const closed = closeClean(broken ? acc : text, shape);
+    truncated = !broken && toks >= maxNew - 2 && !/[.!?。！？»)\]]\s*$/.test(closed.trim());
+    const finished = finishModelAnswer(closed, task.lang, plan.sources, task.ask, prior);
     if (finished.blocked) {
       out = finished.text;
       mode = "rules";
@@ -121,6 +130,11 @@ for (const task of TASKS) {
       out = finished.text || text;
       mode = "model";
     }
+  }
+  const solved = resolveCalculation([{ role: "user", content: task.ask }]);
+  if (solved) {
+    out = verifiedAnswer(out, solved);
+    if (out === solved.display) mode = "model";
   }
   const fails = [];
   for (const pattern of task.must || []) if (!pattern.test(out)) fails.push(`falta ${pattern}`);

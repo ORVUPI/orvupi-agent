@@ -157,6 +157,8 @@ describe("motor de terceros de ARQIVEN", () => {
     assert.equal(app.includes("innerHTML"), false);
     assert.match(app, /loadWorkBytes/);
     assert.match(app, /openEditorWith/);
+    assert.match(app, /id = "stop"/);
+    assert.match(app, /stopGeneration\(true\)/);
     assert.match(app, /randomUUID/);
     const globalBlock = headers.slice(headers.indexOf("\n/*\n"), headers.indexOf("\n/verify/\n"));
     assert.match(globalBlock, /connect-src 'self'/);

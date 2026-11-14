@@ -508,12 +508,14 @@ describe("conocimiento y evaluación de ARQIVEN", () => {
       compactSources: (sources: Array<{ title: string; excerpt: string }>) => Array<{ excerpt: string }>;
       sourcedTurn: (question: string, sources: Array<{ excerpt: string }>) => boolean;
       sourceNote: (sources: Array<{ title: string; excerpt: string }>) => string;
+      replyLanguage: (question: string, page: string) => string;
+      generationPlan: (question: string, sources: unknown[], profile?: string) => { list: boolean; detail: boolean; maxTokens: number };
     };
     const quality = await import(href("web/v2/shared/ia/quality.mjs")) as {
       needsExtract: (answer: string, sources: Array<{ title: string; excerpt: string; origin: string }>, question: string) => boolean;
     };
     const sources = [
-      { title: "ORVUPI Sonar", url: "/sonar/", excerpt: "ORVUPI Sonar muestra datos de mercado. La ruta en español es /sonar/. Auditoría larga que no debe entrar entera en el modelo. ".repeat(8), origin: "orvupi" },
+      { title: "ORVUPI Sonar", url: "/sonar/", excerpt: "ORVUPI Sonar muestra datos de mercado y la ruta en español es /sonar/. El subtítulo es «Sonar · verify on-chain». Auditoría larga que no debe entrar entera en el modelo.", origin: "orvupi" },
       { title: "Auditoría de ORVUPI Sonar", url: "/sonar/", excerpt: "Sonar · verify on chain. Este segundo fragmento no debe entrar en el modelo.", origin: "orvupi" },
     ];
     const compact = prompt.compactSources(sources);
@@ -522,9 +524,24 @@ describe("conocimiento y evaluación de ARQIVEN", () => {
     assert.equal(prompt.sourcedTurn("¿Qué es ORVUPI Sonar?", sources), true);
     assert.equal(prompt.sourcedTurn("¿Qué es un faro?", sources), false);
     const note = prompt.sourceNote(sources);
-    assert.ok(note.length < 400);
+    assert.ok(note.length < 700);
     assert.match(note, /datos de mercado/);
-    assert.doesNotMatch(note, /verify on chain/);
+    assert.match(note, /\/sonar\//);
+    assert.match(note, /verify on-chain/);
+    assert.doesNotMatch(note, /Auditoría larga/);
+    assert.equal(prompt.replyLanguage("What is ORVUPI?", "es"), "en");
+    assert.equal(prompt.replyLanguage("¿Qué es ORVUPI Sonar?", "en"), "es");
+    assert.equal(prompt.replyLanguage("Dame 3 consejos para preparar una entrevista de trabajo", "en"), "es");
+    const tips = prompt.generationPlan("Dame 3 consejos para preparar una entrevista de trabajo", [], "v1");
+    assert.equal(tips.list, true);
+    assert.ok(tips.maxTokens <= 110);
+    const detail = prompt.generationPlan("Explica con más detalle cómo preparar una entrevista de trabajo", [], "v1");
+    assert.equal(detail.detail, true);
+    assert.ok(detail.maxTokens > tips.maxTokens);
+    const app = readFileSync(path.join(root, "web/v2/arqiven/app.js"), "utf8");
+    assert.match(app, /id = "stop"/);
+    assert.match(app, /function stopGeneration/);
+    assert.match(app, /stopGeneration\(true\)/);
     const grounded = "ORVUPI Sonar muestra datos de mercado. La ruta es /sonar/ (ORVUPI Sonar).";
     assert.equal(quality.needsExtract(grounded, sources, "¿Qué es ORVUPI Sonar?"), false);
     const invented = "ORVUPI Sonar es un cohete privado que viaja a Marte cada martes por la noche.";

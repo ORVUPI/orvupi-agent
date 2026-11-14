@@ -26,6 +26,8 @@ const UI = {
     ready: "Modelo de terceros listo",
     again: "Usar este modelo",
     cancel: "Cancelar",
+    stop: "Detener",
+    stopped: "Detenido.",
     preparing: "Descargando un modelo de terceros. Puedes seguir escribiendo.",
     checking: "Comprobando que el modelo de terceros responde en este navegador.",
     idle: "IA de ORVUPI",
@@ -61,6 +63,8 @@ const UI = {
     ready: "Third-party model ready",
     again: "Use this model",
     cancel: "Cancel",
+    stop: "Stop",
+    stopped: "Stopped.",
     preparing: "Downloading a third-party model. You can keep typing.",
     checking: "Checking that the third-party model answers in this browser.",
     idle: "ORVUPI AI",
@@ -96,6 +100,8 @@ const UI = {
     ready: "Modelo de terceiros pronto",
     again: "Usar este modelo",
     cancel: "Cancelar",
+    stop: "Parar",
+    stopped: "Interrompido.",
     who: "ARQIVEN é a IA da ORVUPI. Se você baixar um modelo para ele responder, esse modelo é de terceiros e aparece com o nome dele.",
     preparing: "Baixando um modelo de terceiros. Você pode continuar escrevendo.",
     checking: "Conferindo se o modelo de terceiros responde neste navegador.",
@@ -131,6 +137,8 @@ const UI = {
     ready: "第三者モデルの準備ができました",
     again: "このモデルを使う",
     cancel: "キャンセル",
+    stop: "停止",
+    stopped: "停止しました。",
     who: "ARQIVEN は ORVUPI の AI です。応答させるためにモデルをダウンロードする場合、それは第三者のもので、名前は別に示します。",
     preparing: "第三者モデルをダウンロードしています。入力は続けられます。",
     checking: "このブラウザで第三者モデルが応答するか確認しています。",
@@ -166,6 +174,8 @@ const UI = {
     ready: "제3자 모델이 준비되었습니다",
     again: "이 모델 사용",
     cancel: "취소",
+    stop: "중지",
+    stopped: "중지했습니다.",
     who: "ARQIVEN은 ORVUPI의 AI입니다. 답을 받으려고 모델을 받으면 그 모델은 제3자이고, 이름은 따로 표시합니다.",
     preparing: "제3자 모델을 받는 중입니다. 계속 입력할 수 있습니다.",
     checking: "이 브라우저에서 제3자 모델이 응답하는지 확인하는 중입니다.",
@@ -251,6 +261,15 @@ const sidebar = document.getElementById("sidebar");
 const backdrop = document.getElementById("backdrop");
 const menu = document.getElementById("menu");
 const prompt = document.getElementById("prompt");
+const stop = document.createElement("button");
+stop.type = "button";
+stop.id = "stop";
+stop.className = "stop";
+stop.hidden = true;
+stop.textContent = ui.stop;
+stop.setAttribute("aria-label", ui.stop);
+document.getElementById("send")?.before(stop);
+let turnEpoch = 0;
 const messages = document.getElementById("messages");
 const welcome = document.getElementById("welcome");
 const view = document.getElementById("chat-view");
@@ -464,7 +483,9 @@ async function persist() {
 }
 
 async function openConversation(id) {
-  if (!state.chatDb || !id) return;
+  if (!state.chatDb || !id || id === state.conversationId) return;
+  stopGeneration(true);
+  await persist();
   const row = await readConversation(state.chatDb, id);
   state.conversationId = id;
   state.messages = row?.messages ? row.messages.map((item) => ({ ...item })) : [];
@@ -893,7 +914,10 @@ function paintList() {
 
 function paint() {
   paintList();
-  const running = state.queue.some((item) => item.running) || state.messages.some((item) => item.pending);
+  const generating = state.messages.some((item) => item.running);
+  const running = generating || state.messages.some((item) => item.pending);
+  stop.hidden = !generating;
+  stop.textContent = ui.stop;
   const failed = state.messages.some((item) => item.failed);
   root.dataset.state = running ? "generating" : failed ? "error" : state.messages.length ? "done" : "ready";
   if (messages) {
@@ -1048,7 +1072,30 @@ function markCancelled() {
   state.queue = [];
 }
 
+function stopGeneration(dropQueue = false) {
+  turnEpoch += 1;
+  engine.interrupt();
+  for (const item of state.messages) {
+    if (!item.running && !item.pending) continue;
+    const wasRunning = item.running;
+    item.running = false;
+    item.pending = false;
+    item.request = null;
+    if (wasRunning && !String(item.content || "").trim()) {
+      item.content = ui.stopped;
+      item.mode = "rules";
+      item.provider = "none";
+      item.modelId = "none";
+      item.modelVersion = "";
+    }
+  }
+  if (dropQueue) state.queue = [];
+  paint();
+}
+
 async function streamInto(item, request) {
+  const epoch = turnEpoch;
+  const reply = item.replyLang || lang;
   item.pending = false;
   item.mode = "model";
   item.provider = "third-party";
@@ -1056,18 +1103,20 @@ async function streamInto(item, request) {
   item.modelVersion = state.snap.modelVersion;
   item.content = "";
   item.running = true;
-  state.queue.push(item);
+  if (!state.queue.includes(item)) state.queue.push(item);
   paint();
   try {
     const result = await engine.run(request, (token) => {
+      if (epoch !== turnEpoch) return;
       item.content += token;
       paintSoon();
-    }, lang, item.promptSources || []);
+    }, reply, item.promptSources || []);
+    if (epoch !== turnEpoch) return;
     item.genMs = result.genMs || 0;
     item.genTokens = result.genTokens || 0;
     item.genThreads = result.genThreads || 1;
     const prior = state.messages.filter((entry) => entry !== item).map((entry) => ({ role: entry.role, content: entry.content, mode: entry.mode }));
-    const guarded = finishModelAnswer(result.text, lang, item.sources, item.question, prior);
+    const guarded = finishModelAnswer(result.text, reply, item.sources, item.question, prior);
     const followUp = isFollowUp(item.question, prior);
     if (guarded.blocked) {
       item.running = false;
@@ -1087,7 +1136,7 @@ async function streamInto(item, request) {
     if (!followUp && (guarded.extractive || usable.length < 24 || result.provider !== "third-party")) {
       const excerpt = guarded.extractive && guarded.text.trim().length >= 24
         ? guarded.text
-        : (extractiveFromSources(lang, item.sources, item.question) || citedExcerpt(lang, item.sources, item.question));
+        : (extractiveFromSources(reply, item.sources, item.question) || citedExcerpt(reply, item.sources, item.question));
       item.content = result.provider === "third-party" ? (excerpt || ui.emptyModel) : (result.text || honest);
       if (excerpt && result.provider === "third-party") {
         item.mode = "extractive";
@@ -1108,12 +1157,13 @@ async function streamInto(item, request) {
       item.modelVersion = result.modelVersion || "";
     }
   } catch (error) {
+    if (epoch !== turnEpoch) return;
     item.running = false;
     state.queue = state.queue.filter((entry) => entry !== item);
     const message = error instanceof Error ? error.message : "";
     if (message === "cancelled") {
-      item.content = item.content || ui.cancelled;
-      if (!item.content || item.content === ui.cancelled) {
+      item.content = item.content || ui.stopped;
+      if (!item.content || item.content === ui.stopped) {
         item.mode = "rules";
         item.provider = "none";
         item.modelId = "none";
@@ -1128,6 +1178,7 @@ async function streamInto(item, request) {
       item.modelVersion = "";
     }
   }
+  if (epoch !== turnEpoch) return;
   paint();
 }
 
@@ -1168,10 +1219,7 @@ async function send() {
   const text = (field?.value || "").trim();
   const local = state.localText.trim();
   if (!text && !state.attachment && !local) return;
-  if (state.queue.some((item) => item.running)) {
-    setStatus(ui.busy);
-    return;
-  }
+  if (state.messages.some((item) => item.running)) stopGeneration(true);
   const visible = [text, state.attachment ? state.attachment.name : "", local && !state.attachment ? ui.editorTitle : ""].filter(Boolean).join("\n");
   const modelText = [text, state.attachment?.text || "", local].filter(Boolean).join("\n\n").slice(0, 8000);
   const index = await knowledgeIndex().catch(() => null);
@@ -1226,7 +1274,7 @@ async function send() {
     field?.focus();
     return;
   }
-  const item = assistant({ sources: plan.sources, promptSources: plan.promptSources, question: text });
+  const item = assistant({ sources: plan.sources, promptSources: plan.promptSources, question: text, replyLang: plan.replyLang });
   await streamInto(item, request);
   field?.focus();
 }
@@ -1254,7 +1302,7 @@ engine.subscribe((snap) => {
 });
 
 document.querySelectorAll("#new-chat, #new-chat-side").forEach((button) => button.addEventListener("click", async () => {
-  engine.interrupt();
+  stopGeneration(true);
   await persist();
   state.messages = [];
   state.attachment = null;
@@ -1331,6 +1379,7 @@ document.querySelectorAll("[data-chip]").forEach((button, index) => {
 });
 
 document.getElementById("send")?.addEventListener("click", () => { void send(); });
+stop.addEventListener("click", () => stopGeneration(true));
 prompt?.addEventListener("keydown", (event) => {
   if (!(event instanceof KeyboardEvent) || event.key !== "Enter" || event.shiftKey) return;
   event.preventDefault();

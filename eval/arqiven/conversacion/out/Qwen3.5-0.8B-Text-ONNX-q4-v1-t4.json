@@ -3,7 +3,7 @@
   "dtype": "q4",
   "cfg": "v1",
   "threads": 4,
-  "loadMs": 1808,
+  "loadMs": 1246,
   "results": [
     {
       "id": "ctx-cerca",
@@ -12,15 +12,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 2767,
+      "ms": 1605,
       "toks": 18,
-      "tps": 6.5,
+      "tps": 11.2,
       "truncated": false,
       "broken": false,
       "histMsgs": 5,
       "histChars": 371,
       "sources": [],
-      "out": "La empresa se llama **Velatia** y se dedica a vender software de logística.\n"
+      "out": "La empresa se llama **Velatia** y se dedica a vender software de logística."
     },
     {
       "id": "ctx-lejos",
@@ -29,15 +29,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 1792,
+      "ms": 1596,
       "toks": 11,
-      "tps": 6.1,
+      "tps": 6.9,
       "truncated": false,
       "broken": false,
       "histMsgs": 13,
       "histChars": 1063,
       "sources": [],
-      "out": "Velatia se dedica a vender software de logística.\n"
+      "out": "Velatia se dedica a vender software de logística."
     },
     {
       "id": "ctx-lejos-en",
@@ -46,15 +46,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 1295,
+      "ms": 1139,
       "toks": 7,
-      "tps": 5.4,
+      "tps": 6.1,
       "truncated": false,
       "broken": false,
       "histMsgs": 13,
       "histChars": 475,
       "sources": [],
-      "out": "Velatia sells logistics software.\n"
+      "out": "Velatia sells logistics software."
     },
     {
       "id": "correccion",
@@ -63,15 +63,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 4760,
+      "ms": 1797,
       "toks": 23,
-      "tps": 4.8,
+      "tps": 12.8,
       "truncated": false,
       "broken": false,
       "histMsgs": 5,
       "histChars": 244,
       "sources": [],
-      "out": "Sí, con un presupuesto de 800 € se puede comprar un portátil de 650 €.\n"
+      "out": "Sí, con un presupuesto de 800 € se puede comprar un portátil de 650 €."
     },
     {
       "id": "correccion-lejos",
@@ -83,15 +83,15 @@
         "sobra /^\\s*no\\b/i"
       ],
       "mode": "model",
-      "ms": 8993,
+      "ms": 3187,
       "toks": 43,
-      "tps": 4.8,
+      "tps": 13.5,
       "truncated": false,
       "broken": false,
       "histMsgs": 11,
       "histChars": 761,
       "sources": [],
-      "out": "No, no. El presupuesto original fue de 800 €, pero tu presupuesto actual es de 500 €, por lo que no tienes suficiente dinero para comprar un portátil de 650 €.\n"
+      "out": "No, no. El presupuesto original fue de 800 €, pero tu presupuesto actual es de 500 €, por lo que no tienes suficiente dinero para comprar un portátil de 650 €."
     },
     {
       "id": "correccion-pt",
@@ -100,15 +100,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 4726,
-      "toks": 22,
-      "tps": 4.7,
+      "ms": 1896,
+      "toks": 24,
+      "tps": 12.7,
       "truncated": false,
       "broken": false,
       "histMsgs": 5,
       "histChars": 178,
       "sources": [],
-      "out": "Sim, com 800 reais você pode comprar um fone de 650 reais.\n"
+      "out": "Sim, pois o orçamento de 800 reais permite comprar o fone de 650 reais."
     },
     {
       "id": "instr-persistente",
@@ -117,15 +117,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 3417,
+      "ms": 2627,
       "toks": 37,
-      "tps": 10.8,
+      "tps": 14.1,
       "truncated": false,
       "broken": false,
       "histMsgs": 7,
       "histChars": 528,
       "sources": [],
-      "out": "La inflación es el aumento general del valor de los precios de bienes y servicios por encima del nivel de precios previos, lo que hace que cada moneda vale menos con el tiempo.\n"
+      "out": "La inflación es el aumento general del valor de los precios de bienes y servicios por encima del nivel de precios previos, lo que hace que cada moneda vale menos con el tiempo."
     },
     {
       "id": "formato-3",
@@ -134,15 +134,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 4062,
-      "toks": 43,
-      "tps": 10.6,
+      "ms": 1968,
+      "toks": 29,
+      "tps": 14.7,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
       "histChars": 89,
       "sources": [],
-      "out": "1. Mayor flexibilidad horaria para trabajar desde cualquier lugar o horario.\n2. Reducción significativa del tiempo de desplazamiento y transporte.\n3. Mejora del equilibrio entre trabajo y descanso personal.\n"
+      "out": "1. Mayor autonomía para el trabajo.\n2. Reducción del estrés laboral.\n3. Mejor equilibrio entre vida profesional y personal."
     },
     {
       "id": "incert-1",
@@ -151,15 +151,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 9604,
+      "ms": 5633,
       "toks": 94,
-      "tps": 9.8,
+      "tps": 16.7,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
       "histChars": 59,
       "sources": [],
-      "out": "No tengo información sobre el número de empleados de la panadería de mi barrio en 2019. Como modelo de IA basado en datos históricos, no puedo acceder a registros financieros o administrativos específicos de empresas locales para ese año exacto. Sin embargo, puedo ayudarte a calcularlo si me proporcionas los datos necesarios (por ejemplo, el número de empleados en 2018 y el crecimiento anual). ¿Podrías compartir esos datos?\n"
+      "out": "No tengo información sobre el número de empleados de la panadería de mi barrio en 2019. Como modelo de IA basado en datos históricos, no puedo acceder a registros financieros o administrativos específicos de empresas locales para ese año exacto. Sin embargo, puedo ayudarte a calcularlo si me proporcionas los datos necesarios (por ejemplo, el número de empleados en 2018 y el crecimiento anual). ¿Podrías compartir esos datos?"
     },
     {
       "id": "incert-2",
@@ -168,15 +168,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 9366,
+      "ms": 5304,
       "toks": 88,
-      "tps": 9.4,
+      "tps": 16.6,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
       "histChars": 65,
       "sources": [],
-      "out": "No existe ningún ganador oficial para la lotería de Navidad de 2026, ya que este evento se realiza cada año en fechas diferentes (generalmente entre 14 y 17 de diciembre) y los resultados son aleatorios por lotería. Por lo tanto, no hay un número específico que \"ganar\" esa fecha; todos los números posibles tienen probabilidades iguales según los datos oficiales de la lotería.\n"
+      "out": "No existe ningún ganador oficial para la lotería de Navidad de 2026, ya que este evento se realiza cada año en fechas diferentes (generalmente entre 14 y 17 de diciembre) y los resultados son aleatorios por lotería. Por lo tanto, no hay un número específico que \"ganar\" esa fecha; todos los números posibles tienen probabilidades iguales según los datos oficiales de la lotería."
     },
     {
       "id": "ambigua",
@@ -185,15 +185,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 8598,
+      "ms": 4167,
       "toks": 70,
-      "tps": 8.1,
+      "tps": 16.8,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
       "histChars": 9,
       "sources": [],
-      "out": "No tengo acceso a tu historial o datos personales para realizar cálculos específicos como \"acortar\" algo. Sin embargo, puedo ayudarte con cualquier otro tema relacionado con el contexto de la conversación (por ejemplo, explicando cómo funciona ARQIVEN, describiendo sus características o proporcionando información sobre su uso). ¿En qué puedo ayudarte?\n"
+      "out": "No tengo acceso a tu historial o datos personales para realizar cálculos específicos como \"acortar\" algo. Sin embargo, puedo ayudarte con cualquier otro tema relacionado con el contexto de la conversación (por ejemplo, explicando cómo funciona ARQIVEN, describiendo sus características o proporcionando información sobre su uso). ¿En qué puedo ayudarte?"
     },
     {
       "id": "calculo-1",
@@ -204,15 +204,15 @@
         "falta /\\b8\\b/"
       ],
       "mode": "model",
-      "ms": 12553,
-      "toks": 137,
-      "tps": 10.9,
+      "ms": 3058,
+      "toks": 50,
+      "tps": 16.4,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
       "histChars": 82,
       "sources": [],
-      "out": "No puedo calcular el monto exacto que devuelves porque no tengo acceso al historial previo o a los datos financieros que mencionan en tu historia (como el precio del lápiz o el valor del billete). Sin embargo, puedo ayudarte a resolver esto basándome en la lógica financiera básica:\n\n1.  **Cuesta:** 3 €\n2.  **Billete:** 20 €\n3.  **Monto total a pagar:** 3 + 20 = 23 €\n\n**Respuesta:**\nDeberías recibir **23 €** (la suma de lo que compraste y el valor del billete).\n"
+      "out": "No tengo acceso al historial previo para calcular el monto original o el valor del billete, por lo que no puedo determinar cuánto devuelvo basándome solo en esa información. Sin embargo, puedo ayudarte a resolver este problema matemáticamente."
     },
     {
       "id": "calculo-2",
@@ -221,15 +221,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 12085,
-      "toks": 185,
-      "tps": 15.3,
+      "ms": 5647,
+      "toks": 104,
+      "tps": 18.4,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
       "histChars": 53,
       "sources": [],
-      "out": "No tengo acceso a tu historial previo para saber cuánto dinero gastaste antes de esta consulta, por lo que no puedo calcularlo con precisión basada en datos anteriores. Sin embargo, puedo ayudarte a resolver esto matemáticamente.\n\nSi gastaste el **25%** de tus 120 €, tienes que restar ese porcentaje a tu total. Para hacerlo más fácil, primero calcula el valor del 25% (que es 30€) y luego resta esa cantidad de tu saldo.\n\n**Cálculo:**\n1.  Saldo inicial: 120 €\n2.  Gasto del 25%: 120 × 0,25 = 30 €\n3.  Resto del dinero: 120 - 30 = 90 €\n\nPor lo tanto, te quedan **90 €** de dinero.\n"
+      "out": "El resultado verificado de 120 − 25 % es 90."
     },
     {
       "id": "intencion-correo",
@@ -240,15 +240,15 @@
         "falta /m[eé]dic/i"
       ],
       "mode": "model",
-      "ms": 3405,
-      "toks": 48,
-      "tps": 14.1,
+      "ms": 2222,
+      "toks": 35,
+      "tps": 15.8,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
       "histChars": 80,
       "sources": [],
-      "out": "No tengo información sobre tu horario laboral o disponibilidad para este viernes para evitar errores. Por favor, proporciona los detalles específicos (hora de inicio, hora de fin, si hay otros compromisos) para poder redactar el correo correctamente.\n"
+      "out": "No tengo información sobre tu horario laboral o disponibilidad para este viernes para redactar el correo. Por favor, proporciona más detalles sobre cuándo tienes disponibilidad o qué necesitas hacer."
     },
     {
       "id": "detalle-entrevista",
@@ -257,15 +257,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 15542,
-      "toks": 178,
-      "tps": 11.5,
+      "ms": 9234,
+      "toks": 164,
+      "tps": 17.8,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
       "histChars": 58,
       "sources": [],
-      "out": "Para preparar una entrevista de trabajo, sigue estos pasos clave:\n\n1.  **Revisa el perfil del puesto:** Analiza qué habilidades específicas se buscan para ese cargo (ej. liderazgo, programación, ventas).\n2.  **Crea una lista de competencias clave:** Define los 3 o 4 puntos más importantes que destaca tu experiencia.\n3.  **Reserva espacio para preguntas:** Decide cuántos minutos dedicarte a estas preguntas (generalmente entre 10 y 15 minutos).\n4.  **Construye ejemplos concretos:** Usa casos reales o situaciones actuales para demostrar tu capacidad.\n5.  **Prueba tus respuestas:** Haz una prueba de voz o escrita antes de la entrevista real para asegurar que sea clara.\n6.  **Recibe feedback:** R"
+      "out": "Para preparar una entrevista de trabajo, sigue estos pasos clave:\n\n1. **Revisa el perfil de la empresa**: Analiza qué productos o servicios ofrece la organización para identificar qué habilidades son más relevantes para su equipo.\n2. **Crea una lista de competencias**: Define cuáles habilidades específicas (como liderazgo, resolución de problemas o comunicación) son esenciales para el puesto.\n3. **Construye una narrativa de experiencia**: Recibe ejemplos concretos de cómo aplicaste esas competencias en tu pasado laboral.\n4. **Prueba tus respuestas**: Practica preguntas comunes sobre tu trayectoria y prepara respuestas claras y fundamentadas.\n5. **Revisa la redacción final**: Asegúrate de que"
     },
     {
       "id": "doc-lejos",
@@ -274,15 +274,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 15296,
-      "toks": 103,
-      "tps": 6.7,
+      "ms": 7526,
+      "toks": 89,
+      "tps": 11.8,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
       "histChars": 3374,
       "sources": [],
-      "out": "No tengo acceso a documentos adjuntos o a datos internos específicos sobre el proyecto \"KX-4471\" que no están disponibles en mi base de conocimiento o registros históricos. Sin embargo, basándome en tu solicitud para responder con precisión basada en la información proporcionada (el código fue dado explícitamente como **KX-4471** por parte del equipo), te dirijo la respuesta correcta.\n\nEl código interno del proyecto es **KX-4471**.\n"
+      "out": "No tengo acceso a archivos adjuntos o documentos externos para extraer datos específicos como el código interno del proyecto (KX-4471), ya que este valor podría estar oculto dentro del documento adjunto o requerir información adicional que no se ha proporcionado en el prompt. Sin embargo, basándome exclusivamente en la información disponible en tu mensaje, el código interno del proyecto es **KX-4471**."
     },
     {
       "id": "doc-cerca",
@@ -291,15 +291,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 15369,
-      "toks": 103,
-      "tps": 6.7,
+      "ms": 6668,
+      "toks": 76,
+      "tps": 11.4,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
       "histChars": 3375,
       "sources": [],
-      "out": "No tengo acceso a documentos adjuntos ni a datos internos específicos sobre el proyecto \"ARQIVEN\", ya que soy un modelo basado en conocimiento general y no puedo leer archivos adjuntos o acceder a información privada de sistemas como ORVUPI. Sin embargo, basándome en tu solicitud para responder a la última pregunta con claridad y respetando la estructura del historial (código interno), te dirijo a continuación:\n\n**Código interno del proyecto:** **KX-4471**\n"
+      "out": "No tengo acceso a archivos adjuntos ni a documentos internos específicos para este tipo de consulta técnica, por lo que no puedo confirmar el código interno basado en el contexto de tu solicitud. Sin embargo, basándome en la información proporcionada sobre el calendario, tareas pendientes y indicadores, deduciría que el código interno corresponde a **KX-4471**."
     },
     {
       "id": "fuente-orvupi",
@@ -307,10 +307,10 @@
       "lang": "es",
       "pass": true,
       "fails": [],
-      "mode": "extractive",
-      "ms": 12264,
-      "toks": 74,
-      "tps": 6,
+      "mode": "model",
+      "ms": 3221,
+      "toks": 54,
+      "tps": 16.8,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
@@ -320,7 +320,7 @@
         "orvupi:Auditoría de ORVUPI Sonar",
         "orvupi:QA de ORVUPI Sonar"
       ],
-      "out": "El modelo de terceros se repitió o no se apoyó en las fuentes. Esto es un extracto citado, no su redacción. Auditoría de ORVUPI Sonar El nombre de la herramienta es ORVUPI Sonar, con el subtítulo «Sonar · verify on chain». QA de ORVUPI Sonar Fecha: 31 de octubre de 2026."
+      "out": "El subtítulo del sitio es \"Sonar · verify on-chain\".\nSonar es una plataforma que permite ver datos de mercado y mostrar rutas en español a través de su interfaz.\nNo se trata de un contrato de pago o una red de blockchain."
     },
     {
       "id": "fuente-general",
@@ -331,9 +331,9 @@
         "falta /planta|clorof[ií]l|organism/i"
       ],
       "mode": "model",
-      "ms": 18969,
-      "toks": 163,
-      "tps": 8.6,
+      "ms": 6509,
+      "toks": 104,
+      "tps": 16,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
@@ -341,7 +341,7 @@
       "sources": [
         "wikipedia:Fotosíntesis"
       ],
-      "out": "La fotosíntesis es un proceso bioquímico que consiste en la conversión de materia inorgánica a materia orgánica gracias a la energía que aporta la luz solar. En este proceso, la energía lumínica se transforma en energía química, siendo el NADPH (nicotín adenín dinucleótido fosfato) y el ATP (adenosín trifosfato) las primeras moléculas en las que queda almacenada esta energía química. Con posterioridad, el poder reductor del NADPH y el potencial energético del grupo fosfato del ATP se usan para la síntesis de hidratos de carbono a partir de la reducción del dióxido de carbono (CO2). La vida en nuestro planeta se mantiene fundamentalmente gracias a la síntesis que realiza\n"
+      "out": "La fotosíntesis es un proceso bioquímico que consiste en la conversión de materia inorgánica a materia orgánica gracias a la energía que aporta la luz solar. En este proceso, la energía lumínica se transforma en energía química, siendo el NADPH (nicotín adenín dinucleótido fosfato) y el ATP (adenosín trifosfato) las primeras moléculas en las que queda almacenada esta energía química."
     },
     {
       "id": "seguimiento",
@@ -350,34 +350,32 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 5782,
+      "ms": 3051,
       "toks": 44,
-      "tps": 7.6,
+      "tps": 14.4,
       "truncated": false,
       "broken": false,
       "histMsgs": 3,
       "histChars": 172,
       "sources": [],
-      "out": "Se produce principalmente en los **estomas** (pétalas), específicamente en las hojas principales, donde se realiza la transpiración y la absorción de nutrientes desde el suelo hacia dentro de la célula.\n"
+      "out": "Se produce principalmente en los **estomas** (pétalas), específicamente en las hojas principales, donde se realiza la transpiración y la absorción de nutrientes desde el suelo hacia dentro de la célula."
     },
     {
       "id": "historial-sucio",
       "cat": "contexto",
       "lang": "es",
-      "pass": false,
-      "fails": [
-        "viñetas 0"
-      ],
+      "pass": true,
+      "fails": [],
       "mode": "model",
-      "ms": 18712,
-      "toks": 178,
-      "tps": 9.5,
+      "ms": 2152,
+      "toks": 29,
+      "tps": 13.5,
       "truncated": false,
-      "broken": true,
+      "broken": false,
       "histMsgs": 2,
       "histChars": 82,
       "sources": [],
-      "out": "No tengo información sobre el presupuesto o los detalles específicos de tu negocio (como si fuera un café de barrio con un presupuesto de 800), por lo que no puedo generar nombres basados en esos datos. Sin embargo, aquí tienes tres ideas de nombres para una cafetería de barrio, adaptadas a diferentes estilos: 1. **Barrio Café** * **Por qué funciona:** Es directo, familiar y fácil de recordar. \"Barrio\" evoca la identidad del lugar y sugiere que se sirve comida local o artesanal. 2. **La Mesa del Barrio** * **Por qué funciona:** Tiene una sensación de comunidad y acogimiento. La palabra \"Mesa\" invita a comer juntos, ideal para un entorno cercano. 3. **Café del Corazón**"
+      "out": "1. El Café de los Olivos\n2. La Mesa de la Esperanza\n3. El Barrio de la Cerveza"
     }
   ]
 }

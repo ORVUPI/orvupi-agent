@@ -7,12 +7,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildIndex } from "../../../web/v2/shared/ia/retrieve.mjs";
 import { planTurn } from "../../../web/v2/shared/ia/turn.mjs";
-import { sourceNote, sourcedSystem, sourcedTurn } from "../../../web/v2/shared/ia/prompt.mjs";
+import { closeClean, directExtra, generationPlan, languageName, replyLanguage, sourceNote, sourcedSystem } from "../../../web/v2/shared/ia/prompt.mjs";
 import { profileById } from "../../../web/v2/shared/ia/profile.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, "../../..");
-const LANG_NAME = { es: "español", en: "English", "pt-BR": "português", ja: "日本語", ko: "한국어" };
 const profile = profileById("v1");
 
 export const LATENCY = [
@@ -66,7 +65,15 @@ export const LATENCY = [
   ["orvupi", "ko", "Studio는 무엇입니까?"],
   ["orvupi", "ko", "Academy는 무엇입니까?"],
   ["orvupi", "ko", "Verify는 무엇입니까?"],
-].map(([kind, lang, ask]) => ({ kind, lang, ask }));
+].map(([kind, lang, ask]) => ({ kind, lang, ask, page: lang }));
+
+/** Las cuatro preguntas de la vista previa. «What is ORVUPI?» se hace con la página en español. */
+export const CHECKS = [
+  { kind: "check", lang: "es", page: "es", ask: "¿Qué es ORVUPI Sonar?" },
+  { kind: "check", lang: "en", page: "es", ask: "What is ORVUPI?" },
+  { kind: "check", lang: "es", page: "es", ask: "Dame 3 consejos para preparar una entrevista de trabajo" },
+  { kind: "check", lang: "es", page: "es", ask: "Explica con más detalle cómo preparar una entrevista de trabajo" },
+];
 
 function median(values) {
   const list = values.filter((value) => Number.isFinite(value)).sort((a, b) => a - b);
@@ -79,7 +86,8 @@ const system = worker.match(/const SYSTEM_V1 = (\[[\s\S]*?\]\.join\(" "\));/);
 const SYSTEM_V1 = Function(`return ${system[1]}`)();
 const kn = JSON.parse(await readFile(path.join(repoRoot, "web/v2/arqiven/knowledge-index.json"), "utf8"));
 const index = buildIndex(kn.chunks || []);
-const [repo, dtype] = [process.argv[2] || "onnx-community/Qwen3.5-0.8B-Text-ONNX", process.argv[3] || "q4"];
+const args = process.argv.slice(2).filter((arg) => arg !== "--checks");
+const [repo, dtype] = [args[0] || "onnx-community/Qwen3.5-0.8B-Text-ONNX", args[1] || "q4"];
 const threads = 4;
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
@@ -89,14 +97,14 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const gen = await pipeline("text-generation", repo, { dtype, device: "cpu", session_options: { intraOpNumThreads: threads } });
   const loadMs = Date.now() - loaded;
   const rows = [];
-  for (const item of LATENCY) {
-    const plan = await planTurn({ question: item.ask, lang: item.lang, index, history: [], fetchImpl: null });
+  const items = process.argv.includes("--checks") ? CHECKS : LATENCY.concat(CHECKS);
+  for (const item of items) {
+    const plan = await planTurn({ question: item.ask, lang: item.page || item.lang, index, history: [], fetchImpl: null });
     const history = [{ role: "user", content: item.ask, mode: "model" }];
-    const sourced = sourcedTurn(item.ask, plan.promptSources);
-    const language = LANG_NAME[item.lang] || "español";
-    const prompt = sourced
-      ? sourcedSystem(language) + sourceNote(plan.promptSources)
-      : `${SYSTEM_V1} Responde en ${language}.`;
+    const reply = plan.replyLang || replyLanguage(item.ask, item.page || item.lang);
+    const language = languageName(reply);
+    const shape = generationPlan(item.ask, plan.promptSources, profile.id);
+    const prompt = `${shape.sourced ? sourcedSystem(language) : `${SYSTEM_V1} Responde en ${language}.`}${shape.extra}${shape.sourced ? "" : directExtra(item.ask, false)}${shape.sourced ? sourceNote(plan.promptSources) : ""}`;
     const messages = [{ role: "system", content: prompt }, ...history];
     const promptTokens = messages.reduce((sum, message) => sum + gen.tokenizer.encode(String(message.content || "")).length, 0);
     let ttft = 0;
@@ -111,11 +119,13 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
           if (!ttft) ttft = Date.now() - started;
           acc += chunk;
           const sentences = acc.split(/[.!?。！？]+/).filter((part) => part.trim().length > 8).length;
-          if (sourced && sentences >= 3) stopper.interrupt();
+          const bullets = acc.split("\n").filter((line) => /^\s*(?:[-*•]|\d+[.)])\s+\S/.test(line)).length;
+          const listDone = shape.list && bullets >= 3 && /[.!?。！？]\s*$/.test(acc);
+          if (((shape.sourced || (!shape.detail && !shape.list)) && sentences >= 4) || listDone) stopper.interrupt();
         },
       });
       await gen(messages, {
-        max_new_tokens: sourced ? 40 : 64,
+        max_new_tokens: shape.maxTokens,
         do_sample: false,
         repetition_penalty: profile.repetitionPenalty,
         ...(profile.disableThinking ? { chat_template_kwargs: { enable_thinking: false } } : {}),
@@ -124,12 +134,13 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       });
     }
     const ms = plan.skipModel ? 0 : Date.now() - started;
-    const out = (plan.skipModel ? plan.text : acc).slice(0, 280);
-    const row = { ...item, sourced, skip: plan.skipModel, promptTokens, ttft, ms, out };
+    const out = closeClean(plan.skipModel ? plan.text : acc, shape).slice(0, 400);
+    const row = { ...item, reply, sourced: shape.sourced, list: shape.list, detail: shape.detail, skip: plan.skipModel, promptTokens, ttft, ms, out };
     rows.push(row);
     console.error(`${item.kind} ${item.lang} ttft ${ttft}ms total ${ms}ms prompt ${promptTokens} ${out.slice(0, 80).replace(/\s+/g, " ")}`);
   }
-  const modelRows = rows.filter((row) => !row.skip);
+  const modelRows = rows.filter((row) => !row.skip && row.kind !== "check");
+  const checks = rows.filter((row) => row.kind === "check");
   const summary = {
     repo, dtype, threads, loadMs, profile: profile.id,
     general: {
@@ -144,6 +155,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       total: median(modelRows.filter((row) => row.kind === "orvupi").map((row) => row.ms)),
       prompt: median(modelRows.filter((row) => row.kind === "orvupi").map((row) => row.promptTokens)),
     },
+    checks: checks.map((row) => ({ ask: row.ask, reply: row.reply, ms: row.ms, ttft: row.ttft, prompt: row.promptTokens, out: row.out })),
   };
   await mkdir(path.join(here, "out"), { recursive: true });
   await writeFile(path.join(here, "out", "latencia-qwen35.json"), JSON.stringify({ summary, rows }, null, 2));

@@ -73,6 +73,8 @@ export function search(index, query, limit = 4, lang = "") {
     const product = ["sonar", "studio", "verify", "academy", "work"].filter((name) => tokens.includes(name));
     const route = String(doc.chunk.url || "").toLowerCase();
     if (product.some((name) => titled.includes(name) || route.includes(`/${name}`))) score *= 2.2;
+    const generalOrvupi = tokens.includes("orvupi") && !product.length && !tokens.includes("contrato") && !tokens.includes("contract");
+    if (generalOrvupi && doc.chunk.curated && /^\/(?:en\/|pt-br\/|ja\/|ko\/)?$/.test(route)) score *= 1.8;
     scored.push({ ...doc.chunk, score });
   }
   scored.sort((a, b2) => b2.score - a.score || String(a.id).localeCompare(String(b2.id)));
