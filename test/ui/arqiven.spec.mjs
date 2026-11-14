@@ -382,9 +382,11 @@ self.onmessage = async (event) => {
     while (Date.now() - started < 20000) {}
     return;
   }
-  const text = "Listo: el motor ya está libre para otra pregunta.";
+  const cap = Number(msg.maxTokens) || 0;
+  await new Promise((resolve) => setTimeout(resolve, 700));
+  const text = "Listo: el motor ya está libre para otra pregunta. Tope " + cap + ".";
   self.postMessage({ type: "token", id: msg.id, text });
-  self.postMessage({ type: "done", id: msg.id, text, tokens: 8, ms: 1, threads: 1 });
+  self.postMessage({ type: "done", id: msg.id, text, tokens: cap, ms: 1, threads: 1 });
   self.postMessage({ type: "settled", id: msg.id });
 };
 `;
@@ -408,5 +410,28 @@ test("tras detener, la pregunta espera a que el modelo esté listo", async ({ pa
   await page.locator("#prompt").fill("Di hola");
   await page.locator("#send").click();
   await expect(page.locator("#status")).toContainText("Preparando el modelo", { timeout: 3000 });
-  await expect(page.locator(".assistant").last()).toContainText("ya está libre", { timeout: 8000 });
+  await page.waitForTimeout(400);
+  await expect(page.locator("#status")).toContainText("Preparando el modelo");
+  const answer = page.locator(".assistant").last();
+  await expect(answer).toContainText("ya está libre", { timeout: 8000 });
+  await expect(answer).toContainText("Tope 45");
+  await expect(answer).not.toContainText("Tope 320");
+});
+
+test("la marca y la fuente van en el idioma de la pregunta", async ({ page }) => {
+  await page.goto("/arqiven/");
+  const cases = [
+    ["What is ORVUPI?", "Verified ORVUPI answer.", "Sources"],
+    ["O que é a ORVUPI?", "Resposta verificada da ORVUPI.", "Fontes"],
+    ["ORVUPI とは何ですか。", "ORVUPI の確認済みの回答です。", "出典"],
+    ["ORVUPI란 무엇입니까?", "ORVUPI가 확인한 답입니다。", "출처"],
+  ];
+  for (const [ask, badge, label] of cases) {
+    await page.locator("#prompt").fill(ask);
+    await page.locator("#send").click();
+    const answer = page.locator(".assistant").last();
+    await expect(answer.locator(".badge")).toHaveText(badge);
+    await expect(answer.locator(".sources-label")).toHaveText(label);
+    await expect(answer).not.toContainText("Respuesta verificada de ORVUPI");
+  }
 });

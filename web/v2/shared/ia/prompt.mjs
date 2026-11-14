@@ -139,6 +139,52 @@ export function generationPlan(question, sources, profileId = "v1") {
   return { sourced, detail, list, maxTokens, extra };
 }
 
+/** Tope de salida. Un historial largo no lo sube: solo un documento adjunto. */
+export function tokenLimit(plan, options = {}) {
+  const planned = Number(plan?.maxTokens) > 0 ? Number(plan.maxTokens) : 45;
+  if (options.attached && !plan?.list) return Math.max(planned, 280);
+  return planned;
+}
+
+/** Contexto que entra al modelo. Una pregunta general no arrastra el chat largo. */
+export function contextBudget(plan, options = {}) {
+  if (options.attached || plan?.detail) return { turns: 12, maxChars: 12000, perMessage: 0, pinFirst: true };
+  if (plan?.sourced) return { turns: 4, maxChars: 1400, perMessage: 360, pinFirst: false };
+  return { turns: 2, maxChars: 640, perMessage: 200, pinFirst: false };
+}
+
+export const REPLY_DEADLINE_MS = 30000;
+
+export function moreDetailOffer(lang) {
+  const code = lang === "pt" ? "pt-BR" : (lang || "es");
+  const lines = {
+    es: "Puedes pedir más detalle.",
+    en: "You can ask for more detail.",
+    "pt-BR": "Você pode pedir mais detalhes.",
+    ja: "もっと詳しく聞けます。",
+    ko: "더 자세히 물어볼 수 있습니다.",
+  };
+  return lines[code] || lines.es;
+}
+
+/** Cierra en la última frase completa y ofrece ampliar. */
+export function finishOnDeadline(text, lang) {
+  const value = String(text || "").replace(/\s+$/g, "").trim();
+  const end = Math.max(
+    value.lastIndexOf("."),
+    value.lastIndexOf("!"),
+    value.lastIndexOf("?"),
+    value.lastIndexOf("。"),
+    value.lastIndexOf("！"),
+    value.lastIndexOf("？"),
+  );
+  const cut = end >= 0 ? value.slice(0, end + 1).trim() : "";
+  const offer = moreDetailOffer(lang);
+  if (!cut) return offer;
+  if (cut.endsWith(offer)) return cut;
+  return `${cut} ${offer}`;
+}
+
 /** Corta en el último cierre si el tope dejó una frase a medias. */
 export function closeClean(text, plan = {}) {
   const value = String(text || "").replace(/\s+$/g, "").trim();

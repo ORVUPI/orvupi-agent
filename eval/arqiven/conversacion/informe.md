@@ -99,7 +99,7 @@ Si el recuperador señala con margen una ficha de ORVUPI (qué es ORVUPI, Sonar,
 
 Una pregunta general tiene tope de 45 tokens. Si piden una lista, son 3 viñetas cortas. Si piden más detalle, el tope sube a 180. `SYSTEM_V1` no cambia.
 
-Repetición del banco de 21 tareas, CPU, 4 hilos, q4, perfil v1: 17/21, mediana 2331 ms, 0 truncadas. Los cuatro fallos que siguen son correccion-lejos, calculo-1, intencion-correo y fuente-general. fuente-orvupi sale de la ficha, sin modelo. El filtro financiero no se ha tocado.
+Repetición del banco de 21 tareas, CPU, 4 hilos, q4, perfil v1: 17/21, 0 truncadas. Los cuatro fallos que siguen son correccion-lejos, calculo-1, intencion-correo y fuente-general. fuente-orvupi sale de la ficha, sin modelo. El filtro financiero no se ha tocado.
 
 Latencia nueva, las mismas 4 hilos, 5 generales y 5 de ORVUPI en los cinco idiomas. Carga: 1337 ms.
 
@@ -127,7 +127,7 @@ Las cuatro preguntas de la vista previa, en la misma corrida:
 
 Estas cifras son de Node con 4 hilos, de cuando esas preguntas de ORVUPI todavía pasaban por el modelo. En Chromium real la decodificación va a unos 1,1–1,2 tokens/s: el prefill ya cabe en menos de 5 s, y el tiempo largo es cada token. El motor ya vive en un worker, así que ORT no abre otro proxy; SIMD queda activo y, con la página aislada, usa hasta 4 hilos. Guardar la caché de claves entre turnos no acorta esa decodificación. q4 se mantiene. Una ficha reconocida no espera a esa decodificación. Una pregunta general se corta sobre los 45 tokens (3 viñetas cortas si piden una lista) y el texto sigue pintándose token a token. Más detalle sube el tope.
 
-Detener escribe un 1 en una memoria compartida que el bucle de generación mira en cada token. Mientras tanto el motor no está listo: una pregunta nueva queda en cola con el aviso «Preparando el modelo…» y se responde cuando el worker lo está, sin quedarse en «Generando». Si el worker no confirma la parada en 1 s, se cierra y se vuelve a abrir con el modelo de la caché. «¿Cuánto es 5 por 8?» lo resuelve la calculadora de la página y no espera a ese worker.
+Detener escribe un 1 en una memoria compartida que el bucle de generación mira en cada token. Mientras el worker no está listo o se está reiniciando, el aviso «Preparando el modelo…» se mantiene hasta el primer token. Si ya está listo y aún no hay token, el aviso es «Pensando…». La petición en cola lleva el mismo tope (45, o 180 si piden más detalle): un chat largo no lo sube. A los 30 s se corta en la última frase completa y se ofrece pedir más detalle. Una pregunta general entra con poco contexto, para acortar el prefill. La marca «Respuesta verificada de ORVUPI» y la línea de fuente van en el idioma de la pregunta. Si el worker no confirma la parada en 1 s, se cierra y se vuelve a abrir con el modelo de la caché. «¿Cuánto es 5 por 8?» lo resuelve la calculadora de la página y no espera a ese worker.
 
 `qwen05-cpu-q4` sigue fuera del selector. q8 de Qwen2.5 dio texto sin sentido en Node durante la auditoría y no se ha comprobado en el navegador. La generación de imágenes sigue apagada.
 

@@ -156,7 +156,11 @@ describe("motor de terceros de ARQIVEN", () => {
     assert.match(app, /Preparando modelo de terceros/);
     assert.equal(app.includes("Preparar modelo de terceros"), false);
     assert.match(app, /prepare\.addEventListener/);
-    assert.equal(app.includes("Pensando"), false);
+    assert.match(app, /thinking: "Pensando…"/);
+    assert.match(worker, /tokenLimit/);
+    assert.match(worker, /finishOnDeadline/);
+    assert.match(worker, /REPLY_DEADLINE_MS/);
+    assert.equal(worker.includes("Math.max(plan.maxTokens, 280)"), false);
     assert.equal(app.includes("getUserMedia"), false);
     assert.equal(app.includes("localStorage"), false);
     assert.equal(app.includes("SharedWorker"), false);

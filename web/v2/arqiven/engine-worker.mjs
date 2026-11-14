@@ -5,7 +5,7 @@ import { profileById } from "/shared/ia/profile.mjs";
 import { isDegenerate, trimRepetition } from "/shared/ia/quality.mjs";
 import { clipHistory } from "/shared/ia/history.mjs";
 import { formatNumber, resolveCalculation, verifiedAnswer } from "/shared/ia/calc.mjs";
-import { closeClean, directExtra, generationPlan, languageName, lastUserText, replyLanguage, sourceNote, sourcedSystem } from "/shared/ia/prompt.mjs";
+import { closeClean, contextBudget, directExtra, finishOnDeadline, generationPlan, languageName, lastUserText, REPLY_DEADLINE_MS, replyLanguage, sourceNote, sourcedSystem, tokenLimit } from "/shared/ia/prompt.mjs";
 
 const SYSTEM_LEGACY = [
   "Eres un modelo de terceros dentro del navegador. ARQIVEN es la IA de ORVUPI y no entrenó estos pesos. No digas que eres Arqiven-N.",
@@ -173,18 +173,23 @@ async function handle(msg) {
       }).slice(0, 4) : [];
       const profile = profileById(msg.profile);
       const model = loadedModel || modelById(msg.modelId);
-      const history = clipHistory(msg.messages, {
+      const incoming = Array.isArray(msg.messages) ? msg.messages : [];
+      const questionPreview = lastUserText(incoming);
+      const plan = generationPlan(questionPreview, msg.sources, profile.id);
+      const currentUser = String(incoming.filter((item) => item?.role === "user").at(-1)?.content || "");
+      const attached = currentUser.length > 1000;
+      const budget = contextBudget(plan, { attached });
+      const history = clipHistory(incoming, {
         profile: profile.id,
-        turns: profile.id === "legacy" ? 4 : model?.contextTurns,
-        maxChars: profile.id === "legacy" ? 3200 : model?.contextChars,
-        perMessage: profile.perMessage,
+        turns: profile.id === "legacy" ? 4 : budget.turns,
+        maxChars: profile.id === "legacy" ? 3200 : budget.maxChars,
+        perMessage: profile.id === "legacy" ? profile.perMessage : budget.perMessage,
         dropNonModel: profile.dropNonModel,
-        pinFirst: profile.pinFirst,
+        pinFirst: profile.id === "legacy" ? false : budget.pinFirst,
       });
-      const question = lastUserText(history);
+      const question = lastUserText(history) || questionPreview;
       const reply = replyLanguage(question, msg.lang);
       const language = languageName(reply);
-      const plan = generationPlan(question, msg.sources, profile.id);
       const promptText = plan.sourced ? sourcedSystem(language) : (profile.id === "v1" ? SYSTEM_V1 : SYSTEM_LEGACY);
       const note = plan.sourced ? sourceNote(msg.sources) : (cited.length ? `\n\nFuentes. Apóyate solo en ellas y cita el título. Si no responden, di que no consta.\n${cited.join("\n\n")}` : "");
       const calc = resolveCalculation(history);
@@ -203,11 +208,11 @@ async function handle(msg) {
         return;
       }
       const verified = calc ? `\n\nCálculo verificado. No lo recalcules. ${calc.display}. La respuesta numérica es ${formatNumber(calc.value)}. Responde en una frase y no des otro número.` : "";
-      const longContext = history.reduce((sum, item) => sum + String(item.content || "").length, 0) > 1000;
-      const attached = history.some((item) => item.role === "user" && String(item.content || "").length > 1000);
       const messages = [{ role: "system", content: `${promptText}${plan.sourced ? "" : ` Responde en ${language}. ${hint}`}${plan.extra}${plan.sourced ? "" : directExtra(question, attached)}${note}${verified}` }, ...history];
       let acc = "";
       let broken = false;
+      let timedOut = false;
+      let started = 0;
       const shown = calc ? formatNumber(calc.value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : "";
       const streamer = new TextStreamer(generator.tokenizer, {
         skip_prompt: true,
@@ -218,10 +223,15 @@ async function handle(msg) {
             stopper?.interrupt();
           }
           acc += text;
+          if (!broken && started && Date.now() - started >= REPLY_DEADLINE_MS) {
+            broken = true;
+            timedOut = true;
+            stopper?.interrupt();
+          }
           const sentences = acc.split(/[.!?。！？]+/).filter((part) => part.trim().length > 8).length;
           const bullets = acc.split("\n").filter((line) => /^\s*(?:[-*•]|\d+[.)])\s+\S/.test(line)).length;
           const listDone = plan.list && bullets >= 3 && /[.!?。！？]\s*$/.test(acc);
-          const shortAnswer = (plan.sourced || (!plan.detail && !plan.list && !longContext)) && sentences >= 4;
+          const shortAnswer = (plan.sourced || (!plan.detail && !plan.list && !attached)) && sentences >= 4;
           if (!broken && (looksBroken(acc) || (shown && new RegExp(`(?:^|\\D)${shown}(?:\\D|$)`).test(acc)) || shortAnswer || listDone)) {
             broken = true;
             stopper?.interrupt();
@@ -229,11 +239,12 @@ async function handle(msg) {
           post({ type: "token", id: msg.id, text });
         },
       });
-      const cap = profile.maxTokensCap > 0 ? profile.maxTokensCap : (model?.maxTokens || Number(msg.maxTokens) || 320);
-      const limit = longContext && !plan.list ? Math.max(plan.maxTokens, 280) : plan.maxTokens;
-      const started = Date.now();
+      const limit = tokenLimit(plan, { attached });
+      const asked = Number(msg.maxTokens);
+      const maxNew = Number.isFinite(asked) && asked > 0 ? Math.min(limit, asked) : limit;
+      started = Date.now();
       const output = await generator(messages, {
-        max_new_tokens: calc ? Math.min(cap, 12) : Math.min(cap, limit),
+        max_new_tokens: calc ? Math.min(maxNew, 12) : maxNew,
         do_sample: false,
         repetition_penalty: profile.repetitionPenalty,
         ...(profile.noRepeatNgram ? { no_repeat_ngram_size: profile.noRepeatNgram } : {}),
@@ -244,7 +255,8 @@ async function handle(msg) {
       const last = output?.[0]?.generated_text;
       const raw = Array.isArray(last) ? (last.at(-1)?.content ?? acc) : String(last ?? acc);
       const cleaned = closeClean(stripThinking(trimRepetition(broken ? acc : raw)), plan);
-      const trimmed = verifiedAnswer(cleaned, calc);
+      const bounded = timedOut ? finishOnDeadline(cleaned, reply) : cleaned;
+      const trimmed = verifiedAnswer(bounded, calc);
       const ms = Date.now() - started;
       const tokens = Math.max(1, generator.tokenizer.encode(String(trimmed || acc)).length);
       const promptTokens = messages.reduce((sum, item) => sum + generator.tokenizer.encode(String(item.content || "")).length, 0);

@@ -214,7 +214,7 @@ export function createEngineClient() {
     return interrupt();
   }
 
-  function run(request, onToken = () => undefined, lang = "es", sources = []) {
+  function run(request, onToken = () => undefined, lang = "es", sources = [], maxTokens = 0) {
     if (release || phase !== "ready" || !worker || !model) return Promise.reject(new Error("not-ready"));
     if (pending) return Promise.reject(new Error("busy"));
     const id = ++nextId;
@@ -226,12 +226,16 @@ export function createEngineClient() {
     return new Promise((resolve, reject) => {
       pending = { id, request, onToken, resolve, reject, lang };
       const profile = activeProfile(globalThis.location?.search || "");
+      const asked = Number(maxTokens);
+      const cap = Number.isFinite(asked) && asked > 0
+        ? asked
+        : (profile.maxTokensCap > 0 ? profile.maxTokensCap : (model.maxTokens || 320));
       worker.postMessage({
         type: "generate",
         id,
         task: request?.task || "chat",
         messages: Array.isArray(request?.messages) ? request.messages : [],
-        maxTokens: profile.maxTokensCap > 0 ? profile.maxTokensCap : (model.maxTokens || 320),
+        maxTokens: cap,
         profile: profile.id,
         modelId: model.id,
         sources: promptSources,

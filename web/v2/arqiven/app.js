@@ -5,6 +5,8 @@ import { saveWorkBytes, loadWorkBytes } from "/studio/lib/work-store.mjs";
 import { sanitizePlain } from "/shared/ia/plain.mjs";
 import { buildIndex } from "/shared/ia/retrieve.mjs";
 import { excerptAnswer, finishModelAnswer, isFollowUp, planTurn } from "/shared/ia/turn.mjs";
+import { generationPlan, tokenLimit } from "/shared/ia/prompt.mjs";
+import { activeProfile } from "/shared/ia/profile.mjs";
 import { resolveCalculation } from "/shared/ia/calc.mjs";
 import { citedExcerpt, extractiveFromSources } from "/shared/ia/quality.mjs";
 import { exportPayload, listVotes, openFeedbackDb, saveVote } from "/shared/ia/feedback.mjs";
@@ -35,6 +37,7 @@ const UI = {
     who: "ARQIVEN es la IA de ORVUPI. Si descargas un modelo para que responda, es de terceros y se nombra aparte.",
     queued: "Preparando modelo de terceros… Puedes seguir escribiendo. Este aviso se sustituye cuando haya texto.",
     preparingModel: "Preparando el modelo…",
+    thinking: "Pensando…",
     cancelled: "Cancelado. No hay respuesta generada.",
     error: "El modelo de terceros no se ha preparado.",
     emptyModel: "El modelo de terceros no escribió un texto usable.",
@@ -73,6 +76,7 @@ const UI = {
     who: "ARQIVEN is ORVUPI's AI. If you download a model so it can answer, that model belongs to someone else and is named separately.",
     queued: "Preparing a third-party model… You can keep typing. This notice is replaced when there is text.",
     preparingModel: "Preparing the model…",
+    thinking: "Thinking…",
     cancelled: "Cancelled. There is no generated answer.",
     error: "The third-party model was not prepared.",
     emptyModel: "The third-party model did not write usable text.",
@@ -111,6 +115,7 @@ const UI = {
     idle: "IA da ORVUPI",
     queued: "Preparando modelo de terceiros… Você pode continuar escrevendo. Este aviso é trocado quando houver texto.",
     preparingModel: "Preparando o modelo…",
+    thinking: "Pensando…",
     cancelled: "Cancelado. Não há resposta gerada.",
     error: "O modelo de terceiros não foi preparado.",
     emptyModel: "O modelo de terceiros não escreveu um texto usável.",
@@ -149,6 +154,7 @@ const UI = {
     idle: "ORVUPIのAI",
     queued: "第三者モデルを準備しています… 入力は続けられます。テキストができたらこの表示を置き換えます。",
     preparingModel: "モデルを準備しています…",
+    thinking: "考えています…",
     cancelled: "キャンセルしました。生成された回答はありません。",
     error: "第三者モデルを準備できませんでした。",
     emptyModel: "第三者モデルは使えるテキストを書きませんでした。",
@@ -187,6 +193,7 @@ const UI = {
     idle: "ORVUPI AI",
     queued: "제3자 모델을 준비하는 중… 계속 입력할 수 있습니다. 텍스트가 생기면 이 안내를 바꿉니다.",
     preparingModel: "모델을 준비하는 중…",
+    thinking: "생각 중…",
     cancelled: "취소했습니다. 생성된 답은 없습니다.",
     error: "제3자 모델을 준비하지 못했습니다.",
     emptyModel: "제3자 모델이 쓸 수 있는 글을 쓰지 않았습니다.",
@@ -222,6 +229,16 @@ const CHROME = {
   ko: { newChat: "새 채팅", settings: "설정", conversations: "채팅", recent: "최근", emptyChats: "아직 채팅이 없습니다.", emptyProjects: "아직 프로젝트가 없습니다.", projectOne: "1개", projectMany: "{n}개", emptyLibrary: "아직 이미지가 없습니다.", attachImage: "이미지 첨부", allImages: "전체", imageOne: "1장", imageMany: "{n}장", filterBy: "필터", search: "검색", welcome: "무엇을 도와드릴까요?", note: "ARQIVEN은 ORVUPI의 AI이고 제3자 모델로 동작합니다. 틀릴 수 있으니 중요한 정보는 확인하세요. 쓴 내용은 이 브라우저에 저장됩니다.", generating: "생성 중", waiting: "대기", done: "완료", failed: "오류", copy: "복사", copied: "이 브라우저에 복사했습니다.", copyFail: "복사하지 못했습니다.", againReply: "다시 묻기", attach: "첨부", more: "더보기", details: "세부 정보", today: "오늘", yesterday: "어제", week: "7일", older: "이전", projects: "프로젝트", projectHint: "프로젝트를 삭제하면 채팅은 일반 기록으로 돌아갑니다.", library: "라이브러리", create: "만들기", rename: "이름 바꾸기", move: "프로젝트로 옮기기", remove: "삭제", cancel: "취소", confirm: "확인", general: "일반 기록", fav: "즐겨찾기", download: "다운로드", close: "닫기", openChat: "채팅 열기", savedImage: "이미지를 이 브라우저의 라이브러리에 저장했습니다.", imageBig: "이미지가 4 MB를 넘습니다. 저장하지 않았습니다.", deleteChat: "이 채팅을 이 브라우저에서 삭제할까요?", deleteProject: "이 프로젝트를 삭제할까요? 채팅은 일반 기록으로 돌아갑니다.", deleteImage: "이 이미지를 이 브라우저에서 삭제할까요?", projectName: "프로젝트 이름", chatName: "채팅 이름", imageOff: "이미지 생성은 곧 제공됩니다. 지금은 채팅에 첨부한 이미지를 여기에 보관할 수 있습니다.", originRules: "이 답은 ARQIVEN의 규칙에서 나왔고, 모델은 쓰지 않았습니다.", originVerified: "ORVUPI가 확인한 답입니다。", originExtract: "인용한 출처의 발췌입니다. 모델이 쓴 글이 아닙니다.", originModel: "제3자 모델이 썼습니다" },
 };
 const chrome = CHROME[uiLang];
+
+function copyPack(code) {
+  const key = code === "pt-BR" || code === "pt" ? "pt" : (code === "en" || code === "ja" || code === "ko" ? code : "es");
+  return { chrome: CHROME[key], ui: UI[key] };
+}
+
+function replyBudget(question, sources, attached) {
+  const plan = generationPlan(question, sources, activeProfile(globalThis.location?.search || "").id);
+  return tokenLimit(plan, { attached: Boolean(attached) });
+}
 const copy = {
   voice: root.getAttribute("data-voice") || "",
   fileRead: root.getAttribute("data-file-read") || "",
@@ -580,12 +597,13 @@ function renderRich(parent, text) {
 }
 
 function originLine(item) {
-  if (item.mode === "verified") return chrome.originVerified;
-  if (item.mode === "extractive") return chrome.originExtract;
+  const pack = copyPack(item.replyLang || lang).chrome;
+  if (item.mode === "verified") return pack.originVerified;
+  if (item.mode === "extractive") return pack.originExtract;
   if (item.provider === "third-party" && item.mode === "model") {
-    return item.modelVersion ? `${chrome.originModel}: ${item.modelVersion}.` : `${chrome.originModel}.`;
+    return item.modelVersion ? `${pack.originModel}: ${item.modelVersion}.` : `${pack.originModel}.`;
   }
-  return chrome.originRules;
+  return pack.originRules;
 }
 
 function provenance(item) {
@@ -599,12 +617,12 @@ function provenance(item) {
   return details;
 }
 
-function sourceList(sources) {
+function sourceList(sources, replyLang) {
   const list = document.createElement("ul");
   list.className = "sources";
   const caption = document.createElement("li");
   caption.className = "sources-label";
-  caption.textContent = ui.sourcesLabel;
+  caption.textContent = copyPack(replyLang || lang).ui.sourcesLabel;
   list.append(caption);
   for (const source of sources) {
     if (!source?.url) continue;
@@ -957,7 +975,7 @@ function paint() {
         if (item.mode === "verified") {
           const badge = document.createElement("span");
           badge.className = "badge";
-          badge.textContent = chrome.originVerified;
+          badge.textContent = copyPack(item.replyLang || lang).chrome.originVerified;
           meta.append(badge);
         }
         if (item.failed) {
@@ -969,7 +987,7 @@ function paint() {
         column.append(meta);
         renderRich(column, item.content);
         if (!item.running && item.content) column.append(provenance(item));
-        if (item.sources?.length) column.append(sourceList(item.sources));
+        if (item.sources?.length) column.append(sourceList(item.sources, item.replyLang));
         if (item.content && !item.running) {
           const actions = document.createElement("div");
           actions.className = "answer-actions";
@@ -1030,10 +1048,7 @@ function paint() {
   if (settings) settings.hidden = state.view !== "settings";
   if (state.view === "projects") paintProjects();
   if (save) save.hidden = state.messages.length === 0 && !state.localText.trim();
-  if (status && (running || status.textContent === ui.queued || status.textContent === ui.preparingModel || status.textContent === chrome.generating)) {
-    const generating = state.messages.some((item) => item.running);
-    status.textContent = generating ? chrome.generating : (state.messages.some((item) => item.pending) ? ui.preparingModel : "");
-  }
+  applyLiveStatus();
   const heading = document.getElementById("thread-title");
   const title = liveTitle();
   const projectLabel = state.projects.find((item) => item.id === state.activeProject)?.name || "";
@@ -1048,6 +1063,22 @@ function paint() {
     else button.removeAttribute("aria-current");
   });
   updateEngineUi();
+  applyLiveStatus();
+}
+
+function applyLiveStatus() {
+  if (!status) return;
+  const open = state.messages.find((item) => item.role === "assistant" && (item.pending || item.running));
+  let line = "";
+  if (open && (open.pending || open.held || !state.snap.ready || !String(open.content || "").trim())) {
+    line = open.pending || open.held || !state.snap.ready ? ui.preparingModel : ui.thinking;
+  } else if (state.messages.some((item) => item.running)) line = chrome.generating;
+  if (line) {
+    setStatus(line);
+    return;
+  }
+  const current = status.textContent || "";
+  if (current === ui.queued || current === ui.preparingModel || current === ui.thinking || current === chrome.generating) setStatus("");
 }
 
 function showView(name) {
@@ -1111,6 +1142,7 @@ async function stopGeneration(dropQueue = false) {
 async function streamInto(item, request) {
   const epoch = turnEpoch;
   const reply = item.replyLang || lang;
+  item.held = Boolean(item.pending || item.held || !state.snap.ready);
   item.pending = false;
   item.mode = "model";
   item.provider = "third-party";
@@ -1124,8 +1156,9 @@ async function streamInto(item, request) {
     const result = await engine.run(request, (token) => {
       if (epoch !== turnEpoch) return;
       item.content += token;
+      if (String(item.content || "").trim()) item.held = false;
       paintSoon();
-    }, reply, item.promptSources || []);
+    }, reply, item.promptSources || [], item.maxTokens || 0);
     if (epoch !== turnEpoch) return;
     item.genMs = result.genMs || 0;
     item.genTokens = result.genTokens || 0;
@@ -1272,6 +1305,7 @@ async function send() {
       provider: plan.verified ? "orvupi" : "none",
       modelId: "none",
       sources: plan.sources,
+      replyLang: plan.replyLang,
     });
     paint();
     field?.focus();
@@ -1295,18 +1329,21 @@ async function send() {
     field?.focus();
     return;
   }
+  const budget = replyBudget(text, plan.promptSources, modelText.length > 1000);
   if (!state.snap.ready) {
     // phase "ready" con ready false es la ventana de Detener: no hay que volver a descargar.
     if (state.snap.phase !== "preparing" && state.snap.phase !== "ready") startPrepare(modelPick.value || defaultModel().id);
     const item = assistant({
       content: "",
       pending: true,
+      held: true,
       mode: "rules",
       request,
       sources: plan.sources,
       promptSources: plan.promptSources,
       question: text,
       replyLang: plan.replyLang,
+      maxTokens: budget,
     });
     setStatus(ui.preparingModel);
     state.queue.push(item);
@@ -1314,7 +1351,7 @@ async function send() {
     field?.focus();
     return;
   }
-  const item = assistant({ sources: plan.sources, promptSources: plan.promptSources, question: text, replyLang: plan.replyLang });
+  const item = assistant({ sources: plan.sources, promptSources: plan.promptSources, question: text, replyLang: plan.replyLang, maxTokens: budget });
   await streamInto(item, request);
   field?.focus();
 }

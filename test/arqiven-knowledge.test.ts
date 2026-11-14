@@ -511,6 +511,10 @@ describe("conocimiento y evaluación de ARQIVEN", () => {
       sourceNote: (sources: Array<{ title: string; excerpt: string }>) => string;
       replyLanguage: (question: string, page: string) => string;
       generationPlan: (question: string, sources: unknown[], profile?: string) => { list: boolean; detail: boolean; maxTokens: number };
+      tokenLimit: (plan: { maxTokens: number; list?: boolean }, options?: { attached?: boolean }) => number;
+      contextBudget: (plan: { detail?: boolean }, options?: { attached?: boolean }) => { maxChars: number; pinFirst: boolean };
+      finishOnDeadline: (text: string, lang: string) => string;
+      moreDetailOffer: (lang: string) => string;
     };
     const quality = await import(href("web/v2/shared/ia/quality.mjs")) as {
       needsExtract: (answer: string, sources: Array<{ title: string; excerpt: string; origin: string }>, question: string) => boolean;
@@ -539,6 +543,22 @@ describe("conocimiento y evaluación de ARQIVEN", () => {
     const detail = prompt.generationPlan("Explica con más detalle cómo preparar una entrevista de trabajo", [], "v1");
     assert.equal(detail.detail, true);
     assert.ok(detail.maxTokens > tips.maxTokens);
+    const brief = prompt.generationPlan("Di hola", [], "v1");
+    assert.equal(prompt.tokenLimit(brief, { attached: false }), 45);
+    assert.equal(prompt.tokenLimit(detail, {}), 180);
+    assert.equal(prompt.tokenLimit(brief, { attached: true }), 280);
+    const tight = prompt.contextBudget(brief, {});
+    assert.ok(tight.maxChars <= 800);
+    assert.equal(tight.pinFirst, false);
+    assert.ok(prompt.contextBudget(detail, {}).maxChars > 4000);
+    const cut = prompt.finishOnDeadline("Esta frase ya está cerrada. Y esta segunda queda a medias sin punto", "es");
+    assert.match(cut, /Esta frase ya está cerrada\./);
+    assert.match(cut, /Puedes pedir más detalle/);
+    assert.doesNotMatch(cut, /a medias/);
+    assert.match(prompt.finishOnDeadline("Half a sentence without a stop", "en"), /^You can ask for more detail\.$/);
+    assert.match(prompt.moreDetailOffer("ja"), /詳しく/);
+    assert.match(prompt.moreDetailOffer("ko"), /자세히/);
+    assert.match(prompt.moreDetailOffer("pt-BR"), /mais detalhes/);
     const app = readFileSync(path.join(root, "web/v2/arqiven/app.js"), "utf8");
     assert.match(app, /id = "stop"/);
     assert.match(app, /function stopGeneration/);
