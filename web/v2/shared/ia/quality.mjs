@@ -1,6 +1,7 @@
 /** Detecta respuestas degeneradas y arma un extracto citado. No llama a la red. */
 
 import { normLang } from "./guard.mjs";
+import { looksLikeOrvupi } from "./retrieve.mjs";
 import { wikiQuery } from "./wikipedia.mjs";
 
 const NOTICE = {
@@ -41,16 +42,73 @@ function contentWords(text) {
 
 const COMMON = new Set("esta este esto para como donde cuando sobre entre desde hasta tiene tenido sido fueron seria sería donde that with from have been were this your about into also solo cada muy mais essa este para como quando sobre entre desde".split(/\s+/));
 
-export function lacksSupport(answer, sources) {
+function citesGroundedSource(answer, sources) {
+  const text = String(answer || "").toLowerCase().normalize("NFKC");
+  const flatAnswer = text.replace(/\s+/g, "");
+  for (const source of sources || []) {
+    const titleWords = String(source?.title || "").toLowerCase().split(/[^\p{L}\p{N}]+/u).filter((word) => word.length > 3 && word !== "orvupi" && word !== "arqiven");
+    const excerpt = String(source?.excerpt || source?.text || "").toLowerCase().normalize("NFKC");
+    const facts = contentWords(excerpt).filter((word) => word.length > 4 && !titleWords.includes(word) && word !== "orvupi" && word !== "arqiven");
+    const titleHit = titleWords.some((word) => text.includes(word));
+    const factHit = facts.some((word) => new RegExp(`(?:^|[^\\p{L}\\p{N}])${word}(?:[^\\p{L}\\p{N}]|$)`, "u").test(` ${text} `));
+    if (titleHit && factHit) return true;
+    let body = excerpt;
+    for (const word of titleWords) body = body.replaceAll(word, " ");
+    const flat = body.replace(/[^\p{L}\p{N}]+/gu, "");
+    for (let i = 0; i + 8 <= flat.length; i += 4) {
+      if (flatAnswer.includes(flat.slice(i, i + 8))) return true;
+      const cjk = flat.slice(i, i + 4);
+      if (/^[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]+$/u.test(cjk) && flatAnswer.includes(cjk)) return true;
+    }
+  }
+  return false;
+}
+
+export function lacksSupport(answer, sources, question) {
+  const list = Array.isArray(sources) ? sources : [];
+  if (citesGroundedSource(answer, list)) return false;
+  if (question !== undefined) {
+    const aboutOrvupi = looksLikeOrvupi(question || "");
+    const fromOrvupi = list.length > 0 && list.every((source) => !source?.origin || source.origin === "orvupi");
+    if (!aboutOrvupi || !fromOrvupi) return false;
+  }
   const words = [...new Set(contentWords(answer))].filter((word) => !COMMON.has(word));
-  if (words.length < 3 || !sources?.length) return false;
-  const blob = sources.map((source) => `${source.title || ""} ${source.excerpt || source.text || ""}`).join("\n").toLowerCase();
+  if (words.length < 3 || !list.length) return false;
+  const blob = list.map((source) => `${source.title || ""} ${source.excerpt || source.text || ""}`).join("\n").toLowerCase();
   const missing = words.filter((word) => !blob.includes(word));
   return missing.length >= 2 && missing.length / words.length >= 0.34;
 }
 
-export function needsExtract(answer, sources) {
-  return isDegenerate(answer) || lacksSupport(answer, sources);
+/** Corta el bucle y deja lo anterior si llega a 60 caracteres. Si no, descarta. */
+export function trimRepetition(text) {
+  const flat = String(text || "").replace(/\s+/g, " ").trim();
+  if (!isDegenerate(flat)) return String(text || "");
+  const words = flat.split(/\s+/).filter(Boolean);
+  const seen = new Map();
+  let cut = -1;
+  for (let i = 0; i <= words.length - 3; i += 1) {
+    const gram = words.slice(i, i + 3).join(" ");
+    const at = seen.get(gram) || [];
+    at.push(i);
+    seen.set(gram, at);
+    if (at.length >= 3) {
+      cut = words.slice(0, at[2]).join(" ").length;
+      break;
+    }
+  }
+  if (cut < 0) {
+    const run = flat.match(/([^\p{L}\p{N}\s])\1{7,}/u);
+    if (run?.index != null) cut = run.index;
+  }
+  const prefix = (cut >= 0 ? flat.slice(0, cut) : flat).trim();
+  return prefix.length >= 60 ? prefix : "";
+}
+
+export function needsExtract(answer, sources, question) {
+  const trimmed = trimRepetition(answer);
+  if (!String(trimmed || "").trim()) return isDegenerate(answer) || lacksSupport(answer, sources, question);
+  if (isDegenerate(trimmed)) return true;
+  return lacksSupport(trimmed, sources, question);
 }
 
 function claimWords(sentence) {

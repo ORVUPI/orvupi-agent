@@ -10,9 +10,11 @@ import {
   identityAnswer,
   normLang,
 } from "./guard.mjs";
-import { extractiveFromSources, needsExtract } from "./quality.mjs";
+import { extractiveFromSources, needsExtract, trimRepetition } from "./quality.mjs";
+import { verifiedCard } from "./cards.mjs";
+import { replyLanguage, wantsDetail } from "./prompt.mjs";
 import { looksLikeOrvupi, search } from "./retrieve.mjs";
-import { lookupWikipedia } from "./wikipedia.mjs";
+import { lookupWikipedia, wikiQuery } from "./wikipedia.mjs";
 
 const LOCAL_MIN = 1.2;
 
@@ -27,7 +29,26 @@ export function toSource(hit, origin) {
   };
 }
 
-export function shouldConsultWikipedia(question, localHits) {
+const FOLLOW = /^(?:¿\s*)?(?:y\b|e\b|and\b|entonces\b|eso\b|esa\b|ese\b|ah[ií]\b|then\b)/i;
+
+export function isFollowUp(question, history = []) {
+  const text = String(question || "").trim();
+  if (!text || text.length > 90) return false;
+  const cue = FOLLOW.test(text) || /\b(eso|ah[ií]|that|there)\b/i.test(text);
+  if (!cue) return false;
+  return history.some((item) => item?.role === "assistant" && (item.mode === "model" || (!item.mode && item.content && !/extracto citado|se repiti[oó]|cited excerpt|出典からの抜粋|출처에서 발췌/i.test(String(item.content)))));
+}
+
+export function looksLikeDefinition(question) {
+  const raw = String(question || "").replace(/[¿?¡!。．]/g, " ").replace(/\s+/g, " ").trim();
+  const stripped = wikiQuery(question);
+  return Boolean(stripped) && stripped.length < raw.length;
+}
+
+export function shouldConsultWikipedia(question, localHits, options = {}) {
+  if (options.attachment) return false;
+  if (isFollowUp(question, options.history)) return false;
+  if (!looksLikeDefinition(question)) return false;
   const best = localHits[0]?.score || 0;
   if (looksLikeOrvupi(question) && best >= LOCAL_MIN) return false;
   return true;
@@ -35,10 +56,11 @@ export function shouldConsultWikipedia(question, localHits) {
 
 export async function planTurn(options) {
   const question = String(options.question || "").trim();
-  const lang = normLang(options.lang);
   const pageLang = options.lang === "pt" ? "pt-BR" : (options.lang || "es");
+  const reply = replyLanguage(question, pageLang);
+  const lang = normLang(reply);
   const index = options.index;
-  const localHits = index ? search(index, question, 4, pageLang) : [];
+  const localHits = index ? search(index, question, 4, reply) : [];
   const local = localHits.map((hit) => toSource(hit, "orvupi"));
   if (foreignAddresses(question).length) {
     return { skipModel: true, critical: "ca", text: caWarning(lang), sources: local.slice(0, 2), promptSources: [] };
@@ -49,25 +71,49 @@ export async function planTurn(options) {
   if (asksIdentity(question)) {
     return { skipModel: true, critical: "identity", text: identityAnswer(lang, options.model), sources: [], promptSources: [] };
   }
+  const history = Array.isArray(options.history) ? options.history : [];
+  if (!options.attachment && !isFollowUp(question, history) && !wantsDetail(question)) {
+    const card = verifiedCard(question, localHits, reply);
+    if (card) {
+      return {
+        skipModel: true,
+        verified: true,
+        critical: null,
+        text: card.text,
+        sources: [toSource({ ...card, id: card.id, excerpt: card.text }, "orvupi")],
+        promptSources: [],
+        replyLang: reply,
+      };
+    }
+  }
   let wiki = null;
-  if (options.allowWikipedia !== false && shouldConsultWikipedia(question, localHits) && typeof options.fetchImpl === "function") {
+  if (options.allowWikipedia !== false && shouldConsultWikipedia(question, localHits, { attachment: Boolean(options.attachment), history }) && typeof options.fetchImpl === "function") {
     wiki = await lookupWikipedia(lang, question, options.fetchImpl);
   }
   const usefulLocal = looksLikeOrvupi(question) ? local : [];
-  const sources = wiki ? usefulLocal.slice(0, 2).concat([toSource(wiki, "wikipedia")]) : usefulLocal.slice(0, 4);
+  const namedTool = /\b(sonar|studio|verify|academy|work)\b/i.test(question);
+  const aboutOrvupi = /\borvupi\b/i.test(question) && !namedTool;
+  const focused = aboutOrvupi
+    ? usefulLocal.filter((source) => !/\b(academy|studio|sonar|verify|work)\b/i.test(`${source.title} ${source.url}`))
+    : usefulLocal;
+  const picked = focused.length ? focused : usefulLocal;
+  const sources = wiki ? picked.slice(0, 2).concat([toSource(wiki, "wikipedia")]) : picked.slice(0, 4);
   return {
     skipModel: false,
     critical: null,
     text: "",
     sources,
     promptSources: sources.map((item) => ({ title: item.title, url: item.url, excerpt: item.excerpt })),
+    replyLang: reply,
   };
 }
 
-export function finishModelAnswer(text, lang, sources = [], question = "") {
-  const guarded = guardOutput(text, lang);
+export function finishModelAnswer(text, lang, sources = [], question = "", history = []) {
+  const trimmed = trimRepetition(text);
+  const guarded = guardOutput(trimmed, lang);
   if (guarded.blocked) return { ...guarded, extractive: false };
-  if (needsExtract(guarded.text, sources)) {
+  if (isFollowUp(question, history)) return { ...guarded, extractive: false };
+  if (needsExtract(guarded.text, sources, question)) {
     const excerpt = extractiveFromSources(lang, sources, question);
     if (excerpt) return { text: excerpt, blocked: null, critical: false, foreign: [], extractive: true };
   }

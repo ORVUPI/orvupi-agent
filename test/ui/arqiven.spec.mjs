@@ -61,7 +61,11 @@ for (const item of pages) {
     await expect(page.locator("#new-chat")).toBeVisible();
     await expect(page.locator("#send")).toBeVisible();
     await expect(page.locator("#prompt")).toBeVisible();
+    await expect(page.locator("#local-editor")).toBeHidden();
     await expect(page.locator("#source-note")).toContainText(item.note);
+    await expect(page.locator("#model-pick option[value='qwen35-cpu']")).toHaveText(/Qwen3\.5-0\.8B/);
+    await expect(page.locator("#model-pick option[value='smol135-cpu']")).toHaveText(/SmolLM2-135M-Instruct/);
+    await expect(page.locator("#engine-progress")).toContainText(/SmolLM2/);
     await expect(page.locator("#model-indicator")).toContainText("SmolLM2-135M-Instruct");
     await expect(page.locator("#model-indicator")).toContainText(/tercero|third party|terceiro|第三者|제3자/);
 
@@ -78,6 +82,7 @@ for (const item of pages) {
     await page.locator("#prompt").fill(item.buy);
     await page.locator("#send").click();
     await expect(page.locator(".assistant").last()).toContainText(item.refusal);
+    await expect(page.locator("#local-editor")).toBeHidden();
 
     await page.locator(".vote[data-vote='up']").first().click();
     await expect(page.locator(".vote[data-vote='up']").first()).toHaveAttribute("aria-pressed", "true");
@@ -202,6 +207,66 @@ test("chats, proyectos e imágenes siguen en este navegador", async ({ page }) =
   await expect(page.locator("#recent").getByRole("button", { name: "Chat renombrado" })).toHaveCount(0);
 });
 
+test("en el móvil, si el modelo no carga, el chat sigue y el aviso no entra en el historial", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/arqiven/");
+  const notice = page.locator("#engine-progress");
+  await expect(notice).toContainText("Qwen3.5-0.8B no se ha podido cargar");
+  await expect(notice).toContainText("SmolLM2");
+  await expect(page.locator("#status")).toContainText("SmolLM2");
+  await expect(page.locator("#prompt")).toBeVisible();
+  await expect(page.locator("#send")).toBeVisible();
+  await expect(page.locator(".assistant")).toHaveCount(0);
+  await page.locator("#prompt").fill("¿Compro ORVUPI ahora?");
+  await page.locator("#send").click();
+  const answer = page.locator(".assistant").last();
+  await expect(answer).toContainText("consejo financiero");
+  await expect(answer).not.toContainText("no se ha podido cargar");
+  await expect(notice).toContainText("SmolLM2");
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
+  const box = await page.locator("#send").boundingBox();
+  expect(box && box.y >= 0 && box.y + box.height <= 845).toBeTruthy();
+});
+
+test("la elección de modelo queda guardada en este navegador", async ({ page }) => {
+  await page.goto("/arqiven/");
+  await expect(page.locator("#model-pick")).toBeAttached();
+  if (await page.locator("#menu").isVisible()) await page.locator("#menu").click();
+  await page.locator("#open-settings").click();
+  await page.locator("#model-pick").selectOption("qwen05-cpu");
+  await page.waitForFunction(async () => {
+    const value = await new Promise((resolve) => {
+      const request = indexedDB.open("orvupi-arqiven-settings");
+      request.onsuccess = () => {
+        const db = request.result;
+        const get = db.transaction("settings", "readonly").objectStore("settings").get("model");
+        get.onsuccess = () => {
+          db.close();
+          resolve(get.result?.value || "");
+        };
+      };
+    });
+    return value === "qwen05-cpu";
+  });
+  await page.reload();
+  await page.waitForFunction(async () => {
+    const value = await new Promise((resolve) => {
+      const request = indexedDB.open("orvupi-arqiven-settings");
+      request.onsuccess = () => {
+        const db = request.result;
+        const get = db.transaction("settings", "readonly").objectStore("settings").get("model");
+        get.onsuccess = () => {
+          db.close();
+          resolve(get.result?.value || "");
+        };
+      };
+    });
+    return value === "qwen05-cpu";
+  });
+  await expect(page.locator("#model-pick option[value='smol135-cpu']")).toHaveCount(1);
+});
+
 test("la ventana simulada no recorta el cuadro ni abre scroll horizontal", async ({ page }) => {
   const sizes = [
     { width: 1440, height: 900 },
@@ -224,4 +289,149 @@ test("la ventana simulada no recorta el cuadro ni abre scroll horizontal", async
   await expect(page.locator("#sidebar")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.locator("#sidebar")).toBeHidden();
+});
+
+const SLOW_WORKER = `
+let stopped = false;
+let count = 0;
+self.onmessage = async (event) => {
+  const msg = event.data;
+  if (!msg || typeof msg !== "object") return;
+  if (msg.type === "stop") {
+    stopped = true;
+    return;
+  }
+  if (msg.type === "load") {
+    self.postMessage({ type: "ready" });
+    return;
+  }
+  if (msg.type !== "generate") return;
+  stopped = false;
+  count += 1;
+  const slow = count === 1;
+  self.postMessage({ type: "token", id: msg.id, text: slow ? "Empiezo " : "Listo: el motor ya está libre." });
+  const started = Date.now();
+  while (slow && Date.now() - started < 5000 && !stopped) {
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  self.postMessage({ type: "done", id: msg.id, text: slow ? "Empiezo la mudanza con calma y sin prisa." : "Listo: el motor ya está libre para otra pregunta.", tokens: 8, ms: Math.max(1, Date.now() - started), threads: 1 });
+  self.postMessage({ type: "settled", id: msg.id });
+};
+`;
+
+test("detener suelta el motor y 5 por 8 no espera al modelo", async ({ page }) => {
+  await page.route("**/engine-worker.mjs*", (route) => route.fulfill({
+    status: 200,
+    contentType: "text/javascript",
+    headers: {
+      "cross-origin-opener-policy": "same-origin",
+      "cross-origin-embedder-policy": "credentialless",
+    },
+    body: SLOW_WORKER,
+  }));
+  await page.goto("/arqiven/");
+  await expect(page.locator("#engine-progress")).toContainText("Modelo de terceros listo", { timeout: 15000 });
+  await page.locator("#prompt").fill("Explica con detalle, paso a paso, cómo organizar una mudanza internacional");
+  await page.locator("#send").click();
+  await expect(page.locator(".assistant").last()).toContainText("Empiezo");
+  await expect(page.locator("#stop")).toBeVisible();
+  await page.locator("#stop").click();
+  await page.locator("#prompt").fill("¿Cuánto es 5 por 8?");
+  await page.locator("#send").click();
+  await expect(page.locator(".assistant").last()).toContainText("40", { timeout: 3000 });
+  await page.locator("#prompt").fill("Di hola");
+  await page.locator("#send").click();
+  await expect(page.locator(".assistant").last()).toContainText("ya está libre", { timeout: 5000 });
+});
+
+const QUEUE_WORKER = `
+function slot(name, value) {
+  return new Promise((resolve) => {
+    const open = indexedDB.open("arqiven-worker-test", 1);
+    open.onupgradeneeded = () => open.result.createObjectStore("k");
+    open.onsuccess = () => {
+      const db = open.result;
+      const tx = db.transaction("k", "readwrite");
+      const store = tx.objectStore("k");
+      if (value === undefined) {
+        const get = store.get(name);
+        get.onsuccess = () => { db.close(); resolve(get.result || 0); };
+      } else {
+        store.put(value, name);
+        tx.oncomplete = () => { db.close(); resolve(value); };
+      }
+    };
+  });
+}
+self.onmessage = async (event) => {
+  const msg = event.data;
+  if (!msg || typeof msg !== "object") return;
+  if (msg.type === "load") {
+    const seen = await slot("loads");
+    await slot("loads", seen + 1);
+    if (seen > 0) await new Promise((resolve) => setTimeout(resolve, 1200));
+    self.postMessage({ type: "ready" });
+    return;
+  }
+  if (msg.type === "stop") return;
+  if (msg.type !== "generate") return;
+  const loads = await slot("loads");
+  if (loads <= 1) {
+    self.postMessage({ type: "token", id: msg.id, text: "Empiezo " });
+    const started = Date.now();
+    while (Date.now() - started < 20000) {}
+    return;
+  }
+  const cap = Number(msg.maxTokens) || 0;
+  await new Promise((resolve) => setTimeout(resolve, 700));
+  const text = "Listo: el motor ya está libre para otra pregunta. Tope " + cap + ".";
+  self.postMessage({ type: "token", id: msg.id, text });
+  self.postMessage({ type: "done", id: msg.id, text, tokens: cap, ms: 1, threads: 1 });
+  self.postMessage({ type: "settled", id: msg.id });
+};
+`;
+
+test("tras detener, la pregunta espera a que el modelo esté listo", async ({ page }) => {
+  await page.route("**/engine-worker.mjs*", (route) => route.fulfill({
+    status: 200,
+    contentType: "text/javascript",
+    headers: {
+      "cross-origin-opener-policy": "same-origin",
+      "cross-origin-embedder-policy": "credentialless",
+    },
+    body: QUEUE_WORKER,
+  }));
+  await page.goto("/arqiven/");
+  await expect(page.locator("#engine-progress")).toContainText("Modelo de terceros listo", { timeout: 15000 });
+  await page.locator("#prompt").fill("Explica con detalle, paso a paso, cómo organizar una mudanza internacional");
+  await page.locator("#send").click();
+  await expect(page.locator(".assistant").last()).toContainText("Empiezo");
+  await page.locator("#stop").click();
+  await page.locator("#prompt").fill("Di hola");
+  await page.locator("#send").click();
+  await expect(page.locator("#status")).toContainText("Preparando el modelo", { timeout: 3000 });
+  await page.waitForTimeout(400);
+  await expect(page.locator("#status")).toContainText("Preparando el modelo");
+  const answer = page.locator(".assistant").last();
+  await expect(answer).toContainText("ya está libre", { timeout: 8000 });
+  await expect(answer).toContainText("Tope 45");
+  await expect(answer).not.toContainText("Tope 320");
+});
+
+test("la marca y la fuente van en el idioma de la pregunta", async ({ page }) => {
+  await page.goto("/arqiven/");
+  const cases = [
+    ["What is ORVUPI?", "Verified ORVUPI answer.", "Sources"],
+    ["O que é a ORVUPI?", "Resposta verificada da ORVUPI.", "Fontes"],
+    ["ORVUPI とは何ですか。", "ORVUPI の確認済みの回答です。", "出典"],
+    ["ORVUPI란 무엇입니까?", "ORVUPI가 확인한 답입니다。", "출처"],
+  ];
+  for (const [ask, badge, label] of cases) {
+    await page.locator("#prompt").fill(ask);
+    await page.locator("#send").click();
+    const answer = page.locator(".assistant").last();
+    await expect(answer.locator(".badge")).toHaveText(badge);
+    await expect(answer.locator(".sources-label")).toHaveText(label);
+    await expect(answer).not.toContainText("Respuesta verificada de ORVUPI");
+  }
 });

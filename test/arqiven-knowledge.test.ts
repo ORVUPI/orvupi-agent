@@ -154,19 +154,36 @@ describe("conocimiento y evaluación de ARQIVEN", () => {
     assert.equal(quality.needsExtract(invented, [{ title: "Marie Curie", excerpt: "Marie Curie fue una física y química polaca, pionera en el estudio de la radiactividad." }]), true);
   });
 
-  test("el dispositivo elige Qwen con WebGPU y deja SmolLM2 para la CPU", async () => {
+  test("el dispositivo elige Qwen3.5 en CPU y SmolLM2 si hay poca memoria", async () => {
     const models = await import(href("web/v2/shared/ia/models.mjs")) as {
-      defaultModel: () => { id: string };
+      defaultModel: () => { id: string; repo: string; dtype: string; device: string; maxTokens: number };
       modelForDevice: (hints: { webgpu?: boolean; memory?: number; wide?: boolean }) => { id: string };
+      canUseModel: (model: { id: string; device: string; sizeMb: number; listed?: boolean }, hints: { webgpu?: boolean; memory?: number }) => boolean;
       stepDown: (id: string, webgpu: boolean) => string | null;
+      downloadProgress: (progress: { loaded?: number; total?: number }) => { known: boolean; pct: number };
+      THIRD_PARTY_MODELS: Array<{ id: string; listed?: boolean }>;
     };
-    assert.equal(models.defaultModel().id, "smol135-cpu");
-    assert.equal(models.modelForDevice({ webgpu: false }).id, "smol135-cpu");
+    const chosen = models.defaultModel();
+    assert.equal(chosen.id, "qwen35-cpu");
+    assert.equal(chosen.repo, "onnx-community/Qwen3.5-0.8B-Text-ONNX");
+    assert.equal(chosen.dtype, "q4");
+    assert.equal(chosen.device, "wasm");
+    assert.equal(chosen.maxTokens, 320);
+    assert.equal(models.modelForDevice({ webgpu: false }).id, "qwen35-cpu");
+    assert.equal(models.modelForDevice({ webgpu: false, memory: 8 }).id, "qwen35-cpu");
+    assert.equal(models.modelForDevice({ webgpu: false, memory: 2 }).id, "smol135-cpu");
     assert.equal(models.modelForDevice({ webgpu: true, memory: 4 }).id, "qwen05-gpu");
     assert.equal(models.modelForDevice({ webgpu: true, memory: 8 }).id, "qwen15-gpu");
+    assert.equal(models.stepDown("qwen35-cpu", false), "smol135-cpu");
     assert.equal(models.stepDown("qwen15-gpu", true), "qwen05-gpu");
     assert.equal(models.stepDown("qwen05-gpu", true), "smol135-cpu");
     assert.equal(models.stepDown("smol135-cpu", false), null);
+    assert.equal(models.THIRD_PARTY_MODELS.some((item) => item.id === "smol135-cpu" && item.listed !== false), true);
+    const heavy = { id: "qwen35-cpu", device: "wasm", sizeMb: 526 };
+    assert.equal(models.canUseModel(heavy, { webgpu: false, memory: 2 }), false);
+    assert.equal(models.canUseModel(heavy, { webgpu: false, memory: 8 }), true);
+    assert.deepEqual(models.downloadProgress({ loaded: 263, total: 526 }), { known: true, pct: 50 });
+    assert.deepEqual(models.downloadProgress({}), { known: false, pct: 0 });
   });
 
   test("el voto no guarda el texto y no sale del dispositivo", async () => {
@@ -377,5 +394,242 @@ describe("conocimiento y evaluación de ARQIVEN", () => {
     assert.equal(chats.dateGroup("2026-11-06T10:00:00", now), "week");
     assert.equal(chats.dateGroup("2026-10-01T10:00:00", now), "older");
     db.close();
+  });
+
+  test("el perfil v1 conserva el dato, el adjunto y deja fuera los avisos", async () => {
+    const history = await import(href("web/v2/shared/ia/history.mjs")) as {
+      clipHistory: (messages: Array<{ role: string; content?: string; modelContent?: string; mode?: string }>, options?: { profile?: string; turns?: number; maxChars?: number }) => Array<{ role: string; content: string }>;
+    };
+    const fact = "Mi empresa se llama Velatia y vendemos software de logística.";
+    const messages: Array<{ role: string; content?: string; modelContent?: string; mode?: string }> = [
+      { role: "user", content: fact },
+      { role: "assistant", content: "Entendido.", mode: "model" },
+    ];
+    for (let i = 0; i < 6; i += 1) {
+      messages.push({ role: "user", content: `relleno ${i}` });
+      messages.push({ role: "assistant", content: "Vale.", mode: "model" });
+    }
+    const far = history.clipHistory(messages, { profile: "v1", turns: 12, maxChars: 12000 });
+    assert.match(far.map((item) => item.content).join("\n"), /Velatia/);
+    const notice = history.clipHistory([
+      { role: "user", content: "Necesito ideas para una cafetería." },
+      { role: "assistant", content: "El modelo de terceros se repitió. Extracto citado.", mode: "extractive" },
+      { role: "user", content: "¿Me das tres ideas?" },
+    ], { profile: "v1" });
+    assert.equal(notice.some((item) => /extracto citado/i.test(item.content)), false);
+    const doc = `${"a".repeat(2600)} KX-4471 ${"b".repeat(590)}`;
+    const attached = history.clipHistory([{ role: "user", content: "documento", modelContent: doc }], { profile: "v1", maxChars: 12000 });
+    assert.match(attached.at(-1)?.content || "", /KX-4471/);
+    assert.ok((attached.at(-1)?.content.length || 0) > 2600);
+  });
+
+  test("el filtro financiero deja pasar las preguntas normales y bloquea el activo", async () => {
+    const guard = await import(href("web/v2/shared/ia/guard.mjs")) as { asksFinancialAdvice: (text: string) => boolean };
+    const benign = [
+      "Compro 4 lápices a 3 € y pago con 20 €. ¿Cuánto me devuelven?",
+      "Voy a comprar un portátil para la universidad, ¿qué características miro?",
+      "¿Cómo vendo mi bici usada por internet de forma segura?",
+      "Quiero vender más en mi tienda online, ¿ideas de marketing?",
+      "¿Me conviene estudiar por la mañana o por la noche?",
+      "¿Va a subir la temperatura este fin de semana en Madrid?",
+      "Explícame qué es una inversión térmica en meteorología.",
+      "How do I sell my old phone safely?",
+      "I want to buy a gift for my mother, any ideas?",
+      "Quero comprar um presente para minha mãe, alguma ideia?",
+      "서울에서 사는 곳을 추천해 줘",
+      "재정 계획표를 엑셀로 만드는 방법을 알려줘",
+      "プレゼントを買うならどんな物がいい？",
+      "¿Debería comprar pan integral o blanco para la dieta?",
+      "¿Cuánto cuesta el transporte público en Madrid?",
+      "Redacta un correo para vender nuestro servicio a un cliente.",
+    ];
+    assert.equal(benign.filter((item) => guard.asksFinancialAdvice(item)).length, 0);
+    assert.equal(guard.asksFinancialAdvice("¿Compro ORVUPI ahora?"), true);
+    assert.equal(guard.asksFinancialAdvice("Should I buy ORVUPI?"), true);
+    assert.equal(guard.asksFinancialAdvice("今 ORVUPI を買うべきですか"), true);
+    assert.equal(guard.asksFinancialAdvice("지금 ORVUPI를 사야 할까요?"), true);
+  });
+
+  test("una repetición se recorta y no se vacía", async () => {
+    const quality = await import(href("web/v2/shared/ia/quality.mjs")) as { trimRepetition: (text: string) => string };
+    const prefix = "Preparo la entrevista leyendo la oferta y ensayando respuestas concretas. ";
+    const loop = `${prefix}${"y otra vez ".repeat(12)}`;
+    const kept = quality.trimRepetition(loop);
+    assert.ok(kept.length >= 60);
+    assert.equal(kept.includes("y otra vez y otra vez y otra vez"), false);
+  });
+
+  test("un registro antiguo se lee aunque no traiga el texto del adjunto", async () => {
+    const chats = await import(href("web/v2/shared/ia/chats.mjs")) as {
+      conversationRecord: (input: { id: string; messages: Array<{ role: string; content: string }> }) => { messages: Array<{ content: string; modelContent: string; mode: string }> };
+    };
+    const row = chats.conversationRecord({ id: "viejo-chat", messages: [{ role: "user", content: "Hola antiguo" }] });
+    assert.equal(row.messages[0]?.content, "Hola antiguo");
+    assert.equal(row.messages[0]?.modelContent, "");
+  });
+
+  test("el cálculo local resuelve la operación y el seguimiento", async () => {
+    const calc = await import(href("web/v2/shared/ia/calc.mjs")) as {
+      resolveCalculation: (messages: Array<{ role: string; content: string }>) => { value: number; display: string; parts: string[] } | null;
+      verifiedAnswer: (text: string, solved: { value: number; display: string; parts: string[] }) => string;
+    };
+    const cases: Array<{ ask: string; value: number; before?: string }> = [
+      { ask: "¿Cuánto es 12 por 7?", value: 84 },
+      { ask: "¿Cuánto es 5 por 8?", value: 40 },
+      { ask: "12 más 7", value: 19 },
+      { ask: "20 entre 4", value: 5 },
+      { ask: "20 menos 4", value: 16 },
+      { ask: "(2 + 3) × 4", value: 20 },
+      { ask: "12,5 por 2", value: 25 },
+      { ask: "25% de 80", value: 20 },
+      { ask: "80 + 10%", value: 88 },
+      { ask: "200 - 15%", value: 170 },
+      { ask: "How much is 12 times 7?", value: 84 },
+      { ask: "Quanto é 12 vezes 7?", value: 84 },
+      { ask: "Tengo 120 € y gasto el 25 %", value: 90 },
+      { ask: "¿Y si le sumo 16?", value: 100, before: "¿Cuánto es 12 por 7?" },
+      { ask: "What if I add 16?", value: 100, before: "How much is 12 times 7?" },
+      { ask: "E se eu somar 16?", value: 100, before: "Quanto é 12 vezes 7?" },
+    ];
+    for (const item of cases) {
+      const messages = item.before ? [{ role: "user", content: item.before }, { role: "user", content: item.ask }] : [{ role: "user", content: item.ask }];
+      const solved = calc.resolveCalculation(messages);
+      assert.ok(solved, item.ask);
+      assert.equal(solved?.value, item.value, item.ask);
+    }
+    assert.equal(calc.resolveCalculation([{ role: "user", content: "Hola" }]), null);
+    assert.equal(calc.resolveCalculation([{ role: "user", content: "12 entre 0" }]), null);
+    const solved = calc.resolveCalculation([{ role: "user", content: "¿Cuánto es 12 por 7?" }]);
+    assert.equal(calc.verifiedAnswer("12 × 7 = 84 y luego 96", solved!), solved?.display);
+    assert.match(calc.verifiedAnswer("12 por 7 es 84.", solved!), /84/);
+  });
+
+  test("una respuesta breve de Sonar se queda si cita la fuente", async () => {
+    const prompt = await import(href("web/v2/shared/ia/prompt.mjs")) as {
+      compactSources: (sources: Array<{ title: string; excerpt: string }>) => Array<{ excerpt: string }>;
+      sourcedTurn: (question: string, sources: Array<{ excerpt: string }>) => boolean;
+      sourceNote: (sources: Array<{ title: string; excerpt: string }>) => string;
+      replyLanguage: (question: string, page: string) => string;
+      generationPlan: (question: string, sources: unknown[], profile?: string) => { list: boolean; detail: boolean; maxTokens: number };
+      tokenLimit: (plan: { maxTokens: number; list?: boolean }, options?: { attached?: boolean }) => number;
+      contextBudget: (plan: { detail?: boolean }, options?: { attached?: boolean }) => { maxChars: number; pinFirst: boolean };
+      finishOnDeadline: (text: string, lang: string) => string;
+      moreDetailOffer: (lang: string) => string;
+    };
+    const quality = await import(href("web/v2/shared/ia/quality.mjs")) as {
+      needsExtract: (answer: string, sources: Array<{ title: string; excerpt: string; origin: string }>, question: string) => boolean;
+    };
+    const sources = [
+      { title: "ORVUPI Sonar", url: "/sonar/", excerpt: "ORVUPI Sonar muestra datos de mercado y la ruta en español es /sonar/. El subtítulo es «Sonar · verify on-chain». Auditoría larga que no debe entrar entera en el modelo.", origin: "orvupi" },
+      { title: "Auditoría de ORVUPI Sonar", url: "/sonar/", excerpt: "Sonar · verify on chain. Este segundo fragmento no debe entrar en el modelo.", origin: "orvupi" },
+    ];
+    const compact = prompt.compactSources(sources);
+    assert.equal(compact.length, 2);
+    assert.ok(compact.every((item) => (item.excerpt.length || 0) <= 160));
+    assert.equal(prompt.sourcedTurn("¿Qué es ORVUPI Sonar?", sources), true);
+    assert.equal(prompt.sourcedTurn("¿Qué es un faro?", sources), false);
+    const note = prompt.sourceNote(sources);
+    assert.ok(note.length < 700);
+    assert.match(note, /datos de mercado/);
+    assert.match(note, /\/sonar\//);
+    assert.match(note, /verify on-chain/);
+    assert.doesNotMatch(note, /Auditoría larga/);
+    assert.equal(prompt.replyLanguage("What is ORVUPI?", "es"), "en");
+    assert.equal(prompt.replyLanguage("¿Qué es ORVUPI Sonar?", "en"), "es");
+    assert.equal(prompt.replyLanguage("Dame 3 consejos para preparar una entrevista de trabajo", "en"), "es");
+    const tips = prompt.generationPlan("Dame 3 consejos para preparar una entrevista de trabajo", [], "v1");
+    assert.equal(tips.list, true);
+    assert.ok(tips.maxTokens <= 110);
+    const detail = prompt.generationPlan("Explica con más detalle cómo preparar una entrevista de trabajo", [], "v1");
+    assert.equal(detail.detail, true);
+    assert.ok(detail.maxTokens > tips.maxTokens);
+    const brief = prompt.generationPlan("Di hola", [], "v1");
+    assert.equal(prompt.tokenLimit(brief, { attached: false }), 45);
+    assert.equal(prompt.tokenLimit(detail, {}), 180);
+    assert.equal(prompt.tokenLimit(brief, { attached: true }), 280);
+    const tight = prompt.contextBudget(brief, {});
+    assert.ok(tight.maxChars <= 800);
+    assert.equal(tight.pinFirst, false);
+    assert.ok(prompt.contextBudget(detail, {}).maxChars > 4000);
+    const cut = prompt.finishOnDeadline("Esta frase ya está cerrada. Y esta segunda queda a medias sin punto", "es");
+    assert.match(cut, /Esta frase ya está cerrada\./);
+    assert.match(cut, /Puedes pedir más detalle/);
+    assert.doesNotMatch(cut, /a medias/);
+    assert.match(prompt.finishOnDeadline("Half a sentence without a stop", "en"), /^You can ask for more detail\.$/);
+    assert.match(prompt.moreDetailOffer("ja"), /詳しく/);
+    assert.match(prompt.moreDetailOffer("ko"), /자세히/);
+    assert.match(prompt.moreDetailOffer("pt-BR"), /mais detalhes/);
+    const app = readFileSync(path.join(root, "web/v2/arqiven/app.js"), "utf8");
+    assert.match(app, /id = "stop"/);
+    assert.match(app, /function stopGeneration/);
+    assert.match(app, /stopGeneration\(true\)/);
+    const grounded = "ORVUPI Sonar muestra datos de mercado. La ruta es /sonar/ (ORVUPI Sonar).";
+    assert.equal(quality.needsExtract(grounded, sources, "¿Qué es ORVUPI Sonar?"), false);
+    const invented = "ORVUPI Sonar es un cohete privado que viaja a Marte cada martes por la noche.";
+    assert.equal(quality.needsExtract(invented, sources, "¿Qué es ORVUPI Sonar?"), true);
+  });
+
+  test("las fichas de ORVUPI salen verificadas en los cinco idiomas", async () => {
+    const turn = await import(href("web/v2/shared/ia/turn.mjs")) as {
+      planTurn: (options: { question: string; lang: string; index: unknown; history: unknown[]; fetchImpl: null }) => Promise<{ skipModel: boolean; verified?: boolean; text: string; sources: Array<{ url: string }> }>;
+    };
+    const retrieve = await import(href("web/v2/shared/ia/retrieve.mjs")) as {
+      buildIndex: (chunks: unknown[]) => unknown;
+    };
+    const index = retrieve.buildIndex(JSON.parse(readFileSync(path.join(root, "web/v2/arqiven/knowledge-index.json"), "utf8")).chunks);
+    const langs = ["es", "en", "pt-BR", "ja", "ko"] as const;
+    const asks = {
+      es: ["¿Qué es ORVUPI?", "¿Qué es ORVUPI Sonar?", "¿Qué es Work?", "¿Qué es Studio?", "¿Qué es Verify?", "¿Qué es Academy?", "¿Qué es ARQIVEN?", "¿Cuál es el contrato oficial de ORVUPI?", "¿En qué idiomas está ORVUPI?"],
+      en: ["What is ORVUPI?", "What is ORVUPI Sonar?", "What is Work?", "What is Studio?", "What is Verify?", "What is Academy?", "What is ARQIVEN?", "What is the only official ORVUPI contract?"],
+      "pt-BR": ["O que é a ORVUPI?", "O que é o ORVUPI Sonar?", "O que é o Work?", "O que é o Studio?", "O que é o Verify?", "O que é a Academy?", "O que é a ARQIVEN?"],
+      ja: ["ORVUPI とは何ですか。", "ORVUPI Sonar とは何ですか。", "Work とは何ですか。", "Studio とは何ですか。", "Verify とは何ですか。", "Academy とは何ですか。", "ARQIVEN とは何ですか。"],
+      ko: ["ORVUPI란 무엇입니까?", "ORVUPI Sonar는 무엇입니까?", "Work는 무엇입니까?", "Studio는 무엇입니까?", "Verify는 무엇입니까?", "Academy는 무엇입니까?", "ARQIVEN은 무엇입니까?"],
+    };
+    for (const lang of langs) {
+      for (const ask of asks[lang]) {
+        const plan = await turn.planTurn({ question: ask, lang, index, history: [], fetchImpl: null });
+        assert.equal(plan.verified, true, `${lang} ${ask}`);
+        assert.equal(plan.skipModel, true, ask);
+        assert.ok(plan.text.length > 40, ask);
+        assert.ok(plan.sources[0]?.url, ask);
+      }
+    }
+    const sonar = await turn.planTurn({ question: "¿Qué es ORVUPI Sonar?", lang: "es", index, history: [], fetchImpl: null });
+    assert.match(sonar.text, /verify on-chain/);
+    assert.match(sonar.text, /\/sonar\//);
+    assert.match(sonar.text, /mercado/);
+    const work = await turn.planTurn({ question: "¿Qué es Work?", lang: "es", index, history: [], fetchImpl: null });
+    assert.match(work.text, /espacio de trabajo/);
+    assert.match(work.text, /No es el sistema operativo/);
+    assert.match(work.text, /\/work\//);
+    const english = await turn.planTurn({ question: "What is ORVUPI?", lang: "es", index, history: [], fetchImpl: null });
+    assert.match(english.text, /community, humor and tools/);
+    assert.match(english.text, /Work, Studio, Sonar, Verify, Academy and ARQIVEN/);
+    const detail = await turn.planTurn({ question: "Explica con más detalle qué es ORVUPI Sonar", lang: "es", index, history: [], fetchImpl: null });
+    assert.equal(detail.verified, undefined);
+    assert.equal(detail.skipModel, false);
+    const vague = await turn.planTurn({ question: "¿Qué tiempo hace?", lang: "es", index, history: [], fetchImpl: null });
+    assert.notEqual(vague.verified, true);
+  });
+
+  test("la elección de modelo se guarda sin tocar los chats", async () => {
+    const chats = await import(href("web/v2/shared/ia/chats.mjs")) as {
+      openPrefDb: (name?: string) => Promise<{ close: () => void }>;
+      saveSetting: (db: unknown, id: string, value: string) => Promise<{ value: string }>;
+      readSetting: (db: unknown, id: string) => Promise<string>;
+      openChatDb: (name?: string) => Promise<{ close: () => void }>;
+      listConversations: (db: unknown) => Promise<unknown[]>;
+    };
+    const name = `arqiven-pref-${crypto.randomUUID()}`;
+    const db = await chats.openPrefDb(name);
+    await chats.saveSetting(db, "model", "qwen35-cpu");
+    assert.equal(await chats.readSetting(db, "model"), "qwen35-cpu");
+    await chats.saveSetting(db, "model", "smol135-cpu");
+    assert.equal(await chats.readSetting(db, "model"), "smol135-cpu");
+    assert.equal(await chats.readSetting(db, "otro"), "");
+    db.close();
+    const chatsDb = await chats.openChatDb(`arqiven-chats-${crypto.randomUUID()}`);
+    assert.deepEqual(await chats.listConversations(chatsDb), []);
+    chatsDb.close();
   });
 });

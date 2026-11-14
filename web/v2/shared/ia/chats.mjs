@@ -23,6 +23,7 @@ function cleanMessage(item) {
     role: item.role,
     content,
     mode: String(item.mode || "rules").slice(0, 32),
+    modelContent: typeof item.modelContent === "string" ? item.modelContent.slice(0, 8000) : "",
     provider: String(item.provider || "none").slice(0, 32),
     modelId: String(item.modelId || "none").slice(0, 80),
     modelVersion: String(item.modelVersion || "").slice(0, 80),
@@ -194,6 +195,38 @@ export function deleteImage(db, id) {
   const tx = db.transaction(IMAGE_STORE, "readwrite");
   tx.objectStore(IMAGE_STORE).delete(String(id || ""));
   return finish(tx, true);
+}
+
+export const PREF_DB = "orvupi-arqiven-settings";
+export const PREF_STORE = "settings";
+
+export function openPrefDb(name = PREF_DB) {
+  return new Promise((resolve, reject) => {
+    const request = globalThis.indexedDB.open(name, 1);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(PREF_STORE)) db.createObjectStore(PREF_STORE, { keyPath: "id" });
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+export function saveSetting(db, id, value) {
+  const record = { id: String(id || "").slice(0, 40), value: String(value ?? "").slice(0, 80) };
+  if (!record.id) throw new Error("setting");
+  const tx = db.transaction(PREF_STORE, "readwrite");
+  tx.objectStore(PREF_STORE).put(record);
+  return finish(tx, record);
+}
+
+export function readSetting(db, id) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(PREF_STORE, "readonly");
+    const request = tx.objectStore(PREF_STORE).get(String(id || ""));
+    request.onsuccess = () => resolve(typeof request.result?.value === "string" ? request.result.value : "");
+    request.onerror = () => reject(request.error);
+  });
 }
 
 export function matchesQuery(row, query) {

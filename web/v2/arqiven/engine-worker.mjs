@@ -1,10 +1,13 @@
 /** Worker del mismo motor que Work (Transformers.js + ONNX). Los id son de terceros. */
 
-import { ONNX_WASM, TRANSFORMERS_ESM, modelById } from "/shared/ia/models.mjs";
-import { isDegenerate } from "/shared/ia/quality.mjs";
+import { ONNX_WASM, ORT_WASM_MJS, TRANSFORMERS_ESM, modelById } from "/shared/ia/models.mjs";
+import { profileById } from "/shared/ia/profile.mjs";
+import { isDegenerate, trimRepetition } from "/shared/ia/quality.mjs";
 import { clipHistory } from "/shared/ia/history.mjs";
+import { formatNumber, resolveCalculation, verifiedAnswer } from "/shared/ia/calc.mjs";
+import { closeClean, contextBudget, directExtra, finishOnDeadline, generationPlan, languageName, lastUserText, REPLY_DEADLINE_MS, replyLanguage, sourceNote, sourcedSystem, tokenLimit } from "/shared/ia/prompt.mjs";
 
-const SYSTEM = [
+const SYSTEM_LEGACY = [
   "Eres un modelo de terceros dentro del navegador. ARQIVEN es la IA de ORVUPI y no entrenó estos pesos. No digas que eres Arqiven-N.",
   "Lee la última pregunta y el historial reciente. Identifica la intención: informar, resolver, corregir lo ya dicho o pedir un paso práctico.",
   "Si la pregunta es ambigua, haz una sola pregunta de aclaración. No adivines.",
@@ -13,7 +16,15 @@ const SYSTEM = [
   "En un problema de varios pasos, cierra con una línea que empiece por «Respuesta final:».",
 ].join(" ");
 
-const LANG_NAME = { es: "español", en: "English", pt: "português", ja: "日本語", ko: "한국어" };
+const SYSTEM_V1 = [
+  "Eres un modelo de terceros. ARQIVEN es la IA de ORVUPI y no entrenó estos pesos. No digas que eres Arqiven-N.",
+  "Responde a la última pregunta. Respeta las correcciones del historial. Si no lo sabes, dilo y no inventes cifras.",
+  "Si la pregunta es ambigua, haz una sola aclaración.",
+  "Ejemplo: «El presupuesto es 800, no 500.» Usa 800.",
+  "Ejemplo: «Acórtalo.» sin un texto claro antes: «¿Qué quieres que acorte?»",
+].join(" ");
+
+const SYSTEM = SYSTEM_LEGACY;
 
 const TASK = {
   summarize: "Resume el mensaje en el idioma del usuario, sin inventar datos.",
@@ -29,9 +40,19 @@ const TASK = {
 };
 
 let toolkit = null;
+let wasmThreadCount = 1;
 let generator = null;
 let loadedKey = "";
+let loadedModel = null;
 let stopper = null;
+
+function stripThinking(text) {
+  return String(text || "").replace(/<think>[\s\S]*?<\/think>/gi, "").replace(/<think>[\s\S]*$/i, "").trim();
+}
+
+function qwen3(model) {
+  return /qwen3/i.test(`${model?.repo || ""} ${model?.id || ""}`);
+}
 
 const post = (data) => self.postMessage(data);
 
@@ -42,27 +63,60 @@ function looksBroken(text) {
 
 async function lib() {
   if (toolkit) return toolkit;
-  toolkit = await import(TRANSFORMERS_ESM);
+  const response = await fetch(TRANSFORMERS_ESM);
+  if (!response.ok) throw new Error("transformers");
+  let source = await response.text();
+  source = source.replace(
+    "/npm/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/webgpu/+esm",
+    ORT_WASM_MJS,
+  );
+  source = source.replaceAll("from\"/npm/", "from\"https://cdn.jsdelivr.net/npm/");
+  if (!source.includes("onnxruntime-web@1.31.1/dist/ort.wasm.min.mjs")) throw new Error("runtime");
+  const url = URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
+  toolkit = await import(url);
   const { env, InterruptableStoppingCriteria } = toolkit;
   env.allowLocalModels = false;
   env.useBrowserCache = true;
   const wasm = env.backends?.onnx?.wasm;
   if (wasm) {
     wasm.wasmPaths = ONNX_WASM;
-    wasm.numThreads = 1;
+    const cores = Number(navigator.hardwareConcurrency) || 1;
+    const isolated = typeof crossOriginIsolated === "boolean" && crossOriginIsolated;
+    wasmThreadCount = isolated ? Math.max(1, Math.min(4, cores)) : 1;
+    wasm.numThreads = wasmThreadCount;
+    wasm.simd = true;
+    wasm.proxy = false;
   }
   stopper = new InterruptableStoppingCriteria();
+  if (haltFlag) post({ type: "control", halt: haltFlag.buffer });
   return toolkit;
+}
+
+let turn = Promise.resolve();
+let haltFlag = null;
+try {
+  haltFlag = new Int32Array(new SharedArrayBuffer(4));
+} catch {
+  haltFlag = null;
+}
+
+function haltRequested() {
+  return Boolean(haltFlag) && Atomics.load(haltFlag, 0) === 1;
+}
+
+function clearHalt() {
+  if (haltFlag) Atomics.store(haltFlag, 0, 0);
 }
 
 self.addEventListener("message", (event) => {
   const msg = event.data;
   if (!msg || typeof msg !== "object") return;
   if (msg.type === "stop") {
+    if (haltFlag) Atomics.store(haltFlag, 0, 1);
     stopper?.interrupt();
     return;
   }
-  void handle(msg);
+  turn = turn.then(() => handle(msg)).catch(() => {});
 });
 
 async function handle(msg) {
@@ -80,6 +134,7 @@ async function handle(msg) {
       }
       const { pipeline } = await lib();
       let last = 0;
+      loadedModel = known;
       generator = await pipeline("text-generation", known.repo, {
         device: known.device,
         dtype: known.dtype,
@@ -109,43 +164,110 @@ async function handle(msg) {
     if (msg.type === "generate") {
       if (!generator) throw new Error("not-loaded");
       const { TextStreamer } = await lib();
+      clearHalt();
       stopper?.reset();
       const hint = TASK[msg.task] || "";
       const cited = Array.isArray(msg.sources) ? msg.sources.flatMap((item) => {
         if (!item || typeof item.excerpt !== "string" || !item.excerpt) return [];
         return [`[${item.title || item.url || "fuente"}] ${item.url || ""}\n${item.excerpt}`];
       }).slice(0, 4) : [];
-      const language = LANG_NAME[msg.lang] || LANG_NAME[msg.lang === "pt-BR" ? "pt" : ""] || "español";
-      const sourceNote = cited.length ? `\n\nFuentes. Apóyate solo en ellas y cita el título. Si no responden, di que no consta.\n${cited.join("\n\n")}` : "";
-      const history = clipHistory(msg.messages, { turns: 4, maxChars: 3200 });
-      const messages = [{ role: "system", content: `${SYSTEM} Responde en ${language}. ${hint}${sourceNote}` }, ...history];
+      const profile = profileById(msg.profile);
+      const model = loadedModel || modelById(msg.modelId);
+      const incoming = Array.isArray(msg.messages) ? msg.messages : [];
+      const questionPreview = lastUserText(incoming);
+      const plan = generationPlan(questionPreview, msg.sources, profile.id);
+      const currentUser = String(incoming.filter((item) => item?.role === "user").at(-1)?.content || "");
+      const attached = currentUser.length > 1000;
+      const budget = contextBudget(plan, { attached });
+      const history = clipHistory(incoming, {
+        profile: profile.id,
+        turns: profile.id === "legacy" ? 4 : budget.turns,
+        maxChars: profile.id === "legacy" ? 3200 : budget.maxChars,
+        perMessage: profile.id === "legacy" ? profile.perMessage : budget.perMessage,
+        dropNonModel: profile.dropNonModel,
+        pinFirst: profile.id === "legacy" ? false : budget.pinFirst,
+      });
+      const question = lastUserText(history) || questionPreview;
+      const reply = replyLanguage(question, msg.lang);
+      const language = languageName(reply);
+      const promptText = plan.sourced ? sourcedSystem(language) : (profile.id === "v1" ? SYSTEM_V1 : SYSTEM_LEGACY);
+      const note = plan.sourced ? sourceNote(msg.sources) : (cited.length ? `\n\nFuentes. Apóyate solo en ellas y cita el título. Si no responden, di que no consta.\n${cited.join("\n\n")}` : "");
+      const calc = resolveCalculation(history);
+      if (calc?.follow) {
+        const started = Date.now();
+        post({
+          type: "done",
+          id: msg.id,
+          text: calc.display,
+          broken: false,
+          tokens: 1,
+          ms: Math.max(1, Date.now() - started),
+          threads: wasmThreadCount,
+        });
+        post({ type: "settled", id: msg.id });
+        return;
+      }
+      const verified = calc ? `\n\nCálculo verificado. No lo recalcules. ${calc.display}. La respuesta numérica es ${formatNumber(calc.value)}. Responde en una frase y no des otro número.` : "";
+      const messages = [{ role: "system", content: `${promptText}${plan.sourced ? "" : ` Responde en ${language}. ${hint}`}${plan.extra}${plan.sourced ? "" : directExtra(question, attached)}${note}${verified}` }, ...history];
       let acc = "";
       let broken = false;
+      let timedOut = false;
+      let started = 0;
+      const shown = calc ? formatNumber(calc.value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : "";
       const streamer = new TextStreamer(generator.tokenizer, {
         skip_prompt: true,
         skip_special_tokens: true,
         callback_function: (text) => {
+          if (haltRequested()) {
+            broken = true;
+            stopper?.interrupt();
+          }
           acc += text;
-          if (!broken && looksBroken(acc)) {
+          if (!broken && started && Date.now() - started >= REPLY_DEADLINE_MS) {
+            broken = true;
+            timedOut = true;
+            stopper?.interrupt();
+          }
+          const sentences = acc.split(/[.!?。！？]+/).filter((part) => part.trim().length > 8).length;
+          const bullets = acc.split("\n").filter((line) => /^\s*(?:[-*•]|\d+[.)])\s+\S/.test(line)).length;
+          const listDone = plan.list && bullets >= 3 && /[.!?。！？]\s*$/.test(acc);
+          const shortAnswer = (plan.sourced || (!plan.detail && !plan.list && !attached)) && sentences >= 4;
+          if (!broken && (looksBroken(acc) || (shown && new RegExp(`(?:^|\\D)${shown}(?:\\D|$)`).test(acc)) || shortAnswer || listDone)) {
             broken = true;
             stopper?.interrupt();
           }
           post({ type: "token", id: msg.id, text });
         },
       });
+      const limit = tokenLimit(plan, { attached });
+      const asked = Number(msg.maxTokens);
+      const maxNew = Number.isFinite(asked) && asked > 0 ? Math.min(limit, asked) : limit;
+      started = Date.now();
       const output = await generator(messages, {
-        max_new_tokens: Math.min(120, Number(msg.maxTokens) || 120),
+        max_new_tokens: calc ? Math.min(maxNew, 12) : maxNew,
         do_sample: false,
-        repetition_penalty: 1.22,
-        no_repeat_ngram_size: 5,
+        repetition_penalty: profile.repetitionPenalty,
+        ...(profile.noRepeatNgram ? { no_repeat_ngram_size: profile.noRepeatNgram } : {}),
+        ...(profile.disableThinking && qwen3(model) ? { chat_template_kwargs: { enable_thinking: false } } : {}),
         streamer,
         stopping_criteria: stopper,
       });
       const last = output?.[0]?.generated_text;
-      const text = Array.isArray(last) ? (last.at(-1)?.content ?? acc) : String(last ?? acc);
-      post({ type: "done", id: msg.id, text: broken ? "" : text, broken });
+      const raw = Array.isArray(last) ? (last.at(-1)?.content ?? acc) : String(last ?? acc);
+      const cleaned = closeClean(stripThinking(trimRepetition(broken ? acc : raw)), plan);
+      const bounded = timedOut ? finishOnDeadline(cleaned, reply) : cleaned;
+      const trimmed = verifiedAnswer(bounded, calc);
+      const ms = Date.now() - started;
+      const tokens = Math.max(1, generator.tokenizer.encode(String(trimmed || acc)).length);
+      const promptTokens = messages.reduce((sum, item) => sum + generator.tokenizer.encode(String(item.content || "")).length, 0);
+      post({ type: "done", id: msg.id, text: trimmed, broken: broken && trimmed.trim().length < 60, tokens, promptTokens, ms, threads: wasmThreadCount });
+      post({ type: "settled", id: msg.id });
     }
   } catch (error) {
+    post({ type: "settled", id: msg?.id });
+    generator = null;
+    loadedKey = "";
+    loadedModel = null;
     const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
     let kind = "other";
     if (/allocat|out of memory|OOM|memory access out of bounds/i.test(message)) kind = "memory";

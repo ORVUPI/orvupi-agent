@@ -311,6 +311,14 @@ dialog::backdrop { background: #10203366; }
   padding: 0;
 }
 .send:disabled { background: #e5e7eb; color: #667085; }
+.stop {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  padding: 0 .9rem;
+}
 .send svg { stroke: currentColor; }
 .note, .status { color: var(--muted); font-size: .8rem; margin: .55rem .2rem 0; }
 .answer-actions { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .35rem; }
