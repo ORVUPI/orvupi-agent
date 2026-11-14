@@ -70,7 +70,7 @@ export function search(index, query, limit = 4, lang = "") {
     const asked = fold(query);
     const titled = fold(doc.chunk.title);
     if (asked.length > 4 && titled && (titled === asked || titled.includes(asked))) score += 8;
-    const product = ["sonar", "studio", "verify", "academy", "work"].filter((name) => tokens.includes(name));
+    const product = ["sonar", "studio", "verify", "academy", "work", "arqiven"].filter((name) => tokens.includes(name));
     const route = String(doc.chunk.url || "").toLowerCase();
     if (product.some((name) => titled.includes(name) || route.includes(`/${name}`))) score *= 2.2;
     const generalOrvupi = tokens.includes("orvupi") && !product.length && !tokens.includes("contrato") && !tokens.includes("contract");

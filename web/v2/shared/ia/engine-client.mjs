@@ -16,12 +16,14 @@ export function createEngineClient() {
   let pending = null;
   let halt = null;
   let settle = null;
+  let release = null;
+  let restarting = false;
   const listeners = new Set();
 
   function snapshot() {
     return {
       phase,
-      ready: phase === "ready",
+      ready: phase === "ready" && !restarting,
       provider: "third-party",
       modelId: model?.id || "",
       modelVersion: model?.version || "",
@@ -161,27 +163,41 @@ export function createEngineClient() {
     const id = model?.id;
     halt = null;
     settle = null;
+    restarting = false;
+    failPending(new Error("cancelled"));
     discardWorker();
     phase = "idle";
     if (id) prepare(id);
   }
 
   function interrupt() {
-    if (!worker || phase !== "ready") return Promise.resolve(snapshot());
+    if (release) return release;
+    if (!worker || phase !== "ready" || restarting) return Promise.resolve(snapshot());
     if (halt) Atomics.store(halt, 0, 1);
     const current = worker;
     try { current.postMessage({ type: "stop" }); } catch { /* el worker ya no acepta mensajes */ }
     failPending(new Error("cancelled"));
-    return new Promise((resolve) => {
+    // El motor deja de estar listo al pulsar Detener. Si no confirma la parada, se recrea.
+    // Una pregunta enviada en ese intervalo se encola y no entra en el worker que vamos a cerrar.
+    restarting = true;
+    emit();
+    release = new Promise((resolve) => {
       const timer = setTimeout(() => {
+        release = null;
+        settle = null;
         if (worker === current) forceRestart();
+        else restarting = false;
         resolve(snapshot());
       }, 1000);
       settle = () => {
         clearTimeout(timer);
+        release = null;
+        if (worker === current) restarting = false;
+        emit();
         resolve(snapshot());
       };
     });
+    return release;
   }
 
   function cancel() {
@@ -199,7 +215,7 @@ export function createEngineClient() {
   }
 
   function run(request, onToken = () => undefined, lang = "es", sources = []) {
-    if (phase !== "ready" || !worker || !model) return Promise.reject(new Error("not-ready"));
+    if (release || phase !== "ready" || !worker || !model) return Promise.reject(new Error("not-ready"));
     if (pending) return Promise.reject(new Error("busy"));
     const id = ++nextId;
     const promptSources = (Array.isArray(sources) ? sources : []).slice(0, 4).map((item) => ({

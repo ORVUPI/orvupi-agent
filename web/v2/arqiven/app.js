@@ -34,6 +34,7 @@ const UI = {
     idle: "IA de ORVUPI",
     who: "ARQIVEN es la IA de ORVUPI. Si descargas un modelo para que responda, es de terceros y se nombra aparte.",
     queued: "Preparando modelo de terceros… Puedes seguir escribiendo. Este aviso se sustituye cuando haya texto.",
+    preparingModel: "Preparando el modelo…",
     cancelled: "Cancelado. No hay respuesta generada.",
     error: "El modelo de terceros no se ha preparado.",
     emptyModel: "El modelo de terceros no escribió un texto usable.",
@@ -71,6 +72,7 @@ const UI = {
     idle: "ORVUPI AI",
     who: "ARQIVEN is ORVUPI's AI. If you download a model so it can answer, that model belongs to someone else and is named separately.",
     queued: "Preparing a third-party model… You can keep typing. This notice is replaced when there is text.",
+    preparingModel: "Preparing the model…",
     cancelled: "Cancelled. There is no generated answer.",
     error: "The third-party model was not prepared.",
     emptyModel: "The third-party model did not write usable text.",
@@ -108,6 +110,7 @@ const UI = {
     checking: "Conferindo se o modelo de terceiros responde neste navegador.",
     idle: "IA da ORVUPI",
     queued: "Preparando modelo de terceiros… Você pode continuar escrevendo. Este aviso é trocado quando houver texto.",
+    preparingModel: "Preparando o modelo…",
     cancelled: "Cancelado. Não há resposta gerada.",
     error: "O modelo de terceiros não foi preparado.",
     emptyModel: "O modelo de terceiros não escreveu um texto usável.",
@@ -145,6 +148,7 @@ const UI = {
     checking: "このブラウザで第三者モデルが応答するか確認しています。",
     idle: "ORVUPIのAI",
     queued: "第三者モデルを準備しています… 入力は続けられます。テキストができたらこの表示を置き換えます。",
+    preparingModel: "モデルを準備しています…",
     cancelled: "キャンセルしました。生成された回答はありません。",
     error: "第三者モデルを準備できませんでした。",
     emptyModel: "第三者モデルは使えるテキストを書きませんでした。",
@@ -182,6 +186,7 @@ const UI = {
     checking: "이 브라우저에서 제3자 모델이 응답하는지 확인하는 중입니다.",
     idle: "ORVUPI AI",
     queued: "제3자 모델을 준비하는 중… 계속 입력할 수 있습니다. 텍스트가 생기면 이 안내를 바꿉니다.",
+    preparingModel: "모델을 준비하는 중…",
     cancelled: "취소했습니다. 생성된 답은 없습니다.",
     error: "제3자 모델을 준비하지 못했습니다.",
     emptyModel: "제3자 모델이 쓸 수 있는 글을 쓰지 않았습니다.",
@@ -210,11 +215,11 @@ const UI = {
 };
 const ui = UI[uiLang];
 const CHROME = {
-  es: { newChat: "Nuevo chat", settings: "Ajustes", conversations: "Chats", recent: "Recientes", emptyChats: "Todavía no hay chats.", emptyProjects: "Todavía no hay proyectos.", projectOne: "1 proyecto", projectMany: "{n} proyectos", emptyLibrary: "Todavía no hay imágenes.", attachImage: "Adjuntar imagen", allImages: "Todas", imageOne: "1 imagen", imageMany: "{n} imágenes", filterBy: "Filtrar", search: "Buscar", welcome: "¿En qué puedo ayudarte?", note: "ARQIVEN es la IA de ORVUPI y funciona con modelos de terceros. Puede cometer errores; revisa la información importante. Lo que escribes se guarda en este navegador.", generating: "Generando", waiting: "En espera", done: "Listo", failed: "Error", copy: "Copiar", copied: "Copiado en este navegador.", copyFail: "No se pudo copiar.", againReply: "Volver a preguntar", attach: "Adjuntar", more: "Más", details: "Detalles", today: "Hoy", yesterday: "Ayer", week: "7 días", older: "Anteriores", projects: "Proyectos", projectHint: "Si eliminas un proyecto, sus chats vuelven al historial general.", library: "Biblioteca", create: "Crear", rename: "Renombrar", move: "Mover a proyecto", remove: "Eliminar", cancel: "Cancelar", confirm: "Confirmar", general: "Historial general", fav: "Favoritas", download: "Descargar", close: "Cerrar", openChat: "Abrir chat", savedImage: "Imagen guardada en la biblioteca de este navegador.", imageBig: "La imagen pasa de 4 MB. No se ha guardado.", deleteChat: "¿Eliminar este chat de este navegador?", deleteProject: "¿Eliminar este proyecto? Sus chats vuelven al historial general.", deleteImage: "¿Eliminar esta imagen de este navegador?", projectName: "Nombre del proyecto", chatName: "Nombre del chat", imageOff: "La generación de imágenes llegará pronto. Por ahora puedes guardar aquí las imágenes que adjuntes en tus chats.", originRules: "Esta respuesta sale de las reglas de ARQIVEN, sin un modelo.", originExtract: "Es un extracto de las fuentes citadas. No lo escribió el modelo.", originModel: "Lo escribió un modelo de terceros" },
-  en: { newChat: "New chat", settings: "Settings", conversations: "Chats", recent: "Recent", emptyChats: "No chats yet.", emptyProjects: "No projects yet.", projectOne: "1 project", projectMany: "{n} projects", emptyLibrary: "No images yet.", attachImage: "Attach an image", allImages: "All", imageOne: "1 image", imageMany: "{n} images", filterBy: "Filter", search: "Search", welcome: "How can I help?", note: "ARQIVEN is ORVUPI's AI and runs on third-party models. It can make mistakes; check anything that matters. What you write stays in this browser.", generating: "Generating", waiting: "Waiting", done: "Done", failed: "Error", copy: "Copy", copied: "Copied on this device.", copyFail: "Could not copy.", againReply: "Ask again", attach: "Attach", more: "More", details: "Details", today: "Today", yesterday: "Yesterday", week: "7 days", older: "Older", projects: "Projects", projectHint: "Deleting a project returns its chats to the general history.", library: "Library", create: "Create", rename: "Rename", move: "Move to project", remove: "Delete", cancel: "Cancel", confirm: "Confirm", general: "General history", fav: "Favorites", download: "Download", close: "Close", openChat: "Open chat", savedImage: "Image saved in this browser's library.", imageBig: "The image is over 4 MB. It was not saved.", deleteChat: "Delete this chat from this browser?", deleteProject: "Delete this project? Its chats return to the general history.", deleteImage: "Delete this image from this browser?", projectName: "Project name", chatName: "Chat name", imageOff: "Image generation is coming soon. For now you can keep the images you attach in your chats here.", originRules: "This answer comes from ARQIVEN's rules, without a model.", originExtract: "This is an excerpt from the cited sources. The model did not write it.", originModel: "A third-party model wrote this" },
-  pt: { newChat: "Novo chat", settings: "Ajustes", conversations: "Chats", recent: "Recentes", emptyChats: "Ainda não há chats.", emptyProjects: "Ainda não há projetos.", projectOne: "1 projeto", projectMany: "{n} projetos", emptyLibrary: "Ainda não há imagens.", attachImage: "Anexar imagem", allImages: "Todas", imageOne: "1 imagem", imageMany: "{n} imagens", filterBy: "Filtrar", search: "Buscar", welcome: "Como posso ajudar?", note: "ARQIVEN é a IA da ORVUPI e funciona com modelos de terceiros. Pode errar; confira a informação importante. O que você escreve fica neste navegador.", generating: "Gerando", waiting: "Em espera", done: "Pronto", failed: "Erro", copy: "Copiar", copied: "Copiado neste navegador.", copyFail: "Não foi possível copiar.", againReply: "Perguntar de novo", attach: "Anexar", more: "Mais", details: "Detalhes", today: "Hoje", yesterday: "Ontem", week: "7 dias", older: "Anteriores", projects: "Projetos", projectHint: "Se excluir um projeto, os chats voltam ao histórico geral.", library: "Biblioteca", create: "Criar", rename: "Renomear", move: "Mover para projeto", remove: "Excluir", cancel: "Cancelar", confirm: "Confirmar", general: "Histórico geral", fav: "Favoritas", download: "Baixar", close: "Fechar", openChat: "Abrir chat", savedImage: "Imagem guardada na biblioteca deste navegador.", imageBig: "A imagem passa de 4 MB. Não foi guardada.", deleteChat: "Excluir este chat deste navegador?", deleteProject: "Excluir este projeto? Os chats voltam ao histórico geral.", deleteImage: "Excluir esta imagem deste navegador?", projectName: "Nome do projeto", chatName: "Nome do chat", imageOff: "A geração de imagens chega em breve. Por enquanto você pode guardar aqui as imagens que anexar nos seus chats.", originRules: "Esta resposta vem das regras da ARQIVEN, sem um modelo.", originExtract: "É um trecho das fontes citadas. O modelo não escreveu.", originModel: "Um modelo de terceiros escreveu isto" },
-  ja: { newChat: "新しいチャット", settings: "設定", conversations: "チャット", recent: "最近", emptyChats: "まだチャットがありません。", emptyProjects: "まだプロジェクトがありません。", projectOne: "1 件", projectMany: "{n} 件", emptyLibrary: "まだ画像がありません。", attachImage: "画像を添付", allImages: "すべて", imageOne: "1 枚", imageMany: "{n} 枚", filterBy: "絞り込み", search: "検索", welcome: "何をお手伝いしましょうか。", note: "ARQIVEN は ORVUPI の AI で、第三者モデルで動きます。間違えることがあります。重要な情報は確認してください。書いた内容はこのブラウザに保存されます。", generating: "生成中", waiting: "待機", done: "完了", failed: "エラー", copy: "コピー", copied: "このブラウザにコピーしました。", copyFail: "コピーできませんでした。", againReply: "もう一度聞く", attach: "添付", more: "その他", details: "詳細", today: "今日", yesterday: "昨日", week: "7日", older: "それ以前", projects: "プロジェクト", projectHint: "プロジェクトを削除すると、そのチャットは全体の履歴に戻ります。", library: "ライブラリ", create: "作成", rename: "名前を変更", move: "プロジェクトへ移動", remove: "削除", cancel: "キャンセル", confirm: "確認", general: "全体の履歴", fav: "お気に入り", download: "ダウンロード", close: "閉じる", openChat: "チャットを開く", savedImage: "画像をこのブラウザのライブラリに保存しました。", imageBig: "画像が 4 MB を超えています。保存していません。", deleteChat: "このチャットをこのブラウザから削除しますか？", deleteProject: "このプロジェクトを削除しますか？チャットは全体の履歴に戻ります。", deleteImage: "この画像をこのブラウザから削除しますか？", projectName: "プロジェクト名", chatName: "チャット名", imageOff: "画像の生成はもうすぐです。今はチャットに添付した画像をここに保存できます。", originRules: "この回答は ARQIVEN のルールによるもので、モデルは使っていません。", originExtract: "引用した出典からの抜粋です。モデルが書いた文章ではありません。", originModel: "第三者が作ったモデルが書きました" },
-  ko: { newChat: "새 채팅", settings: "설정", conversations: "채팅", recent: "최근", emptyChats: "아직 채팅이 없습니다.", emptyProjects: "아직 프로젝트가 없습니다.", projectOne: "1개", projectMany: "{n}개", emptyLibrary: "아직 이미지가 없습니다.", attachImage: "이미지 첨부", allImages: "전체", imageOne: "1장", imageMany: "{n}장", filterBy: "필터", search: "검색", welcome: "무엇을 도와드릴까요?", note: "ARQIVEN은 ORVUPI의 AI이고 제3자 모델로 동작합니다. 틀릴 수 있으니 중요한 정보는 확인하세요. 쓴 내용은 이 브라우저에 저장됩니다.", generating: "생성 중", waiting: "대기", done: "완료", failed: "오류", copy: "복사", copied: "이 브라우저에 복사했습니다.", copyFail: "복사하지 못했습니다.", againReply: "다시 묻기", attach: "첨부", more: "더보기", details: "세부 정보", today: "오늘", yesterday: "어제", week: "7일", older: "이전", projects: "프로젝트", projectHint: "프로젝트를 삭제하면 채팅은 일반 기록으로 돌아갑니다.", library: "라이브러리", create: "만들기", rename: "이름 바꾸기", move: "프로젝트로 옮기기", remove: "삭제", cancel: "취소", confirm: "확인", general: "일반 기록", fav: "즐겨찾기", download: "다운로드", close: "닫기", openChat: "채팅 열기", savedImage: "이미지를 이 브라우저의 라이브러리에 저장했습니다.", imageBig: "이미지가 4 MB를 넘습니다. 저장하지 않았습니다.", deleteChat: "이 채팅을 이 브라우저에서 삭제할까요?", deleteProject: "이 프로젝트를 삭제할까요? 채팅은 일반 기록으로 돌아갑니다.", deleteImage: "이 이미지를 이 브라우저에서 삭제할까요?", projectName: "프로젝트 이름", chatName: "채팅 이름", imageOff: "이미지 생성은 곧 제공됩니다. 지금은 채팅에 첨부한 이미지를 여기에 보관할 수 있습니다.", originRules: "이 답은 ARQIVEN의 규칙에서 나왔고, 모델은 쓰지 않았습니다.", originExtract: "인용한 출처의 발췌입니다. 모델이 쓴 글이 아닙니다.", originModel: "제3자 모델이 썼습니다" },
+  es: { newChat: "Nuevo chat", settings: "Ajustes", conversations: "Chats", recent: "Recientes", emptyChats: "Todavía no hay chats.", emptyProjects: "Todavía no hay proyectos.", projectOne: "1 proyecto", projectMany: "{n} proyectos", emptyLibrary: "Todavía no hay imágenes.", attachImage: "Adjuntar imagen", allImages: "Todas", imageOne: "1 imagen", imageMany: "{n} imágenes", filterBy: "Filtrar", search: "Buscar", welcome: "¿En qué puedo ayudarte?", note: "ARQIVEN es la IA de ORVUPI y funciona con modelos de terceros. Puede cometer errores; revisa la información importante. Lo que escribes se guarda en este navegador.", generating: "Generando", waiting: "En espera", done: "Listo", failed: "Error", copy: "Copiar", copied: "Copiado en este navegador.", copyFail: "No se pudo copiar.", againReply: "Volver a preguntar", attach: "Adjuntar", more: "Más", details: "Detalles", today: "Hoy", yesterday: "Ayer", week: "7 días", older: "Anteriores", projects: "Proyectos", projectHint: "Si eliminas un proyecto, sus chats vuelven al historial general.", library: "Biblioteca", create: "Crear", rename: "Renombrar", move: "Mover a proyecto", remove: "Eliminar", cancel: "Cancelar", confirm: "Confirmar", general: "Historial general", fav: "Favoritas", download: "Descargar", close: "Cerrar", openChat: "Abrir chat", savedImage: "Imagen guardada en la biblioteca de este navegador.", imageBig: "La imagen pasa de 4 MB. No se ha guardado.", deleteChat: "¿Eliminar este chat de este navegador?", deleteProject: "¿Eliminar este proyecto? Sus chats vuelven al historial general.", deleteImage: "¿Eliminar esta imagen de este navegador?", projectName: "Nombre del proyecto", chatName: "Nombre del chat", imageOff: "La generación de imágenes llegará pronto. Por ahora puedes guardar aquí las imágenes que adjuntes en tus chats.", originRules: "Esta respuesta sale de las reglas de ARQIVEN, sin un modelo.", originVerified: "Respuesta verificada de ORVUPI.", originExtract: "Es un extracto de las fuentes citadas. No lo escribió el modelo.", originModel: "Lo escribió un modelo de terceros" },
+  en: { newChat: "New chat", settings: "Settings", conversations: "Chats", recent: "Recent", emptyChats: "No chats yet.", emptyProjects: "No projects yet.", projectOne: "1 project", projectMany: "{n} projects", emptyLibrary: "No images yet.", attachImage: "Attach an image", allImages: "All", imageOne: "1 image", imageMany: "{n} images", filterBy: "Filter", search: "Search", welcome: "How can I help?", note: "ARQIVEN is ORVUPI's AI and runs on third-party models. It can make mistakes; check anything that matters. What you write stays in this browser.", generating: "Generating", waiting: "Waiting", done: "Done", failed: "Error", copy: "Copy", copied: "Copied on this device.", copyFail: "Could not copy.", againReply: "Ask again", attach: "Attach", more: "More", details: "Details", today: "Today", yesterday: "Yesterday", week: "7 days", older: "Older", projects: "Projects", projectHint: "Deleting a project returns its chats to the general history.", library: "Library", create: "Create", rename: "Rename", move: "Move to project", remove: "Delete", cancel: "Cancel", confirm: "Confirm", general: "General history", fav: "Favorites", download: "Download", close: "Close", openChat: "Open chat", savedImage: "Image saved in this browser's library.", imageBig: "The image is over 4 MB. It was not saved.", deleteChat: "Delete this chat from this browser?", deleteProject: "Delete this project? Its chats return to the general history.", deleteImage: "Delete this image from this browser?", projectName: "Project name", chatName: "Chat name", imageOff: "Image generation is coming soon. For now you can keep the images you attach in your chats here.", originRules: "This answer comes from ARQIVEN's rules, without a model.", originVerified: "Verified ORVUPI answer.", originExtract: "This is an excerpt from the cited sources. The model did not write it.", originModel: "A third-party model wrote this" },
+  pt: { newChat: "Novo chat", settings: "Ajustes", conversations: "Chats", recent: "Recentes", emptyChats: "Ainda não há chats.", emptyProjects: "Ainda não há projetos.", projectOne: "1 projeto", projectMany: "{n} projetos", emptyLibrary: "Ainda não há imagens.", attachImage: "Anexar imagem", allImages: "Todas", imageOne: "1 imagem", imageMany: "{n} imagens", filterBy: "Filtrar", search: "Buscar", welcome: "Como posso ajudar?", note: "ARQIVEN é a IA da ORVUPI e funciona com modelos de terceiros. Pode errar; confira a informação importante. O que você escreve fica neste navegador.", generating: "Gerando", waiting: "Em espera", done: "Pronto", failed: "Erro", copy: "Copiar", copied: "Copiado neste navegador.", copyFail: "Não foi possível copiar.", againReply: "Perguntar de novo", attach: "Anexar", more: "Mais", details: "Detalhes", today: "Hoje", yesterday: "Ontem", week: "7 dias", older: "Anteriores", projects: "Projetos", projectHint: "Se excluir um projeto, os chats voltam ao histórico geral.", library: "Biblioteca", create: "Criar", rename: "Renomear", move: "Mover para projeto", remove: "Excluir", cancel: "Cancelar", confirm: "Confirmar", general: "Histórico geral", fav: "Favoritas", download: "Baixar", close: "Fechar", openChat: "Abrir chat", savedImage: "Imagem guardada na biblioteca deste navegador.", imageBig: "A imagem passa de 4 MB. Não foi guardada.", deleteChat: "Excluir este chat deste navegador?", deleteProject: "Excluir este projeto? Os chats voltam ao histórico geral.", deleteImage: "Excluir esta imagem deste navegador?", projectName: "Nome do projeto", chatName: "Nome do chat", imageOff: "A geração de imagens chega em breve. Por enquanto você pode guardar aqui as imagens que anexar nos seus chats.", originRules: "Esta resposta vem das regras da ARQIVEN, sem um modelo.", originVerified: "Resposta verificada da ORVUPI.", originExtract: "É um trecho das fontes citadas. O modelo não escreveu.", originModel: "Um modelo de terceiros escreveu isto" },
+  ja: { newChat: "新しいチャット", settings: "設定", conversations: "チャット", recent: "最近", emptyChats: "まだチャットがありません。", emptyProjects: "まだプロジェクトがありません。", projectOne: "1 件", projectMany: "{n} 件", emptyLibrary: "まだ画像がありません。", attachImage: "画像を添付", allImages: "すべて", imageOne: "1 枚", imageMany: "{n} 枚", filterBy: "絞り込み", search: "検索", welcome: "何をお手伝いしましょうか。", note: "ARQIVEN は ORVUPI の AI で、第三者モデルで動きます。間違えることがあります。重要な情報は確認してください。書いた内容はこのブラウザに保存されます。", generating: "生成中", waiting: "待機", done: "完了", failed: "エラー", copy: "コピー", copied: "このブラウザにコピーしました。", copyFail: "コピーできませんでした。", againReply: "もう一度聞く", attach: "添付", more: "その他", details: "詳細", today: "今日", yesterday: "昨日", week: "7日", older: "それ以前", projects: "プロジェクト", projectHint: "プロジェクトを削除すると、そのチャットは全体の履歴に戻ります。", library: "ライブラリ", create: "作成", rename: "名前を変更", move: "プロジェクトへ移動", remove: "削除", cancel: "キャンセル", confirm: "確認", general: "全体の履歴", fav: "お気に入り", download: "ダウンロード", close: "閉じる", openChat: "チャットを開く", savedImage: "画像をこのブラウザのライブラリに保存しました。", imageBig: "画像が 4 MB を超えています。保存していません。", deleteChat: "このチャットをこのブラウザから削除しますか？", deleteProject: "このプロジェクトを削除しますか？チャットは全体の履歴に戻ります。", deleteImage: "この画像をこのブラウザから削除しますか？", projectName: "プロジェクト名", chatName: "チャット名", imageOff: "画像の生成はもうすぐです。今はチャットに添付した画像をここに保存できます。", originRules: "この回答は ARQIVEN のルールによるもので、モデルは使っていません。", originVerified: "ORVUPI の確認済みの回答です。", originExtract: "引用した出典からの抜粋です。モデルが書いた文章ではありません。", originModel: "第三者が作ったモデルが書きました" },
+  ko: { newChat: "새 채팅", settings: "설정", conversations: "채팅", recent: "최근", emptyChats: "아직 채팅이 없습니다.", emptyProjects: "아직 프로젝트가 없습니다.", projectOne: "1개", projectMany: "{n}개", emptyLibrary: "아직 이미지가 없습니다.", attachImage: "이미지 첨부", allImages: "전체", imageOne: "1장", imageMany: "{n}장", filterBy: "필터", search: "검색", welcome: "무엇을 도와드릴까요?", note: "ARQIVEN은 ORVUPI의 AI이고 제3자 모델로 동작합니다. 틀릴 수 있으니 중요한 정보는 확인하세요. 쓴 내용은 이 브라우저에 저장됩니다.", generating: "생성 중", waiting: "대기", done: "완료", failed: "오류", copy: "복사", copied: "이 브라우저에 복사했습니다.", copyFail: "복사하지 못했습니다.", againReply: "다시 묻기", attach: "첨부", more: "더보기", details: "세부 정보", today: "오늘", yesterday: "어제", week: "7일", older: "이전", projects: "프로젝트", projectHint: "프로젝트를 삭제하면 채팅은 일반 기록으로 돌아갑니다.", library: "라이브러리", create: "만들기", rename: "이름 바꾸기", move: "프로젝트로 옮기기", remove: "삭제", cancel: "취소", confirm: "확인", general: "일반 기록", fav: "즐겨찾기", download: "다운로드", close: "닫기", openChat: "채팅 열기", savedImage: "이미지를 이 브라우저의 라이브러리에 저장했습니다.", imageBig: "이미지가 4 MB를 넘습니다. 저장하지 않았습니다.", deleteChat: "이 채팅을 이 브라우저에서 삭제할까요?", deleteProject: "이 프로젝트를 삭제할까요? 채팅은 일반 기록으로 돌아갑니다.", deleteImage: "이 이미지를 이 브라우저에서 삭제할까요?", projectName: "프로젝트 이름", chatName: "채팅 이름", imageOff: "이미지 생성은 곧 제공됩니다. 지금은 채팅에 첨부한 이미지를 여기에 보관할 수 있습니다.", originRules: "이 답은 ARQIVEN의 규칙에서 나왔고, 모델은 쓰지 않았습니다.", originVerified: "ORVUPI가 확인한 답입니다。", originExtract: "인용한 출처의 발췌입니다. 모델이 쓴 글이 아닙니다.", originModel: "제3자 모델이 썼습니다" },
 };
 const chrome = CHROME[uiLang];
 const copy = {
@@ -575,6 +580,7 @@ function renderRich(parent, text) {
 }
 
 function originLine(item) {
+  if (item.mode === "verified") return chrome.originVerified;
   if (item.mode === "extractive") return chrome.originExtract;
   if (item.provider === "third-party" && item.mode === "model") {
     return item.modelVersion ? `${chrome.originModel}: ${item.modelVersion}.` : `${chrome.originModel}.`;
@@ -948,6 +954,12 @@ function paint() {
         who.className = "who";
         who.textContent = "ARQIVEN";
         meta.append(avatar, who);
+        if (item.mode === "verified") {
+          const badge = document.createElement("span");
+          badge.className = "badge";
+          badge.textContent = chrome.originVerified;
+          meta.append(badge);
+        }
         if (item.failed) {
           const badge = document.createElement("span");
           badge.className = "badge is-error";
@@ -1018,8 +1030,9 @@ function paint() {
   if (settings) settings.hidden = state.view !== "settings";
   if (state.view === "projects") paintProjects();
   if (save) save.hidden = state.messages.length === 0 && !state.localText.trim();
-  if (status && (running || status.textContent === ui.queued || status.textContent === chrome.generating)) {
-    status.textContent = running ? (state.messages.some((item) => item.running) ? chrome.generating : ui.queued) : "";
+  if (status && (running || status.textContent === ui.queued || status.textContent === ui.preparingModel || status.textContent === chrome.generating)) {
+    const generating = state.messages.some((item) => item.running);
+    status.textContent = generating ? chrome.generating : (state.messages.some((item) => item.pending) ? ui.preparingModel : "");
   }
   const heading = document.getElementById("thread-title");
   const title = liveTitle();
@@ -1253,7 +1266,13 @@ async function send() {
   const chip = document.getElementById("file-chip");
   if (chip) chip.textContent = "";
   if (plan.skipModel) {
-    assistant({ content: plan.text, mode: "rules", provider: "none", modelId: "none", sources: plan.sources });
+    assistant({
+      content: plan.text,
+      mode: plan.verified ? "verified" : "rules",
+      provider: plan.verified ? "orvupi" : "none",
+      modelId: "none",
+      sources: plan.sources,
+    });
     paint();
     field?.focus();
     return;
@@ -1276,19 +1295,20 @@ async function send() {
     field?.focus();
     return;
   }
-  const excerpt = citedExcerpt(lang, plan.sources, text);
   if (!state.snap.ready) {
-    if (state.snap.phase !== "preparing") startPrepare(modelPick.value || defaultModel().id);
+    // phase "ready" con ready false es la ventana de Detener: no hay que volver a descargar.
+    if (state.snap.phase !== "preparing" && state.snap.phase !== "ready") startPrepare(modelPick.value || defaultModel().id);
     const item = assistant({
-      content: excerpt,
+      content: "",
       pending: true,
-      mode: excerpt ? "extractive" : "rules",
+      mode: "rules",
       request,
       sources: plan.sources,
       promptSources: plan.promptSources,
       question: text,
+      replyLang: plan.replyLang,
     });
-    setStatus(ui.queued);
+    setStatus(ui.preparingModel);
     state.queue.push(item);
     paint();
     field?.focus();

@@ -124,14 +124,18 @@ export function generationPlan(question, sources, profileId = "v1") {
   if (profileId === "legacy") return { sourced, detail: false, list: false, maxTokens: sourced ? 72 : 120, extra: "" };
   const detail = !sourced && wantsDetail(question);
   const list = !sourced && !detail && wantsList(question);
-  const maxTokens = sourced ? 36 : detail ? 180 : 104;
+  const bare = String(question || "").trim();
+  const clarify = !sourced && !detail && !list && bare.length <= 32 && /^(ac[oó]rtalo|ac[oó]rtala|resume|expl[ií]calo|shorten it|make it shorter)[.!?]?$/i.test(bare);
+  const maxTokens = sourced ? 45 : detail ? 180 : 45;
   const extra = sourced
     ? ""
     : detail
       ? " Desarrolla la respuesta con los datos del mensaje y termina la última frase."
       : list
-        ? " Responde solo con 3 puntos, uno por línea y una frase cada uno. Sin preámbulo ni descargo."
-        : "";
+        ? " Responde solo con 3 puntos cortos, uno por línea y una frase cada uno. Sin preámbulo ni descargo."
+        : clarify
+          ? " No hay un texto anterior. Responde solo con una pregunta, sin decir que falta el historial: ¿Qué quieres que acorte?"
+          : " Responde en una o dos frases cortas. Si no lo sabes, dilo en la primera frase.";
   return { sourced, detail, list, maxTokens, extra };
 }
 

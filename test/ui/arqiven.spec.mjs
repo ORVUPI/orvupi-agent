@@ -343,3 +343,70 @@ test("detener suelta el motor y 5 por 8 no espera al modelo", async ({ page }) =
   await page.locator("#send").click();
   await expect(page.locator(".assistant").last()).toContainText("ya está libre", { timeout: 5000 });
 });
+
+const QUEUE_WORKER = `
+function slot(name, value) {
+  return new Promise((resolve) => {
+    const open = indexedDB.open("arqiven-worker-test", 1);
+    open.onupgradeneeded = () => open.result.createObjectStore("k");
+    open.onsuccess = () => {
+      const db = open.result;
+      const tx = db.transaction("k", "readwrite");
+      const store = tx.objectStore("k");
+      if (value === undefined) {
+        const get = store.get(name);
+        get.onsuccess = () => { db.close(); resolve(get.result || 0); };
+      } else {
+        store.put(value, name);
+        tx.oncomplete = () => { db.close(); resolve(value); };
+      }
+    };
+  });
+}
+self.onmessage = async (event) => {
+  const msg = event.data;
+  if (!msg || typeof msg !== "object") return;
+  if (msg.type === "load") {
+    const seen = await slot("loads");
+    await slot("loads", seen + 1);
+    if (seen > 0) await new Promise((resolve) => setTimeout(resolve, 1200));
+    self.postMessage({ type: "ready" });
+    return;
+  }
+  if (msg.type === "stop") return;
+  if (msg.type !== "generate") return;
+  const loads = await slot("loads");
+  if (loads <= 1) {
+    self.postMessage({ type: "token", id: msg.id, text: "Empiezo " });
+    const started = Date.now();
+    while (Date.now() - started < 20000) {}
+    return;
+  }
+  const text = "Listo: el motor ya está libre para otra pregunta.";
+  self.postMessage({ type: "token", id: msg.id, text });
+  self.postMessage({ type: "done", id: msg.id, text, tokens: 8, ms: 1, threads: 1 });
+  self.postMessage({ type: "settled", id: msg.id });
+};
+`;
+
+test("tras detener, la pregunta espera a que el modelo esté listo", async ({ page }) => {
+  await page.route("**/engine-worker.mjs*", (route) => route.fulfill({
+    status: 200,
+    contentType: "text/javascript",
+    headers: {
+      "cross-origin-opener-policy": "same-origin",
+      "cross-origin-embedder-policy": "credentialless",
+    },
+    body: QUEUE_WORKER,
+  }));
+  await page.goto("/arqiven/");
+  await expect(page.locator("#engine-progress")).toContainText("Modelo de terceros listo", { timeout: 15000 });
+  await page.locator("#prompt").fill("Explica con detalle, paso a paso, cómo organizar una mudanza internacional");
+  await page.locator("#send").click();
+  await expect(page.locator(".assistant").last()).toContainText("Empiezo");
+  await page.locator("#stop").click();
+  await page.locator("#prompt").fill("Di hola");
+  await page.locator("#send").click();
+  await expect(page.locator("#status")).toContainText("Preparando el modelo", { timeout: 3000 });
+  await expect(page.locator(".assistant").last()).toContainText("ya está libre", { timeout: 8000 });
+});

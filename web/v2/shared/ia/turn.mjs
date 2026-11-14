@@ -11,7 +11,8 @@ import {
   normLang,
 } from "./guard.mjs";
 import { extractiveFromSources, needsExtract, trimRepetition } from "./quality.mjs";
-import { replyLanguage } from "./prompt.mjs";
+import { verifiedCard } from "./cards.mjs";
+import { replyLanguage, wantsDetail } from "./prompt.mjs";
 import { looksLikeOrvupi, search } from "./retrieve.mjs";
 import { lookupWikipedia, wikiQuery } from "./wikipedia.mjs";
 
@@ -70,8 +71,22 @@ export async function planTurn(options) {
   if (asksIdentity(question)) {
     return { skipModel: true, critical: "identity", text: identityAnswer(lang, options.model), sources: [], promptSources: [] };
   }
-  let wiki = null;
   const history = Array.isArray(options.history) ? options.history : [];
+  if (!options.attachment && !isFollowUp(question, history) && !wantsDetail(question)) {
+    const card = verifiedCard(question, localHits, reply);
+    if (card) {
+      return {
+        skipModel: true,
+        verified: true,
+        critical: null,
+        text: card.text,
+        sources: [toSource({ ...card, id: card.id, excerpt: card.text }, "orvupi")],
+        promptSources: [],
+        replyLang: reply,
+      };
+    }
+  }
+  let wiki = null;
   if (options.allowWikipedia !== false && shouldConsultWikipedia(question, localHits, { attachment: Boolean(options.attachment), history }) && typeof options.fetchImpl === "function") {
     wiki = await lookupWikipedia(lang, question, options.fetchImpl);
   }

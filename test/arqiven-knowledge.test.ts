@@ -549,6 +549,49 @@ describe("conocimiento y evaluación de ARQIVEN", () => {
     assert.equal(quality.needsExtract(invented, sources, "¿Qué es ORVUPI Sonar?"), true);
   });
 
+  test("las fichas de ORVUPI salen verificadas en los cinco idiomas", async () => {
+    const turn = await import(href("web/v2/shared/ia/turn.mjs")) as {
+      planTurn: (options: { question: string; lang: string; index: unknown; history: unknown[]; fetchImpl: null }) => Promise<{ skipModel: boolean; verified?: boolean; text: string; sources: Array<{ url: string }> }>;
+    };
+    const retrieve = await import(href("web/v2/shared/ia/retrieve.mjs")) as {
+      buildIndex: (chunks: unknown[]) => unknown;
+    };
+    const index = retrieve.buildIndex(JSON.parse(readFileSync(path.join(root, "web/v2/arqiven/knowledge-index.json"), "utf8")).chunks);
+    const langs = ["es", "en", "pt-BR", "ja", "ko"] as const;
+    const asks = {
+      es: ["¿Qué es ORVUPI?", "¿Qué es ORVUPI Sonar?", "¿Qué es Work?", "¿Qué es Studio?", "¿Qué es Verify?", "¿Qué es Academy?", "¿Qué es ARQIVEN?", "¿Cuál es el contrato oficial de ORVUPI?", "¿En qué idiomas está ORVUPI?"],
+      en: ["What is ORVUPI?", "What is ORVUPI Sonar?", "What is Work?", "What is Studio?", "What is Verify?", "What is Academy?", "What is ARQIVEN?", "What is the only official ORVUPI contract?"],
+      "pt-BR": ["O que é a ORVUPI?", "O que é o ORVUPI Sonar?", "O que é o Work?", "O que é o Studio?", "O que é o Verify?", "O que é a Academy?", "O que é a ARQIVEN?"],
+      ja: ["ORVUPI とは何ですか。", "ORVUPI Sonar とは何ですか。", "Work とは何ですか。", "Studio とは何ですか。", "Verify とは何ですか。", "Academy とは何ですか。", "ARQIVEN とは何ですか。"],
+      ko: ["ORVUPI란 무엇입니까?", "ORVUPI Sonar는 무엇입니까?", "Work는 무엇입니까?", "Studio는 무엇입니까?", "Verify는 무엇입니까?", "Academy는 무엇입니까?", "ARQIVEN은 무엇입니까?"],
+    };
+    for (const lang of langs) {
+      for (const ask of asks[lang]) {
+        const plan = await turn.planTurn({ question: ask, lang, index, history: [], fetchImpl: null });
+        assert.equal(plan.verified, true, `${lang} ${ask}`);
+        assert.equal(plan.skipModel, true, ask);
+        assert.ok(plan.text.length > 40, ask);
+        assert.ok(plan.sources[0]?.url, ask);
+      }
+    }
+    const sonar = await turn.planTurn({ question: "¿Qué es ORVUPI Sonar?", lang: "es", index, history: [], fetchImpl: null });
+    assert.match(sonar.text, /verify on-chain/);
+    assert.match(sonar.text, /\/sonar\//);
+    assert.match(sonar.text, /mercado/);
+    const work = await turn.planTurn({ question: "¿Qué es Work?", lang: "es", index, history: [], fetchImpl: null });
+    assert.match(work.text, /espacio de trabajo/);
+    assert.match(work.text, /No es el sistema operativo/);
+    assert.match(work.text, /\/work\//);
+    const english = await turn.planTurn({ question: "What is ORVUPI?", lang: "es", index, history: [], fetchImpl: null });
+    assert.match(english.text, /community, humor and tools/);
+    assert.match(english.text, /Work, Studio, Sonar, Verify, Academy and ARQIVEN/);
+    const detail = await turn.planTurn({ question: "Explica con más detalle qué es ORVUPI Sonar", lang: "es", index, history: [], fetchImpl: null });
+    assert.equal(detail.verified, undefined);
+    assert.equal(detail.skipModel, false);
+    const vague = await turn.planTurn({ question: "¿Qué tiempo hace?", lang: "es", index, history: [], fetchImpl: null });
+    assert.notEqual(vague.verified, true);
+  });
+
   test("la elección de modelo se guarda sin tocar los chats", async () => {
     const chats = await import(href("web/v2/shared/ia/chats.mjs")) as {
       openPrefDb: (name?: string) => Promise<{ close: () => void }>;

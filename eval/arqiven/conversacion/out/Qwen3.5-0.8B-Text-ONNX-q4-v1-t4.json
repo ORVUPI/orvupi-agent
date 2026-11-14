@@ -3,7 +3,7 @@
   "dtype": "q4",
   "cfg": "v1",
   "threads": 4,
-  "loadMs": 1246,
+  "loadMs": 1275,
   "results": [
     {
       "id": "ctx-cerca",
@@ -12,15 +12,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 1605,
-      "toks": 18,
-      "tps": 11.2,
+      "ms": 1176,
+      "toks": 8,
+      "tps": 6.8,
       "truncated": false,
       "broken": false,
       "histMsgs": 5,
       "histChars": 371,
       "sources": [],
-      "out": "La empresa se llama **Velatia** y se dedica a vender software de logística."
+      "out": "Velatia vende software de logística."
     },
     {
       "id": "ctx-lejos",
@@ -29,15 +29,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 1596,
-      "toks": 11,
-      "tps": 6.9,
+      "ms": 1513,
+      "toks": 8,
+      "tps": 5.3,
       "truncated": false,
       "broken": false,
       "histMsgs": 13,
       "histChars": 1063,
       "sources": [],
-      "out": "Velatia se dedica a vender software de logística."
+      "out": "Velatia vende software de logística."
     },
     {
       "id": "ctx-lejos-en",
@@ -46,9 +46,9 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 1139,
+      "ms": 1167,
       "toks": 7,
-      "tps": 6.1,
+      "tps": 6,
       "truncated": false,
       "broken": false,
       "histMsgs": 13,
@@ -63,15 +63,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 1797,
-      "toks": 23,
-      "tps": 12.8,
+      "ms": 1836,
+      "toks": 21,
+      "tps": 11.4,
       "truncated": false,
       "broken": false,
       "histMsgs": 5,
       "histChars": 244,
       "sources": [],
-      "out": "Sí, con un presupuesto de 800 € se puede comprar un portátil de 650 €."
+      "out": "Sí, porque 800 € es suficiente para comprar un portátil de 650 €."
     },
     {
       "id": "correccion-lejos",
@@ -80,18 +80,19 @@
       "pass": false,
       "fails": [
         "falta /(^|[^\\p{L}])s[ií]([^\\p{L}]|$)/iu",
+        "falta /800/",
         "sobra /^\\s*no\\b/i"
       ],
       "mode": "model",
-      "ms": 3187,
-      "toks": 43,
-      "tps": 13.5,
+      "ms": 1855,
+      "toks": 16,
+      "tps": 8.6,
       "truncated": false,
       "broken": false,
       "histMsgs": 11,
       "histChars": 761,
       "sources": [],
-      "out": "No, no. El presupuesto original fue de 800 €, pero tu presupuesto actual es de 500 €, por lo que no tienes suficiente dinero para comprar un portátil de 650 €."
+      "out": "No, no tiene suficiente presupuesto para un portátil de 650 €."
     },
     {
       "id": "correccion-pt",
@@ -100,15 +101,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 1896,
-      "toks": 24,
-      "tps": 12.7,
+      "ms": 2336,
+      "toks": 31,
+      "tps": 13.3,
       "truncated": false,
       "broken": false,
       "histMsgs": 5,
       "histChars": 178,
       "sources": [],
-      "out": "Sim, pois o orçamento de 800 reais permite comprar o fone de 650 reais."
+      "out": "Sim, pois 800 - 500 = 300, permitindo comprar o fone de 650 reais."
     },
     {
       "id": "instr-persistente",
@@ -117,15 +118,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 2627,
-      "toks": 37,
-      "tps": 14.1,
+      "ms": 2889,
+      "toks": 39,
+      "tps": 13.5,
       "truncated": false,
       "broken": false,
       "histMsgs": 7,
       "histChars": 528,
       "sources": [],
-      "out": "La inflación es el aumento general del valor de los precios de bienes y servicios por encima del nivel de precios previos, lo que hace que cada moneda vale menos con el tiempo."
+      "out": "La inflación es el aumento general del valor de los precios de bienes y servicios por encima del nivel de precios anteriores, generalmente causado por la subida de la demanda o la reducción de la oferta."
     },
     {
       "id": "formato-3",
@@ -134,15 +135,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 1968,
-      "toks": 29,
-      "tps": 14.7,
+      "ms": 2963,
+      "toks": 42,
+      "tps": 14.2,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
       "histChars": 89,
       "sources": [],
-      "out": "1. Mayor autonomía para el trabajo.\n2. Reducción del estrés laboral.\n3. Mejor equilibrio entre vida profesional y personal."
+      "out": "1. Mayor autonomía para gestionar tu propio tiempo y espacio.\n2. Reducción significativa de costos laborales y de transporte.\n3. Mejora directa en la productividad mediante el control total de tareas."
     },
     {
       "id": "incert-1",
@@ -151,15 +152,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 5633,
-      "toks": 94,
-      "tps": 16.7,
+      "ms": 2063,
+      "toks": 27,
+      "tps": 13.1,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
       "histChars": 59,
       "sources": [],
-      "out": "No tengo información sobre el número de empleados de la panadería de mi barrio en 2019. Como modelo de IA basado en datos históricos, no puedo acceder a registros financieros o administrativos específicos de empresas locales para ese año exacto. Sin embargo, puedo ayudarte a calcularlo si me proporcionas los datos necesarios (por ejemplo, el número de empleados en 2018 y el crecimiento anual). ¿Podrías compartir esos datos?"
+      "out": "No tengo datos históricos sobre el número de empleados de la panadería de mi barrio para el año 2019."
     },
     {
       "id": "incert-2",
@@ -168,15 +169,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 5304,
-      "toks": 88,
-      "tps": 16.6,
+      "ms": 1616,
+      "toks": 20,
+      "tps": 12.4,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
       "histChars": 65,
       "sources": [],
-      "out": "No existe ningún ganador oficial para la lotería de Navidad de 2026, ya que este evento se realiza cada año en fechas diferentes (generalmente entre 14 y 17 de diciembre) y los resultados son aleatorios por lotería. Por lo tanto, no hay un número específico que \"ganar\" esa fecha; todos los números posibles tienen probabilidades iguales según los datos oficiales de la lotería."
+      "out": "No tengo datos sobre los resultados de la lotería de Navidad de 2026."
     },
     {
       "id": "ambigua",
@@ -185,15 +186,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 4167,
-      "toks": 70,
-      "tps": 16.8,
+      "ms": 1094,
+      "toks": 12,
+      "tps": 11,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
       "histChars": 9,
       "sources": [],
-      "out": "No tengo acceso a tu historial o datos personales para realizar cálculos específicos como \"acortar\" algo. Sin embargo, puedo ayudarte con cualquier otro tema relacionado con el contexto de la conversación (por ejemplo, explicando cómo funciona ARQIVEN, describiendo sus características o proporcionando información sobre su uso). ¿En qué puedo ayudarte?"
+      "out": "¿Cuál es el número o cantidad que deseas reducir?"
     },
     {
       "id": "calculo-1",
@@ -204,15 +205,15 @@
         "falta /\\b8\\b/"
       ],
       "mode": "model",
-      "ms": 3058,
-      "toks": 50,
-      "tps": 16.4,
+      "ms": 2989,
+      "toks": 45,
+      "tps": 15.1,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
       "histChars": 82,
       "sources": [],
-      "out": "No tengo acceso al historial previo para calcular el monto original o el valor del billete, por lo que no puedo determinar cuánto devuelvo basándome solo en esa información. Sin embargo, puedo ayudarte a resolver este problema matemáticamente."
+      "out": "No tengo acceso al historial previo para calcular el monto original del lápiz (3 €) ni el valor del billete recibido (20 €), por lo que no puedo determinar cuánto devuelvo."
     },
     {
       "id": "calculo-2",
@@ -221,9 +222,9 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 5647,
-      "toks": 104,
-      "tps": 18.4,
+      "ms": 2966,
+      "toks": 45,
+      "tps": 15.2,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
@@ -240,9 +241,9 @@
         "falta /m[eé]dic/i"
       ],
       "mode": "model",
-      "ms": 2222,
+      "ms": 2331,
       "toks": 35,
-      "tps": 15.8,
+      "tps": 15,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
@@ -257,9 +258,9 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 9234,
+      "ms": 9320,
       "toks": 164,
-      "tps": 17.8,
+      "tps": 17.6,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
@@ -274,15 +275,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 7526,
-      "toks": 89,
-      "tps": 11.8,
+      "ms": 7553,
+      "toks": 78,
+      "tps": 10.3,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
       "histChars": 3374,
       "sources": [],
-      "out": "No tengo acceso a archivos adjuntos o documentos externos para extraer datos específicos como el código interno del proyecto (KX-4471), ya que este valor podría estar oculto dentro del documento adjunto o requerir información adicional que no se ha proporcionado en el prompt. Sin embargo, basándome exclusivamente en la información disponible en tu mensaje, el código interno del proyecto es **KX-4471**."
+      "out": "No tengo acceso a archivos adjuntos ni a documentos internos específicos para este proyecto, por lo que no puedo confirmar el código interno con certeza. Sin embargo, basándome en tu solicitud de usar el número proporcionado (KX-4471) como referencia, te dirijo a continuación:\n\n**Código interno del proyecto es KX-4471."
     },
     {
       "id": "doc-cerca",
@@ -291,15 +292,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 6668,
-      "toks": 76,
-      "tps": 11.4,
+      "ms": 6261,
+      "toks": 70,
+      "tps": 11.2,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
       "histChars": 3375,
       "sources": [],
-      "out": "No tengo acceso a archivos adjuntos ni a documentos internos específicos para este tipo de consulta técnica, por lo que no puedo confirmar el código interno basado en el contexto de tu solicitud. Sin embargo, basándome en la información proporcionada sobre el calendario, tareas pendientes y indicadores, deduciría que el código interno corresponde a **KX-4471**."
+      "out": "No tengo acceso a archivos adjuntos ni a documentos internos específicos para este proyecto, por lo que no puedo confirmar el código interno con certeza. Sin embargo, basándome en tu descripción del trabajo realizado (calendario, tareas del almacén, turnos de atención), el código interno parece ser **KX-4471**."
     },
     {
       "id": "fuente-orvupi",
@@ -307,20 +308,18 @@
       "lang": "es",
       "pass": true,
       "fails": [],
-      "mode": "model",
-      "ms": 3221,
-      "toks": 54,
-      "tps": 16.8,
+      "mode": "rules",
+      "ms": 0,
+      "toks": 0,
+      "tps": null,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
       "histChars": 24,
       "sources": [
-        "orvupi:ORVUPI Sonar",
-        "orvupi:Auditoría de ORVUPI Sonar",
-        "orvupi:QA de ORVUPI Sonar"
+        "orvupi:ORVUPI Sonar"
       ],
-      "out": "El subtítulo del sitio es \"Sonar · verify on-chain\".\nSonar es una plataforma que permite ver datos de mercado y mostrar rutas en español a través de su interfaz.\nNo se trata de un contrato de pago o una red de blockchain."
+      "out": "ORVUPI Sonar verifica en cadena y muestra datos de mercado. El subtítulo es «Sonar · verify on-chain». La ruta es /sonar/."
     },
     {
       "id": "fuente-general",
@@ -331,9 +330,9 @@
         "falta /planta|clorof[ií]l|organism/i"
       ],
       "mode": "model",
-      "ms": 6509,
-      "toks": 104,
-      "tps": 16,
+      "ms": 3258,
+      "toks": 30,
+      "tps": 9.2,
       "truncated": false,
       "broken": false,
       "histMsgs": 1,
@@ -341,7 +340,7 @@
       "sources": [
         "wikipedia:Fotosíntesis"
       ],
-      "out": "La fotosíntesis es un proceso bioquímico que consiste en la conversión de materia inorgánica a materia orgánica gracias a la energía que aporta la luz solar. En este proceso, la energía lumínica se transforma en energía química, siendo el NADPH (nicotín adenín dinucleótido fosfato) y el ATP (adenosín trifosfato) las primeras moléculas en las que queda almacenada esta energía química."
+      "out": "La fotosíntesis es un proceso bioquímico que convierte materia inorgánica a materia orgánica mediante la energía de la luz."
     },
     {
       "id": "seguimiento",
@@ -350,15 +349,15 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 3051,
-      "toks": 44,
-      "tps": 14.4,
+      "ms": 1046,
+      "toks": 10,
+      "tps": 9.6,
       "truncated": false,
       "broken": false,
       "histMsgs": 3,
       "histChars": 172,
       "sources": [],
-      "out": "Se produce principalmente en los **estomas** (pétalas), específicamente en las hojas principales, donde se realiza la transpiración y la absorción de nutrientes desde el suelo hacia dentro de la célula."
+      "out": "En la corteza basal de las hojas."
     },
     {
       "id": "historial-sucio",
@@ -367,9 +366,9 @@
       "pass": true,
       "fails": [],
       "mode": "model",
-      "ms": 2152,
+      "ms": 2191,
       "toks": 29,
-      "tps": 13.5,
+      "tps": 13.2,
       "truncated": false,
       "broken": false,
       "histMsgs": 2,
