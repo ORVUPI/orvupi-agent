@@ -31,16 +31,16 @@ La aspiración a AGI orienta la investigación a largo plazo. No constituye una 
 
 Los enlaces privados de un chat no garantizan acceso a otro agente. Adjuntar los archivos o dejarlos en una ubicación del proyecto que los agentes puedan leer. No solicitar contraseñas ni claves en texto dentro de la conversación: utilizar los mecanismos de acceso y secretos del entorno.
 
-Ficha de entrada a completar tras inspeccionar lo disponible:
+Ficha de entrada, completada el 15/11/2026 tras inspeccionar el repositorio. La hoja de ruta ya está en `docs/arqiven/encargo/` (commit `ee85e41`). No se inventan rutas.
 
-- Repositorio o carpeta: [pendiente].
-- Rama de trabajo: [pendiente].
-- Comandos de arranque observados: [pendiente].
-- URL de desarrollo, si existe: [pendiente].
-- Agente o proceso con ejecución en Windows: [pendiente].
-- Documentos autorizados para la primera tarea: [pendiente].
-- Activos de marca verificados: [pendiente].
-- Problema actual reproducible: [pendiente].
+- Repositorio o carpeta: `ORVUPI/orvupi-agent`.
+- Rama de trabajo: `cursor/arqiven-ollama-local-8c6d`, pull request #166. La #167, de marca y datos, está aparte y en borrador.
+- Comandos de arranque observados: `scripts\arqiven-abrir.cmd`.
+- URL de desarrollo, si existe: `http://127.0.0.1:4174/arqiven/`.
+- Agente o proceso con ejecución en Windows: Meme IA · ORVUPI, desde la consola del PC del propietario. El agente de esta rama trabaja en remoto y no ejecuta nada en ese PC.
+- Documentos autorizados para la primera tarea: los dieciocho de `docs/arqiven/conocimiento/` en el pull request #167, pendientes de la revisión del propietario, y los dos de esta rama, `despido-baja.md` e `higiene-sueno.md`.
+- Activos de marca verificados: `web/v2/assets/arqiven/logo-oficial.png`, usado en `web/v2/arqiven/index.html` como `/assets/arqiven/logo-oficial.png`.
+- Problema actual reproducible: «como ves las inversiones hoy». Antes la respuesta despachaba al usuario. En el PC, el código que sigue abierto para esa pregunta es `a6ca0ab`, porque la regla de aceptación pedía que la respuesta cumpliera entera.
 
 Resolver los campos inspeccionando el proyecto antes de pedir información que ya esté disponible. No inventar rutas o accesos.
 

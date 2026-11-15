@@ -38,4 +38,4 @@ Fecha: 15 de noviembre de 2026, con los informes del PC hasta las 22:03 (Madrid)
 
 ## Lectura corta
 
-En el PC, a las 22:03, commit `a6ca0ab`, `qwen3:8b` quedó en 115/120. El commit `2fcdc16` se descarta: bajó a 97/120, 40/42, 23/25 y 8/10. Se conserva el histórico de Frankfurter y de CoinGecko, y la estructura de mercado solo cuando esas cifras entran. Los 120 casos y sus rúbricas siguen como en `a6ca0ab`. Empieza una base con dos notas oficiales, del BOE y del Ministerio de Sanidad, que el chat recupera y cita. No está medida contra el modelo. No hay entrenamiento.
+En el PC, a las 22:26, commit `6f9c8f4`, `qwen3:8b` quedó en 116/120, con reservado 2 en 42/42, reservado 3 en 25/25, reservado experto en 10/10, conocimiento en 1/2 y verificador en 8/8. Fallan `prog-14`, `conv-10`, `conv-13`, `inc-15` y `cn-02`. `2fcdc16` se descarta: 97/120, 40/42, 23/25 y 8/10. El informe está en `docs/arqiven/entrega-1-informe.md`. La hoja de ruta ya está leída. No hay entrenamiento.

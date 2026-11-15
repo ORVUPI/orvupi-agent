@@ -630,6 +630,21 @@ describe("backend local de ARQIVEN", () => {
     assert.equal(server.includes("/no_think"), false);
   });
 
+  test("el fallo del motor usa datos temporales y no toca el firmware", async () => {
+    const script = await readFile(path.join(root, "scripts/arqiven-fallo-motor.ps1"), "utf8");
+    const report = await readFile(path.join(root, "docs/arqiven/entrega-1-informe.md"), "utf8");
+    assert.match(script, /ARQIVEN-fallo-/);
+    assert.match(script, /\$env:TEMP/);
+    assert.equal(script.includes("ARQIVEN\\local"), false);
+    assert.equal(/bcdedit|flash.?bios/i.test(script), false);
+    assert.match(script, /ollama-down/);
+    assert.match(report, /ee85e41/);
+    assert.match(report, /2fcdc16/);
+    assert.match(report, /116\/120/);
+    assert.match(report, /Discrepancias materiales/);
+    assert.equal(report.includes("pendiente de recibir"), false);
+  });
+
   test("una pregunta suelta no escribe en el historial real", async () => {
     const ollama = await mockOllama(async (_body, res) => {
       res.write(tokenChunk("No lo sé."));
