@@ -314,7 +314,7 @@ describe("conjunto fijo de 100 casos", () => {
       retrieveConocimiento: (q: string) => Promise<{ text: string; hits: Array<{ id: string }> }>;
     };
     assert.equal((await known.retrieveConocimiento("Quiero una hipoteca.")).text, "");
-    assert.equal((await known.retrieveConocimiento("El despido durante una baja, ¿es nulo?")).hits[0]?.id, "despido-baja");
+    assert.equal((await known.retrieveConocimiento("¿Puedo despedir a alguien durante una baja?")).hits[0]?.id, "despido-baja");
     assert.equal((await known.retrieveConocimiento("¿Qué es la higiene del sueño?")).hits[0]?.id, "higiene-sueno");
   });
 });
