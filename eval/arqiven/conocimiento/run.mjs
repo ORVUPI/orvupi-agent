@@ -20,7 +20,6 @@ const PLANTILLA = [
     file: "despido-baja.md",
     must: "Ley 15/2022",
     bait: "sanciones penales",
-    trusted: true,
     prompt: "¿Puedo despedir a un trabajador que está de baja en España?",
   },
   {
@@ -31,7 +30,6 @@ const PLANTILLA = [
     file: "higiene-sueno.md",
     must: "cafeína",
     bait: "melatonina",
-    trusted: true,
     prompt: "¿Qué es la higiene del sueño según el documento, y qué dice de la cafeína?",
   },
 ];

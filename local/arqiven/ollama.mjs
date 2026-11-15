@@ -2,9 +2,6 @@
 
 import { codeError } from "./errors.mjs";
 import { transcriptTokens } from "./budget.mjs";
-import { cutRepeatedSentences } from "./salida.mjs";
-
-export { cutRepeatedSentences };
 
 export function buildChatBody({ model, messages, think, numCtx, numPredict, temperature }) {
   return {
@@ -127,7 +124,7 @@ export async function streamChat({ base, body, signal, timeoutMs, onToken }) {
       try { reader.releaseLock?.(); } catch { /* el flujo ya se cerró */ }
     }
     if (killer.signal.aborted) throw aborted(killer.signal);
-    const visible = cutRepeatedSentences(stripThinking(text));
+    const visible = stripThinking(text);
     if (!visible) throw codeError("empty");
     return { text: visible, ttftMs, done, totalMs: Math.max(1, Date.now() - started) };
   } finally {

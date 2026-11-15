@@ -1,4 +1,4 @@
-/** Arreglos de la respuesta ya escrita. No cambian el filtro de los documentos del usuario. */
+/** Arreglos de la respuesta ya escrita. No cambian el examen ni el filtro. */
 
 function piecesOf(text) {
   const source = String(text || "");
@@ -14,85 +14,42 @@ function piecesOf(text) {
   return pieces;
 }
 
-function joinPieces(pieces, until) {
-  return pieces.slice(0, until).map((piece, index) => piece.body + (index === until - 1 ? "" : piece.sep)).join("");
+function joinPieces(pieces) {
+  return pieces.map((piece) => piece.body + piece.sep).join("").trim();
 }
 
 function normalizeSentence(part) {
   return part.toLowerCase().normalize("NFD").replace(/\p{M}/gu, "").replace(/\s+/g, " ").trim();
 }
 
-/** Si una frase de más de 60 caracteres vuelve a salir, se corta en la anterior. */
+/** Si una frase de más de 60 caracteres vuelve a salir, corta en la anterior. Conserva los saltos de línea. */
 export function cutRepeatedSentences(text) {
   const pieces = piecesOf(text);
   const seen = new Set();
-  let end = pieces.length;
-  for (let index = 0; index < pieces.length; index += 1) {
-    const key = normalizeSentence(pieces[index].body);
-    if (key.length > 60 && seen.has(key)) {
-      end = index;
-      break;
-    }
+  const kept = [];
+  for (const piece of pieces) {
+    const key = normalizeSentence(piece.body);
+    if (key.length > 60 && seen.has(key)) break;
     if (key.length > 60) seen.add(key);
+    kept.push(piece);
   }
-  return joinPieces(pieces, end).trim();
+  return joinPieces(kept);
 }
 
-function sentenceAt(text, index) {
-  const upto = text.slice(0, index);
-  let start = 0;
-  for (let from = 0; from < upto.length; ) {
-    const at = upto.indexOf(". ", from);
-    if (at < 0) break;
-    if (!/art$/i.test(upto.slice(Math.max(0, at - 4), at))) start = at + 2;
-    from = at + 2;
-  }
-  const rest = text.slice(index);
-  const endMatch = rest.search(/[.!?\n]/);
-  const end = endMatch < 0 ? text.length : index + endMatch;
-  return text.slice(start, end);
+function givesPassword(body) {
+  const text = body.toLowerCase();
+  if (/\b(?:123456|password|qwerty|111111|000000)\b/.test(text)) return true;
+  if (/\badmin\b/.test(text) && /contrase|clave|ejemplo/.test(text)) return true;
+  if (/vac[ií]a/.test(text) && /contrase|clave/.test(text)) return true;
+  return false;
 }
 
-/** Quita #aNN si esa frase no cita el artículo NN. El 55.6 corresponde a #a55, no a #a56. */
-export function stripMismatchedAnchors(text) {
-  return String(text || "").replace(/#a(\d+)\b/gi, (tag, raw, index, source) => {
-    const sentence = sentenceAt(source, index);
-    const cited = [...sentence.matchAll(/art(?:[ií]culo|\.)\s*(\d+)/gi)].map((match) => String(Number(match[1])));
-    if (!cited.length || !cited.includes(String(Number(raw)))) return "";
-    return tag;
-  }).replace(/[ \t]{2,}/g, " ").replace(/\s+([,.;])/g, "$1").trim();
+/** Quita la frase que pone una contraseña de ejemplo. El resto se queda. */
+export function dropPasswordExamples(text) {
+  const kept = piecesOf(text).filter((piece) => !givesPassword(piece.body));
+  return joinPieces(kept);
 }
 
-const WARNING = /no es una recomendaci[oó]n|puedes perder|no sustituye|riesgo de p[eé]rdida|no inviertas lo que no puedas|advertencia breve/i;
-
-/** Si hay cifras de mercado, no deja texto después de la advertencia. */
-export function trimAfterWarning(text) {
-  const source = String(text || "");
-  if (!/frankfurter|coingecko|\bel BCE\b/i.test(source)) return source.trim();
-  const pieces = piecesOf(source);
-  const at = pieces.findIndex((piece) => WARNING.test(piece.body));
-  if (at < 0) return source.trim();
-  return joinPieces(pieces, at + 1).trim();
-}
-
-export function ensureNoteCitation(text, id) {
-  const note = String(id || "").trim();
-  const source = String(text || "").trim();
-  if (!note || !source) return source;
-  const cited = new RegExp(`\\[${note}\\]|documento\\s+${note}\\b`, "i");
-  if (cited.test(source)) return source;
-  let end = -1;
-  for (let index = 0; index < source.length; index += 1) {
-    const mark = source[index];
-    if (mark !== "." && mark !== "!" && mark !== "?") continue;
-    if (mark === "." && /art$/i.test(source.slice(Math.max(0, index - 4), index))) continue;
-    if (mark === "." && /\d/.test(source[index - 1] || "") && /\d/.test(source[index + 1] || "")) continue;
-    const next = source[index + 1];
-    if (next == null || /\s/.test(next)) {
-      end = index;
-      break;
-    }
-  }
-  if (end < 0) return `${source} [${note}]`;
-  return `${source.slice(0, end)} [${note}]${source.slice(end)}`;
+export function finishReply(text) {
+  return dropPasswordExamples(cutRepeatedSentences(text));
 }

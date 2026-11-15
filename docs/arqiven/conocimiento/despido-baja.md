@@ -1,21 +1,19 @@
 # Despido durante una baja en España
 
-Sí se puede despedir a una persona que está de baja si hay una causa real, disciplinaria u objetiva. El despido es nulo solo si el motivo es la enfermedad o la condición de salud.
+Estatuto de los Trabajadores, artículos 55 y 56. Real Decreto Legislativo 2/2015. https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a55 https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a56
 
-La enfermedad o la condición de salud es causa de discriminación por la Ley 15/2022, art. 2.1. https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589#a2
+Ley 15/2022, de 12 de julio, integral para la igualdad de trato y la no discriminación, artículos 2, 26 y 30. https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589#a2 https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589#a30
 
-La nulidad de ese acto está en la Ley 15/2022, art. 26. https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589#a26
+Esto es el texto de esas normas, no el criterio sobre un despido concreto. Se habla de la persona trabajadora.
 
-El artículo 55.5 del Estatuto de los Trabajadores no menciona la enfermedad. Declara nulo el despido cuyo móvil es una causa de discriminación prevista en la Constitución o en la ley. https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a55
+El artículo 55.3 del Estatuto de los Trabajadores califica el despido como procedente, improcedente o nulo.
 
-Hay tres calificaciones. El despido procedente disciplinario convalida la extinción sin indemnización ni salarios de tramitación, artículo 55.7. https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a55
+El despido es procedente cuando queda acreditado el incumplimiento alegado y la forma se ajusta al artículo 55.1. El artículo 55.7 dice que el despido procedente convalida la extinción, sin indemnización ni salarios de tramitación.
 
-El despido objetivo procedente da veinte días por año de servicio, con un máximo de doce mensualidades, artículo 53.1.b. https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a53
+El despido es improcedente cuando no queda acreditado el incumplimiento o la forma no se ajusta al artículo 55.1. El artículo 56 deja al empresario, en cinco días desde la sentencia, optar entre la readmisión o una indemnización de treinta y tres días de salario por año de servicio, hasta veinticuatro mensualidades. Si opta por la readmisión, la persona trabajadora tiene derecho a los salarios de tramitación.
 
-El despido improcedente da treinta y tres días por año, con un tope de veinticuatro mensualidades, o la readmisión, artículo 56. https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a56
+El artículo 55.5 dice que será nulo el despido que tenga por móvil alguna de las causas de discriminación prohibidas en la Constitución Española o en la ley. Ese artículo no nombra la enfermedad. La enfermedad y la condición de salud las añade el artículo 2.1 de la Ley 15/2022, que prohíbe discriminar por ellas. El artículo 2.3 dice que la enfermedad no ampara diferencias de trato distintas de las del propio tratamiento, de las limitaciones objetivas para una actividad o de las exigidas por la salud pública. El artículo 26 declara nulos de pleno derecho los actos que constituyan o causen discriminación por un motivo del artículo 2.1. Estar de baja no está, por sí solo, en la lista de nulidad automática del artículo 55.5. El despido puede ser nulo si su móvil es la enfermedad o la condición de salud.
 
-El despido nulo obliga a la readmisión y a los salarios de tramitación, artículo 55.6. https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a55
+El artículo 55.6 dice que el despido nulo tiene el efecto de la readmisión inmediata, con abono de los salarios dejados de percibir.
 
-el trabajador aporta indicios; la empresa debe probar una justificación objetiva y razonable (Ley 15/2022, art. 30). https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589#a30
-
-el despido discriminatorio es nulo, no improcedente.
+El artículo 30 de la Ley 15/2022 dice que, cuando quien demanda alega discriminación y aporta indicios fundados, corresponde a la otra parte una justificación objetiva y razonable, suficientemente probada, de las medidas y de su proporcionalidad. Ese apartado no se aplica a los procesos penales ni a los procedimientos administrativos sancionadores.

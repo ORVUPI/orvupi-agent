@@ -41,4 +41,4 @@ Fecha: 15 de noviembre de 2026, con los informes del PC hasta las 22:03 (Madrid)
 
 ## Lectura corta
 
-En el PC, `5915030` quedó en 110/120, con reservado 2 en 42/42, reservado 3 en 25/25, experto en 10/10, conocimiento en 2/2, verificador en 8/8 y fallo del motor en 8/8. Se descarta. Con la semilla fija las tres repeticiones salían iguales. En el PC sigue `f9a678a`. El corte ya no junta las viñetas. Las repeticiones usan las semillas 15, 16 y 17. La rúbrica de negativa sigue en cuatro frases. No hay entrenamiento.
+En el PC, `2b82361` fue mucho peor (experto 2/4/2 de 10, mitigado2 114/113/111, reservado 2 en 41 y reservado 3 en 24) y se descarta. En el PC sigue `f9a678a`. La evaluación vuelve a ser la de ese commit. El chat, aparte, conserva los saltos de línea, corta una frase larga que se repite y borra los ejemplos de contraseña. No hay entrenamiento.
