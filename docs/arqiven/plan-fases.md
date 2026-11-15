@@ -45,7 +45,7 @@ Objetivo: responder con citas cuando la pregunta depende de documentos del proye
 
 Límites:
 
-- El documento es fuente de hechos. Entra en `[documento: nombre]` … `[/documento]`, antes de la pregunta. Las órdenes de dentro (`ignora`, `di`, `imprime`, `responde con`, `eres`) no se cumplen y el texto no se ejecuta.
+- El documento es fuente de hechos. Antes de llegar al modelo, una capa determinista sustituye las órdenes (`ignora`, `di que`, `afirma que`, `responde con`, `imprime`, `filtra`, `eres`, `obedece`) por `[instrucción del documento omitida]`. Si la respuesta las repite, se descarta. El texto no se ejecuta.
 - Cada frase que afirme un dato del corpus cita el título y un identificador del fragmento. Si el fragmento no contiene el dato, la respuesta es una abstención («no consta en los documentos de este proyecto»), no una suposición.
 - El cálculo local y las fichas verificadas de ORVUPI siguen ganando al modelo: no se pide a Ollama un contrato o una operación que ya resuelve el código.
 - El presupuesto no cambia de forma: los fragmentos cuentan dentro de los 2816 tokens de entrada. Si no caben, se recortan los más lejanos, no se sube `num_ctx` por sorpresa.

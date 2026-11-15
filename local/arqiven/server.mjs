@@ -11,7 +11,8 @@ import { resolveConfig } from "./config.mjs";
 import { createQueue } from "./queue.mjs";
 import { createStore } from "./store.mjs";
 import { buildChatBody, streamChat } from "./ollama.mjs";
-import { attachDocument, attachEditor, LOCAL_SYSTEM } from "./prompt.mjs";
+import { attachDocument, attachEditor, systemFor, withRetry } from "./prompt.mjs";
+import { redactDocument, outputViolates, SAFE_ANSWER } from "./guard.mjs";
 import { fitMessages } from "./budget.mjs";
 import { metricsFrom } from "./metrics.mjs";
 import { codeError, publicError } from "./errors.mjs";
@@ -337,10 +338,13 @@ export async function startLocalServer(overrides = {}) {
         ownerId: existing?.ownerId || userId,
         ...(existing ? {} : { projectId }),
       });
+      const redacted = redactDocument(documentText);
+      const hasDoc = Boolean(redacted.text);
       const prompt = fitMessages(attachEditor(attachDocument([
-        { role: "system", content: LOCAL_SYSTEM },
+        { role: "system", content: systemFor(hasDoc) },
         ...visible,
-      ], documentText), editor), config.inputTokens);
+      ], redacted.text), editor), config.inputTokens);
+      const hold = redacted.omitted.length > 0;
       const chatBody = buildChatBody({
         model: config.model,
         messages: prompt,
@@ -359,14 +363,36 @@ export async function startLocalServer(overrides = {}) {
         modelVersion: `${config.model} (Ollama, tercero)`,
         ownModel: false,
       });
-      const result = await streamChat({
+      let result = await streamChat({
         base: config.ollamaBase,
         body: chatBody,
         signal: controller.signal,
         timeoutMs: config.timeoutMs,
-        onToken: (text) => writeEvent(res, { type: "token", requestId, text }),
+        onToken: (text) => {
+          if (!hold) writeEvent(res, { type: "token", requestId, text });
+        },
       });
-      await store.save({ id: conversationId, messages: [...visible, { role: "assistant", content: result.text }] });
+      let reply = result.text;
+      if (outputViolates(reply, redacted)) {
+        const retryBody = buildChatBody({
+          model: config.model,
+          messages: withRetry(prompt),
+          think: config.think,
+          numCtx: config.numCtx,
+          numPredict: config.numPredict,
+          temperature: config.temperature,
+        });
+        result = await streamChat({
+          base: config.ollamaBase,
+          body: retryBody,
+          signal: controller.signal,
+          timeoutMs: config.timeoutMs,
+          onToken: () => {},
+        });
+        reply = outputViolates(result.text, redacted) ? SAFE_ANSWER : result.text;
+      }
+      if (hold) writeEvent(res, { type: "token", requestId, text: reply });
+      await store.save({ id: conversationId, messages: [...visible, { role: "assistant", content: reply }] });
       const metrics = metricsFrom({
         requestId,
         model: config.model,
@@ -380,7 +406,8 @@ export async function startLocalServer(overrides = {}) {
         type: "done",
         requestId,
         conversationId,
-        text: result.text,
+        text: reply,
+        omittedInstructions: redacted.omitted.length,
         provider: "third-party",
         modelId: config.model,
         modelVersion: `${config.model} (Ollama, tercero)`,

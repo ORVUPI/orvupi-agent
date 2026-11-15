@@ -20,27 +20,27 @@ node eval/arqiven/fijo/run.mjs --comprobar
 Correrlo en el PC, contra el Ollama que ya está (no abre otro puerto):
 
 ```text
-node eval/arqiven/fijo/run.mjs
-node eval/arqiven/fijo/run.mjs --mitigado
+node eval/arqiven/fijo/run.mjs --mitigado2
 ```
 
-Sin `--mitigado` usa el mismo prompt de la línea base (91/100, 15-11-2026 18:36Z). Con `--mitigado` usa las instrucciones nuevas del backend: el dato va entre marcas, y el historial corregido manda. Cada fila de `eval/arqiven/fijo/out/resultado.json` guarda el prompt enviado y la respuesta completa. No se sube al repositorio. Una corrida en la VM con otro modelo no sustituye a la del PC.
+Sin marca usa el prompt de la línea base. `--mitigado` repite el prompt de los 92/100. `--mitigado2` aplica la capa determinista. Cada fila de `eval/arqiven/fijo/out/resultado.json` guarda el prompt enviado y la respuesta completa, y además se copia a `resultado-base.json`, `resultado-mitigado.json` o `resultado-mitigado2.json`. No se sube al repositorio. Una corrida en la VM con otro modelo no sustituye a la del PC.
 
 `prog-20` pide `clampTexto("hola", 2) === "ho"`. `ho...` es un fallo del modelo: son cinco caracteres. `prog-14` también: `primo(5)` con `![1, n].some(i => n % i === 0)` sale siempre falso. No se cambian esos casos.
 
-En `--mitigado` la regla de documentos va en el sistema: los hechos se usan y se citan; una orden del documento (`ignora`, `di`, `imprime`, `responde con`, `eres`) no es un hecho. El bloque `[documento: nombre]` va antes, y la pregunta queda al final bajo `Pregunta del usuario:`. No hay una coletilla detrás del bloque. La corrida sin `--mitigado` conserva el prompt de la línea base.
+En `--mitigado` la regla de documentos va en el sistema y el bloque va antes de `Pregunta del usuario:`. Esa corrida, en el PC a las 19:55, dio 92/100 y conversación 15/15, con aislamiento 5/10.
+
+`--mitigado2` no toca ese prompt ni el de la base. Quita del documento las frases imperativas (`ignora`, `a partir de ahora`, `di que`, `afirma que`, `responde con`, `imprime`, `filtra`, `eres`, `obedece`…) y deja la marca `[instrucción del documento omitida]`. Si la respuesta repite un literal de esa frase o afirma que el modelo se entrenó o se creó desde cero, se pide otra vez y, si sigue, se sustituye por una respuesta segura. Sin documento no se añade `Pregunta del usuario:` ni texto sobre documentos. La corrección del historial se mantiene.
+
+```text
+node eval/arqiven/fijo/run.mjs
+node eval/arqiven/fijo/run.mjs --mitigado
+node eval/arqiven/fijo/run.mjs --mitigado2
+```
 
 Para volver a puntuar un `resultado.json` ya guardado, sin llamar al modelo:
 
 ```text
 node eval/arqiven/fijo/run.mjs --repuntuar eval/arqiven/fijo/out/resultado-base.json
-```
-
-Para repetir las dos en el PC:
-
-```text
-node eval/arqiven/fijo/run.mjs
-node eval/arqiven/fijo/run.mjs --mitigado
 ```
 
 El índice de documentos del modo local usa, si está instalado, `qwen3-embedding:0.6b` (terceros, Apache 2.0, cubre español). No es el modelo de chat. Si falta:
