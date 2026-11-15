@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
 import { describe, test } from "node:test";
 import { pathToFileURL } from "node:url";
 import path from "node:path";
@@ -419,5 +420,21 @@ describe("conjunto fijo de 100 casos", () => {
     });
     assert.equal(none.text, "");
     assert.equal(none.offline, true);
+  });
+
+  test("el cargador solo lee las notas del manifiesto", async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), "arqiven-notas-"));
+    try {
+      await writeFile(path.join(dir, "manifiesto.json"), JSON.stringify(["despido-baja.md"]), "utf8");
+      await writeFile(path.join(dir, "despido-baja.md"), "# Despido\n\nhttps://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a55\n", "utf8");
+      await writeFile(path.join(dir, "otra.md"), "# Otra nota que no está en la lista\n", "utf8");
+      const known = await import(href("local/arqiven/conocimiento.mjs")) as {
+        loadConocimiento: (dir?: string) => Promise<Array<{ id: string }>>;
+      };
+      const docs = await known.loadConocimiento(dir);
+      assert.deepEqual(docs.map((item) => item.id), ["despido-baja"]);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 });

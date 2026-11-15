@@ -1,6 +1,6 @@
 /** Base documental general. Solo entra lo que tiene URL oficial. Se recupera por similitud, en local. */
 
-import { readdir, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { tokensOf } from "./embed.mjs";
@@ -8,15 +8,22 @@ import { tokensOf } from "./embed.mjs";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../docs/arqiven/conocimiento");
 
 export async function loadConocimiento(dir = root) {
-  let names = [];
+  let listed = [];
   try {
-    names = (await readdir(dir)).filter((name) => name.endsWith(".md")).sort();
+    listed = JSON.parse(await readFile(path.join(dir, "manifiesto.json"), "utf8"));
   } catch {
     return [];
   }
+  if (!Array.isArray(listed)) return [];
   const docs = [];
-  for (const name of names) {
-    const text = await readFile(path.join(dir, name), "utf8");
+  for (const name of listed) {
+    if (typeof name !== "string" || !name.endsWith(".md") || name.includes("..") || name.includes("/") || name.includes("\\")) continue;
+    let text = "";
+    try {
+      text = await readFile(path.join(dir, name), "utf8");
+    } catch {
+      continue;
+    }
     const title = (text.match(/^#\s+(.+)$/m) || [null, name])[1].trim();
     const url = (text.match(/https?:\/\/\S+/) || [""])[0];
     docs.push({ id: name.replace(/\.md$/, ""), title, url, text });
