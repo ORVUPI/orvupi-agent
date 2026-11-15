@@ -21,9 +21,12 @@ Correrlo en el PC, contra el Ollama que ya está (no abre otro puerto):
 
 ```text
 node eval/arqiven/fijo/run.mjs
+node eval/arqiven/fijo/run.mjs --mitigado
 ```
 
-Usa `qwen3:8b` salvo que `ARQIVEN_MODEL` diga otra cosa. `think` va en falso. El resultado queda en `eval/arqiven/fijo/out/resultado.json` y no se sube al repositorio. Una corrida en la VM con otro modelo no sustituye a esta.
+Sin `--mitigado` usa el mismo prompt de la línea base (91/100, 15-11-2026 18:36Z). Con `--mitigado` usa las instrucciones nuevas del backend: el dato va entre marcas, y el historial corregido manda. Cada fila de `eval/arqiven/fijo/out/resultado.json` guarda el prompt enviado y la respuesta completa. No se sube al repositorio. Una corrida en la VM con otro modelo no sustituye a la del PC.
+
+`prog-20` pide `clampTexto("hola", 2) === "ho"`. Si el modelo devuelve `ho...`, la rúbrica está bien: añadió puntos suspensivos y la cadena ya no tiene 2 caracteres. No se cambia el caso.
 
 El índice de documentos del modo local usa, si está instalado, `qwen3-embedding:0.6b` (terceros, Apache 2.0, cubre español). No es el modelo de chat. Si falta:
 

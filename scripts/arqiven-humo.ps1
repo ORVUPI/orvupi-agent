@@ -49,7 +49,7 @@ function Read-Ndjson([string]$Url, [string]$Json, [System.Threading.Cancellation
 }
 
 try {
-  $tags = Invoke-RestMethod -Uri "$Ollama/api/tags" -TimeoutSec 5
+  $tags = Invoke-RestMethod -Uri "$Ollama/api/tags" -TimeoutSec 5 -UseBasicParsing
 } catch {
   Fail "Ollama no responde en $Ollama. Abrelo en este equipo y vuelve a ejecutar el script."
 }
@@ -122,7 +122,7 @@ Write-Host ("Cancelacion: se corto tras {0} fragmento(s), a los {1} ms del inici
 
 if ($Backend) {
   try {
-    $status = Invoke-RestMethod -Uri "$Backend/api/arqiven/status" -TimeoutSec 5
+    $status = Invoke-RestMethod -Uri "$Backend/api/arqiven/status" -TimeoutSec 5 -UseBasicParsing
   } catch {
     Fail "El backend local no responde en $Backend. Arranca scripts\arqiven-local.ps1 primero."
   }
@@ -148,7 +148,7 @@ if ($Backend) {
       if ($event.type -eq "token") {
         $script:backendTokens += 1
         if ($script:backendTokens -eq 1) {
-          Invoke-RestMethod -Method Post -Uri "$script:Backend/api/arqiven/cancel" -ContentType "application/json" -Body (@{ requestId = $script:slowId } | ConvertTo-Json) | Out-Null
+          Invoke-RestMethod -Method Post -Uri "$script:Backend/api/arqiven/cancel" -ContentType "application/json" -Body (@{ requestId = $script:slowId } | ConvertTo-Json) -UseBasicParsing | Out-Null
         }
       }
       if ($event.type -eq "error" -and $event.code -ne "cancelled") {

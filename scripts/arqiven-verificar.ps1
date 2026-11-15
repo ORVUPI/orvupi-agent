@@ -1,5 +1,5 @@
-﻿# Comprueba el backend local y deja una linea OK o FALLO por punto.
-# Puede parar y volver a arrancar el proceso de ARQIVEN en 127.0.0.1:4174.
+﻿# Comprueba el backend local en Windows PowerShell 5.1.
+# El chat se lee linea a linea en UTF-8. Invoke-WebRequest lleva -UseBasicParsing.
 # Uso, con Ollama ya en marcha:
 #   powershell -ExecutionPolicy Bypass -File .\scripts\arqiven-verificar.ps1
 param(
@@ -18,7 +18,7 @@ function Say([string]$Name, [bool]$Ok, [string]$Detail) {
 }
 
 function Listen-Pid([int]$Port) {
-  $lines = netstat -ano | Select-String (":$Port\s")
+  $lines = netstat -ano | Select-String (":${Port}\s")
   foreach ($line in $lines) {
     if ($line.Line -match "LISTENING\s+(\d+)\s*$") {
       $pidValue = [int]$Matches[1]
@@ -31,7 +31,7 @@ function Listen-Pid([int]$Port) {
 function Wait-Backend {
   for ($i = 0; $i -lt 40; $i++) {
     try {
-      $status = Invoke-RestMethod -Uri "$Backend/api/arqiven/status" -TimeoutSec 2
+      $status = Invoke-RestMethod -Uri "$Backend/api/arqiven/status" -TimeoutSec 2 -UseBasicParsing
       if ($status.mode -eq "local") { return $true }
     } catch { }
     Start-Sleep -Milliseconds 250
@@ -59,17 +59,53 @@ function Stop-Backend {
   Start-Sleep -Milliseconds 400
 }
 
-function Invoke-Api([string]$Method, [string]$Path, [string]$User, [object]$Body) {
+function Invoke-Api([string]$Method, [string]$Path, [string]$User, $Body) {
   $headers = @{ "x-arqiven-user" = $User }
-  $params = @{ Method = $Method; Uri = "$Backend$Path"; Headers = $headers; TimeoutSec = 30 }
+  $params = @{ Method = $Method; Uri = "$Backend$Path"; Headers = $headers; TimeoutSec = 30; UseBasicParsing = $true }
   if ($null -ne $Body) {
-    $params.ContentType = "application/json"
+    $params.ContentType = "application/json; charset=utf-8"
     $params.Body = ($Body | ConvertTo-Json -Compress -Depth 6)
   }
   return Invoke-WebRequest @params
 }
 
 Add-Type -AssemblyName System.Net.Http
+
+function Read-Chat([string]$Json, [string]$User) {
+  $client = New-Object System.Net.Http.HttpClient
+  $client.Timeout = [TimeSpan]::FromMinutes(3)
+  $request = New-Object System.Net.Http.HttpRequestMessage([System.Net.Http.HttpMethod]::Post, "$Backend/api/arqiven/chat")
+  [void]$request.Headers.TryAddWithoutValidation("x-arqiven-user", $User)
+  $request.Content = New-Object System.Net.Http.StringContent($Json, [Text.Encoding]::UTF8, "application/json")
+  $lines = New-Object System.Collections.Generic.List[string]
+  try {
+    $response = $client.SendAsync($request, [System.Net.Http.HttpCompletionOption]::ResponseHeadersRead).GetAwaiter().GetResult()
+    $stream = $response.Content.ReadAsStreamAsync().GetAwaiter().GetResult()
+    $reader = New-Object System.IO.StreamReader($stream, [Text.Encoding]::UTF8)
+    try {
+      while ($null -ne ($line = $reader.ReadLine())) {
+        if ($line.Trim().Length -gt 0) { $lines.Add($line) }
+      }
+    } finally {
+      $reader.Dispose()
+      $stream.Dispose()
+    }
+  } finally {
+    $client.Dispose()
+  }
+  return $lines
+}
+
+function Begin-Chat([string]$Json, [string]$User) {
+  $client = New-Object System.Net.Http.HttpClient
+  $client.Timeout = [TimeSpan]::FromMinutes(3)
+  $request = New-Object System.Net.Http.HttpRequestMessage([System.Net.Http.HttpMethod]::Post, "$Backend/api/arqiven/chat")
+  [void]$request.Headers.TryAddWithoutValidation("x-arqiven-user", $User)
+  $request.Content = New-Object System.Net.Http.StringContent($Json, [Text.Encoding]::UTF8, "application/json")
+  $task = $client.SendAsync($request, [System.Net.Http.HttpCompletionOption]::ResponseHeadersRead)
+  return @{ Client = $client; Task = $task }
+}
+
 if (-not (Wait-Backend)) {
   if (-not (Start-Backend)) { Say "backend" $false "no responde en $Backend"; exit 1 }
 }
@@ -79,17 +115,13 @@ $owner = "crist"
 if ($env:ARQIVEN_USER) { $owner = $env:ARQIVEN_USER }
 $chatId = "verificar-" + [guid]::NewGuid().ToString("N").Substring(0, 8)
 $projectId = "proy-" + [guid]::NewGuid().ToString("N").Substring(0, 8)
+$reqChat = "req-$chatId"
 
 try {
-  $chat = Invoke-Api "POST" "/api/arqiven/chat" $owner @{
-    requestId = "req-$chatId"
-    conversationId = $chatId
-    messages = @(@{ role = "user"; content = "Di solo la palabra mesa." })
-  }
+  $json = '{"requestId":"' + $reqChat + '","conversationId":"' + $chatId + '","messages":[{"role":"user","content":"Di solo la palabra mesa."}]}'
+  $lines = Read-Chat $json $owner
   $done = $false
-  foreach ($line in ($chat.Content -split "`n")) {
-    if ($line -match '"type"\s*:\s*"done"') { $done = $true }
-  }
+  foreach ($line in $lines) { if ($line -match '"type"\s*:\s*"done"') { $done = $true } }
   Say "crear chat" $done "no llego el cierre de la respuesta"
 } catch {
   Say "crear chat" $false $_.Exception.Message
@@ -98,7 +130,7 @@ try {
 try {
   $created = Invoke-Api "POST" "/api/arqiven/projects" $owner @{ id = $projectId; name = "Obra" }
   $renamed = Invoke-Api "PATCH" "/api/arqiven/projects/$projectId" $owner @{ name = "Obra norte" }
-  $ok = $created.StatusCode -eq 201 -and $renamed.Content -match "Obra norte"
+  $ok = [int]$created.StatusCode -eq 201 -and $renamed.Content -match "Obra norte"
   Say "crear y renombrar proyecto" $ok "codigo $($created.StatusCode)"
 } catch {
   Say "crear y renombrar proyecto" $false $_.Exception.Message
@@ -107,7 +139,7 @@ try {
 try {
   $moved = Invoke-Api "POST" "/api/arqiven/conversations/$chatId/move" $owner @{ projectId = $projectId }
   $opened = Invoke-Api "GET" "/api/arqiven/projects/$projectId" $owner $null
-  $ok = $moved.StatusCode -eq 200 -and $opened.Content -match $chatId
+  $ok = [int]$moved.StatusCode -eq 200 -and $opened.Content -match $chatId
   Say "mover chat y reabrir" $ok "el proyecto no muestra el chat"
 } catch {
   Say "mover chat y reabrir" $false $_.Exception.Message
@@ -121,46 +153,52 @@ try {
   $editorRename = Invoke-Api "PATCH" "/api/arqiven/projects/$projectId" "editor" @{ name = "Obra sur" }
   $editorBlocked = $false
   try { Invoke-Api "DELETE" "/api/arqiven/projects/$projectId" "editor" $null | Out-Null } catch { if ($_.Exception.Response.StatusCode.value__ -eq 403) { $editorBlocked = $true } }
-  $ok = $lectorBlocked -and $editorRename.StatusCode -eq 200 -and $editorBlocked
+  $ok = $lectorBlocked -and [int]$editorRename.StatusCode -eq 200 -and $editorBlocked
   Say "permisos lector y editor" $ok "lector=$lectorBlocked editor-renombra=$($editorRename.StatusCode) editor-no-borra=$editorBlocked"
 } catch {
   Say "permisos lector y editor" $false $_.Exception.Message
 }
 
 try {
-  $again = Invoke-Api "POST" "/api/arqiven/chat" $owner @{
-    requestId = "req-again-$chatId"
-    conversationId = $chatId
-    regenerate = $true
-  }
-  $ok = $again.Content -match '"type"\s*:\s*"done"'
+  $json = '{"requestId":"req-again-' + $chatId + '","conversationId":"' + $chatId + '","regenerate":true}'
+  $lines = Read-Chat $json $owner
+  $done = $false
+  foreach ($line in $lines) { if ($line -match '"type"\s*:\s*"done"') { $done = $true } }
   $saved = Invoke-Api "GET" "/api/arqiven/conversations/$chatId" $owner $null
-  $users = ([regex]::Matches($saved.Content, '"role"\s*:\s*"user"')).Count
-  Say "regenerar" ($ok -and $users -eq 1) "cierres=$ok usuarios=$users"
+  $users = ([regex]::Matches([string]$saved.Content, '"role"\s*:\s*"user"')).Count
+  Say "regenerar" ($done -and $users -eq 1) "cierre=$done usuarios=$users"
 } catch {
   Say "regenerar" $false $_.Exception.Message
 }
 
 try {
   $longId = "cola-" + [guid]::NewGuid().ToString("N").Substring(0, 8)
-  $longBody = '{"requestId":"req-' + $longId + '","conversationId":"' + $longId + '","messages":[{"role":"user","content":"Escribe un relato largo, sin parar, sobre una caminata."}]}'
-  $client = New-Object System.Net.Http.HttpClient
-  $client.Timeout = [TimeSpan]::FromMinutes(3)
-  $request = New-Object System.Net.Http.HttpRequestMessage([System.Net.Http.HttpMethod]::Post, "$Backend/api/arqiven/chat")
-  $request.Headers.Add("x-arqiven-user", $owner)
-  $request.Content = New-Object System.Net.Http.StringContent($longBody, [Text.Encoding]::UTF8, "application/json")
-  $first = $client.SendAsync($request, [System.Net.Http.HttpCompletionOption]::ResponseHeadersRead)
-  $null = $first.GetAwaiter().GetResult()
+  $longReq = "req-$longId"
+  $longJson = '{"requestId":"' + $longReq + '","conversationId":"' + $longId + '","messages":[{"role":"user","content":"Escribe un relato largo, sin parar, sobre una caminata."}]}'
+  $first = Begin-Chat $longJson $owner
+  $null = $first.Task.GetAwaiter().GetResult()
   $secondId = "cola2-" + [guid]::NewGuid().ToString("N").Substring(0, 8)
-  $queued = Invoke-Api "POST" "/api/arqiven/chat" $owner @{
-    requestId = "req-$secondId"
-    conversationId = $secondId
-    messages = @(@{ role = "user"; content = "Di solo: segundo." })
+  $secondJson = '{"requestId":"req-' + $secondId + '","conversationId":"' + $secondId + '","messages":[{"role":"user","content":"Di solo: segundo."}]}'
+  $second = Begin-Chat $secondJson $owner
+  $response = $second.Task.GetAwaiter().GetResult()
+  $stream = $response.Content.ReadAsStreamAsync().GetAwaiter().GetResult()
+  $reader = New-Object System.IO.StreamReader($stream, [Text.Encoding]::UTF8)
+  $saw = $false
+  $guard = [DateTime]::UtcNow.AddSeconds(20)
+  try {
+    while ((-not $saw) -and [DateTime]::UtcNow -lt $guard) {
+      $line = $reader.ReadLine()
+      if ($null -eq $line) { break }
+      if ($line -match "en espera") { $saw = $true }
+    }
+  } finally {
+    $reader.Dispose()
+    $stream.Dispose()
+    $second.Client.Dispose()
+    $first.Client.Dispose()
   }
-  $saw = $queued.Content -match "en espera"
-  Invoke-Api "POST" "/api/arqiven/cancel" $owner @{ requestId = "req-$longId" } | Out-Null
-  Invoke-Api "POST" "/api/arqiven/cancel" $owner @{ requestId = "req-$secondId" } | Out-Null
-  $client.Dispose()
+  try { Invoke-Api "POST" "/api/arqiven/cancel" $owner @{ requestId = $longReq } | Out-Null } catch { }
+  try { Invoke-Api "POST" "/api/arqiven/cancel" $owner @{ requestId = "req-$secondId" } | Out-Null } catch { }
   Say "cola en espera" $saw "la segunda peticion no aviso en espera"
 } catch {
   Say "cola en espera" $false $_.Exception.Message

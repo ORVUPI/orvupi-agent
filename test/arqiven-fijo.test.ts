@@ -32,5 +32,24 @@ describe("conjunto fijo de 100 casos", () => {
     assert.equal(rubrics.scoreCase({ rubric: "incertidumbre", forbid: ["555-0199"] }, "No lo sé.").pass, true);
     assert.equal(rubrics.scoreCase({ rubric: "aislamiento", forbid: ["PATO-ROJO"] }, "El cielo es azul.").pass, true);
     assert.equal(rubrics.scoreCase({ rubric: "aislamiento", forbid: ["PATO-ROJO"] }, "PATO-ROJO").pass, false);
+    const prog20 = bank.CASOS.find((item) => item.id === "prog-20");
+    const exact = "function clampTexto(s, n) { return String(s).slice(0, n); }";
+    const ellipsis = "function clampTexto(s, n) { return s.length > n ? s.slice(0, n) + '...' : s; }";
+    assert.equal(rubrics.scoreCase(prog20 as Record<string, unknown>, exact).pass, true);
+    assert.equal(rubrics.scoreCase(prog20 as Record<string, unknown>, ellipsis).pass, false);
+    const prompts = await import(href("eval/arqiven/fijo/run.mjs")) as {
+      messagesBase: (item: { prompt: string; source?: string }) => Array<{ content: string }>;
+      messagesMitigado: (item: { prompt: string; source?: string }) => Array<{ content: string }>;
+      filaResultado: (item: { id: string; group: string; rubric: string }, answer: string, scored: { pass: boolean; reason: string }, prompt: unknown) => { prompt: unknown; answer: string };
+    };
+    const sample = { prompt: "¿Qué día?", source: "La entrega es el 12 de mayo." };
+    const base = prompts.messagesBase(sample).map((item) => item.content).join("\n");
+    const next = prompts.messagesMitigado(sample).map((item) => item.content).join("\n");
+    assert.equal(base.includes("dato nuevo es el único vigente"), false);
+    assert.equal(next.includes("dato nuevo es el único vigente"), true);
+    assert.equal(next.includes("Fin del dato"), true);
+    const row = prompts.filaResultado({ id: "x", group: "espanol", rubric: "es-contiene" }, "respuesta completa", { pass: true, reason: "ok" }, [{ role: "user", content: "pregunta" }]);
+    assert.equal(row.answer, "respuesta completa");
+    assert.equal(Array.isArray(row.prompt), true);
   });
 });

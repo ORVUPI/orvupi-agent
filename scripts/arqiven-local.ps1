@@ -29,6 +29,33 @@ if (-not $env:ARQIVEN_HOST) { $env:ARQIVEN_HOST = "127.0.0.1" }
 if (-not $env:ARQIVEN_PORT) { $env:ARQIVEN_PORT = "4174" }
 $env:ARQIVEN_THINK = "false"
 
+function Get-ListenPid([int]$Port) {
+  $lines = netstat -ano | Select-String (":${Port}\s")
+  foreach ($line in $lines) {
+    if ($line.Line -match "LISTENING\s+(\d+)\s*$") {
+      $pidValue = [int]$Matches[1]
+      if ($pidValue -gt 4) { return $pidValue }
+    }
+  }
+  return 0
+}
+
+$busy = Get-ListenPid ([int]$env:ARQIVEN_PORT)
+if ($busy -gt 4) {
+  $command = ""
+  try {
+    $proc = Get-CimInstance Win32_Process -Filter "ProcessId=$busy"
+    if ($proc) { $command = [string]$proc.CommandLine }
+  } catch { }
+  if ($command -match "server\.mjs") {
+    Write-Host "El puerto $($env:ARQIVEN_PORT) ya lo usa un ARQIVEN anterior (pid $busy). Lo paro para no dejar el servidor viejo escuchando."
+    Stop-Process -Id $busy -Force
+    Start-Sleep -Milliseconds 400
+  } else {
+    Write-Error "El puerto $($env:ARQIVEN_PORT) esta ocupado por el pid $busy y no parece ARQIVEN. No lo paro."
+  }
+}
+
 Write-Host "ARQIVEN local: http://127.0.0.1:$($env:ARQIVEN_PORT)/arqiven/"
 Write-Host "Ollama previsto en $($env:OLLAMA_HOST) con $($env:ARQIVEN_MODEL)."
 Write-Host "qwen3:8b es un modelo de terceros. ARQIVEN no lo creo."
