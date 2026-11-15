@@ -2,7 +2,7 @@
 ## Del prototipo local a un proyecto con evidencia para buscar financiación
 
 **Fecha de referencia:** 15/11/2026.  
-**Promotor:** Cristian Pardo Camacho.  
+**Promotor:** el titular del proyecto (ORVUPI).  
 **Estado:** plan propuesto; las fases no representan resultados alcanzados.  
 **Relación con el trabajo anterior:** complementa ARQIVEN_Instrucciones_Agentes_2026-11-15.md. No sustituye sus registros ni acredita implementaciones.
 
