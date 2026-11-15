@@ -30,6 +30,16 @@ El script pone `ARQIVEN_MODEL` en cada corrida, ejecuta el fijo con `--mitigado2
 
 La base por defecto del programa sigue siendo `qwen3:8b` hasta que una tabla nueva tenga un total mayor.
 
-## Regla de cita posterior a esta tabla
+## Regla de cita, medida después
 
-Esta tabla mide el código de ese build. Después se cambió la regla de cita, sin usar el reservado 3: el reservado 3 es el control. La marca vuelve a ser `[documento: f1]` y la frase que usa el dato lleva `[f1]`, o «según el documento f1». El sistema dice la familia y el proveedor del modelo que haya en `ARQIVEN_MODEL`, no siempre Qwen. Hay que volver a medir el fijo y el reservado 2 en el PC. El reservado 3 se corre una vez, al final, y no se usa para retocar la regla.
+El fijo y el reservado 2 se usaron para ajustar la regla. El reservado 3 no se usó: es el control.
+
+Verificado en el PC, 15-11-2026 ~20:43 Madrid, commit `1cf4ac5`, `qwen3:8b`, pipeline `mitigado2`. Los archivos están en `C:\Users\crist\ARQIVEN-local\comparativa\qwen3-8b-1cf4ac5-*.json`.
+
+| Conjunto | Resultado | Papel |
+| --- | --- | --- |
+| Fijo, `--mitigado2` | 99/100. Solo falla `prog-14` | Se usó para ajustar la cita |
+| Reservado 2 | 42/42 | Se usó para ajustar la cita |
+| Reservado 3 | 25/25 | Control. No se usó para ajustar |
+
+El verificador de esa misma pasada dio 8/8.
