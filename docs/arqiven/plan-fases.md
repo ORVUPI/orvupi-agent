@@ -1,6 +1,6 @@
 # Fases siguientes de ARQIVEN
 
-La fase local (interfaz, backend en 127.0.0.1, Ollama, cola, historial y métricas) está en el código. Los proyectos locales —crear, renombrar, mover chats, reabrir y permisos— también. Siguen fuera las carpetas anidadas, el RAG y la evaluación fija. El orden importa: no se entrena nada antes de esa evaluación.
+La fase local y los proyectos con permisos están en el código. El RAG local y el conjunto de 100 casos también: las rúbricas se comprueban sin modelo, y la corrida contra Ollama queda para el PC. No se entrena. Las carpetas anidadas siguen fuera.
 
 ## Fase de proyectos
 
@@ -37,7 +37,9 @@ Pruebas antes de darla por hecha: crear, renombrar, mover a otra carpeta, reinic
 
 ## Fase de RAG
 
-Hoy hay un índice estático (`web/v2/arqiven/knowledge-index.json`) y fichas verificadas. Wikipedia se consulta solo en definiciones. No hay un corpus del usuario ni una regla de abstención uniforme para el modelo de 8B.
+El índice del usuario vive en `rag-index.json`, separado por proyecto. Una pregunta con `ground: true` cita fragmentos reales o responde «No consta en los documentos de este proyecto» sin llamar al modelo. Borrar el documento o el proyecto quita sus fragmentos y no los del resto. El texto indexado se trata como dato no confiable.
+
+El embedding previsto es `qwen3-embedding:0.6b` (terceros, Apache 2.0). Las pruebas automáticas no lo descargan: usan un vector determinista. Si ese modelo no está en Ollama, el backend lo dice y no lo sustituye por el modelo de chat.
 
 Objetivo: responder con citas cuando la pregunta depende de documentos del proyecto, y decir que no consta cuando no hay soporte.
 

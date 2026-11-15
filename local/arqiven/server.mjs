@@ -15,6 +15,9 @@ import { attachDocument, attachEditor, LOCAL_SYSTEM } from "./prompt.mjs";
 import { fitMessages } from "./budget.mjs";
 import { metricsFrom } from "./metrics.mjs";
 import { codeError, publicError } from "./errors.mjs";
+import { canAct } from "./projects.mjs";
+import { EMBED_MODEL, ollamaEmbed } from "./embed.mjs";
+import { createIndex } from "./rag.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const webRoot = path.resolve(here, "../../web/v2");
@@ -215,6 +218,14 @@ function statusBody(config, queue, probe) {
 export async function startLocalServer(overrides = {}) {
   const config = resolveConfig(overrides);
   const store = createStore(config.dataDir, { defaultUser: config.localUser });
+  const embed = typeof overrides.embed === "function"
+    ? overrides.embed
+    : (text) => ollamaEmbed({ base: config.ollamaBase, model: EMBED_MODEL, text });
+  const index = createIndex(config.dataDir, {
+    embed,
+    model: EMBED_MODEL,
+    threshold: Number.isFinite(overrides.embedThreshold) ? overrides.embedThreshold : 0.45,
+  });
   const queue = createQueue(1);
   const jobs = new Map();
 
@@ -278,14 +289,54 @@ export async function startLocalServer(overrides = {}) {
       if (!visible.some((item) => item.role === "user")) throw codeError("bad-request");
       const projectId = validId(body.projectId);
       const existing = await store.assertWrite(userId, conversationId, projectId);
+      const scope = existing?.projectId || projectId;
+      let editor = typeof body.editor === "string" ? body.editor : "";
+      let documentText = typeof body.document === "string" ? body.document : "";
+      if (body.ground === true) {
+        if (!scope) throw codeError("bad-request");
+        const question = [...visible].reverse().find((item) => item.role === "user")?.content || "";
+        const found = await index.retrieve(scope, question);
+        if (found.abstain) {
+          const text = found.text;
+          await store.save({
+            id: conversationId,
+            messages: [...visible, { role: "assistant", content: text }],
+            ownerId: existing?.ownerId || userId,
+            ...(existing ? {} : { projectId }),
+          });
+          writeEvent(res, {
+            type: "start",
+            requestId,
+            conversationId,
+            model: "none",
+            modelId: "none",
+            provider: "none",
+            modelVersion: "",
+            ownModel: false,
+          });
+          writeEvent(res, {
+            type: "done",
+            requestId,
+            conversationId,
+            text,
+            provider: "none",
+            modelId: "none",
+            modelVersion: "",
+            ownModel: false,
+            abstain: true,
+            citations: [],
+          });
+          return;
+        }
+        documentText = [documentText, ...found.citations.map((item) => `[${item.id}] ${item.title}\n${item.excerpt}`)].filter(Boolean).join("\n\n");
+        editor = `${editor}\nSi usas un dato de las citas, incluye su id entre corchetes. Si no basta, di que no consta.`.trim();
+      }
       await store.save({
         id: conversationId,
         messages: visible,
         ownerId: existing?.ownerId || userId,
         ...(existing ? {} : { projectId }),
       });
-      const editor = typeof body.editor === "string" ? body.editor : "";
-      const documentText = typeof body.document === "string" ? body.document : "";
       const prompt = fitMessages(attachDocument(attachEditor([
         { role: "system", content: LOCAL_SYSTEM },
         ...visible,
@@ -408,6 +459,59 @@ export async function startLocalServer(overrides = {}) {
       });
       return;
     }
+    if (pathname.startsWith("/api/arqiven/projects/") && pathname.includes("/documents")) {
+      const marker = "/documents";
+      const cut = pathname.indexOf(marker);
+      const projectId = validId(decodeURIComponent(pathname.slice("/api/arqiven/projects/".length, cut)));
+      const userId = requestUser(req, config);
+      const rest = pathname.slice(cut + marker.length).replace(/^\//, "");
+      const documentId = validId(decodeURIComponent(rest));
+      const guard = store.projectFor(userId, projectId).then((opened) => {
+        const write = canAct(opened.project.role, "write");
+        const needsWrite = req.method === "DELETE" || (req.method === "POST" && !pathname.endsWith("/retrieve"));
+        if (needsWrite && !write) throw codeError("forbidden");
+        return opened;
+      });
+      if (req.method === "GET" && !rest) {
+        guard.then(() => index.list(projectId)).then((documents) => sendJson(res, 200, { documents })).catch((error) => {
+          sendJson(res, error?.code === "forbidden" ? 403 : 400, publicError(error?.code || "bad-request", config));
+        });
+        return;
+      }
+      if (req.method === "DELETE" && documentId) {
+        guard.then(() => index.removeDocument(projectId, documentId)).then((result) => sendJson(res, 200, result)).catch((error) => {
+          sendJson(res, error?.code === "forbidden" ? 403 : 400, publicError(error?.code || "bad-request", config));
+        });
+        return;
+      }
+      if (req.method === "POST" && pathname.endsWith("/retrieve")) {
+        readBody(req, 8192).then(async (body) => {
+          await guard;
+          return index.retrieve(projectId, body.query);
+        }).then((found) => sendJson(res, 200, found)).catch((error) => {
+          const code = error?.code || "bad-request";
+          sendJson(res, code === "forbidden" ? 403 : 400, publicError(code, config, error?.detail));
+        });
+        return;
+      }
+      if (req.method === "POST" && !rest) {
+        readBody(req, 65536).then(async (body) => {
+          await guard;
+          return index.add({
+            projectId,
+            documentId: validId(body.id) || randomUUID(),
+            name: body.name,
+            text: body.text,
+          });
+        }).then((document) => sendJson(res, 201, { document })).catch((error) => {
+          const code = error?.code || "bad-request";
+          sendJson(res, code === "forbidden" ? 403 : 400, publicError(code, config, error?.detail));
+        });
+        return;
+      }
+      sendJson(res, 400, publicError("bad-request", config));
+      return;
+    }
     if (pathname.startsWith("/api/arqiven/projects/") && (req.method === "GET" || req.method === "PATCH" || req.method === "DELETE")) {
       const projectId = validId(decodeURIComponent(pathname.slice("/api/arqiven/projects/".length)));
       const userId = requestUser(req, config);
@@ -416,7 +520,10 @@ export async function startLocalServer(overrides = {}) {
         : req.method === "DELETE"
           ? store.removeProject({ projectId, userId })
           : readBody(req, 8192).then((body) => store.renameProject({ projectId, userId, name: body.name }));
-      Promise.resolve(run).then((payload) => sendJson(res, 200, req.method === "GET" ? payload : { project: payload })).catch((error) => {
+      Promise.resolve(run).then(async (payload) => {
+        if (req.method === "DELETE") await index.forgetProject(projectId);
+        sendJson(res, 200, req.method === "GET" ? payload : { project: payload });
+      }).catch((error) => {
         sendJson(res, error?.code === "forbidden" ? 403 : 400, publicError(error?.code || "bad-request", config));
       });
       return;
