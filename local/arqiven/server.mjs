@@ -13,7 +13,7 @@ import { createQueue } from "./queue.mjs";
 import { createStore } from "./store.mjs";
 import { buildChatBody, streamChat } from "./ollama.mjs";
 import { attachEditor, withRetry } from "./prompt.mjs";
-import { guardChat, outputViolates, SAFE_ANSWER } from "./guard.mjs";
+import { guardChat, outputViolates, passedFragments, SAFE_ANSWER } from "./guard.mjs";
 import { fitMessages } from "./budget.mjs";
 import { metricsFrom } from "./metrics.mjs";
 import { codeError, publicError } from "./errors.mjs";
@@ -446,10 +446,11 @@ export async function startLocalServer(overrides = {}) {
         });
         reply = outputViolates(result.text, redacted) ? SAFE_ANSWER : result.text;
       }
+      const fragments = passedFragments(redacted, "fuente");
       if (hold) writeEvent(res, { type: "token", requestId, text: reply });
       const card = await modelCard(config);
       const run = runRecord(config, card);
-      await store.save({ id: conversationId, messages: [...visible, { role: "assistant", content: reply, run }] });
+      await store.save({ id: conversationId, messages: [...visible, { role: "assistant", content: reply, run, fragments }] });
       await appendFile(path.join(config.dataDir, "runs.jsonl"), `${JSON.stringify({ at: new Date().toISOString(), conversationId, requestId, run })}\n`).catch(() => {});
       const metrics = metricsFrom({
         requestId,
@@ -466,6 +467,7 @@ export async function startLocalServer(overrides = {}) {
         conversationId,
         text: reply,
         omittedInstructions: redacted.omitted.length,
+        fragments,
         run,
         provider: "third-party",
         modelId: config.model,

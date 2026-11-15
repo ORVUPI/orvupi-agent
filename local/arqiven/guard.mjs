@@ -87,6 +87,18 @@ export function redactDocument(text) {
   return { text: kept.join(" ").trim(), omitted, literals, polite: politeSpans(source) };
 }
 
+/** Lo que de verdad entró en el prompt. No es la cita del modelo. */
+export function passedFragments(record, name = "fuente") {
+  const text = String(record?.text || "").trim();
+  if (!text) return [];
+  const id = String(name || "fuente").replace(/[\[\]\n]/g, " ").replace(/\s+/g, " ").trim().slice(0, 80) || "fuente";
+  const parts = text.split(/(?<=[.!?])\s+/).map((part) => part.trim()).filter(Boolean);
+  return parts.map((part, index) => ({
+    id: parts.length === 1 ? id : `${id}.${index + 1}`,
+    text: part.slice(0, 2000),
+  }));
+}
+
 function affirmsFromScratch(text) {
   return sentences(text).some((part) => {
     const at = part.toLowerCase().search(/entren\p{L}* desde cero|cread\p{L}* desde cero|cre[oó] desde cero/u);

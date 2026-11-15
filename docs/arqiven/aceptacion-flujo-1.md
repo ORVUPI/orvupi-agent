@@ -30,7 +30,7 @@ El chat en disco quedó verificado en el PC el 15-11-2026 a las 20:17, después 
 
 1. Escribe una frase, por ejemplo «Di solo la palabra mesa», y envíala.
 2. Tiene que aparecer una respuesta. No hace falta que sea larga.
-3. En «Detalles» de esa respuesta, la ficha del modelo: nombre, digest, cuantización, ctx, salida, temperatura, think, versión de Ollama y `mitigado2`.
+3. En «Detalles» de esa respuesta, la ficha del modelo: nombre, digest, cuantización, ctx, salida, temperatura, think, versión de Ollama y `mitigado2`. Si el mensaje llevó un documento, debajo aparece «Fuentes»: los fragmentos que el programa pasó al modelo. Esa lista no es la cita del modelo.
 4. Cierra la ventana de PowerShell. El navegador deja de poder pedir otra respuesta.
 5. Vuelve a abrir con `arqiven-abrir.cmd`.
 6. Reinicia el proceso (cierra la ventana o mata el PID) y abre otra vez el acceso directo. En el PC, el 15-11-2026 a las 20:17, tras matar el proceso y arrancar otro, el chat `prueba-ficha-1` seguía. Reiniciar el PC entero sigue pendiente.

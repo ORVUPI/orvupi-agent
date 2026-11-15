@@ -41,7 +41,16 @@ function cleanMessage(item) {
     ollamaVersion: String(item.run.ollamaVersion || "").slice(0, 40),
     pipeline: String(item.run.pipeline || "").slice(0, 40),
   } : undefined;
-  return run ? { role: item.role, content, run } : { role: item.role, content };
+  const fragments = item.role === "assistant" && Array.isArray(item.fragments)
+    ? item.fragments.slice(0, 12).map((piece) => ({
+      id: String(piece?.id || "").replace(/\s+/g, " ").trim().slice(0, 80),
+      text: String(piece?.text || "").slice(0, 2000),
+    })).filter((piece) => piece.id && piece.text)
+    : [];
+  const message = { role: item.role, content };
+  if (run) message.run = run;
+  if (fragments.length) message.fragments = fragments;
+  return message;
 }
 
 function cleanConversation(input = {}) {

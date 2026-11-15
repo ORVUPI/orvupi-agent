@@ -269,8 +269,11 @@ describe("backend local de ARQIVEN", () => {
       assert.equal(done?.text, "Hola");
       assert.equal(done?.provider, "third-party");
       assert.equal(done?.ownModel, false);
-      const finished = done as { text?: string; run?: { digest?: string; pipeline?: string } };
-      assert.equal(finished.run?.digest, "abc");
+      const finished = done as { text?: string; fragments?: Array<{ text?: string }>; run?: { digest?: string; pipeline?: string } };
+      assert.equal(finished.text, "Hola");
+      assert.equal(String(finished.text).includes("Fuentes"), false);
+      assert.ok(Array.isArray(finished.fragments) && finished.fragments.length > 0);
+      assert.equal(finished.fragments.some((piece) => String(piece.text).includes("Arqiven-1")), false);
       assert.equal(finished.run?.pipeline, "mitigado2");
       const card = await (await fetch(new URL("/api/arqiven/status", app.url))).json() as { digest?: string; pid?: number; startedAt?: string };
       assert.equal(card.digest, "abc");

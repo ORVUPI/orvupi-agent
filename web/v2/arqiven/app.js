@@ -684,6 +684,26 @@ function originLine(item) {
   return pack.originRules;
 }
 
+function passedFragmentList(item) {
+  const pieces = Array.isArray(item.fragments) ? item.fragments : [];
+  if (!pieces.length) return null;
+  const list = document.createElement("ul");
+  list.className = "sources";
+  const caption = document.createElement("li");
+  caption.className = "sources-label";
+  caption.textContent = "Fuentes";
+  list.append(caption);
+  const note = document.createElement("li");
+  note.className = "sources-label";
+  note.textContent = "Pasados al modelo. No son la cita del modelo.";
+  list.append(note);
+  for (const piece of pieces) {
+    const row = document.createElement("li");
+    row.textContent = `${piece.id}: ${piece.text}`;
+    list.append(row);
+  }
+  return list;
+}
 function provenance(item) {
   const details = document.createElement("details");
   details.className = "provenance";
@@ -1117,6 +1137,8 @@ function paint() {
         column.append(meta);
         renderRich(column, item.content);
         if (!item.running && item.content) column.append(provenance(item));
+        const passed = passedFragmentList(item);
+        if (passed) column.append(passed);
         if (item.sources?.length) column.append(sourceList(item.sources, item.replyLang));
         if (item.content && !item.running) {
           const actions = document.createElement("div");
@@ -1512,6 +1534,7 @@ async function streamLocal(item, extra = {}) {
           item.genMs = Number(event.metrics?.evalMs) || 0;
           item.genThreads = 1;
           if (event.run) item.run = event.run;
+          if (Array.isArray(event.fragments)) item.fragments = event.fragments;
           if (event.conversationId) state.conversationId = event.conversationId;
         }
         if (event.type === "error") {
@@ -2317,6 +2340,7 @@ async function adoptLocalHistory() {
     modelId: item.role === "assistant" ? (item.run?.model || state.localInfo?.model || "qwen3:8b") : "none",
     modelVersion: item.role === "assistant" ? `${item.run?.model || state.localInfo?.model || "qwen3:8b"} (Ollama, tercero)` : "",
     run: item.role === "assistant" ? item.run : undefined,
+    fragments: item.role === "assistant" && Array.isArray(item.fragments) ? item.fragments : undefined,
   }));
   state.chatRenamed = false;
   state.chatTitle = "";
