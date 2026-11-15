@@ -294,6 +294,7 @@ describe("conjunto fijo de 100 casos", () => {
       closeMarketAnswer: (answer: string, facts: string) => string;
       citeMissingFigures: (answer: string, facts: string) => string;
       completeDespido: (answer: string, note: string) => string;
+      completeHigiene: (answer: string, note: string) => string;
       offlineMarketAnswer: () => string;
     };
     const lista = "- Manzana\n- Plátano\n- Naranja";
@@ -354,6 +355,11 @@ describe("conjunto fijo de 100 casos", () => {
     assert.match(completo, /\bprocedente\b/i);
     assert.match(completo, /\bimprocedente\b/);
     assert.match(completo, /\bnulo\b/i);
+    const notaSueno = await readFile(path.join(root, "docs/arqiven/conocimiento/higiene-sueno.md"), "utf8");
+    const sinCafe = salida.completeHigiene("La higiene del sueño es una rutina [fuente].", notaSueno);
+    assert.equal(sinCafe.includes("[fuente]"), false);
+    assert.match(sinCafe, /cafeína/);
+    assert.match(sinCafe, /\[higiene-sueno\]/);
     const ya = salida.completeDespido(notaDespido, notaDespido);
     assert.equal(ya.split("artículo 30").length - 1, notaDespido.split("artículo 30").length - 1);
     const sinDatos = salida.offlineMarketAnswer();

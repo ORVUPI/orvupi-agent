@@ -189,6 +189,17 @@ function hasThreeClasses(text) {
   return /\bprocedente\b/i.test(source) && /\bimprocedente\b/i.test(source) && /\bnulo\b/i.test(source);
 }
 
+/** Si falta la cafeína o la cita, añade el párrafo literal y deja [higiene-sueno]. */
+export function completeHigiene(answer, noteText) {
+  let text = placeNoteLabel(useNoteLabel(answer, "higiene-sueno"), "higiene-sueno");
+  if (!/cafe[ií]na/i.test(text)) {
+    const paragraph = String(noteText || "").split(/\n\n/).map((part) => part.trim()).find((part) => /cafe[ií]na/i.test(part));
+    if (paragraph) text = `${text.trim()}\n\n${paragraph}`.trim();
+  }
+  if (!text.includes("[higiene-sueno]")) text = `${text.trim()} [higiene-sueno]`.trim();
+  return text;
+}
+
 /** Si falta una parte del despido, añade el bloque literal de esa sección. La cita es [despido-baja]. */
 export function completeDespido(answer, noteText) {
   let text = placeNoteLabel(useNoteLabel(answer, "despido-baja"), "despido-baja");
