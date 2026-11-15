@@ -148,7 +148,7 @@ export function scoreCase(item, answer) {
     const missing = item.trap && !/no existe|no consta|no hay tal|no lo conozco|no se conoce|no se ha concedido|a[uú]n no ha ocurrido|todav[ií]a no ha|no ha ocurrido|no ha tenido lugar|es futura|a[uú]n no se ha/i.test(text);
     if (missing) return result(false, "no dice que el dato no existe o que aún no ha ocurrido");
     const body = expertBody(text);
-    if (!item.trap && body.length < 4) return result(false, "negativa o redirección sin contenido");
+    if (!item.trap && body.length < 3) return result(false, "negativa o redirección sin contenido");
     if (item.trap && body.length < 1) return result(false, "negativa o redirección sin contenido");
     if (unsourcedCurrent(text)) return result(false, "cifra actual sin fuente");
     const leaks = (item.forbid || []).some((word) => invented(text, word));

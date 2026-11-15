@@ -1,19 +1,23 @@
 # Despido durante una baja en España
 
-Estatuto de los Trabajadores, artículos 53, 55 y 56. Real Decreto Legislativo 2/2015. https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a53 https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a55 https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a56
+Cada frase cita un solo artículo, con su etiqueta.
 
-Ley 15/2022, de 12 de julio, integral para la igualdad de trato y la no discriminación, artículos 2, 26 y 30. https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589#a2 https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589#a30
+El artículo 55.5 del Estatuto de los Trabajadores no menciona la enfermedad. Remite a las causas de discriminación previstas en la Constitución o en la ley. https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a55
 
-Esto es el texto de esas normas, no el criterio sobre un despido concreto. Se habla de la persona trabajadora.
+La enfermedad o la condición de salud es una causa de discriminación por la Ley 15/2022, art. 2.1. https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589#a2
 
-El artículo 55.3 califica el despido como procedente, improcedente o nulo.
+La nulidad del acto discriminatorio está en la Ley 15/2022, art. 26: son nulos de pleno derecho los actos que causen esa discriminación. https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589#a26
 
-El art. 55.5 ET declara nulo el despido por causas de discriminación previstas en la Constitución o la ley; la enfermedad o condición de salud es una de esas causas por la Ley 15/2022, art. 2.1. El artículo 2.3 limita las diferencias al tratamiento, a las limitaciones objetivas de una actividad o a la salud pública. El artículo 26 declara nulos de pleno derecho los actos que causen esa discriminación. Estar de baja, por sí solo, no está en la lista de nulidad automática del artículo 55.5.
+La carga de la prueba está en la Ley 15/2022, art. 30. el trabajador aporta indicios; la empresa debe probar una justificación objetiva y razonable (Ley 15/2022, art. 30). https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589#a30
 
-El despido procedente sin indemnización es solo el disciplinario. El artículo 55.7 dice que ese despido procedente convalida la extinción, sin indemnización ni salarios de tramitación. El despido objetivo procedente, artículo 53.1.b, pone a disposición una indemnización de veinte días por año de servicio, prorrateada por meses y con un máximo de doce mensualidades.
+el despido discriminatorio es nulo, no improcedente.
 
-El despido improcedente, artículos 55.4 y 56, deja al empresario optar en cinco días entre la readmisión o treinta y tres días de salario por año, hasta veinticuatro mensualidades. Si hay readmisión, hay salarios de tramitación.
+Los efectos del despido nulo están en el artículo 55.6 del Estatuto de los Trabajadores: readmisión inmediata y abono de los salarios dejados de percibir. https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a55
 
-El artículo 55.6 dice que el despido nulo tiene el efecto de la readmisión inmediata, con abono de los salarios dejados de percibir.
+El despido procedente sin indemnización es solo el disciplinario, artículo 55.7. https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a55
 
-Queda escrito así: el trabajador aporta indicios; la empresa debe probar una justificación objetiva y razonable (Ley 15/2022, art. 30). Y queda escrito así: el despido discriminatorio es nulo, no improcedente. El artículo 30 no se aplica a un proceso penal ni a un procedimiento sancionador.
+El despido objetivo procedente da veinte días por año de servicio, con un máximo de doce mensualidades, artículo 53.1.b. https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a53
+
+El despido improcedente, artículo 56, deja elegir entre readmisión o treinta y tres días por año, hasta veinticuatro mensualidades. https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a56
+
+Esto no es el criterio de un despido concreto.

@@ -16,6 +16,7 @@ import { attachEditor, withRetry } from "./prompt.mjs";
 import { guardChat, outputViolates, passedFragments, SAFE_ANSWER } from "./guard.mjs";
 import { liveFacts } from "./hechos.mjs";
 import { retrieveConocimiento } from "./conocimiento.mjs";
+import { ensureNoteCitation, stripMismatchedAnchors, trimAfterWarning } from "./salida.mjs";
 import { fitMessages } from "./budget.mjs";
 import { metricsFrom } from "./metrics.mjs";
 import { codeError, publicError } from "./errors.mjs";
@@ -404,9 +405,13 @@ export async function startLocalServer(overrides = {}) {
         if (facts.text) documentText = [documentText, facts.text].filter(Boolean).join("\n\n");
       } catch { /* sin cifras en vivo */ }
       let trustedNote = "";
+      let noteId = "";
       try {
         const known = await retrieveConocimiento(question);
-        if (known.text) trustedNote = known.text;
+        if (known.text) {
+          trustedNote = known.text;
+          noteId = known.hits?.[0]?.id || "";
+        }
       } catch { /* la base general no bloquea el chat */ }
       const guarded = guardChat(visible, documentText, "fuente", config.model, trustedNote);
       const redacted = guarded.record;
@@ -439,7 +444,8 @@ export async function startLocalServer(overrides = {}) {
           if (!hold) writeEvent(res, { type: "token", requestId, text });
         },
       });
-      let reply = result.text;
+      let reply = stripMismatchedAnchors(trimAfterWarning(result.text));
+      if (noteId) reply = ensureNoteCitation(reply, noteId);
       if (outputViolates(reply, redacted)) {
         const retryBody = buildChatBody({
           model: config.model,

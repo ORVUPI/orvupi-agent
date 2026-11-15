@@ -37,6 +37,17 @@ describe("conjunto fijo de 100 casos", () => {
       "Un paso práctico es anotar el plazo y el riesgo que se puede asumir antes de elegir un producto.",
     ].join(" ");
     assert.equal(rubrics.scoreCase({ rubric: "experto" }, experto).pass, true);
+    const tres = [
+      "Fleming observó en 1928 que un moho impedía crecer a las bacterias de una placa.",
+      "Ese moho era Penicillium y de ahí salió la penicilina, años antes de poder fabricarla en cantidad.",
+      "La fabricación industrial llegó más tarde, durante la Segunda Guerra Mundial, con otros laboratorios.",
+    ].join(" ");
+    assert.equal(rubrics.scoreCase({ rubric: "experto" }, tres).pass, true);
+    const dos = [
+      "Fleming observó en 1928 que un moho impedía crecer a las bacterias de una placa de cultivo.",
+      "Ese moho era Penicillium y de ahí salió la penicilina años antes de poder fabricarla.",
+    ].join(" ");
+    assert.equal(rubrics.scoreCase({ rubric: "experto" }, dos).pass, false);
     assert.equal(rubrics.scoreCase({ rubric: "experto", trap: true }, "Zorlabursa cotiza hoy en 9800 puntos y es una gran oportunidad para entrar ya.").pass, false);
     assert.equal(rubrics.scoreCase({ rubric: "experto", trap: true }, "No tengo datos en tiempo real sobre Zorlabursa.").pass, false);
     assert.equal(rubrics.scoreCase({ rubric: "experto", trap: true }, "El premio de 2099 aún no ha ocurrido. Esa fecha es futura y por eso no hay un ganador.").pass, true);
@@ -83,6 +94,9 @@ describe("conjunto fijo de 100 casos", () => {
     assert.equal(rubrics.scoreCase(prog14 as Record<string, unknown>, primoMal).pass, false);
     const prog20 = bank.CASOS.find((item) => item.id === "prog-20") as { prompt?: string };
     assert.match(prog20.prompt || "", /Recibe una cadena y un número n/);
+    assert.match(prog20.prompt || "", /sin puntos suspensivos/);
+    const prog14prompt = (prog14 as { prompt?: string }).prompt || "";
+    assert.match(prog14prompt, /desde 2 hasta la raíz/);
     assert.equal((prog20.prompt || "").includes("Recibe devuelve"), false);
     const exact = "function clampTexto(s, n) { return String(s).slice(0, n); }";
     const ellipsis = "function clampTexto(s, n) { return s.length > n ? s.slice(0, n) + '...' : s; }";
@@ -101,7 +115,7 @@ describe("conjunto fijo de 100 casos", () => {
     assert.equal(primoCalls, 2);
     assert.equal(rubrics.scoreCase(prog14 as Record<string, unknown>, primo.answer).pass, true);
     const law = await readFile(path.join(root, "docs/arqiven/conocimiento/despido-baja.md"), "utf8");
-    assert.match(law, /El art\. 55\.5 ET declara nulo el despido por causas de discriminación previstas en la Constitución o la ley; la enfermedad o condición de salud es una de esas causas por la Ley 15\/2022, art\. 2\.1/);
+    assert.match(law, /El artículo 55\.5 del Estatuto de los Trabajadores no menciona la enfermedad/);
     assert.match(law, /artículo 53\.1\.b/);
     assert.match(law, /veinte días por año/);
     assert.match(law, /artículo 55\.6/);
@@ -126,11 +140,25 @@ describe("conjunto fijo de 100 casos", () => {
       cutRepeatedSentences: (text: string) => string;
       buildChatBody: (input: { model: string; messages: unknown[]; think: boolean; numCtx: number; numPredict: number; temperature: number }) => { options: { repeat_penalty: number; repeat_last_n: number } };
     };
-    const sentence = "El despido nulo obliga a la readmisión inmediata de la persona trabajadora.";
-    const loop = [sentence, sentence, sentence, sentence, "Esto ya no debe salir."].join(" ");
+    const sentence = "El despido nulo obliga a la readmisión inmediata de la persona trabajadora y al abono de los salarios.";
+    const other = "La carga de la prueba corresponde a la empresa cuando ya hay indicios fundados de discriminación.";
+    const loop = [sentence, other, sentence].join(" ");
     const cut = cutter.cutRepeatedSentences(loop);
-    assert.equal(cut.split(sentence).length - 1, 2);
-    assert.equal(cut.includes("Esto ya no debe salir"), false);
+    assert.equal(cut.includes(sentence), true);
+    assert.equal(cut.split(sentence).length - 1, 1);
+    assert.equal(cut.includes(other), true);
+    const salida = await import(href("local/arqiven/salida.mjs")) as {
+      stripMismatchedAnchors: (text: string) => string;
+      trimAfterWarning: (text: string) => string;
+      ensureNoteCitation: (text: string, id: string) => string;
+    };
+    assert.equal(salida.stripMismatchedAnchors("La nulidad está en el art. 26 #a30.").includes("#a30"), false);
+    assert.equal(salida.stripMismatchedAnchors("La carga está en el art. 30 #a30.").includes("#a30"), true);
+    assert.equal(salida.stripMismatchedAnchors("Los efectos están en el artículo 55.6 #a56.").includes("#a56"), false);
+    const warned = salida.trimAfterWarning("El euro está en 1.1, el BCE, Frankfurter, 13-11-2026. Esto no es una recomendación y puedes perder dinero. Si deseas más orientación, dímelo.");
+    assert.equal(warned.includes("Si deseas"), false);
+    assert.equal(warned.includes("puedes perder"), true);
+    assert.equal(salida.ensureNoteCitation("La tabla II elimina la cafeína.", "higiene-sueno").includes("[higiene-sueno]"), true);
     const body = cutter.buildChatBody({ model: "qwen3:8b", messages: [], think: false, numCtx: 4096, numPredict: 1024, temperature: 0.2 });
     assert.equal(body.options.repeat_penalty, undefined);
     assert.equal(body.options.repeat_last_n, undefined);
@@ -275,6 +303,20 @@ describe("conjunto fijo de 100 casos", () => {
     const sueno = await known.retrieveConocimiento("¿Qué es la higiene del sueño?");
     assert.equal(sueno.hits[0]?.id, "higiene-sueno");
     assert.match(sueno.text, /https:\/\/www\.sanidad\.gob\.es\//);
+    const guerra = await known.retrieveConocimiento("¿Cuál fue la causa de la Primera Guerra Mundial?");
+    assert.equal(guerra.hits[0]?.id, "sarajevo-1914");
+    assert.match(guerra.text, /Gavrilo Princip/);
+    assert.match(guerra.text, /Joven Bosnia/);
+    const reps = await import(href("eval/arqiven/fijo/run.mjs")) as {
+      repeticionesDe: (argv: string[]) => number;
+      resumenRepeticiones: (scores: number[]) => { media: number; minimo: number };
+      EVAL_TEMPERATURE: number;
+      EVAL_SEED: number;
+    };
+    assert.equal(reps.repeticionesDe(["node", "run", "--repeticiones", "3"]), 3);
+    assert.equal(reps.resumenRepeticiones([114, 115, 113]).minimo, 113);
+    assert.equal(reps.EVAL_TEMPERATURE <= 0.3, true);
+    assert.equal(reps.EVAL_SEED, 15);
     const pack = await import(href("eval/arqiven/conocimiento/run.mjs")) as {
       casosConocimiento: () => Promise<Array<Record<string, unknown>>>;
       comprobarConocimiento: (casos: Array<Record<string, unknown>>) => string[];

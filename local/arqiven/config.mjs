@@ -11,7 +11,7 @@ export const DEFAULTS = {
   model: "qwen3:8b",
   think: false,
   numCtx: 4096,
-  numPredict: 1024,
+  numPredict: 640,
   temperature: 0.2,
   concurrency: 1,
   timeoutMs: 180000,

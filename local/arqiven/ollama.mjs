@@ -2,6 +2,9 @@
 
 import { codeError } from "./errors.mjs";
 import { transcriptTokens } from "./budget.mjs";
+import { cutRepeatedSentences } from "./salida.mjs";
+
+export { cutRepeatedSentences };
 
 export function buildChatBody({ model, messages, think, numCtx, numPredict, temperature }) {
   return {
@@ -15,23 +18,6 @@ export function buildChatBody({ model, messages, think, numCtx, numPredict, temp
       temperature,
     },
   };
-}
-
-/** Corta cuando una frase larga se repite por tercera vez. Las dos primeras se quedan. */
-export function cutRepeatedSentences(text) {
-  const parts = String(text || "").split(/(?<=[.!?])\s+|\n+/).map((part) => part.trim()).filter(Boolean);
-  const counts = new Map();
-  const kept = [];
-  for (const part of parts) {
-    const key = part.replace(/\s+/g, " ");
-    if (key.length > 40) {
-      const seen = (counts.get(key) || 0) + 1;
-      counts.set(key, seen);
-      if (seen > 2) break;
-    }
-    kept.push(part);
-  }
-  return kept.join(" ").trim();
 }
 
 export function stripThinking(text) {

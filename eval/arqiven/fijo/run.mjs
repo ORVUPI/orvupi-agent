@@ -15,6 +15,26 @@ import { RUBRIC_IDS, scoreCase } from "./rubricas.mjs";
 import { EVAL_SYSTEM_BASE, LOCAL_SYSTEM, fenceUntrusted, fenceUntrustedBase, withRetry } from "../../../local/arqiven/prompt.mjs";
 import { liveFacts } from "../../../local/arqiven/hechos.mjs";
 import { guardChat, outputViolates, SAFE_ANSWER } from "../../../local/arqiven/guard.mjs";
+import { cutRepeatedSentences, ensureNoteCitation, stripMismatchedAnchors, trimAfterWarning } from "../../../local/arqiven/salida.mjs";
+
+export const EVAL_SEED = 15;
+export const EVAL_TEMPERATURE = 0.2;
+
+export function repeticionesDe(argv = process.argv) {
+  const at = argv.indexOf("--repeticiones");
+  if (at < 0) return 1;
+  const count = Number(argv[at + 1]);
+  if (!Number.isInteger(count) || count < 1 || count > 5) {
+    throw new Error("--repeticiones necesita un entero de 1 a 5");
+  }
+  return count;
+}
+
+export function resumenRepeticiones(scores) {
+  const list = scores.map((score) => Number(score));
+  const media = list.reduce((sum, score) => sum + score, 0) / list.length;
+  return { media, minimo: Math.min(...list), scores: list };
+}
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -87,6 +107,8 @@ export async function answerMitigado2(askModel, item, modelId = "") {
       if (outputViolates(answer, prepared.record)) answer = SAFE_ANSWER;
     }
   }
+  answer = trimAfterWarning(stripMismatchedAnchors(cutRepeatedSentences(answer)));
+  if (item.trusted === true) answer = ensureNoteCitation(answer, item.sourceId);
   return { answer, prompt: prepared.messages, omitted: prepared.record.omitted.length };
 }
 
@@ -111,7 +133,7 @@ async function ask(base, model, item, messages) {
       stream: false,
       think: false,
       messages,
-      options: { num_ctx: 4096, num_predict: item?.group === "experto" ? 512 : 256, temperature: 0.2 },
+      options: { num_ctx: 4096, num_predict: item?.group === "experto" ? 640 : 256, temperature: EVAL_TEMPERATURE, seed: EVAL_SEED },
     }),
     signal: AbortSignal.timeout(120000),
   });
@@ -139,17 +161,26 @@ async function runHeld(label, cases, check, fileName) {
   }
   const outDir = path.join(here, "out");
   await mkdir(outDir, { recursive: true });
-  const rows = [];
+  const veces = repeticionesDe();
+  const puntuaciones = [];
+  let rows = [];
   let passed = 0;
-  for (const item of cases) {
-    const settled = await answerMitigado2((messages) => ask(base, model, item, messages), item, model);
-    const scored = scoreCase(item, settled.answer);
-    if (scored.pass) passed += 1;
-    const row = filaResultado(item, settled.answer, scored, settled.prompt);
-    row.omitted = settled.omitted;
-    rows.push(row);
-    console.log(`${scored.pass ? "OK" : "FALLO"}  ${item.id}  ${scored.reason}`);
+  for (let vuelta = 1; vuelta <= veces; vuelta += 1) {
+    rows = [];
+    passed = 0;
+    for (const item of cases) {
+      const settled = await answerMitigado2((messages) => ask(base, model, item, messages), item, model);
+      const scored = scoreCase(item, settled.answer);
+      if (scored.pass) passed += 1;
+      const row = filaResultado(item, settled.answer, scored, settled.prompt);
+      row.omitted = settled.omitted;
+      rows.push(row);
+      console.log(`${scored.pass ? "OK" : "FALLO"}  ${item.id}  ${scored.reason}`);
+    }
+    puntuaciones.push(passed);
+    console.log(`Vuelta ${vuelta}/${veces}: ${passed}/${rows.length}`);
   }
+  const resumen = resumenRepeticiones(puntuaciones);
   const summary = {
     model,
     variant: label,
@@ -157,17 +188,27 @@ async function runHeld(label, cases, check, fileName) {
     think: false,
     numCtx: 4096,
     numPredict: 256,
-    temperature: 0.2,
+    temperature: EVAL_TEMPERATURE,
+    seed: EVAL_SEED,
+    repeticiones: veces,
+    media: resumen.media,
+    minimo: resumen.minimo,
     passed,
     total: rows.length,
     at: new Date().toISOString(),
     rows,
   };
   await writeFile(path.join(outDir, fileName), `${JSON.stringify(summary, null, 2)}\n`);
-  console.log(`${label}: ${passed}/${rows.length}. No es un entrenamiento. El archivo está en eval/arqiven/fijo/out/${fileName}.`);
+  console.log(`${label}: media ${resumen.media}, mínimo ${resumen.minimo}, de ${rows.length}. No es un entrenamiento. El archivo está en eval/arqiven/fijo/out/${fileName}.`);
 }
 
 async function main() {
+  try {
+    repeticionesDe();
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : "repeticiones");
+    process.exit(1);
+  }
   if (process.argv.includes("--reservado-experto")) {
     await runHeld("reservado-experto", RESERVADO_EXPERTO, comprobarReservadoExperto, "resultado-reservado-experto.json");
     return;
@@ -218,8 +259,13 @@ async function main() {
   const variant = process.argv.includes("--mitigado2") ? "mitigado2" : process.argv.includes("--mitigado") ? "mitigado" : "base";
   const outDir = path.join(here, "out");
   await mkdir(outDir, { recursive: true });
-  const rows = [];
+  const veces = repeticionesDe();
+  const puntuaciones = [];
+  let rows = [];
   let passed = 0;
+  for (let vuelta = 1; vuelta <= veces; vuelta += 1) {
+    rows = [];
+    passed = 0;
   for (const item of CASOS) {
     let prompt;
     let answer;
@@ -239,14 +285,22 @@ async function main() {
     if (variant === "mitigado2") row.omitted = omitted;
     rows.push(row);
     console.log(`${scored.pass ? "OK" : "FALLO"}  ${item.id}  ${scored.reason}`);
+    }
+    puntuaciones.push(passed);
+    console.log(`Vuelta ${vuelta}/${veces}: ${passed}/${rows.length}`);
   }
+  const resumen = resumenRepeticiones(puntuaciones);
   const summary = {
     model,
     variant,
     think: false,
     numCtx: 4096,
     numPredict: 256,
-    temperature: 0.2,
+    temperature: EVAL_TEMPERATURE,
+    seed: EVAL_SEED,
+    repeticiones: veces,
+    media: resumen.media,
+    minimo: resumen.minimo,
     passed,
     total: rows.length,
     at: new Date().toISOString(),
@@ -257,7 +311,7 @@ async function main() {
   const body = `${JSON.stringify(summary, null, 2)}\n`;
   await writeFile(file, body);
   await writeFile(named, body);
-  console.log(`Resultado: ${passed}/${rows.length}. No es un entrenamiento. El archivo está en eval/arqiven/fijo/out/.`);
+  console.log(`Resultado: media ${resumen.media}, mínimo ${resumen.minimo}, de ${rows.length}. No es un entrenamiento. El archivo está en eval/arqiven/fijo/out/.`);
 }
 
 /** Vuelve a puntuar un resultado.json ya guardado, sin llamar al modelo. */

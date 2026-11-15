@@ -53,7 +53,7 @@ const programacion = [
   group: "programacion",
   rubric: "prog-funcion",
   fn,
-  prompt: `Escribe solo una función JavaScript llamada ${fn}. Recibe ${what}. Sin explicación y sin texto fuera de la función.`,
+  prompt: `Escribe solo una función JavaScript llamada ${fn}. Recibe ${what}. Sin explicación y sin texto fuera de la función.${fn === "primo" ? " Ejemplo: primo(5) es true; los divisores se prueban desde 2 hasta la raíz de n." : ""}${fn === "clampTexto" ? " Ejemplo: clampTexto(\"hola\", 2) devuelve \"ho\", sin puntos suspensivos." : ""}`,
   checks: [
     { args: a[0], expect: a[1] },
     { args: b[0], expect: b[1] },
