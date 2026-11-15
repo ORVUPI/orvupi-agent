@@ -99,17 +99,8 @@ async function main() {
   const rows = [];
   let passed = 0;
   for (const item of casos) {
-    let settled = await answerMitigado2((messages) => ask(base, model, messages), item, model);
-    let scored = scoreCase(item, settled.answer);
-    if (!scored.pass && item.rubric === "doc-cita" && !new RegExp(`\\[${item.sourceId}\\]|documento\\s+${item.sourceId}\\b`, "i").test(settled.answer)) {
-      const again = await ask(base, model, [
-        ...settled.prompt,
-        { role: "assistant", content: settled.answer },
-        { role: "user", content: `La misma frase del dato incluye la cita [${item.sourceId}].` },
-      ]);
-      settled = { ...settled, answer: again };
-      scored = scoreCase(item, again);
-    }
+    const settled = await answerMitigado2((messages) => ask(base, model, messages), item, model);
+    const scored = scoreCase(item, settled.answer);
     if (scored.pass) passed += 1;
     rows.push({ id: item.id, pass: scored.pass, reason: scored.reason, answer: settled.answer });
     console.log(`${scored.pass ? "OK" : "FALLO"}  ${item.id}  ${scored.reason}`);

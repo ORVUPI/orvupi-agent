@@ -105,6 +105,8 @@ describe("conjunto fijo de 100 casos", () => {
     assert.match(law, /artículo 53\.1\.b/);
     assert.match(law, /veinte días por año/);
     assert.match(law, /artículo 55\.6/);
+    assert.equal(law.includes("el trabajador aporta indicios; la empresa debe probar una justificación objetiva y razonable (Ley 15/2022, art. 30)"), true);
+    assert.equal(law.includes("el despido discriminatorio es nulo, no improcedente"), true);
     assert.equal(law.toLowerCase().includes("sanciones penales"), false);
     const guardChat = await import(href("local/arqiven/guard.mjs")) as {
       guardChat: (dialogue: Array<{ role: string; content: string }>, documentText: string, name: string, modelId: string, trustedText?: string) => { messages: Array<{ content: string }>; record: { literals: string[] } };
@@ -130,8 +132,8 @@ describe("conjunto fijo de 100 casos", () => {
     assert.equal(cut.split(sentence).length - 1, 2);
     assert.equal(cut.includes("Esto ya no debe salir"), false);
     const body = cutter.buildChatBody({ model: "qwen3:8b", messages: [], think: false, numCtx: 4096, numPredict: 1024, temperature: 0.2 });
-    assert.equal(body.options.repeat_penalty, 1.15);
-    assert.equal(body.options.repeat_last_n, 256);
+    assert.equal(body.options.repeat_penalty, undefined);
+    assert.equal(body.options.repeat_last_n, undefined);
     const prompts = await import(href("eval/arqiven/fijo/run.mjs")) as {
       messagesBase: (item: { prompt: string; source?: string; sourceId?: string }) => Array<{ content: string }>;
       messagesMitigado: (item: { prompt: string; source?: string; sourceId?: string }) => Array<{ content: string }>;

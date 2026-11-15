@@ -13,8 +13,6 @@ export function buildChatBody({ model, messages, think, numCtx, numPredict, temp
       num_ctx: numCtx,
       num_predict: numPredict,
       temperature,
-      repeat_penalty: 1.15,
-      repeat_last_n: 256,
     },
   };
 }

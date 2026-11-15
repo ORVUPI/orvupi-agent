@@ -16,4 +16,4 @@ El despido improcedente, artículos 55.4 y 56, deja al empresario optar en cinco
 
 El artículo 55.6 dice que el despido nulo tiene el efecto de la readmisión inmediata, con abono de los salarios dejados de percibir.
 
-El artículo 30 de la Ley 15/2022 dice que, si quien demanda alega discriminación y aporta indicios fundados, la otra parte tiene que dar una justificación objetiva y razonable, suficientemente probada. No se aplica a un proceso penal ni a un procedimiento sancionador.
+Queda escrito así: el trabajador aporta indicios; la empresa debe probar una justificación objetiva y razonable (Ley 15/2022, art. 30). Y queda escrito así: el despido discriminatorio es nulo, no improcedente. El artículo 30 no se aplica a un proceso penal ni a un procedimiento sancionador.
