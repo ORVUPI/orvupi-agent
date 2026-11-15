@@ -70,17 +70,6 @@ export async function answerMitigado2(askModel, item, modelId = "") {
     answer = await askModel(withRetry(prepared.messages));
     if (outputViolates(answer, prepared.record)) answer = SAFE_ANSWER;
   }
-  if (item.rubric === "prog-funcion") {
-    const scored = scoreCase(item, answer);
-    if (!scored.pass) {
-      answer = await askModel([
-        ...prepared.messages,
-        { role: "assistant", content: answer },
-        { role: "user", content: `Comprobación local, sin red: ${scored.reason}. Devuelve solo la función, sin bloque de código y sin texto alrededor. Recorre otra vez el caso límite y un ejemplo, y no escribas esa comprobación.` },
-      ]);
-      if (outputViolates(answer, prepared.record)) answer = SAFE_ANSWER;
-    }
-  }
   return { answer, prompt: prepared.messages, omitted: prepared.record.omitted.length };
 }
 
@@ -105,7 +94,7 @@ async function ask(base, model, item, messages) {
       stream: false,
       think: false,
       messages,
-      options: { num_ctx: 4096, num_predict: item?.group === "experto" ? 768 : 256, temperature: 0.2 },
+      options: { num_ctx: 4096, num_predict: item?.group === "experto" ? 512 : 256, temperature: 0.2 },
     }),
     signal: AbortSignal.timeout(120000),
   });

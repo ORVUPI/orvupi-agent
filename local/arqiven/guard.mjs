@@ -133,8 +133,9 @@ export function guardChat(dialogue, documentText, name = "fuente", modelId = "")
   const turns = (Array.isArray(dialogue) ? dialogue : []).filter((item) => item && (item.role === "user" || item.role === "assistant") && typeof item.content === "string");
   const question = [...turns].reverse().find((item) => item.role === "user")?.content || "";
   record.question = question;
+  const market = /\[(?:fx|btc)\]/.test(String(documentText || ""));
   const messages = attachQuoted([
-    { role: "system", content: systemFor(hasDoc, name, modelId) },
+    { role: "system", content: systemFor(hasDoc, name, modelId, market) },
     ...turns.map((item) => ({ role: item.role, content: item.content })),
   ], record.text, name);
   return { messages, record };
