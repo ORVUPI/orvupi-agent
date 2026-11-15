@@ -55,16 +55,22 @@ export function messagesMitigado(item) {
 
 /** La canalización del chat local. Sin documento no se menciona. Con documento, las órdenes ya no están en el texto. */
 export function prepareMitigado2(item, modelId = "") {
-  return guardChat([...historyOf(item), { role: "user", content: item.prompt }], item.source || "", item.sourceId || "fuente", modelId);
+  const trusted = typeof item.trusted === "string" ? item.trusted : "";
+  return guardChat([...historyOf(item), { role: "user", content: item.prompt }], item.source || "", item.sourceId || "fuente", modelId, trusted);
 }
 
 export async function answerMitigado2(askModel, item, modelId = "") {
   let source = item.source || "";
+  let trusted = "";
+  if (item.trusted === true) {
+    trusted = source;
+    source = "";
+  }
   try {
     const facts = await liveFacts(item.prompt);
     if (facts.text) source = [source, facts.text].filter(Boolean).join("\n\n");
   } catch { /* sin cifras en vivo */ }
-  const prepared = prepareMitigado2({ ...item, source }, modelId);
+  const prepared = prepareMitigado2({ ...item, source, trusted }, modelId);
   let answer = await askModel(prepared.messages);
   if (outputViolates(answer, prepared.record)) {
     answer = await askModel(withRetry(prepared.messages));

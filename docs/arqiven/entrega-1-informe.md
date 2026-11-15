@@ -26,14 +26,14 @@ Cada fila usa solo mediciones ya hechas en el PC, o dice que falta. Los commits 
 | Elemento | Estado | Evidencia | Entorno | Pendiente |
 |---|---|---|---|---|
 | Arranque | Verificado | `scripts\arqiven-abrir.cmd` arranca el backend y el navegador. El verificador dio 8/8 en el PC, la última vez el 15-11-2026 a las 22:26 sobre `6f9c8f4`. La primera fila de esas ocho es que el backend responde | PC del propietario | — |
-| Inferencia | Verificado | El chat usa `qwen3:8b`, terceros, no un modelo creado aquí. Digest `500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41`, Q4_K_M, Ollama 0.40.16. A las 22:26, `6f9c8f4`: `--mitigado2` 116/120. Recupera `prog-20`, `inc-01`, `inc-13` y `ex-01`. Siguen `prog-14`, `conv-10`, `conv-13` e `inc-15` | PC del propietario | La respuesta de inversiones que el propietario acepta en pantalla sigue siendo la de `a6ca0ab` |
+| Inferencia | Verificado | El chat usa `qwen3:8b`, terceros, no un modelo creado aquí. Digest `500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41`, Q4_K_M, Ollama 0.40.16. A las 22:38, `f9a678a`: `--mitigado2` 115/120. Fallan `prog-14`, `conv-10`, `conv-13`, `ex-09` y `ex-18` | PC del propietario | La respuesta de inversiones que el propietario acepta en pantalla sigue siendo la de `a6ca0ab` |
 | Persistencia | Verificado | El 15-11 ~20:17 el chat `prueba-ficha-1` siguió tras matar el proceso y arrancar otro. A las 22:26 el verificador volvió a comprobar la persistencia, esta vez en una carpeta temporal, y dio 8/8 | PC del propietario | — |
 | Cancelación | Verificado en la llamada; la pantalla, no | El humo del 15-11 ~19:30 canceló la llamada directa a Ollama a los 566,8 ms. El verificador llama a cancelar al probar la cola, pero la fila que puntúa es «en espera», no el botón Stop | PC del propietario | Que el propietario vea el botón Stop en `http://127.0.0.1:4174/arqiven/` |
-| Fallo del motor | Pendiente | El texto de error ya está en el código: la API dice que Ollama no responde y la interfaz tiene «Ollama no responde en este equipo.» No hay una pasada en el PC que pare Ollama y lo vuelva a abrir. El script listo es `scripts\arqiven-fallo-motor.ps1`. Usa una carpeta de `%TEMP%` y el puerto 4175. No toca el firmware | Remoto: solo el script. PC: no ejecutado | Ejecutarlo en el PC |
+| Fallo del motor | Verificado | `scripts\arqiven-fallo-motor.ps1` dio 8/8 el 15-11-2026 a las 22:38, commit `f9a678a`. El hash de `history.json` no cambió. Ollama quedó otra vez como aplicación de bandeja. El script usa `%TEMP%` y el puerto 4175. No toca el firmware | PC del propietario | — |
 | Configuración | Verificado | Estado y `runs.jsonl` del 15-11 ~20:21 traen modelo, contexto 4096, salida 1024, temperatura 0,2, `think` false, digest, cuantización y Ollama 0.40.16. No hay secretos en ese registro | PC del propietario | — |
 | Evaluación | Verificado en lo ejecutado | Abajo, la tabla de commits. Rúbricas en `eval/arqiven/fijo/rubricas.mjs`, anteriores a la corrida. `2fcdc16` se incluye y no se esconde | PC del propietario | `prog-14`, `conv-10`, `conv-13`, `inc-15` y `cn-02` |
 | Entorno | Verificado en este informe | Las cifras de la tabla son del PC. Las pruebas de la VM y de la integración continua no se presentan como si fueran ese PC | Informe. Las cifras, PC | — |
-| Reversión | Pendiente | El procedimiento está en este informe. No se ha ejecutado en el PC como prueba de aceptación. El historial real no está dentro del repositorio | Remoto: el procedimiento. PC: no ejecutado | Hacerlo una vez en el PC, sin borrar `%LOCALAPPDATA%\ARQIVEN\local` |
+| Reversión | Verificado | En el PC, sin git: se descomprimió un zip parcial de `a6ca0ab` y se volvió a `f9a678a`. El hash de `history.json` fue el mismo en todos los pasos y se veían 30 chats. El procedimiento, con git y sin git, está en este informe | PC del propietario | — |
 
 ### Cifras medidas en el PC
 
@@ -46,8 +46,9 @@ Modelo `qwen3:8b`. Nada de esto se recalcula aquí.
 | `a6ca0ab` | 22:03 | 115/120 | 42/42 | 25/25 | 10/10 | — | 8/8 |
 | `2fcdc16` | descartado | 97/120 | 40/42 | 23/25 | 8/10 | — | — |
 | `6f9c8f4` | 22:26 | 116/120 | 42/42 | 25/25 | 10/10 | 1/2, falla `cn-02` | 8/8 |
+| `f9a678a` | 22:38 | 115/120 | 42/42 | 25/25 | 10/10 | 1/2, falla `cn-02` | 8/8 |
 
-`2fcdc16` rompió funciones sin `function` o con otro nombre, citas `[f1]` y respuestas que se quedaban en «No consta.» o «Eso no existe.». Se descartó. `a6ca0ab` fallaba `prog-14`, `prog-20`, `inc-01`, `inc-13` y `ex-01`. `6f9c8f4` recupera `prog-20`, `inc-01`, `inc-13` y `ex-01`, y falla `prog-14`, `conv-10` (vuelve a mencionar el dato descartado), `conv-13` (añade «No consta que pertenezca…») e `inc-15` (genérico, sin decir «no lo sé»).
+`2fcdc16` rompió funciones sin `function` o con otro nombre, citas `[f1]` y respuestas que se quedaban en «No consta.» o «Eso no existe.». Se descartó. `a6ca0ab` fallaba `prog-14`, `prog-20`, `inc-01`, `inc-13` y `ex-01`. `6f9c8f4` recupera `prog-20`, `inc-01`, `inc-13` y `ex-01`, y falla `prog-14`, `conv-10` (vuelve a mencionar el dato descartado), `conv-13` (añade «No consta que pertenezca…») e `inc-15` (genérico, sin decir «no lo sé»). `f9a678a`, a las 22:38, baja el fijo a 115/120. Fallan `prog-14`, `conv-10`, `conv-13` (empeora: dice «No consta» y no da «lector»), `ex-09` (atribuye el atentado al «grupo nacionalista serbo Bosniana»; fue Gavrilo Princip, de la Joven Bosnia), `ex-18` (parece un falso positivo de la rúbrica) y `cn-02` (falta la cita `[higiene-sueno]`). El fallo del motor dio 8/8 y el hash de `history.json` no cambió.
 
 En el PC, la pregunta de inversiones sigue servida con `a6ca0ab`, porque la regla de aceptación pedía que esa respuesta cumpliera entera.
 
@@ -109,11 +110,11 @@ No se resuelven en este informe.
 
 ## 1. Qué cambió y por qué
 
-El recorrido local ya estaba: interfaz, backend, Ollama, historial, cola, cancelación de la llamada y evaluación. Este informe lo registra con las cifras del PC, separa `2fcdc16` y deja el fallo del motor y la reversión como pendientes de ejecutar allí. La hoja de ruta entra en el encargo y se contrasta con el catálogo y las fases.
+El recorrido local ya estaba: interfaz, backend, Ollama, historial, cola, cancelación de la llamada y evaluación. Este informe registra las cifras del PC, separa `2fcdc16` y deja constancia de que el fallo del motor y la reversión sin git ya se comprobaron a las 22:38. La hoja de ruta entra en el encargo y se contrasta con el catálogo y las fases.
 
 ## 2. Qué pruebas se ejecutaron, cuáles fallaron y cuáles faltan
 
-En el PC, a las 22:26, commit `6f9c8f4`: 116/120, 42/42, 25/25, 10/10, conocimiento 1/2, verificador 8/8. Fallan `prog-14`, `conv-10`, `conv-13`, `inc-15` y `cn-02`. Falta parar Ollama y recuperarlo, y falta ejecutar la reversión sin borrar el historial real. Falta que el propietario vea Stop en la pantalla.
+En el PC, a las 22:38, commit `f9a678a`: 115/120, 42/42, 25/25, 10/10, conocimiento 1/2, verificador 8/8, fallo del motor 8/8. La reversión sin git dejó el mismo hash de `history.json` y 30 chats. Fallan `prog-14`, `conv-10`, `conv-13`, `ex-09`, `ex-18` y `cn-02`. Falta que el propietario vea Stop en la pantalla.
 
 ## 3. Qué capacidad pertenece al modelo base y qué aporta ARQIVEN
 
@@ -125,7 +126,7 @@ En el PC, a las 22:26, commit `6f9c8f4`: 116/120, 42/42, 25/25, 10/10, conocimie
 
 ## 5. Próximo paso con su criterio de aceptación
 
-Ejecutar `scripts\arqiven-fallo-motor.ps1` en el PC. Aceptación: con Ollama parado, el estado y el chat dicen que no responde, la página sigue abriendo, y al volver a arrancar Ollama un chat corto termina. El historial real no se toca. La reversión de código, descrita abajo, se prueba una vez y `%LOCALAPPDATA%\ARQIVEN\local` sigue en su sitio.
+El fallo del motor y la reversión sin git ya se comprobaron a las 22:38. El siguiente paso es que las notas revisadas no pasen por el filtro de órdenes, que un bucle de frases se corte, y que `conv-13` y `cn-02` dejen de fallar, sin bajar los conjuntos que están en 42/42, 25/25 y 10/10.
 
 ## 6. Decisión pendiente del propietario
 
@@ -148,6 +149,8 @@ scripts\arqiven-abrir.cmd
 ```text
 git checkout cursor/arqiven-ollama-local-8c6d
 ```
+
+Sin git, como se hizo en el PC el 15-11-2026 a las 22:38: se descomprime un zip parcial del commit anterior sobre la carpeta del código, se arranca, se vuelve a descomprimir el zip del commit de trabajo y se arranca otra vez. No se borra `%LOCALAPPDATA%\ARQIVEN\local`. En esa prueba el hash de `history.json` fue idéntico en todos los pasos y se veían 30 chats.
 
 ## Fallo del motor
 

@@ -403,11 +403,12 @@ export async function startLocalServer(overrides = {}) {
         const facts = await liveFacts(question);
         if (facts.text) documentText = [documentText, facts.text].filter(Boolean).join("\n\n");
       } catch { /* sin cifras en vivo */ }
+      let trustedNote = "";
       try {
         const known = await retrieveConocimiento(question);
-        if (known.text) documentText = [documentText, known.text].filter(Boolean).join("\n\n");
+        if (known.text) trustedNote = known.text;
       } catch { /* la base general no bloquea el chat */ }
-      const guarded = guardChat(visible, documentText, "fuente", config.model);
+      const guarded = guardChat(visible, documentText, "fuente", config.model, trustedNote);
       const redacted = guarded.record;
       const prompt = fitMessages(attachEditor(guarded.messages, editor), config.inputTokens);
       const hold = redacted.omitted.some((item) => item.kept !== true);

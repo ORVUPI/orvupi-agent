@@ -101,10 +101,37 @@ describe("conjunto fijo de 100 casos", () => {
     assert.equal(primoCalls, 2);
     assert.equal(rubrics.scoreCase(prog14 as Record<string, unknown>, primo.answer).pass, true);
     const law = await readFile(path.join(root, "docs/arqiven/conocimiento/despido-baja.md"), "utf8");
-    assert.match(law, /no nombra la enfermedad/);
+    assert.match(law, /El art\. 55\.5 ET declara nulo el despido por causas de discriminación previstas en la Constitución o la ley; la enfermedad o condición de salud es una de esas causas por la Ley 15\/2022, art\. 2\.1/);
+    assert.match(law, /artículo 53\.1\.b/);
+    assert.match(law, /veinte días por año/);
     assert.match(law, /artículo 55\.6/);
-    assert.match(law, /artículo 30/);
     assert.equal(law.toLowerCase().includes("sanciones penales"), false);
+    const guardChat = await import(href("local/arqiven/guard.mjs")) as {
+      guardChat: (dialogue: Array<{ role: string; content: string }>, documentText: string, name: string, modelId: string, trustedText?: string) => { messages: Array<{ content: string }>; record: { literals: string[] } };
+      outputViolates: (answer: string, record: { literals: string[] }) => boolean;
+      SAFE_ANSWER: string;
+    };
+    const cited = "El art. 55.5 ET declara nulo el despido discriminatorio. La enfermedad es causa por la Ley 15/2022, art. 2.1, BOE-A-2022-11589.";
+    const blocked = guardChat.guardChat([{ role: "user", content: "¿Puedo despedir a un trabajador que está de baja en España?" }], law, "despido-baja", "qwen3:8b");
+    assert.equal(blocked.record.literals.includes("BOE-A-2022-11589"), true);
+    assert.equal(guardChat.outputViolates(cited, blocked.record), true);
+    const allowed = guardChat.guardChat([{ role: "user", content: "¿Puedo despedir a un trabajador que está de baja en España?" }], "", "despido-baja", "qwen3:8b", law);
+    assert.equal(allowed.record.literals.includes("BOE-A-2022-11589"), false);
+    assert.equal(allowed.messages.map((item) => item.content).join("\n").includes("BOE-A-2022-11589"), true);
+    assert.equal(guardChat.outputViolates(cited, allowed.record), false);
+    assert.equal(guardChat.outputViolates(cited, allowed.record) ? guardChat.SAFE_ANSWER : cited, cited);
+    const cutter = await import(href("local/arqiven/ollama.mjs")) as {
+      cutRepeatedSentences: (text: string) => string;
+      buildChatBody: (input: { model: string; messages: unknown[]; think: boolean; numCtx: number; numPredict: number; temperature: number }) => { options: { repeat_penalty: number; repeat_last_n: number } };
+    };
+    const sentence = "El despido nulo obliga a la readmisión inmediata de la persona trabajadora.";
+    const loop = [sentence, sentence, sentence, sentence, "Esto ya no debe salir."].join(" ");
+    const cut = cutter.cutRepeatedSentences(loop);
+    assert.equal(cut.split(sentence).length - 1, 2);
+    assert.equal(cut.includes("Esto ya no debe salir"), false);
+    const body = cutter.buildChatBody({ model: "qwen3:8b", messages: [], think: false, numCtx: 4096, numPredict: 1024, temperature: 0.2 });
+    assert.equal(body.options.repeat_penalty, 1.15);
+    assert.equal(body.options.repeat_last_n, 256);
     const prompts = await import(href("eval/arqiven/fijo/run.mjs")) as {
       messagesBase: (item: { prompt: string; source?: string; sourceId?: string }) => Array<{ content: string }>;
       messagesMitigado: (item: { prompt: string; source?: string; sourceId?: string }) => Array<{ content: string }>;

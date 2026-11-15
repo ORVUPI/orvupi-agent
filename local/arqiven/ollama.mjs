@@ -13,8 +13,27 @@ export function buildChatBody({ model, messages, think, numCtx, numPredict, temp
       num_ctx: numCtx,
       num_predict: numPredict,
       temperature,
+      repeat_penalty: 1.15,
+      repeat_last_n: 256,
     },
   };
+}
+
+/** Corta cuando una frase larga se repite por tercera vez. Las dos primeras se quedan. */
+export function cutRepeatedSentences(text) {
+  const parts = String(text || "").split(/(?<=[.!?])\s+|\n+/).map((part) => part.trim()).filter(Boolean);
+  const counts = new Map();
+  const kept = [];
+  for (const part of parts) {
+    const key = part.replace(/\s+/g, " ");
+    if (key.length > 40) {
+      const seen = (counts.get(key) || 0) + 1;
+      counts.set(key, seen);
+      if (seen > 2) break;
+    }
+    kept.push(part);
+  }
+  return kept.join(" ").trim();
 }
 
 export function stripThinking(text) {
@@ -124,7 +143,7 @@ export async function streamChat({ base, body, signal, timeoutMs, onToken }) {
       try { reader.releaseLock?.(); } catch { /* el flujo ya se cerró */ }
     }
     if (killer.signal.aborted) throw aborted(killer.signal);
-    const visible = stripThinking(text);
+    const visible = cutRepeatedSentences(stripThinking(text));
     if (!visible) throw codeError("empty");
     return { text: visible, ttftMs, done, totalMs: Math.max(1, Date.now() - started) };
   } finally {

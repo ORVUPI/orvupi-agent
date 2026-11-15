@@ -127,16 +127,18 @@ export function settle(answer, record) {
 }
 
 /** La misma canalización que --mitigado2: sistema, historial y documento ya filtrado. */
-export function guardChat(dialogue, documentText, name = "fuente", modelId = "") {
+export function guardChat(dialogue, documentText, name = "fuente", modelId = "", trustedText = "") {
   const record = redactDocument(documentText || "");
-  const hasDoc = Boolean(record.text);
+  const trusted = String(trustedText || "").trim();
+  const shown = [record.text, trusted].filter(Boolean).join("\n\n");
+  const hasDoc = Boolean(shown);
   const turns = (Array.isArray(dialogue) ? dialogue : []).filter((item) => item && (item.role === "user" || item.role === "assistant") && typeof item.content === "string");
   const question = [...turns].reverse().find((item) => item.role === "user")?.content || "";
   record.question = question;
-  const market = /\[(?:fx|btc)\]/.test(String(documentText || ""));
+  const market = /\[(?:fx|btc)\]/.test(`${documentText || ""}\n${trusted}`);
   const messages = attachQuoted([
     { role: "system", content: systemFor(hasDoc, name, modelId, market) },
     ...turns.map((item) => ({ role: item.role, content: item.content })),
-  ], record.text, name);
+  ], shown, name);
   return { messages, record };
 }
