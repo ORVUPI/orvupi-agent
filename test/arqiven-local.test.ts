@@ -273,10 +273,16 @@ describe("backend local de ARQIVEN", () => {
       assert.equal(sent.options?.temperature, 0.2);
       assert.equal(JSON.stringify(sent).includes("no_think"), false);
       assert.match(sent.messages?.[0]?.content || "", /terceros/);
-      assert.match(sent.messages?.[0]?.content || "", /fuente de hechos/);
-      assert.match(sent.messages?.at(-1)?.content || "", /\[documento: fuente\]/);
-      assert.equal((sent.messages?.at(-1)?.content || "").includes("no confiable"), false);
-      assert.match(sent.messages?.at(-1)?.content || "", /Arqiven-1/);
+      const system = sent.messages?.[0]?.content || "";
+      const last = sent.messages?.at(-1)?.content || "";
+      assert.match(system, /fuente de hechos/);
+      assert.match(system, /no son hechos/);
+      assert.match(last, /\[documento: fuente\]/);
+      assert.equal(last.includes("no confiable"), false);
+      assert.equal(last.includes("Usa los hechos del documento y cítalo"), false);
+      assert.ok(last.indexOf("[documento: fuente]") < last.indexOf("Arqiven-1"));
+      assert.ok(last.indexOf("Arqiven-1") < last.indexOf("Pregunta del usuario:"));
+      assert.ok(last.indexOf("Pregunta del usuario:") < last.indexOf("Di hola"));
       const budget = await import(href("local/arqiven/budget.mjs")) as { transcriptTokens: (messages: Array<{ content: string }>) => number };
       assert.ok(budget.transcriptTokens(sent.messages || []) + 1024 <= 4096);
     } finally {

@@ -337,10 +337,10 @@ export async function startLocalServer(overrides = {}) {
         ownerId: existing?.ownerId || userId,
         ...(existing ? {} : { projectId }),
       });
-      const prompt = fitMessages(attachDocument(attachEditor([
+      const prompt = fitMessages(attachEditor(attachDocument([
         { role: "system", content: LOCAL_SYSTEM },
         ...visible,
-      ], editor), documentText), config.inputTokens);
+      ], documentText), editor), config.inputTokens);
       const chatBody = buildChatBody({
         model: config.model,
         messages: prompt,

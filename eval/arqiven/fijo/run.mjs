@@ -3,7 +3,7 @@
  * Solo comprobar el banco y las rúbricas: node eval/arqiven/fijo/run.mjs --comprobar
  */
 
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { CASOS, GRUPOS } from "./casos.mjs";
@@ -40,9 +40,10 @@ export function messagesBase(item) {
   return [{ role: "system", content: EVAL_SYSTEM_BASE }, ...historyOf(item), { role: "user", content: user }];
 }
 
-/** Las mismas instrucciones que el backend local usa ahora. */
+/** Las mismas instrucciones que el backend local usa ahora. El documento va antes; la pregunta, al final. */
 export function messagesMitigado(item) {
-  const user = item.source ? `${item.prompt}\n\n${fenceUntrusted(item.source, item.sourceId || "fuente")}` : item.prompt;
+  const question = `Pregunta del usuario:\n${item.prompt}`;
+  const user = item.source ? `${fenceUntrusted(item.source, item.sourceId || "fuente")}\n\n${question}` : question;
   return [{ role: "system", content: LOCAL_SYSTEM }, ...historyOf(item), { role: "user", content: user }];
 }
 
@@ -84,6 +85,19 @@ async function main() {
   }
   console.log("Banco fijo: 100 casos. Rúbricas registradas antes de evaluar.");
   if (process.argv.includes("--comprobar")) return;
+  const rescoreAt = process.argv.indexOf("--repuntuar");
+  if (rescoreAt >= 0) {
+    const file = process.argv[rescoreAt + 1];
+    if (!file) {
+      console.error("Falta la ruta de resultado.json");
+      process.exit(1);
+    }
+    const saved = JSON.parse(await readFile(file, "utf8"));
+    const again = repuntuar(saved);
+    const failed = again.rows.filter((row) => !row.pass).map((row) => row.id);
+    console.log(`Repuntuado: ${again.passed}/${again.total}. Fallos: ${failed.join(", ") || "ninguno"}.`);
+    return;
+  }
 
   const base = process.env.OLLAMA_HOST || "http://127.0.0.1:11434";
   const model = process.env.ARQIVEN_MODEL || "qwen3:8b";
@@ -120,8 +134,28 @@ async function main() {
     at: new Date().toISOString(),
     rows,
   };
-  await writeFile(path.join(outDir, "resultado.json"), `${JSON.stringify(summary, null, 2)}\n`);
+  const file = path.join(outDir, "resultado.json");
+  const named = path.join(outDir, `resultado-${summary.variant}.json`);
+  const body = `${JSON.stringify(summary, null, 2)}\n`;
+  await writeFile(file, body);
+  await writeFile(named, body);
   console.log(`Resultado: ${passed}/${rows.length}. No es un entrenamiento. El archivo está en eval/arqiven/fijo/out/.`);
+}
+
+/** Vuelve a puntuar un resultado.json ya guardado, sin llamar al modelo. */
+export function repuntuar(saved) {
+  const byId = new Map(CASOS.map((item) => [item.id, item]));
+  const rows = Array.isArray(saved?.rows) ? saved.rows : [];
+  let passed = 0;
+  const next = [];
+  for (const row of rows) {
+    const item = byId.get(row.id);
+    if (!item) continue;
+    const scored = scoreCase(item, row.answer);
+    if (scored.pass) passed += 1;
+    next.push({ id: row.id, pass: scored.pass, reason: scored.reason, answer: row.answer });
+  }
+  return { passed, total: next.length, rows: next };
 }
 
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
