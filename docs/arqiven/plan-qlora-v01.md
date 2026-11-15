@@ -59,6 +59,6 @@ Identidad: en una muestra de preguntas, la adaptada tiene que seguir diciendo qu
 2. La carpeta anterior no se borra al empezar la corrida nueva.
 3. Solo se declara vigente la nueva si gana en exactitud y no empeora citas, instrucciones ni identidad, y la velocidad y la memoria se han anotado.
 4. Si empata o empeora, se deja la anterior (hoy: sin adaptador, el `qwen3:8b` de Ollama) y se archiva la candidata con el motivo.
-5. No se sube ninguna de las dos a este repositorio.
+5. No se sube ninguna de las dos a este repositorio. Si un adaptador llega a existir, el material de ORVUPI que lo acompaña queda bajo `LICENSE-ARQIVEN.md`. La parte derivada de Qwen3 8B sigue en Apache 2.0, con los avisos de `THIRD_PARTY_NOTICES.md`.
 
 Nada de esta página se ha ejecutado.

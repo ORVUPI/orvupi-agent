@@ -1,3 +1,4 @@
+/* © 2026 ORVUPI. Todos los derechos reservados. */
 // Tareas reales de ARQIVEN. Comprobaciones fijadas antes de medir.
 const filler = [
   ["¿Me recomiendas algún libro sobre productividad? Algo práctico y no muy largo, por favor.", "Te recomiendo «Hábitos atómicos» de James Clear: es práctico, se lee rápido y propone cambios pequeños y medibles."],

@@ -1,16 +1,16 @@
-# Propuesta de licencia del código y política de marca
+# Licencia del código y política de marca
 
 Fecha: 15 de noviembre de 2026.
-Estado: propuesta, pendiente de Cristian.
-No sustituye a `LICENSE`. El borrador para decidir está también en `LICENSE-propuesta.md`.
+Estado: la licencia quedó decidida el 15 de noviembre de 2026, 20:25. La política de marca sigue pendiente de registro.
+No sustituye a `LICENSE`. El acta está en `LICENSE-propuesta.md` y el texto de ARQIVEN en `LICENSE-ARQIVEN.md`.
 
 ## Aviso de copyright
 
-Texto listo, sin aplicarlo al archivo `LICENSE`:
+Decisión tomada. ARQIVEN, en las rutas de `LICENSE-ARQIVEN.md`, lleva:
 
 © 2026 ORVUPI. Todos los derechos reservados.
 
-En la web ese aviso ya cubre el nombre, el pulpo y los recursos visuales. El código original sigue en MIT. La propuesta es mantener ese corte (opción A de `LICENSE-propuesta.md`) salvo que Cristian elija cerrar el código.
+El resto del repositorio y de la web sigue en MIT. `NOTICE.md` dice que esa MIT no cubre esas rutas y no concede las marcas ni el logotipo. Quien ya tenga una copia publicada bajo MIT antes de esa hora conserva la MIT sobre esa copia.
 
 ## Marcas no registradas
 
@@ -54,4 +54,4 @@ Los que ya publica el repositorio: https://orvupi.com/ , https://x.com/ORVUPI , 
 
 ## Decisión que falta
 
-Cristian tiene que decir si el titular que figurará en un registro futuro es él como persona o una sociedad, y en qué clases. Ese dato no está en el repositorio. Sin ese dato no se presenta ninguna solicitud.
+La licencia del código ya está tomada. Sigue faltando el titular registral: si en un registro futuro figura Cristian como persona o una sociedad, y en qué clases. Ese dato no está en el repositorio. Sin ese dato no se presenta ninguna solicitud.

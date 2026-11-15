@@ -1,3 +1,4 @@
+/* © 2026 ORVUPI. Todos los derechos reservados. */
 /** Sube el dataset y el kernel a Kaggle. No entrena en esta máquina.
  * La clave se lee de KAGGLE_USERNAME y KAGGLE_KEY. No va en los argumentos ni se imprime.
  */

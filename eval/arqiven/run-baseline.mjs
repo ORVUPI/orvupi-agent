@@ -1,3 +1,4 @@
+/* © 2026 ORVUPI. Todos los derechos reservados. */
 /** Línea base de la capa de reglas y de las fuentes. No descarga un modelo salvo --model. */
 
 import { mkdir, readFile, writeFile } from "node:fs/promises";

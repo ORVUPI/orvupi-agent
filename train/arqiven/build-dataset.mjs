@@ -1,3 +1,4 @@
+/* © 2026 ORVUPI. Todos los derechos reservados. */
 /** Arma el dataset del LoRA. Por defecto no descarga nada.
  * Con --fetch pide filas públicas al visor de Hugging Face, sin clave y sin GPU.
  * No ejecuta el entrenamiento.

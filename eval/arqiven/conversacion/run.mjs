@@ -1,3 +1,4 @@
+/* © 2026 ORVUPI. Todos los derechos reservados. */
 /** Mide las 21 tareas con el código del repositorio. No publica nada.
  * Uso: node eval/arqiven/conversacion/run.mjs <repo> <dtype> <legacy|v1> [hilos]
  * Requiere @huggingface/transformers en el entorno. No está en las dependencias del sitio.

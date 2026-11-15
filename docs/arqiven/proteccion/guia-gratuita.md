@@ -51,7 +51,7 @@ Un sello demuestra que ese hash existía, no que ORVUPI sea el autor frente a cu
 
 ### El símbolo ™ y los avisos
 
-Se puede escribir ARQIVEN™ y ORVUPI™ sin registro. El aviso propuesto está en `propuesta-licencia-marca.md`. Conviene que la web y la app, cuando Cristian lo apruebe, muestren el mismo aviso en el pie y en Ajustes. Esta rama no edita la web: otro trabajo sigue en la rama de la aplicación.
+Se puede escribir ARQIVEN™ y ORVUPI™ sin registro. La política está en `propuesta-licencia-marca.md`. La licencia del código de ARQIVEN ya es «© 2026 ORVUPI. Todos los derechos reservados.» (`LICENSE-ARQIVEN.md`). Conviene que la web y la app, cuando se toque esa interfaz, muestren el mismo aviso en el pie y en Ajustes.
 
 El pie actual de `web/v2/legal/index.html` ya dice «© 2026 ORVUPI. Nombre, pulpo y recursos visuales: todos los derechos reservados. Código original: licencia MIT.»
 

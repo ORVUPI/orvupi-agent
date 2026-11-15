@@ -13,7 +13,7 @@ No se entrena. No se descarga un modelo. No se llama a Kaggle.
 | `lote-01.jsonl` | Primer lote, 48 conversaciones en español. Una por línea. |
 | `comprobar-solape.mjs` | Falla si un ejemplo repite, exacto o casi exacto, la evaluación. |
 
-Cabecera de los dos programas: «© 2026 ORVUPI. Todos los derechos reservados.» El archivo `LICENSE` de la raíz sigue siendo MIT. Cómo encaja eso está en `LICENSE-propuesta.md`.
+Cabecera de los dos programas: «© 2026 ORVUPI. Todos los derechos reservados.» Esta carpeta se rige por `LICENSE-ARQIVEN.md` desde el 15 de noviembre de 2026, 20:25. La MIT de `LICENSE` no la cubre. Quien ya tuviera una copia anterior bajo MIT conserva esa licencia sobre esa copia. El acta está en `LICENSE-propuesta.md`.
 
 ## Procedencia y permiso
 

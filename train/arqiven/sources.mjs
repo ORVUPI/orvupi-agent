@@ -1,3 +1,4 @@
+/* © 2026 ORVUPI. Todos los derechos reservados. */
 /** Fuentes permitidas para el primer LoRA. Nada de aquí se descarga en CI.
  * Licencias comprobadas en las fichas públicas el 2026-11-10. Se excluye lo no comercial.
  */

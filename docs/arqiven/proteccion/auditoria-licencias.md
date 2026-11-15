@@ -94,7 +94,7 @@ Los iconos de la interfaz (más, menú, clip, engranaje) son SVG en línea en `w
 
 | Situación | Qué hay que cumplir |
 | --- | --- |
-| Alguien clona el repositorio | MIT del código (`LICENSE`) más estos avisos. Los pesos no vienen en el clon. |
+| Alguien clona el repositorio | MIT para el resto (`LICENSE` y `NOTICE.md`). Las rutas de ARQIVEN van en `LICENSE-ARQIVEN.md`, con todos los derechos reservados desde el 15 de noviembre de 2026, 20:25. Quien ya tuviera una copia anterior bajo MIT la conserva. Los pesos no vienen en el clon. |
 | Se copia Qwen3 8B o el embedding, o se publica un adaptador | Apache 2.0 completa, avisos, cita, y no usar la marca Qwen como si fuera ARQIVEN. |
 | Se sirve LFM2 en un producto con ingresos altos | Releer LFM Open License v1.0 antes. |
 | Se cita un párrafo de Wikipedia | CC BY-SA 4.0. |

@@ -1,3 +1,4 @@
+/* © 2026 ORVUPI. Todos los derechos reservados. */
 /** Puntuadores automáticos del banco de ARQIVEN. La rúbrica humana no se inventa aquí. */
 
 import { refusesFinancialAdvice, givesFinancialAdvice, foreignAddresses, OFFICIAL_ADDRESS } from "../../web/v2/shared/ia/guard.mjs";

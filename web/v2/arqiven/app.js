@@ -1,3 +1,4 @@
+/* © 2026 ORVUPI. Todos los derechos reservados. */
 import { arqivenEngine } from "/shared/ia/engine-client.mjs";
 import { canUseModel, defaultModel, downloadProgress, modelById, modelForDevice, stepDown, THIRD_PARTY_MODELS } from "/shared/ia/models.mjs";
 import { createRequest, honestResult } from "/shared/ia/contract.mjs";
