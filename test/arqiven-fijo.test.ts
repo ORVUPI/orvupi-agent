@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { describe, test } from "node:test";
 import { pathToFileURL } from "node:url";
 import path from "node:path";
@@ -87,6 +88,23 @@ describe("conjunto fijo de 100 casos", () => {
     const ellipsis = "function clampTexto(s, n) { return s.length > n ? s.slice(0, n) + '...' : s; }";
     assert.equal(rubrics.scoreCase(prog20 as Record<string, unknown>, exact).pass, true);
     assert.equal(rubrics.scoreCase(prog20 as Record<string, unknown>, ellipsis).pass, false);
+    const retryRunner = await import(href("eval/arqiven/fijo/run.mjs")) as {
+      answerMitigado2: (ask: (messages: unknown) => Promise<string>, item: Record<string, unknown>, modelId?: string) => Promise<{ answer: string }>;
+    };
+    let primoCalls = 0;
+    const primo = await retryRunner.answerMitigado2(async () => {
+      primoCalls += 1;
+      return primoCalls === 1
+        ? "function primo(n) { return n > 1 && ![1, n].some(i => n % i === 0); }"
+        : "function primo(n) { if (n < 2) return false; for (let i = 2; i < n; i += 1) if (n % i === 0) return false; return true; }";
+    }, prog14 as Record<string, unknown>, "qwen3:8b");
+    assert.equal(primoCalls, 2);
+    assert.equal(rubrics.scoreCase(prog14 as Record<string, unknown>, primo.answer).pass, true);
+    const law = await readFile(path.join(root, "docs/arqiven/conocimiento/despido-baja.md"), "utf8");
+    assert.match(law, /no nombra la enfermedad/);
+    assert.match(law, /artículo 55\.6/);
+    assert.match(law, /artículo 30/);
+    assert.equal(law.toLowerCase().includes("sanciones penales"), false);
     const prompts = await import(href("eval/arqiven/fijo/run.mjs")) as {
       messagesBase: (item: { prompt: string; source?: string; sourceId?: string }) => Array<{ content: string }>;
       messagesMitigado: (item: { prompt: string; source?: string; sourceId?: string }) => Array<{ content: string }>;

@@ -1,17 +1,19 @@
 # Despido durante una baja en España
 
-Fuente oficial: Ley 15/2022, de 12 de julio, integral para la igualdad de trato y la no discriminación. BOE-A-2022-11589. https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589
+Estatuto de los Trabajadores, artículos 55 y 56. Real Decreto Legislativo 2/2015. https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a55 https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a56
 
-Fuente oficial: Real Decreto Legislativo 2/2015, de 23 de octubre, por el que se aprueba el texto refundido de la Ley del Estatuto de los Trabajadores, artículo 55. BOE-A-2015-11430. https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430
+Ley 15/2022, de 12 de julio, integral para la igualdad de trato y la no discriminación, artículos 2, 26 y 30. https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589#a2 https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589#a30
 
-Esto es el texto de esas normas, no el criterio sobre un despido concreto.
+Esto es el texto de esas normas, no el criterio sobre un despido concreto. Se habla de la persona trabajadora.
 
-El artículo 2.1 de la Ley 15/2022 dice que nadie podrá ser discriminado por razón de enfermedad o condición de salud. El artículo 2.3 dice que la enfermedad no podrá amparar diferencias de trato distintas de las que deriven del propio proceso de tratamiento, de las limitaciones objetivas que imponga para el ejercicio de determinadas actividades o de las exigidas por razones de salud pública.
+El artículo 55.3 del Estatuto de los Trabajadores califica el despido como procedente, improcedente o nulo.
 
-El artículo 26 de la Ley 15/2022 declara nulos de pleno derecho los actos que constituyan o causen discriminación por alguno de los motivos del artículo 2.1, entre ellos la enfermedad o la condición de salud.
+El despido es procedente cuando queda acreditado el incumplimiento alegado y la forma se ajusta al artículo 55.1. El artículo 55.7 dice que el despido procedente convalida la extinción, sin indemnización ni salarios de tramitación.
 
-El artículo 55.5 del Estatuto de los Trabajadores dice que será nulo el despido que tenga por móvil alguna de las causas de discriminación prohibidas en la Constitución Española o en la ley. La baja por incapacidad temporal no está, por sí sola, en la lista de nulidad automática de ese artículo. Estar de baja no convierte en nulo cualquier despido. El despido puede ser nulo si su móvil es la enfermedad o la condición de salud.
+El despido es improcedente cuando no queda acreditado el incumplimiento o la forma no se ajusta al artículo 55.1. El artículo 56 deja al empresario, en cinco días desde la sentencia, optar entre la readmisión o una indemnización de treinta y tres días de salario por año de servicio, hasta veinticuatro mensualidades. Si opta por la readmisión, la persona trabajadora tiene derecho a los salarios de tramitación.
 
-El artículo 25.2 de la Ley 15/2022 habla de responsabilidades administrativas y, en su caso, penales y civiles, por incumplir las obligaciones de protección. Ese inciso no convierte una pena en la consecuencia ordinaria de despedir durante una baja. El título IV de la ley regula infracciones y sanciones administrativas.
+El artículo 55.5 dice que será nulo el despido que tenga por móvil alguna de las causas de discriminación prohibidas en la Constitución Española o en la ley. Ese artículo no nombra la enfermedad. La enfermedad y la condición de salud las añade el artículo 2.1 de la Ley 15/2022, que prohíbe discriminar por ellas. El artículo 2.3 dice que la enfermedad no ampara diferencias de trato distintas de las del propio tratamiento, de las limitaciones objetivas para una actividad o de las exigidas por la salud pública. El artículo 26 declara nulos de pleno derecho los actos que constituyan o causen discriminación por un motivo del artículo 2.1. Estar de baja no está, por sí solo, en la lista de nulidad automática del artículo 55.5. El despido puede ser nulo si su móvil es la enfermedad o la condición de salud.
 
-Se habla de la persona trabajadora. Esto no sustituye el criterio de un juzgado sobre un caso concreto.
+El artículo 55.6 dice que el despido nulo tiene el efecto de la readmisión inmediata, con abono de los salarios dejados de percibir.
+
+El artículo 30 de la Ley 15/2022 dice que, cuando quien demanda alega discriminación y aporta indicios fundados, corresponde a la otra parte una justificación objetiva y razonable, suficientemente probada, de las medidas y de su proporcionalidad. Ese apartado no se aplica a los procesos penales ni a los procedimientos administrativos sancionadores.

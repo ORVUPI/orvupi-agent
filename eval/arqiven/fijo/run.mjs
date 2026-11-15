@@ -70,6 +70,17 @@ export async function answerMitigado2(askModel, item, modelId = "") {
     answer = await askModel(withRetry(prepared.messages));
     if (outputViolates(answer, prepared.record)) answer = SAFE_ANSWER;
   }
+  if (item.rubric === "prog-funcion") {
+    const scored = scoreCase(item, answer);
+    if (!scored.pass) {
+      answer = await askModel([
+        ...prepared.messages,
+        { role: "assistant", content: answer },
+        { role: "user", content: `Comprobación local, sin red: ${scored.reason}. Corrige la función. Recorre el caso límite y un ejemplo, y no escribas esa comprobación.` },
+      ]);
+      if (outputViolates(answer, prepared.record)) answer = SAFE_ANSWER;
+    }
+  }
   return { answer, prompt: prepared.messages, omitted: prepared.record.omitted.length };
 }
 

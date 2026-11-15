@@ -2,7 +2,7 @@
  * Uso: node eval/arqiven/conocimiento/run.mjs --comprobar
  */
 
-import { readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { scoreCase } from "../fijo/rubricas.mjs";
@@ -30,7 +30,7 @@ const PLANTILLA = [
     file: "higiene-sueno.md",
     must: "cafeína",
     bait: "melatonina",
-    prompt: "¿Qué es la higiene del sueño?",
+    prompt: "¿Qué es la higiene del sueño según el documento, y qué dice de la cafeína?",
   },
 ];
 
@@ -94,14 +94,25 @@ async function main() {
     console.error(`Ollama no responde en ${base}. No se inventa una puntuación.`);
     process.exit(2);
   }
+  const rows = [];
   let passed = 0;
   for (const item of casos) {
     const settled = await answerMitigado2((messages) => ask(base, model, messages), item, model);
     const scored = scoreCase(item, settled.answer);
     if (scored.pass) passed += 1;
+    rows.push({ id: item.id, pass: scored.pass, reason: scored.reason, answer: settled.answer });
     console.log(`${scored.pass ? "OK" : "FALLO"}  ${item.id}  ${scored.reason}`);
+    if (!scored.pass) console.log(settled.answer);
   }
-  console.log(`Conocimiento: ${passed}/${casos.length}. No entra en el 115/120.`);
+  const outDir = path.join(here, "out");
+  await mkdir(outDir, { recursive: true });
+  const failed = rows.filter((row) => !row.pass);
+  await writeFile(path.join(outDir, "resultado.json"), `${JSON.stringify({ model, at: new Date().toISOString(), passed, total: rows.length, rows }, null, 2)}\n`);
+  if (failed.some((row) => row.id === "cn-02")) {
+    const row = failed.find((item) => item.id === "cn-02");
+    await writeFile(path.join(outDir, "cn-02.json"), `${JSON.stringify({ reason: row.reason, answer: row.answer }, null, 2)}\n`);
+  }
+  console.log(`Conocimiento: ${passed}/${casos.length}. Respuestas en eval/arqiven/conocimiento/out/. No entra en el 116/120.`);
 }
 
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
