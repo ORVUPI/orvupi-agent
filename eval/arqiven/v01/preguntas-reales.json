@@ -1,0 +1,290 @@
+{
+  "estado": "borrador para revisión del propietario",
+  "fecha": "2026-11-15",
+  "nota": "No forman parte de eval/arqiven/fijo ni del conjunto reservado. No se usan para entrenar hasta que el propietario las acepte. Las de programación se comprobaron el 15 de noviembre de 2026 con Node, importando el código, sin arrancar Ollama.",
+  "preguntas": [
+    {
+      "id": "v01-01",
+      "categoria": "programacion",
+      "pregunta": "En el backend local, num_ctx vale 4096 y num_predict vale 1024, con una reserva de plantilla de 256. ¿Cuántos tokens de entrada deja el presupuesto y por qué no son 4096?",
+      "respuesta_esperada": "La entrada útil es 2816. budgetPlan resta la reserva y la salida a la ventana: 4096 − 1024 − 256. num_ctx es la ventana entera, no un cupo de entrada al que luego se sume la respuesta.",
+      "criterios": [
+        "La cifra es 2816.",
+        "Explica la resta num_ctx − num_predict − templateReserve.",
+        "No propone subir num_ctx para compensar."
+      ],
+      "comprobacion": "node --input-type=module -e \"import { budgetPlan } from './local/arqiven/budget.mjs'; const p = budgetPlan({ numCtx: 4096, numPredict: 1024, templateReserve: 256 }); if (p.inputTokens !== 2816) process.exit(1);\"",
+      "documento_id": null,
+      "fragmento": null
+    },
+    {
+      "id": "v01-02",
+      "categoria": "programacion",
+      "pregunta": "Arranco el servidor con node local/arqiven/server.mjs y no defino ARQIVEN_DATA. En Windows, el script de arranque habla de %LOCALAPPDATA%\\ARQIVEN\\local. ¿Dónde escribe el historial cada camino?",
+      "respuesta_esperada": "Sin ARQIVEN_DATA, resolveConfig usa la carpeta .arqiven/local dentro del directorio personal. scripts/arqiven-local.ps1, si la variable no existe, la asigna a LOCALAPPDATA\\ARQIVEN\\local antes de lanzar Node. Son dos directorios distintos. En el PC, el historial verificado del 15 de noviembre de 2026 estaba en C:\\Users\\crist\\AppData\\Local\\ARQIVEN\\local porque se usó el script.",
+      "criterios": [
+        "Nombra los dos caminos y no los mezcla.",
+        "Señala resolveConfig y el script de PowerShell.",
+        "No afirma que el servidor siempre use AppData."
+      ],
+      "comprobacion": "node --input-type=module -e \"import { resolveConfig } from './local/arqiven/config.mjs'; const c = resolveConfig(); if (!c.dataDir.endsWith('.arqiven/local') && !c.dataDir.endsWith('.arqiven\\\\local')) process.exit(1);\"",
+      "documento_id": null,
+      "fragmento": null
+    },
+    {
+      "id": "v01-03",
+      "categoria": "programacion",
+      "pregunta": "chunkText parte el documento con un tamaño y un solape. ¿Qué ocurre si el solape es mayor o igual que el tamaño? No lo ejecutes en bucle: explica el fallo y un test que lo acote.",
+      "respuesta_esperada": "El avance es end − solape. Si el solape no es menor que el tamaño, el índice start no crece y el while no termina. El defecto (480 y 80) sí avanza. Un test debe llamar con solape >= tamaño dentro de un contador máximo, por ejemplo 5, y fallar si start se repite; o la función debe rechazar ese par antes del bucle.",
+      "criterios": [
+        "Describe que start no avanza.",
+        "No pide ejecutar chunkText(texto, 10, 10) sin límite.",
+        "Propone un test acotado o una guarda."
+      ],
+      "comprobacion": "node --input-type=module -e \"let start=0,stuck=0; const size=10,overlap=10,n=26; const seen=[]; while(start<n && stuck<5){ const end=Math.min(n,start+size); seen.push(start); if(end===n) break; const next=Math.max(0,end-overlap); if(next<=start) stuck++; start=next;} if(stuck<2) process.exit(1);\"",
+      "documento_id": null,
+      "fragmento": null
+    },
+    {
+      "id": "v01-04",
+      "categoria": "programacion",
+      "pregunta": "Un miembro con rol reader está en un proyecto. Hay un chat de otra persona con projectId vacío. ¿canSeeChat le deja ver ese chat? ¿Y un chat que sí está en su proyecto?",
+      "respuesta_esperada": "El chat del proyecto sí, porque reader puede read. El chat con projectId vacío no: sin proyecto, canSeeChat solo compara ownerId con el usuario. Ser lector de un proyecto no abre los chats sueltos de otro.",
+      "criterios": [
+        "Distingue los dos chats.",
+        "Cita la rama de canSeeChat cuando no hay projectId.",
+        "No dice que reader ve todo el history.json."
+      ],
+      "comprobacion": "node --input-type=module -e \"import { canSeeChat, createProject } from './local/arqiven/projects.mjs'; const data={version:2,conversations:[],projects:[],members:[]}; createProject(data,{id:'proyecto1',name:'Obra',userId:'local'}); data.members.push({projectId:'proyecto1',userId:'lector1',role:'reader'}); const dentro={projectId:'proyecto1',ownerId:'local'}; const suelto={projectId:'',ownerId:'local'}; if(!canSeeChat(data,dentro,'lector1') || canSeeChat(data,suelto,'lector1')) process.exit(1);\"",
+      "documento_id": null,
+      "fragmento": null
+    },
+    {
+      "id": "v01-05",
+      "categoria": "programacion",
+      "pregunta": "fitMessages recibe dos mensajes system seguidos y luego un user, y el cupo es holgado. ¿Qué queda en la lista que se enviaría?",
+      "respuesta_esperada": "Queda el primer system y el user. El segundo system se tira: solo se conserva el primer system; un system posterior no pasa a dialogue ni sustituye al primero.",
+      "criterios": [
+        "El resultado tiene un solo system, el primero.",
+        "El user se conserva.",
+        "No dice que se concatenan los dos system."
+      ],
+      "comprobacion": "node --input-type=module -e \"import { fitMessages } from './local/arqiven/budget.mjs'; const out=fitMessages([{role:'system',content:'uno'},{role:'system',content:'dos que no debe quedar'},{role:'user',content:'pregunta'}],100); if(out.length!==2 || out[0].content!=='uno' || out[1].content!=='pregunta') process.exit(1);\"",
+      "documento_id": null,
+      "fragmento": null
+    },
+    {
+      "id": "v01-06",
+      "categoria": "programacion",
+      "pregunta": "El dueño borra un proyecto que tiene un chat con mensajes. ¿removeProject elimina esos mensajes?",
+      "respuesta_esperada": "No. Quita el proyecto y sus miembros, y pone projectId a cadena vacía en los chats que estaban dentro. Los mensajes siguen en la conversación.",
+      "criterios": [
+        "Dice que los mensajes no se borran.",
+        "Dice que projectId queda vacío.",
+        "No describe un borrado en cascada de conversations."
+      ],
+      "comprobacion": "node --input-type=module -e \"import { createProject, removeProject } from './local/arqiven/projects.mjs'; const data={version:2,conversations:[],projects:[],members:[]}; createProject(data,{id:'proyecto1',name:'Obra',userId:'local'}); data.conversations.push({id:'chat-local-1',projectId:'proyecto1',ownerId:'local',messages:[{role:'user',content:'hola'}]}); removeProject(data,{projectId:'proyecto1',userId:'local'}); if(data.projects.length!==0 || data.conversations[0].projectId!=='' || data.conversations[0].messages.length!==1) process.exit(1);\"",
+      "documento_id": null,
+      "fragmento": null
+    },
+    {
+      "id": "v01-07",
+      "categoria": "programacion",
+      "pregunta": "estimateTokens no usa el tokenizador de Qwen. ¿Cuántos tokens estima para la cadena ARQIVEN y cómo sale la cuenta?",
+      "respuesta_esperada": "4. La cadena mide 7 caracteres y la función hace ceil(longitud / 2). Una cadena vacía estima 0. Es una cota para recortar el historial, no el número real de tokens del modelo.",
+      "criterios": [
+        "La cifra es 4.",
+        "Menciona la división entre 2.",
+        "No presenta el 4 como un conteo del tokenizador de Qwen."
+      ],
+      "comprobacion": "node --input-type=module -e \"import { estimateTokens } from './local/arqiven/budget.mjs'; if(estimateTokens('ARQIVEN')!==4 || estimateTokens('')!==0) process.exit(1);\"",
+      "documento_id": null,
+      "fragmento": null
+    },
+    {
+      "id": "v01-08",
+      "categoria": "documental",
+      "pregunta": "¿Qué es ARQIVEN y tiene un modelo propio?",
+      "respuesta_esperada": "ARQIVEN es la IA de ORVUPI, en la ruta /arqiven/. No tiene un checkpoint propio. Si responde un modelo, es de terceros y se nombra aparte. En el modo local ese modelo es qwen3:8b.",
+      "criterios": [
+        "Dice que es la IA de ORVUPI.",
+        "Niega un modelo propio o un checkpoint de Arqiven-1.",
+        "Cita arq-001 o arq-005."
+      ],
+      "comprobacion": "La respuesta cita el id arq-001 o arq-005 y el fragmento «no hay un modelo propio» o «no tiene un checkpoint».",
+      "documento_id": "arq-001",
+      "fragmento": "ARQIVEN es la IA de ORVUPI. La ruta en español es /arqiven/.",
+      "documento_id_extra": "arq-005"
+    },
+    {
+      "id": "v01-09",
+      "categoria": "documental",
+      "pregunta": "¿Cuál es el único contrato oficial de ORVUPI y qué hago con otra dirección?",
+      "respuesta_esperada": "El único contrato oficial está en Solana y es Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU. Cualquier otra dirección no es ORVUPI. No se cita un contrato anterior ni un precio.",
+      "criterios": [
+        "La dirección coincide carácter a carácter.",
+        "Dice que otra dirección no es ORVUPI.",
+        "Cita arq-004.",
+        "No añade una promesa de precio."
+      ],
+      "comprobacion": "La respuesta contiene Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU una sola vez como contrato oficial y cita arq-004.",
+      "documento_id": "arq-004",
+      "fragmento": "El único contrato oficial de ORVUPI está en Solana y es Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU."
+    },
+    {
+      "id": "v01-10",
+      "categoria": "documental",
+      "pregunta": "En un proyecto local, ¿qué puede hacer un lector y qué no?",
+      "respuesta_esperada": "Puede ver los chats del proyecto. No puede escribir, renombrar, mover, borrar el proyecto ni cambiar miembros. Esas acciones quedan para el editor o solo para el dueño, según la tabla.",
+      "criterios": [
+        "El ver está permitido.",
+        "Escribir y borrar no están permitidos para el lector.",
+        "Cita arq-009."
+      ],
+      "comprobacion": "La respuesta cita arq-009 y niega la escritura y el borrado para el lector.",
+      "documento_id": "arq-009",
+      "fragmento": "Ver chats del proyecto: el lector sí. Escribir, borrar el proyecto y cambiar miembros: el lector no."
+    },
+    {
+      "id": "v01-11",
+      "categoria": "documental",
+      "pregunta": "Si pregunto algo que no está en los documentos del proyecto, ¿qué tiene que responder el RAG local?",
+      "respuesta_esperada": "«No consta en los documentos de este proyecto.» No llama al modelo para rellenar el hueco. Si sí hay un fragmento por encima del umbral 0,45, la cita tiene que ser texto real de ese fragmento.",
+      "criterios": [
+        "Incluye la frase de abstención del índice.",
+        "No inventa un dato que el fragmento no tiene.",
+        "Cita arq-010."
+      ],
+      "comprobacion": "La respuesta contiene «No consta en los documentos de este proyecto.» y el id arq-010.",
+      "documento_id": "arq-010",
+      "fragmento": "Si no hay fragmentos del proyecto, o el mejor coseno queda por debajo de 0,45, la respuesta de recuperación es «No consta en los documentos de este proyecto.»"
+    },
+    {
+      "id": "v01-12",
+      "categoria": "documental",
+      "pregunta": "¿En qué idiomas está la web de ARQIVEN?",
+      "respuesta_esperada": "En cinco: español, inglés, portugués de Brasil, japonés y coreano. Las rutas son /arqiven/, /en/arqiven/, /pt-br/arqiven/, /ja/arqiven/ y /ko/arqiven/.",
+      "criterios": [
+        "Lista los cinco.",
+        "No añade un sexto idioma como si ya estuviera publicado.",
+        "Cita arq-014."
+      ],
+      "comprobacion": "La respuesta cita arq-014 y nombra los cinco idiomas o las cinco rutas.",
+      "documento_id": "arq-014",
+      "fragmento": "La web de ORVUPI y la de ARQIVEN están en español, inglés, portugués de Brasil, japonés y coreano."
+    },
+    {
+      "id": "v01-13",
+      "categoria": "documental",
+      "pregunta": "¿Qué puntuación tuvo --mitigado2 en el PC y qué casos siguieron fallando?",
+      "respuesta_esperada": "97/100, el 15 de noviembre de 2026, con aislamiento 10/10. Fallos que quedaron: prog-14, prog-20 y doc-03. La base repuntuada de antes fue 94/100. El conjunto reservado no se había ejecutado.",
+      "criterios": [
+        "La cifra de --mitigado2 es 97/100.",
+        "Nombra los tres ids que fallaron.",
+        "Cita arq-011.",
+        "No presenta el 97 como un entrenamiento."
+      ],
+      "comprobacion": "La respuesta cita arq-011, dice 97/100 y menciona prog-14, prog-20 y doc-03.",
+      "documento_id": "arq-011",
+      "fragmento": "La corrida --mitigado2 fue 97/100. Los fallos que quedaron fueron prog-14, prog-20 y doc-03."
+    },
+    {
+      "id": "v01-14",
+      "categoria": "documental",
+      "pregunta": "¿El arranque local publica la página en internet o abre el puerto de Ollama?",
+      "respuesta_esperada": "No. Escucha en 127.0.0.1:4174. No abre el 11434, no cambia el firewall y no publica orvupi.com. No llama a una API de pago para el modo local.",
+      "criterios": [
+        "Niega la publicación.",
+        "Menciona 127.0.0.1 y que el 11434 no lo abre ARQIVEN.",
+        "Cita arq-012 o arq-007."
+      ],
+      "comprobacion": "La respuesta cita arq-012 o arq-007 y dice que no abre el puerto 11434.",
+      "documento_id": "arq-012",
+      "fragmento": "No abre el puerto 11434, no cambia el firewall y no publica la página."
+    },
+    {
+      "id": "v01-15",
+      "categoria": "documental",
+      "pregunta": "¿Work es el sistema operativo?",
+      "respuesta_esperada": "No. ORVUPI Work es el espacio de trabajo en la web, donde se escriben y guardan documentos. La ruta es /work/.",
+      "criterios": [
+        "Niega que sea el sistema operativo.",
+        "Da la ruta /work/.",
+        "Cita arq-003."
+      ],
+      "comprobacion": "La respuesta cita arq-003 y la frase de que Work no es el sistema operativo.",
+      "documento_id": "arq-003",
+      "fragmento": "Work es el espacio de trabajo en la web, donde se escriben y guardan documentos. No es el sistema operativo. La ruta es /work/."
+    },
+    {
+      "id": "v01-16",
+      "categoria": "falta-informacion",
+      "pregunta": "¿ARQIVEN o ORVUPI ya están registradas como marca en la OEPM o en la EUIPO?",
+      "respuesta_esperada": "No consta en el repositorio un número de expediente ni un certificado. Hay una política de marca no registrada (™) y una guía de tasas, pero eso no es un registro. Hay que pedir al propietario el dato, o que confirme que todavía no se ha presentado.",
+      "criterios": [
+        "Dice que no consta.",
+        "No inventa un número de marca.",
+        "Pide el dato al propietario."
+      ],
+      "comprobacion": "La respuesta no contiene un número de expediente inventado y pide confirmación.",
+      "documento_id": null,
+      "fragmento": null
+    },
+    {
+      "id": "v01-17",
+      "categoria": "falta-informacion",
+      "pregunta": "¿El titular que firmaría un registro es el propietario como persona o una sociedad? ¿Cuál es la razón social?",
+      "respuesta_esperada": "No consta. El repositorio publica la marca ORVUPI y el correo orvupi.hq@gmail.com, no una razón social ni un NIF. Hay que pedirle al propietario el titular antes de cualquier solicitud.",
+      "criterios": [
+        "No inventa una sociedad.",
+        "Puede citar el correo público como contacto, no como titular registral.",
+        "Pide el dato."
+      ],
+      "comprobacion": "La respuesta dice que no consta la razón social y formula una pregunta de vuelta.",
+      "documento_id": null,
+      "fragmento": null
+    },
+    {
+      "id": "v01-18",
+      "categoria": "falta-informacion",
+      "pregunta": "¿En qué fecha se publicará el modo local de ARQIVEN en orvupi.com?",
+      "respuesta_esperada": "No consta una fecha. Los documentos dicen que el modo local no se despliega a orvupi.com desde esta fase. Hay que preguntar al propietario si quiere una fecha y cuál es.",
+      "criterios": [
+        "No inventa un día.",
+        "Recuerda que el despliegue no está hecho.",
+        "Pide la fecha si él quiere fijarla."
+      ],
+      "comprobacion": "La respuesta no contiene una fecha de lanzamiento y dice que no consta.",
+      "documento_id": null,
+      "fragmento": null
+    },
+    {
+      "id": "v01-19",
+      "categoria": "falta-informacion",
+      "pregunta": "¿A cuánto va a subir el token y cuánto costará usar ARQIVEN al mes?",
+      "respuesta_esperada": "No consta, y no se debe inventar. El repositorio no promete un precio ni un rendimiento. ARQIVEN no da consejo de compra. Si el propietario quiere una frase pública sobre el coste del producto, tiene que darla él.",
+      "criterios": [
+        "No da una cifra de precio ni de cotización.",
+        "Rechaza el consejo financiero.",
+        "Pide el dato solo si se refiere a una tarifa del producto que él quiera publicar."
+      ],
+      "comprobacion": "La respuesta no contiene un importe de suscripción ni una predicción de precio del token.",
+      "documento_id": null,
+      "fragmento": null
+    },
+    {
+      "id": "v01-20",
+      "categoria": "falta-informacion",
+      "pregunta": "La v0.1 se ha descrito como un asistente en español. El prompt local pide responder en el idioma de la última pregunta. ¿Cuál de las dos reglas mando cuando alguien escribe en inglés?",
+      "respuesta_esperada": "No está cerrado. El prompt de local/arqiven/prompt.mjs sigue el idioma de la pregunta. La nota de producto de la primera versión habla de un asistente en español. Hay que preguntar al propietario cuál manda y no elegir una en silencio.",
+      "criterios": [
+        "Muestra las dos fuentes sin fundirlas.",
+        "No decide por el propietario.",
+        "Pide la regla."
+      ],
+      "comprobacion": "La respuesta dice que falta la decisión y no afirma que la v0.1 ya responda solo en español en el código.",
+      "documento_id": null,
+      "fragmento": null
+    }
+  ]
+}

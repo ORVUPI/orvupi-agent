@@ -1,3 +1,4 @@
+/* © 2026 ORVUPI. Todos los derechos reservados. */
 /** Latencia con 4 hilos: 5 preguntas generales y 5 de ORVUPI, en cinco idiomas.
  * node eval/arqiven/conversacion/latencia.mjs [repo] [dtype]
  */

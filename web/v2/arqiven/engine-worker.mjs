@@ -1,3 +1,4 @@
+/* © 2026 ORVUPI. Todos los derechos reservados. */
 /** Worker del mismo motor que Work (Transformers.js + ONNX). Los id son de terceros. */
 
 import { ONNX_WASM, ORT_WASM_MJS, TRANSFORMERS_ESM, modelById } from "/shared/ia/models.mjs";

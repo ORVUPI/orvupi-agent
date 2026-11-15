@@ -1,3 +1,4 @@
+/* © 2026 ORVUPI. Todos los derechos reservados. */
 import { readdir, readFile, writeFile } from "node:fs/promises";
 const { TASKS } = await import("./tasks.mjs?" + Date.now());
 const byId = Object.fromEntries(TASKS.map((t) => [t.id, t]));

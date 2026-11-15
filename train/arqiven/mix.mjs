@@ -1,3 +1,4 @@
+/* © 2026 ORVUPI. Todos los derechos reservados. */
 /** Deduplicación y descontaminación. No entrena y no llama a la red. */
 
 import { createHash } from "node:crypto";

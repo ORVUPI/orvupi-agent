@@ -1,3 +1,4 @@
+# © 2026 ORVUPI. Todos los derechos reservados.
 # %% markdown
 # LoRA de ARQIVEN en Kaggle
 #

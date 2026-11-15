@@ -57,8 +57,8 @@ El agente no tiene claves: no firma, no custodia, no intercambia activos ni env�
 - [Modelo de amenazas](THREAT-MODEL.md)
 - [Cambios de ORVUPI](CHANGELOG.md)
 
-Licencia MIT. Copyright (c) 2026 ORVUPI. Consulta [LICENSE](LICENSE). Se conservan los avisos de licencias de componentes de terceros.
+El resto del repositorio va en MIT. Copyright (c) 2026 ORVUPI. Consulta [LICENSE](LICENSE). ARQIVEN, en las rutas de [LICENSE-ARQIVEN.md](LICENSE-ARQIVEN.md), es «© 2026 ORVUPI. Todos los derechos reservados.» desde el 15 de noviembre de 2026. El corte está en [NOTICE.md](NOTICE.md). La MIT no concede ARQIVEN™, ORVUPI™ ni el logotipo. Se conservan los avisos de terceros.
 
 ## English
 
-ORVUPI combines community, humor, creative content and educational Web3 tools. The agent holds no keys and cannot sign, custody assets or send transactions. No verified ORVUPI token address has been published in this repository. Crypto involves high risk; these tools are not investment advice. Contact: orvupi.hq@gmail.com.
+ORVUPI combines community, humor, creative content and educational Web3 tools. The agent holds no keys and cannot sign, custody assets or send transactions. No verified ORVUPI token address has been published in this repository. Crypto involves high risk; these tools are not investment advice. Contact: orvupi.hq@gmail.com. The rest of the repository stays MIT. ARQIVEN paths listed in LICENSE-ARQIVEN.md are all rights reserved as of 15 November 2026. See NOTICE.md. The MIT license does not grant ARQIVEN™, ORVUPI™ or the logo.

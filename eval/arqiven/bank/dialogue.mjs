@@ -1,3 +1,4 @@
+/* © 2026 ORVUPI. Todos los derechos reservados. */
 /** Casos de diálogo. No los copia el conjunto de entrenamiento. */
 
 const LANGS = ["es", "en", "pt-BR", "ja", "ko"];

@@ -1,0 +1,30 @@
+{
+  "nombre": "arqiven-sft-messages",
+  "version": 1,
+  "fecha": "2026-11-15",
+  "estado": "pendiente de revisión",
+  "compatible_con": "TRL SFTTrainer, columna messages",
+  "archivo": "lote-01.jsonl",
+  "una_linea_un_objeto": true,
+  "campos": {
+    "id": "Identificador estable del ejemplo. No entra en la pérdida.",
+    "estado": "Siempre «pendiente de revisión» hasta que el propietario lo acepte.",
+    "procedencia": "De dónde sale el texto y con qué permiso.",
+    "messages": "Lista de turnos. El entrenador debe usar este campo y puede ignorar el resto."
+  },
+  "turno": {
+    "role": "system, user o assistant",
+    "content": "Texto en español. Sin pesos, sin claves y sin un corpus de terceros."
+  },
+  "ejemplo_minimo": {
+    "id": "sft-000",
+    "estado": "pendiente de revisión",
+    "procedencia": "Redactado para ARQIVEN. Sin texto copiado de un corpus de terceros.",
+    "messages": [
+      {"role": "system", "content": "Eres el asistente de ARQIVEN y respondes en español. No eres un modelo propio."},
+      {"role": "user", "content": "¿Quién creó estos pesos?"},
+      {"role": "assistant", "content": "Son de Qwen3 8B, un modelo de terceros con licencia Apache 2.0. ARQIVEN no los creó desde cero."}
+    ]
+  },
+  "nota_trl": "En las versiones recientes de TRL, SFTTrainer aplica la plantilla de chat si el dataset trae messages y se le pasa el tokenizador. La llamada exacta hay que leerla en la versión que se instale en el PC. Este archivo no la ejecuta. assistant_only_loss, si esa opción existe en esa versión, evita entrenar sobre el system y el user."
+}

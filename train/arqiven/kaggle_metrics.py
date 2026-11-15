@@ -1,3 +1,4 @@
+# © 2026 ORVUPI. Todos los derechos reservados.
 """Puntuador del banco para el kernel de Kaggle. Es el espejo de eval/arqiven/score.mjs."""
 
 from __future__ import annotations

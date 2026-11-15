@@ -1,3 +1,4 @@
+/* © 2026 ORVUPI. Todos los derechos reservados. */
 /** Regla de publicación de ARQIVEN. No publica nada: solo dice si un informe cumpliría el gate. */
 
 export const PUBLICATION_RULE = {

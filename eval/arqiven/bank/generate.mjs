@@ -1,3 +1,4 @@
+/* © 2026 ORVUPI. Todos los derechos reservados. */
 /** Construye el banco JSONL. No descarga modelos ni llama a una API de pago. */
 
 import { dialogueItems } from "./dialogue.mjs";
