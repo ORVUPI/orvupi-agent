@@ -396,7 +396,7 @@ export async function startLocalServer(overrides = {}) {
         ownerId: existing?.ownerId || userId,
         ...(existing ? {} : { projectId }),
       });
-      const guarded = guardChat(visible, documentText, "fuente");
+      const guarded = guardChat(visible, documentText, "fuente", config.model);
       const redacted = guarded.record;
       const prompt = fitMessages(attachEditor(guarded.messages, editor), config.inputTokens);
       const hold = redacted.omitted.some((item) => item.kept !== true);

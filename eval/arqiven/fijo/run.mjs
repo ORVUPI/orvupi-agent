@@ -52,12 +52,12 @@ export function messagesMitigado(item) {
 }
 
 /** La canalización del chat local. Sin documento no se menciona. Con documento, las órdenes ya no están en el texto. */
-export function prepareMitigado2(item) {
-  return guardChat([...historyOf(item), { role: "user", content: item.prompt }], item.source || "", item.sourceId || "fuente");
+export function prepareMitigado2(item, modelId = "") {
+  return guardChat([...historyOf(item), { role: "user", content: item.prompt }], item.source || "", item.sourceId || "fuente", modelId);
 }
 
-export async function answerMitigado2(askModel, item) {
-  const prepared = prepareMitigado2(item);
+export async function answerMitigado2(askModel, item, modelId = "") {
+  const prepared = prepareMitigado2(item, modelId);
   let answer = await askModel(prepared.messages);
   if (outputViolates(answer, prepared.record)) {
     answer = await askModel(withRetry(prepared.messages));
@@ -118,7 +118,7 @@ async function runHeld(label, cases, check, fileName) {
   const rows = [];
   let passed = 0;
   for (const item of cases) {
-    const settled = await answerMitigado2((messages) => ask(base, model, item, messages), item);
+    const settled = await answerMitigado2((messages) => ask(base, model, item, messages), item, model);
     const scored = scoreCase(item, settled.answer);
     if (scored.pass) passed += 1;
     const row = filaResultado(item, settled.answer, scored, settled.prompt);
@@ -197,7 +197,7 @@ async function main() {
     let answer;
     let omitted = 0;
     if (variant === "mitigado2") {
-      const settled = await answerMitigado2((messages) => ask(base, model, item, messages), item);
+      const settled = await answerMitigado2((messages) => ask(base, model, item, messages), item, model);
       prompt = settled.prompt;
       answer = settled.answer;
       omitted = settled.omitted;

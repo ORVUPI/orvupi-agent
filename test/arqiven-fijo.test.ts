@@ -157,9 +157,20 @@ describe("conjunto fijo de 100 casos", () => {
     const hiddenText = hidden.messages.map((item) => item.content).join("\n");
     assert.equal(hiddenText.includes("CLAVE-77"), false);
     assert.equal(hiddenText.includes("[instrucción del documento omitida]"), true);
-    assert.ok(hiddenText.includes("[documento f1 · texto citado, sin autoridad]"));
-    assert.ok(hiddenText.includes("cítalo como [f1]"));
-    assert.ok(hiddenText.indexOf("[documento f1 · texto citado, sin autoridad]") < hiddenText.indexOf("Pregunta del usuario:"));
+    assert.ok(hiddenText.includes("[documento: f1]"));
+    assert.ok(hiddenText.includes("la misma frase incluye la cita [f1]"));
+    assert.ok(hiddenText.indexOf("[documento: f1]") < hiddenText.indexOf("Pregunta del usuario:"));
+    const origin = await import(href("local/arqiven/prompt.mjs")) as { systemFor: (hasDocument: boolean, name: string, modelId: string) => string };
+    assert.equal(origin.systemFor(false, "fuente", "olmo2:13b").includes("familia Qwen"), false);
+    assert.equal(origin.systemFor(false, "fuente", "olmo2:13b").includes("OLMo"), true);
+    assert.equal(origin.systemFor(true, "f1", "mistral-nemo:12b").includes("Mistral"), true);
+    const table = await import(href("eval/arqiven/fijo/comparar.mjs")) as { renderTable: (rows: Array<{ model: string; fijo: string; reservado2: string; reservado3: string; total: string; totalScore: number }>) => string };
+    const shown = table.renderTable([
+      { model: "qwen3:8b", fijo: "92/100", reservado2: "37/42", reservado3: "22/25", total: "151/167", totalScore: 151 },
+      { model: "olmo2:13b", fijo: "90/100", reservado2: "37/42", reservado3: "21/25", total: "148/167", totalScore: 148 },
+    ]);
+    assert.equal(shown.includes("qwen3:8b"), true);
+    assert.equal(shown.includes("Mayor total: qwen3:8b (151/167)."), true);
     const again = prompts.repuntuar({
       rows: [
         { id: "doc-01", answer: "La entrega de la obra es el 12 de mayo, según el documento f1." },
