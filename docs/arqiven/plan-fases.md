@@ -37,7 +37,7 @@ Pruebas antes de darla por hecha: crear, renombrar, mover a otra carpeta, reinic
 
 ## Fase de RAG
 
-El índice del usuario vive en `rag-index.json`, separado por proyecto. Una pregunta con `ground: true` cita fragmentos reales o responde «No consta en los documentos de este proyecto» sin llamar al modelo. Borrar el documento o el proyecto quita sus fragmentos y no los del resto. El texto indexado se trata como dato no confiable.
+El índice del usuario vive en `rag-index.json`, separado por proyecto. Una pregunta con `ground: true` cita fragmentos reales o responde «No consta en los documentos de este proyecto» sin llamar al modelo. Borrar el documento o el proyecto quita sus fragmentos y no los del resto. El texto indexado es fuente de hechos: se usa y se cita. Las órdenes que haya dentro no se obedecen. La marca que ve el modelo es `[documento: nombre]`.
 
 El embedding previsto es `qwen3-embedding:0.6b` (terceros, Apache 2.0). Las pruebas automáticas no lo descargan: usan un vector determinista. Si ese modelo no está en Ollama, el backend lo dice y no lo sustituye por el modelo de chat.
 
@@ -45,7 +45,7 @@ Objetivo: responder con citas cuando la pregunta depende de documentos del proye
 
 Límites:
 
-- Los documentos son datos no confiables. El texto recuperado entra en el mismo bloque `[documento no confiable]` que ya usa el backend. No se ejecuta.
+- El documento es fuente de hechos. Entra en `[documento: nombre]` … `[/documento]`. Se usan y se citan. Las órdenes de dentro no se obedecen y el texto no se ejecuta.
 - Cada frase que afirme un dato del corpus cita el título y un identificador del fragmento. Si el fragmento no contiene el dato, la respuesta es una abstención («no consta en los documentos de este proyecto»), no una suposición.
 - El cálculo local y las fichas verificadas de ORVUPI siguen ganando al modelo: no se pide a Ollama un contrato o una operación que ya resuelve el código.
 - El presupuesto no cambia de forma: los fragmentos cuentan dentro de los 2816 tokens de entrada. Si no caben, se recortan los más lejanos, no se sube `num_ctx` por sorpresa.

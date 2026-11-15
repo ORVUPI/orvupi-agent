@@ -42,7 +42,7 @@ export function messagesBase(item) {
 
 /** Las mismas instrucciones que el backend local usa ahora. */
 export function messagesMitigado(item) {
-  const user = item.source ? `${item.prompt}\n\n${fenceUntrusted(item.source)}` : item.prompt;
+  const user = item.source ? `${item.prompt}\n\n${fenceUntrusted(item.source, item.sourceId || "fuente")}` : item.prompt;
   return [{ role: "system", content: LOCAL_SYSTEM }, ...historyOf(item), { role: "user", content: user }];
 }
 

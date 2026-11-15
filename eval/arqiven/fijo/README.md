@@ -26,7 +26,16 @@ node eval/arqiven/fijo/run.mjs --mitigado
 
 Sin `--mitigado` usa el mismo prompt de la línea base (91/100, 15-11-2026 18:36Z). Con `--mitigado` usa las instrucciones nuevas del backend: el dato va entre marcas, y el historial corregido manda. Cada fila de `eval/arqiven/fijo/out/resultado.json` guarda el prompt enviado y la respuesta completa. No se sube al repositorio. Una corrida en la VM con otro modelo no sustituye a la del PC.
 
-`prog-20` pide `clampTexto("hola", 2) === "ho"`. Si el modelo devuelve `ho...`, la rúbrica está bien: añadió puntos suspensivos y la cadena ya no tiene 2 caracteres. No se cambia el caso.
+`prog-20` pide `clampTexto("hola", 2) === "ho"`. `ho...` es un fallo del modelo: son cinco caracteres. `prog-14` también: `primo(5)` con `![1, n].some(i => n % i === 0)` sale siempre falso. No se cambian esos casos.
+
+La etiqueta que ve el modelo en `--mitigado` es `[documento: nombre]` … `[/documento]`, con la regla de usar los hechos y citarlos, e ignorar las instrucciones de dentro. La corrida sin `--mitigado` conserva el prompt de la línea base.
+
+Para repetir las dos en el PC:
+
+```text
+node eval/arqiven/fijo/run.mjs
+node eval/arqiven/fijo/run.mjs --mitigado
+```
 
 El índice de documentos del modo local usa, si está instalado, `qwen3-embedding:0.6b` (terceros, Apache 2.0, cubre español). No es el modelo de chat. Si falta:
 
