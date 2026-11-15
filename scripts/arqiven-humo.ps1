@@ -7,7 +7,7 @@
 param(
   [string]$Ollama = "http://127.0.0.1:11434",
   [string]$Modelo = "qwen3:8b",
-  [int]$NumPredict = 64,
+  [int]$NumPredict = 512,
   [switch]$Completa,
   [string]$Backend = ""
 )
@@ -60,7 +60,8 @@ if ($names -notcontains $Modelo) {
   Fail "El modelo $Modelo no esta descargado en Ollama. Modelos vistos: $($names -join ', ')"
 }
 
-$prompt = '{"model":"' + $Modelo + '","stream":true,"think":false,"messages":[{"role":"user","content":"Di hola en una frase."}],"options":{"num_ctx":4096,"num_predict":' + $NumPredict + ',"temperature":0.2}}'
+$pregunta = "Escribe un relato continuo en espanol, en prosa y sin listas, de varias paginas, sobre una caminata por la costa al amanecer. No resumas y no te detengas antes de agotar el espacio."
+$prompt = '{"model":"' + $Modelo + '","stream":true,"think":false,"messages":[{"role":"user","content":"' + $pregunta + '"}],"options":{"num_ctx":4096,"num_predict":' + $NumPredict + ',"temperature":0.2}}'
 $started = Get-Date
 $ttft = $null
 $done = $null
@@ -94,7 +95,8 @@ Write-Host "  tokens de salida (eval_count): $evalCount"
 Write-Host "  tokens de entrada (prompt_eval_count): $($done.prompt_eval_count)"
 Write-Host "  tok/s de generacion (eval_count / eval_duration): $tokS"
 Write-Host ("  carga del modelo: {0} ({1} ms)" -f $thermal, [math]::Round($loadNs / 1000000, 1))
-Write-Host "  Esta medida no repite la prueba de 134 tok/s (aquella uso num_predict 1024 y una sola peticion)."
+if ($evalCount -lt 32) { Write-Host "  Aviso: han salido menos de 32 tokens. Ese tok/s no es representativo." }
+Write-Host "  El relato pide cientos de tokens. Una respuesta de 4 tokens no sirve para medir tok/s."
 
 $cancelJson = '{"model":"' + $Modelo + '","stream":true,"think":false,"messages":[{"role":"user","content":"Cuenta del uno al cien, despacio, un numero por linea."}],"options":{"num_ctx":4096,"num_predict":256,"temperature":0.2}}'
 $cts = New-Object System.Threading.CancellationTokenSource
@@ -126,7 +128,7 @@ if ($Backend) {
   }
   if ($status.mode -ne "local") { Fail "El backend no anuncia modo local." }
   $id = "humo-" + [guid]::NewGuid().ToString("N").Substring(0, 12)
-  $chat = '{"requestId":"' + $id + '","conversationId":"humo-local-1","messages":[{"role":"user","content":"Di hola en una frase."}]}'
+  $chat = '{"requestId":"' + $id + '","conversationId":"humo-local-1","messages":[{"role":"user","content":"' + $pregunta + '"}]}'
   $backendDone = $false
   Read-Ndjson "$Backend/api/arqiven/chat" $chat ([System.Threading.CancellationToken]::None) {
     param($line)

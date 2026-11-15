@@ -2,9 +2,28 @@
 
 import { appendFile, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { codeError } from "./errors.mjs";
+import { canSeeChat, canWriteChat, createProject, moveChat, removeProject, renameChat, renameProject, roleOf, setMember } from "./projects.mjs";
 
 function empty() {
-  return { version: 1, conversations: [] };
+  return { version: 2, conversations: [], projects: [], members: [] };
+}
+
+function asVersion2(parsed, defaultUser) {
+  const conversations = Array.isArray(parsed?.conversations) ? parsed.conversations : null;
+  if (!conversations || (parsed.version !== 1 && parsed.version !== 2)) {
+    throw Object.assign(new Error("historial"), { code: "bad-request" });
+  }
+  return {
+    version: 2,
+    conversations: conversations.map((item) => ({
+      ...item,
+      projectId: typeof item.projectId === "string" ? item.projectId : "",
+      ownerId: typeof item.ownerId === "string" && item.ownerId ? item.ownerId : defaultUser,
+    })),
+    projects: Array.isArray(parsed.projects) ? parsed.projects.map((item) => ({ ...item })) : [],
+    members: Array.isArray(parsed.members) ? parsed.members.map((item) => ({ ...item })) : [],
+  };
 }
 
 function cleanMessage(item) {
@@ -19,16 +38,22 @@ function cleanConversation(input = {}) {
   if (!/^[A-Za-z0-9-]{8,80}$/.test(id)) throw Object.assign(new Error("conversation"), { code: "bad-request" });
   const messages = (Array.isArray(input.messages) ? input.messages : []).map(cleanMessage).filter(Boolean).slice(-80);
   const title = String(input.title || messages.find((item) => item.role === "user")?.content || "").replace(/\s+/g, " ").trim().slice(0, 80);
+  const projectId = /^[A-Za-z0-9-]{8,80}$/.test(String(input.projectId || "")) ? String(input.projectId) : "";
+  const ownerId = /^[A-Za-z0-9._-]{1,64}$/.test(String(input.ownerId || "")) ? String(input.ownerId) : "local";
   return {
     id,
     title,
+    renamed: input.renamed === true,
+    projectId,
+    ownerId,
     updated: new Date().toISOString(),
     messages,
   };
 }
 
-export function createStore(dir) {
+export function createStore(dir, options = {}) {
   const root = path.resolve(dir);
+  const defaultUser = /^[A-Za-z0-9._-]{1,64}$/.test(String(options.defaultUser || "")) ? String(options.defaultUser) : "local";
   const historyFile = path.join(root, "history.json");
   const metricsFile = path.join(root, "metrics.jsonl");
   let chain = Promise.resolve();
@@ -47,11 +72,7 @@ export function createStore(dir) {
       if (error?.code === "ENOENT") return empty();
       throw error;
     }
-    const parsed = JSON.parse(text);
-    if (parsed?.version !== 1 || !Array.isArray(parsed.conversations)) {
-      throw Object.assign(new Error("historial"), { code: "bad-request" });
-    }
-    return parsed;
+    return asVersion2(JSON.parse(text), defaultUser);
   }
 
   async function writeHistory(data) {
@@ -78,13 +99,123 @@ export function createStore(dir) {
     },
     save(input) {
       return exclusive(async () => {
-        const clean = cleanConversation(input);
         const data = await readHistory();
-        const index = data.conversations.findIndex((item) => item.id === clean.id);
+        const index = data.conversations.findIndex((item) => item.id === String(input.id || ""));
+        const previous = index >= 0 ? data.conversations[index] : null;
+        const clean = cleanConversation({
+          ...previous,
+          ...input,
+          title: input.title || previous?.title,
+          renamed: input.renamed === true || previous?.renamed === true,
+          projectId: input.projectId !== undefined ? input.projectId : previous?.projectId,
+          ownerId: input.ownerId || previous?.ownerId,
+        });
         if (index >= 0) data.conversations[index] = clean;
         else data.conversations.push(clean);
         await writeHistory(data);
         return clean;
+      });
+    },
+    listFor(userId) {
+      return exclusive(async () => {
+        const data = await readHistory();
+        return data.conversations
+          .filter((item) => canSeeChat(data, item, userId))
+          .map((item) => ({ ...item, messages: item.messages.map((message) => ({ ...message })) }))
+          .sort((a, b) => (a.updated < b.updated ? 1 : -1));
+      });
+    },
+    getFor(userId, id) {
+      return exclusive(async () => {
+        const data = await readHistory();
+        const found = data.conversations.find((item) => item.id === id);
+        if (!found) return null;
+        if (!canSeeChat(data, found, userId)) throw codeError("forbidden");
+        return { ...found, messages: found.messages.map((item) => ({ ...item })) };
+      });
+    },
+    assertWrite(userId, id, projectId) {
+      return exclusive(async () => {
+        const data = await readHistory();
+        const found = data.conversations.find((item) => item.id === id);
+        if (found) {
+          if (!canWriteChat(data, found, userId)) throw codeError("forbidden");
+          return found;
+        }
+        if (projectId) {
+          if (!canWriteChat(data, { projectId, ownerId: userId }, userId)) throw codeError("forbidden");
+        }
+        return null;
+      });
+    },
+    projectsFor(userId) {
+      return exclusive(async () => {
+        const data = await readHistory();
+        return data.projects
+          .filter((item) => roleOf(data.members, item.id, userId))
+          .map((item) => ({ ...item, role: roleOf(data.members, item.id, userId) }))
+          .sort((a, b) => (a.updated < b.updated ? 1 : -1));
+      });
+    },
+    projectFor(userId, id) {
+      return exclusive(async () => {
+        const data = await readHistory();
+        const project = data.projects.find((item) => item.id === id);
+        const role = roleOf(data.members, id, userId);
+        if (!project || !role) throw codeError("forbidden");
+        const conversations = data.conversations
+          .filter((item) => item.projectId === id)
+          .map((item) => ({ id: item.id, title: item.title, updated: item.updated, projectId: item.projectId }))
+          .sort((a, b) => (a.updated < b.updated ? 1 : -1));
+        return { project: { ...project, role }, conversations };
+      });
+    },
+    createProject(input) {
+      return exclusive(async () => {
+        const data = await readHistory();
+        const project = createProject(data, input);
+        await writeHistory(data);
+        return project;
+      });
+    },
+    renameProject(input) {
+      return exclusive(async () => {
+        const data = await readHistory();
+        const project = renameProject(data, input);
+        await writeHistory(data);
+        return project;
+      });
+    },
+    removeProject(input) {
+      return exclusive(async () => {
+        const data = await readHistory();
+        const result = removeProject(data, input);
+        await writeHistory(data);
+        return result;
+      });
+    },
+    setMember(input) {
+      return exclusive(async () => {
+        const data = await readHistory();
+        const result = setMember(data, input);
+        await writeHistory(data);
+        return result;
+      });
+    },
+    renameChat(input) {
+      return exclusive(async () => {
+        const data = await readHistory();
+        const result = renameChat(data, input);
+        await writeHistory(data);
+        return result;
+      });
+    },
+    moveChat(input) {
+      return exclusive(async () => {
+        const data = await readHistory();
+        const result = moveChat(data, input);
+        await writeHistory(data);
+        return result;
       });
     },
     appendMetric(metric) {

@@ -17,6 +17,7 @@ export const DEFAULTS = {
   timeoutMs: 180000,
   maxBodyBytes: 262144,
   templateReserve: 256,
+  localUser: "local",
 };
 
 function fromEnv(name, fallback) {
@@ -74,6 +75,10 @@ export function resolveConfig(overrides = {}) {
   const templateReserve = intValue(overrides.templateReserve ?? fromEnv("ARQIVEN_TEMPLATE_RESERVE", DEFAULTS.templateReserve), "ARQIVEN_TEMPLATE_RESERVE");
   const budget = budgetPlan({ numCtx, numPredict, templateReserve });
   const dataDir = path.resolve(String(overrides.dataDir ?? fromEnv("ARQIVEN_DATA", path.join(os.homedir(), ".arqiven", "local"))));
+  const localUser = String(overrides.localUser ?? fromEnv("ARQIVEN_USER", DEFAULTS.localUser)).slice(0, 64);
+  if (!/^[A-Za-z0-9._-]{1,64}$/.test(localUser)) {
+    throw Object.assign(new Error("ARQIVEN_USER no es un identificador local válido"), { code: "bad-request" });
+  }
   return {
     host: "127.0.0.1",
     port,
@@ -85,6 +90,7 @@ export function resolveConfig(overrides = {}) {
     timeoutMs,
     maxBodyBytes,
     dataDir,
+    localUser,
     ...budget,
   };
 }

@@ -1,10 +1,12 @@
 # Fases siguientes de ARQIVEN
 
-La fase local (interfaz, backend en 127.0.0.1, Ollama, cola, historial y métricas) es la que está en el código. Las tres de abajo no se implementan todavía. El orden importa: no se entrena nada antes de la evaluación fija, y el RAG no entra antes de que el historial y los proyectos tengan un sitio estable.
+La fase local (interfaz, backend en 127.0.0.1, Ollama, cola, historial y métricas) está en el código. Los proyectos locales —crear, renombrar, mover chats, reabrir y permisos— también. Siguen fuera las carpetas anidadas, el RAG y la evaluación fija. El orden importa: no se entrena nada antes de esa evaluación.
 
 ## Fase de proyectos
 
-Hoy los proyectos viven en IndexedDB `orvupi-arqiven-chats`: se crean, se renombran y se borran en el navegador. Borrar un proyecto devuelve sus chats al historial general. No hay carpetas, no hay permiso por persona y el modo local no guarda el proyecto en disco.
+En el modo local, los proyectos viven en el mismo `history.json` que los chats (versión 2; un archivo de la versión 1 se lee y no pierde mensajes). Crear, renombrar un proyecto o un chat, mover un chat y borrar un proyecto pasan por el backend. Borrar un proyecto devuelve sus chats al historial general. Reabrir es `GET /api/arqiven/projects/:id`. El modo navegador sigue en IndexedDB.
+
+El usuario es de este equipo (`x-arqiven-user` o `ARQIVEN_USER`, si no, `local`). No hay cuenta de orvupi.com.
 
 Objetivo: un proyecto es una carpeta de este equipo, con chats dentro, y cada acción comprueba quién puede hacerla.
 

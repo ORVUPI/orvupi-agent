@@ -4,18 +4,19 @@ El PC no tiene Git, Node ni Python. Ollama ya está instalado y el modelo `qwen3
 
 El backend escucha solo en `127.0.0.1`. La página queda en este equipo. No es orvupi.com.
 
-## 1. Instalar Node.js 22 LTS
+## 1. Instalar Node.js 22 o superior
 
-1. Abre https://nodejs.org/ y descarga el instalador de Windows de la rama 22 LTS (x64).
-2. Instálalo con las opciones por defecto. No marques herramientas nativas ni Python si el instalador las ofrece: este backend no las usa.
-3. Cierra PowerShell si estaba abierta y abre una nueva.
-4. Comprueba:
+Hace falta Node.js 22 o superior. La 22 LTS vale, y también una LTS más nueva: en este PC quedó instalada la v26.13.1 con winget, y el arranque la acepta.
+
+1. Si aún no está, instálala con `winget install OpenJS.NodeJS.LTS` o con el instalador de https://nodejs.org/. No marques herramientas nativas ni Python: este backend no las usa.
+2. Cierra PowerShell si estaba abierta y abre una nueva.
+3. Comprueba:
 
 ```text
 node -v
 ```
 
-Tiene que decir `v22` o una versión mayor. Si dice que no reconoce `node`, el instalador no quedó en el PATH: cierra la ventana y ábrela otra vez.
+Tiene que ser 22 o superior (`v22`, `v24`, `v26`…). Si dice que no reconoce `node`, el instalador no quedó en el PATH: cierra la ventana y ábrela otra vez.
 
 ## 2. Traer el código sin Git
 
@@ -73,10 +74,10 @@ powershell -ExecutionPolicy Bypass -File .\scripts\arqiven-humo.ps1
 
 Eso hace dos cosas contra tu Ollama:
 
-1. Una respuesta corta (`num_predict` 64, `think` false, `num_ctx` 4096, temperatura 0.2) e imprime el tiempo hasta el primer token, los tokens y los tok/s que calcula Ollama con `eval_count` y `eval_duration`.
+1. Un relato largo (`num_predict` 512, `think` false, `num_ctx` 4096, temperatura 0.2). Así el tok/s sale de cientos de tokens. Una respuesta de 4 tokens no es representativa: el humo anterior, con «Di hola en una frase», se quedaba ahí.
 2. Otra generación que se cancela al llegar el primer fragmento.
 
-No es la prueba de ~134 tok/s. Aquella usaba `num_predict` 1024. Para repetir ese largo:
+Para repetir un largo de 1024 tokens:
 
 ```text
 powershell -ExecutionPolicy Bypass -File .\scripts\arqiven-humo.ps1 -Completa

@@ -22,6 +22,7 @@ if (-not $env:ARQIVEN_DATA) {
 }
 New-Item -ItemType Directory -Force -Path $env:ARQIVEN_DATA | Out-Null
 
+if (-not $env:ARQIVEN_USER -and $env:USERNAME -match '^[A-Za-z0-9._-]{1,64}$') { $env:ARQIVEN_USER = $env:USERNAME }
 if (-not $env:OLLAMA_HOST) { $env:OLLAMA_HOST = "http://127.0.0.1:11434" }
 if (-not $env:ARQIVEN_MODEL) { $env:ARQIVEN_MODEL = "qwen3:8b" }
 if (-not $env:ARQIVEN_HOST) { $env:ARQIVEN_HOST = "127.0.0.1" }

@@ -45,6 +45,14 @@ function validId(value) {
   return /^[A-Za-z0-9-]{8,80}$/.test(id) ? id : "";
 }
 
+function requestUser(req, config) {
+  const raw = req.headers["x-arqiven-user"];
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  const clean = String(value || "").trim();
+  if (/^[A-Za-z0-9._-]{1,64}$/.test(clean)) return clean;
+  return config.localUser;
+}
+
 function dialogueFrom(input) {
   if (!Array.isArray(input)) return [];
   return input.flatMap((item) => {
@@ -206,7 +214,7 @@ function statusBody(config, queue, probe) {
 
 export async function startLocalServer(overrides = {}) {
   const config = resolveConfig(overrides);
-  const store = createStore(config.dataDir);
+  const store = createStore(config.dataDir, { defaultUser: config.localUser });
   const queue = createQueue(1);
   const jobs = new Map();
 
@@ -229,6 +237,17 @@ export async function startLocalServer(overrides = {}) {
     }
     const requestId = validId(body.requestId) || randomUUID();
     const conversationId = validId(body.conversationId) || randomUUID();
+    const userId = requestUser(req, config);
+    try {
+      const projectId = validId(body.projectId);
+      await store.assertWrite(userId, conversationId, projectId);
+    } catch (error) {
+      if (error?.code === "forbidden") {
+        sendJson(res, 403, publicError("forbidden", config));
+        return;
+      }
+      throw error;
+    }
     const controller = new AbortController();
     jobs.set(requestId, controller);
     res.writeHead(200, {
@@ -257,7 +276,14 @@ export async function startLocalServer(overrides = {}) {
         visible = base;
       }
       if (!visible.some((item) => item.role === "user")) throw codeError("bad-request");
-      await store.save({ id: conversationId, messages: visible });
+      const projectId = validId(body.projectId);
+      const existing = await store.assertWrite(userId, conversationId, projectId);
+      await store.save({
+        id: conversationId,
+        messages: visible,
+        ownerId: existing?.ownerId || userId,
+        ...(existing ? {} : { projectId }),
+      });
       const editor = typeof body.editor === "string" ? body.editor : "";
       const documentText = typeof body.document === "string" ? body.document : "";
       const prompt = fitMessages(attachDocument(attachEditor([
@@ -347,9 +373,85 @@ export async function startLocalServer(overrides = {}) {
       sendJson(res, 503, { enabled: false });
       return;
     }
+    if (pathname === "/api/arqiven/projects" && req.method === "GET") {
+      store.projectsFor(requestUser(req, config)).then((projects) => sendJson(res, 200, { projects })).catch((error) => {
+        sendJson(res, error?.code === "forbidden" ? 403 : 500, publicError(error?.code || "bad-request", config));
+      });
+      return;
+    }
+    if (pathname === "/api/arqiven/projects" && req.method === "POST") {
+      readBody(req, 8192).then(async (body) => {
+        const project = await store.createProject({
+          id: validId(body.id) || randomUUID(),
+          name: body.name,
+          userId: requestUser(req, config),
+        });
+        sendJson(res, 201, { project });
+      }).catch((error) => {
+        sendJson(res, error?.code === "forbidden" ? 403 : 400, publicError(error?.code || "bad-request", config));
+      });
+      return;
+    }
+    if (pathname.startsWith("/api/arqiven/projects/") && req.method === "POST" && pathname.endsWith("/members")) {
+      const projectId = validId(decodeURIComponent(pathname.slice("/api/arqiven/projects/".length, -"/members".length)));
+      readBody(req, 8192).then(async (body) => {
+        const member = await store.setMember({
+          projectId,
+          userId: requestUser(req, config),
+          memberId: body.userId,
+          role: body.role,
+        });
+        sendJson(res, 200, { member });
+      }).catch((error) => {
+        const status = error?.code === "forbidden" ? 403 : 400;
+        sendJson(res, status, publicError(error?.code || "bad-request", config));
+      });
+      return;
+    }
+    if (pathname.startsWith("/api/arqiven/projects/") && (req.method === "GET" || req.method === "PATCH" || req.method === "DELETE")) {
+      const projectId = validId(decodeURIComponent(pathname.slice("/api/arqiven/projects/".length)));
+      const userId = requestUser(req, config);
+      const run = req.method === "GET"
+        ? store.projectFor(userId, projectId)
+        : req.method === "DELETE"
+          ? store.removeProject({ projectId, userId })
+          : readBody(req, 8192).then((body) => store.renameProject({ projectId, userId, name: body.name }));
+      Promise.resolve(run).then((payload) => sendJson(res, 200, req.method === "GET" ? payload : { project: payload })).catch((error) => {
+        sendJson(res, error?.code === "forbidden" ? 403 : 400, publicError(error?.code || "bad-request", config));
+      });
+      return;
+    }
     if (pathname === "/api/arqiven/conversations" && req.method === "GET") {
-      store.list().then((conversations) => sendJson(res, 200, { conversations })).catch(() => {
-        sendJson(res, 500, publicError("bad-request", config));
+      store.listFor(requestUser(req, config)).then((conversations) => sendJson(res, 200, { conversations })).catch((error) => {
+        sendJson(res, error?.code === "forbidden" ? 403 : 500, publicError(error?.code || "bad-request", config));
+      });
+      return;
+    }
+    if (pathname.startsWith("/api/arqiven/conversations/") && req.method === "PATCH") {
+      const id = validId(decodeURIComponent(pathname.slice("/api/arqiven/conversations/".length)));
+      readBody(req, 8192).then(async (body) => {
+        const conversation = await store.renameChat({
+          conversationId: id,
+          title: body.title,
+          userId: requestUser(req, config),
+        });
+        sendJson(res, 200, { conversation });
+      }).catch((error) => {
+        sendJson(res, error?.code === "forbidden" ? 403 : 400, publicError(error?.code || "bad-request", config));
+      });
+      return;
+    }
+    if (pathname.startsWith("/api/arqiven/conversations/") && req.method === "POST" && pathname.endsWith("/move")) {
+      const id = validId(decodeURIComponent(pathname.slice("/api/arqiven/conversations/".length, -"/move".length)));
+      readBody(req, 8192).then(async (body) => {
+        const conversation = await store.moveChat({
+          conversationId: id,
+          projectId: validId(body.projectId),
+          userId: requestUser(req, config),
+        });
+        sendJson(res, 200, { conversation });
+      }).catch((error) => {
+        sendJson(res, error?.code === "forbidden" ? 403 : 400, publicError(error?.code || "bad-request", config));
       });
       return;
     }
@@ -359,9 +461,11 @@ export async function startLocalServer(overrides = {}) {
         sendJson(res, 400, publicError("bad-request", config));
         return;
       }
-      store.get(id).then((conversation) => {
+      store.getFor(requestUser(req, config), id).then((conversation) => {
         sendJson(res, 200, { conversation: conversation || null });
-      }).catch(() => sendJson(res, 500, publicError("bad-request", config)));
+      }).catch((error) => {
+        sendJson(res, error?.code === "forbidden" ? 403 : 500, publicError(error?.code || "bad-request", config));
+      });
       return;
     }
     if (pathname === "/api/arqiven/metrics" && req.method === "GET") {

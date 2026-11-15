@@ -21,6 +21,7 @@ export function publicError(code, config = {}, detail = "") {
     budget: "El presupuesto de contexto no deja sitio para la respuesta.",
     empty: "El modelo de terceros no escribió una respuesta.",
     "ollama-error": "Ollama rechazó la petición.",
+    forbidden: "No tienes permiso para esta acción en el proyecto.",
   };
   const message = table[code] || "No se pudo completar la petición.";
   const extra = String(detail || "").replace(/\s+/g, " ").trim().slice(0, 160);

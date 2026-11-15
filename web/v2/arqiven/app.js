@@ -13,7 +13,7 @@ import { exportPayload, listVotes, openFeedbackDb, saveVote } from "/shared/ia/f
 import { clipHistory } from "/shared/ia/history.mjs";
 void clipHistory;
 import { dateGroup, deleteConversation, deleteImage, deleteProject, listConversations, listImages, listProjects, matchesQuery, openChatDb, openPrefDb, readConversation, readSetting, saveConversation, saveImage, saveProject, saveSetting } from "/shared/ia/chats.mjs";
-import { cancelLocal, localChat, localConversation, localConversations, localStatus } from "/shared/ia/local-client.mjs";
+import { cancelLocal, localChat, localConversation, localConversations, localCreateProject, localDeleteProject, localMoveConversation, localProject, localProjects, localRenameConversation, localRenameProject, localStatus } from "/shared/ia/local-client.mjs";
 
 const root = document.querySelector(".arq-app");
 if (!root) throw new Error("ARQIVEN");
@@ -40,6 +40,7 @@ const UI = {
     localTimeout: "La petición superó el tiempo de espera.",
     localTooLarge: "La petición es demasiado grande.",
     localHonest: "qwen3:8b es un modelo de terceros. ARQIVEN no lo creó.",
+    localForbidden: "No tienes permiso para esta acción en el proyecto.",
     preparing: "Descargando un modelo de terceros. Puedes seguir escribiendo.",
     checking: "Comprobando que el modelo de terceros responde en este navegador.",
     idle: "IA de ORVUPI",
@@ -87,6 +88,7 @@ const UI = {
     localTimeout: "The request timed out.",
     localTooLarge: "The request is too large.",
     localHonest: "qwen3:8b is a third-party model. ARQIVEN did not create it.",
+    localForbidden: "You cannot do that in this project.",
     preparing: "Downloading a third-party model. You can keep typing.",
     checking: "Checking that the third-party model answers in this browser.",
     idle: "ORVUPI AI",
@@ -134,6 +136,7 @@ const UI = {
     localTimeout: "A petição excedeu o tempo de espera.",
     localTooLarge: "A petição é grande demais.",
     localHonest: "qwen3:8b é um modelo de terceiros. A ARQIVEN não o criou.",
+    localForbidden: "Você não tem permissão para esta ação no projeto.",
     who: "ARQIVEN é a IA da ORVUPI. Se você baixar um modelo para ele responder, esse modelo é de terceiros e aparece com o nome dele.",
     preparing: "Baixando um modelo de terceiros. Você pode continuar escrevendo.",
     checking: "Conferindo se o modelo de terceiros responde neste navegador.",
@@ -181,6 +184,7 @@ const UI = {
     localTimeout: "待ち時間を超えました。",
     localTooLarge: "リクエストが大きすぎます。",
     localHonest: "qwen3:8b は第三者モデルです。ARQIVEN は作っていません。",
+    localForbidden: "このプロジェクトではその操作はできません。",
     who: "ARQIVEN は ORVUPI の AI です。応答させるためにモデルをダウンロードする場合、それは第三者のもので、名前は別に示します。",
     preparing: "第三者モデルをダウンロードしています。入力は続けられます。",
     checking: "このブラウザで第三者モデルが応答するか確認しています。",
@@ -228,6 +232,7 @@ const UI = {
     localTimeout: "요청 시간이 초과되었습니다.",
     localTooLarge: "요청이 너무 큽니다.",
     localHonest: "qwen3:8b는 제3자 모델입니다. ARQIVEN이 만들지 않았습니다.",
+    localForbidden: "이 프로젝트에서 그 작업은 허용되지 않습니다.",
     who: "ARQIVEN은 ORVUPI의 AI입니다. 답을 받으려고 모델을 받으면 그 모델은 제3자이고, 이름은 따로 표시합니다.",
     preparing: "제3자 모델을 받는 중입니다. 계속 입력할 수 있습니다.",
     checking: "이 브라우저에서 제3자 모델이 응답하는지 확인하는 중입니다.",
@@ -935,16 +940,24 @@ function toggleChatMenu(item, anchor) {
 }
 
 async function chatAction(action, item) {
-  if (!state.chatDb) return;
+  if (!state.chatDb && state.runtime !== "ollama") return;
   if (action === "rename") {
     const name = await askUser(chrome.chatName, item.title);
     if (!name) return;
+    if (state.runtime === "ollama") {
+      const renamed = await localRenameConversation(item.id, name);
+      if (!renamed) {
+        setStatus(ui.localForbidden);
+        closeRowMenus();
+        return;
+      }
+    }
     const row = state.conversations.find((chat) => chat.id === item.id) || item;
     if (item.id === state.conversationId) {
       state.chatRenamed = true;
       state.chatTitle = name;
       await persist();
-    } else {
+    } else if (state.chatDb) {
       await saveConversation(state.chatDb, { ...row, title: name, renamed: true });
     }
   }
@@ -952,11 +965,19 @@ async function chatAction(action, item) {
     const choice = await askUser(`${chrome.move}\n${chrome.general}`, item.projectId || "");
     if (choice == null) return;
     const projectId = state.projects.some((project) => project.id === choice || project.name === choice) ? (state.projects.find((project) => project.id === choice || project.name === choice)?.id || "") : "";
+    if (state.runtime === "ollama") {
+      const moved = await localMoveConversation(item.id, projectId);
+      if (!moved) {
+        setStatus(ui.localForbidden);
+        closeRowMenus();
+        return;
+      }
+    }
     const row = state.conversations.find((chat) => chat.id === item.id) || item;
     if (item.id === state.conversationId) {
       state.chatProject = projectId;
       await persist();
-    } else {
+    } else if (state.chatDb) {
       await saveConversation(state.chatDb, { ...row, projectId });
     }
   }
@@ -964,7 +985,7 @@ async function chatAction(action, item) {
     const ok = await askUser(chrome.deleteChat, "", chrome.remove);
     if (ok == null) return;
     removedIds.add(item.id);
-    await deleteConversation(state.chatDb, item.id);
+    if (state.chatDb) await deleteConversation(state.chatDb, item.id);
     if (item.id === state.conversationId) {
       state.messages = [];
       state.conversationId = newId();
@@ -975,7 +996,10 @@ async function chatAction(action, item) {
     }
   }
   closeRowMenus();
-  state.conversations = await listConversations(state.chatDb);
+  if (state.runtime === "ollama") {
+    const rows = await localConversations();
+    if (rows) state.conversations = rows;
+  } else if (state.chatDb) state.conversations = await listConversations(state.chatDb);
   paint();
 }
 
@@ -1401,6 +1425,7 @@ async function streamLocal(item, extra = {}) {
         messages: localDialogue(item),
         document: String(item.document || ""),
         editor: String(item.editor || ""),
+        projectId: state.chatProject || "",
       },
       onEvent(event) {
         if (epoch !== turnEpoch || !event || event.requestId && event.requestId !== requestId) return;
@@ -1779,10 +1804,18 @@ document.getElementById("project-form")?.addEventListener("submit", async (event
   event.preventDefault();
   const input = document.getElementById("project-name");
   const name = input instanceof HTMLInputElement ? input.value.trim() : "";
-  if (!name || !state.chatDb) return;
-  await saveProject(state.chatDb, { id: newId(), name });
+  if (!name || (!state.chatDb && state.runtime !== "ollama")) return;
+  const id = newId();
+  if (state.runtime === "ollama") {
+    const created = await localCreateProject({ id, name });
+    if (!created) {
+      setStatus(ui.localForbidden);
+      return;
+    }
+  }
+  if (state.chatDb) await saveProject(state.chatDb, { id, name });
   input.value = "";
-  state.projects = await listProjects(state.chatDb);
+  state.projects = state.runtime === "ollama" ? (await localProjects() || state.projects) : await listProjects(state.chatDb);
   paint();
 });
 document.getElementById("library-attach")?.addEventListener("click", () => fileInput?.click());
@@ -1913,6 +1946,13 @@ function paintProjects() {
     open.textContent = project.name;
     if (project.id === state.activeProject) open.setAttribute("aria-current", "true");
     open.addEventListener("click", async () => {
+      if (state.runtime === "ollama") {
+        const opened = await localProject(project.id);
+        if (opened?.conversations) {
+          const rest = state.conversations.filter((item) => item.projectId !== project.id);
+          state.conversations = rest.concat(opened.conversations);
+        }
+      }
       if (state.chatProject !== project.id) {
         await persist();
         state.messages = [];
@@ -1931,9 +1971,18 @@ function paintProjects() {
     rename.textContent = chrome.rename;
     rename.addEventListener("click", async () => {
       const name = await askUser(chrome.projectName, project.name);
-      if (!name || !state.chatDb) return;
-      await saveProject(state.chatDb, { ...project, name });
-      state.projects = await listProjects(state.chatDb);
+      if (!name) return;
+      if (state.runtime === "ollama") {
+        const renamed = await localRenameProject(project.id, name);
+        if (!renamed) {
+          setStatus(ui.localForbidden);
+          return;
+        }
+        state.projects = await localProjects() || state.projects;
+      } else if (state.chatDb) {
+        await saveProject(state.chatDb, { ...project, name });
+        state.projects = await listProjects(state.chatDb);
+      }
       paint();
     });
     const remove = document.createElement("button");
@@ -1941,14 +1990,28 @@ function paintProjects() {
     remove.textContent = chrome.remove;
     remove.addEventListener("click", async () => {
       const ok = await askUser(chrome.deleteProject, "", chrome.remove);
-      if (ok == null || !state.chatDb) return;
-      await deleteProject(state.chatDb, project.id);
+      if (ok == null) return;
+      if (state.runtime === "ollama") {
+        const removed = await localDeleteProject(project.id);
+        if (!removed) {
+          setStatus(ui.localForbidden);
+          return;
+        }
+      } else if (!state.chatDb) return;
+      if (state.chatDb) await deleteProject(state.chatDb, project.id);
       if (state.activeProject === project.id) state.activeProject = "";
       if (state.chatProject === project.id) state.chatProject = "";
-      state.projects = await listProjects(state.chatDb);
-      state.conversations = await listConversations(state.chatDb);
+      if (state.runtime === "ollama") {
+        state.projects = await localProjects() || [];
+        state.conversations = await localConversations() || state.conversations;
+      } else if (state.chatDb) {
+        state.projects = await listProjects(state.chatDb);
+        state.conversations = await listConversations(state.chatDb);
+      }
       paint();
     });
+    if (project.role === "reader") rename.hidden = true;
+    if (project.role && project.role !== "owner") remove.hidden = true;
     row.append(open, rename, remove);
     list.append(row);
   }
@@ -2203,6 +2266,8 @@ async function bootModel() {
   else startPrepare(chosen.id);
 }
 async function adoptLocalHistory() {
+  const projects = await localProjects();
+  if (projects) state.projects = projects;
   const rows = await localConversations();
   if (!rows) return;
   const merged = new Map(state.conversations.map((item) => [item.id, item]));
