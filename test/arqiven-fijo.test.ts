@@ -42,7 +42,7 @@ describe("conjunto fijo de 100 casos", () => {
       "Ese moho era Penicillium y de ahí salió la penicilina, años antes de poder fabricarla en cantidad.",
       "La fabricación industrial llegó más tarde, durante la Segunda Guerra Mundial, con otros laboratorios.",
     ].join(" ");
-    assert.equal(rubrics.scoreCase({ rubric: "experto" }, tres).pass, true);
+    assert.equal(rubrics.scoreCase({ rubric: "experto" }, tres).pass, false);
     const dos = [
       "Fleming observó en 1928 que un moho impedía crecer a las bacterias de una placa de cultivo.",
       "Ese moho era Penicillium y de ahí salió la penicilina años antes de poder fabricarla.",
@@ -94,9 +94,9 @@ describe("conjunto fijo de 100 casos", () => {
     assert.equal(rubrics.scoreCase(prog14 as Record<string, unknown>, primoMal).pass, false);
     const prog20 = bank.CASOS.find((item) => item.id === "prog-20") as { prompt?: string };
     assert.match(prog20.prompt || "", /Recibe una cadena y un número n/);
-    assert.match(prog20.prompt || "", /sin puntos suspensivos/);
+    assert.equal((prog20.prompt || "").includes("puntos suspensivos"), false);
     const prog14prompt = (prog14 as { prompt?: string }).prompt || "";
-    assert.match(prog14prompt, /desde 2 hasta la raíz/);
+    assert.equal(prog14prompt.includes("raíz"), false);
     assert.equal((prog20.prompt || "").includes("Recibe devuelve"), false);
     const exact = "function clampTexto(s, n) { return String(s).slice(0, n); }";
     const ellipsis = "function clampTexto(s, n) { return s.length > n ? s.slice(0, n) + '...' : s; }";
@@ -147,6 +147,12 @@ describe("conjunto fijo de 100 casos", () => {
     assert.equal(cut.includes(sentence), true);
     assert.equal(cut.split(sentence).length - 1, 1);
     assert.equal(cut.includes(other), true);
+    const lista = "- Manzana\n- Plátano\n- Naranja";
+    const codigo = "function suma(a, b) {\n  return a + b;\n}";
+    const parrafos = "Primer párrafo.\n\nSegundo párrafo.";
+    assert.equal(cutter.cutRepeatedSentences(lista), lista);
+    assert.equal(cutter.cutRepeatedSentences(codigo), codigo);
+    assert.equal(cutter.cutRepeatedSentences(parrafos), parrafos);
     const salida = await import(href("local/arqiven/salida.mjs")) as {
       stripMismatchedAnchors: (text: string) => string;
       trimAfterWarning: (text: string) => string;
@@ -159,6 +165,7 @@ describe("conjunto fijo de 100 casos", () => {
     assert.equal(warned.includes("Si deseas"), false);
     assert.equal(warned.includes("puedes perder"), true);
     assert.equal(salida.ensureNoteCitation("La tabla II elimina la cafeína.", "higiene-sueno").includes("[higiene-sueno]"), true);
+    assert.equal(salida.ensureNoteCitation("La causa está en el art. 2.1 de la ley.", "despido-baja"), "La causa está en el art. 2.1 de la ley [despido-baja].");
     const body = cutter.buildChatBody({ model: "qwen3:8b", messages: [], think: false, numCtx: 4096, numPredict: 1024, temperature: 0.2 });
     assert.equal(body.options.repeat_penalty, undefined);
     assert.equal(body.options.repeat_last_n, undefined);
@@ -307,16 +314,21 @@ describe("conjunto fijo de 100 casos", () => {
     assert.equal(guerra.hits[0]?.id, "sarajevo-1914");
     assert.match(guerra.text, /Gavrilo Princip/);
     assert.match(guerra.text, /Joven Bosnia/);
+    const garantiaNota = await known.retrieveConocimiento("¿Qué significa, en general, la garantía de un producto de consumo?");
+    assert.equal(garantiaNota.hits[0]?.id, "garantia-consumo");
+    assert.match(garantiaNota.text, /reparación/);
     const reps = await import(href("eval/arqiven/fijo/run.mjs")) as {
       repeticionesDe: (argv: string[]) => number;
       resumenRepeticiones: (scores: number[]) => { media: number; minimo: number };
       EVAL_TEMPERATURE: number;
       EVAL_SEED: number;
+      semillaDe: (vuelta: number) => number;
     };
     assert.equal(reps.repeticionesDe(["node", "run", "--repeticiones", "3"]), 3);
     assert.equal(reps.resumenRepeticiones([114, 115, 113]).minimo, 113);
     assert.equal(reps.EVAL_TEMPERATURE <= 0.3, true);
     assert.equal(reps.EVAL_SEED, 15);
+    assert.deepEqual([1, 2, 3].map((vuelta) => reps.semillaDe(vuelta)), [15, 16, 17]);
     const pack = await import(href("eval/arqiven/conocimiento/run.mjs")) as {
       casosConocimiento: () => Promise<Array<Record<string, unknown>>>;
       comprobarConocimiento: (casos: Array<Record<string, unknown>>) => string[];

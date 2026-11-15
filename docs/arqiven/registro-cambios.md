@@ -41,4 +41,4 @@ Fecha: 15 de noviembre de 2026, con los informes del PC hasta las 22:03 (Madrid)
 
 ## Lectura corta
 
-En el PC, `f8788e0` quedó en 114/120, con reservado 2 en 42/42, reservado 3 en 25/25, experto en 10/10, conocimiento en 1/2, verificador en 8/8 y fallo del motor en 8/8. Se descarta: no se distingue de 115/120 en una sola pasada, y el despido volvió a mezclar artículos. En el PC sigue `f9a678a`. La evaluación lleva semilla 15, temperatura 0,2 y `--repeticiones`. `ex-15` y `ex-18` se contaron como negativa con tres frases de contenido: el umbral pasa de 4 a 3, y una respuesta de una o dos frases sigue fallando. No hay entrenamiento.
+En el PC, `5915030` quedó en 110/120, con reservado 2 en 42/42, reservado 3 en 25/25, experto en 10/10, conocimiento en 2/2, verificador en 8/8 y fallo del motor en 8/8. Se descarta. Con la semilla fija las tres repeticiones salían iguales. En el PC sigue `f9a678a`. El corte ya no junta las viñetas. Las repeticiones usan las semillas 15, 16 y 17. La rúbrica de negativa sigue en cuatro frases. No hay entrenamiento.

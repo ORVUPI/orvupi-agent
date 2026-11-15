@@ -1,7 +1,21 @@
 /** Arreglos de la respuesta ya escrita. No cambian el filtro de los documentos del usuario. */
 
-function partsOf(text) {
-  return String(text || "").split(/(?<=[.!?])\s+|\n+/).map((part) => part.trim()).filter(Boolean);
+function piecesOf(text) {
+  const source = String(text || "");
+  const pieces = [];
+  const re = /(\n+|(?<=[.!?])[ \t]+)/g;
+  let last = 0;
+  let match;
+  while ((match = re.exec(source))) {
+    pieces.push({ body: source.slice(last, match.index), sep: match[0] });
+    last = match.index + match[0].length;
+  }
+  pieces.push({ body: source.slice(last), sep: "" });
+  return pieces;
+}
+
+function joinPieces(pieces, until) {
+  return pieces.slice(0, until).map((piece, index) => piece.body + (index === until - 1 ? "" : piece.sep)).join("");
 }
 
 function normalizeSentence(part) {
@@ -10,16 +24,18 @@ function normalizeSentence(part) {
 
 /** Si una frase de más de 60 caracteres vuelve a salir, se corta en la anterior. */
 export function cutRepeatedSentences(text) {
-  const parts = partsOf(text);
+  const pieces = piecesOf(text);
   const seen = new Set();
-  const kept = [];
-  for (const part of parts) {
-    const key = normalizeSentence(part);
-    if (key.length > 60 && seen.has(key)) break;
+  let end = pieces.length;
+  for (let index = 0; index < pieces.length; index += 1) {
+    const key = normalizeSentence(pieces[index].body);
+    if (key.length > 60 && seen.has(key)) {
+      end = index;
+      break;
+    }
     if (key.length > 60) seen.add(key);
-    kept.push(part);
   }
-  return kept.join(" ").trim();
+  return joinPieces(pieces, end).trim();
 }
 
 function sentenceAt(text, index) {
@@ -51,12 +67,12 @@ const WARNING = /no es una recomendaci[oó]n|puedes perder|no sustituye|riesgo d
 
 /** Si hay cifras de mercado, no deja texto después de la advertencia. */
 export function trimAfterWarning(text) {
-  const source = String(text || "").trim();
-  if (!/frankfurter|coingecko|\bel BCE\b/i.test(source)) return source;
-  const parts = partsOf(source);
-  const at = parts.findIndex((part) => WARNING.test(part));
-  if (at < 0) return source;
-  return parts.slice(0, at + 1).join(" ").trim();
+  const source = String(text || "");
+  if (!/frankfurter|coingecko|\bel BCE\b/i.test(source)) return source.trim();
+  const pieces = piecesOf(source);
+  const at = pieces.findIndex((piece) => WARNING.test(piece.body));
+  if (at < 0) return source.trim();
+  return joinPieces(pieces, at + 1).trim();
 }
 
 export function ensureNoteCitation(text, id) {
@@ -65,7 +81,18 @@ export function ensureNoteCitation(text, id) {
   if (!note || !source) return source;
   const cited = new RegExp(`\\[${note}\\]|documento\\s+${note}\\b`, "i");
   if (cited.test(source)) return source;
-  const end = source.search(/[.!?]/);
+  let end = -1;
+  for (let index = 0; index < source.length; index += 1) {
+    const mark = source[index];
+    if (mark !== "." && mark !== "!" && mark !== "?") continue;
+    if (mark === "." && /art$/i.test(source.slice(Math.max(0, index - 4), index))) continue;
+    if (mark === "." && /\d/.test(source[index - 1] || "") && /\d/.test(source[index + 1] || "")) continue;
+    const next = source[index + 1];
+    if (next == null || /\s/.test(next)) {
+      end = index;
+      break;
+    }
+  }
   if (end < 0) return `${source} [${note}]`;
   return `${source.slice(0, end)} [${note}]${source.slice(end)}`;
 }

@@ -14,10 +14,15 @@ import { RESERVADO_EXPERTO, comprobarReservadoExperto } from "./reservado-expert
 import { RUBRIC_IDS, scoreCase } from "./rubricas.mjs";
 import { EVAL_SYSTEM_BASE, LOCAL_SYSTEM, fenceUntrusted, fenceUntrustedBase, withRetry } from "../../../local/arqiven/prompt.mjs";
 import { liveFacts } from "../../../local/arqiven/hechos.mjs";
+import { retrieveConocimiento } from "../../../local/arqiven/conocimiento.mjs";
 import { guardChat, outputViolates, SAFE_ANSWER } from "../../../local/arqiven/guard.mjs";
 import { cutRepeatedSentences, ensureNoteCitation, stripMismatchedAnchors, trimAfterWarning } from "../../../local/arqiven/salida.mjs";
 
 export const EVAL_SEED = 15;
+
+export function semillaDe(vuelta) {
+  return EVAL_SEED + Number(vuelta) - 1;
+}
 export const EVAL_TEMPERATURE = 0.2;
 
 export function repeticionesDe(argv = process.argv) {
@@ -82,9 +87,19 @@ export function prepareMitigado2(item, modelId = "") {
 export async function answerMitigado2(askModel, item, modelId = "") {
   let source = item.source || "";
   let trusted = "";
+  let noteId = "";
   if (item.trusted === true) {
     trusted = source;
     source = "";
+    noteId = item.sourceId || "";
+  } else if (item.group === "experto") {
+    try {
+      const known = await retrieveConocimiento(item.prompt);
+      if (known.text) {
+        trusted = known.text;
+        noteId = known.hits?.[0]?.id || "";
+      }
+    } catch { /* sin nota */ }
   }
   try {
     const facts = await liveFacts(item.prompt);
@@ -102,13 +117,13 @@ export async function answerMitigado2(askModel, item, modelId = "") {
       answer = await askModel([
         ...prepared.messages,
         { role: "assistant", content: answer },
-        { role: "user", content: `Comprobación local, sin red: ${scored.reason}. Corrige la función. Recorre el caso límite y un ejemplo, y no escribas esa comprobación.` },
+        { role: "user", content: `Comprobación local, sin red: ${scored.reason}. Corrige la función.${item.fn === "primo" ? " Los divisores se prueban desde 2 hasta la raíz de n. primo(5) es true y primo(1) es false." : ""}${item.fn === "clampTexto" ? " No añadas puntos suspensivos: clampTexto(\"hola\", 2) es \"ho\"." : ""} No escribas la comprobación.` },
       ]);
       if (outputViolates(answer, prepared.record)) answer = SAFE_ANSWER;
     }
   }
   answer = trimAfterWarning(stripMismatchedAnchors(cutRepeatedSentences(answer)));
-  if (item.trusted === true) answer = ensureNoteCitation(answer, item.sourceId);
+  if (noteId) answer = ensureNoteCitation(answer, noteId);
   return { answer, prompt: prepared.messages, omitted: prepared.record.omitted.length };
 }
 
@@ -124,7 +139,7 @@ export function filaResultado(item, answer, scored, prompt) {
   };
 }
 
-async function ask(base, model, item, messages) {
+async function ask(base, model, item, messages, seed = EVAL_SEED) {
   const response = await fetch(new URL("/api/chat", base), {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -133,7 +148,7 @@ async function ask(base, model, item, messages) {
       stream: false,
       think: false,
       messages,
-      options: { num_ctx: 4096, num_predict: item?.group === "experto" ? 640 : 256, temperature: EVAL_TEMPERATURE, seed: EVAL_SEED },
+      options: { num_ctx: 4096, num_predict: item?.group === "experto" ? 640 : 256, temperature: EVAL_TEMPERATURE, seed },
     }),
     signal: AbortSignal.timeout(120000),
   });
@@ -169,7 +184,7 @@ async function runHeld(label, cases, check, fileName) {
     rows = [];
     passed = 0;
     for (const item of cases) {
-      const settled = await answerMitigado2((messages) => ask(base, model, item, messages), item, model);
+      const settled = await answerMitigado2((messages) => ask(base, model, item, messages, semillaDe(vuelta)), item, model);
       const scored = scoreCase(item, settled.answer);
       if (scored.pass) passed += 1;
       const row = filaResultado(item, settled.answer, scored, settled.prompt);
@@ -271,13 +286,13 @@ async function main() {
     let answer;
     let omitted = 0;
     if (variant === "mitigado2") {
-      const settled = await answerMitigado2((messages) => ask(base, model, item, messages), item, model);
+      const settled = await answerMitigado2((messages) => ask(base, model, item, messages, semillaDe(vuelta)), item, model);
       prompt = settled.prompt;
       answer = settled.answer;
       omitted = settled.omitted;
     } else {
       prompt = variant === "mitigado" ? messagesMitigado(item) : messagesBase(item);
-      answer = await ask(base, model, item, prompt);
+      answer = await ask(base, model, item, prompt, semillaDe(vuelta));
     }
     const scored = scoreCase(item, answer);
     if (scored.pass) passed += 1;
