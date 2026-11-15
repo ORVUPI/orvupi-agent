@@ -3,8 +3,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { hashEmbed, cosine, tokensOf } from "./embed.mjs";
-import { chunkText } from "./rag.mjs";
+import { tokensOf } from "./embed.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../docs/arqiven/conocimiento");
 
@@ -25,43 +24,36 @@ export async function loadConocimiento(dir = root) {
   return docs;
 }
 
-function sharedWords(question, text) {
-  const wanted = new Set(tokensOf(question));
-  let count = 0;
-  for (const token of new Set(tokensOf(text))) if (wanted.has(token)) count += 1;
-  return count;
+function noteTokens(text) {
+  return tokensOf(text).filter((token) => token.length >= 4);
+}
+
+/** Palabras que están en una nota y en ninguna otra. */
+export function distinctiveTokens(docs) {
+  const sets = docs.map((doc) => new Set(noteTokens(`${doc.title || ""} ${doc.text || ""}`)));
+  return sets.map((tokens, index) => [...tokens].filter((token) => sets.every((other, otherIndex) => otherIndex === index || !other.has(token))));
+}
+
+export function matchConocimiento(question, docs) {
+  const asked = new Set(noteTokens(question));
+  const own = distinctiveTokens(docs);
+  const ranked = docs.map((doc, index) => ({
+    doc,
+    words: own[index].filter((token) => asked.has(token)),
+  })).filter((row) => row.words.length >= 2);
+  ranked.sort((a, b) => b.words.length - a.words.length);
+  if (!ranked.length) return null;
+  if (ranked[1] && ranked[1].words.length === ranked[0].words.length) return null;
+  return ranked[0];
 }
 
 export async function retrieveConocimiento(question, options = {}) {
-  const embed = options.embed || hashEmbed;
   const docs = await loadConocimiento(options.dir);
-  if (!docs.length || typeof embed !== "function") return { text: "", hits: [] };
-  const query = await embed(String(question || ""));
-  const byDoc = new Map();
-  for (const doc of docs) {
-    const parts = chunkText(doc.text, 8000, 0).map((part) => ({
-      part,
-      score: 0,
-      words: sharedWords(question, part),
-    }));
-    for (const row of parts) row.score = cosine(query, await embed(row.part));
-    const words = sharedWords(question, doc.text);
-    const score = parts.reduce((best, row) => Math.max(best, row.score), 0);
-    byDoc.set(doc.id, { doc, parts, words, score });
-  }
-  const ranked = [...byDoc.values()].sort((a, b) => b.words - a.words || b.score - a.score);
-  const best = ranked[0];
-  const second = ranked[1];
-  if (!best || best.words < 2) return { text: "", hits: [] };
-  if (second && second.words === best.words && second.score > best.score - 0.05) return { text: "", hits: [] };
-  const hits = best.parts
-    .filter((row) => row.words > 0)
-    .sort((a, b) => b.words - a.words || b.score - a.score)
-    .slice(0, 2);
-  const body = hits.map((row) => row.part).join("\n\n");
-  const text = [`[${best.doc.id}] ${best.doc.title}`, best.doc.url, body].filter(Boolean).join("\n");
+  const chosen = matchConocimiento(question, docs);
+  if (!chosen) return { text: "", hits: [] };
+  const text = [`[${chosen.doc.id}] ${chosen.doc.title}`, chosen.doc.url, chosen.doc.text].filter(Boolean).join("\n");
   return {
     text,
-    hits: [{ id: best.doc.id, title: best.doc.title, url: best.doc.url, score: Math.round(best.score * 1000) / 1000, words: best.words }],
+    hits: [{ id: chosen.doc.id, title: chosen.doc.title, url: chosen.doc.url, words: chosen.words.length }],
   };
 }

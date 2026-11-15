@@ -3,7 +3,7 @@
 function piecesOf(text) {
   const source = String(text || "");
   const pieces = [];
-  const re = /(\n+|(?<=[.!?])[ \t]+)/g;
+  const re = /(\n+|(?<!art)(?<=\.)[ \t]+|(?<=[!?])[ \t]+)/gi;
   let last = 0;
   let match;
   while ((match = re.exec(source))) {
@@ -52,4 +52,32 @@ export function dropPasswordExamples(text) {
 
 export function finishReply(text) {
   return dropPasswordExamples(cutRepeatedSentences(text));
+}
+
+/** Si la etiqueta está en medio de la frase, la pasa al final. No la añade a un «No consta». */
+function sentenceEnd(bare) {
+  for (let index = 0; index < bare.length; index += 1) {
+    const mark = bare[index];
+    if (mark !== "." && mark !== "!" && mark !== "?") continue;
+    if (mark === "." && /art$/i.test(bare.slice(Math.max(0, index - 4), index))) continue;
+    if (mark === "." && /\d/.test(bare[index - 1] || "") && /\d/.test(bare[index + 1] || "")) continue;
+    const after = bare[index + 1];
+    if (after == null || /\s/.test(after)) return index;
+  }
+  return -1;
+}
+
+function placeOneLine(line, tag) {
+  if (!line.includes(tag)) return line;
+  const bare = line.replaceAll(tag, "").replace(/[ \t]+\./g, ".").replace(/[ \t]{2,}/g, " ").trim();
+  if (/^no consta\b/i.test(bare)) return bare;
+  const end = sentenceEnd(bare);
+  if (end < 0) return `${bare} ${tag}`.trim();
+  return `${bare.slice(0, end)} ${tag}${bare.slice(end)}`.replace(/[ \t]{2,}/g, " ");
+}
+
+export function placeNoteLabel(text, id) {
+  const tag = `[${String(id || "").trim()}]`;
+  if (!tag || tag === "[]" || !String(text || "").includes(tag)) return String(text || "");
+  return String(text).split("\n").map((line) => placeOneLine(line, tag)).join("\n");
 }

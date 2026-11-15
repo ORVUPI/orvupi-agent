@@ -15,7 +15,7 @@ import { buildChatBody, streamChat } from "./ollama.mjs";
 import { attachEditor, withRetry } from "./prompt.mjs";
 import { guardChat, outputViolates, passedFragments, SAFE_ANSWER } from "./guard.mjs";
 import { liveFacts } from "./hechos.mjs";
-import { finishReply } from "./salida.mjs";
+import { finishReply, placeNoteLabel } from "./salida.mjs";
 import { retrieveConocimiento } from "./conocimiento.mjs";
 import { fitMessages } from "./budget.mjs";
 import { metricsFrom } from "./metrics.mjs";
@@ -404,11 +404,16 @@ export async function startLocalServer(overrides = {}) {
         const facts = await liveFacts(question);
         if (facts.text) documentText = [documentText, facts.text].filter(Boolean).join("\n\n");
       } catch { /* sin cifras en vivo */ }
+      let trustedNote = "";
+      let noteId = "";
       try {
         const known = await retrieveConocimiento(question);
-        if (known.text) documentText = [documentText, known.text].filter(Boolean).join("\n\n");
+        if (known.text && known.hits?.[0]?.id) {
+          trustedNote = known.text;
+          noteId = known.hits[0].id;
+        }
       } catch { /* la base general no bloquea el chat */ }
-      const guarded = guardChat(visible, documentText, "fuente", config.model);
+      const guarded = guardChat(visible, documentText, "fuente", config.model, trustedNote);
       const redacted = guarded.record;
       const prompt = fitMessages(attachEditor(guarded.messages, editor), config.inputTokens);
       const hold = redacted.omitted.some((item) => item.kept !== true);
@@ -440,6 +445,7 @@ export async function startLocalServer(overrides = {}) {
         },
       });
       let reply = finishReply(result.text);
+      if (noteId) reply = placeNoteLabel(reply, noteId);
       if (outputViolates(reply, redacted)) {
         const retryBody = buildChatBody({
           model: config.model,

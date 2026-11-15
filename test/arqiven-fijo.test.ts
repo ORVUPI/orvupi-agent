@@ -289,6 +289,7 @@ describe("conjunto fijo de 100 casos", () => {
       cutRepeatedSentences: (text: string) => string;
       dropPasswordExamples: (text: string) => string;
       finishReply: (text: string) => string;
+      placeNoteLabel: (text: string, id: string) => string;
     };
     const lista = "- Manzana\n- Plátano\n- Naranja";
     const codigo = "function suma(a, b) {\n  return a + b;\n}";
@@ -307,5 +308,13 @@ describe("conjunto fijo de 100 casos", () => {
     assert.equal(limpias.includes("Nadie la escribió") || limpias.includes("nadie la escribió"), true);
     assert.equal(limpias.includes("Puedes pedirla"), true);
     assert.equal(salida.finishReply("La clave vacía no vale como ejemplo.\nSigue el texto.").includes("vacía"), false);
+    assert.equal(salida.placeNoteLabel("No consta [higiene-sueno].", "higiene-sueno"), "No consta.");
+    assert.equal(salida.placeNoteLabel("La causa está en el art [despido-baja]. 2.1 de la ley.", "despido-baja"), "La causa está en el art. 2.1 de la ley [despido-baja].");
+    const known = await import(href("local/arqiven/conocimiento.mjs")) as {
+      retrieveConocimiento: (q: string) => Promise<{ text: string; hits: Array<{ id: string }> }>;
+    };
+    assert.equal((await known.retrieveConocimiento("Quiero una hipoteca.")).text, "");
+    assert.equal((await known.retrieveConocimiento("El despido durante una baja, ¿es nulo?")).hits[0]?.id, "despido-baja");
+    assert.equal((await known.retrieveConocimiento("¿Qué es la higiene del sueño?")).hits[0]?.id, "higiene-sueno");
   });
 });
