@@ -7,6 +7,8 @@ param(
 )
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
+$script:VerifyData = Join-Path $env:TEMP ("ARQIVEN-verificar-" + [guid]::NewGuid().ToString("N"))
+$env:ARQIVEN_DATA = $script:VerifyData
 $fails = New-Object System.Collections.Generic.List[string]
 
 function Say([string]$Name, [bool]$Ok, [string]$Detail) {
@@ -62,11 +64,7 @@ function Assert-Fresh([object]$Status, [datetime]$NotBefore, [int]$ExpectedPid) 
 
 function Start-Backend {
   Stop-Backend
-  if (-not $env:ARQIVEN_DATA) {
-    $base = $env:LOCALAPPDATA
-    if (-not $base) { $base = $env:USERPROFILE }
-    $env:ARQIVEN_DATA = Join-Path $base "ARQIVEN\local"
-  }
+  $env:ARQIVEN_DATA = $script:VerifyData
   if (-not $env:ARQIVEN_USER -and $env:USERNAME -match '^[A-Za-z0-9._-]{1,64}$') { $env:ARQIVEN_USER = $env:USERNAME }
   $env:OLLAMA_HOST = "http://127.0.0.1:11434"
   $env:ARQIVEN_THINK = "false"
@@ -133,7 +131,14 @@ function Begin-Chat([string]$Json, [string]$User) {
 }
 
 $startError = Start-Backend
-if ($startError) { Say "backend" $false $startError; exit 1 }
+if ($startError) {
+  Say "backend" $false $startError
+  Stop-Backend
+  if ($script:VerifyData -and (Test-Path -LiteralPath $script:VerifyData)) {
+    Remove-Item -LiteralPath $script:VerifyData -Recurse -Force -ErrorAction SilentlyContinue
+  }
+  exit 1
+}
 Say "backend" $true ""
 
 $owner = "crist"
@@ -243,7 +248,13 @@ try {
 Write-Host ""
 if ($fails.Count -eq 0) {
   Write-Host "Todo OK."
-  exit 0
+  $code = 0
+} else {
+  Write-Host ("Fallos: " + ($fails -join ", "))
+  $code = 1
 }
-Write-Host ("Fallos: " + ($fails -join ", "))
-exit 1
+Stop-Backend
+if ($script:VerifyData -and (Test-Path -LiteralPath $script:VerifyData)) {
+  Remove-Item -LiteralPath $script:VerifyData -Recurse -Force -ErrorAction SilentlyContinue
+}
+exit $code

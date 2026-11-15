@@ -15,6 +15,24 @@ async function readJson(fetchImpl, url, timeoutMs) {
   return response.json();
 }
 
+function euroDate(iso) {
+  const [year, month, day] = String(iso || "").split("-");
+  if (!year || !month || !day) return "";
+  return `${day}-${month}-${year}`;
+}
+
+function madridStamp(date) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Madrid",
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const pick = (type) => parts.find((part) => part.type === type)?.value || "";
+  return `${pick("day")}-${pick("month")} ${pick("hour")}:${pick("minute")}`;
+}
 function rateLine(amount, code) {
   const number = Number(amount);
   if (!Number.isFinite(number)) return "";
@@ -32,8 +50,9 @@ export async function liveFacts(question, options = {}) {
     const date = String(fx?.date || "");
     const lines = [rateLine(fx?.rates?.USD, "USD"), rateLine(fx?.rates?.GBP, "GBP")].filter(Boolean);
     if (date && lines.length) {
-      blocks.push(`[fx] Fuente: Frankfurter, tipos de referencia del BCE. Fecha: ${date}.\n${lines.join(" ")}`);
-      sources.push({ id: "fx", name: "Frankfurter", date });
+      const shown = euroDate(date);
+      blocks.push(`[fx] Cifra con fuente y fecha, que hay que repetir juntas: BCE vía Frankfurter, ${shown}.\n${lines.join(" ")}`);
+      sources.push({ id: "fx", name: "Frankfurter", date: shown });
     }
   } catch { /* sin tipo de cambio */ }
   try {
@@ -44,8 +63,8 @@ export async function liveFacts(question, options = {}) {
     if (Number.isFinite(btc)) lines.push(`Bitcoin: ${btc} USD.`);
     if (Number.isFinite(eth)) lines.push(`Ethereum: ${eth} USD.`);
     if (lines.length) {
-      const at = new Date().toISOString();
-      blocks.push(`[btc] Fuente: CoinGecko. Consultado: ${at}.\n${lines.join(" ")}`);
+      const at = madridStamp(new Date());
+      blocks.push(`[btc] Cifra con fuente y hora, que hay que repetir juntas: CoinGecko, ${at}.\n${lines.join(" ")}`);
       sources.push({ id: "btc", name: "CoinGecko", date: at });
     }
   } catch { /* sin cripto */ }
