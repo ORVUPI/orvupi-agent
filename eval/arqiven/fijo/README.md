@@ -1,6 +1,6 @@
-# Conjunto fijo de 100 casos
+# Conjunto fijo
 
-Las rúbricas están en `rubricas.mjs` y el banco en `casos.mjs`. No se cambia un caso para que un modelo quede bien, y no se entrena a partir de esta corrida.
+120 casos: los 100 anteriores más 20 de preguntas generales. Las rúbricas están en `rubricas.mjs` y el banco en `casos.mjs`. No se cambia un caso para que un modelo quede bien, y no se entrena a partir de esta corrida.
 
 | Grupo | Casos | Rúbrica |
 | --- | --- | --- |

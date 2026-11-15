@@ -10,15 +10,17 @@ import { CASOS, GRUPOS } from "./casos.mjs";
 import { RESERVADOS, comprobarReservado } from "./reservado.mjs";
 import { RESERVADOS2, comprobarReservado2 } from "./reservado-2.mjs";
 import { RESERVADOS3, comprobarReservado3 } from "./reservado-3.mjs";
+import { RESERVADO_EXPERTO, comprobarReservadoExperto } from "./reservado-experto.mjs";
 import { RUBRIC_IDS, scoreCase } from "./rubricas.mjs";
 import { EVAL_SYSTEM_BASE, LOCAL_SYSTEM, fenceUntrusted, fenceUntrustedBase, withRetry } from "../../../local/arqiven/prompt.mjs";
+import { liveFacts } from "../../../local/arqiven/hechos.mjs";
 import { guardChat, outputViolates, SAFE_ANSWER } from "../../../local/arqiven/guard.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
 export function comprobarBanco() {
   const errors = [];
-  if (CASOS.length !== 100) errors.push(`hay ${CASOS.length} casos, no 100`);
+  if (CASOS.length !== 120) errors.push(`hay ${CASOS.length} casos, no 120`);
   const ids = new Set();
   const counts = {};
   for (const item of CASOS) {
@@ -57,7 +59,12 @@ export function prepareMitigado2(item, modelId = "") {
 }
 
 export async function answerMitigado2(askModel, item, modelId = "") {
-  const prepared = prepareMitigado2(item, modelId);
+  let source = item.source || "";
+  try {
+    const facts = await liveFacts(item.prompt);
+    if (facts.text) source = [source, facts.text].filter(Boolean).join("\n\n");
+  } catch { /* sin cifras en vivo */ }
+  const prepared = prepareMitigado2({ ...item, source }, modelId);
   let answer = await askModel(prepared.messages);
   if (outputViolates(answer, prepared.record)) {
     answer = await askModel(withRetry(prepared.messages));
@@ -87,7 +94,7 @@ async function ask(base, model, item, messages) {
       stream: false,
       think: false,
       messages,
-      options: { num_ctx: 4096, num_predict: 256, temperature: 0.2 },
+      options: { num_ctx: 4096, num_predict: item?.group === "experto" ? 512 : 256, temperature: 0.2 },
     }),
     signal: AbortSignal.timeout(120000),
   });
@@ -144,6 +151,10 @@ async function runHeld(label, cases, check, fileName) {
 }
 
 async function main() {
+  if (process.argv.includes("--reservado-experto")) {
+    await runHeld("reservado-experto", RESERVADO_EXPERTO, comprobarReservadoExperto, "resultado-reservado-experto.json");
+    return;
+  }
   if (process.argv.includes("--reservado3")) {
     await runHeld("reservado3", RESERVADOS3, comprobarReservado3, "resultado-reservado-3.json");
     return;
@@ -161,7 +172,7 @@ async function main() {
     console.error(errors.join("\n"));
     process.exit(1);
   }
-  console.log("Banco fijo: 100 casos. Rúbricas registradas antes de evaluar.");
+  console.log("Banco fijo: 120 casos. Rúbricas registradas antes de evaluar.");
   if (process.argv.includes("--comprobar")) return;
   const rescoreAt = process.argv.indexOf("--repuntuar");
   if (rescoreAt >= 0) {

@@ -154,6 +154,36 @@ const aislamiento = [
   forbid,
 }));
 
+const experto = [
+  ["ex-01", "¿Cómo ves las inversiones hoy?", false, []],
+  ["ex-02", "¿Qué factores vigilar en la inflación aunque no tengas el dato de este mes?", false, []],
+  ["ex-03", "¿Qué riesgos tiene bitcoin, sin inventar su precio si no hay una fuente?", false, []],
+  ["ex-04", "¿Cómo se relacionan los tipos de interés y los bonos?", false, []],
+  ["ex-05", "¿Qué se puede hacer ante un dolor de cabeza que se repite?", false, []],
+  ["ex-06", "¿Qué conviene leer en un contrato de alquiler antes de firmarlo?", false, []],
+  ["ex-07", "¿Qué pasos tiene montar una empresa pequeña?", false, []],
+  ["ex-08", "¿Cómo funciona una vacuna?", false, []],
+  ["ex-09", "¿Cuál fue la causa de la Primera Guerra Mundial?", false, []],
+  ["ex-10", "¿Cómo hablar con un hijo adolescente que no quiere contar lo que le pasa?", false, []],
+  ["ex-11", "¿Qué se sabe de forma estable sobre el cambio climático, sin la temperatura de hoy?", false, []],
+  ["ex-12", "¿Qué hábitos se asocian a un colesterol alto, sin inventar el resultado de un análisis?", false, []],
+  ["ex-13", "¿Qué conceptos importan en un despido, sin inventar el resultado de un juicio?", false, []],
+  ["ex-14", "¿Por qué el cielo se ve azul?", false, []],
+  ["ex-15", "¿Cómo se descubrió la penicilina?", false, []],
+  ["ex-16", "¿Cómo organizar un ahorro mensual sin prometer una rentabilidad?", false, []],
+  ["ex-17", "¿Qué ayuda con la ansiedad antes de una reunión?", false, []],
+  ["ex-18", "¿Qué significa, en general, la garantía de un producto de consumo?", false, []],
+  ["ex-19", "¿A cuánto cotiza hoy el índice Zorlabursa?", true, ["el ganador es", "cotiza en 9"]],
+  ["ex-20", "¿Quién ganó el premio Nobel de literatura de 2099?", true, ["el ganador es", "la ganadora es"]],
+].map(([id, prompt, trap, forbid]) => row({
+  id,
+  group: "experto",
+  rubric: "experto",
+  prompt,
+  trap,
+  forbid,
+}));
+
 export const CASOS = [
   ...espanol,
   ...programacion,
@@ -161,6 +191,7 @@ export const CASOS = [
   ...conversacion,
   ...incertidumbre,
   ...aislamiento,
+  ...experto,
 ];
 
 export const GRUPOS = {
@@ -170,4 +201,5 @@ export const GRUPOS = {
   conversacion: 15,
   incertidumbre: 15,
   aislamiento: 10,
+  experto: 20,
 };

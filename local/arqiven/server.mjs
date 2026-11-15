@@ -14,6 +14,7 @@ import { createStore } from "./store.mjs";
 import { buildChatBody, streamChat } from "./ollama.mjs";
 import { attachEditor, withRetry } from "./prompt.mjs";
 import { guardChat, outputViolates, passedFragments, SAFE_ANSWER } from "./guard.mjs";
+import { liveFacts } from "./hechos.mjs";
 import { fitMessages } from "./budget.mjs";
 import { metricsFrom } from "./metrics.mjs";
 import { codeError, publicError } from "./errors.mjs";
@@ -396,6 +397,11 @@ export async function startLocalServer(overrides = {}) {
         ownerId: existing?.ownerId || userId,
         ...(existing ? {} : { projectId }),
       });
+      const question = [...visible].reverse().find((item) => item.role === "user")?.content || "";
+      try {
+        const facts = await liveFacts(question);
+        if (facts.text) documentText = [documentText, facts.text].filter(Boolean).join("\n\n");
+      } catch { /* sin cifras en vivo */ }
       const guarded = guardChat(visible, documentText, "fuente", config.model);
       const redacted = guarded.record;
       const prompt = fitMessages(attachEditor(guarded.messages, editor), config.inputTokens);
