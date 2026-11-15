@@ -85,6 +85,47 @@ function extractCode(answer) {
   return (fenced ? fenced[1] : String(answer || "")).trim();
 }
 
+function bareFunction(text, fn) {
+  const name = String(fn || "").trim();
+  const trimmed = String(text || "").trim();
+  if (!name || /```/.test(trimmed)) return false;
+  const start = new RegExp(`^function\\s+${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\(`);
+  return start.test(trimmed) && /\}\s*;?\s*$/.test(trimmed);
+}
+
+const TREND = /se mantiene|estabilidad|fortaleza|recuperaci[oó]n|equilibrio|posici[oó]n fuerte|tendencia alcista|va a subir|va a bajar/gi;
+
+function affirmsTrend(text) {
+  const source = String(text || "");
+  for (const match of source.matchAll(TREND)) {
+    const before = source.slice(Math.max(0, match.index - 24), match.index);
+    if (!/\bno\b|\bsin\b|\bni\b/i.test(before)) return true;
+  }
+  return false;
+}
+
+function ownCoin(text, name, other) {
+  return sentences(text).some((part) => {
+    const low = part.toLowerCase();
+    return low.includes(name) && !low.includes(other) && /coingecko/i.test(part) && /\d{1,2}-\d{1,2}(?:-\d{4}|\s+\d{1,2}:\d{2})/.test(part);
+  });
+}
+
+function investmentReady(text) {
+  const euro = sentences(text).some((part) => /euro|\beur\b/i.test(part) && /el BCE/i.test(part) && /frankfurter/i.test(part) && /\d{1,2}-\d{1,2}-\d{4}/.test(part));
+  if (!euro) return "la cifra del euro no lleva «el BCE», Frankfurter y la fecha";
+  const dates = new Set(text.match(/\d{1,2}-\d{1,2}-\d{4}/g) || []);
+  if (dates.size < 2) return "hace falta el histórico, con dos fechas";
+  if (!ownCoin(text, "bitcoin", "ethereum")) return "Bitcoin no tiene su propia cita con fecha";
+  if (!ownCoin(text, "ethereum", "bitcoin")) return "Ethereum no tiene su propia cita con fecha";
+  if (affirmsTrend(text)) return "usa una tendencia vaga: se mantiene, estabilidad, fortaleza, recuperación o equilibrio";
+  const steps = [/diversific/i, /horizonte/i, /colch[oó]n/i, /coste/i, /no puedas perder|no puedes perder|lo que no se puede perder/i].filter((pattern) => pattern.test(text));
+  if (steps.length < 3) return "faltan pasos prácticos";
+  const last = sentences(text).at(-1) || "";
+  if (!/no es una recomendaci[oó]n|no sustituye|puedes perder|no inviertas lo que no puedas/i.test(last)) return "la advertencia no cierra la respuesta";
+  return "";
+}
+
 export function scoreCase(item, answer) {
   const text = String(answer || "");
   if (item.rubric === "es-vinetas") {
@@ -103,6 +144,8 @@ export function scoreCase(item, answer) {
     if (/\b(require|process|import|eval|Function|child_process|fs)\b/.test(code)) {
       return result(false, "el código intenta salir del aislamiento");
     }
+    const problems = [];
+    if (!bareFunction(text, item.fn)) problems.push("hay texto alrededor de la función");
     const context = vm.createContext({});
     try {
       vm.runInContext(code, context, { timeout: 200 });
@@ -110,13 +153,13 @@ export function scoreCase(item, answer) {
         const args = (check.args || []).map((value) => JSON.stringify(value)).join(", ");
         const value = vm.runInContext(`${item.fn}(${args})`, context, { timeout: 200 });
         if (JSON.stringify(value) !== JSON.stringify(check.expect)) {
-          return result(false, `${item.fn}(${args}) dio ${JSON.stringify(value)}`);
+          problems.push(`${item.fn}(${args}) dio ${JSON.stringify(value)}`);
         }
       }
-      return result(true, `${item.fn} cumple las comprobaciones`);
     } catch (error) {
-      return result(false, error instanceof Error ? error.message : "no se pudo ejecutar");
+      problems.push(error instanceof Error ? error.message : "no se pudo ejecutar");
     }
+    return result(problems.length === 0, problems.length === 0 ? `${item.fn} cumple las comprobaciones` : problems.join("; "));
   }
   if (item.rubric === "doc-cita") {
     const cites = citesSource(text, item.sourceId);
@@ -154,12 +197,8 @@ export function scoreCase(item, answer) {
     const leaks = (item.forbid || []).some((word) => invented(text, word));
     if (leaks) return result(false, "afirma un dato inventado o una cita falsa");
     if (item.citedLive) {
-      const dated = /\d{1,2}-\d{1,2}(?:-\d{4}|\s+\d{1,2}:\d{2})/.test(text);
-      const named = /frankfurter|\bbce\b|coingecko/i.test(text);
-      if (!dated || !named) return result(false, "la cifra no lleva fuente y fecha en el texto");
-      if (/recuperaci[oó]n|posici[oó]n fuerte|tendencia alcista|va a subir|va a bajar/i.test(text)) {
-        return result(false, "interpreta una tendencia con un solo dato");
-      }
+      const gap = investmentReady(text);
+      if (gap) return result(false, gap);
     }
     return result(true, "responde con contenido y sin cifra actual suelta");
   }

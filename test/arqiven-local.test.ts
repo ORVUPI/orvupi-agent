@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { access, mkdtemp, readFile, rm } from "node:fs/promises";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -628,5 +628,36 @@ describe("backend local de ARQIVEN", () => {
     assert.equal(server.includes("ngrok"), false);
     assert.equal(server.includes("cloudflared"), false);
     assert.equal(server.includes("/no_think"), false);
+  });
+
+  test("una pregunta suelta no escribe en el historial real", async () => {
+    const ollama = await mockOllama(async (_body, res) => {
+      res.write(tokenChunk("No lo sé."));
+      res.write(doneChunk(1_000_000));
+    });
+    const ask = await import(href("eval/arqiven/preguntar.mjs")) as {
+      askDetached: (questions: string[], options: { ollamaBase: string; timeoutMs: number; inspect?: (info: { dataDir: string; answer: string }) => Promise<void> }) => Promise<{ answers: string[] }>;
+    };
+    const seen: string[] = [];
+    try {
+      const { answers } = await ask.askDetached(["¿Cuál es el teléfono privado?"], {
+        ollamaBase: ollama.url,
+        timeoutMs: 5000,
+        inspect: async ({ dataDir, answer }) => {
+          seen.push(dataDir);
+          assert.equal(answer, "No lo sé.");
+          assert.equal(dataDir.startsWith(tmpdir()), true);
+          assert.equal(dataDir.includes(`${path.sep}.arqiven${path.sep}`), false);
+          const history = await readFile(path.join(dataDir, "history.json"), "utf8");
+          assert.match(history, /teléfono privado/);
+        },
+      });
+      assert.deepEqual(answers, ["No lo sé."]);
+      const used = seen[0];
+      assert.ok(used);
+      await assert.rejects(() => access(used));
+    } finally {
+      await ollama.close();
+    }
   });
 });
