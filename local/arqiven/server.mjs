@@ -15,7 +15,7 @@ import { buildChatBody, streamChat } from "./ollama.mjs";
 import { attachEditor, withRetry } from "./prompt.mjs";
 import { guardChat, outputViolates, passedFragments, SAFE_ANSWER } from "./guard.mjs";
 import { liveFacts } from "./hechos.mjs";
-import { closeMarketAnswer, finishReply, placeNoteLabel } from "./salida.mjs";
+import { closeMarketAnswer, completeDespido, finishReply, placeNoteLabel } from "./salida.mjs";
 import { retrieveConocimiento } from "./conocimiento.mjs";
 import { fitMessages } from "./budget.mjs";
 import { metricsFrom } from "./metrics.mjs";
@@ -448,9 +448,14 @@ export async function startLocalServer(overrides = {}) {
           if (!hold) writeEvent(res, { type: "token", requestId, text });
         },
       });
-      let reply = finishReply(result.text);
-      if (noteId) reply = placeNoteLabel(reply, noteId);
-      if (factsText) reply = closeMarketAnswer(reply, factsText);
+      const polish = (text) => {
+        let reply = finishReply(text);
+        if (noteId === "despido-baja") reply = completeDespido(reply, trustedNote);
+        else if (noteId) reply = placeNoteLabel(reply, noteId);
+        if (factsText) reply = closeMarketAnswer(reply, factsText);
+        return reply;
+      };
+      let reply = polish(result.text);
       if (outputViolates(reply, redacted)) {
         const retryBody = buildChatBody({
           model: config.model,
@@ -467,7 +472,7 @@ export async function startLocalServer(overrides = {}) {
           timeoutMs: config.timeoutMs,
           onToken: () => {},
         });
-        reply = outputViolates(result.text, redacted) ? SAFE_ANSWER : result.text;
+        reply = outputViolates(result.text, redacted) ? SAFE_ANSWER : polish(result.text);
       }
       const fragments = passedFragments(redacted, "fuente");
       if (hold) writeEvent(res, { type: "token", requestId, text: reply });

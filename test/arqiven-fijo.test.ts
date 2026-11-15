@@ -292,6 +292,7 @@ describe("conjunto fijo de 100 casos", () => {
       placeNoteLabel: (text: string, id: string) => string;
       closeMarketAnswer: (answer: string, facts: string) => string;
       citeMissingFigures: (answer: string, facts: string) => string;
+      completeDespido: (answer: string, note: string) => string;
     };
     const lista = "- Manzana\n- Plátano\n- Naranja";
     const codigo = "function suma(a, b) {\n  return a + b;\n}";
@@ -340,5 +341,18 @@ describe("conjunto fijo de 100 casos", () => {
     assert.match(citado, /-0,98 % \(el BCE, Frankfurter, 16-10-2026 y 13-11-2026\)/);
     assert.match(citado, /11,92 % \(CoinGecko, 15-11 21:54\)/);
     assert.match(citado, /13,97 % \(CoinGecko, 15-11 21:54\)/);
+    const notaDespido = await readFile(path.join(root, "docs/arqiven/conocimiento/despido-baja.md"), "utf8");
+    const soloRegla = "Sí se puede despedir durante una baja si hay causa real. Es nulo si el motivo es la enfermedad (arts. 2.1 y 26) [fuente].";
+    const completo = salida.completeDespido(soloRegla, notaDespido);
+    assert.equal(completo.includes("[fuente]"), false);
+    assert.equal(completo.includes("[documento: fuente]"), false);
+    assert.match(completo, /\[despido-baja\]/);
+    assert.match(completo, /art[ií]culo 30/i);
+    assert.match(completo, /55\.6/);
+    assert.match(completo, /\bprocedente\b/i);
+    assert.match(completo, /\bimprocedente\b/);
+    assert.match(completo, /\bnulo\b/i);
+    const ya = salida.completeDespido(notaDespido, notaDespido);
+    assert.equal(ya.split("artículo 30").length - 1, notaDespido.split("artículo 30").length - 1);
   });
 });

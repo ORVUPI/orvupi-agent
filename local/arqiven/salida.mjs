@@ -153,3 +153,39 @@ export function placeNoteLabel(text, id) {
   if (!tag || tag === "[]" || !String(text || "").includes(tag)) return String(text || "");
   return String(text).split("\n").map((line) => placeOneLine(line, tag)).join("\n");
 }
+
+function useNoteLabel(text, id) {
+  const tag = `[${id}]`;
+  return String(text || "")
+    .replaceAll("[documento: fuente]", tag)
+    .replaceAll("[documento:fuente]", tag)
+    .replaceAll("[fuente]", tag);
+}
+
+function noteSection(noteText, title) {
+  const match = String(noteText || "").match(new RegExp(`## ${title}\\n+([\\s\\S]*?)(?=\\n## |$)`));
+  return match ? match[1].trim() : "";
+}
+
+function hasArticle(text, number) {
+  const token = String(number).replace(".", "\\.");
+  return new RegExp(`art(?:[ií]culos?|s)?\\.?\\s*(?:\\d+(?:\\.\\d+)?\\s*(?:,|y)\\s*)*${token}\\b`, "i").test(String(text || ""));
+}
+
+function hasThreeClasses(text) {
+  const source = String(text || "");
+  return /\bprocedente\b/i.test(source) && /\bimprocedente\b/i.test(source) && /\bnulo\b/i.test(source);
+}
+
+/** Si falta una parte del despido, añade el bloque literal de esa sección. La cita es [despido-baja]. */
+export function completeDespido(answer, noteText) {
+  let text = placeNoteLabel(useNoteLabel(answer, "despido-baja"), "despido-baja");
+  const blocks = [];
+  if (!hasArticle(text, "26")) blocks.push(noteSection(noteText, "1\\. La regla"));
+  if (!hasArticle(text, "30")) blocks.push(noteSection(noteText, "2\\. La carga de la prueba"));
+  if (!/55\.6\b/.test(text) || !hasThreeClasses(text)) blocks.push(noteSection(noteText, "3\\. Las tres calificaciones"));
+  const extra = blocks.filter(Boolean);
+  if (extra.length) text = `${text.trim()}\n\n${extra.join("\n\n")}`.trim();
+  if (!text.includes("[despido-baja]")) text = `${text.trim()} [despido-baja]`.trim();
+  return text;
+}
