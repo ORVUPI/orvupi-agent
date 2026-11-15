@@ -66,6 +66,16 @@ async function mockOllama(onChat: (body: Record<string, unknown>, res: ServerRes
       res.end(JSON.stringify({ models: [{ name: "qwen3:8b", digest: "abc" }] }));
       return;
     }
+    if ((req.url || "").startsWith("/api/version")) {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ version: "0.40.16" }));
+      return;
+    }
+    if ((req.url || "").startsWith("/api/show")) {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ digest: "abc123digest", details: { quantization_level: "Q4_K_M" } }));
+      return;
+    }
     if (options.missing) {
       res.writeHead(404, { "content-type": "application/json" });
       res.end(JSON.stringify({ error: "model 'qwen3:8b' not found" }));
@@ -276,14 +286,14 @@ describe("backend local de ARQIVEN", () => {
       const system = sent.messages?.[0]?.content || "";
       const last = sent.messages?.at(-1)?.content || "";
       assert.match(system, /dato nuevo es el único vigente/);
-      assert.match(system, /fuente de hechos/);
+      assert.match(system, /texto citado del usuario/);
       assert.match(system, /no es un hecho/);
-      assert.match(last, /\[documento: fuente\]/);
+      assert.match(last, /\[texto citado del usuario: fuente\]/);
       assert.match(last, /\[instrucción del documento omitida\]/);
       assert.equal(last.includes("Arqiven-1"), false);
       assert.equal(last.includes("no confiable"), false);
       assert.equal(last.includes("Usa los hechos del documento y cítalo"), false);
-      assert.ok(last.indexOf("[documento: fuente]") < last.indexOf("Pregunta del usuario:"));
+      assert.ok(last.indexOf("[texto citado del usuario: fuente]") < last.indexOf("Pregunta del usuario:"));
       assert.ok(last.indexOf("Pregunta del usuario:") < last.indexOf("Di hola"));
       const budget = await import(href("local/arqiven/budget.mjs")) as { transcriptTokens: (messages: Array<{ content: string }>) => number };
       const pipeline = await import(href("local/arqiven/guard.mjs")) as { guardChat: (dialogue: Array<{ role: string; content: string }>, documentText: string, name: string) => { messages: unknown } };

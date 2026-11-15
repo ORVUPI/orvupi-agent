@@ -30,7 +30,18 @@ function cleanMessage(item) {
   if (!item || (item.role !== "user" && item.role !== "assistant")) return null;
   const content = String(item.content || "").slice(0, 8000);
   if (!content.trim()) return null;
-  return { role: item.role, content };
+  const run = item.role === "assistant" && item.run && typeof item.run === "object" ? {
+    model: String(item.run.model || "").slice(0, 80),
+    digest: String(item.run.digest || "").slice(0, 80),
+    quantization: String(item.run.quantization || "").slice(0, 40),
+    numCtx: Number(item.run.numCtx) || 0,
+    numPredict: Number(item.run.numPredict) || 0,
+    temperature: Number(item.run.temperature),
+    think: item.run.think === true,
+    ollamaVersion: String(item.run.ollamaVersion || "").slice(0, 40),
+    pipeline: String(item.run.pipeline || "").slice(0, 40),
+  } : undefined;
+  return run ? { role: item.role, content, run } : { role: item.role, content };
 }
 
 function cleanConversation(input = {}) {

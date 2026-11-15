@@ -1,5 +1,7 @@
 ﻿# Arranca ARQIVEN en este equipo. No abre el puerto 11434 ni crea un tunel.
 # Uso: powershell -ExecutionPolicy Bypass -File .\scripts\arqiven-local.ps1
+# Con navegador: powershell -ExecutionPolicy Bypass -File .\scripts\arqiven-local.ps1 -Abrir
+param([switch]$Abrir)
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 Set-Location $Root
@@ -61,6 +63,32 @@ Write-Host "Ollama previsto en $($env:OLLAMA_HOST) con $($env:ARQIVEN_MODEL)."
 Write-Host "qwen3:8b es un modelo de terceros. ARQIVEN no lo creo."
 Write-Host "Historial en $($env:ARQIVEN_DATA)"
 Write-Host "Este script no abre el puerto 11434 ni crea tuneles."
+
+if ($Abrir) {
+  $server = Join-Path $Root "local\arqiven\server.mjs"
+  $nodeProc = Start-Process -FilePath $node.Source -ArgumentList $server -WorkingDirectory $Root -PassThru -WindowStyle Minimized
+  $deadline = (Get-Date).AddSeconds(20)
+  $up = $false
+  while ((Get-Date) -lt $deadline) {
+    try {
+      $probe = Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 "http://127.0.0.1:$($env:ARQIVEN_PORT)/api/arqiven/status"
+      if ($probe.StatusCode -eq 200) { $up = $true; break }
+    } catch { }
+    Start-Sleep -Milliseconds 300
+  }
+  if (-not $up) {
+    if (-not $nodeProc.HasExited) { Stop-Process -Id $nodeProc.Id -Force }
+    Write-Error "El backend no respondio en http://127.0.0.1:$($env:ARQIVEN_PORT)/"
+  }
+  Start-Process "http://127.0.0.1:$($env:ARQIVEN_PORT)/arqiven/"
+  Write-Host "Navegador abierto. Cierra esta ventana para parar ARQIVEN."
+  try {
+    Wait-Process -Id $nodeProc.Id
+  } finally {
+    if (-not $nodeProc.HasExited) { Stop-Process -Id $nodeProc.Id -Force }
+  }
+  exit 0
+}
 
 & node (Join-Path $Root "local\arqiven\server.mjs")
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

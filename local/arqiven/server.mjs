@@ -4,6 +4,7 @@
 
 import { createServer } from "node:http";
 import { createReadStream, statSync } from "node:fs";
+import { appendFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
@@ -193,7 +194,7 @@ async function probeOllama(config) {
   }
 }
 
-function statusBody(config, queue, probe) {
+function statusBody(config, queue, probe, card = {}) {
   return {
     mode: "local",
     runtime: "ollama",
@@ -212,7 +213,53 @@ function statusBody(config, queue, probe) {
     active: queue.snapshot().active,
     ollama: probe.ollama,
     modelReady: probe.modelReady,
+    digest: card.digest || "",
+    quantization: card.quantization || "",
+    ollamaVersion: card.ollamaVersion || "",
+    pipeline: "mitigado2",
     note: `${config.model} es una referencia de terceros ejecutada con Ollama. ARQIVEN no creó estos pesos.`,
+  };
+}
+
+let cardCache = { at: 0, key: "", card: null };
+
+async function modelCard(config) {
+  const key = `${config.ollamaBase}|${config.model}`;
+  if (cardCache.card && cardCache.key === key && Date.now() - cardCache.at < 15000) return cardCache.card;
+  const card = { digest: "", quantization: "", ollamaVersion: "" };
+  const timer = AbortSignal.timeout(800);
+  try {
+    const version = await fetch(new URL("/api/version", config.ollamaBase), { signal: timer });
+    if (version.ok) card.ollamaVersion = String((await version.json())?.version || "").slice(0, 40);
+  } catch { /* la ficha sigue sin versión */ }
+  try {
+    const show = await fetch(new URL("/api/show", config.ollamaBase), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name: config.model }),
+      signal: AbortSignal.timeout(800),
+    });
+    if (show.ok) {
+      const body = await show.json();
+      card.digest = String(body?.digest || "").slice(0, 80);
+      card.quantization = String(body?.details?.quantization_level || "").slice(0, 40);
+    }
+  } catch { /* sin ficha del modelo */ }
+  cardCache = { at: Date.now(), key, card };
+  return card;
+}
+
+function runRecord(config, card) {
+  return {
+    model: config.model,
+    digest: card.digest || "",
+    quantization: card.quantization || "",
+    numCtx: config.numCtx,
+    numPredict: config.numPredict,
+    temperature: config.temperature,
+    think: config.think,
+    ollamaVersion: card.ollamaVersion || "",
+    pipeline: "mitigado2",
   };
 }
 
@@ -341,7 +388,7 @@ export async function startLocalServer(overrides = {}) {
       const guarded = guardChat(visible, documentText, "fuente");
       const redacted = guarded.record;
       const prompt = fitMessages(attachEditor(guarded.messages, editor), config.inputTokens);
-      const hold = redacted.omitted.length > 0;
+      const hold = redacted.omitted.some((item) => item.kept !== true);
       const chatBody = buildChatBody({
         model: config.model,
         messages: prompt,
@@ -389,7 +436,10 @@ export async function startLocalServer(overrides = {}) {
         reply = outputViolates(result.text, redacted) ? SAFE_ANSWER : result.text;
       }
       if (hold) writeEvent(res, { type: "token", requestId, text: reply });
-      await store.save({ id: conversationId, messages: [...visible, { role: "assistant", content: reply }] });
+      const card = await modelCard(config);
+      const run = runRecord(config, card);
+      await store.save({ id: conversationId, messages: [...visible, { role: "assistant", content: reply, run }] });
+      await appendFile(path.join(config.dataDir, "runs.jsonl"), `${JSON.stringify({ at: new Date().toISOString(), conversationId, requestId, run })}\n`).catch(() => {});
       const metrics = metricsFrom({
         requestId,
         model: config.model,
@@ -405,6 +455,7 @@ export async function startLocalServer(overrides = {}) {
         conversationId,
         text: reply,
         omittedInstructions: redacted.omitted.length,
+        run,
         provider: "third-party",
         modelId: config.model,
         modelVersion: `${config.model} (Ollama, tercero)`,
@@ -435,7 +486,7 @@ export async function startLocalServer(overrides = {}) {
     const url = new URL(req.url || "/", "http://127.0.0.1");
     const pathname = url.pathname;
     if (pathname === "/api/arqiven/status" && req.method === "GET") {
-      probeOllama(config).then((probe) => sendJson(res, 200, statusBody(config, queue, probe))).catch(() => {
+      Promise.all([probeOllama(config), modelCard(config)]).then(([probe, card]) => sendJson(res, 200, statusBody(config, queue, probe, card))).catch(() => {
         sendJson(res, 200, statusBody(config, queue, { ollama: "down", modelReady: false }));
       });
       return;

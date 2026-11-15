@@ -39,6 +39,8 @@ const UI = {
     localMissing: "El modelo de terceros no está descargado en Ollama.",
     localTimeout: "La petición superó el tiempo de espera.",
     localTooLarge: "La petición es demasiado grande.",
+    localBudget: "La conversación no cabe en el contexto. Acorta el mensaje o empieza un chat nuevo.",
+    localBackend: "El backend de ARQIVEN no responde en este equipo. Ábrelo con el acceso directo y vuelve a intentar.",
     localHonest: "qwen3:8b es un modelo de terceros. ARQIVEN no lo creó.",
     localForbidden: "No tienes permiso para esta acción en el proyecto.",
     preparing: "Descargando un modelo de terceros. Puedes seguir escribiendo.",
@@ -87,6 +89,8 @@ const UI = {
     localMissing: "The third-party model is not downloaded in Ollama.",
     localTimeout: "The request timed out.",
     localTooLarge: "The request is too large.",
+    localBudget: "The conversation does not fit in the context. Shorten the message or start a new chat.",
+    localBackend: "The ARQIVEN backend is not responding on this computer.",
     localHonest: "qwen3:8b is a third-party model. ARQIVEN did not create it.",
     localForbidden: "You cannot do that in this project.",
     preparing: "Downloading a third-party model. You can keep typing.",
@@ -135,6 +139,8 @@ const UI = {
     localMissing: "O modelo de terceiros não está baixado no Ollama.",
     localTimeout: "A petição excedeu o tempo de espera.",
     localTooLarge: "A petição é grande demais.",
+    localBudget: "A conversa não cabe no contexto. Encurte a mensagem ou comece um chat novo.",
+    localBackend: "O backend da ARQIVEN não responde neste computador.",
     localHonest: "qwen3:8b é um modelo de terceiros. A ARQIVEN não o criou.",
     localForbidden: "Você não tem permissão para esta ação no projeto.",
     who: "ARQIVEN é a IA da ORVUPI. Se você baixar um modelo para ele responder, esse modelo é de terceiros e aparece com o nome dele.",
@@ -183,6 +189,8 @@ const UI = {
     localMissing: "第三者モデルが Ollama にありません。",
     localTimeout: "待ち時間を超えました。",
     localTooLarge: "リクエストが大きすぎます。",
+    localBudget: "会話がコンテキストに入りません。短くするか、新しいチャットを始めてください。",
+    localBackend: "このPCの ARQIVEN バックエンドが応答しません。",
     localHonest: "qwen3:8b は第三者モデルです。ARQIVEN は作っていません。",
     localForbidden: "このプロジェクトではその操作はできません。",
     who: "ARQIVEN は ORVUPI の AI です。応答させるためにモデルをダウンロードする場合、それは第三者のもので、名前は別に示します。",
@@ -231,6 +239,8 @@ const UI = {
     localMissing: "제3자 모델이 Ollama에 없습니다.",
     localTimeout: "요청 시간이 초과되었습니다.",
     localTooLarge: "요청이 너무 큽니다.",
+    localBudget: "대화가 컨텍스트에 맞지 않습니다. 메시지를 줄이거나 새 채팅을 시작하세요.",
+    localBackend: "이 PC의 ARQIVEN 백엔드가 응답하지 않습니다.",
     localHonest: "qwen3:8b는 제3자 모델입니다. ARQIVEN이 만들지 않았습니다.",
     localForbidden: "이 프로젝트에서 그 작업은 허용되지 않습니다.",
     who: "ARQIVEN은 ORVUPI의 AI입니다. 답을 받으려고 모델을 받으면 그 모델은 제3자이고, 이름은 따로 표시합니다.",
@@ -681,6 +691,12 @@ function provenance(item) {
   summary.textContent = chrome.details;
   const note = document.createElement("p");
   note.textContent = originLine(item);
+  if (item.run) {
+    const card = document.createElement("p");
+    card.textContent = localIdentity(item.run);
+    details.append(summary, note, card);
+    return details;
+  }
   details.append(summary, note);
   return details;
 }
@@ -818,6 +834,20 @@ function showEngineStatus(line) {
   setStatus(line);
 }
 
+function localIdentity(info) {
+  const card = info || {};
+  return [
+    card.model || "qwen3:8b",
+    card.quantization || "cuantización no indicada",
+    card.digest ? String(card.digest).slice(0, 12) : "digest no disponible",
+    `ctx ${card.numCtx || 4096}`,
+    `salida ${card.numPredict || 1024}`,
+    `temp ${card.temperature ?? 0.2}`,
+    card.think ? "think sí" : "think no",
+    card.ollamaVersion ? `Ollama ${card.ollamaVersion}` : "Ollama (versión no indicada)",
+    card.pipeline || "mitigado2",
+  ].join(" · ");
+}
 function updateEngineUi() {
   const snap = state.snap;
   if (state.runtime === "ollama") {
@@ -828,7 +858,7 @@ function updateEngineUi() {
         ? ui.localMissing
         : `${ui.localReady} · ${info.model || "qwen3:8b"} · ${ui.third}`;
     progress.textContent = `${line}. ${ui.localHonest}`;
-    indicator.textContent = ui.localHonest;
+    indicator.textContent = localIdentity(info);
     meter.hidden = true;
     cancel.hidden = !state.messages.some((item) => item.running || item.queued || item.pending);
     return;
@@ -1377,8 +1407,10 @@ function localErrorText(code, message) {
   if (code === "ollama-down") return ui.localDown;
   if (code === "model-missing") return ui.localMissing;
   if (code === "timeout") return ui.localTimeout;
+  if (code === "budget") return ui.localBudget;
   if (code === "too-large") return ui.localTooLarge;
   if (code === "cancelled") return ui.stopped;
+  if (!code) return ui.localBackend;
   return message || ui.error;
 }
 
@@ -1479,6 +1511,7 @@ async function streamLocal(item, extra = {}) {
           item.genTokens = Number(event.metrics?.evalTokens) || 0;
           item.genMs = Number(event.metrics?.evalMs) || 0;
           item.genThreads = 1;
+          if (event.run) item.run = event.run;
           if (event.conversationId) state.conversationId = event.conversationId;
         }
         if (event.type === "error") {
@@ -2281,8 +2314,9 @@ async function adoptLocalHistory() {
     content: item.content,
     mode: "model",
     provider: item.role === "assistant" ? "third-party" : "none",
-    modelId: item.role === "assistant" ? (state.localInfo?.model || "qwen3:8b") : "none",
-    modelVersion: item.role === "assistant" ? `${state.localInfo?.model || "qwen3:8b"} (Ollama, tercero)` : "",
+    modelId: item.role === "assistant" ? (item.run?.model || state.localInfo?.model || "qwen3:8b") : "none",
+    modelVersion: item.role === "assistant" ? `${item.run?.model || state.localInfo?.model || "qwen3:8b"} (Ollama, tercero)` : "",
+    run: item.role === "assistant" ? item.run : undefined,
   }));
   state.chatRenamed = false;
   state.chatTitle = "";

@@ -50,7 +50,14 @@ node eval/arqiven/fijo/run.mjs --reservado --comprobar
 node eval/arqiven/fijo/run.mjs --reservado
 ```
 
-El chat local arma el prompt con `guardChat`, la misma función que `--mitigado2` y que `--reservado`. Después solo recorta al presupuesto de tokens y, si el request trae editor, lo añade al final.
+El segundo conjunto, que no se ha usado para ajustar nada, se corre aparte:
+
+```text
+node eval/arqiven/fijo/run.mjs --reservado2 --comprobar
+node eval/arqiven/fijo/run.mjs --reservado2
+```
+
+El primero, ya ejecutado en el PC (37/42), no se vuelve a usar para cambiar el filtro.
 
 El índice de documentos del modo local usa, si está instalado, `qwen3-embedding:0.6b` (terceros, Apache 2.0, cubre español). No es el modelo de chat. Si falta:
 

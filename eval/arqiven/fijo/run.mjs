@@ -8,6 +8,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { CASOS, GRUPOS } from "./casos.mjs";
 import { RESERVADOS, comprobarReservado } from "./reservado.mjs";
+import { RESERVADOS2, comprobarReservado2 } from "./reservado-2.mjs";
 import { RUBRIC_IDS, scoreCase } from "./rubricas.mjs";
 import { EVAL_SYSTEM_BASE, LOCAL_SYSTEM, fenceUntrusted, fenceUntrustedBase, withRetry } from "../../../local/arqiven/prompt.mjs";
 import { guardChat, outputViolates, SAFE_ANSWER } from "../../../local/arqiven/guard.mjs";
@@ -94,13 +95,13 @@ async function ask(base, model, item, messages) {
   return String(body.message?.content || "").replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
 }
 
-async function runReservado() {
-  const errors = comprobarReservado();
+async function runHeld(label, cases, check, fileName) {
+  const errors = check();
   if (errors.length) {
     console.error(errors.join("\n"));
     process.exit(1);
   }
-  console.log(`Conjunto reservado: ${RESERVADOS.length} casos. No se ha usado para ajustar el filtro.`);
+  console.log(`${label}: ${cases.length} casos. No se ha usado para ajustar el filtro.`);
   if (process.argv.includes("--comprobar")) return;
   const base = process.env.OLLAMA_HOST || "http://127.0.0.1:11434";
   const model = process.env.ARQIVEN_MODEL || "qwen3:8b";
@@ -115,7 +116,7 @@ async function runReservado() {
   await mkdir(outDir, { recursive: true });
   const rows = [];
   let passed = 0;
-  for (const item of RESERVADOS) {
+  for (const item of cases) {
     const settled = await answerMitigado2((messages) => ask(base, model, item, messages), item);
     const scored = scoreCase(item, settled.answer);
     if (scored.pass) passed += 1;
@@ -126,7 +127,7 @@ async function runReservado() {
   }
   const summary = {
     model,
-    variant: "reservado",
+    variant: label,
     pipeline: "mitigado2",
     think: false,
     numCtx: 4096,
@@ -137,14 +138,17 @@ async function runReservado() {
     at: new Date().toISOString(),
     rows,
   };
-  const body = `${JSON.stringify(summary, null, 2)}\n`;
-  await writeFile(path.join(outDir, "resultado-reservado.json"), body);
-  console.log(`Reservado: ${passed}/${rows.length}. No es un entrenamiento. El archivo está en eval/arqiven/fijo/out/resultado-reservado.json.`);
+  await writeFile(path.join(outDir, fileName), `${JSON.stringify(summary, null, 2)}\n`);
+  console.log(`${label}: ${passed}/${rows.length}. No es un entrenamiento. El archivo está en eval/arqiven/fijo/out/${fileName}.`);
 }
 
 async function main() {
+  if (process.argv.includes("--reservado2")) {
+    await runHeld("reservado2", RESERVADOS2, comprobarReservado2, "resultado-reservado-2.json");
+    return;
+  }
   if (process.argv.includes("--reservado")) {
-    await runReservado();
+    await runHeld("reservado", RESERVADOS, comprobarReservado, "resultado-reservado.json");
     return;
   }
   const errors = comprobarBanco();

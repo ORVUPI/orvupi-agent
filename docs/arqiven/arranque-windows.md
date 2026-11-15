@@ -48,7 +48,15 @@ powershell -ExecutionPolicy Bypass -File .\scripts\arqiven-local.ps1
 
 Si el puerto 4174 ya lo tiene un ARQIVEN anterior, el script lo para y lo dice. No toca otro programa que esté en ese puerto: en ese caso se detiene y avisa.
 
-La ventana se queda ocupada. Eso es el servidor. Abre el navegador en:
+También puedes abrirlo de un golpe, con el servidor y el navegador:
+
+```text
+powershell -ExecutionPolicy Bypass -File .\scripts\arqiven-local.ps1 -Abrir
+```
+
+O haz doble clic en `scripts\arqiven-abrir.cmd`. La guía de lo que tienes que ver está en `docs/arqiven/aceptacion-flujo-1.md`.
+
+La ventana se queda ocupada. Eso es el servidor. Si no usaste `-Abrir`, abre el navegador en:
 
 ```text
 http://127.0.0.1:4174/arqiven/
