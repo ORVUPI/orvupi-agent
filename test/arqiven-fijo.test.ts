@@ -291,6 +291,7 @@ describe("conjunto fijo de 100 casos", () => {
       finishReply: (text: string) => string;
       placeNoteLabel: (text: string, id: string) => string;
       closeMarketAnswer: (answer: string, facts: string) => string;
+      citeMissingFigures: (answer: string, facts: string) => string;
     };
     const lista = "- Manzana\n- Plátano\n- Naranja";
     const codigo = "function suma(a, b) {\n  return a + b;\n}";
@@ -326,5 +327,18 @@ describe("conjunto fijo de 100 casos", () => {
     assert.match(sinAviso, /1\.1052 \(el BCE, Frankfurter, 13-11-2026\)/);
     assert.match(sinAviso, /puedes perder dinero\.$/);
     assert.equal(salida.closeMarketAnswer("- Manzana\n- Plátano", "").includes("\n"), true);
+    const hechosPorcentaje = [
+      "Variación del euro frente al dólar entre 16-10-2026 y 13-11-2026: -1,79 % (el BCE, Frankfurter, 16-10-2026 y 13-11-2026).",
+      "Variación del euro frente a la libra entre 16-10-2026 y 13-11-2026: -0,98 % (el BCE, Frankfurter, 16-10-2026 y 13-11-2026).",
+      "Variación 24 h de Bitcoin: 11,92 % (CoinGecko, 15-11 21:54).",
+      "Variación 7 d de Ethereum: 13,97 % (CoinGecko, 15-11 21:54).",
+    ].join("\n");
+    const escrito = "El cambio es -1,79 (el BCE, Frankfurter, 16-10-2026 y 13-11-2026) %. La libra -0,98 %. Bitcoin 11,92 % y Ethereum 13,97 %.";
+    const citado = salida.citeMissingFigures(escrito, hechosPorcentaje);
+    assert.equal(citado.includes("-1,79 ("), false);
+    assert.match(citado, /-1,79 % \(el BCE, Frankfurter, 16-10-2026 y 13-11-2026\)/);
+    assert.match(citado, /-0,98 % \(el BCE, Frankfurter, 16-10-2026 y 13-11-2026\)/);
+    assert.match(citado, /11,92 % \(CoinGecko, 15-11 21:54\)/);
+    assert.match(citado, /13,97 % \(CoinGecko, 15-11 21:54\)/);
   });
 });

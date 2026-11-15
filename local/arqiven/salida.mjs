@@ -68,32 +68,53 @@ export function trimAfterWarning(text) {
 
 const MARKET_WARNING = "Esto no es una recomendación: puedes perder dinero.";
 
-/** Añade «(Fuente, fecha)» a una cifra que ya está en los hechos y no la trae. */
-export function citeMissingFigures(answer, factsText) {
-  const pairs = [];
+function figureKey(raw) {
+  return String(raw || "").replace(/^\+/, "").replace(",", ".");
+}
+
+function figuresInFacts(factsText) {
+  const figures = [];
   for (const line of String(factsText || "").split("\n")) {
     const cite = line.match(/\(([^)]+)\)/);
     if (!cite) continue;
-    for (const match of line.matchAll(/([+-]?\d+(?:[.,]\d+)?)\s*(?:USD|GBP|%)/gi)) {
+    for (const match of line.matchAll(/([+-]?\d+(?:[.,]\d+)?)\s*(USD|GBP|%)/gi)) {
       const raw = match[1].replace(/^\+/, "");
-      const forms = [...new Set([raw, raw.replace(".", ","), raw.replace(",", ".")])];
-      pairs.push({ forms, citation: cite[1] });
+      if (raw === "1") continue;
+      const unit = match[2].toUpperCase() === "%" ? "%" : match[2].toUpperCase();
+      figures.push({ key: figureKey(raw), unit, citation: cite[1] });
     }
   }
-  pairs.sort((a, b) => b.forms[0].length - a.forms[0].length);
-  let next = String(answer || "");
-  for (const pair of pairs) {
-    for (const form of pair.forms) {
-      if (!form || form === "1") continue;
-      const escaped = form.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      next = next.replace(new RegExp(escaped, "g"), (found, offset, source) => {
-        const around = source.slice(Math.max(0, offset - 80), offset + found.length + 80);
-        if (around.includes(pair.citation) || source.slice(offset + found.length, offset + found.length + 2).trim().startsWith("(")) return found;
-        return `${found} (${pair.citation})`;
-      });
-    }
+  return figures;
+}
+
+function figureFor(figures, number, unit) {
+  const key = figureKey(number);
+  if (!key || key === "1") return null;
+  if (unit) {
+    const exact = figures.find((item) => item.key === key && item.unit === unit);
+    if (exact) return exact;
   }
-  return next;
+  return figures.find((item) => item.key === key) || null;
+}
+
+/** Añade «(Fuente, fecha)» detrás de la cifra y de su unidad. Cada cifra se mira sola. */
+export function citeMissingFigures(answer, factsText) {
+  const figures = figuresInFacts(factsText);
+  if (!figures.length) return String(answer || "");
+  return String(answer || "").replace(
+    /(?<!\d)([+-]?\d+(?:[.,]\d+)?)(\s*\([^)]*\))?(\s*(?:USD|GBP|%))?/gi,
+    (found, number, paren = "", unit = "", offset, source) => {
+      const unitToken = (String(unit).match(/USD|GBP|%/i) || [""])[0].toUpperCase();
+      const figure = figureFor(figures, number, unitToken === "%" ? "%" : unitToken);
+      if (!figure) return found;
+      const rest = source.slice(offset + found.length).trimStart();
+      const cited = `(${figure.citation})`;
+      if (rest.startsWith(cited)) return found;
+      if (!unitToken && paren.includes(figure.citation)) return found;
+      const shown = unitToken === "%" ? "%" : unitToken;
+      return shown ? `${number} ${shown} ${cited}` : `${number} ${cited}`;
+    },
+  );
 }
 
 export function closeMarketAnswer(answer, factsText) {
