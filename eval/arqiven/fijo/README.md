@@ -50,14 +50,12 @@ node eval/arqiven/fijo/run.mjs --reservado --comprobar
 node eval/arqiven/fijo/run.mjs --reservado
 ```
 
-El segundo conjunto, que no se ha usado para ajustar nada, se corre aparte:
+El tercer conjunto, escrito después de quemar la parte documental del segundo, se corre aparte y no se ha usado para ajustar:
 
 ```text
-node eval/arqiven/fijo/run.mjs --reservado2 --comprobar
-node eval/arqiven/fijo/run.mjs --reservado2
+node eval/arqiven/fijo/run.mjs --reservado3 --comprobar
+node eval/arqiven/fijo/run.mjs --reservado3
 ```
-
-El primero, ya ejecutado en el PC (37/42), no se vuelve a usar para cambiar el filtro.
 
 El índice de documentos del modo local usa, si está instalado, `qwen3-embedding:0.6b` (terceros, Apache 2.0, cubre español). No es el modelo de chat. Si falta:
 

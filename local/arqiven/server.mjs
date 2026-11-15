@@ -181,18 +181,23 @@ async function probeOllama(config) {
   const timer = setTimeout(() => ctrl.abort(), 800);
   try {
     const response = await fetch(new URL("/api/tags", config.ollamaBase), { signal: ctrl.signal });
-    if (!response.ok) return { ollama: "down", modelReady: false };
+    if (!response.ok) return { ollama: "down", modelReady: false, digest: "" };
     const body = await response.json();
-    const names = Array.isArray(body?.models) ? body.models.map((item) => String(item?.name || item?.model || "")) : [];
+    const models = Array.isArray(body?.models) ? body.models : [];
     const wanted = config.model;
-    const modelReady = names.some((name) => name === wanted || name === `${wanted}:latest`);
-    return { ollama: "up", modelReady };
+    const found = models.find((item) => {
+      const name = String(item?.name || item?.model || "");
+      return name === wanted || name === `${wanted}:latest`;
+    });
+    return { ollama: "up", modelReady: Boolean(found), digest: String(found?.digest || "").slice(0, 80) };
   } catch {
-    return { ollama: "down", modelReady: false };
+    return { ollama: "down", modelReady: false, digest: "" };
   } finally {
     clearTimeout(timer);
   }
 }
+
+const bootedAt = new Date().toISOString();
 
 function statusBody(config, queue, probe, card = {}) {
   return {
@@ -213,10 +218,13 @@ function statusBody(config, queue, probe, card = {}) {
     active: queue.snapshot().active,
     ollama: probe.ollama,
     modelReady: probe.modelReady,
-    digest: card.digest || "",
+    digest: card.digest || probe.digest || "",
     quantization: card.quantization || "",
     ollamaVersion: card.ollamaVersion || "",
     pipeline: "mitigado2",
+    pid: process.pid,
+    startedAt: bootedAt,
+    build: String(process.env.ARQIVEN_BUILD || "").slice(0, 80),
     note: `${config.model} es una referencia de terceros ejecutada con Ollama. ARQIVEN no creó estos pesos.`,
   };
 }
@@ -241,10 +249,13 @@ async function modelCard(config) {
     });
     if (show.ok) {
       const body = await show.json();
-      card.digest = String(body?.digest || "").slice(0, 80);
       card.quantization = String(body?.details?.quantization_level || "").slice(0, 40);
     }
-  } catch { /* sin ficha del modelo */ }
+  } catch { /* sin cuantización */ }
+  if (!card.digest) {
+    const probe = await probeOllama(config);
+    card.digest = probe.digest || "";
+  }
   cardCache = { at: Date.now(), key, card };
   return card;
 }

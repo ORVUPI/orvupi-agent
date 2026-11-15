@@ -122,7 +122,7 @@ export function guardChat(dialogue, documentText, name = "fuente") {
   const question = [...turns].reverse().find((item) => item.role === "user")?.content || "";
   record.question = question;
   const messages = attachQuoted([
-    { role: "system", content: systemFor(hasDoc) },
+    { role: "system", content: systemFor(hasDoc, name) },
     ...turns.map((item) => ({ role: item.role, content: item.content })),
   ], record.text, name);
   return { messages, record };

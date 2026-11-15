@@ -17,29 +17,51 @@ function Say([string]$Name, [bool]$Ok, [string]$Detail) {
   }
 }
 
-function Listen-Pid([int]$Port) {
-  $lines = netstat -ano | Select-String (":${Port}\s")
-  foreach ($line in $lines) {
-    if ($line.Line -match "LISTENING\s+(\d+)\s*$") {
-      $pidValue = [int]$Matches[1]
-      if ($pidValue -gt 4) { return $pidValue }
+function Get-ArqivenNodes {
+  $ids = @()
+  try {
+    $procs = Get-CimInstance Win32_Process -Filter "Name = 'node.exe'"
+    foreach ($proc in @($procs)) {
+      $command = [string]$proc.CommandLine
+      if ($command -match 'local[\\/]arqiven[\\/]server\.mjs') { $ids += [int]$proc.ProcessId }
     }
+  } catch { }
+  return $ids
+}
+
+function Stop-Backend {
+  foreach ($procId in (Get-ArqivenNodes)) {
+    if ($procId -gt 4) { Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue }
   }
-  return 0
+  Start-Sleep -Milliseconds 400
 }
 
 function Wait-Backend {
   for ($i = 0; $i -lt 40; $i++) {
     try {
       $status = Invoke-RestMethod -Uri "$Backend/api/arqiven/status" -TimeoutSec 2 -UseBasicParsing
-      if ($status.mode -eq "local") { return $true }
+      if ($status.mode -eq "local") { return $status }
     } catch { }
     Start-Sleep -Milliseconds 250
   }
-  return $false
+  return $null
+}
+
+function Assert-Fresh([object]$Status, [datetime]$NotBefore, [int]$ExpectedPid) {
+  if (-not $Status -or -not $Status.startedAt -or -not $Status.pid) {
+    return "el servidor no trae hora de arranque ni pid: es una version anterior"
+  }
+  $started = [datetime]::Parse([string]$Status.startedAt, [cultureinfo]::InvariantCulture, [Globalization.DateTimeStyles]::RoundtripKind)
+  $fresh = $started.ToUniversalTime() -ge $NotBefore.ToUniversalTime().AddSeconds(-3)
+  $same = ($ExpectedPid -gt 4 -and [int]$Status.pid -eq $ExpectedPid)
+  if (-not ($fresh -or $same)) {
+    return "responde un ARQIVEN viejo (pid $($Status.pid), arranque $($Status.startedAt))"
+  }
+  return ""
 }
 
 function Start-Backend {
+  Stop-Backend
   if (-not $env:ARQIVEN_DATA) {
     $base = $env:LOCALAPPDATA
     if (-not $base) { $base = $env:USERPROFILE }
@@ -48,15 +70,19 @@ function Start-Backend {
   if (-not $env:ARQIVEN_USER -and $env:USERNAME -match '^[A-Za-z0-9._-]{1,64}$') { $env:ARQIVEN_USER = $env:USERNAME }
   $env:OLLAMA_HOST = "http://127.0.0.1:11434"
   $env:ARQIVEN_THINK = "false"
+  if (-not $env:ARQIVEN_BUILD) {
+    $file = Join-Path $Root "local\arqiven\server.mjs"
+    if (Test-Path $file) { $env:ARQIVEN_BUILD = "file-" + (Get-Item $file).LastWriteTimeUtc.ToString("yyyyMMddHHmmss") }
+  }
   New-Item -ItemType Directory -Force -Path $env:ARQIVEN_DATA | Out-Null
-  Start-Process -FilePath "node" -ArgumentList "local/arqiven/server.mjs" -WorkingDirectory $Root -WindowStyle Hidden | Out-Null
-  return (Wait-Backend)
-}
-
-function Stop-Backend {
-  $procId = Listen-Pid 4174
-  if ($procId -gt 4) { Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue }
-  Start-Sleep -Milliseconds 400
+  $mark = Get-Date
+  $proc = Start-Process -FilePath "node" -ArgumentList "local/arqiven/server.mjs" -WorkingDirectory $Root -WindowStyle Hidden -PassThru
+  $status = Wait-Backend
+  if (-not $status) { return "no responde en $Backend" }
+  $stale = Assert-Fresh $status $mark $proc.Id
+  if ($stale) { return $stale }
+  Write-Host "Servidor nuevo: pid $($status.pid), arranque $($status.startedAt), build $($status.build)."
+  return ""
 }
 
 function Invoke-Api([string]$Method, [string]$Path, [string]$User, $Body) {
@@ -106,9 +132,8 @@ function Begin-Chat([string]$Json, [string]$User) {
   return @{ Client = $client; Task = $task }
 }
 
-if (-not (Wait-Backend)) {
-  if (-not (Start-Backend)) { Say "backend" $false "no responde en $Backend"; exit 1 }
-}
+$startError = Start-Backend
+if ($startError) { Say "backend" $false $startError; exit 1 }
 Say "backend" $true ""
 
 $owner = "crist"
@@ -206,7 +231,7 @@ try {
 
 try {
   Stop-Backend
-  $up = Start-Backend
+  $up = -not (Start-Backend)
   $back = Invoke-Api "GET" "/api/arqiven/projects/$projectId" $owner $null
   $chatBack = Invoke-Api "GET" "/api/arqiven/conversations/$chatId" $owner $null
   $ok = $up -and $back.Content -match "Obra" -and $chatBack.Content -match $chatId

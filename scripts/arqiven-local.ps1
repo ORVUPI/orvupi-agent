@@ -31,32 +31,59 @@ if (-not $env:ARQIVEN_HOST) { $env:ARQIVEN_HOST = "127.0.0.1" }
 if (-not $env:ARQIVEN_PORT) { $env:ARQIVEN_PORT = "4174" }
 $env:ARQIVEN_THINK = "false"
 
-function Get-ListenPid([int]$Port) {
-  $lines = netstat -ano | Select-String (":${Port}\s")
-  foreach ($line in $lines) {
-    if ($line.Line -match "LISTENING\s+(\d+)\s*$") {
-      $pidValue = [int]$Matches[1]
-      if ($pidValue -gt 4) { return $pidValue }
+function Get-ArqivenNodes {
+  $ids = @()
+  try {
+    $procs = Get-CimInstance Win32_Process -Filter "Name = 'node.exe'"
+    foreach ($proc in @($procs)) {
+      $command = [string]$proc.CommandLine
+      if ($command -match 'local[\\/]arqiven[\\/]server\.mjs') { $ids += [int]$proc.ProcessId }
     }
-  }
-  return 0
+  } catch { }
+  return $ids
 }
 
-$busy = Get-ListenPid ([int]$env:ARQIVEN_PORT)
-if ($busy -gt 4) {
-  $command = ""
-  try {
-    $proc = Get-CimInstance Win32_Process -Filter "ProcessId=$busy"
-    if ($proc) { $command = [string]$proc.CommandLine }
-  } catch { }
-  if ($command -match "server\.mjs") {
-    Write-Host "El puerto $($env:ARQIVEN_PORT) ya lo usa un ARQIVEN anterior (pid $busy). Lo paro para no dejar el servidor viejo escuchando."
-    Stop-Process -Id $busy -Force
-    Start-Sleep -Milliseconds 400
-  } else {
-    Write-Error "El puerto $($env:ARQIVEN_PORT) esta ocupado por el pid $busy y no parece ARQIVEN. No lo paro."
+function Stop-ArqivenNodes {
+  foreach ($procId in (Get-ArqivenNodes)) {
+    if ($procId -gt 4) {
+      Write-Host "Paro un ARQIVEN anterior (pid $procId)."
+      Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+    }
   }
+  Start-Sleep -Milliseconds 400
 }
+
+function Get-ArqivenBuild([string]$Dir) {
+  $git = Get-Command git -ErrorAction SilentlyContinue
+  if ($git) {
+    try {
+      $sha = & git -C $Dir rev-parse --short HEAD 2>$null
+      if ($sha) { return ([string]$sha).Trim() }
+    } catch { }
+  }
+  $file = Join-Path $Dir "local\arqiven\server.mjs"
+  if (Test-Path $file) { return "file-" + (Get-Item $file).LastWriteTimeUtc.ToString("yyyyMMddHHmmss") }
+  return "sin-build"
+}
+
+function Assert-FreshServer([string]$Url, [datetime]$NotBefore, [int]$ExpectedPid) {
+  $status = Invoke-RestMethod -UseBasicParsing -TimeoutSec 3 -Uri "$Url/api/arqiven/status"
+  if (-not $status.startedAt -or -not $status.pid) {
+    Write-Error "El servidor que responde no trae hora de arranque ni pid. Es una version anterior. No sigo."
+  }
+  $started = [datetime]::Parse([string]$status.startedAt, [cultureinfo]::InvariantCulture, [Globalization.DateTimeStyles]::RoundtripKind)
+  $fresh = $started.ToUniversalTime() -ge $NotBefore.ToUniversalTime().AddSeconds(-3)
+  $same = ($ExpectedPid -gt 4 -and [int]$status.pid -eq $ExpectedPid)
+  if (-not ($fresh -or $same)) {
+    Write-Error "Responde un ARQIVEN que ya estaba en marcha (pid $($status.pid), arranque $($status.startedAt)). No sigo."
+  }
+  Write-Host "Servidor nuevo: pid $($status.pid), arranque $($status.startedAt), build $($status.build)."
+  return $status
+}
+
+Stop-ArqivenNodes
+$env:ARQIVEN_BUILD = Get-ArqivenBuild $Root
+$startedMark = Get-Date
 
 Write-Host "ARQIVEN local: http://127.0.0.1:$($env:ARQIVEN_PORT)/arqiven/"
 Write-Host "Ollama previsto en $($env:OLLAMA_HOST) con $($env:ARQIVEN_MODEL)."
@@ -64,31 +91,27 @@ Write-Host "qwen3:8b es un modelo de terceros. ARQIVEN no lo creo."
 Write-Host "Historial en $($env:ARQIVEN_DATA)"
 Write-Host "Este script no abre el puerto 11434 ni crea tuneles."
 
-if ($Abrir) {
-  $server = Join-Path $Root "local\arqiven\server.mjs"
-  $nodeProc = Start-Process -FilePath $node.Source -ArgumentList $server -WorkingDirectory $Root -PassThru -WindowStyle Minimized
-  $deadline = (Get-Date).AddSeconds(20)
-  $up = $false
-  while ((Get-Date) -lt $deadline) {
-    try {
-      $probe = Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 "http://127.0.0.1:$($env:ARQIVEN_PORT)/api/arqiven/status"
-      if ($probe.StatusCode -eq 200) { $up = $true; break }
-    } catch { }
-    Start-Sleep -Milliseconds 300
-  }
-  if (-not $up) {
-    if (-not $nodeProc.HasExited) { Stop-Process -Id $nodeProc.Id -Force }
-    Write-Error "El backend no respondio en http://127.0.0.1:$($env:ARQIVEN_PORT)/"
-  }
-  Start-Process "http://127.0.0.1:$($env:ARQIVEN_PORT)/arqiven/"
-  Write-Host "Navegador abierto. Cierra esta ventana para parar ARQIVEN."
+$server = Join-Path $Root "local\arqiven\server.mjs"
+$nodeProc = Start-Process -FilePath $node.Source -ArgumentList $server -WorkingDirectory $Root -PassThru -WindowStyle Minimized
+$deadline = (Get-Date).AddSeconds(20)
+$up = $false
+while ((Get-Date) -lt $deadline) {
   try {
-    Wait-Process -Id $nodeProc.Id
-  } finally {
-    if (-not $nodeProc.HasExited) { Stop-Process -Id $nodeProc.Id -Force }
-  }
-  exit 0
+    $probe = Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 "http://127.0.0.1:$($env:ARQIVEN_PORT)/api/arqiven/status"
+    if ($probe.StatusCode -eq 200) { $up = $true; break }
+  } catch { }
+  Start-Sleep -Milliseconds 300
 }
-
-& node (Join-Path $Root "local\arqiven\server.mjs")
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+if (-not $up) {
+  if (-not $nodeProc.HasExited) { Stop-Process -Id $nodeProc.Id -Force }
+  Write-Error "El backend no respondio en http://127.0.0.1:$($env:ARQIVEN_PORT)/"
+}
+Assert-FreshServer "http://127.0.0.1:$($env:ARQIVEN_PORT)" $startedMark $nodeProc.Id | Out-Null
+if ($Abrir) { Start-Process "http://127.0.0.1:$($env:ARQIVEN_PORT)/arqiven/" }
+Write-Host "Servidor en marcha. Cierra esta ventana para parar ARQIVEN."
+try {
+  Wait-Process -Id $nodeProc.Id
+} finally {
+  if (-not $nodeProc.HasExited) { Stop-Process -Id $nodeProc.Id -Force }
+}
+exit 0

@@ -22,21 +22,19 @@ powershell -ExecutionPolicy Bypass -File .\scripts\arqiven-local.ps1 -Abrir
 6. En la pantalla: logotipo de ARQIVEN, «Nuevo chat», «Chats», sin la cabecera del sitio.
 7. Debajo del cuadro de escritura, una línea con el modelo. Tiene que nombrar `qwen3:8b`, la cuantización si Ollama la da (en este PC, Q4_K_M), los primeros caracteres del digest, `ctx 4096`, `salida 1024`, `temp 0.2`, `think no`, la versión de Ollama y `mitigado2`.
 
-Si el puerto 4174 ya tenía un ARQIVEN viejo, el script lo para y lo dice. Si lo ocupa otro programa, se detiene y no lo mata.
+Si ya hay un `node.exe` cuya línea de comando es `local\arqiven\server.mjs`, el script lo para. No usa `netstat`: en Windows en español esa lista no dice `LISTENING`. Después de arrancar, mira `/api/arqiven/status` y no sigue si el pid o la hora de arranque son de un servidor viejo.
 
 ## 2. Conversar y recuperar el chat
 
-El guardado en disco está verificado en el PC (verificador 8/8, 15-11-2026 19:45). Abrir el navegador con el acceso directo y ver el mismo chat después de reiniciar el PC está pendiente.
+El chat en disco quedó verificado en el PC el 15-11-2026 a las 20:17, después de matar el proceso y arrancar otro (`prueba-ficha-1`). El 8/8 de las 19:45 no cuenta como ese reinicio. Abrir el navegador y ver la ficha en pantalla sigue pendiente. El historial está en `%LOCALAPPDATA%\ARQIVEN\local\history.json` y cada respuesta añade una línea en `runs.jsonl`.
 
 1. Escribe una frase, por ejemplo «Di solo la palabra mesa», y envíala.
 2. Tiene que aparecer una respuesta. No hace falta que sea larga.
 3. En «Detalles» de esa respuesta, la ficha del modelo: nombre, digest, cuantización, ctx, salida, temperatura, think, versión de Ollama y `mitigado2`.
 4. Cierra la ventana de PowerShell. El navegador deja de poder pedir otra respuesta.
 5. Vuelve a abrir con `arqiven-abrir.cmd`.
-6. En «Chats» sigue el chat. Ábrelo. La frase y la respuesta siguen ahí, y los detalles siguen mostrando la ficha con la que se generó, no la de un arranque posterior.
-7. El archivo está en `%LOCALAPPDATA%\ARQIVEN\local\history.json`.
-8. Cada respuesta añade una línea en `%LOCALAPPDATA%\ARQIVEN\local\runs.jsonl` con la misma ficha, sin el texto del chat.
-9. Reinicia el PC, abre otra vez el acceso directo y comprueba que el chat sigue. Este reinicio del PC no está verificado todavía.
+6. Reinicia el proceso (cierra la ventana o mata el PID) y abre otra vez el acceso directo. En el PC, el 15-11-2026 a las 20:17, tras matar el proceso y arrancar otro, el chat `prueba-ficha-1` seguía. Reiniciar el PC entero sigue pendiente.
+7. En «Detalles», el digest tiene que coincidir con el de `ollama list` (empieza por `500a1f067a9f` en este equipo). Si sale vacío, el servidor que responde es anterior a este arreglo.
 
 ## 3. Stop y errores que se entienden
 

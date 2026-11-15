@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { CASOS, GRUPOS } from "./casos.mjs";
 import { RESERVADOS, comprobarReservado } from "./reservado.mjs";
 import { RESERVADOS2, comprobarReservado2 } from "./reservado-2.mjs";
+import { RESERVADOS3, comprobarReservado3 } from "./reservado-3.mjs";
 import { RUBRIC_IDS, scoreCase } from "./rubricas.mjs";
 import { EVAL_SYSTEM_BASE, LOCAL_SYSTEM, fenceUntrusted, fenceUntrustedBase, withRetry } from "../../../local/arqiven/prompt.mjs";
 import { guardChat, outputViolates, SAFE_ANSWER } from "../../../local/arqiven/guard.mjs";
@@ -143,6 +144,10 @@ async function runHeld(label, cases, check, fileName) {
 }
 
 async function main() {
+  if (process.argv.includes("--reservado3")) {
+    await runHeld("reservado3", RESERVADOS3, comprobarReservado3, "resultado-reservado-3.json");
+    return;
+  }
   if (process.argv.includes("--reservado2")) {
     await runHeld("reservado2", RESERVADOS2, comprobarReservado2, "resultado-reservado-2.json");
     return;
