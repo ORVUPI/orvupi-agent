@@ -117,6 +117,18 @@ export function citeMissingFigures(answer, factsText) {
   );
 }
 
+/** Sin lectura en vivo: la frase fija, el análisis y tres pasos. No dice «No consta información». */
+export function offlineMarketAnswer() {
+  return [
+    "Ahora no hay datos en vivo.",
+    "Sin una lectura de este momento no se puede afirmar si el euro, el bitcoin o el ethereum suben o bajan. El marco general es que esas cotizaciones se mueven y un día no marca una tendencia.",
+    "1. Reparte el ahorro y no lo concentres en un solo activo.",
+    "2. Fija un horizonte y no actúes por el movimiento de una sesión.",
+    "3. Guarda un colchón de emergencia y no inviertas lo que no puedas perder.",
+    "Esto no es una recomendación: puedes perder dinero.",
+  ].join("\n");
+}
+
 export function closeMarketAnswer(answer, factsText) {
   if (!String(factsText || "").trim()) return String(answer || "").trim();
   let text = citeMissingFigures(answer, factsText);

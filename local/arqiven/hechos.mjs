@@ -6,13 +6,24 @@ export function wantsLiveFacts(question) {
   return LIVE.test(String(question || ""));
 }
 
+const CACHE_MS = 5 * 60 * 1000;
+const memory = {};
+
 async function readJson(fetchImpl, url, timeoutMs) {
-  const response = await fetchImpl(url, {
-    signal: AbortSignal.timeout(timeoutMs),
-    headers: { accept: "application/json" },
-  });
-  if (!response.ok) return null;
-  return response.json();
+  let last = null;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const response = await fetchImpl(url, {
+        signal: AbortSignal.timeout(timeoutMs),
+        headers: { accept: "application/json" },
+      });
+      if (!response?.ok) continue;
+      return await response.json();
+    } catch {
+      last = null;
+    }
+  }
+  return last;
 }
 
 function euroDate(iso) {
@@ -136,30 +147,62 @@ function formatCoins(rows, now) {
   return lines.length > 1 ? lines.join("\n") : "";
 }
 
+function cacheFor(options) {
+  if (options.store) return options.store;
+  if (options.fetch) return {};
+  return memory;
+}
+
+function stillFresh(entry, now) {
+  return Boolean(entry?.text) && now.getTime() - entry.at < CACHE_MS;
+}
+
+async function loadFx(fetchImpl, timeoutMs, now, store) {
+  if (stillFresh(store.fx, now)) return store.fx;
+  try {
+    const points = await readFx(fetchImpl, timeoutMs, now);
+    const text = formatFx(points);
+    if (text) {
+      store.fx = { at: now.getTime(), text, date: points.at(-1)?.date || "" };
+      return store.fx;
+    }
+  } catch { /* se usa la última lectura buena */ }
+  return store.fx?.text ? store.fx : null;
+}
+
+async function loadCoins(fetchImpl, timeoutMs, now, store) {
+  if (stillFresh(store.coins, now)) return store.coins;
+  try {
+    const rows = await readJson(fetchImpl, "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum&price_change_percentage=24h,7d", timeoutMs);
+    const text = Array.isArray(rows) ? formatCoins(rows, now) : "";
+    if (text) {
+      store.coins = { at: now.getTime(), text, date: stampFrom(rows.find((row) => row?.last_updated)?.last_updated, now) };
+      return store.coins;
+    }
+  } catch { /* se usa la última lectura buena */ }
+  return store.coins?.text ? store.coins : null;
+}
+
 export async function liveFacts(question, options = {}) {
-  if (!wantsLiveFacts(question)) return { text: "", sources: [] };
+  if (!wantsLiveFacts(question)) return { text: "", sources: [], offline: false };
   const fetchImpl = options.fetch || globalThis.fetch;
   const timeoutMs = options.timeoutMs || 4000;
   const now = options.now instanceof Date ? options.now : new Date();
+  const store = cacheFor(options);
+  const [fx, coins] = await Promise.all([
+    loadFx(fetchImpl, timeoutMs, now, store),
+    loadCoins(fetchImpl, timeoutMs, now, store),
+  ]);
   const blocks = [];
   const sources = [];
-  const [fxResult, coinResult] = await Promise.allSettled([
-    readFx(fetchImpl, timeoutMs, now),
-    readJson(fetchImpl, "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum&price_change_percentage=24h,7d", timeoutMs),
-  ]);
-  if (fxResult.status === "fulfilled") {
-    const text = formatFx(fxResult.value);
-    if (text) {
-      blocks.push(`[fx]\n${text}`);
-      sources.push({ id: "fx", name: "Frankfurter", date: fxResult.value.at(-1)?.date || "" });
-    }
+  if (fx?.text) {
+    blocks.push(`[fx]\n${fx.text}`);
+    sources.push({ id: "fx", name: "Frankfurter", date: fx.date || "" });
   }
-  if (coinResult.status === "fulfilled" && Array.isArray(coinResult.value)) {
-    const text = formatCoins(coinResult.value, now);
-    if (text) {
-      blocks.push(`[btc]\n${text}`);
-      sources.push({ id: "btc", name: "CoinGecko", date: stampFrom(coinResult.value.find((row) => row?.last_updated)?.last_updated, now) });
-    }
+  if (coins?.text) {
+    blocks.push(`[btc]\n${coins.text}`);
+    sources.push({ id: "btc", name: "CoinGecko", date: coins.date || "" });
   }
-  return { text: blocks.join("\n\n"), sources };
+  const text = blocks.join("\n\n");
+  return { text, sources, offline: !text };
 }

@@ -293,6 +293,7 @@ describe("conjunto fijo de 100 casos", () => {
       closeMarketAnswer: (answer: string, facts: string) => string;
       citeMissingFigures: (answer: string, facts: string) => string;
       completeDespido: (answer: string, note: string) => string;
+      offlineMarketAnswer: () => string;
     };
     const lista = "- Manzana\n- Plátano\n- Naranja";
     const codigo = "function suma(a, b) {\n  return a + b;\n}";
@@ -354,5 +355,69 @@ describe("conjunto fijo de 100 casos", () => {
     assert.match(completo, /\bnulo\b/i);
     const ya = salida.completeDespido(notaDespido, notaDespido);
     assert.equal(ya.split("artículo 30").length - 1, notaDespido.split("artículo 30").length - 1);
+    const sinDatos = salida.offlineMarketAnswer();
+    assert.match(sinDatos, /ahora no hay datos en vivo/i);
+    assert.equal(/no consta informaci/i.test(sinDatos), false);
+    assert.match(sinDatos, /^1\. /m);
+    assert.match(sinDatos, /^2\. /m);
+    assert.match(sinDatos, /^3\. /m);
+    const facts = await import(href("local/arqiven/hechos.mjs")) as {
+      liveFacts: (q: string, o?: {
+        fetch?: (url: string) => Promise<{ ok: boolean; json: () => Promise<unknown> }>;
+        now?: Date;
+        store?: Record<string, unknown>;
+      }) => Promise<{ text: string; offline?: boolean }>;
+    };
+    const bodyFor = (url: string) => {
+      if (url.includes("..")) return { rates: { "2026-10-16": { USD: 1.08, GBP: 0.8 }, "2026-11-13": { USD: 1.1, GBP: 0.84 } } };
+      if (url.includes("frankfurter")) return { date: "2026-11-13", rates: { USD: 1.1, GBP: 0.84 } };
+      return [
+        { id: "bitcoin", current_price: 100, last_updated: "2026-11-15T20:54:00.000Z", price_change_percentage_24h: 1.5, price_change_percentage_7d_in_currency: -2 },
+        { id: "ethereum", current_price: 10, last_updated: "2026-11-15T20:54:00.000Z", price_change_percentage_24h: 0.4, price_change_percentage_7d_in_currency: 3 },
+      ];
+    };
+    const store: Record<string, unknown> = {};
+    let calls = 0;
+    const seen = new Map<string, number>();
+    const retried = await facts.liveFacts("¿Cómo ves las inversiones hoy?", {
+      store,
+      now: new Date("2026-11-15T21:00:00Z"),
+      fetch: async (url: string) => {
+        calls += 1;
+        const n = (seen.get(url) || 0) + 1;
+        seen.set(url, n);
+        if (n === 1) throw new Error("caida");
+        return { ok: true, json: async () => bodyFor(url) };
+      },
+    });
+    assert.match(retried.text, /Frankfurter/);
+    assert.match(retried.text, /CoinGecko, 15-11 21:54/);
+    const after = calls;
+    const cached = await facts.liveFacts("¿Cómo ves las inversiones hoy?", {
+      store,
+      now: new Date("2026-11-15T21:03:00Z"),
+      fetch: async () => {
+        calls += 1;
+        throw new Error("no debe llamar");
+      },
+    });
+    assert.equal(calls, after);
+    assert.match(cached.text, /CoinGecko, 15-11 21:54/);
+    const stale = await facts.liveFacts("¿Cómo ves las inversiones hoy?", {
+      store,
+      now: new Date("2026-11-15T21:20:00Z"),
+      fetch: async () => {
+        throw new Error("caida");
+      },
+    });
+    assert.match(stale.text, /CoinGecko, 15-11 21:54/);
+    const none = await facts.liveFacts("¿Cómo ves las inversiones hoy?", {
+      store: {},
+      fetch: async () => {
+        throw new Error("caida");
+      },
+    });
+    assert.equal(none.text, "");
+    assert.equal(none.offline, true);
   });
 });
