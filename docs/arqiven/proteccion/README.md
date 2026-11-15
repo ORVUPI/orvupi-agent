@@ -1,7 +1,7 @@
 # Protección de ARQIVEN
 
 Fecha: 15 de noviembre de 2026.
-Estado: revisado en el repositorio; pendiente de Cristian.
+Estado: revisado en el repositorio; pendiente del propietario.
 No registra marcas, no paga tasas, no cambia `LICENSE` y no publica orvupi.com.
 
 | Documento | Qué es |

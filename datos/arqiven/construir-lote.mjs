@@ -251,7 +251,7 @@ const lote = [
   pair(
     "sft-044",
     "¿Qué falta para dar por cerrada la base documental de esta carpeta?",
-    "La revisión de Cristian. Cada documento de docs/arqiven/conocimiento está marcado «revisado: pendiente de Cristian». Hasta ese visto bueno, la base es un borrador citando el repositorio, no una fuente cerrada.",
+    "La revisión del propietario. Cada documento de docs/arqiven/conocimiento está marcado «revisado: pendiente del propietario». Hasta ese visto bueno, la base es un borrador citando el repositorio, no una fuente cerrada.",
   ),
   pair(
     "sft-045",

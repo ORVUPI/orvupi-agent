@@ -2,7 +2,7 @@
 
 - id: arq-005
 - fecha: 2026-11-15
-- estado: revisado: pendiente de Cristian
+- estado: revisado: pendiente del propietario
 - origen: web/v2/shared/ia/contract.mjs; web/v2/shared/ia/models.mjs; local/arqiven/prompt.mjs; local/arqiven/config.mjs; docs/arqiven/registro-cambios.md
 
 ## Fragmento: no hay checkpoint propio

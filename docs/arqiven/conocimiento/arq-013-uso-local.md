@@ -2,7 +2,7 @@
 
 - id: arq-013
 - fecha: 2026-11-15
-- estado: revisado: pendiente de Cristian
+- estado: revisado: pendiente del propietario
 - origen: docs/arqiven/arranque-windows.md; package.json; docs/arqiven/registro-cambios.md
 
 ## Fragmento: preparación

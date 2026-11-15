@@ -1,7 +1,7 @@
 # Plan QLoRA de ARQIVEN v0.1
 
 Fecha: 15 de noviembre de 2026.
-Estado: plan, pendiente de Cristian.
+Estado: plan, pendiente del propietario.
 No se ha instalado Python, no se ha descargado un modelo, no se ha lanzado un kernel y no se ha entrenado.
 
 ARQIVEN v0.1, si este plan se ejecuta y las pruebas mejoran, será una versión especializada basada en un modelo existente: Qwen3 8B, de terceros, Apache 2.0. No será un modelo creado desde cero ni una API presentada como propia. Los datos de entrenamiento son `datos/arqiven/`, y solo después de la revisión. La evaluación no entra en el gradiente.
@@ -13,10 +13,10 @@ Máquina descrita en `docs/arqiven/auditoria.md`: Windows 11 Pro, RTX 5070 Ti de
 Antes de cualquier instalación, en PowerShell, y anotando la salida:
 
 1. `nvidia-smi`: que la GPU que aparece sea la RTX 5070 Ti, la memoria total ronde los 16 GB y el driver responda. La cifra de VRAM en reposo no es la de un entrenamiento.
-2. `python --version` y `py --version`: se espera que fallen o que no sean un Python de ciencia de datos. No instalar uno hasta que Cristian diga que sí.
+2. `python --version` y `py --version`: se espera que fallen o que no sean un Python de ciencia de datos. No instalar uno hasta que el propietario diga que sí.
 3. Espacio libre en disco. Una copia en 4 bits del 8B ocupa varios gigabytes; una en 16 bits, más; el optimizador y las activaciones, aparte. Hay que medirlo, no fiarse de una estimación de esta nota.
 4. Que Ollama pueda seguir sirviendo `qwen3:8b` para la comparación de velocidad. El entrenamiento, si usa otra pila (PyTorch), no debe borrar ese modelo de Ollama.
-5. Que el lote haya pasado `node datos/arqiven/comprobar-solape.mjs` y que Cristian haya quitado el «pendiente de revisión».
+5. Que el lote haya pasado `node datos/arqiven/comprobar-solape.mjs` y que el propietario haya quitado el «pendiente de revisión».
 
 QLoRA en 16 GB es un candidato, no una promesa. Un 8B en 4 bits más un adaptador de rango bajo y un lote de tamaño 1, con checkpoint de gradiente y una secuencia corta, a veces cabe. También se queda sin memoria si la secuencia o el rango se pasan. La primera corrida útil es una que arranque, imprima la memoria y se pueda cancelar. Si no cabe, se baja la longitud, no se sube la GPU de alquiler.
 
@@ -47,7 +47,7 @@ La misma prueba, el mismo `think`, el mismo `num_ctx`, el mismo `num_predict` y 
 | Velocidad | tok/s y tiempo hasta el primer token, en la misma GPU, con un relato largo como el del humo (cientos de tokens, no una frase de cuatro). | Al lado de la exactitud. Un adaptador más lento se anota, no se esconde. |
 | Memoria | VRAM máxima durante la inferencia de una petición, y durante el entrenamiento si se llegó a lanzar. | Si el adaptador no cabe en los 16 GB para inferir, no sustituye al `qwen3:8b` que ya corre en Ollama. |
 
-`eval/arqiven/v01/preguntas-reales.md` entra en la comparación solo después de que Cristian deje de marcarlas como borrador. Hasta entonces son una revisión humana, no una puntuación automática.
+`eval/arqiven/v01/preguntas-reales.md` entra en la comparación solo después de que el propietario deje de marcarlas como borrador. Hasta entonces son una revisión humana, no una puntuación automática.
 
 El conjunto reservado se ejecuta una vez, en el PC, sobre la candidata ya congelada. No se usa para decidir el rango, la tasa ni qué ejemplos añadir. Así lo pide `eval/arqiven/fijo/reservado.mjs`.
 

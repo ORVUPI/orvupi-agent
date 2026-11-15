@@ -2,7 +2,7 @@
 
 - id: arq-016
 - fecha: 2026-11-15
-- estado: revisado: pendiente de Cristian
+- estado: revisado: pendiente del propietario
 - origen: docs/arqiven/registro-cambios.md; docs/arqiven/plan-fases.md; docs/arqiven/auditoria.md
 
 ## Fragmento: implementado en el código de esta rama
@@ -19,6 +19,6 @@ Origen: `docs/arqiven/registro-cambios.md`.
 
 ## Fragmento: pendiente
 
-Instalar y medir `qwen3-embedding:0.6b` en el PC con `ground: true`. Ejecutar el conjunto reservado en el PC, sin usarlo para retocar el filtro. Repetir el humo `-Backend` contra el proceso de esta rama. Carpetas anidadas. Entrenamiento: no está hecho y no se hace hasta que la evaluación que Cristian acepte lo permita. Despliegue en orvupi.com: no. Fusionar a `main`: no. La nota `docs/arqiven/auditoria.md` describe un punto anterior, el commit `57fda94c`, y dice que proyectos, RAG y los 100 casos no entraban en aquella fase. El registro de cambios es posterior y sí los da por escritos.
+Instalar y medir `qwen3-embedding:0.6b` en el PC con `ground: true`. Ejecutar el conjunto reservado en el PC, sin usarlo para retocar el filtro. Repetir el humo `-Backend` contra el proceso de esta rama. Carpetas anidadas. Entrenamiento: no está hecho y no se hace hasta que la evaluación que el propietario acepte lo permita. Despliegue en orvupi.com: no. Fusionar a `main`: no. La nota `docs/arqiven/auditoria.md` describe un punto anterior, el commit `57fda94c`, y dice que proyectos, RAG y los 100 casos no entraban en aquella fase. El registro de cambios es posterior y sí los da por escritos.
 
 Origen: `docs/arqiven/registro-cambios.md`, `docs/arqiven/plan-fases.md` y `docs/arqiven/auditoria.md`.

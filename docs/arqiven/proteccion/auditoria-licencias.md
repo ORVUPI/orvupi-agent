@@ -1,7 +1,7 @@
 # Auditoría de licencias de terceros
 
 Fecha: 15 de noviembre de 2026.
-Estado: revisado: pendiente de Cristian.
+Estado: revisado: pendiente del propietario.
 Alcance: lo que el modo local y la página `/arqiven/` usan o nombran, leído en esta rama. No se han descargado pesos ni se ha instalado nada.
 
 El listado corto para redistribuir está en `THIRD_PARTY_NOTICES.md`, en la raíz.
@@ -80,7 +80,7 @@ Noto Sans JP y Noto Sans KR, en las páginas japonesa y coreana de ARQIVEN, son 
 
 El logotipo oficial de ARQIVEN es `web/v2/assets/arqiven/logo-oficial.png`. SHA256, medido de nuevo el 15 de noviembre de 2026: `f0b8294692096b5d81151e1702e22fdfbe686a535e8cd834c72323af0000812b`. La copia de `docs/orvupi-ia/assets/` tiene los mismos bytes. La página de marca no declara ese archivo como MIT ni como CC0.
 
-`web/v2/arqiven/favicon-32.png` (SHA256 `12361f385517f2fc9e78065458f5c52a979819b9c275233a9024973a85c2f4cc`) e `icon-192.png` (SHA256 `74d5504d51b417864df4eab9223fe49a94a3ecb76a5bdd9b23d0d1a49ae26aca`) son iconos de la aplicación. No se ha encontrado una licencia de un autor externo. Se tratan como recursos de marca hasta que Cristian diga otra cosa.
+`web/v2/arqiven/favicon-32.png` (SHA256 `12361f385517f2fc9e78065458f5c52a979819b9c275233a9024973a85c2f4cc`) e `icon-192.png` (SHA256 `74d5504d51b417864df4eab9223fe49a94a3ecb76a5bdd9b23d0d1a49ae26aca`) son iconos de la aplicación. No se ha encontrado una licencia de un autor externo. Se tratan como recursos de marca hasta que el propietario diga otra cosa.
 
 El avatar del pulpo, `web/v2/assets/orvupi/avatar.png` (SHA256 `352f34d82481ac001fb9746d4229289e7ab2b43de90a4d8249df83c1e41d6ac5`), queda fuera de la MIT. La página `web/v2/marca/index.html` dice que las imágenes se generaron por encargo del creador, que una búsqueda de similitud fue preliminar y no acredita exclusividad, y que no se declaran CC0.
 

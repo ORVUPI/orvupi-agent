@@ -1,10 +1,10 @@
 # Qué protege sin pagar, y qué no
 
 Fecha: 15 de noviembre de 2026.
-Estado: guía, pendiente de Cristian.
+Estado: guía, pendiente del propietario.
 No es un dictamen. No presenta solicitudes, no paga tasas y no publica un sello.
 
-El registro de marca sí cuesta. Las cifras de abajo salen de las páginas oficiales consultadas ese día. Hay que volver a abrirlas antes de pagar: una tasa cambia, y esta guía no se actualiza sola. El pago y el envío del formulario los tiene que hacer Cristian. Este repositorio no lo hace.
+El registro de marca sí cuesta. Las cifras de abajo salen de las páginas oficiales consultadas ese día. Hay que volver a abrirlas antes de pagar: una tasa cambia, y esta guía no se actualiza sola. El pago y el envío del formulario los tiene que hacer el propietario. Este repositorio no lo hace.
 
 ## Lo que sí protege, y es gratis
 
@@ -22,7 +22,7 @@ La rama `cursor/arqiven-ollama-local-8c6d`, de la que sale este trabajo, tiene c
 
 `git log --format='%G?'` marca esos commits con `N`: no llevan firma. Una fecha de autor sin firma se puede reescribir en un clon. Ayuda como relato del repositorio; pesa más si la rama queda en el remoto y, más adelante, si los commits van firmados y la rama por defecto no admite reescritura.
 
-Qué puede hacer Cristian, sin coste de una oficina:
+Qué puede hacer el propietario, sin coste de una oficina:
 
 - Activar la firma de commits (SSH o GPG) en su máquina y firmar a partir de ahora.
 - Conservar el remoto de GitHub. El historial alojado es otra copia fechada.
@@ -69,7 +69,7 @@ También mirar el nombre en el registro de dominios y en las tiendas de aplicaci
 
 ## Lo que no es gratis
 
-El derecho exclusivo sobre el nombre, oponible a terceros en un territorio, sale del registro. Hay que pagar la tasa a la oficina, con el OK de Cristian. Un agente de la propiedad industrial, si lo contrata, cobra aparte: esa minuta no está en las tablas oficiales y aquí no se pide.
+El derecho exclusivo sobre el nombre, oponible a terceros en un territorio, sale del registro. Hay que pagar la tasa a la oficina, con el OK del propietario. Un agente de la propiedad industrial, si lo contrata, cobra aparte: esa minuta no está en las tablas oficiales y aquí no se pide.
 
 ### España, OEPM
 
@@ -119,7 +119,7 @@ Una marca de la UE y una marca española son registros distintos. Pedir las dos 
 
 ## Orden sensato, todavía sin gasto
 
-1. Dejar fechados el logotipo y los documentos (git y, si Cristian quiere, OpenTimestamps).
+1. Dejar fechados el logotipo y los documentos (git y, si el propietario quiere, OpenTimestamps).
 2. Buscar el nombre en OEPM, EUIPO y TMview, y guardar la captura con fecha.
 3. Decidir titular (persona o sociedad) y clases. Ese dato no está en el repo.
 4. Solo entonces, y con su OK, presentar y pagar en la sede oficial.

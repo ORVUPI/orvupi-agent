@@ -54,4 +54,4 @@ Los que ya publica el repositorio: https://orvupi.com/ , https://x.com/ORVUPI , 
 
 ## Decisión que falta
 
-La licencia del código ya está tomada. Sigue faltando el titular registral: si en un registro futuro figura Cristian como persona o una sociedad, y en qué clases. Ese dato no está en el repositorio. Sin ese dato no se presenta ninguna solicitud.
+La licencia del código ya está tomada. Sigue faltando el titular registral: si en un registro futuro figural propietario como persona o una sociedad, y en qué clases. Ese dato no está en el repositorio. Sin ese dato no se presenta ninguna solicitud.

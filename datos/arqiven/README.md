@@ -21,7 +21,7 @@ Cada línea del lote lleva `procedencia`. El texto lo hemos escrito aquí, o res
 
 Nada de este directorio copia la ficha de Qwen más allá de nombrar el modelo, la licencia Apache 2.0 y que es de terceros. Los pesos no están aquí.
 
-Hasta que Cristian revise el lote, no debe usarse para entrenar. El campo `estado` lo dice en cada línea.
+Hasta que el propietario revise el lote, no debe usarse para entrenar. El campo `estado` lo dice en cada línea.
 
 ## Separación con la evaluación
 
@@ -46,7 +46,7 @@ Si se añade una línea, hay que volver a pasar el script antes de considerar el
 
 Identidad honesta (Qwen3 8B de terceros, sin Arqiven-N), citas a un fragmento con su id, abstención cuando el dato no está y petición del dato, programación del propio backend en ángulos que no son las 20 preguntas de v0.1, fichas de ORVUPI citando `arq-00N`, instrucciones de formato, una corrección de historial, rechazo de consejo financiero y una orden escondida en un documento que no se obedece.
 
-## Cómo lo leería un entrenador, el día que Cristian lo autorice
+## Cómo lo leería un entrenador, el día que el propietario lo autorice
 
 El dataset es JSON lines. La columna que importa es `messages`. `id`, `estado` y `procedencia` se pueden dejar fuera de la pérdida. La versión de TRL que haya en el PC manda sobre el nombre de la clase y de los argumentos: hay que leerla entonces, no dar por buena una llamada escrita hoy. Un esquema de lectura, sin ejecutarlo:
 

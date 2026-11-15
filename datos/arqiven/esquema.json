@@ -8,7 +8,7 @@
   "una_linea_un_objeto": true,
   "campos": {
     "id": "Identificador estable del ejemplo. No entra en la pérdida.",
-    "estado": "Siempre «pendiente de revisión» hasta que Cristian lo acepte.",
+    "estado": "Siempre «pendiente de revisión» hasta que el propietario lo acepte.",
     "procedencia": "De dónde sale el texto y con qué permiso.",
     "messages": "Lista de turnos. El entrenador debe usar este campo y puede ignorar el resto."
   },

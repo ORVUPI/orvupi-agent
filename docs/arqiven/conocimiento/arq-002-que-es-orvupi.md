@@ -2,7 +2,7 @@
 
 - id: arq-002
 - fecha: 2026-11-15
-- estado: revisado: pendiente de Cristian
+- estado: revisado: pendiente del propietario
 - origen: README.md; docs/ORVUPI.md; web/v2/shared/ia/cards.mjs; web/v2/marca/index.html
 
 ## Fragmento: definición

@@ -2,7 +2,7 @@
 
 La licencia MIT de `LICENSE` vale para el resto de este repositorio y de la web. No se ha modificado el texto de esa MIT.
 
-La MIT no cubre las carpetas y los scripts de ARQIVEN listados en `LICENSE-ARQIVEN.md`. Desde la decisión de Cristian del 15 de noviembre de 2026, 20:25, ese material es:
+La MIT no cubre las carpetas y los scripts de ARQIVEN listados en `LICENSE-ARQIVEN.md`. Desde la decisión del propietario del 15 de noviembre de 2026, 20:25, ese material es:
 
 © 2026 ORVUPI. Todos los derechos reservados.
 

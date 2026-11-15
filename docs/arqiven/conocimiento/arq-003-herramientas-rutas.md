@@ -2,7 +2,7 @@
 
 - id: arq-003
 - fecha: 2026-11-15
-- estado: revisado: pendiente de Cristian
+- estado: revisado: pendiente del propietario
 - origen: web/v2/shared/ia/cards.mjs; README.md; web/v2/legal/index.html
 
 ## Fragmento: fichas con ruta

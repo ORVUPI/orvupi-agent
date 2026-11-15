@@ -2,7 +2,7 @@
 
 - id: arq-008
 - fecha: 2026-11-15
-- estado: revisado: pendiente de Cristian
+- estado: revisado: pendiente del propietario
 - origen: local/arqiven/config.mjs; local/arqiven/budget.mjs; docs/arqiven/registro-cambios.md
 
 ## Fragmento: valores por defecto

@@ -2,7 +2,7 @@
 
 © 2026 ORVUPI. Todos los derechos reservados.
 
-Decisión de Cristian, 15 de noviembre de 2026, 20:25. Licencia mixta. Este archivo es la licencia de ARQIVEN a partir de esa decisión. No es un dictamen.
+Decisión del propietario, 15 de noviembre de 2026, 20:25. Licencia mixta. Este archivo es la licencia de ARQIVEN a partir de esa decisión. No es un dictamen.
 
 ## Qué cubre
 

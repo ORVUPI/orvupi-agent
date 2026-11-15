@@ -1,7 +1,7 @@
 # Avisos de terceros que usa ARQIVEN
 
 Fecha de la lectura: 15 de noviembre de 2026.
-Estado: revisado en el repositorio; pendiente de que Cristian lo confirme antes de redistribuir pesos o un adaptador.
+Estado: revisado en el repositorio; pendiente de que el propietario lo confirme antes de redistribuir pesos o un adaptador.
 
 Este archivo no redistribuye pesos. El repositorio no incluye los archivos de Qwen, de Ollama ni de los modelos del navegador. Si más adelante se entrega una copia de esos pesos, o un adaptador derivado (QLoRA u otro), hay que acompañarla de la licencia de terceros que corresponda y conservar los avisos. El código propio de ARQIVEN, desde el 15 de noviembre de 2026, 20:25, es «© 2026 ORVUPI. Todos los derechos reservados.» (`LICENSE-ARQIVEN.md`). El resto del repositorio sigue en `LICENSE` (MIT). La MIT no cubre las rutas de ARQIVEN ni las marcas ni el logotipo (`NOTICE.md`). Un adaptador basado en Qwen sigue sujeto a la Apache 2.0 en la parte derivada de Qwen.
 

@@ -2,7 +2,7 @@
 
 - id: arq-007
 - fecha: 2026-11-15
-- estado: revisado: pendiente de Cristian
+- estado: revisado: pendiente del propietario
 - origen: local/arqiven/config.mjs; local/arqiven/server.mjs; docs/arqiven/arranque-windows.md; docs/arqiven/registro-cambios.md; scripts/arqiven-local.ps1
 
 ## Fragmento: qué es

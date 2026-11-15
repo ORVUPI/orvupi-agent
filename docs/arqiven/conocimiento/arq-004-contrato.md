@@ -2,7 +2,7 @@
 
 - id: arq-004
 - fecha: 2026-11-15
-- estado: revisado: pendiente de Cristian
+- estado: revisado: pendiente del propietario
 - origen: web/v2/shared/orvupi-contract.json; web/v2/shared/orvupi-contract.js; web/v2/shared/ia/cards.mjs; README.md; docs/ORVUPI.md
 
 ## Fragmento: la única dirección
@@ -19,7 +19,7 @@ Origen: `web/v2/shared/ia/guard.mjs` y `web/v2/shared/ia/cards.mjs`.
 
 ## Fragmento: frase que el README todavía no ha alineado
 
-`README.md` y `docs/ORVUPI.md` (actualizado el 15 de octubre de 2026) dicen que no hay una dirección de token ORVUPI verificada publicada en este repositorio. La web y las fichas de ARQIVEN sí publican la dirección de arriba. Hasta que Cristian reescriba el README, la fuente que usa la aplicación es el módulo `orvupi-contract` y la ficha. Este documento no promete precio, rendimiento ni liquidez.
+`README.md` y `docs/ORVUPI.md` (actualizado el 15 de octubre de 2026) dicen que no hay una dirección de token ORVUPI verificada publicada en este repositorio. La web y las fichas de ARQIVEN sí publican la dirección de arriba. Hasta que el propietario reescriba el README, la fuente que usa la aplicación es el módulo `orvupi-contract` y la ficha. Este documento no promete precio, rendimiento ni liquidez.
 
 Origen: `README.md`, `docs/ORVUPI.md`, `web/v2/shared/orvupi-contract.json`.
 

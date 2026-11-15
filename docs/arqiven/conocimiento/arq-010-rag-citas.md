@@ -2,7 +2,7 @@
 
 - id: arq-010
 - fecha: 2026-11-15
-- estado: revisado: pendiente de Cristian
+- estado: revisado: pendiente del propietario
 - origen: local/arqiven/rag.mjs; local/arqiven/embed.mjs; local/arqiven/prompt.mjs; local/arqiven/guard.mjs; docs/arqiven/plan-fases.md
 
 ## Fragmento: índice por proyecto

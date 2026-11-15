@@ -2,7 +2,7 @@
 
 - id: arq-017
 - fecha: 2026-11-15
-- estado: revisado: pendiente de Cristian
+- estado: revisado: pendiente del propietario
 - origen: web/v2/arqiven/index.html; web/v2/shared/ia/cards.mjs; docs/arqiven/arranque-windows.md; README.md
 
 ## Fragmento: ¿ARQIVEN tiene un modelo propio?

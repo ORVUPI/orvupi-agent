@@ -2,7 +2,7 @@
 
 - id: arq-018
 - fecha: 2026-11-15
-- estado: revisado: pendiente de Cristian
+- estado: revisado: pendiente del propietario
 - origen: docs/arqiven/auditoria.md; docs/arqiven/plan-fases.md; docs/arqiven/registro-cambios.md; local/arqiven/config.mjs
 
 ## Fragmento: decisiones del modo local

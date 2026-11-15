@@ -1,7 +1,7 @@
 # Decisión de licencia — tomada
 
 Fecha de la decisión: 15 de noviembre de 2026, 20:25.
-Quién decide: Cristian.
+Quién decide: el propietario.
 Estado: tomada. Licencia mixta. Este archivo ya no es una propuesta abierta.
 
 ## Qué quedó

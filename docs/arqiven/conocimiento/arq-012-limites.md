@@ -2,7 +2,7 @@
 
 - id: arq-012
 - fecha: 2026-11-15
-- estado: revisado: pendiente de Cristian
+- estado: revisado: pendiente del propietario
 - origen: README.md; docs/arqiven/plan-fases.md; docs/arqiven/arranque-windows.md; web/v2/shared/ia/guard.mjs; LIMITS.md
 
 ## Fragmento: qué no hace ARQIVEN

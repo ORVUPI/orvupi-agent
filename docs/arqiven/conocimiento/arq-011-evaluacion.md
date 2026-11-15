@@ -2,7 +2,7 @@
 
 - id: arq-011
 - fecha: 2026-11-15
-- estado: revisado: pendiente de Cristian
+- estado: revisado: pendiente del propietario
 - origen: docs/arqiven/registro-cambios.md; docs/arqiven/plan-fases.md; eval/arqiven/fijo/README.md
 
 ## Fragmento: los 100 casos

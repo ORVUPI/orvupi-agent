@@ -2,7 +2,7 @@
 
 - id: arq-014
 - fecha: 2026-11-15
-- estado: revisado: pendiente de Cristian
+- estado: revisado: pendiente del propietario
 - origen: web/v2/arqiven/index.html; web/v2/shared/ia/cards.mjs; web/v2/ja/arqiven/index.html; web/v2/ko/arqiven/index.html
 
 ## Fragmento: los cinco idiomas del sitio

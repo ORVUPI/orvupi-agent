@@ -2,7 +2,7 @@
 
 - id: arq-006
 - fecha: 2026-11-15
-- estado: revisado: pendiente de Cristian
+- estado: revisado: pendiente del propietario
 - origen: docs/arqiven/auditoria.md; web/v2/arqiven/index.html; web/v2/shared/ia/models.mjs
 
 ## Fragmento: cuándo se usa

@@ -2,7 +2,7 @@
 
 - id: arq-009
 - fecha: 2026-11-15
-- estado: revisado: pendiente de Cristian
+- estado: revisado: pendiente del propietario
 - origen: local/arqiven/projects.mjs; docs/arqiven/plan-fases.md; docs/arqiven/registro-cambios.md
 
 ## Fragmento: qué es un proyecto

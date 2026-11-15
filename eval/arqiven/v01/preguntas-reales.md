@@ -1,15 +1,15 @@
 # Preguntas reales para ARQIVEN v0.1
 
-- estado: borrador para revisión de Cristian
+- estado: borrador para revisión del propietario
 - fecha: 2026-11-15
-- nota: No forman parte de eval/arqiven/fijo ni del conjunto reservado. No se usan para entrenar hasta que Cristian las acepte. Las de programación se comprobaron el 15 de noviembre de 2026 con Node, importando el código, sin arrancar Ollama.
+- nota: No forman parte de eval/arqiven/fijo ni del conjunto reservado. No se usan para entrenar hasta que el propietario las acepte. Las de programación se comprobaron el 15 de noviembre de 2026 con Node, importando el código, sin arrancar Ollama.
 
 Son 20: 7 de programación del repositorio, 8 respondibles con la base documental y 5 en las que lo correcto es decir que el dato no consta y pedirlo.
 
 ## v01-01
 
 - categoría: programacion
-- estado: borrador para revisión de Cristian
+- estado: borrador para revisión del propietario
 
 ### Pregunta
 
@@ -32,7 +32,7 @@ node --input-type=module -e "import { budgetPlan } from './local/arqiven/budget.
 ## v01-02
 
 - categoría: programacion
-- estado: borrador para revisión de Cristian
+- estado: borrador para revisión del propietario
 
 ### Pregunta
 
@@ -55,7 +55,7 @@ node --input-type=module -e "import { resolveConfig } from './local/arqiven/conf
 ## v01-03
 
 - categoría: programacion
-- estado: borrador para revisión de Cristian
+- estado: borrador para revisión del propietario
 
 ### Pregunta
 
@@ -78,7 +78,7 @@ node --input-type=module -e "let start=0,stuck=0; const size=10,overlap=10,n=26;
 ## v01-04
 
 - categoría: programacion
-- estado: borrador para revisión de Cristian
+- estado: borrador para revisión del propietario
 
 ### Pregunta
 
@@ -101,7 +101,7 @@ node --input-type=module -e "import { canSeeChat, createProject } from './local/
 ## v01-05
 
 - categoría: programacion
-- estado: borrador para revisión de Cristian
+- estado: borrador para revisión del propietario
 
 ### Pregunta
 
@@ -124,7 +124,7 @@ node --input-type=module -e "import { fitMessages } from './local/arqiven/budget
 ## v01-06
 
 - categoría: programacion
-- estado: borrador para revisión de Cristian
+- estado: borrador para revisión del propietario
 
 ### Pregunta
 
@@ -147,7 +147,7 @@ node --input-type=module -e "import { createProject, removeProject } from './loc
 ## v01-07
 
 - categoría: programacion
-- estado: borrador para revisión de Cristian
+- estado: borrador para revisión del propietario
 
 ### Pregunta
 
@@ -170,7 +170,7 @@ node --input-type=module -e "import { estimateTokens } from './local/arqiven/bud
 ## v01-08
 
 - categoría: documental
-- estado: borrador para revisión de Cristian
+- estado: borrador para revisión del propietario
 - documento: arq-001, arq-005
 
 ### Pregunta
@@ -198,7 +198,7 @@ La respuesta cita el id arq-001 o arq-005 y el fragmento «no hay un modelo prop
 ## v01-09
 
 - categoría: documental
-- estado: borrador para revisión de Cristian
+- estado: borrador para revisión del propietario
 - documento: arq-004
 
 ### Pregunta
@@ -227,7 +227,7 @@ La respuesta contiene Bj6orFgn4UegmXtQ4WHcBsHSjjfgruHcScCSeauW1TyU una sola vez 
 ## v01-10
 
 - categoría: documental
-- estado: borrador para revisión de Cristian
+- estado: borrador para revisión del propietario
 - documento: arq-009
 
 ### Pregunta
@@ -255,7 +255,7 @@ La respuesta cita arq-009 y niega la escritura y el borrado para el lector.
 ## v01-11
 
 - categoría: documental
-- estado: borrador para revisión de Cristian
+- estado: borrador para revisión del propietario
 - documento: arq-010
 
 ### Pregunta
@@ -283,7 +283,7 @@ La respuesta contiene «No consta en los documentos de este proyecto.» y el id 
 ## v01-12
 
 - categoría: documental
-- estado: borrador para revisión de Cristian
+- estado: borrador para revisión del propietario
 - documento: arq-014
 
 ### Pregunta
@@ -311,7 +311,7 @@ La respuesta cita arq-014 y nombra los cinco idiomas o las cinco rutas.
 ## v01-13
 
 - categoría: documental
-- estado: borrador para revisión de Cristian
+- estado: borrador para revisión del propietario
 - documento: arq-011
 
 ### Pregunta
@@ -340,7 +340,7 @@ La respuesta cita arq-011, dice 97/100 y menciona prog-14, prog-20 y doc-03.
 ## v01-14
 
 - categoría: documental
-- estado: borrador para revisión de Cristian
+- estado: borrador para revisión del propietario
 - documento: arq-012
 
 ### Pregunta
@@ -368,7 +368,7 @@ La respuesta cita arq-012 o arq-007 y dice que no abre el puerto 11434.
 ## v01-15
 
 - categoría: documental
-- estado: borrador para revisión de Cristian
+- estado: borrador para revisión del propietario
 - documento: arq-003
 
 ### Pregunta
@@ -396,7 +396,7 @@ La respuesta cita arq-003 y la frase de que Work no es el sistema operativo.
 ## v01-16
 
 - categoría: falta-informacion
-- estado: borrador para revisión de Cristian
+- estado: borrador para revisión del propietario
 
 ### Pregunta
 
@@ -404,13 +404,13 @@ La respuesta cita arq-003 y la frase de que Work no es el sistema operativo.
 
 ### Respuesta esperada
 
-No consta en el repositorio un número de expediente ni un certificado. Hay una política de marca no registrada (™) y una guía de tasas, pero eso no es un registro. Hay que pedir a Cristian el dato, o que confirme que todavía no se ha presentado.
+No consta en el repositorio un número de expediente ni un certificado. Hay una política de marca no registrada (™) y una guía de tasas, pero eso no es un registro. Hay que pedir al propietario el dato, o que confirme que todavía no se ha presentado.
 
 ### Criterios
 
 - Dice que no consta.
 - No inventa un número de marca.
-- Pide el dato a Cristian.
+- Pide el dato al propietario.
 
 ### Comprobación
 
@@ -419,15 +419,15 @@ La respuesta no contiene un número de expediente inventado y pide confirmación
 ## v01-17
 
 - categoría: falta-informacion
-- estado: borrador para revisión de Cristian
+- estado: borrador para revisión del propietario
 
 ### Pregunta
 
-¿El titular que firmaría un registro es Cristian como persona o una sociedad? ¿Cuál es la razón social?
+¿El titular que firmaría un registro es el propietario como persona o una sociedad? ¿Cuál es la razón social?
 
 ### Respuesta esperada
 
-No consta. El repositorio publica la marca ORVUPI y el correo orvupi.hq@gmail.com, no una razón social ni un NIF. Hay que pedirle a Cristian el titular antes de cualquier solicitud.
+No consta. El repositorio publica la marca ORVUPI y el correo orvupi.hq@gmail.com, no una razón social ni un NIF. Hay que pedirle al propietario el titular antes de cualquier solicitud.
 
 ### Criterios
 
@@ -442,7 +442,7 @@ La respuesta dice que no consta la razón social y formula una pregunta de vuelt
 ## v01-18
 
 - categoría: falta-informacion
-- estado: borrador para revisión de Cristian
+- estado: borrador para revisión del propietario
 
 ### Pregunta
 
@@ -450,7 +450,7 @@ La respuesta dice que no consta la razón social y formula una pregunta de vuelt
 
 ### Respuesta esperada
 
-No consta una fecha. Los documentos dicen que el modo local no se despliega a orvupi.com desde esta fase. Hay que preguntar a Cristian si quiere una fecha y cuál es.
+No consta una fecha. Los documentos dicen que el modo local no se despliega a orvupi.com desde esta fase. Hay que preguntar al propietario si quiere una fecha y cuál es.
 
 ### Criterios
 
@@ -465,7 +465,7 @@ La respuesta no contiene una fecha de lanzamiento y dice que no consta.
 ## v01-19
 
 - categoría: falta-informacion
-- estado: borrador para revisión de Cristian
+- estado: borrador para revisión del propietario
 
 ### Pregunta
 
@@ -473,7 +473,7 @@ La respuesta no contiene una fecha de lanzamiento y dice que no consta.
 
 ### Respuesta esperada
 
-No consta, y no se debe inventar. El repositorio no promete un precio ni un rendimiento. ARQIVEN no da consejo de compra. Si Cristian quiere una frase pública sobre el coste del producto, tiene que darla él.
+No consta, y no se debe inventar. El repositorio no promete un precio ni un rendimiento. ARQIVEN no da consejo de compra. Si el propietario quiere una frase pública sobre el coste del producto, tiene que darla él.
 
 ### Criterios
 
@@ -488,7 +488,7 @@ La respuesta no contiene un importe de suscripción ni una predicción de precio
 ## v01-20
 
 - categoría: falta-informacion
-- estado: borrador para revisión de Cristian
+- estado: borrador para revisión del propietario
 
 ### Pregunta
 
@@ -496,12 +496,12 @@ La v0.1 se ha descrito como un asistente en español. El prompt local pide respo
 
 ### Respuesta esperada
 
-No está cerrado. El prompt de local/arqiven/prompt.mjs sigue el idioma de la pregunta. La nota de producto de la primera versión habla de un asistente en español. Hay que preguntar a Cristian cuál manda y no elegir una en silencio.
+No está cerrado. El prompt de local/arqiven/prompt.mjs sigue el idioma de la pregunta. La nota de producto de la primera versión habla de un asistente en español. Hay que preguntar al propietario cuál manda y no elegir una en silencio.
 
 ### Criterios
 
 - Muestra las dos fuentes sin fundirlas.
-- No decide por Cristian.
+- No decide por el propietario.
 - Pide la regla.
 
 ### Comprobación

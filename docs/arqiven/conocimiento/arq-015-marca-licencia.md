@@ -2,7 +2,7 @@
 
 - id: arq-015
 - fecha: 2026-11-15
-- estado: revisado: pendiente de Cristian
+- estado: revisado: pendiente del propietario
 - origen: LICENSE; LICENSE-ARQIVEN.md; NOTICE.md; README.md; web/v2/marca/index.html; web/v2/legal/index.html; docs/arqiven/auditoria.md
 
 ## Fragmento: código
