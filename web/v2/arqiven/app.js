@@ -13,6 +13,7 @@ import { exportPayload, listVotes, openFeedbackDb, saveVote } from "/shared/ia/f
 import { clipHistory } from "/shared/ia/history.mjs";
 void clipHistory;
 import { dateGroup, deleteConversation, deleteImage, deleteProject, listConversations, listImages, listProjects, matchesQuery, openChatDb, openPrefDb, readConversation, readSetting, saveConversation, saveImage, saveProject, saveSetting } from "/shared/ia/chats.mjs";
+import { cancelLocal, localChat, localConversation, localConversations, localStatus } from "/shared/ia/local-client.mjs";
 
 const root = document.querySelector(".arq-app");
 if (!root) throw new Error("ARQIVEN");
@@ -31,6 +32,14 @@ const UI = {
     cancel: "Cancelar",
     stop: "Detener",
     stopped: "Detenido.",
+    waitingLocal: "en espera",
+    regenerate: "Regenerar",
+    localReady: "Modo local/Ollama",
+    localDown: "Ollama no responde en este equipo.",
+    localMissing: "El modelo de terceros no está descargado en Ollama.",
+    localTimeout: "La petición superó el tiempo de espera.",
+    localTooLarge: "La petición es demasiado grande.",
+    localHonest: "qwen3:8b es un modelo de terceros. ARQIVEN no lo creó.",
     preparing: "Descargando un modelo de terceros. Puedes seguir escribiendo.",
     checking: "Comprobando que el modelo de terceros responde en este navegador.",
     idle: "IA de ORVUPI",
@@ -70,6 +79,14 @@ const UI = {
     cancel: "Cancel",
     stop: "Stop",
     stopped: "Stopped.",
+    waitingLocal: "Waiting",
+    regenerate: "Regenerate",
+    localReady: "Local/Ollama mode",
+    localDown: "Ollama is not responding on this computer.",
+    localMissing: "The third-party model is not downloaded in Ollama.",
+    localTimeout: "The request timed out.",
+    localTooLarge: "The request is too large.",
+    localHonest: "qwen3:8b is a third-party model. ARQIVEN did not create it.",
     preparing: "Downloading a third-party model. You can keep typing.",
     checking: "Checking that the third-party model answers in this browser.",
     idle: "ORVUPI AI",
@@ -109,6 +126,14 @@ const UI = {
     cancel: "Cancelar",
     stop: "Parar",
     stopped: "Interrompido.",
+    waitingLocal: "em espera",
+    regenerate: "Regenerar",
+    localReady: "Modo local/Ollama",
+    localDown: "O Ollama não responde neste computador.",
+    localMissing: "O modelo de terceiros não está baixado no Ollama.",
+    localTimeout: "A petição excedeu o tempo de espera.",
+    localTooLarge: "A petição é grande demais.",
+    localHonest: "qwen3:8b é um modelo de terceiros. A ARQIVEN não o criou.",
     who: "ARQIVEN é a IA da ORVUPI. Se você baixar um modelo para ele responder, esse modelo é de terceiros e aparece com o nome dele.",
     preparing: "Baixando um modelo de terceiros. Você pode continuar escrevendo.",
     checking: "Conferindo se o modelo de terceiros responde neste navegador.",
@@ -148,6 +173,14 @@ const UI = {
     cancel: "キャンセル",
     stop: "停止",
     stopped: "停止しました。",
+    waitingLocal: "待機中",
+    regenerate: "再生成",
+    localReady: "ローカル/Ollama",
+    localDown: "このPCの Ollama が応答しません。",
+    localMissing: "第三者モデルが Ollama にありません。",
+    localTimeout: "待ち時間を超えました。",
+    localTooLarge: "リクエストが大きすぎます。",
+    localHonest: "qwen3:8b は第三者モデルです。ARQIVEN は作っていません。",
     who: "ARQIVEN は ORVUPI の AI です。応答させるためにモデルをダウンロードする場合、それは第三者のもので、名前は別に示します。",
     preparing: "第三者モデルをダウンロードしています。入力は続けられます。",
     checking: "このブラウザで第三者モデルが応答するか確認しています。",
@@ -187,6 +220,14 @@ const UI = {
     cancel: "취소",
     stop: "중지",
     stopped: "중지했습니다.",
+    waitingLocal: "대기 중",
+    regenerate: "다시 생성",
+    localReady: "로컬/Ollama",
+    localDown: "이 PC의 Ollama가 응답하지 않습니다.",
+    localMissing: "제3자 모델이 Ollama에 없습니다.",
+    localTimeout: "요청 시간이 초과되었습니다.",
+    localTooLarge: "요청이 너무 큽니다.",
+    localHonest: "qwen3:8b는 제3자 모델입니다. ARQIVEN이 만들지 않았습니다.",
     who: "ARQIVEN은 ORVUPI의 AI입니다. 답을 받으려고 모델을 받으면 그 모델은 제3자이고, 이름은 따로 표시합니다.",
     preparing: "제3자 모델을 받는 중입니다. 계속 입력할 수 있습니다.",
     checking: "이 브라우저에서 제3자 모델이 응답하는지 확인하는 중입니다.",
@@ -274,6 +315,10 @@ const state = {
   prefDb: null,
   snap: { phase: "idle", ready: false, modelId: "", modelVersion: "", progress: { loaded: 0, total: 0, file: "" }, error: "" },
   queue: [],
+  runtime: "browser",
+  localInfo: null,
+  localAbort: null,
+  localRequestId: "",
   painting: 0,
   knowledge: null,
   webgpu: false,
@@ -506,10 +551,28 @@ async function persist() {
 }
 
 async function openConversation(id) {
-  if (!state.chatDb || !id || id === state.conversationId) return;
+  if (!id || id === state.conversationId) return;
+  if (!state.chatDb && state.runtime !== "ollama") return;
   await stopGeneration(true);
   await persist();
-  const row = await readConversation(state.chatDb, id);
+  let row = state.chatDb ? await readConversation(state.chatDb, id) : null;
+  if (state.runtime === "ollama") {
+    const remote = await localConversation(id);
+    if (remote?.messages?.length) {
+      row = {
+        ...remote,
+        messages: remote.messages.map((item, index) => ({
+          id: `m-${index}-${item.role === "user" ? "u" : "a"}`,
+          role: item.role,
+          content: item.content,
+          mode: item.role === "assistant" ? "model" : "model",
+          provider: item.role === "assistant" ? "third-party" : "none",
+          modelId: item.role === "assistant" ? (state.localInfo?.model || "qwen3:8b") : "none",
+          modelVersion: item.role === "assistant" ? `${state.localInfo?.model || "qwen3:8b"} (Ollama, tercero)` : "",
+        })),
+      };
+    }
+  }
   state.conversationId = id;
   state.messages = row?.messages ? row.messages.map((item) => ({ ...item })) : [];
   state.chatProject = row?.projectId || "";
@@ -752,6 +815,19 @@ function showEngineStatus(line) {
 
 function updateEngineUi() {
   const snap = state.snap;
+  if (state.runtime === "ollama") {
+    const info = state.localInfo || {};
+    const line = info.ollama === "down"
+      ? ui.localDown
+      : info.modelReady === false
+        ? ui.localMissing
+        : `${ui.localReady} · ${info.model || "qwen3:8b"} · ${ui.third}`;
+    progress.textContent = `${line}. ${ui.localHonest}`;
+    indicator.textContent = ui.localHonest;
+    meter.hidden = true;
+    cancel.hidden = !state.messages.some((item) => item.running || item.queued || item.pending);
+    return;
+  }
   const meterState = downloadProgress(snap.progress);
   const pct = meterState.pct;
   if (pill) pill.textContent = ui.idle;
@@ -939,7 +1015,7 @@ function paintList() {
 
 function paint() {
   paintList();
-  const generating = state.messages.some((item) => item.running);
+  const generating = state.messages.some((item) => item.running || item.queued || (state.runtime === "ollama" && item.pending));
   const running = generating || state.messages.some((item) => item.pending);
   stop.hidden = !generating;
   stop.textContent = ui.stop;
@@ -1009,8 +1085,12 @@ function paint() {
           if (!item.running) {
             const again = document.createElement("button");
             again.type = "button";
-            again.textContent = chrome.againReply;
+            again.textContent = state.runtime === "ollama" ? ui.regenerate : chrome.againReply;
             again.addEventListener("click", () => {
+              if (state.runtime === "ollama") {
+                void regenerateLocal(item);
+                return;
+              }
               const index = state.messages.indexOf(item);
               const prior = [...state.messages.slice(0, index)].reverse().find((entry) => entry.role === "user");
               if (prior && prompt instanceof HTMLTextAreaElement) {
@@ -1068,9 +1148,13 @@ function paint() {
 
 function applyLiveStatus() {
   if (!status) return;
-  const open = state.messages.find((item) => item.role === "assistant" && (item.pending || item.running));
+  const open = state.messages.find((item) => item.role === "assistant" && (item.pending || item.running || item.queued));
   let line = "";
-  if (open && (open.pending || open.held || !state.snap.ready || !String(open.content || "").trim())) {
+  if (state.runtime === "ollama" && open) {
+    if (open.queued || (open.pending && !open.running)) line = ui.waitingLocal;
+    else if (!String(open.content || "").trim()) line = ui.thinking;
+    else line = chrome.generating;
+  } else if (open && (open.pending || open.held || !state.snap.ready || !String(open.content || "").trim())) {
     line = open.pending || open.held || !state.snap.ready ? ui.preparingModel : ui.thinking;
   } else if (state.messages.some((item) => item.running)) line = chrome.generating;
   if (line) {
@@ -1078,7 +1162,7 @@ function applyLiveStatus() {
     return;
   }
   const current = status.textContent || "";
-  if (current === ui.queued || current === ui.preparingModel || current === ui.thinking || current === chrome.generating) setStatus("");
+  if (current === ui.queued || current === ui.waitingLocal || current === ui.preparingModel || current === ui.thinking || current === chrome.generating) setStatus("");
 }
 
 function showView(name) {
@@ -1119,7 +1203,10 @@ function markCancelled() {
 
 async function stopGeneration(dropQueue = false) {
   turnEpoch += 1;
-  const done = engine.interrupt();
+  const localId = state.localRequestId;
+  state.localAbort?.abort();
+  if (state.runtime === "ollama" && localId) void cancelLocal(localId);
+  const done = state.runtime === "ollama" ? Promise.resolve() : engine.interrupt();
   for (const item of state.messages) {
     if (!item.running && !item.pending) continue;
     const wasRunning = item.running;
@@ -1262,6 +1349,166 @@ async function flushQueue() {
   if (state.queue.some((item) => item.pending)) await flushQueue();
 }
 
+function localErrorText(code, message) {
+  if (code === "ollama-down") return ui.localDown;
+  if (code === "model-missing") return ui.localMissing;
+  if (code === "timeout") return ui.localTimeout;
+  if (code === "too-large") return ui.localTooLarge;
+  if (code === "cancelled") return ui.stopped;
+  return message || ui.error;
+}
+
+function localDialogue(except) {
+  return state.messages.flatMap((item) => {
+    if (item === except || (item.role !== "user" && item.role !== "assistant")) return [];
+    const content = String(item.content || "").trim();
+    if (!content) return [];
+    return [{ role: item.role, content: content.slice(0, 8000) }];
+  }).slice(-24);
+}
+
+async function refreshLocalList() {
+  const rows = await localConversations();
+  if (!rows) return;
+  const merged = new Map(state.conversations.map((item) => [item.id, item]));
+  for (const row of rows) merged.set(row.id, { ...merged.get(row.id), ...row });
+  state.conversations = [...merged.values()].sort((a, b) => (a.updated < b.updated ? 1 : -1));
+}
+
+async function streamLocal(item, extra = {}) {
+  const epoch = turnEpoch;
+  const requestId = newId();
+  item.requestId = requestId;
+  item.pending = true;
+  item.running = false;
+  item.queued = false;
+  item.provider = "third-party";
+  item.mode = "model";
+  item.modelId = state.localInfo?.model || "qwen3:8b";
+  item.modelVersion = `${item.modelId} (Ollama, tercero)`;
+  const ctrl = new AbortController();
+  state.localAbort = ctrl;
+  state.localRequestId = requestId;
+  paint();
+  try {
+    await localChat({
+      signal: ctrl.signal,
+      body: {
+        requestId,
+        conversationId: state.conversationId,
+        regenerate: extra.regenerate === true,
+        task: state.tool,
+        messages: localDialogue(item),
+        document: String(item.document || ""),
+        editor: String(item.editor || ""),
+      },
+      onEvent(event) {
+        if (epoch !== turnEpoch || !event || event.requestId && event.requestId !== requestId) return;
+        if (event.type === "queued") {
+          item.queued = true;
+          item.pending = true;
+          item.running = false;
+          setStatus(ui.waitingLocal);
+          paintSoon();
+          return;
+        }
+        if (event.type === "start") {
+          item.queued = false;
+          item.pending = false;
+          item.running = true;
+          item.modelId = event.modelId || item.modelId;
+          item.modelVersion = event.modelVersion || item.modelVersion;
+          item.provider = "third-party";
+          paintSoon();
+          return;
+        }
+        if (event.type === "token") {
+          item.queued = false;
+          item.pending = false;
+          item.running = true;
+          item.content += String(event.text || "");
+          paintSoon();
+          return;
+        }
+        if (event.type === "done") {
+          item.running = false;
+          item.pending = false;
+          item.queued = false;
+          const reply = item.replyLang || lang;
+          const prior = state.messages.filter((entry) => entry !== item).map((entry) => ({ role: entry.role, content: entry.content, mode: entry.mode }));
+          const guarded = finishModelAnswer(event.text || item.content, reply, item.sources, item.question, prior);
+          if (guarded.blocked) {
+            item.content = guarded.text;
+            item.mode = "rules";
+            item.provider = "none";
+            item.modelId = "none";
+            item.modelVersion = "";
+          } else {
+            const usable = String(guarded.text || event.text || item.content || "").trim();
+            item.content = sanitizePlain(usable) || ui.emptyModel;
+            item.mode = "model";
+            item.provider = "third-party";
+            item.modelId = event.modelId || item.modelId;
+            item.modelVersion = event.modelVersion || item.modelVersion;
+          }
+          item.genTokens = Number(event.metrics?.evalTokens) || 0;
+          item.genMs = Number(event.metrics?.evalMs) || 0;
+          item.genThreads = 1;
+          if (event.conversationId) state.conversationId = event.conversationId;
+        }
+        if (event.type === "error") {
+          item.running = false;
+          item.pending = false;
+          item.queued = false;
+          if (event.code === "cancelled") item.content = String(item.content || "").trim() || ui.stopped;
+          else {
+            item.failed = true;
+            item.content = localErrorText(event.code, event.message);
+            item.mode = "rules";
+            item.provider = "none";
+            item.modelId = "none";
+            item.modelVersion = "";
+          }
+        }
+      },
+    });
+  } catch (error) {
+    if (epoch !== turnEpoch) return;
+    item.running = false;
+    item.pending = false;
+    item.queued = false;
+    if (error?.name === "AbortError") item.content = String(item.content || "").trim() || ui.stopped;
+    else {
+      item.failed = true;
+      item.content = localErrorText("", error instanceof Error ? error.message : "");
+    }
+  }
+  if (state.localRequestId === requestId) {
+    state.localAbort = null;
+    state.localRequestId = "";
+  }
+  if (epoch !== turnEpoch) return;
+  await refreshLocalList();
+  paint();
+}
+
+async function regenerateLocal(item) {
+  await stopGeneration(true);
+  const index = state.messages.indexOf(item);
+  if (index < 0) return;
+  const prior = [...state.messages.slice(0, index)].reverse().find((entry) => entry.role === "user");
+  state.messages.splice(index, 1);
+  const placeholder = assistant({
+    pending: true,
+    question: prior?.content || "",
+    replyLang: item.replyLang || lang,
+    sources: item.sources,
+    document: item.document || "",
+    editor: item.editor || "",
+  });
+  await streamLocal(placeholder, { regenerate: true });
+}
+
 async function send() {
   const field = prompt instanceof HTMLTextAreaElement ? prompt : null;
   const text = (field?.value || "").trim();
@@ -1270,6 +1517,7 @@ async function send() {
   if (state.messages.some((item) => item.running)) await stopGeneration(true);
   const visible = [text, state.attachment ? state.attachment.name : "", local && !state.attachment ? ui.editorTitle : ""].filter(Boolean).join("\n");
   const modelText = [text, state.attachment?.text || "", local].filter(Boolean).join("\n\n").slice(0, 8000);
+  const localDocument = String(state.attachment?.text || "").slice(0, 8000);
   const index = await knowledgeIndex().catch(() => null);
   const plan = await planTurn({
     question: text,
@@ -1330,6 +1578,21 @@ async function send() {
     return;
   }
   const budget = replyBudget(text, plan.promptSources, modelText.length > 1000);
+  if (state.runtime === "ollama") {
+    const item = assistant({
+      sources: plan.sources,
+      promptSources: plan.promptSources,
+      question: text,
+      replyLang: plan.replyLang,
+      maxTokens: budget,
+      pending: true,
+      document: localDocument,
+      editor: local,
+    });
+    await streamLocal(item);
+    field?.focus();
+    return;
+  }
   if (!state.snap.ready) {
     // phase "ready" con ready false es la ventana de Detener: no hay que volver a descargar.
     if (state.snap.phase !== "preparing" && state.snap.phase !== "ready") startPrepare(modelPick.value || defaultModel().id);
@@ -1504,7 +1767,10 @@ modelPick.addEventListener("change", () => {
   paint();
 });
 exportVotes.addEventListener("click", () => { void downloadVotes(); });
-cancel.addEventListener("click", () => { engine.cancel(); });
+cancel.addEventListener("click", () => {
+  if (state.runtime === "ollama") void stopGeneration(true);
+  else engine.cancel();
+});
 editorToggle.addEventListener("click", () => setEditor(editor.hidden));
 editorClose.addEventListener("click", () => setEditor(false));
 editorText.addEventListener("input", () => { state.localText = editorText.value; });
@@ -1936,4 +2202,41 @@ async function bootModel() {
   if (chosen.id === defaultModel().id) startPrepare(defaultModel().id);
   else startPrepare(chosen.id);
 }
-void bootChats().then(() => bootModel());
+async function adoptLocalHistory() {
+  const rows = await localConversations();
+  if (!rows) return;
+  const merged = new Map(state.conversations.map((item) => [item.id, item]));
+  for (const row of rows) merged.set(row.id, { ...merged.get(row.id), ...row });
+  state.conversations = [...merged.values()].sort((a, b) => (a.updated < b.updated ? 1 : -1));
+  const remote = await localConversation(state.conversationId);
+  if (!remote?.messages?.length) return;
+  state.messages = remote.messages.map((item, index) => ({
+    id: `m-${index}-${item.role === "user" ? "u" : "a"}`,
+    role: item.role,
+    content: item.content,
+    mode: "model",
+    provider: item.role === "assistant" ? "third-party" : "none",
+    modelId: item.role === "assistant" ? (state.localInfo?.model || "qwen3:8b") : "none",
+    modelVersion: item.role === "assistant" ? `${state.localInfo?.model || "qwen3:8b"} (Ollama, tercero)` : "",
+  }));
+  state.chatRenamed = false;
+  state.chatTitle = "";
+}
+
+void (async () => {
+  const local = await localStatus();
+  if (local?.mode === "local") {
+    state.runtime = "ollama";
+    state.localInfo = local;
+    root.dataset.runtime = "ollama";
+    const note = document.querySelector(".composer-area .note");
+    if (note) note.textContent = `${chrome.note} ${ui.localHonest}`;
+  }
+  await bootChats();
+  if (state.runtime === "ollama") {
+    await adoptLocalHistory();
+    paint();
+    return;
+  }
+  await bootModel();
+})();
