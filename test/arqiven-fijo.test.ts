@@ -290,6 +290,7 @@ describe("conjunto fijo de 100 casos", () => {
       dropPasswordExamples: (text: string) => string;
       finishReply: (text: string) => string;
       placeNoteLabel: (text: string, id: string) => string;
+      closeMarketAnswer: (answer: string, facts: string) => string;
     };
     const lista = "- Manzana\n- Plátano\n- Naranja";
     const codigo = "function suma(a, b) {\n  return a + b;\n}";
@@ -316,5 +317,14 @@ describe("conjunto fijo de 100 casos", () => {
     assert.equal((await known.retrieveConocimiento("Quiero una hipoteca.")).text, "");
     assert.equal((await known.retrieveConocimiento("¿Puedo despedir a alguien durante una baja?")).hits[0]?.id, "despido-baja");
     assert.equal((await known.retrieveConocimiento("¿Qué es la higiene del sueño?")).hits[0]?.id, "higiene-sueno");
+    const hechos = "1 EUR = 1.1052 USD (el BCE, Frankfurter, 13-11-2026).";
+    const mercado = salida.closeMarketAnswer("El euro está en 1.1052 dólares. Esto no es una recomendación y puedes perder dinero.\nSi deseas más orientación, dímelo.", hechos);
+    assert.match(mercado, /1\.1052 \(el BCE, Frankfurter, 13-11-2026\)/);
+    assert.match(mercado, /puedes perder dinero/);
+    assert.equal(mercado.includes("Si deseas"), false);
+    const sinAviso = salida.closeMarketAnswer("El euro está en 1.1052 dólares.", hechos);
+    assert.match(sinAviso, /1\.1052 \(el BCE, Frankfurter, 13-11-2026\)/);
+    assert.match(sinAviso, /puedes perder dinero\.$/);
+    assert.equal(salida.closeMarketAnswer("- Manzana\n- Plátano", "").includes("\n"), true);
   });
 });

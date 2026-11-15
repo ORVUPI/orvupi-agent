@@ -54,6 +54,57 @@ export function finishReply(text) {
   return dropPasswordExamples(cutRepeatedSentences(text));
 }
 
+const WARNING = /no es una recomendaci[oó]n|puedes perder|no sustituye|riesgo de p[eé]rdida|no inviertas lo que no puedas/i;
+
+/** Si hay cifras de mercado, no deja texto después de la advertencia. */
+export function trimAfterWarning(text) {
+  const source = String(text || "");
+  if (!/frankfurter|coingecko|\bel BCE\b/i.test(source)) return source.trim();
+  const pieces = piecesOf(source);
+  const at = pieces.findIndex((piece) => WARNING.test(piece.body));
+  if (at < 0) return source.trim();
+  return pieces.slice(0, at + 1).map((piece, index) => piece.body + (index === at ? "" : piece.sep)).join("").trim();
+}
+
+const MARKET_WARNING = "Esto no es una recomendación: puedes perder dinero.";
+
+/** Añade «(Fuente, fecha)» a una cifra que ya está en los hechos y no la trae. */
+export function citeMissingFigures(answer, factsText) {
+  const pairs = [];
+  for (const line of String(factsText || "").split("\n")) {
+    const cite = line.match(/\(([^)]+)\)/);
+    if (!cite) continue;
+    for (const match of line.matchAll(/([+-]?\d+(?:[.,]\d+)?)\s*(?:USD|GBP|%)/gi)) {
+      const raw = match[1].replace(/^\+/, "");
+      const forms = [...new Set([raw, raw.replace(".", ","), raw.replace(",", ".")])];
+      pairs.push({ forms, citation: cite[1] });
+    }
+  }
+  pairs.sort((a, b) => b.forms[0].length - a.forms[0].length);
+  let next = String(answer || "");
+  for (const pair of pairs) {
+    for (const form of pair.forms) {
+      if (!form || form === "1") continue;
+      const escaped = form.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      next = next.replace(new RegExp(escaped, "g"), (found, offset, source) => {
+        const around = source.slice(Math.max(0, offset - 80), offset + found.length + 80);
+        if (around.includes(pair.citation) || source.slice(offset + found.length, offset + found.length + 2).trim().startsWith("(")) return found;
+        return `${found} (${pair.citation})`;
+      });
+    }
+  }
+  return next;
+}
+
+export function closeMarketAnswer(answer, factsText) {
+  if (!String(factsText || "").trim()) return String(answer || "").trim();
+  let text = citeMissingFigures(answer, factsText);
+  if (!/no es una recomendaci[oó]n|puedes perder|no sustituye/i.test(text)) {
+    text = `${text.trim()} ${MARKET_WARNING}`.trim();
+  }
+  return trimAfterWarning(text);
+}
+
 /** Si la etiqueta está en medio de la frase, la pasa al final. No la añade a un «No consta». */
 function sentenceEnd(bare) {
   for (let index = 0; index < bare.length; index += 1) {

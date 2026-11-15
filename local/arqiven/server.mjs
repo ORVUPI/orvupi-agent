@@ -15,7 +15,7 @@ import { buildChatBody, streamChat } from "./ollama.mjs";
 import { attachEditor, withRetry } from "./prompt.mjs";
 import { guardChat, outputViolates, passedFragments, SAFE_ANSWER } from "./guard.mjs";
 import { liveFacts } from "./hechos.mjs";
-import { finishReply, placeNoteLabel } from "./salida.mjs";
+import { closeMarketAnswer, finishReply, placeNoteLabel } from "./salida.mjs";
 import { retrieveConocimiento } from "./conocimiento.mjs";
 import { fitMessages } from "./budget.mjs";
 import { metricsFrom } from "./metrics.mjs";
@@ -400,9 +400,13 @@ export async function startLocalServer(overrides = {}) {
         ...(existing ? {} : { projectId }),
       });
       const question = [...visible].reverse().find((item) => item.role === "user")?.content || "";
+      let factsText = "";
       try {
         const facts = await liveFacts(question);
-        if (facts.text) documentText = [documentText, facts.text].filter(Boolean).join("\n\n");
+        if (facts.text) {
+          factsText = facts.text;
+          documentText = [documentText, facts.text].filter(Boolean).join("\n\n");
+        }
       } catch { /* sin cifras en vivo */ }
       let trustedNote = "";
       let noteId = "";
@@ -446,6 +450,7 @@ export async function startLocalServer(overrides = {}) {
       });
       let reply = finishReply(result.text);
       if (noteId) reply = placeNoteLabel(reply, noteId);
+      if (factsText) reply = closeMarketAnswer(reply, factsText);
       if (outputViolates(reply, redacted)) {
         const retryBody = buildChatBody({
           model: config.model,

@@ -41,4 +41,4 @@ Fecha: 15 de noviembre de 2026, con los informes del PC hasta las 22:03 (Madrid)
 
 ## Lectura corta
 
-En el PC, `2b82361` fue mucho peor (experto 2/4/2 de 10, mitigado2 114/113/111, reservado 2 en 41 y reservado 3 en 24) y se descarta. En el PC sigue `f9a678a`. La evaluación vuelve a ser la de ese commit. El chat, aparte, conserva los saltos de línea, corta una frase larga que se repite y borra los ejemplos de contraseña. No hay entrenamiento.
+En el PC, `2b82361` fue mucho peor (experto 2/4/2 de 10, mitigado2 114/113/111, reservado 2 en 41 y reservado 3 en 24) y se descarta. En el PC sigue `f9a678a`. `eval/arqiven/**` y el prompt general son otra vez los de ese commit. El chat, aparte, hace cuatro cosas: conserva los saltos de línea, corta una frase de más de 60 caracteres que se repite y borra los ejemplos de contraseña; usa una nota solo si la pregunta trae al menos dos palabras propias de esa nota, y nunca escribe «No consta [nota]»; la nota del despido es una plantilla de cuatro partes; y, si hay cifras en vivo, les pone «(Fuente, fecha)» y cierra con la advertencia. No hay entrenamiento.
