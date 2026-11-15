@@ -11,8 +11,8 @@ import { resolveConfig } from "./config.mjs";
 import { createQueue } from "./queue.mjs";
 import { createStore } from "./store.mjs";
 import { buildChatBody, streamChat } from "./ollama.mjs";
-import { attachDocument, attachEditor, systemFor, withRetry } from "./prompt.mjs";
-import { redactDocument, outputViolates, SAFE_ANSWER } from "./guard.mjs";
+import { attachEditor, withRetry } from "./prompt.mjs";
+import { guardChat, outputViolates, SAFE_ANSWER } from "./guard.mjs";
 import { fitMessages } from "./budget.mjs";
 import { metricsFrom } from "./metrics.mjs";
 import { codeError, publicError } from "./errors.mjs";
@@ -338,12 +338,9 @@ export async function startLocalServer(overrides = {}) {
         ownerId: existing?.ownerId || userId,
         ...(existing ? {} : { projectId }),
       });
-      const redacted = redactDocument(documentText);
-      const hasDoc = Boolean(redacted.text);
-      const prompt = fitMessages(attachEditor(attachDocument([
-        { role: "system", content: systemFor(hasDoc) },
-        ...visible,
-      ], redacted.text), editor), config.inputTokens);
+      const guarded = guardChat(visible, documentText, "fuente");
+      const redacted = guarded.record;
+      const prompt = fitMessages(attachEditor(guarded.messages, editor), config.inputTokens);
       const hold = redacted.omitted.length > 0;
       const chatBody = buildChatBody({
         model: config.model,

@@ -47,7 +47,7 @@ const programacion = [
   ["signo", "1 si es positivo, -1 si es negativo y 0 si es cero", [[4], 1], [[0], 0]],
   ["repite", "repite una cadena n veces, n>=0", [["ab", 3], "ababab"], [["z", 0], ""]],
   ["digitos", "la cantidad de dígitos de un entero positivo", [[100], 3], [[7], 1]],
-  ["clampTexto", "devuelve la cadena cortada a n caracteres", [["hola", 2], "ho"], [["ok", 5], "ok"]],
+  ["clampTexto", "una cadena y un número n, y devuelve la cadena cortada a n caracteres", [["hola", 2], "ho"], [["ok", 5], "ok"]],
 ].map(([fn, what, a, b], index) => row({
   id: `prog-${String(index + 1).padStart(2, "0")}`,
   group: "programacion",

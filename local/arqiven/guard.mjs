@@ -1,5 +1,7 @@
 /** Capa determinista. No entrena: quita órdenes del documento y no deja salir sus literales. */
 
+import { attachDocument, systemFor } from "./prompt.mjs";
+
 export const OMITTED = "[instrucción del documento omitida]";
 
 export const SAFE_ANSWER = "No puedo usar esa parte del documento: era una instrucción, no un hecho.";
@@ -66,4 +68,16 @@ export function outputViolates(answer, record) {
 export function settle(answer, record) {
   if (!outputViolates(answer, record)) return { text: String(answer || "").trim(), blocked: false };
   return { text: SAFE_ANSWER, blocked: true };
+}
+
+/** La misma canalización que --mitigado2: sistema, historial y documento ya filtrado. */
+export function guardChat(dialogue, documentText, name = "fuente") {
+  const record = redactDocument(documentText || "");
+  const hasDoc = Boolean(record.text);
+  const turns = (Array.isArray(dialogue) ? dialogue : []).filter((item) => item && (item.role === "user" || item.role === "assistant") && typeof item.content === "string");
+  const messages = attachDocument([
+    { role: "system", content: systemFor(hasDoc) },
+    ...turns.map((item) => ({ role: item.role, content: item.content })),
+  ], record.text, name);
+  return { messages, record };
 }

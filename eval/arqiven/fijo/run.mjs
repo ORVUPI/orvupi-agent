@@ -7,9 +7,10 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { CASOS, GRUPOS } from "./casos.mjs";
+import { RESERVADOS, comprobarReservado } from "./reservado.mjs";
 import { RUBRIC_IDS, scoreCase } from "./rubricas.mjs";
-import { EVAL_SYSTEM_BASE, LOCAL_SYSTEM, fenceUntrusted, fenceUntrustedBase, systemFor, withRetry } from "../../../local/arqiven/prompt.mjs";
-import { redactDocument, outputViolates, SAFE_ANSWER } from "../../../local/arqiven/guard.mjs";
+import { EVAL_SYSTEM_BASE, LOCAL_SYSTEM, fenceUntrusted, fenceUntrustedBase, withRetry } from "../../../local/arqiven/prompt.mjs";
+import { guardChat, outputViolates, SAFE_ANSWER } from "../../../local/arqiven/guard.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -41,24 +42,16 @@ export function messagesBase(item) {
   return [{ role: "system", content: EVAL_SYSTEM_BASE }, ...historyOf(item), { role: "user", content: user }];
 }
 
-/** Las mismas instrucciones que el backend local usa ahora. El documento va antes; la pregunta, al final. */
+/** El prompt de la corrida de 92/100. El backend ya no usa este texto: usa guardChat. */
 export function messagesMitigado(item) {
   const question = `Pregunta del usuario:\n${item.prompt}`;
   const user = item.source ? `${fenceUntrusted(item.source, item.sourceId || "fuente")}\n\n${question}` : question;
   return [{ role: "system", content: LOCAL_SYSTEM }, ...historyOf(item), { role: "user", content: user }];
 }
 
-/** Capa determinista. Sin documento no se menciona. Con documento, las órdenes ya no están en el texto. */
+/** La canalización del chat local. Sin documento no se menciona. Con documento, las órdenes ya no están en el texto. */
 export function prepareMitigado2(item) {
-  const record = redactDocument(item.source || "");
-  const hasDoc = Boolean(record.text);
-  const user = hasDoc
-    ? `${fenceUntrusted(record.text, item.sourceId || "fuente")}\n\nPregunta del usuario:\n${item.prompt}`
-    : item.prompt;
-  return {
-    messages: [{ role: "system", content: systemFor(hasDoc) }, ...historyOf(item), { role: "user", content: user }],
-    record,
-  };
+  return guardChat([...historyOf(item), { role: "user", content: item.prompt }], item.source || "", item.sourceId || "fuente");
 }
 
 export async function answerMitigado2(askModel, item) {
@@ -101,7 +94,59 @@ async function ask(base, model, item, messages) {
   return String(body.message?.content || "").replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
 }
 
+async function runReservado() {
+  const errors = comprobarReservado();
+  if (errors.length) {
+    console.error(errors.join("\n"));
+    process.exit(1);
+  }
+  console.log(`Conjunto reservado: ${RESERVADOS.length} casos. No se ha usado para ajustar el filtro.`);
+  if (process.argv.includes("--comprobar")) return;
+  const base = process.env.OLLAMA_HOST || "http://127.0.0.1:11434";
+  const model = process.env.ARQIVEN_MODEL || "qwen3:8b";
+  try {
+    const tags = await fetch(new URL("/api/tags", base), { signal: AbortSignal.timeout(3000) });
+    if (!tags.ok) throw new Error("sin modelos");
+  } catch {
+    console.error(`Ollama no responde en ${base}. No se inventa una puntuación.`);
+    process.exit(2);
+  }
+  const outDir = path.join(here, "out");
+  await mkdir(outDir, { recursive: true });
+  const rows = [];
+  let passed = 0;
+  for (const item of RESERVADOS) {
+    const settled = await answerMitigado2((messages) => ask(base, model, item, messages), item);
+    const scored = scoreCase(item, settled.answer);
+    if (scored.pass) passed += 1;
+    const row = filaResultado(item, settled.answer, scored, settled.prompt);
+    row.omitted = settled.omitted;
+    rows.push(row);
+    console.log(`${scored.pass ? "OK" : "FALLO"}  ${item.id}  ${scored.reason}`);
+  }
+  const summary = {
+    model,
+    variant: "reservado",
+    pipeline: "mitigado2",
+    think: false,
+    numCtx: 4096,
+    numPredict: 256,
+    temperature: 0.2,
+    passed,
+    total: rows.length,
+    at: new Date().toISOString(),
+    rows,
+  };
+  const body = `${JSON.stringify(summary, null, 2)}\n`;
+  await writeFile(path.join(outDir, "resultado-reservado.json"), body);
+  console.log(`Reservado: ${passed}/${rows.length}. No es un entrenamiento. El archivo está en eval/arqiven/fijo/out/resultado-reservado.json.`);
+}
+
 async function main() {
+  if (process.argv.includes("--reservado")) {
+    await runReservado();
+    return;
+  }
   const errors = comprobarBanco();
   if (errors.length) {
     console.error(errors.join("\n"));

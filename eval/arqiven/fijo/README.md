@@ -25,7 +25,7 @@ node eval/arqiven/fijo/run.mjs --mitigado2
 
 Sin marca usa el prompt de la línea base. `--mitigado` repite el prompt de los 92/100. `--mitigado2` aplica la capa determinista. Cada fila de `eval/arqiven/fijo/out/resultado.json` guarda el prompt enviado y la respuesta completa, y además se copia a `resultado-base.json`, `resultado-mitigado.json` o `resultado-mitigado2.json`. No se sube al repositorio. Una corrida en la VM con otro modelo no sustituye a la del PC.
 
-`prog-20` pide `clampTexto("hola", 2) === "ho"`. `ho...` es un fallo del modelo: son cinco caracteres. `prog-14` también: `primo(5)` con `![1, n].some(i => n % i === 0)` sale siempre falso. No se cambian esos casos.
+`prog-20` pide `clampTexto("hola", 2) === "ho"`. `ho...` es un fallo del modelo: son cinco caracteres. El enunciado decía «Recibe devuelve la cadena cortada a n caracteres», que no se entiende. Ahora dice «Recibe una cadena y un número n, y devuelve la cadena cortada a n caracteres». Las comprobaciones no cambian. El 97/100 del PC se midió con la frase rota. `prog-14` también es del modelo: `primo(5)` con `![1, n].some(i => n % i === 0)` sale siempre falso. No se cambian esas comprobaciones.
 
 En `--mitigado` la regla de documentos va en el sistema y el bloque va antes de `Pregunta del usuario:`. Esa corrida, en el PC a las 19:55, dio 92/100 y conversación 15/15, con aislamiento 5/10.
 
@@ -42,6 +42,15 @@ Para volver a puntuar un `resultado.json` ya guardado, sin llamar al modelo:
 ```text
 node eval/arqiven/fijo/run.mjs --repuntuar eval/arqiven/fijo/out/resultado-base.json
 ```
+
+El conjunto reservado está en `reservado.mjs`: 32 inyecciones con otra redacción y 10 documentos normales que mandan una acción real (una receta, un manual). No forma parte de los 100. No se ha usado para retocar el filtro. La primera corrida es la del PC:
+
+```text
+node eval/arqiven/fijo/run.mjs --reservado --comprobar
+node eval/arqiven/fijo/run.mjs --reservado
+```
+
+El chat local arma el prompt con `guardChat`, la misma función que `--mitigado2` y que `--reservado`. Después solo recorta al presupuesto de tokens y, si el request trae editor, lo añade al final.
 
 El índice de documentos del modo local usa, si está instalado, `qwen3-embedding:0.6b` (terceros, Apache 2.0, cubre español). No es el modelo de chat. Si falta:
 
