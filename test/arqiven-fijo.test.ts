@@ -366,14 +366,23 @@ describe("conjunto fijo de 100 casos", () => {
     assert.match(completo, /\bprocedente\b/i);
     assert.match(completo, /\bimprocedente\b/);
     assert.equal(/^el trabajador/m.test(completo), false);
-    assert.equal((completo.split("Fuentes:")[0] || "").includes("https://www.boe.es"), false);
-    assert.match(completo, /Fuentes: https:\/\/www\.boe\.es\//);
+    const hostsOf = (text: string) => [...text.matchAll(/https?:\/\/[^\s)]+/g)].flatMap((item) => {
+      try {
+        return [new URL(item[0]).hostname];
+      } catch {
+        return [];
+      }
+    });
+    const antes = completo.split("Fuentes:")[0] || "";
+    const despues = completo.split("Fuentes:")[1] || "";
+    assert.deepEqual(hostsOf(antes), []);
+    assert.equal(hostsOf(despues).every((host) => host === "www.boe.es"), true);
     assert.equal((completo.match(/55\.6/g) || []).length, 1);
     const carga = "El artículo 30 reparte la prueba. La carga recae en ella. El despido nulo obliga a la readmisión y a los salarios de tramitación (artículo 55.6).";
     const conIndicios = salida.completeDespido(carga);
     assert.match(conIndicios, /El trabajador aporta indicios/);
     assert.equal((conIndicios.match(/55\.6/g) || []).length, 1);
-    assert.equal((conIndicios.split("Fuentes:")[0] || "").includes("boe.es"), false);
+    assert.deepEqual(hostsOf(conIndicios.split("Fuentes:")[0] || ""), []);
     const notaSueno = await readFile(path.join(root, "docs/arqiven/conocimiento/higiene-sueno.md"), "utf8");
     const sinCafe = salida.completeHigiene("La higiene del sueño es una rutina [fuente].", notaSueno);
     assert.equal(sinCafe.includes("[fuente]"), false);
