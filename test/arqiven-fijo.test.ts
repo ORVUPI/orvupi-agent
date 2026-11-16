@@ -298,6 +298,7 @@ describe("conjunto fijo de 100 casos", () => {
       completeDespido: (answer: string, note?: string) => string;
       completeHigiene: (answer: string, note: string) => string;
       offlineMarketAnswer: () => string;
+      dropUninjectedData: (answer: string, facts?: string) => string;
     };
     const lista = "- Manzana\n- Plátano\n- Naranja";
     const codigo = "function suma(a, b) {\n  return a + b;\n}";
@@ -318,6 +319,10 @@ describe("conjunto fijo de 100 casos", () => {
     assert.equal(salida.finishReply("La clave vacía no vale como ejemplo.\nSigue el texto.").includes("vacía"), false);
     assert.equal(salida.placeNoteLabel("No consta [higiene-sueno].", "higiene-sueno"), "No consta.");
     assert.equal(salida.placeNoteLabel("La causa está en el art [despido-baja]. 2.1 de la ley.", "despido-baja"), "La causa está en el art. 2.1 de la ley [despido-baja].");
+    assert.equal(
+      salida.placeNoteLabel("Es nulo si el motivo es la enfermedad (arts [despido-baja]. 2.1 y 26).", "despido-baja"),
+      "Es nulo si el motivo es la enfermedad (arts. 2.1 y 26) [despido-baja].",
+    );
     const known = await import(href("local/arqiven/conocimiento.mjs")) as {
       retrieveConocimiento: (q: string) => Promise<{ text: string; hits: Array<{ id: string }> }>;
     };
@@ -348,14 +353,15 @@ describe("conjunto fijo de 100 casos", () => {
     assert.match(citado, /13,97/);
     const fraseBitcoin = citado.split(/(?<=\.)\s+/).find((item) => item.includes("11,92")) || "";
     assert.equal((fraseBitcoin.match(/CoinGecko/g) || []).length, 1);
-    const anidada = "El euro cayó (-1,79 % (el BCE, Frankfurter, 16-10-2026 y 13-11-2026)) (el BCE, Frankfurter, 16-10-2026 y 13-11-2026) (el BCE, Frankfurter, 16-10-2026 y 13-11-2026).";
+    const anidada = "El euro cayó (-1,79 %).";
     const limpia = salida.citeMissingFigures(anidada, hechosPorcentaje);
-    assert.equal(limpia.includes("(-1,79"), false);
-    assert.equal(limpia.includes("(("), false);
-    assert.equal((limpia.match(/el BCE, Frankfurter, 16-10-2026 y 13-11-2026/g) || []).length, 1);
-    assert.match(limpia, /-1,79 % \(el BCE, Frankfurter, 16-10-2026 y 13-11-2026\)/);
+    assert.equal(limpia.includes("(-1,79 % ("), false);
+    assert.match(limpia, /\(-1,79 %; BCE vía Frankfurter, 16-10-2026 a 13-11-2026\)/);
+    const aviso = salida.closeMarketAnswer("1. Diversifica el ahorro.\n2. Fija el horizonte.\n3. Guarda un colchón.\n¿Hay algo más en lo que pueda ayudarte?\nEsto no es una recomendación: puedes perder dinero.", hechosPorcentaje);
+    assert.equal(/hay algo más/i.test(aviso), false);
+    assert.match(aviso, /puedes perder dinero/);
     const notaDespido = await readFile(path.join(root, "docs/arqiven/conocimiento/despido-baja.md"), "utf8");
-    const soloRegla = "Sí se puede despedir durante una baja si hay causa real. Es nulo si el motivo es la enfermedad (arts. 2.1 y 26) [fuente].";
+    const soloRegla = "Sí se puede despedir durante una baja si hay causa real. Es nulo si el motivo es la enfermedad (arts [despido-baja]. 2.1 y 26).";
     const completo = salida.completeDespido(soloRegla, notaDespido);
     assert.equal(completo.includes("[fuente]"), false);
     assert.equal(completo.includes("[documento: fuente]"), false);
@@ -378,6 +384,19 @@ describe("conjunto fijo de 100 casos", () => {
     assert.deepEqual(hostsOf(antes), []);
     assert.equal(hostsOf(despues).every((host) => host === "www.boe.es"), true);
     assert.equal((completo.match(/55\.6/g) || []).length, 1);
+    assert.equal(completo.includes("artículo 26"), false);
+    const porArticulos = salida.completeDespido("El despido es nulo si el motivo es la enfermedad (artículos 2.1 y 26).");
+    assert.equal(porArticulos.includes("artículo 26"), false);
+    assert.equal((completo.match(/es nulo si el motivo es la enfermedad/gi) || []).length, 1);
+    assert.match(completo, /artículos 2\.1 y 26|arts\. 2\.1 y 26/);
+    const hipoteca = "Una hipoteca a tipo fijo da estabilidad. El interés medio fue el 2,25 % en diciembre de 2023 según el Banco de España. Según el Banco de España, los tipos han mostrado una ligera disminución.";
+    const sinInventar = salida.dropUninjectedData(hipoteca, "");
+    assert.equal(sinInventar.includes("2,25"), false);
+    assert.equal(/ligera disminución/i.test(sinInventar), false);
+    assert.match(sinInventar, /No tengo conectado el dato actual de los tipos/);
+    assert.match(sinInventar, /Una hipoteca a tipo fijo da estabilidad/);
+    const conectado = salida.dropUninjectedData("El euro está en 1.1052 USD (el BCE, Frankfurter, 13-11-2026).", hechos);
+    assert.match(conectado, /1\.1052/);
     const carga = "El artículo 30 reparte la prueba. La carga recae en ella. El despido nulo obliga a la readmisión y a los salarios de tramitación (artículo 55.6).";
     const conIndicios = salida.completeDespido(carga);
     assert.match(conIndicios, /El trabajador aporta indicios/);

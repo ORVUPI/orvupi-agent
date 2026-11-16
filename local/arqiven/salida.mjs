@@ -1,14 +1,44 @@
 /** Arreglos de la respuesta ya escrita. No cambian el examen ni el filtro. */
 
+const ABBREV = new Set(["art", "arts", "ap", "num", "pag", "pags", "vol", "etc", "sr", "sra", "dr", "dra", "ud", "op", "cit", "fig", "cap"]);
+
+function wordBefore(text, index) {
+  const match = text.slice(0, index).match(/(\p{L}+)\s*$/u);
+  return match ? match[1] : "";
+}
+
+function isAbbrevPeriod(text, index) {
+  if (text[index] !== ".") return false;
+  const word = wordBefore(text, index).toLowerCase().normalize("NFD").replace(/\p{M}/gu, "");
+  return ABBREV.has(word);
+}
+
+function isDecimalPeriod(text, index) {
+  return text[index] === "." && /\d/.test(text[index - 1] || "") && /\d/.test(text[index + 1] || "");
+}
+
 function piecesOf(text) {
   const source = String(text || "");
   const pieces = [];
-  const re = /(\n+|(?<!art)(?<=\.)[ \t]+|(?<=[!?])[ \t]+)/gi;
   let last = 0;
-  let match;
-  while ((match = re.exec(source))) {
-    pieces.push({ body: source.slice(last, match.index), sep: match[0] });
-    last = match.index + match[0].length;
+  for (let index = 0; index < source.length; index += 1) {
+    const mark = source[index];
+    if (mark === "\n") {
+      let end = index;
+      while (source[end] === "\n") end += 1;
+      pieces.push({ body: source.slice(last, index), sep: source.slice(index, end) });
+      last = end;
+      index = end - 1;
+      continue;
+    }
+    if ((mark === "." || mark === "!" || mark === "?") && /[ \t]/.test(source[index + 1] || "")) {
+      if (mark === "." && (isDecimalPeriod(source, index) || isAbbrevPeriod(source, index))) continue;
+      let end = index + 1;
+      while (source[end] === " " || source[end] === "\t") end += 1;
+      pieces.push({ body: source.slice(last, index + 1), sep: source.slice(index + 1, end) });
+      last = end;
+      index = end - 1;
+    }
   }
   pieces.push({ body: source.slice(last), sep: "" });
   return pieces;
@@ -132,6 +162,20 @@ function tidyMarketSentence(sentence, figures) {
   return text;
 }
 
+function prettyCite(citation) {
+  const range = String(citation || "").match(/el BCE,\s*Frankfurter,\s*(\d{2}-\d{2}-\d{4})\s+y\s+(\d{2}-\d{2}-\d{4})/i);
+  if (range) return `BCE vía Frankfurter, ${range[1]} a ${range[2]}`;
+  return String(citation || "").trim();
+}
+
+/** Tras citar, un paréntesis no envuelve a otro. */
+export function flattenNestedCite(text) {
+  return String(text || "").replace(
+    /\(\s*([+-]?\d+(?:[.,]\d+)?(?:\s*(?:USD|GBP|%))?)\s*\(([^)]+)\)\s*\)/g,
+    (_all, figure, cite) => `(${figure.trim()}; ${prettyCite(cite)})`,
+  );
+}
+
 /** Una cita por fuente y frase. Si la frase ya trae la fuente, no se añade otra. */
 export function citeMissingFigures(answer, factsText) {
   const figures = figuresInFacts(factsText);
@@ -146,7 +190,7 @@ export function citeMissingFigures(answer, factsText) {
     last = match.index + match[0].length;
   }
   pieces.push({ body: source.slice(last), sep: "" });
-  return pieces.map((piece) => tidyMarketSentence(piece.body, figures) + piece.sep).join("").trim();
+  return flattenNestedCite(pieces.map((piece) => tidyMarketSentence(piece.body, figures) + piece.sep).join("")).trim();
 }
 
 /** Sin lectura en vivo: la frase fija, el análisis y tres pasos. No dice «No consta información». */
@@ -161,22 +205,34 @@ export function offlineMarketAnswer() {
   ].join("\n");
 }
 
+const CLOSER = /¿\s*hay algo más|si deseas|en qué (?:más )?puedo ayudarte|puedo ayudarte en algo/i;
+
+function dropClosersBeforeWarning(text) {
+  const pieces = piecesOf(text);
+  const warnAt = pieces.findIndex((piece) => WARNING.test(piece.body));
+  const stepAt = pieces.findIndex((piece) => /^\s*\d+\./.test(piece.body));
+  const from = stepAt >= 0 ? stepAt : 0;
+  const to = warnAt >= 0 ? warnAt : pieces.length;
+  const kept = pieces.filter((piece, index) => index < from || index >= to || !CLOSER.test(piece.body));
+  return joinPieces(kept);
+}
+
 export function closeMarketAnswer(answer, factsText) {
   if (!String(factsText || "").trim()) return String(answer || "").trim();
-  let text = citeMissingFigures(answer, factsText);
+  let text = dropClosersBeforeWarning(citeMissingFigures(answer, factsText));
   if (!/no es una recomendaci[oó]n|puedes perder|no sustituye/i.test(text)) {
     text = `${text.trim()} ${MARKET_WARNING}`.trim();
   }
-  return trimAfterWarning(text);
+  return trimAfterWarning(dropClosersBeforeWarning(text));
 }
 
-/** Si la etiqueta está en medio de la frase, la pasa al final. No la añade a un «No consta». */
+/** Si la etiqueta está en medio de la frase, la pasa al final. No corta en art. ni en 2.1. */
 function sentenceEnd(bare) {
   for (let index = 0; index < bare.length; index += 1) {
     const mark = bare[index];
     if (mark !== "." && mark !== "!" && mark !== "?") continue;
-    if (mark === "." && /art$/i.test(bare.slice(Math.max(0, index - 4), index))) continue;
-    if (mark === "." && /\d/.test(bare[index - 1] || "") && /\d/.test(bare[index + 1] || "")) continue;
+    if (mark === "." && isDecimalPeriod(bare, index)) continue;
+    if (mark === "." && isAbbrevPeriod(bare, index) && bare[index + 1] != null) continue;
     const after = bare[index + 1];
     if (after == null || /\s/.test(after)) return index;
   }
@@ -206,9 +262,19 @@ function useNoteLabel(text, id) {
     .replaceAll("[fuente]", tag);
 }
 
+function withoutTags(text) {
+  return String(text || "").replace(/\s*\[[^\]]+\]/g, "");
+}
+
 function hasArticle(text, number) {
   const token = String(number).replace(".", "\\.");
-  return new RegExp(`art(?:[ií]culos?|s)?\\.?\\s*(?:\\d+(?:\\.\\d+)?\\s*(?:,|y)\\s*)*${token}\\b`, "i").test(String(text || ""));
+  const source = withoutTags(text);
+  return new RegExp(`art(?:[ií]culos?|s)?\\.?\\s*(?:\\d+(?:\\.\\d+)?\\s*(?:,|y)\\s*)*${token}\\b`, "i").test(source);
+}
+
+function saysIllnessNull(text) {
+  const source = withoutTags(text);
+  return /nulo/i.test(source) && /enfermedad|condici[oó]n de salud/i.test(source);
 }
 
 const CLAVE_26 = "El despido es nulo si el motivo es la enfermedad o la condición de salud (Ley 15/2022, artículo 26).";
@@ -239,7 +305,7 @@ export function completeDespido(answer) {
   let text = placeNoteLabel(useNoteLabel(answer, "despido-baja"), "despido-baja");
   const lines = [];
   const urls = [];
-  if (!hasArticle(text, "26")) {
+  if (!hasArticle(text, "26") && !saysIllnessNull(text)) {
     lines.push(CLAVE_26);
     urls.push(URL_26);
   }
@@ -267,5 +333,63 @@ export function completeDespido(answer) {
     text = `${text.trim()}\n\nClaves legales\n\n${lines.join("\n")}${cola}`.trim();
   }
   if (!text.includes("[despido-baja]")) text = `${text.trim()} [despido-baja]`.trim();
+  return text;
+}
+
+const DATA_SOURCE = /banco de españa|eur[ií]bor|\bbce\b|coingecko|frankfurter/i;
+const DATA_TREND = /disminuci[oó]n|aument|subid|bajad|ligera|tendencia|se mantiene|fortaleza|recuperaci|han mostrado|ha mostrado/i;
+
+function datumNumbers(sentence) {
+  const found = [];
+  for (const match of String(sentence || "").matchAll(/\d+(?:[.,]\d+)?/g)) {
+    const raw = match[0];
+    if (raw === "1" || /^(?:19|20)\d{2}$/.test(raw)) continue;
+    found.push(raw);
+  }
+  return found;
+}
+
+function numberInFacts(raw, facts) {
+  return numberForms(raw).some((form) => facts.includes(form));
+}
+
+function inventedDatum(sentence, facts) {
+  if (!DATA_SOURCE.test(sentence)) return false;
+  const numbers = datumNumbers(sentence).filter((raw) => new RegExp(`${raw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*%`).test(sentence) || /[.,]/.test(raw));
+  const trend = DATA_TREND.test(sentence);
+  if (!numbers.length && !trend) return false;
+  if (!facts.trim()) return true;
+  if (numbers.some((raw) => !numberInFacts(raw, facts))) return true;
+  return trend && !numbers.length;
+}
+
+function indicatorOf(sentences) {
+  const joined = sentences.join(" ");
+  if (/eur[ií]bor/i.test(joined)) return "el Euríbor";
+  if (/tipos/i.test(joined)) return "los tipos";
+  if (/hipoteca/i.test(joined)) return "la hipoteca";
+  if (/bitcoin/i.test(joined)) return "el bitcoin";
+  if (/ethereum/i.test(joined)) return "el ethereum";
+  if (/banco de españa/i.test(joined)) return "el Banco de España";
+  if (/\bbce\b/i.test(joined)) return "el BCE";
+  return "ese indicador";
+}
+
+/** Quita una cifra o una tendencia atribuida a una fuente que este turno no inyectó. */
+export function dropUninjectedData(answer, factsText = "") {
+  const facts = String(factsText || "");
+  const pieces = piecesOf(answer);
+  const removed = [];
+  const kept = [];
+  for (const piece of pieces) {
+    if (inventedDatum(piece.body, facts)) removed.push(piece.body);
+    else kept.push(piece);
+  }
+  if (!removed.length) return String(answer || "").trim();
+  let text = joinPieces(kept);
+  const stillHasDatum = kept.some((piece) => datumNumbers(piece.body).length > 0 || DATA_TREND.test(piece.body));
+  if (!stillHasDatum) {
+    text = `${text.trim()} No tengo conectado el dato actual de ${indicatorOf(removed)}; consúltalo en la fuente oficial antes de decidir.`.trim();
+  }
   return text;
 }
