@@ -299,6 +299,7 @@ describe("conjunto fijo de 100 casos", () => {
       completeHigiene: (answer: string, note: string) => string;
       offlineMarketAnswer: () => string;
       dropUninjectedData: (answer: string, facts?: string) => string;
+      dropNamedBanks: (answer: string) => string;
     };
     const lista = "- Manzana\n- Plátano\n- Naranja";
     const codigo = "function suma(a, b) {\n  return a + b;\n}";
@@ -419,6 +420,10 @@ describe("conjunto fijo de 100 casos", () => {
     assert.equal((sinInventar.match(/ahora no hay un dato en vivo/gi) || []).length, 1);
     assert.match(sinInventar, /cuota\.\s+Ahora no hay un dato en vivo disponible/);
     assert.match(sinInventar, /Una hipoteca a tipo fijo da estabilidad/);
+    const sinBanco = salida.dropNamedBanks("Para la hipoteca puedes comparar Bankia y CaixaBank. Mira el tipo fijo y el plazo.");
+    assert.equal(/bankia/i.test(sinBanco), false);
+    assert.equal(/caixabank/i.test(sinBanco), false);
+    assert.match(sinBanco, /tipo fijo y el plazo/);
     const conectado = salida.dropUninjectedData("El euro está en 1.1052 USD (el BCE, Frankfurter, 13-11-2026).", hechos);
     assert.match(conectado, /1\.1052/);
     const carga = "El artículo 30 reparte la prueba. La carga recae en ella. El despido nulo obliga a la readmisión y a los salarios de tramitación (artículo 55.6).";

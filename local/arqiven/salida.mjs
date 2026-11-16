@@ -400,3 +400,13 @@ export function dropUninjectedData(answer, factsText = "") {
   if (!stillHasDatum) text = placeLiveGap(text);
   return text;
 }
+
+const NAMED_BANK = /\b(?:bankia|caixabank|caixa\s*bank|santander|bbva|sabadell|bankinter|unicaja|abanca|kutxabank|ibercaja|cajamar|openbank)\b/i;
+
+/** En una respuesta de hipoteca o financiación, no nombra un banco concreto. */
+export function dropNamedBanks(answer) {
+  const source = String(answer || "");
+  if (!/hipotec|pr[eé]stamo|financiaci[oó]n|cr[eé]dito/i.test(source)) return source.trim();
+  const kept = piecesOf(source).filter((piece) => !NAMED_BANK.test(piece.body));
+  return joinPieces(kept);
+}
