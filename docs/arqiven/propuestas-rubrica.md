@@ -14,6 +14,24 @@ Enunciados literales:
 - `ex-15`: «¿Cómo se descubrió la penicilina?»
 - `hx-05`: «¿Qué mecanismo explica el efecto invernadero?»
 
-Las respuestas del modelo en esa pasada no se pegaron en el encargo. No se redactan aquí. Cuando se guarden, se añaden debajo, enteras, antes de tocar el umbral.
+Las respuestas del modelo no están en el repositorio ni en los logs de esta rama. No se redactan. Cuando se guarden, se pegan enteras debajo, antes de tocar el umbral.
+
+### ex-03
+
+```text
+(pegar aquí la respuesta literal)
+```
+
+### ex-15
+
+```text
+(pegar aquí la respuesta literal)
+```
+
+### hx-05
+
+```text
+(pegar aquí la respuesta literal)
+```
 
 Propuesta: no bajar el umbral de cuatro frases. Si una respuesta guardada tiene tres frases sustantivas y no es una negativa, se copia en este archivo y entonces se decide.
