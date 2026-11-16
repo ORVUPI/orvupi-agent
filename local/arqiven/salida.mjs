@@ -269,12 +269,12 @@ function withoutTags(text) {
 function hasArticle(text, number) {
   const token = String(number).replace(".", "\\.");
   const source = withoutTags(text);
-  return new RegExp(`art(?:[ií]culos?|s)?\\.?\\s*(?:\\d+(?:\\.\\d+)?\\s*(?:,|y)\\s*)*${token}\\b`, "i").test(source);
+  return new RegExp(`art(?:[ií]culos?|icles?|s)?\\.?\\s*(?:\\d+(?:\\.\\d+)?\\s*(?:,|y|and)\\s*)*${token}\\b`, "i").test(source);
 }
 
 function saysIllnessNull(text) {
   const source = withoutTags(text);
-  return /nulo/i.test(source) && /enfermedad|condici[oó]n de salud/i.test(source);
+  return /nulo|\bvoid\b/i.test(source) && /enfermedad|condici[oó]n de salud|illness|health condition/i.test(source);
 }
 
 const CLAVE_26 = "El despido es nulo si el motivo es la enfermedad o la condición de salud (Ley 15/2022, artículo 26).";
@@ -292,8 +292,15 @@ const URL_56 = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a56";
 
 /** Si falta la cafeína o la cita, añade el párrafo literal y deja [higiene-sueno]. Solo si la pregunta es de sueño. */
 export function completeHigiene(answer, noteText, question = "") {
-  if (question && !/sueñ|sueno|higiene|insomnio|cafe[ií]na/i.test(question)) return String(answer || "").trim();
+  if (question && !/sueñ|sueno|higiene|insomnio|cafe[ií]na|caffeine|sleep/i.test(question)) return String(answer || "").trim();
   let text = placeNoteLabel(useNoteLabel(answer, "higiene-sueno"), "higiene-sueno");
+  if (answerLanguage(question) === "en") {
+    if (!/caffeine|cafe[ií]na/i.test(text)) {
+      text = `${text.trim()} Sleep hygiene means cutting out alcohol, caffeine and nicotine, getting morning light, keeping regular hours, and finishing dinner two or three hours before bed.`.trim();
+    }
+    if (!text.includes("[higiene-sueno]")) text = `${text.trim()} [higiene-sueno]`.trim();
+    return text;
+  }
   if (!/cafe[ií]na/i.test(text)) {
     const paragraph = String(noteText || "").split(/\n\n/).map((part) => part.trim()).find((part) => /cafe[ií]na/i.test(part));
     if (paragraph) text = `${text.trim()}\n\n${paragraph}`.trim();
@@ -303,30 +310,51 @@ export function completeHigiene(answer, noteText, question = "") {
 }
 
 /** Si falta un punto, añade frases fijas. No pega la nota. Las URL van solo en «Fuentes:». */
-export function completeDespido(answer) {
+export function completeDespido(answer, _note = "", question = "") {
+  const en = answerLanguage(question) === "en";
   let text = placeNoteLabel(useNoteLabel(answer, "despido-baja"), "despido-baja");
   const lines = [];
   const urls = [];
+  const art26 = en
+    ? "Dismissal is void if the motive is illness or a health condition (Law 15/2022, articles 2.1 and 26)."
+    : CLAVE_26;
+  const art30 = en
+    ? "The worker brings indications and the company must prove an objective and reasonable justification (Law 15/2022, article 30)."
+    : CLAVE_30;
+  const indicios = en
+    ? "The worker brings indications and the company must prove an objective and reasonable justification."
+    : CLAVE_INDICIOS;
+  const procedente = en
+    ? "A fair objective dismissal pays 20 days of salary per year of service, with a cap of twelve months."
+    : CLAVE_PROCEDENTE;
+  const improcedente = en
+    ? "An unfair dismissal pays 33 days of salary per year, with a cap of 24 months."
+    : CLAVE_IMPROCEDENTE;
+  const nulo = en
+    ? "A void dismissal requires reinstatement and the wages for the time in between (article 55.6)."
+    : CLAVE_556;
+  const heading = en ? "Legal points" : "Claves legales";
+  const fuentesLabel = en ? "Sources" : "Fuentes";
   if (!hasArticle(text, "26") && !saysIllnessNull(text)) {
-    lines.push(CLAVE_26);
+    lines.push(art26);
     urls.push(URL_26);
   }
   if (!hasArticle(text, "30")) {
-    lines.push(CLAVE_30);
+    lines.push(art30);
     urls.push(URL_30);
-  } else if (!/indicios/i.test(text)) {
-    lines.push(CLAVE_INDICIOS);
+  } else if (!/indicios|indications/i.test(text)) {
+    lines.push(indicios);
   }
-  if (!/\bprocedente\b/i.test(text)) {
-    lines.push(CLAVE_PROCEDENTE);
+  if (!/\bprocedente\b/i.test(text) && !/\b20 days\b/i.test(text)) {
+    lines.push(procedente);
     urls.push(URL_53);
   }
-  if (!/\bimprocedente\b/i.test(text)) {
-    lines.push(CLAVE_IMPROCEDENTE);
+  if (!/\bimprocedente\b/i.test(text) && !/\b33 days\b/i.test(text) && !/\bunfair dismissal\b/i.test(text)) {
+    lines.push(improcedente);
     urls.push(URL_56);
   }
   if (!/55\.6\b/.test(text)) {
-    lines.push(CLAVE_556);
+    lines.push(nulo);
     urls.push(URL_55);
   }
   if (hasArticle(text, "2.1")) urls.push(URL_2);
@@ -334,16 +362,16 @@ export function completeDespido(answer) {
   const fuentes = [...new Set(urls)];
   if (lines.length) {
     const cola = fuentes.length ? `\n\nFuentes: ${fuentes.join(" ")}` : "";
-    text = `${text.trim()}\n\nClaves legales\n\n${lines.join("\n")}${cola}`.trim();
+    text = `${text.trim()}\n\n${heading}\n\n${lines.join("\n")}${cola.replace("Fuentes:", `${fuentesLabel}:`)}`.trim();
   } else if (fuentes.length) {
-    text = `${text.trim()}\n\nFuentes: ${fuentes.join(" ")}`.trim();
+    text = `${text.trim()}\n\n${fuentesLabel}: ${fuentes.join(" ")}`.trim();
   }
   if (!text.includes("[despido-baja]")) text = `${text.trim()} [despido-baja]`.trim();
   return text;
 }
 
-const DATA_SOURCE = /banco de españa|eur[ií]bor|\bbce\b|coingecko|frankfurter/i;
-const DATA_TREND = /disminuci[oó]n|aument|subid|bajad|ligera|tendencia|se mantiene|fortaleza|recuperaci|han mostrado|ha mostrado/i;
+const DATA_SOURCE = /banco de españa|bank of spain|eur[ií]bor|\bbce\b|\becb\b|coingecko|frankfurter/i;
+const DATA_TREND = /disminuci[oó]n|aument|subid|bajad|ligera|tendencia|se mantiene|fortaleza|recuperaci|han mostrado|ha mostrado|decreas|slight decrease|went down/i;
 
 function datumNumbers(sentence) {
   const found = [];
@@ -370,23 +398,26 @@ function inventedDatum(sentence, facts) {
 }
 
 function isAwkwardGap(sentence) {
-  return /no consta un dato actual|no tengo conectado el dato actual/i.test(sentence);
+  return /no consta un dato actual|no tengo conectado el dato actual|there is no current (?:figure|data)|no live data is connected/i.test(sentence);
 }
 
 const LIVE_GAP = "Ahora no hay un dato en vivo disponible; conviene consultarlo en la fuente oficial antes de decidir.";
+const LIVE_GAP_EN = "Live data is not available right now; check the official source before you decide.";
 
-function placeLiveGap(text) {
-  if (/ahora no hay un dato en vivo/i.test(text)) return text.trim();
+function placeLiveGap(text, lang) {
+  const sentence = lang === "en" ? LIVE_GAP_EN : LIVE_GAP;
+  if (/ahora no hay un dato en vivo|live data is not available/i.test(text)) return text.trim();
   const pieces = piecesOf(text);
   const warnAt = pieces.findIndex((piece) => WARNING.test(piece.body));
-  if (warnAt < 0) return `${text.trim()} ${LIVE_GAP}`.trim();
+  if (warnAt < 0) return `${text.trim()} ${sentence}`.trim();
   const before = joinPieces(pieces.slice(0, warnAt));
   const after = joinPieces(pieces.slice(warnAt));
-  return `${before} ${LIVE_GAP} ${after}`.replace(/[ \t]{2,}/g, " ").trim();
+  return `${before} ${sentence} ${after}`.replace(/[ \t]{2,}/g, " ").trim();
 }
 
 /** Quita una cifra o una tendencia atribuida a una fuente que este turno no inyectó. */
-export function dropUninjectedData(answer, factsText = "") {
+export function dropUninjectedData(answer, factsText = "", question = "") {
+  const lang = answerLanguage(question || answer);
   const facts = String(factsText || "");
   const pieces = piecesOf(answer);
   const removed = [];
@@ -398,7 +429,7 @@ export function dropUninjectedData(answer, factsText = "") {
   if (!removed.length) return String(answer || "").trim();
   let text = joinPieces(kept);
   const stillHasDatum = kept.some((piece) => datumNumbers(piece.body).length > 0 || DATA_TREND.test(piece.body));
-  if (!stillHasDatum) text = placeLiveGap(text);
+  if (!stillHasDatum) text = placeLiveGap(text, lang);
   return text;
 }
 
@@ -419,6 +450,15 @@ export const SOURCE_REQUESTS = [
   "hazme un informe",
   "haz un informe",
   "dame un informe",
+  "sources",
+  "give me the sources",
+  "give me the source",
+  "with links",
+  "with link",
+  "send me the document",
+  "give me the document",
+  "make a report",
+  "make me a report",
 ];
 
 function foldRequest(text) {
@@ -431,22 +471,33 @@ function foldRequest(text) {
     .trim();
 }
 
+const EN_WORDS = /\b(the|what|how|should|would|please|before|about|mortgage|sleep|hygiene|dismiss|dismissal|password|invest|investments|sources|source|links|link|document|report|give|with|war|caffeine|today)\b/g;
+const ES_WORDS = /\b(que|como|para|hipoteca|sueno|higiene|despedir|despido|puedo|cual|antes|mirar|guerra|contrasena|inversion|inversiones|fuentes|fuente|documento|informe|enlaces|cafeina|hoy|baja)\b/g;
+
+/** Español por defecto. Inglés solo si el mensaje trae más palabras inglesas que españolas. */
+export function answerLanguage(message) {
+  const text = foldRequest(message);
+  const en = (text.match(EN_WORDS) || []).length;
+  const es = (text.match(ES_WORDS) || []).length;
+  return en > es ? "en" : "es";
+}
+
 export function wantsSources(message) {
   const text = foldRequest(message);
-  if (!text || /\bsin\s+fuentes?\b/.test(text)) return false;
+  if (!text || /\b(?:sin|without)\s+(?:fuentes?|sources?)\b/.test(text)) return false;
   return SOURCE_REQUESTS.some((phrase) => {
     const needle = foldRequest(phrase).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     return new RegExp(`(?:^|\\s)${needle}(?:\\s|$)`).test(text);
   });
 }
 
-function proseFromCite(inner) {
-  const range = String(inner || "").match(/(?:el\s+)?BCE(?:\s+vía\s+Frankfurter)?,\s*(\d{2}-\d{2}-\d{4})\s+a\s+(\d{2}-\d{2}-\d{4})/i);
-  if (range) return `datos del BCE del ${range[1]} al ${range[2]}`;
-  const dated = String(inner || "").match(/(?:el\s+)?BCE(?:,\s*Frankfurter)?,\s*(\d{2}-\d{2}-\d{4}(?:\s+\d{2}:\d{2})?)/i);
-  if (dated) return `datos del BCE a ${dated[1]}`;
+function proseFromCite(inner, lang) {
+  const range = String(inner || "").match(/(?:el\s+)?(?:BCE|ECB)(?:\s+v[ií]a\s+Frankfurter)?,\s*(\d{2}-\d{2}-\d{4})\s+(?:a|to)\s+(\d{2}-\d{2}-\d{4})/i);
+  if (range) return lang === "en" ? `ECB data from ${range[1]} to ${range[2]}` : `datos del BCE del ${range[1]} al ${range[2]}`;
+  const dated = String(inner || "").match(/(?:el\s+)?(?:BCE|ECB)(?:,\s*Frankfurter)?,\s*(\d{2}-\d{2}-\d{4}(?:\s+\d{2}:\d{2})?)/i);
+  if (dated) return lang === "en" ? `ECB data as of ${dated[1]}` : `datos del BCE a ${dated[1]}`;
   const stamp = String(inner || "").match(/(\d{2}-\d{2}(?:-\d{4})?(?:\s+\d{2}:\d{2})?)/);
-  if (stamp && /coingecko|frankfurter|\bbce\b/i.test(inner)) return `a ${stamp[1]}`;
+  if (stamp && /coingecko|frankfurter|\bbce\b|\becb\b/i.test(inner)) return lang === "en" ? `as of ${stamp[1]}` : `a ${stamp[1]}`;
   return "";
 }
 
@@ -454,6 +505,7 @@ function isBibliography(body) {
   const text = String(body || "").trim();
   if (!text) return true;
   if (/^del /i.test(text) && /ministerio|volumen|sanidad|publicaci/i.test(text)) return true;
+  if (/^from the ministry/i.test(text)) return true;
   if (/^fuente oficial\b/i.test(text) || /^volumen\b/i.test(text)) return true;
   if (/ministerio de sanidad/i.test(text) && /volumen|n[uú]mero/i.test(text)) return true;
   if (/^«[^»]{0,80}»\.?$/.test(text)) return true;
@@ -463,7 +515,10 @@ function isBibliography(body) {
 function dropBibliography(text) {
   const kept = [];
   for (const piece of piecesOf(text)) {
-    const body = piece.body.replace(/^\s*según el documento\s+[\w:-]+\s*,?\s*/i, "").trim();
+    const body = piece.body
+      .replace(/^\s*según el documento\s+[\w:-]+\s*,?\s*/i, "")
+      .replace(/^\s*according to the document\s+[\w:-]+\s*,?\s*/i, "")
+      .trim();
     if (isBibliography(body)) continue;
     kept.push({ body, sep: piece.sep });
   }
@@ -474,6 +529,7 @@ function dropBibliography(text) {
 export function presentAnswer(answer, question) {
   const text = String(answer || "").trim();
   if (!text) return text;
+  const lang = answerLanguage(question);
   const urls = [...text.matchAll(/https?:\/\/[^\s)]+/g)].map((item) => item[0]);
   let next = dropBibliography(text);
   if (wantsSources(question)) {
@@ -483,22 +539,23 @@ export function presentAnswer(answer, question) {
       if (!next.includes(tag)) next = `${next.trim()} ${tag}`.trim();
     }
     const fuentes = [...new Set(urls)];
-    if (fuentes.length) next = `${next.trim()}\n\nFuentes: ${fuentes.join(" ")}`.trim();
+    const label = lang === "en" ? "Sources" : "Fuentes";
+    if (fuentes.length) next = `${next.trim()}\n\n${label}: ${fuentes.join(" ")}`.trim();
     return next.replace(/[ \t]{2,}/g, " ").replace(/\s+([.,;])/g, "$1").replace(/\n{3,}/g, "\n\n").trim();
   }
-  next = next.replace(/[ \t]*Fuentes:\s*[^\n]*/gi, "");
+  next = next.replace(/[ \t]*(?:Fuentes|Sources):\s*[^\n]*/gi, "");
   next = next.replace(/https?:\/\/[^\s)]+/g, "");
   next = next.replace(/\[[^\]\n]{1,80}\]/g, "");
   next = next.replace(/\s*,?\s*según el documento\s+[\w:-]+/gi, "");
   next = next.replace(/\(\s*([+-]?\d+(?:[.,]\d+)?\s*%)\s*;\s*([^)]+)\)/g, (_all, figure, cite) => {
-    const prose = proseFromCite(cite);
+    const prose = proseFromCite(cite, lang);
     return prose ? `${figure.trim()} (${prose})` : figure.trim();
   });
   next = next.replace(/\(\s*([^()]{0,180})\s*\)/g, (all, inner) => {
-    if (/datos del BCE/i.test(inner) || !/frankfurter|coingecko|(?:^|[^a-z])bce(?:[^a-z]|$)/i.test(inner)) return all;
-    const prose = proseFromCite(inner);
+    if (/datos del BCE|ECB data/i.test(inner) || !/frankfurter|coingecko|(?:^|[^a-z])(?:bce|ecb)(?:[^a-z]|$)/i.test(inner)) return all;
+    const prose = proseFromCite(inner, lang);
     if (!prose) return "";
-    return prose.startsWith("a ") ? prose : `(${prose})`;
+    return /^(a |as of )/i.test(prose) ? prose : `(${prose})`;
   });
   return next
     .replace(/[ \t]{2,}/g, " ")
@@ -518,6 +575,15 @@ const HIPOTECA_GUIA = [
   "Esto es una guía general: no es la cifra de hoy ni la oferta de un banco concreto.",
 ].join(" ");
 
+const MORTGAGE_GUIDE = [
+  "Before you sign a mortgage, check the reference index, usually Euribor, and the spread added to it.",
+  "Compare the APR, not only the starting rate, and note the fees for opening, early repayment and switching lender.",
+  "Check whether the contract has a floor clause.",
+  "Weigh the risk that the payment goes up.",
+  "Ask for the FEIN and the pre-contract information required by Law 5/2019.",
+  "This is a general guide: it is not today's figure and not a named bank's offer.",
+].join(" ");
+
 function isMortgageNoise(body) {
   return /higiene del sueñ|cafe[ií]na|tabla II|\bcnmf\b|mercado financiero/i.test(body)
     || /^no consta\b/i.test(body.trim())
@@ -526,11 +592,12 @@ function isMortgageNoise(body) {
 
 /** En una pregunta de hipoteca, una guía general y ninguna nota de otro tema. */
 export function completeHipoteca(answer, question) {
-  if (!/hipotec/i.test(String(question || ""))) return String(answer || "").trim();
+  if (!/hipotec|mortgage/i.test(String(question || ""))) return String(answer || "").trim();
   const kept = piecesOf(answer).filter((piece) => !isMortgageNoise(piece.body));
   let text = joinPieces(kept);
-  const covered = /eur[ií]bor/i.test(text) && /\btae\b/i.test(text) && (/fein/i.test(text) || /ley\s*5\s*\/\s*2019/i.test(text));
-  if (!covered) text = `${text} ${HIPOTECA_GUIA}`.replace(/\s+/g, " ").trim();
+  const en = answerLanguage(question) === "en";
+  const covered = /eur[ií]bor/i.test(text) && (/\btae\b/i.test(text) || /\bapr\b/i.test(text)) && (/fein/i.test(text) || /ley\s*5\s*\/\s*2019|law\s*5\s*\/\s*2019/i.test(text));
+  if (!covered) text = `${text} ${en ? MORTGAGE_GUIDE : HIPOTECA_GUIA}`.replace(/\s+/g, " ").trim();
   return text;
 }
 
@@ -539,7 +606,7 @@ const NAMED_BANK = /\b(?:bankia|caixabank|caixa\s*bank|santander|bbva|sabadell|b
 /** En una respuesta de hipoteca o financiación, no nombra un banco concreto. */
 export function dropNamedBanks(answer) {
   const source = String(answer || "");
-  if (!/hipotec|pr[eé]stamo|financiaci[oó]n|cr[eé]dito/i.test(source)) return source.trim();
+  if (!/hipotec|mortgage|pr[eé]stamo|financiaci[oó]n|cr[eé]dito/i.test(source)) return source.trim();
   const kept = piecesOf(source).filter((piece) => !NAMED_BANK.test(piece.body));
   return joinPieces(kept);
 }

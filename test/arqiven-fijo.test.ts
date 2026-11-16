@@ -295,7 +295,7 @@ describe("conjunto fijo de 100 casos", () => {
       placeNoteLabel: (text: string, id: string) => string;
       closeMarketAnswer: (answer: string, facts: string) => string;
       citeMissingFigures: (answer: string, facts: string) => string;
-      completeDespido: (answer: string, note?: string) => string;
+      completeDespido: (answer: string, note?: string, question?: string) => string;
       completeHigiene: (answer: string, note: string) => string;
       offlineMarketAnswer: () => string;
       dropUninjectedData: (answer: string, facts?: string) => string;
@@ -304,6 +304,7 @@ describe("conjunto fijo de 100 casos", () => {
       presentAnswer: (answer: string, question: string) => string;
       completeHipoteca: (answer: string, question: string) => string;
       SOURCE_REQUESTS: string[];
+      answerLanguage: (message: string) => string;
     };
     const lista = "- Manzana\n- Plátano\n- Naranja";
     const codigo = "function suma(a, b) {\n  return a + b;\n}";
@@ -322,6 +323,7 @@ describe("conjunto fijo de 100 casos", () => {
     assert.equal(limpias.includes("Nadie la escribió") || limpias.includes("nadie la escribió"), true);
     assert.equal(limpias.includes("Puedes pedirla"), true);
     assert.equal(salida.finishReply("La clave vacía no vale como ejemplo.\nSigue el texto.").includes("vacía"), false);
+    assert.equal(salida.finishReply("The example password is 123456.\nAsk the person who created the file.").includes("123456"), false);
     assert.equal(salida.placeNoteLabel("No consta [higiene-sueno].", "higiene-sueno"), "No consta.");
     assert.equal(salida.placeNoteLabel("La causa está en el art [despido-baja]. 2.1 de la ley.", "despido-baja"), "La causa está en el art. 2.1 de la ley [despido-baja].");
     assert.equal(
@@ -478,6 +480,39 @@ describe("conjunto fijo de 100 casos", () => {
     assert.match(suenoConFuente, /\n\nFuentes: https:\/\/www\.sanidad\.gob\.es\//);
     assert.equal(/^del Ministerio/i.test(suenoConFuente), false);
     assert.equal(salida.SOURCE_REQUESTS.includes("con enlaces"), true);
+    for (const phrase of ["sources", "give me the sources", "with links", "send me the document", "make a report"]) {
+      assert.equal(salida.wantsSources(phrase), true, phrase);
+    }
+    assert.equal(salida.wantsSources("without sources"), false);
+    assert.equal(salida.answerLanguage("¿Qué mirar antes de pedir una hipoteca a tipo fijo?"), "es");
+    assert.equal(salida.answerLanguage("What should I check before signing a fixed-rate mortgage?"), "en");
+    const inversionEn = "The euro fell (-1.79 %; ECB via Frankfurter, 16-10-2026 to 13-11-2026). Bitcoin: 100 USD (CoinGecko, 15-11 21:54).";
+    const sinEn = salida.presentAnswer(inversionEn, "How do you see investments today?");
+    assert.match(sinEn, /-1\.79 % \(ECB data from 16-10-2026 to 13-11-2026\)/);
+    assert.match(sinEn, /as of 15-11 21:54/);
+    assert.equal(/frankfurter|coingecko|https?:/i.test(sinEn), false);
+    assert.equal(salida.presentAnswer(inversionEn, "give me the sources"), inversionEn);
+    const hipotecaEn = salida.completeHipoteca(hipotecaRota, "What should I check before signing a fixed-rate mortgage?");
+    assert.match(hipotecaEn, /Euribor/);
+    assert.match(hipotecaEn, /\bAPR\b/);
+    assert.match(hipotecaEn, /FEIN/);
+    assert.match(hipotecaEn, /Law 5\/2019/);
+    assert.equal(/cafeína|higiene del sueño|cnmf/i.test(hipotecaEn), false);
+    const suenoEn = "According to the document higiene-sueno, from the Ministry of Health and Consumer Affairs, volume 32, number 4, 2008. Sleep hygiene means cutting out alcohol, caffeine and nicotine [higiene-sueno]. https://www.sanidad.gob.es/biblioPublic/publicaciones/recursos_propios/infMedic/docs/vol32_4TratInsomnio.pdf";
+    const suenoEnLimpio = salida.presentAnswer(suenoEn, "What is sleep hygiene?");
+    assert.match(suenoEnLimpio, /^Sleep hygiene means/);
+    assert.match(suenoEnLimpio, /caffeine/);
+    assert.equal(/ministry|volume|https?:|\[/i.test(suenoEnLimpio), false);
+    const suenoEnFuente = salida.presentAnswer(suenoEn, "send me the document");
+    assert.match(suenoEnFuente, /^Sleep hygiene means/);
+    assert.match(suenoEnFuente, /\[higiene-sueno\]/);
+    assert.match(suenoEnFuente, /\n\nSources: https:\/\/www\.sanidad\.gob\.es\//);
+    const despidoEn = salida.completeDespido("You can dismiss someone on sick leave if there is a real cause.", "", "Can I dismiss an employee who is on sick leave?");
+    assert.match(despidoEn, /Legal points/);
+    assert.match(despidoEn, /articles 2\.1 and 26/);
+    assert.match(despidoEn, /indications/);
+    assert.equal(salida.presentAnswer(despidoEn, "Can I dismiss an employee who is on sick leave?").includes("https://"), false);
+    assert.match(salida.presentAnswer(despidoEn, "make a report"), /Sources:/);
     const sinBanco = salida.dropNamedBanks("Para la hipoteca puedes comparar Bankia y CaixaBank. Mira el tipo fijo y el plazo.");
     assert.equal(/bankia/i.test(sinBanco), false);
     assert.equal(/caixabank/i.test(sinBanco), false);

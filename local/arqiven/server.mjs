@@ -451,12 +451,12 @@ export async function startLocalServer(overrides = {}) {
       });
       const polish = (text) => {
         let reply = finishReply(text);
-        if (noteId === "despido-baja") reply = completeDespido(reply, trustedNote);
+        if (noteId === "despido-baja") reply = completeDespido(reply, trustedNote, question);
         else if (noteId === "higiene-sueno") reply = completeHigiene(reply, trustedNote, question);
         else if (noteId) reply = placeNoteLabel(reply, noteId);
         if (factsText) reply = closeMarketAnswer(reply, factsText);
         else if (marketOffline) reply = offlineMarketAnswer();
-        reply = dropNamedBanks(dropUninjectedData(reply, factsText));
+        reply = dropNamedBanks(dropUninjectedData(reply, factsText, question));
         reply = completeHipoteca(reply, question);
         return presentAnswer(reply, question);
       };
