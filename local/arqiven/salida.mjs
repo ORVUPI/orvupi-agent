@@ -174,20 +174,22 @@ function useNoteLabel(text, id) {
     .replaceAll("[fuente]", tag);
 }
 
-function noteSection(noteText, title) {
-  const match = String(noteText || "").match(new RegExp(`## ${title}\\n+([\\s\\S]*?)(?=\\n## |$)`));
-  return match ? match[1].trim() : "";
-}
-
 function hasArticle(text, number) {
   const token = String(number).replace(".", "\\.");
   return new RegExp(`art(?:[ií]culos?|s)?\\.?\\s*(?:\\d+(?:\\.\\d+)?\\s*(?:,|y)\\s*)*${token}\\b`, "i").test(String(text || ""));
 }
 
-function hasThreeClasses(text) {
-  const source = String(text || "");
-  return /\bprocedente\b/i.test(source) && /\bimprocedente\b/i.test(source) && /\bnulo\b/i.test(source);
-}
+const CLAVE_26 = "El despido es nulo si el motivo es la enfermedad o la condición de salud (Ley 15/2022, artículo 26).";
+const CLAVE_30 = "El trabajador aporta indicios y la empresa debe probar una justificación objetiva y razonable (Ley 15/2022, artículo 30).";
+const CLAVE_INDICIOS = "El trabajador aporta indicios y la empresa debe probar una justificación objetiva y razonable.";
+const CLAVE_PROCEDENTE = "El despido procedente, si es objetivo, da 20 días de salario por año de servicio, con un máximo de doce mensualidades.";
+const CLAVE_IMPROCEDENTE = "El despido improcedente da 33 días de salario por año, con un tope de 24 mensualidades.";
+const CLAVE_556 = "El despido nulo obliga a la readmisión y a los salarios de tramitación (artículo 55.6).";
+const URL_26 = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589#a26";
+const URL_30 = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589#a30";
+const URL_53 = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a53";
+const URL_55 = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a55";
+const URL_56 = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a56";
 
 /** Si falta la cafeína o la cita, añade el párrafo literal y deja [higiene-sueno]. */
 export function completeHigiene(answer, noteText) {
@@ -200,15 +202,38 @@ export function completeHigiene(answer, noteText) {
   return text;
 }
 
-/** Si falta una parte del despido, añade el bloque literal de esa sección. La cita es [despido-baja]. */
-export function completeDespido(answer, noteText) {
+/** Si falta un punto, añade frases fijas. No pega la nota. Las URL van solo en «Fuentes:». */
+export function completeDespido(answer) {
   let text = placeNoteLabel(useNoteLabel(answer, "despido-baja"), "despido-baja");
-  const blocks = [];
-  if (!hasArticle(text, "26")) blocks.push(noteSection(noteText, "1\\. La regla"));
-  if (!hasArticle(text, "30")) blocks.push(noteSection(noteText, "2\\. La carga de la prueba"));
-  if (!/55\.6\b/.test(text) || !hasThreeClasses(text)) blocks.push(noteSection(noteText, "3\\. Las tres calificaciones"));
-  const extra = blocks.filter(Boolean);
-  if (extra.length) text = `${text.trim()}\n\n${extra.join("\n\n")}`.trim();
+  const lines = [];
+  const urls = [];
+  if (!hasArticle(text, "26")) {
+    lines.push(CLAVE_26);
+    urls.push(URL_26);
+  }
+  if (!hasArticle(text, "30")) {
+    lines.push(CLAVE_30);
+    urls.push(URL_30);
+  } else if (!/indicios/i.test(text)) {
+    lines.push(CLAVE_INDICIOS);
+  }
+  if (!/\bprocedente\b/i.test(text)) {
+    lines.push(CLAVE_PROCEDENTE);
+    urls.push(URL_53);
+  }
+  if (!/\bimprocedente\b/i.test(text)) {
+    lines.push(CLAVE_IMPROCEDENTE);
+    urls.push(URL_56);
+  }
+  if (!/55\.6\b/.test(text)) {
+    lines.push(CLAVE_556);
+    urls.push(URL_55);
+  }
+  if (lines.length) {
+    const fuentes = [...new Set(urls)];
+    const cola = fuentes.length ? `\n\nFuentes: ${fuentes.join(" ")}` : "";
+    text = `${text.trim()}\n\nClaves legales\n\n${lines.join("\n")}${cola}`.trim();
+  }
   if (!text.includes("[despido-baja]")) text = `${text.trim()} [despido-baja]`.trim();
   return text;
 }
