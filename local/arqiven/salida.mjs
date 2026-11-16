@@ -83,7 +83,7 @@ export function dropPasswordExamples(text) {
 }
 
 export function finishReply(text) {
-  return dropPasswordExamples(cutRepeatedSentences(text));
+  return dropPasswordExamples(cutRepeatedSentences(text)).replace(/\bque impedir\b/gi, (all) => (all[0] === "Q" ? "Que impida" : "que impida"));
 }
 
 const WARNING = /no es una recomendaci[oó]n|puedes perder|no sustituye|riesgo de p[eé]rdida|no inviertas lo que no puedas|not a recommendation|you can lose money/i;
@@ -292,9 +292,13 @@ export function closeMarketAnswer(answer, factsText, question = "") {
   if (en && isMarketQuestion(question)) return englishMarketAnswer(factsText);
   let text = dropClosersBeforeWarning(citeMissingFigures(answer, factsText));
   if (en && !/(?:^|\n)\s*1\./.test(text)) text = `${text.trim()}\n${MARKET_STEPS_EN}`.trim();
+  text = trimAfterWarning(dropClosersBeforeWarning(text));
   const warning = en ? MARKET_WARNING_EN : MARKET_WARNING;
-  if (!WARNING.test(text)) text = `${text.trim()} ${warning}`.trim();
-  return trimAfterWarning(dropClosersBeforeWarning(text));
+  const exact = en
+    ? /this is not a recommendation:\s*you can lose money\.?$/i
+    : /esto no es una recomendaci[oó]n:\s*puedes perder dinero\.?$/i;
+  if (!exact.test(text.trim())) text = `${text.trim()} ${warning}`.trim();
+  return text;
 }
 
 /** Si la etiqueta está en medio de la frase, la pasa al final. No corta en art. ni en 2.1. */
@@ -385,14 +389,24 @@ export function completeHigiene(answer, noteText, question = "") {
   return text;
 }
 
-/** [texto]() queda en texto, también con espacio o paréntesis de ancho completo. */
+/** [texto]() o [texto](url) queda en texto. Un paréntesis vacío también vale con espacio. */
 export function unwrapEmptyLinks(text) {
-  return String(text || "").replace(/\[([^\]\n]+)\][\s\u00a0\u200b]*[（(][\s\u00a0\u200b]*[)）]/g, "$1");
+  return String(text || "")
+    .replace(/\[([^\]\n]+)\]\((?:https?:\/\/[^)\s]*)?\)/g, "$1")
+    .replace(/\[([^\]\n]+)\][\s\u00a0\u200b]*[（(][\s\u00a0\u200b]*[)）]/g, "$1");
+}
+
+/** «salud Ley 15/2022, arts. 2.1 y 26.» pasa a «salud (Ley 15/2022, arts. 2.1 y 26).» */
+function wrapLawCite(text) {
+  return String(text || "").replace(
+    /(^|[^\w(])((?:Ley|Law)\s*15\s*\/\s*2022,\s*arts?\.\s*\d+(?:\.\d+)?(?:\s*(?:,|y|and)\s*\d+(?:\.\d+)?)*)(\s*\.)?/gi,
+    "$1($2)$3",
+  );
 }
 
 /** Si falta un punto, añade frases fijas. No pega la nota. Las URL van solo en «Fuentes:». */
 function repairProse(answer) {
-  return unwrapEmptyLinks(answer)
+  return wrapLawCite(unwrapEmptyLinks(answer))
     .replace(/no nula el despido/gi, "no anula el despido")
     .replace(/available at:\s*\[\)\s*\.?/gi, "");
 }
@@ -466,8 +480,8 @@ export function completeDespido(answer, _note = "", question = "") {
     urls.push(URL_55);
   }
   if (en && sawWrong55) lines.push("Article 55.5 is in the Workers' Statute, not in Law 15/2022, and it does not name illness.");
-  if (hasArticle(text, "2.1")) urls.push(URL_2);
-  if (hasArticle(text, "26")) urls.push(URL_26);
+  if (hasArticle(text, "2.1") || /ley\s*15\s*\/\s*2022|law\s*15\s*\/\s*2022/i.test(text)) urls.push(URL_2);
+  if (hasArticle(text, "26") || /ley\s*15\s*\/\s*2022|law\s*15\s*\/\s*2022/i.test(text)) urls.push(URL_26);
   const fuentes = [...new Set(urls)];
   if (lines.length) {
     const cola = fuentes.length ? `\n\nFuentes: ${fuentes.join(" ")}` : "";
@@ -699,6 +713,10 @@ function hideProviderNames(text) {
       .replace(/\(\s*[,;]\s*/g, "(")
       .replace(/[ \t]*,\s*\)/g, ")")
       .replace(/\(\s*\)/g, "")
+      .replace(/\bsegún\s*,\s*(\d{2}-\d{2}(?:-\d{4})?(?:\s+\d{2}:\d{2})?)/gi, "a $1")
+      .replace(/\baccording to\s*,\s*(\d{2}-\d{2}(?:-\d{4})?(?:\s+\d{2}:\d{2})?)/gi, "as of $1")
+      .replace(/\bsegún\s*,/gi, "")
+      .replace(/\baccording to\s*,/gi, "")
       .replace(/^[,\s;:]+/g, "")
       .trim();
     if (!body || /^[,.;:()]+$/.test(body)) continue;
@@ -721,13 +739,19 @@ export function presentAnswer(answer, question) {
       if (!next.includes(tag)) next = `${next.trim()} ${tag}`.trim();
     }
     const fuentes = [...new Set(urls)].filter((url) => /boe\.es\/buscar\/act\.php\?id=BOE-A-(?:2022-11589|2015-11430)|sanidad\.gob\.es\//i.test(url));
+    if (/ley\s*15\s*\/\s*2022|law\s*15\s*\/\s*2022|arts?\.\s*2\.1\s+(?:y|and)\s*26|articles?\s+2\.1\s+and\s+26/i.test(next)) {
+      if (!fuentes.includes(URL_2)) fuentes.push(URL_2);
+      if (!fuentes.includes(URL_26)) fuentes.push(URL_26);
+    }
     const label = lang === "en" ? "Sources" : "Fuentes";
     if (fuentes.length) next = `${next.trim()}\n\n${label}: ${fuentes.join(" ")}`.trim();
     return unwrapEmptyLinks(next).replace(/[ \t]{2,}/g, " ").replace(/\s+([.,;])/g, "$1").replace(/\n{3,}/g, "\n\n").trim();
   }
   next = next.replace(/[ \t]*(?:Fuentes|Sources):[ \t]*[^\n]*/gi, "");
   next = next.replace(/https?:\/\/[^\s)]+/g, "");
+  next = stripUnaskedNotes(next);
   next = next.replace(/\[[^\]\n]{1,80}\]/g, "");
+  next = stripPublicationRefs(next);
   next = next.replace(/\s*,?\s*según el documento\s+[\w:-]+/gi, "");
   next = next.replace(/\(\s*([+-]?\d+(?:[.,]\d+)?\s*%)\s*;\s*([^)]+)\)/g, (_all, figure, cite) => {
     const prose = proseFromCite(cite, lang);
@@ -793,19 +817,45 @@ function listBody(line) {
   return { indent: match[1], body };
 }
 
-/** Quita un ítem vacío que dejó un borrado y vuelve a numerar la lista. */
+function isOrphanContinuation(body) {
+  return /^(?:this|that|it) will help\b/i.test(body) || /^(?:esto|esta) (?:te |le )?ayudar/i.test(body);
+}
+
+function stripPublicationRefs(text) {
+  return String(text || "")
+    .replace(/,?\s*en la tabla II de esa publicación,?/gi, "")
+    .replace(/,?\s*in table II of that publication,?/gi, "")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/\s+([,.;:])/g, "$1");
+}
+
+function stripUnaskedNotes(text) {
+  const kept = [];
+  for (const piece of piecesOf(text)) {
+    let body = piece.body.replace(/\[(?:fuente|source)\s*:[^\]\n.]*(?:\]|\.)?/gi, "");
+    const opened = body.replace(/^\s*the document specifies(?:\s+that)?\s*[:,]?\s*/i, "");
+    body = (opened === body ? body : capitalizeStart(opened)).trim();
+    if (!body || /^[.,;:]+$/.test(body)) continue;
+    kept.push({ body, sep: piece.sep });
+  }
+  return joinPieces(kept);
+}
+
+/** Quita un ítem vacío o una continuación huérfana y vuelve a numerar la lista. */
 export function tidyNumberedLists(text) {
-  const collapsed = String(text || "").replace(/(?:^|\n)(\s*)(?:[1-9]|1\d|20)\.\s+(?=(?:[1-9]|1\d|20)\.\s+)/g, "\n$1");
+  const collapsed = String(text || "")
+    .replace(/([.!?])\s+((?:[1-9]|1\d|20)\.\s+)/g, "$1\n$2")
+    .replace(/(?:^|\n)(\s*)(?:[1-9]|1\d|20)\.\s+(?=(?:[1-9]|1\d|20)\.\s+)/g, "\n$1");
   const out = [];
   let number = 0;
   for (const line of collapsed.split("\n")) {
     const item = listBody(line);
     if (!item) {
-      number = 0;
+      if (line.trim()) number = 0;
       out.push(line);
       continue;
     }
-    if (!item.body) continue;
+    if (!item.body || isOrphanContinuation(item.body)) continue;
     number += 1;
     out.push(`${item.indent}${number}. ${item.body}`);
   }

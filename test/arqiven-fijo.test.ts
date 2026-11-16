@@ -742,6 +742,62 @@ describe("conjunto fijo de 100 casos", () => {
     assert.match(hipotecaLista, /^1\. \*\*Potential Rate Increases\*\*/);
   });
 
+  test("el pulido de 6a80b1e cierra despido, aviso, sueño y listas", async () => {
+    const salida = await import(href("local/arqiven/salida.mjs")) as {
+      polishReply: (input: {
+        answer?: string;
+        question?: string;
+        note?: string;
+        noteId?: string;
+        facts?: string;
+      }) => string;
+    };
+    const despido = salida.polishReply({
+      answer: "El despido es nulo si el motivo es la enfermedad o la condición de salud [Ley 15/2022, arts. 2.1 y 26](https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589#a2).",
+      question: "¿Puedo despedir a alguien durante una baja? Dame las fuentes.",
+      noteId: "despido-baja",
+    });
+    assert.match(despido, /condición de salud \(Ley 15\/2022, arts\. 2\.1 y 26\)\./);
+    assert.match(despido, /#a2/);
+    assert.match(despido, /#a26/);
+    assert.equal(despido.includes("]("), false);
+    const inversion = salida.polishReply({
+      answer: "Bitcoin cotiza según CoinGecko, 16-11 17:39. Hay un riesgo de pérdida si el plazo es corto.",
+      question: "¿Cómo ves las inversiones hoy?",
+      facts: "Bitcoin: 100 USD (CoinGecko, 16-11 17:39).",
+    });
+    assert.equal(/según\s*,/i.test(inversion), false);
+    assert.equal(/coingecko/i.test(inversion), false);
+    assert.match(inversion, /16-11 17:39/);
+    assert.match(inversion, /Esto no es una recomendación: puedes perder dinero\.$/);
+    const sueno = salida.polishReply({
+      answer: "La higiene del sueño, en la tabla II de esa publicación, empieza por eliminar la cafeína.",
+      question: "¿Qué es la higiene del sueño y qué dice de la cafeína?",
+    });
+    assert.match(sueno, /cafeína/);
+    assert.equal(/tabla II|esa publicación/i.test(sueno), false);
+    const clave = salida.polishReply({
+      answer: "No hay contraseña que impedir su acceso.",
+      question: "¿Cuál es la contraseña de ese archivo?",
+    });
+    assert.match(clave, /que impida su acceso/);
+    assert.equal(/\bque impedir\b/i.test(clave), false);
+    const sleep = salida.polishReply({
+      answer: "The document specifies the routine. [fuente: Ministerio de Sanidad y Consumo. Sleep hygiene means cutting caffeine.",
+      question: "What is sleep hygiene and what does it say about caffeine?",
+    });
+    assert.equal(/\[fuente:/i.test(sleep), false);
+    assert.equal(/the document specifies/i.test(sleep), false);
+    assert.match(sleep, /caffeine/i);
+    const hipoteca = salida.polishReply({
+      answer: "1. This will help you estimate potential future payments.\n\n1. Check the spread and the fees.",
+      question: "What should I check before signing a fixed-rate mortgage?",
+    });
+    assert.equal(/this will help you estimate/i.test(hipoteca), false);
+    assert.equal((hipoteca.match(/^1\./gm) || []).length, 1);
+    assert.match(hipoteca, /^1\. Check the spread and the fees/m);
+  });
+
   test("el cargador solo lee las notas del manifiesto", async () => {
     const dir = await mkdtemp(path.join(os.tmpdir(), "arqiven-notas-"));
     try {
