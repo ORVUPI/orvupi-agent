@@ -4,7 +4,7 @@ No se aplica. `eval/arqiven/fijo/rubricas.mjs` no cambia.
 
 ## Detector de negativa
 
-En la medición de `6944336`, mitigado2 quedó en 114 y el experto en 9. Los fallos de `ex-03`, `ex-15` y `hx-05` no pasan por el código nuevo del chat. Se tratan como variación entre pasadas. `ex-09` es otro fallo y no entra en esta propuesta.
+En la medición de `d124e4c`, el experto queda en 9,25 frente a 9,5 de referencia, en el límite. `ex-03`, `ex-15` y `hx-05` tienen pinta de falso positivo del detector de negativa por longitud: la rúbrica pide cuatro frases de más de 35 caracteres y, si no llegan, dice «negativa o redirección sin contenido». No pasan por el código nuevo del chat. `ex-09` es otro fallo y no entra en esta propuesta.
 
 La rúbrica `experto` cuenta frases de más de 35 caracteres que no coinciden con el cepillo de descarte. Si, sin trampa, quedan menos de cuatro, la razón es «negativa o redirección sin contenido».
 
