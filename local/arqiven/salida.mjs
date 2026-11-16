@@ -283,6 +283,7 @@ const CLAVE_INDICIOS = "El trabajador aporta indicios y la empresa debe probar u
 const CLAVE_PROCEDENTE = "El despido procedente, si es objetivo, da 20 días de salario por año de servicio, con un máximo de doce mensualidades.";
 const CLAVE_IMPROCEDENTE = "El despido improcedente da 33 días de salario por año, con un tope de 24 mensualidades.";
 const CLAVE_556 = "El despido nulo obliga a la readmisión y a los salarios de tramitación (artículo 55.6).";
+const URL_2 = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589#a2";
 const URL_26 = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589#a26";
 const URL_30 = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589#a30";
 const URL_53 = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a53";
@@ -327,10 +328,14 @@ export function completeDespido(answer) {
     lines.push(CLAVE_556);
     urls.push(URL_55);
   }
+  if (hasArticle(text, "2.1")) urls.push(URL_2);
+  if (hasArticle(text, "26")) urls.push(URL_26);
+  const fuentes = [...new Set(urls)];
   if (lines.length) {
-    const fuentes = [...new Set(urls)];
     const cola = fuentes.length ? `\n\nFuentes: ${fuentes.join(" ")}` : "";
     text = `${text.trim()}\n\nClaves legales\n\n${lines.join("\n")}${cola}`.trim();
+  } else if (fuentes.length) {
+    text = `${text.trim()}\n\nFuentes: ${fuentes.join(" ")}`.trim();
   }
   if (!text.includes("[despido-baja]")) text = `${text.trim()} [despido-baja]`.trim();
   return text;

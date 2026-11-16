@@ -383,6 +383,28 @@ describe("conjunto fijo de 100 casos", () => {
     const despues = completo.split("Fuentes:")[1] || "";
     assert.deepEqual(hostsOf(antes), []);
     assert.equal(hostsOf(despues).every((host) => host === "www.boe.es"), true);
+    const hashes = [...despues.matchAll(/https?:\/\/[^\s)]+/g)].map((item) => {
+      try {
+        return new URL(item[0]).hash;
+      } catch {
+        return "";
+      }
+    });
+    assert.equal(hashes.includes("#a2"), true);
+    assert.equal(hashes.includes("#a26"), true);
+    const yaCitados = [
+      "El despido es nulo si el motivo es la enfermedad (Ley 15/2022, arts. 2.1 y 26).",
+      "El trabajador aporta indicios y la empresa debe probar una justificación objetiva y razonable (artículo 30).",
+      "El despido procedente, si es objetivo, da 20 días de salario por año de servicio.",
+      "El despido improcedente da 33 días de salario por año, con un tope de 24 mensualidades.",
+      "El despido nulo obliga a la readmisión y a los salarios de tramitación (artículo 55.6).",
+    ].join(" ");
+    const soloFuentes = salida.completeDespido(yaCitados);
+    assert.equal(soloFuentes.includes("Claves legales"), false);
+    assert.equal((soloFuentes.match(/es nulo si el motivo es la enfermedad/gi) || []).length, 1);
+    const hashesYa = [...(soloFuentes.split("Fuentes:")[1] || "").matchAll(/https?:\/\/[^\s)]+/g)].map((item) => new URL(item[0]).hash);
+    assert.equal(hashesYa.includes("#a2"), true);
+    assert.equal(hashesYa.includes("#a26"), true);
     assert.equal((completo.match(/55\.6/g) || []).length, 1);
     assert.equal(completo.includes("artículo 26"), false);
     const porArticulos = salida.completeDespido("El despido es nulo si el motivo es la enfermedad (artículos 2.1 y 26).");
