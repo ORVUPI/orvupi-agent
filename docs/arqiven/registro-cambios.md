@@ -41,4 +41,4 @@ Fecha: 15 de noviembre de 2026, con los informes del PC hasta las 22:03 (Madrid)
 
 ## Lectura corta
 
-En el PC, `53d4edd` se revirtió a `d124e4c`: la hipoteca arrastraba la nota del sueño. Una nota solo entra si la pregunta es de ese tema. El chat responde en español o en inglés, el idioma del mensaje, y las peticiones de fuentes valen en los dos. El examen no cambia. No hay entrenamiento.
+En el PC, `c6059ff` se revirtió a `d124e4c`. El sueño en español se quedó sin cafeína y el inglés no estaba apoyado en las notas. Una pregunta de sueño, de café, de insomnio o de dormir vuelve a traer la nota y la frase de la cafeína. El despido con fuentes conserva el enlace del artículo 26 y corrige «no nula». En inglés, el despido, las inversiones, la contraseña y 1914 usan el mismo arreglo. El examen no cambia. No hay entrenamiento.

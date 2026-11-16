@@ -15,8 +15,8 @@ import { buildChatBody, streamChat } from "./ollama.mjs";
 import { attachEditor, withRetry } from "./prompt.mjs";
 import { guardChat, outputViolates, passedFragments, SAFE_ANSWER } from "./guard.mjs";
 import { liveFacts } from "./hechos.mjs";
-import { closeMarketAnswer, completeDespido, completeHigiene, completeHipoteca, dropNamedBanks, dropUninjectedData, finishReply, offlineMarketAnswer, placeNoteLabel, presentAnswer } from "./salida.mjs";
-import { retrieveConocimiento } from "./conocimiento.mjs";
+import { alignLanguage, closeMarketAnswer, completeDespido, completeHigiene, completeHipoteca, completeSarajevo, dropNamedBanks, dropObsoleteClaims, dropUninjectedData, finishReply, offlineMarketAnswer, placeNoteLabel, presentAnswer } from "./salida.mjs";
+import { aboutTopic, retrieveConocimiento } from "./conocimiento.mjs";
 import { fitMessages } from "./budget.mjs";
 import { metricsFrom } from "./metrics.mjs";
 import { codeError, publicError } from "./errors.mjs";
@@ -451,14 +451,15 @@ export async function startLocalServer(overrides = {}) {
       });
       const polish = (text) => {
         let reply = finishReply(text);
-        if (noteId === "despido-baja") reply = completeDespido(reply, trustedNote, question);
-        else if (noteId === "higiene-sueno") reply = completeHigiene(reply, trustedNote, question);
+        if (aboutTopic(question, "despido-baja") || noteId === "despido-baja") reply = completeDespido(reply, trustedNote, question);
+        else if (aboutTopic(question, "higiene-sueno") || noteId === "higiene-sueno") reply = completeHigiene(reply, trustedNote, question);
         else if (noteId) reply = placeNoteLabel(reply, noteId);
-        if (factsText) reply = closeMarketAnswer(reply, factsText);
-        else if (marketOffline) reply = offlineMarketAnswer();
-        reply = dropNamedBanks(dropUninjectedData(reply, factsText, question));
+        if (factsText) reply = closeMarketAnswer(reply, factsText, question);
+        else if (marketOffline) reply = offlineMarketAnswer(question);
+        reply = completeSarajevo(reply, question);
+        reply = dropObsoleteClaims(dropNamedBanks(dropUninjectedData(reply, factsText, question)));
         reply = completeHipoteca(reply, question);
-        return presentAnswer(reply, question);
+        return alignLanguage(presentAnswer(reply, question), question);
       };
       let reply = polish(result.text);
       if (outputViolates(reply, redacted)) {

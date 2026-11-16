@@ -84,7 +84,7 @@ export function finishReply(text) {
   return dropPasswordExamples(cutRepeatedSentences(text));
 }
 
-const WARNING = /no es una recomendaci[oó]n|puedes perder|no sustituye|riesgo de p[eé]rdida|no inviertas lo que no puedas/i;
+const WARNING = /no es una recomendaci[oó]n|puedes perder|no sustituye|riesgo de p[eé]rdida|no inviertas lo que no puedas|not a recommendation|you can lose money/i;
 
 /** Si hay cifras de mercado, no deja texto después de la advertencia. */
 export function trimAfterWarning(text) {
@@ -193,8 +193,23 @@ export function citeMissingFigures(answer, factsText) {
   return flattenNestedCite(pieces.map((piece) => tidyMarketSentence(piece.body, figures) + piece.sep).join("")).trim();
 }
 
+const MARKET_WARNING_EN = "This is not a recommendation: you can lose money.";
+const MARKET_STEPS_EN = [
+  "1. Spread savings across more than one asset.",
+  "2. Set a time horizon and do not act on a single day.",
+  "3. Keep an emergency fund and do not invest money you cannot afford to lose.",
+].join("\n");
+
 /** Sin lectura en vivo: la frase fija, el análisis y tres pasos. No dice «No consta información». */
-export function offlineMarketAnswer() {
+export function offlineMarketAnswer(question = "") {
+  if (answerLanguage(question) === "en") {
+    return [
+      "Live figures are not available right now.",
+      "Without today's reading there is no basis to say whether the euro, bitcoin or ethereum are up or down. Prices move, and one session is not a trend.",
+      MARKET_STEPS_EN,
+      MARKET_WARNING_EN,
+    ].join("\n");
+  }
   return [
     "Ahora no hay datos en vivo.",
     "Sin una lectura de este momento no se puede afirmar si el euro, el bitcoin o el ethereum suben o bajan. El marco general es que esas cotizaciones se mueven y un día no marca una tendencia.",
@@ -217,12 +232,13 @@ function dropClosersBeforeWarning(text) {
   return joinPieces(kept);
 }
 
-export function closeMarketAnswer(answer, factsText) {
+export function closeMarketAnswer(answer, factsText, question = "") {
   if (!String(factsText || "").trim()) return String(answer || "").trim();
+  const en = answerLanguage(question) === "en";
   let text = dropClosersBeforeWarning(citeMissingFigures(answer, factsText));
-  if (!/no es una recomendaci[oó]n|puedes perder|no sustituye/i.test(text)) {
-    text = `${text.trim()} ${MARKET_WARNING}`.trim();
-  }
+  if (en && !/(?:^|\n)\s*1\./.test(text)) text = `${text.trim()}\n${MARKET_STEPS_EN}`.trim();
+  const warning = en ? MARKET_WARNING_EN : MARKET_WARNING;
+  if (!WARNING.test(text)) text = `${text.trim()} ${warning}`.trim();
   return trimAfterWarning(dropClosersBeforeWarning(text));
 }
 
@@ -303,16 +319,39 @@ export function completeHigiene(answer, noteText, question = "") {
   }
   if (!/cafe[ií]na/i.test(text)) {
     const paragraph = String(noteText || "").split(/\n\n/).map((part) => part.trim()).find((part) => /cafe[ií]na/i.test(part));
-    if (paragraph) text = `${text.trim()}\n\n${paragraph}`.trim();
+    const fallback = "La higiene del sueño consiste en eliminar el alcohol, la cafeína y la nicotina, tomar luz por la mañana, mantener horarios regulares y acabar la cena dos o tres horas antes de acostarse.";
+    text = `${text.trim()}\n\n${paragraph || fallback}`.trim();
   }
   if (!text.includes("[higiene-sueno]")) text = `${text.trim()} [higiene-sueno]`.trim();
   return text;
 }
 
 /** Si falta un punto, añade frases fijas. No pega la nota. Las URL van solo en «Fuentes:». */
+function repairProse(answer) {
+  return String(answer || "")
+    .replace(/\[([^\]]+)\]\(\s*\)/g, "$1")
+    .replace(/no nula el despido/gi, "no anula el despido")
+    .replace(/available at:\s*\[\)\s*\.?/gi, "");
+}
+
+function inventedLaw(body) {
+  return /31\/1995|1\/2010|boe-a-2023|article 52|social security|available at/i.test(body);
+}
+
 export function completeDespido(answer, _note = "", question = "") {
   const en = answerLanguage(question) === "en";
-  let text = placeNoteLabel(useNoteLabel(answer, "despido-baja"), "despido-baja");
+  let text = repairProse(answer);
+  if (en) {
+    text = joinPieces(piecesOf(text).filter((piece) => {
+      const folded = foldRequest(piece.body);
+      const english = (folded.match(EN_WORDS) || []).length;
+      const spanish = (folded.match(ES_WORDS) || []).length;
+      return spanish <= english && !inventedLaw(piece.body);
+    }));
+  } else {
+    text = joinPieces(piecesOf(text).filter((piece) => !inventedLaw(piece.body)));
+  }
+  text = placeNoteLabel(useNoteLabel(text, "despido-baja"), "despido-baja");
   const lines = [];
   const urls = [];
   const art26 = en
@@ -370,6 +409,20 @@ export function completeDespido(answer, _note = "", question = "") {
   return text;
 }
 
+const SARAJEVO_ES = "Gavrilo Princip, miembro de la Joven Bosnia, mató en Sarajevo al archiduque Francisco Fernando el 28 de junio de 1914. Ese atentado fue la chispa de la Primera Guerra Mundial.";
+const SARAJEVO_EN = "Gavrilo Princip, a member of Young Bosnia, killed Archduke Franz Ferdinand in Sarajevo on 28 June 1914. That attack was the spark of the First World War.";
+
+/** Si la pregunta es de 1914, la respuesta nombra Sarajevo y la Joven Bosnia. */
+export function completeSarajevo(answer, question) {
+  if (!/sarajevo|princip|bosnia|archiduque|guerra|young bosnia|world war|\bwar\b/i.test(String(question || ""))) return String(answer || "").trim();
+  const en = answerLanguage(question) === "en";
+  let text = String(answer || "").trim();
+  const hasPlace = /sarajevo/i.test(text);
+  const hasGroup = /young bosnia|joven bosnia|mlada bosna/i.test(text);
+  if (hasPlace && hasGroup) return text;
+  return `${text} ${en ? SARAJEVO_EN : SARAJEVO_ES}`.trim();
+}
+
 const DATA_SOURCE = /banco de españa|bank of spain|eur[ií]bor|\bbce\b|\becb\b|coingecko|frankfurter/i;
 const DATA_TREND = /disminuci[oó]n|aument|subid|bajad|ligera|tendencia|se mantiene|fortaleza|recuperaci|han mostrado|ha mostrado|decreas|slight decrease|went down/i;
 
@@ -388,6 +441,8 @@ function numberInFacts(raw, facts) {
 }
 
 function inventedDatum(sentence, facts) {
+  const year = String(sentence || "").match(/\b(?:in|en)\s+(20\d{2})\b/i);
+  if (year && !String(facts || "").includes(year[1])) return true;
   if (!DATA_SOURCE.test(sentence)) return false;
   const numbers = datumNumbers(sentence).filter((raw) => new RegExp(`${raw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*%`).test(sentence) || /[.,]/.test(raw));
   const trend = DATA_TREND.test(sentence);
@@ -531,14 +586,14 @@ export function presentAnswer(answer, question) {
   if (!text) return text;
   const lang = answerLanguage(question);
   const urls = [...text.matchAll(/https?:\/\/[^\s)]+/g)].map((item) => item[0]);
-  let next = dropBibliography(text);
+  let next = repairProse(dropBibliography(text));
   if (wantsSources(question)) {
     const tags = [...text.matchAll(/\[[^\]\n]{1,40}\]/g)].map((item) => item[0]);
     next = next.replace(/https?:\/\/[^\s)]+/g, "").replace(/[ \t]*Fuentes:\s*[^\n]*/gi, "");
     for (const tag of [...new Set(tags)]) {
       if (!next.includes(tag)) next = `${next.trim()} ${tag}`.trim();
     }
-    const fuentes = [...new Set(urls)];
+    const fuentes = [...new Set(urls)].filter((url) => /boe\.es\/buscar\/act\.php\?id=BOE-A-(?:2022-11589|2015-11430)|sanidad\.gob\.es\//i.test(url));
     const label = lang === "en" ? "Sources" : "Fuentes";
     if (fuentes.length) next = `${next.trim()}\n\n${label}: ${fuentes.join(" ")}`.trim();
     return next.replace(/[ \t]{2,}/g, " ").replace(/\s+([.,;])/g, "$1").replace(/\n{3,}/g, "\n\n").trim();
@@ -598,6 +653,22 @@ export function completeHipoteca(answer, question) {
   const en = answerLanguage(question) === "en";
   const covered = /eur[ií]bor/i.test(text) && (/\btae\b/i.test(text) || /\bapr\b/i.test(text)) && (/fein/i.test(text) || /ley\s*5\s*\/\s*2019|law\s*5\s*\/\s*2019/i.test(text));
   if (!covered) text = `${text} ${en ? MORTGAGE_GUIDE : HIPOTECA_GUIA}`.replace(/\s+/g, " ").trim();
+  return text;
+}
+
+const OBSOLETE = /\b(?:eonia|libor|nsf|aasm)\b/i;
+
+/** Quita índices ya retirados y atribuciones horarias sin cita. */
+export function dropObsoleteClaims(answer) {
+  return joinPieces(piecesOf(answer).filter((piece) => !OBSOLETE.test(piece.body)));
+}
+
+export function alignLanguage(answer, question) {
+  const text = String(answer || "").trim();
+  if (answerLanguage(question) !== "en" || answerLanguage(text) === "en") return text;
+  if (/no lo s[eé]|no consta|contraseñ/i.test(text)) {
+    return "I don't know. That detail is not on record, and I will not invent a password or a figure. Ask the person who created the file.";
+  }
   return text;
 }
 

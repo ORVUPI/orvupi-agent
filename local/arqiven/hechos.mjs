@@ -1,6 +1,6 @@
 /** Lecturas públicas de solo lectura. Si fallan, no se inventa ninguna cifra. */
 
-const LIVE = /\b(inversi[oó]n(?:es)?|bolsa|mercados?|acciones|bonos|criptomonedas?|cripto|bitcoin|ethereum|divisas?|inflaci[oó]n|tipos de inter[eé]s|cotizaci[oó]n)\b/i;
+const LIVE = /\b(inversi[oó]n(?:es)?|bolsa|mercados?|acciones|bonos|criptomonedas?|cripto|bitcoin|ethereum|divisas?|inflaci[oó]n|tipos de inter[eé]s|cotizaci[oó]n|investments?|stocks?|shares|markets?|currenc(?:y|ies)|inflation)\b/i;
 
 export function wantsLiveFacts(question) {
   return LIVE.test(String(question || ""));

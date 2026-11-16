@@ -42,9 +42,9 @@ export function distinctiveTokens(docs) {
 }
 
 const TOPIC = {
-  "higiene-sueno": /sueñ|sueno|higiene|insomnio|cafe[ií]na/i,
-  "despido-baja": /despid|desped/i,
-  "sarajevo-1914": /sarajevo|princip|guerra|bosnia|archiduque/i,
+  "higiene-sueno": /sueñ|sueno|higiene|insomnio|cafe[ií]na|\bcaf[eé]\b|dormir|sleep|caffeine/i,
+  "despido-baja": /despid|desped|dismiss/i,
+  "sarajevo-1914": /sarajevo|princip|bosnia|archiduque|guerra|young bosnia|world war|\bwar\b/i,
 };
 
 export function aboutTopic(question, id) {
@@ -59,10 +59,11 @@ export function matchConocimiento(question, docs) {
   const ranked = docs.map((doc, index) => ({
     doc,
     words: own[index].filter((token) => asked.has(token)),
-  })).filter((row) => row.words.length >= 2 && aboutTopic(question, row.doc.id));
+  })).filter((row) => aboutTopic(question, row.doc.id));
   ranked.sort((a, b) => b.words.length - a.words.length);
   if (!ranked.length) return null;
-  if (ranked[1] && ranked[1].words.length === ranked[0].words.length) return null;
+  if (ranked.length === 1) return ranked[0];
+  if (ranked[1].words.length === ranked[0].words.length) return null;
   return ranked[0];
 }
 
