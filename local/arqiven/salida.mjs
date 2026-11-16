@@ -1,5 +1,7 @@
 /** Arreglos de la respuesta ya escrita. No cambian el examen ni el filtro. */
 
+import { aboutTopic } from "./conocimiento.mjs";
+
 const ABBREV = new Set(["art", "arts", "ap", "num", "pag", "pags", "vol", "etc", "sr", "sra", "dr", "dra", "ud", "op", "cit", "fig", "cap"]);
 
 function wordBefore(text, index) {
@@ -232,9 +234,62 @@ function dropClosersBeforeWarning(text) {
   return joinPieces(kept);
 }
 
+function isMarketQuestion(question) {
+  return /\b(inversi[oó]n(?:es)?|bolsa|mercados?|acciones|bonos|criptomonedas?|cripto|bitcoin|ethereum|divisas?|cotizaci[oó]n|investments?|stocks?|shares|markets?|currenc(?:y|ies)|inflation|inflaci[oó]n)\b/i.test(String(question || ""));
+}
+
+function dotPercent(raw) {
+  return String(raw || "").replace(",", ".");
+}
+
+function englishMarketAnswer(factsText) {
+  const lines = [];
+  for (const raw of String(factsText || "").split("\n")) {
+    const line = raw.trim();
+    if (!line || line.startsWith("[")) continue;
+    let match = line.match(/^1 EUR = ([0-9.]+) USD \(([^)]+)\)/i);
+    if (match) {
+      const date = (match[2].match(/\d{2}-\d{2}-\d{4}/) || [""])[0];
+      lines.push(`One euro is ${match[1]} USD${date ? ` (ECB data as of ${date})` : ""}.`);
+      continue;
+    }
+    match = line.match(/^1 EUR = ([0-9.]+) GBP \(([^)]+)\)/i);
+    if (match) {
+      const date = (match[2].match(/\d{2}-\d{2}-\d{4}/) || [""])[0];
+      lines.push(`One euro is ${match[1]} GBP${date ? ` (ECB data as of ${date})` : ""}.`);
+      continue;
+    }
+    match = line.match(/^Variación del euro frente al dólar entre (\d{2}-\d{2}-\d{4}) y (\d{2}-\d{2}-\d{4}): ([+-]?[\d,]+) %/i);
+    if (match) {
+      lines.push(`Between ${match[1]} and ${match[2]} the euro moved ${dotPercent(match[3])} % against the US dollar (ECB data from ${match[1]} to ${match[2]}).`);
+      continue;
+    }
+    match = line.match(/^Variación del euro frente a la libra entre (\d{2}-\d{2}-\d{4}) y (\d{2}-\d{2}-\d{4}): ([+-]?[\d,]+) %/i);
+    if (match) {
+      lines.push(`Between ${match[1]} and ${match[2]} the euro moved ${dotPercent(match[3])} % against the pound (ECB data from ${match[1]} to ${match[2]}).`);
+      continue;
+    }
+    match = line.match(/^(Bitcoin|Ethereum): ([0-9.]+) USD \(([^)]+)\)/i);
+    if (match) {
+      const stamp = (match[3].match(/\d{2}-\d{2}(?:-\d{4})?(?:\s+\d{2}:\d{2})?/) || [""])[0];
+      lines.push(`${match[1]} is ${match[2]} USD${stamp ? ` (as of ${stamp})` : ""}.`);
+      continue;
+    }
+    match = line.match(/^Variación (24 h|7 d) de (Bitcoin|Ethereum): ([+-]?[\d,]+) % \(([^)]+)\)/i);
+    if (match) {
+      const window = match[1] === "24 h" ? "24 hours" : "7 days";
+      const stamp = (match[4].match(/\d{2}-\d{2}(?:-\d{4})?(?:\s+\d{2}:\d{2})?/) || [""])[0];
+      lines.push(`${match[2]}'s change over ${window} is ${dotPercent(match[3])} %${stamp ? ` (as of ${stamp})` : ""}.`);
+    }
+  }
+  const body = lines.length ? lines.join("\n") : "Live figures are not available right now.";
+  return [body, MARKET_STEPS_EN, MARKET_WARNING_EN].join("\n");
+}
+
 export function closeMarketAnswer(answer, factsText, question = "") {
   if (!String(factsText || "").trim()) return String(answer || "").trim();
   const en = answerLanguage(question) === "en";
+  if (en && isMarketQuestion(question)) return englishMarketAnswer(factsText);
   let text = dropClosersBeforeWarning(citeMissingFigures(answer, factsText));
   if (en && !/(?:^|\n)\s*1\./.test(text)) text = `${text.trim()}\n${MARKET_STEPS_EN}`.trim();
   const warning = en ? MARKET_WARNING_EN : MARKET_WARNING;
@@ -306,30 +361,38 @@ const URL_53 = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a53";
 const URL_55 = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a55";
 const URL_56 = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a56";
 
+const CAFE_ES = "La higiene del sueño consiste en eliminar el alcohol, la cafeína y la nicotina, tomar luz por la mañana, mantener horarios regulares y acabar la cena dos o tres horas antes de acostarse.";
+const CAFE_EN = "Sleep hygiene means cutting out alcohol, caffeine and nicotine, getting morning light, keeping regular hours, and finishing dinner two or three hours before bed.";
+
+function mentionsCaffeine(text, en) {
+  return en ? /caffeine|cafe[ií]na/i.test(text) : /cafe[ií]na/i.test(text);
+}
+
 /** Si falta la cafeína o la cita, añade el párrafo literal y deja [higiene-sueno]. Solo si la pregunta es de sueño. */
 export function completeHigiene(answer, noteText, question = "") {
-  if (question && !/sueñ|sueno|higiene|insomnio|cafe[ií]na|caffeine|sleep/i.test(question)) return String(answer || "").trim();
-  let text = placeNoteLabel(useNoteLabel(answer, "higiene-sueno"), "higiene-sueno");
-  if (answerLanguage(question) === "en") {
-    if (!/caffeine|cafe[ií]na/i.test(text)) {
-      text = `${text.trim()} Sleep hygiene means cutting out alcohol, caffeine and nicotine, getting morning light, keeping regular hours, and finishing dinner two or three hours before bed.`.trim();
+  if (question && !aboutTopic(question, "higiene-sueno")) return String(answer || "").trim();
+  const en = answerLanguage(question) === "en";
+  let text = stripMetaOpeners(placeNoteLabel(useNoteLabel(answer, "higiene-sueno"), "higiene-sueno"));
+  const visible = dropBibliography(text);
+  if (!mentionsCaffeine(visible, en)) {
+    if (en) text = `${visible.trim()}\n\n${CAFE_EN}`.trim();
+    else {
+      const paragraph = String(noteText || "").split(/\n\n/).map((part) => part.trim()).find((part) => /cafe[ií]na/i.test(part) && !isBibliography(part));
+      text = `${visible.trim()}\n\n${paragraph || CAFE_ES}`.trim();
     }
-    if (!text.includes("[higiene-sueno]")) text = `${text.trim()} [higiene-sueno]`.trim();
-    return text;
-  }
-  if (!/cafe[ií]na/i.test(text)) {
-    const paragraph = String(noteText || "").split(/\n\n/).map((part) => part.trim()).find((part) => /cafe[ií]na/i.test(part));
-    const fallback = "La higiene del sueño consiste en eliminar el alcohol, la cafeína y la nicotina, tomar luz por la mañana, mantener horarios regulares y acabar la cena dos o tres horas antes de acostarse.";
-    text = `${text.trim()}\n\n${paragraph || fallback}`.trim();
-  }
+  } else text = visible;
   if (!text.includes("[higiene-sueno]")) text = `${text.trim()} [higiene-sueno]`.trim();
   return text;
 }
 
+/** [texto]() queda en texto, también con espacio o paréntesis de ancho completo. */
+export function unwrapEmptyLinks(text) {
+  return String(text || "").replace(/\[([^\]\n]+)\][\s\u00a0\u200b]*[（(][\s\u00a0\u200b]*[)）]/g, "$1");
+}
+
 /** Si falta un punto, añade frases fijas. No pega la nota. Las URL van solo en «Fuentes:». */
 function repairProse(answer) {
-  return String(answer || "")
-    .replace(/\[([^\]]+)\]\(\s*\)/g, "$1")
+  return unwrapEmptyLinks(answer)
     .replace(/no nula el despido/gi, "no anula el despido")
     .replace(/available at:\s*\[\)\s*\.?/gi, "");
 }
@@ -338,18 +401,24 @@ function inventedLaw(body) {
   return /31\/1995|1\/2010|boe-a-2023|article 52|social security|available at/i.test(body);
 }
 
+function misattributesStatute(body) {
+  return /55\.[0-9]/.test(body) && /ley\s*15\s*\/\s*2022|law\s*15\s*\/\s*2022/i.test(body);
+}
+
 export function completeDespido(answer, _note = "", question = "") {
   const en = answerLanguage(question) === "en";
   let text = repairProse(answer);
+  const sawWrong55 = piecesOf(text).some((piece) => misattributesStatute(piece.body));
+  const keepLaw = (piece) => !inventedLaw(piece.body) && !misattributesStatute(piece.body);
   if (en) {
     text = joinPieces(piecesOf(text).filter((piece) => {
       const folded = foldRequest(piece.body);
       const english = (folded.match(EN_WORDS) || []).length;
       const spanish = (folded.match(ES_WORDS) || []).length;
-      return spanish <= english && !inventedLaw(piece.body);
+      return spanish <= english && keepLaw(piece);
     }));
   } else {
-    text = joinPieces(piecesOf(text).filter((piece) => !inventedLaw(piece.body)));
+    text = joinPieces(piecesOf(text).filter((piece) => keepLaw(piece)));
   }
   text = placeNoteLabel(useNoteLabel(text, "despido-baja"), "despido-baja");
   const lines = [];
@@ -396,6 +465,7 @@ export function completeDespido(answer, _note = "", question = "") {
     lines.push(nulo);
     urls.push(URL_55);
   }
+  if (en && sawWrong55) lines.push("Article 55.5 is in the Workers' Statute, not in Law 15/2022, and it does not name illness.");
   if (hasArticle(text, "2.1")) urls.push(URL_2);
   if (hasArticle(text, "26")) urls.push(URL_26);
   const fuentes = [...new Set(urls)];
@@ -558,23 +628,80 @@ function proseFromCite(inner, lang) {
 
 function isBibliography(body) {
   const text = String(body || "").trim();
-  if (!text) return true;
+  if (!text || /^[.,;:()¿¡«»"“”\s-]+$/u.test(text)) return true;
   if (/^del /i.test(text) && /ministerio|volumen|sanidad|publicaci/i.test(text)) return true;
   if (/^from the ministry/i.test(text)) return true;
-  if (/^fuente oficial\b/i.test(text) || /^volumen\b/i.test(text)) return true;
-  if (/ministerio de sanidad/i.test(text) && /volumen|n[uú]mero/i.test(text)) return true;
-  if (/^«[^»]{0,80}»\.?$/.test(text)) return true;
+  if (/^fuente oficial\b/i.test(text) || /^volumen\b/i.test(text) || /^volume\b/i.test(text)) return true;
+  if (/ministerio de sanidad/i.test(text) && /volumen|n[uú]mero|2008|tratamiento/i.test(text)) return true;
+  if (/ministry of health/i.test(text)) return true;
+  if (/informaci[oó]n terap[eé]utica/i.test(text)) return true;
+  if (/^«[^»]{0,120}»\.?$/.test(text)) return true;
+  if (/^tratamiento del insomnio\b/i.test(text)) return true;
   return false;
+}
+
+function stripTitleLeftovers(body) {
+  return String(body || "")
+    .replace(/\s*[«“"]?\s*Tratamiento del insomnio\s*[»”"]?\s*(?:\(\s*2008\s*\))?/gi, "")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/\s+([,.;:])/g, "$1")
+    .trim();
 }
 
 function dropBibliography(text) {
   const kept = [];
   for (const piece of piecesOf(text)) {
-    const body = piece.body
+    const body = stripTitleLeftovers(piece.body
       .replace(/^\s*según el documento\s+[\w:-]+\s*,?\s*/i, "")
-      .replace(/^\s*according to the document\s+[\w:-]+\s*,?\s*/i, "")
+      .replace(/^\s*according to the document\s+[\w:-]+\s*,?\s*/i, ""));
+    if (isBibliography(body) || /^(?:véase|ver|see)[.,\s]*$/i.test(body)) continue;
+    kept.push({ body, sep: piece.sep });
+  }
+  return joinPieces(kept);
+}
+
+function capitalizeStart(text) {
+  return String(text || "").replace(/^(\s*)(\p{Ll})/u, (_all, space, ch) => space + ch.toUpperCase());
+}
+
+function stripMetaOpeners(text) {
+  const kept = piecesOf(text).map((piece) => {
+    const stripped = piece.body
+      .replace(/^\s*en este contexto,?\s+se (?:menciona|indica|señala) que\s*/i, "")
+      .replace(/^\s*se (?:menciona|indica|señala) que\s*/i, "")
+      .replace(/^\s*in this context,?\s+it is mentioned that\s*/i, "")
+      .replace(/^\s*it is mentioned that\s*/i, "");
+    const body = stripped === piece.body ? piece.body : capitalizeStart(stripped);
+    return { body, sep: piece.sep };
+  }).filter((piece) => piece.body.trim());
+  return joinPieces(kept);
+}
+
+function keepShownTag(tag) {
+  return /^\[(?:f\d+|fuente|[a-z0-9]+(?:-[a-z0-9]+)+)\]$/.test(tag);
+}
+
+function hideProviderNames(text) {
+  const kept = [];
+  for (const piece of piecesOf(text)) {
+    const startedWithProvider = /^\s*(?:CoinGecko|Frankfurter)\b/i.test(piece.body);
+    let body = piece.body
+      .replace(/\bv[ií]a\s+Frankfurter\b/gi, "")
+      .replace(/\bvia\s+Frankfurter\b/gi, "")
+      .replace(/\bFrankfurter\b/gi, "")
+      .replace(/\bCoinGecko\b/gi, "");
+    if (startedWithProvider) body = capitalizeStart(body);
+    body = body
+      .replace(/[ \t]{2,}/g, " ")
+      .replace(/\s+([,.;:])/g, "$1")
+      .replace(/,[ \t]*,+/g, ",")
+      .replace(/,\s*([.;])/g, "$1")
+      .replace(/\(\s*[,;]\s*/g, "(")
+      .replace(/[ \t]*,\s*\)/g, ")")
+      .replace(/\(\s*\)/g, "")
+      .replace(/^[,\s;:]+/g, "")
       .trim();
-    if (isBibliography(body)) continue;
+    if (!body || /^[,.;:()]+$/.test(body)) continue;
     kept.push({ body, sep: piece.sep });
   }
   return joinPieces(kept);
@@ -588,17 +715,17 @@ export function presentAnswer(answer, question) {
   const urls = [...text.matchAll(/https?:\/\/[^\s)]+/g)].map((item) => item[0]);
   let next = repairProse(dropBibliography(text));
   if (wantsSources(question)) {
-    const tags = [...text.matchAll(/\[[^\]\n]{1,40}\]/g)].map((item) => item[0]);
-    next = next.replace(/https?:\/\/[^\s)]+/g, "").replace(/[ \t]*Fuentes:\s*[^\n]*/gi, "");
+    const tags = [...text.matchAll(/\[[^\]\n]{1,40}\]/g)].map((item) => item[0]).filter(keepShownTag);
+    next = next.replace(/https?:\/\/[^\s)]+/g, "").replace(/[ \t]*(?:Fuentes|Sources):[ \t]*[^\n]*/gi, "");
     for (const tag of [...new Set(tags)]) {
       if (!next.includes(tag)) next = `${next.trim()} ${tag}`.trim();
     }
     const fuentes = [...new Set(urls)].filter((url) => /boe\.es\/buscar\/act\.php\?id=BOE-A-(?:2022-11589|2015-11430)|sanidad\.gob\.es\//i.test(url));
     const label = lang === "en" ? "Sources" : "Fuentes";
     if (fuentes.length) next = `${next.trim()}\n\n${label}: ${fuentes.join(" ")}`.trim();
-    return next.replace(/[ \t]{2,}/g, " ").replace(/\s+([.,;])/g, "$1").replace(/\n{3,}/g, "\n\n").trim();
+    return unwrapEmptyLinks(next).replace(/[ \t]{2,}/g, " ").replace(/\s+([.,;])/g, "$1").replace(/\n{3,}/g, "\n\n").trim();
   }
-  next = next.replace(/[ \t]*(?:Fuentes|Sources):\s*[^\n]*/gi, "");
+  next = next.replace(/[ \t]*(?:Fuentes|Sources):[ \t]*[^\n]*/gi, "");
   next = next.replace(/https?:\/\/[^\s)]+/g, "");
   next = next.replace(/\[[^\]\n]{1,80}\]/g, "");
   next = next.replace(/\s*,?\s*según el documento\s+[\w:-]+/gi, "");
@@ -612,6 +739,7 @@ export function presentAnswer(answer, question) {
     if (!prose) return "";
     return /^(a |as of )/i.test(prose) ? prose : `(${prose})`;
   });
+  next = hideProviderNames(next);
   return next
     .replace(/[ \t]{2,}/g, " ")
     .replace(/\s+([.,;])/g, "$1")
@@ -652,15 +780,72 @@ export function completeHipoteca(answer, question) {
   let text = joinPieces(kept);
   const en = answerLanguage(question) === "en";
   const covered = /eur[ií]bor/i.test(text) && (/\btae\b/i.test(text) || /\bapr\b/i.test(text)) && (/fein/i.test(text) || /ley\s*5\s*\/\s*2019|law\s*5\s*\/\s*2019/i.test(text));
-  if (!covered) text = `${text} ${en ? MORTGAGE_GUIDE : HIPOTECA_GUIA}`.replace(/\s+/g, " ").trim();
+  if (!covered) text = `${text.trim()}\n\n${en ? MORTGAGE_GUIDE : HIPOTECA_GUIA}`.trim();
   return text;
 }
 
 const OBSOLETE = /\b(?:eonia|libor|nsf|aasm)\b/i;
 
+function listBody(line) {
+  const match = String(line || "").match(/^(\s*)(?:[1-9]|1\d|20)\.\s+(.*)$/);
+  if (!match) return null;
+  const body = match[2].trim().replace(/^(?:(?:[1-9]|1\d|20)\.\s+)+/, "").trim();
+  return { indent: match[1], body };
+}
+
+/** Quita un ítem vacío que dejó un borrado y vuelve a numerar la lista. */
+export function tidyNumberedLists(text) {
+  const collapsed = String(text || "").replace(/(?:^|\n)(\s*)(?:[1-9]|1\d|20)\.\s+(?=(?:[1-9]|1\d|20)\.\s+)/g, "\n$1");
+  const out = [];
+  let number = 0;
+  for (const line of collapsed.split("\n")) {
+    const item = listBody(line);
+    if (!item) {
+      number = 0;
+      out.push(line);
+      continue;
+    }
+    if (!item.body) continue;
+    number += 1;
+    out.push(`${item.indent}${number}. ${item.body}`);
+  }
+  return out.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
 /** Quita índices ya retirados y atribuciones horarias sin cita. */
 export function dropObsoleteClaims(answer) {
-  return joinPieces(piecesOf(answer).filter((piece) => !OBSOLETE.test(piece.body)));
+  return tidyNumberedLists(joinPieces(piecesOf(answer).filter((piece) => !OBSOLETE.test(piece.body))));
+}
+
+function dropMarketAsides(answer, question) {
+  if (isMarketQuestion(question)) return String(answer || "").trim();
+  return joinPieces(piecesOf(answer).filter((piece) => !/frankfurter|coingecko/i.test(piece.body)));
+}
+
+function ensureSleep(answer, question) {
+  if (!question || !aboutTopic(question, "higiene-sueno")) return String(answer || "").trim();
+  const en = answerLanguage(question) === "en";
+  const text = dropBibliography(stripMetaOpeners(answer));
+  if (mentionsCaffeine(text, en)) return text;
+  return `${text.trim()}\n\n${en ? CAFE_EN : CAFE_ES}`.trim();
+}
+
+/** El mismo cierre que aplica el servidor después de Ollama. */
+export function polishReply({ answer = "", question = "", note = "", noteId = "", facts = "", marketOffline = false } = {}) {
+  let reply = unwrapEmptyLinks(stripMetaOpeners(finishReply(answer)));
+  if (aboutTopic(question, "despido-baja") || noteId === "despido-baja") reply = completeDespido(reply, note, question);
+  else if (aboutTopic(question, "higiene-sueno") || noteId === "higiene-sueno") reply = completeHigiene(reply, note, question);
+  else if (noteId) reply = placeNoteLabel(reply, noteId);
+  if (facts) reply = closeMarketAnswer(reply, facts, question);
+  else if (marketOffline) reply = offlineMarketAnswer(question);
+  reply = completeSarajevo(reply, question);
+  reply = dropMarketAsides(reply, question);
+  reply = dropObsoleteClaims(dropNamedBanks(dropUninjectedData(reply, facts, question)));
+  reply = completeHipoteca(reply, question);
+  reply = presentAnswer(reply, question);
+  reply = ensureSleep(reply, question);
+  reply = tidyNumberedLists(unwrapEmptyLinks(stripMetaOpeners(reply)));
+  return alignLanguage(reply, question);
 }
 
 export function alignLanguage(answer, question) {

@@ -631,6 +631,117 @@ describe("conjunto fijo de 100 casos", () => {
     assert.equal(none.offline, true);
   });
 
+  test("el cierre del servidor arregla los textos medidos en cb24be8", async () => {
+    const salida = await import(href("local/arqiven/salida.mjs")) as {
+      polishReply: (input: {
+        answer?: string;
+        question?: string;
+        note?: string;
+        noteId?: string;
+        facts?: string;
+        marketOffline?: boolean;
+      }) => string;
+      dropObsoleteClaims: (text: string) => string;
+    };
+    const server = await readFile(path.join(root, "local/arqiven/server.mjs"), "utf8");
+    assert.match(server, /polishReply\(/);
+    const nota = await readFile(path.join(root, "docs/arqiven/conocimiento/higiene-sueno.md"), "utf8");
+    const pregunta = "¿Qué es la higiene del sueño y qué dice de la cafeína?";
+    const literal = "La higiene del sueño es un conjunto de recomendaciones que buscan mejorar la calidad del sueño y tratar el insomnio.";
+    const solo = salida.polishReply({ answer: literal, question: pregunta, note: nota, noteId: "higiene-sueno" });
+    assert.match(solo, /conjunto de recomendaciones/);
+    assert.match(solo, /cafeína/);
+    const bibliografia = `${literal} Fuente oficial: Ministerio de Sanidad y Consumo, volumen 32, número 4, 2008, «Tratamiento del insomnio», donde se limita la cafeína.`;
+    const sinBib = salida.polishReply({ answer: bibliografia, question: pregunta, note: nota, noteId: "higiene-sueno" });
+    assert.match(sinBib, /cafeína/);
+    assert.equal(/ministerio de sanidad|tratamiento del insomnio|fuente oficial/i.test(sinBib), false);
+    const meta = salida.polishReply({
+      answer: "En este contexto, se menciona que la higiene del sueño es un conjunto de recomendaciones que buscan mejorar la calidad del sueño y tratar el insomnio.",
+      question: pregunta,
+      note: nota,
+      noteId: "higiene-sueno",
+    });
+    assert.match(meta, /^La higiene del sueño/);
+    assert.equal(/^en este contexto/i.test(meta), false);
+    assert.match(meta, /cafeína/);
+    const dormir = salida.polishReply({ answer: "Prueba a relajarte.", question: "No puedo dormir.", note: nota, noteId: "higiene-sueno" });
+    assert.match(dormir, /cafeína/);
+    const despido = salida.polishReply({
+      answer: "La causa de la enfermedad no nula el despido [Ley 15/2022, arts. 2.1 y 26](). Véase también [Ley 15/2022, art. 26]().",
+      question: "¿Puedo despedir a alguien durante una baja? Dame las fuentes.",
+      noteId: "despido-baja",
+    });
+    assert.match(despido, /no anula el despido/);
+    assert.equal(despido.includes("]("), false);
+    assert.equal(/\[Ley 15\/2022/.test(despido), false);
+    assert.match(despido, /Ley 15\/2022, arts\. 2\.1 y 26/);
+    assert.match(despido, /#a26/);
+    const inversion = salida.polishReply({
+      answer: "El euro está en 1.1052 USD según BCE, Frankfurter. CoinGecko da el bitcoin en 100 USD.",
+      question: "¿Cómo ves las inversiones hoy?",
+      facts: "1 EUR = 1.1052 USD (el BCE, Frankfurter, 13-11-2026).\nBitcoin: 100 USD (CoinGecko, 15-11 21:54).",
+    });
+    assert.match(inversion, /1\.1052/);
+    assert.match(inversion, /BCE/);
+    assert.equal(/frankfurter|coingecko/i.test(inversion), false);
+    const hipoteca = salida.polishReply({
+      answer: "Conviene mirar el plazo. Hay proyecciones, como las publicadas por la BCE vía Frankfurter, 13-11-2026. La cuota puede cambiar.",
+      question: "¿Qué mirar antes de pedir una hipoteca a tipo fijo?",
+    });
+    assert.equal(/frankfurter|coingecko/i.test(hipoteca), false);
+    assert.match(hipoteca, /FEIN/);
+    assert.match(hipoteca, /Euríbor/);
+    const mercado = salida.polishReply({
+      answer: "El euro se devaluá frente al dólar. 1. Diversificar el ahorro.",
+      question: "How do you see investments today?",
+      facts: [
+        "1 EUR = 1.1052 USD (el BCE, Frankfurter, 13-11-2026).",
+        "Variación del euro frente al dólar entre 16-10-2026 y 13-11-2026: -1,79 % (el BCE, Frankfurter, 16-10-2026 y 13-11-2026).",
+        "Bitcoin: 100 USD (CoinGecko, 15-11 21:54).",
+      ].join("\n"),
+    });
+    assert.match(mercado, /One euro is 1\.1052 USD/);
+    assert.match(mercado, /1\. Spread savings/);
+    assert.match(mercado, /2\. Set a time horizon/);
+    assert.match(mercado, /3\. Keep an emergency fund/);
+    assert.match(mercado, /you can lose money/);
+    assert.equal(/devaluá|diversificar|frankfurter|coingecko/i.test(mercado), false);
+    const articulo = salida.polishReply({
+      answer: "Article 55.5 of Law 15/2022 makes the dismissal void.",
+      question: "Can I dismiss an employee who is on sick leave?",
+      noteId: "despido-baja",
+    });
+    assert.match(articulo, /Workers' Statute/);
+    assert.equal(/55\.5 of Law 15\/2022/i.test(articulo), false);
+    const fuentes = salida.polishReply({
+      answer: "You can dismiss with a real cause.\n\nSources: [despido-baja]\n\nSources: https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589#a26",
+      question: "Can I dismiss an employee who is on sick leave? Give me the sources.",
+      noteId: "despido-baja",
+    });
+    assert.equal((fuentes.match(/Sources:/g) || []).length, 1);
+    assert.match(fuentes, /\[despido-baja\]/);
+    assert.match(fuentes, /#a26/);
+    const sueno = salida.polishReply({
+      answer: "Sleep hygiene refers to a set of habits from the Ministry of Health and Consumption, Spain, caffeine is one of the substances to limit. «Tratamiento del insomnio» (2008).",
+      question: "What is sleep hygiene and what does it say about caffeine?",
+      note: nota,
+      noteId: "higiene-sueno",
+    });
+    assert.match(sueno, /caffeine/);
+    assert.equal(/ministry of health|tratamiento del insomnio/i.test(sueno), false);
+    const lista = salida.dropObsoleteClaims("1. LIBOR is no longer published.\n2. **Potential Rate Increases**: the payment can rise.");
+    assert.equal(/libor/i.test(lista), false);
+    assert.equal(/1\.\s+2\./.test(lista), false);
+    assert.match(lista, /^1\. \*\*Potential Rate Increases\*\*/);
+    const hipotecaLista = salida.polishReply({
+      answer: "1. LIBOR is referenced in old contracts.\n2. **Potential Rate Increases**",
+      question: "What should I check before signing a fixed-rate mortgage?",
+    });
+    assert.equal(/libor/i.test(hipotecaLista), false);
+    assert.equal(/1\.\s+2\./.test(hipotecaLista), false);
+    assert.match(hipotecaLista, /^1\. \*\*Potential Rate Increases\*\*/);
+  });
+
   test("el cargador solo lee las notas del manifiesto", async () => {
     const dir = await mkdtemp(path.join(os.tmpdir(), "arqiven-notas-"));
     try {
