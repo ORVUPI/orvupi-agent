@@ -411,11 +411,13 @@ describe("conjunto fijo de 100 casos", () => {
     assert.equal(porArticulos.includes("artículo 26"), false);
     assert.equal((completo.match(/es nulo si el motivo es la enfermedad/gi) || []).length, 1);
     assert.match(completo, /artículos 2\.1 y 26|arts\. 2\.1 y 26/);
-    const hipoteca = "Una hipoteca a tipo fijo da estabilidad. El interés medio fue el 2,25 % en diciembre de 2023 según el Banco de España. Según el Banco de España, los tipos han mostrado una ligera disminución.";
+    const hipoteca = "Una hipoteca a tipo fijo da estabilidad. No consta un dato actual de los tipos en este momento. Conviene mirar el plazo y la cuota. El interés medio fue el 2,25 % en diciembre de 2023 según el Banco de España. Según el Banco de España, los tipos han mostrado una ligera disminución.";
     const sinInventar = salida.dropUninjectedData(hipoteca, "");
     assert.equal(sinInventar.includes("2,25"), false);
     assert.equal(/ligera disminución/i.test(sinInventar), false);
-    assert.match(sinInventar, /No tengo conectado el dato actual de los tipos/);
+    assert.equal(/no consta un dato actual/i.test(sinInventar), false);
+    assert.equal((sinInventar.match(/ahora no hay un dato en vivo/gi) || []).length, 1);
+    assert.match(sinInventar, /cuota\.\s+Ahora no hay un dato en vivo disponible/);
     assert.match(sinInventar, /Una hipoteca a tipo fijo da estabilidad/);
     const conectado = salida.dropUninjectedData("El euro está en 1.1052 USD (el BCE, Frankfurter, 13-11-2026).", hechos);
     assert.match(conectado, /1\.1052/);

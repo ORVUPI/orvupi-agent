@@ -368,16 +368,20 @@ function inventedDatum(sentence, facts) {
   return trend && !numbers.length;
 }
 
-function indicatorOf(sentences) {
-  const joined = sentences.join(" ");
-  if (/eur[ií]bor/i.test(joined)) return "el Euríbor";
-  if (/tipos/i.test(joined)) return "los tipos";
-  if (/hipoteca/i.test(joined)) return "la hipoteca";
-  if (/bitcoin/i.test(joined)) return "el bitcoin";
-  if (/ethereum/i.test(joined)) return "el ethereum";
-  if (/banco de españa/i.test(joined)) return "el Banco de España";
-  if (/\bbce\b/i.test(joined)) return "el BCE";
-  return "ese indicador";
+function isAwkwardGap(sentence) {
+  return /no consta un dato actual|no tengo conectado el dato actual/i.test(sentence);
+}
+
+const LIVE_GAP = "Ahora no hay un dato en vivo disponible; conviene consultarlo en la fuente oficial antes de decidir.";
+
+function placeLiveGap(text) {
+  if (/ahora no hay un dato en vivo/i.test(text)) return text.trim();
+  const pieces = piecesOf(text);
+  const warnAt = pieces.findIndex((piece) => WARNING.test(piece.body));
+  if (warnAt < 0) return `${text.trim()} ${LIVE_GAP}`.trim();
+  const before = joinPieces(pieces.slice(0, warnAt));
+  const after = joinPieces(pieces.slice(warnAt));
+  return `${before} ${LIVE_GAP} ${after}`.replace(/[ \t]{2,}/g, " ").trim();
 }
 
 /** Quita una cifra o una tendencia atribuida a una fuente que este turno no inyectó. */
@@ -387,14 +391,12 @@ export function dropUninjectedData(answer, factsText = "") {
   const removed = [];
   const kept = [];
   for (const piece of pieces) {
-    if (inventedDatum(piece.body, facts)) removed.push(piece.body);
+    if (isAwkwardGap(piece.body) || inventedDatum(piece.body, facts)) removed.push(piece.body);
     else kept.push(piece);
   }
   if (!removed.length) return String(answer || "").trim();
   let text = joinPieces(kept);
   const stillHasDatum = kept.some((piece) => datumNumbers(piece.body).length > 0 || DATA_TREND.test(piece.body));
-  if (!stillHasDatum) {
-    text = `${text.trim()} No tengo conectado el dato actual de ${indicatorOf(removed)}; consúltalo en la fuente oficial antes de decidir.`.trim();
-  }
+  if (!stillHasDatum) text = placeLiveGap(text);
   return text;
 }
