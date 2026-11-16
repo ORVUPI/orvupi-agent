@@ -41,4 +41,4 @@ Fecha: 15 de noviembre de 2026, con los informes del PC hasta las 22:03 (Madrid)
 
 ## Lectura corta
 
-En el PC, `d124e4c` está desplegado: mitigado2 114,75 de media en cuatro pasadas, frente a 114,5 de referencia, y experto 9,25 frente a 9,5. El examen sigue siendo el de `f9a678a`. El chat, si la respuesta ya cita los artículos 2.1 y 26, pone sus enlaces en Fuentes; si quita una cifra no inyectada, deja una sola frase de que no hay dato en vivo; y en una hipoteca no nombra un banco. La nota de Sarajevo solo entra en el chat. `prog-14`, `conv-10`, `conv-13`, `ex-13` y `cn-02` los puntúa el examen, que no pasa por ese arreglo. No hay entrenamiento.
+En el PC, `d124e4c` está desplegado: mitigado2 114,75 de media en cuatro pasadas, frente a 114,5 de referencia, y experto 9,25 frente a 9,5. El examen sigue siendo el de `f9a678a`. El chat no muestra etiquetas, enlaces ni Fuentes salvo que el mensaje pida fuentes, enlaces, el documento o un informe. La fecha de una cifra inyectada se queda en prosa. No hay entrenamiento.

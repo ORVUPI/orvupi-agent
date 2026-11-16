@@ -15,7 +15,7 @@ import { buildChatBody, streamChat } from "./ollama.mjs";
 import { attachEditor, withRetry } from "./prompt.mjs";
 import { guardChat, outputViolates, passedFragments, SAFE_ANSWER } from "./guard.mjs";
 import { liveFacts } from "./hechos.mjs";
-import { closeMarketAnswer, completeDespido, completeHigiene, dropNamedBanks, dropUninjectedData, finishReply, offlineMarketAnswer, placeNoteLabel } from "./salida.mjs";
+import { closeMarketAnswer, completeDespido, completeHigiene, dropNamedBanks, dropUninjectedData, finishReply, offlineMarketAnswer, placeNoteLabel, presentAnswer } from "./salida.mjs";
 import { retrieveConocimiento } from "./conocimiento.mjs";
 import { fitMessages } from "./budget.mjs";
 import { metricsFrom } from "./metrics.mjs";
@@ -456,7 +456,7 @@ export async function startLocalServer(overrides = {}) {
         else if (noteId) reply = placeNoteLabel(reply, noteId);
         if (factsText) reply = closeMarketAnswer(reply, factsText);
         else if (marketOffline) reply = offlineMarketAnswer();
-        return dropNamedBanks(dropUninjectedData(reply, factsText));
+        return presentAnswer(dropNamedBanks(dropUninjectedData(reply, factsText)), question);
       };
       let reply = polish(result.text);
       if (outputViolates(reply, redacted)) {

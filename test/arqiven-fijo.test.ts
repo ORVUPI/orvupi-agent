@@ -300,6 +300,9 @@ describe("conjunto fijo de 100 casos", () => {
       offlineMarketAnswer: () => string;
       dropUninjectedData: (answer: string, facts?: string) => string;
       dropNamedBanks: (answer: string) => string;
+      wantsSources: (message: string) => boolean;
+      presentAnswer: (answer: string, question: string) => string;
+      SOURCE_REQUESTS: string[];
     };
     const lista = "- Manzana\n- Plátano\n- Naranja";
     const codigo = "function suma(a, b) {\n  return a + b;\n}";
@@ -421,6 +424,35 @@ describe("conjunto fijo de 100 casos", () => {
     assert.equal((sinInventar.match(/ahora no hay un dato en vivo/gi) || []).length, 1);
     assert.match(sinInventar, /cuota\.\s+Ahora no hay un dato en vivo disponible/);
     assert.match(sinInventar, /Una hipoteca a tipo fijo da estabilidad/);
+    const inversion = "El euro cayó (-1,79 %; BCE vía Frankfurter, 16-10-2026 a 13-11-2026). Bitcoin: 100 USD (CoinGecko, 15-11 21:54).";
+    const sinCita = salida.presentAnswer(inversion, "¿Cómo ves las inversiones hoy?");
+    assert.match(sinCita, /-1,79 % \(datos del BCE del 16-10-2026 al 13-11-2026\)/);
+    assert.match(sinCita, /a 15-11 21:54/);
+    assert.equal(/frankfurter|coingecko|https?:|\[/i.test(sinCita), false);
+    assert.equal(salida.presentAnswer(inversion, "¿fuentes?"), inversion);
+    const despidoChat = "Es nulo si el motivo es la enfermedad (arts. 2.1 y 26) [despido-baja].\n\nFuentes: https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589#a2 https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589#a26";
+    const sinDespido = salida.presentAnswer(despidoChat, "¿Puedo despedir a un trabajador que está de baja?");
+    assert.match(sinDespido, /arts\. 2\.1 y 26/);
+    assert.equal(/\[|Fuentes:|https?:|boe\.es/i.test(sinDespido), false);
+    assert.match(salida.presentAnswer(despidoChat, "dame las fuentes"), /Fuentes:/);
+    assert.match(salida.presentAnswer(despidoChat, "dame las fuentes"), /\[despido-baja\]/);
+    const suenoChat = "La higiene del sueño empieza por eliminar la cafeína [higiene-sueno]. https://www.sanidad.gob.es/biblioPublic/publicaciones/recursos_propios/infMedic/docs/vol32_4TratInsomnio.pdf";
+    const sinSueno = salida.presentAnswer(suenoChat, "¿Qué es la higiene del sueño?");
+    assert.match(sinSueno, /cafeína/);
+    assert.equal(/\[|https?:/i.test(sinSueno), false);
+    assert.match(salida.presentAnswer(suenoChat, "pásame el documento"), /\[higiene-sueno\]/);
+    const hipotecaChat = "Una hipoteca a tipo fijo da estabilidad. Ahora no hay un dato en vivo disponible; conviene consultarlo en la fuente oficial antes de decidir. Fuentes: https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589#a2";
+    const sinHipoteca = salida.presentAnswer(hipotecaChat, "¿Qué mirar en una hipoteca?");
+    assert.match(sinHipoteca, /estabilidad/);
+    assert.match(sinHipoteca, /dato en vivo/);
+    assert.equal(/Fuentes:|https?:|boe\.es/i.test(sinHipoteca), false);
+    assert.match(salida.presentAnswer(hipotecaChat, "hazme un informe"), /Fuentes:/);
+    for (const phrase of ["¿fuentes?", "dame las fuentes", "con enlaces", "pásame el documento", "hazme un informe"]) {
+      assert.equal(salida.wantsSources(phrase), true, phrase);
+    }
+    assert.equal(salida.wantsSources("¿Puedo despedir a un trabajador que está de baja?"), false);
+    assert.equal(salida.wantsSources("sin fuentes"), false);
+    assert.equal(salida.SOURCE_REQUESTS.includes("con enlaces"), true);
     const sinBanco = salida.dropNamedBanks("Para la hipoteca puedes comparar Bankia y CaixaBank. Mira el tipo fijo y el plazo.");
     assert.equal(/bankia/i.test(sinBanco), false);
     assert.equal(/caixabank/i.test(sinBanco), false);

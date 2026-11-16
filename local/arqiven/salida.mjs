@@ -401,6 +401,81 @@ export function dropUninjectedData(answer, factsText = "") {
   return text;
 }
 
+/** Frases que piden fuentes, enlaces, el documento o un informe. Si no aparece ninguna, la respuesta no las muestra. */
+export const SOURCE_REQUESTS = [
+  "fuentes",
+  "dame las fuentes",
+  "dame la fuente",
+  "con fuentes",
+  "con fuente",
+  "con enlaces",
+  "con enlace",
+  "dame los enlaces",
+  "dame el enlace",
+  "pásame el documento",
+  "dame el documento",
+  "envíame el documento",
+  "hazme un informe",
+  "haz un informe",
+  "dame un informe",
+];
+
+function foldRequest(text) {
+  return String(text || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .replace(/[¿?¡!.,;:()«»"']/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function wantsSources(message) {
+  const text = foldRequest(message);
+  if (!text || /\bsin\s+fuentes?\b/.test(text)) return false;
+  return SOURCE_REQUESTS.some((phrase) => {
+    const needle = foldRequest(phrase).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`(?:^|\\s)${needle}(?:\\s|$)`).test(text);
+  });
+}
+
+function proseFromCite(inner) {
+  const range = String(inner || "").match(/(?:el\s+)?BCE(?:\s+vía\s+Frankfurter)?,\s*(\d{2}-\d{2}-\d{4})\s+a\s+(\d{2}-\d{2}-\d{4})/i);
+  if (range) return `datos del BCE del ${range[1]} al ${range[2]}`;
+  const dated = String(inner || "").match(/(?:el\s+)?BCE(?:,\s*Frankfurter)?,\s*(\d{2}-\d{2}-\d{4}(?:\s+\d{2}:\d{2})?)/i);
+  if (dated) return `datos del BCE a ${dated[1]}`;
+  const stamp = String(inner || "").match(/(\d{2}-\d{2}(?:-\d{4})?(?:\s+\d{2}:\d{2})?)/);
+  if (stamp && /coingecko|frankfurter|\bbce\b/i.test(inner)) return `a ${stamp[1]}`;
+  return "";
+}
+
+/** Sin una petición explícita, la respuesta no enseña etiquetas, enlaces ni el bloque Fuentes. */
+export function presentAnswer(answer, question) {
+  const text = String(answer || "").trim();
+  if (!text || wantsSources(question)) return text;
+  let next = text.replace(/[ \t]*Fuentes:\s*[^\n]*/gi, "");
+  next = next.replace(/https?:\/\/[^\s)]+/g, "");
+  next = next.replace(/\[[^\]\n]{1,80}\]/g, "");
+  next = next.replace(/\s*,?\s*según el documento\s+[\w:-]+/gi, "");
+  next = next.replace(/\(\s*([+-]?\d+(?:[.,]\d+)?\s*%)\s*;\s*([^)]+)\)/g, (_all, figure, cite) => {
+    const prose = proseFromCite(cite);
+    return prose ? `${figure.trim()} (${prose})` : figure.trim();
+  });
+  next = next.replace(/\(\s*([^()]{0,180})\s*\)/g, (all, inner) => {
+    if (/datos del BCE/i.test(inner) || !/frankfurter|coingecko|(?:^|[^a-z])bce(?:[^a-z]|$)/i.test(inner)) return all;
+    const prose = proseFromCite(inner);
+    if (!prose) return "";
+    return prose.startsWith("a ") ? prose : `(${prose})`;
+  });
+  return next
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/\s+([.,;])/g, "$1")
+    .replace(/\(\s*\)/g, "")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 const NAMED_BANK = /\b(?:bankia|caixabank|caixa\s*bank|santander|bbva|sabadell|bankinter|unicaja|abanca|kutxabank|ibercaja|cajamar|openbank)\b/i;
 
 /** En una respuesta de hipoteca o financiación, no nombra un banco concreto. */
