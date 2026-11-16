@@ -342,8 +342,16 @@ describe("conjunto fijo de 100 casos", () => {
     assert.equal(citado.includes("-1,79 ("), false);
     assert.match(citado, /-1,79 % \(el BCE, Frankfurter, 16-10-2026 y 13-11-2026\)/);
     assert.match(citado, /-0,98 % \(el BCE, Frankfurter, 16-10-2026 y 13-11-2026\)/);
-    assert.match(citado, /11,92 % \(CoinGecko, 15-11 21:54\)/);
-    assert.match(citado, /13,97 % \(CoinGecko, 15-11 21:54\)/);
+    assert.match(citado, /11,92/);
+    assert.match(citado, /13,97/);
+    const fraseBitcoin = citado.split(/(?<=\.)\s+/).find((item) => item.includes("11,92")) || "";
+    assert.equal((fraseBitcoin.match(/CoinGecko/g) || []).length, 1);
+    const anidada = "El euro cayó (-1,79 % (el BCE, Frankfurter, 16-10-2026 y 13-11-2026)) (el BCE, Frankfurter, 16-10-2026 y 13-11-2026) (el BCE, Frankfurter, 16-10-2026 y 13-11-2026).";
+    const limpia = salida.citeMissingFigures(anidada, hechosPorcentaje);
+    assert.equal(limpia.includes("(-1,79"), false);
+    assert.equal(limpia.includes("(("), false);
+    assert.equal((limpia.match(/el BCE, Frankfurter, 16-10-2026 y 13-11-2026/g) || []).length, 1);
+    assert.match(limpia, /-1,79 % \(el BCE, Frankfurter, 16-10-2026 y 13-11-2026\)/);
     const notaDespido = await readFile(path.join(root, "docs/arqiven/conocimiento/despido-baja.md"), "utf8");
     const soloRegla = "Sí se puede despedir durante una baja si hay causa real. Es nulo si el motivo es la enfermedad (arts. 2.1 y 26) [fuente].";
     const completo = salida.completeDespido(soloRegla, notaDespido);

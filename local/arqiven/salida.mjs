@@ -81,40 +81,72 @@ function figuresInFacts(factsText) {
       const raw = match[1].replace(/^\+/, "");
       if (raw === "1") continue;
       const unit = match[2].toUpperCase() === "%" ? "%" : match[2].toUpperCase();
-      figures.push({ key: figureKey(raw), unit, citation: cite[1] });
+      figures.push({ key: figureKey(raw), raw, unit, citation: cite[1] });
     }
   }
   return figures;
 }
 
-function figureFor(figures, number, unit) {
-  const key = figureKey(number);
-  if (!key || key === "1") return null;
-  if (unit) {
-    const exact = figures.find((item) => item.key === key && item.unit === unit);
-    if (exact) return exact;
-  }
-  return figures.find((item) => item.key === key) || null;
+function numberForms(raw) {
+  const bare = String(raw || "").replace(/^\+/, "");
+  return [...new Set([bare, bare.replace(".", ","), bare.replace(",", ".")])];
 }
 
-/** Añade «(Fuente, fecha)» detrás de la cifra y de su unidad. Cada cifra se mira sola. */
+function sentenceHasNumber(text, figure) {
+  return numberForms(figure.raw).some((form) => new RegExp(`(?<!\\d)${form.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?!\\d)`).test(text));
+}
+
+function placeOnce(text, figure) {
+  const forms = numberForms(figure.raw).sort((a, b) => b.length - a.length);
+  for (const form of forms) {
+    const escaped = form.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp(`(?<!\\d)${escaped}(\\s*(?:USD|GBP|%))?`, "i");
+    const match = re.exec(text);
+    if (!match) continue;
+    const number = match[0].match(/[+-]?\d+(?:[.,]\d+)?/)?.[0] || form;
+    const unit = (match[1] || "").match(/USD|GBP|%/i)?.[0] || "";
+    const shown = unit ? `${number} ${unit.toUpperCase() === "%" ? "%" : unit.toUpperCase()}` : number;
+    return `${text.slice(0, match.index)}${shown} (${figure.citation})${text.slice(match.index + match[0].length)}`;
+  }
+  return text;
+}
+
+function tidyMarketSentence(sentence, figures) {
+  let text = String(sentence || "").replace(/\(\s*([+-]?\d+(?:[.,]\d+)?\s*(?:USD|GBP|%)\s*\([^)]+\))\s*\)/g, "$1");
+  text = text.replace(/([+-]?\d+(?:[.,]\d+)?)\s*\([^)]*\)\s*(USD|GBP|%)/gi, "$1 $2");
+  const needed = [];
+  for (const figure of figures) {
+    if (!sentenceHasNumber(text, figure)) continue;
+    if (needed.some((item) => item.citation === figure.citation)) continue;
+    needed.push(figure);
+  }
+  for (const figure of needed) {
+    text = text.split(`(${figure.citation})`).join(" ");
+  }
+  text = text.replace(/[ \t]{2,}/g, " ").replace(/\s+([.,;])/g, "$1").trim();
+  for (const figure of needed) {
+    const family = /coingecko/i.test(figure.citation) ? /coingecko/i : /frankfurter|\bel bce\b/i;
+    if (text.includes(figure.citation) || family.test(text)) continue;
+    text = placeOnce(text, figure);
+  }
+  return text;
+}
+
+/** Una cita por fuente y frase. Si la frase ya trae la fuente, no se añade otra. */
 export function citeMissingFigures(answer, factsText) {
   const figures = figuresInFacts(factsText);
   if (!figures.length) return String(answer || "");
-  return String(answer || "").replace(
-    /(?<!\d)([+-]?\d+(?:[.,]\d+)?)(\s*\([^)]*\))?(\s*(?:USD|GBP|%))?/gi,
-    (found, number, paren = "", unit = "", offset, source) => {
-      const unitToken = (String(unit).match(/USD|GBP|%/i) || [""])[0].toUpperCase();
-      const figure = figureFor(figures, number, unitToken === "%" ? "%" : unitToken);
-      if (!figure) return found;
-      const rest = source.slice(offset + found.length).trimStart();
-      const cited = `(${figure.citation})`;
-      if (rest.startsWith(cited)) return found;
-      if (!unitToken && paren.includes(figure.citation)) return found;
-      const shown = unitToken === "%" ? "%" : unitToken;
-      return shown ? `${number} ${shown} ${cited}` : `${number} ${cited}`;
-    },
-  );
+  const source = String(answer || "");
+  const pieces = [];
+  const re = /(\n+|(?<=[.!?])[ \t]+)/g;
+  let last = 0;
+  let match;
+  while ((match = re.exec(source))) {
+    pieces.push({ body: source.slice(last, match.index), sep: match[0] });
+    last = match.index + match[0].length;
+  }
+  pieces.push({ body: source.slice(last), sep: "" });
+  return pieces.map((piece) => tidyMarketSentence(piece.body, figures) + piece.sep).join("").trim();
 }
 
 /** Sin lectura en vivo: la frase fija, el análisis y tres pasos. No dice «No consta información». */
