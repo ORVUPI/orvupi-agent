@@ -302,6 +302,7 @@ describe("conjunto fijo de 100 casos", () => {
       dropNamedBanks: (answer: string) => string;
       wantsSources: (message: string) => boolean;
       presentAnswer: (answer: string, question: string) => string;
+      completeHipoteca: (answer: string, question: string) => string;
       SOURCE_REQUESTS: string[];
     };
     const lista = "- Manzana\n- Plátano\n- Naranja";
@@ -331,6 +332,7 @@ describe("conjunto fijo de 100 casos", () => {
       retrieveConocimiento: (q: string) => Promise<{ text: string; hits: Array<{ id: string }> }>;
     };
     assert.equal((await known.retrieveConocimiento("Quiero una hipoteca.")).text, "");
+    assert.equal((await known.retrieveConocimiento("¿Qué mirar antes de pedir una hipoteca a tipo fijo?")).text, "");
     assert.equal((await known.retrieveConocimiento("¿Puedo despedir a alguien durante una baja?")).hits[0]?.id, "despido-baja");
     assert.equal((await known.retrieveConocimiento("¿Qué es la higiene del sueño?")).hits[0]?.id, "higiene-sueno");
     assert.equal((await known.retrieveConocimiento("¿Cuál fue la causa de la Primera Guerra Mundial?")).hits[0]?.id, "sarajevo-1914");
@@ -452,6 +454,29 @@ describe("conjunto fijo de 100 casos", () => {
     }
     assert.equal(salida.wantsSources("¿Puedo despedir a un trabajador que está de baja?"), false);
     assert.equal(salida.wantsSources("sin fuentes"), false);
+    const hipotecaRota = "No consta. No hay información sobre eso en el documento. La higiene del sueño, en la tabla II de esa publicación, empieza por eliminar el alcohol, la cafeína y la nicotina. La Comisión Nacional del Mercado Financiero (CNMF) publica el índice.";
+    const guia = salida.completeHipoteca(hipotecaRota, "¿Qué mirar antes de pedir una hipoteca a tipo fijo?");
+    assert.equal(/^no consta/i.test(guia), false);
+    assert.equal(/cafeína|higiene del sueño|cnmf|mercado financiero/i.test(guia), false);
+    assert.match(guia, /Euríbor/);
+    assert.match(guia, /diferencial/);
+    assert.match(guia, /\bTAE\b/);
+    assert.match(guia, /comisiones/);
+    assert.match(guia, /cláusula suelo/);
+    assert.match(guia, /riesgo de que la cuota suba/);
+    assert.match(guia, /FEIN/);
+    assert.match(guia, /Ley 5\/2019/);
+    const suenoRoto = "Según el documento higiene-sueno, del Ministerio de Sanidad y Consumo, volumen 32, número 4, 2008. «Tratamiento del insomnio». La higiene del sueño, en la tabla II de esa publicación, empieza por eliminar el alcohol, la cafeína y la nicotina [higiene-sueno]. https://www.sanidad.gob.es/biblioPublic/publicaciones/recursos_propios/infMedic/docs/vol32_4TratInsomnio.pdf";
+    const suenoLimpio = salida.presentAnswer(suenoRoto, "¿Qué es la higiene del sueño?");
+    assert.match(suenoLimpio, /^La higiene del sueño/);
+    assert.match(suenoLimpio, /cafeína/);
+    assert.equal(/^del Ministerio/i.test(suenoLimpio), false);
+    assert.equal(/ministerio|volumen|higiene-sueno|https?:/i.test(suenoLimpio), false);
+    const suenoConFuente = salida.presentAnswer(suenoRoto, "dame las fuentes");
+    assert.match(suenoConFuente, /^La higiene del sueño/);
+    assert.match(suenoConFuente, /\[higiene-sueno\]/);
+    assert.match(suenoConFuente, /\n\nFuentes: https:\/\/www\.sanidad\.gob\.es\//);
+    assert.equal(/^del Ministerio/i.test(suenoConFuente), false);
     assert.equal(salida.SOURCE_REQUESTS.includes("con enlaces"), true);
     const sinBanco = salida.dropNamedBanks("Para la hipoteca puedes comparar Bankia y CaixaBank. Mira el tipo fijo y el plazo.");
     assert.equal(/bankia/i.test(sinBanco), false);

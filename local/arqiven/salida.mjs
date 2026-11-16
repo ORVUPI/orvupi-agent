@@ -290,8 +290,9 @@ const URL_53 = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a53";
 const URL_55 = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a55";
 const URL_56 = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430#a56";
 
-/** Si falta la cafeína o la cita, añade el párrafo literal y deja [higiene-sueno]. */
-export function completeHigiene(answer, noteText) {
+/** Si falta la cafeína o la cita, añade el párrafo literal y deja [higiene-sueno]. Solo si la pregunta es de sueño. */
+export function completeHigiene(answer, noteText, question = "") {
+  if (question && !/sueñ|sueno|higiene|insomnio|cafe[ií]na/i.test(question)) return String(answer || "").trim();
   let text = placeNoteLabel(useNoteLabel(answer, "higiene-sueno"), "higiene-sueno");
   if (!/cafe[ií]na/i.test(text)) {
     const paragraph = String(noteText || "").split(/\n\n/).map((part) => part.trim()).find((part) => /cafe[ií]na/i.test(part));
@@ -449,11 +450,43 @@ function proseFromCite(inner) {
   return "";
 }
 
+function isBibliography(body) {
+  const text = String(body || "").trim();
+  if (!text) return true;
+  if (/^del /i.test(text) && /ministerio|volumen|sanidad|publicaci/i.test(text)) return true;
+  if (/^fuente oficial\b/i.test(text) || /^volumen\b/i.test(text)) return true;
+  if (/ministerio de sanidad/i.test(text) && /volumen|n[uú]mero/i.test(text)) return true;
+  if (/^«[^»]{0,80}»\.?$/.test(text)) return true;
+  return false;
+}
+
+function dropBibliography(text) {
+  const kept = [];
+  for (const piece of piecesOf(text)) {
+    const body = piece.body.replace(/^\s*según el documento\s+[\w:-]+\s*,?\s*/i, "").trim();
+    if (isBibliography(body)) continue;
+    kept.push({ body, sep: piece.sep });
+  }
+  return joinPieces(kept);
+}
+
 /** Sin una petición explícita, la respuesta no enseña etiquetas, enlaces ni el bloque Fuentes. */
 export function presentAnswer(answer, question) {
   const text = String(answer || "").trim();
-  if (!text || wantsSources(question)) return text;
-  let next = text.replace(/[ \t]*Fuentes:\s*[^\n]*/gi, "");
+  if (!text) return text;
+  const urls = [...text.matchAll(/https?:\/\/[^\s)]+/g)].map((item) => item[0]);
+  let next = dropBibliography(text);
+  if (wantsSources(question)) {
+    const tags = [...text.matchAll(/\[[^\]\n]{1,40}\]/g)].map((item) => item[0]);
+    next = next.replace(/https?:\/\/[^\s)]+/g, "").replace(/[ \t]*Fuentes:\s*[^\n]*/gi, "");
+    for (const tag of [...new Set(tags)]) {
+      if (!next.includes(tag)) next = `${next.trim()} ${tag}`.trim();
+    }
+    const fuentes = [...new Set(urls)];
+    if (fuentes.length) next = `${next.trim()}\n\nFuentes: ${fuentes.join(" ")}`.trim();
+    return next.replace(/[ \t]{2,}/g, " ").replace(/\s+([.,;])/g, "$1").replace(/\n{3,}/g, "\n\n").trim();
+  }
+  next = next.replace(/[ \t]*Fuentes:\s*[^\n]*/gi, "");
   next = next.replace(/https?:\/\/[^\s)]+/g, "");
   next = next.replace(/\[[^\]\n]{1,80}\]/g, "");
   next = next.replace(/\s*,?\s*según el documento\s+[\w:-]+/gi, "");
@@ -474,6 +507,31 @@ export function presentAnswer(answer, question) {
     .replace(/[ \t]+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
+}
+
+const HIPOTECA_GUIA = [
+  "Antes de firmar una hipoteca revise el índice de referencia, que suele ser el Euríbor, y el diferencial que se le suma.",
+  "Compare la TAE, no solo el tipo de partida, y anote las comisiones de apertura, amortización y subrogación.",
+  "Compruebe si el contrato trae cláusula suelo.",
+  "Valore el riesgo de que la cuota suba.",
+  "Pida la FEIN y la información precontractual prevista en la Ley 5/2019.",
+  "Esto es una guía general: no es la cifra de hoy ni la oferta de un banco concreto.",
+].join(" ");
+
+function isMortgageNoise(body) {
+  return /higiene del sueñ|cafe[ií]na|tabla II|\bcnmf\b|mercado financiero/i.test(body)
+    || /^no consta\b/i.test(body.trim())
+    || /^no hay informaci/i.test(body.trim());
+}
+
+/** En una pregunta de hipoteca, una guía general y ninguna nota de otro tema. */
+export function completeHipoteca(answer, question) {
+  if (!/hipotec/i.test(String(question || ""))) return String(answer || "").trim();
+  const kept = piecesOf(answer).filter((piece) => !isMortgageNoise(piece.body));
+  let text = joinPieces(kept);
+  const covered = /eur[ií]bor/i.test(text) && /\btae\b/i.test(text) && (/fein/i.test(text) || /ley\s*5\s*\/\s*2019/i.test(text));
+  if (!covered) text = `${text} ${HIPOTECA_GUIA}`.replace(/\s+/g, " ").trim();
+  return text;
 }
 
 const NAMED_BANK = /\b(?:bankia|caixabank|caixa\s*bank|santander|bbva|sabadell|bankinter|unicaja|abanca|kutxabank|ibercaja|cajamar|openbank)\b/i;

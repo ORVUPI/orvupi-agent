@@ -15,7 +15,7 @@ import { buildChatBody, streamChat } from "./ollama.mjs";
 import { attachEditor, withRetry } from "./prompt.mjs";
 import { guardChat, outputViolates, passedFragments, SAFE_ANSWER } from "./guard.mjs";
 import { liveFacts } from "./hechos.mjs";
-import { closeMarketAnswer, completeDespido, completeHigiene, dropNamedBanks, dropUninjectedData, finishReply, offlineMarketAnswer, placeNoteLabel, presentAnswer } from "./salida.mjs";
+import { closeMarketAnswer, completeDespido, completeHigiene, completeHipoteca, dropNamedBanks, dropUninjectedData, finishReply, offlineMarketAnswer, placeNoteLabel, presentAnswer } from "./salida.mjs";
 import { retrieveConocimiento } from "./conocimiento.mjs";
 import { fitMessages } from "./budget.mjs";
 import { metricsFrom } from "./metrics.mjs";
@@ -452,11 +452,13 @@ export async function startLocalServer(overrides = {}) {
       const polish = (text) => {
         let reply = finishReply(text);
         if (noteId === "despido-baja") reply = completeDespido(reply, trustedNote);
-        else if (noteId === "higiene-sueno") reply = completeHigiene(reply, trustedNote);
+        else if (noteId === "higiene-sueno") reply = completeHigiene(reply, trustedNote, question);
         else if (noteId) reply = placeNoteLabel(reply, noteId);
         if (factsText) reply = closeMarketAnswer(reply, factsText);
         else if (marketOffline) reply = offlineMarketAnswer();
-        return presentAnswer(dropNamedBanks(dropUninjectedData(reply, factsText)), question);
+        reply = dropNamedBanks(dropUninjectedData(reply, factsText));
+        reply = completeHipoteca(reply, question);
+        return presentAnswer(reply, question);
       };
       let reply = polish(result.text);
       if (outputViolates(reply, redacted)) {

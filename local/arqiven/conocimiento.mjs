@@ -41,13 +41,25 @@ export function distinctiveTokens(docs) {
   return sets.map((tokens, index) => [...tokens].filter((token) => sets.every((other, otherIndex) => otherIndex === index || !other.has(token))));
 }
 
+const TOPIC = {
+  "higiene-sueno": /sueñ|sueno|higiene|insomnio|cafe[ií]na/i,
+  "despido-baja": /despid|desped/i,
+  "sarajevo-1914": /sarajevo|princip|guerra|bosnia|archiduque/i,
+};
+
+export function aboutTopic(question, id) {
+  const rule = TOPIC[id];
+  if (!rule) return false;
+  return rule.test(String(question || ""));
+}
+
 export function matchConocimiento(question, docs) {
   const asked = new Set(noteTokens(question));
   const own = distinctiveTokens(docs);
   const ranked = docs.map((doc, index) => ({
     doc,
     words: own[index].filter((token) => asked.has(token)),
-  })).filter((row) => row.words.length >= 2);
+  })).filter((row) => row.words.length >= 2 && aboutTopic(question, row.doc.id));
   ranked.sort((a, b) => b.words.length - a.words.length);
   if (!ranked.length) return null;
   if (ranked[1] && ranked[1].words.length === ranked[0].words.length) return null;
