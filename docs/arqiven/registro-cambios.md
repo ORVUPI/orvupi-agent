@@ -41,4 +41,4 @@ Fecha: 15 de noviembre de 2026, con los informes del PC hasta las 22:03 (Madrid)
 
 ## Lectura corta
 
-En el PC, `d124e4c` está desplegado: mitigado2 114,75 de media en cuatro pasadas, frente a 114,5 de referencia, y experto 9,25 frente a 9,5. El examen sigue siendo el de `f9a678a`. El chat no muestra etiquetas, enlaces ni Fuentes salvo que el mensaje pida fuentes, enlaces, el documento o un informe. La fecha de una cifra inyectada se queda en prosa. No hay entrenamiento.
+En el PC, `53d4edd` se revirtió a `d124e4c`: la hipoteca arrastraba la nota del sueño. Una nota solo entra si la pregunta es de ese tema. El chat responde en español o en inglés, el idioma del mensaje, y las peticiones de fuentes valen en los dos. El examen no cambia. No hay entrenamiento.
