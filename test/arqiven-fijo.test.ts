@@ -233,8 +233,10 @@ describe("conjunto fijo de 100 casos", () => {
     assert.match(origin.systemFor(false, "fuente", "qwen3:8b"), /una o dos frases/);
     assert.equal(origin.systemFor(false, "fuente", "qwen3:8b").includes("Si piden solo una función"), false);
     assert.equal(origin.systemFor(false, "fuente", "qwen3:8b").includes("colchón de emergencia"), false);
+    assert.equal(origin.systemFor(false, "fuente", "qwen3:8b").includes("Fuera de una pregunta de inversiones"), false);
     const withMarket = prompts.prepareMitigado2({ prompt: "¿Cómo ves las inversiones hoy?", source: "[fx]\n1 EUR = 1.1 USD (el BCE, Frankfurter, 13-11-2026)." });
     assert.match(withMarket.messages.map((item) => item.content).join("\n"), /colchón de emergencia/);
+    assert.match(withMarket.messages.map((item) => item.content).join("\n"), /Fuera de una pregunta de inversiones/);
     const known = await import(href("local/arqiven/conocimiento.mjs")) as {
       retrieveConocimiento: (q: string) => Promise<{ text: string; hits: Array<{ id: string }> }>;
     };

@@ -104,7 +104,7 @@ function coreSystem(modelId) {
 }
 
 export function marketGuidance() {
-  return "Hay cifras de mercado inyectadas. Cada cifra va en su frase con la fuente y la fecha. Escribe «el BCE». Bitcoin y Ethereum van en frases distintas, cada una con su propia cita de CoinGecko, también la variación de 24 h y la de 7 d. Después, qué significan, con prudencia. Luego exactamente 3 pasos numerados, entre diversificar, horizonte, colchón de emergencia, costes y no invertir lo que no puedas perder. Si falta un dato personal, pídelo antes del cierre. La última frase es solo una advertencia breve. No cierres con «dame más datos». Sin dos fechas no digas «se mantiene», ni estabilidad, ni fortaleza, ni recuperación, ni equilibrio. Con dos fechas puedes describir el cambio entre ellas y citar ambas.";
+  return "Hay cifras de mercado inyectadas. Cada cifra va en su frase con la fuente y la fecha. Escribe «el BCE». Bitcoin y Ethereum van en frases distintas, cada una con su propia cita de CoinGecko, también la variación de 24 h y la de 7 d. Después, qué significan, con prudencia. Luego exactamente 3 pasos numerados, entre diversificar, horizonte, colchón de emergencia, costes y no invertir lo que no puedas perder. Si falta un dato personal, pídelo antes del cierre. La última frase es solo una advertencia breve. No cierres con «dame más datos». Sin dos fechas no digas «se mantiene», ni estabilidad, ni fortaleza, ni recuperación, ni equilibrio. Con dos fechas puedes describir el cambio entre ellas y citar ambas. Fuera de una pregunta de inversiones, no afirmes datos de mercado, como el BCE o los tipos, si no son una cifra inyectada con su fuente.";
 }
 
 export function systemFor(hasDocument, name = "fuente", modelId = "", market = false) {
