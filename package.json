@@ -35,7 +35,8 @@
     "logs:daily": "tsc && node dist/src/cli.js logs:daily",
     "verify:all": "tsc && node scripts/verify-all.mjs",
     "test:browser": "node test/library-notebook.playwright.mjs",
-    "test:ui": "playwright test"
+    "test:ui": "playwright test",
+    "arqiven:local": "node local/arqiven/server.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

@@ -13,6 +13,7 @@ import { exportPayload, listVotes, openFeedbackDb, saveVote } from "/shared/ia/f
 import { clipHistory } from "/shared/ia/history.mjs";
 void clipHistory;
 import { dateGroup, deleteConversation, deleteImage, deleteProject, listConversations, listImages, listProjects, matchesQuery, openChatDb, openPrefDb, readConversation, readSetting, saveConversation, saveImage, saveProject, saveSetting } from "/shared/ia/chats.mjs";
+import { cancelLocal, localChat, localConversation, localConversations, localCreateProject, localDeleteProject, localMoveConversation, localProject, localProjects, localRenameConversation, localRenameProject, localStatus } from "/shared/ia/local-client.mjs";
 
 const root = document.querySelector(".arq-app");
 if (!root) throw new Error("ARQIVEN");
@@ -31,6 +32,17 @@ const UI = {
     cancel: "Cancelar",
     stop: "Detener",
     stopped: "Detenido.",
+    waitingLocal: "en espera",
+    regenerate: "Regenerar",
+    localReady: "Modo local/Ollama",
+    localDown: "Ollama no responde en este equipo.",
+    localMissing: "El modelo de terceros no está descargado en Ollama.",
+    localTimeout: "La petición superó el tiempo de espera.",
+    localTooLarge: "La petición es demasiado grande.",
+    localBudget: "La conversación no cabe en el contexto. Acorta el mensaje o empieza un chat nuevo.",
+    localBackend: "El backend de ARQIVEN no responde en este equipo. Ábrelo con el acceso directo y vuelve a intentar.",
+    localHonest: "qwen3:8b es un modelo de terceros. ARQIVEN no lo creó.",
+    localForbidden: "No tienes permiso para esta acción en el proyecto.",
     preparing: "Descargando un modelo de terceros. Puedes seguir escribiendo.",
     checking: "Comprobando que el modelo de terceros responde en este navegador.",
     idle: "IA de ORVUPI",
@@ -70,6 +82,17 @@ const UI = {
     cancel: "Cancel",
     stop: "Stop",
     stopped: "Stopped.",
+    waitingLocal: "Waiting",
+    regenerate: "Regenerate",
+    localReady: "Local/Ollama mode",
+    localDown: "Ollama is not responding on this computer.",
+    localMissing: "The third-party model is not downloaded in Ollama.",
+    localTimeout: "The request timed out.",
+    localTooLarge: "The request is too large.",
+    localBudget: "The conversation does not fit in the context. Shorten the message or start a new chat.",
+    localBackend: "The ARQIVEN backend is not responding on this computer.",
+    localHonest: "qwen3:8b is a third-party model. ARQIVEN did not create it.",
+    localForbidden: "You cannot do that in this project.",
     preparing: "Downloading a third-party model. You can keep typing.",
     checking: "Checking that the third-party model answers in this browser.",
     idle: "ORVUPI AI",
@@ -109,6 +132,17 @@ const UI = {
     cancel: "Cancelar",
     stop: "Parar",
     stopped: "Interrompido.",
+    waitingLocal: "em espera",
+    regenerate: "Regenerar",
+    localReady: "Modo local/Ollama",
+    localDown: "O Ollama não responde neste computador.",
+    localMissing: "O modelo de terceiros não está baixado no Ollama.",
+    localTimeout: "A petição excedeu o tempo de espera.",
+    localTooLarge: "A petição é grande demais.",
+    localBudget: "A conversa não cabe no contexto. Encurte a mensagem ou comece um chat novo.",
+    localBackend: "O backend da ARQIVEN não responde neste computador.",
+    localHonest: "qwen3:8b é um modelo de terceiros. A ARQIVEN não o criou.",
+    localForbidden: "Você não tem permissão para esta ação no projeto.",
     who: "ARQIVEN é a IA da ORVUPI. Se você baixar um modelo para ele responder, esse modelo é de terceiros e aparece com o nome dele.",
     preparing: "Baixando um modelo de terceiros. Você pode continuar escrevendo.",
     checking: "Conferindo se o modelo de terceiros responde neste navegador.",
@@ -148,6 +182,17 @@ const UI = {
     cancel: "キャンセル",
     stop: "停止",
     stopped: "停止しました。",
+    waitingLocal: "待機中",
+    regenerate: "再生成",
+    localReady: "ローカル/Ollama",
+    localDown: "このPCの Ollama が応答しません。",
+    localMissing: "第三者モデルが Ollama にありません。",
+    localTimeout: "待ち時間を超えました。",
+    localTooLarge: "リクエストが大きすぎます。",
+    localBudget: "会話がコンテキストに入りません。短くするか、新しいチャットを始めてください。",
+    localBackend: "このPCの ARQIVEN バックエンドが応答しません。",
+    localHonest: "qwen3:8b は第三者モデルです。ARQIVEN は作っていません。",
+    localForbidden: "このプロジェクトではその操作はできません。",
     who: "ARQIVEN は ORVUPI の AI です。応答させるためにモデルをダウンロードする場合、それは第三者のもので、名前は別に示します。",
     preparing: "第三者モデルをダウンロードしています。入力は続けられます。",
     checking: "このブラウザで第三者モデルが応答するか確認しています。",
@@ -187,6 +232,17 @@ const UI = {
     cancel: "취소",
     stop: "중지",
     stopped: "중지했습니다.",
+    waitingLocal: "대기 중",
+    regenerate: "다시 생성",
+    localReady: "로컬/Ollama",
+    localDown: "이 PC의 Ollama가 응답하지 않습니다.",
+    localMissing: "제3자 모델이 Ollama에 없습니다.",
+    localTimeout: "요청 시간이 초과되었습니다.",
+    localTooLarge: "요청이 너무 큽니다.",
+    localBudget: "대화가 컨텍스트에 맞지 않습니다. 메시지를 줄이거나 새 채팅을 시작하세요.",
+    localBackend: "이 PC의 ARQIVEN 백엔드가 응답하지 않습니다.",
+    localHonest: "qwen3:8b는 제3자 모델입니다. ARQIVEN이 만들지 않았습니다.",
+    localForbidden: "이 프로젝트에서 그 작업은 허용되지 않습니다.",
     who: "ARQIVEN은 ORVUPI의 AI입니다. 답을 받으려고 모델을 받으면 그 모델은 제3자이고, 이름은 따로 표시합니다.",
     preparing: "제3자 모델을 받는 중입니다. 계속 입력할 수 있습니다.",
     checking: "이 브라우저에서 제3자 모델이 응답하는지 확인하는 중입니다.",
@@ -274,6 +330,10 @@ const state = {
   prefDb: null,
   snap: { phase: "idle", ready: false, modelId: "", modelVersion: "", progress: { loaded: 0, total: 0, file: "" }, error: "" },
   queue: [],
+  runtime: "browser",
+  localInfo: null,
+  localAbort: null,
+  localRequestId: "",
   painting: 0,
   knowledge: null,
   webgpu: false,
@@ -506,10 +566,28 @@ async function persist() {
 }
 
 async function openConversation(id) {
-  if (!state.chatDb || !id || id === state.conversationId) return;
+  if (!id || id === state.conversationId) return;
+  if (!state.chatDb && state.runtime !== "ollama") return;
   await stopGeneration(true);
   await persist();
-  const row = await readConversation(state.chatDb, id);
+  let row = state.chatDb ? await readConversation(state.chatDb, id) : null;
+  if (state.runtime === "ollama") {
+    const remote = await localConversation(id);
+    if (remote?.messages?.length) {
+      row = {
+        ...remote,
+        messages: remote.messages.map((item, index) => ({
+          id: `m-${index}-${item.role === "user" ? "u" : "a"}`,
+          role: item.role,
+          content: item.content,
+          mode: item.role === "assistant" ? "model" : "model",
+          provider: item.role === "assistant" ? "third-party" : "none",
+          modelId: item.role === "assistant" ? (state.localInfo?.model || "qwen3:8b") : "none",
+          modelVersion: item.role === "assistant" ? `${state.localInfo?.model || "qwen3:8b"} (Ollama, tercero)` : "",
+        })),
+      };
+    }
+  }
   state.conversationId = id;
   state.messages = row?.messages ? row.messages.map((item) => ({ ...item })) : [];
   state.chatProject = row?.projectId || "";
@@ -606,6 +684,26 @@ function originLine(item) {
   return pack.originRules;
 }
 
+function passedFragmentList(item) {
+  const pieces = Array.isArray(item.fragments) ? item.fragments : [];
+  if (!pieces.length) return null;
+  const list = document.createElement("ul");
+  list.className = "sources";
+  const caption = document.createElement("li");
+  caption.className = "sources-label";
+  caption.textContent = "Fuentes";
+  list.append(caption);
+  const note = document.createElement("li");
+  note.className = "sources-label";
+  note.textContent = "Pasados al modelo. No son la cita del modelo.";
+  list.append(note);
+  for (const piece of pieces) {
+    const row = document.createElement("li");
+    row.textContent = `${piece.id}: ${piece.text}`;
+    list.append(row);
+  }
+  return list;
+}
 function provenance(item) {
   const details = document.createElement("details");
   details.className = "provenance";
@@ -613,6 +711,12 @@ function provenance(item) {
   summary.textContent = chrome.details;
   const note = document.createElement("p");
   note.textContent = originLine(item);
+  if (item.run) {
+    const card = document.createElement("p");
+    card.textContent = localIdentity(item.run);
+    details.append(summary, note, card);
+    return details;
+  }
   details.append(summary, note);
   return details;
 }
@@ -750,8 +854,35 @@ function showEngineStatus(line) {
   setStatus(line);
 }
 
+function localIdentity(info) {
+  const card = info || {};
+  return [
+    card.model || "qwen3:8b",
+    card.quantization || "cuantización no indicada",
+    card.digest ? String(card.digest).slice(0, 12) : "digest no disponible",
+    `ctx ${card.numCtx || 4096}`,
+    `salida ${card.numPredict || 1024}`,
+    `temp ${card.temperature ?? 0.2}`,
+    card.think ? "think sí" : "think no",
+    card.ollamaVersion ? `Ollama ${card.ollamaVersion}` : "Ollama (versión no indicada)",
+    card.pipeline || "mitigado2",
+  ].join(" · ");
+}
 function updateEngineUi() {
   const snap = state.snap;
+  if (state.runtime === "ollama") {
+    const info = state.localInfo || {};
+    const line = info.ollama === "down"
+      ? ui.localDown
+      : info.modelReady === false
+        ? ui.localMissing
+        : `${ui.localReady} · ${info.model || "qwen3:8b"} · ${ui.third}`;
+    progress.textContent = `${line}. ${ui.localHonest}`;
+    indicator.textContent = localIdentity(info);
+    meter.hidden = true;
+    cancel.hidden = !state.messages.some((item) => item.running || item.queued || item.pending);
+    return;
+  }
   const meterState = downloadProgress(snap.progress);
   const pct = meterState.pct;
   if (pill) pill.textContent = ui.idle;
@@ -859,16 +990,24 @@ function toggleChatMenu(item, anchor) {
 }
 
 async function chatAction(action, item) {
-  if (!state.chatDb) return;
+  if (!state.chatDb && state.runtime !== "ollama") return;
   if (action === "rename") {
     const name = await askUser(chrome.chatName, item.title);
     if (!name) return;
+    if (state.runtime === "ollama") {
+      const renamed = await localRenameConversation(item.id, name);
+      if (!renamed) {
+        setStatus(ui.localForbidden);
+        closeRowMenus();
+        return;
+      }
+    }
     const row = state.conversations.find((chat) => chat.id === item.id) || item;
     if (item.id === state.conversationId) {
       state.chatRenamed = true;
       state.chatTitle = name;
       await persist();
-    } else {
+    } else if (state.chatDb) {
       await saveConversation(state.chatDb, { ...row, title: name, renamed: true });
     }
   }
@@ -876,11 +1015,19 @@ async function chatAction(action, item) {
     const choice = await askUser(`${chrome.move}\n${chrome.general}`, item.projectId || "");
     if (choice == null) return;
     const projectId = state.projects.some((project) => project.id === choice || project.name === choice) ? (state.projects.find((project) => project.id === choice || project.name === choice)?.id || "") : "";
+    if (state.runtime === "ollama") {
+      const moved = await localMoveConversation(item.id, projectId);
+      if (!moved) {
+        setStatus(ui.localForbidden);
+        closeRowMenus();
+        return;
+      }
+    }
     const row = state.conversations.find((chat) => chat.id === item.id) || item;
     if (item.id === state.conversationId) {
       state.chatProject = projectId;
       await persist();
-    } else {
+    } else if (state.chatDb) {
       await saveConversation(state.chatDb, { ...row, projectId });
     }
   }
@@ -888,7 +1035,7 @@ async function chatAction(action, item) {
     const ok = await askUser(chrome.deleteChat, "", chrome.remove);
     if (ok == null) return;
     removedIds.add(item.id);
-    await deleteConversation(state.chatDb, item.id);
+    if (state.chatDb) await deleteConversation(state.chatDb, item.id);
     if (item.id === state.conversationId) {
       state.messages = [];
       state.conversationId = newId();
@@ -899,7 +1046,10 @@ async function chatAction(action, item) {
     }
   }
   closeRowMenus();
-  state.conversations = await listConversations(state.chatDb);
+  if (state.runtime === "ollama") {
+    const rows = await localConversations();
+    if (rows) state.conversations = rows;
+  } else if (state.chatDb) state.conversations = await listConversations(state.chatDb);
   paint();
 }
 
@@ -939,7 +1089,7 @@ function paintList() {
 
 function paint() {
   paintList();
-  const generating = state.messages.some((item) => item.running);
+  const generating = state.messages.some((item) => item.running || item.queued || (state.runtime === "ollama" && item.pending));
   const running = generating || state.messages.some((item) => item.pending);
   stop.hidden = !generating;
   stop.textContent = ui.stop;
@@ -987,6 +1137,8 @@ function paint() {
         column.append(meta);
         renderRich(column, item.content);
         if (!item.running && item.content) column.append(provenance(item));
+        const passed = passedFragmentList(item);
+        if (passed) column.append(passed);
         if (item.sources?.length) column.append(sourceList(item.sources, item.replyLang));
         if (item.content && !item.running) {
           const actions = document.createElement("div");
@@ -1009,8 +1161,12 @@ function paint() {
           if (!item.running) {
             const again = document.createElement("button");
             again.type = "button";
-            again.textContent = chrome.againReply;
+            again.textContent = state.runtime === "ollama" ? ui.regenerate : chrome.againReply;
             again.addEventListener("click", () => {
+              if (state.runtime === "ollama") {
+                void regenerateLocal(item);
+                return;
+              }
               const index = state.messages.indexOf(item);
               const prior = [...state.messages.slice(0, index)].reverse().find((entry) => entry.role === "user");
               if (prior && prompt instanceof HTMLTextAreaElement) {
@@ -1068,9 +1224,13 @@ function paint() {
 
 function applyLiveStatus() {
   if (!status) return;
-  const open = state.messages.find((item) => item.role === "assistant" && (item.pending || item.running));
+  const open = state.messages.find((item) => item.role === "assistant" && (item.pending || item.running || item.queued));
   let line = "";
-  if (open && (open.pending || open.held || !state.snap.ready || !String(open.content || "").trim())) {
+  if (state.runtime === "ollama" && open) {
+    if (open.queued || (open.pending && !open.running)) line = ui.waitingLocal;
+    else if (!String(open.content || "").trim()) line = ui.thinking;
+    else line = chrome.generating;
+  } else if (open && (open.pending || open.held || !state.snap.ready || !String(open.content || "").trim())) {
     line = open.pending || open.held || !state.snap.ready ? ui.preparingModel : ui.thinking;
   } else if (state.messages.some((item) => item.running)) line = chrome.generating;
   if (line) {
@@ -1078,7 +1238,7 @@ function applyLiveStatus() {
     return;
   }
   const current = status.textContent || "";
-  if (current === ui.queued || current === ui.preparingModel || current === ui.thinking || current === chrome.generating) setStatus("");
+  if (current === ui.queued || current === ui.waitingLocal || current === ui.preparingModel || current === ui.thinking || current === chrome.generating) setStatus("");
 }
 
 function showView(name) {
@@ -1119,7 +1279,10 @@ function markCancelled() {
 
 async function stopGeneration(dropQueue = false) {
   turnEpoch += 1;
-  const done = engine.interrupt();
+  const localId = state.localRequestId;
+  state.localAbort?.abort();
+  if (state.runtime === "ollama" && localId) void cancelLocal(localId);
+  const done = state.runtime === "ollama" ? Promise.resolve() : engine.interrupt();
   for (const item of state.messages) {
     if (!item.running && !item.pending) continue;
     const wasRunning = item.running;
@@ -1262,6 +1425,171 @@ async function flushQueue() {
   if (state.queue.some((item) => item.pending)) await flushQueue();
 }
 
+function localErrorText(code, message) {
+  if (code === "ollama-down") return ui.localDown;
+  if (code === "model-missing") return ui.localMissing;
+  if (code === "timeout") return ui.localTimeout;
+  if (code === "budget") return ui.localBudget;
+  if (code === "too-large") return ui.localTooLarge;
+  if (code === "cancelled") return ui.stopped;
+  if (!code) return ui.localBackend;
+  return message || ui.error;
+}
+
+function localDialogue(except) {
+  return state.messages.flatMap((item) => {
+    if (item === except || (item.role !== "user" && item.role !== "assistant")) return [];
+    const content = String(item.content || "").trim();
+    if (!content) return [];
+    return [{ role: item.role, content: content.slice(0, 8000) }];
+  }).slice(-24);
+}
+
+async function refreshLocalList() {
+  const rows = await localConversations();
+  if (!rows) return;
+  const merged = new Map(state.conversations.map((item) => [item.id, item]));
+  for (const row of rows) merged.set(row.id, { ...merged.get(row.id), ...row });
+  state.conversations = [...merged.values()].sort((a, b) => (a.updated < b.updated ? 1 : -1));
+}
+
+async function streamLocal(item, extra = {}) {
+  const epoch = turnEpoch;
+  const requestId = newId();
+  item.requestId = requestId;
+  item.pending = true;
+  item.running = false;
+  item.queued = false;
+  item.provider = "third-party";
+  item.mode = "model";
+  item.modelId = state.localInfo?.model || "qwen3:8b";
+  item.modelVersion = `${item.modelId} (Ollama, tercero)`;
+  const ctrl = new AbortController();
+  state.localAbort = ctrl;
+  state.localRequestId = requestId;
+  paint();
+  try {
+    await localChat({
+      signal: ctrl.signal,
+      body: {
+        requestId,
+        conversationId: state.conversationId,
+        regenerate: extra.regenerate === true,
+        task: state.tool,
+        messages: localDialogue(item),
+        document: String(item.document || ""),
+        editor: String(item.editor || ""),
+        projectId: state.chatProject || "",
+      },
+      onEvent(event) {
+        if (epoch !== turnEpoch || !event || event.requestId && event.requestId !== requestId) return;
+        if (event.type === "queued") {
+          item.queued = true;
+          item.pending = true;
+          item.running = false;
+          setStatus(ui.waitingLocal);
+          paintSoon();
+          return;
+        }
+        if (event.type === "start") {
+          item.queued = false;
+          item.pending = false;
+          item.running = true;
+          item.modelId = event.modelId || item.modelId;
+          item.modelVersion = event.modelVersion || item.modelVersion;
+          item.provider = "third-party";
+          paintSoon();
+          return;
+        }
+        if (event.type === "token") {
+          item.queued = false;
+          item.pending = false;
+          item.running = true;
+          item.content += String(event.text || "");
+          paintSoon();
+          return;
+        }
+        if (event.type === "done") {
+          item.running = false;
+          item.pending = false;
+          item.queued = false;
+          const reply = item.replyLang || lang;
+          const prior = state.messages.filter((entry) => entry !== item).map((entry) => ({ role: entry.role, content: entry.content, mode: entry.mode }));
+          const guarded = finishModelAnswer(event.text || item.content, reply, item.sources, item.question, prior);
+          if (guarded.blocked) {
+            item.content = guarded.text;
+            item.mode = "rules";
+            item.provider = "none";
+            item.modelId = "none";
+            item.modelVersion = "";
+          } else {
+            const usable = String(guarded.text || event.text || item.content || "").trim();
+            item.content = sanitizePlain(usable) || ui.emptyModel;
+            item.mode = "model";
+            item.provider = "third-party";
+            item.modelId = event.modelId || item.modelId;
+            item.modelVersion = event.modelVersion || item.modelVersion;
+          }
+          item.genTokens = Number(event.metrics?.evalTokens) || 0;
+          item.genMs = Number(event.metrics?.evalMs) || 0;
+          item.genThreads = 1;
+          if (event.run) item.run = event.run;
+          if (Array.isArray(event.fragments)) item.fragments = event.fragments;
+          if (event.conversationId) state.conversationId = event.conversationId;
+        }
+        if (event.type === "error") {
+          item.running = false;
+          item.pending = false;
+          item.queued = false;
+          if (event.code === "cancelled") item.content = String(item.content || "").trim() || ui.stopped;
+          else {
+            item.failed = true;
+            item.content = localErrorText(event.code, event.message);
+            item.mode = "rules";
+            item.provider = "none";
+            item.modelId = "none";
+            item.modelVersion = "";
+          }
+        }
+      },
+    });
+  } catch (error) {
+    if (epoch !== turnEpoch) return;
+    item.running = false;
+    item.pending = false;
+    item.queued = false;
+    if (error?.name === "AbortError") item.content = String(item.content || "").trim() || ui.stopped;
+    else {
+      item.failed = true;
+      item.content = localErrorText("", error instanceof Error ? error.message : "");
+    }
+  }
+  if (state.localRequestId === requestId) {
+    state.localAbort = null;
+    state.localRequestId = "";
+  }
+  if (epoch !== turnEpoch) return;
+  await refreshLocalList();
+  paint();
+}
+
+async function regenerateLocal(item) {
+  await stopGeneration(true);
+  const index = state.messages.indexOf(item);
+  if (index < 0) return;
+  const prior = [...state.messages.slice(0, index)].reverse().find((entry) => entry.role === "user");
+  state.messages.splice(index, 1);
+  const placeholder = assistant({
+    pending: true,
+    question: prior?.content || "",
+    replyLang: item.replyLang || lang,
+    sources: item.sources,
+    document: item.document || "",
+    editor: item.editor || "",
+  });
+  await streamLocal(placeholder, { regenerate: true });
+}
+
 async function send() {
   const field = prompt instanceof HTMLTextAreaElement ? prompt : null;
   const text = (field?.value || "").trim();
@@ -1270,6 +1598,7 @@ async function send() {
   if (state.messages.some((item) => item.running)) await stopGeneration(true);
   const visible = [text, state.attachment ? state.attachment.name : "", local && !state.attachment ? ui.editorTitle : ""].filter(Boolean).join("\n");
   const modelText = [text, state.attachment?.text || "", local].filter(Boolean).join("\n\n").slice(0, 8000);
+  const localDocument = String(state.attachment?.text || "").slice(0, 8000);
   const index = await knowledgeIndex().catch(() => null);
   const plan = await planTurn({
     question: text,
@@ -1330,6 +1659,21 @@ async function send() {
     return;
   }
   const budget = replyBudget(text, plan.promptSources, modelText.length > 1000);
+  if (state.runtime === "ollama") {
+    const item = assistant({
+      sources: plan.sources,
+      promptSources: plan.promptSources,
+      question: text,
+      replyLang: plan.replyLang,
+      maxTokens: budget,
+      pending: true,
+      document: localDocument,
+      editor: local,
+    });
+    await streamLocal(item);
+    field?.focus();
+    return;
+  }
   if (!state.snap.ready) {
     // phase "ready" con ready false es la ventana de Detener: no hay que volver a descargar.
     if (state.snap.phase !== "preparing" && state.snap.phase !== "ready") startPrepare(modelPick.value || defaultModel().id);
@@ -1504,7 +1848,10 @@ modelPick.addEventListener("change", () => {
   paint();
 });
 exportVotes.addEventListener("click", () => { void downloadVotes(); });
-cancel.addEventListener("click", () => { engine.cancel(); });
+cancel.addEventListener("click", () => {
+  if (state.runtime === "ollama") void stopGeneration(true);
+  else engine.cancel();
+});
 editorToggle.addEventListener("click", () => setEditor(editor.hidden));
 editorClose.addEventListener("click", () => setEditor(false));
 editorText.addEventListener("input", () => { state.localText = editorText.value; });
@@ -1513,10 +1860,18 @@ document.getElementById("project-form")?.addEventListener("submit", async (event
   event.preventDefault();
   const input = document.getElementById("project-name");
   const name = input instanceof HTMLInputElement ? input.value.trim() : "";
-  if (!name || !state.chatDb) return;
-  await saveProject(state.chatDb, { id: newId(), name });
+  if (!name || (!state.chatDb && state.runtime !== "ollama")) return;
+  const id = newId();
+  if (state.runtime === "ollama") {
+    const created = await localCreateProject({ id, name });
+    if (!created) {
+      setStatus(ui.localForbidden);
+      return;
+    }
+  }
+  if (state.chatDb) await saveProject(state.chatDb, { id, name });
   input.value = "";
-  state.projects = await listProjects(state.chatDb);
+  state.projects = state.runtime === "ollama" ? (await localProjects() || state.projects) : await listProjects(state.chatDb);
   paint();
 });
 document.getElementById("library-attach")?.addEventListener("click", () => fileInput?.click());
@@ -1647,6 +2002,13 @@ function paintProjects() {
     open.textContent = project.name;
     if (project.id === state.activeProject) open.setAttribute("aria-current", "true");
     open.addEventListener("click", async () => {
+      if (state.runtime === "ollama") {
+        const opened = await localProject(project.id);
+        if (opened?.conversations) {
+          const rest = state.conversations.filter((item) => item.projectId !== project.id);
+          state.conversations = rest.concat(opened.conversations);
+        }
+      }
       if (state.chatProject !== project.id) {
         await persist();
         state.messages = [];
@@ -1665,9 +2027,18 @@ function paintProjects() {
     rename.textContent = chrome.rename;
     rename.addEventListener("click", async () => {
       const name = await askUser(chrome.projectName, project.name);
-      if (!name || !state.chatDb) return;
-      await saveProject(state.chatDb, { ...project, name });
-      state.projects = await listProjects(state.chatDb);
+      if (!name) return;
+      if (state.runtime === "ollama") {
+        const renamed = await localRenameProject(project.id, name);
+        if (!renamed) {
+          setStatus(ui.localForbidden);
+          return;
+        }
+        state.projects = await localProjects() || state.projects;
+      } else if (state.chatDb) {
+        await saveProject(state.chatDb, { ...project, name });
+        state.projects = await listProjects(state.chatDb);
+      }
       paint();
     });
     const remove = document.createElement("button");
@@ -1675,14 +2046,28 @@ function paintProjects() {
     remove.textContent = chrome.remove;
     remove.addEventListener("click", async () => {
       const ok = await askUser(chrome.deleteProject, "", chrome.remove);
-      if (ok == null || !state.chatDb) return;
-      await deleteProject(state.chatDb, project.id);
+      if (ok == null) return;
+      if (state.runtime === "ollama") {
+        const removed = await localDeleteProject(project.id);
+        if (!removed) {
+          setStatus(ui.localForbidden);
+          return;
+        }
+      } else if (!state.chatDb) return;
+      if (state.chatDb) await deleteProject(state.chatDb, project.id);
       if (state.activeProject === project.id) state.activeProject = "";
       if (state.chatProject === project.id) state.chatProject = "";
-      state.projects = await listProjects(state.chatDb);
-      state.conversations = await listConversations(state.chatDb);
+      if (state.runtime === "ollama") {
+        state.projects = await localProjects() || [];
+        state.conversations = await localConversations() || state.conversations;
+      } else if (state.chatDb) {
+        state.projects = await listProjects(state.chatDb);
+        state.conversations = await listConversations(state.chatDb);
+      }
       paint();
     });
+    if (project.role === "reader") rename.hidden = true;
+    if (project.role && project.role !== "owner") remove.hidden = true;
     row.append(open, rename, remove);
     list.append(row);
   }
@@ -1936,4 +2321,45 @@ async function bootModel() {
   if (chosen.id === defaultModel().id) startPrepare(defaultModel().id);
   else startPrepare(chosen.id);
 }
-void bootChats().then(() => bootModel());
+async function adoptLocalHistory() {
+  const projects = await localProjects();
+  if (projects) state.projects = projects;
+  const rows = await localConversations();
+  if (!rows) return;
+  const merged = new Map(state.conversations.map((item) => [item.id, item]));
+  for (const row of rows) merged.set(row.id, { ...merged.get(row.id), ...row });
+  state.conversations = [...merged.values()].sort((a, b) => (a.updated < b.updated ? 1 : -1));
+  const remote = await localConversation(state.conversationId);
+  if (!remote?.messages?.length) return;
+  state.messages = remote.messages.map((item, index) => ({
+    id: `m-${index}-${item.role === "user" ? "u" : "a"}`,
+    role: item.role,
+    content: item.content,
+    mode: "model",
+    provider: item.role === "assistant" ? "third-party" : "none",
+    modelId: item.role === "assistant" ? (item.run?.model || state.localInfo?.model || "qwen3:8b") : "none",
+    modelVersion: item.role === "assistant" ? `${item.run?.model || state.localInfo?.model || "qwen3:8b"} (Ollama, tercero)` : "",
+    run: item.role === "assistant" ? item.run : undefined,
+    fragments: item.role === "assistant" && Array.isArray(item.fragments) ? item.fragments : undefined,
+  }));
+  state.chatRenamed = false;
+  state.chatTitle = "";
+}
+
+void (async () => {
+  const local = await localStatus();
+  if (local?.mode === "local") {
+    state.runtime = "ollama";
+    state.localInfo = local;
+    root.dataset.runtime = "ollama";
+    const note = document.querySelector(".composer-area .note");
+    if (note) note.textContent = `${chrome.note} ${ui.localHonest}`;
+  }
+  await bootChats();
+  if (state.runtime === "ollama") {
+    await adoptLocalHistory();
+    paint();
+    return;
+  }
+  await bootModel();
+})();

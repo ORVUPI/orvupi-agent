@@ -33,6 +33,9 @@ drill-SHA256SUMS
 verify-report.json
 verify-report.md
 train/arqiven/out/
+local/arqiven/data/
+eval/arqiven/fijo/out/
+eval/arqiven/conocimiento/out/
 web/v2/assets/orvupi/album/**
 !web/v2/assets/orvupi/album/**/
 !web/v2/assets/orvupi/album/**/*.png
