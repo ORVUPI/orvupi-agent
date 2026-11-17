@@ -396,12 +396,28 @@ export function unwrapEmptyLinks(text) {
     .replace(/\[([^\]\n]+)\][\s\u00a0\u200b]*[（(][\s\u00a0\u200b]*[)）]/g, "$1");
 }
 
-/** «salud Ley 15/2022, arts. 2.1 y 26.» pasa a «salud (Ley 15/2022, arts. 2.1 y 26).» */
+const LAW_ARTS = String.raw`(?:arts?\.|articles?)\s*\d+(?:\.\d+)?(?:\s*(?:,|y|and)\s*\d+(?:\.\d+)?)*`;
+
+/** «según la (Ley…)» pasa a «según la Ley (arts…)». Sin artículo, la cita entera va entre paréntesis. */
 function wrapLawCite(text) {
-  return String(text || "").replace(
-    /(^|[^\w(])((?:Ley|Law)\s*15\s*\/\s*2022,\s*arts?\.\s*\d+(?:\.\d+)?(?:\s*(?:,|y|and)\s*\d+(?:\.\d+)?)*)(\s*\.)?/gi,
-    "$1($2)$3",
-  );
+  const arts = LAW_ARTS;
+  return String(text || "")
+    .replace(
+      new RegExp(String.raw`\b(la|el|the|una)\s+\(((?:Ley|Law)\s*15\s*\/\s*2022),\s*(${arts})\)`, "gi"),
+      "$1 $2 ($3)",
+    )
+    .replace(
+      new RegExp(String.raw`(^|[^\w(])(?:(la|el|the|una)\s+)?((?:Ley|Law)\s*15\s*\/\s*2022),\s*(${arts})(\s*\.)?`, "gi"),
+      (_all, prefix, article, law, cited, dot) => {
+        const tail = dot || "";
+        if (article) return `${prefix}${article} ${law} (${cited})${tail}`;
+        return `${prefix}(${law}, ${cited})${tail}`;
+      },
+    );
+}
+
+function stripInternalSlugs(text) {
+  return String(text || "").replace(/[ \t]*\[[a-z0-9]+(?:-[a-z0-9]+)+\]/gi, "");
 }
 
 /** Si falta un punto, añade frases fijas. No pega la nota. Las URL van solo en «Fuentes:». */
@@ -692,7 +708,8 @@ function stripMetaOpeners(text) {
 }
 
 function keepShownTag(tag) {
-  return /^\[(?:f\d+|fuente|[a-z0-9]+(?:-[a-z0-9]+)+)\]$/.test(tag);
+  if (/^\[[a-z0-9]+(?:-[a-z0-9]+)+\]$/i.test(tag)) return false;
+  return /^\[(?:f\d+|fuente)\]$/i.test(tag);
 }
 
 function hideProviderNames(text) {
@@ -735,6 +752,7 @@ export function presentAnswer(answer, question) {
   if (wantsSources(question)) {
     const tags = [...text.matchAll(/\[[^\]\n]{1,40}\]/g)].map((item) => item[0]).filter(keepShownTag);
     next = next.replace(/https?:\/\/[^\s)]+/g, "").replace(/[ \t]*(?:Fuentes|Sources):[ \t]*[^\n]*/gi, "");
+    next = stripInternalSlugs(next);
     for (const tag of [...new Set(tags)]) {
       if (!next.includes(tag)) next = `${next.trim()} ${tag}`.trim();
     }
@@ -797,11 +815,24 @@ function isMortgageNoise(body) {
     || /^no hay informaci/i.test(body.trim());
 }
 
+/** La TIE no es el índice vigente, y la cláusula suelo no protege al cliente de una subida. */
+function falseMortgageClaim(body) {
+  const text = String(body || "");
+  if (/\bTIE\b/.test(text) && /índice|index|referencia|reference|españa|spain|actual|current/i.test(text)) return true;
+  if (!/cl[aá]usula suelo|floor clause/i.test(text)) return false;
+  const protectsClient = /proteg(?:e|en|er)|protects?|cliente|borrower|customer|consumidor/i.test(text);
+  const rise = /subid|alza|rise|increas|go up|goes up/i.test(text);
+  if (protectsClient && rise) return true;
+  if (/proteg(?:e|en) (?:al|a la|a los|a las)\s+(?:cliente|consumidor|titular|prestatario)/i.test(text)) return true;
+  if (/protects? (?:you|the borrower|the customer|the client)/i.test(text)) return true;
+  return false;
+}
+
 /** En una pregunta de hipoteca, una guía general y ninguna nota de otro tema. */
 export function completeHipoteca(answer, question) {
   if (!/hipotec|mortgage/i.test(String(question || ""))) return String(answer || "").trim();
-  const kept = piecesOf(answer).filter((piece) => !isMortgageNoise(piece.body));
-  let text = joinPieces(kept);
+  const kept = piecesOf(answer).filter((piece) => !isMortgageNoise(piece.body) && !falseMortgageClaim(piece.body));
+  let text = tidyNumberedLists(joinPieces(kept));
   const en = answerLanguage(question) === "en";
   const covered = /eur[ií]bor/i.test(text) && (/\btae\b/i.test(text) || /\bapr\b/i.test(text)) && (/fein/i.test(text) || /ley\s*5\s*\/\s*2019|law\s*5\s*\/\s*2019/i.test(text));
   if (!covered) text = `${text.trim()}\n\n${en ? MORTGAGE_GUIDE : HIPOTECA_GUIA}`.trim();
@@ -818,13 +849,17 @@ function listBody(line) {
 }
 
 function isOrphanContinuation(body) {
-  return /^(?:this|that|it) will help\b/i.test(body) || /^(?:esto|esta) (?:te |le )?ayudar/i.test(body);
+  const text = String(body || "").trim();
+  if (/^(?:this|that|it) will help\b/i.test(text) || /^(?:esto|esta) (?:te |le )?ayudar/i.test(text)) return true;
+  if (/eur[ií]bor/i.test(text)) return false;
+  return /^(?:this|that) index\b/i.test(text) || /^(?:este|ese) índice\b/i.test(text);
 }
 
 function stripPublicationRefs(text) {
   return String(text || "")
     .replace(/,?\s*en la tabla II de esa publicación,?/gi, "")
     .replace(/,?\s*in table II of that publication,?/gi, "")
+    .replace(/,?\s*as outlined in (?:the|that) publication,?/gi, "")
     .replace(/[ \t]{2,}/g, " ")
     .replace(/\s+([,.;:])/g, "$1");
 }

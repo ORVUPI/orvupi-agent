@@ -457,12 +457,15 @@ describe("conjunto fijo de 100 casos", () => {
     assert.match(sinDespido, /arts\. 2\.1 y 26/);
     assert.equal(/\[|Fuentes:|https?:|boe\.es/i.test(sinDespido), false);
     assert.match(salida.presentAnswer(despidoChat, "dame las fuentes"), /Fuentes:/);
-    assert.match(salida.presentAnswer(despidoChat, "dame las fuentes"), /\[despido-baja\]/);
+    assert.match(salida.presentAnswer(despidoChat, "dame las fuentes"), /#a2/);
+    assert.match(salida.presentAnswer(despidoChat, "dame las fuentes"), /#a26/);
+    assert.equal(/\[despido-baja\]/.test(salida.presentAnswer(despidoChat, "dame las fuentes")), false);
     const suenoChat = "La higiene del sueño empieza por eliminar la cafeína [higiene-sueno]. https://www.sanidad.gob.es/biblioPublic/publicaciones/recursos_propios/infMedic/docs/vol32_4TratInsomnio.pdf";
     const sinSueno = salida.presentAnswer(suenoChat, "¿Qué es la higiene del sueño?");
     assert.match(sinSueno, /cafeína/);
     assert.equal(/\[|https?:/i.test(sinSueno), false);
-    assert.match(salida.presentAnswer(suenoChat, "pásame el documento"), /\[higiene-sueno\]/);
+    assert.match(salida.presentAnswer(suenoChat, "pásame el documento"), /sanidad\.gob\.es/);
+    assert.equal(/\[higiene-sueno\]/.test(salida.presentAnswer(suenoChat, "pásame el documento")), false);
     const hipotecaChat = "Una hipoteca a tipo fijo da estabilidad. Ahora no hay un dato en vivo disponible; conviene consultarlo en la fuente oficial antes de decidir. Fuentes: https://www.boe.es/buscar/act.php?id=BOE-A-2022-11589#a2";
     const sinHipoteca = salida.presentAnswer(hipotecaChat, "¿Qué mirar en una hipoteca?");
     assert.match(sinHipoteca, /estabilidad/);
@@ -494,7 +497,7 @@ describe("conjunto fijo de 100 casos", () => {
     assert.equal(/ministerio|volumen|higiene-sueno|https?:/i.test(suenoLimpio), false);
     const suenoConFuente = salida.presentAnswer(suenoRoto, "dame las fuentes");
     assert.match(suenoConFuente, /^La higiene del sueño/);
-    assert.match(suenoConFuente, /\[higiene-sueno\]/);
+    assert.equal(/\[higiene-sueno\]/.test(suenoConFuente), false);
     assert.match(suenoConFuente, /\n\nFuentes: https:\/\/www\.sanidad\.gob\.es\//);
     assert.equal(/^del Ministerio/i.test(suenoConFuente), false);
     assert.equal(salida.SOURCE_REQUESTS.includes("con enlaces"), true);
@@ -523,7 +526,7 @@ describe("conjunto fijo de 100 casos", () => {
     assert.equal(/ministry|volume|https?:|\[/i.test(suenoEnLimpio), false);
     const suenoEnFuente = salida.presentAnswer(suenoEn, "send me the document");
     assert.match(suenoEnFuente, /^Sleep hygiene means/);
-    assert.match(suenoEnFuente, /\[higiene-sueno\]/);
+    assert.equal(/\[higiene-sueno\]/.test(suenoEnFuente), false);
     assert.match(suenoEnFuente, /\n\nSources: https:\/\/www\.sanidad\.gob\.es\//);
     const despidoEn = salida.completeDespido("You can dismiss someone on sick leave if there is a real cause.", "", "Can I dismiss an employee who is on sick leave?");
     assert.match(despidoEn, /Legal points/);
@@ -719,7 +722,8 @@ describe("conjunto fijo de 100 casos", () => {
       noteId: "despido-baja",
     });
     assert.equal((fuentes.match(/Sources:/g) || []).length, 1);
-    assert.match(fuentes, /\[despido-baja\]/);
+    assert.equal(/\[despido-baja\]/.test(fuentes), false);
+    assert.match(fuentes, /#a2/);
     assert.match(fuentes, /#a26/);
     const sueno = salida.polishReply({
       answer: "Sleep hygiene refers to a set of habits from the Ministry of Health and Consumption, Spain, caffeine is one of the substances to limit. «Tratamiento del insomnio» (2008).",
@@ -796,6 +800,55 @@ describe("conjunto fijo de 100 casos", () => {
     assert.equal(/this will help you estimate/i.test(hipoteca), false);
     assert.equal((hipoteca.match(/^1\./gm) || []).length, 1);
     assert.match(hipoteca, /^1\. Check the spread and the fees/m);
+  });
+
+  test("el pulido de e441d779 quita la etiqueta, la cita mal puesta y la hipoteca falsa", async () => {
+    const salida = await import(href("local/arqiven/salida.mjs")) as {
+      polishReply: (input: {
+        answer?: string;
+        question?: string;
+        noteId?: string;
+      }) => string;
+    };
+    const despido = salida.polishReply({
+      answer: "Según la (Ley 15/2022, arts. 2.1 y 26) el despido es nulo si el motivo es la enfermedad [despido-baja].",
+      question: "¿Puedo despedir a alguien durante una baja? Dame las fuentes.",
+      noteId: "despido-baja",
+    });
+    assert.match(despido, /según la Ley 15\/2022 \(arts\. 2\.1 y 26\)/i);
+    assert.equal(/según la \(Ley/i.test(despido), false);
+    assert.equal(/\[despido-baja\]|\[higiene-sueno\]/.test(despido), false);
+    assert.match(despido, /#a2/);
+    assert.match(despido, /#a26/);
+    assert.match(despido, /Fuentes:/);
+    const suelta = salida.polishReply({
+      answer: "Es nulo por la condición de salud Ley 15/2022, arts. 2.1 y 26.",
+      question: "¿Puedo despedir a alguien durante una baja? Dame las fuentes.",
+      noteId: "despido-baja",
+    });
+    assert.match(suelta, /condición de salud \(Ley 15\/2022, arts\. 2\.1 y 26\)/);
+    const hipoteca = salida.polishReply({
+      answer: "La TIE es el índice de referencia español actual. La cláusula suelo protege al cliente frente a las subidas del tipo.",
+      question: "¿Qué mirar antes de pedir una hipoteca a tipo fijo?",
+    });
+    assert.equal(/\bTIE\b/.test(hipoteca), false);
+    assert.equal(/cláusula suelo protege al cliente/i.test(hipoteca), false);
+    assert.match(hipoteca, /Euríbor/);
+    assert.match(hipoteca, /Compruebe si el contrato trae cláusula suelo/);
+    const hipotecaEn = salida.polishReply({
+      answer: "1. The TIE is the current Spanish reference index.\n2. This index is what banks quote today.\n3. Compare the fees.",
+      question: "What should I check before signing a fixed-rate mortgage?",
+    });
+    assert.equal(/\bTIE\b/.test(hipotecaEn), false);
+    assert.equal(/2\. This index/i.test(hipotecaEn), false);
+    assert.equal(/^2\./m.test(hipotecaEn), false);
+    assert.match(hipotecaEn, /Euribor/);
+    const sueno = salida.polishReply({
+      answer: "Sleep hygiene, as outlined in the publication, means limiting caffeine.",
+      question: "What is sleep hygiene and what does it say about caffeine?",
+    });
+    assert.equal(/as outlined in the publication/i.test(sueno), false);
+    assert.match(sueno, /caffeine/i);
   });
 
   test("el cargador solo lee las notas del manifiesto", async () => {
