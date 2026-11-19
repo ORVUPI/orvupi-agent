@@ -9,17 +9,36 @@ export { OFFICIAL_ADDRESS, isOfficialAddress };
 const ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 const ADDRESS = new RegExp(`(?<![${ALPHABET}])[${ALPHABET}]{32,44}(?![${ALPHABET}])`, "g");
 
-const FINANCE_ASK = [
-  /\b(compro|comprar|compr[eé]|invierto|invertir|vendo|vender)\b/i,
-  /\b(subir[aá]|bajar[aá]|va a subir|va a bajar|inversi[oó]n|investimento|investment)\b/i,
-  /\b(deber[ií]a comprar|debo comprar|me conviene|precio objetivo|objetivo de precio)\b/i,
+const FINANCE_EXPLICIT = [
   /\b(consejo financiero|asesoramiento financiero|recomendaci[oó]n de inversi[oó]n)\b/i,
-  /\b(should i buy|should i sell|should i invest|will it (go|rise|pump)|price target|financial advice|invest in|go up|go down)\b/i,
-  /\b(buy|sell|invest|profit)\b/i,
-  /\b(buy now|sell now|how much should i invest|good investment)\b/i,
-  /\b(devo comprar|vale a pena comprar|vai subir|vai cair|preço alvo|conselho financeiro|devo investir)\b/i,
-  /買う|買え|買い|売る|売れ|売り|上がり|下がり|投資|儲か|目標価格|財務アドバイス/,
-  /사야|살까|살지|팔아|팔까|오를|내릴|투자|재테크|매수|목표 가격|재정|사면|사기|사도록|사는/,
+  /\b(precio objetivo|objetivo de precio|price target|preço alvo)\b/i,
+  /\b(should i buy|should i sell|should i invest|should buy|should sell|financial advice)\b/i,
+  /\b(debo comprar|devo comprar|devo investir|deber[ií]a invertir|recomiend\w* comprar|recomenda comprar|recommend that i buy)\b/i,
+  /\b(buen momento para vender|good time to sell|boa hora para vender|melhor hora para comprar|best time to buy)\b/i,
+  /\b(vendo todo|sell everything|vender tudo|cu[aá]nto gano|how much do i make|quanto ganho)\b/i,
+  /\b(garantizas beneficio|guarantee a profit|garante lucro|el doble si baja|buy twice|comprar o dobro)\b/i,
+  /\b(conselho financeiro|investment recommendation|recomenda[cç][aã]o de investimento|buena inversi[oó]n|good investment|bom investimento)\b/i,
+  /\b(mejor momento para comprar|si compro|se eu compro)\b/i,
+  /財務アドバイス|目標価格|投資すべき|買うべき|売るべき|いくら投資|儲かり|利益を保証|一番いい時|すべて売|勧めますか|通貨|倍買|良い投資|買うかどうか|投資のおすすめ/,
+  /재정 조언|목표 가격|투자해야|사야 할까|사야 할까요|사야 하는지|사는 것을 권|팔아야 할 때|전부 팔|가장 좋은 때|이익을 보장|두 배로|투자 추천|오늘 사면|사도록|살지|코인|좋은 투자/,
+];
+
+const PRICE_WORD = /\b(precio|price|preço)\b|価格|가격/;
+const PRICE_MOVE = /\b(subir|bajar|go up|go down|vai subir|vai cair)\b|上が|下が|오를|내릴/;
+
+const FINANCE_ASSET = [
+  /\b(orvupi|token|cripto|criptomoneda|crypto|bitcoin|btc|memecoin|memecoins)\b/i,
+  /\b(acci[oó]n|acciones|moneda|monedas|moeda|moedas|coin|coins)\b/i,
+  /\$[A-Za-z]{2,12}\b/,
+];
+
+const FINANCE_MOVE = [
+  /\b(compro|comprar|compr[eé]|invierto|invertir|vendo|vender|inversi[oó]n)\b/i,
+  /\b(va a subir|va a bajar|subir[aá]|bajar[aá])\b/i,
+  /\b(buy|sell|invest|go up|go down)\b/i,
+  /\b(comprar|vender|investir|vai subir|vai cair)\b/i,
+  /買う|買え|売り|売る|投資|上がり|下がり/,
+  /사야|살까|팔아|팔까|투자|오를|내릴|매수/,
 ];
 
 const ADVICE_OUT = [
@@ -99,7 +118,11 @@ export function foreignAddresses(text) {
 
 export function asksFinancialAdvice(text) {
   const value = String(text || "");
-  return FINANCE_ASK.some((pattern) => pattern.test(value));
+  if (FINANCE_EXPLICIT.some((pattern) => pattern.test(value))) return true;
+  if (PRICE_WORD.test(value) && PRICE_MOVE.test(value)) return true;
+  const asset = FINANCE_ASSET.some((pattern) => pattern.test(value)) || findAddresses(value).length > 0 || value.includes(OFFICIAL_ADDRESS);
+  if (!asset) return false;
+  return FINANCE_MOVE.some((pattern) => pattern.test(value));
 }
 
 export function givesFinancialAdvice(text) {

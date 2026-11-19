@@ -8,6 +8,44 @@ import { repoRoot } from "../src/paths.js";
 const root = repoRoot();
 const read = (rel: string) => readFileSync(path.join(root, rel), "utf8");
 
+function headerRules(text: string) {
+  const rules: Array<{ path: string; items: Array<{ detach?: string; name?: string; value?: string }> }> = [];
+  let current: (typeof rules)[number] | null = null;
+  for (const line of text.split("\n")) {
+    if (!line.trim() || line.startsWith("#")) continue;
+    if (!/^\s/.test(line)) {
+      current = { path: line.trim(), items: [] };
+      rules.push(current);
+      continue;
+    }
+    const body = line.trim();
+    if (!current) continue;
+    if (body.startsWith("! ")) current.items.push({ detach: body.slice(2).trim() });
+    else {
+      const split = body.indexOf(":");
+      current.items.push({ name: body.slice(0, split).trim(), value: body.slice(split + 1).trim() });
+    }
+  }
+  return rules;
+}
+
+function headerValues(text: string, urlPath: string, name: string) {
+  const matched = headerRules(text).filter((rule) => new RegExp(`^${rule.path.split("*").map((part) => part.replace(/[.+?^${}()|[\]\\]/g, "\\$&")).join(".*")}$`).test(urlPath));
+  matched.sort((a, b) => {
+    const stars = (path: string) => (path.match(/\*/g) ?? []).length;
+    const literal = (path: string) => path.replace(/\*/g, "").length;
+    return stars(b.path) - stars(a.path) || literal(a.path) - literal(b.path);
+  });
+  const values = new Map<string, string[]>();
+  for (const rule of matched) {
+    for (const item of rule.items) {
+      if (item.detach) values.delete(item.detach);
+      else if (item.name) values.set(item.name, [...(values.get(item.name) ?? []), item.value ?? ""]);
+    }
+  }
+  return values.get(name) ?? [];
+}
+
 describe("motor de terceros de ARQIVEN", () => {
   test("el catálogo nombra terceros y el contrato no acepta Arqiven-N sin checkpoint", async () => {
     const models = await import(pathToFileURL(path.join(root, "web/v2/shared/ia/models.mjs")).href) as {
@@ -22,8 +60,8 @@ describe("motor de terceros de ARQIVEN", () => {
     };
     const request = contract.createRequest({ source: "central" });
     assert.deepEqual(contract.capabilities().models, []);
-    assert.equal(models.defaultModel().id, "smol135-cpu");
-    assert.equal(models.defaultModel().repo, "HuggingFaceTB/SmolLM2-135M-Instruct");
+    assert.equal(models.defaultModel().id, "qwen35-cpu");
+    assert.equal(models.defaultModel().repo, "onnx-community/Qwen3.5-0.8B-Text-ONNX");
     assert.equal(models.THIRD_PARTY_MODELS.some((item) => item.id.startsWith("arqiven-")), false);
     const third = models.thirdPartyResult(request, { text: "azul", modelId: "smol135-cpu", provider: "third-party", mode: "model", lang: "es" });
     assert.equal(third.provider, "third-party");
@@ -37,6 +75,19 @@ describe("motor de terceros de ARQIVEN", () => {
     assert.match(blocked.text, /No hay respuesta generada/);
     const unknown = models.thirdPartyResult(request, { text: "x", modelId: "inventado", provider: "third-party" });
     assert.equal(unknown.provider, "none");
+  });
+
+  test("cada ruta de ARQIVEN recibe COOP y COEP una sola vez", () => {
+    const headers = read("web/v2/_headers");
+    const pages = ["/arqiven/", "/arqiven/index.html", "/arqiven/engine-worker.mjs", "/en/arqiven/", "/en/arqiven/app.js", "/pt-br/arqiven/", "/pt-br/arqiven/index.html", "/ja/arqiven/", "/ja/arqiven/engine-worker.mjs", "/ko/arqiven/", "/ko/arqiven/app.js"];
+    for (const urlPath of pages) {
+      assert.deepEqual(headerValues(headers, urlPath, "Cross-Origin-Opener-Policy"), ["same-origin"], urlPath);
+      assert.deepEqual(headerValues(headers, urlPath, "Cross-Origin-Embedder-Policy"), ["credentialless"], urlPath);
+    }
+    for (const urlPath of ["/", "/work/", "/work/index.html", "/verify/", "/studio/index.html"]) {
+      assert.deepEqual(headerValues(headers, urlPath, "Cross-Origin-Opener-Policy"), ["same-origin"], urlPath);
+      assert.deepEqual(headerValues(headers, urlPath, "Cross-Origin-Embedder-Policy"), [], urlPath);
+    }
   });
 
   test("Studio usa el motor solo si está listo y si no deja el catálogo", async () => {
@@ -78,10 +129,25 @@ describe("motor de terceros de ARQIVEN", () => {
     const app = read("web/v2/arqiven/app.js");
     const headers = read("web/v2/_headers");
     assert.match(models, /https:\/\/cdn\.jsdelivr\.net\/npm\/@huggingface\/transformers@4\.3\.1\/\+esm/);
-    assert.match(models, /https:\/\/cdn\.jsdelivr\.net\/npm\/onnxruntime-web@1\.31\.0-dev\.20260914-8d85527a0\/dist\//);
-    assert.match(worker, /import\(TRANSFORMERS_ESM\)/);
+    assert.match(models, /https:\/\/cdn\.jsdelivr\.net\/npm\/onnxruntime-web@1\.31\.1\/dist\//);
+    assert.match(worker, /fetch\(TRANSFORMERS_ESM\)/);
+    assert.match(worker, /ort\.wasm\.min\.mjs/);
     assert.match(worker, /wasmPaths = ONNX_WASM/);
-    assert.match(worker, /numThreads = 1/);
+    assert.match(read("web/v2/shared/ia/engine-client.mjs"), /function discardWorker/);
+    assert.match(read("apps/work/src/ai/worker.ts"), /onnxruntime-web@1\.31\.0-dev\.20260914-8d85527a0/);
+    assert.match(worker, /crossOriginIsolated/);
+    assert.match(worker, /Math\.min\(4, cores\)/);
+    assert.match(worker, /wasm\.proxy = false/);
+    assert.match(worker, /Atomics\.store\(haltFlag, 0, 1\)/);
+    assert.match(worker, /new SharedArrayBuffer\(4\)/);
+    assert.match(worker, /type: "settled"/);
+    assert.match(read("web/v2/shared/ia/engine-client.mjs"), /forceRestart/);
+    assert.match(read("web/v2/arqiven/app.js"), /resolveCalculation/);
+    assert.match(worker, /: 1;/);
+    assert.match(headers, /! Cross-Origin-Opener-Policy/);
+    assert.match(headers, /! Cross-Origin-Embedder-Policy/);
+    assert.match(headers, /Cross-Origin-Embedder-Policy: credentialless/);
+    assert.equal(app.includes("openEditorWith(item.content, false)"), false);
     assert.equal(worker.includes("arqiven-1"), false);
     assert.equal(worker.includes("Eres ORVUPI AI"), false);
     assert.match(app, /documentElement\.lang/);
@@ -90,13 +156,19 @@ describe("motor de terceros de ARQIVEN", () => {
     assert.match(app, /Preparando modelo de terceros/);
     assert.equal(app.includes("Preparar modelo de terceros"), false);
     assert.match(app, /prepare\.addEventListener/);
-    assert.equal(app.includes("Pensando"), false);
+    assert.match(app, /thinking: "Pensando…"/);
+    assert.match(worker, /tokenLimit/);
+    assert.match(worker, /finishOnDeadline/);
+    assert.match(worker, /REPLY_DEADLINE_MS/);
+    assert.equal(worker.includes("Math.max(plan.maxTokens, 280)"), false);
     assert.equal(app.includes("getUserMedia"), false);
     assert.equal(app.includes("localStorage"), false);
     assert.equal(app.includes("SharedWorker"), false);
     assert.equal(app.includes("innerHTML"), false);
     assert.match(app, /loadWorkBytes/);
     assert.match(app, /openEditorWith/);
+    assert.match(app, /id = "stop"/);
+    assert.match(app, /stopGeneration\(true\)/);
     assert.match(app, /randomUUID/);
     const globalBlock = headers.slice(headers.indexOf("\n/*\n"), headers.indexOf("\n/verify/\n"));
     assert.match(globalBlock, /connect-src 'self'/);

@@ -1,14 +1,18 @@
 import { arqivenEngine } from "/shared/ia/engine-client.mjs";
-import { defaultModel, modelById, modelForDevice, stepDown, THIRD_PARTY_MODELS } from "/shared/ia/models.mjs";
+import { canUseModel, defaultModel, downloadProgress, modelById, modelForDevice, stepDown, THIRD_PARTY_MODELS } from "/shared/ia/models.mjs";
 import { createRequest, honestResult } from "/shared/ia/contract.mjs";
 import { saveWorkBytes, loadWorkBytes } from "/studio/lib/work-store.mjs";
 import { sanitizePlain } from "/shared/ia/plain.mjs";
 import { buildIndex } from "/shared/ia/retrieve.mjs";
-import { excerptAnswer, finishModelAnswer, planTurn } from "/shared/ia/turn.mjs";
+import { excerptAnswer, finishModelAnswer, isFollowUp, planTurn } from "/shared/ia/turn.mjs";
+import { generationPlan, tokenLimit } from "/shared/ia/prompt.mjs";
+import { activeProfile } from "/shared/ia/profile.mjs";
+import { resolveCalculation } from "/shared/ia/calc.mjs";
 import { citedExcerpt, extractiveFromSources } from "/shared/ia/quality.mjs";
 import { exportPayload, listVotes, openFeedbackDb, saveVote } from "/shared/ia/feedback.mjs";
 import { clipHistory } from "/shared/ia/history.mjs";
-import { dateGroup, deleteConversation, deleteImage, deleteProject, listConversations, listImages, listProjects, matchesQuery, openChatDb, readConversation, saveConversation, saveImage, saveProject } from "/shared/ia/chats.mjs";
+void clipHistory;
+import { dateGroup, deleteConversation, deleteImage, deleteProject, listConversations, listImages, listProjects, matchesQuery, openChatDb, openPrefDb, readConversation, readSetting, saveConversation, saveImage, saveProject, saveSetting } from "/shared/ia/chats.mjs";
 
 const root = document.querySelector(".arq-app");
 if (!root) throw new Error("ARQIVEN");
@@ -25,11 +29,15 @@ const UI = {
     ready: "Modelo de terceros listo",
     again: "Usar este modelo",
     cancel: "Cancelar",
+    stop: "Detener",
+    stopped: "Detenido.",
     preparing: "Descargando un modelo de terceros. Puedes seguir escribiendo.",
     checking: "Comprobando que el modelo de terceros responde en este navegador.",
     idle: "IA de ORVUPI",
     who: "ARQIVEN es la IA de ORVUPI. Si descargas un modelo para que responda, es de terceros y se nombra aparte.",
     queued: "Preparando modelo de terceros… Puedes seguir escribiendo. Este aviso se sustituye cuando haya texto.",
+    preparingModel: "Preparando el modelo…",
+    thinking: "Pensando…",
     cancelled: "Cancelado. No hay respuesta generada.",
     error: "El modelo de terceros no se ha preparado.",
     emptyModel: "El modelo de terceros no escribió un texto usable.",
@@ -45,6 +53,8 @@ const UI = {
     shortcut: "Atajo de tarea. No ejecuta un modelo ni promete esa capacidad.",
     notBuilt: "Programar no está implementado. El chip no crea un programa.",
     retries: "Se ha reintentado tres veces. No hay otra descarga automática.",
+    fallbackLoad: "Qwen3.5-0.8B no se ha podido cargar. En su lugar se usa SmolLM2, que es más pequeño.",
+    fallbackMemory: "Este navegador tiene poca memoria para Qwen3.5-0.8B. Se usa SmolLM2, que es más pequeño.",
     excerptBadge: "extracto de la fuente · no es el modelo",
     usesSources: "usa fuentes y las cita",
     sourcesLabel: "Fuentes",
@@ -58,11 +68,15 @@ const UI = {
     ready: "Third-party model ready",
     again: "Use this model",
     cancel: "Cancel",
+    stop: "Stop",
+    stopped: "Stopped.",
     preparing: "Downloading a third-party model. You can keep typing.",
     checking: "Checking that the third-party model answers in this browser.",
     idle: "ORVUPI AI",
     who: "ARQIVEN is ORVUPI's AI. If you download a model so it can answer, that model belongs to someone else and is named separately.",
     queued: "Preparing a third-party model… You can keep typing. This notice is replaced when there is text.",
+    preparingModel: "Preparing the model…",
+    thinking: "Thinking…",
     cancelled: "Cancelled. There is no generated answer.",
     error: "The third-party model was not prepared.",
     emptyModel: "The third-party model did not write usable text.",
@@ -78,6 +92,8 @@ const UI = {
     shortcut: "Task shortcut. It does not run a model or promise that ability.",
     notBuilt: "Coding is not implemented. This chip does not create a program.",
     retries: "Retried three times. There is no further automatic download.",
+    fallbackLoad: "Qwen3.5-0.8B could not be loaded. SmolLM2 is used instead. It is smaller.",
+    fallbackMemory: "This browser does not have enough memory for Qwen3.5-0.8B. SmolLM2 is used instead. It is smaller.",
     excerptBadge: "source excerpt · not the model",
     usesSources: "uses sources and cites them",
     sourcesLabel: "Sources",
@@ -91,11 +107,15 @@ const UI = {
     ready: "Modelo de terceiros pronto",
     again: "Usar este modelo",
     cancel: "Cancelar",
+    stop: "Parar",
+    stopped: "Interrompido.",
     who: "ARQIVEN é a IA da ORVUPI. Se você baixar um modelo para ele responder, esse modelo é de terceiros e aparece com o nome dele.",
     preparing: "Baixando um modelo de terceiros. Você pode continuar escrevendo.",
     checking: "Conferindo se o modelo de terceiros responde neste navegador.",
     idle: "IA da ORVUPI",
     queued: "Preparando modelo de terceiros… Você pode continuar escrevendo. Este aviso é trocado quando houver texto.",
+    preparingModel: "Preparando o modelo…",
+    thinking: "Pensando…",
     cancelled: "Cancelado. Não há resposta gerada.",
     error: "O modelo de terceiros não foi preparado.",
     emptyModel: "O modelo de terceiros não escreveu um texto usável.",
@@ -111,6 +131,8 @@ const UI = {
     shortcut: "Atalho de tarefa. Não executa um modelo nem promete essa capacidade.",
     notBuilt: "Programar não está implementado. O atalho não cria um programa.",
     retries: "Houve três tentativas. Não há outra descarga automática.",
+    fallbackLoad: "Não foi possível carregar o Qwen3.5-0.8B. No lugar dele usa-se o SmolLM2, que é menor.",
+    fallbackMemory: "Este navegador tem pouca memória para o Qwen3.5-0.8B. Usa-se o SmolLM2, que é menor.",
     excerptBadge: "trecho da fonte · não é o modelo",
     usesSources: "usa fontes e cita",
     sourcesLabel: "Fontes",
@@ -124,11 +146,15 @@ const UI = {
     ready: "第三者モデルの準備ができました",
     again: "このモデルを使う",
     cancel: "キャンセル",
+    stop: "停止",
+    stopped: "停止しました。",
     who: "ARQIVEN は ORVUPI の AI です。応答させるためにモデルをダウンロードする場合、それは第三者のもので、名前は別に示します。",
     preparing: "第三者モデルをダウンロードしています。入力は続けられます。",
     checking: "このブラウザで第三者モデルが応答するか確認しています。",
     idle: "ORVUPIのAI",
     queued: "第三者モデルを準備しています… 入力は続けられます。テキストができたらこの表示を置き換えます。",
+    preparingModel: "モデルを準備しています…",
+    thinking: "考えています…",
     cancelled: "キャンセルしました。生成された回答はありません。",
     error: "第三者モデルを準備できませんでした。",
     emptyModel: "第三者モデルは使えるテキストを書きませんでした。",
@@ -144,6 +170,8 @@ const UI = {
     shortcut: "タスクの近道です。モデルは実行せず、その能力も約束しません。",
     notBuilt: "プログラミングは未実装です。このチップはプログラムを作りません。",
     retries: "3回試しました。これ以上は自動では受けません。",
+    fallbackLoad: "Qwen3.5-0.8B を読み込めませんでした。代わりに、より小さい SmolLM2 を使います。",
+    fallbackMemory: "このブラウザのメモリでは Qwen3.5-0.8B が入りません。より小さい SmolLM2 を使います。",
     excerptBadge: "出典の抜粋 · モデルの文章ではない",
     usesSources: "出典を使い、出典を示します",
     sourcesLabel: "出典",
@@ -157,11 +185,15 @@ const UI = {
     ready: "제3자 모델이 준비되었습니다",
     again: "이 모델 사용",
     cancel: "취소",
+    stop: "중지",
+    stopped: "중지했습니다.",
     who: "ARQIVEN은 ORVUPI의 AI입니다. 답을 받으려고 모델을 받으면 그 모델은 제3자이고, 이름은 따로 표시합니다.",
     preparing: "제3자 모델을 받는 중입니다. 계속 입력할 수 있습니다.",
     checking: "이 브라우저에서 제3자 모델이 응답하는지 확인하는 중입니다.",
     idle: "ORVUPI AI",
     queued: "제3자 모델을 준비하는 중… 계속 입력할 수 있습니다. 텍스트가 생기면 이 안내를 바꿉니다.",
+    preparingModel: "모델을 준비하는 중…",
+    thinking: "생각 중…",
     cancelled: "취소했습니다. 생성된 답은 없습니다.",
     error: "제3자 모델을 준비하지 못했습니다.",
     emptyModel: "제3자 모델이 쓸 수 있는 글을 쓰지 않았습니다.",
@@ -177,6 +209,8 @@ const UI = {
     shortcut: "작업 바로가기입니다. 모델을 실행하지 않고, 그 능력을 약속하지도 않습니다.",
     notBuilt: "프로그래밍은 구현되지 않았습니다. 이 칩은 프로그램을 만들지 않습니다.",
     retries: "세 번 시도했습니다. 더 이상 자동으로 받지 않습니다.",
+    fallbackLoad: "Qwen3.5-0.8B를 불러오지 못했습니다. 더 작은 SmolLM2를 대신 사용합니다.",
+    fallbackMemory: "이 브라우저에는 Qwen3.5-0.8B를 위한 메모리가 부족합니다. 더 작은 SmolLM2를 사용합니다.",
     excerptBadge: "출처 발췌 · 모델의 글이 아님",
     usesSources: "출처를 쓰고 출처를 밝힙니다",
     sourcesLabel: "출처",
@@ -188,13 +222,23 @@ const UI = {
 };
 const ui = UI[uiLang];
 const CHROME = {
-  es: { newChat: "Nuevo chat", settings: "Ajustes", conversations: "Chats", recent: "Recientes", emptyChats: "Todavía no hay chats.", emptyProjects: "Todavía no hay proyectos.", projectOne: "1 proyecto", projectMany: "{n} proyectos", emptyLibrary: "Todavía no hay imágenes.", attachImage: "Adjuntar imagen", allImages: "Todas", imageOne: "1 imagen", imageMany: "{n} imágenes", filterBy: "Filtrar", search: "Buscar", welcome: "¿En qué puedo ayudarte?", note: "ARQIVEN es la IA de ORVUPI y funciona con modelos de terceros. Puede cometer errores; revisa la información importante. Lo que escribes se guarda en este navegador.", generating: "Generando", waiting: "En espera", done: "Listo", failed: "Error", copy: "Copiar", copied: "Copiado en este navegador.", copyFail: "No se pudo copiar.", againReply: "Volver a preguntar", attach: "Adjuntar", more: "Más", details: "Detalles", today: "Hoy", yesterday: "Ayer", week: "7 días", older: "Anteriores", projects: "Proyectos", projectHint: "Si eliminas un proyecto, sus chats vuelven al historial general.", library: "Biblioteca", create: "Crear", rename: "Renombrar", move: "Mover a proyecto", remove: "Eliminar", cancel: "Cancelar", confirm: "Confirmar", general: "Historial general", fav: "Favoritas", download: "Descargar", close: "Cerrar", openChat: "Abrir chat", savedImage: "Imagen guardada en la biblioteca de este navegador.", imageBig: "La imagen pasa de 4 MB. No se ha guardado.", deleteChat: "¿Eliminar este chat de este navegador?", deleteProject: "¿Eliminar este proyecto? Sus chats vuelven al historial general.", deleteImage: "¿Eliminar esta imagen de este navegador?", projectName: "Nombre del proyecto", chatName: "Nombre del chat", imageOff: "La generación de imágenes llegará pronto. Por ahora puedes guardar aquí las imágenes que adjuntes en tus chats.", originRules: "Esta respuesta sale de las reglas de ARQIVEN, sin un modelo.", originExtract: "Es un extracto de las fuentes citadas. No lo escribió el modelo.", originModel: "Lo escribió un modelo de terceros" },
-  en: { newChat: "New chat", settings: "Settings", conversations: "Chats", recent: "Recent", emptyChats: "No chats yet.", emptyProjects: "No projects yet.", projectOne: "1 project", projectMany: "{n} projects", emptyLibrary: "No images yet.", attachImage: "Attach an image", allImages: "All", imageOne: "1 image", imageMany: "{n} images", filterBy: "Filter", search: "Search", welcome: "How can I help?", note: "ARQIVEN is ORVUPI's AI and runs on third-party models. It can make mistakes; check anything that matters. What you write stays in this browser.", generating: "Generating", waiting: "Waiting", done: "Done", failed: "Error", copy: "Copy", copied: "Copied on this device.", copyFail: "Could not copy.", againReply: "Ask again", attach: "Attach", more: "More", details: "Details", today: "Today", yesterday: "Yesterday", week: "7 days", older: "Older", projects: "Projects", projectHint: "Deleting a project returns its chats to the general history.", library: "Library", create: "Create", rename: "Rename", move: "Move to project", remove: "Delete", cancel: "Cancel", confirm: "Confirm", general: "General history", fav: "Favorites", download: "Download", close: "Close", openChat: "Open chat", savedImage: "Image saved in this browser's library.", imageBig: "The image is over 4 MB. It was not saved.", deleteChat: "Delete this chat from this browser?", deleteProject: "Delete this project? Its chats return to the general history.", deleteImage: "Delete this image from this browser?", projectName: "Project name", chatName: "Chat name", imageOff: "Image generation is coming soon. For now you can keep the images you attach in your chats here.", originRules: "This answer comes from ARQIVEN's rules, without a model.", originExtract: "This is an excerpt from the cited sources. The model did not write it.", originModel: "A third-party model wrote this" },
-  pt: { newChat: "Novo chat", settings: "Ajustes", conversations: "Chats", recent: "Recentes", emptyChats: "Ainda não há chats.", emptyProjects: "Ainda não há projetos.", projectOne: "1 projeto", projectMany: "{n} projetos", emptyLibrary: "Ainda não há imagens.", attachImage: "Anexar imagem", allImages: "Todas", imageOne: "1 imagem", imageMany: "{n} imagens", filterBy: "Filtrar", search: "Buscar", welcome: "Como posso ajudar?", note: "ARQIVEN é a IA da ORVUPI e funciona com modelos de terceiros. Pode errar; confira a informação importante. O que você escreve fica neste navegador.", generating: "Gerando", waiting: "Em espera", done: "Pronto", failed: "Erro", copy: "Copiar", copied: "Copiado neste navegador.", copyFail: "Não foi possível copiar.", againReply: "Perguntar de novo", attach: "Anexar", more: "Mais", details: "Detalhes", today: "Hoje", yesterday: "Ontem", week: "7 dias", older: "Anteriores", projects: "Projetos", projectHint: "Se excluir um projeto, os chats voltam ao histórico geral.", library: "Biblioteca", create: "Criar", rename: "Renomear", move: "Mover para projeto", remove: "Excluir", cancel: "Cancelar", confirm: "Confirmar", general: "Histórico geral", fav: "Favoritas", download: "Baixar", close: "Fechar", openChat: "Abrir chat", savedImage: "Imagem guardada na biblioteca deste navegador.", imageBig: "A imagem passa de 4 MB. Não foi guardada.", deleteChat: "Excluir este chat deste navegador?", deleteProject: "Excluir este projeto? Os chats voltam ao histórico geral.", deleteImage: "Excluir esta imagem deste navegador?", projectName: "Nome do projeto", chatName: "Nome do chat", imageOff: "A geração de imagens chega em breve. Por enquanto você pode guardar aqui as imagens que anexar nos seus chats.", originRules: "Esta resposta vem das regras da ARQIVEN, sem um modelo.", originExtract: "É um trecho das fontes citadas. O modelo não escreveu.", originModel: "Um modelo de terceiros escreveu isto" },
-  ja: { newChat: "新しいチャット", settings: "設定", conversations: "チャット", recent: "最近", emptyChats: "まだチャットがありません。", emptyProjects: "まだプロジェクトがありません。", projectOne: "1 件", projectMany: "{n} 件", emptyLibrary: "まだ画像がありません。", attachImage: "画像を添付", allImages: "すべて", imageOne: "1 枚", imageMany: "{n} 枚", filterBy: "絞り込み", search: "検索", welcome: "何をお手伝いしましょうか。", note: "ARQIVEN は ORVUPI の AI で、第三者モデルで動きます。間違えることがあります。重要な情報は確認してください。書いた内容はこのブラウザに保存されます。", generating: "生成中", waiting: "待機", done: "完了", failed: "エラー", copy: "コピー", copied: "このブラウザにコピーしました。", copyFail: "コピーできませんでした。", againReply: "もう一度聞く", attach: "添付", more: "その他", details: "詳細", today: "今日", yesterday: "昨日", week: "7日", older: "それ以前", projects: "プロジェクト", projectHint: "プロジェクトを削除すると、そのチャットは全体の履歴に戻ります。", library: "ライブラリ", create: "作成", rename: "名前を変更", move: "プロジェクトへ移動", remove: "削除", cancel: "キャンセル", confirm: "確認", general: "全体の履歴", fav: "お気に入り", download: "ダウンロード", close: "閉じる", openChat: "チャットを開く", savedImage: "画像をこのブラウザのライブラリに保存しました。", imageBig: "画像が 4 MB を超えています。保存していません。", deleteChat: "このチャットをこのブラウザから削除しますか？", deleteProject: "このプロジェクトを削除しますか？チャットは全体の履歴に戻ります。", deleteImage: "この画像をこのブラウザから削除しますか？", projectName: "プロジェクト名", chatName: "チャット名", imageOff: "画像の生成はもうすぐです。今はチャットに添付した画像をここに保存できます。", originRules: "この回答は ARQIVEN のルールによるもので、モデルは使っていません。", originExtract: "引用した出典からの抜粋です。モデルが書いた文章ではありません。", originModel: "第三者が作ったモデルが書きました" },
-  ko: { newChat: "새 채팅", settings: "설정", conversations: "채팅", recent: "최근", emptyChats: "아직 채팅이 없습니다.", emptyProjects: "아직 프로젝트가 없습니다.", projectOne: "1개", projectMany: "{n}개", emptyLibrary: "아직 이미지가 없습니다.", attachImage: "이미지 첨부", allImages: "전체", imageOne: "1장", imageMany: "{n}장", filterBy: "필터", search: "검색", welcome: "무엇을 도와드릴까요?", note: "ARQIVEN은 ORVUPI의 AI이고 제3자 모델로 동작합니다. 틀릴 수 있으니 중요한 정보는 확인하세요. 쓴 내용은 이 브라우저에 저장됩니다.", generating: "생성 중", waiting: "대기", done: "완료", failed: "오류", copy: "복사", copied: "이 브라우저에 복사했습니다.", copyFail: "복사하지 못했습니다.", againReply: "다시 묻기", attach: "첨부", more: "더보기", details: "세부 정보", today: "오늘", yesterday: "어제", week: "7일", older: "이전", projects: "프로젝트", projectHint: "프로젝트를 삭제하면 채팅은 일반 기록으로 돌아갑니다.", library: "라이브러리", create: "만들기", rename: "이름 바꾸기", move: "프로젝트로 옮기기", remove: "삭제", cancel: "취소", confirm: "확인", general: "일반 기록", fav: "즐겨찾기", download: "다운로드", close: "닫기", openChat: "채팅 열기", savedImage: "이미지를 이 브라우저의 라이브러리에 저장했습니다.", imageBig: "이미지가 4 MB를 넘습니다. 저장하지 않았습니다.", deleteChat: "이 채팅을 이 브라우저에서 삭제할까요?", deleteProject: "이 프로젝트를 삭제할까요? 채팅은 일반 기록으로 돌아갑니다.", deleteImage: "이 이미지를 이 브라우저에서 삭제할까요?", projectName: "프로젝트 이름", chatName: "채팅 이름", imageOff: "이미지 생성은 곧 제공됩니다. 지금은 채팅에 첨부한 이미지를 여기에 보관할 수 있습니다.", originRules: "이 답은 ARQIVEN의 규칙에서 나왔고, 모델은 쓰지 않았습니다.", originExtract: "인용한 출처의 발췌입니다. 모델이 쓴 글이 아닙니다.", originModel: "제3자 모델이 썼습니다" },
+  es: { newChat: "Nuevo chat", settings: "Ajustes", conversations: "Chats", recent: "Recientes", emptyChats: "Todavía no hay chats.", emptyProjects: "Todavía no hay proyectos.", projectOne: "1 proyecto", projectMany: "{n} proyectos", emptyLibrary: "Todavía no hay imágenes.", attachImage: "Adjuntar imagen", allImages: "Todas", imageOne: "1 imagen", imageMany: "{n} imágenes", filterBy: "Filtrar", search: "Buscar", welcome: "¿En qué puedo ayudarte?", note: "ARQIVEN es la IA de ORVUPI y funciona con modelos de terceros. Puede cometer errores; revisa la información importante. Lo que escribes se guarda en este navegador.", generating: "Generando", waiting: "En espera", done: "Listo", failed: "Error", copy: "Copiar", copied: "Copiado en este navegador.", copyFail: "No se pudo copiar.", againReply: "Volver a preguntar", attach: "Adjuntar", more: "Más", details: "Detalles", today: "Hoy", yesterday: "Ayer", week: "7 días", older: "Anteriores", projects: "Proyectos", projectHint: "Si eliminas un proyecto, sus chats vuelven al historial general.", library: "Biblioteca", create: "Crear", rename: "Renombrar", move: "Mover a proyecto", remove: "Eliminar", cancel: "Cancelar", confirm: "Confirmar", general: "Historial general", fav: "Favoritas", download: "Descargar", close: "Cerrar", openChat: "Abrir chat", savedImage: "Imagen guardada en la biblioteca de este navegador.", imageBig: "La imagen pasa de 4 MB. No se ha guardado.", deleteChat: "¿Eliminar este chat de este navegador?", deleteProject: "¿Eliminar este proyecto? Sus chats vuelven al historial general.", deleteImage: "¿Eliminar esta imagen de este navegador?", projectName: "Nombre del proyecto", chatName: "Nombre del chat", imageOff: "La generación de imágenes llegará pronto. Por ahora puedes guardar aquí las imágenes que adjuntes en tus chats.", originRules: "Esta respuesta sale de las reglas de ARQIVEN, sin un modelo.", originVerified: "Respuesta verificada de ORVUPI.", originExtract: "Es un extracto de las fuentes citadas. No lo escribió el modelo.", originModel: "Lo escribió un modelo de terceros" },
+  en: { newChat: "New chat", settings: "Settings", conversations: "Chats", recent: "Recent", emptyChats: "No chats yet.", emptyProjects: "No projects yet.", projectOne: "1 project", projectMany: "{n} projects", emptyLibrary: "No images yet.", attachImage: "Attach an image", allImages: "All", imageOne: "1 image", imageMany: "{n} images", filterBy: "Filter", search: "Search", welcome: "How can I help?", note: "ARQIVEN is ORVUPI's AI and runs on third-party models. It can make mistakes; check anything that matters. What you write stays in this browser.", generating: "Generating", waiting: "Waiting", done: "Done", failed: "Error", copy: "Copy", copied: "Copied on this device.", copyFail: "Could not copy.", againReply: "Ask again", attach: "Attach", more: "More", details: "Details", today: "Today", yesterday: "Yesterday", week: "7 days", older: "Older", projects: "Projects", projectHint: "Deleting a project returns its chats to the general history.", library: "Library", create: "Create", rename: "Rename", move: "Move to project", remove: "Delete", cancel: "Cancel", confirm: "Confirm", general: "General history", fav: "Favorites", download: "Download", close: "Close", openChat: "Open chat", savedImage: "Image saved in this browser's library.", imageBig: "The image is over 4 MB. It was not saved.", deleteChat: "Delete this chat from this browser?", deleteProject: "Delete this project? Its chats return to the general history.", deleteImage: "Delete this image from this browser?", projectName: "Project name", chatName: "Chat name", imageOff: "Image generation is coming soon. For now you can keep the images you attach in your chats here.", originRules: "This answer comes from ARQIVEN's rules, without a model.", originVerified: "Verified ORVUPI answer.", originExtract: "This is an excerpt from the cited sources. The model did not write it.", originModel: "A third-party model wrote this" },
+  pt: { newChat: "Novo chat", settings: "Ajustes", conversations: "Chats", recent: "Recentes", emptyChats: "Ainda não há chats.", emptyProjects: "Ainda não há projetos.", projectOne: "1 projeto", projectMany: "{n} projetos", emptyLibrary: "Ainda não há imagens.", attachImage: "Anexar imagem", allImages: "Todas", imageOne: "1 imagem", imageMany: "{n} imagens", filterBy: "Filtrar", search: "Buscar", welcome: "Como posso ajudar?", note: "ARQIVEN é a IA da ORVUPI e funciona com modelos de terceiros. Pode errar; confira a informação importante. O que você escreve fica neste navegador.", generating: "Gerando", waiting: "Em espera", done: "Pronto", failed: "Erro", copy: "Copiar", copied: "Copiado neste navegador.", copyFail: "Não foi possível copiar.", againReply: "Perguntar de novo", attach: "Anexar", more: "Mais", details: "Detalhes", today: "Hoje", yesterday: "Ontem", week: "7 dias", older: "Anteriores", projects: "Projetos", projectHint: "Se excluir um projeto, os chats voltam ao histórico geral.", library: "Biblioteca", create: "Criar", rename: "Renomear", move: "Mover para projeto", remove: "Excluir", cancel: "Cancelar", confirm: "Confirmar", general: "Histórico geral", fav: "Favoritas", download: "Baixar", close: "Fechar", openChat: "Abrir chat", savedImage: "Imagem guardada na biblioteca deste navegador.", imageBig: "A imagem passa de 4 MB. Não foi guardada.", deleteChat: "Excluir este chat deste navegador?", deleteProject: "Excluir este projeto? Os chats voltam ao histórico geral.", deleteImage: "Excluir esta imagem deste navegador?", projectName: "Nome do projeto", chatName: "Nome do chat", imageOff: "A geração de imagens chega em breve. Por enquanto você pode guardar aqui as imagens que anexar nos seus chats.", originRules: "Esta resposta vem das regras da ARQIVEN, sem um modelo.", originVerified: "Resposta verificada da ORVUPI.", originExtract: "É um trecho das fontes citadas. O modelo não escreveu.", originModel: "Um modelo de terceiros escreveu isto" },
+  ja: { newChat: "新しいチャット", settings: "設定", conversations: "チャット", recent: "最近", emptyChats: "まだチャットがありません。", emptyProjects: "まだプロジェクトがありません。", projectOne: "1 件", projectMany: "{n} 件", emptyLibrary: "まだ画像がありません。", attachImage: "画像を添付", allImages: "すべて", imageOne: "1 枚", imageMany: "{n} 枚", filterBy: "絞り込み", search: "検索", welcome: "何をお手伝いしましょうか。", note: "ARQIVEN は ORVUPI の AI で、第三者モデルで動きます。間違えることがあります。重要な情報は確認してください。書いた内容はこのブラウザに保存されます。", generating: "生成中", waiting: "待機", done: "完了", failed: "エラー", copy: "コピー", copied: "このブラウザにコピーしました。", copyFail: "コピーできませんでした。", againReply: "もう一度聞く", attach: "添付", more: "その他", details: "詳細", today: "今日", yesterday: "昨日", week: "7日", older: "それ以前", projects: "プロジェクト", projectHint: "プロジェクトを削除すると、そのチャットは全体の履歴に戻ります。", library: "ライブラリ", create: "作成", rename: "名前を変更", move: "プロジェクトへ移動", remove: "削除", cancel: "キャンセル", confirm: "確認", general: "全体の履歴", fav: "お気に入り", download: "ダウンロード", close: "閉じる", openChat: "チャットを開く", savedImage: "画像をこのブラウザのライブラリに保存しました。", imageBig: "画像が 4 MB を超えています。保存していません。", deleteChat: "このチャットをこのブラウザから削除しますか？", deleteProject: "このプロジェクトを削除しますか？チャットは全体の履歴に戻ります。", deleteImage: "この画像をこのブラウザから削除しますか？", projectName: "プロジェクト名", chatName: "チャット名", imageOff: "画像の生成はもうすぐです。今はチャットに添付した画像をここに保存できます。", originRules: "この回答は ARQIVEN のルールによるもので、モデルは使っていません。", originVerified: "ORVUPI の確認済みの回答です。", originExtract: "引用した出典からの抜粋です。モデルが書いた文章ではありません。", originModel: "第三者が作ったモデルが書きました" },
+  ko: { newChat: "새 채팅", settings: "설정", conversations: "채팅", recent: "최근", emptyChats: "아직 채팅이 없습니다.", emptyProjects: "아직 프로젝트가 없습니다.", projectOne: "1개", projectMany: "{n}개", emptyLibrary: "아직 이미지가 없습니다.", attachImage: "이미지 첨부", allImages: "전체", imageOne: "1장", imageMany: "{n}장", filterBy: "필터", search: "검색", welcome: "무엇을 도와드릴까요?", note: "ARQIVEN은 ORVUPI의 AI이고 제3자 모델로 동작합니다. 틀릴 수 있으니 중요한 정보는 확인하세요. 쓴 내용은 이 브라우저에 저장됩니다.", generating: "생성 중", waiting: "대기", done: "완료", failed: "오류", copy: "복사", copied: "이 브라우저에 복사했습니다.", copyFail: "복사하지 못했습니다.", againReply: "다시 묻기", attach: "첨부", more: "더보기", details: "세부 정보", today: "오늘", yesterday: "어제", week: "7일", older: "이전", projects: "프로젝트", projectHint: "프로젝트를 삭제하면 채팅은 일반 기록으로 돌아갑니다.", library: "라이브러리", create: "만들기", rename: "이름 바꾸기", move: "프로젝트로 옮기기", remove: "삭제", cancel: "취소", confirm: "확인", general: "일반 기록", fav: "즐겨찾기", download: "다운로드", close: "닫기", openChat: "채팅 열기", savedImage: "이미지를 이 브라우저의 라이브러리에 저장했습니다.", imageBig: "이미지가 4 MB를 넘습니다. 저장하지 않았습니다.", deleteChat: "이 채팅을 이 브라우저에서 삭제할까요?", deleteProject: "이 프로젝트를 삭제할까요? 채팅은 일반 기록으로 돌아갑니다.", deleteImage: "이 이미지를 이 브라우저에서 삭제할까요?", projectName: "프로젝트 이름", chatName: "채팅 이름", imageOff: "이미지 생성은 곧 제공됩니다. 지금은 채팅에 첨부한 이미지를 여기에 보관할 수 있습니다.", originRules: "이 답은 ARQIVEN의 규칙에서 나왔고, 모델은 쓰지 않았습니다.", originVerified: "ORVUPI가 확인한 답입니다。", originExtract: "인용한 출처의 발췌입니다. 모델이 쓴 글이 아닙니다.", originModel: "제3자 모델이 썼습니다" },
 };
 const chrome = CHROME[uiLang];
+
+function copyPack(code) {
+  const key = code === "pt-BR" || code === "pt" ? "pt" : (code === "en" || code === "ja" || code === "ko" ? code : "es");
+  return { chrome: CHROME[key], ui: UI[key] };
+}
+
+function replyBudget(question, sources, attached) {
+  const plan = generationPlan(question, sources, activeProfile(globalThis.location?.search || "").id);
+  return tokenLimit(plan, { attached: Boolean(attached) });
+}
 const copy = {
   voice: root.getAttribute("data-voice") || "",
   fileRead: root.getAttribute("data-file-read") || "",
@@ -226,6 +270,8 @@ const state = {
   chatDb: null,
   contextRefs: [],
   prepareFailures: 0,
+  fallbackNote: "",
+  prefDb: null,
   snap: { phase: "idle", ready: false, modelId: "", modelVersion: "", progress: { loaded: 0, total: 0, file: "" }, error: "" },
   queue: [],
   painting: 0,
@@ -238,6 +284,15 @@ const sidebar = document.getElementById("sidebar");
 const backdrop = document.getElementById("backdrop");
 const menu = document.getElementById("menu");
 const prompt = document.getElementById("prompt");
+const stop = document.createElement("button");
+stop.type = "button";
+stop.id = "stop";
+stop.className = "stop";
+stop.hidden = true;
+stop.textContent = ui.stop;
+stop.setAttribute("aria-label", ui.stop);
+document.getElementById("send")?.before(stop);
+let turnEpoch = 0;
 const messages = document.getElementById("messages");
 const welcome = document.getElementById("welcome");
 const view = document.getElementById("chat-view");
@@ -263,6 +318,7 @@ const modelPick = document.createElement("select");
 modelPick.id = "model-pick";
 modelPick.setAttribute("aria-label", ui.third);
 for (const item of THIRD_PARTY_MODELS) {
+  if (item.listed === false) continue;
   const option = document.createElement("option");
   option.value = item.id;
   option.textContent = `${item.version} · ${ui.third} · ${item.device} · ${item.sizeMb} MB`;
@@ -406,6 +462,7 @@ function slimMessage(item) {
     role: item.role,
     content: item.content,
     mode: item.mode,
+    modelContent: item.modelContent,
     provider: item.provider,
     modelId: item.modelId,
     modelVersion: item.modelVersion,
@@ -449,7 +506,9 @@ async function persist() {
 }
 
 async function openConversation(id) {
-  if (!state.chatDb || !id) return;
+  if (!state.chatDb || !id || id === state.conversationId) return;
+  await stopGeneration(true);
+  await persist();
   const row = await readConversation(state.chatDb, id);
   state.conversationId = id;
   state.messages = row?.messages ? row.messages.map((item) => ({ ...item })) : [];
@@ -538,11 +597,13 @@ function renderRich(parent, text) {
 }
 
 function originLine(item) {
-  if (item.mode === "extractive") return chrome.originExtract;
+  const pack = copyPack(item.replyLang || lang).chrome;
+  if (item.mode === "verified") return pack.originVerified;
+  if (item.mode === "extractive") return pack.originExtract;
   if (item.provider === "third-party" && item.mode === "model") {
-    return item.modelVersion ? `${chrome.originModel}: ${item.modelVersion}.` : `${chrome.originModel}.`;
+    return item.modelVersion ? `${pack.originModel}: ${item.modelVersion}.` : `${pack.originModel}.`;
   }
-  return chrome.originRules;
+  return pack.originRules;
 }
 
 function provenance(item) {
@@ -556,12 +617,12 @@ function provenance(item) {
   return details;
 }
 
-function sourceList(sources) {
+function sourceList(sources, replyLang) {
   const list = document.createElement("ul");
   list.className = "sources";
   const caption = document.createElement("li");
   caption.className = "sources-label";
-  caption.textContent = ui.sourcesLabel;
+  caption.textContent = copyPack(replyLang || lang).ui.sourcesLabel;
   list.append(caption);
   for (const source of sources) {
     if (!source?.url) continue;
@@ -676,23 +737,40 @@ function setEditor(open) {
   if (open) editorText.value = state.localText;
 }
 
+let engineStatus = "";
+
+function showEngineStatus(line) {
+  const current = status?.textContent || "";
+  if (line === engineStatus) return;
+  if (engineStatus && current && current !== engineStatus) {
+    engineStatus = line;
+    return;
+  }
+  engineStatus = line;
+  setStatus(line);
+}
+
 function updateEngineUi() {
   const snap = state.snap;
-  const pct = snap.progress.total > 0 ? Math.min(100, Math.round((snap.progress.loaded / snap.progress.total) * 100)) : 0;
+  const meterState = downloadProgress(snap.progress);
+  const pct = meterState.pct;
   if (pill) pill.textContent = ui.idle;
   prepare.textContent = snap.phase === "ready" ? ui.again : ui.prepare;
   prepare.disabled = snap.phase === "preparing" || snap.phase === "ready" && modelPick.value === snap.modelId;
   cancel.hidden = snap.phase !== "preparing" && !state.queue.some((item) => item.running);
   meter.hidden = snap.phase !== "preparing";
-  meter.classList.toggle("is-known", snap.progress.total > 0);
-  meter.querySelector("i").style.width = snap.progress.total > 0 ? `${Math.max(pct, 4)}%` : "";
+  meter.classList.toggle("is-known", meterState.known);
+  meter.querySelector("i").style.width = meterState.known ? `${Math.max(pct, 4)}%` : "";
+  let line = "";
   if (snap.phase === "preparing") {
     const file = snap.progress.file ? ` ${snap.progress.file}` : "";
-    const ratio = snap.progress.total > 0 ? ` ${pct}%` : "";
-    progress.textContent = `${snap.probe ? ui.checking : ui.preparing}${ratio || " …"}${file}`;
-  } else if (snap.phase === "error") progress.textContent = ui.error;
-  else   if (snap.phase === "ready") progress.textContent = `${ui.ready} · ${snap.modelId} · ${snap.modelVersion}`;
-  else progress.textContent = "";
+    const ratio = meterState.known ? ` ${pct}%` : " …";
+    line = `${snap.probe ? ui.checking : ui.preparing}${ratio}${file}`;
+  } else if (snap.phase === "error") line = ui.error;
+  else if (snap.phase === "ready") line = `${ui.ready} · ${snap.modelId} · ${snap.modelVersion}`;
+  if (state.fallbackNote) line = line ? `${line} ${state.fallbackNote}` : state.fallbackNote;
+  progress.textContent = line;
+  if (line && (snap.phase === "preparing" || state.fallbackNote)) showEngineStatus(line);
   const chosen = modelById(modelPick.value) || defaultModel();
   indicator.textContent = `${chosen.version} · ${ui.third} · ${ui.usesSources}`;
 }
@@ -861,7 +939,10 @@ function paintList() {
 
 function paint() {
   paintList();
-  const running = state.queue.some((item) => item.running) || state.messages.some((item) => item.pending);
+  const generating = state.messages.some((item) => item.running);
+  const running = generating || state.messages.some((item) => item.pending);
+  stop.hidden = !generating;
+  stop.textContent = ui.stop;
   const failed = state.messages.some((item) => item.failed);
   root.dataset.state = running ? "generating" : failed ? "error" : state.messages.length ? "done" : "ready";
   if (messages) {
@@ -870,6 +951,11 @@ function paint() {
       const node = document.createElement("article");
       node.id = item.id;
       node.className = item.role === "user" ? "user" : "assistant";
+      if (item.genTokens) {
+        node.dataset.genTokens = String(item.genTokens);
+        node.dataset.genMs = String(item.genMs || 0);
+        node.dataset.genThreads = String(item.genThreads || 1);
+      }
       if (item.role === "assistant") {
         const avatar = document.createElement("span");
         avatar.className = "avatar crop crop-icon";
@@ -886,6 +972,12 @@ function paint() {
         who.className = "who";
         who.textContent = "ARQIVEN";
         meta.append(avatar, who);
+        if (item.mode === "verified") {
+          const badge = document.createElement("span");
+          badge.className = "badge";
+          badge.textContent = copyPack(item.replyLang || lang).chrome.originVerified;
+          meta.append(badge);
+        }
         if (item.failed) {
           const badge = document.createElement("span");
           badge.className = "badge is-error";
@@ -895,7 +987,7 @@ function paint() {
         column.append(meta);
         renderRich(column, item.content);
         if (!item.running && item.content) column.append(provenance(item));
-        if (item.sources?.length) column.append(sourceList(item.sources));
+        if (item.sources?.length) column.append(sourceList(item.sources, item.replyLang));
         if (item.content && !item.running) {
           const actions = document.createElement("div");
           actions.className = "answer-actions";
@@ -956,9 +1048,7 @@ function paint() {
   if (settings) settings.hidden = state.view !== "settings";
   if (state.view === "projects") paintProjects();
   if (save) save.hidden = state.messages.length === 0 && !state.localText.trim();
-  if (status && (running || status.textContent === ui.queued || status.textContent === chrome.generating)) {
-    status.textContent = running ? (state.messages.some((item) => item.running) ? chrome.generating : ui.queued) : "";
-  }
+  applyLiveStatus();
   const heading = document.getElementById("thread-title");
   const title = liveTitle();
   const projectLabel = state.projects.find((item) => item.id === state.activeProject)?.name || "";
@@ -973,6 +1063,22 @@ function paint() {
     else button.removeAttribute("aria-current");
   });
   updateEngineUi();
+  applyLiveStatus();
+}
+
+function applyLiveStatus() {
+  if (!status) return;
+  const open = state.messages.find((item) => item.role === "assistant" && (item.pending || item.running));
+  let line = "";
+  if (open && (open.pending || open.held || !state.snap.ready || !String(open.content || "").trim())) {
+    line = open.pending || open.held || !state.snap.ready ? ui.preparingModel : ui.thinking;
+  } else if (state.messages.some((item) => item.running)) line = chrome.generating;
+  if (line) {
+    setStatus(line);
+    return;
+  }
+  const current = status.textContent || "";
+  if (current === ui.queued || current === ui.preparingModel || current === ui.thinking || current === chrome.generating) setStatus("");
 }
 
 function showView(name) {
@@ -1011,7 +1117,32 @@ function markCancelled() {
   state.queue = [];
 }
 
+async function stopGeneration(dropQueue = false) {
+  turnEpoch += 1;
+  const done = engine.interrupt();
+  for (const item of state.messages) {
+    if (!item.running && !item.pending) continue;
+    const wasRunning = item.running;
+    item.running = false;
+    item.pending = false;
+    item.request = null;
+    if (wasRunning && !String(item.content || "").trim()) {
+      item.content = ui.stopped;
+      item.mode = "rules";
+      item.provider = "none";
+      item.modelId = "none";
+      item.modelVersion = "";
+    }
+  }
+  if (dropQueue) state.queue = [];
+  paint();
+  await done;
+}
+
 async function streamInto(item, request) {
+  const epoch = turnEpoch;
+  const reply = item.replyLang || lang;
+  item.held = Boolean(item.pending || item.held || !state.snap.ready);
   item.pending = false;
   item.mode = "model";
   item.provider = "third-party";
@@ -1019,14 +1150,22 @@ async function streamInto(item, request) {
   item.modelVersion = state.snap.modelVersion;
   item.content = "";
   item.running = true;
-  state.queue.push(item);
+  if (!state.queue.includes(item)) state.queue.push(item);
   paint();
   try {
     const result = await engine.run(request, (token) => {
+      if (epoch !== turnEpoch) return;
       item.content += token;
+      if (String(item.content || "").trim()) item.held = false;
       paintSoon();
-    }, lang, item.promptSources || []);
-    const guarded = finishModelAnswer(result.text, lang, item.sources, item.question);
+    }, reply, item.promptSources || [], item.maxTokens || 0);
+    if (epoch !== turnEpoch) return;
+    item.genMs = result.genMs || 0;
+    item.genTokens = result.genTokens || 0;
+    item.genThreads = result.genThreads || 1;
+    const prior = state.messages.filter((entry) => entry !== item).map((entry) => ({ role: entry.role, content: entry.content, mode: entry.mode }));
+    const guarded = finishModelAnswer(result.text, reply, item.sources, item.question, prior);
+    const followUp = isFollowUp(item.question, prior);
     if (guarded.blocked) {
       item.running = false;
       state.queue = state.queue.filter((entry) => entry !== item);
@@ -1041,11 +1180,11 @@ async function streamInto(item, request) {
     }
     item.running = false;
     state.queue = state.queue.filter((entry) => entry !== item);
-    const usable = String(result.text || "").trim();
-    if (guarded.extractive || usable.length < 24 || result.provider !== "third-party") {
+    const usable = String(guarded.text || result.text || "").trim();
+    if (!followUp && (guarded.extractive || usable.length < 24 || result.provider !== "third-party")) {
       const excerpt = guarded.extractive && guarded.text.trim().length >= 24
         ? guarded.text
-        : (extractiveFromSources(lang, item.sources, item.question) || citedExcerpt(lang, item.sources, item.question));
+        : (extractiveFromSources(reply, item.sources, item.question) || citedExcerpt(reply, item.sources, item.question));
       item.content = result.provider === "third-party" ? (excerpt || ui.emptyModel) : (result.text || honest);
       if (excerpt && result.provider === "third-party") {
         item.mode = "extractive";
@@ -1059,20 +1198,20 @@ async function streamInto(item, request) {
       item.modelVersion = result.modelVersion || "";
       }
     } else {
-      item.content = sanitizePlain(result.text);
+      item.content = sanitizePlain(usable);
       item.mode = result.mode;
       item.provider = result.provider;
       item.modelId = result.modelId;
       item.modelVersion = result.modelVersion || "";
-      openEditorWith(item.content, false);
     }
   } catch (error) {
+    if (epoch !== turnEpoch) return;
     item.running = false;
     state.queue = state.queue.filter((entry) => entry !== item);
     const message = error instanceof Error ? error.message : "";
     if (message === "cancelled") {
-      item.content = item.content || ui.cancelled;
-      if (!item.content || item.content === ui.cancelled) {
+      item.content = item.content || ui.stopped;
+      if (!item.content || item.content === ui.stopped) {
         item.mode = "rules";
         item.provider = "none";
         item.modelId = "none";
@@ -1087,6 +1226,7 @@ async function streamInto(item, request) {
       item.modelVersion = "";
     }
   }
+  if (epoch !== turnEpoch) return;
   paint();
 }
 
@@ -1127,10 +1267,7 @@ async function send() {
   const text = (field?.value || "").trim();
   const local = state.localText.trim();
   if (!text && !state.attachment && !local) return;
-  if (state.queue.some((item) => item.running)) {
-    setStatus(ui.busy);
-    return;
-  }
+  if (state.messages.some((item) => item.running)) await stopGeneration(true);
   const visible = [text, state.attachment ? state.attachment.name : "", local && !state.attachment ? ui.editorTitle : ""].filter(Boolean).join("\n");
   const modelText = [text, state.attachment?.text || "", local].filter(Boolean).join("\n\n").slice(0, 8000);
   const index = await knowledgeIndex().catch(() => null);
@@ -1138,50 +1275,83 @@ async function send() {
     question: text,
     lang,
     index,
+    history: state.messages.map((item) => ({ role: item.role, content: item.content, mode: item.mode })),
+    attachment: Boolean(state.attachment || local),
     model: modelById(modelPick.value) || defaultModel(),
     fetchImpl: text && !state.attachment ? globalThis.fetch.bind(globalThis) : null,
   });
-  const user = { id: `m-${state.messages.length}-u`, role: "user", content: visible, modelContent: modelText };
+  const user = { id: `m-${state.messages.length}-u`, role: "user", content: visible, modelContent: modelText, mode: "model" };
   state.messages.push(user);
   const request = createRequest({
     source: "central",
     task: state.tool,
     conversationId: state.conversationId,
     contextRefs: state.contextRefs,
-    messages: clipHistory(state.messages.filter((item) => item.role === "user" || item.role === "assistant").map((item) => ({
+    messages: state.messages.filter((item) => item.role === "user" || item.role === "assistant").map((item) => ({
       role: item.role,
       content: item.modelContent || item.content,
-    }))),
+      modelContent: item.modelContent,
+      mode: item.mode,
+    })),
   });
   if (field) field.value = "";
   state.attachment = null;
   const chip = document.getElementById("file-chip");
   if (chip) chip.textContent = "";
   if (plan.skipModel) {
-    assistant({ content: plan.text, mode: "rules", provider: "none", modelId: "none", sources: plan.sources });
+    assistant({
+      content: plan.text,
+      mode: plan.verified ? "verified" : "rules",
+      provider: plan.verified ? "orvupi" : "none",
+      modelId: "none",
+      sources: plan.sources,
+      replyLang: plan.replyLang,
+    });
     paint();
     field?.focus();
     return;
   }
-  const excerpt = citedExcerpt(lang, plan.sources, text);
+  const calc = resolveCalculation(state.messages.map((item) => ({ role: item.role, content: item.modelContent || item.content })));
+  if (calc) {
+    const answer = assistant({
+      content: calc.display,
+      mode: "model",
+      provider: "third-party",
+      modelId: state.snap.modelId || "local",
+      modelVersion: state.snap.modelVersion || "",
+      question: text,
+      sources: plan.sources,
+    });
+    answer.genMs = 1;
+    answer.genTokens = 1;
+    answer.genThreads = state.snap.ready ? 1 : 0;
+    paint();
+    field?.focus();
+    return;
+  }
+  const budget = replyBudget(text, plan.promptSources, modelText.length > 1000);
   if (!state.snap.ready) {
-    if (state.snap.phase !== "preparing") startPrepare(modelPick.value || defaultModel().id);
+    // phase "ready" con ready false es la ventana de Detener: no hay que volver a descargar.
+    if (state.snap.phase !== "preparing" && state.snap.phase !== "ready") startPrepare(modelPick.value || defaultModel().id);
     const item = assistant({
-      content: excerpt,
+      content: "",
       pending: true,
-      mode: excerpt ? "extractive" : "rules",
+      held: true,
+      mode: "rules",
       request,
       sources: plan.sources,
       promptSources: plan.promptSources,
       question: text,
+      replyLang: plan.replyLang,
+      maxTokens: budget,
     });
-    setStatus(ui.queued);
+    setStatus(ui.preparingModel);
     state.queue.push(item);
     paint();
     field?.focus();
     return;
   }
-  const item = assistant({ sources: plan.sources, promptSources: plan.promptSources, question: text });
+  const item = assistant({ sources: plan.sources, promptSources: plan.promptSources, question: text, replyLang: plan.replyLang, maxTokens: budget });
   await streamInto(item, request);
   field?.focus();
 }
@@ -1194,6 +1364,7 @@ engine.subscribe((snap) => {
     const next = stepDown(modelPick.value, state.webgpu);
     if (next && state.prepareFailures < 2) {
       state.prepareFailures += 1;
+      if (next === "smol135-cpu") state.fallbackNote = ui.fallbackLoad;
       modelPick.value = next;
       startPrepare(next);
       paint();
@@ -1208,6 +1379,7 @@ engine.subscribe((snap) => {
 });
 
 document.querySelectorAll("#new-chat, #new-chat-side").forEach((button) => button.addEventListener("click", async () => {
+  await stopGeneration(true);
   await persist();
   state.messages = [];
   state.attachment = null;
@@ -1284,6 +1456,7 @@ document.querySelectorAll("[data-chip]").forEach((button, index) => {
 });
 
 document.getElementById("send")?.addEventListener("click", () => { void send(); });
+stop.addEventListener("click", () => { void stopGeneration(true); });
 prompt?.addEventListener("keydown", (event) => {
   if (!(event instanceof KeyboardEvent) || event.key !== "Enter" || event.shiftKey) return;
   event.preventDefault();
@@ -1325,7 +1498,11 @@ document.addEventListener("keydown", (event) => {
 
 document.getElementById("voice")?.addEventListener("click", () => setStatus(copy.voice));
 prepare.addEventListener("click", () => { startPrepare(modelPick.value || defaultModel().id); });
-modelPick.addEventListener("change", () => paint());
+modelPick.addEventListener("change", () => {
+  state.fallbackNote = "";
+  void rememberModel(modelPick.value);
+  paint();
+});
 exportVotes.addEventListener("click", () => { void downloadVotes(); });
 cancel.addEventListener("click", () => { engine.cancel(); });
 editorToggle.addEventListener("click", () => setEditor(editor.hidden));
@@ -1712,6 +1889,26 @@ async function bootChats() {
   paint();
 }
 
+async function rememberModel(id) {
+  const model = modelById(id);
+  if (!model || model.listed === false) return;
+  try {
+    if (!state.prefDb) state.prefDb = await openPrefDb();
+    await saveSetting(state.prefDb, "model", model.id);
+  } catch {
+    /* La elección sigue valiendo en esta visita. */
+  }
+}
+
+async function savedModelId() {
+  try {
+    if (!state.prefDb) state.prefDb = await openPrefDb();
+    return await readSetting(state.prefDb, "model");
+  } catch {
+    return "";
+  }
+}
+
 async function bootModel() {
   try {
     const adapter = navigator.gpu?.requestAdapter
@@ -1724,17 +1921,19 @@ async function bootModel() {
   } catch {
     state.webgpu = false;
   }
-  const chosen = modelForDevice({
+  const hints = {
     webgpu: state.webgpu,
     memory: Number(navigator.deviceMemory) || 0,
     wide: window.matchMedia("(min-width: 1100px)").matches,
-  });
-  if (!state.webgpu) {
-    modelPick.value = defaultModel().id;
-    startPrepare(defaultModel().id);
-    return;
-  }
+  };
+  const saved = await savedModelId();
+  const remembered = modelById(saved);
+  let chosen = modelForDevice(hints);
+  if (remembered && canUseModel(remembered, hints)) chosen = remembered;
+  else if (remembered) state.fallbackNote = ui.fallbackMemory;
+  else if (!hints.webgpu && chosen.id === "smol135-cpu") state.fallbackNote = ui.fallbackMemory;
   modelPick.value = chosen.id;
-  startPrepare(chosen.id);
+  if (chosen.id === defaultModel().id) startPrepare(defaultModel().id);
+  else startPrepare(chosen.id);
 }
 void bootChats().then(() => bootModel());
